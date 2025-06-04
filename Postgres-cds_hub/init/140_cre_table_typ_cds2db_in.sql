@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-06-01 22:49:29
+-- Create time: 2025-06-04 12:37:51
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -89,391 +89,469 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_id varchar;   -- id (varchar)
         END IF; -- column (enc_id)
+
         IF NOT EXISTS ( -- column not exists (enc_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (enc_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (enc_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (enc_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (enc_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (enc_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (enc_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (enc_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (enc_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (enc_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (enc_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (enc_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (enc_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (enc_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (enc_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (enc_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (enc_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (enc_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_patient_ref varchar;   -- subject/reference (varchar)
         END IF; -- column (enc_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (enc_partof_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_partof_ref'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_partof_ref varchar;   -- partOf/reference (varchar)
         END IF; -- column (enc_partof_ref)
+
         IF NOT EXISTS ( -- column not exists (enc_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_status'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_status varchar;   -- status (varchar)
         END IF; -- column (enc_status)
+
         IF NOT EXISTS ( -- column not exists (enc_class_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_class_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_class_system varchar;   -- class/system (varchar)
         END IF; -- column (enc_class_system)
+
         IF NOT EXISTS ( -- column not exists (enc_class_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_class_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_class_version varchar;   -- class/version (varchar)
         END IF; -- column (enc_class_version)
+
         IF NOT EXISTS ( -- column not exists (enc_class_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_class_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_class_code varchar;   -- class/code (varchar)
         END IF; -- column (enc_class_code)
+
         IF NOT EXISTS ( -- column not exists (enc_class_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_class_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_class_display varchar;   -- class/display (varchar)
         END IF; -- column (enc_class_display)
+
         IF NOT EXISTS ( -- column not exists (enc_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_type_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_type_system varchar;   -- type/coding/system (varchar)
         END IF; -- column (enc_type_system)
+
         IF NOT EXISTS ( -- column not exists (enc_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_type_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_type_version varchar;   -- type/coding/version (varchar)
         END IF; -- column (enc_type_version)
+
         IF NOT EXISTS ( -- column not exists (enc_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_type_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_type_code varchar;   -- type/coding/code (varchar)
         END IF; -- column (enc_type_code)
+
         IF NOT EXISTS ( -- column not exists (enc_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_type_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_type_display varchar;   -- type/coding/display (varchar)
         END IF; -- column (enc_type_display)
+
         IF NOT EXISTS ( -- column not exists (enc_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_type_text'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_type_text varchar;   -- type/text (varchar)
         END IF; -- column (enc_type_text)
+
         IF NOT EXISTS ( -- column not exists (enc_servicetype_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_servicetype_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_servicetype_system varchar;   -- serviceType/coding/system (varchar)
         END IF; -- column (enc_servicetype_system)
+
         IF NOT EXISTS ( -- column not exists (enc_servicetype_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_servicetype_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_servicetype_version varchar;   -- serviceType/coding/version (varchar)
         END IF; -- column (enc_servicetype_version)
+
         IF NOT EXISTS ( -- column not exists (enc_servicetype_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_servicetype_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_servicetype_code varchar;   -- serviceType/coding/code (varchar)
         END IF; -- column (enc_servicetype_code)
+
         IF NOT EXISTS ( -- column not exists (enc_servicetype_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_servicetype_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_servicetype_display varchar;   -- serviceType/coding/display (varchar)
         END IF; -- column (enc_servicetype_display)
+
         IF NOT EXISTS ( -- column not exists (enc_servicetype_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_servicetype_text'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_servicetype_text varchar;   -- serviceType/text (varchar)
         END IF; -- column (enc_servicetype_text)
+
         IF NOT EXISTS ( -- column not exists (enc_period_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_period_start'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_period_start timestamp;   -- period/start (timestamp)
         END IF; -- column (enc_period_start)
+
         IF NOT EXISTS ( -- column not exists (enc_period_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_period_end'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_period_end timestamp;   -- period/end (timestamp)
         END IF; -- column (enc_period_end)
+
         IF NOT EXISTS ( -- column not exists (enc_diagnosis_condition_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_diagnosis_condition_ref'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_diagnosis_condition_ref varchar;   -- diagnosis/condition/reference (varchar)
         END IF; -- column (enc_diagnosis_condition_ref)
+
         IF NOT EXISTS ( -- column not exists (enc_diagnosis_use_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_diagnosis_use_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_diagnosis_use_system varchar;   -- diagnosis/use/coding/system (varchar)
         END IF; -- column (enc_diagnosis_use_system)
+
         IF NOT EXISTS ( -- column not exists (enc_diagnosis_use_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_diagnosis_use_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_diagnosis_use_version varchar;   -- diagnosis/use/coding/version (varchar)
         END IF; -- column (enc_diagnosis_use_version)
+
         IF NOT EXISTS ( -- column not exists (enc_diagnosis_use_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_diagnosis_use_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_diagnosis_use_code varchar;   -- diagnosis/use/coding/code (varchar)
         END IF; -- column (enc_diagnosis_use_code)
+
         IF NOT EXISTS ( -- column not exists (enc_diagnosis_use_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_diagnosis_use_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_diagnosis_use_display varchar;   -- diagnosis/use/coding/display (varchar)
         END IF; -- column (enc_diagnosis_use_display)
+
         IF NOT EXISTS ( -- column not exists (enc_diagnosis_use_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_diagnosis_use_text'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_diagnosis_use_text varchar;   -- diagnosis/use/text (varchar)
         END IF; -- column (enc_diagnosis_use_text)
+
         IF NOT EXISTS ( -- column not exists (enc_diagnosis_rank)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_diagnosis_rank'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_diagnosis_rank int;   -- diagnosis/rank (int)
         END IF; -- column (enc_diagnosis_rank)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_admitsource_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_admitsource_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_admitsource_system varchar;   -- hospitalization/admitSource/coding/system (varchar)
         END IF; -- column (enc_hospitalization_admitsource_system)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_admitsource_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_admitsource_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_admitsource_version varchar;   -- hospitalization/admitSource/coding/version (varchar)
         END IF; -- column (enc_hospitalization_admitsource_version)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_admitsource_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_admitsource_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_admitsource_code varchar;   -- hospitalization/admitSource/coding/code (varchar)
         END IF; -- column (enc_hospitalization_admitsource_code)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_admitsource_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_admitsource_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_admitsource_display varchar;   -- hospitalization/admitSource/coding/display (varchar)
         END IF; -- column (enc_hospitalization_admitsource_display)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_admitsource_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_admitsource_text'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_admitsource_text varchar;   -- hospitalization/admitSource/text (varchar)
         END IF; -- column (enc_hospitalization_admitsource_text)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_dischargedisposition_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_dischargedisposition_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_dischargedisposition_system varchar;   -- hospitalization/dischargeDisposition/coding/system (varchar)
         END IF; -- column (enc_hospitalization_dischargedisposition_system)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_dischargedisposition_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_dischargedisposition_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_dischargedisposition_version varchar;   -- hospitalization/dischargeDisposition/coding/version (varchar)
         END IF; -- column (enc_hospitalization_dischargedisposition_version)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_dischargedisposition_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_dischargedisposition_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_dischargedisposition_code varchar;   -- hospitalization/dischargeDisposition/coding/code (varchar)
         END IF; -- column (enc_hospitalization_dischargedisposition_code)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_dischargedisposition_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_dischargedisposition_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_dischargedisposition_display varchar;   -- hospitalization/dischargeDisposition/coding/display (varchar)
         END IF; -- column (enc_hospitalization_dischargedisposition_display)
+
         IF NOT EXISTS ( -- column not exists (enc_hospitalization_dischargedisposition_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_hospitalization_dischargedisposition_text'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_hospitalization_dischargedisposition_text varchar;   -- hospitalization/dischargeDisposition/text (varchar)
         END IF; -- column (enc_hospitalization_dischargedisposition_text)
+
         IF NOT EXISTS ( -- column not exists (enc_location_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_ref'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_ref varchar;   -- location/location/reference (varchar)
         END IF; -- column (enc_location_ref)
+
         IF NOT EXISTS ( -- column not exists (enc_location_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_type'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_type varchar;   -- location/location/type (varchar)
         END IF; -- column (enc_location_type)
+
         IF NOT EXISTS ( -- column not exists (enc_location_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_identifier_use varchar;   -- location/location/identifier/use (varchar)
         END IF; -- column (enc_location_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (enc_location_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_identifier_type_system varchar;   -- location/location/identifier/type/coding/system (varchar)
         END IF; -- column (enc_location_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (enc_location_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_identifier_type_version varchar;   -- location/location/identifier/type/coding/version (varchar)
         END IF; -- column (enc_location_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (enc_location_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_identifier_type_code varchar;   -- location/location/identifier/type/coding/code (varchar)
         END IF; -- column (enc_location_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (enc_location_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_identifier_type_display varchar;   -- location/location/identifier/type/coding/display (varchar)
         END IF; -- column (enc_location_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (enc_location_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_identifier_type_text varchar;   -- location/location/identifier/type/text (varchar)
         END IF; -- column (enc_location_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (enc_location_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_identifier_system varchar;   -- location/location/identifier/system (varchar)
         END IF; -- column (enc_location_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (enc_location_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_identifier_value varchar;   -- location/location/identifier/value (varchar)
         END IF; -- column (enc_location_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (enc_location_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_display varchar;   -- location/location/display (varchar)
         END IF; -- column (enc_location_display)
+
         IF NOT EXISTS ( -- column not exists (enc_location_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_status'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_status varchar;   -- location/status (varchar)
         END IF; -- column (enc_location_status)
+
         IF NOT EXISTS ( -- column not exists (enc_location_physicaltype_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_physicaltype_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_physicaltype_system varchar;   -- location/physicalType/coding/system (varchar)
         END IF; -- column (enc_location_physicaltype_system)
+
         IF NOT EXISTS ( -- column not exists (enc_location_physicaltype_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_physicaltype_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_physicaltype_version varchar;   -- location/physicalType/coding/version (varchar)
         END IF; -- column (enc_location_physicaltype_version)
+
         IF NOT EXISTS ( -- column not exists (enc_location_physicaltype_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_physicaltype_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_physicaltype_code varchar;   -- location/physicalType/coding/code (varchar)
         END IF; -- column (enc_location_physicaltype_code)
+
         IF NOT EXISTS ( -- column not exists (enc_location_physicaltype_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_physicaltype_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_physicaltype_display varchar;   -- location/physicalType/coding/display (varchar)
         END IF; -- column (enc_location_physicaltype_display)
+
         IF NOT EXISTS ( -- column not exists (enc_location_physicaltype_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_location_physicaltype_text'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_location_physicaltype_text varchar;   -- location/physicalType/text (varchar)
         END IF; -- column (enc_location_physicaltype_text)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_ref'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_ref varchar;   -- serviceProvider/reference (varchar)
         END IF; -- column (enc_serviceprovider_ref)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_type'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_type varchar;   -- serviceProvider/type (varchar)
         END IF; -- column (enc_serviceprovider_type)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_identifier_use varchar;   -- serviceProvider/identifier/use (varchar)
         END IF; -- column (enc_serviceprovider_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_identifier_type_system varchar;   -- serviceProvider/identifier/type/coding/system (varchar)
         END IF; -- column (enc_serviceprovider_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_identifier_type_version varchar;   -- serviceProvider/identifier/type/coding/version (varchar)
         END IF; -- column (enc_serviceprovider_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_identifier_type_code varchar;   -- serviceProvider/identifier/type/coding/code (varchar)
         END IF; -- column (enc_serviceprovider_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_identifier_type_display varchar;   -- serviceProvider/identifier/type/coding/display (varchar)
         END IF; -- column (enc_serviceprovider_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_identifier_type_text varchar;   -- serviceProvider/identifier/type/text (varchar)
         END IF; -- column (enc_serviceprovider_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_identifier_system varchar;   -- serviceProvider/identifier/system (varchar)
         END IF; -- column (enc_serviceprovider_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_identifier_value varchar;   -- serviceProvider/identifier/value (varchar)
         END IF; -- column (enc_serviceprovider_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (enc_serviceprovider_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_serviceprovider_display'
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_serviceprovider_display varchar;   -- serviceProvider/display (varchar)
         END IF; -- column (enc_serviceprovider_display)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -648,9 +726,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'encounter'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.encounter ADD
@@ -795,111 +871,133 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_id varchar;   -- id (varchar)
         END IF; -- column (pat_id)
+
         IF NOT EXISTS ( -- column not exists (pat_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (pat_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (pat_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (pat_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (pat_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (pat_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (pat_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (pat_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (pat_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (pat_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (pat_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (pat_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (pat_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (pat_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (pat_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (pat_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (pat_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (pat_name_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_name_use'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_name_use varchar;   -- name/use (varchar)
         END IF; -- column (pat_name_use)
+
         IF NOT EXISTS ( -- column not exists (pat_name_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_name_text'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_name_text varchar;   -- name/text (varchar)
         END IF; -- column (pat_name_text)
+
         IF NOT EXISTS ( -- column not exists (pat_name_family)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_name_family'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_name_family varchar;   -- name/family (varchar)
         END IF; -- column (pat_name_family)
+
         IF NOT EXISTS ( -- column not exists (pat_name_given)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_name_given'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_name_given varchar;   -- name/given (varchar)
         END IF; -- column (pat_name_given)
+
         IF NOT EXISTS ( -- column not exists (pat_gender)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_gender'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_gender varchar;   -- gender (varchar)
         END IF; -- column (pat_gender)
+
         IF NOT EXISTS ( -- column not exists (pat_birthdate)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_birthdate'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_birthdate date;   -- birthDate (date)
         END IF; -- column (pat_birthdate)
+
         IF NOT EXISTS ( -- column not exists (pat_deceaseddatetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_deceaseddatetime'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_deceaseddatetime timestamp;   -- deceasedDateTime (timestamp)
         END IF; -- column (pat_deceaseddatetime)
+
         IF NOT EXISTS ( -- column not exists (pat_address_postalcode)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_address_postalcode'
         ) THEN
             ALTER TABLE cds2db_in.patient ADD pat_address_postalcode varchar;   -- address/postalCode (varchar)
         END IF; -- column (pat_address_postalcode)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -962,9 +1060,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'patient'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.patient ADD
@@ -1053,621 +1149,745 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_id varchar;   -- id (varchar)
         END IF; -- column (con_id)
+
         IF NOT EXISTS ( -- column not exists (con_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (con_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (con_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (con_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (con_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (con_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (con_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (con_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (con_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (con_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (con_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (con_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (con_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (con_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (con_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (con_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (con_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (con_encounter_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_encounter_ref'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_encounter_ref varchar;   -- encounter/reference (varchar)
         END IF; -- column (con_encounter_ref)
+
         IF NOT EXISTS ( -- column not exists (con_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_patient_ref varchar;   -- subject/reference (varchar)
         END IF; -- column (con_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (con_clinicalstatus_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_clinicalstatus_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_clinicalstatus_system varchar;   -- clinicalStatus/coding/system (varchar)
         END IF; -- column (con_clinicalstatus_system)
+
         IF NOT EXISTS ( -- column not exists (con_clinicalstatus_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_clinicalstatus_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_clinicalstatus_version varchar;   -- clinicalStatus/coding/version (varchar)
         END IF; -- column (con_clinicalstatus_version)
+
         IF NOT EXISTS ( -- column not exists (con_clinicalstatus_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_clinicalstatus_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_clinicalstatus_code varchar;   -- clinicalStatus/coding/code (varchar)
         END IF; -- column (con_clinicalstatus_code)
+
         IF NOT EXISTS ( -- column not exists (con_clinicalstatus_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_clinicalstatus_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_clinicalstatus_display varchar;   -- clinicalStatus/coding/display (varchar)
         END IF; -- column (con_clinicalstatus_display)
+
         IF NOT EXISTS ( -- column not exists (con_clinicalstatus_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_clinicalstatus_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_clinicalstatus_text varchar;   -- clinicalStatus/text (varchar)
         END IF; -- column (con_clinicalstatus_text)
+
         IF NOT EXISTS ( -- column not exists (con_verificationstatus_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_verificationstatus_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_verificationstatus_system varchar;   -- verificationStatus/coding/system (varchar)
         END IF; -- column (con_verificationstatus_system)
+
         IF NOT EXISTS ( -- column not exists (con_verificationstatus_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_verificationstatus_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_verificationstatus_version varchar;   -- verificationStatus/coding/version (varchar)
         END IF; -- column (con_verificationstatus_version)
+
         IF NOT EXISTS ( -- column not exists (con_verificationstatus_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_verificationstatus_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_verificationstatus_code varchar;   -- verificationStatus/coding/code (varchar)
         END IF; -- column (con_verificationstatus_code)
+
         IF NOT EXISTS ( -- column not exists (con_verificationstatus_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_verificationstatus_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_verificationstatus_display varchar;   -- verificationStatus/coding/display (varchar)
         END IF; -- column (con_verificationstatus_display)
+
         IF NOT EXISTS ( -- column not exists (con_verificationstatus_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_verificationstatus_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_verificationstatus_text varchar;   -- verificationStatus/text (varchar)
         END IF; -- column (con_verificationstatus_text)
+
         IF NOT EXISTS ( -- column not exists (con_category_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_category_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_category_system varchar;   -- category/coding/system (varchar)
         END IF; -- column (con_category_system)
+
         IF NOT EXISTS ( -- column not exists (con_category_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_category_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_category_version varchar;   -- category/coding/version (varchar)
         END IF; -- column (con_category_version)
+
         IF NOT EXISTS ( -- column not exists (con_category_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_category_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_category_code varchar;   -- category/coding/code (varchar)
         END IF; -- column (con_category_code)
+
         IF NOT EXISTS ( -- column not exists (con_category_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_category_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_category_display varchar;   -- category/coding/display (varchar)
         END IF; -- column (con_category_display)
+
         IF NOT EXISTS ( -- column not exists (con_category_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_category_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_category_text varchar;   -- category/text (varchar)
         END IF; -- column (con_category_text)
+
         IF NOT EXISTS ( -- column not exists (con_severity_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_severity_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_severity_system varchar;   -- severity/coding/system (varchar)
         END IF; -- column (con_severity_system)
+
         IF NOT EXISTS ( -- column not exists (con_severity_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_severity_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_severity_version varchar;   -- severity/coding/version (varchar)
         END IF; -- column (con_severity_version)
+
         IF NOT EXISTS ( -- column not exists (con_severity_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_severity_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_severity_code varchar;   -- severity/coding/code (varchar)
         END IF; -- column (con_severity_code)
+
         IF NOT EXISTS ( -- column not exists (con_severity_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_severity_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_severity_display varchar;   -- severity/coding/display (varchar)
         END IF; -- column (con_severity_display)
+
         IF NOT EXISTS ( -- column not exists (con_severity_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_severity_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_severity_text varchar;   -- severity/text (varchar)
         END IF; -- column (con_severity_text)
+
         IF NOT EXISTS ( -- column not exists (con_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_code_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_code_system varchar;   -- code/coding/system (varchar)
         END IF; -- column (con_code_system)
+
         IF NOT EXISTS ( -- column not exists (con_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_code_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_code_version varchar;   -- code/coding/version (varchar)
         END IF; -- column (con_code_version)
+
         IF NOT EXISTS ( -- column not exists (con_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_code_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_code_code varchar;   -- code/coding/code (varchar)
         END IF; -- column (con_code_code)
+
         IF NOT EXISTS ( -- column not exists (con_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_code_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_code_display varchar;   -- code/coding/display (varchar)
         END IF; -- column (con_code_display)
+
         IF NOT EXISTS ( -- column not exists (con_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_code_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_code_text varchar;   -- code/text (varchar)
         END IF; -- column (con_code_text)
+
         IF NOT EXISTS ( -- column not exists (con_bodysite_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_bodysite_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_bodysite_system varchar;   -- bodySite/coding/system (varchar)
         END IF; -- column (con_bodysite_system)
+
         IF NOT EXISTS ( -- column not exists (con_bodysite_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_bodysite_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_bodysite_version varchar;   -- bodySite/coding/version (varchar)
         END IF; -- column (con_bodysite_version)
+
         IF NOT EXISTS ( -- column not exists (con_bodysite_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_bodysite_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_bodysite_code varchar;   -- bodySite/coding/code (varchar)
         END IF; -- column (con_bodysite_code)
+
         IF NOT EXISTS ( -- column not exists (con_bodysite_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_bodysite_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_bodysite_display varchar;   -- bodySite/coding/display (varchar)
         END IF; -- column (con_bodysite_display)
+
         IF NOT EXISTS ( -- column not exists (con_bodysite_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_bodysite_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_bodysite_text varchar;   -- bodySite/text (varchar)
         END IF; -- column (con_bodysite_text)
+
         IF NOT EXISTS ( -- column not exists (con_onsetperiod_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_onsetperiod_start'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_onsetperiod_start timestamp;   -- onsetPeriod/start (timestamp)
         END IF; -- column (con_onsetperiod_start)
+
         IF NOT EXISTS ( -- column not exists (con_onsetperiod_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_onsetperiod_end'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_onsetperiod_end timestamp;   -- onsetPeriod/end (timestamp)
         END IF; -- column (con_onsetperiod_end)
+
         IF NOT EXISTS ( -- column not exists (con_onsetdatetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_onsetdatetime'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_onsetdatetime timestamp;   -- onsetDateTime (timestamp)
         END IF; -- column (con_onsetdatetime)
+
         IF NOT EXISTS ( -- column not exists (con_abatementdatetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementdatetime'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementdatetime timestamp;   -- abatementDateTime (timestamp)
         END IF; -- column (con_abatementdatetime)
+
         IF NOT EXISTS ( -- column not exists (con_abatementage_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementage_value'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementage_value double precision;   -- abatementAge/value (double precision)
         END IF; -- column (con_abatementage_value)
+
         IF NOT EXISTS ( -- column not exists (con_abatementage_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementage_comparator'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementage_comparator varchar;   -- abatementAge/comparator (varchar)
         END IF; -- column (con_abatementage_comparator)
+
         IF NOT EXISTS ( -- column not exists (con_abatementage_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementage_unit'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementage_unit varchar;   -- abatementAge/unit (varchar)
         END IF; -- column (con_abatementage_unit)
+
         IF NOT EXISTS ( -- column not exists (con_abatementage_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementage_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementage_system varchar;   -- abatementAge/system (varchar)
         END IF; -- column (con_abatementage_system)
+
         IF NOT EXISTS ( -- column not exists (con_abatementage_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementage_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementage_code varchar;   -- abatementAge/code (varchar)
         END IF; -- column (con_abatementage_code)
+
         IF NOT EXISTS ( -- column not exists (con_abatementperiod_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementperiod_start'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementperiod_start timestamp;   -- abatementPeriod/start (timestamp)
         END IF; -- column (con_abatementperiod_start)
+
         IF NOT EXISTS ( -- column not exists (con_abatementperiod_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementperiod_end'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementperiod_end timestamp;   -- abatementPeriod/end (timestamp)
         END IF; -- column (con_abatementperiod_end)
+
         IF NOT EXISTS ( -- column not exists (con_abatementrange_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementrange_low_value'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementrange_low_value double precision;   -- abatementRange/low/value (double precision)
         END IF; -- column (con_abatementrange_low_value)
+
         IF NOT EXISTS ( -- column not exists (con_abatementrange_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementrange_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementrange_low_unit varchar;   -- abatementRange/low/unit (varchar)
         END IF; -- column (con_abatementrange_low_unit)
+
         IF NOT EXISTS ( -- column not exists (con_abatementrange_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementrange_low_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementrange_low_system varchar;   -- abatementRange/low/system (varchar)
         END IF; -- column (con_abatementrange_low_system)
+
         IF NOT EXISTS ( -- column not exists (con_abatementrange_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementrange_low_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementrange_low_code varchar;   -- abatementRange/low/code (varchar)
         END IF; -- column (con_abatementrange_low_code)
+
         IF NOT EXISTS ( -- column not exists (con_abatementrange_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementrange_high_value'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementrange_high_value double precision;   -- abatementRange/high/value (double precision)
         END IF; -- column (con_abatementrange_high_value)
+
         IF NOT EXISTS ( -- column not exists (con_abatementrange_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementrange_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementrange_high_unit varchar;   -- abatementRange/high/unit (varchar)
         END IF; -- column (con_abatementrange_high_unit)
+
         IF NOT EXISTS ( -- column not exists (con_abatementrange_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementrange_high_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementrange_high_system varchar;   -- abatementRange/high/system (varchar)
         END IF; -- column (con_abatementrange_high_system)
+
         IF NOT EXISTS ( -- column not exists (con_abatementrange_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementrange_high_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementrange_high_code varchar;   -- abatementRange/high/code (varchar)
         END IF; -- column (con_abatementrange_high_code)
+
         IF NOT EXISTS ( -- column not exists (con_abatementstring)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_abatementstring'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_abatementstring varchar;   -- abatementString (varchar)
         END IF; -- column (con_abatementstring)
+
         IF NOT EXISTS ( -- column not exists (con_recordeddate)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recordeddate'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recordeddate timestamp;   -- recordedDate (timestamp)
         END IF; -- column (con_recordeddate)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_ref'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_ref varchar;   -- recorder/reference (varchar)
         END IF; -- column (con_recorder_ref)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_type'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_type varchar;   -- recorder/type (varchar)
         END IF; -- column (con_recorder_type)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_identifier_use varchar;   -- recorder/identifier/use (varchar)
         END IF; -- column (con_recorder_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_identifier_type_system varchar;   -- recorder/identifier/type/coding/system (varchar)
         END IF; -- column (con_recorder_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_identifier_type_version varchar;   -- recorder/identifier/type/coding/version (varchar)
         END IF; -- column (con_recorder_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_identifier_type_code varchar;   -- recorder/identifier/type/coding/code (varchar)
         END IF; -- column (con_recorder_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_identifier_type_display varchar;   -- recorder/identifier/type/coding/display (varchar)
         END IF; -- column (con_recorder_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_identifier_type_text varchar;   -- recorder/identifier/type/text (varchar)
         END IF; -- column (con_recorder_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_identifier_system varchar;   -- recorder/identifier/system (varchar)
         END IF; -- column (con_recorder_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_identifier_value varchar;   -- recorder/identifier/value (varchar)
         END IF; -- column (con_recorder_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (con_recorder_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_recorder_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_recorder_display varchar;   -- recorder/display (varchar)
         END IF; -- column (con_recorder_display)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_ref'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_ref varchar;   -- asserter/reference (varchar)
         END IF; -- column (con_asserter_ref)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_type'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_type varchar;   -- asserter/type (varchar)
         END IF; -- column (con_asserter_type)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_identifier_use varchar;   -- asserter/identifier/use (varchar)
         END IF; -- column (con_asserter_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_identifier_type_system varchar;   -- asserter/identifier/type/coding/system (varchar)
         END IF; -- column (con_asserter_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_identifier_type_version varchar;   -- asserter/identifier/type/coding/version (varchar)
         END IF; -- column (con_asserter_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_identifier_type_code varchar;   -- asserter/identifier/type/coding/code (varchar)
         END IF; -- column (con_asserter_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_identifier_type_display varchar;   -- asserter/identifier/type/coding/display (varchar)
         END IF; -- column (con_asserter_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_identifier_type_text varchar;   -- asserter/identifier/type/text (varchar)
         END IF; -- column (con_asserter_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_identifier_system varchar;   -- asserter/identifier/system (varchar)
         END IF; -- column (con_asserter_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_identifier_value varchar;   -- asserter/identifier/value (varchar)
         END IF; -- column (con_asserter_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (con_asserter_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_asserter_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_asserter_display varchar;   -- asserter/display (varchar)
         END IF; -- column (con_asserter_display)
+
         IF NOT EXISTS ( -- column not exists (con_stage_summary_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_summary_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_summary_system varchar;   -- stage/summary/coding/system (varchar)
         END IF; -- column (con_stage_summary_system)
+
         IF NOT EXISTS ( -- column not exists (con_stage_summary_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_summary_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_summary_version varchar;   -- stage/summary/coding/version (varchar)
         END IF; -- column (con_stage_summary_version)
+
         IF NOT EXISTS ( -- column not exists (con_stage_summary_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_summary_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_summary_code varchar;   -- stage/summary/coding/code (varchar)
         END IF; -- column (con_stage_summary_code)
+
         IF NOT EXISTS ( -- column not exists (con_stage_summary_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_summary_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_summary_display varchar;   -- stage/summary/coding/display (varchar)
         END IF; -- column (con_stage_summary_display)
+
         IF NOT EXISTS ( -- column not exists (con_stage_summary_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_summary_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_summary_text varchar;   -- stage/summary/text (varchar)
         END IF; -- column (con_stage_summary_text)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_ref'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_ref varchar;   -- stage/assessment/reference (varchar)
         END IF; -- column (con_stage_assessment_ref)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_type'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_type varchar;   -- stage/assessment/type (varchar)
         END IF; -- column (con_stage_assessment_type)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_identifier_use varchar;   -- stage/assessment/identifier/use (varchar)
         END IF; -- column (con_stage_assessment_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_identifier_type_system varchar;   -- stage/assessment/identifier/type/coding/system (varchar)
         END IF; -- column (con_stage_assessment_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_identifier_type_version varchar;   -- stage/assessment/identifier/type/coding/version (varchar)
         END IF; -- column (con_stage_assessment_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_identifier_type_code varchar;   -- stage/assessment/identifier/type/coding/code (varchar)
         END IF; -- column (con_stage_assessment_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_identifier_type_display varchar;   -- stage/assessment/identifier/type/coding/display (varchar)
         END IF; -- column (con_stage_assessment_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_identifier_type_text varchar;   -- stage/assessment/identifier/type/text (varchar)
         END IF; -- column (con_stage_assessment_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_identifier_system varchar;   -- stage/assessment/identifier/system (varchar)
         END IF; -- column (con_stage_assessment_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_identifier_value varchar;   -- stage/assessment/identifier/value (varchar)
         END IF; -- column (con_stage_assessment_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (con_stage_assessment_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_assessment_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_assessment_display varchar;   -- stage/assessment/display (varchar)
         END IF; -- column (con_stage_assessment_display)
+
         IF NOT EXISTS ( -- column not exists (con_stage_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_type_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_type_system varchar;   -- stage/type/coding/system (varchar)
         END IF; -- column (con_stage_type_system)
+
         IF NOT EXISTS ( -- column not exists (con_stage_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_type_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_type_version varchar;   -- stage/type/coding/version (varchar)
         END IF; -- column (con_stage_type_version)
+
         IF NOT EXISTS ( -- column not exists (con_stage_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_type_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_type_code varchar;   -- stage/type/coding/code (varchar)
         END IF; -- column (con_stage_type_code)
+
         IF NOT EXISTS ( -- column not exists (con_stage_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_type_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_type_display varchar;   -- stage/type/coding/display (varchar)
         END IF; -- column (con_stage_type_display)
+
         IF NOT EXISTS ( -- column not exists (con_stage_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_stage_type_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_stage_type_text varchar;   -- stage/type/text (varchar)
         END IF; -- column (con_stage_type_text)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorstring)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorstring'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorstring varchar;   -- note/authorString (varchar)
         END IF; -- column (con_note_authorstring)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_ref varchar;   -- note/authorReference/reference (varchar)
         END IF; -- column (con_note_authorreference_ref)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_type'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_type varchar;   -- note/authorReference/type (varchar)
         END IF; -- column (con_note_authorreference_type)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_identifier_use varchar;   -- note/authorReference/identifier/use (varchar)
         END IF; -- column (con_note_authorreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_identifier_type_system varchar;   -- note/authorReference/identifier/type/coding/system (varchar)
         END IF; -- column (con_note_authorreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_identifier_type_version varchar;   -- note/authorReference/identifier/type/coding/version (varchar)
         END IF; -- column (con_note_authorreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_identifier_type_code varchar;   -- note/authorReference/identifier/type/coding/code (varchar)
         END IF; -- column (con_note_authorreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_identifier_type_display varchar;   -- note/authorReference/identifier/type/coding/display (varchar)
         END IF; -- column (con_note_authorreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_identifier_type_text varchar;   -- note/authorReference/identifier/type/text (varchar)
         END IF; -- column (con_note_authorreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_identifier_system varchar;   -- note/authorReference/identifier/system (varchar)
         END IF; -- column (con_note_authorreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_identifier_value varchar;   -- note/authorReference/identifier/value (varchar)
         END IF; -- column (con_note_authorreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (con_note_authorreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_authorreference_display'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_authorreference_display varchar;   -- note/authorReference/display (varchar)
         END IF; -- column (con_note_authorreference_display)
+
         IF NOT EXISTS ( -- column not exists (con_note_time)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_time'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_time timestamp;   -- note/time (timestamp)
         END IF; -- column (con_note_time)
+
         IF NOT EXISTS ( -- column not exists (con_note_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_note_text'
         ) THEN
             ALTER TABLE cds2db_in.condition ADD con_note_text varchar;   -- note/text (varchar)
         END IF; -- column (con_note_text)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -1934,9 +2154,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'condition'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.condition ADD
@@ -2127,311 +2345,373 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_id varchar;   -- id (varchar)
         END IF; -- column (med_id)
+
         IF NOT EXISTS ( -- column not exists (med_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (med_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (med_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (med_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (med_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (med_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (med_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (med_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (med_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (med_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (med_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (med_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (med_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (med_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (med_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (med_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (med_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (med_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_code_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_code_system varchar;   -- code/coding/system (varchar)
         END IF; -- column (med_code_system)
+
         IF NOT EXISTS ( -- column not exists (med_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_code_version'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_code_version varchar;   -- code/coding/version (varchar)
         END IF; -- column (med_code_version)
+
         IF NOT EXISTS ( -- column not exists (med_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_code_code'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_code_code varchar;   -- code/coding/code (varchar)
         END IF; -- column (med_code_code)
+
         IF NOT EXISTS ( -- column not exists (med_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_code_display'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_code_display varchar;   -- code/coding/display (varchar)
         END IF; -- column (med_code_display)
+
         IF NOT EXISTS ( -- column not exists (med_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_code_text'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_code_text varchar;   -- code/text (varchar)
         END IF; -- column (med_code_text)
+
         IF NOT EXISTS ( -- column not exists (med_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_status'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_status varchar;   -- status (varchar)
         END IF; -- column (med_status)
+
         IF NOT EXISTS ( -- column not exists (med_form_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_form_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_form_system varchar;   -- form/coding/system (varchar)
         END IF; -- column (med_form_system)
+
         IF NOT EXISTS ( -- column not exists (med_form_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_form_version'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_form_version varchar;   -- form/coding/version (varchar)
         END IF; -- column (med_form_version)
+
         IF NOT EXISTS ( -- column not exists (med_form_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_form_code'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_form_code varchar;   -- form/coding/code (varchar)
         END IF; -- column (med_form_code)
+
         IF NOT EXISTS ( -- column not exists (med_form_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_form_display'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_form_display varchar;   -- form/coding/display (varchar)
         END IF; -- column (med_form_display)
+
         IF NOT EXISTS ( -- column not exists (med_form_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_form_text'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_form_text varchar;   -- form/text (varchar)
         END IF; -- column (med_form_text)
+
         IF NOT EXISTS ( -- column not exists (med_amount_numerator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_numerator_value'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_numerator_value double precision;   -- amount/numerator/value (double precision)
         END IF; -- column (med_amount_numerator_value)
+
         IF NOT EXISTS ( -- column not exists (med_amount_numerator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_numerator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_numerator_comparator varchar;   -- amount/numerator/comparator (varchar)
         END IF; -- column (med_amount_numerator_comparator)
+
         IF NOT EXISTS ( -- column not exists (med_amount_numerator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_numerator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_numerator_unit varchar;   -- amount/numerator/unit (varchar)
         END IF; -- column (med_amount_numerator_unit)
+
         IF NOT EXISTS ( -- column not exists (med_amount_numerator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_numerator_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_numerator_system varchar;   -- amount/numerator/system (varchar)
         END IF; -- column (med_amount_numerator_system)
+
         IF NOT EXISTS ( -- column not exists (med_amount_numerator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_numerator_code'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_numerator_code varchar;   -- amount/numerator/code (varchar)
         END IF; -- column (med_amount_numerator_code)
+
         IF NOT EXISTS ( -- column not exists (med_amount_denominator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_denominator_value'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_denominator_value double precision;   -- amount/denominator/value (double precision)
         END IF; -- column (med_amount_denominator_value)
+
         IF NOT EXISTS ( -- column not exists (med_amount_denominator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_denominator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_denominator_comparator varchar;   -- amount/denominator/comparator (varchar)
         END IF; -- column (med_amount_denominator_comparator)
+
         IF NOT EXISTS ( -- column not exists (med_amount_denominator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_denominator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_denominator_unit varchar;   -- amount/denominator/unit (varchar)
         END IF; -- column (med_amount_denominator_unit)
+
         IF NOT EXISTS ( -- column not exists (med_amount_denominator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_denominator_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_denominator_system varchar;   -- amount/denominator/system (varchar)
         END IF; -- column (med_amount_denominator_system)
+
         IF NOT EXISTS ( -- column not exists (med_amount_denominator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_amount_denominator_code'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_amount_denominator_code varchar;   -- amount/denominator/code (varchar)
         END IF; -- column (med_amount_denominator_code)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_numerator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_numerator_value'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_numerator_value double precision;   -- ingredient/strength/numerator/value (double precision)
         END IF; -- column (med_ingredient_strength_numerator_value)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_numerator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_numerator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_numerator_comparator varchar;   -- ingredient/strength/numerator/comparator (varchar)
         END IF; -- column (med_ingredient_strength_numerator_comparator)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_numerator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_numerator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_numerator_unit varchar;   -- ingredient/strength/numerator/unit (varchar)
         END IF; -- column (med_ingredient_strength_numerator_unit)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_numerator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_numerator_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_numerator_system varchar;   -- ingredient/strength/numerator/system (varchar)
         END IF; -- column (med_ingredient_strength_numerator_system)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_numerator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_numerator_code'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_numerator_code varchar;   -- ingredient/strength/numerator/code (varchar)
         END IF; -- column (med_ingredient_strength_numerator_code)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_denominator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_denominator_value'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_denominator_value double precision;   -- ingredient/strength/denominator/value (double precision)
         END IF; -- column (med_ingredient_strength_denominator_value)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_denominator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_denominator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_denominator_comparator varchar;   -- ingredient/strength/denominator/comparator (varchar)
         END IF; -- column (med_ingredient_strength_denominator_comparator)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_denominator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_denominator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_denominator_unit varchar;   -- ingredient/strength/denominator/unit (varchar)
         END IF; -- column (med_ingredient_strength_denominator_unit)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_denominator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_denominator_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_denominator_system varchar;   -- ingredient/strength/denominator/system (varchar)
         END IF; -- column (med_ingredient_strength_denominator_system)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_strength_denominator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_strength_denominator_code'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_strength_denominator_code varchar;   -- ingredient/strength/denominator/code (varchar)
         END IF; -- column (med_ingredient_strength_denominator_code)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemcodeableconcept_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemcodeableconcept_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemcodeableconcept_system varchar;   -- ingredient/itemCodeableConcept/coding/system (varchar)
         END IF; -- column (med_ingredient_itemcodeableconcept_system)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemcodeableconcept_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemcodeableconcept_version'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemcodeableconcept_version varchar;   -- ingredient/itemCodeableConcept/coding/version (varchar)
         END IF; -- column (med_ingredient_itemcodeableconcept_version)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemcodeableconcept_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemcodeableconcept_code'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemcodeableconcept_code varchar;   -- ingredient/itemCodeableConcept/coding/code (varchar)
         END IF; -- column (med_ingredient_itemcodeableconcept_code)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemcodeableconcept_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemcodeableconcept_display'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemcodeableconcept_display varchar;   -- ingredient/itemCodeableConcept/coding/display (varchar)
         END IF; -- column (med_ingredient_itemcodeableconcept_display)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemcodeableconcept_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemcodeableconcept_text'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemcodeableconcept_text varchar;   -- ingredient/itemCodeableConcept/text (varchar)
         END IF; -- column (med_ingredient_itemcodeableconcept_text)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_ref varchar;   -- ingredient/itemReference/reference (varchar)
         END IF; -- column (med_ingredient_itemreference_ref)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_type'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_type varchar;   -- ingredient/itemReference/type (varchar)
         END IF; -- column (med_ingredient_itemreference_type)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_identifier_use varchar;   -- ingredient/itemReference/identifier/use (varchar)
         END IF; -- column (med_ingredient_itemreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_identifier_type_system varchar;   -- ingredient/itemReference/identifier/type/coding/system (varchar)
         END IF; -- column (med_ingredient_itemreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_identifier_type_version varchar;   -- ingredient/itemReference/identifier/type/coding/version (varchar)
         END IF; -- column (med_ingredient_itemreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_identifier_type_code varchar;   -- ingredient/itemReference/identifier/type/coding/code (varchar)
         END IF; -- column (med_ingredient_itemreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_identifier_type_display varchar;   -- ingredient/itemReference/identifier/type/coding/display (varchar)
         END IF; -- column (med_ingredient_itemreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_identifier_type_text varchar;   -- ingredient/itemReference/identifier/type/text (varchar)
         END IF; -- column (med_ingredient_itemreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_identifier_system varchar;   -- ingredient/itemReference/identifier/system (varchar)
         END IF; -- column (med_ingredient_itemreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_identifier_value varchar;   -- ingredient/itemReference/identifier/value (varchar)
         END IF; -- column (med_ingredient_itemreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_itemreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_itemreference_display'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_itemreference_display varchar;   -- ingredient/itemReference/display (varchar)
         END IF; -- column (med_ingredient_itemreference_display)
+
         IF NOT EXISTS ( -- column not exists (med_ingredient_isactive)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_ingredient_isactive'
         ) THEN
             ALTER TABLE cds2db_in.medication ADD med_ingredient_isactive boolean;   -- ingredient/isActive (boolean)
         END IF; -- column (med_ingredient_isactive)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -2574,9 +2854,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'medication'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.medication ADD
@@ -2705,1196 +2983,1435 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_id varchar;   -- id (varchar)
         END IF; -- column (medreq_id)
+
         IF NOT EXISTS ( -- column not exists (medreq_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (medreq_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (medreq_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (medreq_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (medreq_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (medreq_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (medreq_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (medreq_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (medreq_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (medreq_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (medreq_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (medreq_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (medreq_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (medreq_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (medreq_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (medreq_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (medreq_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (medreq_encounter_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_encounter_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_encounter_ref varchar;   -- encounter/reference (varchar)
         END IF; -- column (medreq_encounter_ref)
+
         IF NOT EXISTS ( -- column not exists (medreq_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_patient_ref varchar;   -- subject/reference (varchar)
         END IF; -- column (medreq_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (medreq_medicationreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_medicationreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_medicationreference_ref varchar;   -- medicationReference/reference (varchar)
         END IF; -- column (medreq_medicationreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medreq_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_status'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_status varchar;   -- status (varchar)
         END IF; -- column (medreq_status)
+
         IF NOT EXISTS ( -- column not exists (medreq_statusreason_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_statusreason_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_statusreason_system varchar;   -- statusReason/coding/system (varchar)
         END IF; -- column (medreq_statusreason_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_statusreason_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_statusreason_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_statusreason_version varchar;   -- statusReason/coding/version (varchar)
         END IF; -- column (medreq_statusreason_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_statusreason_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_statusreason_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_statusreason_code varchar;   -- statusReason/coding/code (varchar)
         END IF; -- column (medreq_statusreason_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_statusreason_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_statusreason_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_statusreason_display varchar;   -- statusReason/coding/display (varchar)
         END IF; -- column (medreq_statusreason_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_statusreason_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_statusreason_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_statusreason_text varchar;   -- statusReason/text (varchar)
         END IF; -- column (medreq_statusreason_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_intend)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_intend'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_intend varchar;   -- intend (varchar)
         END IF; -- column (medreq_intend)
+
         IF NOT EXISTS ( -- column not exists (medreq_intent)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_intent'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_intent varchar;   -- intent (varchar)
         END IF; -- column (medreq_intent)
+
         IF NOT EXISTS ( -- column not exists (medreq_category_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_category_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_category_system varchar;   -- category/coding/system (varchar)
         END IF; -- column (medreq_category_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_category_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_category_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_category_version varchar;   -- category/coding/version (varchar)
         END IF; -- column (medreq_category_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_category_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_category_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_category_code varchar;   -- category/coding/code (varchar)
         END IF; -- column (medreq_category_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_category_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_category_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_category_display varchar;   -- category/coding/display (varchar)
         END IF; -- column (medreq_category_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_category_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_category_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_category_text varchar;   -- category/text (varchar)
         END IF; -- column (medreq_category_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_priority)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_priority'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_priority varchar;   -- priority (varchar)
         END IF; -- column (medreq_priority)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedboolean)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedboolean'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedboolean boolean;   -- reportedBoolean (boolean)
         END IF; -- column (medreq_reportedboolean)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_ref varchar;   -- reportedReference/reference (varchar)
         END IF; -- column (medreq_reportedreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_type varchar;   -- reportedReference/type (varchar)
         END IF; -- column (medreq_reportedreference_type)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_identifier_use varchar;   -- reportedReference/identifier/use (varchar)
         END IF; -- column (medreq_reportedreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_identifier_type_system varchar;   -- reportedReference/identifier/type/coding/system (varchar)
         END IF; -- column (medreq_reportedreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_identifier_type_version varchar;   -- reportedReference/identifier/type/coding/version (varchar)
         END IF; -- column (medreq_reportedreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_identifier_type_code varchar;   -- reportedReference/identifier/type/coding/code (varchar)
         END IF; -- column (medreq_reportedreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_identifier_type_display varchar;   -- reportedReference/identifier/type/coding/display (varchar)
         END IF; -- column (medreq_reportedreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_identifier_type_text varchar;   -- reportedReference/identifier/type/text (varchar)
         END IF; -- column (medreq_reportedreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_identifier_system varchar;   -- reportedReference/identifier/system (varchar)
         END IF; -- column (medreq_reportedreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_identifier_value varchar;   -- reportedReference/identifier/value (varchar)
         END IF; -- column (medreq_reportedreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_reportedreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reportedreference_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reportedreference_display varchar;   -- reportedReference/display (varchar)
         END IF; -- column (medreq_reportedreference_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_medicationcodeableconcept_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_medicationcodeableconcept_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_medicationcodeableconcept_system varchar;   -- medicationCodeableConcept/coding/system (varchar)
         END IF; -- column (medreq_medicationcodeableconcept_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_medicationcodeableconcept_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_medicationcodeableconcept_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_medicationcodeableconcept_version varchar;   -- medicationCodeableConcept/coding/version (varchar)
         END IF; -- column (medreq_medicationcodeableconcept_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_medicationcodeableconcept_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_medicationcodeableconcept_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_medicationcodeableconcept_code varchar;   -- medicationCodeableConcept/coding/code (varchar)
         END IF; -- column (medreq_medicationcodeableconcept_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_medicationcodeableconcept_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_medicationcodeableconcept_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_medicationcodeableconcept_display varchar;   -- medicationCodeableConcept/coding/display (varchar)
         END IF; -- column (medreq_medicationcodeableconcept_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_medicationcodeableconcept_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_medicationcodeableconcept_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_medicationcodeableconcept_text varchar;   -- medicationCodeableConcept/text (varchar)
         END IF; -- column (medreq_medicationcodeableconcept_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_ref varchar;   -- supportingInformation/reference (varchar)
         END IF; -- column (medreq_supportinginformation_ref)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_type varchar;   -- supportingInformation/type (varchar)
         END IF; -- column (medreq_supportinginformation_type)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_identifier_use varchar;   -- supportingInformation/identifier/use (varchar)
         END IF; -- column (medreq_supportinginformation_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_identifier_type_system varchar;   -- supportingInformation/identifier/type/coding/system (varchar)
         END IF; -- column (medreq_supportinginformation_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_identifier_type_version varchar;   -- supportingInformation/identifier/type/coding/version (varchar)
         END IF; -- column (medreq_supportinginformation_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_identifier_type_code varchar;   -- supportingInformation/identifier/type/coding/code (varchar)
         END IF; -- column (medreq_supportinginformation_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_identifier_type_display varchar;   -- supportingInformation/identifier/type/coding/display (varchar)
         END IF; -- column (medreq_supportinginformation_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_identifier_type_text varchar;   -- supportingInformation/identifier/type/text (varchar)
         END IF; -- column (medreq_supportinginformation_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_identifier_system varchar;   -- supportingInformation/identifier/system (varchar)
         END IF; -- column (medreq_supportinginformation_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_identifier_value varchar;   -- supportingInformation/identifier/value (varchar)
         END IF; -- column (medreq_supportinginformation_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_supportinginformation_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_supportinginformation_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_supportinginformation_display varchar;   -- supportingInformation/display (varchar)
         END IF; -- column (medreq_supportinginformation_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_authoredon)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_authoredon'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_authoredon timestamp;   -- authoredOn (timestamp)
         END IF; -- column (medreq_authoredon)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_ref varchar;   -- requester/reference (varchar)
         END IF; -- column (medreq_requester_ref)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_type varchar;   -- requester/type (varchar)
         END IF; -- column (medreq_requester_type)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_identifier_use varchar;   -- requester/identifier/use (varchar)
         END IF; -- column (medreq_requester_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_identifier_type_system varchar;   -- requester/identifier/type/coding/system (varchar)
         END IF; -- column (medreq_requester_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_identifier_type_version varchar;   -- requester/identifier/type/coding/version (varchar)
         END IF; -- column (medreq_requester_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_identifier_type_code varchar;   -- requester/identifier/type/coding/code (varchar)
         END IF; -- column (medreq_requester_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_identifier_type_display varchar;   -- requester/identifier/type/coding/display (varchar)
         END IF; -- column (medreq_requester_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_identifier_type_text varchar;   -- requester/identifier/type/text (varchar)
         END IF; -- column (medreq_requester_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_identifier_system varchar;   -- requester/identifier/system (varchar)
         END IF; -- column (medreq_requester_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_identifier_value varchar;   -- requester/identifier/value (varchar)
         END IF; -- column (medreq_requester_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_requester_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_requester_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_requester_display varchar;   -- requester/display (varchar)
         END IF; -- column (medreq_requester_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasoncode_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasoncode_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasoncode_system varchar;   -- reasonCode/coding/system (varchar)
         END IF; -- column (medreq_reasoncode_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasoncode_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasoncode_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasoncode_version varchar;   -- reasonCode/coding/version (varchar)
         END IF; -- column (medreq_reasoncode_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasoncode_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasoncode_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasoncode_code varchar;   -- reasonCode/coding/code (varchar)
         END IF; -- column (medreq_reasoncode_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasoncode_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasoncode_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasoncode_display varchar;   -- reasonCode/coding/display (varchar)
         END IF; -- column (medreq_reasoncode_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasoncode_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasoncode_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasoncode_text varchar;   -- reasonCode/text (varchar)
         END IF; -- column (medreq_reasoncode_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_ref varchar;   -- reasonReference/reference (varchar)
         END IF; -- column (medreq_reasonreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_type varchar;   -- reasonReference/type (varchar)
         END IF; -- column (medreq_reasonreference_type)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_identifier_use varchar;   -- reasonReference/identifier/use (varchar)
         END IF; -- column (medreq_reasonreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_identifier_type_system varchar;   -- reasonReference/identifier/type/coding/system (varchar)
         END IF; -- column (medreq_reasonreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_identifier_type_version varchar;   -- reasonReference/identifier/type/coding/version (varchar)
         END IF; -- column (medreq_reasonreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_identifier_type_code varchar;   -- reasonReference/identifier/type/coding/code (varchar)
         END IF; -- column (medreq_reasonreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_identifier_type_display varchar;   -- reasonReference/identifier/type/coding/display (varchar)
         END IF; -- column (medreq_reasonreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_identifier_type_text varchar;   -- reasonReference/identifier/type/text (varchar)
         END IF; -- column (medreq_reasonreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_identifier_system varchar;   -- reasonReference/identifier/system (varchar)
         END IF; -- column (medreq_reasonreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_identifier_value varchar;   -- reasonReference/identifier/value (varchar)
         END IF; -- column (medreq_reasonreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_reasonreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_reasonreference_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_reasonreference_display varchar;   -- reasonReference/display (varchar)
         END IF; -- column (medreq_reasonreference_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_ref varchar;   -- basedOn/reference (varchar)
         END IF; -- column (medreq_basedon_ref)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_type varchar;   -- basedOn/type (varchar)
         END IF; -- column (medreq_basedon_type)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_identifier_use varchar;   -- basedOn/identifier/use (varchar)
         END IF; -- column (medreq_basedon_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_identifier_type_system varchar;   -- basedOn/identifier/type/coding/system (varchar)
         END IF; -- column (medreq_basedon_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_identifier_type_version varchar;   -- basedOn/identifier/type/coding/version (varchar)
         END IF; -- column (medreq_basedon_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_identifier_type_code varchar;   -- basedOn/identifier/type/coding/code (varchar)
         END IF; -- column (medreq_basedon_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_identifier_type_display varchar;   -- basedOn/identifier/type/coding/display (varchar)
         END IF; -- column (medreq_basedon_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_identifier_type_text varchar;   -- basedOn/identifier/type/text (varchar)
         END IF; -- column (medreq_basedon_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_identifier_system varchar;   -- basedOn/identifier/system (varchar)
         END IF; -- column (medreq_basedon_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_identifier_value varchar;   -- basedOn/identifier/value (varchar)
         END IF; -- column (medreq_basedon_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_basedon_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_basedon_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_basedon_display varchar;   -- basedOn/display (varchar)
         END IF; -- column (medreq_basedon_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorstring)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorstring'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorstring varchar;   -- note/authorString (varchar)
         END IF; -- column (medreq_note_authorstring)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_ref varchar;   -- note/authorReference/reference (varchar)
         END IF; -- column (medreq_note_authorreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_type varchar;   -- note/authorReference/type (varchar)
         END IF; -- column (medreq_note_authorreference_type)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_identifier_use varchar;   -- note/authorReference/identifier/use (varchar)
         END IF; -- column (medreq_note_authorreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_identifier_type_system varchar;   -- note/authorReference/identifier/type/coding/system (varchar)
         END IF; -- column (medreq_note_authorreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_identifier_type_version varchar;   -- note/authorReference/identifier/type/coding/version (varchar)
         END IF; -- column (medreq_note_authorreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_identifier_type_code varchar;   -- note/authorReference/identifier/type/coding/code (varchar)
         END IF; -- column (medreq_note_authorreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_identifier_type_display varchar;   -- note/authorReference/identifier/type/coding/display (varchar)
         END IF; -- column (medreq_note_authorreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_identifier_type_text varchar;   -- note/authorReference/identifier/type/text (varchar)
         END IF; -- column (medreq_note_authorreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_identifier_system varchar;   -- note/authorReference/identifier/system (varchar)
         END IF; -- column (medreq_note_authorreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_identifier_value varchar;   -- note/authorReference/identifier/value (varchar)
         END IF; -- column (medreq_note_authorreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_authorreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_authorreference_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_authorreference_display varchar;   -- note/authorReference/display (varchar)
         END IF; -- column (medreq_note_authorreference_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_time)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_time'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_time timestamp;   -- note/time (timestamp)
         END IF; -- column (medreq_note_time)
+
         IF NOT EXISTS ( -- column not exists (medreq_note_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_note_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_note_text varchar;   -- note/text (varchar)
         END IF; -- column (medreq_note_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_sequence)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_sequence'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_sequence int;   -- dosageInstruction/sequence (int)
         END IF; -- column (medreq_doseinstruc_sequence)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_text varchar;   -- dosageInstruction/text (varchar)
         END IF; -- column (medreq_doseinstruc_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_additionalinstruction_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_additionalinstruction_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_additionalinstruction_system varchar;   -- dosageInstruction/additionalInstruction/coding/system (varchar)
         END IF; -- column (medreq_doseinstruc_additionalinstruction_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_additionalinstruction_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_additionalinstruction_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_additionalinstruction_version varchar;   -- dosageInstruction/additionalInstruction/coding/version (varchar)
         END IF; -- column (medreq_doseinstruc_additionalinstruction_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_additionalinstruction_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_additionalinstruction_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_additionalinstruction_code varchar;   -- dosageInstruction/additionalInstruction/coding/code (varchar)
         END IF; -- column (medreq_doseinstruc_additionalinstruction_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_additionalinstruction_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_additionalinstruction_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_additionalinstruction_display varchar;   -- dosageInstruction/additionalInstruction/coding/display (varchar)
         END IF; -- column (medreq_doseinstruc_additionalinstruction_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_additionalinstruction_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_additionalinstruction_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_additionalinstruction_text varchar;   -- dosageInstruction/additionalInstruction/text (varchar)
         END IF; -- column (medreq_doseinstruc_additionalinstruction_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_patientinstruction)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_patientinstruction'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_patientinstruction varchar;   -- dosageInstruction/patientInstruction (varchar)
         END IF; -- column (medreq_doseinstruc_patientinstruction)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_event)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_event'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_event timestamp;   -- dosageInstruction/timing/event (timestamp)
         END IF; -- column (medreq_doseinstruc_timing_event)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsduration_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsduration_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsduration_value double precision;   -- dosageInstruction/timing/repeat/boundsDuration/value (double precision)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsduration_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsduration_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsduration_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsduration_comparator varchar;   -- dosageInstruction/timing/repeat/boundsDuration/comparator (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsduration_comparator)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsduration_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsduration_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsduration_unit varchar;   -- dosageInstruction/timing/repeat/boundsDuration/unit (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsduration_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsduration_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsduration_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsduration_system varchar;   -- dosageInstruction/timing/repeat/boundsDuration/system (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsduration_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsduration_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsduration_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsduration_code varchar;   -- dosageInstruction/timing/repeat/boundsDuration/code (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsduration_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsrange_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsrange_low_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsrange_low_value double precision;   -- dosageInstruction/timing/repeat/boundsRange/low/value (double precision)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsrange_low_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsrange_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsrange_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsrange_low_unit varchar;   -- dosageInstruction/timing/repeat/boundsRange/low/unit (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsrange_low_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsrange_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsrange_low_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsrange_low_system varchar;   -- dosageInstruction/timing/repeat/boundsRange/low/system (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsrange_low_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsrange_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsrange_low_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsrange_low_code varchar;   -- dosageInstruction/timing/repeat/boundsRange/low/code (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsrange_low_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsrange_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsrange_high_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsrange_high_value double precision;   -- dosageInstruction/timing/repeat/boundsRange/high/value (double precision)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsrange_high_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsrange_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsrange_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsrange_high_unit varchar;   -- dosageInstruction/timing/repeat/boundsRange/high/unit (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsrange_high_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsrange_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsrange_high_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsrange_high_system varchar;   -- dosageInstruction/timing/repeat/boundsRange/high/system (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsrange_high_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsrange_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsrange_high_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsrange_high_code varchar;   -- dosageInstruction/timing/repeat/boundsRange/high/code (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsrange_high_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsperiod_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsperiod_start'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsperiod_start timestamp;   -- dosageInstruction/timing/repeat/boundsPeriod/start (timestamp)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsperiod_start)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_boundsperiod_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_boundsperiod_end'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_boundsperiod_end timestamp;   -- dosageInstruction/timing/repeat/boundsPeriod/end (timestamp)
         END IF; -- column (medreq_doseinstruc_timing_repeat_boundsperiod_end)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_count)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_count'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_count int;   -- dosageInstruction/timing/repeat/count (int)
         END IF; -- column (medreq_doseinstruc_timing_repeat_count)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_countmax)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_countmax'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_countmax int;   -- dosageInstruction/timing/repeat/countMax (int)
         END IF; -- column (medreq_doseinstruc_timing_repeat_countmax)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_duration)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_duration'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_duration double precision;   -- dosageInstruction/timing/repeat/duration (double precision)
         END IF; -- column (medreq_doseinstruc_timing_repeat_duration)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_durationmax)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_durationmax'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_durationmax double precision;   -- dosageInstruction/timing/repeat/durationMax (double precision)
         END IF; -- column (medreq_doseinstruc_timing_repeat_durationmax)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_durationunit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_durationunit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_durationunit varchar;   -- dosageInstruction/timing/repeat/durationUnit (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_durationunit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_frequency)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_frequency'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_frequency int;   -- dosageInstruction/timing/repeat/frequency (int)
         END IF; -- column (medreq_doseinstruc_timing_repeat_frequency)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_frequencymax)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_frequencymax'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_frequencymax int;   -- dosageInstruction/timing/repeat/frequencyMax (int)
         END IF; -- column (medreq_doseinstruc_timing_repeat_frequencymax)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_period)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_period'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_period double precision;   -- dosageInstruction/timing/repeat/period (double precision)
         END IF; -- column (medreq_doseinstruc_timing_repeat_period)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_periodmax)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_periodmax'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_periodmax double precision;   -- dosageInstruction/timing/repeat/periodMax (double precision)
         END IF; -- column (medreq_doseinstruc_timing_repeat_periodmax)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_periodunit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_periodunit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_periodunit varchar;   -- dosageInstruction/timing/repeat/periodUnit (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_periodunit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_dayofweek)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_dayofweek'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_dayofweek varchar;   -- dosageInstruction/timing/repeat/dayOfWeek (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_dayofweek)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_timeofday)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_timeofday'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_timeofday time;   -- dosageInstruction/timing/repeat/timeOfDay (time)
         END IF; -- column (medreq_doseinstruc_timing_repeat_timeofday)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_when)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_when'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_when varchar;   -- dosageInstruction/timing/repeat/when (varchar)
         END IF; -- column (medreq_doseinstruc_timing_repeat_when)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_repeat_offset)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_repeat_offset'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_repeat_offset int;   -- dosageInstruction/timing/repeat/offset (int)
         END IF; -- column (medreq_doseinstruc_timing_repeat_offset)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_code_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_code_system varchar;   -- dosageInstruction/timing/code/coding/system (varchar)
         END IF; -- column (medreq_doseinstruc_timing_code_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_code_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_code_version varchar;   -- dosageInstruction/timing/code/coding/version (varchar)
         END IF; -- column (medreq_doseinstruc_timing_code_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_code_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_code_code varchar;   -- dosageInstruction/timing/code/coding/code (varchar)
         END IF; -- column (medreq_doseinstruc_timing_code_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_code_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_code_display varchar;   -- dosageInstruction/timing/code/coding/display (varchar)
         END IF; -- column (medreq_doseinstruc_timing_code_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_timing_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_timing_code_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_timing_code_text varchar;   -- dosageInstruction/timing/code/text (varchar)
         END IF; -- column (medreq_doseinstruc_timing_code_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_asneededboolean)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_asneededboolean'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_asneededboolean boolean;   -- dosageInstruction/asNeededBoolean (boolean)
         END IF; -- column (medreq_doseinstruc_asneededboolean)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_asneededcodeableconcept_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_asneededcodeableconcept_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_asneededcodeableconcept_system varchar;   -- dosageInstruction/asNeededCodeableConcept/coding/system (varchar)
         END IF; -- column (medreq_doseinstruc_asneededcodeableconcept_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_asneededcodeableconcept_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_asneededcodeableconcept_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_asneededcodeableconcept_version varchar;   -- dosageInstruction/asNeededCodeableConcept/coding/version (varchar)
         END IF; -- column (medreq_doseinstruc_asneededcodeableconcept_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_asneededcodeableconcept_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_asneededcodeableconcept_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_asneededcodeableconcept_code varchar;   -- dosageInstruction/asNeededCodeableConcept/coding/code (varchar)
         END IF; -- column (medreq_doseinstruc_asneededcodeableconcept_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_asneededcodeableconcept_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_asneededcodeableconcept_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_asneededcodeableconcept_display varchar;   -- dosageInstruction/asNeededCodeableConcept/coding/display (varchar)
         END IF; -- column (medreq_doseinstruc_asneededcodeableconcept_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_asneededcodeableconcept_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_asneededcodeableconcept_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_asneededcodeableconcept_text varchar;   -- dosageInstruction/asNeededCodeableConcept/text (varchar)
         END IF; -- column (medreq_doseinstruc_asneededcodeableconcept_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_site_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_site_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_site_system varchar;   -- dosageInstruction/site/coding/system (varchar)
         END IF; -- column (medreq_doseinstruc_site_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_site_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_site_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_site_version varchar;   -- dosageInstruction/site/coding/version (varchar)
         END IF; -- column (medreq_doseinstruc_site_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_site_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_site_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_site_code varchar;   -- dosageInstruction/site/coding/code (varchar)
         END IF; -- column (medreq_doseinstruc_site_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_site_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_site_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_site_display varchar;   -- dosageInstruction/site/coding/display (varchar)
         END IF; -- column (medreq_doseinstruc_site_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_site_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_site_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_site_text varchar;   -- dosageInstruction/site/text (varchar)
         END IF; -- column (medreq_doseinstruc_site_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_route_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_route_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_route_system varchar;   -- dosageInstruction/route/coding/system (varchar)
         END IF; -- column (medreq_doseinstruc_route_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_route_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_route_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_route_version varchar;   -- dosageInstruction/route/coding/version (varchar)
         END IF; -- column (medreq_doseinstruc_route_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_route_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_route_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_route_code varchar;   -- dosageInstruction/route/coding/code (varchar)
         END IF; -- column (medreq_doseinstruc_route_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_route_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_route_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_route_display varchar;   -- dosageInstruction/route/coding/display (varchar)
         END IF; -- column (medreq_doseinstruc_route_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_route_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_route_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_route_text varchar;   -- dosageInstruction/route/text (varchar)
         END IF; -- column (medreq_doseinstruc_route_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_method_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_method_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_method_system varchar;   -- dosageInstruction/method/coding/system (varchar)
         END IF; -- column (medreq_doseinstruc_method_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_method_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_method_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_method_version varchar;   -- dosageInstruction/method/coding/version (varchar)
         END IF; -- column (medreq_doseinstruc_method_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_method_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_method_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_method_code varchar;   -- dosageInstruction/method/coding/code (varchar)
         END IF; -- column (medreq_doseinstruc_method_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_method_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_method_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_method_display varchar;   -- dosageInstruction/method/coding/display (varchar)
         END IF; -- column (medreq_doseinstruc_method_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_method_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_method_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_method_text varchar;   -- dosageInstruction/method/text (varchar)
         END IF; -- column (medreq_doseinstruc_method_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_type_system varchar;   -- dosageInstruction/doseAndRate/type/coding/system (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_type_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_type_version varchar;   -- dosageInstruction/doseAndRate/type/coding/version (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_type_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_type_code varchar;   -- dosageInstruction/doseAndRate/type/coding/code (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_type_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_type_display varchar;   -- dosageInstruction/doseAndRate/type/coding/display (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_type_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_type_text varchar;   -- dosageInstruction/doseAndRate/type/text (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_type_text)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_doserange_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_doserange_low_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_doserange_low_value double precision;   -- dosageInstruction/doseAndRate/doseRange/low/value (double precision)
         END IF; -- column (medreq_doseinstruc_doseandrate_doserange_low_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_doserange_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_doserange_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_doserange_low_unit varchar;   -- dosageInstruction/doseAndRate/doseRange/low/unit (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_doserange_low_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_doserange_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_doserange_low_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_doserange_low_system varchar;   -- dosageInstruction/doseAndRate/doseRange/low/system (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_doserange_low_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_doserange_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_doserange_low_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_doserange_low_code varchar;   -- dosageInstruction/doseAndRate/doseRange/low/code (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_doserange_low_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_doserange_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_doserange_high_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_doserange_high_value double precision;   -- dosageInstruction/doseAndRate/doseRange/high/value (double precision)
         END IF; -- column (medreq_doseinstruc_doseandrate_doserange_high_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_doserange_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_doserange_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_doserange_high_unit varchar;   -- dosageInstruction/doseAndRate/doseRange/high/unit (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_doserange_high_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_doserange_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_doserange_high_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_doserange_high_system varchar;   -- dosageInstruction/doseAndRate/doseRange/high/system (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_doserange_high_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_doserange_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_doserange_high_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_doserange_high_code varchar;   -- dosageInstruction/doseAndRate/doseRange/high/code (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_doserange_high_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_dosequantity_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_dosequantity_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_dosequantity_value double precision;   -- dosageInstruction/doseAndRate/doseQuantity/value (double precision)
         END IF; -- column (medreq_doseinstruc_doseandrate_dosequantity_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_dosequantity_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_dosequantity_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_dosequantity_comparator varchar;   -- dosageInstruction/doseAndRate/doseQuantity/comparator (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_dosequantity_comparator)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_dosequantity_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_dosequantity_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_dosequantity_unit varchar;   -- dosageInstruction/doseAndRate/doseQuantity/unit (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_dosequantity_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_dosequantity_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_dosequantity_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_dosequantity_system varchar;   -- dosageInstruction/doseAndRate/doseQuantity/system (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_dosequantity_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_dosequantity_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_dosequantity_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_dosequantity_code varchar;   -- dosageInstruction/doseAndRate/doseQuantity/code (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_dosequantity_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_numerator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_numerator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_numerator_value double precision;   -- dosageInstruction/doseAndRate/rateRatio/numerator/value (double precision)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_numerator_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_numerator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_numerator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_numerator_comparator varchar;   -- dosageInstruction/doseAndRate/rateRatio/numerator/comparator (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_numerator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_numerator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_numerator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_numerator_unit varchar;   -- dosageInstruction/doseAndRate/rateRatio/numerator/unit (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_numerator_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_numerator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_numerator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_numerator_system varchar;   -- dosageInstruction/doseAndRate/rateRatio/numerator/system (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_numerator_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_numerator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_numerator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_numerator_code varchar;   -- dosageInstruction/doseAndRate/rateRatio/numerator/code (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_numerator_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_denominator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_denominator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_denominator_value double precision;   -- dosageInstruction/doseAndRate/rateRatio/denominator/value (double precision)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_denominator_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_denominator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_denominator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_denominator_comparator varchar;   -- dosageInstruction/doseAndRate/rateRatio/denominator/comparator (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_denominator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_denominator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_denominator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_denominator_unit varchar;   -- dosageInstruction/doseAndRate/rateRatio/denominator/unit (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_denominator_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_denominator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_denominator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_denominator_system varchar;   -- dosageInstruction/doseAndRate/rateRatio/denominator/system (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_denominator_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_rateratio_denominator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_rateratio_denominator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_rateratio_denominator_code varchar;   -- dosageInstruction/doseAndRate/rateRatio/denominator/code (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_rateratio_denominator_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_raterange_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_raterange_low_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_raterange_low_value double precision;   -- dosageInstruction/doseAndRate/rateRange/low/value (double precision)
         END IF; -- column (medreq_doseinstruc_doseandrate_raterange_low_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_raterange_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_raterange_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_raterange_low_unit varchar;   -- dosageInstruction/doseAndRate/rateRange/low/unit (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_raterange_low_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_raterange_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_raterange_low_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_raterange_low_system varchar;   -- dosageInstruction/doseAndRate/rateRange/low/system (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_raterange_low_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_raterange_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_raterange_low_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_raterange_low_code varchar;   -- dosageInstruction/doseAndRate/rateRange/low/code (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_raterange_low_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_raterange_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_raterange_high_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_raterange_high_value double precision;   -- dosageInstruction/doseAndRate/rateRange/high/value (double precision)
         END IF; -- column (medreq_doseinstruc_doseandrate_raterange_high_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_raterange_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_raterange_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_raterange_high_unit varchar;   -- dosageInstruction/doseAndRate/rateRange/high/unit (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_raterange_high_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_raterange_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_raterange_high_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_raterange_high_system varchar;   -- dosageInstruction/doseAndRate/rateRange/high/system (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_raterange_high_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_raterange_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_raterange_high_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_raterange_high_code varchar;   -- dosageInstruction/doseAndRate/rateRange/high/code (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_raterange_high_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_ratequantity_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_ratequantity_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_ratequantity_value double precision;   -- dosageInstruction/doseAndRate/rateQuantity/value (double precision)
         END IF; -- column (medreq_doseinstruc_doseandrate_ratequantity_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_ratequantity_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_ratequantity_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_ratequantity_unit varchar;   -- dosageInstruction/doseAndRate/rateQuantity/unit (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_ratequantity_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_ratequantity_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_ratequantity_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_ratequantity_system varchar;   -- dosageInstruction/doseAndRate/rateQuantity/system (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_ratequantity_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_doseandrate_ratequantity_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_doseandrate_ratequantity_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_doseandrate_ratequantity_code varchar;   -- dosageInstruction/doseAndRate/rateQuantity/code (varchar)
         END IF; -- column (medreq_doseinstruc_doseandrate_ratequantity_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_numerator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_numerator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_numerator_value double precision;   -- dosageInstruction/maxDosePerPeriod/numerator/value (double precision)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_numerator_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_numerator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_numerator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_numerator_comparator varchar;   -- dosageInstruction/maxDosePerPeriod/numerator/comparator (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_numerator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_numerator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_numerator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_numerator_unit varchar;   -- dosageInstruction/maxDosePerPeriod/numerator/unit (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_numerator_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_numerator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_numerator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_numerator_system varchar;   -- dosageInstruction/maxDosePerPeriod/numerator/system (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_numerator_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_numerator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_numerator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_numerator_code varchar;   -- dosageInstruction/maxDosePerPeriod/numerator/code (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_numerator_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_denominator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_denominator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_denominator_value double precision;   -- dosageInstruction/maxDosePerPeriod/denominator/value (double precision)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_denominator_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_denominator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_denominator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_denominator_comparator varchar;   -- dosageInstruction/maxDosePerPeriod/denominator/comparator (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_denominator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_denominator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_denominator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_denominator_unit varchar;   -- dosageInstruction/maxDosePerPeriod/denominator/unit (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_denominator_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_denominator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_denominator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_denominator_system varchar;   -- dosageInstruction/maxDosePerPeriod/denominator/system (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_denominator_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperperiod_denominator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperperiod_denominator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperperiod_denominator_code varchar;   -- dosageInstruction/maxDosePerPeriod/denominator/code (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperperiod_denominator_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperadministration_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperadministration_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperadministration_value double precision;   -- dosageInstruction/maxDosePerAdministration/value (double precision)
         END IF; -- column (medreq_doseinstruc_maxdoseperadministration_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperadministration_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperadministration_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperadministration_unit varchar;   -- dosageInstruction/maxDosePerAdministration/unit (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperadministration_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperadministration_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperadministration_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperadministration_system varchar;   -- dosageInstruction/maxDosePerAdministration/system (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperadministration_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperadministration_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperadministration_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperadministration_code varchar;   -- dosageInstruction/maxDosePerAdministration/code (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperadministration_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperlifetime_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperlifetime_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperlifetime_value double precision;   -- dosageInstruction/maxDosePerLifetime/value (double precision)
         END IF; -- column (medreq_doseinstruc_maxdoseperlifetime_value)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperlifetime_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperlifetime_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperlifetime_unit varchar;   -- dosageInstruction/maxDosePerLifetime/unit (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperlifetime_unit)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperlifetime_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperlifetime_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperlifetime_system varchar;   -- dosageInstruction/maxDosePerLifetime/system (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperlifetime_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_doseinstruc_maxdoseperlifetime_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_doseinstruc_maxdoseperlifetime_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_doseinstruc_maxdoseperlifetime_code varchar;   -- dosageInstruction/maxDosePerLifetime/code (varchar)
         END IF; -- column (medreq_doseinstruc_maxdoseperlifetime_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_substitution_reason_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_substitution_reason_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_substitution_reason_system varchar;   -- substitution/reason/coding/system (varchar)
         END IF; -- column (medreq_substitution_reason_system)
+
         IF NOT EXISTS ( -- column not exists (medreq_substitution_reason_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_substitution_reason_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_substitution_reason_version varchar;   -- substitution/reason/coding/version (varchar)
         END IF; -- column (medreq_substitution_reason_version)
+
         IF NOT EXISTS ( -- column not exists (medreq_substitution_reason_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_substitution_reason_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_substitution_reason_code varchar;   -- substitution/reason/coding/code (varchar)
         END IF; -- column (medreq_substitution_reason_code)
+
         IF NOT EXISTS ( -- column not exists (medreq_substitution_reason_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_substitution_reason_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_substitution_reason_display varchar;   -- substitution/reason/coding/display (varchar)
         END IF; -- column (medreq_substitution_reason_display)
+
         IF NOT EXISTS ( -- column not exists (medreq_substitution_reason_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_substitution_reason_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest ADD medreq_substitution_reason_text varchar;   -- substitution/reason/text (varchar)
         END IF; -- column (medreq_substitution_reason_text)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -4391,9 +4908,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.medicationrequest ADD
@@ -4699,591 +5214,709 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_id varchar;   -- id (varchar)
         END IF; -- column (medadm_id)
+
         IF NOT EXISTS ( -- column not exists (medadm_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (medadm_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (medadm_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (medadm_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (medadm_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (medadm_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (medadm_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (medadm_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (medadm_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (medadm_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (medadm_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (medadm_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (medadm_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (medadm_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (medadm_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (medadm_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (medadm_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (medadm_encounter_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_encounter_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_encounter_ref varchar;   -- context/reference (varchar)
         END IF; -- column (medadm_encounter_ref)
+
         IF NOT EXISTS ( -- column not exists (medadm_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_patient_ref varchar;   -- subject/reference (varchar)
         END IF; -- column (medadm_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (medadm_partof_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_partof_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_partof_ref varchar;   -- partOf/reference (varchar)
         END IF; -- column (medadm_partof_ref)
+
         IF NOT EXISTS ( -- column not exists (medadm_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_status'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_status varchar;   -- status (varchar)
         END IF; -- column (medadm_status)
+
         IF NOT EXISTS ( -- column not exists (medadm_statusreason_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_statusreason_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_statusreason_system varchar;   -- statusReason/coding/system (varchar)
         END IF; -- column (medadm_statusreason_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_statusreason_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_statusreason_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_statusreason_version varchar;   -- statusReason/coding/version (varchar)
         END IF; -- column (medadm_statusreason_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_statusreason_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_statusreason_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_statusreason_code varchar;   -- statusReason/coding/code (varchar)
         END IF; -- column (medadm_statusreason_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_statusreason_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_statusreason_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_statusreason_display varchar;   -- statusReason/coding/display (varchar)
         END IF; -- column (medadm_statusreason_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_statusreason_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_statusreason_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_statusreason_text varchar;   -- statusReason/text (varchar)
         END IF; -- column (medadm_statusreason_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_category_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_category_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_category_system varchar;   -- category/coding/system (varchar)
         END IF; -- column (medadm_category_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_category_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_category_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_category_version varchar;   -- category/coding/version (varchar)
         END IF; -- column (medadm_category_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_category_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_category_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_category_code varchar;   -- category/coding/code (varchar)
         END IF; -- column (medadm_category_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_category_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_category_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_category_display varchar;   -- category/coding/display (varchar)
         END IF; -- column (medadm_category_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_category_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_category_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_category_text varchar;   -- category/text (varchar)
         END IF; -- column (medadm_category_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_medicationreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_medicationreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_medicationreference_ref varchar;   -- medicationReference/reference (varchar)
         END IF; -- column (medadm_medicationreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medadm_medicationcodeableconcept_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_medicationcodeableconcept_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_medicationcodeableconcept_system varchar;   -- medicationCodeableConcept/coding/system (varchar)
         END IF; -- column (medadm_medicationcodeableconcept_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_medicationcodeableconcept_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_medicationcodeableconcept_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_medicationcodeableconcept_version varchar;   -- medicationCodeableConcept/coding/version (varchar)
         END IF; -- column (medadm_medicationcodeableconcept_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_medicationcodeableconcept_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_medicationcodeableconcept_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_medicationcodeableconcept_code varchar;   -- medicationCodeableConcept/coding/code (varchar)
         END IF; -- column (medadm_medicationcodeableconcept_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_medicationcodeableconcept_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_medicationcodeableconcept_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_medicationcodeableconcept_display varchar;   -- medicationCodeableConcept/coding/display (varchar)
         END IF; -- column (medadm_medicationcodeableconcept_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_medicationcodeableconcept_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_medicationcodeableconcept_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_medicationcodeableconcept_text varchar;   -- medicationCodeableConcept/text (varchar)
         END IF; -- column (medadm_medicationcodeableconcept_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_ref varchar;   -- supportingInformation/reference (varchar)
         END IF; -- column (medadm_supportinginformation_ref)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_type varchar;   -- supportingInformation/type (varchar)
         END IF; -- column (medadm_supportinginformation_type)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_identifier_use varchar;   -- supportingInformation/identifier/use (varchar)
         END IF; -- column (medadm_supportinginformation_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_identifier_type_system varchar;   -- supportingInformation/identifier/type/coding/system (varchar)
         END IF; -- column (medadm_supportinginformation_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_identifier_type_version varchar;   -- supportingInformation/identifier/type/coding/version (varchar)
         END IF; -- column (medadm_supportinginformation_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_identifier_type_code varchar;   -- supportingInformation/identifier/type/coding/code (varchar)
         END IF; -- column (medadm_supportinginformation_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_identifier_type_display varchar;   -- supportingInformation/identifier/type/coding/display (varchar)
         END IF; -- column (medadm_supportinginformation_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_identifier_type_text varchar;   -- supportingInformation/identifier/type/text (varchar)
         END IF; -- column (medadm_supportinginformation_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_identifier_system varchar;   -- supportingInformation/identifier/system (varchar)
         END IF; -- column (medadm_supportinginformation_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_identifier_value varchar;   -- supportingInformation/identifier/value (varchar)
         END IF; -- column (medadm_supportinginformation_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medadm_supportinginformation_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_supportinginformation_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_supportinginformation_display varchar;   -- supportingInformation/display (varchar)
         END IF; -- column (medadm_supportinginformation_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_effectivedatetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_effectivedatetime'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_effectivedatetime timestamp;   -- effectiveDateTime (timestamp)
         END IF; -- column (medadm_effectivedatetime)
+
         IF NOT EXISTS ( -- column not exists (medadm_effectiveperiod_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_effectiveperiod_start'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_effectiveperiod_start timestamp;   -- effectivePeriod/start (timestamp)
         END IF; -- column (medadm_effectiveperiod_start)
+
         IF NOT EXISTS ( -- column not exists (medadm_effectiveperiod_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_effectiveperiod_end'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_effectiveperiod_end timestamp;   -- effectivePeriod/end (timestamp)
         END IF; -- column (medadm_effectiveperiod_end)
+
         IF NOT EXISTS ( -- column not exists (medadm_performer_function_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_performer_function_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_performer_function_system varchar;   -- performer/function/coding/system (varchar)
         END IF; -- column (medadm_performer_function_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_performer_function_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_performer_function_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_performer_function_version varchar;   -- performer/function/coding/version (varchar)
         END IF; -- column (medadm_performer_function_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_performer_function_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_performer_function_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_performer_function_code varchar;   -- performer/function/coding/code (varchar)
         END IF; -- column (medadm_performer_function_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_performer_function_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_performer_function_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_performer_function_display varchar;   -- performer/function/coding/display (varchar)
         END IF; -- column (medadm_performer_function_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_performer_function_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_performer_function_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_performer_function_text varchar;   -- performer/function/text (varchar)
         END IF; -- column (medadm_performer_function_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasoncode_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasoncode_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasoncode_system varchar;   -- reasonCode/coding/system (varchar)
         END IF; -- column (medadm_reasoncode_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasoncode_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasoncode_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasoncode_version varchar;   -- reasonCode/coding/version (varchar)
         END IF; -- column (medadm_reasoncode_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasoncode_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasoncode_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasoncode_code varchar;   -- reasonCode/coding/code (varchar)
         END IF; -- column (medadm_reasoncode_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasoncode_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasoncode_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasoncode_display varchar;   -- reasonCode/coding/display (varchar)
         END IF; -- column (medadm_reasoncode_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasoncode_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasoncode_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasoncode_text varchar;   -- reasonCode/text (varchar)
         END IF; -- column (medadm_reasoncode_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_ref varchar;   -- reasonReference/reference (varchar)
         END IF; -- column (medadm_reasonreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_type varchar;   -- reasonReference/type (varchar)
         END IF; -- column (medadm_reasonreference_type)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_identifier_use varchar;   -- reasonReference/identifier/use (varchar)
         END IF; -- column (medadm_reasonreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_identifier_type_system varchar;   -- reasonReference/identifier/type/coding/system (varchar)
         END IF; -- column (medadm_reasonreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_identifier_type_version varchar;   -- reasonReference/identifier/type/coding/version (varchar)
         END IF; -- column (medadm_reasonreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_identifier_type_code varchar;   -- reasonReference/identifier/type/coding/code (varchar)
         END IF; -- column (medadm_reasonreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_identifier_type_display varchar;   -- reasonReference/identifier/type/coding/display (varchar)
         END IF; -- column (medadm_reasonreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_identifier_type_text varchar;   -- reasonReference/identifier/type/text (varchar)
         END IF; -- column (medadm_reasonreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_identifier_system varchar;   -- reasonReference/identifier/system (varchar)
         END IF; -- column (medadm_reasonreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_identifier_value varchar;   -- reasonReference/identifier/value (varchar)
         END IF; -- column (medadm_reasonreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medadm_reasonreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_reasonreference_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_reasonreference_display varchar;   -- reasonReference/display (varchar)
         END IF; -- column (medadm_reasonreference_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_request_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_request_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_request_ref varchar;   -- request/reference (varchar)
         END IF; -- column (medadm_request_ref)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorstring)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorstring'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorstring varchar;   -- note/authorString (varchar)
         END IF; -- column (medadm_note_authorstring)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_ref varchar;   -- note/authorReference/reference (varchar)
         END IF; -- column (medadm_note_authorreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_type varchar;   -- note/authorReference/type (varchar)
         END IF; -- column (medadm_note_authorreference_type)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_identifier_use varchar;   -- note/authorReference/identifier/use (varchar)
         END IF; -- column (medadm_note_authorreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_identifier_type_system varchar;   -- note/authorReference/identifier/type/coding/system (varchar)
         END IF; -- column (medadm_note_authorreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_identifier_type_version varchar;   -- note/authorReference/identifier/type/coding/version (varchar)
         END IF; -- column (medadm_note_authorreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_identifier_type_code varchar;   -- note/authorReference/identifier/type/coding/code (varchar)
         END IF; -- column (medadm_note_authorreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_identifier_type_display varchar;   -- note/authorReference/identifier/type/coding/display (varchar)
         END IF; -- column (medadm_note_authorreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_identifier_type_text varchar;   -- note/authorReference/identifier/type/text (varchar)
         END IF; -- column (medadm_note_authorreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_identifier_system varchar;   -- note/authorReference/identifier/system (varchar)
         END IF; -- column (medadm_note_authorreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_identifier_value varchar;   -- note/authorReference/identifier/value (varchar)
         END IF; -- column (medadm_note_authorreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_authorreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_authorreference_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_authorreference_display varchar;   -- note/authorReference/display (varchar)
         END IF; -- column (medadm_note_authorreference_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_time)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_time'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_time timestamp;   -- note/time (timestamp)
         END IF; -- column (medadm_note_time)
+
         IF NOT EXISTS ( -- column not exists (medadm_note_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_note_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_note_text varchar;   -- note/text (varchar)
         END IF; -- column (medadm_note_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_text varchar;   -- dosage/text (varchar)
         END IF; -- column (medadm_dosage_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_site_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_site_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_site_system varchar;   -- dosage/site/coding/system (varchar)
         END IF; -- column (medadm_dosage_site_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_site_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_site_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_site_version varchar;   -- dosage/site/coding/version (varchar)
         END IF; -- column (medadm_dosage_site_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_site_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_site_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_site_code varchar;   -- dosage/site/coding/code (varchar)
         END IF; -- column (medadm_dosage_site_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_site_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_site_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_site_display varchar;   -- dosage/site/coding/display (varchar)
         END IF; -- column (medadm_dosage_site_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_site_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_site_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_site_text varchar;   -- dosage/site/text (varchar)
         END IF; -- column (medadm_dosage_site_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_route_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_route_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_route_system varchar;   -- dosage/route/coding/system (varchar)
         END IF; -- column (medadm_dosage_route_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_route_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_route_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_route_version varchar;   -- dosage/route/coding/version (varchar)
         END IF; -- column (medadm_dosage_route_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_route_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_route_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_route_code varchar;   -- dosage/route/coding/code (varchar)
         END IF; -- column (medadm_dosage_route_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_route_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_route_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_route_display varchar;   -- dosage/route/coding/display (varchar)
         END IF; -- column (medadm_dosage_route_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_route_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_route_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_route_text varchar;   -- dosage/route/text (varchar)
         END IF; -- column (medadm_dosage_route_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_method_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_method_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_method_system varchar;   -- dosage/method/coding/system (varchar)
         END IF; -- column (medadm_dosage_method_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_method_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_method_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_method_version varchar;   -- dosage/method/coding/version (varchar)
         END IF; -- column (medadm_dosage_method_version)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_method_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_method_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_method_code varchar;   -- dosage/method/coding/code (varchar)
         END IF; -- column (medadm_dosage_method_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_method_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_method_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_method_display varchar;   -- dosage/method/coding/display (varchar)
         END IF; -- column (medadm_dosage_method_display)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_method_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_method_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_method_text varchar;   -- dosage/method/text (varchar)
         END IF; -- column (medadm_dosage_method_text)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_dose_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_dose_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_dose_value double precision;   -- dosage/dose/value (double precision)
         END IF; -- column (medadm_dosage_dose_value)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_dose_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_dose_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_dose_unit varchar;   -- dosage/dose/unit (varchar)
         END IF; -- column (medadm_dosage_dose_unit)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_dose_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_dose_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_dose_system varchar;   -- dosage/dose/system (varchar)
         END IF; -- column (medadm_dosage_dose_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_dose_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_dose_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_dose_code varchar;   -- dosage/dose/code (varchar)
         END IF; -- column (medadm_dosage_dose_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_numerator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_numerator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_numerator_value double precision;   -- dosage/rateRatio/numerator/value (double precision)
         END IF; -- column (medadm_dosage_rateratio_numerator_value)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_numerator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_numerator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_numerator_comparator varchar;   -- dosage/rateRatio/numerator/comparator (varchar)
         END IF; -- column (medadm_dosage_rateratio_numerator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_numerator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_numerator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_numerator_unit varchar;   -- dosage/rateRatio/numerator/unit (varchar)
         END IF; -- column (medadm_dosage_rateratio_numerator_unit)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_numerator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_numerator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_numerator_system varchar;   -- dosage/rateRatio/numerator/system (varchar)
         END IF; -- column (medadm_dosage_rateratio_numerator_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_numerator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_numerator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_numerator_code varchar;   -- dosage/rateRatio/numerator/code (varchar)
         END IF; -- column (medadm_dosage_rateratio_numerator_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_denominator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_denominator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_denominator_value double precision;   -- dosage/rateRatio/denominator/value (double precision)
         END IF; -- column (medadm_dosage_rateratio_denominator_value)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_denominator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_denominator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_denominator_comparator varchar;   -- dosage/rateRatio/denominator/comparator (varchar)
         END IF; -- column (medadm_dosage_rateratio_denominator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_denominator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_denominator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_denominator_unit varchar;   -- dosage/rateRatio/denominator/unit (varchar)
         END IF; -- column (medadm_dosage_rateratio_denominator_unit)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_denominator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_denominator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_denominator_system varchar;   -- dosage/rateRatio/denominator/system (varchar)
         END IF; -- column (medadm_dosage_rateratio_denominator_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_rateratio_denominator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_rateratio_denominator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_rateratio_denominator_code varchar;   -- dosage/rateRatio/denominator/code (varchar)
         END IF; -- column (medadm_dosage_rateratio_denominator_code)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_ratequantity_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_ratequantity_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_ratequantity_value double precision;   -- dosage/rateQuantity/value (double precision)
         END IF; -- column (medadm_dosage_ratequantity_value)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_ratequantity_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_ratequantity_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_ratequantity_unit varchar;   -- dosage/rateQuantity/unit (varchar)
         END IF; -- column (medadm_dosage_ratequantity_unit)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_ratequantity_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_ratequantity_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_ratequantity_system varchar;   -- dosage/rateQuantity/system (varchar)
         END IF; -- column (medadm_dosage_ratequantity_system)
+
         IF NOT EXISTS ( -- column not exists (medadm_dosage_ratequantity_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_dosage_ratequantity_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationadministration ADD medadm_dosage_ratequantity_code varchar;   -- dosage/rateQuantity/code (varchar)
         END IF; -- column (medadm_dosage_ratequantity_code)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -5538,9 +6171,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.medicationadministration ADD
@@ -5725,1116 +6356,1339 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_id varchar;   -- id (varchar)
         END IF; -- column (medstat_id)
+
         IF NOT EXISTS ( -- column not exists (medstat_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (medstat_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (medstat_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (medstat_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (medstat_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (medstat_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (medstat_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (medstat_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (medstat_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (medstat_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (medstat_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (medstat_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (medstat_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (medstat_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (medstat_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (medstat_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (medstat_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (medstat_encounter_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_encounter_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_encounter_ref varchar;   -- context/reference (varchar)
         END IF; -- column (medstat_encounter_ref)
+
         IF NOT EXISTS ( -- column not exists (medstat_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_patient_ref varchar;   -- subject/reference (varchar)
         END IF; -- column (medstat_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (medstat_partof_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_partof_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_partof_ref varchar;   -- partOf/reference (varchar)
         END IF; -- column (medstat_partof_ref)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_ref varchar;   -- basedOn/reference (varchar)
         END IF; -- column (medstat_basedon_ref)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_type varchar;   -- basedOn/type (varchar)
         END IF; -- column (medstat_basedon_type)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_identifier_use varchar;   -- basedOn/identifier/use (varchar)
         END IF; -- column (medstat_basedon_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_identifier_type_system varchar;   -- basedOn/identifier/type/coding/system (varchar)
         END IF; -- column (medstat_basedon_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_identifier_type_version varchar;   -- basedOn/identifier/type/coding/version (varchar)
         END IF; -- column (medstat_basedon_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_identifier_type_code varchar;   -- basedOn/identifier/type/coding/code (varchar)
         END IF; -- column (medstat_basedon_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_identifier_type_display varchar;   -- basedOn/identifier/type/coding/display (varchar)
         END IF; -- column (medstat_basedon_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_identifier_type_text varchar;   -- basedOn/identifier/type/text (varchar)
         END IF; -- column (medstat_basedon_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_identifier_system varchar;   -- basedOn/identifier/system (varchar)
         END IF; -- column (medstat_basedon_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_identifier_value varchar;   -- basedOn/identifier/value (varchar)
         END IF; -- column (medstat_basedon_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_basedon_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_basedon_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_basedon_display varchar;   -- basedOn/display (varchar)
         END IF; -- column (medstat_basedon_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_status'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_status varchar;   -- status (varchar)
         END IF; -- column (medstat_status)
+
         IF NOT EXISTS ( -- column not exists (medstat_statusreason_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_statusreason_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_statusreason_system varchar;   -- statusReason/coding/system (varchar)
         END IF; -- column (medstat_statusreason_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_statusreason_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_statusreason_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_statusreason_version varchar;   -- statusReason/coding/version (varchar)
         END IF; -- column (medstat_statusreason_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_statusreason_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_statusreason_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_statusreason_code varchar;   -- statusReason/coding/code (varchar)
         END IF; -- column (medstat_statusreason_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_statusreason_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_statusreason_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_statusreason_display varchar;   -- statusReason/coding/display (varchar)
         END IF; -- column (medstat_statusreason_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_statusreason_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_statusreason_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_statusreason_text varchar;   -- statusReason/text (varchar)
         END IF; -- column (medstat_statusreason_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_category_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_category_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_category_system varchar;   -- category/coding/system (varchar)
         END IF; -- column (medstat_category_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_category_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_category_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_category_version varchar;   -- category/coding/version (varchar)
         END IF; -- column (medstat_category_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_category_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_category_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_category_code varchar;   -- category/coding/code (varchar)
         END IF; -- column (medstat_category_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_category_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_category_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_category_display varchar;   -- category/coding/display (varchar)
         END IF; -- column (medstat_category_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_category_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_category_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_category_text varchar;   -- category/text (varchar)
         END IF; -- column (medstat_category_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_medicationreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_medicationreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_medicationreference_ref varchar;   -- medicationReference/reference (varchar)
         END IF; -- column (medstat_medicationreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medstat_medicationcodeableconcept_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_medicationcodeableconcept_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_medicationcodeableconcept_system varchar;   -- medicationCodeableConcept/coding/system (varchar)
         END IF; -- column (medstat_medicationcodeableconcept_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_medicationcodeableconcept_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_medicationcodeableconcept_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_medicationcodeableconcept_version varchar;   -- medicationCodeableConcept/coding/version (varchar)
         END IF; -- column (medstat_medicationcodeableconcept_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_medicationcodeableconcept_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_medicationcodeableconcept_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_medicationcodeableconcept_code varchar;   -- medicationCodeableConcept/coding/code (varchar)
         END IF; -- column (medstat_medicationcodeableconcept_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_medicationcodeableconcept_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_medicationcodeableconcept_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_medicationcodeableconcept_display varchar;   -- medicationCodeableConcept/coding/display (varchar)
         END IF; -- column (medstat_medicationcodeableconcept_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_medicationcodeableconcept_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_medicationcodeableconcept_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_medicationcodeableconcept_text varchar;   -- medicationCodeableConcept/text (varchar)
         END IF; -- column (medstat_medicationcodeableconcept_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_effectivedatetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_effectivedatetime'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_effectivedatetime timestamp;   -- effectiveDateTime (timestamp)
         END IF; -- column (medstat_effectivedatetime)
+
         IF NOT EXISTS ( -- column not exists (medstat_effectiveperiod_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_effectiveperiod_start'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_effectiveperiod_start timestamp;   -- effectivePeriod/start (timestamp)
         END IF; -- column (medstat_effectiveperiod_start)
+
         IF NOT EXISTS ( -- column not exists (medstat_effectiveperiod_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_effectiveperiod_end'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_effectiveperiod_end timestamp;   -- effectivePeriod/end (timestamp)
         END IF; -- column (medstat_effectiveperiod_end)
+
         IF NOT EXISTS ( -- column not exists (medstat_dateasserted)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dateasserted'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dateasserted timestamp;   -- dateAsserted (timestamp)
         END IF; -- column (medstat_dateasserted)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_ref varchar;   -- informationSource/reference (varchar)
         END IF; -- column (medstat_informationsource_ref)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_type varchar;   -- informationSource/type (varchar)
         END IF; -- column (medstat_informationsource_type)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_identifier_use varchar;   -- informationSource/identifier/use (varchar)
         END IF; -- column (medstat_informationsource_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_identifier_type_system varchar;   -- informationSource/identifier/type/coding/system (varchar)
         END IF; -- column (medstat_informationsource_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_identifier_type_version varchar;   -- informationSource/identifier/type/coding/version (varchar)
         END IF; -- column (medstat_informationsource_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_identifier_type_code varchar;   -- informationSource/identifier/type/coding/code (varchar)
         END IF; -- column (medstat_informationsource_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_identifier_type_display varchar;   -- informationSource/identifier/type/coding/display (varchar)
         END IF; -- column (medstat_informationsource_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_identifier_type_text varchar;   -- informationSource/identifier/type/text (varchar)
         END IF; -- column (medstat_informationsource_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_identifier_system varchar;   -- informationSource/identifier/system (varchar)
         END IF; -- column (medstat_informationsource_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_identifier_value varchar;   -- informationSource/identifier/value (varchar)
         END IF; -- column (medstat_informationsource_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_informationsource_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_informationsource_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_informationsource_display varchar;   -- informationSource/display (varchar)
         END IF; -- column (medstat_informationsource_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_ref varchar;   -- derivedFrom/reference (varchar)
         END IF; -- column (medstat_derivedfrom_ref)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_type varchar;   -- derivedFrom/type (varchar)
         END IF; -- column (medstat_derivedfrom_type)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_identifier_use varchar;   -- derivedFrom/identifier/use (varchar)
         END IF; -- column (medstat_derivedfrom_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_identifier_type_system varchar;   -- derivedFrom/identifier/type/coding/system (varchar)
         END IF; -- column (medstat_derivedfrom_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_identifier_type_version varchar;   -- derivedFrom/identifier/type/coding/version (varchar)
         END IF; -- column (medstat_derivedfrom_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_identifier_type_code varchar;   -- derivedFrom/identifier/type/coding/code (varchar)
         END IF; -- column (medstat_derivedfrom_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_identifier_type_display varchar;   -- derivedFrom/identifier/type/coding/display (varchar)
         END IF; -- column (medstat_derivedfrom_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_identifier_type_text varchar;   -- derivedFrom/identifier/type/text (varchar)
         END IF; -- column (medstat_derivedfrom_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_identifier_system varchar;   -- derivedFrom/identifier/system (varchar)
         END IF; -- column (medstat_derivedfrom_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_identifier_value varchar;   -- derivedFrom/identifier/value (varchar)
         END IF; -- column (medstat_derivedfrom_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_derivedfrom_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_derivedfrom_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_derivedfrom_display varchar;   -- derivedFrom/display (varchar)
         END IF; -- column (medstat_derivedfrom_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasoncode_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasoncode_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasoncode_system varchar;   -- reasonCode/coding/system (varchar)
         END IF; -- column (medstat_reasoncode_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasoncode_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasoncode_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasoncode_version varchar;   -- reasonCode/coding/version (varchar)
         END IF; -- column (medstat_reasoncode_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasoncode_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasoncode_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasoncode_code varchar;   -- reasonCode/coding/code (varchar)
         END IF; -- column (medstat_reasoncode_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasoncode_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasoncode_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasoncode_display varchar;   -- reasonCode/coding/display (varchar)
         END IF; -- column (medstat_reasoncode_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasoncode_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasoncode_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasoncode_text varchar;   -- reasonCode/text (varchar)
         END IF; -- column (medstat_reasoncode_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_ref varchar;   -- reasonReference/reference (varchar)
         END IF; -- column (medstat_reasonreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_type varchar;   -- reasonReference/type (varchar)
         END IF; -- column (medstat_reasonreference_type)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_identifier_use varchar;   -- reasonReference/identifier/use (varchar)
         END IF; -- column (medstat_reasonreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_identifier_type_system varchar;   -- reasonReference/identifier/type/coding/system (varchar)
         END IF; -- column (medstat_reasonreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_identifier_type_version varchar;   -- reasonReference/identifier/type/coding/version (varchar)
         END IF; -- column (medstat_reasonreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_identifier_type_code varchar;   -- reasonReference/identifier/type/coding/code (varchar)
         END IF; -- column (medstat_reasonreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_identifier_type_display varchar;   -- reasonReference/identifier/type/coding/display (varchar)
         END IF; -- column (medstat_reasonreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_identifier_type_text varchar;   -- reasonReference/identifier/type/text (varchar)
         END IF; -- column (medstat_reasonreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_identifier_system varchar;   -- reasonReference/identifier/system (varchar)
         END IF; -- column (medstat_reasonreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_identifier_value varchar;   -- reasonReference/identifier/value (varchar)
         END IF; -- column (medstat_reasonreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_reasonreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_reasonreference_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_reasonreference_display varchar;   -- reasonReference/display (varchar)
         END IF; -- column (medstat_reasonreference_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorstring)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorstring'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorstring varchar;   -- note/authorString (varchar)
         END IF; -- column (medstat_note_authorstring)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_ref varchar;   -- note/authorReference/reference (varchar)
         END IF; -- column (medstat_note_authorreference_ref)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_type'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_type varchar;   -- note/authorReference/type (varchar)
         END IF; -- column (medstat_note_authorreference_type)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_identifier_use varchar;   -- note/authorReference/identifier/use (varchar)
         END IF; -- column (medstat_note_authorreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_identifier_type_system varchar;   -- note/authorReference/identifier/type/coding/system (varchar)
         END IF; -- column (medstat_note_authorreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_identifier_type_version varchar;   -- note/authorReference/identifier/type/coding/version (varchar)
         END IF; -- column (medstat_note_authorreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_identifier_type_code varchar;   -- note/authorReference/identifier/type/coding/code (varchar)
         END IF; -- column (medstat_note_authorreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_identifier_type_display varchar;   -- note/authorReference/identifier/type/coding/display (varchar)
         END IF; -- column (medstat_note_authorreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_identifier_type_text varchar;   -- note/authorReference/identifier/type/text (varchar)
         END IF; -- column (medstat_note_authorreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_identifier_system varchar;   -- note/authorReference/identifier/system (varchar)
         END IF; -- column (medstat_note_authorreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_identifier_value varchar;   -- note/authorReference/identifier/value (varchar)
         END IF; -- column (medstat_note_authorreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_authorreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_authorreference_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_authorreference_display varchar;   -- note/authorReference/display (varchar)
         END IF; -- column (medstat_note_authorreference_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_time)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_time'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_time timestamp;   -- note/time (timestamp)
         END IF; -- column (medstat_note_time)
+
         IF NOT EXISTS ( -- column not exists (medstat_note_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_note_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_note_text varchar;   -- note/text (varchar)
         END IF; -- column (medstat_note_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_sequence)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_sequence'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_sequence int;   -- dosage/sequence (int)
         END IF; -- column (medstat_dosage_sequence)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_text varchar;   -- dosage/text (varchar)
         END IF; -- column (medstat_dosage_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_additionalinstruction_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_additionalinstruction_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_additionalinstruction_system varchar;   -- dosage/additionalInstruction/coding/system (varchar)
         END IF; -- column (medstat_dosage_additionalinstruction_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_additionalinstruction_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_additionalinstruction_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_additionalinstruction_version varchar;   -- dosage/additionalInstruction/coding/version (varchar)
         END IF; -- column (medstat_dosage_additionalinstruction_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_additionalinstruction_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_additionalinstruction_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_additionalinstruction_code varchar;   -- dosage/additionalInstruction/coding/code (varchar)
         END IF; -- column (medstat_dosage_additionalinstruction_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_additionalinstruction_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_additionalinstruction_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_additionalinstruction_display varchar;   -- dosage/additionalInstruction/coding/display (varchar)
         END IF; -- column (medstat_dosage_additionalinstruction_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_additionalinstruction_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_additionalinstruction_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_additionalinstruction_text varchar;   -- dosage/additionalInstruction/text (varchar)
         END IF; -- column (medstat_dosage_additionalinstruction_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_patientinstruction)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_patientinstruction'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_patientinstruction varchar;   -- dosage/patientInstruction (varchar)
         END IF; -- column (medstat_dosage_patientinstruction)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_event)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_event'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_event timestamp;   -- dosage/timing/event (timestamp)
         END IF; -- column (medstat_dosage_timing_event)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsduration_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsduration_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsduration_value double precision;   -- dosage/timing/repeat/boundsDuration/value (double precision)
         END IF; -- column (medstat_dosage_timing_repeat_boundsduration_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsduration_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsduration_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsduration_comparator varchar;   -- dosage/timing/repeat/boundsDuration/comparator (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsduration_comparator)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsduration_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsduration_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsduration_unit varchar;   -- dosage/timing/repeat/boundsDuration/unit (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsduration_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsduration_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsduration_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsduration_system varchar;   -- dosage/timing/repeat/boundsDuration/system (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsduration_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsduration_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsduration_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsduration_code varchar;   -- dosage/timing/repeat/boundsDuration/code (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsduration_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsrange_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsrange_low_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsrange_low_value double precision;   -- dosage/timing/repeat/boundsRange/low/value (double precision)
         END IF; -- column (medstat_dosage_timing_repeat_boundsrange_low_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsrange_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsrange_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsrange_low_unit varchar;   -- dosage/timing/repeat/boundsRange/low/unit (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsrange_low_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsrange_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsrange_low_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsrange_low_system varchar;   -- dosage/timing/repeat/boundsRange/low/system (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsrange_low_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsrange_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsrange_low_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsrange_low_code varchar;   -- dosage/timing/repeat/boundsRange/low/code (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsrange_low_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsrange_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsrange_high_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsrange_high_value double precision;   -- dosage/timing/repeat/boundsRange/high/value (double precision)
         END IF; -- column (medstat_dosage_timing_repeat_boundsrange_high_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsrange_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsrange_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsrange_high_unit varchar;   -- dosage/timing/repeat/boundsRange/high/unit (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsrange_high_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsrange_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsrange_high_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsrange_high_system varchar;   -- dosage/timing/repeat/boundsRange/high/system (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsrange_high_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsrange_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsrange_high_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsrange_high_code varchar;   -- dosage/timing/repeat/boundsRange/high/code (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_boundsrange_high_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsperiod_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsperiod_start'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsperiod_start timestamp;   -- dosage/timing/repeat/boundsPeriod/start (timestamp)
         END IF; -- column (medstat_dosage_timing_repeat_boundsperiod_start)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_boundsperiod_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_boundsperiod_end'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_boundsperiod_end timestamp;   -- dosage/timing/repeat/boundsPeriod/end (timestamp)
         END IF; -- column (medstat_dosage_timing_repeat_boundsperiod_end)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_count)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_count'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_count int;   -- dosage/timing/repeat/count (int)
         END IF; -- column (medstat_dosage_timing_repeat_count)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_countmax)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_countmax'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_countmax int;   -- dosage/timing/repeat/countMax (int)
         END IF; -- column (medstat_dosage_timing_repeat_countmax)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_duration)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_duration'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_duration double precision;   -- dosage/timing/repeat/duration (double precision)
         END IF; -- column (medstat_dosage_timing_repeat_duration)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_durationmax)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_durationmax'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_durationmax double precision;   -- dosage/timing/repeat/durationMax (double precision)
         END IF; -- column (medstat_dosage_timing_repeat_durationmax)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_durationunit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_durationunit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_durationunit varchar;   -- dosage/timing/repeat/durationUnit (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_durationunit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_frequency)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_frequency'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_frequency int;   -- dosage/timing/repeat/frequency (int)
         END IF; -- column (medstat_dosage_timing_repeat_frequency)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_frequencymax)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_frequencymax'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_frequencymax int;   -- dosage/timing/repeat/frequencyMax (int)
         END IF; -- column (medstat_dosage_timing_repeat_frequencymax)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_period)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_period'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_period double precision;   -- dosage/timing/repeat/period (double precision)
         END IF; -- column (medstat_dosage_timing_repeat_period)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_periodmax)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_periodmax'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_periodmax double precision;   -- dosage/timing/repeat/periodMax (double precision)
         END IF; -- column (medstat_dosage_timing_repeat_periodmax)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_periodunit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_periodunit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_periodunit varchar;   -- dosage/timing/repeat/periodUnit (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_periodunit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_dayofweek)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_dayofweek'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_dayofweek varchar;   -- dosage/timing/repeat/dayOfWeek (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_dayofweek)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_timeofday)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_timeofday'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_timeofday time;   -- dosage/timing/repeat/timeOfDay (time)
         END IF; -- column (medstat_dosage_timing_repeat_timeofday)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_when)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_when'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_when varchar;   -- dosage/timing/repeat/when (varchar)
         END IF; -- column (medstat_dosage_timing_repeat_when)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_repeat_offset)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_repeat_offset'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_repeat_offset int;   -- dosage/timing/repeat/offset (int)
         END IF; -- column (medstat_dosage_timing_repeat_offset)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_code_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_code_system varchar;   -- dosage/timing/code/coding/system (varchar)
         END IF; -- column (medstat_dosage_timing_code_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_code_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_code_version varchar;   -- dosage/timing/code/coding/version (varchar)
         END IF; -- column (medstat_dosage_timing_code_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_code_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_code_code varchar;   -- dosage/timing/code/coding/code (varchar)
         END IF; -- column (medstat_dosage_timing_code_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_code_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_code_display varchar;   -- dosage/timing/code/coding/display (varchar)
         END IF; -- column (medstat_dosage_timing_code_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_timing_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_timing_code_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_timing_code_text varchar;   -- dosage/timing/code/text (varchar)
         END IF; -- column (medstat_dosage_timing_code_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_asneededboolean)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_asneededboolean'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_asneededboolean boolean;   -- dosage/asNeededBoolean (boolean)
         END IF; -- column (medstat_dosage_asneededboolean)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_asneededcodeableconcept_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_asneededcodeableconcept_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_asneededcodeableconcept_system varchar;   -- dosage/asNeededCodeableConcept/coding/system (varchar)
         END IF; -- column (medstat_dosage_asneededcodeableconcept_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_asneededcodeableconcept_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_asneededcodeableconcept_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_asneededcodeableconcept_version varchar;   -- dosage/asNeededCodeableConcept/coding/version (varchar)
         END IF; -- column (medstat_dosage_asneededcodeableconcept_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_asneededcodeableconcept_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_asneededcodeableconcept_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_asneededcodeableconcept_code varchar;   -- dosage/asNeededCodeableConcept/coding/code (varchar)
         END IF; -- column (medstat_dosage_asneededcodeableconcept_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_asneededcodeableconcept_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_asneededcodeableconcept_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_asneededcodeableconcept_display varchar;   -- dosage/asNeededCodeableConcept/coding/display (varchar)
         END IF; -- column (medstat_dosage_asneededcodeableconcept_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_asneededcodeableconcept_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_asneededcodeableconcept_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_asneededcodeableconcept_text varchar;   -- dosage/asNeededCodeableConcept/text (varchar)
         END IF; -- column (medstat_dosage_asneededcodeableconcept_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_site_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_site_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_site_system varchar;   -- dosage/site/coding/system (varchar)
         END IF; -- column (medstat_dosage_site_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_site_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_site_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_site_version varchar;   -- dosage/site/coding/version (varchar)
         END IF; -- column (medstat_dosage_site_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_site_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_site_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_site_code varchar;   -- dosage/site/coding/code (varchar)
         END IF; -- column (medstat_dosage_site_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_site_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_site_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_site_display varchar;   -- dosage/site/coding/display (varchar)
         END IF; -- column (medstat_dosage_site_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_site_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_site_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_site_text varchar;   -- dosage/site/text (varchar)
         END IF; -- column (medstat_dosage_site_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_route_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_route_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_route_system varchar;   -- dosage/route/coding/system (varchar)
         END IF; -- column (medstat_dosage_route_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_route_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_route_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_route_version varchar;   -- dosage/route/coding/version (varchar)
         END IF; -- column (medstat_dosage_route_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_route_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_route_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_route_code varchar;   -- dosage/route/coding/code (varchar)
         END IF; -- column (medstat_dosage_route_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_route_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_route_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_route_display varchar;   -- dosage/route/coding/display (varchar)
         END IF; -- column (medstat_dosage_route_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_route_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_route_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_route_text varchar;   -- dosage/route/text (varchar)
         END IF; -- column (medstat_dosage_route_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_method_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_method_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_method_system varchar;   -- dosage/method/coding/system (varchar)
         END IF; -- column (medstat_dosage_method_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_method_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_method_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_method_version varchar;   -- dosage/method/coding/version (varchar)
         END IF; -- column (medstat_dosage_method_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_method_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_method_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_method_code varchar;   -- dosage/method/coding/code (varchar)
         END IF; -- column (medstat_dosage_method_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_method_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_method_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_method_display varchar;   -- dosage/method/coding/display (varchar)
         END IF; -- column (medstat_dosage_method_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_method_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_method_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_method_text varchar;   -- dosage/method/text (varchar)
         END IF; -- column (medstat_dosage_method_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_type_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_type_system varchar;   -- dosage/doseAndRate/type/coding/system (varchar)
         END IF; -- column (medstat_dosage_doseandrate_type_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_type_version'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_type_version varchar;   -- dosage/doseAndRate/type/coding/version (varchar)
         END IF; -- column (medstat_dosage_doseandrate_type_version)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_type_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_type_code varchar;   -- dosage/doseAndRate/type/coding/code (varchar)
         END IF; -- column (medstat_dosage_doseandrate_type_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_type_display'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_type_display varchar;   -- dosage/doseAndRate/type/coding/display (varchar)
         END IF; -- column (medstat_dosage_doseandrate_type_display)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_type_text'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_type_text varchar;   -- dosage/doseAndRate/type/text (varchar)
         END IF; -- column (medstat_dosage_doseandrate_type_text)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_doserange_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_doserange_low_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_doserange_low_value double precision;   -- dosage/doseAndRate/doseRange/low/value (double precision)
         END IF; -- column (medstat_dosage_doseandrate_doserange_low_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_doserange_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_doserange_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_doserange_low_unit varchar;   -- dosage/doseAndRate/doseRange/low/unit (varchar)
         END IF; -- column (medstat_dosage_doseandrate_doserange_low_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_doserange_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_doserange_low_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_doserange_low_system varchar;   -- dosage/doseAndRate/doseRange/low/system (varchar)
         END IF; -- column (medstat_dosage_doseandrate_doserange_low_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_doserange_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_doserange_low_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_doserange_low_code varchar;   -- dosage/doseAndRate/doseRange/low/code (varchar)
         END IF; -- column (medstat_dosage_doseandrate_doserange_low_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_doserange_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_doserange_high_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_doserange_high_value double precision;   -- dosage/doseAndRate/doseRange/high/value (double precision)
         END IF; -- column (medstat_dosage_doseandrate_doserange_high_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_doserange_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_doserange_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_doserange_high_unit varchar;   -- dosage/doseAndRate/doseRange/high/unit (varchar)
         END IF; -- column (medstat_dosage_doseandrate_doserange_high_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_doserange_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_doserange_high_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_doserange_high_system varchar;   -- dosage/doseAndRate/doseRange/high/system (varchar)
         END IF; -- column (medstat_dosage_doseandrate_doserange_high_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_doserange_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_doserange_high_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_doserange_high_code varchar;   -- dosage/doseAndRate/doseRange/high/code (varchar)
         END IF; -- column (medstat_dosage_doseandrate_doserange_high_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_dosequantity_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_dosequantity_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_dosequantity_value double precision;   -- dosage/doseAndRate/doseQuantity/value (double precision)
         END IF; -- column (medstat_dosage_doseandrate_dosequantity_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_dosequantity_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_dosequantity_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_dosequantity_comparator varchar;   -- dosage/doseAndRate/doseQuantity/comparator (varchar)
         END IF; -- column (medstat_dosage_doseandrate_dosequantity_comparator)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_dosequantity_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_dosequantity_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_dosequantity_unit varchar;   -- dosage/doseAndRate/doseQuantity/unit (varchar)
         END IF; -- column (medstat_dosage_doseandrate_dosequantity_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_dosequantity_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_dosequantity_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_dosequantity_system varchar;   -- dosage/doseAndRate/doseQuantity/system (varchar)
         END IF; -- column (medstat_dosage_doseandrate_dosequantity_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_dosequantity_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_dosequantity_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_dosequantity_code varchar;   -- dosage/doseAndRate/doseQuantity/code (varchar)
         END IF; -- column (medstat_dosage_doseandrate_dosequantity_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_numerator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_numerator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_numerator_value double precision;   -- dosage/doseAndRate/rateRatio/numerator/value (double precision)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_numerator_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_numerator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_numerator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_numerator_comparator varchar;   -- dosage/doseAndRate/rateRatio/numerator/comparator (varchar)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_numerator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_numerator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_numerator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_numerator_unit varchar;   -- dosage/doseAndRate/rateRatio/numerator/unit (varchar)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_numerator_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_numerator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_numerator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_numerator_system varchar;   -- dosage/doseAndRate/rateRatio/numerator/system (varchar)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_numerator_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_numerator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_numerator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_numerator_code varchar;   -- dosage/doseAndRate/rateRatio/numerator/code (varchar)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_numerator_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_denominator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_denominator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_denominator_value double precision;   -- dosage/doseAndRate/rateRatio/denominator/value (double precision)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_denominator_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_denominator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_denominator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_denominator_comparator varchar;   -- dosage/doseAndRate/rateRatio/denominator/comparator (varchar)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_denominator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_denominator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_denominator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_denominator_unit varchar;   -- dosage/doseAndRate/rateRatio/denominator/unit (varchar)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_denominator_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_denominator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_denominator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_denominator_system varchar;   -- dosage/doseAndRate/rateRatio/denominator/system (varchar)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_denominator_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_rateratio_denominator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_rateratio_denominator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_rateratio_denominator_code varchar;   -- dosage/doseAndRate/rateRatio/denominator/code (varchar)
         END IF; -- column (medstat_dosage_doseandrate_rateratio_denominator_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_raterange_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_raterange_low_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_raterange_low_value double precision;   -- dosage/doseAndRate/rateRange/low/value (double precision)
         END IF; -- column (medstat_dosage_doseandrate_raterange_low_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_raterange_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_raterange_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_raterange_low_unit varchar;   -- dosage/doseAndRate/rateRange/low/unit (varchar)
         END IF; -- column (medstat_dosage_doseandrate_raterange_low_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_raterange_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_raterange_low_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_raterange_low_system varchar;   -- dosage/doseAndRate/rateRange/low/system (varchar)
         END IF; -- column (medstat_dosage_doseandrate_raterange_low_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_raterange_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_raterange_low_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_raterange_low_code varchar;   -- dosage/doseAndRate/rateRange/low/code (varchar)
         END IF; -- column (medstat_dosage_doseandrate_raterange_low_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_raterange_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_raterange_high_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_raterange_high_value double precision;   -- dosage/doseAndRate/rateRange/high/value (double precision)
         END IF; -- column (medstat_dosage_doseandrate_raterange_high_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_raterange_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_raterange_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_raterange_high_unit varchar;   -- dosage/doseAndRate/rateRange/high/unit (varchar)
         END IF; -- column (medstat_dosage_doseandrate_raterange_high_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_raterange_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_raterange_high_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_raterange_high_system varchar;   -- dosage/doseAndRate/rateRange/high/system (varchar)
         END IF; -- column (medstat_dosage_doseandrate_raterange_high_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_raterange_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_raterange_high_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_raterange_high_code varchar;   -- dosage/doseAndRate/rateRange/high/code (varchar)
         END IF; -- column (medstat_dosage_doseandrate_raterange_high_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_ratequantity_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_ratequantity_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_ratequantity_value double precision;   -- dosage/doseAndRate/rateQuantity/value (double precision)
         END IF; -- column (medstat_dosage_doseandrate_ratequantity_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_ratequantity_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_ratequantity_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_ratequantity_unit varchar;   -- dosage/doseAndRate/rateQuantity/unit (varchar)
         END IF; -- column (medstat_dosage_doseandrate_ratequantity_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_ratequantity_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_ratequantity_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_ratequantity_system varchar;   -- dosage/doseAndRate/rateQuantity/system (varchar)
         END IF; -- column (medstat_dosage_doseandrate_ratequantity_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_doseandrate_ratequantity_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_doseandrate_ratequantity_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_doseandrate_ratequantity_code varchar;   -- dosage/doseAndRate/rateQuantity/code (varchar)
         END IF; -- column (medstat_dosage_doseandrate_ratequantity_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_numerator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_numerator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_numerator_value double precision;   -- dosage/maxDosePerPeriod/numerator/value (double precision)
         END IF; -- column (medstat_dosage_maxdoseperperiod_numerator_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_numerator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_numerator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_numerator_comparator varchar;   -- dosage/maxDosePerPeriod/numerator/comparator (varchar)
         END IF; -- column (medstat_dosage_maxdoseperperiod_numerator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_numerator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_numerator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_numerator_unit varchar;   -- dosage/maxDosePerPeriod/numerator/unit (varchar)
         END IF; -- column (medstat_dosage_maxdoseperperiod_numerator_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_numerator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_numerator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_numerator_system varchar;   -- dosage/maxDosePerPeriod/numerator/system (varchar)
         END IF; -- column (medstat_dosage_maxdoseperperiod_numerator_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_numerator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_numerator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_numerator_code varchar;   -- dosage/maxDosePerPeriod/numerator/code (varchar)
         END IF; -- column (medstat_dosage_maxdoseperperiod_numerator_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_denominator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_denominator_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_denominator_value double precision;   -- dosage/maxDosePerPeriod/denominator/value (double precision)
         END IF; -- column (medstat_dosage_maxdoseperperiod_denominator_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_denominator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_denominator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_denominator_comparator varchar;   -- dosage/maxDosePerPeriod/denominator/comparator (varchar)
         END IF; -- column (medstat_dosage_maxdoseperperiod_denominator_comparator)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_denominator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_denominator_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_denominator_unit varchar;   -- dosage/maxDosePerPeriod/denominator/unit (varchar)
         END IF; -- column (medstat_dosage_maxdoseperperiod_denominator_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_denominator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_denominator_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_denominator_system varchar;   -- dosage/maxDosePerPeriod/denominator/system (varchar)
         END IF; -- column (medstat_dosage_maxdoseperperiod_denominator_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperperiod_denominator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperperiod_denominator_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperperiod_denominator_code varchar;   -- dosage/maxDosePerPeriod/denominator/code (varchar)
         END IF; -- column (medstat_dosage_maxdoseperperiod_denominator_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperadministration_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperadministration_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperadministration_value double precision;   -- dosage/maxDosePerAdministration/value (double precision)
         END IF; -- column (medstat_dosage_maxdoseperadministration_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperadministration_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperadministration_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperadministration_unit varchar;   -- dosage/maxDosePerAdministration/unit (varchar)
         END IF; -- column (medstat_dosage_maxdoseperadministration_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperadministration_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperadministration_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperadministration_system varchar;   -- dosage/maxDosePerAdministration/system (varchar)
         END IF; -- column (medstat_dosage_maxdoseperadministration_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperadministration_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperadministration_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperadministration_code varchar;   -- dosage/maxDosePerAdministration/code (varchar)
         END IF; -- column (medstat_dosage_maxdoseperadministration_code)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperlifetime_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperlifetime_value'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperlifetime_value double precision;   -- dosage/maxDosePerLifetime/value (double precision)
         END IF; -- column (medstat_dosage_maxdoseperlifetime_value)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperlifetime_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperlifetime_unit'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperlifetime_unit varchar;   -- dosage/maxDosePerLifetime/unit (varchar)
         END IF; -- column (medstat_dosage_maxdoseperlifetime_unit)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperlifetime_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperlifetime_system'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperlifetime_system varchar;   -- dosage/maxDosePerLifetime/system (varchar)
         END IF; -- column (medstat_dosage_maxdoseperlifetime_system)
+
         IF NOT EXISTS ( -- column not exists (medstat_dosage_maxdoseperlifetime_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_dosage_maxdoseperlifetime_code'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement ADD medstat_dosage_maxdoseperlifetime_code varchar;   -- dosage/maxDosePerLifetime/code (varchar)
         END IF; -- column (medstat_dosage_maxdoseperlifetime_code)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -7299,9 +8153,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.medicationstatement ADD
@@ -7591,711 +8443,853 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_id varchar;   -- id (varchar)
         END IF; -- column (obs_id)
+
         IF NOT EXISTS ( -- column not exists (obs_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (obs_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (obs_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (obs_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (obs_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (obs_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (obs_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (obs_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (obs_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (obs_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (obs_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (obs_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (obs_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (obs_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (obs_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (obs_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (obs_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (obs_encounter_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_encounter_ref'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_encounter_ref varchar;   -- encounter/reference (varchar)
         END IF; -- column (obs_encounter_ref)
+
         IF NOT EXISTS ( -- column not exists (obs_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_patient_ref varchar;   -- subject/reference (varchar)
         END IF; -- column (obs_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (obs_partof_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_partof_ref'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_partof_ref varchar;   -- partOf/reference (varchar)
         END IF; -- column (obs_partof_ref)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_ref'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_ref varchar;   -- basedOn/reference (varchar)
         END IF; -- column (obs_basedon_ref)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_type'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_type varchar;   -- basedOn/type (varchar)
         END IF; -- column (obs_basedon_type)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_identifier_use varchar;   -- basedOn/identifier/use (varchar)
         END IF; -- column (obs_basedon_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_identifier_type_system varchar;   -- basedOn/identifier/type/coding/system (varchar)
         END IF; -- column (obs_basedon_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_identifier_type_version varchar;   -- basedOn/identifier/type/coding/version (varchar)
         END IF; -- column (obs_basedon_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_identifier_type_code varchar;   -- basedOn/identifier/type/coding/code (varchar)
         END IF; -- column (obs_basedon_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_identifier_type_display varchar;   -- basedOn/identifier/type/coding/display (varchar)
         END IF; -- column (obs_basedon_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_identifier_type_text varchar;   -- basedOn/identifier/type/text (varchar)
         END IF; -- column (obs_basedon_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_identifier_system varchar;   -- basedOn/identifier/system (varchar)
         END IF; -- column (obs_basedon_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_identifier_value varchar;   -- basedOn/identifier/value (varchar)
         END IF; -- column (obs_basedon_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (obs_basedon_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_basedon_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_basedon_display varchar;   -- basedOn/display (varchar)
         END IF; -- column (obs_basedon_display)
+
         IF NOT EXISTS ( -- column not exists (obs_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_status'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_status varchar;   -- status (varchar)
         END IF; -- column (obs_status)
+
         IF NOT EXISTS ( -- column not exists (obs_category_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_category_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_category_system varchar;   -- category/coding/system (varchar)
         END IF; -- column (obs_category_system)
+
         IF NOT EXISTS ( -- column not exists (obs_category_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_category_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_category_version varchar;   -- category/coding/version (varchar)
         END IF; -- column (obs_category_version)
+
         IF NOT EXISTS ( -- column not exists (obs_category_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_category_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_category_code varchar;   -- category/coding/code (varchar)
         END IF; -- column (obs_category_code)
+
         IF NOT EXISTS ( -- column not exists (obs_category_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_category_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_category_display varchar;   -- category/coding/display (varchar)
         END IF; -- column (obs_category_display)
+
         IF NOT EXISTS ( -- column not exists (obs_category_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_category_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_category_text varchar;   -- category/text (varchar)
         END IF; -- column (obs_category_text)
+
         IF NOT EXISTS ( -- column not exists (obs_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_code_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_code_system varchar;   -- code/coding/system (varchar)
         END IF; -- column (obs_code_system)
+
         IF NOT EXISTS ( -- column not exists (obs_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_code_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_code_version varchar;   -- code/coding/version (varchar)
         END IF; -- column (obs_code_version)
+
         IF NOT EXISTS ( -- column not exists (obs_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_code_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_code_code varchar;   -- code/coding/code (varchar)
         END IF; -- column (obs_code_code)
+
         IF NOT EXISTS ( -- column not exists (obs_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_code_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_code_display varchar;   -- code/coding/display (varchar)
         END IF; -- column (obs_code_display)
+
         IF NOT EXISTS ( -- column not exists (obs_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_code_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_code_text varchar;   -- code/text (varchar)
         END IF; -- column (obs_code_text)
+
         IF NOT EXISTS ( -- column not exists (obs_effectivedatetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_effectivedatetime'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_effectivedatetime timestamp;   -- effectiveDateTime (timestamp)
         END IF; -- column (obs_effectivedatetime)
+
         IF NOT EXISTS ( -- column not exists (obs_issued)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_issued'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_issued timestamp;   -- issued (timestamp)
         END IF; -- column (obs_issued)
+
         IF NOT EXISTS ( -- column not exists (obs_valuerange_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuerange_low_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuerange_low_value double precision;   -- valueRange/low/value (double precision)
         END IF; -- column (obs_valuerange_low_value)
+
         IF NOT EXISTS ( -- column not exists (obs_valuerange_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuerange_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuerange_low_unit varchar;   -- valueRange/low/unit (varchar)
         END IF; -- column (obs_valuerange_low_unit)
+
         IF NOT EXISTS ( -- column not exists (obs_valuerange_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuerange_low_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuerange_low_system varchar;   -- valueRange/low/system (varchar)
         END IF; -- column (obs_valuerange_low_system)
+
         IF NOT EXISTS ( -- column not exists (obs_valuerange_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuerange_low_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuerange_low_code varchar;   -- valueRange/low/code (varchar)
         END IF; -- column (obs_valuerange_low_code)
+
         IF NOT EXISTS ( -- column not exists (obs_valuerange_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuerange_high_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuerange_high_value double precision;   -- valueRange/high/value (double precision)
         END IF; -- column (obs_valuerange_high_value)
+
         IF NOT EXISTS ( -- column not exists (obs_valuerange_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuerange_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuerange_high_unit varchar;   -- valueRange/high/unit (varchar)
         END IF; -- column (obs_valuerange_high_unit)
+
         IF NOT EXISTS ( -- column not exists (obs_valuerange_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuerange_high_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuerange_high_system varchar;   -- valueRange/high/system (varchar)
         END IF; -- column (obs_valuerange_high_system)
+
         IF NOT EXISTS ( -- column not exists (obs_valuerange_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuerange_high_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuerange_high_code varchar;   -- valueRange/high/code (varchar)
         END IF; -- column (obs_valuerange_high_code)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_numerator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_numerator_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_numerator_value double precision;   -- valueRatio/numerator/value (double precision)
         END IF; -- column (obs_valueratio_numerator_value)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_numerator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_numerator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_numerator_comparator varchar;   -- valueRatio/numerator/comparator (varchar)
         END IF; -- column (obs_valueratio_numerator_comparator)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_numerator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_numerator_unit'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_numerator_unit varchar;   -- valueRatio/numerator/unit (varchar)
         END IF; -- column (obs_valueratio_numerator_unit)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_numerator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_numerator_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_numerator_system varchar;   -- valueRatio/numerator/system (varchar)
         END IF; -- column (obs_valueratio_numerator_system)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_numerator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_numerator_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_numerator_code varchar;   -- valueRatio/numerator/code (varchar)
         END IF; -- column (obs_valueratio_numerator_code)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_denominator_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_denominator_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_denominator_value double precision;   -- valueRatio/denominator/value (double precision)
         END IF; -- column (obs_valueratio_denominator_value)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_denominator_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_denominator_comparator'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_denominator_comparator varchar;   -- valueRatio/denominator/comparator (varchar)
         END IF; -- column (obs_valueratio_denominator_comparator)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_denominator_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_denominator_unit'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_denominator_unit varchar;   -- valueRatio/denominator/unit (varchar)
         END IF; -- column (obs_valueratio_denominator_unit)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_denominator_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_denominator_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_denominator_system varchar;   -- valueRatio/denominator/system (varchar)
         END IF; -- column (obs_valueratio_denominator_system)
+
         IF NOT EXISTS ( -- column not exists (obs_valueratio_denominator_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valueratio_denominator_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valueratio_denominator_code varchar;   -- valueRatio/denominator/code (varchar)
         END IF; -- column (obs_valueratio_denominator_code)
+
         IF NOT EXISTS ( -- column not exists (obs_valuequantity_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuequantity_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuequantity_value double precision;   -- valueQuantity/value (double precision)
         END IF; -- column (obs_valuequantity_value)
+
         IF NOT EXISTS ( -- column not exists (obs_valuequantity_comparator)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuequantity_comparator'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuequantity_comparator varchar;   -- valueQuantity/comparator (varchar)
         END IF; -- column (obs_valuequantity_comparator)
+
         IF NOT EXISTS ( -- column not exists (obs_valuequantity_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuequantity_unit'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuequantity_unit varchar;   -- valueQuantity/unit (varchar)
         END IF; -- column (obs_valuequantity_unit)
+
         IF NOT EXISTS ( -- column not exists (obs_valuequantity_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuequantity_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuequantity_system varchar;   -- valueQuantity/system (varchar)
         END IF; -- column (obs_valuequantity_system)
+
         IF NOT EXISTS ( -- column not exists (obs_valuequantity_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuequantity_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuequantity_code varchar;   -- valueQuantity/code (varchar)
         END IF; -- column (obs_valuequantity_code)
+
         IF NOT EXISTS ( -- column not exists (obs_valuecodeableconcept_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuecodeableconcept_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuecodeableconcept_system varchar;   -- valueCodeableConcept/coding/system (varchar)
         END IF; -- column (obs_valuecodeableconcept_system)
+
         IF NOT EXISTS ( -- column not exists (obs_valuecodeableconcept_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuecodeableconcept_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuecodeableconcept_version varchar;   -- valueCodeableConcept/coding/version (varchar)
         END IF; -- column (obs_valuecodeableconcept_version)
+
         IF NOT EXISTS ( -- column not exists (obs_valuecodeableconcept_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuecodeableconcept_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuecodeableconcept_code varchar;   -- valueCodeableConcept/coding/code (varchar)
         END IF; -- column (obs_valuecodeableconcept_code)
+
         IF NOT EXISTS ( -- column not exists (obs_valuecodeableconcept_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuecodeableconcept_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuecodeableconcept_display varchar;   -- valueCodeableConcept/coding/display (varchar)
         END IF; -- column (obs_valuecodeableconcept_display)
+
         IF NOT EXISTS ( -- column not exists (obs_valuecodeableconcept_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_valuecodeableconcept_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_valuecodeableconcept_text varchar;   -- valueCodeableConcept/text (varchar)
         END IF; -- column (obs_valuecodeableconcept_text)
+
         IF NOT EXISTS ( -- column not exists (obs_dataabsentreason_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_dataabsentreason_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_dataabsentreason_system varchar;   -- dataAbsentReason/coding/system (varchar)
         END IF; -- column (obs_dataabsentreason_system)
+
         IF NOT EXISTS ( -- column not exists (obs_dataabsentreason_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_dataabsentreason_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_dataabsentreason_version varchar;   -- dataAbsentReason/coding/version (varchar)
         END IF; -- column (obs_dataabsentreason_version)
+
         IF NOT EXISTS ( -- column not exists (obs_dataabsentreason_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_dataabsentreason_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_dataabsentreason_code varchar;   -- dataAbsentReason/coding/code (varchar)
         END IF; -- column (obs_dataabsentreason_code)
+
         IF NOT EXISTS ( -- column not exists (obs_dataabsentreason_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_dataabsentreason_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_dataabsentreason_display varchar;   -- dataAbsentReason/coding/display (varchar)
         END IF; -- column (obs_dataabsentreason_display)
+
         IF NOT EXISTS ( -- column not exists (obs_dataabsentreason_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_dataabsentreason_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_dataabsentreason_text varchar;   -- dataAbsentReason/text (varchar)
         END IF; -- column (obs_dataabsentreason_text)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorstring)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorstring'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorstring varchar;   -- note/authorString (varchar)
         END IF; -- column (obs_note_authorstring)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_ref varchar;   -- note/authorReference/reference (varchar)
         END IF; -- column (obs_note_authorreference_ref)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_type'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_type varchar;   -- note/authorReference/type (varchar)
         END IF; -- column (obs_note_authorreference_type)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_identifier_use varchar;   -- note/authorReference/identifier/use (varchar)
         END IF; -- column (obs_note_authorreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_identifier_type_system varchar;   -- note/authorReference/identifier/type/coding/system (varchar)
         END IF; -- column (obs_note_authorreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_identifier_type_version varchar;   -- note/authorReference/identifier/type/coding/version (varchar)
         END IF; -- column (obs_note_authorreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_identifier_type_code varchar;   -- note/authorReference/identifier/type/coding/code (varchar)
         END IF; -- column (obs_note_authorreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_identifier_type_display varchar;   -- note/authorReference/identifier/type/coding/display (varchar)
         END IF; -- column (obs_note_authorreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_identifier_type_text varchar;   -- note/authorReference/identifier/type/text (varchar)
         END IF; -- column (obs_note_authorreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_identifier_system varchar;   -- note/authorReference/identifier/system (varchar)
         END IF; -- column (obs_note_authorreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_identifier_value varchar;   -- note/authorReference/identifier/value (varchar)
         END IF; -- column (obs_note_authorreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (obs_note_authorreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_authorreference_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_authorreference_display varchar;   -- note/authorReference/display (varchar)
         END IF; -- column (obs_note_authorreference_display)
+
         IF NOT EXISTS ( -- column not exists (obs_note_time)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_time'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_time timestamp;   -- note/time (timestamp)
         END IF; -- column (obs_note_time)
+
         IF NOT EXISTS ( -- column not exists (obs_note_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_note_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_note_text varchar;   -- note/text (varchar)
         END IF; -- column (obs_note_text)
+
         IF NOT EXISTS ( -- column not exists (obs_method_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_method_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_method_system varchar;   -- method/coding/system (varchar)
         END IF; -- column (obs_method_system)
+
         IF NOT EXISTS ( -- column not exists (obs_method_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_method_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_method_version varchar;   -- method/coding/version (varchar)
         END IF; -- column (obs_method_version)
+
         IF NOT EXISTS ( -- column not exists (obs_method_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_method_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_method_code varchar;   -- method/coding/code (varchar)
         END IF; -- column (obs_method_code)
+
         IF NOT EXISTS ( -- column not exists (obs_method_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_method_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_method_display varchar;   -- method/coding/display (varchar)
         END IF; -- column (obs_method_display)
+
         IF NOT EXISTS ( -- column not exists (obs_method_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_method_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_method_text varchar;   -- method/text (varchar)
         END IF; -- column (obs_method_text)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_ref'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_ref varchar;   -- performer/reference (varchar)
         END IF; -- column (obs_performer_ref)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_type'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_type varchar;   -- performer/type (varchar)
         END IF; -- column (obs_performer_type)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_identifier_use varchar;   -- performer/identifier/use (varchar)
         END IF; -- column (obs_performer_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_identifier_type_system varchar;   -- performer/identifier/type/coding/system (varchar)
         END IF; -- column (obs_performer_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_identifier_type_version varchar;   -- performer/identifier/type/coding/version (varchar)
         END IF; -- column (obs_performer_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_identifier_type_code varchar;   -- performer/identifier/type/coding/code (varchar)
         END IF; -- column (obs_performer_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_identifier_type_display varchar;   -- performer/identifier/type/coding/display (varchar)
         END IF; -- column (obs_performer_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_identifier_type_text varchar;   -- performer/identifier/type/text (varchar)
         END IF; -- column (obs_performer_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_identifier_system varchar;   -- performer/identifier/system (varchar)
         END IF; -- column (obs_performer_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_identifier_value varchar;   -- performer/identifier/value (varchar)
         END IF; -- column (obs_performer_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (obs_performer_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_performer_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_performer_display varchar;   -- performer/display (varchar)
         END IF; -- column (obs_performer_display)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_low_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_low_value double precision;   -- referenceRange/low/value (double precision)
         END IF; -- column (obs_referencerange_low_value)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_low_unit varchar;   -- referenceRange/low/unit (varchar)
         END IF; -- column (obs_referencerange_low_unit)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_low_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_low_system varchar;   -- referenceRange/low/system (varchar)
         END IF; -- column (obs_referencerange_low_system)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_low_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_low_code varchar;   -- referenceRange/low/code (varchar)
         END IF; -- column (obs_referencerange_low_code)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_high_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_high_value double precision;   -- referenceRange/high/value (double precision)
         END IF; -- column (obs_referencerange_high_value)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_high_unit varchar;   -- referenceRange/high/unit (varchar)
         END IF; -- column (obs_referencerange_high_unit)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_high_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_high_system varchar;   -- referenceRange/high/system (varchar)
         END IF; -- column (obs_referencerange_high_system)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_high_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_high_code varchar;   -- referenceRange/high/code (varchar)
         END IF; -- column (obs_referencerange_high_code)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_type_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_type_system varchar;   -- referenceRange/type/coding/system (varchar)
         END IF; -- column (obs_referencerange_type_system)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_type_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_type_version varchar;   -- referenceRange/type/coding/version (varchar)
         END IF; -- column (obs_referencerange_type_version)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_type_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_type_code varchar;   -- referenceRange/type/coding/code (varchar)
         END IF; -- column (obs_referencerange_type_code)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_type_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_type_display varchar;   -- referenceRange/type/coding/display (varchar)
         END IF; -- column (obs_referencerange_type_display)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_type_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_type_text varchar;   -- referenceRange/type/text (varchar)
         END IF; -- column (obs_referencerange_type_text)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_appliesto_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_appliesto_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_appliesto_system varchar;   -- referenceRange/appliesTo/coding/system (varchar)
         END IF; -- column (obs_referencerange_appliesto_system)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_appliesto_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_appliesto_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_appliesto_version varchar;   -- referenceRange/appliesTo/coding/version (varchar)
         END IF; -- column (obs_referencerange_appliesto_version)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_appliesto_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_appliesto_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_appliesto_code varchar;   -- referenceRange/appliesTo/coding/code (varchar)
         END IF; -- column (obs_referencerange_appliesto_code)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_appliesto_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_appliesto_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_appliesto_display varchar;   -- referenceRange/appliesTo/coding/display (varchar)
         END IF; -- column (obs_referencerange_appliesto_display)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_appliesto_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_appliesto_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_appliesto_text varchar;   -- referenceRange/appliesTo/text (varchar)
         END IF; -- column (obs_referencerange_appliesto_text)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_age_low_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_age_low_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_age_low_value double precision;   -- referenceRange/age/low/value (double precision)
         END IF; -- column (obs_referencerange_age_low_value)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_age_low_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_age_low_unit'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_age_low_unit varchar;   -- referenceRange/age/low/unit (varchar)
         END IF; -- column (obs_referencerange_age_low_unit)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_age_low_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_age_low_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_age_low_system varchar;   -- referenceRange/age/low/system (varchar)
         END IF; -- column (obs_referencerange_age_low_system)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_age_low_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_age_low_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_age_low_code varchar;   -- referenceRange/age/low/code (varchar)
         END IF; -- column (obs_referencerange_age_low_code)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_age_high_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_age_high_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_age_high_value double precision;   -- referenceRange/age/high/value (double precision)
         END IF; -- column (obs_referencerange_age_high_value)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_age_high_unit)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_age_high_unit'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_age_high_unit varchar;   -- referenceRange/age/high/unit (varchar)
         END IF; -- column (obs_referencerange_age_high_unit)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_age_high_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_age_high_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_age_high_system varchar;   -- referenceRange/age/high/system (varchar)
         END IF; -- column (obs_referencerange_age_high_system)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_age_high_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_age_high_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_age_high_code varchar;   -- referenceRange/age/high/code (varchar)
         END IF; -- column (obs_referencerange_age_high_code)
+
         IF NOT EXISTS ( -- column not exists (obs_referencerange_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_referencerange_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_referencerange_text varchar;   -- referenceRange/text (varchar)
         END IF; -- column (obs_referencerange_text)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_ref'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_ref varchar;   -- hasMember/reference (varchar)
         END IF; -- column (obs_hasmember_ref)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_type'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_type varchar;   -- hasMember/type (varchar)
         END IF; -- column (obs_hasmember_type)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_identifier_use varchar;   -- hasMember/identifier/use (varchar)
         END IF; -- column (obs_hasmember_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_identifier_type_system varchar;   -- hasMember/identifier/type/coding/system (varchar)
         END IF; -- column (obs_hasmember_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_identifier_type_version varchar;   -- hasMember/identifier/type/coding/version (varchar)
         END IF; -- column (obs_hasmember_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_identifier_type_code varchar;   -- hasMember/identifier/type/coding/code (varchar)
         END IF; -- column (obs_hasmember_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_identifier_type_display varchar;   -- hasMember/identifier/type/coding/display (varchar)
         END IF; -- column (obs_hasmember_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_identifier_type_text varchar;   -- hasMember/identifier/type/text (varchar)
         END IF; -- column (obs_hasmember_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_identifier_system varchar;   -- hasMember/identifier/system (varchar)
         END IF; -- column (obs_hasmember_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_identifier_value varchar;   -- hasMember/identifier/value (varchar)
         END IF; -- column (obs_hasmember_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (obs_hasmember_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_hasmember_display'
         ) THEN
             ALTER TABLE cds2db_in.observation ADD obs_hasmember_display varchar;   -- hasMember/display (varchar)
         END IF; -- column (obs_hasmember_display)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -8598,9 +9592,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'observation'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.observation ADD
@@ -8809,246 +9801,295 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_id varchar;   -- id (varchar)
         END IF; -- column (diagrep_id)
+
         IF NOT EXISTS ( -- column not exists (diagrep_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (diagrep_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (diagrep_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (diagrep_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (diagrep_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (diagrep_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (diagrep_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (diagrep_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (diagrep_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (diagrep_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (diagrep_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (diagrep_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (diagrep_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (diagrep_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (diagrep_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (diagrep_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (diagrep_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (diagrep_encounter_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_encounter_ref'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_encounter_ref varchar;   -- encounter/reference (varchar)
         END IF; -- column (diagrep_encounter_ref)
+
         IF NOT EXISTS ( -- column not exists (diagrep_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_patient_ref varchar;   -- subject/reference (varchar)
         END IF; -- column (diagrep_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (diagrep_partof_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_partof_ref'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_partof_ref varchar;   -- partOf/reference (varchar)
         END IF; -- column (diagrep_partof_ref)
+
         IF NOT EXISTS ( -- column not exists (diagrep_result_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_result_ref'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_result_ref varchar;   -- result/reference (varchar)
         END IF; -- column (diagrep_result_ref)
+
         IF NOT EXISTS ( -- column not exists (diagrep_basedon_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_basedon_ref'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_basedon_ref varchar;   -- basedOn/reference (varchar)
         END IF; -- column (diagrep_basedon_ref)
+
         IF NOT EXISTS ( -- column not exists (diagrep_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_status'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_status varchar;   -- status (varchar)
         END IF; -- column (diagrep_status)
+
         IF NOT EXISTS ( -- column not exists (diagrep_category_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_category_system'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_category_system varchar;   -- category/coding/system (varchar)
         END IF; -- column (diagrep_category_system)
+
         IF NOT EXISTS ( -- column not exists (diagrep_category_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_category_version'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_category_version varchar;   -- category/coding/version (varchar)
         END IF; -- column (diagrep_category_version)
+
         IF NOT EXISTS ( -- column not exists (diagrep_category_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_category_code'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_category_code varchar;   -- category/coding/code (varchar)
         END IF; -- column (diagrep_category_code)
+
         IF NOT EXISTS ( -- column not exists (diagrep_category_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_category_display'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_category_display varchar;   -- category/coding/display (varchar)
         END IF; -- column (diagrep_category_display)
+
         IF NOT EXISTS ( -- column not exists (diagrep_category_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_category_text'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_category_text varchar;   -- category/text (varchar)
         END IF; -- column (diagrep_category_text)
+
         IF NOT EXISTS ( -- column not exists (diagrep_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_code_system'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_code_system varchar;   -- code/coding/system (varchar)
         END IF; -- column (diagrep_code_system)
+
         IF NOT EXISTS ( -- column not exists (diagrep_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_code_version'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_code_version varchar;   -- code/coding/version (varchar)
         END IF; -- column (diagrep_code_version)
+
         IF NOT EXISTS ( -- column not exists (diagrep_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_code_code'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_code_code varchar;   -- code/coding/code (varchar)
         END IF; -- column (diagrep_code_code)
+
         IF NOT EXISTS ( -- column not exists (diagrep_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_code_display'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_code_display varchar;   -- code/coding/display (varchar)
         END IF; -- column (diagrep_code_display)
+
         IF NOT EXISTS ( -- column not exists (diagrep_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_code_text'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_code_text varchar;   -- code/text (varchar)
         END IF; -- column (diagrep_code_text)
+
         IF NOT EXISTS ( -- column not exists (diagrep_effectivedatetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_effectivedatetime'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_effectivedatetime timestamp;   -- effectiveDateTime (timestamp)
         END IF; -- column (diagrep_effectivedatetime)
+
         IF NOT EXISTS ( -- column not exists (diagrep_issued)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_issued'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_issued timestamp;   -- issued (timestamp)
         END IF; -- column (diagrep_issued)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_ref'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_ref varchar;   -- performer/reference (varchar)
         END IF; -- column (diagrep_performer_ref)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_type'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_type varchar;   -- performer/type (varchar)
         END IF; -- column (diagrep_performer_type)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_identifier_use varchar;   -- performer/identifier/use (varchar)
         END IF; -- column (diagrep_performer_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_identifier_type_system varchar;   -- performer/identifier/type/coding/system (varchar)
         END IF; -- column (diagrep_performer_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_identifier_type_version varchar;   -- performer/identifier/type/coding/version (varchar)
         END IF; -- column (diagrep_performer_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_identifier_type_code varchar;   -- performer/identifier/type/coding/code (varchar)
         END IF; -- column (diagrep_performer_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_identifier_type_display varchar;   -- performer/identifier/type/coding/display (varchar)
         END IF; -- column (diagrep_performer_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_identifier_type_text varchar;   -- performer/identifier/type/text (varchar)
         END IF; -- column (diagrep_performer_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_identifier_system varchar;   -- performer/identifier/system (varchar)
         END IF; -- column (diagrep_performer_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_identifier_value varchar;   -- performer/identifier/value (varchar)
         END IF; -- column (diagrep_performer_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (diagrep_performer_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_performer_display'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_performer_display varchar;   -- performer/display (varchar)
         END IF; -- column (diagrep_performer_display)
+
         IF NOT EXISTS ( -- column not exists (diagrep_conclusion)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_conclusion'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_conclusion varchar;   -- conclusion (varchar)
         END IF; -- column (diagrep_conclusion)
+
         IF NOT EXISTS ( -- column not exists (diagrep_conclusioncode_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_conclusioncode_system'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_conclusioncode_system varchar;   -- conclusionCode/coding/system (varchar)
         END IF; -- column (diagrep_conclusioncode_system)
+
         IF NOT EXISTS ( -- column not exists (diagrep_conclusioncode_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_conclusioncode_version'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_conclusioncode_version varchar;   -- conclusionCode/coding/version (varchar)
         END IF; -- column (diagrep_conclusioncode_version)
+
         IF NOT EXISTS ( -- column not exists (diagrep_conclusioncode_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_conclusioncode_code'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_conclusioncode_code varchar;   -- conclusionCode/coding/code (varchar)
         END IF; -- column (diagrep_conclusioncode_code)
+
         IF NOT EXISTS ( -- column not exists (diagrep_conclusioncode_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_conclusioncode_display'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_conclusioncode_display varchar;   -- conclusionCode/coding/display (varchar)
         END IF; -- column (diagrep_conclusioncode_display)
+
         IF NOT EXISTS ( -- column not exists (diagrep_conclusioncode_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_conclusioncode_text'
         ) THEN
             ALTER TABLE cds2db_in.diagnosticreport ADD diagrep_conclusioncode_text varchar;   -- conclusionCode/text (varchar)
         END IF; -- column (diagrep_conclusioncode_text)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -9165,9 +10206,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.diagnosticreport ADD
@@ -9283,336 +10322,403 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_id varchar;   -- id (varchar)
         END IF; -- column (servreq_id)
+
         IF NOT EXISTS ( -- column not exists (servreq_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (servreq_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (servreq_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (servreq_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (servreq_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (servreq_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (servreq_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (servreq_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (servreq_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (servreq_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (servreq_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (servreq_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (servreq_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (servreq_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (servreq_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (servreq_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (servreq_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (servreq_encounter_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_encounter_ref'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_encounter_ref varchar;   -- encounter/reference (varchar)
         END IF; -- column (servreq_encounter_ref)
+
         IF NOT EXISTS ( -- column not exists (servreq_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_patient_ref varchar;   -- subject/reference (varchar)
         END IF; -- column (servreq_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_ref'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_ref varchar;   -- basedOn/reference (varchar)
         END IF; -- column (servreq_basedon_ref)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_type'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_type varchar;   -- basedOn/type (varchar)
         END IF; -- column (servreq_basedon_type)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_identifier_use varchar;   -- basedOn/identifier/use (varchar)
         END IF; -- column (servreq_basedon_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_identifier_type_system varchar;   -- basedOn/identifier/type/coding/system (varchar)
         END IF; -- column (servreq_basedon_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_identifier_type_version varchar;   -- basedOn/identifier/type/coding/version (varchar)
         END IF; -- column (servreq_basedon_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_identifier_type_code varchar;   -- basedOn/identifier/type/coding/code (varchar)
         END IF; -- column (servreq_basedon_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_identifier_type_display varchar;   -- basedOn/identifier/type/coding/display (varchar)
         END IF; -- column (servreq_basedon_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_identifier_type_text varchar;   -- basedOn/identifier/type/text (varchar)
         END IF; -- column (servreq_basedon_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_identifier_system varchar;   -- basedOn/identifier/system (varchar)
         END IF; -- column (servreq_basedon_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_identifier_value varchar;   -- basedOn/identifier/value (varchar)
         END IF; -- column (servreq_basedon_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (servreq_basedon_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_basedon_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_basedon_display varchar;   -- basedOn/display (varchar)
         END IF; -- column (servreq_basedon_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_status'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_status varchar;   -- status (varchar)
         END IF; -- column (servreq_status)
+
         IF NOT EXISTS ( -- column not exists (servreq_intent)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_intent'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_intent varchar;   -- intent (varchar)
         END IF; -- column (servreq_intent)
+
         IF NOT EXISTS ( -- column not exists (servreq_category_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_category_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_category_system varchar;   -- category/coding/system (varchar)
         END IF; -- column (servreq_category_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_category_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_category_version'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_category_version varchar;   -- category/coding/version (varchar)
         END IF; -- column (servreq_category_version)
+
         IF NOT EXISTS ( -- column not exists (servreq_category_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_category_code'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_category_code varchar;   -- category/coding/code (varchar)
         END IF; -- column (servreq_category_code)
+
         IF NOT EXISTS ( -- column not exists (servreq_category_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_category_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_category_display varchar;   -- category/coding/display (varchar)
         END IF; -- column (servreq_category_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_category_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_category_text'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_category_text varchar;   -- category/text (varchar)
         END IF; -- column (servreq_category_text)
+
         IF NOT EXISTS ( -- column not exists (servreq_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_code_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_code_system varchar;   -- code/coding/system (varchar)
         END IF; -- column (servreq_code_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_code_version'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_code_version varchar;   -- code/coding/version (varchar)
         END IF; -- column (servreq_code_version)
+
         IF NOT EXISTS ( -- column not exists (servreq_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_code_code'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_code_code varchar;   -- code/coding/code (varchar)
         END IF; -- column (servreq_code_code)
+
         IF NOT EXISTS ( -- column not exists (servreq_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_code_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_code_display varchar;   -- code/coding/display (varchar)
         END IF; -- column (servreq_code_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_code_text'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_code_text varchar;   -- code/text (varchar)
         END IF; -- column (servreq_code_text)
+
         IF NOT EXISTS ( -- column not exists (servreq_authoredon)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_authoredon'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_authoredon timestamp;   -- authoredOn (timestamp)
         END IF; -- column (servreq_authoredon)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_ref'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_ref varchar;   -- requester/reference (varchar)
         END IF; -- column (servreq_requester_ref)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_type'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_type varchar;   -- requester/type (varchar)
         END IF; -- column (servreq_requester_type)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_identifier_use varchar;   -- requester/identifier/use (varchar)
         END IF; -- column (servreq_requester_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_identifier_type_system varchar;   -- requester/identifier/type/coding/system (varchar)
         END IF; -- column (servreq_requester_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_identifier_type_version varchar;   -- requester/identifier/type/coding/version (varchar)
         END IF; -- column (servreq_requester_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_identifier_type_code varchar;   -- requester/identifier/type/coding/code (varchar)
         END IF; -- column (servreq_requester_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_identifier_type_display varchar;   -- requester/identifier/type/coding/display (varchar)
         END IF; -- column (servreq_requester_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_identifier_type_text varchar;   -- requester/identifier/type/text (varchar)
         END IF; -- column (servreq_requester_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_identifier_system varchar;   -- requester/identifier/system (varchar)
         END IF; -- column (servreq_requester_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_identifier_value varchar;   -- requester/identifier/value (varchar)
         END IF; -- column (servreq_requester_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (servreq_requester_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_requester_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_requester_display varchar;   -- requester/display (varchar)
         END IF; -- column (servreq_requester_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_ref'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_ref varchar;   -- performer/reference (varchar)
         END IF; -- column (servreq_performer_ref)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_type'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_type varchar;   -- performer/type (varchar)
         END IF; -- column (servreq_performer_type)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_identifier_use varchar;   -- performer/identifier/use (varchar)
         END IF; -- column (servreq_performer_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_identifier_type_system varchar;   -- performer/identifier/type/coding/system (varchar)
         END IF; -- column (servreq_performer_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_identifier_type_version varchar;   -- performer/identifier/type/coding/version (varchar)
         END IF; -- column (servreq_performer_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_identifier_type_code varchar;   -- performer/identifier/type/coding/code (varchar)
         END IF; -- column (servreq_performer_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_identifier_type_display varchar;   -- performer/identifier/type/coding/display (varchar)
         END IF; -- column (servreq_performer_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_identifier_type_text varchar;   -- performer/identifier/type/text (varchar)
         END IF; -- column (servreq_performer_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_identifier_system varchar;   -- performer/identifier/system (varchar)
         END IF; -- column (servreq_performer_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_identifier_value varchar;   -- performer/identifier/value (varchar)
         END IF; -- column (servreq_performer_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (servreq_performer_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_performer_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_performer_display varchar;   -- performer/display (varchar)
         END IF; -- column (servreq_performer_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_locationcode_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_locationcode_system'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_locationcode_system varchar;   -- locationCode/coding/system (varchar)
         END IF; -- column (servreq_locationcode_system)
+
         IF NOT EXISTS ( -- column not exists (servreq_locationcode_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_locationcode_version'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_locationcode_version varchar;   -- locationCode/coding/version (varchar)
         END IF; -- column (servreq_locationcode_version)
+
         IF NOT EXISTS ( -- column not exists (servreq_locationcode_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_locationcode_code'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_locationcode_code varchar;   -- locationCode/coding/code (varchar)
         END IF; -- column (servreq_locationcode_code)
+
         IF NOT EXISTS ( -- column not exists (servreq_locationcode_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_locationcode_display'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_locationcode_display varchar;   -- locationCode/coding/display (varchar)
         END IF; -- column (servreq_locationcode_display)
+
         IF NOT EXISTS ( -- column not exists (servreq_locationcode_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_locationcode_text'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest ADD servreq_locationcode_text varchar;   -- locationCode/text (varchar)
         END IF; -- column (servreq_locationcode_text)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -9765,9 +10871,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.servicerequest ADD
@@ -9901,386 +11005,463 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_id varchar;   -- id (varchar)
         END IF; -- column (proc_id)
+
         IF NOT EXISTS ( -- column not exists (proc_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (proc_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (proc_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (proc_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (proc_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (proc_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (proc_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (proc_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (proc_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (proc_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (proc_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (proc_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (proc_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (proc_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (proc_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (proc_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (proc_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (proc_encounter_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_encounter_ref'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_encounter_ref varchar;   -- encounter/reference (varchar)
         END IF; -- column (proc_encounter_ref)
+
         IF NOT EXISTS ( -- column not exists (proc_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_patient_ref varchar;   -- subject/reference (varchar)
         END IF; -- column (proc_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (proc_partof_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_partof_ref'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_partof_ref varchar;   -- partOf/reference (varchar)
         END IF; -- column (proc_partof_ref)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_ref'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_ref varchar;   -- basedOn/reference (varchar)
         END IF; -- column (proc_basedon_ref)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_type'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_type varchar;   -- basedOn/type (varchar)
         END IF; -- column (proc_basedon_type)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_identifier_use varchar;   -- basedOn/identifier/use (varchar)
         END IF; -- column (proc_basedon_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_identifier_type_system varchar;   -- basedOn/identifier/type/coding/system (varchar)
         END IF; -- column (proc_basedon_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_identifier_type_version varchar;   -- basedOn/identifier/type/coding/version (varchar)
         END IF; -- column (proc_basedon_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_identifier_type_code varchar;   -- basedOn/identifier/type/coding/code (varchar)
         END IF; -- column (proc_basedon_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_identifier_type_display varchar;   -- basedOn/identifier/type/coding/display (varchar)
         END IF; -- column (proc_basedon_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_identifier_type_text varchar;   -- basedOn/identifier/type/text (varchar)
         END IF; -- column (proc_basedon_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_identifier_system varchar;   -- basedOn/identifier/system (varchar)
         END IF; -- column (proc_basedon_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_identifier_value varchar;   -- basedOn/identifier/value (varchar)
         END IF; -- column (proc_basedon_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (proc_basedon_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_basedon_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_basedon_display varchar;   -- basedOn/display (varchar)
         END IF; -- column (proc_basedon_display)
+
         IF NOT EXISTS ( -- column not exists (proc_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_status'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_status varchar;   -- status (varchar)
         END IF; -- column (proc_status)
+
         IF NOT EXISTS ( -- column not exists (proc_statusreason_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_statusreason_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_statusreason_system varchar;   -- statusReason/coding/system (varchar)
         END IF; -- column (proc_statusreason_system)
+
         IF NOT EXISTS ( -- column not exists (proc_statusreason_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_statusreason_version'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_statusreason_version varchar;   -- statusReason/coding/version (varchar)
         END IF; -- column (proc_statusreason_version)
+
         IF NOT EXISTS ( -- column not exists (proc_statusreason_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_statusreason_code'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_statusreason_code varchar;   -- statusReason/coding/code (varchar)
         END IF; -- column (proc_statusreason_code)
+
         IF NOT EXISTS ( -- column not exists (proc_statusreason_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_statusreason_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_statusreason_display varchar;   -- statusReason/coding/display (varchar)
         END IF; -- column (proc_statusreason_display)
+
         IF NOT EXISTS ( -- column not exists (proc_statusreason_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_statusreason_text'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_statusreason_text varchar;   -- statusReason/text (varchar)
         END IF; -- column (proc_statusreason_text)
+
         IF NOT EXISTS ( -- column not exists (proc_category_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_category_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_category_system varchar;   -- category/coding/system (varchar)
         END IF; -- column (proc_category_system)
+
         IF NOT EXISTS ( -- column not exists (proc_category_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_category_version'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_category_version varchar;   -- category/coding/version (varchar)
         END IF; -- column (proc_category_version)
+
         IF NOT EXISTS ( -- column not exists (proc_category_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_category_code'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_category_code varchar;   -- category/coding/code (varchar)
         END IF; -- column (proc_category_code)
+
         IF NOT EXISTS ( -- column not exists (proc_category_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_category_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_category_display varchar;   -- category/coding/display (varchar)
         END IF; -- column (proc_category_display)
+
         IF NOT EXISTS ( -- column not exists (proc_category_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_category_text'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_category_text varchar;   -- category/text (varchar)
         END IF; -- column (proc_category_text)
+
         IF NOT EXISTS ( -- column not exists (proc_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_code_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_code_system varchar;   -- code/coding/system (varchar)
         END IF; -- column (proc_code_system)
+
         IF NOT EXISTS ( -- column not exists (proc_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_code_version'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_code_version varchar;   -- code/coding/version (varchar)
         END IF; -- column (proc_code_version)
+
         IF NOT EXISTS ( -- column not exists (proc_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_code_code'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_code_code varchar;   -- code/coding/code (varchar)
         END IF; -- column (proc_code_code)
+
         IF NOT EXISTS ( -- column not exists (proc_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_code_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_code_display varchar;   -- code/coding/display (varchar)
         END IF; -- column (proc_code_display)
+
         IF NOT EXISTS ( -- column not exists (proc_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_code_text'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_code_text varchar;   -- code/text (varchar)
         END IF; -- column (proc_code_text)
+
         IF NOT EXISTS ( -- column not exists (proc_performeddatetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_performeddatetime'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_performeddatetime timestamp;   -- performedDateTime (timestamp)
         END IF; -- column (proc_performeddatetime)
+
         IF NOT EXISTS ( -- column not exists (proc_performedperiod_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_performedperiod_start'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_performedperiod_start timestamp;   -- performedPeriod/start (timestamp)
         END IF; -- column (proc_performedperiod_start)
+
         IF NOT EXISTS ( -- column not exists (proc_performedperiod_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_performedperiod_end'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_performedperiod_end timestamp;   -- performedPeriod/end (timestamp)
         END IF; -- column (proc_performedperiod_end)
+
         IF NOT EXISTS ( -- column not exists (proc_reasoncode_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasoncode_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasoncode_system varchar;   -- reasonCode/coding/system (varchar)
         END IF; -- column (proc_reasoncode_system)
+
         IF NOT EXISTS ( -- column not exists (proc_reasoncode_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasoncode_version'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasoncode_version varchar;   -- reasonCode/coding/version (varchar)
         END IF; -- column (proc_reasoncode_version)
+
         IF NOT EXISTS ( -- column not exists (proc_reasoncode_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasoncode_code'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasoncode_code varchar;   -- reasonCode/coding/code (varchar)
         END IF; -- column (proc_reasoncode_code)
+
         IF NOT EXISTS ( -- column not exists (proc_reasoncode_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasoncode_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasoncode_display varchar;   -- reasonCode/coding/display (varchar)
         END IF; -- column (proc_reasoncode_display)
+
         IF NOT EXISTS ( -- column not exists (proc_reasoncode_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasoncode_text'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasoncode_text varchar;   -- reasonCode/text (varchar)
         END IF; -- column (proc_reasoncode_text)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_ref varchar;   -- reasonReference/reference (varchar)
         END IF; -- column (proc_reasonreference_ref)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_type'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_type varchar;   -- reasonReference/type (varchar)
         END IF; -- column (proc_reasonreference_type)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_identifier_use varchar;   -- reasonReference/identifier/use (varchar)
         END IF; -- column (proc_reasonreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_identifier_type_system varchar;   -- reasonReference/identifier/type/coding/system (varchar)
         END IF; -- column (proc_reasonreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_identifier_type_version varchar;   -- reasonReference/identifier/type/coding/version (varchar)
         END IF; -- column (proc_reasonreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_identifier_type_code varchar;   -- reasonReference/identifier/type/coding/code (varchar)
         END IF; -- column (proc_reasonreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_identifier_type_display varchar;   -- reasonReference/identifier/type/coding/display (varchar)
         END IF; -- column (proc_reasonreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_identifier_type_text varchar;   -- reasonReference/identifier/type/text (varchar)
         END IF; -- column (proc_reasonreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_identifier_system varchar;   -- reasonReference/identifier/system (varchar)
         END IF; -- column (proc_reasonreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_identifier_value varchar;   -- reasonReference/identifier/value (varchar)
         END IF; -- column (proc_reasonreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (proc_reasonreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_reasonreference_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_reasonreference_display varchar;   -- reasonReference/display (varchar)
         END IF; -- column (proc_reasonreference_display)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorstring)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorstring'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorstring varchar;   -- note/authorString (varchar)
         END IF; -- column (proc_note_authorstring)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_ref'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_ref varchar;   -- note/authorReference/reference (varchar)
         END IF; -- column (proc_note_authorreference_ref)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_type'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_type varchar;   -- note/authorReference/type (varchar)
         END IF; -- column (proc_note_authorreference_type)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_identifier_use varchar;   -- note/authorReference/identifier/use (varchar)
         END IF; -- column (proc_note_authorreference_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_identifier_type_system varchar;   -- note/authorReference/identifier/type/coding/system (varchar)
         END IF; -- column (proc_note_authorreference_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_identifier_type_version varchar;   -- note/authorReference/identifier/type/coding/version (varchar)
         END IF; -- column (proc_note_authorreference_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_identifier_type_code varchar;   -- note/authorReference/identifier/type/coding/code (varchar)
         END IF; -- column (proc_note_authorreference_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_identifier_type_display varchar;   -- note/authorReference/identifier/type/coding/display (varchar)
         END IF; -- column (proc_note_authorreference_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_identifier_type_text varchar;   -- note/authorReference/identifier/type/text (varchar)
         END IF; -- column (proc_note_authorreference_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_identifier_system varchar;   -- note/authorReference/identifier/system (varchar)
         END IF; -- column (proc_note_authorreference_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_identifier_value varchar;   -- note/authorReference/identifier/value (varchar)
         END IF; -- column (proc_note_authorreference_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (proc_note_authorreference_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_authorreference_display'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_authorreference_display varchar;   -- note/authorReference/display (varchar)
         END IF; -- column (proc_note_authorreference_display)
+
         IF NOT EXISTS ( -- column not exists (proc_note_time)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_time'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_time timestamp;   -- note/time (timestamp)
         END IF; -- column (proc_note_time)
+
         IF NOT EXISTS ( -- column not exists (proc_note_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_note_text'
         ) THEN
             ALTER TABLE cds2db_in.procedure ADD proc_note_text varchar;   -- note/text (varchar)
         END IF; -- column (proc_note_text)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -10453,9 +11634,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'procedure'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.procedure ADD
@@ -10599,371 +11778,445 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_id varchar;   -- id (varchar)
         END IF; -- column (cons_id)
+
         IF NOT EXISTS ( -- column not exists (cons_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (cons_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (cons_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (cons_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (cons_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (cons_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (cons_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (cons_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (cons_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (cons_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (cons_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (cons_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (cons_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (cons_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (cons_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (cons_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (cons_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (cons_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_patient_ref'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_patient_ref varchar;   -- patient/reference (varchar)
         END IF; -- column (cons_patient_ref)
+
         IF NOT EXISTS ( -- column not exists (cons_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_status'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_status varchar;   -- status (varchar)
         END IF; -- column (cons_status)
+
         IF NOT EXISTS ( -- column not exists (cons_scope_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_scope_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_scope_system varchar;   -- scope/coding/system (varchar)
         END IF; -- column (cons_scope_system)
+
         IF NOT EXISTS ( -- column not exists (cons_scope_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_scope_version'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_scope_version varchar;   -- scope/coding/version (varchar)
         END IF; -- column (cons_scope_version)
+
         IF NOT EXISTS ( -- column not exists (cons_scope_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_scope_code'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_scope_code varchar;   -- scope/coding/code (varchar)
         END IF; -- column (cons_scope_code)
+
         IF NOT EXISTS ( -- column not exists (cons_scope_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_scope_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_scope_display varchar;   -- scope/coding/display (varchar)
         END IF; -- column (cons_scope_display)
+
         IF NOT EXISTS ( -- column not exists (cons_scope_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_scope_text'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_scope_text varchar;   -- scope/text (varchar)
         END IF; -- column (cons_scope_text)
+
         IF NOT EXISTS ( -- column not exists (cons_datetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_datetime'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_datetime timestamp;   -- dateTime (timestamp)
         END IF; -- column (cons_datetime)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_type'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_type varchar;   -- provision/type (varchar)
         END IF; -- column (cons_provision_type)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_period_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_period_start'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_period_start timestamp;   -- provision/period/start (timestamp)
         END IF; -- column (cons_provision_period_start)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_period_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_period_end'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_period_end timestamp;   -- provision/period/end (timestamp)
         END IF; -- column (cons_provision_period_end)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_role_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_role_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_role_system varchar;   -- provision/actor/role/coding/system (varchar)
         END IF; -- column (cons_provision_actor_role_system)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_role_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_role_version'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_role_version varchar;   -- provision/actor/role/coding/version (varchar)
         END IF; -- column (cons_provision_actor_role_version)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_role_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_role_code'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_role_code varchar;   -- provision/actor/role/coding/code (varchar)
         END IF; -- column (cons_provision_actor_role_code)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_role_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_role_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_role_display varchar;   -- provision/actor/role/coding/display (varchar)
         END IF; -- column (cons_provision_actor_role_display)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_role_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_role_text'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_role_text varchar;   -- provision/actor/role/text (varchar)
         END IF; -- column (cons_provision_actor_role_text)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_ref'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_ref varchar;   -- provision/actor/reference (varchar)
         END IF; -- column (cons_provision_actor_ref)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_type'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_type varchar;   -- provision/actor/type (varchar)
         END IF; -- column (cons_provision_actor_type)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_identifier_use varchar;   -- provision/actor/identifier/use (varchar)
         END IF; -- column (cons_provision_actor_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_identifier_type_system varchar;   -- provision/actor/identifier/type/coding/system (varchar)
         END IF; -- column (cons_provision_actor_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_identifier_type_version varchar;   -- provision/actor/identifier/type/coding/version (varchar)
         END IF; -- column (cons_provision_actor_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_identifier_type_code varchar;   -- provision/actor/identifier/type/coding/code (varchar)
         END IF; -- column (cons_provision_actor_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_identifier_type_display varchar;   -- provision/actor/identifier/type/coding/display (varchar)
         END IF; -- column (cons_provision_actor_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_identifier_type_text varchar;   -- provision/actor/identifier/type/text (varchar)
         END IF; -- column (cons_provision_actor_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_identifier_system varchar;   -- provision/actor/identifier/system (varchar)
         END IF; -- column (cons_provision_actor_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_identifier_value varchar;   -- provision/actor/identifier/value (varchar)
         END IF; -- column (cons_provision_actor_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_actor_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_actor_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_actor_display varchar;   -- provision/actor/display (varchar)
         END IF; -- column (cons_provision_actor_display)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_code_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_code_system varchar;   -- provision/code/coding/system (varchar)
         END IF; -- column (cons_provision_code_system)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_code_version'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_code_version varchar;   -- provision/code/coding/version (varchar)
         END IF; -- column (cons_provision_code_version)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_code_code'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_code_code varchar;   -- provision/code/coding/code (varchar)
         END IF; -- column (cons_provision_code_code)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_code_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_code_display varchar;   -- provision/code/coding/display (varchar)
         END IF; -- column (cons_provision_code_display)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_code_text'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_code_text varchar;   -- provision/code/text (varchar)
         END IF; -- column (cons_provision_code_text)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_dataperiod_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_dataperiod_start'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_dataperiod_start timestamp;   -- provision/dataPeriod/start (timestamp)
         END IF; -- column (cons_provision_dataperiod_start)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_dataperiod_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_dataperiod_end'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_dataperiod_end timestamp;   -- provision/dataPeriod/end (timestamp)
         END IF; -- column (cons_provision_dataperiod_end)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_type'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_type varchar;   -- provision/provision/type (varchar)
         END IF; -- column (cons_provision_provision_type)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_period_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_period_start'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_period_start timestamp;   -- provision/provision/period/start (timestamp)
         END IF; -- column (cons_provision_provision_period_start)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_period_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_period_end'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_period_end timestamp;   -- provision/provision/period/end (timestamp)
         END IF; -- column (cons_provision_provision_period_end)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_role_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_role_system varchar;   -- provision/provision/actor/role/coding/system (varchar)
         END IF; -- column (cons_provision_provision_actor_role_system)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_role_version'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_role_version varchar;   -- provision/provision/actor/role/coding/version (varchar)
         END IF; -- column (cons_provision_provision_actor_role_version)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_role_code'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_role_code varchar;   -- provision/provision/actor/role/coding/code (varchar)
         END IF; -- column (cons_provision_provision_actor_role_code)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_role_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_role_display varchar;   -- provision/provision/actor/role/coding/display (varchar)
         END IF; -- column (cons_provision_provision_actor_role_display)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_role_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_role_text'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_role_text varchar;   -- provision/provision/actor/role/text (varchar)
         END IF; -- column (cons_provision_provision_actor_role_text)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_ref'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_ref varchar;   -- provision/provision/actor/reference (varchar)
         END IF; -- column (cons_provision_provision_actor_ref)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_type'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_type varchar;   -- provision/provision/actor/type (varchar)
         END IF; -- column (cons_provision_provision_actor_type)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_identifier_use varchar;   -- provision/provision/actor/identifier/use (varchar)
         END IF; -- column (cons_provision_provision_actor_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_identifier_type_system varchar;   -- provision/provision/actor/identifier/type/coding/system (varchar)
         END IF; -- column (cons_provision_provision_actor_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_identifier_type_version varchar;   -- provision/provision/actor/identifier/type/coding/version (varchar)
         END IF; -- column (cons_provision_provision_actor_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_identifier_type_code varchar;   -- provision/provision/actor/identifier/type/coding/code (varchar)
         END IF; -- column (cons_provision_provision_actor_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_identifier_type_display varchar;   -- provision/provision/actor/identifier/type/coding/display (varchar)
         END IF; -- column (cons_provision_provision_actor_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_identifier_type_text varchar;   -- provision/provision/actor/identifier/type/text (varchar)
         END IF; -- column (cons_provision_provision_actor_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_identifier_system varchar;   -- provision/provision/actor/identifier/system (varchar)
         END IF; -- column (cons_provision_provision_actor_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_identifier_value varchar;   -- provision/provision/actor/identifier/value (varchar)
         END IF; -- column (cons_provision_provision_actor_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_actor_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_actor_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_actor_display varchar;   -- provision/provision/actor/display (varchar)
         END IF; -- column (cons_provision_provision_actor_display)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_code_system'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_code_system varchar;   -- provision/provision/code/coding/system (varchar)
         END IF; -- column (cons_provision_provision_code_system)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_code_version'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_code_version varchar;   -- provision/provision/code/coding/version (varchar)
         END IF; -- column (cons_provision_provision_code_version)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_code_code'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_code_code varchar;   -- provision/provision/code/coding/code (varchar)
         END IF; -- column (cons_provision_provision_code_code)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_code_display'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_code_display varchar;   -- provision/provision/code/coding/display (varchar)
         END IF; -- column (cons_provision_provision_code_display)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_code_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_code_text'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_code_text varchar;   -- provision/provision/code/text (varchar)
         END IF; -- column (cons_provision_provision_code_text)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_dataperiod_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_dataperiod_start'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_dataperiod_start timestamp;   -- provision/provision/dataPeriod/start (timestamp)
         END IF; -- column (cons_provision_provision_dataperiod_start)
+
         IF NOT EXISTS ( -- column not exists (cons_provision_provision_dataperiod_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_provision_dataperiod_end'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_provision_provision_dataperiod_end timestamp;   -- provision/provision/dataPeriod/end (timestamp)
         END IF; -- column (cons_provision_provision_dataperiod_end)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -11130,9 +12383,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'consent'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.consent ADD
@@ -11273,91 +12524,109 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_id varchar;   -- id (varchar)
         END IF; -- column (loc_id)
+
         IF NOT EXISTS ( -- column not exists (loc_meta_versionid)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_meta_versionid'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_meta_versionid varchar;   -- meta/versionId (varchar)
         END IF; -- column (loc_meta_versionid)
+
         IF NOT EXISTS ( -- column not exists (loc_meta_lastupdated)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_meta_lastupdated'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_meta_lastupdated timestamp;   -- meta/lastUpdated (timestamp)
         END IF; -- column (loc_meta_lastupdated)
+
         IF NOT EXISTS ( -- column not exists (loc_meta_profile)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_meta_profile'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_meta_profile varchar;   -- meta/profile (varchar)
         END IF; -- column (loc_meta_profile)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_use)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_use'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_use varchar;   -- identifier/use (varchar)
         END IF; -- column (loc_identifier_use)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_type_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_type_system'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_type_system varchar;   -- identifier/type/coding/system (varchar)
         END IF; -- column (loc_identifier_type_system)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_type_version)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_type_version'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_type_version varchar;   -- identifier/type/coding/version (varchar)
         END IF; -- column (loc_identifier_type_version)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_type_code)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_type_code'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_type_code varchar;   -- identifier/type/coding/code (varchar)
         END IF; -- column (loc_identifier_type_code)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_type_display)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_type_display'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_type_display varchar;   -- identifier/type/coding/display (varchar)
         END IF; -- column (loc_identifier_type_display)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_type_text)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_type_text'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_type_text varchar;   -- identifier/type/text (varchar)
         END IF; -- column (loc_identifier_type_text)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_system)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_system'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_system varchar;   -- identifier/system (varchar)
         END IF; -- column (loc_identifier_system)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_value)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_value'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_value varchar;   -- identifier/value (varchar)
         END IF; -- column (loc_identifier_value)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_start)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_start'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_start timestamp;   -- identifier/start (timestamp)
         END IF; -- column (loc_identifier_start)
+
         IF NOT EXISTS ( -- column not exists (loc_identifier_end)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_identifier_end'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_identifier_end timestamp;   -- identifier/end (timestamp)
         END IF; -- column (loc_identifier_end)
+
         IF NOT EXISTS ( -- column not exists (loc_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_status'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_status varchar;   -- status (varchar)
         END IF; -- column (loc_status)
+
         IF NOT EXISTS ( -- column not exists (loc_name)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_name'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_name varchar;   -- name (varchar)
         END IF; -- column (loc_name)
+
         IF NOT EXISTS ( -- column not exists (loc_description)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_description'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_description varchar;   -- description (varchar)
         END IF; -- column (loc_description)
+
         IF NOT EXISTS ( -- column not exists (loc_alias)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_alias'
         ) THEN
             ALTER TABLE cds2db_in.location ADD loc_alias varchar;   -- alias (varchar)
         END IF; -- column (loc_alias)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -11412,9 +12681,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'location'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.location ADD
@@ -11499,16 +12766,19 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.pids_per_ward ADD ward_name varchar;   -- ward_name (varchar)
         END IF; -- column (ward_name)
+
         IF NOT EXISTS ( -- column not exists (patient_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'patient_id'
         ) THEN
             ALTER TABLE cds2db_in.pids_per_ward ADD patient_id varchar;   -- patient_id (varchar)
         END IF; -- column (patient_id)
+
         IF NOT EXISTS ( -- column not exists (encounter_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'encounter_id'
         ) THEN
             ALTER TABLE cds2db_in.pids_per_ward ADD encounter_id varchar;   -- encounter_id (varchar)
         END IF; -- column (encounter_id)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -11539,9 +12809,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.pids_per_ward ADD
@@ -13108,18 +14376,19 @@ BEGIN
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'idx_encounter_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_encounter_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_encounter_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_encounter_raw_id ON cds2db_in.encounter USING btree (idx_encounter_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_encounter_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_encounter_raw_id ON cds2db_in.encounter USING btree (idx_encounter_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_encounter_id RENAME TO del_idx_encounter_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_encounter_id;
+   	        CREATE INDEX idx_encounter_raw_id ON cds2db_in.encounter USING btree (idx_encounter_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_encounter_raw_id ON cds2db_in.encounter USING btree (idx_encounter_raw_id DESC);
+	    CREATE INDEX idx_encounter_raw_id ON cds2db_in.encounter USING btree (idx_encounter_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -13130,19 +14399,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_encounter_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_encounter_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_input_dt ON cds2db_in.encounter USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_input_dt ON cds2db_in.encounter USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_encounter_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_input_dt ON cds2db_in.encounter USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_encounter_input_dt RENAME TO del_cds2db_in_encounter_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_encounter_i_dt;
+	    CREATE INDEX idx_cds2db_in_encounter_input_dt ON cds2db_in.encounter USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_input_dt ON cds2db_in.encounter USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_encounter_input_dt ON cds2db_in.encounter USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_encounter_input_pnr for Table "encounter" in schema "cds2db_in"
@@ -13152,18 +14422,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_encounter_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_encounter_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_input_pnr ON cds2db_in.encounter USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_input_pnr ON cds2db_in.encounter USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_encounter_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_input_pnr ON cds2db_in.encounter USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_encounter_input_pnr RENAME TO del_cds2db_in_encounter_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_encounter_i_pnr;
+	    CREATE INDEX idx_cds2db_in_encounter_input_pnr ON cds2db_in.encounter USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_input_pnr ON cds2db_in.encounter USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_encounter_input_pnr ON cds2db_in.encounter USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13174,18 +14445,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_encounter_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_encounter_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'encounter'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_last_dt ON cds2db_in.encounter USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_last_dt ON cds2db_in.encounter USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_encounter_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_last_dt ON cds2db_in.encounter USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_encounter_last_dt RENAME TO del_cds2db_in_encounter_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_encounter_l_dt;
+	    CREATE INDEX idx_cds2db_in_encounter_last_dt ON cds2db_in.encounter USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_last_dt ON cds2db_in.encounter USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_encounter_last_dt ON cds2db_in.encounter USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13196,18 +14468,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_encounter_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_encounter_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_last_pnr ON cds2db_in.encounter USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_last_pnr ON cds2db_in.encounter USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_encounter_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_last_pnr ON cds2db_in.encounter USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_encounter_last_pnr RENAME TO del_cds2db_in_encounter_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_encounter_l_pnr;
+	    CREATE INDEX idx_cds2db_in_encounter_last_pnr ON cds2db_in.encounter USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_last_pnr ON cds2db_in.encounter USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_encounter_last_pnr ON cds2db_in.encounter USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13218,119 +14491,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_encounter_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_encounter_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_input_dt ON cds2db_in.encounter USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_cds2db_in_encounter_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_encounter_input_dt ON cds2db_in.encounter USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_encounter_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_hash ON cds2db_in.encounter USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_encounter_hash RENAME TO del_cds2db_in_encounter_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_encounter_hash;
+	    CREATE INDEX idx_cds2db_in_encounter_hash ON cds2db_in.encounter USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_encounter_hash ON cds2db_in.encounter USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_encounter_hash ON cds2db_in.encounter USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for encounter ----------------------------------------------------
 --- idx_encounter_enc_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_encounter_enc_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_enc_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_encounter_enc_id ON cds2db_in.encounter USING btree (enc_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_encounter_enc_id;
-   	        CREATE INDEX CONCURRENTLY idx_encounter_enc_id ON cds2db_in.encounter USING btree (enc_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_encounter_enc_id ON cds2db_in.encounter USING btree (enc_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_encounter_enc_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_enc_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_encounter_enc_id ON cds2db_in.encounter USING btree (enc_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_encounter_enc_id RENAME TO del_encounter_enc_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_encounter_enc_id;
+	    CREATE INDEX idx_encounter_enc_id ON cds2db_in.encounter USING btree (enc_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_encounter_enc_id ON cds2db_in.encounter USING btree (enc_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_encounter_enc_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_encounter_enc_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_enc_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_encounter_enc_meta_versionid ON cds2db_in.encounter USING btree (enc_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_encounter_enc_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_encounter_enc_meta_versionid ON cds2db_in.encounter USING btree (enc_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_encounter_enc_meta_versionid ON cds2db_in.encounter USING btree (enc_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_encounter_enc_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_enc_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_encounter_enc_meta_versionid ON cds2db_in.encounter USING btree (enc_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_encounter_enc_meta_versionid RENAME TO del_encounter_enc_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_encounter_enc_meta_versionid;
+	    CREATE INDEX idx_encounter_enc_meta_versionid ON cds2db_in.encounter USING btree (enc_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_encounter_enc_meta_versionid ON cds2db_in.encounter USING btree (enc_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_encounter_enc_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_encounter_enc_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_enc_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_encounter_enc_meta_lastupdated ON cds2db_in.encounter USING btree (enc_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_encounter_enc_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_encounter_enc_meta_lastupdated ON cds2db_in.encounter USING btree (enc_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_encounter_enc_meta_lastupdated ON cds2db_in.encounter USING btree (enc_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_encounter_enc_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_enc_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_encounter_enc_meta_lastupdated ON cds2db_in.encounter USING btree (enc_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_encounter_enc_meta_lastupdated RENAME TO del_encounter_enc_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_encounter_enc_meta_lastupdated;
+	    CREATE INDEX idx_encounter_enc_meta_lastupdated ON cds2db_in.encounter USING btree (enc_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_encounter_enc_meta_lastupdated ON cds2db_in.encounter USING btree (enc_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_encounter_enc_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_encounter_enc_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_enc_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_encounter_enc_meta_profile ON cds2db_in.encounter USING btree (enc_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_encounter_enc_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_encounter_enc_meta_profile ON cds2db_in.encounter USING btree (enc_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_encounter_enc_meta_profile ON cds2db_in.encounter USING btree (enc_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_encounter_enc_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'encounter' AND substr(indexname,1,63)=substr('idx_encounter_enc_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_encounter_enc_meta_profile ON cds2db_in.encounter USING btree (enc_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_encounter_enc_meta_profile RENAME TO del_encounter_enc_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_encounter_enc_meta_profile;
+	    CREATE INDEX idx_encounter_enc_meta_profile ON cds2db_in.encounter USING btree (enc_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_encounter_enc_meta_profile ON cds2db_in.encounter USING btree (enc_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - patient ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'idx_patient_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_patient_raw_id ON cds2db_in.patient USING btree (idx_patient_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_patient_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_patient_raw_id ON cds2db_in.patient USING btree (idx_patient_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_patient_id RENAME TO del_idx_patient_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_patient_id;
+   	        CREATE INDEX idx_patient_raw_id ON cds2db_in.patient USING btree (idx_patient_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_patient_raw_id ON cds2db_in.patient USING btree (idx_patient_raw_id DESC);
+	    CREATE INDEX idx_patient_raw_id ON cds2db_in.patient USING btree (idx_patient_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -13341,19 +14625,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_patient_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_input_dt ON cds2db_in.patient USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_input_dt ON cds2db_in.patient USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_patient_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_input_dt ON cds2db_in.patient USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_input_dt RENAME TO del_cds2db_in_patient_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_i_dt;
+	    CREATE INDEX idx_cds2db_in_patient_input_dt ON cds2db_in.patient USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_input_dt ON cds2db_in.patient USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_patient_input_dt ON cds2db_in.patient USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_patient_input_pnr for Table "patient" in schema "cds2db_in"
@@ -13363,18 +14648,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_input_pnr ON cds2db_in.patient USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_input_pnr ON cds2db_in.patient USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_patient_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_input_pnr ON cds2db_in.patient USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_input_pnr RENAME TO del_cds2db_in_patient_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_i_pnr;
+	    CREATE INDEX idx_cds2db_in_patient_input_pnr ON cds2db_in.patient USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_input_pnr ON cds2db_in.patient USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_patient_input_pnr ON cds2db_in.patient USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13385,18 +14671,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'patient'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_last_dt ON cds2db_in.patient USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_last_dt ON cds2db_in.patient USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_patient_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_last_dt ON cds2db_in.patient USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_last_dt RENAME TO del_cds2db_in_patient_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_l_dt;
+	    CREATE INDEX idx_cds2db_in_patient_last_dt ON cds2db_in.patient USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_last_dt ON cds2db_in.patient USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_patient_last_dt ON cds2db_in.patient USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13407,18 +14694,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_last_pnr ON cds2db_in.patient USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_last_pnr ON cds2db_in.patient USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_patient_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_last_pnr ON cds2db_in.patient USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_last_pnr RENAME TO del_cds2db_in_patient_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_l_pnr;
+	    CREATE INDEX idx_cds2db_in_patient_last_pnr ON cds2db_in.patient USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_last_pnr ON cds2db_in.patient USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_patient_last_pnr ON cds2db_in.patient USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13429,119 +14717,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_patient_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_input_dt ON cds2db_in.patient USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_cds2db_in_patient_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_patient_input_dt ON cds2db_in.patient USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_patient_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_hash ON cds2db_in.patient USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_patient_hash RENAME TO del_cds2db_in_patient_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_hash;
+	    CREATE INDEX idx_cds2db_in_patient_hash ON cds2db_in.patient USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_hash ON cds2db_in.patient USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_patient_hash ON cds2db_in.patient USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for patient ----------------------------------------------------
 --- idx_patient_pat_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_pat_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_pat_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_patient_pat_id ON cds2db_in.patient USING btree (pat_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_patient_pat_id;
-   	        CREATE INDEX CONCURRENTLY idx_patient_pat_id ON cds2db_in.patient USING btree (pat_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_patient_pat_id ON cds2db_in.patient USING btree (pat_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_patient_pat_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_pat_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_patient_pat_id ON cds2db_in.patient USING btree (pat_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_patient_pat_id RENAME TO del_patient_pat_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_patient_pat_id;
+	    CREATE INDEX idx_patient_pat_id ON cds2db_in.patient USING btree (pat_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_patient_pat_id ON cds2db_in.patient USING btree (pat_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_patient_pat_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_pat_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_pat_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_patient_pat_meta_versionid ON cds2db_in.patient USING btree (pat_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_patient_pat_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_patient_pat_meta_versionid ON cds2db_in.patient USING btree (pat_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_patient_pat_meta_versionid ON cds2db_in.patient USING btree (pat_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_patient_pat_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_pat_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_patient_pat_meta_versionid ON cds2db_in.patient USING btree (pat_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_patient_pat_meta_versionid RENAME TO del_patient_pat_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_patient_pat_meta_versionid;
+	    CREATE INDEX idx_patient_pat_meta_versionid ON cds2db_in.patient USING btree (pat_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_patient_pat_meta_versionid ON cds2db_in.patient USING btree (pat_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_patient_pat_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_pat_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_pat_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_patient_pat_meta_lastupdated ON cds2db_in.patient USING btree (pat_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_patient_pat_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_patient_pat_meta_lastupdated ON cds2db_in.patient USING btree (pat_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_patient_pat_meta_lastupdated ON cds2db_in.patient USING btree (pat_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_patient_pat_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_pat_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_patient_pat_meta_lastupdated ON cds2db_in.patient USING btree (pat_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_patient_pat_meta_lastupdated RENAME TO del_patient_pat_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_patient_pat_meta_lastupdated;
+	    CREATE INDEX idx_patient_pat_meta_lastupdated ON cds2db_in.patient USING btree (pat_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_patient_pat_meta_lastupdated ON cds2db_in.patient USING btree (pat_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_patient_pat_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_pat_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_pat_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_patient_pat_meta_profile ON cds2db_in.patient USING btree (pat_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_patient_pat_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_patient_pat_meta_profile ON cds2db_in.patient USING btree (pat_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_patient_pat_meta_profile ON cds2db_in.patient USING btree (pat_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'pat_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_patient_pat_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'patient' AND substr(indexname,1,63)=substr('idx_patient_pat_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_patient_pat_meta_profile ON cds2db_in.patient USING btree (pat_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_patient_pat_meta_profile RENAME TO del_patient_pat_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_patient_pat_meta_profile;
+	    CREATE INDEX idx_patient_pat_meta_profile ON cds2db_in.patient USING btree (pat_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_patient_pat_meta_profile ON cds2db_in.patient USING btree (pat_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - condition ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'idx_condition_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_condition_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_condition_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_condition_raw_id ON cds2db_in.condition USING btree (idx_condition_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_condition_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_condition_raw_id ON cds2db_in.condition USING btree (idx_condition_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_condition_id RENAME TO del_idx_condition_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_condition_id;
+   	        CREATE INDEX idx_condition_raw_id ON cds2db_in.condition USING btree (idx_condition_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_condition_raw_id ON cds2db_in.condition USING btree (idx_condition_raw_id DESC);
+	    CREATE INDEX idx_condition_raw_id ON cds2db_in.condition USING btree (idx_condition_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -13552,19 +14851,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_condition_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_condition_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_input_dt ON cds2db_in.condition USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_input_dt ON cds2db_in.condition USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_condition_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_input_dt ON cds2db_in.condition USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_condition_input_dt RENAME TO del_cds2db_in_condition_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_condition_i_dt;
+	    CREATE INDEX idx_cds2db_in_condition_input_dt ON cds2db_in.condition USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_input_dt ON cds2db_in.condition USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_condition_input_dt ON cds2db_in.condition USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_condition_input_pnr for Table "condition" in schema "cds2db_in"
@@ -13574,18 +14874,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_condition_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_condition_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_input_pnr ON cds2db_in.condition USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_input_pnr ON cds2db_in.condition USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_condition_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_input_pnr ON cds2db_in.condition USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_condition_input_pnr RENAME TO del_cds2db_in_condition_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_condition_i_pnr;
+	    CREATE INDEX idx_cds2db_in_condition_input_pnr ON cds2db_in.condition USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_input_pnr ON cds2db_in.condition USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_condition_input_pnr ON cds2db_in.condition USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13596,18 +14897,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_condition_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_condition_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'condition'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_last_dt ON cds2db_in.condition USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_last_dt ON cds2db_in.condition USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_condition_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_last_dt ON cds2db_in.condition USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_condition_last_dt RENAME TO del_cds2db_in_condition_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_condition_l_dt;
+	    CREATE INDEX idx_cds2db_in_condition_last_dt ON cds2db_in.condition USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_last_dt ON cds2db_in.condition USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_condition_last_dt ON cds2db_in.condition USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13618,18 +14920,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_condition_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_condition_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_last_pnr ON cds2db_in.condition USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_last_pnr ON cds2db_in.condition USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_condition_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_last_pnr ON cds2db_in.condition USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_condition_last_pnr RENAME TO del_cds2db_in_condition_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_condition_l_pnr;
+	    CREATE INDEX idx_cds2db_in_condition_last_pnr ON cds2db_in.condition USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_last_pnr ON cds2db_in.condition USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_condition_last_pnr ON cds2db_in.condition USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13640,119 +14943,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_condition_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_condition_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_input_dt ON cds2db_in.condition USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_cds2db_in_condition_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_condition_input_dt ON cds2db_in.condition USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_condition_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_hash ON cds2db_in.condition USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_condition_hash RENAME TO del_cds2db_in_condition_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_condition_hash;
+	    CREATE INDEX idx_cds2db_in_condition_hash ON cds2db_in.condition USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_condition_hash ON cds2db_in.condition USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_condition_hash ON cds2db_in.condition USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for condition ----------------------------------------------------
 --- idx_condition_con_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_condition_con_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_con_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_condition_con_id ON cds2db_in.condition USING btree (con_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_condition_con_id;
-   	        CREATE INDEX CONCURRENTLY idx_condition_con_id ON cds2db_in.condition USING btree (con_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_condition_con_id ON cds2db_in.condition USING btree (con_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_condition_con_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_con_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_condition_con_id ON cds2db_in.condition USING btree (con_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_condition_con_id RENAME TO del_condition_con_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_condition_con_id;
+	    CREATE INDEX idx_condition_con_id ON cds2db_in.condition USING btree (con_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_condition_con_id ON cds2db_in.condition USING btree (con_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_condition_con_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_condition_con_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_con_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_condition_con_meta_versionid ON cds2db_in.condition USING btree (con_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_condition_con_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_condition_con_meta_versionid ON cds2db_in.condition USING btree (con_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_condition_con_meta_versionid ON cds2db_in.condition USING btree (con_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_condition_con_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_con_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_condition_con_meta_versionid ON cds2db_in.condition USING btree (con_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_condition_con_meta_versionid RENAME TO del_condition_con_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_condition_con_meta_versionid;
+	    CREATE INDEX idx_condition_con_meta_versionid ON cds2db_in.condition USING btree (con_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_condition_con_meta_versionid ON cds2db_in.condition USING btree (con_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_condition_con_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_condition_con_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_con_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_condition_con_meta_lastupdated ON cds2db_in.condition USING btree (con_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_condition_con_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_condition_con_meta_lastupdated ON cds2db_in.condition USING btree (con_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_condition_con_meta_lastupdated ON cds2db_in.condition USING btree (con_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_condition_con_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_con_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_condition_con_meta_lastupdated ON cds2db_in.condition USING btree (con_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_condition_con_meta_lastupdated RENAME TO del_condition_con_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_condition_con_meta_lastupdated;
+	    CREATE INDEX idx_condition_con_meta_lastupdated ON cds2db_in.condition USING btree (con_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_condition_con_meta_lastupdated ON cds2db_in.condition USING btree (con_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_condition_con_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_condition_con_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_con_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_condition_con_meta_profile ON cds2db_in.condition USING btree (con_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_condition_con_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_condition_con_meta_profile ON cds2db_in.condition USING btree (con_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_condition_con_meta_profile ON cds2db_in.condition USING btree (con_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'con_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_condition_con_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'condition' AND substr(indexname,1,63)=substr('idx_condition_con_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_condition_con_meta_profile ON cds2db_in.condition USING btree (con_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_condition_con_meta_profile RENAME TO del_condition_con_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_condition_con_meta_profile;
+	    CREATE INDEX idx_condition_con_meta_profile ON cds2db_in.condition USING btree (con_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_condition_con_meta_profile ON cds2db_in.condition USING btree (con_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - medication ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'idx_medication_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medication_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medication_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_medication_raw_id ON cds2db_in.medication USING btree (idx_medication_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medication_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_medication_raw_id ON cds2db_in.medication USING btree (idx_medication_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_medication_id RENAME TO del_idx_medication_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_medication_id;
+   	        CREATE INDEX idx_medication_raw_id ON cds2db_in.medication USING btree (idx_medication_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medication_raw_id ON cds2db_in.medication USING btree (idx_medication_raw_id DESC);
+	    CREATE INDEX idx_medication_raw_id ON cds2db_in.medication USING btree (idx_medication_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -13763,19 +15077,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medication_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_medication_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_input_dt ON cds2db_in.medication USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_input_dt ON cds2db_in.medication USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medication_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_input_dt ON cds2db_in.medication USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_medication_input_dt RENAME TO del_cds2db_in_medication_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medication_i_dt;
+	    CREATE INDEX idx_cds2db_in_medication_input_dt ON cds2db_in.medication USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_input_dt ON cds2db_in.medication USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_medication_input_dt ON cds2db_in.medication USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_medication_input_pnr for Table "medication" in schema "cds2db_in"
@@ -13785,18 +15100,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medication_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medication_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_input_pnr ON cds2db_in.medication USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_input_pnr ON cds2db_in.medication USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medication_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_input_pnr ON cds2db_in.medication USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medication_input_pnr RENAME TO del_cds2db_in_medication_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medication_i_pnr;
+	    CREATE INDEX idx_cds2db_in_medication_input_pnr ON cds2db_in.medication USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_input_pnr ON cds2db_in.medication USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_medication_input_pnr ON cds2db_in.medication USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13807,18 +15123,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medication_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medication_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'medication'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_last_dt ON cds2db_in.medication USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_last_dt ON cds2db_in.medication USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medication_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_last_dt ON cds2db_in.medication USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medication_last_dt RENAME TO del_cds2db_in_medication_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medication_l_dt;
+	    CREATE INDEX idx_cds2db_in_medication_last_dt ON cds2db_in.medication USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_last_dt ON cds2db_in.medication USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_medication_last_dt ON cds2db_in.medication USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13829,18 +15146,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medication_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medication_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_last_pnr ON cds2db_in.medication USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_last_pnr ON cds2db_in.medication USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medication_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_last_pnr ON cds2db_in.medication USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medication_last_pnr RENAME TO del_cds2db_in_medication_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medication_l_pnr;
+	    CREATE INDEX idx_cds2db_in_medication_last_pnr ON cds2db_in.medication USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_last_pnr ON cds2db_in.medication USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_medication_last_pnr ON cds2db_in.medication USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -13851,119 +15169,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medication_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medication_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_input_dt ON cds2db_in.medication USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_cds2db_in_medication_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medication_input_dt ON cds2db_in.medication USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medication_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_hash ON cds2db_in.medication USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medication_hash RENAME TO del_cds2db_in_medication_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medication_hash;
+	    CREATE INDEX idx_cds2db_in_medication_hash ON cds2db_in.medication USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medication_hash ON cds2db_in.medication USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_medication_hash ON cds2db_in.medication USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for medication ----------------------------------------------------
 --- idx_medication_med_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medication_med_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_med_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medication_med_id ON cds2db_in.medication USING btree (med_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medication_med_id;
-   	        CREATE INDEX CONCURRENTLY idx_medication_med_id ON cds2db_in.medication USING btree (med_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medication_med_id ON cds2db_in.medication USING btree (med_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medication_med_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_med_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medication_med_id ON cds2db_in.medication USING btree (med_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medication_med_id RENAME TO del_medication_med_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_medication_med_id;
+	    CREATE INDEX idx_medication_med_id ON cds2db_in.medication USING btree (med_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medication_med_id ON cds2db_in.medication USING btree (med_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_medication_med_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medication_med_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_med_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medication_med_meta_versionid ON cds2db_in.medication USING btree (med_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medication_med_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_medication_med_meta_versionid ON cds2db_in.medication USING btree (med_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medication_med_meta_versionid ON cds2db_in.medication USING btree (med_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medication_med_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_med_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medication_med_meta_versionid ON cds2db_in.medication USING btree (med_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medication_med_meta_versionid RENAME TO del_medication_med_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_medication_med_meta_versionid;
+	    CREATE INDEX idx_medication_med_meta_versionid ON cds2db_in.medication USING btree (med_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medication_med_meta_versionid ON cds2db_in.medication USING btree (med_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_medication_med_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medication_med_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_med_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medication_med_meta_lastupdated ON cds2db_in.medication USING btree (med_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medication_med_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_medication_med_meta_lastupdated ON cds2db_in.medication USING btree (med_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medication_med_meta_lastupdated ON cds2db_in.medication USING btree (med_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medication_med_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_med_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medication_med_meta_lastupdated ON cds2db_in.medication USING btree (med_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medication_med_meta_lastupdated RENAME TO del_medication_med_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_medication_med_meta_lastupdated;
+	    CREATE INDEX idx_medication_med_meta_lastupdated ON cds2db_in.medication USING btree (med_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medication_med_meta_lastupdated ON cds2db_in.medication USING btree (med_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_medication_med_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medication_med_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_med_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medication_med_meta_profile ON cds2db_in.medication USING btree (med_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medication_med_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_medication_med_meta_profile ON cds2db_in.medication USING btree (med_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medication_med_meta_profile ON cds2db_in.medication USING btree (med_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'med_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medication_med_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medication' AND substr(indexname,1,63)=substr('idx_medication_med_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medication_med_meta_profile ON cds2db_in.medication USING btree (med_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medication_med_meta_profile RENAME TO del_medication_med_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_medication_med_meta_profile;
+	    CREATE INDEX idx_medication_med_meta_profile ON cds2db_in.medication USING btree (med_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medication_med_meta_profile ON cds2db_in.medication USING btree (med_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - medicationrequest ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'idx_medicationrequest_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationrequest_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationrequest_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (idx_medicationrequest_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationrequest_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (idx_medicationrequest_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_medicationrequest_id RENAME TO del_idx_medicationrequest_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_medicationrequest_id;
+   	        CREATE INDEX idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (idx_medicationrequest_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (idx_medicationrequest_raw_id DESC);
+	    CREATE INDEX idx_medicationrequest_raw_id ON cds2db_in.medicationrequest USING btree (idx_medicationrequest_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -13974,19 +15303,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_medicationrequest_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_input_dt ON cds2db_in.medicationrequest USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_input_dt ON cds2db_in.medicationrequest USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationrequest_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_input_dt ON cds2db_in.medicationrequest USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationrequest_input_dt RENAME TO del_cds2db_in_medicationrequest_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationrequest_i_dt;
+	    CREATE INDEX idx_cds2db_in_medicationrequest_input_dt ON cds2db_in.medicationrequest USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_input_dt ON cds2db_in.medicationrequest USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_medicationrequest_input_dt ON cds2db_in.medicationrequest USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_medicationrequest_input_pnr for Table "medicationrequest" in schema "cds2db_in"
@@ -13996,18 +15326,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_input_pnr ON cds2db_in.medicationrequest USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_input_pnr ON cds2db_in.medicationrequest USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationrequest_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_input_pnr ON cds2db_in.medicationrequest USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationrequest_input_pnr RENAME TO del_cds2db_in_medicationrequest_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationrequest_i_pnr;
+	    CREATE INDEX idx_cds2db_in_medicationrequest_input_pnr ON cds2db_in.medicationrequest USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_input_pnr ON cds2db_in.medicationrequest USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_medicationrequest_input_pnr ON cds2db_in.medicationrequest USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14018,18 +15349,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_last_dt ON cds2db_in.medicationrequest USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_last_dt ON cds2db_in.medicationrequest USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationrequest_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_last_dt ON cds2db_in.medicationrequest USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationrequest_last_dt RENAME TO del_cds2db_in_medicationrequest_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationrequest_l_dt;
+	    CREATE INDEX idx_cds2db_in_medicationrequest_last_dt ON cds2db_in.medicationrequest USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_last_dt ON cds2db_in.medicationrequest USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_medicationrequest_last_dt ON cds2db_in.medicationrequest USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14040,18 +15372,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_last_pnr ON cds2db_in.medicationrequest USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_last_pnr ON cds2db_in.medicationrequest USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationrequest_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_last_pnr ON cds2db_in.medicationrequest USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationrequest_last_pnr RENAME TO del_cds2db_in_medicationrequest_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationrequest_l_pnr;
+	    CREATE INDEX idx_cds2db_in_medicationrequest_last_pnr ON cds2db_in.medicationrequest USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_last_pnr ON cds2db_in.medicationrequest USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_medicationrequest_last_pnr ON cds2db_in.medicationrequest USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14062,119 +15395,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_input_dt ON cds2db_in.medicationrequest USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationrequest_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationrequest_input_dt ON cds2db_in.medicationrequest USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationrequest_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_hash ON cds2db_in.medicationrequest USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationrequest_hash RENAME TO del_cds2db_in_medicationrequest_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationrequest_hash;
+	    CREATE INDEX idx_cds2db_in_medicationrequest_hash ON cds2db_in.medicationrequest USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationrequest_hash ON cds2db_in.medicationrequest USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_medicationrequest_hash ON cds2db_in.medicationrequest USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for medicationrequest ----------------------------------------------------
 --- idx_medicationrequest_medreq_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationrequest_medreq_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_medreq_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationrequest_medreq_id ON cds2db_in.medicationrequest USING btree (medreq_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationrequest_medreq_id;
-   	        CREATE INDEX CONCURRENTLY idx_medicationrequest_medreq_id ON cds2db_in.medicationrequest USING btree (medreq_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationrequest_medreq_id ON cds2db_in.medicationrequest USING btree (medreq_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationrequest_medreq_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_medreq_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationrequest_medreq_id ON cds2db_in.medicationrequest USING btree (medreq_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationrequest_medreq_id RENAME TO del_medicationrequest_medreq_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationrequest_medreq_id;
+	    CREATE INDEX idx_medicationrequest_medreq_id ON cds2db_in.medicationrequest USING btree (medreq_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationrequest_medreq_id ON cds2db_in.medicationrequest USING btree (medreq_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_medicationrequest_medreq_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationrequest_medreq_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_medreq_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationrequest_medreq_meta_versionid ON cds2db_in.medicationrequest USING btree (medreq_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationrequest_medreq_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_medicationrequest_medreq_meta_versionid ON cds2db_in.medicationrequest USING btree (medreq_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationrequest_medreq_meta_versionid ON cds2db_in.medicationrequest USING btree (medreq_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationrequest_medreq_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_medreq_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationrequest_medreq_meta_versionid ON cds2db_in.medicationrequest USING btree (medreq_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationrequest_medreq_meta_versionid RENAME TO del_medicationrequest_medreq_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationrequest_medreq_meta_versionid;
+	    CREATE INDEX idx_medicationrequest_medreq_meta_versionid ON cds2db_in.medicationrequest USING btree (medreq_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationrequest_medreq_meta_versionid ON cds2db_in.medicationrequest USING btree (medreq_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_medicationrequest_medreq_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationrequest_medreq_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_medreq_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationrequest_medreq_meta_lastupdated ON cds2db_in.medicationrequest USING btree (medreq_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationrequest_medreq_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_medicationrequest_medreq_meta_lastupdated ON cds2db_in.medicationrequest USING btree (medreq_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationrequest_medreq_meta_lastupdated ON cds2db_in.medicationrequest USING btree (medreq_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationrequest_medreq_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_medreq_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationrequest_medreq_meta_lastupdated ON cds2db_in.medicationrequest USING btree (medreq_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationrequest_medreq_meta_lastupdated RENAME TO del_medicationrequest_medreq_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationrequest_medreq_meta_lastupdated;
+	    CREATE INDEX idx_medicationrequest_medreq_meta_lastupdated ON cds2db_in.medicationrequest USING btree (medreq_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationrequest_medreq_meta_lastupdated ON cds2db_in.medicationrequest USING btree (medreq_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_medicationrequest_medreq_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationrequest_medreq_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_medreq_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationrequest_medreq_meta_profile ON cds2db_in.medicationrequest USING btree (medreq_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationrequest_medreq_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_medicationrequest_medreq_meta_profile ON cds2db_in.medicationrequest USING btree (medreq_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationrequest_medreq_meta_profile ON cds2db_in.medicationrequest USING btree (medreq_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'medreq_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationrequest_medreq_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest' AND substr(indexname,1,63)=substr('idx_medicationrequest_medreq_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationrequest_medreq_meta_profile ON cds2db_in.medicationrequest USING btree (medreq_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationrequest_medreq_meta_profile RENAME TO del_medicationrequest_medreq_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationrequest_medreq_meta_profile;
+	    CREATE INDEX idx_medicationrequest_medreq_meta_profile ON cds2db_in.medicationrequest USING btree (medreq_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationrequest_medreq_meta_profile ON cds2db_in.medicationrequest USING btree (medreq_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - medicationadministration ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'idx_medicationadministration_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationadministration_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationadministration_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (idx_medicationadministration_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationadministration_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (idx_medicationadministration_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_medicationadministration_id RENAME TO del_idx_medicationadministration_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_medicationadministration_id;
+   	        CREATE INDEX idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (idx_medicationadministration_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (idx_medicationadministration_raw_id DESC);
+	    CREATE INDEX idx_medicationadministration_raw_id ON cds2db_in.medicationadministration USING btree (idx_medicationadministration_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -14185,19 +15529,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_medicationadministration_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_input_dt ON cds2db_in.medicationadministration USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_input_dt ON cds2db_in.medicationadministration USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationadministration_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_input_dt ON cds2db_in.medicationadministration USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationadministration_input_dt RENAME TO del_cds2db_in_medicationadministration_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationadministration_i_dt;
+	    CREATE INDEX idx_cds2db_in_medicationadministration_input_dt ON cds2db_in.medicationadministration USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_input_dt ON cds2db_in.medicationadministration USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_medicationadministration_input_dt ON cds2db_in.medicationadministration USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_medicationadministration_input_pnr for Table "medicationadministration" in schema "cds2db_in"
@@ -14207,18 +15552,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_input_pnr ON cds2db_in.medicationadministration USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_input_pnr ON cds2db_in.medicationadministration USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationadministration_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_input_pnr ON cds2db_in.medicationadministration USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationadministration_input_pnr RENAME TO del_cds2db_in_medicationadministration_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationadministration_i_pnr;
+	    CREATE INDEX idx_cds2db_in_medicationadministration_input_pnr ON cds2db_in.medicationadministration USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_input_pnr ON cds2db_in.medicationadministration USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_medicationadministration_input_pnr ON cds2db_in.medicationadministration USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14229,18 +15575,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_last_dt ON cds2db_in.medicationadministration USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_last_dt ON cds2db_in.medicationadministration USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationadministration_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_last_dt ON cds2db_in.medicationadministration USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationadministration_last_dt RENAME TO del_cds2db_in_medicationadministration_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationadministration_l_dt;
+	    CREATE INDEX idx_cds2db_in_medicationadministration_last_dt ON cds2db_in.medicationadministration USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_last_dt ON cds2db_in.medicationadministration USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_medicationadministration_last_dt ON cds2db_in.medicationadministration USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14251,18 +15598,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_last_pnr ON cds2db_in.medicationadministration USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_last_pnr ON cds2db_in.medicationadministration USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationadministration_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_last_pnr ON cds2db_in.medicationadministration USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationadministration_last_pnr RENAME TO del_cds2db_in_medicationadministration_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationadministration_l_pnr;
+	    CREATE INDEX idx_cds2db_in_medicationadministration_last_pnr ON cds2db_in.medicationadministration USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_last_pnr ON cds2db_in.medicationadministration USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_medicationadministration_last_pnr ON cds2db_in.medicationadministration USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14273,119 +15621,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_input_dt ON cds2db_in.medicationadministration USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationadministration_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationadministration_input_dt ON cds2db_in.medicationadministration USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationadministration_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_hash ON cds2db_in.medicationadministration USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationadministration_hash RENAME TO del_cds2db_in_medicationadministration_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationadministration_hash;
+	    CREATE INDEX idx_cds2db_in_medicationadministration_hash ON cds2db_in.medicationadministration USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationadministration_hash ON cds2db_in.medicationadministration USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_medicationadministration_hash ON cds2db_in.medicationadministration USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for medicationadministration ----------------------------------------------------
 --- idx_medicationadministration_medadm_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationadministration_medadm_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_medadm_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationadministration_medadm_id ON cds2db_in.medicationadministration USING btree (medadm_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationadministration_medadm_id;
-   	        CREATE INDEX CONCURRENTLY idx_medicationadministration_medadm_id ON cds2db_in.medicationadministration USING btree (medadm_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationadministration_medadm_id ON cds2db_in.medicationadministration USING btree (medadm_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationadministration_medadm_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_medadm_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationadministration_medadm_id ON cds2db_in.medicationadministration USING btree (medadm_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationadministration_medadm_id RENAME TO del_medicationadministration_medadm_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationadministration_medadm_id;
+	    CREATE INDEX idx_medicationadministration_medadm_id ON cds2db_in.medicationadministration USING btree (medadm_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationadministration_medadm_id ON cds2db_in.medicationadministration USING btree (medadm_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_medicationadministration_medadm_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationadministration_medadm_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_medadm_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationadministration_medadm_meta_versionid ON cds2db_in.medicationadministration USING btree (medadm_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationadministration_medadm_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_medicationadministration_medadm_meta_versionid ON cds2db_in.medicationadministration USING btree (medadm_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationadministration_medadm_meta_versionid ON cds2db_in.medicationadministration USING btree (medadm_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationadministration_medadm_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_medadm_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationadministration_medadm_meta_versionid ON cds2db_in.medicationadministration USING btree (medadm_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationadministration_medadm_meta_versionid RENAME TO del_medicationadministration_medadm_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationadministration_medadm_meta_versionid;
+	    CREATE INDEX idx_medicationadministration_medadm_meta_versionid ON cds2db_in.medicationadministration USING btree (medadm_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationadministration_medadm_meta_versionid ON cds2db_in.medicationadministration USING btree (medadm_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_medicationadministration_medadm_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationadministration_medadm_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_medadm_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationadministration_medadm_meta_lastupdated ON cds2db_in.medicationadministration USING btree (medadm_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationadministration_medadm_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_medicationadministration_medadm_meta_lastupdated ON cds2db_in.medicationadministration USING btree (medadm_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationadministration_medadm_meta_lastupdated ON cds2db_in.medicationadministration USING btree (medadm_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationadministration_medadm_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_medadm_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationadministration_medadm_meta_lastupdated ON cds2db_in.medicationadministration USING btree (medadm_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationadministration_medadm_meta_lastupdated RENAME TO del_medicationadministration_medadm_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationadministration_medadm_meta_lastupdated;
+	    CREATE INDEX idx_medicationadministration_medadm_meta_lastupdated ON cds2db_in.medicationadministration USING btree (medadm_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationadministration_medadm_meta_lastupdated ON cds2db_in.medicationadministration USING btree (medadm_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_medicationadministration_medadm_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationadministration_medadm_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_medadm_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationadministration_medadm_meta_profile ON cds2db_in.medicationadministration USING btree (medadm_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationadministration_medadm_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_medicationadministration_medadm_meta_profile ON cds2db_in.medicationadministration USING btree (medadm_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationadministration_medadm_meta_profile ON cds2db_in.medicationadministration USING btree (medadm_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'medadm_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationadministration_medadm_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration' AND substr(indexname,1,63)=substr('idx_medicationadministration_medadm_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationadministration_medadm_meta_profile ON cds2db_in.medicationadministration USING btree (medadm_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationadministration_medadm_meta_profile RENAME TO del_medicationadministration_medadm_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationadministration_medadm_meta_profile;
+	    CREATE INDEX idx_medicationadministration_medadm_meta_profile ON cds2db_in.medicationadministration USING btree (medadm_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationadministration_medadm_meta_profile ON cds2db_in.medicationadministration USING btree (medadm_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - medicationstatement ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'idx_medicationstatement_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationstatement_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationstatement_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (idx_medicationstatement_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationstatement_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (idx_medicationstatement_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_medicationstatement_id RENAME TO del_idx_medicationstatement_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_medicationstatement_id;
+   	        CREATE INDEX idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (idx_medicationstatement_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (idx_medicationstatement_raw_id DESC);
+	    CREATE INDEX idx_medicationstatement_raw_id ON cds2db_in.medicationstatement USING btree (idx_medicationstatement_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -14396,19 +15755,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_medicationstatement_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_input_dt ON cds2db_in.medicationstatement USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_input_dt ON cds2db_in.medicationstatement USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationstatement_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_input_dt ON cds2db_in.medicationstatement USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationstatement_input_dt RENAME TO del_cds2db_in_medicationstatement_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationstatement_i_dt;
+	    CREATE INDEX idx_cds2db_in_medicationstatement_input_dt ON cds2db_in.medicationstatement USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_input_dt ON cds2db_in.medicationstatement USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_medicationstatement_input_dt ON cds2db_in.medicationstatement USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_medicationstatement_input_pnr for Table "medicationstatement" in schema "cds2db_in"
@@ -14418,18 +15778,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_input_pnr ON cds2db_in.medicationstatement USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_input_pnr ON cds2db_in.medicationstatement USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationstatement_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_input_pnr ON cds2db_in.medicationstatement USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationstatement_input_pnr RENAME TO del_cds2db_in_medicationstatement_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationstatement_i_pnr;
+	    CREATE INDEX idx_cds2db_in_medicationstatement_input_pnr ON cds2db_in.medicationstatement USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_input_pnr ON cds2db_in.medicationstatement USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_medicationstatement_input_pnr ON cds2db_in.medicationstatement USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14440,18 +15801,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_last_dt ON cds2db_in.medicationstatement USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_last_dt ON cds2db_in.medicationstatement USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationstatement_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_last_dt ON cds2db_in.medicationstatement USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationstatement_last_dt RENAME TO del_cds2db_in_medicationstatement_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationstatement_l_dt;
+	    CREATE INDEX idx_cds2db_in_medicationstatement_last_dt ON cds2db_in.medicationstatement USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_last_dt ON cds2db_in.medicationstatement USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_medicationstatement_last_dt ON cds2db_in.medicationstatement USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14462,18 +15824,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_last_pnr ON cds2db_in.medicationstatement USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_last_pnr ON cds2db_in.medicationstatement USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationstatement_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_last_pnr ON cds2db_in.medicationstatement USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationstatement_last_pnr RENAME TO del_cds2db_in_medicationstatement_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationstatement_l_pnr;
+	    CREATE INDEX idx_cds2db_in_medicationstatement_last_pnr ON cds2db_in.medicationstatement USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_last_pnr ON cds2db_in.medicationstatement USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_medicationstatement_last_pnr ON cds2db_in.medicationstatement USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14484,119 +15847,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_input_dt ON cds2db_in.medicationstatement USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_cds2db_in_medicationstatement_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_medicationstatement_input_dt ON cds2db_in.medicationstatement USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_medicationstatement_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_hash ON cds2db_in.medicationstatement USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_medicationstatement_hash RENAME TO del_cds2db_in_medicationstatement_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_medicationstatement_hash;
+	    CREATE INDEX idx_cds2db_in_medicationstatement_hash ON cds2db_in.medicationstatement USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_medicationstatement_hash ON cds2db_in.medicationstatement USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_medicationstatement_hash ON cds2db_in.medicationstatement USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for medicationstatement ----------------------------------------------------
 --- idx_medicationstatement_medstat_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationstatement_medstat_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_medstat_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationstatement_medstat_id ON cds2db_in.medicationstatement USING btree (medstat_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationstatement_medstat_id;
-   	        CREATE INDEX CONCURRENTLY idx_medicationstatement_medstat_id ON cds2db_in.medicationstatement USING btree (medstat_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationstatement_medstat_id ON cds2db_in.medicationstatement USING btree (medstat_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationstatement_medstat_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_medstat_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationstatement_medstat_id ON cds2db_in.medicationstatement USING btree (medstat_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationstatement_medstat_id RENAME TO del_medicationstatement_medstat_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationstatement_medstat_id;
+	    CREATE INDEX idx_medicationstatement_medstat_id ON cds2db_in.medicationstatement USING btree (medstat_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationstatement_medstat_id ON cds2db_in.medicationstatement USING btree (medstat_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_medicationstatement_medstat_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationstatement_medstat_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_medstat_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationstatement_medstat_meta_versionid ON cds2db_in.medicationstatement USING btree (medstat_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationstatement_medstat_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_medicationstatement_medstat_meta_versionid ON cds2db_in.medicationstatement USING btree (medstat_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationstatement_medstat_meta_versionid ON cds2db_in.medicationstatement USING btree (medstat_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationstatement_medstat_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_medstat_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationstatement_medstat_meta_versionid ON cds2db_in.medicationstatement USING btree (medstat_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationstatement_medstat_meta_versionid RENAME TO del_medicationstatement_medstat_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationstatement_medstat_meta_versionid;
+	    CREATE INDEX idx_medicationstatement_medstat_meta_versionid ON cds2db_in.medicationstatement USING btree (medstat_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationstatement_medstat_meta_versionid ON cds2db_in.medicationstatement USING btree (medstat_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_medicationstatement_medstat_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationstatement_medstat_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_medstat_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationstatement_medstat_meta_lastupdated ON cds2db_in.medicationstatement USING btree (medstat_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationstatement_medstat_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_medicationstatement_medstat_meta_lastupdated ON cds2db_in.medicationstatement USING btree (medstat_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationstatement_medstat_meta_lastupdated ON cds2db_in.medicationstatement USING btree (medstat_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationstatement_medstat_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_medstat_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationstatement_medstat_meta_lastupdated ON cds2db_in.medicationstatement USING btree (medstat_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationstatement_medstat_meta_lastupdated RENAME TO del_medicationstatement_medstat_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationstatement_medstat_meta_lastupdated;
+	    CREATE INDEX idx_medicationstatement_medstat_meta_lastupdated ON cds2db_in.medicationstatement USING btree (medstat_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationstatement_medstat_meta_lastupdated ON cds2db_in.medicationstatement USING btree (medstat_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_medicationstatement_medstat_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationstatement_medstat_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_medstat_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_medicationstatement_medstat_meta_profile ON cds2db_in.medicationstatement USING btree (medstat_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_medicationstatement_medstat_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_medicationstatement_medstat_meta_profile ON cds2db_in.medicationstatement USING btree (medstat_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_medicationstatement_medstat_meta_profile ON cds2db_in.medicationstatement USING btree (medstat_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'medstat_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_medicationstatement_medstat_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement' AND substr(indexname,1,63)=substr('idx_medicationstatement_medstat_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_medicationstatement_medstat_meta_profile ON cds2db_in.medicationstatement USING btree (medstat_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_medicationstatement_medstat_meta_profile RENAME TO del_medicationstatement_medstat_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_medicationstatement_medstat_meta_profile;
+	    CREATE INDEX idx_medicationstatement_medstat_meta_profile ON cds2db_in.medicationstatement USING btree (medstat_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_medicationstatement_medstat_meta_profile ON cds2db_in.medicationstatement USING btree (medstat_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - observation ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'idx_observation_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_observation_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_observation_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_observation_raw_id ON cds2db_in.observation USING btree (idx_observation_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_observation_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_observation_raw_id ON cds2db_in.observation USING btree (idx_observation_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_observation_id RENAME TO del_idx_observation_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_observation_id;
+   	        CREATE INDEX idx_observation_raw_id ON cds2db_in.observation USING btree (idx_observation_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_observation_raw_id ON cds2db_in.observation USING btree (idx_observation_raw_id DESC);
+	    CREATE INDEX idx_observation_raw_id ON cds2db_in.observation USING btree (idx_observation_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -14607,19 +15981,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_observation_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_observation_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_input_dt ON cds2db_in.observation USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_input_dt ON cds2db_in.observation USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_observation_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_input_dt ON cds2db_in.observation USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_observation_input_dt RENAME TO del_cds2db_in_observation_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_observation_i_dt;
+	    CREATE INDEX idx_cds2db_in_observation_input_dt ON cds2db_in.observation USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_input_dt ON cds2db_in.observation USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_observation_input_dt ON cds2db_in.observation USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_observation_input_pnr for Table "observation" in schema "cds2db_in"
@@ -14629,18 +16004,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_observation_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_observation_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_input_pnr ON cds2db_in.observation USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_input_pnr ON cds2db_in.observation USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_observation_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_input_pnr ON cds2db_in.observation USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_observation_input_pnr RENAME TO del_cds2db_in_observation_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_observation_i_pnr;
+	    CREATE INDEX idx_cds2db_in_observation_input_pnr ON cds2db_in.observation USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_input_pnr ON cds2db_in.observation USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_observation_input_pnr ON cds2db_in.observation USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14651,18 +16027,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_observation_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_observation_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'observation'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_last_dt ON cds2db_in.observation USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_last_dt ON cds2db_in.observation USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_observation_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_last_dt ON cds2db_in.observation USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_observation_last_dt RENAME TO del_cds2db_in_observation_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_observation_l_dt;
+	    CREATE INDEX idx_cds2db_in_observation_last_dt ON cds2db_in.observation USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_last_dt ON cds2db_in.observation USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_observation_last_dt ON cds2db_in.observation USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14673,18 +16050,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_observation_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_observation_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_last_pnr ON cds2db_in.observation USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_last_pnr ON cds2db_in.observation USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_observation_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_last_pnr ON cds2db_in.observation USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_observation_last_pnr RENAME TO del_cds2db_in_observation_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_observation_l_pnr;
+	    CREATE INDEX idx_cds2db_in_observation_last_pnr ON cds2db_in.observation USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_last_pnr ON cds2db_in.observation USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_observation_last_pnr ON cds2db_in.observation USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14695,119 +16073,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_observation_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_observation_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_input_dt ON cds2db_in.observation USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_cds2db_in_observation_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_observation_input_dt ON cds2db_in.observation USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_observation_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_hash ON cds2db_in.observation USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_observation_hash RENAME TO del_cds2db_in_observation_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_observation_hash;
+	    CREATE INDEX idx_cds2db_in_observation_hash ON cds2db_in.observation USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_observation_hash ON cds2db_in.observation USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_observation_hash ON cds2db_in.observation USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for observation ----------------------------------------------------
 --- idx_observation_obs_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_observation_obs_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_obs_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_observation_obs_id ON cds2db_in.observation USING btree (obs_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_observation_obs_id;
-   	        CREATE INDEX CONCURRENTLY idx_observation_obs_id ON cds2db_in.observation USING btree (obs_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_observation_obs_id ON cds2db_in.observation USING btree (obs_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_observation_obs_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_obs_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_observation_obs_id ON cds2db_in.observation USING btree (obs_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_observation_obs_id RENAME TO del_observation_obs_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_observation_obs_id;
+	    CREATE INDEX idx_observation_obs_id ON cds2db_in.observation USING btree (obs_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_observation_obs_id ON cds2db_in.observation USING btree (obs_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_observation_obs_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_observation_obs_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_obs_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_observation_obs_meta_versionid ON cds2db_in.observation USING btree (obs_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_observation_obs_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_observation_obs_meta_versionid ON cds2db_in.observation USING btree (obs_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_observation_obs_meta_versionid ON cds2db_in.observation USING btree (obs_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_observation_obs_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_obs_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_observation_obs_meta_versionid ON cds2db_in.observation USING btree (obs_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_observation_obs_meta_versionid RENAME TO del_observation_obs_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_observation_obs_meta_versionid;
+	    CREATE INDEX idx_observation_obs_meta_versionid ON cds2db_in.observation USING btree (obs_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_observation_obs_meta_versionid ON cds2db_in.observation USING btree (obs_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_observation_obs_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_observation_obs_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_obs_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_observation_obs_meta_lastupdated ON cds2db_in.observation USING btree (obs_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_observation_obs_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_observation_obs_meta_lastupdated ON cds2db_in.observation USING btree (obs_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_observation_obs_meta_lastupdated ON cds2db_in.observation USING btree (obs_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_observation_obs_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_obs_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_observation_obs_meta_lastupdated ON cds2db_in.observation USING btree (obs_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_observation_obs_meta_lastupdated RENAME TO del_observation_obs_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_observation_obs_meta_lastupdated;
+	    CREATE INDEX idx_observation_obs_meta_lastupdated ON cds2db_in.observation USING btree (obs_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_observation_obs_meta_lastupdated ON cds2db_in.observation USING btree (obs_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_observation_obs_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_observation_obs_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_obs_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_observation_obs_meta_profile ON cds2db_in.observation USING btree (obs_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_observation_obs_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_observation_obs_meta_profile ON cds2db_in.observation USING btree (obs_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_observation_obs_meta_profile ON cds2db_in.observation USING btree (obs_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'obs_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_observation_obs_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'observation' AND substr(indexname,1,63)=substr('idx_observation_obs_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_observation_obs_meta_profile ON cds2db_in.observation USING btree (obs_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_observation_obs_meta_profile RENAME TO del_observation_obs_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_observation_obs_meta_profile;
+	    CREATE INDEX idx_observation_obs_meta_profile ON cds2db_in.observation USING btree (obs_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_observation_obs_meta_profile ON cds2db_in.observation USING btree (obs_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - diagnosticreport ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'idx_diagnosticreport_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_diagnosticreport_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_diagnosticreport_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_diagnosticreport_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_diagnosticreport_id RENAME TO del_idx_diagnosticreport_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_diagnosticreport_id;
+   	        CREATE INDEX idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC);
+	    CREATE INDEX idx_diagnosticreport_raw_id ON cds2db_in.diagnosticreport USING btree (idx_diagnosticreport_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -14818,19 +16207,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_diagnosticreport_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_input_dt ON cds2db_in.diagnosticreport USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_input_dt ON cds2db_in.diagnosticreport USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_diagnosticreport_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_input_dt ON cds2db_in.diagnosticreport USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_diagnosticreport_input_dt RENAME TO del_cds2db_in_diagnosticreport_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_diagnosticreport_i_dt;
+	    CREATE INDEX idx_cds2db_in_diagnosticreport_input_dt ON cds2db_in.diagnosticreport USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_input_dt ON cds2db_in.diagnosticreport USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_diagnosticreport_input_dt ON cds2db_in.diagnosticreport USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_diagnosticreport_input_pnr for Table "diagnosticreport" in schema "cds2db_in"
@@ -14840,18 +16230,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_input_pnr ON cds2db_in.diagnosticreport USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_input_pnr ON cds2db_in.diagnosticreport USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_diagnosticreport_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_input_pnr ON cds2db_in.diagnosticreport USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_diagnosticreport_input_pnr RENAME TO del_cds2db_in_diagnosticreport_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_diagnosticreport_i_pnr;
+	    CREATE INDEX idx_cds2db_in_diagnosticreport_input_pnr ON cds2db_in.diagnosticreport USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_input_pnr ON cds2db_in.diagnosticreport USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_diagnosticreport_input_pnr ON cds2db_in.diagnosticreport USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14862,18 +16253,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_last_dt ON cds2db_in.diagnosticreport USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_last_dt ON cds2db_in.diagnosticreport USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_diagnosticreport_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_last_dt ON cds2db_in.diagnosticreport USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_diagnosticreport_last_dt RENAME TO del_cds2db_in_diagnosticreport_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_diagnosticreport_l_dt;
+	    CREATE INDEX idx_cds2db_in_diagnosticreport_last_dt ON cds2db_in.diagnosticreport USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_last_dt ON cds2db_in.diagnosticreport USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_diagnosticreport_last_dt ON cds2db_in.diagnosticreport USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14884,18 +16276,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_last_pnr ON cds2db_in.diagnosticreport USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_last_pnr ON cds2db_in.diagnosticreport USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_diagnosticreport_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_last_pnr ON cds2db_in.diagnosticreport USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_diagnosticreport_last_pnr RENAME TO del_cds2db_in_diagnosticreport_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_diagnosticreport_l_pnr;
+	    CREATE INDEX idx_cds2db_in_diagnosticreport_last_pnr ON cds2db_in.diagnosticreport USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_last_pnr ON cds2db_in.diagnosticreport USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_diagnosticreport_last_pnr ON cds2db_in.diagnosticreport USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -14906,119 +16299,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_input_dt ON cds2db_in.diagnosticreport USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_cds2db_in_diagnosticreport_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_diagnosticreport_input_dt ON cds2db_in.diagnosticreport USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_diagnosticreport_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_hash ON cds2db_in.diagnosticreport USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_diagnosticreport_hash RENAME TO del_cds2db_in_diagnosticreport_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_diagnosticreport_hash;
+	    CREATE INDEX idx_cds2db_in_diagnosticreport_hash ON cds2db_in.diagnosticreport USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_diagnosticreport_hash ON cds2db_in.diagnosticreport USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_diagnosticreport_hash ON cds2db_in.diagnosticreport USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for diagnosticreport ----------------------------------------------------
 --- idx_diagnosticreport_diagrep_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_diagnosticreport_diagrep_id ON cds2db_in.diagnosticreport USING btree (diagrep_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_diagnosticreport_diagrep_id;
-   	        CREATE INDEX CONCURRENTLY idx_diagnosticreport_diagrep_id ON cds2db_in.diagnosticreport USING btree (diagrep_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_diagnosticreport_diagrep_id ON cds2db_in.diagnosticreport USING btree (diagrep_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_diagnosticreport_diagrep_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_diagnosticreport_diagrep_id ON cds2db_in.diagnosticreport USING btree (diagrep_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_diagnosticreport_diagrep_id RENAME TO del_diagnosticreport_diagrep_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_diagnosticreport_diagrep_id;
+	    CREATE INDEX idx_diagnosticreport_diagrep_id ON cds2db_in.diagnosticreport USING btree (diagrep_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_diagnosticreport_diagrep_id ON cds2db_in.diagnosticreport USING btree (diagrep_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_diagnosticreport_diagrep_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_diagnosticreport_diagrep_meta_versionid ON cds2db_in.diagnosticreport USING btree (diagrep_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_diagnosticreport_diagrep_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_diagnosticreport_diagrep_meta_versionid ON cds2db_in.diagnosticreport USING btree (diagrep_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_diagnosticreport_diagrep_meta_versionid ON cds2db_in.diagnosticreport USING btree (diagrep_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_diagnosticreport_diagrep_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_diagnosticreport_diagrep_meta_versionid ON cds2db_in.diagnosticreport USING btree (diagrep_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_diagnosticreport_diagrep_meta_versionid RENAME TO del_diagnosticreport_diagrep_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_diagnosticreport_diagrep_meta_versionid;
+	    CREATE INDEX idx_diagnosticreport_diagrep_meta_versionid ON cds2db_in.diagnosticreport USING btree (diagrep_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_diagnosticreport_diagrep_meta_versionid ON cds2db_in.diagnosticreport USING btree (diagrep_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_diagnosticreport_diagrep_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_diagnosticreport_diagrep_meta_lastupdated ON cds2db_in.diagnosticreport USING btree (diagrep_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_diagnosticreport_diagrep_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_diagnosticreport_diagrep_meta_lastupdated ON cds2db_in.diagnosticreport USING btree (diagrep_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_diagnosticreport_diagrep_meta_lastupdated ON cds2db_in.diagnosticreport USING btree (diagrep_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_diagnosticreport_diagrep_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_diagnosticreport_diagrep_meta_lastupdated ON cds2db_in.diagnosticreport USING btree (diagrep_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_diagnosticreport_diagrep_meta_lastupdated RENAME TO del_diagnosticreport_diagrep_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_diagnosticreport_diagrep_meta_lastupdated;
+	    CREATE INDEX idx_diagnosticreport_diagrep_meta_lastupdated ON cds2db_in.diagnosticreport USING btree (diagrep_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_diagnosticreport_diagrep_meta_lastupdated ON cds2db_in.diagnosticreport USING btree (diagrep_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_diagnosticreport_diagrep_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_diagnosticreport_diagrep_meta_profile ON cds2db_in.diagnosticreport USING btree (diagrep_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_diagnosticreport_diagrep_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_diagnosticreport_diagrep_meta_profile ON cds2db_in.diagnosticreport USING btree (diagrep_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_diagnosticreport_diagrep_meta_profile ON cds2db_in.diagnosticreport USING btree (diagrep_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_diagnosticreport_diagrep_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport' AND substr(indexname,1,63)=substr('idx_diagnosticreport_diagrep_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_diagnosticreport_diagrep_meta_profile ON cds2db_in.diagnosticreport USING btree (diagrep_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_diagnosticreport_diagrep_meta_profile RENAME TO del_diagnosticreport_diagrep_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_diagnosticreport_diagrep_meta_profile;
+	    CREATE INDEX idx_diagnosticreport_diagrep_meta_profile ON cds2db_in.diagnosticreport USING btree (diagrep_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_diagnosticreport_diagrep_meta_profile ON cds2db_in.diagnosticreport USING btree (diagrep_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - servicerequest ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'idx_servicerequest_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_servicerequest_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_servicerequest_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (idx_servicerequest_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_servicerequest_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (idx_servicerequest_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_servicerequest_id RENAME TO del_idx_servicerequest_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_servicerequest_id;
+   	        CREATE INDEX idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (idx_servicerequest_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (idx_servicerequest_raw_id DESC);
+	    CREATE INDEX idx_servicerequest_raw_id ON cds2db_in.servicerequest USING btree (idx_servicerequest_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15029,19 +16433,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_servicerequest_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_input_dt ON cds2db_in.servicerequest USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_input_dt ON cds2db_in.servicerequest USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_servicerequest_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_input_dt ON cds2db_in.servicerequest USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_servicerequest_input_dt RENAME TO del_cds2db_in_servicerequest_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_servicerequest_i_dt;
+	    CREATE INDEX idx_cds2db_in_servicerequest_input_dt ON cds2db_in.servicerequest USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_input_dt ON cds2db_in.servicerequest USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_servicerequest_input_dt ON cds2db_in.servicerequest USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_servicerequest_input_pnr for Table "servicerequest" in schema "cds2db_in"
@@ -15051,18 +16456,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_input_pnr ON cds2db_in.servicerequest USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_input_pnr ON cds2db_in.servicerequest USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_servicerequest_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_input_pnr ON cds2db_in.servicerequest USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_servicerequest_input_pnr RENAME TO del_cds2db_in_servicerequest_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_servicerequest_i_pnr;
+	    CREATE INDEX idx_cds2db_in_servicerequest_input_pnr ON cds2db_in.servicerequest USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_input_pnr ON cds2db_in.servicerequest USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_servicerequest_input_pnr ON cds2db_in.servicerequest USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15073,18 +16479,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_last_dt ON cds2db_in.servicerequest USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_last_dt ON cds2db_in.servicerequest USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_servicerequest_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_last_dt ON cds2db_in.servicerequest USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_servicerequest_last_dt RENAME TO del_cds2db_in_servicerequest_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_servicerequest_l_dt;
+	    CREATE INDEX idx_cds2db_in_servicerequest_last_dt ON cds2db_in.servicerequest USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_last_dt ON cds2db_in.servicerequest USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_servicerequest_last_dt ON cds2db_in.servicerequest USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15095,18 +16502,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_last_pnr ON cds2db_in.servicerequest USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_last_pnr ON cds2db_in.servicerequest USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_servicerequest_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_last_pnr ON cds2db_in.servicerequest USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_servicerequest_last_pnr RENAME TO del_cds2db_in_servicerequest_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_servicerequest_l_pnr;
+	    CREATE INDEX idx_cds2db_in_servicerequest_last_pnr ON cds2db_in.servicerequest USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_last_pnr ON cds2db_in.servicerequest USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_servicerequest_last_pnr ON cds2db_in.servicerequest USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15117,119 +16525,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_input_dt ON cds2db_in.servicerequest USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_cds2db_in_servicerequest_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_servicerequest_input_dt ON cds2db_in.servicerequest USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_servicerequest_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_hash ON cds2db_in.servicerequest USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_servicerequest_hash RENAME TO del_cds2db_in_servicerequest_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_servicerequest_hash;
+	    CREATE INDEX idx_cds2db_in_servicerequest_hash ON cds2db_in.servicerequest USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_servicerequest_hash ON cds2db_in.servicerequest USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_servicerequest_hash ON cds2db_in.servicerequest USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for servicerequest ----------------------------------------------------
 --- idx_servicerequest_servreq_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_servicerequest_servreq_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_servreq_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_servicerequest_servreq_id ON cds2db_in.servicerequest USING btree (servreq_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_servicerequest_servreq_id;
-   	        CREATE INDEX CONCURRENTLY idx_servicerequest_servreq_id ON cds2db_in.servicerequest USING btree (servreq_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_servicerequest_servreq_id ON cds2db_in.servicerequest USING btree (servreq_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_servicerequest_servreq_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_servreq_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_servicerequest_servreq_id ON cds2db_in.servicerequest USING btree (servreq_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_servicerequest_servreq_id RENAME TO del_servicerequest_servreq_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_servicerequest_servreq_id;
+	    CREATE INDEX idx_servicerequest_servreq_id ON cds2db_in.servicerequest USING btree (servreq_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_servicerequest_servreq_id ON cds2db_in.servicerequest USING btree (servreq_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_servicerequest_servreq_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_servicerequest_servreq_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_servreq_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_servicerequest_servreq_meta_versionid ON cds2db_in.servicerequest USING btree (servreq_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_servicerequest_servreq_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_servicerequest_servreq_meta_versionid ON cds2db_in.servicerequest USING btree (servreq_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_servicerequest_servreq_meta_versionid ON cds2db_in.servicerequest USING btree (servreq_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_servicerequest_servreq_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_servreq_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_servicerequest_servreq_meta_versionid ON cds2db_in.servicerequest USING btree (servreq_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_servicerequest_servreq_meta_versionid RENAME TO del_servicerequest_servreq_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_servicerequest_servreq_meta_versionid;
+	    CREATE INDEX idx_servicerequest_servreq_meta_versionid ON cds2db_in.servicerequest USING btree (servreq_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_servicerequest_servreq_meta_versionid ON cds2db_in.servicerequest USING btree (servreq_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_servicerequest_servreq_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_servicerequest_servreq_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_servreq_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_servicerequest_servreq_meta_lastupdated ON cds2db_in.servicerequest USING btree (servreq_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_servicerequest_servreq_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_servicerequest_servreq_meta_lastupdated ON cds2db_in.servicerequest USING btree (servreq_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_servicerequest_servreq_meta_lastupdated ON cds2db_in.servicerequest USING btree (servreq_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_servicerequest_servreq_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_servreq_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_servicerequest_servreq_meta_lastupdated ON cds2db_in.servicerequest USING btree (servreq_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_servicerequest_servreq_meta_lastupdated RENAME TO del_servicerequest_servreq_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_servicerequest_servreq_meta_lastupdated;
+	    CREATE INDEX idx_servicerequest_servreq_meta_lastupdated ON cds2db_in.servicerequest USING btree (servreq_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_servicerequest_servreq_meta_lastupdated ON cds2db_in.servicerequest USING btree (servreq_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_servicerequest_servreq_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_servicerequest_servreq_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_servreq_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_servicerequest_servreq_meta_profile ON cds2db_in.servicerequest USING btree (servreq_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_servicerequest_servreq_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_servicerequest_servreq_meta_profile ON cds2db_in.servicerequest USING btree (servreq_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_servicerequest_servreq_meta_profile ON cds2db_in.servicerequest USING btree (servreq_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'servreq_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_servicerequest_servreq_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'servicerequest' AND substr(indexname,1,63)=substr('idx_servicerequest_servreq_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_servicerequest_servreq_meta_profile ON cds2db_in.servicerequest USING btree (servreq_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_servicerequest_servreq_meta_profile RENAME TO del_servicerequest_servreq_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_servicerequest_servreq_meta_profile;
+	    CREATE INDEX idx_servicerequest_servreq_meta_profile ON cds2db_in.servicerequest USING btree (servreq_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_servicerequest_servreq_meta_profile ON cds2db_in.servicerequest USING btree (servreq_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - procedure ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'idx_procedure_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_procedure_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_procedure_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_procedure_raw_id ON cds2db_in.procedure USING btree (idx_procedure_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_procedure_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_procedure_raw_id ON cds2db_in.procedure USING btree (idx_procedure_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_procedure_id RENAME TO del_idx_procedure_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_procedure_id;
+   	        CREATE INDEX idx_procedure_raw_id ON cds2db_in.procedure USING btree (idx_procedure_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_procedure_raw_id ON cds2db_in.procedure USING btree (idx_procedure_raw_id DESC);
+	    CREATE INDEX idx_procedure_raw_id ON cds2db_in.procedure USING btree (idx_procedure_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15240,19 +16659,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_procedure_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_procedure_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_input_dt ON cds2db_in.procedure USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_input_dt ON cds2db_in.procedure USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_procedure_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_input_dt ON cds2db_in.procedure USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_procedure_input_dt RENAME TO del_cds2db_in_procedure_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_procedure_i_dt;
+	    CREATE INDEX idx_cds2db_in_procedure_input_dt ON cds2db_in.procedure USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_input_dt ON cds2db_in.procedure USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_procedure_input_dt ON cds2db_in.procedure USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_procedure_input_pnr for Table "procedure" in schema "cds2db_in"
@@ -15262,18 +16682,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_procedure_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_procedure_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_input_pnr ON cds2db_in.procedure USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_input_pnr ON cds2db_in.procedure USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_procedure_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_input_pnr ON cds2db_in.procedure USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_procedure_input_pnr RENAME TO del_cds2db_in_procedure_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_procedure_i_pnr;
+	    CREATE INDEX idx_cds2db_in_procedure_input_pnr ON cds2db_in.procedure USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_input_pnr ON cds2db_in.procedure USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_procedure_input_pnr ON cds2db_in.procedure USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15284,18 +16705,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_procedure_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_procedure_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'procedure'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_last_dt ON cds2db_in.procedure USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_last_dt ON cds2db_in.procedure USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_procedure_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_last_dt ON cds2db_in.procedure USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_procedure_last_dt RENAME TO del_cds2db_in_procedure_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_procedure_l_dt;
+	    CREATE INDEX idx_cds2db_in_procedure_last_dt ON cds2db_in.procedure USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_last_dt ON cds2db_in.procedure USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_procedure_last_dt ON cds2db_in.procedure USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15306,18 +16728,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_procedure_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_procedure_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_last_pnr ON cds2db_in.procedure USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_last_pnr ON cds2db_in.procedure USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_procedure_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_last_pnr ON cds2db_in.procedure USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_procedure_last_pnr RENAME TO del_cds2db_in_procedure_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_procedure_l_pnr;
+	    CREATE INDEX idx_cds2db_in_procedure_last_pnr ON cds2db_in.procedure USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_last_pnr ON cds2db_in.procedure USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_procedure_last_pnr ON cds2db_in.procedure USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15328,119 +16751,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_procedure_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_procedure_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_input_dt ON cds2db_in.procedure USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_cds2db_in_procedure_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_procedure_input_dt ON cds2db_in.procedure USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_procedure_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_hash ON cds2db_in.procedure USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_procedure_hash RENAME TO del_cds2db_in_procedure_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_procedure_hash;
+	    CREATE INDEX idx_cds2db_in_procedure_hash ON cds2db_in.procedure USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_procedure_hash ON cds2db_in.procedure USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_procedure_hash ON cds2db_in.procedure USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for procedure ----------------------------------------------------
 --- idx_procedure_proc_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_procedure_proc_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_proc_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_procedure_proc_id ON cds2db_in.procedure USING btree (proc_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_procedure_proc_id;
-   	        CREATE INDEX CONCURRENTLY idx_procedure_proc_id ON cds2db_in.procedure USING btree (proc_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_procedure_proc_id ON cds2db_in.procedure USING btree (proc_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_procedure_proc_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_proc_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_procedure_proc_id ON cds2db_in.procedure USING btree (proc_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_procedure_proc_id RENAME TO del_procedure_proc_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_procedure_proc_id;
+	    CREATE INDEX idx_procedure_proc_id ON cds2db_in.procedure USING btree (proc_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_procedure_proc_id ON cds2db_in.procedure USING btree (proc_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_procedure_proc_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_procedure_proc_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_proc_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_procedure_proc_meta_versionid ON cds2db_in.procedure USING btree (proc_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_procedure_proc_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_procedure_proc_meta_versionid ON cds2db_in.procedure USING btree (proc_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_procedure_proc_meta_versionid ON cds2db_in.procedure USING btree (proc_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_procedure_proc_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_proc_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_procedure_proc_meta_versionid ON cds2db_in.procedure USING btree (proc_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_procedure_proc_meta_versionid RENAME TO del_procedure_proc_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_procedure_proc_meta_versionid;
+	    CREATE INDEX idx_procedure_proc_meta_versionid ON cds2db_in.procedure USING btree (proc_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_procedure_proc_meta_versionid ON cds2db_in.procedure USING btree (proc_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_procedure_proc_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_procedure_proc_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_proc_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_procedure_proc_meta_lastupdated ON cds2db_in.procedure USING btree (proc_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_procedure_proc_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_procedure_proc_meta_lastupdated ON cds2db_in.procedure USING btree (proc_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_procedure_proc_meta_lastupdated ON cds2db_in.procedure USING btree (proc_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_procedure_proc_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_proc_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_procedure_proc_meta_lastupdated ON cds2db_in.procedure USING btree (proc_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_procedure_proc_meta_lastupdated RENAME TO del_procedure_proc_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_procedure_proc_meta_lastupdated;
+	    CREATE INDEX idx_procedure_proc_meta_lastupdated ON cds2db_in.procedure USING btree (proc_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_procedure_proc_meta_lastupdated ON cds2db_in.procedure USING btree (proc_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_procedure_proc_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_procedure_proc_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_proc_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_procedure_proc_meta_profile ON cds2db_in.procedure USING btree (proc_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_procedure_proc_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_procedure_proc_meta_profile ON cds2db_in.procedure USING btree (proc_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_procedure_proc_meta_profile ON cds2db_in.procedure USING btree (proc_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'proc_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_procedure_proc_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'procedure' AND substr(indexname,1,63)=substr('idx_procedure_proc_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_procedure_proc_meta_profile ON cds2db_in.procedure USING btree (proc_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_procedure_proc_meta_profile RENAME TO del_procedure_proc_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_procedure_proc_meta_profile;
+	    CREATE INDEX idx_procedure_proc_meta_profile ON cds2db_in.procedure USING btree (proc_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_procedure_proc_meta_profile ON cds2db_in.procedure USING btree (proc_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - consent ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'idx_consent_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_consent_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_consent_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_consent_raw_id ON cds2db_in.consent USING btree (idx_consent_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_consent_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_consent_raw_id ON cds2db_in.consent USING btree (idx_consent_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_consent_id RENAME TO del_idx_consent_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_consent_id;
+   	        CREATE INDEX idx_consent_raw_id ON cds2db_in.consent USING btree (idx_consent_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_consent_raw_id ON cds2db_in.consent USING btree (idx_consent_raw_id DESC);
+	    CREATE INDEX idx_consent_raw_id ON cds2db_in.consent USING btree (idx_consent_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15451,19 +16885,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_consent_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_consent_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_input_dt ON cds2db_in.consent USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_input_dt ON cds2db_in.consent USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_consent_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_input_dt ON cds2db_in.consent USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_consent_input_dt RENAME TO del_cds2db_in_consent_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_consent_i_dt;
+	    CREATE INDEX idx_cds2db_in_consent_input_dt ON cds2db_in.consent USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_input_dt ON cds2db_in.consent USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_consent_input_dt ON cds2db_in.consent USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_consent_input_pnr for Table "consent" in schema "cds2db_in"
@@ -15473,18 +16908,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_consent_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_consent_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_input_pnr ON cds2db_in.consent USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_input_pnr ON cds2db_in.consent USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_consent_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_input_pnr ON cds2db_in.consent USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_consent_input_pnr RENAME TO del_cds2db_in_consent_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_consent_i_pnr;
+	    CREATE INDEX idx_cds2db_in_consent_input_pnr ON cds2db_in.consent USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_input_pnr ON cds2db_in.consent USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_consent_input_pnr ON cds2db_in.consent USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15495,18 +16931,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_consent_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_consent_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'consent'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_last_dt ON cds2db_in.consent USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_last_dt ON cds2db_in.consent USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_consent_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_last_dt ON cds2db_in.consent USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_consent_last_dt RENAME TO del_cds2db_in_consent_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_consent_l_dt;
+	    CREATE INDEX idx_cds2db_in_consent_last_dt ON cds2db_in.consent USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_last_dt ON cds2db_in.consent USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_consent_last_dt ON cds2db_in.consent USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15517,18 +16954,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_consent_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_consent_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_last_pnr ON cds2db_in.consent USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_last_pnr ON cds2db_in.consent USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_consent_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_last_pnr ON cds2db_in.consent USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_consent_last_pnr RENAME TO del_cds2db_in_consent_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_consent_l_pnr;
+	    CREATE INDEX idx_cds2db_in_consent_last_pnr ON cds2db_in.consent USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_last_pnr ON cds2db_in.consent USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_consent_last_pnr ON cds2db_in.consent USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15539,119 +16977,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_consent_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_consent_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_input_dt ON cds2db_in.consent USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_cds2db_in_consent_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_consent_input_dt ON cds2db_in.consent USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_consent_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_hash ON cds2db_in.consent USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_consent_hash RENAME TO del_cds2db_in_consent_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_consent_hash;
+	    CREATE INDEX idx_cds2db_in_consent_hash ON cds2db_in.consent USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_consent_hash ON cds2db_in.consent USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_consent_hash ON cds2db_in.consent USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for consent ----------------------------------------------------
 --- idx_consent_cons_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_consent_cons_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_cons_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_consent_cons_id ON cds2db_in.consent USING btree (cons_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_consent_cons_id;
-   	        CREATE INDEX CONCURRENTLY idx_consent_cons_id ON cds2db_in.consent USING btree (cons_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_consent_cons_id ON cds2db_in.consent USING btree (cons_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_consent_cons_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_cons_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_consent_cons_id ON cds2db_in.consent USING btree (cons_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_consent_cons_id RENAME TO del_consent_cons_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_consent_cons_id;
+	    CREATE INDEX idx_consent_cons_id ON cds2db_in.consent USING btree (cons_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_consent_cons_id ON cds2db_in.consent USING btree (cons_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_consent_cons_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_consent_cons_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_cons_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_consent_cons_meta_versionid ON cds2db_in.consent USING btree (cons_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_consent_cons_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_consent_cons_meta_versionid ON cds2db_in.consent USING btree (cons_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_consent_cons_meta_versionid ON cds2db_in.consent USING btree (cons_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_consent_cons_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_cons_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_consent_cons_meta_versionid ON cds2db_in.consent USING btree (cons_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_consent_cons_meta_versionid RENAME TO del_consent_cons_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_consent_cons_meta_versionid;
+	    CREATE INDEX idx_consent_cons_meta_versionid ON cds2db_in.consent USING btree (cons_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_consent_cons_meta_versionid ON cds2db_in.consent USING btree (cons_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_consent_cons_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_consent_cons_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_cons_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_consent_cons_meta_lastupdated ON cds2db_in.consent USING btree (cons_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_consent_cons_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_consent_cons_meta_lastupdated ON cds2db_in.consent USING btree (cons_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_consent_cons_meta_lastupdated ON cds2db_in.consent USING btree (cons_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_consent_cons_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_cons_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_consent_cons_meta_lastupdated ON cds2db_in.consent USING btree (cons_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_consent_cons_meta_lastupdated RENAME TO del_consent_cons_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_consent_cons_meta_lastupdated;
+	    CREATE INDEX idx_consent_cons_meta_lastupdated ON cds2db_in.consent USING btree (cons_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_consent_cons_meta_lastupdated ON cds2db_in.consent USING btree (cons_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_consent_cons_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_consent_cons_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_cons_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_consent_cons_meta_profile ON cds2db_in.consent USING btree (cons_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_consent_cons_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_consent_cons_meta_profile ON cds2db_in.consent USING btree (cons_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_consent_cons_meta_profile ON cds2db_in.consent USING btree (cons_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_consent_cons_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'consent' AND substr(indexname,1,63)=substr('idx_consent_cons_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_consent_cons_meta_profile ON cds2db_in.consent USING btree (cons_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_consent_cons_meta_profile RENAME TO del_consent_cons_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_consent_cons_meta_profile;
+	    CREATE INDEX idx_consent_cons_meta_profile ON cds2db_in.consent USING btree (cons_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_consent_cons_meta_profile ON cds2db_in.consent USING btree (cons_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - location ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'idx_location_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_location_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_location_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_location_raw_id ON cds2db_in.location USING btree (idx_location_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_location_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_location_raw_id ON cds2db_in.location USING btree (idx_location_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_location_id RENAME TO del_idx_location_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_location_id;
+   	        CREATE INDEX idx_location_raw_id ON cds2db_in.location USING btree (idx_location_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_location_raw_id ON cds2db_in.location USING btree (idx_location_raw_id DESC);
+	    CREATE INDEX idx_location_raw_id ON cds2db_in.location USING btree (idx_location_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15662,19 +17111,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_location_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_location_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_location_input_dt ON cds2db_in.location USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_location_input_dt ON cds2db_in.location USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_location_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_input_dt ON cds2db_in.location USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_location_input_dt RENAME TO del_cds2db_in_location_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_location_i_dt;
+	    CREATE INDEX idx_cds2db_in_location_input_dt ON cds2db_in.location USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_input_dt ON cds2db_in.location USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_location_input_dt ON cds2db_in.location USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_location_input_pnr for Table "location" in schema "cds2db_in"
@@ -15684,18 +17134,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_location_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_location_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_location_input_pnr ON cds2db_in.location USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_location_input_pnr ON cds2db_in.location USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_location_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_input_pnr ON cds2db_in.location USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_location_input_pnr RENAME TO del_cds2db_in_location_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_location_i_pnr;
+	    CREATE INDEX idx_cds2db_in_location_input_pnr ON cds2db_in.location USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_input_pnr ON cds2db_in.location USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_location_input_pnr ON cds2db_in.location USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15706,18 +17157,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_location_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_location_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'location'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_location_last_dt ON cds2db_in.location USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_location_last_dt ON cds2db_in.location USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_location_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_last_dt ON cds2db_in.location USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_location_last_dt RENAME TO del_cds2db_in_location_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_location_l_dt;
+	    CREATE INDEX idx_cds2db_in_location_last_dt ON cds2db_in.location USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_last_dt ON cds2db_in.location USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_location_last_dt ON cds2db_in.location USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15728,18 +17180,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_location_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_location_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_location_last_pnr ON cds2db_in.location USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_location_last_pnr ON cds2db_in.location USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_location_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_last_pnr ON cds2db_in.location USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_location_last_pnr RENAME TO del_cds2db_in_location_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_location_l_pnr;
+	    CREATE INDEX idx_cds2db_in_location_last_pnr ON cds2db_in.location USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_last_pnr ON cds2db_in.location USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_location_last_pnr ON cds2db_in.location USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15750,119 +17203,130 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_location_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_location_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_location_input_dt ON cds2db_in.location USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_cds2db_in_location_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_location_input_dt ON cds2db_in.location USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_location_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_hash ON cds2db_in.location USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_location_hash RENAME TO del_cds2db_in_location_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_location_hash;
+	    CREATE INDEX idx_cds2db_in_location_hash ON cds2db_in.location USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_location_hash ON cds2db_in.location USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_location_hash ON cds2db_in.location USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for location ----------------------------------------------------
 --- idx_location_loc_id - create btree index on \bid\b --------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_id'
-    ) THEN
-        IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_location_loc_id',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_loc_id',1,63)
-		    AND indexdef != 'CREATE INDEX idx_location_loc_id ON cds2db_in.location USING btree (loc_id)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_location_loc_id;
-   	        CREATE INDEX CONCURRENTLY idx_location_loc_id ON cds2db_in.location USING btree (loc_id);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_location_loc_id ON cds2db_in.location USING btree (loc_id);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_id'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_location_loc_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_loc_id',1,63)
+	    AND indexdef != 'CREATE INDEX idx_location_loc_id ON cds2db_in.location USING btree (loc_id)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_location_loc_id RENAME TO del_location_loc_id;
+	    DROP INDEX IF EXISTS cds2db_in.del_location_loc_id;
+	    CREATE INDEX idx_location_loc_id ON cds2db_in.location USING btree (loc_id);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_location_loc_id ON cds2db_in.location USING btree (loc_id);
+    END IF; -- INDEX available
+END IF; -- target column
 
 
 --- idx_location_loc_meta_versionid - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_meta_versionid'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_location_loc_meta_versionid',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_loc_meta_versionid',1,63)
-		    AND indexdef != 'CREATE INDEX idx_location_loc_meta_versionid ON cds2db_in.location USING btree (loc_meta_versionid)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_location_loc_meta_versionid;
-   	        CREATE INDEX CONCURRENTLY idx_location_loc_meta_versionid ON cds2db_in.location USING btree (loc_meta_versionid);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_location_loc_meta_versionid ON cds2db_in.location USING btree (loc_meta_versionid);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_meta_versionid'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_location_loc_meta_versionid',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_loc_meta_versionid',1,63)
+	    AND indexdef != 'CREATE INDEX idx_location_loc_meta_versionid ON cds2db_in.location USING btree (loc_meta_versionid)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_location_loc_meta_versionid RENAME TO del_location_loc_meta_versionid;
+	    DROP INDEX IF EXISTS cds2db_in.del_location_loc_meta_versionid;
+	    CREATE INDEX idx_location_loc_meta_versionid ON cds2db_in.location USING btree (loc_meta_versionid);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_location_loc_meta_versionid ON cds2db_in.location USING btree (loc_meta_versionid);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_location_loc_meta_lastupdated - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_meta_lastupdated'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_location_loc_meta_lastupdated',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_loc_meta_lastupdated',1,63)
-		    AND indexdef != 'CREATE INDEX idx_location_loc_meta_lastupdated ON cds2db_in.location USING btree (loc_meta_lastupdated)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_location_loc_meta_lastupdated;
-   	        CREATE INDEX CONCURRENTLY idx_location_loc_meta_lastupdated ON cds2db_in.location USING btree (loc_meta_lastupdated);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_location_loc_meta_lastupdated ON cds2db_in.location USING btree (loc_meta_lastupdated);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_meta_lastupdated'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_location_loc_meta_lastupdated',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_loc_meta_lastupdated',1,63)
+	    AND indexdef != 'CREATE INDEX idx_location_loc_meta_lastupdated ON cds2db_in.location USING btree (loc_meta_lastupdated)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_location_loc_meta_lastupdated RENAME TO del_location_loc_meta_lastupdated;
+	    DROP INDEX IF EXISTS cds2db_in.del_location_loc_meta_lastupdated;
+	    CREATE INDEX idx_location_loc_meta_lastupdated ON cds2db_in.location USING btree (loc_meta_lastupdated);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_location_loc_meta_lastupdated ON cds2db_in.location USING btree (loc_meta_lastupdated);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 --- idx_location_loc_meta_profile - create btree index on ^meta/--------------------
-    IF EXISTS ( -- target column
-        SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_meta_profile'
-    ) THEN
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_location_loc_meta_profile',1,63)
-        ) THEN -- check current status
-            IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_loc_meta_profile',1,63)
-		    AND indexdef != 'CREATE INDEX idx_location_loc_meta_profile ON cds2db_in.location USING btree (loc_meta_profile)'
-            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_location_loc_meta_profile;
-   	        CREATE INDEX CONCURRENTLY idx_location_loc_meta_profile ON cds2db_in.location USING btree (loc_meta_profile);
-            END IF; -- check current status
-	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_location_loc_meta_profile ON cds2db_in.location USING btree (loc_meta_profile);
-        END IF; -- INDEX available
-    END IF; -- target column
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'loc_meta_profile'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_location_loc_meta_profile',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'cds2db_in' AND tablename = 'location' AND substr(indexname,1,63)=substr('idx_location_loc_meta_profile',1,63)
+	    AND indexdef != 'CREATE INDEX idx_location_loc_meta_profile ON cds2db_in.location USING btree (loc_meta_profile)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX cds2db_in.idx_location_loc_meta_profile RENAME TO del_location_loc_meta_profile;
+	    DROP INDEX IF EXISTS cds2db_in.del_location_loc_meta_profile;
+	    CREATE INDEX idx_location_loc_meta_profile ON cds2db_in.location USING btree (loc_meta_profile);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_location_loc_meta_profile ON cds2db_in.location USING btree (loc_meta_profile);
+    END IF; -- INDEX available
+END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+
 ------------------------- Index for cds2db_in - pids_per_ward ---------------------------------
     -- Primary key of the corresponding raw table
     IF EXISTS ( -- target column
         SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'idx_pids_per_ward_raw_id'
     ) THEN
         IF EXISTS ( -- INDEX available
-            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_pids_per_ward_raw_id',1,63)
+            SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_pids_per_ward_raw_id',1,63) AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward'
         ) THEN -- check current status
             IF EXISTS ( -- INDEX nicht auf akuellen Stand
                 SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
                 AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_pids_per_ward_raw_id',1,63)
 		 AND indexdef != 'CREATE INDEX idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC)'
             ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS cds2db_in.idx_pids_per_ward_raw_id;
-   	        CREATE INDEX CONCURRENTLY idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC);
+		ALTER INDEX cds2db_in.idx_pids_per_ward_id RENAME TO del_idx_pids_per_ward_id;
+		DROP INDEX IF EXISTS cds2db_in.del_idx_pids_per_ward_id;
+   	        CREATE INDEX idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC);
             END IF; -- check current status
 	ELSE -- (easy) Create new
-	    CREATE INDEX CONCURRENTLY idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC);
+	    CREATE INDEX idx_pids_per_ward_raw_id ON cds2db_in.pids_per_ward USING btree (idx_pids_per_ward_raw_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
 
@@ -15873,19 +17337,20 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'input_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_input_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_cds2db_in_pids_per_ward_input_dt',1,63) AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_input_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_input_dt ON cds2db_in.pids_per_ward USING brin (input_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_input_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_input_dt ON cds2db_in.pids_per_ward USING brin (input_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_pids_per_ward_input_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_input_dt ON cds2db_in.pids_per_ward USING brin (input_datetime);
-        END IF; -- check current status"%>
+            ALTER INDEX cds2db_in.idx_cds2db_in_pids_per_ward_input_dt RENAME TO del_cds2db_in_pids_per_ward_i_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_pids_per_ward_i_dt;
+	    CREATE INDEX idx_cds2db_in_pids_per_ward_input_dt ON cds2db_in.pids_per_ward USING brin (input_datetime);
+        END IF; -- check current status
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_input_dt ON cds2db_in.pids_per_ward USING brin (input_datetime);
-    END IF; -- INDEX available"%>
+        CREATE INDEX idx_cds2db_in_pids_per_ward_input_dt ON cds2db_in.pids_per_ward USING brin (input_datetime);
+    END IF; -- INDEX available
 END IF; -- target column
 
 -- Index idx_cds2db_in_pids_per_ward_input_pnr for Table "pids_per_ward" in schema "cds2db_in"
@@ -15895,18 +17360,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'input_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_input_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_input_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_input_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_input_pnr ON cds2db_in.pids_per_ward USING brin (input_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_input_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_input_pnr ON cds2db_in.pids_per_ward USING brin (input_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_pids_per_ward_input_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_input_pnr ON cds2db_in.pids_per_ward USING brin (input_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_pids_per_ward_input_pnr RENAME TO del_cds2db_in_pids_per_ward_i_pnr;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_pids_per_ward_i_pnr;
+	    CREATE INDEX idx_cds2db_in_pids_per_ward_input_pnr ON cds2db_in.pids_per_ward USING brin (input_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_input_pnr ON cds2db_in.pids_per_ward USING brin (input_processing_nr);
+        CREATE INDEX idx_cds2db_in_pids_per_ward_input_pnr ON cds2db_in.pids_per_ward USING brin (input_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15917,18 +17383,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'last_check_datetime'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_last_dt',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_last_dt',1,63)  AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_last_dt',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_last_dt ON cds2db_in.pids_per_ward USING brin (last_check_datetime)'
+            AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_last_dt',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_last_dt ON cds2db_in.pids_per_ward USING brin (last_check_datetime)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_pids_per_ward_last_dt;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_last_dt ON cds2db_in.pids_per_ward USING brin (last_check_datetime);
+            ALTER INDEX cds2db_in.idx_cds2db_in_pids_per_ward_last_dt RENAME TO del_cds2db_in_pids_per_ward_l_dt;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_pids_per_ward_l_dt;
+	    CREATE INDEX idx_cds2db_in_pids_per_ward_last_dt ON cds2db_in.pids_per_ward USING brin (last_check_datetime);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_last_dt ON cds2db_in.pids_per_ward USING brin (last_check_datetime);
+        CREATE INDEX idx_cds2db_in_pids_per_ward_last_dt ON cds2db_in.pids_per_ward USING brin (last_check_datetime);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15939,18 +17406,19 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'last_processing_nr'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_last_pnr',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_last_pnr',1,63) AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_last_pnr',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_last_pnr ON cds2db_in.pids_per_ward USING brin (last_processing_nr)'
+            AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_last_pnr',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_last_pnr ON cds2db_in.pids_per_ward USING brin (last_processing_nr)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_pids_per_ward_last_pnr;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_last_pnr ON cds2db_in.pids_per_ward USING brin (last_processing_nr);
+            ALTER INDEX cds2db_in.idx_cds2db_in_pids_per_ward_last_pnr RENAME TO del_cds2db_in_pids_per_ward_l_pnr;
+            DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_pids_per_ward_l_pnr;
+	    CREATE INDEX idx_cds2db_in_pids_per_ward_last_pnr ON cds2db_in.pids_per_ward USING brin (last_processing_nr);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_last_pnr ON cds2db_in.pids_per_ward USING brin (last_processing_nr);
+        CREATE INDEX idx_cds2db_in_pids_per_ward_last_pnr ON cds2db_in.pids_per_ward USING brin (last_processing_nr);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
@@ -15961,25 +17429,24 @@ IF EXISTS ( -- target column
     SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col'
 ) THEN
     IF EXISTS ( -- INDEX available
-        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_hash',1,63)
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_hash',1,63) AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward'
     ) THEN -- check current status
         IF EXISTS ( -- INDEX nicht auf akuellen Stand
             SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_hash',1,63)
-	        AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_input_dt ON cds2db_in.pids_per_ward USING btree (hash_index_col)'
+            AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward' AND substr(indexname,1,63)=substr('idx_cds2db_in_pids_per_ward_hash',1,63)
+	    AND indexdef != 'CREATE INDEX idx_cds2db_in_pids_per_ward_input_dt ON cds2db_in.pids_per_ward USING btree (hash_index_col)'
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-		DROP INDEX CONCURRENTLY IF EXISTS idx_cds2db_in_pids_per_ward_hash;
-	        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_hash ON cds2db_in.pids_per_ward USING btree (hash_index_col);
+            ALTER INDEX cds2db_in.idx_cds2db_in_pids_per_ward_hash RENAME TO del_cds2db_in_pids_per_ward_hash;
+	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_pids_per_ward_hash;
+	    CREATE INDEX idx_cds2db_in_pids_per_ward_hash ON cds2db_in.pids_per_ward USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_pids_per_ward_hash ON cds2db_in.pids_per_ward USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_pids_per_ward_hash ON cds2db_in.pids_per_ward USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
--- index by definition table ----------------------------------------------------
+-- index by definition table for pids_per_ward ----------------------------------------------------
 
-
--- index by definition table ----------------------------------------------------
 
 ------------------------------------------------------------------------------------------------
 END
