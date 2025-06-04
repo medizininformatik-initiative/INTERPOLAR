@@ -408,10 +408,10 @@ IF EXISTS ( -- target column
         ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
             ALTER INDEX cds2db_in.idx_cds2db_in_patient_raw_hash RENAME TO del_cds2db_in_patient_raw_hash;
 	    DROP INDEX IF EXISTS cds2db_in.del_cds2db_in_patient_raw_hash;
-	    CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_raw_hash ON cds2db_in.patient_raw USING btree (hash_index_col);
+	    CREATE INDEX idx_cds2db_in_patient_raw_hash ON cds2db_in.patient_raw USING btree (hash_index_col);
         END IF; -- check current status"%>
     ELSE -- (easy) Create new
-        CREATE INDEX CONCURRENTLY idx_cds2db_in_patient_raw_hash ON cds2db_in.patient_raw USING btree (hash_index_col);
+        CREATE INDEX idx_cds2db_in_patient_raw_hash ON cds2db_in.patient_raw USING btree (hash_index_col);
     END IF; -- INDEX available"%>
 END IF; -- target column
 
