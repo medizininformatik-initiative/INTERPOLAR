@@ -78,9 +78,7 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>'
-            AND column_name = 'hash_index_col'
+            SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'hash_index_col'
         ) THEN
             -- Creating the hash column
             ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD
