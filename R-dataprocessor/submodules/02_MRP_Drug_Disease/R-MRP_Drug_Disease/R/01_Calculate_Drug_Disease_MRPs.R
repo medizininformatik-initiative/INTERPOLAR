@@ -130,7 +130,7 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 calculateDrugDiseaseMRPs <- function() {
 
   etlutils::runLevel2("Load and expand Drug-Disease Definition", {
-    drug_disease_mrp_tables <- getExpandedContent("Drug-Disease", MRP_PAIR_LISTS_PATHS)
+    drug_disease_mrp_tables <- getExpandedContent("Drug_Disease", MRP_PAIR_LISTS_PATHS)
   })
 
   # Load all active PIDs

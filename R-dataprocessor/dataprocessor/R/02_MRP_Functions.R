@@ -2,7 +2,7 @@
 .resource_env <- new.env()
 
 MRP_TABLE_COLUMN_NAMES <- list(
-  "Drug-Disease" = etlutils::namedListByValue("SMPC_NAME",
+  "Drug_Disease" = etlutils::namedListByValue("SMPC_NAME",
                                               "SMPC_VERSION",
                                               "ATC_DISPLAY",
                                               "ATC_PRIMARY",
@@ -126,7 +126,7 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
 
   if (is.null(processed_content_hash)) {
     # If the hash is not found, process the MRP definition
-    preprocess_function_name <- paste0("cleanAndExpandDefinition", gsub("-", "", table_name))
+    preprocess_function_name <- paste0("cleanAndExpandDefinition", gsub("_", "", table_name))
     preprocess_function <- get(preprocess_function_name, mode = "function", inherits = TRUE)
     processed_content <- preprocess_function(mrp_definition$excel_file_content)
     processed_content_hash <- digest::digest(processed_content, algo = "sha256")
