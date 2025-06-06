@@ -89,19 +89,19 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
       if (is.na(icd) || icd == "") {
         return(NA_character_)
       }
-      input_icds <- unlist(strsplit(icd, '\\+'))
-      # Handle single ICD code case
-      if (length(input_icds) == 1) {
-        return(paste(etlutils::interpolar_expandICDs(input_icds), collapse = ' '))
+      if (!grepl("+", icd, fixed = TRUE)) {
+        # Handle single ICD code case
+        return(paste(etlutils::expandICDs(icd), collapse = ' '))
+
       }
       # Handle multiple ICD codes separated by '+'
-      if (length(input_icds) > 1) {
-        icd_1 <- etlutils::interpolar_expandICDs(input_icds[[1]])
-        icd_2 <- etlutils::interpolar_expandICDs(input_icds[[2]])
-        # Create combinations and concatenate
-        combinations <- outer(icd_1, icd_2, paste, sep = '+')
-        return(trimws(paste(c(combinations), collapse = ' ')))
-      }
+      input_icds <- unlist(strsplit(icd, '\\+'))
+      icd_1 <- etlutils::expandICDs(input_icds[[1]])
+      icd_2 <- etlutils::expandICDs(input_icds[[2]])
+      # Create combinations and concatenate
+      combinations <- outer(icd_1, icd_2, paste, sep = '+')
+      return(trimws(paste(c(combinations), collapse = ' ')))
+
     }
     # Apply the function to the entire column
     sapply(icd_column, processICD)

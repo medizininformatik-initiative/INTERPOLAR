@@ -157,7 +157,7 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
 
     # Convert content and processed_content to base64-encoded serialized data
     content <- base64enc::base64encode(serialize(content, NULL))
-    processed_content <- base64enc::base64encode(serialize(processed_content, NULL))
+    processed_content_serialized <- base64enc::base64encode(serialize(processed_content, NULL))
 
     new_input_data_file_row <- data.table::data.table(
       file_name = file_name,
@@ -173,7 +173,7 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
     )
     new_input_data_file_processed_content_row <- data.table::data.table(
       processed_content_hash = processed_content_hash,
-      processed_content = processed_content
+      processed_content = processed_content_serialized
     )
     input_data_files_processed_content <- rbind(
       input_data_files_processed_content,
