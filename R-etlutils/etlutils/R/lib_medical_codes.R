@@ -43,7 +43,7 @@ expandICD <- function(icd, minyear = NA, maxyear = NA, fullExpanded = TRUE, norm
     # Get ICD labels for the first 3 characters
     expand_icd_code <- ICD10gm::get_icd_labels(year = year, icd3 = icd3)$icd_normcode
     # Filter the results based on the input ICD code
-    expand_icd <- expand_icd_code[grepl(paste0('^', icd), expand_icd_code)]
+    expand_icd <- expand_icd_code[startsWith(expand_icd_code, icd)]
     if (fullExpanded) {
       for (i in seq_len(length(expand_icd) - 1)) {
         if (startsWith(expand_icd[i + 1], expand_icd[i])) {
@@ -55,7 +55,7 @@ expandICD <- function(icd, minyear = NA, maxyear = NA, fullExpanded = TRUE, norm
       # should the code with this style 'A00.-' added too?
       if (!normcodesOnly) {
         expand_icd_code <- ICD10gm::get_icd_labels(year = year, icd3 = icd3)$icd_code
-        expand_icd <- c(expand_icd, expand_icd_code[grepl(paste0('^', icd), expand_icd_code)])
+        expand_icd <- c(expand_icd, expand_icd_code[startsWith(expand_icd_code, icd)])
       }
       unique(expand_icd)
     }
@@ -88,24 +88,12 @@ expandICD <- function(icd, minyear = NA, maxyear = NA, fullExpanded = TRUE, norm
 #' print(expandICDs('I25', 2018, 2021, fullExpanded = FALSE, normcodesOnly = FALSE))
 #'
 #' @export
-expandICDs <- function(icdCodes, minyear = NA, maxyear = NA, fullExpanded = TRUE, normcodesOnly = TRUE) {
+expandICDs <- function(icdCodes, minyear = NA, maxyear = NA, fullExpanded = FALSE, normcodesOnly = FALSE) {
   icd_codes <- c()
   for (icd in icdCodes) {
     icd_codes <- c(icd_codes, expandICD(icd, minyear, maxyear, fullExpanded, normcodesOnly))
   }
   sort(unique(icd_codes))
-}
-
-#' Expand the given ICD Codes between the polar start year and current year.
-#' The codes are expanded with general codes and codes with bars like 'A20.-'
-#'
-#' @param ... the ICD codes to be expanded
-#'
-#' @seealso expandICDs
-#'
-#' @export
-interpolar_expandICDs <- function(...) {
-  expandICDs(c(...), NA, NA, FALSE, FALSE)
 }
 
 # https://stackoverflow.com/questions/69947452/regex-boundary-to-also-exclude-special-characters
