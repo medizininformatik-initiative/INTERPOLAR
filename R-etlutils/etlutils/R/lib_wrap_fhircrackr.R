@@ -47,7 +47,12 @@ executeFHIRSearchVariation <- function(
 ) {
 
   # Set new timeout (e.g., 30 minutes)
-  httr::set_config(httr::timeout(getFhirSearchCurlTimeout()))
+  # httr::set_config(httr::timeout(getFhirSearchCurlTimeout()))
+  httr::set_config(httr::config(
+    timeout = getFhirSearchCurlTimeout(),
+    low_speed_limit = 1,
+    low_speed_time = getFhirSearchCurlTimeout()
+  ))
 
   result <- if (!is.null(FHIR_TOKEN) && FHIR_TOKEN != "") {
 

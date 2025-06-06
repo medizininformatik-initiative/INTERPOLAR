@@ -293,10 +293,11 @@ dbGetStatus <- function() {
     if (grepl("WaitForCronJob", status)) {
       admin_connection <- dbGetAdminConnection()
       DBI::dbExecute(admin_connection,
-                    "UPDATE db_config.db_process_control
+                     "UPDATE db_config.db_process_control
                      SET pc_value = 'ReadyToConnect', last_change_timestamp = CURRENT_TIMESTAMP
                      WHERE pc_name = 'semaphor_cron_job_data_transfer';")
       status <- dbGetSingleValue("SELECT db.data_transfer_status();")
+      dbDisconnect(admin_connection)
     }
   }
   return(status)
@@ -439,6 +440,7 @@ dbTransferDataInternal <- function() {
   for (query in queries) {
     DBI::dbExecute(admin_connection, query)
   }
+  dbDisconnect(admin_connection)
 }
 
 #' Unlock a Database for Read or Write Access
@@ -884,7 +886,6 @@ dbReadTable <- function(table_name, lock_id = NULL) {
 #' contains any rows. It executes a `COUNT(*)` query on the table and evaluates
 #' whether the count is zero.
 #'
-#' @param db_connection A valid database connection object to the PostgreSQL database.
 #' @param table_name A character string specifying the name of the table to check.
 #'
 #' @return A logical value: `TRUE` if the table is empty, `FALSE` otherwise.
@@ -897,12 +898,11 @@ dbReadTable <- function(table_name, lock_id = NULL) {
 #'
 #' @seealso \code{\link[DBI]{dbGetQuery}} for executing SQL queries.
 #'
-dbIsTableEmpty <- function(db_connection, table_name) {
-  readonly <- identical(db_connection, dbGetReadConnection())
+dbIsTableEmptyBeforeWrite <- function(table_name) {
   # SQL query to count rows in the table
   query <- paste0("SELECT COUNT(*) FROM ", table_name)
   # Execute the query and fetch the result (for the write connection)
-  result <- dbGetQuery(query, readonly = readonly)
+  result <- dbGetQuery(query, readonly = FALSE)
   rows_in_table <- result[1, 1]
   dbLog("Table '", table_name, "' has ", rows_in_table, " rows")
   # Return TRUE if the count is 0, indicating the table is empty
@@ -952,11 +952,9 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
   # 1. Check if any tables are not empty when `stop_if_table_not_empty` is TRUE
   # Check if tables are empty if required
   if (stop_if_table_not_empty) {
-    db_connection <- dbGetWriteConnection()
     non_empty_tables <- table_names[!sapply(table_names, function(table_name) {
-      dbIsTableEmpty(db_connection, table_name)
+      dbIsTableEmptyBeforeWrite(table_name)
     })]
-    dbDisconnect(db_connection)
     if (length(non_empty_tables) > 0) {
       stop("The following tables are not empty:\n",
            paste(non_empty_tables, collapse = "\n"))
