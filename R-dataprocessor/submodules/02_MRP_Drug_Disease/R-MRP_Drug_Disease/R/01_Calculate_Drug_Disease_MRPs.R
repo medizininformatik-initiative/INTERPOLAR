@@ -1,13 +1,3 @@
-formatCodeErrors <- function(error_list, code_type_label) {
-  if (length(error_list) == 0) return(character())
-
-  messages <- c(sprintf("The following errors were found in %s codes:", code_type_label))
-  for (col in names(error_list)) {
-    messages <- c(messages,
-                  sprintf("  Column '%s': %s", col, paste(error_list[[col]], collapse = ", ")))
-  }
-  return(messages)
-}
 
 #' Clean and Expand Drug_Disease_MRP Definition Table
 #'

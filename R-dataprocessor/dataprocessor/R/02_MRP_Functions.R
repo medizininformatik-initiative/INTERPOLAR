@@ -220,6 +220,41 @@ getStoredProcessedContentHash <- function(target_hash, table_path) {
     }
   }
   return(NULL)
+
+#' Format code-related error messages for display
+#'
+#' Takes a named list of validation errors per column and creates a character vector of formatted
+#' error messages that can be displayed to the user or logged. If no errors are provided, an empty
+#' character vector is returned.
+#'
+#' @param error_list A named list where each element contains a character vector of error messages
+#'   for a specific column.
+#' @param code_type_label A character string indicating the type of codes being validated (e.g.,
+#'   "diagnosis", "procedure").
+#'
+#' @return A character vector of formatted error messages. If \code{error_list} is empty, an empty
+#'   character vector is returned.
+#'
+#' @examples
+#' errors <- list(
+#'   diagnosis = c("Invalid format", "Unknown code"),
+#'   procedure = c("Missing value")
+#' )
+#' formatCodeErrors(errors, "input")
+#'
+#' empty_errors <- list()
+#' formatCodeErrors(empty_errors, "output")
+#'
+#' @export
+formatCodeErrors <- function(error_list, code_type_label) {
+  if (length(error_list) == 0) return(character())
+
+  messages <- c(sprintf("The following errors were found in %s codes:", code_type_label))
+  for (col in names(error_list)) {
+    messages <- c(messages,
+                  sprintf("  Column '%s': %s", col, paste(error_list[[col]], collapse = ", ")))
+  }
+  return(messages)
 }
 
 #' #' Calculates the valid observation datetime based on the maximum LOINC validity period
