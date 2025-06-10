@@ -19,6 +19,8 @@ Suggests:
 Imports: 
     dplyr,
     data.table,
-    etlutils
+    etlutils,
+    kableExtra,
+    knitr
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2

@@ -64,12 +64,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   # FAS2_1 <- defineFAS2_1(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END)
   # F2 <- calculateF2(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
-  print(patient_table)
-  print(encounter_table)
-  print(pids_per_ward_table)
+  # print(patient_table)
+  # print(encounter_table)
+  # print(pids_per_ward_table)
 
   # Print the patient, encounter, F1 and F2 datasets for verification
-  print(data.table::as.data.table(complete_table))
+  writeKable(complete_table, format = "html")
+
   # print(data.table::as.data.table(FAS2_1))
   #
   # # Print the reporting period
