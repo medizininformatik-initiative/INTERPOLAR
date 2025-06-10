@@ -154,3 +154,23 @@ loadResourcesLastVersionByOwnIDFromDB <- function(resource_name, ids_or_refs) {
     filter_column_values = ids_or_refs,
     lock_id = paste0("loadResourcesLastVersionByOwnIDFromDB(", resource_name, ")"))
 }
+
+#' Load existing record IDs from the database for given patient IDs
+#'
+#' This function retrieves the existing record IDs associated with a given set of
+#' patient IDs from the `v_patient_fe` view in the database. It builds a query using
+#' the provided patient IDs and executes it in read-only mode with an appropriate lock ID.
+#'
+#' @param pat_ids A character vector of patient IDs to look up in the database.
+#'
+#' @return A data.table containing the columns \code{pat_id} and \code{record_id} for
+#' all matching patients found in the database.
+#'
+#' @export
+loadExistingRecordIDsFromDB <- function(pat_ids) {
+  pat_ids <- etlutils::fhirdataExtractIDs(pat_ids)
+  query_ids <- etlutils::fhirdbGetQueryList(pat_ids)
+  query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN ", query_ids)
+  existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "loadExistingRecordIDsFromDB()")
+  return(existing_record_ids)
+}
