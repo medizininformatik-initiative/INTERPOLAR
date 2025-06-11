@@ -612,7 +612,7 @@ loadDatabaseRightsAndConvertDefinition <- function() {
                 "strings here in this R-script."))
   }
 
-  rights_definition <- etlutils::removeRowsWithNAorEmpty(rights_definition)
+  rights_definition <- etlutils::dtRemoveCommentRows(rights_definition)
   rights_definition[, TABLE_DESCRIPTION := trimws(TABLE_DESCRIPTION)]
   rights_definition <- etlutils::splitTableToList(rights_definition, rights_definition_columns$TABLE_DESCRIPTION)
   for (i in 1:length(rights_definition)) {
@@ -627,7 +627,7 @@ loadDatabaseRightsAndConvertDefinition <- function() {
     convert_definition_columns <- getConvertDefinitionColumnNames()
     convert_definition <- etlutils::removeTableHeader(convert_definition, convert_definition_columns)
     if (etlutils::isValidTable(convert_definition)) {
-      convert_definition <- etlutils::removeRowsWithNAorEmpty(convert_definition)
+      convert_definition <- etlutils::dtRemoveCommentRows(convert_definition)
       convert_definition <- etlutils::splitTableToList(convert_definition, convert_definition_columns$TABLE_DESCRIPTION)
     } else {
       message("No valid convert definition found -> we use all Table Descriptions in the original style.")

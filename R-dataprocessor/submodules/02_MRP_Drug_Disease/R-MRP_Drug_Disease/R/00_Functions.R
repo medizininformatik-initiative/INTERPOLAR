@@ -13,6 +13,9 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
   # Remove not nesessary columns
   drug_disease_mrp_definition <- drug_disease_mrp_definition[, c("SMPC_NAME", "SMPC_VERSION") := NULL]
 
+  # Remove comment and full empty rows
+  drug_disease_mrp_definition <- etlutils::dtRemoveCommentRows(drug_disease_mrp_definition)
+
   # Remove rows with all empty code columns
   proxy_column_names <- names(drug_disease_mrp_definition)[
     (grepl("PROXY|ATC", names(drug_disease_mrp_definition))) &
