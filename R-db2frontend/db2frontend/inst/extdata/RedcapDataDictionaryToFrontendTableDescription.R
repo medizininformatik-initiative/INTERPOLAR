@@ -11,11 +11,6 @@ library(etlutils)
 
 # Load the CSV file as a data.table
 dt <- fread("./R-db2frontend/db2frontend/inst/extdata/Frontend_DataDictionary.csv", encoding = "UTF-8")
-# Load the Excel file with the additional database columns for the frontend tables
-table_description_extension <- etlutils::getTableDescriptionSplittedByTableName(
-  table_description_path = "./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description_Extension.xlsx",
-  table_description_sheet_name = "frontend_table_description"
-)
 
 # Rename columns
 column_names <- c("Variable / Field Name", "Form Name", "Field Type", "Field Label",
@@ -58,18 +53,6 @@ for (i in 1:nrow(dt)) {
     }
   } else {
     expanded_rows <- rbindlist(list(expanded_rows, as.data.table(row[, .(TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_TYPE, VALIDATION_TYPE)])), fill = TRUE)
-    if (i == nrow(dt) || dt$TABLE_NAME[i] != dt$TABLE_NAME[i + 1]) {
-      # If the next row is a different table and further rows from the
-      # table_description_extension are to be added for this table
-      if (dt$TABLE_NAME[i] %in% names(table_description_extension)) {
-        # Add the lines from the table_description_extension
-        additional_rows <- table_description_extension[[dt$TABLE_NAME[i]]]
-        additional_rows[, TABLE_NAME := dt$TABLE_NAME[i]]  # Setze den Tabellennamen
-        expanded_rows <- rbindlist(list(expanded_rows, additional_rows), fill = TRUE)
-        # Replace all NA values created by fille = TRUE with empty strings
-        expanded_rows[is.na(expanded_rows)] <- ""
-      }
-    }
   }
 }
 

@@ -15,22 +15,6 @@
 #'
 importDB2Redcap <- function() {
 
-  addAdditionalValues <- function(data_from_db) {
-
-    for (i in seq_len(nrow(data_from_db))) {
-      # Get the main encounter ID and medical case ID from the database
-      db_ret_main_enc_id <- data_from_db[i, "db_ret_main_enc_id"]
-      db_ret_medical_case_id <- data_from_db[i, "db_ret_medical_case_id"]
-
-      paste0("db_ret_main_enc_id = ", db_ret_main_enc_id, "\n",
-             "db_ret_medical_case_id = ", db_ret_medical_case_id)
-    }
-    data_from_db[, db_ret_main_enc_id := NULL]
-    data_from_db[, db_ret_medical_case_id := NULL]
-
-    return(data_from_db)
-  }
-
   tryRedcap <- function(redcap_process) {
     tryCatch({
       redcap_process()
@@ -66,10 +50,6 @@ importDB2Redcap <- function() {
 
       # Fetch data from the database
       data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
-
-      if (startsWith(tablename, "retrolektive_mrpbewertung")) {
-        data_from_db <- addAdditionalValues(data_from_db)
-      }
 
       table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
       etlutils::writeRData(data_from_db, paste0(table_filename_prefix, "db2frontend_", i, "_", table_name))

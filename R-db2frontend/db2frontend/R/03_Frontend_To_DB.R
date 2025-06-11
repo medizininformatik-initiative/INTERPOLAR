@@ -48,28 +48,8 @@ importRedcap2DB <- function() {
       complete_column_name <- paste0(form_name, "_complete")
       dt <- dt[!is.na(dt[[complete_column_name]]), ]
 
-      rdata_filename <- paste0(table_filename_prefix, "frontend2db_", i, "_", form_name)
-
-      # Add additional values for specific forms
-      if (form_name == "retrolektive_mrpbewertung") {
-        rdata_filename_before_additional_values <- paste0(rdata_filename, "_before_additional_values")
-        etlutils::writeRData(dt, rdata_filename_before_additional_values)
-        for (i in nrow(dt):1) {
-          tryCatch({
-            additional_values <- RcppTOML::parseTOML(text = dt$ret_additional_values[i])
-            dt$db_ret_main_enc_id[i] <- additional_values$db_ret_main_enc_id
-            dt$db_ret_medical_case_id[i] <- additional_values$db_ret_medical_case_id
-          }, error = function(e) {
-            catErrorMessage("Error in retrolektive_mrpbewertung by parsing ret_additional_values for row ",
-                            i, ": ", e$message, "Check table in ", rdata_filename_before_additional_values, "\n")
-            dt <- dt[-i]
-          })
-        }
-      }
-
       table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
-
-      etlutils::writeRData(dt, rdata_filename)
+      etlutils::writeRData(dt, paste0(table_filename_prefix, "frontend2db_", i, "_", form_name))
 
       tables2Export[[form_name]] <- dt
     }
