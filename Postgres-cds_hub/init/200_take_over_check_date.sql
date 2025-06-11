@@ -7,7 +7,7 @@
 -- Rights definition file size        : 15631 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-05-27 07:55:33
+-- Create time: 2025-06-11 14:30:02
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -720,6 +720,7 @@ BEGIN
         WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
+        new_last_pro_nr:= max_last_pro_nr; -- Letzte Processing Number wird auf letzte Nummer des letzten Kopiervorgangs in typed gesetzt
         IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
         err_section:='MAIN-30';    err_schema:='db_log';    err_table:='lpn_collection';

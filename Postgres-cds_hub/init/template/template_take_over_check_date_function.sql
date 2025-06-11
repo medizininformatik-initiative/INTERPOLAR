@@ -110,6 +110,7 @@ BEGIN
         WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
+        new_last_pro_nr:= max_last_pro_nr; -- Letzte Processing Number wird auf letzte Nummer des letzten Kopiervorgangs in typed gesetzt
         IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
         err_section:='MAIN-30';    err_schema:='db_log';    err_table:='lpn_collection';
