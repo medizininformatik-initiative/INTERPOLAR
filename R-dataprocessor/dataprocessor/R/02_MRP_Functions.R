@@ -137,9 +137,7 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
     openxlsx::write.xlsx(processed_content, file = file.path(paste0(path_to_mrp_tables, "/", table_name, "_content"),
                                                              paste0(table_name, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
 
-    ################START: Replace with database functionality###################
-    # Load or init storage tables
-    #TODO: Replace with database functionality
+    # Load or init storage tables locally
     input_data_files_path <- paste0(path_to_mrp_tables, "/input_data_files.RData")
     input_data_files_processed_path <- paste0(path_to_mrp_tables, "/input_data_files_processed_content.RData")
 
@@ -182,10 +180,16 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
       fill = TRUE
     )
 
-    # Save the updated data frames back to the RData file
+    # Save the updated data tables back to the RData file
     saveRDS(input_data_files, input_data_files_path)
     saveRDS(input_data_files_processed_content, input_data_files_processed_path)
-    ################END: Replace with database functionality###################
+
+    # Save the updated data tables back to the database
+    etlutils::dbWriteTables(
+      tables = etlutils::namedListByParam(input_data_files, input_data_files_processed_content),
+      lock_id = "Write input data files to database",
+      stop_if_table_not_empty = TRUE)
+
   } else {
     # Load processed content
     #TODO: Replace with database functionality
