@@ -220,6 +220,7 @@ getStoredProcessedContentHash <- function(target_hash, table_path) {
     }
   }
   return(NULL)
+}
 
 #' Format code-related error messages for display
 #'
