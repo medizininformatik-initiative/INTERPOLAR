@@ -138,10 +138,7 @@ export(greplic)
 export(humanReadableDuration)
 export(indexOfSubstring)
 export(initModuleConstants)
-<<<<<<< HEAD
-=======
 export(initSubmoduleConstants)
->>>>>>> origin/575-inhalt-und-metadaten-von-wp7-listen-in-db-speichern
 export(isATC7)
 export(isATC7orSmaller)
 export(isDBTableDescription)
