@@ -48,7 +48,7 @@ startFrontend2DB <- function(reset_lock_only = FALSE) {
   etlutils::dbCloseAllConnections()
 
   # Generate finish message
-  finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
+  finish_message <- etlutils::generateFinishMessage()
 
   etlutils::finalize(finish_message)
 
@@ -97,8 +97,8 @@ startDB2Frontend <- function(reset_lock_only = FALSE) {
   etlutils::dbCloseAllConnections()
 
   # Generate finish message
-  finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
+  finish_message <- etlutils::generateFinishMessage()
 
-  etlutils::finalize(finish_message)
+  return(etlutils::finalize(finish_message))
 
 }

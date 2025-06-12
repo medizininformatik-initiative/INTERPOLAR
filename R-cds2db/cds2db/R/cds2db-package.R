@@ -2,12 +2,7 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom data.table data.table
-#' @importFrom data.table is.data.table
-#' @importFrom data.table setcolorder
-#' @importFrom data.table setDF
-#' @importFrom data.table setDT
-#' @importFrom methods new
-#' @importFrom data.table :=
+#' @import data.table
+#' @import etlutils
 ## usethis namespace: end
 NULL

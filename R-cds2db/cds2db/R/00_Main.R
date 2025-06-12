@@ -123,19 +123,19 @@ retrieve <- function(reset_lock_only = FALSE) {
   etlutils::dbCloseAllConnections()
 
   # Generate finish message
-  finish_message <- etlutils::generateFinishMessage(PROJECT_NAME)
+  finish_message <- etlutils::generateFinishMessage()
   if (!etlutils::isErrorOccured() &&
       (etlutils::isDefinedAndTrue("all_wards_empty") ||
        etlutils::isDefinedAndTrue("all_empty_fhir") ||
        etlutils::isDefinedAndTrue("all_empty_raw"))) {
     finish_message <- paste0(
-      "\nModule '", PROJECT_NAME, "' finished with no errors but the result was empty (see warnings above).\n"
+      "\nModule '", etlutils::getModuleName(), "' finished with no errors but the result was empty (see warnings above).\n"
     )
   }
 
   # Add warning if any DEBUG_ variables are active
   finish_message <- etlutils::appendDebugWarning(finish_message)
 
-  etlutils::finalize(finish_message)
+  return(etlutils::finalize(finish_message))
 
 }
