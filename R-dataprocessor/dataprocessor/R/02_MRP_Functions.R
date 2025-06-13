@@ -197,8 +197,6 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
     matching_row <- input_data_files_processed_content[processed_content_hash == get("processed_content_hash")]
     processed_content <- unserialize(base64enc::base64decode(matching_row$processed_content))
   }
-  # Split the processed content into a list by ATC_PRIMARY
-  processed_content <- etlutils::splitTableToList(processed_content, "ATC_PRIMARY")
 
   # Return the processed content
   return(processed_content)
