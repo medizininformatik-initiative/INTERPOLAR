@@ -148,85 +148,334 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
   return(drug_disease_mrp_definition)
 }
 
+#' Filter active MedicationRequests for an encounter within a specific time window
+#'
+#' @param medication_requests A \code{data.table} of MedicationRequest resources. Must contain columns \code{medreq_encounter_ref} and \code{medreq_authoredon}.
+#' @param encounter_id The encounter ID (character) to filter by (e.g., "12345").
+#' @param enc_period_start POSIXct. The start datetime of the encounter period.
+#' @param meda_datetime POSIXct. The datetime of the medication analysis (cutoff point).
+#'
+#' @return A \code{data.table} with filtered active medication requests for the given encounter and time range.
+#'
+getActiveMedicationRequests <- function(medication_requests, encounter_id, enc_period_start, meda_datetime) {
+  if (is.null(medication_requests) || nrow(medication_requests) == 0) {
+    return(data.table())
+  }
+  active_requests <- medication_requests[
+    medreq_encounter_ref == paste0("Encounter/", encounter_id) &
+      !is.na(medreq_authoredon) &
+      medreq_authoredon >= enc_period_start &
+      medreq_authoredon <= meda_datetime
+  ]
+  return(active_requests)
+}
+
+#' Get relevant patient conditions up to a given date
+#'
+#' Filters the list of Condition resources to return conditions for a specific patient
+#' that occurred on or before the given medication analysis date. If the condition has a
+#' \code{con_recordeddate}, it is used for filtering; otherwise, \code{con_onsetperiod_start}
+#' is used as a fallback.
+#'
+#' @param conditions A \code{data.table} of FHIR Condition resources, including columns \code{pat_id},
+#' \code{con_recordeddate}, and \code{con_onsetperiod_start}.
+#' @param patient_id A character string identifying the patient whose conditions should be returned.
+#' @param meda_datetime A POSIXct timestamp representing the medication analysis date.
+#'
+#' @return A \code{data.table} of conditions that match the patient and date criteria.
+#' Returns an empty table if no matches are found.
+#'
+getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
+  if (is.null(conditions) || nrow(conditions) == 0) {
+    return(data.table())
+  }
+  # Filter conditions by patient ID and ensure recorded date is before or on meda_datetime
+  relevant_conditions <- conditions[
+    pat_id == patient_id &
+      (
+        (!is.na(con_recordeddate) & con_recordeddate <= meda_datetime) |
+          (is.na(con_recordeddate) & con_onsetperiod_start <= meda_datetime)
+      )
+  ]
+  return(relevant_conditions)
+}
+
+#' Match ATC codes between active medication requests and MRP definitions
+#'
+#' This function compares ATC codes from a list of active medication requests with the keys
+#' (ATC codes) in the MRP rule definitions and returns all codes that appear in both.
+#'
+#' @param active_requests A \code{data.table} containing at least a column \code{atc_code}
+#'        with the ATC codes from active medication requests.
+#' @param mrp_table_list_by_atc A named list of \code{data.table}s, where each name is an ATC code
+#'        and the corresponding table contains MRP rule definitions.
+#'
+#' @return A \code{data.table} with a single column \code{atc_code} listing all ATC codes
+#'         found in both \code{active_requests} and \code{mrp_table_list_by_atc}.
+#'
+matchATCCodes <- function(active_requests, mrp_table_list_by_atc) {
+  # Alle ATC-Codes aus den MRP-Tabellen
+  mrp_atc_keys <- names(mrp_table_list_by_atc)
+  # ATC-Codes aus active_requests
+  active_atcs <- unique(active_requests$atc_code)
+  # Schnittmenge bilden
+  matching_atcs <- intersect(active_atcs, mrp_atc_keys)
+  matched_rows <- list()
+  for (atc in matching_atcs) {
+    row <- data.table(
+      atc_code = atc
+    )
+    matched_rows[[length(matched_rows) + 1]] <- row
+  }
+  return(rbindlist(matched_rows))
+}
+
+#' Match ICD codes against MRP rules and ATC codes
+#'
+#' This function matches ICD codes found in a patient's condition records to the ICD codes defined
+#' in a list of MRP rules. It also checks whether the condition was recorded within a valid
+#' time window relative to a medication analysis date and whether the corresponding ATC code
+#' is part of the active ATC matches.
+#'
+#' @param conditions A \code{data.table} of FHIR Condition resources, including columns
+#'        \code{pat_id}, \code{con_code_code}, \code{con_code_system},
+#'        \code{con_recordeddate}, and \code{con_onsetperiod_start}.
+#' @param mrp_table_list A named list of \code{data.table}s containing MRP rules grouped by ICD code
+#'        (names are ICD-10-GM codes).
+#' @param atc_matches A \code{data.table} with a column \code{atc_code}, representing ATC codes
+#'        matched from active medication requests.
+#' @param meda_datetime The medication analysis date (as \code{Date} or \code{POSIXct}) to evaluate
+#'        the time window for ICD code validity.
+#' @param patient_id The patient ID to filter relevant condition entries.
+#'
+#' @return A \code{data.table} containing matched ICD and ATC codes, with one row per valid combination.
+#'         Each row includes columns \code{icd}, \code{atc}, and \code{kurzbeschr} (a textual description
+#'         of the contraindication).
+#'
+matchICDCodes <- function(conditions, mrp_table_list, atc_matches, meda_datetime, patient_id) {
+  matched_rows <- list()
+  patient_conditions <- conditions[pat_id == patient_id]
+  for (mrp_icd in names(mrp_table_list)) {
+    # Alle Regeln mit diesem ICD
+    mrp_table_list_rows <- mrp_table_list[[mrp_icd]]
+    # Finde ICDs beim Patienten
+    patient_conditions <- patient_conditions[
+      con_code_code == mrp_icd &
+        con_code_system == "http://fhir.de/CodeSystem/bfarm/icd-10-gm"
+    ]
+    if (nrow(patient_conditions) == 0) next
+    for (j in seq_len(nrow(mrp_table_list_rows))) {
+      mrp_table_list_row <- mrp_table_list_rows[j]
+      validity_days <- mrp_table_list_row$ICD_VALIDITY_DAYS
+      # Prüfe: Ist mindestens ein ICD im gültigen Zeitfenster?
+      condition_match <- any({
+        if (tolower(validity_days) == "unbegrenzt") {
+          condition_check <- ifelse(
+            is.na(patient_conditions$con_recordeddate),
+            patient_conditions$con_onsetperiod_start <= meda_datetime,
+            patient_conditions$con_recordeddate <= meda_datetime
+          )
+        } else {
+          condition_check <- ifelse(
+            is.na(patient_conditions$con_recordeddate),
+            patient_conditions$con_onsetperiod_start >= (meda_datetime - validity_days) &
+              patient_conditions$con_onsetperiod_start <= meda_datetime,
+            patient_conditions$con_recordeddate >= (meda_datetime - validity_days) &
+              patient_conditions$con_recordeddate <= meda_datetime
+          )
+        }
+        condition_check
+      })
+      if (!condition_match) next
+      # Jetzt: Prüfe, ob einer der ATC-Codes aus den Matches im aktuellen Rule-ATC-Feld vorkommt
+      relevant_atcs <- atc_matches[
+        grepl(mrp_table_list_row$ATC_FOR_CALCULATION, atc_code),
+        atc_code
+      ]
+      for (atc_code in relevant_atcs) {
+        matched_rows[[length(matched_rows) + 1]] <- data.table(
+          icd = mrp_icd,
+          atc = atc_code,
+          kurzbeschr = paste0(mrp_table_list_row$ATC_DISPLAY, " ist bei ", mrp_table_list_row$CONDITION_DISPLAY_CLUSTER, " kontrainduziert.")
+        )
+      }
+    }
+  }
+  return(rbindlist(matched_rows, fill = TRUE))
+}
+
 #' Calculate Drug-Disease Medication-Related Problems (MRPs)
 #'
 #' This function retrieves all necessary patient-related data, including encounters,
 #' medication requests, medications, observations, and conditions, to analyze potential
 #' drug-disease medication-related problems (MRPs).
 #'
-#' @param drug_disease_mrp_definition A data structure (e.g., a list or data.table)
+#' @param drug_disease_mrp_tables A data structure (e.g., a list or data.table)
 #'   defining the rules for identifying drug-disease MRPs.
 #'
 #' @return This function return table with all calculated drug-disease MRPs.
 #'
-calculateDrugDiseaseMRPs <- function() {
+calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables) {
 
-  etlutils::runLevel2("Load and expand Drug-Disease Definition", {
-    drug_disease_mrp_tables <- getExpandedContent("Drug_Disease", MRP_PAIR_LISTS_PATHS)
-  })
+  resources <- getResourcesForMRPCalculation("Drug_Disease")
+  #Encounters (nur relevante, alte, ohne vorhandene Bewertung)
+  #Record-IDs
+  #Erste Medikationsanalysen je Encounter
+  #Alle relevanten Ressourcen (MedicationRequests, MedicationAdmins, MedicationStatements, Conditions, Procedures, Observations, Medications)
 
-  # Load all active PIDs
-  patient_ids <- getPIDs()
+  for (encounter_id in resources$main_encounters$enc_id) {
 
-  # Save and retrieve query datetime
-  setQueryDatetime()
-  query_datetime <- getQueryDatetime()
+    encounter <- resources$main_encounters[enc_id == encounter_id]
+    patient_ref <- enc$enc_patient_ref
+    patient_id <- etlutils::fhirdataExtractIDs(patient_ref)
 
-  # Load encounters by PIDs
-  encounters <- loadEncounters(patient_ids, query_datetime)
+    meda <- resources$encounters_first_medication_analysis[[encounter_id]]
+    meda_id <- if (!is.null(meda)) meda$record_id else NA_character_
+    meda_datetime <- if (!is.null(meda)) meda$dat1 else NA
 
-  # Load MedicationRequest resources referenced by Encounters
-  encounter_ids <- paste0("Encounter/", unique(encounters$enc_id))
-  medication_requests <- loadResourcesFromDB(
-    resource_name = MEDICATION_REQUEST_RESOURCE,
-    column_name = MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME,
-    query_ids = encounter_ids
-  )
+    # Ressourcen eingrenzen auf Zeitfenster
+    active_requests <- getActiveMedicationRequests(resources$medication_requests, encounter_id, encounter$enc_period_start, meda_datetime)
+    # # ATC-Codes direkt anfügen
+    # active_requests <- addATCToMedicationResources(active_requests, resources$medications)
 
-  # Load Medication resources referenced by MedicationRequest
-  medication_ids <- medication_requests[, unique(get(MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME))]
-  medications <- loadResourcesFromDB(
-    resource_name = "Medication",
-    column_name = "med_id",
-    query_ids = medication_ids,
-    remove_ref_type = TRUE
-  )
+    # ICDs usw. je nach Typ auch holen
+    relevant_conditions <- getRelevantConditions(resources$conditions, patient_id, meda_datetime)
 
-  # Fill column LOINC_VALIDITY_DAYS and find max value
-  observation_datetime <- calculateObservationDatetime(drug_disease_mrp_tables[[1]], "LOINC_VALIDITY_DAYS", query_datetime, DEFAULT_LOINC_VALIDITY_DAYS)
-  # Load Observation resources referenced by Patient
-  observations <- loadResourcesFromDB(
-    resource_name = "observation",
-    column_name = "obs_patient_ref",
-    query_ids = patient_ids,
-    additional_query_parameter = paste0("obs_effectivedatetime >= '", observation_datetime, "'\n")
-  )
+    # Match ATC-codes
+    drug_disease_mrp_tables_by_atc <- etlutils::splitTableToList(drug_disease_mrp_tables, "ATC_FOR_CALCULATION")
+    match_atc_codes <- matchATCCodes(active_requests, drug_disease_mrp_tables_by_atc)
 
-  # Load Condition resources referenced by Patient
-  conditions <- loadResourcesFromDB(
-    resource_name = "condition",
-    column_name = "con_patient_ref",
-    query_ids = patient_ids
-  )
+    # Match ICD-codes
+    if (nrow(match_atc_codes)) {
+      drug_disease_mrp_tables_by_icd <- etlutils::splitTableToList(drug_disease_mrp_tables, "ICD")
+      match_results <- matchICDCodes(
+        conditions = resources$conditions,
+        mrp_table_list = drug_disease_mrp_tables_by_icd,
+        atc_matches = match_atc_codes,
+        meda_datetime = meda_datetime,
+        patient_id = patient_id
+      )
+    }
 
-  # Load Procedures resources referenced by Encounter
-  encounter_ids <- paste0("Encounter/", unique(encounters$enc_id))
-  procedures <- loadResourcesFromDB(
-    resource_name = "procedure",
-    column_name = "proc_encounter_ref",
-    query_ids = encounter_ids
-  )
+    if (nrow(match_results)) {
+      for (match in match_results) {
+        # Neue Zeile retrolektive_mrpbewertung erzeugen
+        ret_row <- list(
+          record_id = record_id,
+          ret_id = ...,
+          ret_meda_id = meda_id,
+          ret_meda_dat1 = meda_datetime,
+          ret_kurzbeschr = match$kurzbeschr,
+          ret_atc1 = match$atc,
+          ...
+        )
+        retrolektive_mrpbewertung <- rbind(retrolektive_mrpbewertung, ret_row)
 
-  # Load mrp_drug_disease template table
-  mrp_drug_disease_path <- "./R-dataprocessor/submodules/02_MRP_Drug_Disease/R-MRP_Drug_Disease/inst/extdata/mrp_drug_disease.xlsx"
-  mrp_drug_disease_tables <- etlutils::getTableDescriptionSplittedByTableName(mrp_drug_disease_path, "mrp_drug_disease")
+        # dp_mrp_calculations ergänzen
+        dp_row <- list(
+          enc_id = encounter_id,
+          mrp_calculation_type = "Drug_Disease",
+          meda_id = meda_id,
+          ret_id = ret_row$ret_id,
+          mrp_proxy_type = NA_character_,
+          mrp_proxy_code = NA_character_
+        )
+        dp_mrp_calculations <- rbind(dp_mrp_calculations, dp_row)
 
-  # Initialize table for calculated drug disease MRPs
-  calculated_drug_disease_mrps <- createEmptyTable(mrp_drug_disease_tables$mrp_drug_disease)
-
-  browser()
-
+      }
+    } else {
+      dp_row <- list(
+        enc_id = encounter_id,
+        mrp_calculation_type = "Drug_Disease",
+        meda_id = meda_id,
+        ret_id = NA_character_,
+        mrp_proxy_type = NA_character_,
+        mrp_proxy_code = NA_character_
+      )
+      dp_mrp_calculations <- rbind(dp_mrp_calculations, dp_row)
+    }
+  }
 }
+
+#' #' Calculate Drug-Disease Medication-Related Problems (MRPs)
+#' #'
+#' #' This function retrieves all necessary patient-related data, including encounters,
+#' #' medication requests, medications, observations, and conditions, to analyze potential
+#' #' drug-disease medication-related problems (MRPs).
+#' #'
+#' #' @param drug_disease_mrp_definition A data structure (e.g., a list or data.table)
+#' #'   defining the rules for identifying drug-disease MRPs.
+#' #'
+#' #' @return This function return table with all calculated drug-disease MRPs.
+#' #'
+#' calculateDrugDiseaseMRPs <- function() {
+#'
+#'   etlutils::runLevel2("Load and expand Drug-Disease Definition", {
+#'     drug_disease_mrp_tables <- getExpandedContent("Drug_Disease", MRP_PAIR_LISTS_PATHS)
+#'   })
+#'
+#'   # Load all active PIDs
+#'   patient_ids <- getPIDs()
+#'
+#'   # Save and retrieve query datetime
+#'   setQueryDatetime()
+#'   query_datetime <- getQueryDatetime()
+#'
+#'   # Load encounters by PIDs
+#'   encounters <- loadEncounters(patient_ids, query_datetime)
+#'
+#'   # Load MedicationRequest resources referenced by Encounters
+#'   encounter_ids <- paste0("Encounter/", unique(encounters$enc_id))
+#'   medication_requests <- loadResourcesFromDB(
+#'     resource_name = MEDICATION_REQUEST_RESOURCE,
+#'     column_name = MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME,
+#'     query_ids = encounter_ids
+#'   )
+#'
+#'   # Load Medication resources referenced by MedicationRequest
+#'   medication_ids <- medication_requests[, unique(get(MEDICATION_REQUEST_RESOURCE_MEDICATION_REFERENCE_COLUMN_NAME))]
+#'   medications <- loadResourcesFromDB(
+#'     resource_name = "Medication",
+#'     column_name = "med_id",
+#'     query_ids = medication_ids,
+#'     remove_ref_type = TRUE
+#'   )
+#'
+#'   # Fill column LOINC_VALIDITY_DAYS and find max value
+#'   observation_datetime <- calculateObservationDatetime(drug_disease_mrp_tables[[1]], "LOINC_VALIDITY_DAYS", query_datetime, DEFAULT_LOINC_VALIDITY_DAYS)
+#'   # Load Observation resources referenced by Patient
+#'   observations <- loadResourcesFromDB(
+#'     resource_name = "observation",
+#'     column_name = "obs_patient_ref",
+#'     query_ids = patient_ids,
+#'     additional_query_parameter = paste0("obs_effectivedatetime >= '", observation_datetime, "'\n")
+#'   )
+#'
+#'   # Load Condition resources referenced by Patient
+#'   conditions <- loadResourcesFromDB(
+#'     resource_name = "condition",
+#'     column_name = "con_patient_ref",
+#'     query_ids = patient_ids
+#'   )
+#'
+#'   # Load Procedures resources referenced by Encounter
+#'   encounter_ids <- paste0("Encounter/", unique(encounters$enc_id))
+#'   procedures <- loadResourcesFromDB(
+#'     resource_name = "procedure",
+#'     column_name = "proc_encounter_ref",
+#'     query_ids = encounter_ids
+#'   )
+#'
+#'   # Load mrp_drug_disease template table
+#'   mrp_drug_disease_path <- "./R-dataprocessor/submodules/02_MRP_Drug_Disease/R-MRP_Drug_Disease/inst/extdata/mrp_drug_disease.xlsx"
+#'   mrp_drug_disease_tables <- etlutils::getTableDescriptionSplittedByTableName(mrp_drug_disease_path, "mrp_drug_disease")
+#'
+#'   # Initialize table for calculated drug disease MRPs
+#'   calculated_drug_disease_mrps <- createEmptyTable(mrp_drug_disease_tables$mrp_drug_disease)
+#'
+#'   browser()
+#'
+#' }
 
 
 #' calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
