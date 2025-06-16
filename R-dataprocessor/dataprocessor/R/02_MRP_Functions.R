@@ -2,31 +2,34 @@
 .resource_env <- new.env()
 
 MRP_TABLE_COLUMN_NAMES <- list(
-  "Drug-Disease" = etlutils::namedListByValue("MEDICATION_NAME",
+  "Drug_Disease" = etlutils::namedListByValue("SMPC_NAME",
+                                              "SMPC_VERSION",
                                               "ATC_DISPLAY",
-                                              "ATC",
+                                              "ATC_PRIMARY",
+                                              "ATC_SYSTEMIC_SY",
+                                              "ATC_DERMATIC_D",
+                                              "ATC_OPHTHALMOLOGIC_OP",
+                                              "ATC_INHALATIVE_I",
+                                              "ATC_OTHER_OT",
+                                              "ATC_INCLUSION",
                                               "CONDITION_DISPLAY",
-                                              "CONDITION_DISPLAY_2",
+                                              "CONDITION_DISPLAY_CLUSTER",
                                               "ICD",
-                                              "ICD_VALIDiTY_DAYS",
-                                              "ATC_PROXY",
+                                              "ICD_VALIDITY_DAYS",
+                                              "ICD_PROXY_ATC",
+                                              "ICD_PROXY_ATC_VALIDITY_DAYS",
+                                              "ICD_PROXY_OPS",
+                                              "ICD_PROXY_OPS_VALIDITY_DAYS",
                                               "LOINC_PRIMARY_PROXY",
                                               "LOINC_UNIT",
-                                              "LOINC_VALIDITY_DAYS",
                                               "LOINC_DISPLAY",
+                                              "LOINC_VALIDITY_DAYS",
                                               "LOINC_CUTOFF_REFERENCE",
-                                              "LOINC_CUTOFF_ABSOLUTE",
-                                              "OPS_PROXY",
-                                              "OPS_VALIDITY_DAYS")
+                                              "LOINC_CUTOFF_ABSOLUTE")
 
-  # Newer version of column names
-  #"SMPC_NAME", "SMPC_VERSION", "ATC_DISPLAY", "ATC_PRIMARY", "ATC_SYSTEMIC_SY", "ATC_DERMATIC_D",
-  # "ATC_OPHTHALMOLOGIC_OP", "ATC_INHALATIVE_I", "ATC_OTHER_OT", "ATC_INCLUSION", "CONDITION_DISPLAY",
-  # "CONDITION_DISPLAY_CLUSTER", "ICD", "ICD_VALIDITY_DAYS", "LOINC_PRIMARY_PROXY", "LOINC_UNIT",
-  # "LOINC_DISPLAY", "LOINC_CUTOFF_REFERENCE", "LOINC_CUTOFF_ABSOLUTE", "ICD_PROXY_ATC", "ICD_PROXY_OPS"
 )
 
-#' Validate ATC7 Codes in Multiple Columns
+#' Validate ATC Codes in Multiple Columns
 #'
 #' This function checks whether the values in specified columns of a data table
 #' are valid ATC7 codes and issues warnings for any invalid values.
@@ -46,24 +49,18 @@ MRP_TABLE_COLUMN_NAMES <- list(
 #'   ATC = c("A01AB07", "INVALID", NA),
 #'   ATC_PROXY = c(NA, "WRONG", "B03AA02")
 #' )
-#' validateATC7Codes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
+#' validateATCCodes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
 #'
 #' @export
-validateATC7Codes <- function(data, columns) {
-  warnings <- c()
+validateATCCodes <- function(data, columns) {
+  errors <- list()
   for (column in columns) {
-    # Filter out NA values and check for invalid ATC7 codes
-    invalid_codes <- data[[column]][!etlutils::isATC7(data[[column]]) & !is.na(data[[column]])]
-    # Issue a warning if there are invalid codes
+    invalid_codes <- data[[column]][!etlutils::isATC7orSmaller(data[[column]]) & !is.na(data[[column]])]
     if (length(invalid_codes) > 0) {
-      warnings <- c(warnings, sprintf(
-        "The following codes are not valid in column '%s', please check:\n%s",
-        column,
-        paste(invalid_codes, collapse = ", \n")
-      ))
+      errors[[column]] <- invalid_codes
     }
   }
-  return(warnings)
+  return(errors)
 }
 
 #' Validate LOINC Codes in a Column
@@ -94,20 +91,13 @@ validateATC7Codes <- function(data, columns) {
 #'
 #' @export
 validateLOINCCodes <- function(data, column_name) {
-  warnings <- c()
-  # Extract the column values
   column_values <- data[[column_name]]
-  # Identify invalid codes (ignore NA values)
   invalid_codes <- column_values[!etlutils::isLOINC(column_values) & !is.na(column_values)]
-  # If there are invalid codes, issue a warning
   if (length(invalid_codes) > 0) {
-    warnings <- c(warnings, sprintf(
-      "The following codes in column '%s' are not valid LOINC codes:\n%s",
-      column_name,
-      paste(invalid_codes, collapse = ", \n")
-    ))
+    return(setNames(list(invalid_codes), column_name))
+  } else {
+    return(list())
   }
-  return(warnings)
 }
 
 #' Get Processed and Expanded MRP Definition Table
@@ -132,28 +122,40 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
   content_hash <- digest::digest(mrp_definition$excel_file_content, algo = "sha256")
   file_name <- mrp_definition$excel_file_name
   content <- mrp_definition$excel_file_content
-  processed_content_hash <- getStoredProcessedContentHash(content_hash)
+  processed_content_hash <- getStoredProcessedContentHash(content_hash, path_to_mrp_tables)
 
   if (is.null(processed_content_hash)) {
     # If the hash is not found, process the MRP definition
-    preprocess_function_name <- paste0("cleanAndExpandDefinition", gsub("-", "", table_name))
+    preprocess_function_name <- paste0("cleanAndExpandDefinition", gsub("_", "", table_name))
     preprocess_function <- get(preprocess_function_name, mode = "function", inherits = TRUE)
     processed_content <- preprocess_function(mrp_definition$excel_file_content)
     processed_content_hash <- digest::digest(processed_content, algo = "sha256")
 
     # Write content and processed content to Excel files
-    openxlsx::write.xlsx(content, file = file.path(path_to_mrp_tables, paste0(table_name, "_MRP_Table.xlsx")), overwrite = TRUE)
-    openxlsx::write.xlsx(processed_content, file = file.path(path_to_mrp_tables, paste0(table_name, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
+    openxlsx::write.xlsx(content, file = file.path(paste0(path_to_mrp_tables, "/", table_name, "_content"),
+                                                   paste0(table_name, "_MRP_Table.xlsx")), overwrite = TRUE)
+    openxlsx::write.xlsx(processed_content, file = file.path(paste0(path_to_mrp_tables, "/", table_name, "_content"),
+                                                             paste0(table_name, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
 
-    ################START: Replace with database functionality###################
-    # Load or init storage tables
-    #TODO: Replace with database functionality
-    input_data_files <- readRDS("./Input-Repo/MRP_Drug_Disease/input_data_files.RData")
-    input_data_files_processed_content <- readRDS("./Input-Repo/MRP_Drug_Disease/input_data_files_processed_content.RData")
+    # Load or init storage tables locally
+    input_data_files_path <- paste0(path_to_mrp_tables, "/input_data_files.RData")
+    input_data_files_processed_path <- paste0(path_to_mrp_tables, "/input_data_files_processed_content.RData")
+
+    if (file.exists(input_data_files_path)) {
+      input_data_files <- readRDS(input_data_files_path)
+    } else {
+      input_data_files <- data.table::data.table()
+    }
+
+    if (file.exists(input_data_files_processed_path)) {
+      input_data_files_processed_content <- readRDS(input_data_files_processed_path)
+    } else {
+      input_data_files_processed_content <- data.table::data.table()
+    }
 
     # Convert content and processed_content to base64-encoded serialized data
     content <- base64enc::base64encode(serialize(content, NULL))
-    processed_content <- base64enc::base64encode(serialize(processed_content, NULL))
+    processed_content_serialized <- base64enc::base64encode(serialize(processed_content, NULL))
 
     new_input_data_file_row <- data.table::data.table(
       file_name = file_name,
@@ -169,7 +171,7 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
     )
     new_input_data_file_processed_content_row <- data.table::data.table(
       processed_content_hash = processed_content_hash,
-      processed_content = processed_content
+      processed_content = processed_content_serialized
     )
     input_data_files_processed_content <- rbind(
       input_data_files_processed_content,
@@ -178,17 +180,24 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
       fill = TRUE
     )
 
-    # Save the updated data frames back to the RData file
-    saveRDS(input_data_files, "./Input-Repo/MRP_Drug_Disease/input_data_files.RData")
-    saveRDS(input_data_files_processed_content, "./Input-Repo/MRP_Drug_Disease/input_data_files_processed_content.RData")
-    ################END: Replace with database functionality###################
+    # Save the updated data tables back to the RData file
+    saveRDS(input_data_files, input_data_files_path)
+    saveRDS(input_data_files_processed_content, input_data_files_processed_path)
+
+    # Save the updated data tables back to the database
+    etlutils::dbWriteTables(
+      tables = etlutils::namedListByParam(input_data_files, input_data_files_processed_content),
+      lock_id = "Write input data files to database",
+      stop_if_table_not_empty = TRUE)
+
   } else {
     # Load processed content
     #TODO: Replace with database functionality
-    input_data_files_processed_content <- readRDS("./Input-Repo/MRP_Drug_Disease/input_data_files_processed_content.RData")
+    input_data_files_processed_content <- readRDS(paste0(path_to_mrp_tables, "/input_data_files_processed_content.RData"))
     matching_row <- input_data_files_processed_content[processed_content_hash == get("processed_content_hash")]
     processed_content <- unserialize(base64enc::base64decode(matching_row$processed_content))
   }
+
   # Return the processed content
   return(processed_content)
 }
@@ -196,19 +205,59 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
 #' Retrieve Stored Processed Content Hash from Input Data File Table
 #'
 #' This function loads the input data file metadata table and returns the
-#' corresponding `processed_content_hash` for a given `content_hash`, if available.
+#' corresponding `processed_content_hash` for a given `target_hash`, if available.
 #'
-#' @param content_hash A character string representing the content hash to look up.
+#' @param target_hash A character string representing the content hash to look up.
+#' @param table_path A character string representing the table path of the MRP definition.
 #'
 #' @return A character string containing the processed content hash if found; otherwise `NULL`.
 #'
-getStoredProcessedContentHash <- function(content_hash) {
-  input_data_files <- readRDS("./Input-Repo/MRP_Drug_Disease/input_data_files.RData")
-  matching_row <- input_data_files[content_hash == get("content_hash")]
-  if (nrow(matching_row)) {
-    return(matching_row$processed_content_hash)
+getStoredProcessedContentHash <- function(target_hash, table_path) {
+  file_path <- paste0(table_path, "/input_data_files.RData")
+  if (file.exists(file_path)) {
+    input_data_files <- readRDS(file_path)
+    matching_row <- input_data_files[content_hash == target_hash]
+    if (nrow(matching_row)) {
+      return(matching_row$processed_content_hash)
+    }
   }
   return(NULL)
+}
+
+#' Format code-related error messages for display
+#'
+#' Takes a named list of validation errors per column and creates a character vector of formatted
+#' error messages that can be displayed to the user or logged. If no errors are provided, an empty
+#' character vector is returned.
+#'
+#' @param error_list A named list where each element contains a character vector of error messages
+#'   for a specific column.
+#' @param code_type_label A character string indicating the type of codes being validated (e.g.,
+#'   "diagnosis", "procedure").
+#'
+#' @return A character vector of formatted error messages. If \code{error_list} is empty, an empty
+#'   character vector is returned.
+#'
+#' @examples
+#' errors <- list(
+#'   diagnosis = c("Invalid format", "Unknown code"),
+#'   procedure = c("Missing value")
+#' )
+#' formatCodeErrors(errors, "input")
+#'
+#' empty_errors <- list()
+#' formatCodeErrors(empty_errors, "output")
+#'
+#' @export
+formatCodeErrors <- function(error_list, code_type_label) {
+  if (length(error_list) == 0) return(character())
+
+  messages <- c(sprintf("The following errors were found in %s codes:", code_type_label))
+  for (col in names(error_list)) {
+    messages <- c(messages,
+                  sprintf("  Column '%s': %s", col, paste(error_list[[col]], collapse = ", ")))
+  }
+  return(messages)
 }
 
 #' #' Calculates the valid observation datetime based on the maximum LOINC validity period

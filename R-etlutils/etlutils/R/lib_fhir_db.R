@@ -106,5 +106,5 @@ fhirdbGetQueryList <- function(collection, remove_ref_type = FALSE, return_NA_if
   if (remove_ref_type) {
     collection <- etlutils::fhirdataExtractIDs(collection)
   }
-  paste0("'", collection, "'", collapse = ", ")
+  paste0("(", paste0("'", collection, "'", collapse = ", "), ")")
 }

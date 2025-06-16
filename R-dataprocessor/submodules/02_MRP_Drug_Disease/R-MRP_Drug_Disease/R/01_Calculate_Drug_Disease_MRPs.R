@@ -1,3 +1,4 @@
+
 #' Clean and Expand Drug_Disease_MRP Definition Table
 #'
 #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
@@ -10,8 +11,14 @@
 #' @export
 cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 
-  # remove rows with empty ICD code and empty proxy codes (ATC, LOINC, OPS)
-  proxy_column_names <- names(drug_disease_mrp_definition)[grepl("PROXY", names(drug_disease_mrp_definition))]
+  # Remove not nesessary columns
+  drug_disease_mrp_definition <- drug_disease_mrp_definition[, c("SMPC_NAME", "SMPC_VERSION") := NULL]
+
+  # Remove rows with all empty code columns
+  proxy_column_names <- names(drug_disease_mrp_definition)[
+    (grepl("PROXY|ATC", names(drug_disease_mrp_definition))) &
+      !grepl("DISPLAY|INCLUSION|VALIDITY_DAYS", names(drug_disease_mrp_definition))
+  ]
   relevant_column_names <- c("ICD", proxy_column_names)
   drug_disease_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_disease_mrp_definition, relevant_column_names)
 
@@ -20,6 +27,45 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
   etlutils::replacePatternsInColumn(drug_disease_mrp_definition, 'ICD', '\\s*\\+\\s*', '+')
   # replace all invalid chars in the ICD codes by a simple whitespace -> can be trimmed and splitted
   drug_disease_mrp_definition[, ICD := sapply(ICD, function(text) gsub('[^0-9A-Za-z. +]', '', text))]
+
+  secondary_atc_cols <- setdiff(
+    grep("^ATC_", proxy_column_names, value = TRUE),
+    "ATC_PRIMARY"
+  )
+  suffix_map <- setNames(secondary_atc_cols, sub(".*_", "", secondary_atc_cols))
+
+  drug_disease_mrp_definition[, ATC_FOR_CALCULATION := apply(
+    drug_disease_mrp_definition, 1, function(row) {
+      # Split the ATC_INCLUSION field by whitespace to handle multiple inclusion terms (e.g., "SY OP" -> c("SY", "OP"))
+      inclusions <- trimws(unlist(strsplit(row[["ATC_INCLUSION"]], "\\s+")))
+      # Initialize a vector to collect all secondary ATC codes from all inclusions
+      all_secondary <- character(0)
+
+      for (inclusion in inclusions) {
+        if (inclusion == "alle") {
+          raw_values <- row[secondary_atc_cols]
+        } else if (inclusion == "keine weiteren") {
+          raw_values <- character(0)
+        } else {
+          suffixes <- trimws(unlist(strsplit(inclusion, ",")))
+          cols <- suffix_map[suffixes]
+          raw_values <- row[cols]
+        }
+        # Append the raw values for this inclusion to the overall secondary list
+        all_secondary <- c(all_secondary, raw_values)
+      }
+
+      # Combine all collected secondary ATC codes into a single vector, splitting by whitespace
+      secondary <- unlist(strsplit(paste(na.omit(all_secondary), collapse = " "), "\\s+"))
+      # Merge primary and secondary ATC codes, remove duplicates and empty strings
+      all_atc <- unique(c(row[["ATC_PRIMARY"]], secondary))
+      all_atc <- all_atc[nzchar(all_atc)]
+      # Collapse the final list of ATC codes into a single space-separated string
+      paste(all_atc, collapse = " ")
+    }
+  )]
+
+  relevant_column_names <- c(relevant_column_names[!startsWith(relevant_column_names, "ATC")], "ATC_FOR_CALCULATION")
 
   # SPLIT and TRIM: ICD and proxy column:
   # split the whitespace separated lists in ICD and proxy columns in a single row per code
@@ -37,14 +83,30 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
   # Remove duplicate rows
   drug_disease_mrp_definition <- unique(drug_disease_mrp_definition)
 
-  # check column ATC and ATC_PROXY for correct ATC codes
-  code_errors <- validateATC7Codes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
-  # check column LOINC_PROXY for correct LOINC codes
-  code_errors <- c(code_errors, validateLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY"))
+  # Clean rows with NA or empty values in relevant columns
+  for (col in relevant_column_names) {
+    drug_disease_mrp_definition[[col]] <- ifelse(
+      is.na(drug_disease_mrp_definition[[col]]) |
+        !nzchar(trimws(drug_disease_mrp_definition[[col]])),
+      NA_character_,
+      drug_disease_mrp_definition[[col]]
+    )
+  }
 
-  code_errors <- paste0(code_errors, collapse = "\n")
-  if (nchar(code_errors)) {
-    stop(paste0("The following errors were found in the ATC and LOINC codes:\n", code_errors))
+  # check column ATC and ATC_PROXY for correct ATC codes
+  atc_columns <- grep("ATC(?!.*(DISPLAY|INCLUSION|VALIDITY_DAYS))", names(drug_disease_mrp_definition), value = TRUE, perl = TRUE)
+  atc_errors <- validateATCCodes(drug_disease_mrp_definition, atc_columns)
+
+  # check column LOINC_PROXY for correct LOINC codes
+  loinc_errors <- validateLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY")
+
+  error_messages <- c(
+    formatCodeErrors(atc_errors, "ATC"),
+    formatCodeErrors(loinc_errors, "LOINC")
+  )
+
+  if (length(error_messages) > 0) {
+    stop(paste(error_messages, collapse = "\n"))
   }
 
   # Expand and concatenate ICD codes in a vectorized manner.
@@ -56,19 +118,19 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
       if (is.na(icd) || icd == "") {
         return(NA_character_)
       }
-      input_icds <- unlist(strsplit(icd, '\\+'))
-      # Handle single ICD code case
-      if (length(input_icds) == 1) {
-        return(paste(etlutils::interpolar_expandICDs(input_icds), collapse = ' '))
+      if (!grepl("+", icd, fixed = TRUE)) {
+        # Handle single ICD code case
+        return(paste(etlutils::expandICDs(icd), collapse = ' '))
+
       }
       # Handle multiple ICD codes separated by '+'
-      if (length(input_icds) > 1) {
-        icd_1 <- etlutils::interpolar_expandICDs(input_icds[[1]])
-        icd_2 <- etlutils::interpolar_expandICDs(input_icds[[2]])
-        # Create combinations and concatenate
-        combinations <- outer(icd_1, icd_2, paste, sep = '+')
-        return(trimws(paste(c(combinations), collapse = ' ')))
-      }
+      input_icds <- unlist(strsplit(icd, '\\+'))
+      icd_1 <- etlutils::expandICDs(input_icds[[1]])
+      icd_2 <- etlutils::expandICDs(input_icds[[2]])
+      # Create combinations and concatenate
+      combinations <- outer(icd_1, icd_2, paste, sep = '+')
+      return(trimws(paste(c(combinations), collapse = ' ')))
+
     }
     # Apply the function to the entire column
     sapply(icd_column, processICD)
@@ -100,7 +162,7 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 calculateDrugDiseaseMRPs <- function() {
 
   etlutils::runLevel2("Load and expand Drug-Disease Definition", {
-    drug_disease_mrp_tables <- getExpandedContent("Drug-Disease", MRP_PAIR_LISTS_PATHS)
+    drug_disease_mrp_tables <- getExpandedContent("Drug_Disease", MRP_PAIR_LISTS_PATHS)
   })
 
   # Load all active PIDs

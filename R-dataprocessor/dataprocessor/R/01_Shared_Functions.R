@@ -99,7 +99,7 @@ getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, filter = "")
 #'
 #' @return A character string representing the filter statement for the SQL query.
 #'
-getWhereClause <- function(resource_name, target_column = NA, target_values = NA) {
+getWhereClauseForReferencedResources <- function(resource_name, target_column = NA, target_values = NA) {
   if (is.na(target_column) || all(is.na(target_values))) {
     return("")
   }
@@ -107,11 +107,11 @@ getWhereClause <- function(resource_name, target_column = NA, target_values = NA
   resource_id_column <- etlutils::fhirdbGetIDColumn(resource_name)
   if (target_column == resource_id_column) {
     # remove resource name and the slash if the IDs are references and not pure IDs
-    target_values <- gsub(paste0("^", resource_name, "/"), "", target_values)
+    target_values <- etlutils::fhirdataExtractIDs(target_values)
   }
   # quote every pid and collapse the vector comma separated
-  target_values <- paste0("'", target_values, "'", collapse = ",")
-  where_clause <- paste0("WHERE ", target_column, " IN (", target_values, ")\n")
+  target_values <- etlutils::fhirdbGetQueryList(target_values)
+  where_clause <- paste0("WHERE ", target_column, " IN ", target_values, "\n")
   return(where_clause)
 }
 
@@ -128,8 +128,8 @@ getWhereClause <- function(resource_name, target_column = NA, target_values = NA
 #' access under this name
 #' @return A data frame containing the results of the SQL query.
 #'
-loadResourcesFilteredFromDB <- function(resource_name, filter_column = NA, filter_column_values = NA, lock_id) {
-  where_clause <- getWhereClause(resource_name, filter_column, filter_column_values)
+loadResourcesFilteredByValuesFromDB <- function(resource_name, filter_column = NA, filter_column_values = NA, lock_id) {
+  where_clause <- getWhereClauseForReferencedResources(resource_name, filter_column, filter_column_values)
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, where_clause)
   etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
 }
@@ -148,9 +148,29 @@ loadResourcesFilteredFromDB <- function(resource_name, filter_column = NA, filte
 #'
 loadResourcesLastVersionByOwnIDFromDB <- function(resource_name, ids_or_refs) {
   id_column <- etlutils::fhirdbGetIDColumn(resource_name)
-  loadResourcesFilteredFromDB(
+  loadResourcesFilteredByValuesFromDB(
     resource_name = resource_name,
     filter_column = id_column,
     filter_column_values = ids_or_refs,
     lock_id = paste0("loadResourcesLastVersionByOwnIDFromDB(", resource_name, ")"))
+}
+
+#' Load existing record IDs from the database for given patient IDs
+#'
+#' This function retrieves the existing record IDs associated with a given set of
+#' patient IDs from the `v_patient_fe` view in the database. It builds a query using
+#' the provided patient IDs and executes it in read-only mode with an appropriate lock ID.
+#'
+#' @param pat_ids A character vector of patient IDs to look up in the database.
+#'
+#' @return A data.table containing the columns \code{pat_id} and \code{record_id} for
+#' all matching patients found in the database.
+#'
+#' @export
+loadExistingRecordIDsFromDB <- function(pat_ids) {
+  pat_ids <- etlutils::fhirdataExtractIDs(pat_ids)
+  query_ids <- etlutils::fhirdbGetQueryList(pat_ids)
+  query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN ", query_ids)
+  existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "loadExistingRecordIDsFromDB()")
+  return(existing_record_ids)
 }
