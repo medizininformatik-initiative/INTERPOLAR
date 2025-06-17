@@ -3,32 +3,24 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 15:06:44
--- Rights definition file size        : 14653 Byte
+-- Rights definition file last update : 2025-06-17 22:42:12
+-- Rights definition file size        : 14274 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-06-17 15:17:50
+-- Create time: 2025-06-17 22:57:32
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  330_cre_table_datap_submodules_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
--- TEMPLATE (4):  template_cre_table.sql
 -- OWNER_USER:  db2dataprocessor_user
--- OWNER_USER (4):  db2dataprocessor_user
 -- OWNER_SCHEMA:  db2dataprocessor_in
--- OWNER_SCHEMA (4):  db2dataprocessor_in
 -- TAGS:  
 -- TABLE_PREFIX:  
 -- TABLE_POSTFIX:  
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- RIGHTS (3):  SELECT
--- RIGHTS (4):  INSERT, DELETE, UPDATE, SELECT
--- RIGHTS (6):  SELECT
 -- GRANT_TARGET_USER:  db2dataprocessor_user
 -- GRANT_TARGET_USER (2):  db_user
 -- GRANT_TARGET_USER (3):  db_log_user
--- GRANT_TARGET_USER (4):  db2dataprocessor_user
--- GRANT_TARGET_USER (5):  db_user
--- GRANT_TARGET_USER (6):  db_log_user
 -- COPY_FUNC_SCRIPTNAME:  
 -- COPY_FUNC_TEMPLATE:  
 -- COPY_FUNC_NAME:  
@@ -332,9 +324,6 @@ GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.dp_mrp_calculations TO db2dataprocessor_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.dp_mrp_calculations TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db2dataprocessor_in.dp_mrp_calculations TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.dp_mrp_calculations TO db2dataprocessor_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.dp_mrp_calculations TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db2dataprocessor_in.dp_mrp_calculations TO db_log_user; -- Additional authorizations for testing
 
 -- Table "dp_mrp_ward_type" in schema "db2dataprocessor_in"
 ----------------------------------------------------
@@ -342,9 +331,6 @@ GRANT TRIGGER ON db2dataprocessor_in.dp_mrp_ward_type TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db2dataprocessor_in TO db2dataprocessor_user;
 GRANT USAGE ON db.db_seq TO db2dataprocessor_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.dp_mrp_ward_type TO db2dataprocessor_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.dp_mrp_ward_type TO db_user; -- Additional authorizations for testing
-GRANT SELECT ON TABLE db2dataprocessor_in.dp_mrp_ward_type TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.dp_mrp_ward_type TO db2dataprocessor_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db2dataprocessor_in.dp_mrp_ward_type TO db_user; -- Additional authorizations for testing
 GRANT SELECT ON TABLE db2dataprocessor_in.dp_mrp_ward_type TO db_log_user; -- Additional authorizations for testing

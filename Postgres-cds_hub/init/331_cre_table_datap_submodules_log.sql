@@ -3,37 +3,26 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 15:06:44
--- Rights definition file size        : 14653 Byte
+-- Rights definition file last update : 2025-06-17 22:42:12
+-- Rights definition file size        : 14274 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-17 15:17:50
+-- Create time: 2025-06-17 22:57:34
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  331_cre_table_datap_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
--- TEMPLATE (3):  template_cre_table.sql
 -- OWNER_USER:  db_log_user
--- OWNER_USER (3):  db_log_user
 -- OWNER_SCHEMA:  db_log
--- OWNER_SCHEMA (3):  db_log
 -- TAGS:  INT_ID
--- TAGS (3):  INT_ID
 -- TABLE_PREFIX:  
 -- TABLE_POSTFIX:  
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
--- RIGHTS (3):  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
 -- GRANT_TARGET_USER (2):  db_user
--- GRANT_TARGET_USER (3):  db_log_user
--- GRANT_TARGET_USER (4):  db_user
 -- COPY_FUNC_SCRIPTNAME:  332_db_submodules_dp_in_to_db_log.sql
--- COPY_FUNC_SCRIPTNAME (3):  332_db_submodules_dp_in_to_db_log.sql
 -- COPY_FUNC_TEMPLATE:  template_copy_function.sql
--- COPY_FUNC_TEMPLATE (3):  template_copy_function.sql
 -- COPY_FUNC_NAME:  copy_submodules_dp_in_to_db_log
--- COPY_FUNC_NAME (3):  copy_submodules_dp_in_to_db_log
 -- SCHEMA_2:  db2dataprocessor_in
--- SCHEMA_2 (3):  db2dataprocessor_in
 -- TABLE_POSTFIX_2:  
 -- SCHEMA_3:  
 -- TABLE_POSTFIX_3:  
@@ -332,8 +321,6 @@ GRANT USAGE ON db.db_seq TO db_log_user;
 
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_calculations TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_calculations TO db_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_calculations TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_calculations TO db_user; -- Additional authorizations for testing
 
 -- Table "dp_mrp_ward_type" in schema "db_log"
 ----------------------------------------------------
@@ -341,8 +328,6 @@ GRANT TRIGGER ON db_log.dp_mrp_ward_type TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON db.db_seq TO db_log_user;
 
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_ward_type TO db_log_user; -- Additional authorizations for testing
-GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_ward_type TO db_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_ward_type TO db_log_user; -- Additional authorizations for testing
 GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_ward_type TO db_user; -- Additional authorizations for testing
 
