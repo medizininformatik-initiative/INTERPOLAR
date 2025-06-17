@@ -72,14 +72,17 @@ getObservationQueryDatetime <- function(encounters) {
 #' determine the table name, ID column, and apply optional filtering conditions.
 #'
 #' @param resource_name The name of the resource for which to retrieve the last version.
+#' @param column_names names of the columns to return as vector or string. Default is "*".
 #' @param filter Additional filtering conditions to apply to the query. Default is an empty string.
 #'
 #' @return A character string representing the SQL query.
 #'
-getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, filter = "") {
+getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, column_names = "*", filter = "") {
+  distinct <- ifelse(column_names == "*", "", "DISTINCT ")
   # this should be view tables named in a style like 'v_patient' for resource_name Patient
+  column_names <- paste0(column_names, collapse = ", ")
   query <-paste0(
-    "SELECT * FROM v_", resource_name, "_last_version\n",
+    "SELECT ", distinct, column_names, " FROM v_", resource_name, "_last_version\n",
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"
   )
@@ -122,15 +125,16 @@ getWhereClauseForReferencedResources <- function(resource_name, target_column = 
 #' to generate the filter statement and the main query statement.
 #'
 #' @param resource_name The name of the resource table.
+#' @param column_names names of the columns to return as vector or string. Default is "*".
 #' @param filter_column The column on which to apply the filter.
 #' @param filter_column_values A vector of values to filter on.
 #' @param lock_id A string representation as ID for the process to lock the database during the
 #' access under this name
 #' @return A data frame containing the results of the SQL query.
 #'
-loadResourcesFilteredByValuesFromDB <- function(resource_name, filter_column = NA, filter_column_values = NA, lock_id) {
+loadResourcesFilteredByValuesFromDB <- function(resource_name, column_names = "*", filter_column = NA, filter_column_values = NA, lock_id) {
   where_clause <- getWhereClauseForReferencedResources(resource_name, filter_column, filter_column_values)
-  query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, where_clause)
+  query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, column_names, where_clause)
   etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
 }
 
