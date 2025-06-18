@@ -312,7 +312,7 @@ createFrontendTables <- function() {
     )
 
     encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = pids_per_ward$encounter_id,
-                                                     common_encounter_fhir_identifier_system = FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
+                                                     common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
                                                      lock_id_extension = "CreateEncounterFrontendTable()_")
 
     # If the CDS-conform 3-level encounter system has been implemented, then enc_type_system must
@@ -409,8 +409,8 @@ createFrontendTables <- function() {
         # Extract the FHIR identifier value for the frontend table
         # There can be multiple rows with different identifier systems, so we need to filter them
         # out first and then combine the values into a single string, if there are multiple values.
-        if (etlutils::isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
-          filtered_rows <- pid_encounter[enc_identifier_system == FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
+        if (etlutils::isDefinedAndNotEmpty("COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+          filtered_rows <- pid_encounter[enc_identifier_system == COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
           if (nrow(filtered_rows)) {
             enc_identifier_value <- paste(unique(filtered_rows$enc_identifier_value), collapse = ", ")
           } else {
