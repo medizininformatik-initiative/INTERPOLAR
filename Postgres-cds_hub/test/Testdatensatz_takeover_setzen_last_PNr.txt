@@ -3,54 +3,59 @@
 -- Testung wie man sicherstellt, das alle FHIR Daten die zum selben Zeitpunkt importiert wurden auch die selbe last_processing_nr erhalen
 -- Erst x dann x+3 Datensätze Ziel: in Dataprocessor sollen alle DS mit selber Ausführungsnummer erscheinen
 -- 3 Datensätze in raw imporieren
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) VALUES
+('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115'),
+('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331'),
+('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+
 SELECT pg_sleep(120); -- Kurz warten um unterschiede zu erzeugen und zu sehen
 -- copy to log
 -- solte durch cronjob erfolgen - SELECT db.copy_raw_cds_in_to_db_log();
 -- melten
-INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)
-(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, to_date(pat_birthdate,'YYYY-MM-DD'), pat_address_postalcode from cds2db_out.v_patient where pat_id like 'Pat_FHIR_Test_%');
+INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_address_postalcode)
+(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, pat_address_postalcode from cds2db_out.v_patient_raw_diff where pat_id like 'Pat_FHIR_Test_%');
+
 SELECT pg_sleep(120); -- Kurz warten um unterschiede zu erzeugen und zu sehen
 -- solte durch cronjob erfolgen SELECT db.copy_type_cds_in_to_db_log();
 -- copy to log
 -- takeoverfunktion
 -- die selben 3 Datensätze in raw imporieren plus weitere
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) VALUES
+('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115'),
+('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331'),
+('Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667'),
+('Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173'),
+('Pat_FHIR_Test_05','Lea', 'Wagner', 'weiblich', '1998-12-01', '20095');
+
 SELECT pg_sleep(120); -- Kurz warten um unterschiede zu erzeugen und zu sehen
 -- copy to log
 -- solte durch cronjob erfolgen SELECT db.copy_raw_cds_in_to_db_log();
 -- melten
-INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)
-(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, to_date(pat_birthdate,'YYYY-MM-DD'), pat_address_postalcode from cds2db_out.v_patient where pat_id like 'Pat_FHIR_Test_%');
+INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_address_postalcode)
+(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, pat_address_postalcode from cds2db_out.v_patient_raw_diff where pat_id like 'Pat_FHIR_Test_%');
+
 SELECT pg_sleep(120); -- Kurz warten um unterschiede zu erzeugen und zu sehen
 -- copy to log
 -- solte durch cronjob erfolgen SELECT db.copy_type_cds_in_to_db_log();
 -- takeoverfunktion
 -- solte durch cronjob erfolgen select db.take_over_last_check_date(); -- eigentlich am Ende der kopierfunktion wenn DS kopiert wurden
 --- ###################
--- Test an dieser Stelle das nun auch wirklich nur neu in Raw importierte DS letzte proc nr in core bekommen
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
-INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
-VALUES ('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
-SELECT db.copy_raw_cds_in_to_db_log();
-INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode)
-(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, to_date(pat_birthdate,'YYYY-MM-DD'), pat_address_postalcode from cds2db_out.v_patient where pat_id in ('Pat_FHIR_Test_01','Pat_FHIR_Test_02'));
-SELECT db.copy_type_cds_in_to_db_log();
+-- Test an dieser Stelle das nun auch wirklich nur neu in Raw importierte DS letzte proc nr in core bekommen und nicht alle die letzte pnr check_date bekommen
+INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) VALUES
+('Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115'),
+('Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+
+--SELECT db.copy_raw_cds_in_to_db_log();
+SELECT pg_sleep(120); -- Kurz warten um unterschiede zu erzeugen und zu sehen
+
+-- Auslesen ob nun mehrere Zeitpunkte vorhanden sind
+select last_check_datetime, count(1) anz from db_log.patient_raw group by last_check_datetime;
+
+
+INSERT INTO cds2db_in.patient (patient_raw_id,pat_id, pat_name_text, pat_name_family, pat_gender, pat_address_postalcode)
+(select patient_raw_id, pat_id, pat_name_text, pat_name_family, pat_gender, pat_address_postalcode from cds2db_out.v_patient_raw_diff where pat_id like 'Pat_FHIR_Test_%');
+
+--SELECT db.copy_type_cds_in_to_db_log();
 
 SELECT pg_sleep(120); -- Kurz warten um unterschiede zu erzeugen und zu sehen
 

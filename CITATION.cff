@@ -1,0 +1,142 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: CDS Tool Chain
+message: 'If you use the CDS Tool Chain, please cite us.'
+type: software
+authors:
+  - orcid: 'https://orcid.org/0000-0002-7221-7415'
+    given-names: Sebastian
+    family-names: Stäubert
+    email: sebastian.staeubert@imise.uni-leipzig.de
+    name-particle: Stäubert
+    affiliation: Universität Leipzig
+  - given-names: Alexander
+    family-names: Strübing
+    email: alexander.struebing@imise.uni-leipzig.de
+    affiliation: Universität Leipzig
+    orcid: 'https://orcid.org/0000-0001-5151-7665'
+  - given-names: Florian
+    family-names: Schmidt
+    email: florian.schmidt@imise.uni-leipzig.de
+    affiliation: Universität Leipzig
+    orcid: 'https://orcid.org/0000-0003-2027-8213'
+  - given-names: Marcel
+    family-names: von Borzestowski
+    email: marcel.vonBorzestowski@medizin.uni-leipzig.de
+    affiliation: Universität Leipzig
+    orcid: 'https://orcid.org/0009-0007-1369-4055'
+  - given-names: Maryam
+    family-names: Yahiaoui-Doktor
+    orcid: 'https://orcid.org/0000-0002-3321-1598'
+    affiliation: Alumni
+  - given-names: Matthias
+    family-names: Reusche
+    email: matthias.reusche@uni-leipzig.de
+    affiliation: Universität Leipzig
+    orcid: 'https://orcid.org/0000-0002-7395-7255'
+  - given-names: Frank
+    family-names: Meineke
+    email: frank.meineke@imise.uni-leipzig.de
+    affiliation: Universität Leipzig
+    orcid: 'https://orcid.org/0000-0002-9256-7543'
+  - given-names: Daniel
+    family-names: Neumann
+    email: daniel.neumann@uni-leipzig.de
+    affiliation: Universität Leipzig
+    orcid: 'https://orcid.org/0000-0002-4639-5189'
+  - given-names: Markus
+    email: markus.loeffler@imise.uni-leipzig.de
+    family-names: Loeffler
+    affiliation: Universität Leipzig
+    orcid: 'https://orcid.org/0000-0002-0424-9933'
+  - name: Universität Leipzig
+    city: Leipzig
+    address: Härtelstr. 16-18
+    post-code: '04107'
+    region: Sachsen (Saxony)
+    tel: +49 341 97 16100
+    country: DE
+    location: >-
+      Institute for Medical Informatics, Statistics and
+      Epidemiology (IMISE)
+    website: 'https://www.imise.uni-leipzig.de/'
+    fax: +49 341 97 16109
+identifiers:
+  - type: doi
+    value: 10.3233/SHTI240838
+    description: Publication of the CDS Tool Chain concept.
+repository-code: 'https://github.com/medizininformatik-initiative/INTERPOLAR'
+url: 'https://medizininformatik-initiative.github.io/INTERPOLAR/'
+abstract: >-
+  The CDS Tool Chain is a modular reference implementation
+  that can be used, for example, by MII data integration
+  centers (DIC). FHIR resources are downloaded from the KDS
+  (core data set) FHIR server / endpoint, converted into a
+  table structure (CDS2DB) and written to a Posgres database
+  (CDS_HUB). In a next step, the data is checked, harmonized
+  and can be further processed with the help of algorithms
+  (DataProcessor). The data is then made visible on a user
+  interface via a frontend (e.g. Redcap) (DB2Frontend,
+  Frontend).
+keywords:
+  - Medical Informatics
+  - Core Data Set
+  - Medical Informatics Initiative
+  - HL7 FHIR
+  - Medical Data Science
+  - Distributed Processing
+license: Apache-2.0
+preferred-citation:
+  type: article
+  authors:
+    - orcid: 'https://orcid.org/0000-0002-7221-7415'
+      given-names: Sebastian
+      family-names: Stäubert
+      email: sebastian.staeubert@imise.uni-leipzig.de
+      name-particle: Stäubert
+      affiliation: Universität Leipzig
+    - given-names: Alexander
+      family-names: Strübing
+      email: alexander.struebing@imise.uni-leipzig.de
+      affiliation: Universität Leipzig
+      orcid: 'https://orcid.org/0000-0001-5151-7665'
+    - given-names: Florian
+      family-names: Schmidt
+      email: florian.schmidt@imise.uni-leipzig.de
+      affiliation: Universität Leipzig
+      orcid: 'https://orcid.org/0000-0003-2027-8213'
+    - given-names: Maryam
+      family-names: Yahiaoui-Doktor
+      affiliation: Universität Leipzig
+      orcid: 'https://orcid.org/0000-0002-3321-1598'
+    - given-names: Matthias
+      family-names: Reusche
+      email: matthias.reusche@uni-leipzig.de
+      affiliation: Universität Leipzig
+      orcid: 'https://orcid.org/0000-0002-7395-7255'
+    - given-names: Frank
+      family-names: Meineke
+      email: frank.meineke@imise.uni-leipzig.de
+      affiliation: Universität Leipzig
+      orcid: 'https://orcid.org/0000-0002-9256-7543'
+    - given-names: Daniel
+      family-names: Neumann
+      email: daniel.neumann@uni-leipzig.de
+      affiliation: Universität Leipzig
+      orcid: 'https://orcid.org/0000-0002-4639-5189'
+    - given-names: Markus
+      email: markus.loeffler@imise.uni-leipzig.de
+      family-names: Loeffler
+      affiliation: Universität Leipzig
+      orcid: 'https://orcid.org/0000-0002-0424-9933'
+  doi: "10.3233/SHTI240838"
+  journal: "Stud Health Technol Inform"
+  month: 8
+  year: 2024
+  date-published: "2024-08-30"
+  title: "Introducing a versatile Medical Informatics Initiative Core Data Set computing tool chain"
+  volume: 317
+  start: 59
+  end: 66
