@@ -117,6 +117,20 @@ OBSERVATION_BODY_HEIGHT_CODES  = "8302-2"
 OBSERVATION_BMI_SYSTEM         = "http://loinc.org"
 OBSERVATION_BMI_CODES          = "39156-5"
 
+[mrp.calculation]
+
+# Global variables for the module can be defined here. They overwrite any existing variables from
+# the global (or any previously loaded) config.toml.
+
+# Paths to all Excel files that are to be used in the MRP calculation.
+# This can be a list of folders or Excel files. If one or more folders are specified, all Excel
+# files are loaded from them. If one or more files are specified, only these files will be loaded.
+MRP_PAIR_LISTS_PATHS = ["./Input-Repo/MRP_Drug_Disease"]
+
+# Default value that applies to the validity period in days for the laboratory values
+DEFAULT_LOINC_VALIDITY_DAYS = 7
+
+
 [database]
 
 PATH_TO_DB_CONFIG_TOML = "./cds_hub_db_config.toml"
