@@ -129,7 +129,7 @@ retrieve <- function(reset_lock_only = FALSE) {
        etlutils::isDefinedAndTrue("all_empty_fhir") ||
        etlutils::isDefinedAndTrue("all_empty_raw"))) {
     finish_message <- paste0(
-      "\nModule '", MODULE_NAME, "' finished with no errors but the result was empty (see warnings above).\n"
+      "\nModule '", etlutils::getModuleName(), "' finished with no errors but the result was empty (see warnings above).\n"
     )
   }
 

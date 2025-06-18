@@ -461,6 +461,11 @@ convertTemplate <- function(tables_descriptions,
               }
             }
           }
+
+          if (etlutils::isSimpleNA(single_loop_content)) {
+            single_loop_content <- ""
+          }
+
           # set indentation, but not for the first column (first column gets its indentation from
           # the line with the placeholder itself
           indent <- ifelse(loop_row == 1, "", indentation)
@@ -528,7 +533,7 @@ convertTemplate <- function(tables_descriptions,
         stop("Unknown source in IF expression: ", condition_arguments$source)
       }
       #if (startsWith(placeholder, "<%IF NOT TABLE_DESCRIPTION:COLUMN_DESCRIPTION \"^meta/\"")) browser()
-      if (xor(condition_arguments$invert, grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
+      if (!etlutils::isSimpleNA(condition_compare_value) && xor(condition_arguments$invert, grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
         # quotes at the beginning of the result indicate that not a subtemplate name is given but
         # directly the content
         if (startsWith(condition_arguments$result, "\"")) {
@@ -612,7 +617,7 @@ loadDatabaseRightsAndConvertDefinition <- function() {
                 "strings here in this R-script."))
   }
 
-  rights_definition <- etlutils::removeRowsWithNAorEmpty(rights_definition)
+  rights_definition <- etlutils::dtRemoveCommentRows(rights_definition)
   rights_definition[, TABLE_DESCRIPTION := trimws(TABLE_DESCRIPTION)]
   rights_definition <- etlutils::splitTableToList(rights_definition, rights_definition_columns$TABLE_DESCRIPTION)
   for (i in 1:length(rights_definition)) {
@@ -627,7 +632,7 @@ loadDatabaseRightsAndConvertDefinition <- function() {
     convert_definition_columns <- getConvertDefinitionColumnNames()
     convert_definition <- etlutils::removeTableHeader(convert_definition, convert_definition_columns)
     if (etlutils::isValidTable(convert_definition)) {
-      convert_definition <- etlutils::removeRowsWithNAorEmpty(convert_definition)
+      convert_definition <- etlutils::dtRemoveCommentRows(convert_definition)
       convert_definition <- etlutils::splitTableToList(convert_definition, convert_definition_columns$TABLE_DESCRIPTION)
     } else {
       message("No valid convert definition found -> we use all Table Descriptions in the original style.")

@@ -1348,3 +1348,50 @@ test_that("mergeTablesUnion correctly merges tables with different numbers of ro
   expect_equal(nrow(merged_tables$tableA), 6)
   expect_equal(colnames(merged_tables$tableA), c("x", "y"))  # Only common columns
 })
+
+##########################
+# dtRemoveCommentRows    #
+##########################
+
+# Removes comment and empty rows by default
+
+test_that("comment and empty rows are removed with default settings", {
+  dt <- data.table::data.table(
+    col1 = c("#comment", "   ", "valid", NA, "# another", "", NA),
+    col2 = c(NA, "#skip", "value", "   ", "entry", " ", NA)
+  )
+
+  result <- dtRemoveCommentRows(dt)
+
+  expect_equal(nrow(result), 1)
+  expect_equal(result$col1, "valid")
+  expect_equal(result$col2, "value")
+})
+
+# Keeps empty rows when remove_empty = FALSE
+
+test_that("empty rows are kept when remove_empty is FALSE", {
+  dt <- data.table::data.table(
+    col1 = c("value", "   ", "", NA),
+    col2 = c("x", " ", "", NA)
+  )
+
+  result <- dtRemoveCommentRows(dt, remove_empty = FALSE)
+
+  expect_equal(nrow(result), 4)
+})
+
+# Custom marker removes rows starting with that marker, keeps empty rows if requested
+
+test_that("comment rows are removed with custom marker", {
+  dt <- data.table::data.table(
+    col1 = c("@note", "   ", "valid", NA, "@info", "", NA),
+    col2 = c(NA, "@meta", "value", "   ", "entry", " ", NA)
+  )
+
+  result <- dtRemoveCommentRows(dt, comment_marker = "@")
+
+  expect_equal(nrow(result), 1)
+  expect_equal(result$col1, "valid")
+  expect_equal(result$col2, "value")
+})

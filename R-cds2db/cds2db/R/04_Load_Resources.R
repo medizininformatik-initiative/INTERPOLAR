@@ -210,7 +210,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
       "GROUP BY pat_id;"
     )
 
-    # Create the corrct format for the Postgres Parameter Array
+    # Create the correct format for the Postgres Parameter Array
     params <- list(paste0("{", paste(patient_ids, collapse = ","), "}"))
     # Execute the SQL query to retrieve the data, passing the list of IDs as a single parameter
     result <- etlutils::dbGetReadOnlyQuery(query, params = params, lock_id = "getLastPatientUpdateDate()[1]")
@@ -218,7 +218,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
     # Create an empty result vector with NAs for patient IDs not found in the database
     last_insert_dates <- etlutils::as.DateWithTimezone(rep(NA, length(patient_ids)))
 
-    if (!etlutils::isDefinedAndTrue("DEBUG_IGNORE_LAST_UPDATE_DATE")){
+    if (!etlutils::isDefinedAndTrue("DEBUG_IGNORE_LAST_UPDATE_DATE")) {
       # Map the retrieved data to the corresponding patient IDs
       for (i in seq_along(patient_ids)) {
         matching_row <- result[result$pat_id == patient_ids[i], ]
