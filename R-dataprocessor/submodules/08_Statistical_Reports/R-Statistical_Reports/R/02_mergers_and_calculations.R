@@ -134,7 +134,8 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
                          dplyr::select(enc_id, enc_period_start) |>
                          dplyr::rename(main_enc_id = enc_id, main_enc_period_start = enc_period_start),
         by = "main_enc_id") |>
-      dplyr::relocate(main_enc_period_start, .after = main_enc_id)
+      dplyr::relocate(main_enc_period_start, .after = main_enc_id) |>
+    dplyr::arrange(main_enc_period_start, enc_class_code, enc_type_code, enc_period_start, enc_period_end)
 
   return(encounter_table_with_MainEncPeriodStart)
 }
@@ -172,60 +173,31 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 
 #------------------------------------------------------------------------------#
 
-#' Add Ward Name to Merged Patient-Encounter Data
+#' Add Ward Name to Patient Encounters
 #'
-#' This function enriches the merged patient-encounter table with ward names from a
-#' `pids_per_ward_table`, taking into account potential ward changes during a single encounter.
-#' Ward names are assigned only to encounters of type `"versorgungsstellenkontakt"`, as higher-level
-#' encounters like `"einrichtungskontakt"` and `"abteilungskontakt"` may span multiple wards.
+#' This function adds ward names to a table of patient encounters by merging it with a table that provides ward names for each patient and encounter.
+#' It ensures ward names are placed after the `enc_period_end` column and removes duplicate rows.
 #'
-#' @param merged_table_with_main_enc A data frame or tibble containing merged patient and
-#'   encounter data. It must include the columns `main_enc_id`, `pat_id`, `enc_type_code`,
-#'   `enc_partof_ref`, `enc_class_code`, `enc_period_start`, and `enc_period_end`.
-#' @param pids_per_ward_table A data frame or tibble containing the mapping between patients,
-#'   encounters, and their associated ward names, including the columns `encounter_id`,
-#'   `patient_id`, `ward_name`, and `input_datetime` (indicating the timing of the ward assignment).
+#' @param merged_table_with_main_enc A data frame containing patient encounters. Must include `enc_id`, `pat_id`, and `enc_period_end`.
+#' @param pids_per_ward_table A data frame containing ward names along with corresponding patient and encounter IDs of the "Versogungsstellenkontakt". Must include `ward_name`, `patient_id`, and `encounter_id`.
 #'
-#' @return A data frame or tibble that includes the original merged data with an additional
-#'   `ward_name` column. The `ward_name` column is placed immediately after `enc_period_end`.
+#' @return A data frame similar to the input `merged_table_with_main_enc`, but with the `ward_name` column added and located after the `enc_period_end` column. Duplicate rows in the output are removed.
 #'
 #' @details
-#' The function performs the following steps:
-#' \itemize{
-#'   \item Assigns a row number within each `main_enc_id` + `enc_partof_ref` group in the merged data.
-#'   \item Assigns a row number within each `encounter_id` + `patient_id` group in the ward mapping table,
-#'         ordered by `input_datetime`.
-#'   \item Performs a left join on `main_enc_id = encounter_id`, `pat_id = patient_id`, and
-#'         `grouped_row_number` to align corresponding ward records with sub-encounters.
-#'   \item For higher-level encounters (`"einrichtungskontakt"` and `"abteilungskontakt"`),
-#'         sets the ward name to `NA_character_`.
-#'   \item Removes temporary grouping columns and ensures distinct rows in the result.
-#' }
+#' The function performs a left join between `merged_table_with_main_enc` and `pids_per_ward_table` based on patient and encounter IDs. It relocates the `ward_name` column to directly follow `enc_period_end`, ensuring that the returned table is free of duplicate rows.
+#' Note: The current implementation assumes complete join coverage and may require logic refinement for handling situations with multiple rows for a single encounter.
 #'
-#' @importFrom dplyr left_join select relocate mutate case_when distinct arrange group_by ungroup row_number
+#' @seealso
+#' \code{\link[dplyr]{left_join}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{distinct}}
+#'
 #' @export
 addWardName <- function(merged_table_with_main_enc,pids_per_ward_table) {
-  # TODO: how to identify non-INTERPOLAR ward encounters -----------------
-  # TDDO: fix logic, numbering doesn't work as expected (non interpolar ward),
-  # also multiple rows for one encounter
-  merged_table_with_ward <-merged_table_with_main_enc |>
-    dplyr::arrange(main_enc_period_start, enc_class_code, enc_type_code, enc_period_start, enc_period_end) |>
-    dplyr::group_by(main_enc_id,enc_partof_ref) |>
-    dplyr::mutate(grouped_row_number = dplyr::row_number()) |>
-    dplyr::ungroup() |>
+  # TODO: check multiple rows for one encounter (e.g. ward change)
+  merged_table_with_ward <- merged_table_with_main_enc |>
     dplyr::left_join(pids_per_ward_table |>
-                       dplyr::arrange(patient_id, encounter_id, input_datetime) |>
-                       dplyr::group_by(patient_id, encounter_id) |>
-                       dplyr::mutate(grouped_row_number = dplyr::row_number()) |>
-                       dplyr::ungroup() |>
-                       dplyr::select(ward_name, patient_id, encounter_id, grouped_row_number),
-                     by = c("main_enc_id" = "encounter_id", "pat_id" = "patient_id", "grouped_row_number")) |>
-    dplyr::select(-grouped_row_number) |>
+                       dplyr::select(ward_name, patient_id, encounter_id),
+                     by = c("enc_id" = "encounter_id", "pat_id" = "patient_id")) |>
     dplyr::relocate(ward_name, .after = enc_period_end) |>
-    dplyr::mutate(ward_name = dplyr::case_when(
-      enc_type_code == "einrichtungskontakt" ~ NA_character_,
-      enc_type_code == "abteilungskontakt" ~ NA_character_,
-      enc_type_code == "versorgungsstellenkontakt" ~ ward_name)) |>
     dplyr::distinct()
   return(merged_table_with_ward)
 }

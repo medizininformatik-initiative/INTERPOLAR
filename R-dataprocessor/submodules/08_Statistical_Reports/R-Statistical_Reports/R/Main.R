@@ -32,7 +32,7 @@
 createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
                                     REPORT_PERIOD_END = "2025-04-30") {
 
-  # TODO: include the start and end date in an interactive way ----------
+  # TODO: include the start and end date in an interactive / default way and print it to the report ----------
 
   # TOASK: Sicherstellen, dass immer nur der aktuellste bzw. vollständigste Datensatz betrachtet wird -----
   # z.B. durch Auswahl eines anderen views oder durch Filterung der Datensätze über input_datetime
@@ -54,50 +54,26 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
     addMainEncId() |>
     addMainEncPeriodStart() |>
-    calculateAge() #|>
-    # addWardName(pids_per_ward_table)
+    calculateAge() |>
+    addWardName(pids_per_ward_table)
 
-  # FAS1 <- defineFAS1(complete_table)
-  #
-  # F1 <- calculateF1(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
-  #
+  FAS1 <- defineFAS1(complete_table)
+
+  F1 <- calculateF1(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
+
   # FAS2_1 <- defineFAS2_1(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END)
   # F2 <- calculateF2(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
-  # print(patient_table)
-  # print(encounter_table)
-  # print(pids_per_ward_table)
+  print(patient_table)
+  print(encounter_table)
+  print(pids_per_ward_table)
 
   # Print the patient, encounter, F1 and F2 datasets for verification
   writeKable(complete_table, format = "html")
+  writeKable(FAS1, format= "html")
+  writeKable(F1, format= "html")
 
-  # print(data.table::as.data.table(FAS2_1))
+  #TODO: implement pdf option ----------
+  # writeKable(complete_table, format = "pdf")
   #
-  # # Print the reporting period
-  # print(paste0("Reporting period: ",REPORT_PERIOD_START, " - ", REPORT_PERIOD_END))
-  #
-  # # Print the number of cases in the F1 dataset
-  #
-  # print(F1 |>
-  #         dplyr::distinct(main_enc_id,ward_name) |>
-  #         dplyr::group_by(ward_name) |>
-  #         dplyr::tally())
-  #
-  # print(paste0("Number of cases in F1: ",
-  #              F1 |>
-  #                dplyr::distinct(main_enc_id, ward_name) |>
-  #                nrow()))
-  #
-  # # Print the number of cases in the F2 dataset
-  #
-  # print(F2 |>
-  #         dplyr::distinct(main_enc_id,ward_name) |>
-  #         dplyr::group_by(ward_name) |>
-  #         dplyr::tally())
-  #
-  # print(paste0("Number of cases in F2: ",
-  #              F2 |>
-  #                dplyr::distinct(main_enc_id, ward_name) |>
-  #                nrow()))
-
 }

@@ -89,9 +89,12 @@ writeKable <- function(table, filename_without_extension = NA, project_sub_dir =
     filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
   }
   if (is.na(project_sub_dir)) {
-    project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "tables")
+    project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
   } else {
     project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
+  }
+  if (!dir.exists(project_sub_dir)) {
+    dir.create(project_sub_dir, recursive = TRUE)
   }
   kableExtra::kable(table, format = "html") |>
     kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>

@@ -101,7 +101,9 @@ getPatientData <- function(lock_id, table_name) {
 
 getEncounterData <- function(lock_id, table_name) {
 
-  query <- paste0("SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, enc_class_system, enc_class_code, ",
+  query <- paste0("SELECT enc_id, enc_identifier_value, ",
+
+                  "enc_patient_ref, enc_partof_ref, enc_class_system, enc_class_code, ",
                   "enc_type_system, enc_type_code, enc_servicetype_system, enc_servicetype_code, ",
                   "enc_period_start, enc_period_end, enc_status, ",
                   "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
@@ -153,9 +155,9 @@ getPidsPerWardData <- function(lock_id, table_name) {
   query <- paste0("SELECT ward_name, patient_id, encounter_id, input_datetime ",
                   "FROM ", table_name, "\n")
 
-  pid_per_ward_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+  pids_per_ward_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     dplyr::arrange(patient_id, encounter_id, input_datetime)
 
-  return(pid_per_ward_table)
+  return(pids_per_ward_table)
 }
