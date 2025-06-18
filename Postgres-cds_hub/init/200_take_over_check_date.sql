@@ -7,7 +7,7 @@
 -- Rights definition file size        : 14274 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-18 11:48:24
+-- Create time: 2025-06-18 14:30:56
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -178,294 +178,294 @@ BEGIN
 
     ---- Start check db_log.encounter_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.encounter_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.encounter WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.encounter WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.encounter_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.encounter WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.encounter_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.encounter_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.encounter_raw_id=t.encounter_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''encounter_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''encounter_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.encounter - count ----
 
     ---- Start check db_log.patient_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.patient_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.patient WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.patient WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.patient_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.patient WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.patient_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.patient_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.patient_raw_id=t.patient_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''patient_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''patient_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.patient - count ----
 
     ---- Start check db_log.condition_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.condition_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.condition WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.condition WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.condition_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.condition WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.condition_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.condition_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.condition_raw_id=t.condition_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''condition_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''condition_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.condition - count ----
 
     ---- Start check db_log.medication_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medication_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.medication WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.medication WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.medication_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.medication WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.medication_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.medication_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medication_raw_id=t.medication_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medication_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medication_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.medication - count ----
 
     ---- Start check db_log.medicationrequest_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medicationrequest_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.medicationrequest WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.medicationrequest WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.medicationrequest_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.medicationrequest WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.medicationrequest_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.medicationrequest_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationrequest_raw_id=t.medicationrequest_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationrequest_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationrequest_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.medicationrequest - count ----
 
     ---- Start check db_log.medicationadministration_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medicationadministration_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.medicationadministration WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.medicationadministration WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.medicationadministration_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.medicationadministration WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.medicationadministration_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.medicationadministration_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationadministration_raw_id=t.medicationadministration_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationadministration_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationadministration_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.medicationadministration - count ----
 
     ---- Start check db_log.medicationstatement_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.medicationstatement_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.medicationstatement WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.medicationstatement WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.medicationstatement_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.medicationstatement WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.medicationstatement_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.medicationstatement_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationstatement_raw_id=t.medicationstatement_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationstatement_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationstatement_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.medicationstatement - count ----
 
     ---- Start check db_log.observation_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.observation_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.observation WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.observation WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.observation_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.observation WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.observation_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.observation_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.observation_raw_id=t.observation_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''observation_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''observation_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.observation - count ----
 
     ---- Start check db_log.diagnosticreport_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.diagnosticreport_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.diagnosticreport WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.diagnosticreport WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.diagnosticreport_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.diagnosticreport WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.diagnosticreport_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.diagnosticreport_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.diagnosticreport_raw_id=t.diagnosticreport_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''diagnosticreport_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''diagnosticreport_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.diagnosticreport - count ----
 
     ---- Start check db_log.servicerequest_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.servicerequest_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.servicerequest WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.servicerequest WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.servicerequest_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.servicerequest WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.servicerequest_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.servicerequest_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.servicerequest_raw_id=t.servicerequest_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''servicerequest_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''servicerequest_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.servicerequest - count ----
 
     ---- Start check db_log.procedure_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.procedure_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.procedure WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.procedure WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.procedure_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.procedure WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.procedure_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.procedure_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.procedure_raw_id=t.procedure_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''procedure_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''procedure_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.procedure - count ----
 
     ---- Start check db_log.consent_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.consent_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.consent WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.consent WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.consent_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.consent WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.consent_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.consent_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.consent_raw_id=t.consent_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''consent_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''consent_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.consent - count ----
 
     ---- Start check db_log.location_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.location_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.location WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.location WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.location WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.location WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.location_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.location WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.location_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.location WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.location_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.location_raw_id=t.location_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''location_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''location_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.location - count ----
 
     ---- Start check db_log.pids_per_ward_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.pids_per_ward_raw';
-    IF data_count_pro_all=0 AND COALESCE(max_ent_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen - sobald eine E. gefunden wurde über alle berechnen
-        SELECT COUNT(1) INTO temp_int FROM db_log.pids_per_ward WHERE last_processing_nr=max_ent_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
+    IF data_count_pro_all=0 AND COALESCE(max_last_pro_nr,0)!=0 THEN -- Nur wenn bisher keine Datensätze gefunden wurden diese Entität überprüfen und es eine max lpn gibt - sobald eine E. gefunden wurde über alle berechnen
+        SELECT COUNT(1) INTO temp_int FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr; -- erst schauen ob es Treffer in dieser Tabelle gibt mit letzter processing number
         IF temp_int>0 THEN
-            SELECT COUNT(1) INTO temp_int FROM db_log.pids_per_ward WHERE last_processing_nr=max_ent_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
+            SELECT COUNT(1) INTO temp_int FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.pids_per_ward_raw WHERE last_processing_nr!=max_ent_pro_nr) r
-                , (SELECT * FROM db_log.pids_per_ward WHERE last_processing_nr=max_ent_pro_nr) t
+    	        FROM (SELECT * FROM db_log.pids_per_ward_raw WHERE last_processing_nr!=max_last_pro_nr) r
+                , (SELECT * FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.pids_per_ward_raw r2
     	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.pids_per_ward_raw_id=t.pids_per_ward_raw_id;
             END IF;
         END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''pids_per_ward_raw'', ''db_log'', ''max_ent_pro_nr / data_count_pro_all :'||max_ent_pro_nr||' / '||data_count_pro_all||''' );'
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''pids_per_ward_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.pids_per_ward - count ----
@@ -753,10 +753,10 @@ BEGIN
         );
 
             ----------------- Update for encounter_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='encounter';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='encounter';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.encounter t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE encounter_raw_id IN (SELECT encounter_raw_ID FROM db_log.encounter_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -776,10 +776,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='encounter_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='encounter_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.encounter_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -790,15 +790,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.encounter_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT encounter_raw_ID FROM db_log.encounter_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.encounter_raw_id = sub.encounter_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.encounter_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT encounter_raw_ID FROM db_log.encounter_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.encounter_raw_id = sub.encounter_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for patient_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='patient';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='patient';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.patient t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE patient_raw_id IN (SELECT patient_raw_ID FROM db_log.patient_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -818,10 +818,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='patient_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='patient_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.patient_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -832,15 +832,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.patient_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT patient_raw_ID FROM db_log.patient_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.patient_raw_id = sub.patient_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.patient_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT patient_raw_ID FROM db_log.patient_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.patient_raw_id = sub.patient_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for condition_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='condition';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='condition';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.condition t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE condition_raw_id IN (SELECT condition_raw_ID FROM db_log.condition_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -860,10 +860,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='condition_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='condition_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.condition_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -874,15 +874,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.condition_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT condition_raw_ID FROM db_log.condition_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.condition_raw_id = sub.condition_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.condition_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT condition_raw_ID FROM db_log.condition_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.condition_raw_id = sub.condition_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for medication_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medication';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medication';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.medication t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE medication_raw_id IN (SELECT medication_raw_ID FROM db_log.medication_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -902,10 +902,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medication_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medication_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medication_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -916,15 +916,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medication_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medication_raw_ID FROM db_log.medication_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medication_raw_id = sub.medication_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medication_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medication_raw_ID FROM db_log.medication_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medication_raw_id = sub.medication_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for medicationrequest_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationrequest';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationrequest';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.medicationrequest t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE medicationrequest_raw_id IN (SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -944,10 +944,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationrequest_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationrequest_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationrequest_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -958,15 +958,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medicationrequest_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medicationrequest_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for medicationadministration_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationadministration';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationadministration';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.medicationadministration t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE medicationadministration_raw_id IN (SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -986,10 +986,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationadministration_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationadministration_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationadministration_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1000,15 +1000,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medicationadministration_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medicationadministration_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for medicationstatement_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationstatement';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationstatement';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.medicationstatement t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE medicationstatement_raw_id IN (SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1028,10 +1028,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationstatement_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationstatement_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationstatement_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1042,15 +1042,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medicationstatement_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medicationstatement_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for observation_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='observation';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='observation';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.observation t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE observation_raw_id IN (SELECT observation_raw_ID FROM db_log.observation_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1070,10 +1070,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='observation_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='observation_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.observation_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1084,15 +1084,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.observation_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT observation_raw_ID FROM db_log.observation_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.observation_raw_id = sub.observation_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.observation_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT observation_raw_ID FROM db_log.observation_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.observation_raw_id = sub.observation_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for diagnosticreport_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='diagnosticreport';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='diagnosticreport';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.diagnosticreport t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE diagnosticreport_raw_id IN (SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1112,10 +1112,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='diagnosticreport_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='diagnosticreport_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.diagnosticreport_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1126,15 +1126,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.diagnosticreport_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.diagnosticreport_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for servicerequest_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='servicerequest';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='servicerequest';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.servicerequest t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE servicerequest_raw_id IN (SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1154,10 +1154,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='servicerequest_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='servicerequest_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.servicerequest_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1168,15 +1168,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.servicerequest_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.servicerequest_raw_id = sub.servicerequest_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.servicerequest_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.servicerequest_raw_id = sub.servicerequest_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for procedure_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='procedure';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='procedure';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.procedure t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE procedure_raw_id IN (SELECT procedure_raw_ID FROM db_log.procedure_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1196,10 +1196,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='procedure_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='procedure_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.procedure_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1210,15 +1210,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.procedure_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT procedure_raw_ID FROM db_log.procedure_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.procedure_raw_id = sub.procedure_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.procedure_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT procedure_raw_ID FROM db_log.procedure_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.procedure_raw_id = sub.procedure_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for consent_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='consent';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='consent';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.consent t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE consent_raw_id IN (SELECT consent_raw_ID FROM db_log.consent_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1238,10 +1238,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='consent_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='consent_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.consent_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1252,15 +1252,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.consent_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT consent_raw_ID FROM db_log.consent_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.consent_raw_id = sub.consent_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.consent_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT consent_raw_ID FROM db_log.consent_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.consent_raw_id = sub.consent_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for location_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='location';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='location';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.location t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE location_raw_id IN (SELECT location_raw_ID FROM db_log.location_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1280,10 +1280,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='location_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='location_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.location_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1294,15 +1294,15 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.location_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT location_raw_ID FROM db_log.location_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.location_raw_id = sub.location_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.location_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT location_raw_ID FROM db_log.location_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.location_raw_id = sub.location_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
             ----------------- Update for pids_per_ward_raw ----------------------------------
-            --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='pids_per_ward';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='pids_per_ward';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.pids_per_ward t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE pids_per_ward_raw_id IN (SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1322,10 +1322,10 @@ BEGIN
             END LOOP;
 -- v3 --
           ------------------------------------------------------------------------------------
-            --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
-/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
-/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
-/*Test*/))  AS t(res TEXT) INTO erg;
+            err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
+--/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+--/*Test*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.pids_per_ward_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1336,7 +1336,7 @@ BEGIN
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.pids_per_ward_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.pids_per_ward_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
