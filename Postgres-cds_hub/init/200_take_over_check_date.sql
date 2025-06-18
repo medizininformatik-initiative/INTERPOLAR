@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 15:06:44
--- Rights definition file size        : 14653 Byte
+-- Rights definition file last update : 2025-06-17 22:42:12
+-- Rights definition file size        : 14274 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-17 15:19:35
+-- Create time: 2025-06-18 00:26:53
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -749,149 +749,597 @@ BEGIN
                 UNION ALL SELECT last_processing_nr AS lpn FROM db_log.consent_raw r, (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr) t WHERE r.consent_raw_id=t.consent_raw_id
                 UNION ALL SELECT last_processing_nr AS lpn FROM db_log.location_raw r, (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_last_pro_nr) t WHERE r.location_raw_id=t.location_raw_id
                 UNION ALL SELECT last_processing_nr AS lpn FROM db_log.pids_per_ward_raw r, (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr) t WHERE r.pids_per_ward_raw_id=t.pids_per_ward_raw_id
-            )
+            ) WHERE LPN > 0
         );
 
             ----------------- Update for encounter_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='encounter';
-	    UPDATE db_log.encounter SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE encounter_raw_id IN (SELECT encounter_raw_ID FROM db_log.encounter_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.encounter t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE encounter_raw_id IN (SELECT encounter_raw_ID FROM db_log.encounter_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.encounter t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT encounter_raw_ID FROM db_log.encounter_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.encounter_raw_ID = sub.encounter_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.encounter t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT encounter_raw_ID FROM db_log.encounter_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.encounter_raw_ID = sub.encounter_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='encounter_raw';
-            UPDATE db_log.encounter_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE encounter_raw_id IN (SELECT encounter_raw_ID FROM db_log.encounter_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.encounter_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT encounter_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.encounter_raw_id = sub.encounter_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.encounter_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT encounter_raw_ID FROM db_log.encounter t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.encounter_raw_id = sub.encounter_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for patient_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='patient';
-	    UPDATE db_log.patient SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE patient_raw_id IN (SELECT patient_raw_ID FROM db_log.patient_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.patient t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE patient_raw_id IN (SELECT patient_raw_ID FROM db_log.patient_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.patient t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT patient_raw_ID FROM db_log.patient_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.patient_raw_ID = sub.patient_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.patient t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT patient_raw_ID FROM db_log.patient_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.patient_raw_ID = sub.patient_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='patient_raw';
-            UPDATE db_log.patient_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE patient_raw_id IN (SELECT patient_raw_ID FROM db_log.patient_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.patient_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT patient_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.patient_raw_id = sub.patient_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.patient_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT patient_raw_ID FROM db_log.patient t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.patient_raw_id = sub.patient_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for condition_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='condition';
-	    UPDATE db_log.condition SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE condition_raw_id IN (SELECT condition_raw_ID FROM db_log.condition_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.condition t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE condition_raw_id IN (SELECT condition_raw_ID FROM db_log.condition_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.condition t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT condition_raw_ID FROM db_log.condition_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.condition_raw_ID = sub.condition_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.condition t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT condition_raw_ID FROM db_log.condition_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.condition_raw_ID = sub.condition_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='condition_raw';
-            UPDATE db_log.condition_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE condition_raw_id IN (SELECT condition_raw_ID FROM db_log.condition_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.condition_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT condition_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.condition_raw_id = sub.condition_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.condition_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT condition_raw_ID FROM db_log.condition t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.condition_raw_id = sub.condition_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for medication_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medication';
-	    UPDATE db_log.medication SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE medication_raw_id IN (SELECT medication_raw_ID FROM db_log.medication_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.medication t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE medication_raw_id IN (SELECT medication_raw_ID FROM db_log.medication_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.medication t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medication_raw_ID FROM db_log.medication_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.medication_raw_ID = sub.medication_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medication t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT medication_raw_ID FROM db_log.medication_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.medication_raw_ID = sub.medication_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medication_raw';
-            UPDATE db_log.medication_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE medication_raw_id IN (SELECT medication_raw_ID FROM db_log.medication_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.medication_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medication_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.medication_raw_id = sub.medication_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medication_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medication_raw_ID FROM db_log.medication t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.medication_raw_id = sub.medication_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for medicationrequest_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationrequest';
-	    UPDATE db_log.medicationrequest SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE medicationrequest_raw_id IN (SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.medicationrequest t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE medicationrequest_raw_id IN (SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.medicationrequest t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.medicationrequest_raw_ID = sub.medicationrequest_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medicationrequest t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT medicationrequest_raw_ID FROM db_log.medicationrequest_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.medicationrequest_raw_ID = sub.medicationrequest_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationrequest_raw';
-            UPDATE db_log.medicationrequest_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE medicationrequest_raw_id IN (SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationrequest_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationrequest_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medicationrequest_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for medicationadministration_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationadministration';
-	    UPDATE db_log.medicationadministration SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE medicationadministration_raw_id IN (SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.medicationadministration t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE medicationadministration_raw_id IN (SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.medicationadministration t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.medicationadministration_raw_ID = sub.medicationadministration_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medicationadministration t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT medicationadministration_raw_ID FROM db_log.medicationadministration_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.medicationadministration_raw_ID = sub.medicationadministration_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationadministration_raw';
-            UPDATE db_log.medicationadministration_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE medicationadministration_raw_id IN (SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationadministration_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationadministration_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medicationadministration_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for medicationstatement_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationstatement';
-	    UPDATE db_log.medicationstatement SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE medicationstatement_raw_id IN (SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.medicationstatement t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE medicationstatement_raw_id IN (SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.medicationstatement t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.medicationstatement_raw_ID = sub.medicationstatement_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medicationstatement t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT medicationstatement_raw_ID FROM db_log.medicationstatement_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.medicationstatement_raw_ID = sub.medicationstatement_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationstatement_raw';
-            UPDATE db_log.medicationstatement_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE medicationstatement_raw_id IN (SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationstatement_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationstatement_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medicationstatement_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for observation_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='observation';
-	    UPDATE db_log.observation SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE observation_raw_id IN (SELECT observation_raw_ID FROM db_log.observation_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.observation t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE observation_raw_id IN (SELECT observation_raw_ID FROM db_log.observation_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.observation t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT observation_raw_ID FROM db_log.observation_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.observation_raw_ID = sub.observation_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.observation t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT observation_raw_ID FROM db_log.observation_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.observation_raw_ID = sub.observation_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='observation_raw';
-            UPDATE db_log.observation_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE observation_raw_id IN (SELECT observation_raw_ID FROM db_log.observation_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.observation_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT observation_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.observation_raw_id = sub.observation_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.observation_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT observation_raw_ID FROM db_log.observation t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.observation_raw_id = sub.observation_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for diagnosticreport_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='diagnosticreport';
-	    UPDATE db_log.diagnosticreport SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE diagnosticreport_raw_id IN (SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.diagnosticreport t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE diagnosticreport_raw_id IN (SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.diagnosticreport t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.diagnosticreport_raw_ID = sub.diagnosticreport_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.diagnosticreport t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.diagnosticreport_raw_ID = sub.diagnosticreport_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='diagnosticreport_raw';
-            UPDATE db_log.diagnosticreport_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE diagnosticreport_raw_id IN (SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.diagnosticreport_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT diagnosticreport_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.diagnosticreport_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for servicerequest_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='servicerequest';
-	    UPDATE db_log.servicerequest SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE servicerequest_raw_id IN (SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.servicerequest t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE servicerequest_raw_id IN (SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.servicerequest t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.servicerequest_raw_ID = sub.servicerequest_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.servicerequest t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT servicerequest_raw_ID FROM db_log.servicerequest_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.servicerequest_raw_ID = sub.servicerequest_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='servicerequest_raw';
-            UPDATE db_log.servicerequest_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE servicerequest_raw_id IN (SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.servicerequest_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT servicerequest_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.servicerequest_raw_id = sub.servicerequest_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.servicerequest_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.servicerequest_raw_id = sub.servicerequest_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for procedure_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='procedure';
-	    UPDATE db_log.procedure SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE procedure_raw_id IN (SELECT procedure_raw_ID FROM db_log.procedure_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.procedure t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE procedure_raw_id IN (SELECT procedure_raw_ID FROM db_log.procedure_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.procedure t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT procedure_raw_ID FROM db_log.procedure_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.procedure_raw_ID = sub.procedure_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.procedure t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT procedure_raw_ID FROM db_log.procedure_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.procedure_raw_ID = sub.procedure_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='procedure_raw';
-            UPDATE db_log.procedure_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE procedure_raw_id IN (SELECT procedure_raw_ID FROM db_log.procedure_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.procedure_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT procedure_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.procedure_raw_id = sub.procedure_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.procedure_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT procedure_raw_ID FROM db_log.procedure t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.procedure_raw_id = sub.procedure_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for consent_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='consent';
-	    UPDATE db_log.consent SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE consent_raw_id IN (SELECT consent_raw_ID FROM db_log.consent_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.consent t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE consent_raw_id IN (SELECT consent_raw_ID FROM db_log.consent_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.consent t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT consent_raw_ID FROM db_log.consent_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.consent_raw_ID = sub.consent_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.consent t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT consent_raw_ID FROM db_log.consent_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.consent_raw_ID = sub.consent_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='consent_raw';
-            UPDATE db_log.consent_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE consent_raw_id IN (SELECT consent_raw_ID FROM db_log.consent_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.consent_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT consent_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.consent_raw_id = sub.consent_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.consent_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT consent_raw_ID FROM db_log.consent t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.consent_raw_id = sub.consent_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for location_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='location';
-	    UPDATE db_log.location SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE location_raw_id IN (SELECT location_raw_ID FROM db_log.location_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.location t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE location_raw_id IN (SELECT location_raw_ID FROM db_log.location_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.location t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT location_raw_ID FROM db_log.location_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.location_raw_ID = sub.location_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.location t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT location_raw_ID FROM db_log.location_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.location_raw_ID = sub.location_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='location_raw';
-            UPDATE db_log.location_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE location_raw_id IN (SELECT location_raw_ID FROM db_log.location_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.location_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT location_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.location_raw_id = sub.location_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.location_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT location_raw_ID FROM db_log.location t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.location_raw_id = sub.location_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
             ----------------- Update for pids_per_ward_raw ----------------------------------
             --err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='pids_per_ward';
-	    UPDATE db_log.pids_per_ward SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE pids_per_ward_raw_id IN (SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
 
+--/*AltDirekteAusführung_v1*/            UPDATE db_log.pids_per_ward t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v1*/            WHERE pids_per_ward_raw_id IN (SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
+--/*AltDirekteAusführung_v1*/            AND last_processing_nr!=new_last_pro_nr;
+
+--/*AltDirekteAusführung_v2*/	         UPDATE db_log.pids_per_ward t SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw r JOIN lpn_collection l ON r.last_processing_nr = l.lpn ) sub
+--/*AltDirekteAusführung_v2*/            WHERE t.pids_per_ward_raw_ID = sub.pids_per_ward_raw_ID AND t.last_processing_nr != new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.pids_per_ward t SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT DISTINCT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub WHERE t.pids_per_ward_raw_ID = sub.pids_per_ward_raw_ID AND t.last_processing_nr != '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
+          ------------------------------------------------------------------------------------
             --err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
-            UPDATE db_log.pids_per_ward_raw SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
-            WHERE pids_per_ward_raw_id IN (SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
-            AND last_processing_nr!=new_last_pro_nr;
+/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
+/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
+/*Test*/))  AS t(res TEXT) INTO erg;
+
+--/*AltDirekteAusführung_v2*/            UPDATE db_log.pids_per_ward_raw r SET
+--/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
+--/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT pids_per_ward_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            WHERE r.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND r.last_processing_nr < new_last_pro_nr;
+
+-- v3 --
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.pids_per_ward_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
+-- v3 --
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''Nach Einzelnen Tabellen'' );'
