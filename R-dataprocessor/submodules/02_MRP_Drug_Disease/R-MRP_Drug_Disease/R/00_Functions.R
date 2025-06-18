@@ -24,14 +24,17 @@ MRP_CALCULATION_TYPE <- etlutils::namedListByValue(
 # Load Einrichtungskontakt Encounters without retrolective MRP evaluation
 #
 getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_type) {
-  # Get all Einrichtungskontakt encounters that ended at leas 14 days ago and do not have a retrolective MRP evaluation
+  # Get all Einrichtungskontakt encounters that ended at least 14 days ago and do not have a retrolective MRP evaluation
   query_date <- Sys.Date() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS
   query <- paste0(
-    "SELECT DISTINCT enc_id, enc_period_start FROM encounter\n",
+    "SELECT DISTINCT enc_id, enc_period_start, enc_patient_ref\n",
+    "FROM v_encounter_last_version\n",
     "WHERE enc_period_end <= '", query_date, "'\n",
     "AND enc_type_code = 'einrichtungskontakt'\n",
-    "AND enc_id NOT IN (SELECT enc_id FROM dp_mrp_calculations)\n",
-    "AND mrp_calculation_type = '", mrp_calculation_type, "'\n"
+    "AND enc_id NOT IN (\n",
+    "  SELECT enc_id FROM v_dp_mrp_calculations\n",
+    "  WHERE mrp_type = '", mrp_calculation_type, "'\n",
+    ")"
   )
   encounters <- etlutils::dbGetReadOnlyQuery(query)
 }
@@ -41,7 +44,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_
 #
 getMedicationAnalysesFromDB <- function(record_ids) {
   query_ids <- etlutils::fhirdbGetQueryList(record_ids$record_id)
-  query <- paste0("SELECT * FROM medikationsanalyse_fe WHERE record_id in ", query_ids, "\n")
+  query <- paste0("SELECT * FROM v_medikationsanalyse_fe WHERE record_id in ", query_ids, "\n")
   medication_analyses <- etlutils::dbGetReadOnlyQuery(query)
   data.table::setorder(medication_analyses, meda_dat)
   return(medication_analyses)
@@ -58,22 +61,23 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
   patient_ref_column_name <- etlutils::fhirdbGetPIDColumn(resource_name)
   patient_references <- etlutils::fhirdataGetPatientReference(patient_references)
   patient_references <- etlutils::fhirdbGetQueryList(patient_references)
-  status_exclusion <- etlutils::fhirdbGetQueryList(status_exclusion)
+  status_exclusion <- etlutils::fhirdbGetQueryList(status_exclusion, return_NA_if_empty = TRUE)
 
   where_clause <- paste0("WHERE ", patient_ref_column_name, " IN ", patient_references, "\n")
 
-  if (!is.null(status_exclusion) && !etlutils::isSimpleNA(status_exclusion) && length(status_exclusion)) {
+  if (!is.null(status_exclusion) && !is.na(status_exclusion) && !etlutils::isSimpleNA(status_exclusion) && length(status_exclusion)) {
     resource_column_prefix <- etlutils::fhirdbGetResourceAbbreviation(resource_name)
-    where_clause <- paste0(where_clause, "  AND ", resource_column_prefix, "_status NOT IN ", status_exclusion, "\n")
+    where_clause <- paste0(where_clause, "  AND (", resource_column_prefix, "_status IS NULL OR ", resource_column_prefix, "_status NOT IN ", status_exclusion, ")\n")
   }
 
   if (!is.null(additional_conditions) && !etlutils::isSimpleNA(additional_conditions) && length(additional_conditions)) {
-    additional_conditions <- paste(additional_conditions, collapse = "\n. AND ")
+    additional_conditions <- paste(additional_conditions, collapse = "\n AND ")
     where_clause <- paste0(where_clause, "  AND ", additional_conditions, "\n")
   }
 
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, column_names, where_clause)
-  etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
+
+  etlutils::dbGetReadOnlyQuery(query)
 }
 
 #
@@ -81,7 +85,7 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
 #
 addMedicationIdColumn <- function(medication_resources) {
   med_ref_col_name <- colnames(medication_resources)[endsWith(colnames(medication_resources), "_medicationreference_ref")]
-  medication_resources[, med_id := etlutils::fhirdataExtractIDs(get(med_ref_col_name))]
+  medication_resources[, med_id := etlutils::fhirdataExtractIDs(get(med_ref_col_name), unique = FALSE)]
   return(medication_resources)
 }
 
@@ -94,7 +98,7 @@ getMedicationRequestsFromDB <- function(patient_references) {
                                                              "medreq_encounter_ref",
                                                              "medreq_patient_ref",
                                                              "medreq_medicationreference_ref",
-                                                             "medreq_authoredon")
+                                                             "medreq_authoredon"),
                                             patient_references = patient_references,
                                             status_exclusion = c("cancelled", "entered-in-error", "stopped") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
   )
@@ -154,10 +158,8 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
   where_clause <- paste0("WHERE med_id IN ", medication_ids, "\n",
                          "AND med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n")
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name = "Medication",
-                                                    column_names = c("record_id",
-                                                                     "meda_id",
-                                                                     "meda_typ",
-                                                                     "meda_dat"),
+                                                    column_names = c("med_id",
+                                                                     "med_code_code"),
                                                     filter = where_clause)
   medications <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getATCMedicationsFromDB()")
 }
@@ -171,7 +173,7 @@ getObservationsFromDB <- function(patient_references) {
                                       "obs_encounter_ref",
                                       "obs_patient_ref",
                                       "obs_code_system",
-                                      "obs_code_code"
+                                      "obs_code_code",
                                       "obs_effectivedatetime",
                                       "obs_issued",
                                       "obs_valuerange_low_value",
@@ -246,7 +248,7 @@ getProceduresFromDB <- function(patient_references) {
                                       "proc_patient_ref",
                                       "proc_code_code",
                                       "proc_performeddatetime",
-                                      "proc_performedperiod_start")
+                                      "proc_performedperiod_start"),
                      patient_references = patient_references,
                      status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
                      additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
@@ -257,20 +259,21 @@ getProceduresFromDB <- function(patient_references) {
 # Condition
 #
 getConditionsFromDB <- function(patient_references) {
-  getResourcesFromDB(resource_name = "Conditions",
+  getResourcesFromDB(resource_name = "Condition",
                      column_names = c("con_id",
                                       "con_encounter_ref",
-                                      "con_patient_ref"
+                                      "con_patient_ref",
                                       "con_code_code",
                                       "con_onsetperiod_start",
-                                      "con_recordeddate")
+                                      "con_recordeddate"),
                      patient_references = patient_references,
-                     status_exclusion = NULL, # Status is considred in additional_conditions
+                     status_exclusion = NULL, # Status is considered in additional_conditions
                      # clinical_status c("inactive") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2833668
                      # verification status c("refuted", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831601
                      additional_conditions = c("con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm'",
-                                               "con_clinicalstatus_code <> 'inactive'",
-                                               "con_verificationstatus_code NOT IN ('refuted', 'entered-in-error')")
+                                               #"(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
+                                               "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))")
+  )
 }
 
 #
@@ -310,24 +313,34 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
   #     and do not have a retrolective MRP evaluation for Drug_Disease
   main_encounters <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB(mrp_calculation_type)
 
+  if (!nrow(main_encounters)) {
+    etlutils::catWarningMessage(paste0(
+      "No Einrichtungskontakt encounters found that ended at least ",
+      DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS,
+      " days ago and do not have a retrolective MRP evaluation for type '",
+      mrp_calculation_type, "'.\n"
+    ))
+    return(list())
+  }
+
   # 2.) Load all record IDs for the patient IDs of the Encounter from the DB
-  record_ids <- loadExistingRecordIDsFromDB(main_encounters$patient_ref)
+  record_ids <- loadExistingRecordIDsFromDB(main_encounters$enc_patient_ref)
 
   # 3.) Load all medication analyses for these record IDs from the DB
-  medication_analyses <- getMedicationAnalysesFromDBFromDB(record_ids)
+  medication_analyses <- getMedicationAnalysesFromDB(record_ids)
 
   # 4.) For each Encounter ID, keep only the very first medication analyses
   encounters_first_medication_analysis <- list()
-  for (row in seqlen(nrow(main_encounters))) {
+  for (row in seq_len(nrow(main_encounters))) {
 
     # Get the encounter
     main_encounter <- main_encounters[row]
 
     # Get the specific record ID for the patient of the main encounter
     patient_id <- etlutils::fhirdataExtractIDs(main_encounter$enc_patient_ref)
-    record_id <- record_ids[pat_id == ..patient_id, record_id][1]
+    target_record_id <- record_ids[pat_id == patient_id, record_id][1]
 
-    encounter_medication_analyses <- medication_analyses[record_id == ..record_id]
+    encounter_medication_analyses <- medication_analyses[record_id == target_record_id]
 
     # Get the first medication analysis
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- if (nrow(encounter_medication_analyses)) {
@@ -344,7 +357,7 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
   medication_requests <- getMedicationRequestsFromDB(patient_references)
   medication_administrations <- getMedicationAdministrationsFromDB(patient_references)
   medication_statements <- getMedicationStatementsFromDB(patient_references)
-  medications <- getATCMedicationsFromDB(medication_request, medication_administrations, medication_statements)
+  medications <- getATCMedicationsFromDB(medication_requests, medication_administrations, medication_statements)
 
   # Add ATC codes as separate column and remove all medication resources without ATC
   medication_requests <- appendATCColumn(medications, medication_requests)

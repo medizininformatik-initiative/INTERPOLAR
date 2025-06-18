@@ -78,7 +78,8 @@ getObservationQueryDatetime <- function(encounters) {
 #' @return A character string representing the SQL query.
 #'
 getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, column_names = "*", filter = "") {
-  distinct <- ifelse(column_names == "*", "", "DISTINCT ")
+  # ensure that the resource name is valid
+  distinct <- if (identical(column_names, "*")) "" else "DISTINCT "
   # this should be view tables named in a style like 'v_patient' for resource_name Patient
   column_names <- paste0(column_names, collapse = ", ")
   query <-paste0(

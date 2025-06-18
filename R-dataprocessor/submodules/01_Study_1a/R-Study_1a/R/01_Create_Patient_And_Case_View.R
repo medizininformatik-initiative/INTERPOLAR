@@ -118,7 +118,7 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
   obs_codes <- parseQueryList(obs_codes)
   # Query template to get desired Observations from DB
   query_template <- paste0("SELECT * FROM v_observation\n",
-                           "  WHERE obs_code_code IN (", obs_codes, ") AND\n",
+                           "  WHERE obs_code_code IN ", obs_codes, " AND\n",
                            "        obs_code_system = '", obs_system, "' AND\n",
                            "        obs_effectivedatetime < '", query_datetime, "' AND\n")
 
@@ -128,7 +128,7 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
     enc_refs <- fhirdataGetReference("Encounter", (unique(encounters$enc_id)))
     enc_query_refs <- etlutils::fhirdbGetQueryList(enc_refs)
     # Extract the Observations by direct encounter references
-    additional_query_condition <- paste0("        obs_encounter_ref IN (", enc_query_refs, ")\n")
+    additional_query_condition <- paste0("        obs_encounter_ref IN ", enc_query_refs, "\n")
     query <- paste0(query_template, additional_query_condition)
     observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[1]")
 
@@ -214,14 +214,6 @@ createFrontendTables <- function() {
     pids <- etlutils::fhirdataExtractIDs(pids)
     patients <- loadResourcesLastVersionByOwnIDFromDB("Patient", pids)
     return(patients)
-  }
-
-  # Function to load existing record IDs from the database for a list of patient IDs
-  loadExistingRecordIDsFromDB <- function(pat_ids) {
-    query_ids <- etlutils::fhirdbGetQueryList(pat_ids)
-    query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN (", query_ids, ")")
-    existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "cacheExistingRecordIDs()")
-    return(existing_record_ids)
   }
 
   # Function to retrieve an existing record_id for a given patient ID
