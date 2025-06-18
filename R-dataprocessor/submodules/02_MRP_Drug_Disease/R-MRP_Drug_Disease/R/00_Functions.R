@@ -3,6 +3,14 @@
 ###########
 
 #
+# Days after encounter end to check for MRP evaluations
+#
+if (!exists("DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS")) {
+  # Default value if not set
+  DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS <- 14
+}
+
+#
 # Type of MRP
 #
 MRP_CALCULATION_TYPE <- etlutils::namedListByValue(
