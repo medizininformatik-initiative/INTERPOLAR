@@ -1,6 +1,3 @@
-# This file is a working example configuration for testing / debugging.
-# You can use this config together with a respective config example for the R-cds2db.
-
 ##################################################
 # Project Definition for module dataprocessor    #
 ##################################################
@@ -41,52 +38,44 @@ MAX_DIR_COUNT = 5
 [analyse]
 
 #################
-# In the patient table of the frontend, the patient ID should be displayed, which
-# can be used to search for further information on the patient in other systems.
-# This is normally specified as one of several possible identifiers for a FHIR
-# patient resource. To select the correct one, a string as a grep pattern can be
-# specified here for the 'system' entry of the Identifier, 'type/coding/system'
-# and/or the 'type/coding/code' of the Identifier, via which the correct one
-# can be found.
-# These patterns are regular expressions for R
-# (see https://hypebright.nl/index.php/en/2020/05/25/ultimate-cheatsheet-for-regex-in-r-2/).
+# Filter for the displayable PID
+# ------------------------------
+# To filter the correct patient ID from the hospital information system for the
+# frontend, there are 3 possible parameters.
+# These can be used to filter out the correct FHIR identifier of the patient
+# resource. They all target the system property of the identifier.
+# All 3 work as patterns, i.e. if you simply enter a string, all identifiers
+# containing this string will be found.
+# If you want to search for the exact string, the string must be preceded by an
+# umbrella ‘^’ and ended with a dollar sign ‘$’.
+# If more than one value is to be searched for, the individual values must be
+# OR-linked using a pipe symbol '|'.
+# (see https://hypebright.nl/index.php/en/2020/05/25/ultimate-cheatsheet-for-regex-in-r-2/)
 # Exception: If a variable is commented out or the empty string "" then the filter
 # on this FHIR expression is deactivated. The same result can be achieved by passing
 # ".*" as the pattern, which means "any characters any number of times".
-# If the filter result on a single Patient resoruce will provide more than one
+# If the filter result on a single Patient resource will provide more than one
 # Identifier, then they are written one after the other, separated by semicolons.
-# Accepts any system with pattern ".*" (Default).
 #################
+# 1. Patient.indentifier.system
 FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = ".*"
-
-#################
-# Accepts only type/coding/sytem with the exact value 'http://terminology.hl7.org/CodeSystem/v2-0203'
-# this system is the binded system for the clinical information system patient ID.
-# FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = "^http://terminology.hl7.org/CodeSystem/v2-0203$"
-# Alternative variant to accept any value in 'type/coding/system' with pattern ".*" (Default).
-#################
+# 2. Patient.indentifier.type.coding.system
 FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ".*"
-
-#################
-# Accepts only type/coding/code with the exact value 'MR'. This value means
-# 'medical record number' in the system http://terminology.hl7.org/CodeSystem/v2-0203
-# and is the recommended code for the patient ID in the hospital.
-# For example: FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = "^MR$"
-# To match the start and end of the exact value, use caret (^) and dollar ($) symbols.
-# Accept any type/coding/code with pattern ".*" (Default).
-#################
+# 3. Patient.indentifier.type.coding.code
 FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 
 #################
-# This pattern can be used to specify what should be displayed in REDCap as the ID of the overall medical case.
-# This should usually be an identifier for a 'Einrichtungskontakt'. To find the correct identifier/value, the exact
-# string of the corresponding identifier/system must be specified here.
-# This variable has a further meaning. To find all sub-encounters of a medical case, the partOf references are
-# normally evaluated. If these are not completely available, the identifier/value found here is used as a
-# fallback. To do this, all encounters and all sub-encounters must each have this identifier as a common identifier.
-# For example: FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = "http://hospitalxy.org/InternalCodeSystem/v1"
+# Filter for the medical case ID
+# ------------------------------
+# The following filter targets Encounter.indentifier.system.
+# It is used for 2 things:
+# 1.) If not all Encounter resources of the 3 levels are linked to each other via partOf relationships, they must at least have a common identifier (all absolutely the same), as specified in the Implementation Guide.
+# They can all be found here using this common identifier.
+# 2.) This identifier should correspond to the ID of the hospital case and is displayed in the frontend as "Case ID".
+#
+# It is *not* a pattern. It must be specified here as an exact string.
 #################
-FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
 
 #################
 # Only Encounters that have one of the entries specified here as a class attribute are displayed
@@ -119,6 +108,20 @@ OBSERVATION_BODY_HEIGHT_SYSTEM = "http://loinc.org"
 OBSERVATION_BODY_HEIGHT_CODES  = "8302-2"
 OBSERVATION_BMI_SYSTEM         = "http://loinc.org"
 OBSERVATION_BMI_CODES          = "39156-5"
+
+[mrp.calculation]
+
+# Global variables for the module can be defined here. They overwrite any existing variables from
+# the global (or any previously loaded) config.toml.
+
+# Paths to all Excel files that are to be used in the MRP calculation.
+# This can be a list of folders or Excel files. If one or more folders are specified, all Excel
+# files are loaded from them. If one or more files are specified, only these files will be loaded.
+MRP_PAIR_LISTS_PATHS = ["./Input-Repo/MRP_Drug_Disease"]
+
+# Default value that applies to the validity period in days for the laboratory values
+DEFAULT_LOINC_VALIDITY_DAYS = 7
+
 
 [database]
 
