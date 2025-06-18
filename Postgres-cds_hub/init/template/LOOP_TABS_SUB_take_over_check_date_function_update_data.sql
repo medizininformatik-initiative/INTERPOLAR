@@ -30,13 +30,13 @@
 --/*AltDirekteAusführung_v2*/            UPDATE <%SCHEMA_2%>.<%TABLE_NAME%> r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT <%TABLE_NAME%>_ID FROM <%SCHEMA_2%>.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT <%TABLE_NAME%>_ID FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.<%TABLE_NAME%>_id = sub.<%TABLE_NAME%>_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE <%SCHEMA_2%>.<%TABLE_NAME%> r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT <%TABLE_NAME%>_ID FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.<%TABLE_NAME%>_id = sub.<%TABLE_NAME%>_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE <%SCHEMA_2%>.<%TABLE_NAME%> rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT <%TABLE_NAME%>_ID FROM <%SCHEMA_2%>.<%TABLE_NAME%> r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.<%TABLE_NAME%>_id = sub.<%TABLE_NAME%>_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --

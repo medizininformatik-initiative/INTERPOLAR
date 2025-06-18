@@ -7,7 +7,7 @@
 -- Rights definition file size        : 14274 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-18 00:26:53
+-- Create time: 2025-06-18 11:48:24
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -784,13 +784,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.encounter_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT encounter_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT encounter_raw_ID FROM db_log.encounter t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.encounter_raw_id = sub.encounter_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.encounter_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT encounter_raw_ID FROM db_log.encounter t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.encounter_raw_id = sub.encounter_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.encounter_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT encounter_raw_ID FROM db_log.encounter_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.encounter_raw_id = sub.encounter_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -826,13 +826,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.patient_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT patient_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT patient_raw_ID FROM db_log.patient t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.patient_raw_id = sub.patient_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.patient_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT patient_raw_ID FROM db_log.patient t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.patient_raw_id = sub.patient_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.patient_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT patient_raw_ID FROM db_log.patient_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.patient_raw_id = sub.patient_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -868,13 +868,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.condition_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT condition_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT condition_raw_ID FROM db_log.condition t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.condition_raw_id = sub.condition_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.condition_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT condition_raw_ID FROM db_log.condition t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.condition_raw_id = sub.condition_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.condition_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT condition_raw_ID FROM db_log.condition_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.condition_raw_id = sub.condition_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -910,13 +910,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medication_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT medication_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medication_raw_ID FROM db_log.medication t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.medication_raw_id = sub.medication_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medication_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medication_raw_ID FROM db_log.medication t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.medication_raw_id = sub.medication_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medication_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medication_raw_ID FROM db_log.medication_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medication_raw_id = sub.medication_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -952,13 +952,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationrequest_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationrequest_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medicationrequest_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medicationrequest_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -994,13 +994,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationadministration_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationadministration_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medicationadministration_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medicationadministration_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -1036,13 +1036,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationstatement_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationstatement_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medicationstatement_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medicationstatement_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -1078,13 +1078,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.observation_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT observation_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT observation_raw_ID FROM db_log.observation t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.observation_raw_id = sub.observation_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.observation_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT observation_raw_ID FROM db_log.observation t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.observation_raw_id = sub.observation_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.observation_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT observation_raw_ID FROM db_log.observation_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.observation_raw_id = sub.observation_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -1120,13 +1120,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.diagnosticreport_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT diagnosticreport_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.diagnosticreport_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.diagnosticreport_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -1162,13 +1162,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.servicerequest_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT servicerequest_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.servicerequest_raw_id = sub.servicerequest_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.servicerequest_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.servicerequest_raw_id = sub.servicerequest_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.servicerequest_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.servicerequest_raw_id = sub.servicerequest_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -1204,13 +1204,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.procedure_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT procedure_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT procedure_raw_ID FROM db_log.procedure t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.procedure_raw_id = sub.procedure_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.procedure_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT procedure_raw_ID FROM db_log.procedure t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.procedure_raw_id = sub.procedure_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.procedure_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT procedure_raw_ID FROM db_log.procedure_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.procedure_raw_id = sub.procedure_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -1246,13 +1246,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.consent_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT consent_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT consent_raw_ID FROM db_log.consent t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.consent_raw_id = sub.consent_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.consent_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT consent_raw_ID FROM db_log.consent t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.consent_raw_id = sub.consent_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.consent_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT consent_raw_ID FROM db_log.consent_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.consent_raw_id = sub.consent_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -1288,13 +1288,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.location_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT location_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT location_raw_ID FROM db_log.location t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.location_raw_id = sub.location_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.location_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT location_raw_ID FROM db_log.location t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.location_raw_id = sub.location_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.location_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT location_raw_ID FROM db_log.location_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.location_raw_id = sub.location_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
@@ -1330,13 +1330,13 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.pids_per_ward_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
 --/*AltDirekteAusführung_v2*/            last_processing_nr = new_last_pro_nr
---/*AltDirekteAusführung_v2*/            FROM ( SELECT pids_per_ward_raw_ID FROM db_log.<%TABLE_NAME%_2> t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
+--/*AltDirekteAusführung_v2*/            FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.pids_per_ward_raw r SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE r.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.pids_per_ward_raw rz SET rz.last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND r.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
