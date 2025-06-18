@@ -264,6 +264,7 @@ getConditionsFromDB <- function(patient_references) {
                                       "con_encounter_ref",
                                       "con_patient_ref",
                                       "con_code_code",
+                                      "con_code_system",
                                       "con_onsetperiod_start",
                                       "con_recordeddate"),
                      patient_references = patient_references,

@@ -224,12 +224,12 @@ matchATCCodes <- function(active_requests, mrp_table_list_by_atc) {
   # Collect matched ATC codes into a data.table
   matched_rows <- list()
   for (atc in matching_atcs) {
-    row <- data.table(
+    row <- data.table::data.table(
       atc_code = atc
     )
     matched_rows[[length(matched_rows) + 1]] <- row
   }
-  return(rbindlist(matched_rows))
+  return(data.table::rbindlist(matched_rows))
 }
 
 #' Match ICD codes against MRP rules and ATC codes
@@ -306,7 +306,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 
       # Add one row per matching ATC
       for (atc_code in relevant_atcs) {
-        matched_rows[[length(matched_rows) + 1]] <- data.table(
+        matched_rows[[length(matched_rows) + 1]] <- data.table::data.table(
           icd = mrp_icd,
           atc = atc_code,
           # TODO: Use a more descriptive text from the MRP definition
@@ -320,7 +320,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
     }
   }
 
-  return(rbindlist(matched_rows, fill = TRUE))
+  return(data.table::rbindlist(matched_rows, fill = TRUE))
 }
 
 #' Match ICD Proxies Using ATC and OPS Codes
@@ -492,16 +492,16 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables) {
   # Initialize empty lists for results
   retrolektive_mrpbewertung_rows <- list()
   dp_mrp_calculations_rows <- list()
-browser()
+
   for (encounter_id in resources$main_encounters$enc_id) {
 
     # Get encounter data and patient ID
     encounter <- resources$main_encounters[enc_id == encounter_id]
     patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
     meda <- resources$encounters_first_medication_analysis[[encounter_id]]
-    meda_id <- if (!is.null(meda)) meda$record_id else NA_character_
-    meda_datetime <- if (!is.null(meda)) meda$dat1 else NA
-    record_id <- resources$record_ids[pat_id == patient_id, record_id]
+    meda_id <- if (!is.null(meda)) meda$medikationsanalyse_fe_id else NA_character_
+    meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
+    record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
 
     # Get active MedicationRequests for the encounter
     active_requests <- getActiveMedicationRequests(resources$medication_requests, encounter$enc_period_start, meda_datetime)
@@ -544,11 +544,10 @@ browser()
 
     if (nrow(match_atc_and_icd_codes)) {
       # Iterate over matched results and create new rows for retrolektive_mrpbewertung and dp_mrp_calculations
-      for (i in seq_along(match_atc_and_icd_codes)) {
-        match <- match_atc_and_icd_codes[[i]]
-
+      for (i in nrow(match_atc_and_icd_codes)) {
+        match <- match_atc_and_icd_codes[i]
         # Create new row for table retrolektive_mrpbewertung
-        ret_row[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
+        retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
           record_id = record_id,
           ret_id = paste0(meda_id, "-r", i),
           ret_meda_id = meda_id,
@@ -566,7 +565,7 @@ browser()
           enc_id = encounter_id,
           mrp_calculation_type = MRP_CALCULATION_TYPE$Drug_Disease,
           meda_id = meda_id,
-          ret_id = ret_row$ret_id,
+          ret_id = retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows)]]$ret_id,
           mrp_proxy_type = NA_character_,
           mrp_proxy_code = NA_character_
         )
