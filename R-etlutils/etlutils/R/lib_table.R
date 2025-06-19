@@ -1237,3 +1237,54 @@ dtFilterRows <- function(dt, column_name, pattern) {
   }
   return(dt_filtered)
 }
+
+#' Remove comment and empty rows from a data.table
+#'
+#' Removes all rows from a data.table where the first non-empty, non-NA entry in a row (after
+#' trimming whitespace) starts with a specified comment marker. By default, rows that are entirely
+#' empty (i.e. contain only \code{NA}, empty strings, or whitespace) are also removed. This behavior
+#' can be disabled.
+#'
+#' @param dt A \code{data.table} to clean. All columns are scanned row-wise, left to right.
+#' @param comment_marker A character string that indicates a comment. Defaults to \code{"#"}.
+#' @param remove_empty Logical flag indicating whether to remove rows with no meaningful content.
+#'   Defaults to \code{TRUE}.
+#'
+#' @return A \code{data.table} with comment rows (and optionally empty rows) removed. Original row
+#'   order is preserved.
+#'
+#' @examples
+#' input <- data.table::data.table(
+#'   V1 = c("# comment", NA, "value", "   ", "@note", "", NA),
+#'   V2 = c(NA, "#ignore", "keep", " ", "entry", " ", NA)
+#' )
+#' dtRemoveCommentRows(input) # removes comments and empty rows
+#' dtRemoveCommentRows(input, comment_marker = "@") # removes "@" comments and empty rows
+#' dtRemoveCommentRows(input, remove_empty = FALSE) # only removes comments
+#'
+#' @export
+dtRemoveCommentRows <- function(dt, comment_marker = "#", remove_empty = TRUE) {
+  rows_to_remove <- dt[
+    , {
+      row_values <- trimws(as.character(unlist(.SD)))
+      row_values <- row_values[!is.na(row_values) & row_values != ""]
+      should_remove <- FALSE
+
+      if (length(row_values) == 0) {
+        should_remove <- remove_empty
+      } else {
+        should_remove <- startsWith(row_values[1], comment_marker)
+      }
+
+      list(remove = should_remove)
+    },
+    by = seq_len(nrow(dt))
+  ][remove == TRUE, seq_len]
+
+  if (length(rows_to_remove) > 0) {
+    dt <- dt[-rows_to_remove]
+  }
+
+  return(dt)
+}
+

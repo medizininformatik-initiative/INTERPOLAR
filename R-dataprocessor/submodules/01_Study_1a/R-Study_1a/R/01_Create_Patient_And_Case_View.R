@@ -88,14 +88,21 @@ getAdmissionDiagnoses <- function(encounter, conditions) {
   admission_diagnoses <- encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_ref
   admission_diagnoses <- unique(admission_diagnoses)
   admission_diagnoses <- etlutils::fhirdataExtractIDs(admission_diagnoses)
-  admission_diagnoses <- conditions[con_id %in% admission_diagnoses, .(con_code_text, con_code_code)]
+  admission_diagnoses <- conditions[con_id %in% admission_diagnoses, .(con_code_text, con_code_code, con_code_display)]
   admission_diagnoses <- unique(admission_diagnoses)
 
   return_value <- character()
   for (i in seq_len(nrow(admission_diagnoses))) {
     row <- admission_diagnoses[i]
     if (!is.na(row$con_code_text) && nzchar(trimws(row$con_code_text))) {
-      diagnosis_text <- paste0(row$con_code_text, " (", row$con_code_code, ")")
+      diagnosis_text <- row$con_code_text
+    } else if (!is.na(row$con_code_display) && nzchar(trimws(row$con_code_display))) {
+      diagnosis_text <- row$con_code_display
+    } else {
+      diagnosis_text <- NULL
+    }
+    if (!is.null(diagnosis_text)) {
+      diagnosis_text <- paste0(diagnosis_text, " (", row$con_code_code, ")")
     } else {
       diagnosis_text <- row$con_code_code
     }
@@ -111,7 +118,7 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
   obs_codes <- parseQueryList(obs_codes)
   # Query template to get desired Observations from DB
   query_template <- paste0("SELECT * FROM v_observation\n",
-                           "  WHERE obs_code_code IN (", obs_codes, ") AND\n",
+                           "  WHERE obs_code_code IN ", obs_codes, " AND\n",
                            "        obs_code_system = '", obs_system, "' AND\n",
                            "        obs_effectivedatetime < '", query_datetime, "' AND\n")
 
@@ -121,7 +128,7 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
     enc_refs <- fhirdataGetReference("Encounter", (unique(encounters$enc_id)))
     enc_query_refs <- etlutils::fhirdbGetQueryList(enc_refs)
     # Extract the Observations by direct encounter references
-    additional_query_condition <- paste0("        obs_encounter_ref IN (", enc_query_refs, ")\n")
+    additional_query_condition <- paste0("        obs_encounter_ref IN ", enc_query_refs, "\n")
     query <- paste0(query_template, additional_query_condition)
     observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[1]")
 
@@ -136,18 +143,22 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
     if (length(pat_refs_without_obs)) {
       pat_query_refs <- etlutils::fhirdbGetQueryList(pat_refs_without_obs)
       enc_without_obs <- encounters[enc_patient_ref %in% pat_refs_without_obs]
-      min_enc_period_start <- min(enc_without_obs$enc_period_start)
+      # If the FHIR data is correct, there should be no enc_period_start = NA. However, it has occurred in practice.
+      valid_dates <- na.omit(enc_without_obs$enc_period_start)
 
-      additional_query_condition <- paste0("        obs_patient_ref IN (", pat_query_refs, ") AND\n",
-                                           "        obs_effectivedatetime > '", min_enc_period_start, "'\n")
-      query <- paste0(query_template, additional_query_condition)
-      more_observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
+      if (length(valid_dates)) {
+        min_enc_period_start <- min(valid_dates)
+        additional_query_condition <- paste0("        obs_patient_ref IN (", pat_query_refs, ") AND\n",
+                                             "        obs_effectivedatetime > '", min_enc_period_start, "'\n")
+        query <- paste0(query_template, additional_query_condition)
+        more_observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
 
-      # Check if the new observations are already in the first set
-      # and remove them
-      more_observations <- more_observations[!obs_id %in% observations$obs_id]
-      # Combine the two sets of observations
-      observations <- rbind(observations, more_observations, use.names = TRUE, fill = TRUE)
+        # Check if the new observations are already in the first set
+        # and remove them
+        more_observations <- more_observations[!obs_id %in% observations$obs_id]
+        # Combine the two sets of observations
+        observations <- rbind(observations, more_observations, use.names = TRUE, fill = TRUE)
+      }
     }
 
   } else {
@@ -203,14 +214,6 @@ createFrontendTables <- function() {
     pids <- etlutils::fhirdataExtractIDs(pids)
     patients <- loadResourcesLastVersionByOwnIDFromDB("Patient", pids)
     return(patients)
-  }
-
-  # Function to load existing record IDs from the database for a list of patient IDs
-  loadExistingRecordIDsFromDB <- function(pat_ids) {
-    query_ids <- etlutils::fhirdbGetQueryList(pat_ids)
-    query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN (", query_ids, ")")
-    existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "cacheExistingRecordIDs()")
-    return(existing_record_ids)
   }
 
   # Function to retrieve an existing record_id for a given patient ID
@@ -301,8 +304,16 @@ createFrontendTables <- function() {
     )
 
     encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = pids_per_ward$encounter_id,
-                                                     common_encounter_fhir_identifier_system = FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
+                                                     common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
                                                      lock_id_extension = "CreateEncounterFrontendTable()_")
+
+    # If the CDS-conform 3-level encounter system has been implemented, then enc_type_system must
+    # contain "http://fhir.de/CodeSystem/Kontaktebene"
+    encounters <- encounters[enc_type_system == "http://fhir.de/CodeSystem/Kontaktebene" | enc_type_code %in% c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt")]
+    if (!nrow(encounters)) {
+      stop("All Encounters has not CDS conform Encounter system. If the CDS-conform 3-level encounter system has been implemented, then enc_type_system must contain 'http://fhir.de/CodeSystem/Kontaktebene'")
+    }
+
     location_refs <- na.omit(unique(encounters$enc_location_ref))
     locations <- loadResourcesLastVersionByOwnIDFromDB("Location", location_refs)
 
@@ -390,9 +401,8 @@ createFrontendTables <- function() {
         # Extract the FHIR identifier value for the frontend table
         # There can be multiple rows with different identifier systems, so we need to filter them
         # out first and then combine the values into a single string, if there are multiple values.
-        if (exists("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM") &&
-            nzchar(FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)) {
-          filtered_rows <- pid_encounter[grepl(FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM, enc_identifier_system)]
+        if (etlutils::isDefinedAndNotEmpty("COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+          filtered_rows <- pid_encounter[enc_identifier_system == COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
           if (nrow(filtered_rows)) {
             enc_identifier_value <- paste(unique(filtered_rows$enc_identifier_value), collapse = ", ")
           } else {

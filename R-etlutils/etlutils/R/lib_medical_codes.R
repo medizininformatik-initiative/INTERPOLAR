@@ -43,7 +43,7 @@ expandICD <- function(icd, minyear = NA, maxyear = NA, fullExpanded = TRUE, norm
     # Get ICD labels for the first 3 characters
     expand_icd_code <- ICD10gm::get_icd_labels(year = year, icd3 = icd3)$icd_normcode
     # Filter the results based on the input ICD code
-    expand_icd <- expand_icd_code[grepl(paste0('^', icd), expand_icd_code)]
+    expand_icd <- expand_icd_code[startsWith(expand_icd_code, icd)]
     if (fullExpanded) {
       for (i in seq_len(length(expand_icd) - 1)) {
         if (startsWith(expand_icd[i + 1], expand_icd[i])) {
@@ -55,7 +55,7 @@ expandICD <- function(icd, minyear = NA, maxyear = NA, fullExpanded = TRUE, norm
       # should the code with this style 'A00.-' added too?
       if (!normcodesOnly) {
         expand_icd_code <- ICD10gm::get_icd_labels(year = year, icd3 = icd3)$icd_code
-        expand_icd <- c(expand_icd, expand_icd_code[grepl(paste0('^', icd), expand_icd_code)])
+        expand_icd <- c(expand_icd, expand_icd_code[startsWith(expand_icd_code, icd)])
       }
       unique(expand_icd)
     }
@@ -88,24 +88,12 @@ expandICD <- function(icd, minyear = NA, maxyear = NA, fullExpanded = TRUE, norm
 #' print(expandICDs('I25', 2018, 2021, fullExpanded = FALSE, normcodesOnly = FALSE))
 #'
 #' @export
-expandICDs <- function(icdCodes, minyear = NA, maxyear = NA, fullExpanded = TRUE, normcodesOnly = TRUE) {
+expandICDs <- function(icdCodes, minyear = NA, maxyear = NA, fullExpanded = FALSE, normcodesOnly = FALSE) {
   icd_codes <- c()
   for (icd in icdCodes) {
     icd_codes <- c(icd_codes, expandICD(icd, minyear, maxyear, fullExpanded, normcodesOnly))
   }
   sort(unique(icd_codes))
-}
-
-#' Expand the given ICD Codes between the polar start year and current year.
-#' The codes are expanded with general codes and codes with bars like 'A20.-'
-#'
-#' @param ... the ICD codes to be expanded
-#'
-#' @seealso expandICDs
-#'
-#' @export
-interpolar_expandICDs <- function(...) {
-  expandICDs(c(...), NA, NA, FALSE, FALSE)
 }
 
 # https://stackoverflow.com/questions/69947452/regex-boundary-to-also-exclude-special-characters
@@ -158,6 +146,26 @@ MED_CODES_PATTERN <- list(
 # TEST_ATC[greplic(MED_CODES_PATTERN$ATCsmaller7, TEST_ATC)]
 # TEST_ATC[greplic(MED_CODES_PATTERN$ATCgreater7, TEST_ATC)]
 
+#' Check if codes match the ATC7 pattern or smaller.
+#'
+#' This function determines whether the input codes match the ATC7 pattern or smaller
+#' defined in the `MED_CODES_PATTERN` object, while ignoring `NA` values.
+#'
+#' @param codes A character vector of codes to check.
+#'
+#' @return A logical vector indicating whether each code matches the ATC7 pattern.
+#' `NA` values in the input will remain `NA` in the output.
+#'
+#' @details The function uses a regular expression from `MED_CODES_PATTERN$ATC7orSmaller`
+#' to validate if the provided codes conform to the ATC7 format.
+#'
+#' @examples
+#' # Example usage:
+#' codes <- c("A01AB07", "B03AA", "I", NA)
+#' isATC7orSmaller(codes)
+#' # Returns: TRUE, TRUE, TRUE, FALSE
+#'
+#' @export
 isATC7orSmaller <- function(codes) {
   grepl(MED_CODES_PATTERN$ATC7orSmaller, codes, perl = TRUE)
 }

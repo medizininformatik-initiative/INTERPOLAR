@@ -39,6 +39,12 @@ BEGIN
         status='ReadyToConnect';
     END IF;
 
+    -- db.cron_job_data_transfer nur ausführen wenn auch durch postgre cron aktuell direkt gestartet und nicht im nachhinein nachgeholt (cron job startet immer zur vollen Minute)
+    num:=to_char(CURRENT_TIMESTAMP,'SS')::INT;
+    IF num>5 THEN
+        status:='cron_job_data_transfer nicht ausführen';
+    END IF;
+
     SELECT pg_sleep(1) INTO temp; -- Time to inelize dynamic shared memory 
 
     err_section:='cron_job_data_transfer-10';    err_schema:='db_config';    err_table:='/';
@@ -277,6 +283,10 @@ BEGIN
         status='Ongoing - '||msg||' (#'||module||'#)';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'UPDATE db_config.db_process_control SET pc_value='''||status||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        )) AS t(res TEXT) INTO temp;
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value='''||module||'-'||msg||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_last_block_modul'''
         )) AS t(res TEXT) INTO temp;
 
         err_section:='db.data_transfer_stop-16';    err_schema:='db_config';    err_table:='db_process_control';
@@ -644,6 +654,7 @@ DECLARE
     status TEXT;
     temp VARCHAR;
     num INT;
+    last_bl_modul VARCHAR;
 BEGIN
     -- Aktuellen Verarbeitungsstatus holen - wenn vorhanden
     SELECT pc_value || ' since ' || to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')
@@ -652,6 +663,9 @@ BEGIN
     FROM db_config.db_process_control
     WHERE pc_name = 'semaphor_cron_job_data_transfer';
 
+    SELECT  ' | last_bl_modul:'||pc_value||' (set on :'||to_char(last_change_timestamp, 'YYYY-MM-DD HH24:MI:SS')||')' INTO last_bl_modul
+    FROM db_config.db_process_control
+    WHERE pc_name = 'semaphor_last_block_modul';
 
     IF status LIKE 'Ongo%' THEN
         SELECT CASE WHEN LENGTH(pc_value)<1 THEN 'n.a.' ELSE pc_value END INTO temp FROM db_config.db_process_control WHERE pc_name='current_total_number_of_records_in_the_function';
@@ -661,7 +675,7 @@ BEGIN
         END IF;
     END IF;
 
-    RETURN status;
+    RETURN status||last_bl_modul;
 EXCEPTION
     WHEN OTHERS THEN
     SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren

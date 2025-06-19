@@ -135,6 +135,13 @@ BEGIN
       INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
       VALUES ('currently_processed_number_of_data_records_in_the_function','','currently processed number of data records in the function (db.data_transfer_status)');
    END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_process_control WHERE pc_name = 'semaphor_last_block_modul'
+   ) THEN
+      INSERT INTO db_config.db_process_control (pc_name, pc_value, pc_description)
+      VALUES ('semaphor_last_block_modul','','last modul that block the semaphor');
+   END IF;
 END
 $$;
 

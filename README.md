@@ -85,34 +85,32 @@ Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwen
 
 ## Verwendung
 
-Ein typischer Ablauf sieht wie folgt aus:
-
- 1. [CDS2DB](./R-cds2db) ausführen (Schritt 1 und 2 in der Grafik oben)
-    ```console
-    docker compose run --rm --no-deps r-env Rscript R-cds2db/StartRetrieval.R
-    ```
- 1. [DataProcessor](./R-dataprocessor) ausführen (Schritt 3 und 4 in der Grafik oben)
-    ```console
-    docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R
-    ```
- 1. [DB2Frontend](./R-db2frontend) ausführen (Schritt 5 und 6 in der Grafik oben)
-    ```console
-    docker compose run --rm --no-deps r-env Rscript R-db2frontend/StartDB2Frontend.R
-    ```
- 1. Frontend im Web-Browser aufrufen und dokumentieren
- 1. [DB2Frontend](./R-db2frontend) erneut ausführen (Schritt 7 und 8 in der Grafik oben)
-    ```console
-    docker compose run --rm --no-deps r-env Rscript R-db2frontend/StartDB2Frontend.R
-    ```
-
-Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) ausgeführt werden. Vor der ersten Dokumentation (4."Frontend aufrufen und dokumentieren") an einem Tag sollten die vorhergehenden Schritte ausgeführt werden. Nach der letzten Dokumentation sollte erneut DB2Frontend ausgeführt werden, damit die im Frontend eingegebenen Daten synchronisiert werden können.
-
-Laufen die manuellen Schritte ohne Fehler, kann der folgende Befehl genutzt werden, um alle Schritte hintereinander auszuführen:
+Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) ausgeführt werden, siehe Hinweise unter [Discussions #750](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/750). Der folgende Aufruf führt die CDS Tool Chain komplett aus:
 ```console
 docker compose run --rm --no-deps r-env Rscript R-cdstoolchain/StartCDSToolChain.R
 ```
+**Hinweis:** Um eine sinnvolles Intervall für die zeitgesteuerte Ausführung der CDS Tool Chain zu wählen, sollten die initialen Aufrufe (z.B. die ersten 3 Tage der Verwendung) manuell erfolgen, um die typischen Laufzeiten am Standort zu ermitteln. Der initiale Lauf dauert länger, spätere Läufe entsprechend kürzer, da nur noch Änderungen verarbeitet werden. Es wird empfohlen die CDS Tool Chain in der Projektlaufzeit mehrfach täglich auszuführen, mind. jedoch einmal am Tag. Bei der Wahl des Ausführungsintervals sollte darauf geachtet werden, dass ein typischer Durchlauf innerhalb des Intervalls erfolgen kann. Wird z.B. ermittelt, dass ein Lauf mit den typischen Änderungen bei den Patientendaten auf den INTERPOLAR-Stationen ca. 1h dauert, kann die CDS Tool Chain via cron 2-stündlich laufen.
 
+Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der hier angegebenen typischen Reihenfolge verwendet werden:
 
+ 1. [CDS2DB](./R-cds2db) ausführen (Ziffern 1-3 in der Grafik oben), um die Daten vom FHIR-Server herunterzuladen und in CDS_HUB DB zu speichern
+    ```console
+    docker compose run --rm --no-deps r-env Rscript R-cds2db/StartRetrieval.R
+    ```
+ 1. [DB2Frontend](./R-db2frontend) ausführen (Ziffern 8 und 9 in der Grafik oben), um bereits vorhandene Daten im Frontend in CDS_HUB zu übernehmen
+    ```console
+    docker compose run --rm --no-deps r-env Rscript R-db2frontend/Start1_Frontend2DB.R
+    ```
+ 1. [DataProcessor](./R-dataprocessor) ausführen (Ziffern 4 und 5 in der Grafik oben), um in CDS_HUB vorhandene Daten zu verarbeiten
+    ```console
+    docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R
+    ```
+ 1. [DB2Frontend](./R-db2frontend) ausführen (Ziffern 6 und 7 in der Grafik oben), um über CDS2DB und DataProcessor in CDS_HUB hinzugefügte Daten in das Frontend zu übernehmen
+    ```console
+    docker compose run --rm --no-deps r-env Rscript R-db2frontend/Start2_DB2Frontend.R
+    ```
+
+ 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)
 - Haben Sie einen Fehler gefunden, legen Sie bitte ein Ticket ([Issues->New issue](https://github.com/medizininformatik-initiative/INTERPOLAR/issues/new/choose)) an.

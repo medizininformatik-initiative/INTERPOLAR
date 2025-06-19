@@ -110,6 +110,7 @@ getTableDescriptionSplittedByTableName <- function(table_description_path = NA, 
   # first columns
   table_description_table_names_column <- if (isFHIRTableDescription(table_description)) FHIR_TABLE_DESCRIPTION_COLNAMES[1] else DB_TABLE_DESCRIPTION_COLNAMES[1]
   table_description[, (table_description_table_names_column) := tolower(get(table_description_table_names_column))]
+  table_description <- dtRemoveCommentRows(table_description)
   table_description <- splitTableToList(table_description, table_description_table_names_column)
   return(table_description)
 }
