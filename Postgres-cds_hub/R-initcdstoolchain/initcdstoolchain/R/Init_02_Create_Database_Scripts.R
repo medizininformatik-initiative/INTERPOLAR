@@ -462,10 +462,6 @@ convertTemplate <- function(tables_descriptions,
             }
           }
 
-          if (etlutils::isSimpleNA(single_loop_content)) {
-            single_loop_content <- ""
-          }
-
           # set indentation, but not for the first column (first column gets its indentation from
           # the line with the placeholder itself
           indent <- ifelse(loop_row == 1, "", indentation)
@@ -524,7 +520,7 @@ convertTemplate <- function(tables_descriptions,
 
     } else if (startsWith(toupper(placeholder), "<%IF ")) {
       condition_arguments <- parseIFExpression(placeholder)
-      condition_compare_value <- ""
+
       if (condition_arguments$source %in% "RIGHTS_DEFINITION") {
         condition_compare_value <- rights_first_row[[condition_arguments$field]]
       } else if (condition_arguments$source %in% "TABLE_DESCRIPTION") {
@@ -532,8 +528,11 @@ convertTemplate <- function(tables_descriptions,
       } else {
         stop("Unknown source in IF expression: ", condition_arguments$source)
       }
-      #if (startsWith(placeholder, "<%IF NOT TABLE_DESCRIPTION:COLUMN_DESCRIPTION \"^meta/\"")) browser()
-      if (!etlutils::isSimpleNA(condition_compare_value) && xor(condition_arguments$invert, grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
+      if (etlutils::isSimpleNA(condition_compare_value)) {
+        condition_compare_value = ""
+      }
+
+      if (xor(condition_arguments$invert, grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
         # quotes at the beginning of the result indicate that not a subtemplate name is given but
         # directly the content
         if (startsWith(condition_arguments$result, "\"")) {
