@@ -43,8 +43,35 @@ CREATE TABLE IF NOT EXISTS db_config.db_parameter (
 
 -- Index idx_db_config_db_parameter_name for Table "db_parameter" in schema "db_config"
 ------------------------------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_config_db_parameter_name
-ON db_config.db_parameter (   parameter_name );
+DO
+$$
+BEGIN
+------------------------------------------------------------------------------------------------
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'db_config' AND table_name = 'db_parameter' AND column_name = 'parameter_name'
+    ) THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT 1 FROM pg_indexes where indexname='idx_db_config_db_parameter_name'
+        ) THEN -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT 1 FROM pg_indexes
+                WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                AND schemaname = 'db_config' AND tablename = 'db_parameter' AND indexname='idx_db_config_db_parameter_name'
+		AND indexdef != 'CREATE INDEX idx_db_config_db_parameter_name ON db_config.db_parameter USING btree (parameter_name)'
+            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db_config.idx_db_config_db_parameter_name RENAME TO del_db_config_db_parameter_name;
+		DROP INDEX IF EXISTS db_config.del_db_config_db_parameter_name;
+		CREATE INDEX idx_db_config_db_parameter_name ON db_config.db_parameter USING btree (parameter_name);
+            END IF; -- aktueller Stand
+	ELSE -- (einfach) Neu Anlegen
+	    CREATE INDEX idx_db_config_db_parameter_name ON db_config.db_parameter USING btree (parameter_name);
+        END IF; -- Index vorhanden
+    END IF; -- Zielspalte
+
+------------------------------------------------------------------------------------------------
+END
+$$;
 
 GRANT INSERT ON db_config.db_parameter TO db_user;
 GRANT SELECT ON db_config.db_parameter TO db_user;
@@ -63,8 +90,35 @@ CREATE TABLE IF NOT EXISTS db_config.db_process_control (
 
 -- Index idx_db_config_db_db_process_control_name for Table "db_process_control" in schema "db_config"
 ------------------------------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_config_db_db_process_control_name
-ON db_config.db_process_control (   pc_name );
+DO
+$$
+BEGIN
+------------------------------------------------------------------------------------------------
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'db_config' AND table_name = 'db_process_control' AND column_name = 'pc_name'
+    ) THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT 1 FROM pg_indexes where indexname='idx_db_config_db_db_process_control_name'
+        ) THEN -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT 1 FROM pg_indexes
+                WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                AND schemaname = 'db_config' AND tablename = 'db_parameter' AND indexname='idx_db_config_db_db_process_control_name'
+		AND indexdef != 'CREATE INDEX idx_db_config_db_db_process_control_name ON db_config.db_process_control USING btree (pc_name)'
+            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db_config.idx_db_config_db_db_process_control_name RENAME TO del_db_config_db_db_process_control_name;
+		DROP INDEX IF EXISTS db_config.del_db_config_db_db_process_control_name;
+   	        CREATE INDEX idx_db_config_db_db_process_control_name ON db_config.db_process_control USING btree (pc_name);
+            END IF; -- aktueller Stand
+	ELSE -- (einfach) Neu Anlegen
+	    CREATE INDEX idx_db_config_db_db_process_control_name ON db_config.db_process_control USING btree (pc_name);
+        END IF; -- Index vorhanden
+    END IF; -- Zielspalte
+
+------------------------------------------------------------------------------------------------
+END
+$$;
 
 GRANT INSERT ON db_config.db_process_control TO db_user;
 GRANT SELECT ON db_config.db_process_control TO db_user;
@@ -164,29 +218,131 @@ CREATE TABLE IF NOT EXISTS db.data_import_hist (
 
 -- Index idx_db_data_import_hist_last_processing_nr for Table "data_import_hist" in schema "db"
 ------------------------------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_last_processing_nr
-ON db.data_import_hist (   last_processing_nr );
+DO
+$$
+BEGIN
+------------------------------------------------------------------------------------------------
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'db' AND table_name = 'data_import_hist' AND column_name = 'last_processing_nr'
+    ) THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT 1 FROM pg_indexes where indexname='idx_db_data_import_hist_last_processing_nr'
+        ) THEN -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT 1 FROM pg_indexes
+                WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_last_processing_nr'
+		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_last_processing_nr ON db.data_import_hist USING btree (last_processing_nr)'
+            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db.idx_db_data_import_hist_last_processing_nr RENAME TO del_idx_db_data_import_hist_last_processing_nr;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_last_processing_nr;
+   	        CREATE INDEX idx_db_data_import_hist_last_processing_nr ON db.data_import_hist USING btree (last_processing_nr);
+            END IF; -- aktueller Stand
+	ELSE -- (einfach) Neu Anlegen
+	    CREATE INDEX idx_db_data_import_hist_last_processing_nr ON db.data_import_hist USING btree (last_processing_nr);
+        END IF; -- Index vorhanden
+    END IF; -- Zielspalte
 
 -- Index idx_db_data_import_hist_schema_name for Table "data_import_hist" in schema "db"
 ------------------------------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_schema_name
-ON db.data_import_hist (   schema_name );
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'db' AND table_name = 'data_import_hist' AND column_name = 'schema_name'
+    ) THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT 1 FROM pg_indexes where indexname='idx_db_data_import_hist_schema_name'
+        ) THEN -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT 1 FROM pg_indexes
+                WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_schema_name'
+		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_schema_name ON db.data_import_hist USING btree (schema_name)'
+            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db.idx_db_data_import_hist_schema_name RENAME TO del_idx_db_data_import_hist_schema_name;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_schema_name;
+   	        CREATE INDEX idx_db_data_import_hist_schema_name ON db.data_import_hist USING btree (schema_name);
+            END IF; -- aktueller Stand
+	ELSE -- (einfach) Neu Anlegen
+	    CREATE INDEX idx_db_data_import_hist_schema_name ON db.data_import_hist USING btree (schema_name);
+        END IF; -- Index vorhanden
+    END IF; -- Zielspalte
 
 -- Index idx_db_data_import_hist_table_name for Table "data_import_hist" in schema "db"
 ------------------------------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_table_name
-ON db.data_import_hist (   table_name );
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'db' AND table_name = 'data_import_hist' AND column_name = 'table_name'
+    ) THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT 1 FROM pg_indexes where indexname='idx_db_data_import_hist_table_name'
+        ) THEN -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT 1 FROM pg_indexes
+                WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_table_name'
+		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_table_name ON db.data_import_hist USING btree (table_name)'
+            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db.idx_db_data_import_hist_table_name RENAME TO del_idx_db_data_import_hist_table_name;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_table_name;
+   	        CREATE INDEX idx_db_data_import_hist_table_name ON db.data_import_hist USING btree (table_name);
+            END IF; -- aktueller Stand
+	ELSE -- (einfach) Neu Anlegen
+	    CREATE INDEX idx_db_data_import_hist_table_name ON db.data_import_hist USING btree (table_name);
+        END IF; -- Index vorhanden
+    END IF; -- Zielspalte
 
 -- Index idx_db_data_import_hist_function_name for Table "data_import_hist" in schema "db"
 ------------------------------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_function_name
-ON db.data_import_hist (   function_name );
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'db' AND table_name = 'data_import_hist' AND column_name = 'function_name'
+    ) THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT 1 FROM pg_indexes where indexname='idx_db_data_import_hist_function_name'
+        ) THEN -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT 1 FROM pg_indexes
+                WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_function_name'
+		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_function_name ON db.data_import_hist USING btree (function_name)'
+            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db.idx_db_data_import_hist_function_name RENAME TO del_idx_db_data_import_hist_function_name;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_function_name;
+   	        CREATE INDEX idx_db_data_import_hist_function_name ON db.data_import_hist USING btree (function_name);
+            END IF; -- aktueller Stand
+	ELSE -- (einfach) Neu Anlegen
+	    CREATE INDEX idx_db_data_import_hist_function_name ON db.data_import_hist USING btree (function_name);
+        END IF; -- Index vorhanden
+    END IF; -- Zielspalte
 
 -- Index idx_db_data_import_hist_variable_name for Table "data_import_hist" in schema "db"
 ------------------------------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_db_data_import_hist_variable_name
-ON db.data_import_hist (   variable_name );
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'db' AND table_name = 'data_import_hist' AND column_name = 'variable_name'
+    ) THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT 1 FROM pg_indexes where indexname='idx_db_data_import_hist_variable_name'
+        ) THEN -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT 1 FROM pg_indexes
+                WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                AND schemaname = 'db' AND tablename = 'data_import_hist' AND indexname='idx_db_data_import_hist_variable_name'
+		AND indexdef != 'CREATE INDEX idx_db_data_import_hist_variable_name ON db.data_import_hist USING btree (variable_name)'
+            ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db.idx_db_data_import_hist_variable_name RENAME TO del_idx_db_data_import_hist_variable_name;
+		DROP INDEX IF EXISTS db.del_idx_db_data_import_hist_variable_name;
+   	        CREATE INDEX idx_db_data_import_hist_variable_name ON db.data_import_hist USING btree (variable_name);
+            END IF; -- aktueller Stand
+	ELSE -- (einfach) Neu Anlegen
+	    CREATE INDEX idx_db_data_import_hist_variable_name ON db.data_import_hist USING btree (variable_name);
+        END IF; -- Index vorhanden
+    END IF; -- Zielspalte
+END
+$$;
 
+------------------------------------------------------------------------------------------------
 GRANT USAGE ON SCHEMA db_log TO db_log_user;
 GRANT USAGE ON SCHEMA db_log TO db2dataprocessor_user;
 GRANT USAGE ON SCHEMA db_log TO cds2db_user;

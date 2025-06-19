@@ -138,6 +138,36 @@ Erstellt die Überführungsfunktion (db.copy_raw_cds_in_to_db_log) für die FHIR
 ### 310_cds_in_to_db_log
 Erstellt die Überführungsfunktion (db.copy_type_cds_in_to_db_log) für die FHIR-Daten vom Schnittstellenschema cds2db_in in den Kern (db_log) für die getypten und aufgeschlüsselten Daten. Nach anlegen der Funktion wird ebenfalls der Cron-Job angelegt und gestartet, der die Funktion regelmäßig ausführt.
 
+### 330_cre_table_datap_submodules_dataproc_in
+Erzeugen der Tabellen für die Submodule des Dataprocessor welche in der Tabelle /R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx definiert werden (Dataprocessor-In Schema).
+
+### 331_cre_table_datap_submodules_log
+Erzeugen der Tabellen für die Submodule des Dataprocessor welche in der Tabelle /R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx definiert werden (Kern db_log).
+
+### 332_db_submodules_dp_in_to_db_log
+Erstellt die Überführungsfunktion (db.copy_submodules_dp_in_to_db_log) für die berechneten Daten der Submodule des Dataprocessorsaus dem Schnittstellenschema db2dataprocessor_in in den Kern (db_log).
+
+### 334_cre_view_dataproc_submodules_last_import
+ToDo
+
+### 335_cre_view_dataproc_submodules_all
+ToDo
+
+### 340_cre_table_datap_core_dataproc_in
+ToDo
+
+### 341_cre_table_datap_core_log
+ToDo
+
+### 342_db_core_dp_in_to_db_log
+ToDo
+
+### 344_cre_view_dataproc_core_last_import
+ToDo
+
+### 345_cre_view_dataproc_core_all
+ToDo
+
 ### 400_cre_table_typ_dataproc_in
 Erstellen der Strukturen für die durch den Dataprocessor erstellten Daten für das Frontend im Schnittstellenschema db2dataprocessor_in. Dabei werden eindeutige Primärschlüssel vergeben, die technischen Primärschlüssel der FHIR-Daten referenziert sowie die Berechtigungen für die zugehörigen Datenbankbenutzer gesetzt.
 
