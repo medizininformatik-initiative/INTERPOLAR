@@ -40,6 +40,20 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_
 }
 
 #
+# Get the study phase for a unique ward_name from defined toml parameters.
+#
+getStudyPhase <- fuction(ward_name) {
+  if (ward_name %in$ WARDS_PHASE_A) {
+    return("PhaseA")
+  } else if (ward_name %in% WARDS_PHASE_B_TEST) {
+    return("PhaseBTest")
+  } else if (ward_name %in% WARDS_PHASE_B) {
+    return("PhaseB")
+  }
+  return(NULL)
+}
+
+#
 # Load medikationsanalyse_fe from database
 #
 getMedicationAnalysesFromDB <- function(record_ids) {
