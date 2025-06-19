@@ -431,7 +431,16 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_complete", fall_complete)
 
         # Extract ward name from unique_pid_ward table
-        data.table::set(enc_frontend_table, target_index, "fall_station", unique_pid_ward$ward_name[pid_index])
+        ward_name <- unique_pid_ward$ward_name[pid_index]
+        data.table::set(enc_frontend_table, target_index, "fall_station", ward_name)
+
+        # Get the current study phase for the ward of the Encounter
+        study_phase <- getStudyPhase(ward_name)
+        if (is.null(study_phase)) {
+          stop("ERROR: No study phase found for ward '", ward_name, "'.\n",
+               "Please check the study phase configuration in the dataprocessor_config.toml for parameters WARDS_PHASE_A, WARDS_PHASE_B_TEST and WARDS_PHASE_B.")
+        }
+        data.table::set(enc_frontend_table, target_index, "fall_studienphase", study_phase)
 
         # Extract the admission diagnoses
         admission_diagnoses <- getAdmissionDiagnoses(pid_encounter, conditions)
