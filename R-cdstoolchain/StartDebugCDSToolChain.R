@@ -20,6 +20,7 @@ DEBUG_DATES <- c("2025-03-03 13:55:45 CET",
 
 start_full <- Sys.time()
 day_times <- c()
+DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS <<- 0
 
 for (i in seq_along(DEBUG_DATES)) {
   DEBUG_DAY <- i

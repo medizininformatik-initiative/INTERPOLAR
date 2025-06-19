@@ -72,14 +72,18 @@ getObservationQueryDatetime <- function(encounters) {
 #' determine the table name, ID column, and apply optional filtering conditions.
 #'
 #' @param resource_name The name of the resource for which to retrieve the last version.
+#' @param column_names names of the columns to return as vector or string. Default is "*".
 #' @param filter Additional filtering conditions to apply to the query. Default is an empty string.
 #'
 #' @return A character string representing the SQL query.
 #'
-getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, filter = "") {
+getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, column_names = "*", filter = "") {
+  # ensure that the resource name is valid
+  distinct <- if (identical(column_names, "*")) "" else "DISTINCT "
   # this should be view tables named in a style like 'v_patient' for resource_name Patient
+  column_names <- paste0(column_names, collapse = ", ")
   query <-paste0(
-    "SELECT * FROM v_", resource_name, "_last_version\n",
+    "SELECT ", distinct, column_names, " FROM v_", resource_name, "_last_version\n",
     if (nchar(filter)) paste0("\n", filter) else "",
     ";\n"
   )
@@ -99,7 +103,7 @@ getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, filter = "")
 #'
 #' @return A character string representing the filter statement for the SQL query.
 #'
-getWhereClause <- function(resource_name, target_column = NA, target_values = NA) {
+getWhereClauseForReferencedResources <- function(resource_name, target_column = NA, target_values = NA) {
   if (is.na(target_column) || all(is.na(target_values))) {
     return("")
   }
@@ -107,11 +111,11 @@ getWhereClause <- function(resource_name, target_column = NA, target_values = NA
   resource_id_column <- etlutils::fhirdbGetIDColumn(resource_name)
   if (target_column == resource_id_column) {
     # remove resource name and the slash if the IDs are references and not pure IDs
-    target_values <- gsub(paste0("^", resource_name, "/"), "", target_values)
+    target_values <- etlutils::fhirdataExtractIDs(target_values)
   }
   # quote every pid and collapse the vector comma separated
-  target_values <- paste0("'", target_values, "'", collapse = ",")
-  where_clause <- paste0("WHERE ", target_column, " IN (", target_values, ")\n")
+  target_values <- etlutils::fhirdbGetQueryList(target_values)
+  where_clause <- paste0("WHERE ", target_column, " IN ", target_values, "\n")
   return(where_clause)
 }
 
@@ -122,15 +126,16 @@ getWhereClause <- function(resource_name, target_column = NA, target_values = NA
 #' to generate the filter statement and the main query statement.
 #'
 #' @param resource_name The name of the resource table.
+#' @param column_names names of the columns to return as vector or string. Default is "*".
 #' @param filter_column The column on which to apply the filter.
 #' @param filter_column_values A vector of values to filter on.
 #' @param lock_id A string representation as ID for the process to lock the database during the
 #' access under this name
 #' @return A data frame containing the results of the SQL query.
 #'
-loadResourcesFilteredFromDB <- function(resource_name, filter_column = NA, filter_column_values = NA, lock_id) {
-  where_clause <- getWhereClause(resource_name, filter_column, filter_column_values)
-  query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, where_clause)
+loadResourcesFilteredByValuesFromDB <- function(resource_name, column_names = "*", filter_column = NA, filter_column_values = NA, lock_id) {
+  where_clause <- getWhereClauseForReferencedResources(resource_name, filter_column, filter_column_values)
+  query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, column_names, where_clause)
   etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
 }
 
@@ -148,7 +153,7 @@ loadResourcesFilteredFromDB <- function(resource_name, filter_column = NA, filte
 #'
 loadResourcesLastVersionByOwnIDFromDB <- function(resource_name, ids_or_refs) {
   id_column <- etlutils::fhirdbGetIDColumn(resource_name)
-  loadResourcesFilteredFromDB(
+  loadResourcesFilteredByValuesFromDB(
     resource_name = resource_name,
     filter_column = id_column,
     filter_column_values = ids_or_refs,

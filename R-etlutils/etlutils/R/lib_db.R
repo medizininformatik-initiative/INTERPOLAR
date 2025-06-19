@@ -151,7 +151,8 @@ dbLog <- function(...) {
   log <- isDefinedAndTrue("DB_LOG", envir = .lib_db_env)
   if (length(list(...)) > 0 && log) {
     message <- paste0(...)
-    cat(message, fill = !endsWith(message, "\n"))
+    message <- ifelse(endsWith(message, "\n"), message, paste0(message, "\n"))
+    cat(message, sep = "")
   }
   return(log)
 }
