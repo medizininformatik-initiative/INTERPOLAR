@@ -182,7 +182,7 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 # Observation
 #
 getObservationsFromDB <- function(patient_references) {
-  getResourcesFromDB(resource_name = "Observation",
+  observations <- getResourcesFromDB(resource_name = "Observation",
                      column_names = c("obs_id",
                                       "obs_encounter_ref",
                                       "obs_patient_ref",
@@ -250,13 +250,15 @@ getObservationsFromDB <- function(patient_references) {
                      additional_conditions = c("obs_category_code = 'laboratory'",
                                                "obs_code_system = 'http://loinc.org'")
   )
+  observations[, start_date := obs_effectivedatetime]
+  return(observations)
 }
 
 #
 # Procedure
 #
 getProceduresFromDB <- function(patient_references) {
-  getResourcesFromDB(resource_name = "Procedure",
+  procedures <- getResourcesFromDB(resource_name = "Procedure",
                      column_names = c("proc_id",
                                       "proc_encounter_ref",
                                       "proc_patient_ref",
@@ -267,13 +269,15 @@ getProceduresFromDB <- function(patient_references) {
                      status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
                      additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
   )
+  procedures[, start_date := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
+  return(procedures)
 }
 
 #
 # Condition
 #
 getConditionsFromDB <- function(patient_references) {
-  getResourcesFromDB(resource_name = "Condition",
+  conditions <- getResourcesFromDB(resource_name = "Condition",
                      column_names = c("con_id",
                                       "con_encounter_ref",
                                       "con_patient_ref",
@@ -289,6 +293,8 @@ getConditionsFromDB <- function(patient_references) {
                                                #"(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
                                                "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))")
   )
+  conditions[, start_date := pmin(con_onsetperiod_start, con_recordeddate, na.rm = TRUE)]
+  return(conditions)
 }
 
 #
