@@ -38,6 +38,15 @@ MAX_DIR_COUNT = 5
 [analyse]
 
 #################
+# All ward names must be defined here for exactly 1 phase.
+# These ward names must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS
+# in the cds2db_config.toml.
+#################
+WARDS_PHASE_A = ["Station 1", "Station 3"] # Study phase A without retrolective MRP evaluations
+WARDS_PHASE_B_TEST = ["Station 2"] # Study phase A but with test calculation for retrolective MRP evaluations
+WARDS_PHASE_B = [] # Study phase B with regular calculation for retrolective MRP evaluations
+
+#################
 # Filter for the displayable PID
 # ------------------------------
 # To filter the correct patient ID from the hospital information system for the
