@@ -363,16 +363,62 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
 
     encounter_medication_analyses <- medication_analyses[record_id == target_record_id]
 
-    # Get the first medication analysis
-    encounters_first_medication_analysis[[main_encounter$enc_id]] <- if (nrow(encounter_medication_analyses)) {
-      encounter_medication_analyses[1]
-    } else {
-      NULL
+    encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
+    if (nrow(encounter_medication_analyses)) {
+      # Find the first medication analysis with a date in the encounters period
+      # sort medication analyses by date
+      encounter_medication_analyses <- encounter_medication_analyses[order(meda_dat)]
+      # all main encounters here must have an end date
+      encounter_medication_analyses <- encounter_medication_analyses[meda_dat >= main_encounter$enc_period_start & meda_dat <= main_encounter$enc_period_end]
+      # if there is at least one medication analyses, take the first one
+      if (nrow(encounter_medication_analyses)) {
+        encounters_first_medication_analysis[[main_encounter$enc_id]] <- encounter_medication_analyses[1]
+      }
+    }
+  }
+
+  # 5.) Get the ward name and study phase where the patient was located at the time of the medication analysis
+
+  main_enc_ids_with_medication_analysis <- names(encounters_first_medication_analysis)[!vapply(encounters_first_medication_analysis, is.null, logical(1))]
+
+  column_names <- c("fall_fe_id",
+                    "input_datetime",
+                    "record_id",
+                    "fall_fhir_enc_id",
+                    "fall_pat_id",
+                    "fall_id",
+                    "fall_studienphase",
+                    "fall_station")
+  query <- paste0(
+    "SELECT ", paste(column_names, collapse = ", "), " \n",
+    "FROM fall_fe \n",
+    "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(main_enc_ids_with_medication_analysis), "\n",
+    "ORDER BY input_datetime"
+  )
+
+  main_encs_fall_fe <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getResourcesForMRPCalculation()_fall_fe_all")
+
+  for (main_enc_id in main_enc_ids_with_medication_analysis) {
+    medication_analysis <- encounters_first_medication_analysis[[main_enc_id]]
+    # Get the corresponding row from fall_fe_all
+    fall_fe_rows <- main_encs_fall_fe[fall_fhir_enc_id == main_enc_id]
+
+    medication_analysis$study_phase <- NA_character_
+    medication_analysis$ward_name <- NA_character_
+
+    if (nrow(fall_fe_rows) > 0) {
+      fall_fe_row <- fall_fe_rows[lenght(fall_fe_rows)]
+      if (!fall_fe_row$fall_studienphase == "PhaseBTest") {
+        fall_fe_row <- fall_fe_rows[1]
+      }
+      # Add study phase and ward name to the medication analysis
+      medication_analysis$study_phase <- fall_fe_row$fall_studienphase
+      medication_analysis$ward_name <- fall_fe_row$fall_station
     }
   }
 
   # get patient references
-  patient_references <- main_encounters$enc_patient_ref
+  patient_references <- main_encounters[enc_id == main_enc_ids_with_medication_analysis]$enc_patient_ref
 
   # extract Medication resources
   medication_requests <- getMedicationRequestsFromDB(patient_references)
