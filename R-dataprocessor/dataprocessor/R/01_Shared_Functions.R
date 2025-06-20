@@ -179,3 +179,17 @@ loadExistingRecordIDsFromDB <- function(pat_ids) {
   existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "loadExistingRecordIDsFromDB()")
   return(existing_record_ids)
 }
+
+#
+# Get the study phase for a unique ward_name from defined toml parameters.
+#
+getStudyPhase <- function(ward_name) {
+  if (ward_name %in% WARDS_PHASE_A) {
+    return("PhaseA")
+  } else if (ward_name %in% WARDS_PHASE_B_TEST) {
+    return("PhaseBTest")
+  } else if (ward_name %in% WARDS_PHASE_B) {
+    return("PhaseB")
+  }
+  return(NULL)
+}

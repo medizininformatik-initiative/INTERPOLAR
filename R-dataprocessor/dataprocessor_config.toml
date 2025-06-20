@@ -38,6 +38,16 @@ MAX_DIR_COUNT = 5
 [analyse]
 
 #################
+# All ward names must be defined here for exactly 1 phase.
+# These ward names must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS
+# in the cds2db_config.toml.
+#################
+WARDS_PHASE_A = ["Station 1", "Station 3"] # Study phase A without retrolective MRP evaluations
+WARDS_PHASE_B_TEST = ["Station 2"] # Study phase A but with test calculation for retrolective MRP evaluations
+WARDS_PHASE_B = "" # Study phase B with regular calculation for retrolective MRP evaluations
+#################
+
+#################
 # Filter for the displayable PID
 # ------------------------------
 # To filter the correct patient ID from the hospital information system for the
@@ -75,7 +85,7 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 #
 # It is *not* a pattern. It must be specified here as an exact string.
 #################
-COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = "fill_this_with_your_encounter_identifier_system_for_the_case_ID"
+COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
 
 #################
 # Only Encounters that have one of the entries specified here as a class attribute are displayed
@@ -94,7 +104,7 @@ FRONTEND_DISPLAYED_ENCOUNTER_CLASS = ["IMP"]
 # Examples (choose exact one or create your own):
 #################
 #FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "enc_location_display"
-#FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "enc_location_identifier_value"
+FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "enc_location_identifier_value"
 #FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "loc_name"
 #FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN = "loc_identifier_type_display"
 
