@@ -31,7 +31,7 @@ isContentChanged <- function(existing_file_path, new_file_content) {
   new_lines <- strsplit(new_file_content, "\n", fixed = TRUE)[[1]]
 
   # Define patterns of lines to ignore (last pattern is for empty lines)
-  drop_patterns <- c("Rights definition file last update", "Create time", "^\\s*$")
+  drop_patterns <- c("Rights definition", "Create time", "^\\s*$")
 
   # Function to remove lines containing any of the drop patterns
   cleanLines <- function(lines) {
