@@ -26,6 +26,7 @@ importDB2Redcap <- function() {
   }
 
   etlutils::runLevel2Line("Update frontend data from DB", {
+
     # Connect to REDCap
     frontend_connection <- getRedcapConnection()
 
