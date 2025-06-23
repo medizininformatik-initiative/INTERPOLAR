@@ -58,6 +58,11 @@ importDB2Redcap <- function() {
       # Keep only columns that exist in REDCap
       data_from_db <- data_from_db[, names(data_from_db) %in% valid_fields, with = FALSE]
 
+      colname <- paste0(table_name, "_additional_values")
+      if (colname %in% names(data_from_db)) {
+        data_from_db[[colname]] <- etlutils::redcapEscape(data_from_db[[colname]])
+      }
+
       tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db))
 
       if (table_name %in% "fall") {

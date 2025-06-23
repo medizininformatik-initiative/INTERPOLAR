@@ -48,6 +48,11 @@ importRedcap2DB <- function() {
       complete_column_name <- paste0(form_name, "_complete")
       dt <- dt[!is.na(dt[[complete_column_name]]), ]
 
+      colname <- paste0(form_name, "_additional_values")
+      if (colname %in% names(dt)) {
+        dt[[colname]] <- etlutils::redcapUnescape(dt[[colname]])
+      }
+
       table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
       etlutils::writeRData(dt, paste0(table_filename_prefix, "frontend2db_", i, "_", form_name))
 
