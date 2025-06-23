@@ -457,6 +457,11 @@ convertTemplate <- function(tables_descriptions,
             } else {
               sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
               if (sub_placeholder_name %in% names(column_row)) {
+                replace_value <- column_row[[sub_placeholder_name]]
+                if (is.na(replace_value)) {
+                  # missing values in the current column row are replaced by the value in the first row
+                  stop(paste0("Missing value in column '", sub_placeholder_name, "' in table '", table_name, "' in row ", loop_row, "."))
+                }
                 single_loop_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_loop_content)
               }
             }
