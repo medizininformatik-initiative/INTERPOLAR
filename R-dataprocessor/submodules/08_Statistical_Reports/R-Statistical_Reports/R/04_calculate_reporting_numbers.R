@@ -1,10 +1,8 @@
-#TODO: needs updates and advancements! -------
-
-#' Calculate F1from FAS1 Dataset
+#' Calculate F1 from FAS1 Dataset
 #'
-#' This function calucaltes the F1 from the previously defined FAS1 dataset. It includes only
-#' those encounters where the admission to the INTERPOLAR ward (`versorgungsstellenkontakt`) occurred
-#' within a specified reporting period. The output provides a tally of distinct encounters by ward.
+#'#' This function processes encounter data to calculate the F1 metric by filtering encounters to those
+#' starting in the specified reporting period and selecting the first encounter within the INTERPOLAR
+#' ward (as defined for the pids_per_ward table). It groups entries by ward and calendar week and counts the occurrences.
 #'
 #' @param FAS1 A data frame or tibble representing the FAS1 dataset. It must include columns
 #'   indicating the first valid interpolar ward contact per inpatient encounter, as well as
@@ -12,31 +10,51 @@
 #' @param REPORT_PERIOD_START A character string representing the start date-time of the reporting period (in `"YYYY-MM-DD"` format or compatible POSIX format).
 #' @param REPORT_PERIOD_END A character string representing the end date-time of the reporting period (exclusive).
 #'
-#' @return A data frame or tibble that:
-#' \itemize{
-#'   \item Contains distinct rows based on `main_enc_id` and `ward_name`.
-#'   \item Groups the data by `ward_name` and provides a count of encounters per ward.
-#' }
+#' @return A dataframe summarizing the first encounter within each ward for the specified calendar week
+#' and ward, containing columns for `ward_name`, `calendar_week`, and the count of encounters (`n`).
+#' If issues are detected (e.g., undefined start dates or multiple first contacts), a warning is issued
+#' and the preprocessed data is returned for inspection.
 #'
-#' @details
-#' The function filters encounters admitted to INTERPOLAR wards during the report period, ensuring temporal relevance of ward admissions. It further groups by `ward_name` and counts the distinct admissions, reflecting the activity per ward.
-#'
-#' @importFrom dplyr filter distinct group_by tally
+#' @importFrom dplyr filter distinct group_by tally select
 #' @export
+#' @seealso `checkMultipleRows` for handling potential issues with encounter data rows.
+#'
 calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
-  F1 <- FAS1 |>
+  F1_prep <- FAS1 |>
     dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only admission to INTEROPLAR ward in reporting period
     dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END)) |>
-    dplyr::filter(!is.na(ward_name)) |> # only encounters with ward name
-    dplyr::distinct(main_enc_id,ward_name) |>
-    dplyr::group_by(ward_name) |>
-    dplyr::tally()
+    dplyr::filter(!is.na(ward_name)) |>  # only encounters with ward name
+    dplyr::distinct(enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
+                    enc_type_code, age_at_hospitalization, enc_period_start, calendar_week,
+                    enc_period_end, ward_name, enc_status)
 
-  return(F1)
+  if (anyNA(F1_prep$enc_period_start)) {
+    warning("Starting day undefined for a INTERPOLAR-ward contact (NA start date). Please check the data.")
+    print(F1_prep)
+    return()
+  }
+
+  if (checkMultipleRows(F1_prep, c("main_enc_id","enc_period_start"))) {
+    warning("First INTERPOLAR-ward contact undefinded for a main encounter (multiple rows with same start date). Please check the data.")
+    print(F1_prep)
+    return()
+    }
+
+  else {
+    F1 <- F1_prep |>
+      selectMin(grouping_variables = c("main_enc_id"),
+                selection_variable = enc_period_start) |>
+      dplyr::distinct(main_enc_id, enc_period_start, calendar_week, ward_name) |>
+      dplyr::group_by(
+        ward_name, calendar_week) |>
+      dplyr::tally()
+
+    return(F1)
+    }
 }
 
 #------------------------------------------------------------------------------#
-
+#TODO: needs updates and advancements! -------
 #' Calculate F2 from FAS2.1 Dataset
 #'
 #' This function filters the FAS2.1 dataset to calculate the F2.  It includes only those ward contacts

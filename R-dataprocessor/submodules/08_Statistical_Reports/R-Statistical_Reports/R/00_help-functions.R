@@ -1,26 +1,68 @@
-#' Select the Most Recent Row for Each Group
+#' Select Maximum Values by Group
 #'
-#' This function filters a dataset to retain only the most recent row for each group, based on the `input_datetime` column.
+#' This function groups a dataset by specified grouping variables and selects the rows
+#' with the maximum values of a specified selection variable within each group.
 #'
-#' @param data A data frame containing the dataset to be filtered.
-#' @param grouping_vars A character vector specifying the columns used for grouping.
+#' @param data A data frame containing the dataset to be processed.
+#' @param grouping_variables A character vector of column names to group the data by.
+#' @param selection_variable An unquoted string specifying the column name for which the maximum
+#' value is used for filtering within each group.
 #'
-#' @return A data frame containing the most recent row for each group, based on the maximum value of `input_datetime`.
+#' @return A data frame containing the rows with the maximum values of the
+#' selection variable for each group defined by the grouping variables.
 #'
-#' @details
-#' The function uses `dplyr` to group the data by the specified grouping variables, then selects the row with the maximum value of `input_datetime` within each group.
+#' @examples
+#' \dontrun{
+#' # Example usage
+#' df <- data.frame(
+#'   group = c("A", "A", "B", "B"),
+#'   value = c(10, 20, 5, 30)
+#' )
 #'
+#' selectMax(df, grouping_variables = "group", selection_variable = value)
+#' }
 #'
-#' # Select the most recent row for each group
-#' select_newest_input(data, grouping_vars = "group")
-#'
-#' @importFrom dplyr group_by slice_max ungroup
-#'
+#' @importFrom dplyr group_by slice_max ungroup across all_of
 #' @export
-selectNewestInput <- function(data, grouping_vars) {
+selectMax <- function(data, grouping_variables, selection_variable) {
   data_current <- data |>
-    dplyr::group_by(across(all_of(grouping_vars))) |>
-    dplyr::slice_max(input_datetime) |>
+    dplyr::group_by(across(all_of(grouping_variables))) |>
+    dplyr::slice_max({{selection_variable}}) |>
+    dplyr::ungroup()
+  return(data_current)
+}
+
+#------------------------------------------------------------------------------#
+#' Select Minimum Values by Group
+#'
+#' This function groups a dataset by specified grouping variables and selects the rows
+#' with the minimum values of a specified selection variable within each group.
+#'
+#' @param data A data frame containing the dataset to be processed.
+#' @param grouping_variables A character vector of column names to group the data by.
+#' @param selection_variable An unquoted string specifying the column name for which the minimum
+#' value is used for filtering within each group.
+#'
+#' @return A data frame containing the rows with the minimum values of the
+#' selection variable for each group defined by the grouping variables.
+#'
+#' @examples
+#' \dontrun{
+#' # Example usage
+#' df <- data.frame(
+#'   group = c("A", "A", "B", "B"),
+#'   value = c(10, 20, 5, 30)
+#' )
+#'
+#' selectMin(df, grouping_variables = "group", selection_variable = value)
+#' }
+#'
+#' @importFrom dplyr group_by slice_min ungroup across all_of
+#' @export
+selectMin <- function(data, grouping_variables, selection_variable) {
+  data_current <- data |>
+    dplyr::group_by(across(all_of(grouping_variables))) |>
+    dplyr::slice_min({{selection_variable}}) |>
     dplyr::ungroup()
   return(data_current)
 }
@@ -84,21 +126,26 @@ checkMultipleRows <- function(data, grouping_vars) {
 #' @seealso
 #' \code{\link[kableExtra]{kable}}, \code{\link[kableExtra]{kable_styling}}, \code{\link[kableExtra]{save_kable}}
 #'
-writeKable <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html") {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
+writeKable <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html", caption=NA) {
+  if (!is.null(table)) {
+    if (is.na(filename_without_extension)) {
+      filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
+    }
+    if (is.na(project_sub_dir)) {
+      project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
+    } else {
+      project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
+    }
+    if (!dir.exists(project_sub_dir)) {
+      dir.create(project_sub_dir, recursive = TRUE)
+    }
+    kableExtra::kable(table, format = "html", caption = caption) |>
+      kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
+      kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
   }
-  if (is.na(project_sub_dir)) {
-    project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
-  } else {
-    project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
+  else {
+    warning(paste0("The table '", deparse(substitute(table)), "' is NULL. No file was written."))
   }
-  if (!dir.exists(project_sub_dir)) {
-    dir.create(project_sub_dir, recursive = TRUE)
-  }
-  kableExtra::kable(table, format = "html") |>
-    kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
-    kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
 }
 
 

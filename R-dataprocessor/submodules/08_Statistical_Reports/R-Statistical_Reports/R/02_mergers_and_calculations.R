@@ -190,6 +190,7 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 #' @seealso
 #' \code{\link[dplyr]{left_join}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{distinct}}
 #'
+#' @importFrom dplyr left_join select relocate distinct
 #' @export
 addWardName <- function(merged_table_with_main_enc,pids_per_ward_table) {
   # TODO: check multiple rows for one encounter (e.g. ward change)
