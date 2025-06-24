@@ -153,10 +153,11 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
 
   active_requests <- medication_requests[
-    #medreq_encounter_ref == paste0("Encounter/", encounter_id) &
     !is.na(start_date) &
       start_date >= enc_period_start &
-      start_date <= meda_datetime
+      start_date <= meda_datetime &
+      (is.na(end_date) |
+         end_date > meda_datetime)
   ]
 
   relevant_cols <- c("atc_code")
@@ -518,8 +519,6 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
     meda_study_phase <- if (!is.null(meda)) meda$study_phase else NA_character_
     meda_ward_name <- if (!is.null(meda)) meda$ward_name else NA_character_
     record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
-    #ret_id <- meda_id
-    #ret_status <- NA_character_
     ret_id <- ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id)
     ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
 
@@ -527,7 +526,6 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
     active_requests <- getActiveMedicationRequests(resources$medication_requests, encounter$enc_period_start, meda_datetime)
 
     if (nrow(active_requests) && meda_study_phase != "PhaseA") {
-    #if (nrow(active_requests)) {
       # Match ATC-codes between encounter data and MRP definitions
       match_atc_codes <- matchATCCodes(active_requests, drug_disease_mrp_tables_by_atc)
       # Get and match ICD-codes of the patient

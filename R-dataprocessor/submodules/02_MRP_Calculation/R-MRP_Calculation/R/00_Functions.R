@@ -98,12 +98,21 @@ getMedicationRequestsFromDB <- function(patient_references) {
                                                              "medreq_encounter_ref",
                                                              "medreq_patient_ref",
                                                              "medreq_medicationreference_ref",
-                                                             "medreq_authoredon"),
+                                                             "medreq_authoredon",
+                                                             "medreq_doseinstruc_timing_repeat_boundsperiod_start",
+                                                             "medreq_doseinstruc_timing_repeat_boundsperiod_end"),
                                             patient_references = patient_references,
                                             status_exclusion = c("cancelled", "entered-in-error", "stopped") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
   )
   medication_requests <- addMedicationIdColumn(medication_requests)
-  medication_requests[, start_date := medreq_authoredon]
+
+  medication_requests[, start_date := fifelse(
+    !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_start),
+    medreq_doseinstruc_timing_repeat_boundsperiod_start,
+    medreq_authoredon
+  )]
+
+  medication_requests[, end_date := medreq_doseinstruc_timing_repeat_boundsperiod_end]
   return(medication_requests)
 }
 
@@ -117,12 +126,14 @@ getMedicationAdministrationsFromDB <- function(patient_references) {
                                                                     "medadm_patient_ref",
                                                                     "medadm_medicationreference_ref",
                                                                     "medadm_effectivedatetime",
-                                                                    "medadm_effectiveperiod_start"),
+                                                                    "medadm_effectiveperiod_start",
+                                                                    "medadm_effectiveperiod_end"),
                                                    patient_references = patient_references,
                                                    status_exclusion = c("not-done", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831577
   )
   medication_administrations <- addMedicationIdColumn(medication_administrations)
   medication_administrations[, start_date := pmin(medadm_effectivedatetime, medadm_effectiveperiod_start, na.rm = TRUE)]
+  medication_administrations[, end_date := medadm_effectiveperiod_end]
   return(medication_administrations)
 }
 
@@ -136,12 +147,14 @@ getMedicationStatementsFromDB <- function(patient_references) {
                                                                "medstat_patient_ref",
                                                                "medstat_medicationreference_ref",
                                                                "medstat_effectivedatetime",
-                                                               "medstat_effectiveperiod_start"),
+                                                               "medstat_effectiveperiod_start",
+                                                               "medstat_effectiveperiod_end"),
                                               patient_references = patient_references,
                                               status_exclusion = c("entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834331
   )
   medication_statements <- addMedicationIdColumn(medication_statements)
   medication_statements[, start_date := pmin(medstat_effectivedatetime, medstat_effectiveperiod_start, na.rm = TRUE)]
+  medication_statements[, end_date := medstat_effectiveperiod_end]
   return(medication_statements)
 }
 
