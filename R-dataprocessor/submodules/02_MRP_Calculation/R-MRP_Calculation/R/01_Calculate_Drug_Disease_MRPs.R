@@ -381,15 +381,15 @@ matchICDProxies <- function(
         fallback_validity <- rule$ICD_VALIDITY_DAYS
         validity_days <- if (!is.na(validity) && validity != "") validity else fallback_validity
 
-        relevant <- all_items[grepl(proxy_code, code, fixed = TRUE) & !is.na(start_date)]
+        recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
 
-        if (!nrow(relevant)) next
+        if (!nrow(recources_with_proxy)) next
 
         match_found <- if (tolower(validity_days) == "unbegrenzt") {
-          any(relevant$start_date <= meda_datetime)
+          any(recources_with_proxy$start_date <= meda_datetime)
         } else {
           validity_days_num <- as.numeric(validity_days)
-          any(relevant$start_date >= (meda_datetime - validity_days_num) & relevant$start_date <= meda_datetime)
+          any(recources_with_proxy$start_date <= meda_datetime & (recources_with_proxy$end_date + validity_days_num) >= meda_datetime )
         }
 
         if (match_found) {
@@ -414,14 +414,14 @@ matchICDProxies <- function(
 
   #  Combine all medication rows
   all_medications <- rbind(
-    medication_resources$medication_requests[, .(code = atc_code, start_date)],
-    medication_resources$medication_statements[, .(code = atc_code, start_date)],
-    medication_resources$medication_administrations[, .(code = atc_code, start_date)],
+    medication_resources$medication_requests[, .(code = atc_code, start_date, end_date)],
+    medication_resources$medication_statements[, .(code = atc_code, start_date, end_date)],
+    medication_resources$medication_administrations[, .(code = atc_code, start_date, end_date)],
     fill = TRUE
   )
 
   #  Combine all procedures rows
-  all_procedures <- procedure_resources[, .(code = proc_code_code, start_date)]
+  all_procedures <- procedure_resources[, .(code = proc_code_code, start_date, end_date)]
 
   # ATC-Proxy-Matching
   atc_matches <- matchProxy(

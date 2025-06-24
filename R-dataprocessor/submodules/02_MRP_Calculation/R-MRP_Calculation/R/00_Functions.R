@@ -111,8 +111,12 @@ getMedicationRequestsFromDB <- function(patient_references) {
     medreq_doseinstruc_timing_repeat_boundsperiod_start,
     medreq_authoredon
   )]
-
-  medication_requests[, end_date := medreq_doseinstruc_timing_repeat_boundsperiod_end]
+  medication_requests <- medication_requests[!is.na(start_date)]
+  medication_requests[, end_date := fifelse(
+    !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_end),
+    medreq_doseinstruc_timing_repeat_boundsperiod_end,
+    start_date
+  )]
   return(medication_requests)
 }
 
@@ -133,7 +137,12 @@ getMedicationAdministrationsFromDB <- function(patient_references) {
   )
   medication_administrations <- addMedicationIdColumn(medication_administrations)
   medication_administrations[, start_date := pmin(medadm_effectivedatetime, medadm_effectiveperiod_start, na.rm = TRUE)]
-  medication_administrations[, end_date := medadm_effectiveperiod_end]
+  medication_administrations <- medication_administrations[!is.na(start_date)]
+  medication_administrations[, end_date := fifelse(
+    !is.na(medadm_effectiveperiod_end),
+    medadm_effectiveperiod_end,
+    start_date
+  )]
   return(medication_administrations)
 }
 
@@ -154,7 +163,12 @@ getMedicationStatementsFromDB <- function(patient_references) {
   )
   medication_statements <- addMedicationIdColumn(medication_statements)
   medication_statements[, start_date := pmin(medstat_effectivedatetime, medstat_effectiveperiod_start, na.rm = TRUE)]
-  medication_statements[, end_date := medstat_effectiveperiod_end]
+  medication_statements <- medication_statements[!is.na(start_date)]
+  medication_statements[, end_date := fifelse(
+    !is.na(medstat_effectiveperiod_end),
+    medstat_effectiveperiod_end,
+    start_date
+  )]
   return(medication_statements)
 }
 
@@ -182,72 +196,72 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 #
 getObservationsFromDB <- function(patient_references) {
   observations <- getResourcesFromDB(resource_name = "Observation",
-                     column_names = c("obs_id",
-                                      "obs_encounter_ref",
-                                      "obs_patient_ref",
-                                      "obs_code_system",
-                                      "obs_code_code",
-                                      "obs_effectivedatetime",
-                                      "obs_issued",
-                                      "obs_valuerange_low_value",
-                                      "obs_valuerange_low_unit",
-                                      "obs_valuerange_low_system",
-                                      "obs_valuerange_low_code",
-                                      "obs_valuerange_high_value",
-                                      "obs_valuerange_high_unit",
-                                      "obs_valuerange_high_system",
-                                      "obs_valuerange_high_code",
-                                      "obs_valueratio_numerator_value",
-                                      "obs_valueratio_numerator_comparator",
-                                      "obs_valueratio_numerator_unit",
-                                      "obs_valueratio_numerator_system",
-                                      "obs_valueratio_numerator_code",
-                                      "obs_valueratio_denominator_value",
-                                      "obs_valueratio_denominator_comparator",
-                                      "obs_valueratio_denominator_unit",
-                                      "obs_valueratio_denominator_system",
-                                      "obs_valueratio_denominator_code",
-                                      "obs_valuequantity_value",
-                                      "obs_valuequantity_comparator",
-                                      "obs_valuequantity_unit",
-                                      "obs_valuequantity_system",
-                                      "obs_valuequantity_code",
-                                      "obs_valuecodeableconcept_system",
-                                      "obs_valuecodeableconcept_version",
-                                      "obs_valuecodeableconcept_code",
-                                      "obs_valuecodeableconcept_display",
-                                      "obs_valuecodeableconcept_text",
-                                      "obs_referencerange_low_value",
-                                      "obs_referencerange_low_unit",
-                                      "obs_referencerange_low_system",
-                                      "obs_referencerange_low_code",
-                                      "obs_referencerange_high_value",
-                                      "obs_referencerange_high_unit",
-                                      "obs_referencerange_high_system",
-                                      "obs_referencerange_high_code",
-                                      "obs_referencerange_type_system",
-                                      "obs_referencerange_type_version",
-                                      "obs_referencerange_type_code",
-                                      "obs_referencerange_type_display",
-                                      "obs_referencerange_type_text",
-                                      "obs_referencerange_appliesto_system",
-                                      "obs_referencerange_appliesto_version",
-                                      "obs_referencerange_appliesto_code",
-                                      "obs_referencerange_appliesto_display",
-                                      "obs_referencerange_appliesto_text",
-                                      "obs_referencerange_age_low_value",
-                                      "obs_referencerange_age_low_unit",
-                                      "obs_referencerange_age_low_system",
-                                      "obs_referencerange_age_low_code",
-                                      "obs_referencerange_age_high_value",
-                                      "obs_referencerange_age_high_unit",
-                                      "obs_referencerange_age_high_system",
-                                      "obs_referencerange_age_high_code",
-                                      "obs_referencerange_text"),
-                     patient_references = patient_references,
-                     status_exclusion = c("registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834407
-                     additional_conditions = c("obs_category_code = 'laboratory'",
-                                               "obs_code_system = 'http://loinc.org'")
+                                     column_names = c("obs_id",
+                                                      "obs_encounter_ref",
+                                                      "obs_patient_ref",
+                                                      "obs_code_system",
+                                                      "obs_code_code",
+                                                      "obs_effectivedatetime",
+                                                      "obs_issued",
+                                                      "obs_valuerange_low_value",
+                                                      "obs_valuerange_low_unit",
+                                                      "obs_valuerange_low_system",
+                                                      "obs_valuerange_low_code",
+                                                      "obs_valuerange_high_value",
+                                                      "obs_valuerange_high_unit",
+                                                      "obs_valuerange_high_system",
+                                                      "obs_valuerange_high_code",
+                                                      "obs_valueratio_numerator_value",
+                                                      "obs_valueratio_numerator_comparator",
+                                                      "obs_valueratio_numerator_unit",
+                                                      "obs_valueratio_numerator_system",
+                                                      "obs_valueratio_numerator_code",
+                                                      "obs_valueratio_denominator_value",
+                                                      "obs_valueratio_denominator_comparator",
+                                                      "obs_valueratio_denominator_unit",
+                                                      "obs_valueratio_denominator_system",
+                                                      "obs_valueratio_denominator_code",
+                                                      "obs_valuequantity_value",
+                                                      "obs_valuequantity_comparator",
+                                                      "obs_valuequantity_unit",
+                                                      "obs_valuequantity_system",
+                                                      "obs_valuequantity_code",
+                                                      "obs_valuecodeableconcept_system",
+                                                      "obs_valuecodeableconcept_version",
+                                                      "obs_valuecodeableconcept_code",
+                                                      "obs_valuecodeableconcept_display",
+                                                      "obs_valuecodeableconcept_text",
+                                                      "obs_referencerange_low_value",
+                                                      "obs_referencerange_low_unit",
+                                                      "obs_referencerange_low_system",
+                                                      "obs_referencerange_low_code",
+                                                      "obs_referencerange_high_value",
+                                                      "obs_referencerange_high_unit",
+                                                      "obs_referencerange_high_system",
+                                                      "obs_referencerange_high_code",
+                                                      "obs_referencerange_type_system",
+                                                      "obs_referencerange_type_version",
+                                                      "obs_referencerange_type_code",
+                                                      "obs_referencerange_type_display",
+                                                      "obs_referencerange_type_text",
+                                                      "obs_referencerange_appliesto_system",
+                                                      "obs_referencerange_appliesto_version",
+                                                      "obs_referencerange_appliesto_code",
+                                                      "obs_referencerange_appliesto_display",
+                                                      "obs_referencerange_appliesto_text",
+                                                      "obs_referencerange_age_low_value",
+                                                      "obs_referencerange_age_low_unit",
+                                                      "obs_referencerange_age_low_system",
+                                                      "obs_referencerange_age_low_code",
+                                                      "obs_referencerange_age_high_value",
+                                                      "obs_referencerange_age_high_unit",
+                                                      "obs_referencerange_age_high_system",
+                                                      "obs_referencerange_age_high_code",
+                                                      "obs_referencerange_text"),
+                                     patient_references = patient_references,
+                                     status_exclusion = c("registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834407
+                                     additional_conditions = c("obs_category_code = 'laboratory'",
+                                                               "obs_code_system = 'http://loinc.org'")
   )
   observations[, start_date := obs_effectivedatetime]
   return(observations)
@@ -258,17 +272,24 @@ getObservationsFromDB <- function(patient_references) {
 #
 getProceduresFromDB <- function(patient_references) {
   procedures <- getResourcesFromDB(resource_name = "Procedure",
-                     column_names = c("proc_id",
-                                      "proc_encounter_ref",
-                                      "proc_patient_ref",
-                                      "proc_code_code",
-                                      "proc_performeddatetime",
-                                      "proc_performedperiod_start"),
-                     patient_references = patient_references,
-                     status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
-                     additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
+                                   column_names = c("proc_id",
+                                                    "proc_encounter_ref",
+                                                    "proc_patient_ref",
+                                                    "proc_code_code",
+                                                    "proc_performeddatetime",
+                                                    "proc_performedperiod_start",
+                                                    "proc_performedperiod_end"),
+                                   patient_references = patient_references,
+                                   status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
+                                   additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
   )
   procedures[, start_date := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
+  procedures <- procedures[!is.na(start_date)]
+  procedures[, end_date := fifelse(
+    !is.na(proc_performedperiod_end),
+    proc_performedperiod_end,
+    start_date
+  )]
   return(procedures)
 }
 
@@ -277,20 +298,20 @@ getProceduresFromDB <- function(patient_references) {
 #
 getConditionsFromDB <- function(patient_references) {
   conditions <- getResourcesFromDB(resource_name = "Condition",
-                     column_names = c("con_id",
-                                      "con_encounter_ref",
-                                      "con_patient_ref",
-                                      "con_code_code",
-                                      "con_code_system",
-                                      "con_onsetperiod_start",
-                                      "con_recordeddate"),
-                     patient_references = patient_references,
-                     status_exclusion = NULL, # Status is considered in additional_conditions
-                     # clinical_status c("inactive") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2833668
-                     # verification status c("refuted", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831601
-                     additional_conditions = c("con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm'",
-                                               #"(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
-                                               "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))")
+                                   column_names = c("con_id",
+                                                    "con_encounter_ref",
+                                                    "con_patient_ref",
+                                                    "con_code_code",
+                                                    "con_code_system",
+                                                    "con_onsetperiod_start",
+                                                    "con_recordeddate"),
+                                   patient_references = patient_references,
+                                   status_exclusion = NULL, # Status is considered in additional_conditions
+                                   # clinical_status c("inactive") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2833668
+                                   # verification status c("refuted", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831601
+                                   additional_conditions = c("con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm'",
+                                                             #"(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
+                                                             "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))")
   )
   conditions[, start_date := pmin(con_onsetperiod_start, con_recordeddate, na.rm = TRUE)]
   return(conditions)
