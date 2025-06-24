@@ -23,13 +23,13 @@
 \i ./250_adding_historical_raw_records.sql
 \i ./300_cds_in_to_db_log.sql
 \i ./310_cds_in_to_db_log.sql
-\i ./330_cre_table_datap_submodules_dataproc_in.sql
-\i ./331_cre_table_datap_submodules_log.sql
+\i ./330_cre_table_dataproc_submodules_dataproc_in.sql
+\i ./331_cre_table_dataproc_submodules_log.sql
 \i ./332_db_submodules_dp_in_to_db_log.sql
 \i ./334_cre_view_dataproc_submodules_last_import.sql
 \i ./335_cre_view_dataproc_submodules_all.sql
-\i ./340_cre_table_datap_core_dataproc_in.sql
-\i ./341_cre_table_datap_core_log.sql
+\i ./340_cre_table_dataproc_core_dataproc_in.sql
+\i ./341_cre_table_dataproc_core_log.sql
 \i ./342_db_core_dp_in_to_db_log.sql
 \i ./344_cre_view_dataproc_core_last_import.sql
 \i ./345_cre_view_dataproc_core_all.sql
