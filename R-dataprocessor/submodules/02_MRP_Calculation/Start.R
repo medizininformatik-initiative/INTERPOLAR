@@ -1,7 +1,7 @@
 etlutils::runLevel2("MRP Calculation", {
 
   etlutils::runLevel3("Load and expand Drug-Disease Definition", {
-    drug_disease_mrp_content <- getExpandedContent(MRP_CALCULATION_TYPE$Drug_Disease, MRP_PAIR_LISTS_PATHS)
+    drug_disease_mrp_content <- getExpandedContent(MRP_CALCULATION_TYPE$Drug_Disease, paste0(MRP_PAIR_PATH, "/MRP_", MRP_CALCULATION_TYPE$Drug_Disease))
   })
 
   etlutils::runLevel3("Calculate Drug-Disease MRPs", {
