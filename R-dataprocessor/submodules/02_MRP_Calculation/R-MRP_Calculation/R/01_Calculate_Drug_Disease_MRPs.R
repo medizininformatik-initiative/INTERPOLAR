@@ -399,7 +399,7 @@ matchICDProxies <- function(
             proxy_code = proxy_code,
             proxy_type = proxy_type,
             kurzbeschr = sprintf(
-              "%s (%s) ist bei %s (%s) kontrainduziert. %s ist als %s-Proxy für %s verwendet worden.",
+              "%s (%s) ist bei %s (%s) kontrainduziert.\n%s ist als %s-Proxy für %s verwendet worden.",
               rule$ATC_DISPLAY, rule$ATC_FOR_CALCULATION,
               rule$CONDITION_DISPLAY_CLUSTER, rule$ICD,
               proxy_code, proxy_type, rule$ICD
@@ -491,7 +491,6 @@ matchICDProxies <- function(
 #' - If no match is found for an encounter, a placeholder entry is created in `dp_mrp_calculations`.
 #'
 calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_processed_content_hash) {
-
   resources <- getResourcesForMRPCalculation(MRP_CALCULATION_TYPE$Drug_Disease)
 
   if (!length(resources)) {
