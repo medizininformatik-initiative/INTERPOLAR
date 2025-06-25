@@ -300,6 +300,7 @@ createFrontendTables <- function() {
       #fall_bmi = numeric(),
       fall_status = character(),
       fall_ent_dat = etlutils::as.POSIXctWithTimezone(character()),
+      fall_additional_values = character(),
       fall_complete = character()
     )
 
@@ -424,6 +425,23 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_ent_dat", enc_period_end)
         data.table::set(enc_frontend_table, target_index, "fall_status", enc_status)
 
+        # Store all known Encounter IDs in toml syntax in the additional values
+        pids_per_ward_encounters <- pids_per_ward[patient_id == pid]
+        fall_additional_values <- ""
+        fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
+                                                             pids_per_ward_encounters$encounter_id,
+                                                             key = "pids_per_ward_encounters",
+                                                             comment = "FHIR ID of all Encounters of this medical case that were in the pids_per_ward table")
+        fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
+                                                             pid_main_encounters$enc_id,
+                                                             key = "main_encounters",
+                                                             comment = "FHIR ID of all main Encounter(s) for the medical case (should be exactly one)")
+        fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
+                                                             pid_part_of_encounters$enc_id,
+                                                             key = "part_encounters",
+                                                             comment = "FHIR ID of all Encounters for the medical case at this point which are not the main Encounter")
+        data.table::set(enc_frontend_table, target_index, "fall_additional_values", fall_additional_values)
+
         # set fall_complete (derived from FHIR Encounter.status)
         # see https://github.com/medizininformatik-initiative/INTERPOLAR/issues/274
         fall_complete <- grepl("^finished$|^cancelled$|^entered-in-error$", enc_status, ignore.case = TRUE)
@@ -431,7 +449,16 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_complete", fall_complete)
 
         # Extract ward name from unique_pid_ward table
-        data.table::set(enc_frontend_table, target_index, "fall_station", unique_pid_ward$ward_name[pid_index])
+        ward_name <- unique_pid_ward$ward_name[pid_index]
+        data.table::set(enc_frontend_table, target_index, "fall_station", ward_name)
+
+        # Get the current study phase for the ward of the Encounter
+        study_phase <- getStudyPhase(ward_name)
+        if (is.null(study_phase)) {
+          stop("ERROR: No study phase found for ward '", ward_name, "'.\n",
+               "Please check the study phase configuration in the dataprocessor_config.toml for parameters WARDS_PHASE_A, WARDS_PHASE_B_TEST and WARDS_PHASE_B.")
+        }
+        data.table::set(enc_frontend_table, target_index, "fall_studienphase", study_phase)
 
         # Extract the admission diagnoses
         admission_diagnoses <- getAdmissionDiagnoses(pid_encounter, conditions)

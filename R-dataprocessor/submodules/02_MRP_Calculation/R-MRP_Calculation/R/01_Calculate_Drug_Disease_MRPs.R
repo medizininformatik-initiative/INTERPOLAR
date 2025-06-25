@@ -1,4 +1,3 @@
-
 #' Clean and Expand Drug_Disease_MRP Definition Table
 #'
 #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
@@ -66,16 +65,13 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
   )]
 
   relevant_column_names <- c(relevant_column_names[!startsWith(relevant_column_names, "ATC")], "ATC_FOR_CALCULATION")
-
   # SPLIT and TRIM: ICD and proxy column:
   # split the whitespace separated lists in ICD and proxy columns in a single row per code
   drug_disease_mrp_definition <- etlutils::splitColumnsToRows(drug_disease_mrp_definition, relevant_column_names)
   # trim all values in the whole table
   etlutils::trimTableValues(drug_disease_mrp_definition)
-
   # ICD column: remove tailing points from ICD codes
   etlutils::replacePatternsInColumn(drug_disease_mrp_definition, 'ICD', '\\.$', '')
-
   # remove rows with empty ICD code and empty proxy codes (ATC, LOINC, OPS) again.
   # After the replacing of special signs with an empty string their can be new empty rows in this both columns
   drug_disease_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_disease_mrp_definition, relevant_column_names)
@@ -138,10 +134,8 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 
   # Apply the function to the 'ICD' column
   drug_disease_mrp_definition$ICD <- expandAndConcatenateICDs(drug_disease_mrp_definition$ICD)
-
   # Split concatenated ICD codes into separate rows
   drug_disease_mrp_definition <- etlutils::splitColumnsToRows(drug_disease_mrp_definition, "ICD")
-
   # Remove duplicate rows
   drug_disease_mrp_definition <- unique(drug_disease_mrp_definition)
 
@@ -159,10 +153,11 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
 
   active_requests <- medication_requests[
-    #medreq_encounter_ref == paste0("Encounter/", encounter_id) &
-    !is.na(medreq_authoredon) &
-      medreq_authoredon >= enc_period_start &
-      medreq_authoredon <= meda_datetime
+    !is.na(start_date) &
+      start_date >= enc_period_start &
+      start_date <= meda_datetime &
+      (is.na(end_date) |
+         end_date > meda_datetime)
   ]
 
   relevant_cols <- c("atc_code")
@@ -189,13 +184,9 @@ getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
 
   # Filter conditions by patient ID and ensure recorded date is before or on meda_datetime
   relevant_conditions <- conditions[
-    con_patient_ref == paste0("Patient/", patient_id) &
-      ((!is.na(con_recordeddate) & con_recordeddate <= meda_datetime) |
-         (is.na(con_recordeddate) & con_onsetperiod_start <= meda_datetime))
-  ]
+    con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_date) & start_date <= meda_datetime]
 
-  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system",
-                     "con_recordeddate", "con_onsetperiod_start")
+  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "start_date")
   relevant_conditions <- relevant_conditions[, ..relevant_cols]
 
   return(relevant_conditions)
@@ -224,12 +215,12 @@ matchATCCodes <- function(active_requests, mrp_table_list_by_atc) {
   # Collect matched ATC codes into a data.table
   matched_rows <- list()
   for (atc in matching_atcs) {
-    row <- data.table(
+    row <- data.table::data.table(
       atc_code = atc
     )
     matched_rows[[length(matched_rows) + 1]] <- row
   }
-  return(rbindlist(matched_rows))
+  return(data.table::rbindlist(matched_rows))
 }
 
 #' Match ICD codes against MRP rules and ATC codes
@@ -259,10 +250,13 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 
   # Filter all conditions for the current patient
   all_patient_conditions <- relevant_conditions[con_patient_ref == paste0("Patient/", patient_id)]
+  used_icds <- unique(all_patient_conditions[!is.na(con_code_code), con_code_code])
+  icds <- intersect(names(drug_disease_mrp_tables_by_icd), used_icds)
 
-  for (mrp_icd in names(drug_disease_mrp_tables_by_icd)) {
+  for (mrp_icd in icds) {
     # Extract all MRP rules for this ICD
     mrp_table_list_rows <- drug_disease_mrp_tables_by_icd[[mrp_icd]]
+    mrp_table_list_rows <- mrp_table_list_rows[ATC_FOR_CALCULATION %in% match_atc_codes$atc_code]
 
     # Find matching ICD conditions for this specific ICD
     patient_conditions <- all_patient_conditions[
@@ -270,7 +264,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
         con_code_system == "http://fhir.de/CodeSystem/bfarm/icd-10-gm"
     ]
 
-    if (nrow(patient_conditions) == 0) next
+    if (!nrow(patient_conditions)) next
 
     for (j in seq_len(nrow(mrp_table_list_rows))) {
       mrp_table_list_row <- mrp_table_list_rows[j]
@@ -278,21 +272,12 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 
       # Check if at least one matching condition is within the validity window
       if (tolower(validity_days) == "unbegrenzt") {
-        condition_match <- any(
-          (is.na(patient_conditions$con_recordeddate) &
-             patient_conditions$con_onsetperiod_start <= meda_datetime) |
-            (!is.na(patient_conditions$con_recordeddate) &
-               patient_conditions$con_recordeddate <= meda_datetime)
-        )
+        condition_match <- any(patient_conditions$start_date <= meda_datetime)
       } else {
         validity_days <- as.numeric(validity_days)
         condition_match <- any(
-          (is.na(patient_conditions$con_recordeddate) &
-             patient_conditions$con_onsetperiod_start >= (meda_datetime - validity_days) &
-             patient_conditions$con_onsetperiod_start <= meda_datetime) |
-            (!is.na(patient_conditions$con_recordeddate) &
-               patient_conditions$con_recordeddate >= (meda_datetime - validity_days) &
-               patient_conditions$con_recordeddate <= meda_datetime)
+          patient_conditions$start_date >= (meda_datetime - lubridate::days(validity_days)) &
+            patient_conditions$start_date <= meda_datetime
         )
       }
 
@@ -306,178 +291,206 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 
       # Add one row per matching ATC
       for (atc_code in relevant_atcs) {
-        matched_rows[[length(matched_rows) + 1]] <- data.table(
-          icd = mrp_icd,
-          atc = atc_code,
+        matched_rows[[length(matched_rows) + 1]] <- data.table::data.table(
+          icd_code = mrp_icd,
+          atc_code = atc_code,
+          proxy_code = NA_character_,
+          proxy_type = NA_character_,
           # TODO: Use a more descriptive text from the MRP definition
           kurzbeschr = paste0(
-            mrp_table_list_row$ATC_DISPLAY,
-            " ist bei ",
-            mrp_table_list_row$CONDITION_DISPLAY_CLUSTER,
-            " kontrainduziert.")
+            mrp_table_list_row$ATC_DISPLAY, " (", atc_code, ") ist bei ",
+            mrp_table_list_row$CONDITION_DISPLAY_CLUSTER, " (", mrp_icd, ") kontrainduziert.")
         )
       }
     }
   }
 
-  return(rbindlist(matched_rows, fill = TRUE))
+  return(data.table::rbindlist(matched_rows, fill = TRUE))
 }
 
 #' Match ICD Proxies Using ATC and OPS Codes
 #'
-#' This function searches a patient's medication and (optionally) procedure data
-#' to infer ICD diagnoses based on proxy rules defined in drug-disease MRP tables.
-#' These proxy rules allow using ATC (Anatomical Therapeutic Chemical) codes or
-#' OPS (German procedure codes) as indirect indicators for ICD codes, in case no
-#' explicit diagnosis is present.
+#' This function analyzes a patient's medication and procedure data to infer ICD diagnoses
+#' based on proxy rules defined in drug-disease MRP (medication risk profile) tables. These rules
+#' define ATC (Anatomical Therapeutic Chemical) or OPS (Operationen- und Prozedurenschlüssel, i.e. German procedure)
+#' codes as proxies for ICD diagnoses.
 #'
-#' For each ICD-related rule, the function checks whether a proxy ATC or OPS code
-#' is defined and whether a relevant event (e.g., medication or procedure) has occurred
-#' within a valid time window relative to a given reference date.
+#' The function evaluates whether proxy events (e.g., medication or procedure entries) occurred within
+#' a rule-defined time window relative to a reference datetime. Matching proxies are returned
+#' as suggested ICD codes with context descriptions.
 #'
-#' @param medication_resources A list of data.tables containing the patient's medications,
-#'   typically with the elements: `medication_requests`, `medication_statements`, and
-#'   `medication_administrations`. Each should include `atc_code` and `date` columns.
-#' @param drug_disease_mrp_tables_by_icd A named list of data.tables, where each name
-#'   represents an ICD code, and each table contains rules with possible proxy fields
-#'   such as `ICD_PROXY_ATC`, `ICD_PROXY_ATC_VALIDITY_DAYS`, `ICD_PROXY_OPS`, and
-#'   `ICD_PROXY_OPS_VALIDITY_DAYS`.
-#' @param meda_datetime A reference `Date` or `POSIXct` object representing the time
-#'   at which proxies are evaluated (e.g., current time or time of case evaluation).
+#' @param medication_resources A named list of `data.table`s containing medication information:
+#'   - `medication_requests`
+#'   - `medication_statements`
+#'   - `medication_administrations`
+#'   Each must include columns `atc_code` and `start_date`.
 #'
-#' @return A `data.table` listing matched proxy-based ICD suggestions. Each row contains:
-#'   - `icd`: the ICD code inferred,
-#'   - `atc`: the matching proxy ATC (if applicable),
-#'   - `kurzbeschr`: a short description of the rule match.
+#' @param procedure_resources A `data.table` containing procedures with columns:
+#'   - `proc_code_code`: the OPS code
+#'   - `start_date`: date of the procedure
+#'
+#' @param drug_disease_mrp_tables_by_atc_proxy A named list of `data.table`s, one per ATC code,
+#'   containing MRP rules. Each table should include the columns: `ICD`, `ICD_PROXY_ATC`,
+#'   `ICD_PROXY_ATC_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
+#'
+#' @param drug_disease_mrp_tables_by_ops_proxy A named list of `data.table`s, one per OPS code,
+#'   containing MRP rules. Each table should include: `ICD`, `ICD_PROXY_OPS`,
+#'   `ICD_PROXY_OPS_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
+#'
+#' @param meda_datetime A `Date` or `POSIXct` object representing the reference datetime
+#'   for evaluating proxy validity windows.
+#'
+#' @param match_atc_codes A character vector of ATC codes that are being evaluated (e.g.,
+#'   medication in question triggering the contraindication check).
+#'
+#' @return A `data.table` of inferred ICD proxies with columns:
+#' \describe{
+#'   \item{icd_code}{The ICD code inferred via proxy}
+#'   \item{atc_code}{The ATC code evaluated (from the rule)}
+#'   \item{proxy_code}{The matching ATC or OPS proxy code that triggered the inference}
+#'   \item{proxy_type}{One of `"ATC"` or `"OPS"`}
+#'   \item{kurzbeschr}{A short German description of the match reasoning}
+#' }
 #'
 #' @details
-#' This function currently supports ATC proxies (from medication data). You can extend it
-#' to support OPS proxies (from procedure data) by incorporating logic similar to the ATC
-#' check, using fields `ICD_PROXY_OPS` and `ICD_PROXY_OPS_VALIDITY_DAYS`.
+#' - The function returns one row per matched rule per ICD code.
+#' - Only rules with a valid, non-empty proxy field are evaluated.
+#' - Validity periods can be numerical (in days) or `"unbegrenzt"` (no time restriction).
+#' - Matching is performed via `grepl` with `fixed = TRUE` for proxy codes.
 #'
-#' If multiple matching ATC proxies are found for a single ICD rule, only the first
-#' valid match will be reported per rule iteration.
-#'
-matchICDProxies <- function(medication_resources, procedure_resources, drug_disease_mrp_tables_by_icd, meda_datetime) {
-  matched_rows <- list()
+matchICDProxies <- function(
+    medication_resources,
+    procedure_resources,
+    drug_disease_mrp_tables_by_atc_proxy,
+    drug_disease_mrp_tables_by_ops_proxy,
+    meda_datetime,
+    match_atc_codes
+) {
+  matchProxy <- function(all_items, proxy_table_list, proxy_type, code_column, rule_proxy_col, rule_validity_col) {
+    matched <- list()
+    used_codes <- unique(all_items[!is.na(code), code])
+    matching_proxies <- intersect(names(proxy_table_list), used_codes)
 
-  for (mrp_icd in names(drug_disease_mrp_tables_by_icd)) {
-    mrp_table <- drug_disease_mrp_tables_by_icd[[mrp_icd]]
+    for (proxy_code in matching_proxies) {
+      rules <- proxy_table_list[[proxy_code]]
+      rules <- rules[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(rule_proxy_col)) & get(rule_proxy_col) != ""]
 
-    proxy_enabled_rules <- mrp_table[
-      (!is.na(ICD_PROXY_ATC) & ICD_PROXY_ATC != "") |
-        (!is.na(ICD_PROXY_OPS) & ICD_PROXY_OPS != "")
-    ]
-
-    if (nrow(proxy_enabled_rules) == 0) next
-
-    for (j in seq_len(nrow(proxy_enabled_rules))) {
-      rule <- proxy_enabled_rules[j]
-
-      # Combine all medication rows
-      all_medications <- rbind(
-        medication_resources$medication_requests[, .(code = atc_code, date)],
-        medication_resources$medication_statements[, .(code = atc_code, date)],
-        medication_resources$medication_administrations[, .(code = atc_code, date)],
-        fill = TRUE
-      )
-
-      # Combine all procedure rows
-      all_procedures <- procedure_resources[, .(code = ops_code, date)]
-
-      match_found <- FALSE
-      beschreibung <- NULL
-
-      # Check ATC proxy
-      if (!is.na(rule$ICD_PROXY_ATC) && rule$ICD_PROXY_ATC != "") {
-        proxy_code <- rule$ICD_PROXY_ATC
-        validity <- rule$ICD_PROXY_ATC_VALIDITY_DAYS
+      for (i in seq_len(nrow(rules))) {
+        rule <- rules[i]
+        validity <- rule[[rule_validity_col]]
         fallback_validity <- rule$ICD_VALIDITY_DAYS
-
         validity_days <- if (!is.na(validity) && validity != "") validity else fallback_validity
 
-        relevant_rows <- all_medications[
-          grepl(proxy_code, code, fixed = TRUE) & !is.na(date)
-        ]
+        recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
 
-        if (tolower(validity_days) == "unbegrenzt") {
-          match_found <- any(relevant_rows$date <= meda_datetime)
+        if (!nrow(recources_with_proxy)) next
+
+        match_found <- if (tolower(validity_days) == "unbegrenzt") {
+          any(recources_with_proxy$start_date <= meda_datetime)
         } else {
           validity_days_num <- as.numeric(validity_days)
-          match_found <- any(
-            relevant_rows$date >= (meda_datetime - validity_days_num) &
-              relevant_rows$date <= meda_datetime
-          )
+          any(recources_with_proxy$start_date <= meda_datetime & (recources_with_proxy$end_date + validity_days_num) >= meda_datetime )
         }
 
         if (match_found) {
-          beschreibung <- paste0(proxy_code, " ist als ATC-Proxy für ", mrp_icd, " verwendet worden.")
-        }
-      }
-
-      # Check OPS proxy (only if not already matched by ATC)
-      if (!match_found && !is.na(rule$ICD_PROXY_OPS) && rule$ICD_PROXY_OPS != "") {
-        proxy_code <- rule$ICD_PROXY_OPS
-        validity <- rule$ICD_PROXY_OPS_VALIDITY_DAYS
-        fallback_validity <- rule$ICD_VALIDITY_DAYS
-
-        validity_days <- if (!is.na(validity) && validity != "") validity else fallback_validity
-
-        relevant_rows <- all_procedures[
-          grepl(proxy_code, code, fixed = TRUE) & !is.na(date)
-        ]
-
-        if (tolower(validity_days) == "unbegrenzt") {
-          match_found <- any(relevant_rows$date <= meda_datetime)
-        } else {
-          validity_days_num <- as.numeric(validity_days)
-          match_found <- any(
-            relevant_rows$date >= (meda_datetime - validity_days_num) &
-              relevant_rows$date <= meda_datetime
+          matched[[length(matched) + 1]] <- data.table::data.table(
+            icd_code = rule$ICD,
+            atc_code = rule$ATC_FOR_CALCULATION,
+            proxy_code = proxy_code,
+            proxy_type = proxy_type,
+            kurzbeschr = sprintf(
+              "%s (%s) ist bei %s (%s) kontrainduziert. %s ist als %s-Proxy für %s verwendet worden.",
+              rule$ATC_DISPLAY, rule$ATC_FOR_CALCULATION,
+              rule$CONDITION_DISPLAY_CLUSTER, rule$ICD,
+              proxy_code, proxy_type, rule$ICD
+            )
           )
         }
-
-        if (match_found) {
-          beschreibung <- paste0(proxy_code, " ist als OPS-Proxy für ", mrp_icd, " verwendet worden.")
-        }
-      }
-
-      if (match_found) {
-        matched_rows[[length(matched_rows) + 1]] <- data.table(
-          icd = mrp_icd,
-          code = proxy_code,
-          kurzbeschr = beschreibung
-        )
       }
     }
+
+    return(matched)
   }
 
-  return(rbindlist(matched_rows, fill = TRUE))
+  #  Combine all medication rows
+  all_medications <- rbind(
+    medication_resources$medication_requests[, .(code = atc_code, start_date, end_date)],
+    medication_resources$medication_statements[, .(code = atc_code, start_date, end_date)],
+    medication_resources$medication_administrations[, .(code = atc_code, start_date, end_date)],
+    fill = TRUE
+  )
+
+  #  Combine all procedures rows
+  all_procedures <- procedure_resources[, .(code = proc_code_code, start_date, end_date)]
+
+  # ATC-Proxy-Matching
+  atc_matches <- matchProxy(
+    all_items = all_medications,
+    proxy_table_list = drug_disease_mrp_tables_by_atc_proxy,
+    proxy_type = "ATC",
+    code_column = "code",
+    rule_proxy_col = "ICD_PROXY_ATC",
+    rule_validity_col = "ICD_PROXY_ATC_VALIDITY_DAYS"
+  )
+
+  # OPS-Proxy-Matching
+  ops_matches <- matchProxy(
+    all_items = all_procedures,
+    proxy_table_list = drug_disease_mrp_tables_by_ops_proxy,
+    proxy_type = "OPS",
+    code_column = "code",
+    rule_proxy_col = "ICD_PROXY_OPS",
+    rule_validity_col = "ICD_PROXY_OPS_VALIDITY_DAYS"
+  )
+
+  return(data.table::rbindlist(c(atc_matches, ops_matches), fill = TRUE))
 }
 
 
 #' Calculate Drug-Disease Medication-Related Problems (MRPs)
 #'
-#' This function analyzes potential drug-disease interactions for a set of patient
-#' encounters. It loads all relevant patient resources (such as medication requests,
-#' conditions, and encounters) and applies predefined MRP rules to identify
-#' clinically relevant drug-disease medication-related problems (MRPs).
+#' This function analyzes potential drug-disease interactions across a set of patient
+#' encounters. It evaluates predefined MRP (medication-related problem) rules for
+#' contraindications between active medications and known patient diagnoses.
 #'
-#' For each encounter, any matches are compiled into two result tables: one containing
-#' descriptive MRP evaluations (`retrolektive_mrpbewertung`), and one documenting
-#' the MRP calculation process (`dp_mrp_calculations`).
-#'
-#' @param drug_disease_mrp_tables A `data.table` containing all predefined MRP rules
-#'   for drug-disease interactions, typically with columns like `ATC_FOR_CALCULATION`,
-#'   `ICD`, `ICD_VALIDITY_DAYS`, etc.
-#'
-#' @return A named list with two `data.table`s:
-#' \describe{
-#'   \item{retrolektive_mrpbewertung}{A table containing all detected drug-disease MRP matches.}
-#'   \item{dp_mrp_calculations}{A table logging the MRP calculation process per encounter.}
+#' For each encounter, the function:
+#' \itemize{
+#'   \item Gathers all active medications and patient conditions.
+#'   \item Matches medication ATC codes against MRP definitions.
+#'   \item Attempts to find matching ICD codes directly from patient conditions.
+#'   \item If no direct ICD matches are found, evaluates proxy rules (using ATC or OPS codes).
+#'   \item Compiles results into descriptive and audit tables.
 #' }
 #'
-calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables) {
+#' @param drug_disease_mrp_tables A `data.table` containing MRP rules for drug-disease
+#'   interactions. Expected columns include:
+#'   \describe{
+#'     \item{ATC_FOR_CALCULATION}{ATC code used for rule evaluation}
+#'     \item{ICD}{Target ICD code (contraindicated condition)}
+#'     \item{ICD_VALIDITY_DAYS}{Validity period for the ICD diagnosis}
+#'     \item{ICD_PROXY_ATC}{Optional proxy ATC code used if no direct ICD is found}
+#'     \item{ICD_PROXY_ATC_VALIDITY_DAYS}{Validity window for proxy ATC usage}
+#'     \item{ICD_PROXY_OPS}{Optional OPS code used as an ICD proxy}
+#'     \item{ICD_PROXY_OPS_VALIDITY_DAYS}{Validity window for proxy OPS usage}
+#'   }
+#'
+#' @param input_file_processed_content_hash A string hash identifying the content version of the input file
+#'   used during calculation (useful for reproducibility and auditing).
+#'
+#' @return A named list with two `data.table` objects:
+#' \describe{
+#'   \item{retrolektive_mrpbewertung_fe}{MRP evaluations found for each encounter, ready for reporting or REDCap import.}
+#'   \item{dp_mrp_calculations}{Audit log of all MRP evaluation steps, including proxy type and code used.}
+#' }
+#'
+#' @details
+#' - The function uses `getResourcesForMRPCalculation()` to load relevant FHIR resources.
+#' - ATC codes are matched using `matchATCCodes()`, ICDs using `matchICDCodes()`.
+#' - If no ICD match is found, `matchICDProxies()` evaluates proxy rules (ATC/OPS).
+#' - Each match results in one entry in both output tables.
+#' - If no match is found for an encounter, a placeholder entry is created in `dp_mrp_calculations`.
+#'
+calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_processed_content_hash) {
 
   resources <- getResourcesForMRPCalculation(MRP_CALCULATION_TYPE$Drug_Disease)
 
@@ -488,25 +501,31 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables) {
   # Split drug_disease_mrp_tables by ATC and ICD
   drug_disease_mrp_tables_by_atc <- etlutils::splitTableToList(drug_disease_mrp_tables, "ATC_FOR_CALCULATION")
   drug_disease_mrp_tables_by_icd <- etlutils::splitTableToList(drug_disease_mrp_tables, "ICD")
+  drug_disease_mrp_tables_by_atc_proxy <- etlutils::splitTableToList(drug_disease_mrp_tables, "ICD_PROXY_ATC")
+  drug_disease_mrp_tables_by_ops_proxy <- etlutils::splitTableToList(drug_disease_mrp_tables, "ICD_PROXY_OPS")
 
   # Initialize empty lists for results
   retrolektive_mrpbewertung_rows <- list()
   dp_mrp_calculations_rows <- list()
-browser()
+
   for (encounter_id in resources$main_encounters$enc_id) {
 
     # Get encounter data and patient ID
     encounter <- resources$main_encounters[enc_id == encounter_id]
     patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
     meda <- resources$encounters_first_medication_analysis[[encounter_id]]
-    meda_id <- if (!is.null(meda)) meda$record_id else NA_character_
-    meda_datetime <- if (!is.null(meda)) meda$dat1 else NA
-    record_id <- resources$record_ids[pat_id == patient_id, record_id]
+    meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_
+    meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
+    meda_study_phase <- if (!is.null(meda)) meda$study_phase else NA_character_
+    meda_ward_name <- if (!is.null(meda)) meda$ward_name else NA_character_
+    record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
+    ret_id <- ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id)
+    ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
 
     # Get active MedicationRequests for the encounter
     active_requests <- getActiveMedicationRequests(resources$medication_requests, encounter$enc_period_start, meda_datetime)
 
-    if (nrow(active_requests)) {
+    if (nrow(active_requests) && meda_study_phase != "PhaseA") {
       # Match ATC-codes between encounter data and MRP definitions
       match_atc_codes <- matchATCCodes(active_requests, drug_disease_mrp_tables_by_atc)
       # Get and match ICD-codes of the patient
@@ -521,42 +540,50 @@ browser()
           meda_datetime = meda_datetime,
           patient_id = patient_id
         )
-      }
-      if (nrow(match_atc_and_icd_codes) == 0 && nrow(match_atc_codes)) {
-        # No ICD matches found, check ATC and OPS Proxys for ICDs
-        match_icd_proxies <- matchICDProxies(
-          medication_resources = list(
-            medication_requests = resources$medication_requests[medreq_patient_ref == paste0("Patient/", patient_id)],
-            medication_statements = resources$medication_statements[medstat_patient_ref == paste0("Patient/", patient_id)],
-            medication_administrations = resources$medication_administrations[medadm_patient_ref == paste0("Patient/", patient_id)]
-          ),
-          procedure_resources = resources$procedures[proc_patient_ref == paste0("Patient/", patient_id)],
-          drug_disease_mrp_tables_by_icd = drug_disease_mrp_tables_by_icd,
-          meda_datetime = meda_datetime
-        )
+        matched_atcs <- unique(match_atc_and_icd_codes$atc)
+        unmatched_atcs <- match_atc_codes[!(atc_code %in% matched_atcs)]
 
-        match_atc_and_icd_codes <- match_icd_proxies
+        if (nrow(unmatched_atcs)) {
+          # No ICD matches found, check ATC and OPS Proxys for ICDs
+          match_icd_proxies <- matchICDProxies(
+            medication_resources = list(
+              medication_requests = resources$medication_requests[medreq_patient_ref == paste0("Patient/", patient_id)],
+              medication_statements = resources$medication_statements[medstat_patient_ref == paste0("Patient/", patient_id)],
+              medication_administrations = resources$medication_administrations[medadm_patient_ref == paste0("Patient/", patient_id)]
+            ),
+            procedure_resources = resources$procedures[proc_patient_ref == paste0("Patient/", patient_id)],
+            drug_disease_mrp_tables_by_atc_proxy = drug_disease_mrp_tables_by_atc_proxy,
+            drug_disease_mrp_tables_by_ops_proxy = drug_disease_mrp_tables_by_ops_proxy,
+            meda_datetime = meda_datetime,
+            match_atc_codes = unmatched_atcs$atc_code
+          )
+          if (nrow(match_icd_proxies)) {
+            match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
+          }
+        }
+      } else {
+        # No active medication requests found for this encounter
+        match_atc_and_icd_codes <- data.table::data.table()
       }
     } else {
-      # No active medication requests found for this encounter
-      match_atc_and_icd_codes <- data.table()
+      match_atc_and_icd_codes <- data.table::data.table()
     }
 
     if (nrow(match_atc_and_icd_codes)) {
       # Iterate over matched results and create new rows for retrolektive_mrpbewertung and dp_mrp_calculations
-      for (i in seq_along(match_atc_and_icd_codes)) {
-        match <- match_atc_and_icd_codes[[i]]
-
+      for (i in seq_len(nrow(match_atc_and_icd_codes))) {
+        match <- match_atc_and_icd_codes[i]
         # Create new row for table retrolektive_mrpbewertung
-        ret_row[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
+        retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
           record_id = record_id,
           ret_id = paste0(meda_id, "-r", i),
           ret_meda_id = meda_id,
           ret_meda_dat1 = meda_datetime,
           ret_kurzbeschr = match$kurzbeschr,
-          ret_atc1 = match$atc,
+          ret_atc1 = match$atc_code,
           ret_ip_klasse_01 = MRP_CALCULATION_TYPE$Drug_Disease,
           ret_ip_klasse_disease = match$icd,
+          retrolektive_mrpbewertung_complete = ret_status,
           redcap_repeat_instrument = "retrolektive_mrpbewertung",
           redcap_repeat_instance = i
         )
@@ -566,9 +593,12 @@ browser()
           enc_id = encounter_id,
           mrp_calculation_type = MRP_CALCULATION_TYPE$Drug_Disease,
           meda_id = meda_id,
-          ret_id = ret_row$ret_id,
-          mrp_proxy_type = NA_character_,
-          mrp_proxy_code = NA_character_
+          study_phase = meda_study_phase,
+          ward_name = meda_ward_name,
+          ret_id = retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows)]]$ret_id,
+          mrp_proxy_type = match$proxy_type,
+          mrp_proxy_code = match$proxy_code,
+          input_file_processed_content_hash = input_file_processed_content_hash
         )
 
       }
@@ -578,9 +608,12 @@ browser()
         enc_id = encounter_id,
         mrp_calculation_type = MRP_CALCULATION_TYPE$Drug_Disease,
         meda_id = meda_id,
+        study_phase = meda_study_phase,
+        ward_name = meda_ward_name,
         ret_id = NA_character_,
         mrp_proxy_type = NA_character_,
-        mrp_proxy_code = NA_character_
+        mrp_proxy_code = NA_character_,
+        input_file_processed_content_hash = input_file_processed_content_hash
       )
     }
   }
@@ -589,328 +622,7 @@ browser()
   dp_mrp_calculations <- data.table::rbindlist(dp_mrp_calculations_rows, use.names = TRUE, fill = TRUE)
 
   return(list(
-    retrolektive_mrpbewertung = retrolektive_mrpbewertung,
+    retrolektive_mrpbewertung_fe = retrolektive_mrpbewertung,
     dp_mrp_calculations = dp_mrp_calculations
   ))
 }
-
-#' calculateDrugDiseaseMRPs <- function(drug_disease_mrp_definition) {
-#'   calculateMRPsInternal <- function(drug_disease_mrp_definition_expanded) {
-#'     # load current relevant patient IDS per Ward
-#'     pids_per_ward <- loadPIDsPerWard()
-#'
-#'     result_mrps <- data.table()
-#'     for (pid in pids_per_ward$patient_id) {
-#'
-#'       # MEDICATION_REQUEST_RESOURCE = "MedicationAdministration"
-#'       # MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME = "medreq_doseinstruc_timing_event"
-#'       # MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_start"
-#'       # MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME = "medreq_doseinstruc_timing_repeat_boundsperiod_end"
-#'
-#'       getCurrentMedication <- function(pid, drug_disease_mrp_definition_expanded, current_time = Sys.time()) {
-#'
-#'         # TODO: Diese Funktion wird ziemlich sicher auch in den anderen MRP-Berechnungen gebraucht -> nach 01 verlegen
-#'         # Encounter has a start date before or on the given date and is not yet completed on the given date.
-#'         #
-#'         # @param pid the patient ID
-#'         # @param current_time datetime for which all active encounters are to be found
-#'         #
-#'         # @return data.table with all current Encounters for the given patient at the given datetime
-#'         #
-#'         getCurrentEncounters <- function(pid, current_time) {
-#'           encounters <- getEncounterResources(pid)
-#'           encounters <- encounters[enc_period_start <= current_time & (is.na(enc_period_end) | enc_period_end > current_time)]
-#'           return(encounters)
-#'         }
-#'
-#'         # Calculates which of the given MedicationRequests belongs to one of the given encounters based on the date.
-#'         #
-#'         # @param medication_requests data.table with the MedicationRequests to check
-#'         # @param current_encounters data.table with all Encounters in whose runtime the given MedicationRequests should
-#'         #        lie
-#'         #
-#'         # @return data.table with the matching MedicationRequests
-#'         #
-#'         getCurrentMedicationsByDateMatching <- function(medication_requests, current_encounters) {
-#'           # 5.2 Now all remaining MedicationRequests with matching dates must be found. I.e.
-#'           #    a. There is a timing event that is at or after the start of an encounter and before its end, if
-#'           #       this encounter end is not NA.
-#'           current_medication_requests <- medication_requests[{
-#'             start_time <- get(MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME)
-#'             any(start_time >= encounters$enc_period_start) | any(start_time < encounters$enc_period_end)
-#'           }]
-#'           #       remove all MedicationRequest from the remaining which we found in step a.
-#'           medication_requests <- medication_requests[!current_medication_requests, on = names(medication_requests), nomatch = 0]
-#'
-#'           #    b. Same check as a. only for period start
-#'           more_current_medication_request <- medication_requests[{
-#'             start_time <- get(MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME)
-#'             any(start_time >= encounters$enc_period_start) | any(start_time < encounters$enc_period_end)
-#'           }]
-#'           #       add the matching MedicationRequests to the result
-#'           current_medication_requests <- rbind(current_medication_requests, more_current_medication_request)
-#'           #       remove all MedicationRequest from the remaining which we found in step b.
-#'           medication_requests <- medication_requests[!current_medication_requests, on = names(medication_requests), nomatch = 0]
-#'
-#'           #    c. Period end is after the start date of the Encounter but before or on the end
-#'           #       date of the Encounter if this Encounter end is not NA.
-#'           more_current_medication_request <- medication_requests[{
-#'             end_time <- get(MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME)
-#'             any(end_time > encounters$enc_period_start) & any(end_time <= encounters$enc_period_end)
-#'           }]
-#'           #       add the matching MedicationRequests to the result
-#'           current_medication_requests <- rbind(current_medication_requests, more_current_medication_request)
-#'           #       remove all MedicationRequest from the remaining which we found in step b.
-#'           medication_requests <- medication_requests[!current_medication_requests, on = names(medication_requests), nomatch = 0]
-#'
-#'           #    d. Period start is before the Encounter start and period end is after the
-#'           #       Encounter end if this counter end is not NA.
-#'           more_current_medication_request <- medication_requests[{
-#'             start_time <- get(MEDICATION_REQUEST_RESOURCE_PERIOD_START_COLUMN_NAME)
-#'             end_time <- get(MEDICATION_REQUEST_RESOURCE_PERIOD_END_COLUMN_NAME)
-#'             any(start_time < encounters$enc_period_start) & any(end_time > encounters$enc_period_end)
-#'           }]
-#'           #       add the matching MedicationRequests to the result
-#'           current_medication_requests <- rbind(current_medication_requests, more_current_medication_request)
-#'           return(current_medication_requests)
-#'         }
-#'
-#'         # Calculates for a given MedicationRequest whether a medication will be applied on the given date.
-#'         #
-#'         # @param medication_requests data.table with the MedicationRequest to check
-#'         # @param date date (day) that should be checked whether the medication is applied at
-#'         #
-#'         # @return vector with TRUE/FALSE values for every MedicationRequest in the same order as in medication_request
-#'         #
-#'         willBeAppliedAt <- function(medication_requests, date) {
-#'
-#'         }
-#'
-#'         # all resource datetimes are nromalized to UTC by the getResource() function -> normalize current_time too
-#'         current_time <- etlutils::normalizeTimeToUTC(current_time)
-#'         # 1. Take all Encounters of the patient with pid whose start date is before current_time and whose end date
-#'         #    is after current_time or is not set at all
-#'         encounters <- getCurrentEncounters(pid, current_time)
-#'         # 2. Get all MedicationRequests of the patient that have ever been made
-#'         medication_requests <- getResources(MEDICATION_REQUEST_RESOURCE, pid)
-#'         #    2.1 Remove unnecessary columns
-#'         medication_needed_column_names <- unlist(getGlobalVariablesByPrefix("MEDICATION_REQUEST_RESOURCE_"))
-#'         etlutils::retainColumns(medication_requests, medication_needed_column_names)
-#'         # 3. Remove all MedicationRequests that were ordered in the future
-#'         medication_requests <- medication_requests[get(MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME) <= current_time]
-#'         # 4. Collect all remaining MedicationRequests in a new list that directly reference one of the encounters from 1.
-#'         current_medication_requests <- medication_requests[etlutils::getAfterLastSlash(get(MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME)) %in% encounters$enc_id]
-#'         # 5. For all remaining MedicationRequests that have not ended up in the new list, check the date to see if they
-#'         #    match one of the current Encounters. If so, add them to the new list as well.
-#'         #    5.1 Remove the MedicationRequest with encounter references from the original list
-#'         current_encounter_IDs <- current_medication_requests[[MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME]]
-#'         medication_requests <- medication_requests[!(get(MEDICATION_REQUEST_RESOURCE_ENCOUNTER_REFERENCE_COLUMN_NAME) %in% current_encounter_IDs)]
-#'
-#'
-#'         # library(data.table)
-#'         # encounters <- data.table(enc_period_start = as.POSIXct(c("2023-03-10 12:00:00",
-#'         #                                                          "2023-03-11 15:00:00")))
-#'         # start_time <- as.POSIXct("2023-03-10 12:00:01")
-#'
-#'
-#'         #    5.2. Jetzt müssen alle übrigen MedicationRequest rausgefunden werden, bei denen das Datm passt. D.h.
-#'         #       a. Es gibt ein timing event, das am oder nach dem Start eines Encounter liegt und vor dessen Ende, wenn
-#'         #          dieses Encounterende nicht NA ist.
-#'         more_current_encounters <- medication_requests[{
-#'           start_time <- get(MEDICATION_REQUEST_RESOURCE_TIMESTAMP_COLUMN_NAME)
-#'           any(start_time >= encounters$enc_period_start) | any(start_time < encounters$enc_period_end)
-#'         }]
-#'         #       b. Denselben Check wie a. nur für period start
-#'         #       c. Period end liegt nach dem Startdatum des Encounters aber vor oder am Enddatum des Encounters, wenn
-#'         #          dieses Encounterende nicht NA ist.
-#'         #       d. Period start liegt vor dem Encounterstart und period end liegt nach dem Encounternende, wenn dieses
-#'         #          Encounterende nicht NA ist.
-#'
-#'         #    5.2 Add all time matching Medicationrequest to the current list
-#'         # for (i in seq_len(nrow(medication_requests))) {
-#'         #   medication_request <- medication_requests[i]
-#'         #   if (isCurrentMedicationByDateMatching(medication_request, encounters)) {
-#'         #     current_medication_requests <- rbind(current_medication_requests, medication_request)
-#'         #   }
-#'         # }
-#'
-#'         current_medication_requests <- rbind(current_medication_requests, getCurrentMedicationsByDateMatching(medication_request))
-#'
-#'         # 6. Merge the Medications to the remaining MedicationRequest to get the ATC codes for the requests
-#'         getMedicationResources(current_medication_requests[[]])
-#'         # 7. Run them through the willBeApplyedAt() function and use it to fill the 30-day matrix.
-#'
-#'       }
-#'
-#'       getCurrentDiagnosesByLoinc <- function(pid, drug_disease_mrp_definition_expanded) {
-#'         # analog getCurrentDiagnosesByIcd but determine the ICD code via LOINC
-#'       }
-#'
-#'       # patient_resource <- getPatientResources(pid)
-#'       # encounter_resources <- getEncounterResources(pid)
-#'
-#'       #medication_resources <- getMedicationResource(pid)
-#'       # medicationadministration_resources <- getMedicationAdministrationResources(pid)
-#'       # medicationstatement_resources <- getMedicationStatementResources(pid)
-#'
-#'
-#'       getCurrentDiagnosesByICD <- function(pid, drug_disease_mrp_definition_expanded, current_time = Sys.time()) {
-#'         # all resource datetimes are nromalized to UTC by the getResource() function -> normalize current_time too
-#'         current_time <- etlutils::normalizeTimeToUTC(current_time)
-#'         # 0. Get the table with all diagnoses ever made for the patient
-#'         conditions <- getConditionResources(pid)
-#'         # 1. Remove all irrelevant conditions (not contained in the MRP lists)
-#'         diagnoses <- unique(na.omit(drug_disease_mrp_definition_expanded$ICD))
-#'         diagnoses <- sort(unique(unlist(strsplit(diagnoses, "\\+"))))
-#'         conditions <- conditions[con_code_code %in% diagnoses]
-#'         #TODO: Wenn wir die Stati "completed, "inactive" etc. als mögliches Ende einer vorher gestellten Diagose beachten wollen, dürfen wir das wegwerfen aller nicht-"active" Diagnosen nicht machen
-#'         # 2. Remove all diagnoses that have a clinicalStatus and this is not 'active'
-#'         conditions <- conditions[is.na(con_clinicalstatus_code) || con_clinicalstatus_code == "active"]
-#'         # 3. Remove all diagnoses with a start time in the future (recordeddate is a datetime)
-#'         conditions <- conditions[con_recordeddate <= current_time]
-#'         # 4. Remove all diagnosis with an abatement time in the past
-#'         conditions <- conditions[is.na(con_abatementdatetime) || con_abatementdatetime >= current_time]
-#'         # 5. Remove all diagnoses that are no longer valid
-#'         #TODO: Wir müssen hier auch nach Diagnosen suchen, die durch ihren Status vorher gestellte Diagnosen der gleichen ICD beenden (siehe TODO an 2.). Es kann zu mehreren Zeitintervallen für eine Diagnose kommen.
-#'         #   Extract for every diagnosis code the validity period (duration) in days
-#'         diagnoses_durations <- drug_disease_mrp_definition_expanded[ICD %in% conditions$con_code_code]
-#'         diagnoses_durations <- etlutils::retainColumns(diagnoses_durations, c("ICD", "Geltungsdauer"))
-#'         diagnoses_durations[, Geltungsdauer := as.integer(Geltungsdauer)]
-#'         diagnoses_durations <- unique(diagnoses_durations)
-#'         #   Filter diagnoses_durations to only keep the longest duration for each ICD code (if there are conflicting durations for the same code)
-#'         diagnoses_durations[is.na(Geltungsdauer), Geltungsdauer := Inf] # Replace NA with Inf
-#'         diagnoses_durations <- diagnoses_durations[, .SD[which.max(Geltungsdauer)], by = ICD]
-#'         #   Perform a join between conditions and diagnoses_durations to add the duration to each diagnosis in conditions
-#'         conditions <- merge(conditions, diagnoses_durations, by.x = "con_code_code", by.y = "ICD", all.x = TRUE)
-#'         #   Calculate the validity end date for each diagnosis in conditions and filter based on a given current_time
-#'         #      R's Integer values have 32 bit. To calculate with dates by Integer values the absolut maximum date is
-#'         #      "2038-01-19 04:14:07 CET". To express infinite diagnosis duration we select a slightly lower date in the
-#'         #      far away future.
-#'         conditions[, con_validity_end := as.POSIXct(ifelse(is.infinite(Geltungsdauer), "9999-12-31 23:59:59", as.integer(con_recordeddate + Geltungsdauer * 3600 * 24)))]
-#'         conditions[, con_validity_end := as.POSIXct(ifelse(is.na(con_abatementdatetime), con_validity_end, min(con_abatementdatetime, con_validity_end)))]
-#'         #   remove all no longer valid conditions (con_validity_end in the past -> drop them)
-#'         conditions <- conditions[con_validity_end >= current_time]
-#'
-#'         # every interval will end MAX_DAYS_CHECKED_FOR_MRPS_IN_FUTURE days in the from current_time
-#'         general_diagnosis_max_time <- getMaxTimeInFutureToCheckForMRPs(current_time)
-#'         # 6. Determine for every diagnosis from current_time until general_diagnosis_max_time which diagnoses applies
-#'         #   Create a list of vectors with the diagnosis code as name for the list elements and an interval for the
-#'         #   validity period of the diagnosis.
-#'         current_conditions <- list()
-#'         for (i in seq_len(nrow(conditions))) {
-#'           condition <- conditions[i]
-#'           diagnosis_min_time <- max(condition$con_recordeddate, current_time)
-#'           diagnosis_max_time <- min(general_diagnosis_max_time, condition$con_validity_end)
-#'           current_conditions[[condition$con_code_code]] <- lubridate::interval(diagnosis_min_time, diagnosis_max_time)
-#'         }
-#'         return(current_conditions)
-#'       }
-#'       current_conditions <- getCurrentDiagnosesByICD(pid, drug_disease_mrp_definition_expanded, as.POSIXct("2019-01-01 12:00:00", tz = "CET"))
-#'       #current_medication <- getCurrentMedication(pid, drug_disease_mrp_definition_expanded, as.POSIXct("2019-01-01 12:00:00", tz = "CEST"))
-#'
-#'     }
-#'     return(result_mrps)
-#'   }
-#'
-#'   etlutils::runLevel3("Check if drug_disease_mrp_definition must be expanded", {
-#'     # Check if drug_disease_mrp_definition must be expanded
-#'     # set must_expand to FALSE
-#'     must_expand <- FALSE
-#'     # load file info for drug-disease-mrp excel
-#'     file_info_drug_disease_mrp_definition <- file.info(readExcelFilePath(MRP_DEFINITION_FILE_DRUG_DISEASE))
-#'     # check if .RData files not exists or modification time is not equal -> set must_expand to TRUE
-#'     if (!etlutils::existsLocalRdataFile("mrp_definition_file_status") || !etlutils::existsLocalRdataFile("drug_disease_mrp_definition_expanded")) {
-#'       must_expand <- TRUE
-#'       mrp_definition_file_status <- list()
-#'     } else {
-#'       mrp_definition_file_status <- etlutils::polar_read_rdata("mrp_definition_file_status")
-#'       drug_disease_last_update <- mrp_definition_file_status[["drug_disease_last_update"]]
-#'       if (is.null(drug_disease_last_update) || file_info_drug_disease_mrp_definition$mtime != drug_disease_last_update) {
-#'         must_expand <- TRUE
-#'       }
-#'     }
-#'   })
-#'
-#'   etlutils::runLevel3("Expand drug_disease_mrp_definition", {
-#'     if (must_expand) {
-#'       # read drug-disease-mrp excel as table list
-#'       drug_disease_mrp_definition <- readExcelFileAsTableListFromExtData(MRP_DEFINITION_FILE_DRUG_DISEASE)[["Drug_Disease_Pairs"]]
-#'       # clean and expand table list
-#'       drug_disease_mrp_definition_expanded <- cleanAndExpandDefinition(drug_disease_mrp_definition)
-#'       polar_write_rdata(drug_disease_mrp_definition_expanded)
-#'       # set modification date of drug-disease-mrp excel file to new list with drug_disease_last_update
-#'       mrp_definition_file_status[["drug_disease_last_update"]] <- file_info_drug_disease_mrp_definition$mtime
-#'       polar_write_rdata(mrp_definition_file_status)
-#'     }
-#'   })
-#'
-#'   etlutils::runLevel3("Load expanded drug_disease_mrp_definition from file", {
-#'     if (!exists("drug_disease_mrp_definition_expanded")) {
-#'       drug_disease_mrp_definition_expanded <- etlutils::polar_read_rdata("drug_disease_mrp_definition_expanded")
-#'     }
-#'   })
-#'
-#'   etlutils::runLevel3("Calculate Drug Disease MRPs internal", {
-#'     mrps <- calculateMRPsInternal(drug_disease_mrp_definition_expanded)
-#'     message(mrps)
-#'   })
-#'
-#'   etlutils::runLevel3("Create Drug Disease MRP Table", {
-#'     # TODO weitere Spalten wie medreq_ID, medreq_startdate, con_datetime, obs_datetime
-#'     # wie Hauptdiagnose bestimmen
-#'     mrp_drug_disease <- data.table::data.table(
-#'       pid = c("IP_123", "IP_123" ),
-#'       mrp_calculation_time = c("2024-04-23 10:19:32 UTC", "2024-04-24 10:19:32 UTC"),
-#'       mrp_description = c("Antithrombin-Mangel", "Hyperthyreose"),
-#'       atc1 = c("G03FA15", "N06BA12"),
-#'       atc1_active_component = c("Dienogest und Estrogen", "Lisdexamfetamin"),
-#'       icd = c(NA, "E05"),
-#'       proxy_atc2 = c("B01AB02", NA),
-#'       proxy_loinc = c(NA, NA)
-#'     )
-#'   })
-#'
-#'   etlutils::runLevel3("Write MRP Tables to DB", {
-#'     writeResourceTablesToDatabase <- function(tables, table_names = NA, clear_before_insert = FALSE) {
-#'
-#'       # write all tables (table_names == NA) or only tables with the given names
-#'       if (is.na(table_names)) {
-#'         table_names <- names(tables)
-#'       }
-#'
-#'       db_connection <- etlutils::dbConnect(
-#'         user = DB_KDS2DB_USER,
-#'         password = DB_KDS2DB_PASSWORD,
-#'         dbname = DB_GENERAL_NAME,
-#'         host = DB_GENERAL_HOST,
-#'         port = DB_GENERAL_PORT,
-#'         schema = DB_KDS2DB_SCHEMA_IN
-#'       )
-#'
-#'       db_table_names <- etlutils::dbListTables(db_connection)
-#'       # Display the table names
-#'       print(paste("The following tables are found in database:", paste(db_table_names, collapse = ", ")))
-#'       if (is.null(db_table_names)) {
-#'         warning("There is no tables found in database")
-#'       }
-#'
-#'       # write tables to DB
-#'       for (table_name in table_names) {
-#'         if (tolower(table_name) %in% db_table_names) {
-#'           table <- tables[[table_name]]
-#'           if (clear_before_insert) {
-#'             etlutils::dbDeleteContent(db_connection, table_name)
-#'           }
-#'           # Check column widths of table content
-#'           etlutils::dbCheckContent(db_connection, table_name, table)
-#'           # Add table content to DB
-#'           etlutils::dbAddContent(db_connection, table_name, table)
-#'         } else {
-#'           warning(paste("Table", table_name, "not found in database"))
-#'         }
-#'       }
-#'       etlutils::dbDisconnect(db_connection)
-#'     }
-#'   })
-#'
-#' }

@@ -111,11 +111,31 @@ if (exists("DEBUG_DAY")) {
       med_id = "[1]UKB-0001-M-1",
       med_code_code = "[1.1.1]14022620 ~ [1.2.1]A10BA02"
     )]
+    dt_med <- rbind(dt_med, dt_med[1])
+    dt_med[2, `:=`(
+      med_id = "[1]UKB-0001-M-2",
+      med_code_code = "[1.1.1]14022620 ~ [1.2.1]N07BB03"
+    )]
+    dt_med <- rbind(dt_med, dt_med[1])
+    dt_med[3, `:=`(
+      med_id = "[1]UKB-0001-M-3",
+      med_code_code = "[1.1.1]14022620 ~ [1.2.1]N02AA01"
+    )]
 
-    dt_medreq <- rbind(dt_medreq, list(medreq_id = "[1]UKB-0001-MR-1",
-                                       medreq_patient_ref = "[1.1]Patient/UKB-0001",
-                                       medreq_medicationreference_ref = "[1]Medication/UKB-0001-M-1",
-                                       medreq_authoredon = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.6)), fill = TRUE)
+    dt_medreq <- rbind(
+      dt_medreq,
+      data.table::data.table(
+        medreq_id = c("[1]UKB-0001-MR-1", "[1]UKB-0001-MR-2", "[1]UKB-0001-MR-3"),
+        medreq_patient_ref = "[1.1]Patient/UKB-0001",
+        medreq_medicationreference_ref = c("[1]Medication/UKB-0001-M-1", "[1]Medication/UKB-0001-M-2", "[1]Medication/UKB-0001-M-3"),
+        medreq_authoredon = c(
+          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.6),
+          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.7),
+          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.8)
+        )
+      ),
+      fill = TRUE
+    )
 
     dt_con <- dt_con[1,]
     dt_con[1, `:=`(
@@ -125,12 +145,20 @@ if (exists("DEBUG_DAY")) {
       con_recordeddate = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.6),
       con_onsetperiod_start = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.6)
     )]
+    dt_con <- rbind(dt_con, dt_con[1,])
+    dt_con[2, `:=`(
+      con_id = "[1]UKB-0001-C-2",
+      con_patient_ref = "[1.1]Patient/UKB-0001",
+      con_code_code = "[1.1.1]R10.0",
+      con_recordeddate = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.7),
+      con_onsetperiod_start = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.7)
+    )]
 
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-1-A-1-V-1",
                      enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 1"]
     pids_per_wards <- resource_tables$pids_per_ward
     pids_per_wards[, encounter_id := "UKB-0001-E-1-A-1-V-1"]
-    pids_per_wards[, ward_name := "IP-Station A"]
+    pids_per_wards[, ward_name := "Station 2"]
 
   } else if (DEBUG_DAY == 2) {
     # Day 2: Versorgungsstellenkontakt wird entlassen

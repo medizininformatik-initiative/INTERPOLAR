@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-05-05 10:51:51
--- Rights definition file size        : 15631 Byte
+-- Rights definition file last update : 2025-06-23 09:23:55
+-- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-05-20 19:36:51
+-- Create time: 2025-06-24 08:18:17
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -157,6 +157,7 @@ BEGIN
                                 redcap_repeat_instrument,
                                 redcap_repeat_instance,
                                 redcap_data_access_group,
+                                projekt_versionsnummer,
                                 pat_id,
                                 pat_cis_pid,
                                 pat_name,
@@ -177,6 +178,7 @@ BEGIN
                                 current_record.redcap_repeat_instrument,
                                 current_record.redcap_repeat_instance,
                                 current_record.redcap_data_access_group,
+                                current_record.projekt_versionsnummer,
                                 current_record.pat_id,
                                 current_record.pat_cis_pid,
                                 current_record.pat_name,
@@ -322,6 +324,7 @@ BEGIN
                                 redcap_repeat_instrument,
                                 redcap_repeat_instance,
                                 redcap_data_access_group,
+                                db_filter_8,
                                 fall_fhir_enc_id,
                                 patient_id_fk,
                                 fall_pat_id,
@@ -351,6 +354,7 @@ BEGIN
                                 current_record.redcap_repeat_instrument,
                                 current_record.redcap_repeat_instance,
                                 current_record.redcap_data_access_group,
+                                current_record.db_filter_8,
                                 current_record.fall_fhir_enc_id,
                                 current_record.patient_id_fk,
                                 current_record.fall_pat_id,
@@ -505,6 +509,8 @@ BEGIN
                                 redcap_repeat_instrument,
                                 redcap_repeat_instance,
                                 redcap_data_access_group,
+                                db_filter_5,
+                                db_filter_7,
                                 meda_anlage,
                                 meda_edit,
                                 fall_meda_id,
@@ -540,6 +546,8 @@ BEGIN
                                 current_record.redcap_repeat_instrument,
                                 current_record.redcap_repeat_instance,
                                 current_record.redcap_data_access_group,
+                                current_record.db_filter_5,
+                                current_record.db_filter_7,
                                 current_record.meda_anlage,
                                 current_record.meda_edit,
                                 current_record.fall_meda_id,
@@ -700,6 +708,7 @@ BEGIN
                                 redcap_repeat_instrument,
                                 redcap_repeat_instance,
                                 redcap_data_access_group,
+                                db_filter_6,
                                 mrp_anlage,
                                 mrp_edit,
                                 mrp_meda_id,
@@ -786,6 +795,7 @@ BEGIN
                                 current_record.redcap_repeat_instrument,
                                 current_record.redcap_repeat_instance,
                                 current_record.redcap_data_access_group,
+                                current_record.db_filter_6,
                                 current_record.mrp_anlage,
                                 current_record.mrp_edit,
                                 current_record.mrp_meda_id,
@@ -1037,9 +1047,7 @@ BEGIN
                                 ret_notiz1,
                                 ret_meda_dat2,
                                 ret_2ndbewertung___1,
-                                ret_bewerter2_pipeline,
                                 ret_bewerter2,
-                                ret_bewerter3,
                                 ret_gewissheit2,
                                 ret_mrp_zuordnung2,
                                 ret_gewissheit2_oth,
@@ -1067,8 +1075,6 @@ BEGIN
                                 ret_massn_orga2___8,
                                 ret_notiz2,
                                 ret_additional_values,
-                                db_ret_main_enc_id,
-                                db_ret_medical_case_id,
                                 retrolektive_mrpbewertung_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -1121,9 +1127,7 @@ BEGIN
                                 current_record.ret_notiz1,
                                 current_record.ret_meda_dat2,
                                 current_record.ret_2ndbewertung___1,
-                                current_record.ret_bewerter2_pipeline,
                                 current_record.ret_bewerter2,
-                                current_record.ret_bewerter3,
                                 current_record.ret_gewissheit2,
                                 current_record.ret_mrp_zuordnung2,
                                 current_record.ret_gewissheit2_oth,
@@ -1151,8 +1155,6 @@ BEGIN
                                 current_record.ret_massn_orga2___8,
                                 current_record.ret_notiz2,
                                 current_record.ret_additional_values,
-                                current_record.db_ret_main_enc_id,
-                                current_record.db_ret_medical_case_id,
                                 current_record.retrolektive_mrpbewertung_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,

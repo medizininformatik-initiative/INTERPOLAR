@@ -1,5 +1,7 @@
 ﻿"Variable / Field Name","Form Name","Section Header","Field Type","Field Label","Choices, Calculations, OR Slider Labels","Field Note","Text Validation Type OR Show Slider Number","Text Validation Min","Text Validation Max",Identifier?,"Branching Logic (Show field only if...)","Required Field?","Custom Alignment","Question Number (surveys only)","Matrix Group Name","Matrix Ranking?","Field Annotation"
 record_id,patient,,text,"Record ID",,,,,,,,,,,,,
+projekt_versionsnummer,patient,,text,"Versionsnummer zum Matching von REDCap-Projektversion mit weiteren Versionselementen der Toolchain
+",,v1.0.0,,,,,,,,,,," @HIDDEN"
 pat_header,patient,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 25%;""><col style=""width: 25%;""><col style=""width: 25%;""><col style=""width: 25%;""></colgroup> <tbody> <tr> <td> </td> <td colspan=""2""> <h3 style=""text-align: center;"">Patientendaten</h3> </td> <td> </td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
 patient_fe_id,patient,,text,"verstecktes Feld für intern patient_fe_id",,,integer,,,,,,,,,," @HIDDEN"
 pat_id,patient,,text,"Patient-identifier (FHIR)",,,,,,,,,,,,," @HIDDEN"
@@ -12,19 +14,173 @@ pat_aktuell_alter,patient,,text,"<div class=""rich-text-field-label""><p>aktuell
 pat_geschlecht,patient,,text,Geschlecht,,,,,,,,,RH,,,," @READONLY"
 pat_additional_values,patient,,notes,"Reserviertes Feld für zusätzliche Werte",,,,,,,,,,,,," @HIDDEN"
 fall_fe_id,fall,,text,"verstecktes Feld für fall_fe_id",,,integer,,,,,,,,,," @HIDDEN"
+db_filter_8,fall,,calc,"Dashboard Filter 8","if(
+  (not_contain([meda_id][1], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][2], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][3], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][4], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][5], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][6], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][7], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][8], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][9], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][10], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][11], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][12], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][13], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][14], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][15], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][16], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][17], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][18], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][19], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][20], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][21], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][22], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][23], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][24], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][25], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][26], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][27], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][28], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][29], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][30], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][31], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][32], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][33], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][34], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][35], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][36], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][37], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][38], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][39], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][40], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][41], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][42], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][43], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][44], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][45], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][46], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][47], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][48], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][49], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][50], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][51], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][52], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][53], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][54], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][55], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][56], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][57], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][58], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][59], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][60], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][61], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][62], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][63], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][64], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][65], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][66], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][67], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][68], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][69], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][70], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][71], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][72], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][73], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][74], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][75], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][76], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][77], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][78], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][79], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][80], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][81], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][82], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][83], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][84], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][85], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][86], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][87], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][88], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][89], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][90], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][91], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][92], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][93], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][94], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][95], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][96], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][97], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][98], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][99], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][100], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][101], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][102], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][103], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][104], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][105], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][106], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][107], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][108], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][109], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][110], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][111], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][112], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][113], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][114], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][115], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][116], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][117], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][118], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][119], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][120], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][121], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][122], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][123], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][124], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][125], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][126], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][127], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][128], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][129], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][130], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][131], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][132], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][133], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][134], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][135], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][136], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][137], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][138], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][139], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][140], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][141], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][142], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][143], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][144], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][145], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][146], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][147], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][148], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][149], [fall_id]) and [fall_complete] = 0) and
+  (not_contain([meda_id][150], [fall_id]) and [fall_complete] = 0)
+, 0, 1)",,,,,,,,,,,," @HIDDEN"
 fall_fhir_enc_id,fall,,text,"verstecktes Feld für FHIR-ID des Encounters",,,,,,,,,,,,," @HIDDEN"
 fall_header,fall,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 25%;""><col style=""width: 25%;""><col style=""width: 25%;""><col style=""width: 25%;""></colgroup> <tbody> <tr> <td> <p><strong>[pat_name] [pat_vorname]</strong></p> <p>Pat-ID: [pat_cis_pid]</p> </td> <td colspan=""2""> <h3 style=""text-align: center;"">Fall <span style=""font-size: 13px; text-align: var(--bs-body-text-align);"">[fall_id]</span></h3> </td> <td> </td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
 patient_id_fk,fall,,text,"verstecktes Feld für patient_id_fk",,,integer,,,,,,,,,," @HIDDEN"
 fall_pat_id,fall,,text,"verstecktes Feld für fall_pat_id",,,,,,,,,,,,," @HIDDEN"
-fall_femb_1,fall,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>Fall-ID</td> <td>{fall_id}</td> <td> </td> <td> </td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr> <td>Station (<i>ID / Name)</i></td> <td>{fall_station}</td> <td style=""text-align: center;"">Aufnahmedatum</td> <td>{fall_aufn_dat}</td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr> <td>Zimmer-Nr.</td> <td>{fall_zimmernr}</td> <td style=""text-align: center;""> </td> <td> </td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 80%;""> </colgroup> <tbody> <tr> <td>Diagnose(n) bei Aufnahme</td> <td colspan=""3"">{fall_aufn_diag}</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
+fall_femb_1,fall,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>Fall-ID</td> <td>{fall_id}</td> <td> </td> <td> </td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr> <td>Station (<i>ID / Name)</i></td> <td>{fall_station}</td> <td style=""text-align: center;"">Aufnahmedatum</td> <td>{fall_aufn_dat}</td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30.0741%;""><col style=""width: 20%;""><col style=""width: 30.0741%;""></colgroup> <tbody> <tr> <td>Zimmer-Nr.</td> <td colspan=""3"">{fall_zimmernr}</td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 80%;""> </colgroup> <tbody> <tr> <td>Diagnose(n) bei Aufnahme</td> <td colspan=""3"">{fall_aufn_diag}</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
 fall_femb_2,fall,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 25px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>Fallstatus</td> <td>{fall_status}</td> <td style=""text-align: center;"">Entlassdatum</td> <td>{fall_ent_dat}</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
-fall_id,fall,,text,"Fall-ID Encounter-Identifier (KIS)",,,,,,,,,,,,," @READONLY"
+fall_id,fall,,text,"Fall-ID Encounter-Identifier (KIS)
+
+",,,,,,,,,,,,," @READONLY"
 fall_studienphase,fall,,text,"<div class=""rich-text-field-label""><p><span style=""color: #000000;"">Studienphase</span></p></div>",,,,,,,,,,,,," @HIDDEN"
 fall_station,fall,,text,Station,,"ID / Name",,,,,,,,,,," @READONLY"
 fall_aufn_dat,fall,,text,Aufnahmedatum,,,datetime_seconds_ymd,,,,,,,,,," @READONLY"
 fall_zimmernr,fall,,text,Zimmer-Nr.,,,,,,,,,,,,," @READONLY"
 fall_aufn_diag,fall,,notes,"<div class=""rich-text-field-label""><p><span style=""color: #e03e2d;""><span style=""color: #000000;"">Diagnose(n) bei Aufnahme</span><br></span></p></div>",,,,,,,,,,,,," @READONLY"
-fall_femb_8,fall,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 25px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 10%;""><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 10%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>aktuelles Gewicht</td> <td>{fall_gewicht_aktuell} </td> <td>{fall_gewicht_aktl_einheit}</td> <td style=""text-align: center;"">Größe</td> <td>{fall_groesse} </td> <td>{fall_groesse_einheit}</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
+fall_femb_8,fall,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 25px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 10%;""><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 10%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>aktuelles Gewicht</td> <td>{fall_gewicht_aktuell} </td> <td>{fall_gewicht_aktl_einheit}</td> <td style=""text-align: center;"">Größe</td> <td>{fall_groesse} </td> <td>{fall_groesse_einheit}</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
 fall_gewicht_aktuell,fall,,text,"aktuelles Gewicht",,,number,30,500,,,,,,,," @READONLY"
 fall_gewicht_aktl_einheit,fall,,text,"<div class=""rich-text-field-label""><p><span style=""color: #000000;"">aktuelles Gewicht: Einheit</span></p></div>",,,,,,,,,,,,," @READONLY"
 fall_groesse,fall,,text,Größe,,,number,100,230,,,,,,,," @READONLY"
@@ -33,18 +189,327 @@ fall_bmi,fall,,text,BMI,,,number,,,,,,,,,," @HIDDEN"
 fall_status,fall,,text,"<div class=""rich-text-field-label""><p><span style=""color: #e03e2d;""><span style=""color: #000000;"">Fallstatus</span><br></span></p></div>",,,,,,,,,,,,," @READONLY"
 fall_ent_dat,fall,,text,Entlassdatum,,,datetime_seconds_ymd,,,,,,,,,," @READONLY"
 fall_additional_values,fall,,notes,"Reserviertes Feld für zusätzliche Werte",,,,,,,,,,,,," @HIDDEN"
+db_filter_5,medikationsanalyse,,calc,"Dashboard Filter 5","if(
+    (
+        (contains([meda_id], [fall_id][1]) and ([fall_complete][1] = 2)) or
+        (contains([meda_id], [fall_id][2]) and ([fall_complete][2] = 2)) or
+        (contains([meda_id], [fall_id][3]) and ([fall_complete][3] = 2)) or
+        (contains([meda_id], [fall_id][4]) and ([fall_complete][4] = 2)) or
+        (contains([meda_id], [fall_id][5]) and ([fall_complete][5] = 2)) or
+        (contains([meda_id], [fall_id][6]) and ([fall_complete][6] = 2)) or
+        (contains([meda_id], [fall_id][7]) and ([fall_complete][7] = 2)) or
+        (contains([meda_id], [fall_id][8]) and ([fall_complete][8] = 2)) or
+        (contains([meda_id], [fall_id][9]) and ([fall_complete][9] = 2)) or
+        (contains([meda_id], [fall_id][10]) and ([fall_complete][10] = 2)) or
+        (contains([meda_id], [fall_id][11]) and ([fall_complete][11] = 2)) or
+        (contains([meda_id], [fall_id][12]) and ([fall_complete][12] = 2)) or
+        (contains([meda_id], [fall_id][13]) and ([fall_complete][13] = 2)) or
+        (contains([meda_id], [fall_id][14]) and ([fall_complete][14] = 2)) or
+        (contains([meda_id], [fall_id][15]) and ([fall_complete][15] = 2)) or
+        (contains([meda_id], [fall_id][16]) and ([fall_complete][16] = 2)) or
+        (contains([meda_id], [fall_id][17]) and ([fall_complete][17] = 2)) or
+        (contains([meda_id], [fall_id][18]) and ([fall_complete][18] = 2)) or
+        (contains([meda_id], [fall_id][19]) and ([fall_complete][19] = 2)) or
+        (contains([meda_id], [fall_id][20]) and ([fall_complete][20] = 2)) or
+        (contains([meda_id], [fall_id][21]) and ([fall_complete][21] = 2)) or
+        (contains([meda_id], [fall_id][22]) and ([fall_complete][22] = 2)) or
+        (contains([meda_id], [fall_id][23]) and ([fall_complete][23] = 2)) or
+        (contains([meda_id], [fall_id][24]) and ([fall_complete][24] = 2)) or
+        (contains([meda_id], [fall_id][25]) and ([fall_complete][25] = 2)) or
+        (contains([meda_id], [fall_id][26]) and ([fall_complete][26] = 2)) or
+        (contains([meda_id], [fall_id][27]) and ([fall_complete][27] = 2)) or
+        (contains([meda_id], [fall_id][28]) and ([fall_complete][28] = 2)) or
+        (contains([meda_id], [fall_id][29]) and ([fall_complete][29] = 2)) or
+        (contains([meda_id], [fall_id][30]) and ([fall_complete][30] = 2)) or
+        (contains([meda_id], [fall_id][31]) and ([fall_complete][31] = 2)) or
+        (contains([meda_id], [fall_id][32]) and ([fall_complete][32] = 2)) or
+        (contains([meda_id], [fall_id][33]) and ([fall_complete][33] = 2)) or
+        (contains([meda_id], [fall_id][34]) and ([fall_complete][34] = 2)) or
+        (contains([meda_id], [fall_id][35]) and ([fall_complete][35] = 2)) or
+        (contains([meda_id], [fall_id][36]) and ([fall_complete][36] = 2)) or
+        (contains([meda_id], [fall_id][37]) and ([fall_complete][37] = 2)) or
+        (contains([meda_id], [fall_id][38]) and ([fall_complete][38] = 2)) or
+        (contains([meda_id], [fall_id][39]) and ([fall_complete][39] = 2)) or
+        (contains([meda_id], [fall_id][40]) and ([fall_complete][40] = 2)) or
+        (contains([meda_id], [fall_id][41]) and ([fall_complete][41] = 2)) or
+        (contains([meda_id], [fall_id][42]) and ([fall_complete][42] = 2)) or
+        (contains([meda_id], [fall_id][43]) and ([fall_complete][43] = 2)) or
+        (contains([meda_id], [fall_id][44]) and ([fall_complete][44] = 2)) or
+        (contains([meda_id], [fall_id][45]) and ([fall_complete][45] = 2)) or
+        (contains([meda_id], [fall_id][46]) and ([fall_complete][46] = 2)) or
+        (contains([meda_id], [fall_id][47]) and ([fall_complete][47] = 2)) or
+        (contains([meda_id], [fall_id][48]) and ([fall_complete][48] = 2)) or
+        (contains([meda_id], [fall_id][49]) and ([fall_complete][49] = 2)) or
+        (contains([meda_id], [fall_id][50]) and ([fall_complete][50] = 2)) or
+        (contains([meda_id], [fall_id][51]) and ([fall_complete][51] = 2)) or
+        (contains([meda_id], [fall_id][52]) and ([fall_complete][52] = 2)) or
+        (contains([meda_id], [fall_id][53]) and ([fall_complete][53] = 2)) or
+        (contains([meda_id], [fall_id][54]) and ([fall_complete][54] = 2)) or
+        (contains([meda_id], [fall_id][55]) and ([fall_complete][55] = 2)) or
+        (contains([meda_id], [fall_id][56]) and ([fall_complete][56] = 2)) or
+        (contains([meda_id], [fall_id][57]) and ([fall_complete][57] = 2)) or
+        (contains([meda_id], [fall_id][58]) and ([fall_complete][58] = 2)) or
+        (contains([meda_id], [fall_id][59]) and ([fall_complete][59] = 2)) or
+        (contains([meda_id], [fall_id][60]) and ([fall_complete][60] = 2)) or
+        (contains([meda_id], [fall_id][61]) and ([fall_complete][61] = 2)) or
+        (contains([meda_id], [fall_id][62]) and ([fall_complete][62] = 2)) or
+        (contains([meda_id], [fall_id][63]) and ([fall_complete][63] = 2)) or
+        (contains([meda_id], [fall_id][64]) and ([fall_complete][64] = 2)) or
+        (contains([meda_id], [fall_id][65]) and ([fall_complete][65] = 2)) or
+        (contains([meda_id], [fall_id][66]) and ([fall_complete][66] = 2)) or
+        (contains([meda_id], [fall_id][67]) and ([fall_complete][67] = 2)) or
+        (contains([meda_id], [fall_id][68]) and ([fall_complete][68] = 2)) or
+        (contains([meda_id], [fall_id][69]) and ([fall_complete][69] = 2)) or
+        (contains([meda_id], [fall_id][70]) and ([fall_complete][70] = 2)) or
+        (contains([meda_id], [fall_id][71]) and ([fall_complete][71] = 2)) or
+        (contains([meda_id], [fall_id][72]) and ([fall_complete][72] = 2)) or
+        (contains([meda_id], [fall_id][73]) and ([fall_complete][73] = 2)) or
+        (contains([meda_id], [fall_id][74]) and ([fall_complete][74] = 2)) or
+        (contains([meda_id], [fall_id][75]) and ([fall_complete][75] = 2)) or
+        (contains([meda_id], [fall_id][76]) and ([fall_complete][76] = 2)) or
+        (contains([meda_id], [fall_id][77]) and ([fall_complete][77] = 2)) or
+        (contains([meda_id], [fall_id][78]) and ([fall_complete][78] = 2)) or
+        (contains([meda_id], [fall_id][79]) and ([fall_complete][79] = 2)) or
+        (contains([meda_id], [fall_id][80]) and ([fall_complete][80] = 2)) or
+        (contains([meda_id], [fall_id][81]) and ([fall_complete][81] = 2)) or
+        (contains([meda_id], [fall_id][82]) and ([fall_complete][82] = 2)) or
+        (contains([meda_id], [fall_id][83]) and ([fall_complete][83] = 2)) or
+        (contains([meda_id], [fall_id][84]) and ([fall_complete][84] = 2)) or
+        (contains([meda_id], [fall_id][85]) and ([fall_complete][85] = 2)) or
+        (contains([meda_id], [fall_id][86]) and ([fall_complete][86] = 2)) or
+        (contains([meda_id], [fall_id][87]) and ([fall_complete][87] = 2)) or
+        (contains([meda_id], [fall_id][88]) and ([fall_complete][88] = 2)) or
+        (contains([meda_id], [fall_id][89]) and ([fall_complete][89] = 2)) or
+        (contains([meda_id], [fall_id][90]) and ([fall_complete][90] = 2)) or
+        (contains([meda_id], [fall_id][91]) and ([fall_complete][91] = 2)) or
+        (contains([meda_id], [fall_id][92]) and ([fall_complete][92] = 2)) or
+        (contains([meda_id], [fall_id][93]) and ([fall_complete][93] = 2)) or
+        (contains([meda_id], [fall_id][94]) and ([fall_complete][94] = 2)) or
+        (contains([meda_id], [fall_id][95]) and ([fall_complete][95] = 2)) or
+        (contains([meda_id], [fall_id][96]) and ([fall_complete][96] = 2)) or
+        (contains([meda_id], [fall_id][97]) and ([fall_complete][97] = 2)) or
+        (contains([meda_id], [fall_id][98]) and ([fall_complete][98] = 2)) or
+        (contains([meda_id], [fall_id][99]) and ([fall_complete][99] = 2)) or
+        (contains([meda_id], [fall_id][100]) and ([fall_complete][100] = 2)) or
+        (contains([meda_id], [fall_id][101]) and ([fall_complete][101] = 2)) or
+        (contains([meda_id], [fall_id][102]) and ([fall_complete][102] = 2)) or
+        (contains([meda_id], [fall_id][103]) and ([fall_complete][103] = 2)) or
+        (contains([meda_id], [fall_id][104]) and ([fall_complete][104] = 2)) or
+        (contains([meda_id], [fall_id][105]) and ([fall_complete][105] = 2)) or
+        (contains([meda_id], [fall_id][106]) and ([fall_complete][106] = 2)) or
+        (contains([meda_id], [fall_id][107]) and ([fall_complete][107] = 2)) or
+        (contains([meda_id], [fall_id][108]) and ([fall_complete][108] = 2)) or
+        (contains([meda_id], [fall_id][109]) and ([fall_complete][109] = 2)) or
+        (contains([meda_id], [fall_id][110]) and ([fall_complete][110] = 2)) or
+        (contains([meda_id], [fall_id][111]) and ([fall_complete][111] = 2)) or
+        (contains([meda_id], [fall_id][112]) and ([fall_complete][112] = 2)) or
+        (contains([meda_id], [fall_id][113]) and ([fall_complete][113] = 2)) or
+        (contains([meda_id], [fall_id][114]) and ([fall_complete][114] = 2)) or
+        (contains([meda_id], [fall_id][115]) and ([fall_complete][115] = 2)) or
+        (contains([meda_id], [fall_id][116]) and ([fall_complete][116] = 2)) or
+        (contains([meda_id], [fall_id][117]) and ([fall_complete][117] = 2)) or
+        (contains([meda_id], [fall_id][118]) and ([fall_complete][118] = 2)) or
+        (contains([meda_id], [fall_id][119]) and ([fall_complete][119] = 2)) or
+        (contains([meda_id], [fall_id][120]) and ([fall_complete][120] = 2)) or
+        (contains([meda_id], [fall_id][121]) and ([fall_complete][121] = 2)) or
+        (contains([meda_id], [fall_id][122]) and ([fall_complete][122] = 2)) or
+        (contains([meda_id], [fall_id][123]) and ([fall_complete][123] = 2)) or
+        (contains([meda_id], [fall_id][124]) and ([fall_complete][124] = 2)) or
+        (contains([meda_id], [fall_id][125]) and ([fall_complete][125] = 2)) or
+        (contains([meda_id], [fall_id][126]) and ([fall_complete][126] = 2)) or
+        (contains([meda_id], [fall_id][127]) and ([fall_complete][127] = 2)) or
+        (contains([meda_id], [fall_id][128]) and ([fall_complete][128] = 2)) or
+        (contains([meda_id], [fall_id][129]) and ([fall_complete][129] = 2)) or
+        (contains([meda_id], [fall_id][130]) and ([fall_complete][130] = 2)) or
+        (contains([meda_id], [fall_id][131]) and ([fall_complete][131] = 2)) or
+        (contains([meda_id], [fall_id][132]) and ([fall_complete][132] = 2)) or
+        (contains([meda_id], [fall_id][133]) and ([fall_complete][133] = 2)) or
+        (contains([meda_id], [fall_id][134]) and ([fall_complete][134] = 2)) or
+        (contains([meda_id], [fall_id][135]) and ([fall_complete][135] = 2)) or
+        (contains([meda_id], [fall_id][136]) and ([fall_complete][136] = 2)) or
+        (contains([meda_id], [fall_id][137]) and ([fall_complete][137] = 2)) or
+        (contains([meda_id], [fall_id][138]) and ([fall_complete][138] = 2)) or
+        (contains([meda_id], [fall_id][139]) and ([fall_complete][139] = 2)) or
+        (contains([meda_id], [fall_id][140]) and ([fall_complete][140] = 2)) or
+        (contains([meda_id], [fall_id][141]) and ([fall_complete][141] = 2)) or
+        (contains([meda_id], [fall_id][142]) and ([fall_complete][142] = 2)) or
+        (contains([meda_id], [fall_id][143]) and ([fall_complete][143] = 2)) or
+        (contains([meda_id], [fall_id][144]) and ([fall_complete][144] = 2)) or
+        (contains([meda_id], [fall_id][145]) and ([fall_complete][145] = 2)) or
+        (contains([meda_id], [fall_id][146]) and ([fall_complete][146] = 2)) or
+        (contains([meda_id], [fall_id][147]) and ([fall_complete][147] = 2)) or
+        (contains([meda_id], [fall_id][148]) and ([fall_complete][148] = 2)) or
+        (contains([meda_id], [fall_id][149]) and ([fall_complete][149] = 2)) or
+        (contains([meda_id], [fall_id][150]) and ([fall_complete][150] = 2))
+    )
+    and ([medikationsanalyse_complete] = 0),
+    0,
+    1
+)",,,,,,,,,,,," @HIDDEN"
+db_filter_7,medikationsanalyse,,calc,"Dashboard Filter 7 ","if(
+  (not_contain([mrp_id][1], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][2], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][3], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][4], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][5], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][6], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][7], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][8], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][9], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][10], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][11], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][12], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][13], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][14], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][15], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][16], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][17], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][18], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][19], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][20], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][21], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][22], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][23], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][24], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][25], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][26], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][27], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][28], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][29], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][30], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][31], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][32], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][33], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][34], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][35], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][36], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][37], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][38], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][39], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][40], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][41], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][42], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][43], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][44], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][45], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][46], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][47], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][48], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][49], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][50], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][51], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][52], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][53], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][54], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][55], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][56], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][57], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][58], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][59], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][60], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][61], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][62], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][63], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][64], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][65], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][66], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][67], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][68], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][69], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][70], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][71], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][72], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][73], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][74], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][75], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][76], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][77], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][78], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][79], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][80], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][81], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][82], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][83], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][84], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][85], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][86], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][87], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][88], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][89], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][90], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][91], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][92], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][93], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][94], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][95], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][96], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][97], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][98], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][99], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][100], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][101], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][102], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][103], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][104], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][105], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][106], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][107], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][108], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][109], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][110], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][111], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][112], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][113], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][114], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][115], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][116], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][117], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][118], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][119], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][120], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][121], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][122], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][123], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][124], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][125], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][126], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][127], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][128], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][129], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][130], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][131], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][132], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][133], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][134], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][135], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][136], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][137], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][138], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][139], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][140], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][141], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][142], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][143], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][144], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][145], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][146], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][147], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][148], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][149], [meda_id]) and ([meda_mrp_detekt] = 1)) and
+  (not_contain([mrp_id][150], [meda_id]) and ([meda_mrp_detekt] = 1))
+, 0, 1)",,,,,,,,,,,," @HIDDEN"
 medikationsanalyse_fe_id,medikationsanalyse,,text,,,,integer,,,,,,,,,," @HIDDEN"
 meda_anlage,medikationsanalyse,,text,"Formular angelegt von ",,,,,,,,,,,,," @DEFAULT = '[user-name]' @HIDDEN"
 meda_edit,medikationsanalyse,,text,"Formular zuletzt bearbeitet von ",,,,,,,,,,,,," @SETVALUE = '[user-name]' @HIDDEN"
 meda_header,medikationsanalyse,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 139px;"" border=""0""><colgroup><col style=""width: 13.913%;""><col style=""width: 14.9275%;""><col style=""width: 17.1014%;""><col style=""width: 23.0435%;""><col style=""width: 10.2899%;""><col style=""width: 7.97101%;""><col style=""width: 12.7536%;""></colgroup> <tbody> <tr style=""height: 45.2031px;""> <td> <p><span style=""font-weight: normal;"">[pat_name] </span></p> </td> <td> <p><span style=""font-weight: normal;"">[pat_vorname]</span></p> </td> <td style=""text-align: left;"" colspan=""4"" rowspan=""3""> <h3 style=""text-align: center;"">Medikationsanalyse <span style=""font-size: 13px;"">[meda_id]</span></h3> </td> <td rowspan=""3""> </td> </tr> <tr style=""height: 45.2031px;""> <td> <p><span style=""font-weight: normal;"">Pat-ID: </span></p> </td> <td> <p><span style=""font-weight: normal;"">[pat_cis_pid]</span></p> </td> </tr> <tr style=""height: 48.5938px;""> <td> <p>Fall-ID:</p> </td> <td> <p>{fall_meda_id}</p> </td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
-fall_meda_id,medikationsanalyse,,sql,"<div class=""rich-text-field-label""><p><span style=""color: #000000;"">Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall (Fall-ID Encounter-Identifier (KIS))</span></p> <p><span style=""color: #000000;"">Auswahlfeld falls die aktuell dokumentierte Medikationsanalyse sich nicht auf die letzte Instanz des Falls bezieht.</span></p> <p> </p></div>","select value from [data-table] where project_id = [project-id] and record = [record-name] and field_name = 'fall_id' order by value desc",,,,,,,,RH,,,," @DEFAULT = '[fall_id][last-instance:fall]'"
+fall_meda_id,medikationsanalyse,,sql,"<div class=""rich-text-field-label""><p><span style=""color: #000000;"">1 Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall (Fall-ID Encounter-Identifier (KIS))</span></p> <p><span style=""color: #000000;"">Auswahlfeld falls die aktuell dokumentierte Medikationsanalyse sich nicht auf die letzte Instanz des Falls bezieht.</span></p> <p> </p></div>","select value from [data-table] where project_id = [project-id] and record = [record-name] and field_name = 'fall_id' order by value desc",,,,,,,,RH,,,," @DEFAULT = '[fall_id][last-instance:fall]'"
 meda_id,medikationsanalyse,,text,"ID Medikationsanalyse (REDCap)
 
 Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse aggregiert",,,,,,,,,RH,,,," @HIDDEN @DEFAULT = @CALCTEXT(concat_ws('-',[fall_meda_id],[current-instance]))"
 meda_femb_5,medikationsanalyse,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30.0741%;""><col style=""width: 20%;""><col style=""width: 30.0741%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>Typ der Medikationsanalyse (MA)<strong>*</strong></td> <td>{meda_typ}</td> <td style=""text-align: left;"">Datum der Medikationsanalyse<span style=""font-weight: normal;""><strong>*</strong></span></td> <td>{meda_dat}</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
 meda_typ,medikationsanalyse,,dropdown,"Typ der Medikationsanalyse (MA)","1, Typ 1: Einfache MA | 2a, Typ 2a: Erweiterte MA | 2b, Typ 2b: Erweiterte MA | 3, Typ 3: Umfassende MA",,,,,,,y,,,,,
 meda_dat,medikationsanalyse,,text,"Datum der Medikationsanalyse",,,datetime_seconds_ymd,,,,,y,,,,,
-meda_femb_1,medikationsanalyse,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 25px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 10%;""><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 10%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>aktuelles Gewicht</td> <td>{meda_gewicht_aktuell} </td> <td>{meda_gewicht_aktl_einheit}</td> <td style=""text-align: center;"">Größe</td> <td>{meda_groesse} </td> <td>{meda_groesse_einheit}</td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>Chronische Niereninsuffizienz</td> <td>{meda_nieren_insuf_chron}</td> <td style=""text-align: right;"">{meda_nieren_insuf_ausmass_lbl}</td> <td>{meda_nieren_insuf_ausmass}</td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
+meda_femb_1,medikationsanalyse,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 25px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 10%;""><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 10%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>aktuelles Gewicht</td> <td>{meda_gewicht_aktuell} </td> <td>{meda_gewicht_aktl_einheit}</td> <td style=""text-align: center;"">Größe</td> <td>{meda_groesse} </td> <td>{meda_groesse_einheit}</td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td>Chronische Niereninsuffizienz</td> <td>{meda_nieren_insuf_chron}</td> <td style=""text-align: right;"">{meda_nieren_insuf_ausmass_lbl}</td> <td>{meda_nieren_insuf_ausmass}</td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
 meda_gewicht_aktuell,medikationsanalyse,,text,"aktuelles Gewicht",,,number,30,500,,,,,,,," @DEFAULT = '[fall_gewicht_aktuell][last-instance:fall]'"
 meda_gewicht_aktl_einheit,medikationsanalyse,,dropdown,"<div class=""rich-text-field-label""><p><span style=""color: #000000;"">aktuelles Gewicht: Einheit</span></p></div>","kg, kg | g, g",,,,,,,,,,,," @DEFAULT = '[fall_gewicht_aktl_einheit][last-instance:fall]'"
 meda_groesse,medikationsanalyse,,text,Größe,,,number,100,230,,,,,,,," @DEFAULT = '[fall_groesse][last-instance:fall]'"
@@ -76,10 +541,161 @@ meda_aufwand_zeit_and,medikationsanalyse,,text,"genaue Dauer in Minuten",,,integ
 meda_notiz,medikationsanalyse,,notes,Notizfeld,,,,,,,,,,,,,
 meda_additional_values,medikationsanalyse,,notes,"Reserviertes Feld für zusätzliche Werte",,,,,,,,,,,,," @HIDDEN"
 mrpdokumentation_validierung_fe_id,mrpdokumentation_validierung,,text,,,,integer,,,,,,,,,," @HIDDEN"
+db_filter_6,mrpdokumentation_validierung,,calc,"Dashboard Filter 6","if(((contains([mrp_id], [fall_id][1]) and ([fall_complete][1] = 2)) or
+        (contains([mrp_id], [fall_id][2]) and ([fall_complete][2] = 2)) or
+        (contains([mrp_id], [fall_id][3]) and ([fall_complete][3] = 2)) or
+        (contains([mrp_id], [fall_id][4]) and ([fall_complete][4] = 2)) or
+        (contains([mrp_id], [fall_id][5]) and ([fall_complete][5] = 2)) or
+        (contains([mrp_id], [fall_id][6]) and ([fall_complete][6] = 2)) or
+        (contains([mrp_id], [fall_id][7]) and ([fall_complete][7] = 2)) or
+        (contains([mrp_id], [fall_id][8]) and ([fall_complete][8] = 2)) or
+        (contains([mrp_id], [fall_id][9]) and ([fall_complete][9] = 2)) or
+        (contains([mrp_id], [fall_id][10]) and ([fall_complete][10] = 2)) or
+        (contains([mrp_id], [fall_id][11]) and ([fall_complete][11] = 2)) or
+        (contains([mrp_id], [fall_id][12]) and ([fall_complete][12] = 2)) or
+        (contains([mrp_id], [fall_id][13]) and ([fall_complete][13] = 2)) or
+        (contains([mrp_id], [fall_id][14]) and ([fall_complete][14] = 2)) or
+        (contains([mrp_id], [fall_id][15]) and ([fall_complete][15] = 2)) or
+        (contains([mrp_id], [fall_id][16]) and ([fall_complete][16] = 2)) or
+        (contains([mrp_id], [fall_id][17]) and ([fall_complete][17] = 2)) or
+        (contains([mrp_id], [fall_id][18]) and ([fall_complete][18] = 2)) or
+        (contains([mrp_id], [fall_id][19]) and ([fall_complete][19] = 2)) or
+        (contains([mrp_id], [fall_id][20]) and ([fall_complete][20] = 2)) or
+        (contains([mrp_id], [fall_id][21]) and ([fall_complete][21] = 2)) or
+        (contains([mrp_id], [fall_id][22]) and ([fall_complete][22] = 2)) or
+        (contains([mrp_id], [fall_id][23]) and ([fall_complete][23] = 2)) or
+        (contains([mrp_id], [fall_id][24]) and ([fall_complete][24] = 2)) or
+        (contains([mrp_id], [fall_id][25]) and ([fall_complete][25] = 2)) or
+        (contains([mrp_id], [fall_id][26]) and ([fall_complete][26] = 2)) or
+        (contains([mrp_id], [fall_id][27]) and ([fall_complete][27] = 2)) or
+        (contains([mrp_id], [fall_id][28]) and ([fall_complete][28] = 2)) or
+        (contains([mrp_id], [fall_id][29]) and ([fall_complete][29] = 2)) or
+        (contains([mrp_id], [fall_id][30]) and ([fall_complete][30] = 2)) or
+        (contains([mrp_id], [fall_id][31]) and ([fall_complete][31] = 2)) or
+        (contains([mrp_id], [fall_id][32]) and ([fall_complete][32] = 2)) or
+        (contains([mrp_id], [fall_id][33]) and ([fall_complete][33] = 2)) or
+        (contains([mrp_id], [fall_id][34]) and ([fall_complete][34] = 2)) or
+        (contains([mrp_id], [fall_id][35]) and ([fall_complete][35] = 2)) or
+        (contains([mrp_id], [fall_id][36]) and ([fall_complete][36] = 2)) or
+        (contains([mrp_id], [fall_id][37]) and ([fall_complete][37] = 2)) or
+        (contains([mrp_id], [fall_id][38]) and ([fall_complete][38] = 2)) or
+        (contains([mrp_id], [fall_id][39]) and ([fall_complete][39] = 2)) or
+        (contains([mrp_id], [fall_id][40]) and ([fall_complete][40] = 2)) or
+        (contains([mrp_id], [fall_id][41]) and ([fall_complete][41] = 2)) or
+        (contains([mrp_id], [fall_id][42]) and ([fall_complete][42] = 2)) or
+        (contains([mrp_id], [fall_id][43]) and ([fall_complete][43] = 2)) or
+        (contains([mrp_id], [fall_id][44]) and ([fall_complete][44] = 2)) or
+        (contains([mrp_id], [fall_id][45]) and ([fall_complete][45] = 2)) or
+        (contains([mrp_id], [fall_id][46]) and ([fall_complete][46] = 2)) or
+        (contains([mrp_id], [fall_id][47]) and ([fall_complete][47] = 2)) or
+        (contains([mrp_id], [fall_id][48]) and ([fall_complete][48] = 2)) or
+        (contains([mrp_id], [fall_id][49]) and ([fall_complete][49] = 2)) or
+        (contains([mrp_id], [fall_id][50]) and ([fall_complete][50] = 2)) or
+        (contains([mrp_id], [fall_id][51]) and ([fall_complete][51] = 2)) or
+        (contains([mrp_id], [fall_id][52]) and ([fall_complete][52] = 2)) or
+        (contains([mrp_id], [fall_id][53]) and ([fall_complete][53] = 2)) or
+        (contains([mrp_id], [fall_id][54]) and ([fall_complete][54] = 2)) or
+        (contains([mrp_id], [fall_id][55]) and ([fall_complete][55] = 2)) or
+        (contains([mrp_id], [fall_id][56]) and ([fall_complete][56] = 2)) or
+        (contains([mrp_id], [fall_id][57]) and ([fall_complete][57] = 2)) or
+        (contains([mrp_id], [fall_id][58]) and ([fall_complete][58] = 2)) or
+        (contains([mrp_id], [fall_id][59]) and ([fall_complete][59] = 2)) or
+        (contains([mrp_id], [fall_id][60]) and ([fall_complete][60] = 2)) or
+        (contains([mrp_id], [fall_id][61]) and ([fall_complete][61] = 2)) or
+        (contains([mrp_id], [fall_id][62]) and ([fall_complete][62] = 2)) or
+        (contains([mrp_id], [fall_id][63]) and ([fall_complete][63] = 2)) or
+        (contains([mrp_id], [fall_id][64]) and ([fall_complete][64] = 2)) or
+        (contains([mrp_id], [fall_id][65]) and ([fall_complete][65] = 2)) or
+        (contains([mrp_id], [fall_id][66]) and ([fall_complete][66] = 2)) or
+        (contains([mrp_id], [fall_id][67]) and ([fall_complete][67] = 2)) or
+        (contains([mrp_id], [fall_id][68]) and ([fall_complete][68] = 2)) or
+        (contains([mrp_id], [fall_id][69]) and ([fall_complete][69] = 2)) or
+        (contains([mrp_id], [fall_id][70]) and ([fall_complete][70] = 2)) or
+        (contains([mrp_id], [fall_id][71]) and ([fall_complete][71] = 2)) or
+        (contains([mrp_id], [fall_id][72]) and ([fall_complete][72] = 2)) or
+        (contains([mrp_id], [fall_id][73]) and ([fall_complete][73] = 2)) or
+        (contains([mrp_id], [fall_id][74]) and ([fall_complete][74] = 2)) or
+        (contains([mrp_id], [fall_id][75]) and ([fall_complete][75] = 2)) or
+        (contains([mrp_id], [fall_id][76]) and ([fall_complete][76] = 2)) or
+        (contains([mrp_id], [fall_id][77]) and ([fall_complete][77] = 2)) or
+        (contains([mrp_id], [fall_id][78]) and ([fall_complete][78] = 2)) or
+        (contains([mrp_id], [fall_id][79]) and ([fall_complete][79] = 2)) or
+        (contains([mrp_id], [fall_id][80]) and ([fall_complete][80] = 2)) or
+        (contains([mrp_id], [fall_id][81]) and ([fall_complete][81] = 2)) or
+        (contains([mrp_id], [fall_id][82]) and ([fall_complete][82] = 2)) or
+        (contains([mrp_id], [fall_id][83]) and ([fall_complete][83] = 2)) or
+        (contains([mrp_id], [fall_id][84]) and ([fall_complete][84] = 2)) or
+        (contains([mrp_id], [fall_id][85]) and ([fall_complete][85] = 2)) or
+        (contains([mrp_id], [fall_id][86]) and ([fall_complete][86] = 2)) or
+        (contains([mrp_id], [fall_id][87]) and ([fall_complete][87] = 2)) or
+        (contains([mrp_id], [fall_id][88]) and ([fall_complete][88] = 2)) or
+        (contains([mrp_id], [fall_id][89]) and ([fall_complete][89] = 2)) or
+        (contains([mrp_id], [fall_id][90]) and ([fall_complete][90] = 2)) or
+        (contains([mrp_id], [fall_id][91]) and ([fall_complete][91] = 2)) or
+        (contains([mrp_id], [fall_id][92]) and ([fall_complete][92] = 2)) or
+        (contains([mrp_id], [fall_id][93]) and ([fall_complete][93] = 2)) or
+        (contains([mrp_id], [fall_id][94]) and ([fall_complete][94] = 2)) or
+        (contains([mrp_id], [fall_id][95]) and ([fall_complete][95] = 2)) or
+        (contains([mrp_id], [fall_id][96]) and ([fall_complete][96] = 2)) or
+        (contains([mrp_id], [fall_id][97]) and ([fall_complete][97] = 2)) or
+        (contains([mrp_id], [fall_id][98]) and ([fall_complete][98] = 2)) or
+        (contains([mrp_id], [fall_id][99]) and ([fall_complete][99] = 2)) or
+        (contains([mrp_id], [fall_id][100]) and ([fall_complete][100] = 2)) or
+        (contains([mrp_id], [fall_id][101]) and ([fall_complete][101] = 2)) or
+        (contains([mrp_id], [fall_id][102]) and ([fall_complete][102] = 2)) or
+        (contains([mrp_id], [fall_id][103]) and ([fall_complete][103] = 2)) or
+        (contains([mrp_id], [fall_id][104]) and ([fall_complete][104] = 2)) or
+        (contains([mrp_id], [fall_id][105]) and ([fall_complete][105] = 2)) or
+        (contains([mrp_id], [fall_id][106]) and ([fall_complete][106] = 2)) or
+        (contains([mrp_id], [fall_id][107]) and ([fall_complete][107] = 2)) or
+        (contains([mrp_id], [fall_id][108]) and ([fall_complete][108] = 2)) or
+        (contains([mrp_id], [fall_id][109]) and ([fall_complete][109] = 2)) or
+        (contains([mrp_id], [fall_id][110]) and ([fall_complete][110] = 2)) or
+        (contains([mrp_id], [fall_id][111]) and ([fall_complete][111] = 2)) or
+        (contains([mrp_id], [fall_id][112]) and ([fall_complete][112] = 2)) or
+        (contains([mrp_id], [fall_id][113]) and ([fall_complete][113] = 2)) or
+        (contains([mrp_id], [fall_id][114]) and ([fall_complete][114] = 2)) or
+        (contains([mrp_id], [fall_id][115]) and ([fall_complete][115] = 2)) or
+        (contains([mrp_id], [fall_id][116]) and ([fall_complete][116] = 2)) or
+        (contains([mrp_id], [fall_id][117]) and ([fall_complete][117] = 2)) or
+        (contains([mrp_id], [fall_id][118]) and ([fall_complete][118] = 2)) or
+        (contains([mrp_id], [fall_id][119]) and ([fall_complete][119] = 2)) or
+        (contains([mrp_id], [fall_id][120]) and ([fall_complete][120] = 2)) or
+        (contains([mrp_id], [fall_id][121]) and ([fall_complete][121] = 2)) or
+        (contains([mrp_id], [fall_id][122]) and ([fall_complete][122] = 2)) or
+        (contains([mrp_id], [fall_id][123]) and ([fall_complete][123] = 2)) or
+        (contains([mrp_id], [fall_id][124]) and ([fall_complete][124] = 2)) or
+        (contains([mrp_id], [fall_id][125]) and ([fall_complete][125] = 2)) or
+        (contains([mrp_id], [fall_id][126]) and ([fall_complete][126] = 2)) or
+        (contains([mrp_id], [fall_id][127]) and ([fall_complete][127] = 2)) or
+        (contains([mrp_id], [fall_id][128]) and ([fall_complete][128] = 2)) or
+        (contains([mrp_id], [fall_id][129]) and ([fall_complete][129] = 2)) or
+        (contains([mrp_id], [fall_id][130]) and ([fall_complete][130] = 2)) or
+        (contains([mrp_id], [fall_id][131]) and ([fall_complete][131] = 2)) or
+        (contains([mrp_id], [fall_id][132]) and ([fall_complete][132] = 2)) or
+        (contains([mrp_id], [fall_id][133]) and ([fall_complete][133] = 2)) or
+        (contains([mrp_id], [fall_id][134]) and ([fall_complete][134] = 2)) or
+        (contains([mrp_id], [fall_id][135]) and ([fall_complete][135] = 2)) or
+        (contains([mrp_id], [fall_id][136]) and ([fall_complete][136] = 2)) or
+        (contains([mrp_id], [fall_id][137]) and ([fall_complete][137] = 2)) or
+        (contains([mrp_id], [fall_id][138]) and ([fall_complete][138] = 2)) or
+        (contains([mrp_id], [fall_id][139]) and ([fall_complete][139] = 2)) or
+        (contains([mrp_id], [fall_id][140]) and ([fall_complete][140] = 2)) or
+        (contains([mrp_id], [fall_id][141]) and ([fall_complete][141] = 2)) or
+        (contains([mrp_id], [fall_id][142]) and ([fall_complete][142] = 2)) or
+        (contains([mrp_id], [fall_id][143]) and ([fall_complete][143] = 2)) or
+        (contains([mrp_id], [fall_id][144]) and ([fall_complete][144] = 2)) or
+        (contains([mrp_id], [fall_id][145]) and ([fall_complete][145] = 2)) or
+        (contains([mrp_id], [fall_id][146]) and ([fall_complete][146] = 2)) or
+        (contains([mrp_id], [fall_id][147]) and ([fall_complete][147] = 2)) or
+        (contains([mrp_id], [fall_id][148]) and ([fall_complete][148] = 2)) or
+        (contains([mrp_id], [fall_id][149]) and ([fall_complete][149] = 2)) or
+        (contains([mrp_id], [fall_id][150]) and ([fall_complete][150] = 2)))
+    and ([mrpdokumentation_validierung_complete] = 0), 0, 1)",,,,,,,,,,,," @HIDDEN"
 mrp_anlage,mrpdokumentation_validierung,,text,"Formular angelegt von ",,,,,,,,,,,,," @DEFAULT = '[user-name]' @HIDDEN"
 mrp_edit,mrpdokumentation_validierung,,text,"Formular zuletzt bearbeitet von ",,,,,,,,,,,,," @SETVALUE = '[user-name]' @HIDDEN"
 mrp_header,mrpdokumentation_validierung,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 160.047px;"" border=""0""><colgroup><col style=""width: 14.4928%;""><col style=""width: 15.0725%;""><col style=""width: 13.7681%;""><col style=""width: 18.5507%;""><col style=""width: 11.8841%;""><col style=""width: 9.27536%;""><col style=""width: 16.9565%;""></colgroup> <tbody> <tr style=""height: 57.4219px;""> <td> <p><span style=""font-weight: normal;"">[pat_name] </span></p> </td> <td> <p><span style=""font-weight: normal;"">[pat_vorname]</span></p> </td> <td colspan=""4"" rowspan=""3""> <h3 style=""text-align: center;"">MRP <span style=""font-size: 13px; text-align: var(--bs-body-text-align);"">[mrp_id]</span></h3> </td> <td rowspan=""3""> </td> </tr> <tr style=""height: 57.4219px;""> <td> <p><span style=""font-weight: normal;"">Pat-ID: </span></p> </td> <td> <p><span style=""font-weight: normal;"">[pat_cis_pid]</span></p> </td> </tr> <tr style=""height: 45.2031px;""> <td> <p>Meda-ID:</p> </td> <td> <p>{mrp_meda_id}</p> </td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
-mrp_meda_id,mrpdokumentation_validierung,,sql,"<div class=""rich-text-field-label""><p><span style=""color: #000000;"">Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu MRP</span></p> <p> </p> <p>Auswahlfeld falls die aktuell dokumentiertes MRP  sich nicht auf die letzte Instanz der Medikationsanalyse bezieht.</p> <p> </p></div>","select value from [data-table] where project_id = [project-id] and record = [record-name] and field_name = 'meda_id' order by value desc",,,,,,,,RH,,,," @DEFAULT = '[meda_id][last-instance:medikationsanalyse]'"
+mrp_meda_id,mrpdokumentation_validierung,,sql,"<div class=""rich-text-field-label""><p><span style=""color: #000000;"">2 Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu MRP</span></p> <p> </p> <p>Auswahlfeld falls die aktuell dokumentiertes MRP  sich nicht auf die letzte Instanz der Medikationsanalyse bezieht.</p> <p> </p></div>","select value from [data-table] where project_id = [project-id] and record = [record-name] and field_name = 'meda_id' order by value desc",,,,,,,,RH,,,," @DEFAULT = '[meda_id][last-instance:medikationsanalyse]'"
 mrp_id,mrpdokumentation_validierung,,text,"MRP-ID (REDCap)
 
 Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert",,,,,,,,,,,,," @HIDDEN @DEFAULT = @CALCTEXT(concat([mrp_meda_id],'-m',[current-instance]))"
@@ -139,21 +755,22 @@ mrp_femb_16,mrpdokumentation_validierung,,descriptive,"<div class=""rich-text-fi
 mrp_massn_orga,mrpdokumentation_validierung,,checkbox,"<div class=""rich-text-field-label""><p>ORGA: Organisatorisch</p></div>","1, Aushändigung einer Information/eines Medikationsplans | 2, CIRS-/AMK-Meldung | 3, Einbindung anderer Berufsgruppen z.B. des Stationsapothekers | 4, Etablierung einer Doppelkontrolle | 5, Lieferantenwechsel | 6, Optimierung der internen und externene Kommunikation | 7, Prozessoptimierung/Etablierung einer SOP/VA | 8, Sensibilisierung/Schulung",,,,,,,,,,,,
 mrp_femb_17,mrpdokumentation_validierung,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 80%;""> </colgroup> <tbody> <tr> <td>Notiz</td> <td colspan=""3"">{mrp_notiz}</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
 mrp_notiz,mrpdokumentation_validierung,,notes,Notiz,,,,,,,,,,,,,
-mrp_femb_18,mrpdokumentation_validierung,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 18.1875px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 18.1875px;""> <td> <h6><strong>Ausgang</strong></h6> </td> <td> </td> <td style=""text-align: left;""> </td> <td> </td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr> <td>Handlungsempfehlung akzeptiert?<strong>*</strong></td> <td>{mrp_dokup_hand_emp_akz}</td> <td style=""text-align: left;""> </td> <td> </td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 55.1875px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30.0741%;""><col style=""width: 25.3254%;""><col style=""width: 24.7486%;""></colgroup> <tbody> <tr style=""height: 45.1875px;""> <td> <p>NCC MERP Score</p> </td> <td>{mrp_merp}</td> <td style=""text-align: left;"">{mrp_merp_info}</td> <td> </td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
+mrp_femb_18,mrpdokumentation_validierung,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 18.1875px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 18.1875px;""> <td> <h6><strong>Ausgang</strong></h6> </td> <td> </td> <td style=""text-align: left;""> </td> <td> </td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr> <td>Handlungsempfehlung akzeptiert?<strong>*</strong></td> <td>{mrp_dokup_hand_emp_akz}</td> <td style=""text-align: left;""> </td> <td> </td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 55.1875px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30.0741%;""><col style=""width: 25.3254%;""><col style=""width: 24.7486%;""></colgroup> <tbody> <tr style=""height: 45.1875px;""> <td> <p>NCC MERP Score</p> </td> <td>{mrp_merp}</td> <td style=""text-align: left;"">{mrp_merp_info}</td> <td> </td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
 mrp_dokup_hand_emp_akz,mrpdokumentation_validierung,,dropdown,"Handlungsempfehlung akzeptiert?","1, Arzt / Pflege informiert | 2, Intervention vorgeschlagen und umgesetzt | 3, Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation) | 4, Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung) | 5, Intervention vorgeschlagen, Umsetzung unbekannt | 6, Problem nicht gelöst",,,,,,,y,,,,,
 mrp_merp,mrpdokumentation_validierung,,dropdown,"NCC MERP Score","A, Category A | B, Category B | C, Category C | D, Category D | E, Category E | F, Category F | G, Category G | H, Category H | I, Category I",,,,,,,,,,,,
 mrp_merp_info,mrpdokumentation_validierung,,checkbox,,"1, NCC MERP Index anzeigen",,,,,,,,,,,,
 mrp_merp_info_txt,mrpdokumentation_validierung,,descriptive,,,,,,,,"[mrp_merp_info(1)] = '1'",,,,,,
 mrp_additional_values,mrpdokumentation_validierung,,notes,"Reserviertes Feld für zusätzliche Werte",,,,,,,,,,,,," @HIDDEN"
 retrolektive_mrpbewertung_fe_id,retrolektive_mrpbewertung,,text,,,,integer,,,,,,,,,," @HIDDEN"
-ret_bewerter1,retrolektive_mrpbewertung,,text,"1. Bewertung von ",,,,,,,,,,,,," @DEFAULT = '[user-name]' @HIDDEN"
-ret_header,retrolektive_mrpbewertung,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 139px;"" border=""0""><colgroup><col style=""width: 13.913%;""><col style=""width: 14.9275%;""><col style=""width: 17.1014%;""><col style=""width: 23.0435%;""><col style=""width: 10.2899%;""><col style=""width: 7.97101%;""><col style=""width: 12.7536%;""></colgroup> <tbody> <tr style=""height: 45.2031px;""> <td> <p><span style=""font-weight: normal;"">[pat_name] </span></p> </td> <td> <p><span style=""font-weight: normal;"">[pat_vorname]</span></p> </td> <td style=""text-align: center;"" colspan=""4"" rowspan=""3""> <h3 style=""text-align: center;"">Retrolektive MRP-Bewertung</h3> [ret_id]</td> <td rowspan=""3""> </td> </tr> <tr style=""height: 45.2031px;""> <td> <p><span style=""font-weight: normal;"">Pat-ID: </span></p> </td> <td> <p><span style=""font-weight: normal;"">[pat_cis_pid]</span></p> </td> </tr> <tr style=""height: 48.5938px;""> <td>Meda-ID</td> <td>[ret_meda_id]</td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
+ret_bewerter1,retrolektive_mrpbewertung,,text,"1. Bewertung von ",,,,,,,,,,,,," @USERNAME @HIDDEN"
+ret_header,retrolektive_mrpbewertung,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 139px;"" border=""0""><colgroup><col style=""width: 13.913%;""><col style=""width: 14.9275%;""><col style=""width: 17.1014%;""><col style=""width: 23.0435%;""><col style=""width: 10.2899%;""><col style=""width: 7.97101%;""><col style=""width: 12.7536%;""></colgroup> <tbody> <tr style=""height: 45.2031px;""> <td> <p><span style=""font-weight: normal;"">[pat_name] </span></p> </td> <td> <p><span style=""font-weight: normal;"">[pat_vorname]</span></p> </td> <td style=""text-align: center;"" colspan=""4"" rowspan=""3""> <h3 style=""text-align: center;"">Retrolektive MRP-Bewertung</h3> [ret_id]</td> <td rowspan=""3""> </td> </tr> <tr style=""height: 45.2031px;""> <td> <p><span style=""font-weight: normal;"">Pat-ID: </span></p> </td> <td> <p><span style=""font-weight: normal;"">[pat_cis_pid]</span></p> </td> </tr> <tr style=""height: 48.5938px;""> <td>Meda-ID</td> <td>[ret_meda_id]</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
 ret_id,retrolektive_mrpbewertung,,text,"Retrolektive MRP-ID (REDCap)
 
 Hier wird die MEDA-ID der Medikationsanalyse angegeben, zu deren Zeitpunkt dieses MRP vom Apotheker hätte gefunden werden können. Wenn keine Medikationsanalyse dokumentiert ist wir eine ID aus Fall-ID-x eingetragen ",,,,,,,,,,,,," @DEFAULT = @CALCTEXT(concat([ret_meda_id],'-r',[current-instance])) @HIDDEN"
 ret_meda_id,retrolektive_mrpbewertung,,text,"Zuordnung Meda -> rMRP
 ",,,,,,,,,,,,," @HIDDEN"
-ret_femb_1,retrolektive_mrpbewertung,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td> </td> <td> </td> <td style=""text-align: right;"">Bewertungsdatum</td> <td>{ret_meda_dat1}</td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 30.1875px;"" border=""0""><colgroup><col style=""width: 43.6226%;""><col style=""width: 7.68179%;""><col style=""width: 19.5652%;""><col style=""width: 29.1304%;""></colgroup> <tbody> <tr style=""height: 30.1875px;""> <td> <h6><strong>Pharmazeutische Intervention (PI) / <br>Medikationsfehler (MF)</strong></h6> </td> <td> </td> <td style=""text-align: left;""> </td> <td style=""text-align: left;""> </td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
+ret_femb_25,retrolektive_mrpbewertung,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td> </td> <td> </td> <td style=""text-align: right;"">Bewertungsdatum*</td> <td>{ret_meda_dat1}</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,," @IF([user-name] != [ret_bewerter1] and [ret_bewerter1] <>'', @HIDDEN, '')"
+ret_femb_1,retrolektive_mrpbewertung,,descriptive,"<div class=""rich-text-field-label""><div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 30.1875px;"" border=""0""><colgroup><col style=""width: 43.6226%;""><col style=""width: 7.68179%;""><col style=""width: 19.5652%;""><col style=""width: 29.1304%;""></colgroup> <tbody> <tr style=""height: 30.1875px;""> <td> <h6><strong>Pharmazeutische Intervention (PI) / <br>Medikationsfehler (MF)</strong></h6> </td> <td> </td> <td style=""text-align: left;""> </td> <td style=""text-align: left;""> </td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
 ret_meda_dat1,retrolektive_mrpbewertung,,text,"Datum der retrolektiven Betrachtung*",,,datetime_seconds_ymd,,,,,y,,,,,
 ret_femb_2,retrolektive_mrpbewertung,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 80%;""> </colgroup> <tbody> <tr> <td>Kurzbeschreibung<br>des MRP</td> <td colspan=""3"">{ret_kurzbeschr}</td> </tr> </tbody> </table> </div> <p> </p></div>",,,,,,,,,,,,,
 ret_kurzbeschr,retrolektive_mrpbewertung,,notes,"Kurzbeschreibung des MRPs",,,,,,,,,,,,," @READONLY"
@@ -212,14 +829,12 @@ ret_massn_orga1,retrolektive_mrpbewertung,,checkbox,"<div class=""rich-text-fiel
 ret_femb_14,retrolektive_mrpbewertung,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 80%;""> </colgroup> <tbody> <tr> <td>Notiz</td> <td colspan=""3"">{ret_notiz1}</td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,," @IF([user-name] != [ret_bewerter1] and [ret_bewerter1] <>'', @HIDDEN, '')"
 ret_notiz1,retrolektive_mrpbewertung,,notes,Notiz,,,,,,,,,,,,,
 ret_femb_15,retrolektive_mrpbewertung,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 10.1875px;"" border=""0""><colgroup><col style=""width: 40%;""><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 20%;""></colgroup> <tbody> <tr style=""height: 10.1875px;""> <td colspan=""2""> <h6><strong>2nd look / Zweite MRP-Bewertung </strong></h6> </td> <td style=""text-align: left;""> </td> <td> </td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 25px;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 25px;""> <td colspan=""2"">{ret_2ndbewertung}</td> <td style=""text-align: right;"">{ret_meda_dat2_lbl}</td> <td>{ret_meda_dat2}</td> </tr> </tbody> </table> </div></div>",,,,,,,,,,,,,
-ret_meda_dat2_lbl,retrolektive_mrpbewertung,,descriptive,Bewertungsdatum,,,,,,,"[ret_2ndbewertung(1)] = '1'",y,,,,,
+ret_meda_dat2_lbl,retrolektive_mrpbewertung,,descriptive,Bewertungsdatum*,,,,,,,"[ret_2ndbewertung(1)] = '1'",y,,,,,
 ret_meda_dat2,retrolektive_mrpbewertung,,text,"Datum der retrolektiven Betrachtung*",,,datetime_seconds_ymd,,,,"[ret_2ndbewertung(1)] = '1'",y,,,,,
 ret_2ndbewertung,retrolektive_mrpbewertung,,checkbox,"Zweite MRP-Bewertung durchführen","1, 2nd Look / Zweite MRP-Bewertung durchführen",,,,,,,,,,,,
-ret_bewerter2_pipeline,retrolektive_mrpbewertung,,text,"Bewerter2 Pipeline",,,,,,,,,,,,," @DEFAULT = @CALCTEXT(if([ret_2ndbewertung(1)][current-instance] = '1' and [ret_bewerter2_pipeline][current-instance] = '', [user-name], '')) @HIDDEN"
 ret_bewerter2,retrolektive_mrpbewertung,,text,"2. Bewertung von 
-
-@DEFAULT = @SETVALUE = '[ret_bewerter2_pipeline]' ",,,,,,,,,,,,," @HIDDEN"
-ret_bewerter3,retrolektive_mrpbewertung,,text,"2. Bewertung von ",,,,,,,,,,,,," @DEFAULT = @IF(ret_2ndbewertung(1)] = '1', '[user-name]' , '') @HIDDEN"
+",,,,,,,,,,,,," @IF([retrolektive_mrpbewertung_complete] = 2 and [ret_meda_dat1] <> '' and [ret_gewissheit1] <> '' and ([ret_massn_am1(1)] = 1 or [ret_massn_am1(2)] = 1 or [ret_massn_am1(3)] = 1 or [ret_massn_am1(4)] = 1 or [ret_massn_am1(5)] = 1 or [ret_massn_am1(6)] = 1 or [ret_massn_am1(7)] = 1 or [ret_massn_am1(9)] = 1 or [ret_massn_am1(9)] = 1 or [ret_massn_am1(10)] = 1) , @USERNAME, '')
+@HIDDEN"
 ret_femb_16,retrolektive_mrpbewertung,,descriptive,"<div class=""rich-text-field-label""><p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%; height: 18.1875px;"" border=""0""><colgroup><col style=""width: 40%;""><col style=""width: 20%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr style=""height: 18.1875px;""> <td> <h6><strong>Patientenindividuelle<br>MRP-Bewertung</strong></h6> </td> <td> </td> <td style=""text-align: left;""> </td> <td> </td> </tr> </tbody> </table> </div> <p> </p> <div class=""blue""> <table style=""border-collapse: collapse; width: 100%;"" border=""0""><colgroup><col style=""width: 20%;""><col style=""width: 30%;""><col style=""width: 20%;""><col style=""width: 30%;""></colgroup> <tbody> <tr> <td>{ret_gewissheit2_lbl}</td> <td>{ret_gewissheit2}</td> <td style=""text-align: right;"">{ret_mrp_zuordnung2_lbl}</td> <td>{ret_mrp_zuordnung2}</td> </tr> </tbody> </table> </div></div>",,,,,,,"[ret_2ndbewertung(1)] = '1'",,,,,,
 ret_gewissheit2_lbl,retrolektive_mrpbewertung,,descriptive,"Sicherheit des detektierten MRP*",,,,,,,,,,,,,
 ret_gewissheit2,retrolektive_mrpbewertung,,dropdown,"Sicherheit des detektierten MRP","1, MRP bestätigt | 4, MRP bestätigt und von Stationsapotheker vorher identifiziert | 2, MRP möglich, weitere Informationen nötig | 3, MRP nicht bestätigt",,,,,,,y,,,,,
