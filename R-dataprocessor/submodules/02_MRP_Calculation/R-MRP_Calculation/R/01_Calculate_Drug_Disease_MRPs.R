@@ -514,7 +514,7 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
     encounter <- resources$main_encounters[enc_id == encounter_id]
     patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
     meda <- resources$encounters_first_medication_analysis[[encounter_id]]
-    meda_id <- if (!is.null(meda)) meda$medikationsanalyse_fe_id else NA_character_
+    meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_
     meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
     meda_study_phase <- if (!is.null(meda)) meda$study_phase else NA_character_
     meda_ward_name <- if (!is.null(meda)) meda$ward_name else NA_character_
@@ -576,7 +576,7 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
         # Create new row for table retrolektive_mrpbewertung
         retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
           record_id = record_id,
-          ret_id = paste0(ret_id, "-r", i),
+          ret_id = paste0(meda_id, "-r", i),
           ret_meda_id = meda_id,
           ret_meda_dat1 = meda_datetime,
           ret_kurzbeschr = match$kurzbeschr,
