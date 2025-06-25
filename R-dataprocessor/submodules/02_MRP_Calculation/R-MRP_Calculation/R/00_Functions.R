@@ -13,11 +13,11 @@ if (!exists("DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS")) {
 #
 # Type of MRP
 #
-MRP_CALCULATION_TYPE <- etlutils::namedListByValue(
-  "Drug_Disease",
-  "Drug_Drug",
-  "Drug_DrugGroup",
-  "Drug_Kidney"
+MRP_CALCULATION_TYPE <- list(
+  "Drug_Disease" = 2,
+  "Drug_Drug" = 1,
+  "Drug_DrugGroup" = 1,
+  "Drug_Niereninsuffizienz" = 3
 )
 
 #
