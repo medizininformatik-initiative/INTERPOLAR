@@ -112,11 +112,12 @@ validateLOINCCodes <- function(data, column_name) {
 #' @return A data.table containing the processed and expanded MRP definition.
 #'
 getExpandedContent <- function(table_name, path_to_mrp_tables) {
+
   # Load the MRP definition from the Excel file
   mrp_columnnames <- MRP_TABLE_COLUMN_NAMES[[table_name]]
   mrp_definition <- etlutils::readFirstExcelFileSheet(path_to_mrp_tables, table_name, mrp_columnnames)
   if (is.null(mrp_definition)) {
-    stop(paste0("No or empty ", table_name, " MRP definition table found in the specified path."))
+    stop(paste0("No or empty ", table_name, " MRP definition table found in the specified path: ", path_to_mrp_tables))
   }
   # Compute the hash of the current MRP definition
   content_hash <- digest::digest(mrp_definition$excel_file_content, algo = "sha256")
