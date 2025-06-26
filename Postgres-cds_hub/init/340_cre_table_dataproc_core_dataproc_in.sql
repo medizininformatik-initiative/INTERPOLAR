@@ -3,13 +3,13 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 22:42:12
--- Rights definition file size        : 14274 Byte
+-- Rights definition file last update : 2025-06-20 11:15:33
+-- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-06-17 22:57:36
+-- Create time: 2025-06-20 11:57:11
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
--- SCRIPTNAME:  340_cre_table_datap_core_dataproc_in.sql
+-- SCRIPTNAME:  340_cre_table_dataproc_core_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db2dataprocessor_user
 -- OWNER_SCHEMA:  db2dataprocessor_in

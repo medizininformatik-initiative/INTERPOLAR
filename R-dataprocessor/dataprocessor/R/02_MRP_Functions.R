@@ -198,8 +198,11 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
     processed_content <- unserialize(base64enc::base64decode(matching_row$processed_content))
   }
 
-  # Return the processed content
-  return(processed_content)
+  # Return both processed content and hash
+  return(list(
+    processed_content = processed_content,
+    processed_content_hash = processed_content_hash
+  ))
 }
 
 #' Retrieve Stored Processed Content Hash from Input Data File Table
