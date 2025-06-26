@@ -733,7 +733,7 @@ BEGIN
         CREATE TEMP TABLE lpn_collection
         ON COMMIT DROP
         AS (
-            SELECT MAX(LPN) FROM (
+            SELECT MAX(LPN) lpn FROM (
                 SELECT -1 AS LPN
                 UNION ALL SELECT last_processing_nr AS lpn FROM db_log.encounter_raw r, (SELECT encounter_raw_id FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr) t WHERE r.encounter_raw_id=t.encounter_raw_id
                 UNION ALL SELECT last_processing_nr AS lpn FROM db_log.patient_raw r, (SELECT patient_raw_id FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr) t WHERE r.patient_raw_id=t.patient_raw_id

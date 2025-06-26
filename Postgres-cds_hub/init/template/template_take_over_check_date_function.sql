@@ -123,7 +123,7 @@ BEGIN
         CREATE TEMP TABLE lpn_collection
         ON COMMIT DROP
         AS (
-            SELECT MAX(LPN) FROM (
+            SELECT MAX(LPN) lpn FROM (
                 SELECT -1 AS LPN
 <%LOOP_TABS_SUB_take_over_check_date_function_lpn_collection%>
             ) --WHERE LPN > 0
