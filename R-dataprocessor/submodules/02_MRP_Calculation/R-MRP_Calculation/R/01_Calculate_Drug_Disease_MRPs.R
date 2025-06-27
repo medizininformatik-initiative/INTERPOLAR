@@ -575,7 +575,7 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
         # Create new row for table retrolektive_mrpbewertung
         retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
           record_id = record_id,
-          ret_id = paste0(meda_id, "-r", i),
+          ret_id = paste0(ret_id, "-r", i),
           ret_meda_id = meda_id,
           ret_meda_dat1 = meda_datetime,
           ret_kurzbeschr = match$kurzbeschr,
