@@ -36,7 +36,7 @@
 -- v3 --
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE <%SCHEMA_2%>.<%TABLE_NAME%> rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT <%TABLE_NAME%>_ID FROM <%SCHEMA_2%>.<%TABLE_NAME%> r WHERE r.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.<%TABLE_NAME%>_id = sub.<%TABLE_NAME%>_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE <%SCHEMA_2%>.<%TABLE_NAME%> rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT <%TABLE_NAME%>_ID FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.<%TABLE_NAME%>_id = sub.<%TABLE_NAME%>_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
