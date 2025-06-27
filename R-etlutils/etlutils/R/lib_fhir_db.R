@@ -101,7 +101,7 @@ fhirdbGetEncIDColumn <- function(resource_name) {
 fhirdbGetQueryList <- function(collection, remove_ref_type = FALSE, return_NA_if_empty = FALSE) {
   collection <- unique(na.omit(collection))
   if (!length(collection)) {
-    return(ifelse(return_NA_if_empty, NA, "''"))
+    return(ifelse(return_NA_if_empty, NA, "('')"))
   }
   if (remove_ref_type) {
     collection <- etlutils::fhirdataExtractIDs(collection)
