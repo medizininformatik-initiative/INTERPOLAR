@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-26 14:40:40
+-- Create time: 2025-06-27 17:47:48
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -37,6 +37,7 @@ DECLARE
     new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
     max_last_pro_nr INT:=0; -- Last processing number over all entities
     max_ent_pro_nr INT:=0;  -- Max processing number from a entiti
+    max_ent_pro_nr2 INT:=0;  -- Max processing number from a entiti
     max_ppw_pro_nr INT:=0;  -- Max processing number von pids_per_ward
     last_pro_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
@@ -47,6 +48,7 @@ DECLARE
     data_count_pro_processed INT:=0; -- Counting all records in this run which processed
     data_count_last_status_set INT:=0; -- Number of data records since the status was last set
     data_count_last_status_max INT:=0; -- Max number of data records since the status was last set (parameter)
+    data_count_raw_to_typed INT:=0; -- Counting all records if max(lpn_raw) > max(lpn_typed) --> Datacount --> takeover
     timestamp_start VARCHAR;
     timestamp_end VARCHAR;
     tmp_sec double precision:=0; -- Temporary variable to store execution time
@@ -85,96 +87,139 @@ BEGIN
     ---- Start check db_log.encounter_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.encounter_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.encounter;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.encounter_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.encounter - last_processing_nr ----
 
     ---- Start check db_log.patient_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.patient_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.patient;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.patient_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.patient - last_processing_nr ----
 
     ---- Start check db_log.condition_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.condition_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.condition;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.condition_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.condition - last_processing_nr ----
 
     ---- Start check db_log.medication_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medication_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medication;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.medication_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.medication - last_processing_nr ----
 
     ---- Start check db_log.medicationrequest_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medicationrequest_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medicationrequest;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.medicationrequest_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.medicationrequest - last_processing_nr ----
 
     ---- Start check db_log.medicationadministration_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medicationadministration_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medicationadministration;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.medicationadministration_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.medicationadministration - last_processing_nr ----
 
     ---- Start check db_log.medicationstatement_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.medicationstatement_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.medicationstatement;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.medicationstatement_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.medicationstatement - last_processing_nr ----
 
     ---- Start check db_log.observation_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.observation_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.observation;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.observation_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.observation - last_processing_nr ----
 
     ---- Start check db_log.diagnosticreport_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.diagnosticreport_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.diagnosticreport;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.diagnosticreport_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.diagnosticreport - last_processing_nr ----
 
     ---- Start check db_log.servicerequest_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.servicerequest_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.servicerequest;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.servicerequest_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.servicerequest - last_processing_nr ----
 
     ---- Start check db_log.procedure_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.procedure_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.procedure;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.procedure_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.procedure - last_processing_nr ----
 
     ---- Start check db_log.consent_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.consent_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.consent;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.consent_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.consent - last_processing_nr ----
 
     ---- Start check db_log.location_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.location_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.location;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.location_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.location - last_processing_nr ----
 
     ---- Start check db_log.pids_per_ward_raw - last_processing_nr ----
     err_section:='CHECK-15';    err_schema:='db_log';    err_table:='db_log.pids_per_ward_raw';
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr FROM db_log.pids_per_ward;
+    SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ent_pro_nr2 FROM db_log.pids_per_ward_raw;
+
     IF COALESCE(max_ent_pro_nr,0)>COALESCE(max_last_pro_nr,0) THEN max_last_pro_nr:=COALESCE(max_ent_pro_nr,0); END IF;
+    IF COALESCE(max_ent_pro_nr2,0)>COALESCE(max_ent_pro_nr,0) AND COALESCE(max_ent_pro_nr,0)>0 THEN data_count_raw_to_typed:=max_ent_pro_nr2; END IF; -- Datasets with lpn_raw>lpn_typed - set with last_processing_number
     ---- End check db_log.pids_per_ward - last_processing_nr ----
+
 
 
     err_section:='HEAD-11';    err_schema:='db_log';    err_table:='db_log.pids_per_ward';
     -- Check if it is sufficient to count pids_per_ward or if counting must be done across all resources
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ppw_pro_nr FROM db_log.pids_per_ward;
 
-    IF max_ppw_pro_nr!=max_last_pro_nr THEN
-       SELECT res FROM pg_background_result(pg_background_launch(
-       'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', ''Lange Ausfuehrung - all resouces'', ''max_ppw_pro_nr:'||max_ppw_pro_nr||' / max_last_pro_nr:'||max_last_pro_nr||''' );'
-       ))  AS t(res TEXT) INTO erg;
+    IF max_ppw_pro_nr!=max_last_pro_nr AND data_count_raw_to_typed<1 THEN -- wenn ausführung schon klar - kurze zählung
+--/*Test*/       SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/       'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', ''Lange Ausfuehrung - all resouces'', ''max_ppw_pro_nr:'||max_ppw_pro_nr||' / max_last_pro_nr:'||max_last_pro_nr||''' );'
+--/*Test*/       ))  AS t(res TEXT) INTO erg;
 
     ---- Start check db_log.encounter_raw - count ----
     err_section:='CHECK-16';    err_schema:='db_log';    err_table:='db_log.encounter_raw';
@@ -191,9 +236,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''encounter_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_encounter_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_encounter_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''encounter_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_encounter_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.encounter - count ----
 
@@ -212,9 +257,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''patient_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_patient_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_patient_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''patient_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_patient_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.patient - count ----
 
@@ -233,9 +278,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''condition_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_condition_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_condition_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''condition_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_condition_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.condition - count ----
 
@@ -254,9 +299,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medication_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medication_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medication_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medication_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_medication_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.medication - count ----
 
@@ -275,9 +320,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationrequest_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medicationrequest_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationrequest_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationrequest_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_medicationrequest_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.medicationrequest - count ----
 
@@ -296,9 +341,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationadministration_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medicationadministration_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationadministration_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationadministration_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_medicationadministration_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.medicationadministration - count ----
 
@@ -317,9 +362,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationstatement_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medicationstatement_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationstatement_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''medicationstatement_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_medicationstatement_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.medicationstatement - count ----
 
@@ -338,9 +383,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''observation_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_observation_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_observation_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''observation_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_observation_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.observation - count ----
 
@@ -359,9 +404,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''diagnosticreport_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_diagnosticreport_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_diagnosticreport_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''diagnosticreport_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_diagnosticreport_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.diagnosticreport - count ----
 
@@ -380,9 +425,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''servicerequest_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_servicerequest_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_servicerequest_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''servicerequest_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_servicerequest_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.servicerequest - count ----
 
@@ -401,9 +446,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''procedure_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_procedure_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_procedure_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''procedure_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_procedure_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.procedure - count ----
 
@@ -422,9 +467,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''consent_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_consent_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_consent_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''consent_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_consent_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.consent - count ----
 
@@ -443,9 +488,9 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''location_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_location_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_location_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''location_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_location_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.location - count ----
 
@@ -464,13 +509,14 @@ BEGIN
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''pids_per_ward_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_pids_per_ward_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_pids_per_ward_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''pids_per_ward_raw'', ''db_log'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_pids_per_ward_raw*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check db_log.pids_per_ward - count ----
 
     ELSE
+        err_section:='HEAD-17';    err_schema:='db_log';    err_table:='db_log.pids_per_ward (ELSE)';
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM (select * from db_log.pids_per_ward_raw where last_processing_nr!=max_ent_pro_nr) r
 	, (select * from db_log.pids_per_ward where last_processing_nr=max_ent_pro_nr) t
@@ -482,7 +528,7 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''data_count_pro_all / max_last_pro_nr:'||data_count_pro_all||' / '||max_last_pro_nr||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
-    IF data_count_pro_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
+    IF data_count_pro_all>0 OR data_count_raw_to_typed>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
         -- Copy FHIR metadata from raw to typed
         err_section:='MAIN-12';    err_schema:='db_log';    err_table:='copy_fhir_metadata_from_raw_to_typed';
         SELECT parameter_value INTO copy_fhir_metadata_from_raw_to_typed FROM db_config.db_parameter WHERE parameter_name='copy_fhir_metadata_from_raw_to_typed';
@@ -749,14 +795,14 @@ BEGIN
                 UNION ALL SELECT last_processing_nr AS lpn FROM db_log.consent_raw r, (SELECT consent_raw_id FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr) t WHERE r.consent_raw_id=t.consent_raw_id
                 UNION ALL SELECT last_processing_nr AS lpn FROM db_log.location_raw r, (SELECT location_raw_id FROM db_log.location WHERE last_processing_nr=max_last_pro_nr) t WHERE r.location_raw_id=t.location_raw_id
                 UNION ALL SELECT last_processing_nr AS lpn FROM db_log.pids_per_ward_raw r, (SELECT pids_per_ward_raw_id FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr) t WHERE r.pids_per_ward_raw_id=t.pids_per_ward_raw_id
-            ) --WHERE LPN > 0
+            ) -- WHERE LPN > 0
         );
 
             ----------------- Update for encounter_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='encounter';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_encounter_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_encounter_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_encounter_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.encounter t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE encounter_raw_id IN (SELECT encounter_raw_ID FROM db_log.encounter_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -777,9 +823,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='encounter_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_encounter_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_encounter_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_encounter_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.encounter_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -787,18 +833,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT encounter_raw_ID FROM db_log.encounter t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.encounter_raw_id = sub.encounter_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.encounter_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT encounter_raw_ID FROM db_log.encounter t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.encounter_raw_id = sub.encounter_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.encounter_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT encounter_raw_ID FROM db_log.encounter t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.encounter_raw_id = sub.encounter_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='encounter_raw';
+--/*Test_encounter_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_encounter_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_encounter_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.encounter t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, encounter_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.encounter_raw r) sub WHERE sub.encounter_raw_id = t.encounter_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for patient_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='patient';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_patient_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_patient_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_patient_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.patient t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE patient_raw_id IN (SELECT patient_raw_ID FROM db_log.patient_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -819,9 +878,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='patient_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_patient_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_patient_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_patient_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.patient_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -829,18 +888,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT patient_raw_ID FROM db_log.patient t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.patient_raw_id = sub.patient_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.patient_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT patient_raw_ID FROM db_log.patient t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.patient_raw_id = sub.patient_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.patient_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT patient_raw_ID FROM db_log.patient t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.patient_raw_id = sub.patient_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='patient_raw';
+--/*Test_patient_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_patient_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_patient_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.patient t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, patient_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.patient_raw r) sub WHERE sub.patient_raw_id = t.patient_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for condition_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='condition';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_condition_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_condition_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_condition_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.condition t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE condition_raw_id IN (SELECT condition_raw_ID FROM db_log.condition_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -861,9 +933,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='condition_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_condition_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_condition_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_condition_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.condition_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -871,18 +943,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT condition_raw_ID FROM db_log.condition t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.condition_raw_id = sub.condition_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.condition_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT condition_raw_ID FROM db_log.condition t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.condition_raw_id = sub.condition_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.condition_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT condition_raw_ID FROM db_log.condition t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.condition_raw_id = sub.condition_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='condition_raw';
+--/*Test_condition_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_condition_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_condition_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.condition t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, condition_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.condition_raw r) sub WHERE sub.condition_raw_id = t.condition_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for medication_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medication';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medication_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medication_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_medication_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.medication t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE medication_raw_id IN (SELECT medication_raw_ID FROM db_log.medication_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -903,9 +988,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medication_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medication_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medication_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_medication_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medication_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -913,18 +998,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT medication_raw_ID FROM db_log.medication t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.medication_raw_id = sub.medication_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medication_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medication_raw_ID FROM db_log.medication t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medication_raw_id = sub.medication_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medication_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medication_raw_ID FROM db_log.medication t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.medication_raw_id = sub.medication_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='medication_raw';
+--/*Test_medication_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medication_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_medication_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medication t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, medication_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.medication_raw r) sub WHERE sub.medication_raw_id = t.medication_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for medicationrequest_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationrequest';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medicationrequest_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationrequest_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_medicationrequest_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.medicationrequest t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE medicationrequest_raw_id IN (SELECT medicationrequest_raw_ID FROM db_log.medicationrequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -945,9 +1043,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationrequest_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medicationrequest_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationrequest_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_medicationrequest_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationrequest_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -955,18 +1053,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medicationrequest_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medicationrequest_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationrequest_raw_ID FROM db_log.medicationrequest t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.medicationrequest_raw_id = sub.medicationrequest_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='medicationrequest_raw';
+--/*Test_medicationrequest_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationrequest_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_medicationrequest_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medicationrequest t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, medicationrequest_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.medicationrequest_raw r) sub WHERE sub.medicationrequest_raw_id = t.medicationrequest_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for medicationadministration_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationadministration';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medicationadministration_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationadministration_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_medicationadministration_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.medicationadministration t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE medicationadministration_raw_id IN (SELECT medicationadministration_raw_ID FROM db_log.medicationadministration_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -987,9 +1098,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationadministration_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medicationadministration_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationadministration_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_medicationadministration_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationadministration_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -997,18 +1108,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medicationadministration_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medicationadministration_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationadministration_raw_ID FROM db_log.medicationadministration t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.medicationadministration_raw_id = sub.medicationadministration_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='medicationadministration_raw';
+--/*Test_medicationadministration_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationadministration_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_medicationadministration_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medicationadministration t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, medicationadministration_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.medicationadministration_raw r) sub WHERE sub.medicationadministration_raw_id = t.medicationadministration_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for medicationstatement_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='medicationstatement';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medicationstatement_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationstatement_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_medicationstatement_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.medicationstatement t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE medicationstatement_raw_id IN (SELECT medicationstatement_raw_ID FROM db_log.medicationstatement_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1029,9 +1153,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='medicationstatement_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_medicationstatement_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationstatement_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_medicationstatement_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.medicationstatement_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1039,18 +1163,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.medicationstatement_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.medicationstatement_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT medicationstatement_raw_ID FROM db_log.medicationstatement t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.medicationstatement_raw_id = sub.medicationstatement_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='medicationstatement_raw';
+--/*Test_medicationstatement_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_medicationstatement_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_medicationstatement_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.medicationstatement t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, medicationstatement_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.medicationstatement_raw r) sub WHERE sub.medicationstatement_raw_id = t.medicationstatement_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for observation_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='observation';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_observation_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_observation_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_observation_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.observation t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE observation_raw_id IN (SELECT observation_raw_ID FROM db_log.observation_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1071,9 +1208,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='observation_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_observation_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_observation_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_observation_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.observation_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1081,18 +1218,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT observation_raw_ID FROM db_log.observation t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.observation_raw_id = sub.observation_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.observation_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT observation_raw_ID FROM db_log.observation t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.observation_raw_id = sub.observation_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.observation_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT observation_raw_ID FROM db_log.observation t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.observation_raw_id = sub.observation_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='observation_raw';
+--/*Test_observation_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_observation_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_observation_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.observation t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, observation_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.observation_raw r) sub WHERE sub.observation_raw_id = t.observation_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for diagnosticreport_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='diagnosticreport';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_diagnosticreport_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_diagnosticreport_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_diagnosticreport_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.diagnosticreport t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE diagnosticreport_raw_id IN (SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1113,9 +1263,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='diagnosticreport_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_diagnosticreport_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_diagnosticreport_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_diagnosticreport_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.diagnosticreport_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1123,18 +1273,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.diagnosticreport_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.diagnosticreport_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT diagnosticreport_raw_ID FROM db_log.diagnosticreport t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.diagnosticreport_raw_id = sub.diagnosticreport_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='diagnosticreport_raw';
+--/*Test_diagnosticreport_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_diagnosticreport_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_diagnosticreport_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.diagnosticreport t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, diagnosticreport_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.diagnosticreport_raw r) sub WHERE sub.diagnosticreport_raw_id = t.diagnosticreport_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for servicerequest_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='servicerequest';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_servicerequest_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_servicerequest_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_servicerequest_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.servicerequest t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE servicerequest_raw_id IN (SELECT servicerequest_raw_ID FROM db_log.servicerequest_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1155,9 +1318,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='servicerequest_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_servicerequest_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_servicerequest_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_servicerequest_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.servicerequest_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1165,18 +1328,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.servicerequest_raw_id = sub.servicerequest_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.servicerequest_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.servicerequest_raw_id = sub.servicerequest_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.servicerequest_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT servicerequest_raw_ID FROM db_log.servicerequest t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.servicerequest_raw_id = sub.servicerequest_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='servicerequest_raw';
+--/*Test_servicerequest_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_servicerequest_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_servicerequest_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.servicerequest t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, servicerequest_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.servicerequest_raw r) sub WHERE sub.servicerequest_raw_id = t.servicerequest_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for procedure_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='procedure';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_procedure_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_procedure_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_procedure_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.procedure t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE procedure_raw_id IN (SELECT procedure_raw_ID FROM db_log.procedure_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1197,9 +1373,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='procedure_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_procedure_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_procedure_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_procedure_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.procedure_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1207,18 +1383,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT procedure_raw_ID FROM db_log.procedure t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.procedure_raw_id = sub.procedure_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.procedure_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT procedure_raw_ID FROM db_log.procedure t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.procedure_raw_id = sub.procedure_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.procedure_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT procedure_raw_ID FROM db_log.procedure t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.procedure_raw_id = sub.procedure_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='procedure_raw';
+--/*Test_procedure_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_procedure_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_procedure_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.procedure t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, procedure_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.procedure_raw r) sub WHERE sub.procedure_raw_id = t.procedure_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for consent_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='consent';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_consent_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_consent_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_consent_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.consent t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE consent_raw_id IN (SELECT consent_raw_ID FROM db_log.consent_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1239,9 +1428,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='consent_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_consent_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_consent_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_consent_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.consent_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1249,18 +1438,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT consent_raw_ID FROM db_log.consent t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.consent_raw_id = sub.consent_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.consent_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT consent_raw_ID FROM db_log.consent t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.consent_raw_id = sub.consent_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.consent_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT consent_raw_ID FROM db_log.consent t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.consent_raw_id = sub.consent_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='consent_raw';
+--/*Test_consent_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_consent_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_consent_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.consent t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, consent_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.consent_raw r) sub WHERE sub.consent_raw_id = t.consent_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for location_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='location';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_location_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_location_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_location_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.location t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE location_raw_id IN (SELECT location_raw_ID FROM db_log.location_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1281,9 +1483,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='location_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_location_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_location_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_location_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.location_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1291,18 +1493,31 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT location_raw_ID FROM db_log.location t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.location_raw_id = sub.location_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.location_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT location_raw_ID FROM db_log.location t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.location_raw_id = sub.location_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.location_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT location_raw_ID FROM db_log.location t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.location_raw_id = sub.location_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='location_raw';
+--/*Test_location_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_location_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_location_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.location t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, location_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.location_raw r) sub WHERE sub.location_raw_id = t.location_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
             ----------------- Update for pids_per_ward_raw ----------------------------------
             err_section:='UPDATE-35';    err_schema:='db_log';    err_table:='pids_per_ward';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_pids_per_ward_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_pids_per_ward_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed'' );'
+--/*Test_pids_per_ward_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v1*/            UPDATE db_log.pids_per_ward t SET last_check_datetime = last_pro_datetime, last_processing_nr = new_last_pro_nr
 --/*AltDirekteAusführung_v1*/            WHERE pids_per_ward_raw_id IN (SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward_raw t, lpn_collection l WHERE t.last_processing_nr=l.lpn)
@@ -1323,9 +1538,9 @@ BEGIN
 -- v3 --
           ------------------------------------------------------------------------------------
             err_section:='UPDATE-40';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw'' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_pids_per_ward_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_pids_per_ward_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update raw - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_pids_per_ward_raw*/))  AS t(res TEXT) INTO erg;
 
 --/*AltDirekteAusführung_v2*/            UPDATE db_log.pids_per_ward_raw r SET
 --/*AltDirekteAusführung_v2*/            -- last_check_datetime = last_pro_datetime,
@@ -1333,13 +1548,26 @@ BEGIN
 --/*AltDirekteAusführung_v2*/            FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward t JOIN lpn_collection l ON t.last_processing_nr=l.lpn) sub
 --/*AltDirekteAusführung_v2*/            WHERE r.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND r.last_processing_nr < new_last_pro_nr;
 
--- v3 --
+-- v3 -- Übernehmen wenn typed neu geschrieben wurden auf raw
             FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
                 SELECT res FROM public.pg_background_result(public.pg_background_launch(
-                'UPDATE db_log.pids_per_ward_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward t WHERE t.last_processing_nr = '||current_record.lpn||' ) sub  WHERE rz.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
+                'UPDATE db_log.pids_per_ward_raw rz SET last_processing_nr = '||new_last_pro_nr||' FROM ( SELECT pids_per_ward_raw_ID FROM db_log.pids_per_ward t WHERE t.last_processing_nr > '||current_record.lpn||' ) sub  WHERE rz.pids_per_ward_raw_id = sub.pids_per_ward_raw_ID AND rz.last_processing_nr < '||new_last_pro_nr
                 ) ) AS t(res TEXT) INTO erg;
             END LOOP;
 -- v3 --
+
+          ------------------------------------------------------------------------------------
+-- Übernehmen lpn von teilmengen die gleich waren zu den typed
+            err_section:='UPDATE-45';    err_schema:='db_log';    err_table:='pids_per_ward_raw';
+--/*Test_pids_per_ward_raw*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_pids_per_ward_raw*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''main update typed - new_last_pro_nr:'||new_last_pro_nr||' c.lpn:'||current_record.lpn||''' );'
+--/*Test_pids_per_ward_raw*/))  AS t(res TEXT) INTO erg;
+
+            FOR current_record IN (SELECT lpn FROM lpn_collection) LOOP
+                SELECT res FROM public.pg_background_result(public.pg_background_launch(
+                'UPDATE db_log.pids_per_ward t SET last_processing_nr = sub.last_processing_nr, last_check_datetime = sub.last_check_datetime, current_dataset_status = sub.current_dataset_status FROM (SELECT r.last_processing_nr, pids_per_ward_raw_ID, r.last_check_datetime, r.current_dataset_status FROM db_log.pids_per_ward_raw r) sub WHERE sub.pids_per_ward_raw_id = t.pids_per_ward_raw_ID and sub.last_processing_nr>t.last_processing_nr'
+                ) ) AS t(res TEXT) INTO erg;
+            END LOOP;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''Nach Einzelnen Tabellen'' );'
