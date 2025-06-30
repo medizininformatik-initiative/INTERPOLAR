@@ -1,0 +1,103 @@
+-- aktueller Stand Datenbank
+   select * from db_config.db_parameter;
+
+-- alles löschen - vorbereiten
+    delete from db_log.patient_raw where pat_id like 'Test%';
+    delete from db_log.patient where pat_id like 'Test%';
+
+
+------- Test 1 2/2 neu Patieten einfügen und Typen -----------------------------------------------------------------------------------
+    select db.data_transfer_status(); -- warten bis cron gerade durchgelaufen ist >:10
+
+-- einfügen schnittstelle
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115')    ,('Test_Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+
+-- Melten simulieren indem alle raw nach typt übernommen werden
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from cds2db_in.patient_raw where pat_id like 'Test%');
+
+    select db.data_transfer_status(); -- abwarten bis einmal verarbeitet
+
+-- Ergebnis sollte sein - 2 Patient neu - in typed und raw solte lpn hist wiederspiegeln (1 unterschied)
+    select  db.data_transfer_status() status, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient_raw where pat_id like 'Test%';
+    select  db.data_transfer_status() status, patient_id, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient where pat_id like 'Test%';
+
+------- Test 2 1/2 Patieten einfügen und Typen -----------------------------------------------------------------------------------
+    select db.data_transfer_status(); -- warten bis cron gerade durchgelaufen ist >:10
+-- einfügen schnittstelle
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+
+-- Melten simulieren indem alle raw nach typt übernommen werden
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from cds2db_in.patient_raw where pat_id like 'Test%');
+
+    select db.data_transfer_status(); -- abwarten bis einmal verarbeitet
+
+-- Ergebnis sollte sein - ein Patient neu - in typed und raw selbe lpn
+    select  db.data_transfer_status() status, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient_raw where pat_id like 'Test%';
+    select  db.data_transfer_status() status, patient_id, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient where pat_id like 'Test%';
+
+----- Test 3 - 2/2  selbe Patienten  ------------------------------------------------------------------------
+    select db.data_transfer_status(); -- warten bis cron gerade durchgelaufen ist >:10
+
+-- einfügen schnittstelle
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115')    ,('Test_Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+
+-- Melten simulieren indem alle raw nach typt übernommen werden
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from cds2db_in.patient_raw where pat_id like 'Test%');
+
+    select db.data_transfer_status(); -- abwarten bis einmal verarbeitet
+
+-- Ergebnis sollte sein - 2 vorhandene Patient mit höherer lpn (ipn<lpn)
+    select  db.data_transfer_status() status, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient_raw where pat_id like 'Test%';
+    select  db.data_transfer_status() status, patient_id, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient where pat_id like 'Test%';
+
+----- Test 4 - 0/2 + 1  neuen Patienen hinzu ------------------------------------------------------------------------
+    select db.data_transfer_status(); -- warten bis cron gerade durchgelaufen ist >:10
+
+-- einfügen schnittstelle
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667');
+
+-- Melten simulieren indem alle raw nach typt übernommen werden
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from cds2db_in.patient_raw where pat_id like 'Test%');
+
+    select db.data_transfer_status(); -- abwarten bis einmal verarbeitet
+
+-- Ergebnis sollte sein - der neue hat höhere lpn
+    select  db.data_transfer_status() status, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient_raw where pat_id like 'Test%';
+    select  db.data_transfer_status() status, patient_id, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient where pat_id like 'Test%';
+
+----- Test 5 - 1/3 (wie Test 2) ein bekannter Patienen hinzu -------------------------------------------------------------------
+    select db.data_transfer_status(); -- warten bis cron gerade durchgelaufen ist >:10
+
+-- einfügen schnittstelle
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115');
+
+-- Melten simulieren indem alle raw nach typt übernommen werden
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from cds2db_in.patient_raw where pat_id like 'Test%');
+
+    select db.data_transfer_status(); -- abwarten bis einmal verarbeitet
+
+-- Ergebnis sollte sein - der eingefügte hat höchste lpn - alle 3 haben verschiedene lpn
+    select  db.data_transfer_status() status, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient_raw where pat_id like 'Test%';
+    select  db.data_transfer_status() status, patient_id, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient where pat_id like 'Test%';
+
+----- Test 6 - 1/3+1 ein bekannter Patienen / ein neuer Patient hinzu -------------------------------------------------------------------
+    select db.data_transfer_status(); -- warten bis cron gerade durchgelaufen ist >:10
+
+-- einfügen schnittstelle
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_03','Sophie', 'Fischer', 'weiblich', '1995-06-03', '50667'), ('Test_Pat_FHIR_Test_04','Max', 'Weber', 'männlich', '1982-09-12', '70173');
+
+-- Melten simulieren indem alle raw nach typt übernommen werden
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from cds2db_in.patient_raw where pat_id like 'Test%');
+
+    select db.data_transfer_status(); -- abwarten bis einmal verarbeitet
+
+-- Ergebnis sollte sein - beide patienten haben höchste lpn - zwischen raw und typed um 1 versetzt
+    select  db.data_transfer_status() status, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient_raw where pat_id like 'Test%';
+    select  db.data_transfer_status() status, patient_id, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient where pat_id like 'Test%';
+
