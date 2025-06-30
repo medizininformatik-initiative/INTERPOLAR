@@ -17,6 +17,7 @@ etlutils::runLevel2("MRP Calculation", {
   })
 
   #TODO: bei weiteren MRP-Arten dann die dp_mrp_calculation-Tabelle immer rbinden und alle anderen Tabellen zur Gesamtliste hinzufügen
+  #außerdem muss die Liste der existingRetrolectiveMRPEvaluationIDs um die neuen MRP erweitert werden
 
   etlutils::runLevel3("Calculate MRPs", {
     for (iiiii in seq_along(mrp_contents)) {
