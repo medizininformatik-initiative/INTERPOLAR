@@ -267,7 +267,7 @@ DO
 $$
 BEGIN
     IF NOT EXISTS (
-        SELECT COUNT(1) FROM cron.job j WHERE j.active IS TRUE AND command='SELECT db.cron_job_data_transfer();'
+        SELECT 1 FROM cron.job j WHERE j.active IS TRUE AND command='SELECT db.cron_job_data_transfer();'
     ) THEN
         -- Datatransfer Job anlegen
         PERFORM cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
