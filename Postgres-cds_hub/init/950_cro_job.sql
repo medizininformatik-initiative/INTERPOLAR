@@ -267,7 +267,7 @@ DO
 $$
 BEGIN
     IF NOT EXISTS ( -- if cron job not exist
-            select * from cron.job j where active is true and command='SELECT db.cron_job_data_transfer();'
+            select 1 from cron.job j where active is true and command='SELECT db.cron_job_data_transfer();'
         ) THEN
             -- Datatransfer Job anlegen
             SELECT cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
