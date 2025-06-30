@@ -266,10 +266,11 @@ $$ LANGUAGE plpgsql; -- db.cron_job_data_transfer
 DO
 $$
 BEGIN
-    IF (SELECT COUNT(1) FROM cron.job j WHERE j.active IS TRUE AND j.command='SELECT db.cron_job_data_transfer();') = 0
-    THEN
+    IF NOT EXISTS (
+        SELECT COUNT(1) FROM cron.job j WHERE j.active IS TRUE AND command='SELECT db.cron_job_data_transfer();'
+    ) THEN
         -- Datatransfer Job anlegen
-        SELECT cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
+        PERFORM cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
     END IF;
 END
 $$;
