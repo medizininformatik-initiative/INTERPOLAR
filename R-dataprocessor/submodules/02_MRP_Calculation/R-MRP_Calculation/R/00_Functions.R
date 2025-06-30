@@ -466,8 +466,18 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
     }
   }
 
-  # 6.) Get all necessary resources for the MRP calculation for these Encounters and return them as a list
+  # 6.) Get existing ret_id's for the medication analyses
+  getExistingRetrolectiveMRPEvaluationIDs <- function(medication_analyses_ids) {
+    query <- paste0(
+      "SELECT meda_id, ret_id\n",
+      "FROM v_dp_mrp_calculations\n",
+      "WHERE meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids))
+    return(etlutils::dbGetReadOnlyQuery(query))
+  }
+  medication_analyses_ids <- unlist(lapply(encounters_first_medication_analysis, function(dt) if (!is.null(dt)) dt$meda_id else NULL), use.names = FALSE)
+  existing_retrolective_mrp_evaluation_ids <- getExistingRetrolectiveMRPEvaluationIDs(medication_analyses_ids)
 
+  # 7.) Get all necessary resources for the MRP calculation for these Encounters and return them as a list
   # Get patient references
 
   patient_references <- main_encounters[enc_id %in% names(encounters_first_medication_analysis)]$enc_patient_ref
@@ -487,6 +497,7 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
     main_encounters = main_encounters,
     record_ids = record_ids,
     encounters_first_medication_analysis = encounters_first_medication_analysis,
+    existing_retrolective_mrp_evaluation_ids = existing_retrolective_mrp_evaluation_ids,
     medication_requests = medication_requests,
     medication_administrations = medication_administrations,
     medication_statements = medication_statements,

@@ -518,8 +518,10 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
     meda_study_phase <- if (!is.null(meda)) meda$study_phase else NA_character_
     meda_ward_name <- if (!is.null(meda)) meda$ward_name else NA_character_
     record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
-    ret_id <- ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id)
+    # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
+    ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
     ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
+    kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
 
     # Get active MedicationRequests for the encounter
     active_requests <- getActiveMedicationRequests(resources$medication_requests, encounter$enc_period_start, meda_datetime)
@@ -572,13 +574,21 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
       # Iterate over matched results and create new rows for retrolektive_mrpbewertung and dp_mrp_calculations
       for (i in seq_len(nrow(match_atc_and_icd_codes))) {
         match <- match_atc_and_icd_codes[i]
+        meda_id_value <- meda_id # we need this renaming for the following comparison
+        existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
+
+        next_index <- if (length(existing_ret_ids) == 0) 1 else max(as.integer(sub(ret_id_prefix, "", existing_ret_ids)), na.rm = TRUE) + 1
+        ret_id <- paste0(ret_id_prefix, next_index)
+        # always updating the references to the existing ret_ids
+        resources$existing_retrolective_mrp_evaluation_ids <- etlutils::addTableRow(resources$existing_retrolective_mrp_evaluation_ids, meda_id, ret_id)
+
         # Create new row for table retrolektive_mrpbewertung
         retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
           record_id = record_id,
-          ret_id = paste0(ret_id, "-r", i),
+          ret_id = ret_id,
           ret_meda_id = meda_id,
           ret_meda_dat1 = meda_datetime,
-          ret_kurzbeschr = match$kurzbeschr,
+          ret_kurzbeschr = paste0(kurzbeschr_prefix, match$kurzbeschr),
           ret_atc1 = match$atc_code,
           ret_ip_klasse_01 = MRP_CALCULATION_TYPE$Drug_Disease,
           ret_ip_klasse_disease = match$icd,
