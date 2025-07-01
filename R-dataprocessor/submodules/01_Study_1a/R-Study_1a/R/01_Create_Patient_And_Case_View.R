@@ -148,7 +148,7 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
 
       if (length(valid_dates)) {
         min_enc_period_start <- min(valid_dates)
-        additional_query_condition <- paste0("        obs_patient_ref IN (", pat_query_refs, ") AND\n",
+        additional_query_condition <- paste0("        obs_patient_ref IN ", pat_query_refs, " AND\n",
                                              "        obs_effectivedatetime > '", min_enc_period_start, "'\n")
         query <- paste0(query_template, additional_query_condition)
         more_observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
@@ -164,7 +164,7 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
   } else {
     pat_query_refs <- etlutils::fhirdbGetQueryList(enc_patient_refs)
     # Extract Observations by patient ID, but without any references to the encounter
-    additional_query_condition <- paste0("        obs_patient_ref IN (", pat_query_refs, ")\n")
+    additional_query_condition <- paste0("        obs_patient_ref IN ", pat_query_refs, "\n")
     query <- paste0(query_template, additional_query_condition)
 
     observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[3]")
@@ -337,7 +337,7 @@ createFrontendTables <- function() {
     query_ids <- etlutils::fhirdbGetQueryList(encounters$enc_diagnosis_condition_ref,
                                               remove_ref_type = TRUE)
     query <- paste0("SELECT * FROM v_condition\n",
-                    "  WHERE con_id IN (", query_ids, ")\n")
+                    "  WHERE con_id IN ", query_ids, "\n")
     conditions <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[2]")
 
     observations_weight <- getObservations(encounters, query_datetime_obs, OBSERVATION_BODY_WEIGHT_CODES, OBSERVATION_BODY_WEIGHT_SYSTEM)
