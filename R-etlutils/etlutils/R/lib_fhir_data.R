@@ -150,7 +150,7 @@ fhirdataGetAllEncounters <- function(encounter_ids, common_encounter_fhir_identi
     if (length(encounter_ids)) {
       query_ids <- fhirdbGetQueryList(encounter_ids)
       query <- paste0( "SELECT * FROM v_encounter_last_version\n",
-                       "WHERE enc_id IN (", query_ids, ")\n")
+                       "WHERE enc_id IN ", query_ids, "\n")
       encounters <- dbGetReadOnlyQuery(query, lock_id = paste0("getAllEncounters()[", lock_id_extension, sub_lock_id_extension, "]"))
       return(encounters)
     }
@@ -187,7 +187,7 @@ fhirdataGetAllEncounters <- function(encounter_ids, common_encounter_fhir_identi
     if (nrow(encounters)) {
       query_ids <- fhirdbGetQueryList(fhirdataGetReference("Encounter", encounters$enc_id))
       query <- paste0( "SELECT * FROM v_encounter_last_version\n",
-                       "WHERE enc_partof_ref IN (", query_ids, ")\n")
+                       "WHERE enc_partof_ref IN ", query_ids, "\n")
       part_encounters <- dbGetReadOnlyQuery(query, lock_id = paste0("getAllEncounters()[", lock_id_extension, sub_lock_id_extension, "]"))
       # are there any new encounters?
       part_encounters <- data.table::fsetdiff(part_encounters, encounters)
@@ -204,7 +204,7 @@ fhirdataGetAllEncounters <- function(encounter_ids, common_encounter_fhir_identi
     query_ids <- fhirdbGetQueryList(encounters$enc_identifier_value)
     query <- paste0( "SELECT * FROM v_encounter_last_version\n",
                      "WHERE enc_identifier_system = '", common_encounter_fhir_identifier_system, "'\n",
-                     "AND enc_identifier_value IN (", query_ids, ")\n")
+                     "AND enc_identifier_value IN ", query_ids, "\n")
     encounters_with_same_identifier <- dbGetReadOnlyQuery(query, lock_id = paste0("getAllEncounters()[2]"))
     encounters <- joinEncounters(encounters, encounters_with_same_identifier)
   }

@@ -34,6 +34,8 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS rlang
 RUN /rocker_scripts/bin/install2.r -n $NCPUS stringr
 RUN /rocker_scripts/bin/install2.r -n $NCPUS xml2
 RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
+RUN /rocker_scripts/bin/install2.r -n $NCPUS base64enc
+RUN /rocker_scripts/bin/install2.r -n $NCPUS digest
 
 WORKDIR /src
 

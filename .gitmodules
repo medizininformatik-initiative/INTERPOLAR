@@ -1,0 +1,3 @@
+[submodule "Input-Repo/INTERPOLAR-WP7"]
+	path = Input-Repo/INTERPOLAR-WP7
+	url = git@github.com:medizininformatik-initiative/INTERPOLAR-WP7.git

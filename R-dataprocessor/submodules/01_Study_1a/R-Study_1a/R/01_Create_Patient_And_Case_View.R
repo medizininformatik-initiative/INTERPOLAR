@@ -118,7 +118,7 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
   obs_codes <- parseQueryList(obs_codes)
   # Query template to get desired Observations from DB
   query_template <- paste0("SELECT * FROM v_observation\n",
-                           "  WHERE obs_code_code IN (", obs_codes, ") AND\n",
+                           "  WHERE obs_code_code IN ", obs_codes, " AND\n",
                            "        obs_code_system = '", obs_system, "' AND\n",
                            "        obs_effectivedatetime < '", query_datetime, "' AND\n")
 
@@ -128,7 +128,7 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
     enc_refs <- fhirdataGetReference("Encounter", (unique(encounters$enc_id)))
     enc_query_refs <- etlutils::fhirdbGetQueryList(enc_refs)
     # Extract the Observations by direct encounter references
-    additional_query_condition <- paste0("        obs_encounter_ref IN (", enc_query_refs, ")\n")
+    additional_query_condition <- paste0("        obs_encounter_ref IN ", enc_query_refs, "\n")
     query <- paste0(query_template, additional_query_condition)
     observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[1]")
 
@@ -202,16 +202,6 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
 #'
 createFrontendTables <- function() {
 
-  # This function constructs an error or warning message with optional additional
-  # information such as related tables and database connection details. It can be
-  # used to provide more context when reporting errors or warnings.
-  getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
-    tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
-    db_connection <- if (!etlutils::isSimpleNA(readonly)) etlutils::dbGetInfo(readonly) else ""
-    text <- paste0(text, tables, db_connection)
-    return(text)
-  }
-
   # This functions loads the last version of a patient.
   # NOTE: THIS IS ALWAYS THE VERY LAST VERSION. THE current_date IS CURRENTLY IGNORED HERE.
   # If there will be
@@ -224,14 +214,6 @@ createFrontendTables <- function() {
     pids <- etlutils::fhirdataExtractIDs(pids)
     patients <- loadResourcesLastVersionByOwnIDFromDB("Patient", pids)
     return(patients)
-  }
-
-  # Function to load existing record IDs from the database for a list of patient IDs
-  loadExistingRecordIDsFromDB <- function(pat_ids) {
-    query_ids <- etlutils::fhirdbGetQueryList(pat_ids)
-    query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN (", query_ids, ")")
-    existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "cacheExistingRecordIDs()")
-    return(existing_record_ids)
   }
 
   # Function to retrieve an existing record_id for a given patient ID
@@ -258,7 +240,7 @@ createFrontendTables <- function() {
     pids_count <- length(pids)
 
     # Initialize an empty data table with a fix number of rows to store patient information
-    patient_frontend_table <- data.table(
+    patient_frontend_table <- data.table::data.table(
       record_id = rep(NA_character_, times = pids_count), # v_patient -> patient_id
       patient_fe_id = NA_character_, # v_patient -> patient_id
       pat_id = NA_character_, # v_patient -> pat_id
@@ -299,7 +281,7 @@ createFrontendTables <- function() {
   createEncounterFrontendTable <- function(pids_per_ward, patients, existing_record_ids) {
     # Initialize an empty data table with no rows to store encounter information.
     # The rows will be added later via rbind in the function addEmptyRows().
-    enc_frontend_table <- data.table(
+    enc_frontend_table <- data.table::data.table(
       record_id	= character(), # v_patient -> patient_id
       fall_id	= character(), # v_encounter -> enc_id
       fall_pat_id	= character(), # v_patient -> pat_id
@@ -318,11 +300,12 @@ createFrontendTables <- function() {
       #fall_bmi = numeric(),
       fall_status = character(),
       fall_ent_dat = etlutils::as.POSIXctWithTimezone(character()),
+      fall_additional_values = character(),
       fall_complete = character()
     )
 
     encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = pids_per_ward$encounter_id,
-                                                     common_encounter_fhir_identifier_system = FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
+                                                     common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
                                                      lock_id_extension = "CreateEncounterFrontendTable()_")
 
     # If the CDS-conform 3-level encounter system has been implemented, then enc_type_system must
@@ -419,8 +402,8 @@ createFrontendTables <- function() {
         # Extract the FHIR identifier value for the frontend table
         # There can be multiple rows with different identifier systems, so we need to filter them
         # out first and then combine the values into a single string, if there are multiple values.
-        if (etlutils::isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
-          filtered_rows <- pid_encounter[enc_identifier_system == FRONTEND_DISPLAYED_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
+        if (etlutils::isDefinedAndNotEmpty("COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+          filtered_rows <- pid_encounter[enc_identifier_system == COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
           if (nrow(filtered_rows)) {
             enc_identifier_value <- paste(unique(filtered_rows$enc_identifier_value), collapse = ", ")
           } else {
@@ -442,6 +425,23 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_ent_dat", enc_period_end)
         data.table::set(enc_frontend_table, target_index, "fall_status", enc_status)
 
+        # Store all known Encounter IDs in toml syntax in the additional values
+        pids_per_ward_encounters <- pids_per_ward[patient_id == pid]
+        fall_additional_values <- ""
+        fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
+                                                             pids_per_ward_encounters$encounter_id,
+                                                             key = "pids_per_ward_encounters",
+                                                             comment = "FHIR ID of all Encounters of this medical case that were in the pids_per_ward table")
+        fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
+                                                             pid_main_encounters$enc_id,
+                                                             key = "main_encounters",
+                                                             comment = "FHIR ID of all main Encounter(s) for the medical case (should be exactly one)")
+        fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
+                                                             pid_part_of_encounters$enc_id,
+                                                             key = "part_encounters",
+                                                             comment = "FHIR ID of all Encounters for the medical case at this point which are not the main Encounter")
+        data.table::set(enc_frontend_table, target_index, "fall_additional_values", fall_additional_values)
+
         # set fall_complete (derived from FHIR Encounter.status)
         # see https://github.com/medizininformatik-initiative/INTERPOLAR/issues/274
         fall_complete <- grepl("^finished$|^cancelled$|^entered-in-error$", enc_status, ignore.case = TRUE)
@@ -449,7 +449,16 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_complete", fall_complete)
 
         # Extract ward name from unique_pid_ward table
-        data.table::set(enc_frontend_table, target_index, "fall_station", unique_pid_ward$ward_name[pid_index])
+        ward_name <- unique_pid_ward$ward_name[pid_index]
+        data.table::set(enc_frontend_table, target_index, "fall_station", ward_name)
+
+        # Get the current study phase for the ward of the Encounter
+        study_phase <- getStudyPhase(ward_name)
+        if (is.null(study_phase)) {
+          stop("ERROR: No study phase found for ward '", ward_name, "'.\n",
+               "Please check the study phase configuration in the dataprocessor_config.toml for parameters WARDS_PHASE_A, WARDS_PHASE_B_TEST and WARDS_PHASE_B.")
+        }
+        data.table::set(enc_frontend_table, target_index, "fall_studienphase", study_phase)
 
         # Extract the admission diagnoses
         admission_diagnoses <- getAdmissionDiagnoses(pid_encounter, conditions)

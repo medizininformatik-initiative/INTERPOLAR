@@ -8,6 +8,7 @@ DECLARE
     new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
     max_last_pro_nr INT:=0; -- Last processing number over all entities
     max_ent_pro_nr INT:=0;  -- Max processing number from a entiti
+    max_ent_pro_nr2 INT:=0;  -- Max processing number from a entiti
     max_ppw_pro_nr INT:=0;  -- Max processing number von pids_per_ward
     last_pro_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP; -- Last time function is startet
     data_import_hist_every_dataset INT:=0; -- Value for documentation of each individual data record switch off
@@ -18,6 +19,7 @@ DECLARE
     data_count_pro_processed INT:=0; -- Counting all records in this run which processed
     data_count_last_status_set INT:=0; -- Number of data records since the status was last set
     data_count_last_status_max INT:=0; -- Max number of data records since the status was last set (parameter)
+    data_count_raw_to_typed INT:=0; -- Counting all records if max(lpn_raw) > max(lpn_typed) --> Datacount --> takeover
     timestamp_start VARCHAR;
     timestamp_end VARCHAR;
     tmp_sec double precision:=0; -- Temporary variable to store execution time
@@ -55,17 +57,19 @@ BEGIN
 
 <%LOOP_TABS_SUB_take_over_check_date_function_last_pnr%>
 
+
     err_section:='HEAD-11';    err_schema:='db_log';    err_table:='db_log.pids_per_ward';
     -- Check if it is sufficient to count pids_per_ward or if counting must be done across all resources
     SELECT COALESCE(MAX(last_processing_nr),0) INTO max_ppw_pro_nr FROM db_log.pids_per_ward;
 
-    IF max_ppw_pro_nr!=max_last_pro_nr THEN
-       SELECT res FROM pg_background_result(pg_background_launch(
-       'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', ''Lange Ausfuehrung - all resouces'', ''max_ppw_pro_nr:'||max_ppw_pro_nr||' / max_last_pro_nr:'||max_last_pro_nr||''' );'
-       ))  AS t(res TEXT) INTO erg;
+    IF max_ppw_pro_nr!=max_last_pro_nr AND data_count_raw_to_typed<1 THEN -- wenn ausführung schon klar - kurze zählung
+--/*Test*/       SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test*/       'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', ''Lange Ausfuehrung - all resouces'', ''max_ppw_pro_nr:'||max_ppw_pro_nr||' / max_last_pro_nr:'||max_last_pro_nr||''' );'
+--/*Test*/       ))  AS t(res TEXT) INTO erg;
 
 <%LOOP_TABS_SUB_take_over_check_date_function_count%>
     ELSE
+        err_section:='HEAD-17';    err_schema:='db_log';    err_table:='db_log.pids_per_ward (ELSE)';
         SELECT COUNT(1) INTO data_count_pro_all
     	FROM (select * from db_log.pids_per_ward_raw where last_processing_nr!=max_ent_pro_nr) r
 	, (select * from db_log.pids_per_ward where last_processing_nr=max_ent_pro_nr) t
@@ -77,7 +81,7 @@ BEGIN
 --/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', '''||err_section||' - '||err_table||''', '''||err_schema||''', ''data_count_pro_all / max_last_pro_nr:'||data_count_pro_all||' / '||max_last_pro_nr||''' );'
 --/*Test*/))  AS t(res TEXT) INTO erg;
 
-    IF data_count_pro_all>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
+    IF data_count_pro_all>0 OR data_count_raw_to_typed>0 THEN -- Complete execution is only necessary if new data records are available - otherwise no database access is necessary
         -- Copy FHIR metadata from raw to typed
         err_section:='MAIN-12';    err_schema:='db_log';    err_table:='copy_fhir_metadata_from_raw_to_typed';
         SELECT parameter_value INTO copy_fhir_metadata_from_raw_to_typed FROM db_config.db_parameter WHERE parameter_name='copy_fhir_metadata_from_raw_to_typed';
@@ -110,6 +114,7 @@ BEGIN
         WHERE pc_name=''currently_processed_number_of_data_records_in_the_function'''
         ))  AS t(res TEXT) INTO erg;
 
+        new_last_pro_nr:= max_last_pro_nr; -- Letzte Processing Number wird auf letzte Nummer des letzten Kopiervorgangs in typed gesetzt
         IF new_last_pro_nr IS NULL THEN SELECT nextval('db.db_seq') INTO new_last_pro_nr; END IF;
 
         err_section:='MAIN-30';    err_schema:='db_log';    err_table:='lpn_collection';
@@ -122,10 +127,10 @@ BEGIN
         CREATE TEMP TABLE lpn_collection
         ON COMMIT DROP
         AS (
-            SELECT DISTINCT LPN FROM (
+            SELECT MAX(LPN) lpn FROM (
                 SELECT -1 AS LPN
 <%LOOP_TABS_SUB_take_over_check_date_function_lpn_collection%>
-            )
+            ) -- WHERE LPN > 0
         );
 
 <%LOOP_TABS_SUB_take_over_check_date_function_update_data%>

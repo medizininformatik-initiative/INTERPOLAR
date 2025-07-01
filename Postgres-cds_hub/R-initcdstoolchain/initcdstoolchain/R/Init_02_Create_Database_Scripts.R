@@ -31,7 +31,7 @@ isContentChanged <- function(existing_file_path, new_file_content) {
   new_lines <- strsplit(new_file_content, "\n", fixed = TRUE)[[1]]
 
   # Define patterns of lines to ignore (last pattern is for empty lines)
-  drop_patterns <- c("Rights definition file last update", "Create time", "^\\s*$")
+  drop_patterns <- c("Rights definition", "Create time", "^\\s*$")
 
   # Function to remove lines containing any of the drop patterns
   cleanLines <- function(lines) {
@@ -457,10 +457,16 @@ convertTemplate <- function(tables_descriptions,
             } else {
               sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
               if (sub_placeholder_name %in% names(column_row)) {
+                replace_value <- column_row[[sub_placeholder_name]]
+                if (is.na(replace_value)) {
+                  # missing values in the current column row are replaced by the value in the first row
+                  stop(paste0("Missing value in column '", sub_placeholder_name, "' in table '", table_name, "' in row ", loop_row, "."))
+                }
                 single_loop_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_loop_content)
               }
             }
           }
+
           # set indentation, but not for the first column (first column gets its indentation from
           # the line with the placeholder itself
           indent <- ifelse(loop_row == 1, "", indentation)
@@ -519,7 +525,7 @@ convertTemplate <- function(tables_descriptions,
 
     } else if (startsWith(toupper(placeholder), "<%IF ")) {
       condition_arguments <- parseIFExpression(placeholder)
-      condition_compare_value <- ""
+
       if (condition_arguments$source %in% "RIGHTS_DEFINITION") {
         condition_compare_value <- rights_first_row[[condition_arguments$field]]
       } else if (condition_arguments$source %in% "TABLE_DESCRIPTION") {
@@ -527,7 +533,10 @@ convertTemplate <- function(tables_descriptions,
       } else {
         stop("Unknown source in IF expression: ", condition_arguments$source)
       }
-      #if (startsWith(placeholder, "<%IF NOT TABLE_DESCRIPTION:COLUMN_DESCRIPTION \"^meta/\"")) browser()
+      if (etlutils::isSimpleNA(condition_compare_value)) {
+        condition_compare_value = ""
+      }
+
       if (xor(condition_arguments$invert, grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
         # quotes at the beginning of the result indicate that not a subtemplate name is given but
         # directly the content
@@ -612,7 +621,7 @@ loadDatabaseRightsAndConvertDefinition <- function() {
                 "strings here in this R-script."))
   }
 
-  rights_definition <- etlutils::removeRowsWithNAorEmpty(rights_definition)
+  rights_definition <- etlutils::dtRemoveCommentRows(rights_definition)
   rights_definition[, TABLE_DESCRIPTION := trimws(TABLE_DESCRIPTION)]
   rights_definition <- etlutils::splitTableToList(rights_definition, rights_definition_columns$TABLE_DESCRIPTION)
   for (i in 1:length(rights_definition)) {
@@ -627,7 +636,7 @@ loadDatabaseRightsAndConvertDefinition <- function() {
     convert_definition_columns <- getConvertDefinitionColumnNames()
     convert_definition <- etlutils::removeTableHeader(convert_definition, convert_definition_columns)
     if (etlutils::isValidTable(convert_definition)) {
-      convert_definition <- etlutils::removeRowsWithNAorEmpty(convert_definition)
+      convert_definition <- etlutils::dtRemoveCommentRows(convert_definition)
       convert_definition <- etlutils::splitTableToList(convert_definition, convert_definition_columns$TABLE_DESCRIPTION)
     } else {
       message("No valid convert definition found -> we use all Table Descriptions in the original style.")

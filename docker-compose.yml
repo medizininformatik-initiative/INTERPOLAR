@@ -3,7 +3,7 @@ services:
   # FHIR Server for testing/simulating
   # replace it with the productive FHIR Server and/or configure this
   # FHIR Server in the services below.
-  # Handle the "deploy" section with care and configure it according to your setup and needs. 
+  # Handle the "deploy" section with care and configure it according to your setup and needs.
   #   The "deploy" section should only be commented out if necessary.
 #  blaze-DIC:
 #    image: "samply/blaze:latest"
@@ -81,6 +81,8 @@ services:
     # retries: 5
     ports:
       - "15432:5432"
+    # Shared Memory auf 1GB für große Joins setzen
+    shm_size: 1g
     environment:
       TZ: Europe/Berlin
       POSTGRES_PASSWORD_FILE: /run/secrets/cds_hub_db_admin.password
@@ -113,12 +115,12 @@ services:
       - external
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-      - ./pgadmin_cds_hub.json:/pgadmin4/pgadmin_cds_hub.json  
+      - ./pgadmin_cds_hub.json:/pgadmin4/pgadmin_cds_hub.json
 
   # This section is no service, but for building the R-environment
   # to execute (manualy) R scripts for r-cds2db and r-db2frontend,
   # e.g. StartRetrieval.R
-  # Handle the "deploy" section with care and configure it according to your setup and needs. 
+  # Handle the "deploy" section with care and configure it according to your setup and needs.
   #   The "deploy" section should only be commented out if necessary.
   r-env:
     build:
@@ -142,7 +144,8 @@ services:
       - ./R-dataprocessor/dataprocessor_config.toml:/src/R-dataprocessor/dataprocessor_config.toml
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
-      # Include certificates, e.g. self-signed certificates of the FHIR-Server, 
+      - ./Input-Repo:/src/Input-Repo
+      # Include certificates, e.g. self-signed certificates of the FHIR-Server,
       # incl. root-CA or CHAIN if needed.
       #- <self-signed_cert_FHIR-Server.pem>:/etc/ssl/certs/<self-signed_cert_FHIR-Server.pem>
       #- <root-CA_cert.pem>:/etc/ssl/certs/<root-CA_cert.pem>
