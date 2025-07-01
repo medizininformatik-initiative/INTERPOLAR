@@ -3,12 +3,11 @@ permalink:        pretty
 # Setup
 theme:            minima
 title:            'CDS Tool Chain'
-tagline:          'MII KDS FHIR -> DB -> Frontend'
-description:      ''
-#description:      'A Health IT Ontology for systematically describing application systems and software products in health IT. By <a href="https://imise.uni-leipzig.de/" target="_blank">IMISE</a> and <a href="https://umit.at/" target="_blank">UMIT</a>.'
+#tagline:          'MII KDS FHIR -> DB -> Frontend'
+#description:      ''
 #url:              https://foo.de
 #baseurl:          ''
 
-author:
-  name:           'INTERPOLAR IT-Team'
-  url:            https://github.com/SebStaeubert , https://github.com/astruebi, https://github.com/Flow191, https://github.com/reuschem
+#author:
+#  name:           'INTERPOLAR IT-Team'
+#  url:            https://github.com/SebStaeubert , https://github.com/astruebi, https://github.com/Flow191, https://github.com/reuschem
