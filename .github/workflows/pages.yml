@@ -18,6 +18,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'false'
+      
+      # Für Jekyll wird Ruby bzw. Bundler benötigt:
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - name: Install dependencies
+        run: bundle install
+      
       # Hier kommen weitere Schritte hin, z.B. das Bauen deiner Seite
       # Beispiel für Jekyll:
       - name: Build site with Jekyll
@@ -26,7 +35,7 @@ jobs:
       # Beispiel für reines HTML:
       # - name: Copy files
       #   run: cp -r * ${{ github.workspace }}/_site
-      #
+      
       # Deployment auf GitHub Pages:
       - uses: actions/upload-pages-artifact@v3
         with:
