@@ -1,7 +1,8 @@
 # URLs ohne Endungen wie .html oder .md
 permalink:        pretty
 # Setup
-theme:            minima
+# Themes: minima (taugt nicht, da fehlerhaft)
+theme:            jekyll-theme-primer
 title:            'CDS Tool Chain'
 #tagline:          'MII KDS FHIR -> DB -> Frontend'
 #description:      ''
