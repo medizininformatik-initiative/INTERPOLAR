@@ -1,0 +1,28 @@
+name: Build and Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'false'
+      # Hier kommen weitere Schritte hin, z.B. das Bauen deiner Seite
+      # Beispiel für Jekyll:
+      - name: Build site with Jekyll
+        run: bundle exec jekyll build
+      #
+      # Beispiel für reines HTML:
+      # - name: Copy files
+      #   run: cp -r * ${{ github.workspace }}/_site
+      #
+      # Deployment auf GitHub Pages:
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: './_site'
+      - uses: actions/deploy-pages@v4
