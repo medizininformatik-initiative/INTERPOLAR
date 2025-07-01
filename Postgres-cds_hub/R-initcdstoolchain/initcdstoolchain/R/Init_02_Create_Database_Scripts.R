@@ -31,7 +31,7 @@ isContentChanged <- function(existing_file_path, new_file_content) {
   new_lines <- strsplit(new_file_content, "\n", fixed = TRUE)[[1]]
 
   # Define patterns of lines to ignore (last pattern is for empty lines)
-  drop_patterns <- c("Rights definition file last update", "Create time", "^\\s*$")
+  drop_patterns <- c("Rights definition", "Create time", "^\\s*$")
 
   # Function to remove lines containing any of the drop patterns
   cleanLines <- function(lines) {
@@ -457,6 +457,11 @@ convertTemplate <- function(tables_descriptions,
             } else {
               sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
               if (sub_placeholder_name %in% names(column_row)) {
+                replace_value <- column_row[[sub_placeholder_name]]
+                if (is.na(replace_value)) {
+                  # missing values in the current column row are replaced by the value in the first row
+                  stop(paste0("Missing value in column '", sub_placeholder_name, "' in table '", table_name, "' in row ", loop_row, "."))
+                }
                 single_loop_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_loop_content)
               }
             }

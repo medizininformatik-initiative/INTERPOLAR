@@ -129,24 +129,16 @@ if (exists("DEBUG_DAY")) {
         medreq_patient_ref = "[1.1]Patient/UKB-0001",
         medreq_medicationreference_ref = c("[1]Medication/UKB-0001-M-1", "[1]Medication/UKB-0001-M-2", "[1]Medication/UKB-0001-M-3"),
         medreq_authoredon = c(
-          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.6),
+          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.8),
           getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.7),
-          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.8)
+          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.6)
         )
       ),
       fill = TRUE
     )
 
-    dt_con <- dt_con[1,]
-    dt_con[1, `:=`(
-      con_id = "[1]UKB-0001-C-1",
-      con_patient_ref = "[1.1]Patient/UKB-0001",
-      con_code_code = "[1.1.1]F10.2",
-      con_recordeddate = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.6),
-      con_onsetperiod_start = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.6)
-    )]
-    dt_con <- rbind(dt_con, dt_con[1,])
-    dt_con[2, `:=`(
+    dt_con <- dt_con[1,] # keep only one row
+    dt_con[nrow(dt_con), `:=`(
       con_id = "[1]UKB-0001-C-2",
       con_patient_ref = "[1.1]Patient/UKB-0001",
       con_code_code = "[1.1.1]R10.0",
@@ -164,21 +156,21 @@ if (exists("DEBUG_DAY")) {
     # Day 2: Versorgungsstellenkontakt wird entlassen
 
     dt_pat <- dt_pat[-1]
-    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.3))
+    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.1))
     changeDataForPID(dt_enc, pats$`UKB-0001`, colnames_pattern_diagnosis, NA)
 
     dt_enc[1, enc_id := "UKB-0001-E-1"]
     dt_enc[1, enc_status := "finished"]
     dt_enc[1, enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 1"]
-    dt_enc[1, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.5)]
+    dt_enc[1, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.2)]
 
     dt_enc[2, enc_id := "UKB-0001-E-1-A-1"]
     dt_enc[2, enc_status := "finished"]
-    dt_enc[2, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.5)]
+    dt_enc[2, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.2)]
 
     dt_enc[3, enc_id := "UKB-0001-E-1-A-1-V-1"]
     dt_enc[3, enc_status := "finished"]
-    dt_enc[3, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.5)]
+    dt_enc[3, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.2)]
 
     pids_per_wards <- resource_tables$pids_per_ward
     pids_per_wards <- pids_per_wards[-1]

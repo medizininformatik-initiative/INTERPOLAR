@@ -378,7 +378,7 @@ getPIDsSplittedByWard <- function(log_result = TRUE) {
         }
       })
 
-      etlutils::runLevel3("Split Encounters", {
+      etlutils::runLevel3Line("Split Encounters to wards", {
         # now filter the encounters with the patterns and then extract the PIDs
         pids_splitted_by_ward <- extractPIDsSplittedByWard(encounters, filter_patterns)
       })

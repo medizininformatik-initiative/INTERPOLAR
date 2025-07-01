@@ -153,10 +153,11 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
 getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
 
   active_requests <- medication_requests[
-    #medreq_encounter_ref == paste0("Encounter/", encounter_id) &
     !is.na(start_date) &
       start_date >= enc_period_start &
-      start_date <= meda_datetime
+      start_date <= meda_datetime &
+      (is.na(end_date) |
+         end_date > meda_datetime)
   ]
 
   relevant_cols <- c("atc_code")
@@ -380,15 +381,15 @@ matchICDProxies <- function(
         fallback_validity <- rule$ICD_VALIDITY_DAYS
         validity_days <- if (!is.na(validity) && validity != "") validity else fallback_validity
 
-        relevant <- all_items[grepl(proxy_code, code, fixed = TRUE) & !is.na(start_date)]
+        recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
 
-        if (!nrow(relevant)) next
+        if (!nrow(recources_with_proxy)) next
 
         match_found <- if (tolower(validity_days) == "unbegrenzt") {
-          any(relevant$start_date <= meda_datetime)
+          any(recources_with_proxy$start_date <= meda_datetime)
         } else {
           validity_days_num <- as.numeric(validity_days)
-          any(relevant$start_date >= (meda_datetime - validity_days_num) & relevant$start_date <= meda_datetime)
+          any(recources_with_proxy$start_date <= meda_datetime & (recources_with_proxy$end_date + validity_days_num) >= meda_datetime )
         }
 
         if (match_found) {
@@ -398,7 +399,7 @@ matchICDProxies <- function(
             proxy_code = proxy_code,
             proxy_type = proxy_type,
             kurzbeschr = sprintf(
-              "%s (%s) ist bei %s (%s) kontrainduziert. %s ist als %s-Proxy für %s verwendet worden.",
+              "%s (%s) ist bei %s (%s) kontrainduziert.\n%s ist als %s-Proxy für %s verwendet worden.",
               rule$ATC_DISPLAY, rule$ATC_FOR_CALCULATION,
               rule$CONDITION_DISPLAY_CLUSTER, rule$ICD,
               proxy_code, proxy_type, rule$ICD
@@ -413,14 +414,14 @@ matchICDProxies <- function(
 
   #  Combine all medication rows
   all_medications <- rbind(
-    medication_resources$medication_requests[, .(code = atc_code, start_date)],
-    medication_resources$medication_statements[, .(code = atc_code, start_date)],
-    medication_resources$medication_administrations[, .(code = atc_code, start_date)],
+    medication_resources$medication_requests[, .(code = atc_code, start_date, end_date)],
+    medication_resources$medication_statements[, .(code = atc_code, start_date, end_date)],
+    medication_resources$medication_administrations[, .(code = atc_code, start_date, end_date)],
     fill = TRUE
   )
 
   #  Combine all procedures rows
-  all_procedures <- procedure_resources[, .(code = proc_code_code, start_date)]
+  all_procedures <- procedure_resources[, .(code = proc_code_code, start_date, end_date)]
 
   # ATC-Proxy-Matching
   atc_matches <- matchProxy(
@@ -490,7 +491,6 @@ matchICDProxies <- function(
 #' - If no match is found for an encounter, a placeholder entry is created in `dp_mrp_calculations`.
 #'
 calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_processed_content_hash) {
-
   resources <- getResourcesForMRPCalculation(MRP_CALCULATION_TYPE$Drug_Disease)
 
   if (!length(resources)) {
@@ -513,21 +513,20 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
     encounter <- resources$main_encounters[enc_id == encounter_id]
     patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
     meda <- resources$encounters_first_medication_analysis[[encounter_id]]
-    meda_id <- if (!is.null(meda)) meda$medikationsanalyse_fe_id else NA_character_
+    meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_
     meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
     meda_study_phase <- if (!is.null(meda)) meda$study_phase else NA_character_
     meda_ward_name <- if (!is.null(meda)) meda$ward_name else NA_character_
     record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
-    #ret_id <- meda_id
-    #ret_status <- NA_character_
-    ret_id <- ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id)
+    # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
+    ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
     ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
+    kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
 
     # Get active MedicationRequests for the encounter
     active_requests <- getActiveMedicationRequests(resources$medication_requests, encounter$enc_period_start, meda_datetime)
 
     if (nrow(active_requests) && meda_study_phase != "PhaseA") {
-    #if (nrow(active_requests)) {
       # Match ATC-codes between encounter data and MRP definitions
       match_atc_codes <- matchATCCodes(active_requests, drug_disease_mrp_tables_by_atc)
       # Get and match ICD-codes of the patient
@@ -575,13 +574,21 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
       # Iterate over matched results and create new rows for retrolektive_mrpbewertung and dp_mrp_calculations
       for (i in seq_len(nrow(match_atc_and_icd_codes))) {
         match <- match_atc_and_icd_codes[i]
+        meda_id_value <- meda_id # we need this renaming for the following comparison
+        existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
+
+        next_index <- if (length(existing_ret_ids) == 0) 1 else max(as.integer(sub(ret_id_prefix, "", existing_ret_ids)), na.rm = TRUE) + 1
+        ret_id <- paste0(ret_id_prefix, next_index)
+        # always updating the references to the existing ret_ids
+        resources$existing_retrolective_mrp_evaluation_ids <- etlutils::addTableRow(resources$existing_retrolective_mrp_evaluation_ids, meda_id, ret_id)
+
         # Create new row for table retrolektive_mrpbewertung
         retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
           record_id = record_id,
-          ret_id = paste0(ret_id, "-r", i),
+          ret_id = ret_id,
           ret_meda_id = meda_id,
           ret_meda_dat1 = meda_datetime,
-          ret_kurzbeschr = match$kurzbeschr,
+          ret_kurzbeschr = paste0(kurzbeschr_prefix, match$kurzbeschr),
           ret_atc1 = match$atc_code,
           ret_ip_klasse_01 = MRP_CALCULATION_TYPE$Drug_Disease,
           ret_ip_klasse_disease = match$icd,

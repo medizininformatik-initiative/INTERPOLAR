@@ -112,11 +112,12 @@ validateLOINCCodes <- function(data, column_name) {
 #' @return A data.table containing the processed and expanded MRP definition.
 #'
 getExpandedContent <- function(table_name, path_to_mrp_tables) {
+
   # Load the MRP definition from the Excel file
   mrp_columnnames <- MRP_TABLE_COLUMN_NAMES[[table_name]]
   mrp_definition <- etlutils::readFirstExcelFileSheet(path_to_mrp_tables, table_name, mrp_columnnames)
   if (is.null(mrp_definition)) {
-    stop(paste0("No or empty ", table_name, " MRP definition table found in the specified path."))
+    stop(paste0("No or empty ", table_name, " MRP definition table found in the specified path: ", path_to_mrp_tables))
   }
   # Compute the hash of the current MRP definition
   content_hash <- digest::digest(mrp_definition$excel_file_content, algo = "sha256")
@@ -131,10 +132,17 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
     processed_content <- preprocess_function(mrp_definition$excel_file_content)
     processed_content_hash <- digest::digest(processed_content, algo = "sha256")
 
+    output_dir <- file.path(path_to_mrp_tables, paste0(table_name, "_content"))
+    if (!dir.exists(output_dir)) {
+      dir.create(output_dir, recursive = TRUE)
+    }
+
+    file_path_part <- paste0(path_to_mrp_tables, "/", table_name, "_content")
+
     # Write content and processed content to Excel files
-    openxlsx::write.xlsx(content, file = file.path(paste0(path_to_mrp_tables, "/", table_name, "_content"),
+    openxlsx::write.xlsx(content, file = file.path(file_path_part,
                                                    paste0(table_name, "_MRP_Table.xlsx")), overwrite = TRUE)
-    openxlsx::write.xlsx(processed_content, file = file.path(paste0(path_to_mrp_tables, "/", table_name, "_content"),
+    openxlsx::write.xlsx(processed_content, file = file.path(file_path_part,
                                                              paste0(table_name, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
 
     # Load or init storage tables locally

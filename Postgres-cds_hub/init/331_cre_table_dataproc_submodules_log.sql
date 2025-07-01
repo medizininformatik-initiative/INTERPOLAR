@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-20 11:15:33
+-- Rights definition file last update : 2025-06-23 09:23:55
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-20 11:57:10
+-- Create time: 2025-06-23 09:28:47
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  331_cre_table_dataproc_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -98,8 +98,20 @@ BEGIN
         IF NOT EXISTS ( -- column not exists (meda_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'meda_id'
         ) THEN
-            ALTER TABLE db_log.dp_mrp_calculations ADD meda_id varchar;   -- Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (varchar)
+            ALTER TABLE db_log.dp_mrp_calculations ADD meda_id varchar;   -- optional - Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (varchar)
         END IF; -- column (meda_id)
+
+        IF NOT EXISTS ( -- column not exists (ward_name)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'ward_name'
+        ) THEN
+            ALTER TABLE db_log.dp_mrp_calculations ADD ward_name varchar;   -- optional – Name of the ward where the patient was during the medication analysis (varchar)
+        END IF; -- column (ward_name)
+
+        IF NOT EXISTS ( -- column not exists (study_phase)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'study_phase'
+        ) THEN
+            ALTER TABLE db_log.dp_mrp_calculations ADD study_phase varchar;   -- optional – Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if meda_id is not empty (varchar)
+        END IF; -- column (study_phase)
 
         IF NOT EXISTS ( -- column not exists (ret_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'ret_id'
@@ -136,6 +148,8 @@ BEGIN
 	         COALESCE(db.to_char_immutable(enc_id), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_calculation_type), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(meda_id), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ward_name), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(study_phase), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_id), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_proxy_type), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_proxy_code), ''#NULL#'') || ''|||'' ||
@@ -151,7 +165,9 @@ BEGIN
             md5(
 	         COALESCE(db.to_char_immutable(enc_id), '#NULL#') || '|||' || -- hash from: FHIR ID of the associated institution contact (enc_id)
           COALESCE(db.to_char_immutable(mrp_calculation_type), '#NULL#') || '|||' || -- hash from: Type of MRP (name of the submodule which has calculated the MRP e.g. “Drug_Disease”, “Drug_Drug”, “Drug_DrugGoup”, “Drug_Kidney”) (mrp_calculation_type)
-          COALESCE(db.to_char_immutable(meda_id), '#NULL#') || '|||' || -- hash from: Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (meda_id)
+          COALESCE(db.to_char_immutable(meda_id), '#NULL#') || '|||' || -- hash from: optional - Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (meda_id)
+          COALESCE(db.to_char_immutable(ward_name), '#NULL#') || '|||' || -- hash from: optional – Name of the ward where the patient was during the medication analysis (ward_name)
+          COALESCE(db.to_char_immutable(study_phase), '#NULL#') || '|||' || -- hash from: optional – Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if meda_id is not empty (study_phase)
           COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: optional – Redcap ID of the generated retrolective_mrpbewertung_fe (ret_id)
           COALESCE(db.to_char_immutable(mrp_proxy_type), '#NULL#') || '|||' || -- hash from: optional – ICD, ATC, OPS, LOINC (mrp_proxy_type)
           COALESCE(db.to_char_immutable(mrp_proxy_code), '#NULL#') || '|||' || -- hash from: optional – Code of the proxy (mrp_proxy_code)
@@ -171,7 +187,9 @@ BEGIN
             md5(
 	         COALESCE(db.to_char_immutable(enc_id), '#NULL#') || '|||' || -- hash from: FHIR ID of the associated institution contact (enc_id)
           COALESCE(db.to_char_immutable(mrp_calculation_type), '#NULL#') || '|||' || -- hash from: Type of MRP (name of the submodule which has calculated the MRP e.g. “Drug_Disease”, “Drug_Drug”, “Drug_DrugGoup”, “Drug_Kidney”) (mrp_calculation_type)
-          COALESCE(db.to_char_immutable(meda_id), '#NULL#') || '|||' || -- hash from: Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (meda_id)
+          COALESCE(db.to_char_immutable(meda_id), '#NULL#') || '|||' || -- hash from: optional - Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (meda_id)
+          COALESCE(db.to_char_immutable(ward_name), '#NULL#') || '|||' || -- hash from: optional – Name of the ward where the patient was during the medication analysis (ward_name)
+          COALESCE(db.to_char_immutable(study_phase), '#NULL#') || '|||' || -- hash from: optional – Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if meda_id is not empty (study_phase)
           COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: optional – Redcap ID of the generated retrolective_mrpbewertung_fe (ret_id)
           COALESCE(db.to_char_immutable(mrp_proxy_type), '#NULL#') || '|||' || -- hash from: optional – ICD, ATC, OPS, LOINC (mrp_proxy_type)
           COALESCE(db.to_char_immutable(mrp_proxy_code), '#NULL#') || '|||' || -- hash from: optional – Code of the proxy (mrp_proxy_code)
@@ -208,7 +226,9 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_calculations TO db_u
 COMMENT ON COLUMN db_log.dp_mrp_calculations.dp_mrp_calculations_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.enc_id IS 'FHIR ID of the associated institution contact (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.mrp_calculation_type IS 'Type of MRP (name of the submodule which has calculated the MRP e.g. “Drug_Disease”, “Drug_Drug”, “Drug_DrugGoup”, “Drug_Kidney”) (varchar)';
-COMMENT ON COLUMN db_log.dp_mrp_calculations.meda_id IS 'Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (varchar)';
+COMMENT ON COLUMN db_log.dp_mrp_calculations.meda_id IS 'optional - Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (varchar)';
+COMMENT ON COLUMN db_log.dp_mrp_calculations.ward_name IS 'optional – Name of the ward where the patient was during the medication analysis (varchar)';
+COMMENT ON COLUMN db_log.dp_mrp_calculations.study_phase IS 'optional – Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if meda_id is not empty (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.ret_id IS 'optional – Redcap ID of the generated retrolective_mrpbewertung_fe (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.mrp_proxy_type IS 'optional – ICD, ATC, OPS, LOINC (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.mrp_proxy_code IS 'optional – Code of the proxy (varchar)';

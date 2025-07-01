@@ -122,8 +122,8 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
     if (!is.null(fhir_table_description)) {
       brackets <- fhir_table_description@brackets
       if (isIndexedTable(resource_tables[[i]], brackets)) {
-        print(paste0("Melt table ", resource_name))
         nrow_before_melt <- nrow(resource_tables[[i]])
+        print(paste0("Melt table ", resource_name, " with ", nrow_before_melt, " rows."))
         sep <- fhir_table_description@sep
         time0 <- Sys.time()
         resource_tables[[i]] <- fhircrackr::fhir_melt_all(resource_tables[[i]], brackets, sep, column_name_separator = "/")

@@ -13,30 +13,82 @@ if (!exists("DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS")) {
 #
 # Type of MRP
 #
-MRP_CALCULATION_TYPE <- etlutils::namedListByValue(
-  "Drug_Disease",
-  "Drug_Drug",
-  "Drug_DrugGroup",
-  "Drug_Kidney"
+MRP_CALCULATION_TYPE <- list(
+  "Drug_Disease" = "Drug-Disease",
+  "Drug_Drug" = "Drug-Drug",
+  "Drug_DrugGroup" = "Drug-Drug",
+  "Drug_Niereninsuffizienz" = "Drug-Niereninsuffizienz"
 )
 
 #
 # Load Einrichtungskontakt Encounters without retrolective MRP evaluation
 #
 getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_type) {
-  # Get all Einrichtungskontakt encounters that ended at least 14 days ago and do not have a retrolective MRP evaluation
-  query_date <- Sys.Date() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS
+  #
+  # 1.) Get all Einrichtungskontakt encounters that ended before now and do not have a retrolective MRP evaluation
+  #
   query <- paste0(
-    "SELECT DISTINCT enc_id, enc_period_start, enc_patient_ref\n",
+    "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
     "FROM v_encounter_last_version\n",
-    "WHERE enc_period_end <= '", query_date, "'\n",
+    "WHERE enc_period_end <= '", format(Sys.Date(), "%Y-%m-%d"), "'\n",
     "AND enc_type_code = 'einrichtungskontakt'\n",
     "AND enc_id NOT IN (\n",
     "  SELECT enc_id FROM v_dp_mrp_calculations\n",
-    "  WHERE mrp_type = '", mrp_calculation_type, "'\n",
+    "  WHERE mrp_calculation_type = '", mrp_calculation_type, "'\n",
     ")"
   )
   encounters <- etlutils::dbGetReadOnlyQuery(query)
+
+  if (!nrow(encounters)) {
+    return(encounters)
+  }
+
+  #
+  # 2.) Add the Study Phase to all Encounters
+  #
+  column_names <- c("fall_fe_id",
+                    "input_datetime",
+                    "record_id",
+                    "fall_fhir_enc_id",
+                    "fall_pat_id",
+                    "fall_id",
+                    "fall_studienphase",
+                    "fall_station")
+  query <- paste0(
+    "SELECT ", paste(column_names, collapse = ", "), " \n",
+    "FROM v_fall_fe\n",
+    "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(encounters$enc_id), "\n",
+    "ORDER BY input_datetime"
+  )
+  encs_fall_fe <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getEncountersWithoutRetrolectiveMRPEvaluationFromDB()_enc_fall_fe")
+
+  for (current_enc_id in encounters$enc_id) {
+    fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id == current_enc_id]
+
+    study_phase <- NA_character_
+    ward_name <- NA_character_
+
+    if (nrow(fall_fe_rows) > 0) {
+      fall_fe_row <- fall_fe_rows[.N]  # last row
+      if (!is.na(fall_fe_row$fall_studienphase) && fall_fe_row$fall_studienphase != "PhaseBTest") {
+        fall_fe_row <- fall_fe_rows[1]  # first row
+      }
+      study_phase <- fall_fe_row$fall_studienphase
+      ward_name <- fall_fe_row$fall_station
+    }
+
+    encounters[enc_id == current_enc_id, `:=`(
+      study_phase = study_phase,
+      ward_name = ward_name
+    )]
+  }
+
+  #
+  # 3.) Remove all Encounters with Study Phase "Phase_B" and an end date within the last 14 days
+  #
+  encounters <- encounters[!(study_phase == "Phase_B" & enc_period_end > (Sys.Date() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
+
+  return(encounters)
 }
 
 #
@@ -98,12 +150,25 @@ getMedicationRequestsFromDB <- function(patient_references) {
                                                              "medreq_encounter_ref",
                                                              "medreq_patient_ref",
                                                              "medreq_medicationreference_ref",
-                                                             "medreq_authoredon"),
+                                                             "medreq_authoredon",
+                                                             "medreq_doseinstruc_timing_repeat_boundsperiod_start",
+                                                             "medreq_doseinstruc_timing_repeat_boundsperiod_end"),
                                             patient_references = patient_references,
                                             status_exclusion = c("cancelled", "entered-in-error", "stopped") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
   )
   medication_requests <- addMedicationIdColumn(medication_requests)
-  medication_requests[, start_date := medreq_authoredon]
+
+  medication_requests[, start_date := data.table::fifelse(
+    !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_start),
+    medreq_doseinstruc_timing_repeat_boundsperiod_start,
+    medreq_authoredon
+  )]
+  medication_requests <- medication_requests[!is.na(start_date)]
+  medication_requests[, end_date := data.table::fifelse(
+    !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_end),
+    medreq_doseinstruc_timing_repeat_boundsperiod_end,
+    NA
+  )]
   return(medication_requests)
 }
 
@@ -117,12 +182,19 @@ getMedicationAdministrationsFromDB <- function(patient_references) {
                                                                     "medadm_patient_ref",
                                                                     "medadm_medicationreference_ref",
                                                                     "medadm_effectivedatetime",
-                                                                    "medadm_effectiveperiod_start"),
+                                                                    "medadm_effectiveperiod_start",
+                                                                    "medadm_effectiveperiod_end"),
                                                    patient_references = patient_references,
                                                    status_exclusion = c("not-done", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831577
   )
   medication_administrations <- addMedicationIdColumn(medication_administrations)
   medication_administrations[, start_date := pmin(medadm_effectivedatetime, medadm_effectiveperiod_start, na.rm = TRUE)]
+  medication_administrations <- medication_administrations[!is.na(start_date)]
+  medication_administrations[, end_date := data.table::fifelse(
+    !is.na(medadm_effectiveperiod_end),
+    medadm_effectiveperiod_end,
+    NA
+  )]
   return(medication_administrations)
 }
 
@@ -136,12 +208,19 @@ getMedicationStatementsFromDB <- function(patient_references) {
                                                                "medstat_patient_ref",
                                                                "medstat_medicationreference_ref",
                                                                "medstat_effectivedatetime",
-                                                               "medstat_effectiveperiod_start"),
+                                                               "medstat_effectiveperiod_start",
+                                                               "medstat_effectiveperiod_end"),
                                               patient_references = patient_references,
                                               status_exclusion = c("entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834331
   )
   medication_statements <- addMedicationIdColumn(medication_statements)
   medication_statements[, start_date := pmin(medstat_effectivedatetime, medstat_effectiveperiod_start, na.rm = TRUE)]
+  medication_statements <- medication_statements[!is.na(start_date)]
+  medication_statements[, end_date := data.table::fifelse(
+    !is.na(medstat_effectiveperiod_end),
+    medstat_effectiveperiod_end,
+    NA
+  )]
   return(medication_statements)
 }
 
@@ -169,72 +248,72 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 #
 getObservationsFromDB <- function(patient_references) {
   observations <- getResourcesFromDB(resource_name = "Observation",
-                     column_names = c("obs_id",
-                                      "obs_encounter_ref",
-                                      "obs_patient_ref",
-                                      "obs_code_system",
-                                      "obs_code_code",
-                                      "obs_effectivedatetime",
-                                      "obs_issued",
-                                      "obs_valuerange_low_value",
-                                      "obs_valuerange_low_unit",
-                                      "obs_valuerange_low_system",
-                                      "obs_valuerange_low_code",
-                                      "obs_valuerange_high_value",
-                                      "obs_valuerange_high_unit",
-                                      "obs_valuerange_high_system",
-                                      "obs_valuerange_high_code",
-                                      "obs_valueratio_numerator_value",
-                                      "obs_valueratio_numerator_comparator",
-                                      "obs_valueratio_numerator_unit",
-                                      "obs_valueratio_numerator_system",
-                                      "obs_valueratio_numerator_code",
-                                      "obs_valueratio_denominator_value",
-                                      "obs_valueratio_denominator_comparator",
-                                      "obs_valueratio_denominator_unit",
-                                      "obs_valueratio_denominator_system",
-                                      "obs_valueratio_denominator_code",
-                                      "obs_valuequantity_value",
-                                      "obs_valuequantity_comparator",
-                                      "obs_valuequantity_unit",
-                                      "obs_valuequantity_system",
-                                      "obs_valuequantity_code",
-                                      "obs_valuecodeableconcept_system",
-                                      "obs_valuecodeableconcept_version",
-                                      "obs_valuecodeableconcept_code",
-                                      "obs_valuecodeableconcept_display",
-                                      "obs_valuecodeableconcept_text",
-                                      "obs_referencerange_low_value",
-                                      "obs_referencerange_low_unit",
-                                      "obs_referencerange_low_system",
-                                      "obs_referencerange_low_code",
-                                      "obs_referencerange_high_value",
-                                      "obs_referencerange_high_unit",
-                                      "obs_referencerange_high_system",
-                                      "obs_referencerange_high_code",
-                                      "obs_referencerange_type_system",
-                                      "obs_referencerange_type_version",
-                                      "obs_referencerange_type_code",
-                                      "obs_referencerange_type_display",
-                                      "obs_referencerange_type_text",
-                                      "obs_referencerange_appliesto_system",
-                                      "obs_referencerange_appliesto_version",
-                                      "obs_referencerange_appliesto_code",
-                                      "obs_referencerange_appliesto_display",
-                                      "obs_referencerange_appliesto_text",
-                                      "obs_referencerange_age_low_value",
-                                      "obs_referencerange_age_low_unit",
-                                      "obs_referencerange_age_low_system",
-                                      "obs_referencerange_age_low_code",
-                                      "obs_referencerange_age_high_value",
-                                      "obs_referencerange_age_high_unit",
-                                      "obs_referencerange_age_high_system",
-                                      "obs_referencerange_age_high_code",
-                                      "obs_referencerange_text"),
-                     patient_references = patient_references,
-                     status_exclusion = c("registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834407
-                     additional_conditions = c("obs_category_code = 'laboratory'",
-                                               "obs_code_system = 'http://loinc.org'")
+                                     column_names = c("obs_id",
+                                                      "obs_encounter_ref",
+                                                      "obs_patient_ref",
+                                                      "obs_code_system",
+                                                      "obs_code_code",
+                                                      "obs_effectivedatetime",
+                                                      "obs_issued",
+                                                      "obs_valuerange_low_value",
+                                                      "obs_valuerange_low_unit",
+                                                      "obs_valuerange_low_system",
+                                                      "obs_valuerange_low_code",
+                                                      "obs_valuerange_high_value",
+                                                      "obs_valuerange_high_unit",
+                                                      "obs_valuerange_high_system",
+                                                      "obs_valuerange_high_code",
+                                                      "obs_valueratio_numerator_value",
+                                                      "obs_valueratio_numerator_comparator",
+                                                      "obs_valueratio_numerator_unit",
+                                                      "obs_valueratio_numerator_system",
+                                                      "obs_valueratio_numerator_code",
+                                                      "obs_valueratio_denominator_value",
+                                                      "obs_valueratio_denominator_comparator",
+                                                      "obs_valueratio_denominator_unit",
+                                                      "obs_valueratio_denominator_system",
+                                                      "obs_valueratio_denominator_code",
+                                                      "obs_valuequantity_value",
+                                                      "obs_valuequantity_comparator",
+                                                      "obs_valuequantity_unit",
+                                                      "obs_valuequantity_system",
+                                                      "obs_valuequantity_code",
+                                                      "obs_valuecodeableconcept_system",
+                                                      "obs_valuecodeableconcept_version",
+                                                      "obs_valuecodeableconcept_code",
+                                                      "obs_valuecodeableconcept_display",
+                                                      "obs_valuecodeableconcept_text",
+                                                      "obs_referencerange_low_value",
+                                                      "obs_referencerange_low_unit",
+                                                      "obs_referencerange_low_system",
+                                                      "obs_referencerange_low_code",
+                                                      "obs_referencerange_high_value",
+                                                      "obs_referencerange_high_unit",
+                                                      "obs_referencerange_high_system",
+                                                      "obs_referencerange_high_code",
+                                                      "obs_referencerange_type_system",
+                                                      "obs_referencerange_type_version",
+                                                      "obs_referencerange_type_code",
+                                                      "obs_referencerange_type_display",
+                                                      "obs_referencerange_type_text",
+                                                      "obs_referencerange_appliesto_system",
+                                                      "obs_referencerange_appliesto_version",
+                                                      "obs_referencerange_appliesto_code",
+                                                      "obs_referencerange_appliesto_display",
+                                                      "obs_referencerange_appliesto_text",
+                                                      "obs_referencerange_age_low_value",
+                                                      "obs_referencerange_age_low_unit",
+                                                      "obs_referencerange_age_low_system",
+                                                      "obs_referencerange_age_low_code",
+                                                      "obs_referencerange_age_high_value",
+                                                      "obs_referencerange_age_high_unit",
+                                                      "obs_referencerange_age_high_system",
+                                                      "obs_referencerange_age_high_code",
+                                                      "obs_referencerange_text"),
+                                     patient_references = patient_references,
+                                     status_exclusion = c("registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834407
+                                     additional_conditions = c("obs_category_code = 'laboratory'",
+                                                               "obs_code_system = 'http://loinc.org'")
   )
   observations[, start_date := obs_effectivedatetime]
   return(observations)
@@ -245,17 +324,24 @@ getObservationsFromDB <- function(patient_references) {
 #
 getProceduresFromDB <- function(patient_references) {
   procedures <- getResourcesFromDB(resource_name = "Procedure",
-                     column_names = c("proc_id",
-                                      "proc_encounter_ref",
-                                      "proc_patient_ref",
-                                      "proc_code_code",
-                                      "proc_performeddatetime",
-                                      "proc_performedperiod_start"),
-                     patient_references = patient_references,
-                     status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
-                     additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
+                                   column_names = c("proc_id",
+                                                    "proc_encounter_ref",
+                                                    "proc_patient_ref",
+                                                    "proc_code_code",
+                                                    "proc_performeddatetime",
+                                                    "proc_performedperiod_start",
+                                                    "proc_performedperiod_end"),
+                                   patient_references = patient_references,
+                                   status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
+                                   additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
   )
   procedures[, start_date := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
+  procedures <- procedures[!is.na(start_date)]
+  procedures[, end_date := data.table::fifelse(
+    !is.na(proc_performedperiod_end),
+    proc_performedperiod_end,
+    NA
+  )]
   return(procedures)
 }
 
@@ -264,20 +350,20 @@ getProceduresFromDB <- function(patient_references) {
 #
 getConditionsFromDB <- function(patient_references) {
   conditions <- getResourcesFromDB(resource_name = "Condition",
-                     column_names = c("con_id",
-                                      "con_encounter_ref",
-                                      "con_patient_ref",
-                                      "con_code_code",
-                                      "con_code_system",
-                                      "con_onsetperiod_start",
-                                      "con_recordeddate"),
-                     patient_references = patient_references,
-                     status_exclusion = NULL, # Status is considered in additional_conditions
-                     # clinical_status c("inactive") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2833668
-                     # verification status c("refuted", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831601
-                     additional_conditions = c("con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm'",
-                                               #"(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
-                                               "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))")
+                                   column_names = c("con_id",
+                                                    "con_encounter_ref",
+                                                    "con_patient_ref",
+                                                    "con_code_code",
+                                                    "con_code_system",
+                                                    "con_onsetperiod_start",
+                                                    "con_recordeddate"),
+                                   patient_references = patient_references,
+                                   status_exclusion = NULL, # Status is considered in additional_conditions
+                                   # clinical_status c("inactive") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2833668
+                                   # verification status c("refuted", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831601
+                                   additional_conditions = c("con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm'",
+                                                             #"(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
+                                                             "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))")
   )
   conditions[, start_date := pmin(con_onsetperiod_start, con_recordeddate, na.rm = TRUE)]
   return(conditions)
@@ -356,6 +442,7 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
       encounter_medication_analyses <- encounter_medication_analyses[order(meda_dat)]
       # all main encounters here must have an end date
       encounter_medication_analyses <- encounter_medication_analyses[meda_dat >= main_encounter$enc_period_start & meda_dat <= main_encounter$enc_period_end]
+
       # if there is at least one medication analyses, take the first one
       if (nrow(encounter_medication_analyses)) {
         encounters_first_medication_analysis[[main_encounter$enc_id]] <- encounter_medication_analyses[1]
@@ -363,50 +450,39 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
     }
   }
 
-  # 5.) Get the ward name and study phase where the patient was located at the time of the medication analysis
-
-  main_enc_ids_with_medication_analysis <- names(encounters_first_medication_analysis)[!vapply(encounters_first_medication_analysis, is.null, logical(1))]
-
-  column_names <- c("fall_fe_id",
-                    "input_datetime",
-                    "record_id",
-                    "fall_fhir_enc_id",
-                    "fall_pat_id",
-                    "fall_id",
-                    "fall_studienphase",
-                    "fall_station")
-  query <- paste0(
-    "SELECT ", paste(column_names, collapse = ", "), " \n",
-    "FROM fall_fe \n",
-    "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(main_enc_ids_with_medication_analysis), "\n",
-    "ORDER BY input_datetime"
-  )
-
-  main_encs_fall_fe <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getResourcesForMRPCalculation()_fall_fe_all")
-
-  for (main_enc_id in main_enc_ids_with_medication_analysis) {
+  # 5.) Add study_phase and ward_name from the corresponding Encounter (matched via enc_id == fall_fhir_enc_id)
+  for (main_enc_id in names(encounters_first_medication_analysis)) {
     medication_analysis <- encounters_first_medication_analysis[[main_enc_id]]
-    # Get the corresponding row from fall_fe_all
-    fall_fe_rows <- main_encs_fall_fe[fall_fhir_enc_id == main_enc_id]
 
-    medication_analysis$study_phase <- NA_character_
-    medication_analysis$ward_name <- NA_character_
+    if (!is.null(medication_analysis)) {
+      matching_encounter <- main_encounters[enc_id == main_enc_id]
 
-    if (nrow(fall_fe_rows) > 0) {
-      fall_fe_row <- fall_fe_rows[lenght(fall_fe_rows)]
-      if (!fall_fe_row$fall_studienphase == "PhaseBTest") {
-        fall_fe_row <- fall_fe_rows[1]
+      if (nrow(matching_encounter) >= 1) {
+        medication_analysis$study_phase <- matching_encounter$study_phase[1]
+        medication_analysis$ward_name <- matching_encounter$ward_name[1]
       }
-      # Add study phase and ward name to the medication analysis
-      medication_analysis$study_phase <- fall_fe_row$fall_studienphase
-      medication_analysis$ward_name <- fall_fe_row$fall_station
+
+      encounters_first_medication_analysis[[main_enc_id]] <- medication_analysis
     }
   }
 
-  # get patient references
-  patient_references <- main_encounters[enc_id == main_enc_ids_with_medication_analysis]$enc_patient_ref
+  # 6.) Get existing ret_id's for the medication analyses
+  getExistingRetrolectiveMRPEvaluationIDs <- function(medication_analyses_ids) {
+    query <- paste0(
+      "SELECT meda_id, ret_id\n",
+      "FROM v_dp_mrp_calculations\n",
+      "WHERE meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids))
+    return(etlutils::dbGetReadOnlyQuery(query))
+  }
+  medication_analyses_ids <- unlist(lapply(encounters_first_medication_analysis, function(dt) if (!is.null(dt)) dt$meda_id else NULL), use.names = FALSE)
+  existing_retrolective_mrp_evaluation_ids <- getExistingRetrolectiveMRPEvaluationIDs(medication_analyses_ids)
 
-  # extract Medication resources
+  # 7.) Get all necessary resources for the MRP calculation for these Encounters and return them as a list
+  # Get patient references
+
+  patient_references <- main_encounters[enc_id %in% names(encounters_first_medication_analysis)]$enc_patient_ref
+
+  # Extract Medication resources
   medication_requests <- getMedicationRequestsFromDB(patient_references)
   medication_administrations <- getMedicationAdministrationsFromDB(patient_references)
   medication_statements <- getMedicationStatementsFromDB(patient_references)
@@ -417,11 +493,11 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
   medication_administrations <- appendATCColumn(medications, medication_administrations)
   medication_statements <- appendATCColumn(medications, medication_statements)
 
-  # 5.) Get all necessary resources for the MRP calculation for these Encounters
   return(list(
     main_encounters = main_encounters,
     record_ids = record_ids,
     encounters_first_medication_analysis = encounters_first_medication_analysis,
+    existing_retrolective_mrp_evaluation_ids = existing_retrolective_mrp_evaluation_ids,
     medication_requests = medication_requests,
     medication_administrations = medication_administrations,
     medication_statements = medication_statements,

@@ -51,11 +51,13 @@ isValidTable <- function(table) {
 #'
 #' @export
 addTableRow <- function(dt, ...) {
-  rbind(
-    dt,
-    cbind(...),
-    use.names = FALSE
-  )
+  vals <- list(...)
+  if (length(vals) != ncol(dt)) {
+    stop("Number of values does not match number of columns in data.table")
+  }
+  names(vals) <- names(dt)
+  new_row <- data.table::as.data.table(vals)
+  data.table::rbindlist(list(dt, new_row), use.names = TRUE)
 }
 
 #' Add Empty Rows to a Data Table

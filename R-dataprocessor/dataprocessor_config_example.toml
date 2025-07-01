@@ -114,10 +114,14 @@ OBSERVATION_BMI_CODES          = "39156-5"
 # Global variables for the module can be defined here. They overwrite any existing variables from
 # the global (or any previously loaded) config.toml.
 
-# Paths to all Excel files that are to be used in the MRP calculation.
-# This can be a list of folders or Excel files. If one or more folders are specified, all Excel
-# files are loaded from them. If one or more files are specified, only these files will be loaded.
-MRP_PAIR_LISTS_PATHS = ["./Input-Repo/MRP_Drug_Disease"]
+# Path to all Excel files used in the MRP calculation. This path contains the subrepository
+# INTERPOLAR-WP7 (see: https://github.com/medizininformatik-initiative/INTERPOLAR-WP7).
+# Please ensure that the subrepository is initialized and updated using: git submodule update --init --recursive
+# Also make sure that the main branch is checked out using: git submodule status
+# If a different branch is selected, navigate to the subrepository directory: cd Input-Repo/INTERPOLAR-WP7
+# Then check out the main branch: git checkout main
+# To update the main- and the subrepository, use the following command: git pull && git submodule update --recursive
+MRP_PAIR_PATH = ["./Input-Repo/INTERPOLAR-WP7"]
 
 # Default value that applies to the validity period in days for the laboratory values
 DEFAULT_LOINC_VALIDITY_DAYS = 7

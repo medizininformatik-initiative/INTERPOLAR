@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-20 11:15:33
+-- Rights definition file last update : 2025-06-23 09:23:55
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-20 11:57:10
+-- Create time: 2025-06-23 09:28:47
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  331_cre_table_dataproc_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -150,6 +150,8 @@ BEGIN
                                 enc_id,
                                 mrp_calculation_type,
                                 meda_id,
+                                ward_name,
+                                study_phase,
                                 ret_id,
                                 mrp_proxy_type,
                                 mrp_proxy_code,
@@ -164,6 +166,8 @@ BEGIN
                                 current_record.enc_id,
                                 current_record.mrp_calculation_type,
                                 current_record.meda_id,
+                                current_record.ward_name,
+                                current_record.study_phase,
                                 current_record.ret_id,
                                 current_record.mrp_proxy_type,
                                 current_record.mrp_proxy_code,
