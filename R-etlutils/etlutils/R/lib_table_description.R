@@ -91,3 +91,26 @@ loadTableDescriptionFile <- function(table_description_path = NA, table_descript
   return(table_description)
 }
 
+#' Get Table Description Split by Table Name
+#'
+#' This function loads a table description from an Excel file, removes rows that are fully NA, and splits
+#' the table description by table names. The result is a list where each element is a subset of the table
+#' description corresponding to a specific table name.
+#'
+#' @param table_description_path A character string specifying the path to the table description file.
+#' If NA (default), it uses the file from the package's extdata directory.
+#' @param table_description_sheet_name name of the sheet with the table description in the Excel file.
+#' Default is "table_description".
+#'
+#' @return A list of data.tables, each containing the table description for a specific resource.
+#'
+#' @export
+getTableDescriptionSplittedByTableName <- function(table_description_path = NA, table_description_sheet_name = "table_description") {
+  table_description <- loadTableDescriptionFile(table_description_path, table_description_sheet_name)
+  # first columns
+  table_description_table_names_column <- if (isFHIRTableDescription(table_description)) FHIR_TABLE_DESCRIPTION_COLNAMES[1] else DB_TABLE_DESCRIPTION_COLNAMES[1]
+  table_description[, (table_description_table_names_column) := tolower(get(table_description_table_names_column))]
+  table_description <- dtRemoveCommentRows(table_description)
+  table_description <- splitTableToList(table_description, table_description_table_names_column)
+  return(table_description)
+}

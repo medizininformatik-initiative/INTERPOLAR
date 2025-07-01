@@ -61,7 +61,7 @@ fhirsearchLogRequest <- function(verbose, resource_name, bundles) {
   if (verbose >= VL_90_FHIR_RESPONSE) {
     cat(bundles_requests, "\n")
   }
-  log_filename <- fhircrackr::paste_paths(returnPathToBundlesDir(), paste0("cds2db_total_bundles.txt"))
+  log_filename <- fhircrackr::paste_paths(getBundlesDirectory(), paste0("cds2db_total_bundles.txt"))
   log_file <- file(log_filename, open = "at")
   writeLines(bundles_requests, log_file, useBytes = TRUE)
   close(log_file)
@@ -363,6 +363,7 @@ fhirsearchResourcesByIDs <- function(
 #'   resulting table. This should be compatible with the `fhircrackr` package.
 #' @param verbose Logical flag indicating whether to print detailed logs during
 #'   the execution of the function. Default is `VERBOSE`.
+#' @param ncores Integer specifying the number of cores to use for parallel processing.
 #' @param log_errors A string specifying the file name where any errors encountered
 #'   during the FHIR request will be logged. Default is `'enc_error.xml'`.
 #'
@@ -375,8 +376,14 @@ fhirsearchDownloadAndCrackResources <- function(
     max_bundles,
     table_description,
     verbose     = VERBOSE,
+    ncores = NULL,
     log_errors
 ) {
+
+  # Check if ncores is NULL and set it to the maximum available cores
+  if (is.null(ncores)) {
+    ncores <- parallelGetAvailableCoreNumber()
+  }
 
   bundles <- executeFHIRSearchVariation(
     request = request,
@@ -392,6 +399,7 @@ fhirsearchDownloadAndCrackResources <- function(
       bundles = bundles,
       design = table_description,
       verbose = verbose,
+      ncores = ncores,
       data.table = TRUE
     )
   }

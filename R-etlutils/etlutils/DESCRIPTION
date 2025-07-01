@@ -23,6 +23,7 @@ Imports:
     fhircrackr,
     hms,
     httr,
+    ICD10gm,
     lubridate,
     methods,
     openxlsx,
