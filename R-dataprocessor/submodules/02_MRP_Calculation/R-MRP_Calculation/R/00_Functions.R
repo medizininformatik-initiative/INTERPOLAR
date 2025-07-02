@@ -62,6 +62,14 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_
   )
   encs_fall_fe <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getEncountersWithoutRetrolectiveMRPEvaluationFromDB()_enc_fall_fe")
 
+  #
+  # 2a.) Remove all Encounters which were never on a relevant ward (their FHIR ID is not in the fall_fe table)
+  #
+  encounters <- encounters[enc_id %in% encs_fall_fe$fall_fhir_enc_id]
+
+  #
+  # 2b.) Add the Study Phase to all remaining Encounters
+  #
   for (current_enc_id in encounters$enc_id) {
     fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id == current_enc_id]
 
