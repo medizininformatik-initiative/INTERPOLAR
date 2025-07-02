@@ -62,11 +62,12 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   # F2 <- calculateF2(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
   # Print the patient, encounter, F1 and F2 datasets for verification
-  writeKable(FAS1, format= "html")
-  writeKable(F1, format= "html",
+  writeTableLocal(complete_table, format= "html")
+  writeTableLocal(FAS1, format= "html")
+  writeTableGlobal(F1, format= "html",
              caption = paste0("F1 measure for reporting period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END))
 
   #TODO: implement pdf / quarto option ----------
-  # writeKable(complete_table, format = "pdf")
+  # writeTable(complete_table, format = "pdf")
   #
 }

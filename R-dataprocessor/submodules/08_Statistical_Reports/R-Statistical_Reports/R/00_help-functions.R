@@ -97,55 +97,7 @@ checkMultipleRows <- function(data, grouping_vars) {
   return(nrow(data_check_multiple_row) > 0)
 }
 
-# -------------------------------------------------------------------------------#
 
-#' Write a Formatted Table to a File
-#'
-#' This function converts a data frame or matrix into a table formatted in the specified format
-#' and writes it to a file. It leverages the `kableExtra` package for styling and file output.
-#'
-#' @param table A data frame or matrix to convert into a formatted table.
-#' @param filename_without_extension A character string specifying the base name of the output file.
-#' If `NA`, the name of the `table` variable is used as the filename.
-#' @param project_sub_dir A character string defining a sub-directory within the project's local directory
-#' where the file will be saved, or `NA` to use a default directory path. The path is constructed using `fhircrackr::pastep`.
-#' @param format A character string indicating the format of the output table file (only html); Default is "html".
-#'
-#' @return This function does not return a value. It creates a side effect of writing a file in the specified format.
-#'
-#' @details
-#' The function determines the filename by examining the call stack if `filename_without_extension` is `NA`.
-#' It calculates the save path using `fhircrackr::pastep` and applies styling to the table using `kableExtra`.
-#' The table format is flexible, supporting "html" outputs.
-#'
-#' @examples
-#' \dontrun{
-#' writeKable(mtcars, "mtcars_summary", format = "html")
-#' }
-#'
-#' @seealso
-#' \code{\link[kableExtra]{kable}}, \code{\link[kableExtra]{kable_styling}}, \code{\link[kableExtra]{save_kable}}
-#'
-writeKable <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html", caption=NA) {
-  if (!is.null(table)) {
-    if (is.na(filename_without_extension)) {
-      filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
-    }
-    if (is.na(project_sub_dir)) {
-      project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
-    } else {
-      project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
-    }
-    if (!dir.exists(project_sub_dir)) {
-      dir.create(project_sub_dir, recursive = TRUE)
-    }
-    kableExtra::kable(table, format = "html", caption = caption) |>
-      kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
-      kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
-  }
-  else {
-    warning(paste0("The table '", deparse(substitute(table)), "' is NULL. No file was written."))
-  }
-}
+
 
 

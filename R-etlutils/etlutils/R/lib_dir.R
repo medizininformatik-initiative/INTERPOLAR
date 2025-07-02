@@ -16,8 +16,8 @@ getProjectDirNames <- function(project_name, project_time_stamp = MODULE_TIME_ST
   global_dir <- "outputGlobal"
   local_dir <- "outputLocal"
 
-  local_results_directories_names  <- c("bundles", "log", "performance", "tables")
-  global_results_directories_names <- c("performance", "requests")
+  local_results_directories_names  <- c("bundles", "log", "performance", "tables", "reports")
+  global_results_directories_names <- c("performance", "requests", "reports")
 
   global_dir <- fhircrackr::pastep(global_dir, project_name)
   local_dir <- fhircrackr::pastep(local_dir, project_name)
@@ -192,6 +192,96 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
     project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
   }
   saveRDS(object = object, file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData'))
+}
+
+#' Write a Formatted Table to a File
+#'
+#' This function converts a data frame or matrix into a table formatted in the specified format
+#' and writes it to a file. It leverages the `kableExtra` package for styling and file output.
+#'
+#' @param table A data frame or matrix to convert into a formatted table.
+#' @param filename_without_extension A character string specifying the base name of the output file.
+#' If `NA`, the name of the `table` variable is used as the filename.
+#' @param project_sub_dir A character string defining a sub-directory within the project's global directory
+#' where the file will be saved, or `NA` to use a default directory path. The path is constructed using `fhircrackr::pastep`.
+#' @param format A character string indicating the format of the output table file (only html); Default is "html".
+#'
+#' @return This function does not return a value. It creates a side effect of writing a file in the specified format.
+#'
+#' @details
+#' The function determines the filename by examining the call stack if `filename_without_extension` is `NA`.
+#' It calculates the save path using `fhircrackr::pastep` and applies styling to the table using `kableExtra`.
+#' The table format is flexible, supporting "html" outputs.
+#'
+#' @importFrom kableExtra kable kable_styling save_kable
+#' @importFrom fhircrackr pastep
+#' @export
+#'
+#' @seealso
+#' \code{\link[kableExtra]{kable}}, \code{\link[kableExtra]{kable_styling}}, \code{\link[kableExtra]{save_kable}}
+#'
+writeTableGlobal <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html", caption=NA) {
+  if (!is.null(table)) {
+    if (is.na(filename_without_extension)) {
+      filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
+    }
+    if (is.na(project_sub_dir)) {
+      project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$global_dir, "reports")
+    } else {
+      project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
+    }
+    kableExtra::kable(table, format = "html", caption = caption) |>
+      kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
+      kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
+  }
+  else {
+    warning(paste0("The table '", deparse(substitute(table)), "' is NULL. No file was written."))
+  }
+}
+
+#' Write a Formatted Table to a File
+#'
+#' This function converts a data frame or matrix into a table formatted in the specified format
+#' and writes it to a file. It leverages the `kableExtra` package for styling and file output.
+#'
+#' @param table A data frame or matrix to convert into a formatted table.
+#' @param filename_without_extension A character string specifying the base name of the output file.
+#' If `NA`, the name of the `table` variable is used as the filename.
+#' @param project_sub_dir A character string defining a sub-directory within the project's local directory
+#' where the file will be saved, or `NA` to use a default directory path. The path is constructed using `fhircrackr::pastep`.
+#' @param format A character string indicating the format of the output table file (only html); Default is "html".
+#'
+#' @return This function does not return a value. It creates a side effect of writing a file in the specified format.
+#'
+#' @details
+#' The function determines the filename by examining the call stack if `filename_without_extension` is `NA`.
+#' It calculates the save path using `fhircrackr::pastep` and applies styling to the table using `kableExtra`.
+#' The table format is flexible, supporting "html" outputs.
+#'
+#' @importFrom kableExtra kable kable_styling save_kable
+#' @importFrom fhircrackr pastep
+#' @export
+#'
+#' @seealso
+#' \code{\link[kableExtra]{kable}}, \code{\link[kableExtra]{kable_styling}}, \code{\link[kableExtra]{save_kable}}
+#'
+writeTableLocal <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html", caption=NA) {
+  if (!is.null(table)) {
+    if (is.na(filename_without_extension)) {
+      filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
+    }
+    if (is.na(project_sub_dir)) {
+      project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
+    } else {
+      project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
+    }
+    kableExtra::kable(table, format = "html", caption = caption) |>
+      kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
+      kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
+  }
+  else {
+    warning(paste0("The table '", deparse(substitute(table)), "' is NULL. No file was written."))
+  }
 }
 
 #' Read the entire content of a file as a string
