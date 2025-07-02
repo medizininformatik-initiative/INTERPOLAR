@@ -144,7 +144,7 @@ services:
       - ./R-dataprocessor/dataprocessor_config.toml:/src/R-dataprocessor/dataprocessor_config.toml
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
-      - ./Input-Repo:/src/Input-Repo
+      #- <Path_to_INTERPOLAR-WP7_folder>:/src/Input-Repo/INTERPOLAR-WP7
       # Include certificates, e.g. self-signed certificates of the FHIR-Server,
       # incl. root-CA or CHAIN if needed.
       #- <self-signed_cert_FHIR-Server.pem>:/etc/ssl/certs/<self-signed_cert_FHIR-Server.pem>
