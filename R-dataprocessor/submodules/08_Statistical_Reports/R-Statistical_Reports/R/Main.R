@@ -7,11 +7,11 @@
 #' patient age, and encounter type. The report also allows for customization of the start and end
 #' date for the reporting period.
 #'
-#' @param REPORT_PERIOD_START A character string specifying the start date of the report period.
-#' @param REPORT_PERIOD_END A character string specifying the end date of the report period.
+#' @param REPORT_PERIOD_START A character string specifying the start date of the report period in "YYYY-MM-DD" format.
+#' @param REPORT_PERIOD_END A character string specifying the end date of the report period in "YYYY-MM-DD" format.
 #'
-#' @return A statistical report that includes the patient table, encounter table,
-#'   merged table, and FAS1 dataset.
+#' @return A statistical report that includes processed tables, such as the patient table, encounter table,
+#'   the merged dataset, and calculation results within the specified reporting period.
 #'
 #' @details
 #' The function performs the following steps:
@@ -23,14 +23,15 @@
 #'    calculates patient age using `calculateAge()`.
 #' 5. Defines the FAS1 dataset by filtering and processing the merged data using `defineFAS1()`,
 #'    considering the provided reporting period (`REPORT_PERIOD_START` and `REPORT_PERIOD_END`).
-#' 6. Prints the resulting datasets (`complete_table` and `FAS1`) for verification.
-#' 7. Prints the reporting period and the number of cases in the FAS1 dataset.
+#' 6. Calculates the F1 metric for the defined FAS1 dataset using `calculateF1()`, summarizing findings within the reporting period.
+#' 7. Outputs tables in an HTML format for review, facilitating verification and analysis.
 #'
 #' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
-#'   [mergePatEnc()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()]
+#'   [mergePatEnc()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()],
+#'   [calculateF1()]
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
-                                    REPORT_PERIOD_END = "2025-04-30") {
+                                    REPORT_PERIOD_END = "2025-06-30") {
 
   # TODO: include the start and end date in an interactive / default way and print it to the report ----------
 

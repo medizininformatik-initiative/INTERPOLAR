@@ -21,8 +21,6 @@
 #'
 calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
   F1_prep <- FAS1 |>
-    dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only admission to INTEROPLAR ward in reporting period
-    dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END)) |>
     dplyr::filter(!is.na(ward_name)) |>  # only encounters with ward name
     dplyr::distinct(enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
                     enc_type_code, age_at_hospitalization, enc_period_start, calendar_week,
@@ -44,6 +42,8 @@ calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
     F1 <- F1_prep |>
       selectMin(grouping_variables = c("main_enc_id"),
                 selection_variable = enc_period_start) |>
+      dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only admission to INTEROPLAR ward in reporting period
+      dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END)) |>
       dplyr::distinct(main_enc_id, enc_period_start, calendar_week, ward_name) |>
       dplyr::group_by(
         ward_name, calendar_week) |>
