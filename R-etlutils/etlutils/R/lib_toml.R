@@ -100,7 +100,7 @@ tomlFromDT <- function(dt, key = NULL) {
 #' name = "B"
 #' value = 2
 #' '
-#' parsed <- parseTOMLString(toml_txt)
+#' parsed <- tomlParseString(toml_txt)
 #' dt <- tomlToDT(parsed, "entries")
 #' print(dt)
 #'
@@ -121,8 +121,8 @@ tomlToDT <- function(parsed_toml, key) {
 #' @return A character string with the new section header appended at the end.
 #'
 #' @examples
-#' base_toml <- vectorToTOML(c("a", "b"), key = "values")
-#' full_toml <- appendSection(base_toml, "metadata")
+#' base_toml <- tomlFromVector(c("a", "b"), key = "values")
+#' full_toml <- tomlAppendSection(base_toml, "metadata")
 #' cat(full_toml)
 #'
 #' @export
@@ -194,7 +194,7 @@ tomlAppendVector <- function(toml_string, vec, key = NULL, comment = NULL) {
 #'
 #' @examples
 #' toml_txt <- 'values = ["a", "b", "c"]'
-#' parsed <- parseTOMLString(toml_txt)
+#' parsed <- tomlParseString(toml_txt)
 #' parsed$values
 #'
 #' @export

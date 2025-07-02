@@ -14,23 +14,26 @@ test_that('Test isValidTable()', {
 # addTableRow #
 ###############
 
-test_that('Test addTableRow', {
-  # Create a sample data table
-  dt <- data.table(
+####################
+# addTableRow      #
+####################
+
+# Test adding a row by position
+test_that("Test addTableRow with positional values", {
+  # Sample data.table
+  dt <- data.table::data.table(
     ID = 1:5,
     Name = c("Alice", "Bob", "Charlie", "David", "Eve"),
     Score = c(85, 92, 78, 65, 97)
   )
-  expect_equal(nrow(dt), 5)
 
-  # Add a new row to the data table
-  # addTableRow converts all columns to character
-  dt <- addTableRow(dt, 6, 'Frank', 88)
+  # Add a row using positional matching
+  dt <- addTableRow(dt, 6, "Frank", 88)
 
   expect_equal(nrow(dt), 6)
-  expect_equal(dt[6][[1]], '6')
-  expect_equal(dt[6][[2]], 'Frank')
-  expect_equal(dt[6][[3]], '88')
+  expect_equal(dt[6, ID], 6)
+  expect_equal(dt[6, Name], "Frank")
+  expect_equal(dt[6, Score], 88)
 })
 
 ################

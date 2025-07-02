@@ -13,9 +13,9 @@
             END IF;
         END IF;
 
---/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
---/*Test*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''<%TABLE_NAME%>'', ''<%SCHEMA_2%>'', ''max_last_pro_nr / data_count_pro_all :'||max_last_pro_nr||' / '||data_count_pro_all||''' );'
---/*Test*/))  AS t(res TEXT) INTO erg;
+--/*Test_<%TABLE_NAME%>*/SELECT res FROM pg_background_result(pg_background_launch(
+--/*Test_<%TABLE_NAME%>*/ 'INSERT INTO db.data_import_hist (function_name, table_name, schema_name, variable_name ) VALUES ( ''take_over_check_data'', ''<%TABLE_NAME%>'', ''<%SCHEMA_2%>'', ''max_last_pro_nr / data_count_pro_all / count :'||max_last_pro_nr||' / '||data_count_pro_all||' / '||temp_int||''' );'
+--/*Test_<%TABLE_NAME%>*/))  AS t(res TEXT) INTO erg;
     END IF;
     ---- End check <%SCHEMA_2%>.<%TABLE_NAME_2%> - count ----
 

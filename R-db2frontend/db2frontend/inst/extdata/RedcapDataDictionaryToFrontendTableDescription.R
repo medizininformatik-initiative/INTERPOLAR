@@ -85,14 +85,14 @@ validation_mapping <- c(
 )
 
 # Convert COLUMN_TYPE using primary mapping
-dt[, COLUMN_TYPE := fifelse(
+dt[, COLUMN_TYPE := data.table::fifelse(
   is.na(type_mapping[COLUMN_TYPE]),
   COLUMN_TYPE,
   type_mapping[COLUMN_TYPE]
 )]
 
 # If COLUMN_TYPE is unspecific (varchar), check if VALIDATION_TYPE provides better information
-dt[, COLUMN_TYPE := fifelse(
+dt[, COLUMN_TYPE := data.table::fifelse(
   COLUMN_TYPE == "varchar" & !is.na(VALIDATION_TYPE) & VALIDATION_TYPE %in% names(validation_mapping),
   validation_mapping[VALIDATION_TYPE],
   COLUMN_TYPE
@@ -141,7 +141,7 @@ for (tbl in names(dt_list)) {
 dt <- rbindlist(dt_list, fill = TRUE)
 
 # Ensure TABLE_NAME only appears in the first row of each table, replace NA with empty strings
-dt[, TABLE_NAME := fifelse(duplicated(TABLE_NAME), "", TABLE_NAME)]
+dt[, TABLE_NAME := data.table::fifelse(duplicated(TABLE_NAME), "", TABLE_NAME)]
 
 # Replace any remaining NA with empty strings (ensures consistency in Excel exports)
 dt[is.na(TABLE_NAME), TABLE_NAME := ""]
