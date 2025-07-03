@@ -18,13 +18,15 @@
 #' 1. Fetches patient data from the database using `getPatientData()`.
 #' 2. Fetches encounter data from the database using `getEncounterData()`.
 #' 3. Fetches data related to patients per ward using `getPidsPerWardData()`.
-#' 4. Merges the patient, encounter, and ward data using `mergePatEnc()`, adds the main encounter ID
+#' 4. Fetches patient feature data using `getPatientFeData()`.
+#' 5. Merges the patient, encounter, and ward data using `mergePatEnc()`, adds the main encounter ID
 #'    using `addMainEncId()`, adds the main encounter period start using `addMainEncPeriodStart()`, and
-#'    calculates patient age using `calculateAge()`.
-#' 5. Defines the FAS1 dataset by filtering and processing the merged data using `defineFAS1()`,
+#'    calculates patient age using `calculateAge()`, adds ward names using `addWardName()` and
+#'    adds record IDs using `addRecordId()`.
+#' 6. Defines the FAS1 dataset by filtering and processing the merged data using `defineFAS1()`,
 #'    considering the provided reporting period (`REPORT_PERIOD_START` and `REPORT_PERIOD_END`).
-#' 6. Calculates the F1 metric for the defined FAS1 dataset using `calculateF1()`, summarizing findings within the reporting period.
-#' 7. Outputs tables in an HTML format for review, facilitating verification and analysis.
+#' 7. Calculates the F1 metric for the defined FAS1 dataset using `calculateF1()`, summarizing findings within the reporting period.
+#' 8. Outputs tables in an HTML format for review, facilitating verification and analysis.
 #'
 #' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
 #'   [mergePatEnc()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()],
@@ -49,11 +51,16 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   # this table can have multiple entries per main encounter due to transferral to another ward,
   # it should include the encounter level "Versorgungsstellenkontakt"
 
+  patient_fe_table <- getPatientFeData(lock_id = "statistical reports[4]",
+                                  table_name = "v_patient_fe")
+  # --> this table should only have one entry per patient (warning if not)
+
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
     addMainEncId() |>
     addMainEncPeriodStart() |>
     calculateAge() |>
-    addWardName(pids_per_ward_table)
+    addWardName(pids_per_ward_table) |>
+    addRecordId(patient_fe_table)
 
   FAS1 <- defineFAS1(complete_table)
 

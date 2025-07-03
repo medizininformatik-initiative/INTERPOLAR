@@ -204,3 +204,33 @@ addWardName <- function(merged_table_with_main_enc,pids_per_ward_table) {
 }
 
 #------------------------------------------------------------------------------#
+#' Add Record Merged Table
+#'
+#' This function adds a `record_id` to each row in a given merged table by joining it with a
+#' patient front-end data table. It ensures that each patient entry in the merged table is
+#' complemented with its corresponding `record_id` from the patient data when available.
+#'
+#' @param merged_table_with_ward A dataframe that includes patient and encounter information, likely
+#' merged with ward data. It should have columns that can be used to identify patients.
+#' @param patient_fe_table A dataframe containing patient front-end data, including columns
+#' `pat_id`, `pat_cis_pid`, and `record_id`.
+#'
+#' @return A dataframe identical to `merged_table_with_ward` but with an additional
+#' `record_id` column, which is relocated immediately after `pat_identifier_value`.
+#'
+#' @details
+#' The function performs a left join on `merged_table_with_ward` using `pat_id` from the merged table and
+#' matches it with `pat_cis_pid` from `patient_fe_table`. This adds the `record_id` to the merged table, providing
+#' a unique identification feature that can be crucial for subsequent analyses or data organization tasks.
+#'
+#' @importFrom dplyr left_join select relocate
+#' @export
+addRecordId <- function(merged_table_with_ward, patient_fe_table) {
+  merged_table_with_record_id <- merged_table_with_ward |>
+    dplyr::left_join(patient_fe_table |>
+                       dplyr::select(pat_id, pat_cis_pid, record_id),
+                     by = c("pat_id" = "pat_id", "pat_identifier_value" = "pat_cis_pid")) |>
+    dplyr::relocate(record_id, .after = pat_identifier_value)
+  return(merged_table_with_record_id)
+}
+

@@ -161,3 +161,48 @@ getPidsPerWardData <- function(lock_id, table_name) {
 
   return(pids_per_ward_table)
 }
+
+#------------------------------------------------------------------------------#
+
+#' Retrieve and Process Patient Front-End Data
+#'
+#' This function retrieves patient data from a specified database table and processes it by
+#' filtering out duplicate entries and arranging the data. It performs checks for duplicate
+#' patient IDs and issues warnings if duplicates are found based on either the FHIR or KIS identifiers.
+#'
+#' @param lock_id A character string used to lock the database table and ensure safe data retrieval.
+#' This is important for managing concurrent data access in environments where multiple processes might access
+#' the data simultaneously.
+#' @param table_name A character string specifying the name of the database table to query. This table
+#' should include columns `pat_id`, `pat_cis_pid`, `record_id`, and `input_datetime`.
+#'
+#' @return A dataframe (`patient_fe_table`) that includes patient data, cleaned to ensure distinct
+#' entries per `pat_id`, arranged in order.
+#'
+#' @details The function constructs an SQL query to select relevant columns from the specified table,
+#' retrieves the data while checking for read-only access, and processes it to remove duplicates and
+#' arrange the records. If there are multiple rows for a single `pat_id` (related to the FHIR identifier)
+#' or `pat_cis_pid` (related to the KIS identifier), warnings are issued to indicate potential data issues.
+#'
+#' @importFrom etlutils dbGetReadOnlyQuery
+#' @importFrom dplyr distinct arrange
+#' @export
+getPatientFeData <- function(lock_id, table_name) {
+
+  query <- paste0("SELECT pat_id, pat_cis_pid, record_id, ",
+                  "input_datetime FROM ", table_name, "\n")
+
+  patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    dplyr::arrange(pat_id)
+
+  if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
+    warning("The patient_fe table contains multiple rows for the same pat_id(FHIR). Please check the data.")
+  }
+
+  if (checkMultipleRows(patient_fe_table, c("pat_cis_pid"))) {
+    warning("The patient_fe table contains multiple rows for the same patient identifier (KIS). Please check the data.")
+  }
+
+  return(patient_fe_table)
+}
