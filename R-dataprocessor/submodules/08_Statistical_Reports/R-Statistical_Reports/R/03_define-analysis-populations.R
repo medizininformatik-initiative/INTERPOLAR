@@ -24,7 +24,6 @@
 #' @importFrom dplyr filter pull mutate select distinct
 #' @importFrom data.table isoweek
 #' @export
-# TODO: implement KW week stratification and include report period start & end ----------
 # TODO: check each FHIR item for the possible values and include this into filtering e.g. "Begleitperson" --------
 
 defineFAS1 <- function(complete_table) {
@@ -88,7 +87,7 @@ defineFAS1 <- function(complete_table) {
 #' @export
 
 # TODO: identify first interpolar ward contact and its lenght
-# TODO: implement rules for combining short absences -------
+# TODO: implement rules for combining short absences? -------
 # TODO: include all patients with documented medication analysis within the first 7 days -------------
 # TODO: handle NA end-dates properly (e.g. deceased) -------------
 

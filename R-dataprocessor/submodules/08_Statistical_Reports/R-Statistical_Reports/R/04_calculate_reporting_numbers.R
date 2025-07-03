@@ -15,7 +15,7 @@
 #' If issues are detected (e.g., undefined start dates or multiple first contacts), a warning is issued
 #' and the preprocessed data is returned for inspection.
 #'
-#' @importFrom dplyr filter distinct group_by tally select
+#' @importFrom dplyr filter distinct group_by tally select mutate across
 #' @export
 #' @seealso `checkMultipleRows` for handling potential issues with encounter data rows.
 #'
@@ -39,15 +39,31 @@ calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
     }
 
   else {
-    F1 <- F1_prep |>
+    F1_prep_red <- F1_prep |>
       selectMin(grouping_variables = c("main_enc_id"),
                 selection_variable = enc_period_start) |>
       dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only admission to INTEROPLAR ward in reporting period
       dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END)) |>
-      dplyr::distinct(main_enc_id, enc_period_start, calendar_week, ward_name) |>
-      dplyr::group_by(
-        ward_name, calendar_week) |>
-      dplyr::tally()
+      dplyr::distinct(pat_id, main_enc_id, calendar_week, ward_name) |>
+      dplyr::mutate(dplyr::across(c(ward_name, calendar_week), as.character))
+
+    F1_grouped_counts <- F1_prep_red |>
+      dplyr::group_by(ward_name, calendar_week) |>
+      dplyr::summarise(
+        encounters = dplyr::n_distinct(main_enc_id),
+        patients = dplyr::n_distinct(pat_id),
+        .groups = 'drop'
+      )
+
+    F1_total_counts <- F1_prep_red |>
+      dplyr::summarise(
+        ward_name = "all wards",
+        calendar_week = "all weeks",
+        encounters = dplyr::n_distinct(main_enc_id),
+        patients = dplyr::n_distinct(pat_id)
+    )
+
+    F1 <- dplyr::bind_rows(F1_grouped_counts, F1_total_counts)
 
     return(F1)
     }

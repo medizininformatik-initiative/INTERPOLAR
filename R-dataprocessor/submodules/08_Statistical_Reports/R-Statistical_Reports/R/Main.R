@@ -31,9 +31,9 @@
 #'   [calculateF1()]
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
-                                    REPORT_PERIOD_END = "2025-06-30") {
+                                    REPORT_PERIOD_END = Sys.Date()) {
 
-  # TODO: include the start and end date in an interactive / default way and print it to the report ----------
+  # TODO: include the start and end date in an interactive way ----------
 
   patient_table <- getPatientData(lock_id = "statistical reports[1]",
                                     table_name = "v_patient_last_version")
@@ -66,7 +66,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   writeTableLocal(complete_table, format= "html")
   writeTableLocal(FAS1, format= "html")
   writeTableGlobal(F1, format= "html",
-             caption = paste0("F1 measure for reporting period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END))
+             caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END))
 
   #TODO: implement pdf / quarto option ----------
   # writeTable(complete_table, format = "pdf")
