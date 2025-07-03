@@ -20,10 +20,10 @@ etlutils::runLevel2("MRP Calculation", {
   #außerdem muss die Liste der existingRetrolectiveMRPEvaluationIDs um die neuen MRP erweitert werden
 
   etlutils::runLevel3("Calculate MRPs", {
-    for (iiiii in seq_along(mrp_contents)) {
-      etlutils::runLevel3(paste0("Calculate ", names(mrp_contents)[iiiii], " MRPs"), {
-        mrp_table_lists <- calculateDrugDiseaseMRPs(mrp_content$processed_content,
-                                                    mrp_content$processed_content_hash)
+    for (mrp_content_index in seq_along(mrp_contents)) {
+      etlutils::runLevel3(paste0("Calculate ", names(mrp_contents)[mrp_content_index], " MRPs"), {
+        mrp_table_lists <- calculateDrugDiseaseMRPs(mrp_contents[[mrp_content_index]]$processed_content,
+                                                    mrp_contents[[mrp_content_index]]$processed_content_hash)
       })
     }
   })
