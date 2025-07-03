@@ -512,8 +512,8 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
     meda <- resources$encounters_first_medication_analysis[[encounter_id]]
     meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_
     meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
-    meda_study_phase <- if (!is.null(meda)) meda$study_phase else NA_character_
-    meda_ward_name <- if (!is.null(meda)) meda$ward_name else NA_character_
+    meda_study_phase <- encounter$study_phase
+    meda_ward_name <- encounter$ward_name
     record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
     # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
     ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
