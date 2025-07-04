@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-23 09:23:55
+-- Rights definition file last update : 2025-07-02 16:19:58
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-06-24 08:18:01
+-- Create time: 2025-07-04 14:36:01
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  440_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1793,7 +1793,7 @@ BEGIN
         IF NOT EXISTS ( -- column not exists (ret_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_id'
         ) THEN
-            ALTER TABLE db2frontend_in.retrolektive_mrpbewertung_fe ADD ret_id varchar;   -- Retrolektive MRP-ID (REDCap) Hier wird die MEDA-ID der Medikationsanalyse angegeben, zu deren Zeitpunkt dieses MRP vom Apotheker hätte gefunden werden können. Wenn keine Medikationsanalyse dokumentiert ist wir eine ID aus Fall-ID-x eingetragen (varchar)
+            ALTER TABLE db2frontend_in.retrolektive_mrpbewertung_fe ADD ret_id varchar;   -- Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (varchar)
         END IF; -- column (ret_id)
 
         IF NOT EXISTS ( -- column not exists (ret_meda_id)
@@ -2030,6 +2030,18 @@ BEGIN
             ALTER TABLE db2frontend_in.retrolektive_mrpbewertung_fe ADD ret_bewerter2 varchar;   -- 2. Bewertung von (varchar)
         END IF; -- column (ret_bewerter2)
 
+        IF NOT EXISTS ( -- column not exists (ret_bewerter3)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_bewerter3'
+        ) THEN
+            ALTER TABLE db2frontend_in.retrolektive_mrpbewertung_fe ADD ret_bewerter3 varchar;   --  (varchar)
+        END IF; -- column (ret_bewerter3)
+
+        IF NOT EXISTS ( -- column not exists (ret_bewerter2_pipeline)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_bewerter2_pipeline'
+        ) THEN
+            ALTER TABLE db2frontend_in.retrolektive_mrpbewertung_fe ADD ret_bewerter2_pipeline varchar;   --  (varchar)
+        END IF; -- column (ret_bewerter2_pipeline)
+
         IF NOT EXISTS ( -- column not exists (ret_gewissheit2)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewissheit2'
         ) THEN
@@ -2251,6 +2263,8 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_meda_dat2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_2ndbewertung___1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_bewerter2), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_bewerter3), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_bewerter2_pipeline), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewissheit2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), ''#NULL#'') || ''|||'' ||
@@ -2293,7 +2307,7 @@ BEGIN
           COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
           COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
           COALESCE(db.to_char_immutable(ret_bewerter1), '#NULL#') || '|||' || -- hash from: 1. Bewertung von (ret_bewerter1)
-          COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Hier wird die MEDA-ID der Medikationsanalyse angegeben, zu deren Zeitpunkt dieses MRP vom Apotheker hätte gefunden werden können. Wenn keine Medikationsanalyse dokumentiert ist wir eine ID aus Fall-ID-x eingetragen (ret_id)
+          COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (ret_id)
           COALESCE(db.to_char_immutable(ret_meda_id), '#NULL#') || '|||' || -- hash from: Zuordnung Meda -> rMRP (ret_meda_id)
           COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat1)
           COALESCE(db.to_char_immutable(ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
@@ -2333,6 +2347,8 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_meda_dat2), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat2)
           COALESCE(db.to_char_immutable(ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look / Zweite MRP-Bewertung durchführen (ret_2ndbewertung___1)
           COALESCE(db.to_char_immutable(ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter2)
+          COALESCE(db.to_char_immutable(ret_bewerter3), '#NULL#') || '|||' || -- hash from:  (ret_bewerter3)
+          COALESCE(db.to_char_immutable(ret_bewerter2_pipeline), '#NULL#') || '|||' || -- hash from:  (ret_bewerter2_pipeline)
           COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit2)
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
@@ -2379,7 +2395,7 @@ BEGIN
           COALESCE(db.to_char_immutable(redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
           COALESCE(db.to_char_immutable(redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
           COALESCE(db.to_char_immutable(ret_bewerter1), '#NULL#') || '|||' || -- hash from: 1. Bewertung von (ret_bewerter1)
-          COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Hier wird die MEDA-ID der Medikationsanalyse angegeben, zu deren Zeitpunkt dieses MRP vom Apotheker hätte gefunden werden können. Wenn keine Medikationsanalyse dokumentiert ist wir eine ID aus Fall-ID-x eingetragen (ret_id)
+          COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (ret_id)
           COALESCE(db.to_char_immutable(ret_meda_id), '#NULL#') || '|||' || -- hash from: Zuordnung Meda -> rMRP (ret_meda_id)
           COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat1)
           COALESCE(db.to_char_immutable(ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
@@ -2419,6 +2435,8 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_meda_dat2), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat2)
           COALESCE(db.to_char_immutable(ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look / Zweite MRP-Bewertung durchführen (ret_2ndbewertung___1)
           COALESCE(db.to_char_immutable(ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter2)
+          COALESCE(db.to_char_immutable(ret_bewerter3), '#NULL#') || '|||' || -- hash from:  (ret_bewerter3)
+          COALESCE(db.to_char_immutable(ret_bewerter2_pipeline), '#NULL#') || '|||' || -- hash from:  (ret_bewerter2_pipeline)
           COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit2)
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
@@ -3304,7 +3322,7 @@ COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.redcap_repeat_inst
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.redcap_repeat_instance IS 'Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.redcap_data_access_group IS 'Function as dataset filter by stations (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_bewerter1 IS '1. Bewertung von (varchar)';
-COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_id IS 'Retrolektive MRP-ID (REDCap) Hier wird die MEDA-ID der Medikationsanalyse angegeben, zu deren Zeitpunkt dieses MRP vom Apotheker hätte gefunden werden können. Wenn keine Medikationsanalyse dokumentiert ist wir eine ID aus Fall-ID-x eingetragen (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_id IS 'Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_meda_id IS 'Zuordnung Meda -> rMRP (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_meda_dat1 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
@@ -3344,6 +3362,8 @@ COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_notiz1 IS 'Not
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_meda_dat2 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_2ndbewertung___1 IS '1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_bewerter2 IS '2. Bewertung von (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_bewerter3 IS ' (varchar)';
+COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_bewerter2_pipeline IS ' (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_gewissheit2 IS 'Sicherheit des detektierten MRP (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung2 IS 'Zuordnung zu manuellem MRP (varchar)';
 COMMENT ON COLUMN db2frontend_in.retrolektive_mrpbewertung_fe.ret_gewissheit2_oth IS 'Weitere Informationen (varchar)';
