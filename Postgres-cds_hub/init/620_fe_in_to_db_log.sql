@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-23 09:23:55
+-- Rights definition file last update : 2025-07-02 16:19:58
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-24 08:18:17
+-- Create time: 2025-07-04 14:36:17
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1048,6 +1048,8 @@ BEGIN
                                 ret_meda_dat2,
                                 ret_2ndbewertung___1,
                                 ret_bewerter2,
+                                ret_bewerter3,
+                                ret_bewerter2_pipeline,
                                 ret_gewissheit2,
                                 ret_mrp_zuordnung2,
                                 ret_gewissheit2_oth,
@@ -1128,6 +1130,8 @@ BEGIN
                                 current_record.ret_meda_dat2,
                                 current_record.ret_2ndbewertung___1,
                                 current_record.ret_bewerter2,
+                                current_record.ret_bewerter3,
+                                current_record.ret_bewerter2_pipeline,
                                 current_record.ret_gewissheit2,
                                 current_record.ret_mrp_zuordnung2,
                                 current_record.ret_gewissheit2_oth,
