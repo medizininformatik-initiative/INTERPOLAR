@@ -30,7 +30,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_
   query <- paste0(
     "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
     "FROM v_encounter_last_version\n",
-    "WHERE enc_period_end <= '", format(Sys.Date(), "%Y-%m-%d"), "'\n",
+    "WHERE enc_period_end <= '", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "'\n",
     "AND enc_type_code = 'einrichtungskontakt'\n",
     "AND enc_id NOT IN (\n",
     "  SELECT enc_id FROM v_dp_mrp_calculations\n",
@@ -62,6 +62,14 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_
   )
   encs_fall_fe <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getEncountersWithoutRetrolectiveMRPEvaluationFromDB()_enc_fall_fe")
 
+  #
+  # 2a.) Remove all Encounters which were never on a relevant ward (their FHIR ID is not in the fall_fe table)
+  #
+  encounters <- encounters[enc_id %in% encs_fall_fe$fall_fhir_enc_id]
+
+  #
+  # 2b.) Add the Study Phase to all remaining Encounters
+  #
   for (current_enc_id in encounters$enc_id) {
     fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id == current_enc_id]
 
@@ -451,6 +459,7 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
   }
 
   # 5.) Add study_phase and ward_name from the corresponding Encounter (matched via enc_id == fall_fhir_enc_id)
+  #     to the medication analysis
   for (main_enc_id in names(encounters_first_medication_analysis)) {
     medication_analysis <- encounters_first_medication_analysis[[main_enc_id]]
 

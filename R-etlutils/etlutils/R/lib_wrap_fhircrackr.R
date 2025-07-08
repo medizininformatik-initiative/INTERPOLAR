@@ -62,7 +62,7 @@ executeFHIRSearchVariation <- function(
       token                  = FHIR_TOKEN,
       max_bundles            = max_bundles,
       verbose                = verbose,
-      log_errors             = if (!is.null(log_errors)) combineLogPaths(log_errors),
+      log_errors             = if (!is.null(log_errors)) combineLoggingPaths(log_errors),
       save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles
     )
@@ -75,7 +75,7 @@ executeFHIRSearchVariation <- function(
       password               = FHIR_SERVER_PASS,
       max_bundles            = max_bundles,
       verbose                = verbose,
-      log_errors             = if (!is.null(log_errors)) combineLogPaths(log_errors),
+      log_errors             = if (!is.null(log_errors)) combineLoggingPaths(log_errors),
       save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles
     )
@@ -86,7 +86,7 @@ executeFHIRSearchVariation <- function(
       body                   = body,
       max_bundles            = max_bundles,
       verbose                = verbose,
-      log_errors             = if (!is.null(log_errors)) combineLogPaths(log_errors),
+      log_errors             = if (!is.null(log_errors)) combineLoggingPaths(log_errors),
       save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles
     )
