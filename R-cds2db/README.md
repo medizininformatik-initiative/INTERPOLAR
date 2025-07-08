@@ -6,7 +6,7 @@ Die Ausleitung der FHIR-Daten in die Datenbank sollte möglichst 1 mal täglich 
 
 ## Konfiguration
 
-Der ETL-Prozess kann über die Datei [cds2db_config.toml](https://github.com/medizininformatik-initiative/INTERPOLAR/blob/main/R-cds2db/cds2db_config.tomlcds2db_config.toml) konfiguriert werden. Alle Parameter sind in der Datei durch Kommentare beschrieben. Hier werden u.a. sowohl die Logging-Parameter, als auch die Parameter zum Zugriff auf den FHIR-Server angegeben. Außerdem stehen Debug-Parameter zur Verfügung. Damit kann man für ältere Zeiträume Daten übertragen, falls für Tests keine aktuellen Daten vorliegen.
+Der ETL-Prozess kann über die Datei [cds2db_config.toml](https://github.com/medizininformatik-initiative/INTERPOLAR/blob/main/R-cds2db/cds2db_config.toml) konfiguriert werden. Alle Parameter sind in der Datei durch Kommentare beschrieben. Hier werden u.a. sowohl die Logging-Parameter, als auch die Parameter zum Zugriff auf den FHIR-Server angegeben. Außerdem stehen Debug-Parameter zur Verfügung. Damit kann man für ältere Zeiträume Daten übertragen, falls für Tests keine aktuellen Daten vorliegen.
 
 ### Extraktion relevanter Patienten
 
