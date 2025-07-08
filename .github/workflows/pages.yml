@@ -3,8 +3,10 @@ name: Build and Deploy GitHub Pages
 on:
   push:
     branches:
-      - main
-      - develop
+      # Test: nur bei einem Commit in diesen Branch, wird der github Actions Workflow genutzt.
+      #   Funktioniert die github Actions Page Generierung irgendwann, 
+      #   sollte hier "main" eingetragen werden.
+      - github-pages-via-actions
 
 permissions:
   contents: read
