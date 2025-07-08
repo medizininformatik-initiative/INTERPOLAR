@@ -11,7 +11,7 @@ title: CDS Tool Chain - Ablauf
 
 ## 1. Vorbereitung:
 
-Eine Übersicht aller Module ist in der [Projekt README Datei](/) zu finden.
+Eine Übersicht aller Module ist in der [Projekt README Datei](./) zu finden.
 
 ### 1.1 Konfigurationsdateien:
 
