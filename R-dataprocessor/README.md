@@ -2,7 +2,7 @@
 
 Generell ist das Modul "dataprocessor" dazu gedacht, Daten zu transformieren und für eine Ausgabe im Frontend oder für eine Ausleitung zur Verfügung zu stellen.
 
-Seit Version [0.2.x](https://github.com/medizininformatik-initiative/INTERPOLAR/releases) nutzt es die im [Modul "cds2db"](R-cds2db) typisierten Daten aus der Postgres-Datenbank, um Tabellen mit relevanten Patienten und Fallinformationen zu erstellen. Diese werden auch zurück in die Postgres-Datenbank geschrieben und anschließend über das [Modul "db2frontend"](../R-db2frontend) dem Frontend zur Verfügung gestellt.
+Seit Version [0.2.x](https://github.com/medizininformatik-initiative/INTERPOLAR/releases) nutzt es die im [Modul "cds2db"](../R-cds2db) typisierten Daten aus der Postgres-Datenbank, um Tabellen mit relevanten Patienten und Fallinformationen zu erstellen. Diese werden auch zurück in die Postgres-Datenbank geschrieben und anschließend über das [Modul "db2frontend"](../R-db2frontend) dem Frontend zur Verfügung gestellt.
 
 ## Konfiguration
 
