@@ -1,5 +1,6 @@
 # URLs ohne Endungen wie .html oder .md
-permalink:        pretty
+#permalink:        pretty
+
 # Setup
 # Themes: minima (taugt nicht, da fehlerhaft)
 theme:            jekyll-theme-primer
