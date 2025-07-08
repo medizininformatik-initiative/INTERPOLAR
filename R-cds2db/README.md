@@ -14,7 +14,7 @@ Die Ermittlung der Patienten relevanter Stationen erfolgt über eine der beiden 
 
 #### Variante 1: Die relevanten Patienten werden über Informationen aus den FHIR-Daten ermittelt
 
-Bei dieser Variante ist es notwendig, dass die relevanten Stationen aus dem FHIR-Profil [Encounter](https://www.medizininformatik-initiative.de/Kerndatensatz/Modul_Fall/EncounterKontaktGesundheitseinrichtung.html) ausgelesen werden können.\
+Bei dieser Variante ist es notwendig, dass die relevanten Stationen aus dem FHIR-Profil <a href="https://www.medizininformatik-initiative.de/Kerndatensatz/Modul_Fall/EncounterKontaktGesundheitseinrichtung.html" target="_blank" rel="noopener noreferrer">Encounter</a> ausgelesen werden können.\
 Ziel ist es Patienten-IDs von Encountern zu finden, die bestimmte Eigenschaften in den FHIR-Daten aufweisen. Idealerweise sollte es so etwas sein wie, der Encounter ist noch nicht abgeschlossen und als ServiceProvider ist der gesuchte Stationsname angegeben oder der Encounter referenziert eine bestimmte Location.\
 Die Encounter können also über beliebige Einträge identifiziert werden. Es ist frei konfigurierbar und auf die lokalen Gegebenheiten am DIZ einstellbar. Die Beschreibung der Einstellungsmöglichkeiten befinden sich direkt in der toml-Datei als Kommentar zu den ENCOUNTER_FILTER_PATTERN.
 
