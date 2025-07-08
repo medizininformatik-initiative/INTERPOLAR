@@ -16,8 +16,8 @@ Es gibt eines Excel Datei  Namens [Table-Description](./inst/extdata/Table_Descr
 
 ### Herunterladen und verflachen der FHIR-Ressourcen
 
-Auf Grundlage der relevanten Patienten werden die FHIR-Ressourcen, unter Verwendung der definierten Table-Description, heruntergeladen. Aus den JSON-Struktur der heruntergeladenen Ressourcen entstehen in einen nächsten Schritt flache Tabellen auf Basis der Table-Description. Für diese Schritte wird das [fhircrackr-Package]('https://cran.r-project.org/web/packages/fhircrackr/index.html') verwendet.
+Auf Grundlage der relevanten Patienten werden die FHIR-Ressourcen, unter Verwendung der definierten Table-Description, heruntergeladen. Aus den JSON-Struktur der heruntergeladenen Ressourcen entstehen in einen nächsten Schritt flache Tabellen auf Basis der Table-Description. Für diese Schritte wird das [fhircrackr-Package](https://cran.r-project.orcds2db_config.tomlg/web/packages/fhircrackr/index.html) verwendet.
 
 ### Schreiben der Ressourcen-Tabellen in die Datenbank
 
-Die flachen Tabellen werden in eine Postgres-Datenbank überführt, dazu wird eine Datenbankverbindung mit den angegebenen Anmeldeinformationen aus der [config-Datei](../../cds_hub_db_config.toml) für die Datenbankverbindungen erstellt.
+Die flachen Tabellen werden in eine Postgres-Datenbank überführt, dazu wird eine Datenbankverbindung mit den angegebenen Anmeldeinformationen aus der [config-Datei](https://github.com/medizininformatik-initiative/INTERPOLAR/blob/main/cds_hub_db_config.toml) für die Datenbankverbindungen erstellt.
