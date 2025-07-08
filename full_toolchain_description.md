@@ -1,3 +1,8 @@
+---
+layout: default
+title: CDS Tool Chain - Ablauf
+---
+
 **Work in progress, Stand: 20.12.2024**
 
 # CDS Tool Chain - Ablauf:
