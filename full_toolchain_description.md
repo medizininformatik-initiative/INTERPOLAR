@@ -1,3 +1,8 @@
+---
+layout: default
+title: CDS Tool Chain - Ablauf
+---
+
 **Work in progress, Stand: 20.12.2024**
 
 # CDS Tool Chain - Ablauf:
@@ -6,7 +11,7 @@
 
 ## 1. Vorbereitung:
 
-Eine Übersicht aller Module ist in der [Projekt README Datei](README.md) zu finden.
+Eine Übersicht aller Module ist in der [Projekt README Datei](./) zu finden.
 
 ### 1.1 Konfigurationsdateien:
 
@@ -20,7 +25,7 @@ Nach dem Start dieses Moduls werden alle gesetzten Konfigurationsparameter in R 
 ### 2.1 Semaphore freigeben
 
 In einem ersten Schritt wird Status der Semaphore in der DB zurückgesetzt, falls zuvor ein fehlerhafter Durchlauf zum Abbruch der Pipeline geführt hat. Generell wird vor jedem Lese- und Schreibmodul geprüft, ob die Datenbank bereit ist Daten zu empfangen oder zu senden. Die Datenbank wird über einen Cron-Jobs gesteuert und über eine eingebaute Semaphore wird der aktuelle Status der Datenbank bekannt gegeben.
-Die Datenbank kann für den Lese- und Schreibzugriff in R gesperrt und wieder freigegeben werden. Weitere Informationen zur Datenbank sind in der [DB_description.md](Postgres-cds_hub/DB_description.md) und dem [Dataflow.md](Dataflow.md) nachzulesen.
+Die Datenbank kann für den Lese- und Schreibzugriff in R gesperrt und wieder freigegeben werden. Weitere Informationen zur Datenbank sind in der [DB_description](Postgres-cds_hub/DB_description) und dem [Dataflow](Dataflow) nachzulesen.
 
 ### 2.2  Laden der relevanten Patienten-IDs (PIDs)
 
@@ -37,7 +42,7 @@ Diese beschriebenen Parameter sind jedoch nur für Test-Zwecke gedacht!
 
 ### 2.3 Einlesen der TableDescription
 
-In diesen Schritt wird die [Table_Description.xlsx](R-cds2db/cds2db/inst/extdata/Table_Description.xlsx), welche alle abgefragten FHIR-Ressourcen (COI) sowie alle absoluten XML-Pfade dieser Ressourcen beinhaltet, eingelesen. Weitere Informationen zur Generierung und Funktionalität dieser Datei ist in dem Dokument [Dataflow.md](Dataflow.md#voraussetzungen--vorbereitung) nachzulesen.
+In diesen Schritt wird die [Table_Description.xlsx](R-cds2db/cds2db/inst/extdata/Table_Description.xlsx), welche alle abgefragten FHIR-Ressourcen (COI) sowie alle absoluten XML-Pfade dieser Ressourcen beinhaltet, eingelesen. Weitere Informationen zur Generierung und Funktionalität dieser Datei ist in dem Dokument [Dataflow](Dataflow#voraussetzungen--vorbereitung) nachzulesen.
 
 ### 2.4 Herunterladen der FHIR Ressourcen
 
