@@ -2,8 +2,8 @@
 .resource_env <- new.env()
 
 MRP_TABLE_COLUMN_NAMES <- list(
-  "Drug_Disease" = etlutils::namedListByValue("SMPC_NAME",
-                                              "SMPC_VERSION",
+  "Drug_Disease" = etlutils::namedListByValue(#"SMPC_NAME",
+                                              #"SMPC_VERSION",
                                               "ATC_DISPLAY",
                                               "ATC_PRIMARY",
                                               "ATC_SYSTEMIC_SY",
@@ -25,7 +25,26 @@ MRP_TABLE_COLUMN_NAMES <- list(
                                               "LOINC_DISPLAY",
                                               "LOINC_VALIDITY_DAYS",
                                               "LOINC_CUTOFF_REFERENCE",
-                                              "LOINC_CUTOFF_ABSOLUTE")
+                                              "LOINC_CUTOFF_ABSOLUTE"),
+  "Drug_Drug" = etlutils::namedListByValue("ATC_DISPLAY",
+                                           #"SMPC_NAME",
+                                           #"SMPC_VERSION",
+                                           "ATC_PRIMARY",
+                                           "ATC_SYSTEMIC_SY",
+                                           "ATC_DERMATIKA_D",
+                                           "ATC_OPHTHALMIKA_O",
+                                           "ATC_INHALANDA_I",
+                                           "ATC_SONSTIGE_SO",
+                                           "ATC_INCLUSION",
+                                           #"DRUG_DRUG_KI",
+                                           "ATC2_DISPLAY",
+                                           "ATC2_PRIMARY",
+                                           "ATC2_SYSTEMIC_SY",
+                                           "ATC2_DERMATIKA_D",
+                                           "ATC2_OPHTHALMIKA_O",
+                                           "ATC2_INHALANDA_I",
+                                           "ATC2_SONSTIGE_SO",
+                                           "ATC2_INCLUSION")
 
 )
 
