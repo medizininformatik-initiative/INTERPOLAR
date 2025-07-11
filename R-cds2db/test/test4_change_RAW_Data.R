@@ -106,6 +106,7 @@ if (exists("DEBUG_DAY")) {
       changeDataForPID(dt_con, pats[[i]], "medreq_meta_lastupdated", lastupdated)
     }
 
+    # Ressources for Drug-Disease MRP
     dt_med <- dt_med[1,]
     dt_med[1, `:=`(
       med_id = "[1]UKB-0001-M-1",
@@ -146,6 +147,36 @@ if (exists("DEBUG_DAY")) {
       con_onsetperiod_start = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.7)
     )]
 
+    # Ressources for Drug-Drug MRP
+    dt_med <- rbind(dt_med, dt_med[1])
+    dt_med[4, `:=`(
+      med_id = "[1]UKB-0001-M-4",
+      med_code_code = "[1.1.1]14022620 ~ [1.2.1]N06AX22"
+    )]
+    dt_med <- rbind(dt_med, dt_med[1])
+    dt_med[5, `:=`(
+      med_id = "[1]UKB-0001-M-5",
+      med_code_code = "[1.1.1]14022620 ~ [1.2.1]J01MA02"
+    )]
+
+    dt_medreq <- rbind(
+      dt_medreq,
+      data.table::data.table(
+        medreq_id = c("[1]UKB-0001-MR-4", "[1]UKB-0001-MR-5"),
+        medreq_patient_ref = "[1.1]Patient/UKB-0001",
+        medreq_medicationreference_ref = c("[1]Medication/UKB-0001-M-4", "[1]Medication/UKB-0001-M-5"),
+        medreq_doseinstruc_timing_repeat_boundsperiod_start = c(
+          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.5),
+          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.5)
+        ),
+        medreq_doseinstruc_timing_repeat_boundsperiod_end = c(
+          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.2),
+          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.2)
+        )
+      ),
+      fill = TRUE
+    )
+    #########################################################
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-1-A-1-V-1",
                      enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 1"]
     pids_per_wards <- resource_tables$pids_per_ward
