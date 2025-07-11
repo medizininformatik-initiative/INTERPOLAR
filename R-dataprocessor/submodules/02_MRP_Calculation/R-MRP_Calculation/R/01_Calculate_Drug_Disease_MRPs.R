@@ -4,14 +4,15 @@
 #' splitting and trimming values, and expanding concatenated ICD codes.
 #'
 #' @param drug_disease_mrp_definition A data.table containing the MRP definition table.
+#' @param table_name A character string representing the base name of the MRP definition (e.g., `"Drug_Disease"`).
 #'
 #' @return A cleaned and expanded data.table containing the MRP definition table.
 #'
 #' @export
-cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
+cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, table_name) {
 
   # Remove not nesessary columns
-  drug_disease_mrp_definition <- drug_disease_mrp_definition[, c("SMPC_NAME", "SMPC_VERSION") := NULL]
+  drug_disease_mrp_definition <- drug_disease_mrp_definition[, MRP_TABLE_COLUMN_NAMES[[table_name]]]
 
   # Remove rows with all empty code columns
   proxy_column_names <- names(drug_disease_mrp_definition)[
@@ -500,7 +501,7 @@ calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_process
     kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
 
     # Get active MedicationRequests for the encounter
-    active_atc <- extractActiveATCCodes(resources$medication_requests, encounter$enc_period_start, meda_datetime)
+    active_atc <- getActiveMedicationRequests(resources$medication_requests, encounter$enc_period_start, meda_datetime)
 
     if (nrow(active_atc) && meda_study_phase != "PhaseA") {
       # Match ATC-codes between encounter data and MRP definitions
