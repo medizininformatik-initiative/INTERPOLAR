@@ -270,3 +270,25 @@ formatCodeErrors <- function(error_list, code_type_label) {
   }
   return(messages)
 }
+
+#' Filter active MedicationRequests for an encounter within a specific time window
+#'
+#' @param medication_requests A \code{data.table} of MedicationRequest resources. Must contain columns \code{medreq_encounter_ref} and \code{medreq_authoredon}.
+#' @param enc_period_start POSIXct. The start datetime of the encounter period.
+#' @param meda_datetime POSIXct. The datetime of the medication analysis (cutoff point).
+#'
+#' @return A \code{data.table} with filtered active medication requests for the given encounter and time range.
+#'
+#' @export
+getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
+
+  active_requests <- medication_requests[
+    !is.na(start_date) &
+      start_date >= enc_period_start &
+      start_date <= meda_datetime &
+      (is.na(end_date) |
+         end_date >= meda_datetime)
+  ]
+  atc_codes <- active_requests[, c("atc_code")]
+  return(atc_codes)
+}
