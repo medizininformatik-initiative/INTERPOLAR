@@ -1,11 +1,11 @@
 # CDS tool chain
 
-Dieses Repository enthält die Bestandteile der CDS tool chain zur Verarbeitung von [`MII KDS FHIR Ressourcen`](https://www.medizininformatik-initiative.de/de/basismodule-des-kerndatensatzes-der-mii). Es handelt sich um eine modular aufgebaute Referenzimplementierung, welche z.B. Datenintegrationszentren (DIZ) der MII eingesetzt werden kann. Hierbei werden FHIR-Ressourcen vom KDS (Kerndatensatz) FHIR Server / Endpunkt heruntergeladen, in eine Tabellenstruktur überführt  ([CDS2DB](./README.md#cds2db)) und in eine Posgres-Datenbank (CDS_HUB) geschrieben. In einen nächsten Schritt werden die Daten geprüft, harmonisiert und können mit Hilfe von Algorithmen weiter verarbeitet werden (DataProcessor). Anschließend werden die Daten über ein Frontend (z.B. Redcap) auf einer Benutzeroberfläche sichtbar gemacht (DB2Frontend, Frontend).
+Dieses Repository enthält die Bestandteile der CDS tool chain zur Verarbeitung von [`MII KDS FHIR Ressourcen`](https://www.medizininformatik-initiative.de/de/basismodule-des-kerndatensatzes-der-mii). Es handelt sich um eine modular aufgebaute Referenzimplementierung, welche z.B. Datenintegrationszentren (DIZ) der MII eingesetzt werden kann. Hierbei werden FHIR-Ressourcen vom KDS (Kerndatensatz) FHIR Server / Endpunkt heruntergeladen, in eine Tabellenstruktur überführt  ([CDS2DB](#cds2db)) und in eine Posgres-Datenbank (CDS_HUB) geschrieben. In einen nächsten Schritt werden die Daten geprüft, harmonisiert und können mit Hilfe von Algorithmen weiter verarbeitet werden (DataProcessor). Anschließend werden die Daten über ein Frontend (z.B. Redcap) auf einer Benutzeroberfläche sichtbar gemacht (DB2Frontend, Frontend).
 
 ![CDS tool chain](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/5671404/d8ee4fb8-c9fb-40f2-81cb-2adeda6d20b2)
-Der detaillierte Datenfluss zwischen den und innerhalb der Module ist in der Datei [Dataflow.md](Dataflow.md) beschrieben.
+Der detaillierte Datenfluss zwischen den und innerhalb der Module ist in der Datei [Dataflow](Dataflow) beschrieben.
 
-Der gesamte Ablauf der CDS Toolchain ist in der Datei [full_toolchain_description.md](full_toolchain_description.md) beschrieben.
+Der gesamte Ablauf der CDS Toolchain ist in der Datei [full_toolchain_description](full_toolchain_description) beschrieben.
 
 ## Bestandteile der CDS tool chain
 
@@ -21,14 +21,14 @@ Dieses R-Modul dient zur Ausleitung Kerndatensatz-konformer Daten in eine Postgr
 
 Der Quellcode (R) dafür befindet sich im Ordner [R-cds2db](./R-cds2db).
 
-Eine Beschreibung zur Konfiguration und Ausführung befindet sich in [R-cds2db/README.md](./R-cds2db/README.md).
+Eine Beschreibung zur Konfiguration und Ausführung befindet sich in [R-cds2db](./R-cds2db/).
 
 ### CDS_HUB
 
 Beim CDS_HUB handelt es sich um eine relationale Datenbank (Postgres). Im Ordner [Postgres-cds_hub](./Postgres-cds_hub) befinden sich Dateien für die Konfiguration und Initialisierung.
 
-Eine Beschreibung der Datenbankstruktur befindet sich unter [Postgres-cds_hub/DB_description.md](./Postgres-cds_hub/DB_description.md). \
-Eine Beschreibung, wie der Zugriff erfolgt befindet sich unter [Postgres-cds_hub/Readme.md](./Postgres-cds_hub/Readme.md) .
+Eine Beschreibung der Datenbankstruktur befindet sich unter [Postgres-cds_hub/DB_description](./Postgres-cds_hub/DB_description). \
+Eine Beschreibung, wie der Zugriff erfolgt befindet sich unter [Postgres-cds_hub](./Postgres-cds_hub) .
 
 ### DataProcessor
 
@@ -81,7 +81,7 @@ Es handelt sich dabei um eine Schätzung. Je nach Datenbestand kann es erforderl
 
 ## Installation
 
-Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwenden: [Install.md](Install.md)
+Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwenden: [Install](Install)
 
 ## Verwendung
 

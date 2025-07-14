@@ -38,6 +38,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_
     ")"
   )
   encounters <- etlutils::dbGetReadOnlyQuery(query)
+  encounters[, `:=`(study_phase = character(), ward_name = character())]
 
   if (!nrow(encounters)) {
     return(encounters)
