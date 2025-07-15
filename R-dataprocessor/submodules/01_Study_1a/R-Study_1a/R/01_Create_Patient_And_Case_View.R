@@ -337,6 +337,20 @@ createFrontendTables <- function() {
       fall_complete = character()
     )
 
+    getExistingFallFeRedcapRepeatInstance <- function(existing_record_ids) {
+      column_names <- c("record_id",
+                        "fall_fhir_enc_id",
+                        "redcap_repeat_instance")
+      query <- paste0(
+        "SELECT ", paste(column_names, collapse = ", "), " \n",
+        "FROM v_fall_fe\n",
+        "WHERE record_id IN ", etlutils::fhirdbGetQueryList(existing_record_ids), "\n"
+      )
+      return(etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingFallFeRedcapRepeatInstance()"))
+    }
+
+    existing_repeat_instances <- getExistingFallFeRedcapRepeatInstance(existing_record_ids)
+
     encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = pids_per_ward$encounter_id,
                                                      common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
                                                      lock_id_extension = "CreateEncounterFrontendTable()_")
@@ -522,13 +536,25 @@ createFrontendTables <- function() {
         # being. It is not currently displayed in the RedCap anyway.
         #getObservation(OBSERVATION_BMI_CODES, OBSERVATION_BMI_SYSTEM, "fall_bmi")
 
-      }
+        # Fill redcap_repeat_instance column in table enc_frontend_table
+        enc_redcap_repeat_instance <- unique(na.omit(existing_repeat_instances[fall_fhir_enc_id == enc_id, redcap_repeat_instance]))
 
-      # Fill redcap_repeat_instance column in table enc_frontend_table
-      # Sort the data table by fall_pat_id and fall_aufn_dat
-      data.table::setorder(enc_frontend_table, fall_pat_id, fall_aufn_dat)
-      # Grouping and numbering based on fall_pat_id and fall_aufn_dat
-      enc_frontend_table[, redcap_repeat_instance := seq_len(.N), by = .(fall_pat_id)]
+        if (length(enc_redcap_repeat_instance)) {
+          # Case 1: The enc_id already appears as fall_fhir_enc_id → use the corresponding max instance
+          enc_redcap_repeat_instance <- max(as.integer(enc_redcap_repeat_instance)) # should be exactly 1, but max() ensures this...
+        } else {
+          # Case 2: The enc_id does not appear → determine max + 1 within the group (grouped by record_id)
+          enc_record_id <- record_id  # rename to use this variable in data.table syntax
+          enc_redcap_repeat_instance <- na.omit(existing_repeat_instances[record_id == enc_record_id, redcap_repeat_instance])
+          if (length(enc_redcap_repeat_instance)) {
+            enc_redcap_repeat_instance <- max(as.integer(enc_redcap_repeat_instance)) + 1
+          } else {
+            enc_redcap_repeat_instance <- 1
+          }
+          existing_repeat_instances <- etlutils::addTableRow(existing_repeat_instances, record_id, enc_id, enc_redcap_repeat_instance)
+        }
+        data.table::set(enc_frontend_table, target_index, "redcap_repeat_instance", enc_redcap_repeat_instance)
+      }
 
     }
     return(enc_frontend_table)
