@@ -400,6 +400,9 @@ createFrontendTables <- function() {
                                          "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
       }
 
+      # This is used to print it in the additional values to check the correctness
+      pid_main_encounter_ids <- unique(pid_main_encounters$enc_id)
+
       # Create a list of data.tables, each containing the rows for a specific encounter
       pid_main_encounters <- split(pid_main_encounters, pid_main_encounters$enc_id)
 
@@ -461,16 +464,17 @@ createFrontendTables <- function() {
         # Store all known Encounter IDs in toml syntax in the additional values
         pids_per_ward_encounters <- pids_per_ward[patient_id %in% pid]
         fall_additional_values <- ""
+
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             pids_per_ward_encounters$encounter_id,
+                                                             unique(pids_per_ward_encounters$encounter_id),
                                                              key = "pids_per_ward_encounters",
                                                              comment = "FHIR ID of all Encounters of this medical case that were in the pids_per_ward table")
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             pid_main_encounters$enc_id,
+                                                             pid_main_encounter_ids,
                                                              key = "main_encounters",
                                                              comment = "FHIR ID of all main Encounter(s) for the medical case (should be exactly one)")
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             pid_part_of_encounters$enc_id,
+                                                             unique(pid_part_of_encounters$enc_id),
                                                              key = "part_encounters",
                                                              comment = "FHIR ID of all Encounters for the medical case at this point which are not the main Encounter")
         data.table::set(enc_frontend_table, target_index, "fall_additional_values", fall_additional_values)
