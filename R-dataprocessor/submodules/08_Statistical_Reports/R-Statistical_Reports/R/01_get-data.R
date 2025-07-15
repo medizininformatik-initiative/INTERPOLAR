@@ -8,12 +8,13 @@
 #'   This ensures safe access to the database during query execution and may support concurrent processing.
 #' @param table_name A character string specifying the name of the database table to query.
 #'   The table must contain at least the following columns: `pat_id`, `pat_identifier_value`,
-#'   `pat_birthdate`, `pat_deceaseddatetime`, `pat_meta_lastupdated`, and `input_datetime`.
+#'   `pat_birthdate`, `pat_gender` ,`pat_deceaseddatetime`, `pat_meta_lastupdated`, and `input_datetime`.
 #'
 #' @return A data frame containing:
 #'   - `pat_id`: Patient FHIR identifier
 #'   - `pat_identifier_value`: KIS (hospital system) patient identifier
 #'   - `pat_birthdate`: Patient's birthdate (expected in `Date` format)
+#'   - `pat_gender`: patient's gender
 #'   - `pat_deceaseddatetime`: Date and time of death, if available
 #'   - `pat_meta_lastupdated`: Timestamp of last update to patient data
 #'   - `input_datetime`: Timestamp of data input
@@ -33,7 +34,7 @@
 #' @export
 getPatientData <- function(lock_id, table_name) {
 
-  query <- paste0("SELECT pat_id, pat_identifier_value, pat_birthdate, ",
+  query <- paste0("SELECT pat_id, pat_identifier_value, pat_birthdate, pat_gender, ",
   "pat_deceaseddatetime, ",
   "pat_meta_lastupdated, input_datetime FROM ", table_name, "\n")
 
@@ -98,6 +99,8 @@ getPatientData <- function(lock_id, table_name) {
 #'
 #' @importFrom dplyr distinct arrange
 #' @export
+
+# TODO: check all variables in table _description_relevant for manifestations and importance to include them ------------
 
 getEncounterData <- function(lock_id, table_name) {
 
@@ -205,4 +208,57 @@ getPatientFeData <- function(lock_id, table_name) {
   }
 
   return(patient_fe_table)
+}
+
+#------------------------------------------------------------------------------#
+#' Retrieve Fall Front-End Data from Database
+#'
+#' This function queries a specified database table to retrieve front-end data related to patient encounters ("Fälle").
+#' It fetches relevant fields such as encounter ID, patient ID, station, dates, and metadata, and returns a cleaned version
+#' of the table with duplicates removed and sorted by `record_id` and `input_datetime`.
+#'
+#' @param lock_id A database connection identifier (used by `etlutils::dbGetReadOnlyQuery`) to ensure read-only access.
+#' @param table_name A character string specifying the name of the database table from which to retrieve the data.
+#'
+#' @return A data frame or tibble containing the cleaned and de-duplicated fall front-end data.
+#'   The returned columns include:
+#'   \item{record_id}{Unique record identifier for the patient in RedCap}
+#'   \item{fall_fhir_enc_id}{FHIR-based encounter ID}
+#'   \item{fall_pat_id}{FHIR-based Patient ID}
+#'   \item{fall_id}{Fall ID from the hospital intern system (KIS)}
+#'   \item{fall_studienphase}{Study phase associated with the case}
+#'   \item{fall_station}{INTERPOLAR-ward fromt he pids_per_ward table}
+#'   \item{fall_aufn_dat}{Admission date of the main encounter}
+#'   \item{fall_status}{Status of the encounter}
+#'   \item{fall_ent_dat}{Discharge date of the main encounter}
+#'   \item{fall_additional_values}{information on associated sub-encounters}
+#'   \item{fall_complete}{flag indicating completeness}
+#'
+#' @details
+#' The function executes a SQL `SELECT` query on the specified `table_name`, retrieving all expected columns. It then:
+#' \enumerate{
+#'   \item Removes exact duplicates.
+#'   \item Sorts rows by `record_id` and `input_datetime` to ensure consistent ordering.
+#'   \item Removes the `input_datetime` column before final output.
+#' }
+#'
+#' @importFrom etlutils dbGetReadOnlyQuery
+#' @importFrom dplyr distinct arrange select
+#' @export
+getFallFeData <- function(lock_id, table_name) {
+
+  query <- paste0("SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
+                  "fall_id, fall_studienphase, fall_station, fall_aufn_dat, ",
+                  "fall_status, fall_ent_dat, fall_additional_values, ",
+                  "fall_complete, input_datetime FROM ", table_name, "\n")
+
+  fall_fe_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    dplyr::arrange(record_id, input_datetime)
+
+  fall_fe_table <- fall_fe_table_raw |>
+    dplyr::select(-input_datetime) |>
+    dplyr::distinct()
+
+  return(fall_fe_table)
 }

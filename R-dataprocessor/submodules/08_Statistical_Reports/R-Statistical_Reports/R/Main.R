@@ -55,12 +55,16 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
                                   table_name = "v_patient_fe")
   # --> this table should only have one entry per patient (warning if not)
 
+  fall_fe_table <- getFallFeData(lock_id = "statistical reports[5]",
+                                  table_name = "v_fall_fe")
+
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
     addMainEncId() |>
     addMainEncPeriodStart() |>
     calculateAge() |>
     addWardName(pids_per_ward_table) |>
-    addRecordId(patient_fe_table)
+    addRecordId(patient_fe_table) |>
+    addFallIdAndStudienphase(fall_fe_table)
 
   FAS1 <- defineFAS1(complete_table)
 
@@ -70,10 +74,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   # F2 <- calculateF2(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
   # Print the patient, encounter, F1 and F2 datasets for verification
-  writeTableLocal(complete_table, format= "html")
   writeTableLocal(FAS1, format= "html")
   writeTableGlobal(F1, format= "html",
-             caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END))
+             caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END, " <br>
+                              F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)"))
+
+  writeTableLocal(complete_table, format= "html")
+  writeTableLocal(fall_fe_table, format= "html")
 
   #TODO: implement pdf / quarto option ----------
   # writeTable(complete_table, format = "pdf")

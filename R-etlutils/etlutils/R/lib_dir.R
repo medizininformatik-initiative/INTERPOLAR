@@ -230,7 +230,7 @@ writeTableGlobal <- function(table, filename_without_extension = NA, project_sub
     } else {
       project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
     }
-    kableExtra::kable(table, format = "html", caption = caption) |>
+    kableExtra::kable(table, format = "html", caption = caption, escape = FALSE) |>
       kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
       kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
   }
@@ -275,7 +275,7 @@ writeTableLocal <- function(table, filename_without_extension = NA, project_sub_
     } else {
       project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
     }
-    kableExtra::kable(table, format = "html", caption = caption) |>
+    kableExtra::kable(table, format = "html", caption = caption, escape = FALSE) |>
       kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
       kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
   }

@@ -39,6 +39,7 @@ mergePatEnc <- function(patient_table, encounter_table) {
       enc_class_code,
       enc_type_code,
       pat_birthdate,
+      pat_gender,
       enc_period_start,
       enc_period_end,
       pat_deceaseddatetime,
@@ -78,6 +79,7 @@ mergePatEnc <- function(patient_table, encounter_table) {
 #'
 #' @importFrom dplyr mutate case_when relocate
 #' @export
+# TODO: adapt version for non-established part-of references -----------
 addMainEncId <- function(encounter_table) {
   encounter_table_with_main_enc <- encounter_table |>
     dplyr::mutate(main_enc_id = dplyr::case_when(
@@ -234,3 +236,50 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
   return(merged_table_with_record_id)
 }
 
+#------------------------------------------------------------------------------#
+#' Merge Fall ID and Studienphase into Merged Table
+#'
+#' This function enriches a merged dataset with additional information from a front-end fall data table.
+#' It performs a left join to append the KIS Fall ID (`fall_id`) and study phase (`fall_studienphase`) based on
+#' multiple matching keys, and renames the resulting columns for clarity.
+#'
+#' @param merged_table_with_record_id A data frame or tibble that must contain the following columns:
+#'   `record_id`, `main_enc_id`, `pat_id`, `ward_name`, `main_enc_period_start`, and `enc_identifier_value`.
+#' @param fall_fe_table A data frame or tibble returned by [getFallFeData()], which includes:
+#'   `record_id`, `fall_fhir_enc_id`, `fall_pat_id`, `fall_id`, `fall_studienphase`, `fall_station`, and `fall_aufn_dat`.
+#'
+#' @return A data frame identical to `merged_table_with_record_id`, but with two additional columns:
+#'   \item{`fall_id_KIS`}{KIS Fall ID, renamed from `fall_id`}
+#'   \item{`studienphase`}{Study phase, renamed from `fall_studienphase`}
+#' The new columns are relocated for readability: `fall_id_KIS` is placed after `enc_identifier_value`,
+#' and `studienphase` is placed after `ward_name`.
+#'
+#' @details
+#' The function joins the datasets using a composite key made up of:
+#' \itemize{
+#'   \item `record_id`
+#'   \item `main_enc_id` = `fall_fhir_enc_id`
+#'   \item `pat_id` = `fall_pat_id`
+#'   \item `ward_name` = `fall_station`
+#'   \item `main_enc_period_start` = `fall_aufn_dat`
+#' }
+#' After the join, the function renames and relocates the relevant columns, and ensures uniqueness using `distinct()`.
+#'
+#' @importFrom dplyr left_join select rename relocate distinct
+#' @export
+addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table) {
+  merged_table_with_fall_id_and_studienphase <- merged_table_with_record_id |>
+    dplyr::left_join(fall_fe_table |>
+                       dplyr::select(record_id, fall_fhir_enc_id, fall_pat_id, fall_id, fall_studienphase,
+                                     fall_station, fall_aufn_dat) |>
+                       dplyr::distinct(),
+                     by = c("record_id" = "record_id", "main_enc_id" = "fall_fhir_enc_id",
+                            "pat_id" = "fall_pat_id", "ward_name" = "fall_station",
+                            "main_enc_period_start" = "fall_aufn_dat")) |>
+    dplyr::rename(fall_id_KIS = fall_id,
+                  studienphase = fall_studienphase) |>
+    dplyr::relocate(fall_id_KIS, .after = enc_identifier_value) |>
+    dplyr::relocate(studienphase, .after = ward_name) |>
+    dplyr::distinct()
+  return(merged_table_with_fall_id_and_studienphase)
+}

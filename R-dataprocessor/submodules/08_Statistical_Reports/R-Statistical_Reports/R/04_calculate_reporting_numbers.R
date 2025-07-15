@@ -3,7 +3,7 @@
 #'#' This function processes encounter data to calculate the F1 metric by filtering encounters to those
 #' starting in the specified reporting period and selecting the first encounter within the INTERPOLAR
 #' ward (as defined for the pids_per_ward table). It groups entries by ward and calendar week and counts
-#' distinct occurrences of encounters, patients, and patient records (patients_fe).
+#' distinct occurrences of encounters, patients, and patient records (patients_also_in_patients_fe).
 #'
 #' @param FAS1 A data frame or tibble representing the FAS1 dataset. It must include columns
 #'   indicating the first valid interpolar ward contact per inpatient encounter, as well as
@@ -13,7 +13,7 @@
 #'
 #' @return A dataframe summarizing the first encounter within each ward for the specified calendar week
 #' and ward, containing columns for `ward_name`, `calendar_week`, distinct counts of encounters, patients,
-#' and `patients_fe` (patient records).
+#' and `patients_also_in_patients_fe` (patient records).
 #' If issues are detected (e.g., undefined start dates or multiple first contacts), a warning is issued
 #' and the preprocessed data is returned for inspection.
 #'
@@ -25,8 +25,8 @@ calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
   F1_prep <- FAS1 |>
     dplyr::filter(!is.na(ward_name)) |>  # only encounters with ward name
     dplyr::distinct(enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
-                    record_id, enc_type_code, age_at_hospitalization, enc_period_start, calendar_week,
-                    enc_period_end, ward_name, enc_status)
+                    record_id, fall_id_KIS, enc_type_code, age_at_hospitalization, enc_period_start, calendar_week,
+                    enc_period_end, ward_name, studienphase, enc_status)
 
   if (anyNA(F1_prep$enc_period_start)) {
     warning("Starting day undefined for a INTERPOLAR-ward contact (NA start date). Please check the data.")
@@ -46,15 +46,16 @@ calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
                 selection_variable = enc_period_start) |>
       dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only admission to INTEROPLAR ward in reporting period
       dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END)) |>
-      dplyr::distinct(pat_id, main_enc_id, record_id, calendar_week, ward_name) |>
+      dplyr::distinct(pat_id, main_enc_id, record_id, fall_id_KIS, calendar_week, ward_name) |>
       dplyr::mutate(dplyr::across(c(ward_name, calendar_week), as.character))
 
     F1_grouped_counts <- F1_prep_red |>
       dplyr::group_by(ward_name, calendar_week) |>
       dplyr::summarise(
         encounters = dplyr::n_distinct(main_enc_id),
+        encounters_also_in_fe = dplyr::n_distinct(fall_id_KIS),
         patients = dplyr::n_distinct(pat_id),
-        patients_fe = dplyr::n_distinct(record_id),
+        patients_also_in_fe = dplyr::n_distinct(record_id),
         .groups = 'drop'
       )
 
@@ -63,8 +64,9 @@ calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
         ward_name = "all wards",
         calendar_week = "all weeks",
         encounters = dplyr::n_distinct(main_enc_id),
+        encounters_also_in_fe = dplyr::n_distinct(fall_id_KIS),
         patients = dplyr::n_distinct(pat_id),
-        patients_fe = dplyr::n_distinct(record_id)
+        patients_also_in_fe = dplyr::n_distinct(record_id)
     )
 
     F1 <- dplyr::bind_rows(F1_grouped_counts, F1_total_counts)
