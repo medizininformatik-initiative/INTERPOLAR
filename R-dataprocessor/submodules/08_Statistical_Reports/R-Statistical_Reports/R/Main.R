@@ -39,7 +39,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
 
   patient_table <- getPatientData(lock_id = "statistical reports[1]",
                                     table_name = "v_patient_last_version")
-  # --> this table should only have one entry per patient (warning if not)
+  # --> this table should only have one entry per patient (error if not)
 
   encounter_table <- getEncounterData(lock_id = "statistical reports[2]",
                                         table_name = "v_encounter_last_version")
@@ -53,7 +53,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
 
   patient_fe_table <- getPatientFeData(lock_id = "statistical reports[4]",
                                   table_name = "v_patient_fe")
-  # --> this table should only have one entry per patient (warning if not)
+  # --> this table should only have one entry per patient (error if not)
 
   fall_fe_table <- getFallFeData(lock_id = "statistical reports[5]",
                                   table_name = "v_fall_fe")
@@ -74,13 +74,12 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   # F2 <- calculateF2(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
   # Print the patient, encounter, F1 and F2 datasets for verification
-  writeTableLocal(FAS1, format= "html")
-  writeTableGlobal(F1, format= "html",
+  writeTableLocal(FAS1)
+  writeTableGlobal(F1,
              caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END, " <br>
                               F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)"))
 
-  writeTableLocal(complete_table, format= "html")
-  writeTableLocal(fall_fe_table, format= "html")
+  writeTableLocal(fall_fe_table)
 
   #TODO: implement pdf / quarto option ----------
   # writeTable(complete_table, format = "pdf")

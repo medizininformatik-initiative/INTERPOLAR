@@ -14,7 +14,7 @@
 #' @return A dataframe summarizing the first encounter within each ward for the specified calendar week
 #' and ward, containing columns for `ward_name`, `calendar_week`, distinct counts of encounters, patients,
 #' and `patients_also_in_patients_fe` (patient records).
-#' If issues are detected (e.g., undefined start dates or multiple first contacts), a warning is issued
+#' If issues are detected (e.g., undefined start dates or multiple first contacts), a error is issued
 #' and the preprocessed data is returned for inspection.
 #'
 #' @importFrom dplyr filter distinct group_by tally select mutate across summarise bind_rows n_distinct
@@ -29,15 +29,11 @@ calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
                     enc_period_end, ward_name, studienphase, enc_status)
 
   if (anyNA(F1_prep$enc_period_start)) {
-    warning("Starting day undefined for a INTERPOLAR-ward contact (NA start date). Please check the data.")
-    print(F1_prep)
-    return()
+    stop("Starting day undefined for a INTERPOLAR-ward contact (NA start date). Please check the data.")
   }
 
   if (checkMultipleRows(F1_prep, c("main_enc_id","enc_period_start"))) {
-    warning("First INTERPOLAR-ward contact undefinded for a main encounter (multiple rows with same start date). Please check the data.")
-    print(F1_prep)
-    return()
+    stop("First INTERPOLAR-ward contact undefinded for a main encounter (multiple rows with same start date). Please check the data.")
     }
 
   else {

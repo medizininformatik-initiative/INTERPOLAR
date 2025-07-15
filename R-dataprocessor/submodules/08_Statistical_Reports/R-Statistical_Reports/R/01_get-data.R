@@ -2,7 +2,7 @@
 #'
 #' This function retrieves patient data—including patient IDs, birthdates, and metadata—
 #' from a specified database table. It ensures data consistency by removing duplicate entries
-#' and warning the user if multiple records exist for the same patient ID or identifier.
+#' and error the user if multiple records exist for the same patient ID or identifier.
 #'
 #' @param lock_id A character string specifying the lock ID for the database query.
 #'   This ensures safe access to the database during query execution and may support concurrent processing.
@@ -28,7 +28,7 @@
 #' 4. Checks for potential duplicates in:
 #'    - `pat_id`: should uniquely identify patients in FHIR
 #'    - `pat_identifier_value`: should uniquely identify patients in the hospital system
-#'    If duplicates are found, warnings are issued for manual inspection.
+#'    If duplicates are found, errors are issued for manual inspection.
 #'
 #' @importFrom dplyr distinct arrange
 #' @export
@@ -43,11 +43,11 @@ getPatientData <- function(lock_id, table_name) {
     dplyr::arrange(pat_id)
 
   if (checkMultipleRows(patient_table, c("pat_id"))) {
-    warning("The patient table contains multiple rows for the same pat_id(FHIR). Please check the data.")
+    stop("The patient table contains multiple rows for the same pat_id(FHIR). Please check the data.")
   }
 
   if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
-    warning("The patient table contains multiple rows for the same patient identifier (KIS). Please check the data.")
+    stop("The patient table contains multiple rows for the same patient identifier (KIS). Please check the data.")
   }
 
   return(patient_table)
@@ -171,7 +171,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #'
 #' This function retrieves patient data from a specified database table and processes it by
 #' filtering out duplicate entries and arranging the data. It performs checks for duplicate
-#' patient IDs and issues warnings if duplicates are found based on either the FHIR or KIS identifiers.
+#' patient IDs and issues errors if duplicates are found based on either the FHIR or KIS identifiers.
 #'
 #' @param lock_id A character string used to lock the database table and ensure safe data retrieval.
 #' This is important for managing concurrent data access in environments where multiple processes might access
@@ -185,7 +185,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' @details The function constructs an SQL query to select relevant columns from the specified table,
 #' retrieves the data while checking for read-only access, and processes it to remove duplicates and
 #' arrange the records. If there are multiple rows for a single `pat_id` (related to the FHIR identifier)
-#' or `pat_cis_pid` (related to the KIS identifier), warnings are issued to indicate potential data issues.
+#' or `pat_cis_pid` (related to the KIS identifier), errors are issued to indicate potential data issues.
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
 #' @importFrom dplyr distinct arrange
@@ -200,11 +200,11 @@ getPatientFeData <- function(lock_id, table_name) {
     dplyr::arrange(pat_id)
 
   if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
-    warning("The patient_fe table contains multiple rows for the same pat_id(FHIR). Please check the data.")
+    stop("The patient_fe table contains multiple rows for the same pat_id(FHIR). Please check the data.")
   }
 
   if (checkMultipleRows(patient_fe_table, c("pat_cis_pid"))) {
-    warning("The patient_fe table contains multiple rows for the same patient identifier (KIS). Please check the data.")
+    stop("The patient_fe table contains multiple rows for the same patient identifier (KIS). Please check the data.")
   }
 
   return(patient_fe_table)
