@@ -35,29 +35,48 @@ getLocationString <- function(encounters, locations) {
     # Filter for relevant physical types
     encounters <- encounters[enc_location_physicaltype_code %in% c("ro", "bd")]
 
-    if (nrow(encounters)) {
+    if (nrow(encounters) & !all(is.na(encounters$enc_period_start))) {
+      room_value <- NA_character_
+      bed_value <- NA_character_
       # Keep only rows with latest period start
-      encounters <- encounters[enc_period_start == max(enc_period_start)]
+      encounters <- encounters[enc_period_start %in% max(enc_period_start, na.rm = TRUE)]
 
-      room_encounter <- encounters[enc_location_physicaltype_code == "ro"][1]
-      bed_encounter <- encounters[enc_location_physicaltype_code == "bd"][1]
+      room_encounter <- encounters[enc_location_physicaltype_code %in% "ro"]
+      room_encounter <- if (nrow(room_encounter)) room_encounter[1] else NULL
+
+      bed_encounter <- encounters[enc_location_physicaltype_code %in% "bd"]
+      bed_encounter <- if (nrow(bed_encounter)) bed_encounter[1] else NULL
 
       col_name <- FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN
 
       if (startsWith(col_name, "loc_")) {
         # Room
-        room_location_ref <- room_encounter[, get("enc_location_ref")]
-        room_location_id <- etlutils::fhirdataExtractIDs(room_location_ref)
-        room_value <- locations[loc_id == room_location_id, get(col_name)]
+        if (!is.null(room_encounter)) {
+          room_location_ref <- room_encounter[, get("enc_location_ref")]
+          room_location_id <- etlutils::fhirdataExtractIDs(room_location_ref)
+          room_value <- tryCatch(
+            locations[loc_id %in% room_location_id, get(col_name)],
+            error = function(e) NA_character_
+          )
+        }
         # Bed
-        bed_location_ref <- bed_encounter[, get("enc_location_ref")]
-        bed_location_id <- etlutils::fhirdataExtractIDs(bed_location_ref)
-        bed_value <- locations[loc_id == bed_location_id, get(col_name)]
+        if (!is.null(bed_encounter)) {
+          bed_location_ref <- bed_encounter[, get("enc_location_ref")]
+          bed_location_id <- etlutils::fhirdataExtractIDs(bed_location_ref)
+          bed_value <- tryCatch(
+            locations[loc_id %in% bed_location_id, get(col_name)],
+            error = function(e) NA_character_
+          )
+        }
       } else if (startsWith(col_name, "enc_")) {
         # Room
-        room_value <- room_encounter[, get(col_name)]
+        if (!is.null(room_encounter) && !is.null(col_name)) {
+          room_value <- tryCatch(room_encounter[, get(col_name)], error = function(e) NA_character_)
+        }
         # Bed
-        bed_value <- bed_encounter[, get(col_name)]
+        if (!is.null(bed_encounter) && !is.null(col_name)) {
+          bed_value <- tryCatch(bed_encounter[, get(col_name)], error = function(e) NA_character_)
+        }
       }
       if (etlutils::isSimpleNotEmptyString(room_value)) room <- room_value
       if (etlutils::isSimpleNotEmptyString(bed_value)) bed <- bed_value
@@ -85,7 +104,8 @@ getLocationString <- function(encounters, locations) {
 #'         If no diagnoses are found, or no usable text/code is available, returns \code{NA_character_}.
 #'
 getAdmissionDiagnoses <- function(encounter, conditions) {
-  admission_diagnoses <- encounter[enc_diagnosis_use_code == "AD"]$enc_diagnosis_condition_ref
+  admission_diagnoses <- encounter[enc_diagnosis_use_code %in% "AD"]$enc_diagnosis_condition_ref
+  if (!any(encounter$enc_diagnosis_use_code %in% "AD")) return(NA_character_)
   admission_diagnoses <- unique(admission_diagnoses)
   admission_diagnoses <- etlutils::fhirdataExtractIDs(admission_diagnoses)
   admission_diagnoses <- conditions[con_id %in% admission_diagnoses, .(con_code_text, con_code_code, con_code_display)]
@@ -110,7 +130,7 @@ getAdmissionDiagnoses <- function(encounter, conditions) {
   }
 
   return_value <- paste0(return_value, collapse = "\n")
-  return(if (nzchar(return_value)) return_value else NA_character_)
+  return(if(nzchar(return_value)) return_value else NA_character_)
 }
 
 getObservations <- function(encounters, query_datetime, obs_codes, obs_system, obs_by_pid = FALSE) {
@@ -174,12 +194,25 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
   # for every patient
   if (nrow(observations)) {
     unique_pat_refs <- unique(observations$obs_patient_ref)
-    result <- data.table::data.table()  # initialize empty result table
+    result <- data.table::data.table(
+      obs_id = character(),
+      obs_patient_ref = character(),
+      obs_encounter_ref = character(),
+      obs_code_code = character(),
+      obs_code_system = character(),
+      obs_effectivedatetime = as.POSIXct(character()),
+      obs_valuequantity_value = numeric(),
+      obs_valuequantity_code = character()
+    )
     for (pat_ref in unique_pat_refs) {
-      patient_obs <- observations[obs_patient_ref == pat_ref]
+      patient_obs <- observations[obs_patient_ref %in% pat_ref & !is.na(obs_effectivedatetime)]
       # Select the first Observation with the latest effective date
-      selected_obs <- patient_obs[obs_effectivedatetime == max(obs_effectivedatetime)][1]
-      result <- rbind(result, selected_obs, use.names = TRUE)
+      if (nrow(patient_obs) > 0) {
+        selected_obs <- patient_obs[obs_effectivedatetime %in% max(obs_effectivedatetime, na.rm = TRUE)][1]
+        # Only keep columns matching the result table structure
+        selected_obs <- selected_obs[, names(result), with = FALSE]
+        result <- rbind(result, selected_obs, use.names = TRUE)
+      }
     }
     observations <- result
   }
@@ -222,11 +255,11 @@ createFrontendTables <- function() {
     existing_record_ids <- existing_record_ids[order(record_id)][, .SD[1], by = pat_id]
     specific_pat_id <- pat_id
     # Get existing_record_id for the specific pat_id
-    existing_record_id <- unique(existing_record_ids[pat_id == specific_pat_id, record_id])
+    existing_record_id <- unique(existing_record_ids[pat_id %in% specific_pat_id, record_id])
 
     if (!length(existing_record_id)) {
       # If the default value is a vector, take the lowest value
-      existing_record_id <- sort(default)[1]
+      existing_record_id <- sort(default, na.last = TRUE)[1]
     }
     return(existing_record_id)
   }
@@ -304,13 +337,27 @@ createFrontendTables <- function() {
       fall_complete = character()
     )
 
+    getExistingFallFeRedcapRepeatInstance <- function(existing_record_ids) {
+      column_names <- c("record_id",
+                        "fall_fhir_enc_id",
+                        "redcap_repeat_instance")
+      query <- paste0(
+        "SELECT ", paste(column_names, collapse = ", "), " \n",
+        "FROM v_fall_fe\n",
+        "WHERE record_id IN ", etlutils::fhirdbGetQueryList(existing_record_ids), "\n"
+      )
+      return(etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingFallFeRedcapRepeatInstance()"))
+    }
+
+    existing_repeat_instances <- getExistingFallFeRedcapRepeatInstance(existing_record_ids)
+
     encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = pids_per_ward$encounter_id,
                                                      common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
                                                      lock_id_extension = "CreateEncounterFrontendTable()_")
 
     # If the CDS-conform 3-level encounter system has been implemented, then enc_type_system must
     # contain "http://fhir.de/CodeSystem/Kontaktebene"
-    encounters <- encounters[enc_type_system == "http://fhir.de/CodeSystem/Kontaktebene" | enc_type_code %in% c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt")]
+    encounters <- encounters[enc_type_system %in% "http://fhir.de/CodeSystem/Kontaktebene" | enc_type_code %in% c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt")]
     if (!nrow(encounters)) {
       stop("All Encounters has not CDS conform Encounter system. If the CDS-conform 3-level encounter system has been implemented, then enc_type_system must contain 'http://fhir.de/CodeSystem/Kontaktebene'")
     }
@@ -350,8 +397,8 @@ createFrontendTables <- function() {
 
       pid <- unique_pid_ward$patient_id[pid_index]
       pid_ref <- etlutils::fhirdataGetPatientReference(pid)
-      pid_main_encounters <- main_encounters[enc_patient_ref == pid_ref]
-      pid_part_of_encounters <- part_of_encounters[enc_patient_ref == pid_ref]
+      pid_main_encounters <- main_encounters[enc_patient_ref %in% pid_ref]
+      pid_part_of_encounters <- part_of_encounters[enc_patient_ref %in% pid_ref]
 
       # check possible errors
       if (!nrow(pid_main_encounters)) { # no encounter for PID found
@@ -367,11 +414,14 @@ createFrontendTables <- function() {
                                          "  Encounter-IDs: ", paste0(unique_encounter_IDs, collapse = ", "), "\n"))
       }
 
+      # This is used to print it in the additional values to check the correctness
+      pid_main_encounter_ids <- unique(pid_main_encounters$enc_id)
+
       # Create a list of data.tables, each containing the rows for a specific encounter
       pid_main_encounters <- split(pid_main_encounters, pid_main_encounters$enc_id)
 
       # Get the patient lines for the current PID
-      pid_patient <- patients[pat_id == pid]
+      pid_patient <- patients[pat_id %in% pid]
 
       # Check errors no patient resource found for PID
       if (!nrow(pid_patient)) { # no Patient resource found for PID
@@ -403,7 +453,7 @@ createFrontendTables <- function() {
         # There can be multiple rows with different identifier systems, so we need to filter them
         # out first and then combine the values into a single string, if there are multiple values.
         if (etlutils::isDefinedAndNotEmpty("COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
-          filtered_rows <- pid_encounter[enc_identifier_system == COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
+          filtered_rows <- pid_encounter[enc_identifier_system %in% COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM]
           if (nrow(filtered_rows)) {
             enc_identifier_value <- paste(unique(filtered_rows$enc_identifier_value), collapse = ", ")
           } else {
@@ -426,18 +476,19 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_status", enc_status)
 
         # Store all known Encounter IDs in toml syntax in the additional values
-        pids_per_ward_encounters <- pids_per_ward[patient_id == pid]
+        pids_per_ward_encounters <- pids_per_ward[patient_id %in% pid]
         fall_additional_values <- ""
+
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             pids_per_ward_encounters$encounter_id,
+                                                             unique(pids_per_ward_encounters$encounter_id),
                                                              key = "pids_per_ward_encounters",
                                                              comment = "FHIR ID of all Encounters of this medical case that were in the pids_per_ward table")
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             pid_main_encounters$enc_id,
+                                                             pid_main_encounter_ids,
                                                              key = "main_encounters",
                                                              comment = "FHIR ID of all main Encounter(s) for the medical case (should be exactly one)")
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             pid_part_of_encounters$enc_id,
+                                                             unique(pid_part_of_encounters$enc_id),
                                                              key = "part_encounters",
                                                              comment = "FHIR ID of all Encounters for the medical case at this point which are not the main Encounter")
         data.table::set(enc_frontend_table, target_index, "fall_additional_values", fall_additional_values)
@@ -468,12 +519,12 @@ createFrontendTables <- function() {
         room_and_bed <- getLocationString(pid_part_of_encounters, locations)
         data.table::set(enc_frontend_table, target_index, "fall_zimmernr", room_and_bed)
 
-        obs_weight <- observations_weight[obs_patient_ref == pid_ref]
+        obs_weight <- observations_weight[obs_patient_ref %in% pid_ref]
         if (nrow(obs_weight)) {
           data.table::set(enc_frontend_table, target_index, "fall_gewicht_aktuell", obs_weight$obs_valuequantity_value)
           data.table::set(enc_frontend_table, target_index, "fall_gewicht_aktl_einheit", obs_weight$obs_valuequantity_code)
         }
-        obs_height <- observations_height[obs_patient_ref == pid_ref]
+        obs_height <- observations_height[obs_patient_ref %in% pid_ref]
         if (nrow(obs_height)) {
           data.table::set(enc_frontend_table, target_index, "fall_groesse", obs_height$obs_valuequantity_value)
           data.table::set(enc_frontend_table, target_index, "fall_groesse_einheit", obs_height$obs_valuequantity_code)
@@ -485,13 +536,25 @@ createFrontendTables <- function() {
         # being. It is not currently displayed in the RedCap anyway.
         #getObservation(OBSERVATION_BMI_CODES, OBSERVATION_BMI_SYSTEM, "fall_bmi")
 
-      }
+        # Fill redcap_repeat_instance column in table enc_frontend_table
+        enc_redcap_repeat_instance <- unique(na.omit(existing_repeat_instances[fall_fhir_enc_id == enc_id, redcap_repeat_instance]))
 
-      # Fill redcap_repeat_instance column in table enc_frontend_table
-      # Sort the data table by fall_pat_id and fall_aufn_dat
-      data.table::setorder(enc_frontend_table, fall_pat_id, fall_aufn_dat)
-      # Grouping and numbering based on fall_pat_id and fall_aufn_dat
-      enc_frontend_table[, redcap_repeat_instance := seq_len(.N), by = .(fall_pat_id)]
+        if (length(enc_redcap_repeat_instance)) {
+          # Case 1: The enc_id already appears as fall_fhir_enc_id → use the corresponding max instance
+          enc_redcap_repeat_instance <- max(as.integer(enc_redcap_repeat_instance)) # should be exactly 1, but max() ensures this...
+        } else {
+          # Case 2: The enc_id does not appear → determine max + 1 within the group (grouped by record_id)
+          enc_record_id <- record_id  # rename to use this variable in data.table syntax
+          enc_redcap_repeat_instance <- na.omit(existing_repeat_instances[record_id == enc_record_id, redcap_repeat_instance])
+          if (length(enc_redcap_repeat_instance)) {
+            enc_redcap_repeat_instance <- max(as.integer(enc_redcap_repeat_instance)) + 1
+          } else {
+            enc_redcap_repeat_instance <- 1
+          }
+          existing_repeat_instances <- etlutils::addTableRow(existing_repeat_instances, record_id, enc_id, enc_redcap_repeat_instance)
+        }
+        data.table::set(enc_frontend_table, target_index, "redcap_repeat_instance", enc_redcap_repeat_instance)
+      }
 
     }
     return(enc_frontend_table)
@@ -549,9 +612,9 @@ createFrontendTables <- function() {
     pat_rows <- patient_rows_from_database_for_single_pat_id
     # Check if the column 'pat_name_use' exists and contains any "official" entries
     if ("pat_name_use" %in% names(pat_rows)
-        && any(pat_rows$pat_name_use == "official", na.rm = TRUE)) {
+        && any(pat_rows$pat_name_use %in% "official", na.rm = TRUE)) {
       # Filter rows where name is "official" and there is a non-empty, non-NA given name
-      official_rows <- pat_rows[pat_name_use == "official" & pat_name_given != "" & !is.na(pat_name_given)]
+      official_rows <- pat_rows[pat_name_use %in% "official" & pat_name_given != "" & !is.na(pat_name_given)]
       # If such official rows exist, return the one with the smallest patient_id
       if (nrow(official_rows)) {
         return(official_rows[which.min(patient_id)])

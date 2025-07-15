@@ -68,7 +68,7 @@ retrieve <- function(reset_lock_only = FALSE) {
         # Write pids_per_ward table to database
         etlutils::runLevel2("Write pids_per_ward table to database", {
           etlutils::dbWriteTables(
-            tables = resource_tables$pids_per_ward,
+            tables = list(pids_per_ward_raw = resource_tables$pids_per_ward_raw),
             lock_id = "Write pids_per_ward table to database",
             stop_if_table_not_empty = TRUE)
         })
