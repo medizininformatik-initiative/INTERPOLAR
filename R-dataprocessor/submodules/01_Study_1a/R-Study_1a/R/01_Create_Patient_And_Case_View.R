@@ -36,6 +36,8 @@ getLocationString <- function(encounters, locations) {
     encounters <- encounters[enc_location_physicaltype_code %in% c("ro", "bd")]
 
     if (nrow(encounters) & !all(is.na(encounters$enc_period_start))) {
+      room_value <- NA_character_
+      bed_value <- NA_character_
       # Keep only rows with latest period start
       encounters <- encounters[enc_period_start %in% max(enc_period_start, na.rm = TRUE)]
 
@@ -52,19 +54,29 @@ getLocationString <- function(encounters, locations) {
         if (!is.null(room_encounter)) {
           room_location_ref <- room_encounter[, get("enc_location_ref")]
           room_location_id <- etlutils::fhirdataExtractIDs(room_location_ref)
-          room_value <- locations[loc_id %in% room_location_id, get(col_name)]
+          room_value <- tryCatch(
+            locations[loc_id %in% room_location_id, get(col_name)],
+            error = function(e) NA_character_
+          )
         }
         # Bed
         if (!is.null(bed_encounter)) {
           bed_location_ref <- bed_encounter[, get("enc_location_ref")]
           bed_location_id <- etlutils::fhirdataExtractIDs(bed_location_ref)
-          bed_value <- locations[loc_id %in% bed_location_id, get(col_name)]
+          bed_value <- tryCatch(
+            locations[loc_id %in% bed_location_id, get(col_name)],
+            error = function(e) NA_character_
+          )
         }
       } else if (startsWith(col_name, "enc_")) {
         # Room
-        room_value <- room_encounter[, get(col_name)]
+        if (!is.null(room_encounter) && !is.null(col_name)) {
+          room_value <- tryCatch(room_encounter[, get(col_name)], error = function(e) NA_character_)
+        }
         # Bed
-        bed_value <- bed_encounter[, get(col_name)]
+        if (!is.null(bed_encounter) && !is.null(col_name)) {
+          bed_value <- tryCatch(bed_encounter[, get(col_name)], error = function(e) NA_character_)
+        }
       }
       if (etlutils::isSimpleNotEmptyString(room_value)) room <- room_value
       if (etlutils::isSimpleNotEmptyString(bed_value)) bed <- bed_value
