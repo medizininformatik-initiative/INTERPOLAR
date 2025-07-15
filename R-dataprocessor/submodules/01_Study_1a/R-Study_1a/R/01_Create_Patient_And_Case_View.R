@@ -209,6 +209,8 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
       # Select the first Observation with the latest effective date
       if (nrow(patient_obs) > 0) {
         selected_obs <- patient_obs[obs_effectivedatetime %in% max(obs_effectivedatetime, na.rm = TRUE)][1]
+        # Only keep columns matching the result table structure
+        selected_obs <- selected_obs[, names(result), with = FALSE]
         result <- rbind(result, selected_obs, use.names = TRUE)
       }
     }
