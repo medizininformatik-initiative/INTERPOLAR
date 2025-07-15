@@ -56,7 +56,8 @@ mergePatEnc <- function(patient_table, encounter_table) {
 #' This function adds a new column `main_enc_id` to the encounter table, identifying
 #' the top-level inpatient encounter (e.g., a facility-level "einrichtungskontakt" encounter)
 #' for each record. It determines the main encounter by walking up the encounter hierarchy
-#' based on encounter type and `enc_partof_ref` relationships.
+#' based on encounter type and `enc_partof_ref` relationships. If part-of references are not
+#' available, it uses the unique`enc_identifier_value` to identify top-level encounters.
 #'
 #' @param encounter_table A data frame or tibble containing FHIR-based encounter data.
 #'   Must include the following columns:
@@ -64,6 +65,7 @@ mergePatEnc <- function(patient_table, encounter_table) {
 #'   - `enc_partof_ref`: Reference to the parent encounter (e.g., "Encounter/123").
 #'   - `enc_type_code`: Type of the encounter (e.g., "einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt").
 #'   - `enc_class_code`: Class of the encounter (e.g., "IMP" for inpatient).
+#'   - `enc_identifier_value`: Identifier value for the encounter, used to identify top-level encounters.
 #'
 #' @return A data frame or tibble identical to the input but with an additional column:
 #'   - `main_enc_id`: The ID of the top-level (main) encounter associated with each record.
@@ -76,13 +78,37 @@ mergePatEnc <- function(patient_table, encounter_table) {
 #' 2. If the encounter is of type `"abteilungskontakt"` (departmental contact), its parent is assumed to be the main encounter.
 #' 3. If the encounter is of type `"versorgungsstellenkontakt"` (sub-departmental contact), the function extracts the parent encounter's
 #'    `enc_id`, finds its parent, and uses that as the top-level `main_enc_id`.
+#' The function also handles cases where encounters may not have a parent reference but have a unique identifier value.
+#' The function also checks for the presence of `enc_identifier_value` for top-level encounters
+#' and ensures that there are no multiple `einrichtungskontakt` encounters with the same identifier value.
+#' If any inconsistencies are found (e.g., multiple top-level encounters for the same identifier), an error is raised.
 #'
 #' @importFrom dplyr mutate case_when relocate
 #' @export
-# TODO: adapt version for non-established part-of references -----------
 addMainEncId <- function(encounter_table) {
+
+  if(any(encounter_table$enc_type_code != "einrichtungskontakt" & is.na(encounter_table$enc_partof_ref) & is.na(encounter_table$enc_identifier_value))) {
+    stop("Some encounters of type other than 'einrichtungskontakt' have no parent reference or identifier value. Main_enc_id not defined. Please check the data.")
+  }
+
+  if(checkMultipleRows((encounter_table |>
+                       dplyr::filter(enc_type_code == "einrichtungskontakt") |>
+                       dplyr::distinct(enc_id, enc_identifier_value)),
+                       c("enc_identifier_value"))) {
+    stop("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value. Main_enc_id not defined. Please check the data.")
+  }
+
   encounter_table_with_main_enc <- encounter_table |>
+    dplyr::left_join(encounter_table |>
+                       dplyr::filter(enc_type_code == "einrichtungskontakt") |>
+                       dplyr::distinct(enc_id, enc_identifier_value),
+                     by = "enc_identifier_value",
+                     suffix = c("", "_einrichtungskontakt")) |>
     dplyr::mutate(main_enc_id = dplyr::case_when(
+
+      is.na(enc_partof_ref) &
+        enc_type_code != "einrichtungskontakt" ~ enc_id_einrichtungskontakt,
+
       # Top-level: einrichtungskontakt
       is.na(enc_partof_ref) &
         enc_type_code == "einrichtungskontakt" &
@@ -97,6 +123,7 @@ addMainEncId <- function(encounter_table) {
         grandparent_ref <- encounter_table$enc_partof_ref[match(parent_id, encounter_table$enc_id)]
         sub("^Encounter/", "", grandparent_ref)
       })) |>
+    dplyr::select(-enc_id_einrichtungskontakt) |>
     dplyr::relocate(main_enc_id, .after = enc_id)
 
   return(encounter_table_with_main_enc)
