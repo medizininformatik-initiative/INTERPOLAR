@@ -1,3 +1,7 @@
+---
+layout: default
+title: Installationsanleitung
+---
 # Installationsanleitung bzw. Anleitung zur Einrichtung der CDS tool chain
 
   1. Checkout des INTERPOLAR Repositories, z.B. mit einem dieser Befehle: \
