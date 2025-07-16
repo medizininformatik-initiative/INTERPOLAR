@@ -1,10 +1,10 @@
 # Ein Patient
-# Tag 1: Versorgungsstellenkontakt auf IP-Station A Zimmer 1, Bett 1
-# Tag 2: Versorgungsstellenkontakt auf IP-Station A Zimmer 1, Bett 2
+# Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1, Bett 1
+# Tag 2: Versorgungsstellenkontakt auf Station 1 Zimmer 1, Bett 2
 # Tag 3: Versorgungsstellenkontakt auf nicht-IP-Station
-# Tag 4: Versorgungsstellenkontakt auf IP-Station B Zimmer 9, Bett 9
+# Tag 4: Versorgungsstellenkontakt auf Station 2 Zimmer 9, Bett 9
 # Tag 5: Versorgungsstellenkontakt wird entlassen
-# Tag 6: Neuer Encounter auf neuer IP-Station C Zimmer 666, Bett 666
+# Tag 6: Neuer Encounter auf neuer Station 3 Zimmer 666, Bett 666
 if (exists("DEBUG_DAY")) {
 
   if (DEBUG_DAY == 1) {
@@ -85,13 +85,13 @@ if (exists("DEBUG_DAY")) {
   }
 
   if (DEBUG_DAY == 1) {
-    # Day 1: #Versorgungsstellenkontakt to ward IP-Station A Zimmer 1, Bett 1
+    # Day 1: #Versorgungsstellenkontakt to ward Station 1 Zimmer 1, Bett 1
 
     # Set all encounter to "in-progress", delete end date and diagnoses and set
     # the encounter last updated date to the current date with a small offset
     # Set the patient last updated date to the current date with a small offset
     # Set enc_location_identifier_value for the Versorgungsstellenkontakt (Raum 1, Bett 1)
-    # Change pids_per_wards to the correct encounter id and ward name (IP-Station A)
+    # Change pids_per_wards to the correct encounter id and ward name (Station 1)
     for (i in seq_along(pats)) {
       # Encounter
       changeDataForPID(dt_enc, pats[[i]], "enc_status", "in-progress")
@@ -106,17 +106,17 @@ if (exists("DEBUG_DAY")) {
                      enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 1"]
     pids_per_wards <- resource_tables$pids_per_ward
     pids_per_wards[, encounter_id := "UKB-0001-E-1-A-1-V-1"]
-    pids_per_wards[, ward_name := "IP-Station A"]
+    pids_per_wards[, ward_name := "Station 1"]
 
   } else if (DEBUG_DAY == 2) {
-    # Day 2: Versorgungsstellenkontakt to ward IP-Station A Zimmer 1, Bett 2
+    # Day 2: Versorgungsstellenkontakt to ward Station 1 Zimmer 1, Bett 2
 
     # Remove Einrichtungs- und Abteilungskontakt from encounter table
     # Patient unchanged to day 1, delete row
     # Set all encounter to "in-progress", delete end date and diagnoses and set
     # the encounter last updated date to the current date with a small offset
     # Set enc_location_identifier_value for the Versorgungsstellenkontakt (Raum 1, Bett 2)
-    # Change pids_per_wards to the correct encounter id and ward name (IP-Station A)
+    # Change pids_per_wards to the correct encounter id and ward name (Station 1)
 
     dt_enc <- dt_enc[-c(1, 2)]
     dt_pat <- dt_pat[-1]
@@ -129,7 +129,7 @@ if (exists("DEBUG_DAY")) {
     dt_enc[, enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 2"]
     pids_per_wards <- resource_tables$pids_per_ward
     pids_per_wards[, encounter_id := "UKB-0001-E-1-A-1-V-1"]
-    pids_per_wards[, ward_name := "IP-Station A"]
+    pids_per_wards[, ward_name := "Station 1"]
 
   } else if (DEBUG_DAY == 3) {
     # Day 3: Versorgungsstellenkontakt to ward Nicht-IP-Station Z, Raum 5, Bett 5
@@ -164,7 +164,7 @@ if (exists("DEBUG_DAY")) {
     pids_per_wards <- pids_per_wards[-1]
 
   } else if (DEBUG_DAY == 4) {
-    # Day 4: Versorgungsstellenkontakt to ward IP-Station B Zimmer 9, Bett 9
+    # Day 4: Versorgungsstellenkontakt to ward Station 2 Zimmer 9, Bett 9
 
     # Remove Einrichtungs- und Abteilungskontakt from encounter table and duplicate Versorgungsstellenkontakt
     # Patient unchanged to day 1, delete row
@@ -173,7 +173,7 @@ if (exists("DEBUG_DAY")) {
     # And enc_period_end to the current date and enc_status to "finished"
     # Versorgungsstellenkontakt 2: Set enc_location_identifier_value for the Versorgungsstellenkontakt ([1.1.1.1]Raum 9 ~ [2.1.1.1]Bett 9)
     # And enc_period_start to debug day 3 and enc_period_enc to NA and enc_status to "in-progress"
-    # Change pids_per_wards to the correct encounter id and ward name (IP-Station B)
+    # Change pids_per_wards to the correct encounter id and ward name (Station 2)
 
     dt_enc[2] <- dt_enc[3]
     dt_enc <- dt_enc[-1]
@@ -194,7 +194,7 @@ if (exists("DEBUG_DAY")) {
 
     pids_per_wards <- resource_tables$pids_per_ward
     pids_per_wards[, encounter_id := "UKB-0001-E-1-A-1-V-3"]
-    pids_per_wards[, ward_name := "IP-Station B"]
+    pids_per_wards[, ward_name := "Station 2"]
 
   } else if (DEBUG_DAY == 5) {
     # Day 5: Versorgungsstellenkontakt finished
@@ -222,13 +222,13 @@ if (exists("DEBUG_DAY")) {
     pids_per_wards <- pids_per_wards[-1]
 
   } else if (DEBUG_DAY == 6) {
-    # Day 6: New Encounter on ward IP-Station C Zimmer 666, Bett 666
+    # Day 6: New Encounter on ward Station 3 Zimmer 666, Bett 666
 
     # Set all encounter to "in-progress", delete end date, set start date to last debug day and diagnoses and set
     # the encounter last updated date to the current date with a small offset
     # Set new enc_location_identifier_value to "[1.1.1.1]Raum 666 ~ [2.1.1.1]Bett 666" and add part of references
     # Update patient with new pat_meta_lastupdated
-    # Change pids_per_wards to the correct encounter id and ward name (IP-Station C)
+    # Change pids_per_wards to the correct encounter id and ward name (Station 3)
 
     changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_status", "in-progress")
     changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_period_start", getFormattedRAWDateTime(DEBUG_DATES[6], offset_days = 0.5))
@@ -240,7 +240,7 @@ if (exists("DEBUG_DAY")) {
 
     dt_enc <- dt_enc[, enc_id := gsub("\\[1\\]UKB-0001-E-1", "[1]UKB-0001-E-2", enc_id)]
 
-    # Neuer Encounter auf neuer IP-Station C Zimmer 666, Bett 666
+    # Neuer Encounter auf neuer Station 3 Zimmer 666, Bett 666
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-2-A-1-V-1",
                      enc_location_identifier_value := "[1.1.1.1]Raum 666 ~ [2.1.1.1]Bett 666"]
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-2",
@@ -252,7 +252,7 @@ if (exists("DEBUG_DAY")) {
 
     pids_per_wards <- resource_tables$pids_per_ward
     pids_per_wards[, encounter_id := "UKB-0001-E-2-A-1-V-1"]
-    pids_per_wards[, ward_name := "IP-Station C"]
+    pids_per_wards[, ward_name := "Station 3"]
 
   }
   # Update the Encounter table in the resource_tables list
