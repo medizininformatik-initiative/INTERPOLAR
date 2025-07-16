@@ -48,10 +48,10 @@ calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
     F1_grouped_counts <- F1_prep_red |>
       dplyr::group_by(ward_name, calendar_week) |>
       dplyr::summarise(
-        encounters = dplyr::n_distinct(main_enc_id),
-        encounters_also_in_fe = dplyr::n_distinct(fall_id_KIS),
-        patients = dplyr::n_distinct(pat_id),
-        patients_also_in_fe = dplyr::n_distinct(record_id),
+        F1_encounters = dplyr::n_distinct(main_enc_id),
+        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_KIS),
+        F1_patients = dplyr::n_distinct(pat_id),
+        F1_patients_also_in_fe = dplyr::n_distinct(record_id),
         .groups = 'drop'
       )
 
@@ -59,10 +59,10 @@ calculateF1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
       dplyr::summarise(
         ward_name = "all wards",
         calendar_week = "all weeks",
-        encounters = dplyr::n_distinct(main_enc_id),
-        encounters_also_in_fe = dplyr::n_distinct(fall_id_KIS),
-        patients = dplyr::n_distinct(pat_id),
-        patients_also_in_fe = dplyr::n_distinct(record_id)
+        F1_encounters = dplyr::n_distinct(main_enc_id),
+        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_KIS),
+        F1_patients = dplyr::n_distinct(pat_id),
+        F1_patients_also_in_fe = dplyr::n_distinct(record_id)
     )
 
     F1 <- dplyr::bind_rows(F1_grouped_counts, F1_total_counts)

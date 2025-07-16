@@ -58,6 +58,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   fall_fe_table <- getFallFeData(lock_id = "statistical reports[5]",
                                   table_name = "v_fall_fe")
 
+  medikationsanalyse_fe_table <- getMedikationsanalyseFeData(lock_id = "statistical reports[6]",
+                                  table_name = "v_medikationsanalyse_fe_last_import")
+
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
     addMainEncId() |>
     addMainEncPeriodStart() |>
@@ -76,10 +79,12 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   # Print the patient, encounter, F1 and F2 datasets for verification
   writeTableLocal(FAS1)
   writeTableGlobal(F1,
-             caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END, " <br>
-                              F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)"))
+             caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
+             footnote = "F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)")
 
+  writeTableLocal(complete_table)
   writeTableLocal(fall_fe_table)
+  writeTableLocal(medikationsanalyse_fe_table)
 
   #TODO: implement pdf / quarto option ----------
   # writeTable(complete_table, format = "pdf")

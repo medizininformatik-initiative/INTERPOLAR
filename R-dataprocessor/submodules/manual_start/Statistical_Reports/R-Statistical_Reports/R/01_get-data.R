@@ -262,3 +262,49 @@ getFallFeData <- function(lock_id, table_name) {
 
   return(fall_fe_table)
 }
+
+#------------------------------------------------------------------------------#
+#' Retrieve Medikationsanalyse Front-End Data
+#'
+#' This function queries a database table containing front-end documentation of medication analyses
+#' and returns a cleaned and ordered data frame.
+#'
+#' @param lock_id A database lock identifier used to manage access when querying data via `etlutils::dbGetReadOnlyQuery()`.
+#' @param table_name A character string specifying the name of the database table to query.
+#'
+#' @return A tibble or data frame containing distinct rows of medication analysis data,
+#' ordered by `record_id`, `fall_meda_id`, and `meda_dat`.
+#'
+#' @details
+#' The following columns are retrieved from the specified table:
+#' \itemize{
+#'   \item `record_id` – Unique identifier for the patient record.
+#'   \item `meda_anlage` – identifier of the person who created the medication analysis.
+#'   \item `meda_edit` – identifier of the person who last edited the medication analysis.
+#'   \item `fall_meda_id` – Identifier linking to the specific encounter (KIS id).
+#'   \item `meda_id` – Identifier for the medication analysis instance.
+#'   \item `meda_typ` – Type of medication analysis.
+#'   \item `meda_dat` – Date of the medication analysis.
+#'   \item `meda_ma_thueberw` – Flag indicating if medication analysis is marked for representment
+#'   \item `meda_mrp_detekt` – Flag indicating if a medication-related problem (MRP) was detected.
+#'   \item `medikationsanalyse_complete` – Completion status of the form.
+#' }
+#'
+#' Duplicate entries are removed using `dplyr::distinct()` and the result is sorted by `record_id`,
+#' `fall_meda_id`, and `meda_dat`.
+#'
+#' @importFrom etlutils dbGetReadOnlyQuery
+#' @importFrom dplyr distinct arrange
+#' @export
+getMedikationsanalyseFeData <- function(lock_id, table_name) {
+
+  query <- paste0("SELECT record_id, meda_anlage, meda_edit, fall_meda_id, ",
+                  "meda_id, meda_typ, meda_dat, meda_ma_thueberw, meda_mrp_detekt, ",
+                  "medikationsanalyse_complete FROM ", table_name, "\n")
+
+  medikationsanalyse_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    dplyr::arrange(record_id, fall_meda_id, meda_dat)
+
+  return(medikationsanalyse_fe_table)
+}
