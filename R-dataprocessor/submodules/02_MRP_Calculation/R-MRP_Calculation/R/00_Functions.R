@@ -72,30 +72,30 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_
   # 2b.) Add the Study Phase to all remaining Encounters
   #
   for (current_enc_id in encounters$enc_id) {
-    fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id == current_enc_id]
+    fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id %in% current_enc_id]
 
-    study_phase <- NA_character_
-    ward_name <- NA_character_
+    new_study_phase <- NA_character_
+    new_ward_name <- NA_character_
 
     if (nrow(fall_fe_rows) > 0) {
       fall_fe_row <- fall_fe_rows[.N]  # last row
       if (!is.na(fall_fe_row$fall_studienphase) && fall_fe_row$fall_studienphase != "PhaseBTest") {
         fall_fe_row <- fall_fe_rows[1]  # first row
       }
-      study_phase <- fall_fe_row$fall_studienphase
-      ward_name <- fall_fe_row$fall_station
+      new_study_phase <- fall_fe_row$fall_studienphase
+      new_ward_name <- fall_fe_row$fall_station
     }
 
-    encounters[enc_id == current_enc_id, `:=`(
-      study_phase = study_phase,
-      ward_name = ward_name
+    encounters[enc_id %in% current_enc_id, `:=`(
+      study_phase = new_study_phase,
+      ward_name = new_ward_name
     )]
   }
 
   #
   # 3.) Remove all Encounters with Study Phase "Phase_B" and an end date within the last 14 days
   #
-  encounters <- encounters[!(study_phase == "Phase_B" & enc_period_end > (Sys.Date() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
+  encounters <- encounters[!(study_phase %in% "Phase_B" & enc_period_end > (Sys.Date() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
 
   return(encounters)
 }
@@ -392,7 +392,7 @@ appendATCColumn <- function(medications, medication_resources) {
     # return resources only if they have a reference to an ATC medication
     # (means: ignore all others)
     if (!is.na(current_med_id) && nzchar(current_med_id)) {
-      matched_meds <- medications[med_id == current_med_id]
+      matched_meds <- medications[med_id %in% current_med_id]
 
       if (nrow(matched_meds) > 0) {
         expanded <- medication_resource[rep(1L, nrow(matched_meds))]
@@ -440,9 +440,9 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
 
     # Get the specific record ID for the patient of the main encounter
     patient_id <- etlutils::fhirdataExtractIDs(main_encounter$enc_patient_ref)
-    target_record_id <- record_ids[pat_id == patient_id, record_id][1]
+    target_record_id <- record_ids[pat_id %in% patient_id, record_id][1]
 
-    encounter_medication_analyses <- medication_analyses[record_id == target_record_id]
+    encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id]
 
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
     if (nrow(encounter_medication_analyses)) {
@@ -465,7 +465,7 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
     medication_analysis <- encounters_first_medication_analysis[[main_enc_id]]
 
     if (!is.null(medication_analysis)) {
-      matching_encounter <- main_encounters[enc_id == main_enc_id]
+      matching_encounter <- main_encounters[enc_id %in% main_enc_id]
 
       if (nrow(matching_encounter) >= 1) {
         medication_analysis$study_phase <- matching_encounter$study_phase[1]

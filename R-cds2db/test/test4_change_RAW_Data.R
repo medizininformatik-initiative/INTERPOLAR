@@ -1,5 +1,5 @@
 # Ein Patient
-# Tag 1: Versorgungsstellenkontakt auf IP-Station A Zimmer 1, Bett 1, bekommt Medikamente + Diagnose + Medikationsanalyse
+# Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1, Bett 1, bekommt Medikamente + Diagnose + Medikationsanalyse
 # Tag 2: Versorgungsstellenkontakt wird entlassen
 if (exists("DEBUG_DAY")) {
 
@@ -84,13 +84,13 @@ if (exists("DEBUG_DAY")) {
   }
 
   if (DEBUG_DAY == 1) {
-    # Day 1: #Versorgungsstellenkontakt to ward IP-Station A Zimmer 1, Bett 1
+    # Day 1: #Versorgungsstellenkontakt to ward Station 1 Zimmer 1, Bett 1
 
     # Set all encounter to "in-progress", delete end date and diagnoses and set
     # the encounter last updated date to the current date with a small offset
     # Set the patient last updated date to the current date with a small offset
     # Set enc_location_identifier_value for the Versorgungsstellenkontakt (Raum 1, Bett 1)
-    # Change pids_per_wards to the correct encounter id and ward name (IP-Station A)
+    # Change pids_per_wards to the correct encounter id and ward name (Station 1)
     for (i in seq_along(pats)) {
       # Encounter
       changeDataForPID(dt_enc, pats[[i]], "enc_status", "in-progress")
