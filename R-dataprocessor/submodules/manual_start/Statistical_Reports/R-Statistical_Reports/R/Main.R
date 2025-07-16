@@ -85,7 +85,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
     calculateAge() |>
     addWardName(pids_per_ward_table) |>
     addRecordId(patient_fe_table) |>
-    addFallIdAndStudienphase(fall_fe_table)
+    addFallIdAndStudienphase(fall_fe_table) |>
+    addMedaIdAndMedaDat(medikationsanalyse_fe_table)
 
   FAS1 <- defineFAS1(complete_table)
   F1_data <- prepareF1data(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
@@ -97,6 +98,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   writeTableLocal(complete_table)
   writeTableLocal(F1_data)
   writeTableLocal(FAS1)
+  writeTableLocal(patient_fe_table)
   writeTableLocal(fall_fe_table)
   writeTableLocal(medikationsanalyse_fe_table)
 

@@ -310,3 +310,52 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
     dplyr::distinct()
   return(merged_table_with_fall_id_and_studienphase)
 }
+#------------------------------------------------------------------------------#
+
+#' Add Medication Analysis Data to Merged Encounter Table
+#'
+#' This function merges medication analysis metadata (`meda_id`, `meda_dat`)
+#' into a preprocessed table containing encounter and case-level information.
+#' It aligns medication records to the corresponding hospital stay segment
+#' based on `record_id`, `fall_id_KIS`, and temporal overlap (`meda_dat` falls
+#' within `enc_period_start` and `enc_period_end`).
+#'
+#' @param merged_table_with_fall_id_and_studienphase A data frame containing merged patient,
+#'   encounter, ward, and fall data. Must include `record_id`, `fall_id_KIS`, `enc_period_start`,
+#'   and `enc_period_end`.
+#' @param medikationsanalyse_fe_table A data frame containing the latest version of
+#'   medication analysis front-end data. Must include `record_id`, `fall_meda_id`,
+#'   `meda_id`, and `meda_dat`.
+#'
+#' @return A data frame containing all columns of the input `merged_table_with_fall_id_and_studienphase`,
+#'   plus `meda_id` and `meda_dat`, matched by time window and identifiers.
+#'
+#' @details
+#' The merge is performed using a non-equi join based on:
+#' - `record_id` match
+#' - `fall_id_KIS` matching `fall_meda_id`
+#' - `meda_dat` occurring within the `enc_period_start` and `enc_period_end`
+#'
+#' @note
+#' - Open-ended encounters (i.e., missing `enc_period_end`) should be handled explicitly.
+#'   Currently, if `enc_period_end` is `NA`, no `meda_id` will match — a fix is pending.
+#' - If multiple medication analyses exist within a ward stay, all matching rows will be retained.
+#'   Downstream filtering (e.g., deduplication or priority logic) may be needed depending on use-case.
+#'
+#' @importFrom dplyr left_join relocate distinct join_by between
+#' @export
+# TODO: fix for open enc_period_end -------------
+# TODO: check logic for multiple medas per Versorgunsgstellenkontakt ------------
+addMedaIdAndMedaDat <- function(merged_table_with_fall_id_and_studienphase, medikationsanalyse_fe_table) {
+
+  merged_table_with_meda_id <- merged_table_with_fall_id_and_studienphase |>
+    dplyr::left_join(medikationsanalyse_fe_table |>
+                       dplyr::select(record_id, fall_meda_id, meda_id, meda_dat) |>
+                       dplyr::distinct(),
+                     by = dplyr::join_by(record_id == record_id,
+                                         fall_id_KIS == fall_meda_id,
+                                         dplyr::between(y$meda_dat, x$enc_period_start, x$enc_period_end))) |>
+    dplyr::relocate(meda_id, meda_dat, .after = enc_period_end) |>
+    dplyr::distinct()
+  return(merged_table_with_meda_id)
+}
