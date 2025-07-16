@@ -20,6 +20,7 @@ Imports:
     dplyr,
     data.table,
     etlutils,
-    kableExtra
+    kableExtra,
+    dataprocessor
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2
