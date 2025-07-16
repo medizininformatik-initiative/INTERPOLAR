@@ -57,41 +57,12 @@ defineFAS1 <- function(complete_table) {
 
 #------------------------------------------------------------------------------#
 
-#' Define FAS2_1: Filter Long-Term or Ongoing Encounters
-#'
-#' This function filters the FAS1 group to define the FAS2_1 group. It includes encounters that have either
-#' lasted at least 7 days or are ongoing with an assumed duration of at least 7 days since the report period start.
-#'
-#' @param FAS1 A data frame representing the FAS1 group, which includes inpatient, adult INTERPOLAR ward encounters.
-#'   The data frame must include `enc_period_start`, `enc_period_end`, and `enc_status`.
-#' @param REPORT_PERIOD_START A date object representing the start of the reporting period.
-#' @param REPORT_PERIOD_END A date object representing the end of the reporting period.
-#'
-#' @return A data frame representing the FAS2_1 group. This includes encounters from FAS1
-#' that lasted at least 7 days or ongoing encounters projected to last 7 days.
-#'
-#' @details
-#' The function applies the following filtering criteria:
-#' - Encounters with a non-missing `enc_period_end` should have a duration of 7 days or more.
-#' - For ongoing encounters (`enc_status == "in-progress"`) with a missing `enc_period_end`,
-#'   the expected duration is calculated from `enc_period_start` to `REPORT_PERIOD_END`, and
-#'   only those projected to last 7 days or more are included.
-#' - Ensures the output is distinct by removing duplicate records.
-#'
-#' Note: The function is designed to accommodate ongoing encounters by estimating their duration
-#' based on the report period, reflecting hypothetical ongoing progress.
-#'
-#' @seealso
-#' \code{\link[dplyr]{filter}}, \code{\link[dplyr]{case_when}}, \code{\link[dplyr]{distinct}}
-#'
-#' @export
-
-# TODO: identify first interpolar ward contact and its lenght
+# TODO: identify first interpolar ward contact and its proper lenght --------
 # TODO: implement rules for combining short absences? -------
 # TODO: include all patients with documented medication analysis within the first 7 days -------------
 # TODO: handle NA end-dates properly (e.g. deceased) -------------
 
-defineFAS2_1 <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
+defineFAS2_1 <- function(FAS1,REPORT_PERIOD_END) {
   FAS2_1 <- FAS1 |>
     dplyr::filter(dplyr::case_when(
       !is.na(enc_period_end) ~

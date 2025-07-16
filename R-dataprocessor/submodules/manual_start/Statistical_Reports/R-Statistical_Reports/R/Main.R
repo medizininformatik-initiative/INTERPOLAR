@@ -1,37 +1,53 @@
-#' Create Statistical Report
+#' Create Statistical Report for INTERPOLAR Ward Metrics
 #'
-#' This function generates a statistical report by fetching and processing patient, encounter,
-#' and ward data. It includes steps for merging the data, calculating the age of patients,
-#' defining the FAS1 dataset, and verifying that the data meets specific criteria. The report
-#' focuses on encounters and patients that meet certain conditions such as the presence of a ward,
-#' patient age, and encounter type. The report also allows for customization of the start and end
-#' date for the reporting period.
+#' This function orchestrates the creation of a statistical report by extracting,
+#' processing, and summarizing patient- and encounter-level data. The report focuses
+#' on hospitalized patients in INTERPOLAR wards and computes key metrics within a
+#' specified reporting period.
 #'
-#' @param REPORT_PERIOD_START A character string specifying the start date of the report period in "YYYY-MM-DD" format.
-#' @param REPORT_PERIOD_END A character string specifying the end date of the report period in "YYYY-MM-DD" format.
+#' @param REPORT_PERIOD_START Character string in `"YYYY-MM-DD"` format specifying the start date of the reporting period.
+#' @param REPORT_PERIOD_END Character string in `"YYYY-MM-DD"` format specifying the end date of the reporting period.
 #'
-#' @return A statistical report that includes processed tables, such as the patient table, encounter table,
-#'   the merged dataset, and calculation results within the specified reporting period.
+#' @return Invisibly returns `NULL`. The function is used for its side effects of writing tables to local/global output
+#'   and producing a summarized statistical report for review.
 #'
 #' @details
-#' The function performs the following steps:
-#' 1. Fetches patient data from the database using `getPatientData()`.
-#' 2. Fetches encounter data from the database using `getEncounterData()`.
-#' 3. Fetches data related to patients per ward using `getPidsPerWardData()`.
-#' 4. Fetches patient feature data using `getPatientFeData()`.
-#' 5. Merges the patient, encounter, and ward data using `mergePatEnc()`, adds the main encounter ID
-#'    using `addMainEncId()`, adds the main encounter period start using `addMainEncPeriodStart()`, and
-#'    calculates patient age using `calculateAge()`, adds ward names using `addWardName()` and
-#'    adds record IDs using `addRecordId()`.
-#' 6. Defines the FAS1 dataset by filtering and processing the merged data using `defineFAS1()`,
-#'    considering the provided reporting period (`REPORT_PERIOD_START` and `REPORT_PERIOD_END`).
-#' 7. Calculates the F1 metric for the defined FAS1 dataset using `calculateF1()`, summarizing findings within the reporting period.
-#' 8. Outputs tables in an HTML format for review, facilitating verification and analysis.
+#' This function performs the following steps:
+#' \enumerate{
+#'   \item Fetches patient data via `getPatientData()`.
+#'   \item Fetches encounter data via `getEncounterData()`.
+#'   \item Fetches ward-stay mappings via `getPidsPerWardData()`.
+#'   \item Fetches patient front-end data via `getPatientFeData()`.
+#'   \item Fetches case (fall) front-end data via `getFallFeData()`.
+#'   \item Fetches medication analysis data via `getMedikationsanalyseFeData()`.
+#'   \item Merges the datasets into a complete table using helper functions like:
+#'     \itemize{
+#'       \item `mergePatEnc()`
+#'       \item `addMainEncId()`
+#'       \item `addMainEncPeriodStart()`
+#'       \item `calculateAge()`
+#'       \item `addWardName()`
+#'       \item `addRecordId()`
+#'       \item `addFallIdAndStudienphase()`
+#'     }
+#'   \item Defines the FAS1 dataset by filtering relevant INTERPOLAR ward stays using `defineFAS1()`.
+#'   \item Prepares and filters F1 data for the reporting period using `prepareF1data()`.
+#'   \item Calculates summary statistics using `calculateF1()`, providing encounter and patient counts.
+#'   \item Writes intermediate and final results using `writeTableLocal()` and `writeTableGlobal()`.
+#' }
+#'
+#' @section Output:
+#' - Intermediate data frames (e.g., `FAS1`, `F1_data`, `fall_fe_table`) are written to local output using `writeTableLocal()`.
+#' - The final statistical summary is printed globally via `writeTableGlobal()` with metadata (caption and footnote).
+#'
+#' @note Additional metrics such as F2 are scaffolded but currently commented out. Future versions may include more detailed analyses.
 #'
 #' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
-#'   [mergePatEnc()], [calculateAge()], [defineFAS1()], [addMainEncId()], [addMainEncPeriodStart()],
-#'   [calculateF1()]
+#'   [mergePatEnc()], [calculateAge()], [defineFAS1()], [prepareF1data()], [calculateF1()],
+#'   [addMainEncId()], [addMainEncPeriodStart()], [writeTableLocal()], [writeTableGlobal()]
+#'
 #' @export
+
 createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
                                     REPORT_PERIOD_END = Sys.Date()) {
 
@@ -57,9 +73,11 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
 
   fall_fe_table <- getFallFeData(lock_id = "statistical reports[5]",
                                   table_name = "v_fall_fe")
+  # --> this table shows the trajectory of each case in the front-end system (multiple rows per case possible)
 
   medikationsanalyse_fe_table <- getMedikationsanalyseFeData(lock_id = "statistical reports[6]",
                                   table_name = "v_medikationsanalyse_fe_last_import")
+  # --> this table shows only the last version of each medikationsanalyse_fe entry
 
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
     addMainEncId() |>
@@ -70,23 +88,25 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
     addFallIdAndStudienphase(fall_fe_table)
 
   FAS1 <- defineFAS1(complete_table)
+  F1_data <- prepareF1data(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
-  F1 <- calculateF1(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
+  # FAS2_1 <- defineFAS2_1(FAS1, REPORT_PERIOD_END)
+  # F2_data <- prepareF2data(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
-  # FAS2_1 <- defineFAS2_1(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END)
-  # F2 <- calculateF2(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
-
-  # Print the patient, encounter, F1 and F2 datasets for verification
-  writeTableLocal(FAS1)
-  writeTableGlobal(F1,
-             caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
-             footnote = "F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)")
-
+  # Print datasets for verification to outputLocal
   writeTableLocal(complete_table)
+  writeTableLocal(F1_data)
+  writeTableLocal(FAS1)
   writeTableLocal(fall_fe_table)
   writeTableLocal(medikationsanalyse_fe_table)
 
+  statistical_report <- calculateF1(F1_data) #|>
+  # calculateF2(F2_data)
+
+  # print report to outputGlobal
+  writeTableGlobal(statistical_report,
+             caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
+             footnote = "F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)")
+
   #TODO: implement pdf / quarto option ----------
-  # writeTable(complete_table, format = "pdf")
-  #
 }
