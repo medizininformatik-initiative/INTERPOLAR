@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 22:42:12
--- Rights definition file size        : 14274 Byte
+-- Rights definition file last update : 2025-07-01 10:58:41
+-- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-06-17 22:45:35
+-- Create time: 2025-07-16 11:41:32
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  100_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -12614,6 +12614,36 @@ BEGIN
             ALTER TABLE cds2db_in.location_raw ADD loc_alias VARCHAR;   -- alias (VARCHAR)
         END IF; -- column (loc_alias)
 
+        IF NOT EXISTS ( -- column not exists (loc_physicaltype_system)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw' AND column_name = 'loc_physicaltype_system'
+        ) THEN
+            ALTER TABLE cds2db_in.location_raw ADD loc_physicaltype_system VARCHAR;   -- physicalType/coding/system (VARCHAR)
+        END IF; -- column (loc_physicaltype_system)
+
+        IF NOT EXISTS ( -- column not exists (loc_physicaltype_version)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw' AND column_name = 'loc_physicaltype_version'
+        ) THEN
+            ALTER TABLE cds2db_in.location_raw ADD loc_physicaltype_version VARCHAR;   -- physicalType/coding/version (VARCHAR)
+        END IF; -- column (loc_physicaltype_version)
+
+        IF NOT EXISTS ( -- column not exists (loc_physicaltype_code)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw' AND column_name = 'loc_physicaltype_code'
+        ) THEN
+            ALTER TABLE cds2db_in.location_raw ADD loc_physicaltype_code VARCHAR;   -- physicalType/coding/code (VARCHAR)
+        END IF; -- column (loc_physicaltype_code)
+
+        IF NOT EXISTS ( -- column not exists (loc_physicaltype_display)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw' AND column_name = 'loc_physicaltype_display'
+        ) THEN
+            ALTER TABLE cds2db_in.location_raw ADD loc_physicaltype_display VARCHAR;   -- physicalType/coding/display (VARCHAR)
+        END IF; -- column (loc_physicaltype_display)
+
+        IF NOT EXISTS ( -- column not exists (loc_physicaltype_text)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw' AND column_name = 'loc_physicaltype_text'
+        ) THEN
+            ALTER TABLE cds2db_in.location_raw ADD loc_physicaltype_text VARCHAR;   -- physicalType/text (VARCHAR)
+        END IF; -- column (loc_physicaltype_text)
+
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
@@ -12636,7 +12666,12 @@ BEGIN
           COALESCE(db.to_char_immutable(loc_status), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(loc_name), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(loc_description), ''#NULL#'') || ''|||'' ||
-          COALESCE(db.to_char_immutable(loc_alias), ''#NULL#'') || ''|||'' ||''#''
+          COALESCE(db.to_char_immutable(loc_alias), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(loc_physicaltype_system), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(loc_physicaltype_version), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(loc_physicaltype_code), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(loc_physicaltype_display), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(loc_physicaltype_text), ''#NULL#'') || ''|||'' ||''#''
                 ','(',''),')',''))
             ) THEN
             -- Delete the old hash column so that a new one can be created
@@ -12661,6 +12696,11 @@ BEGIN
           COALESCE(db.to_char_immutable(loc_name), '#NULL#') || '|||' || -- hash from: name (loc_name)
           COALESCE(db.to_char_immutable(loc_description), '#NULL#') || '|||' || -- hash from: description (loc_description)
           COALESCE(db.to_char_immutable(loc_alias), '#NULL#') || '|||' || -- hash from: alias (loc_alias)
+          COALESCE(db.to_char_immutable(loc_physicaltype_system), '#NULL#') || '|||' || -- hash from: physicalType/coding/system (loc_physicaltype_system)
+          COALESCE(db.to_char_immutable(loc_physicaltype_version), '#NULL#') || '|||' || -- hash from: physicalType/coding/version (loc_physicaltype_version)
+          COALESCE(db.to_char_immutable(loc_physicaltype_code), '#NULL#') || '|||' || -- hash from: physicalType/coding/code (loc_physicaltype_code)
+          COALESCE(db.to_char_immutable(loc_physicaltype_display), '#NULL#') || '|||' || -- hash from: physicalType/coding/display (loc_physicaltype_display)
+          COALESCE(db.to_char_immutable(loc_physicaltype_text), '#NULL#') || '|||' || -- hash from: physicalType/text (loc_physicaltype_text)
                  '#'
                )
             ) STORED; -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
@@ -12689,6 +12729,11 @@ BEGIN
           COALESCE(db.to_char_immutable(loc_name), '#NULL#') || '|||' || -- hash from: name (loc_name)
           COALESCE(db.to_char_immutable(loc_description), '#NULL#') || '|||' || -- hash from: description (loc_description)
           COALESCE(db.to_char_immutable(loc_alias), '#NULL#') || '|||' || -- hash from: alias (loc_alias)
+          COALESCE(db.to_char_immutable(loc_physicaltype_system), '#NULL#') || '|||' || -- hash from: physicalType/coding/system (loc_physicaltype_system)
+          COALESCE(db.to_char_immutable(loc_physicaltype_version), '#NULL#') || '|||' || -- hash from: physicalType/coding/version (loc_physicaltype_version)
+          COALESCE(db.to_char_immutable(loc_physicaltype_code), '#NULL#') || '|||' || -- hash from: physicalType/coding/code (loc_physicaltype_code)
+          COALESCE(db.to_char_immutable(loc_physicaltype_display), '#NULL#') || '|||' || -- hash from: physicalType/coding/display (loc_physicaltype_display)
+          COALESCE(db.to_char_immutable(loc_physicaltype_text), '#NULL#') || '|||' || -- hash from: physicalType/text (loc_physicaltype_text)
                  '#'
                )
             ) STORED; -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
@@ -14316,6 +14361,11 @@ COMMENT ON COLUMN cds2db_in.location_raw.loc_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_name IS 'name (varchar)';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_description IS 'description (varchar)';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_alias IS 'alias (varchar)';
+COMMENT ON COLUMN cds2db_in.location_raw.loc_physicaltype_system IS 'physicalType/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.location_raw.loc_physicaltype_version IS 'physicalType/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.location_raw.loc_physicaltype_code IS 'physicalType/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.location_raw.loc_physicaltype_display IS 'physicalType/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.location_raw.loc_physicaltype_text IS 'physicalType/text (varchar)';
 COMMENT ON COLUMN cds2db_in.location_raw.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN cds2db_in.location_raw.last_check_datetime IS 'Time at which data record was last checked';
 COMMENT ON COLUMN cds2db_in.location_raw.current_dataset_status IS 'Processing status of the data record';
