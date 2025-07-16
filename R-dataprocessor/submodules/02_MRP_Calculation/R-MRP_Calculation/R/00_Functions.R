@@ -74,21 +74,21 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_
   for (current_enc_id in encounters$enc_id) {
     fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id %in% current_enc_id]
 
-    study_phase <- NA_character_
-    ward_name <- NA_character_
+    new_study_phase <- NA_character_
+    new_ward_name <- NA_character_
 
     if (nrow(fall_fe_rows) > 0) {
       fall_fe_row <- fall_fe_rows[.N]  # last row
       if (!is.na(fall_fe_row$fall_studienphase) && fall_fe_row$fall_studienphase != "PhaseBTest") {
         fall_fe_row <- fall_fe_rows[1]  # first row
       }
-      study_phase <- fall_fe_row$fall_studienphase
-      ward_name <- fall_fe_row$fall_station
+      new_study_phase <- fall_fe_row$fall_studienphase
+      new_ward_name <- fall_fe_row$fall_station
     }
 
     encounters[enc_id %in% current_enc_id, `:=`(
-      study_phase = study_phase,
-      ward_name = ward_name
+      study_phase = new_study_phase,
+      ward_name = new_ward_name
     )]
   }
 
