@@ -1,53 +1,3 @@
-# Environment for saving resource data from DB
-.resource_env <- new.env()
-
-MRP_TABLE_COLUMN_NAMES <- list(
-  "Drug_Disease" = etlutils::namedListByValue(#"SMPC_NAME",
-                                              #"SMPC_VERSION",
-                                              "ATC_DISPLAY",
-                                              "ATC_PRIMARY",
-                                              "ATC_SYSTEMIC_SY",
-                                              "ATC_DERMATIC_D",
-                                              "ATC_OPHTHALMOLOGIC_OP",
-                                              "ATC_INHALATIVE_I",
-                                              "ATC_OTHER_OT",
-                                              "ATC_INCLUSION",
-                                              "CONDITION_DISPLAY",
-                                              "CONDITION_DISPLAY_CLUSTER",
-                                              "ICD",
-                                              "ICD_VALIDITY_DAYS",
-                                              "ICD_PROXY_ATC",
-                                              "ICD_PROXY_ATC_VALIDITY_DAYS",
-                                              "ICD_PROXY_OPS",
-                                              "ICD_PROXY_OPS_VALIDITY_DAYS",
-                                              "LOINC_PRIMARY_PROXY",
-                                              "LOINC_UNIT",
-                                              "LOINC_DISPLAY",
-                                              "LOINC_VALIDITY_DAYS",
-                                              "LOINC_CUTOFF_REFERENCE",
-                                              "LOINC_CUTOFF_ABSOLUTE"),
-  "Drug_Drug" = etlutils::namedListByValue("ATC_DISPLAY",
-                                           #"SMPC_NAME",
-                                           #"SMPC_VERSION",
-                                           "ATC_PRIMARY",
-                                           "ATC_SYSTEMIC_SY",
-                                           "ATC_DERMATIKA_D",
-                                           "ATC_OPHTHALMIKA_O",
-                                           "ATC_INHALANDA_I",
-                                           "ATC_SONSTIGE_SO",
-                                           "ATC_INCLUSION",
-                                           #"DRUG_DRUG_KI",
-                                           "ATC2_DISPLAY",
-                                           "ATC2_PRIMARY",
-                                           "ATC2_SYSTEMIC_SY",
-                                           "ATC2_DERMATIKA_D",
-                                           "ATC2_OPHTHALMIKA_O",
-                                           "ATC2_INHALANDA_I",
-                                           "ATC2_SONSTIGE_SO",
-                                           "ATC2_INCLUSION")
-
-)
-
 #' Validate ATC Codes in Multiple Columns
 #'
 #' This function checks whether the values in specified columns of a data table
@@ -125,18 +75,20 @@ validateLOINCCodes <- function(data, column_name) {
 #' computes its content hash, and either returns a cached, already-processed version or processes
 #' it using a dynamic cleaning/expansion function. The result is cached for future use.
 #'
-#' @param table_name A character string representing the base name of the MRP definition (e.g., `"Drug_Disease"`).
-#' @param path_to_mrp_tables A character string specifying the path to the directory containing the MRP Excel files.
+#' @param mrp_type A character string representing the base name of the MRP definition (e.g., `"Drug_Disease"`).
 #'
 #' @return A data.table containing the processed and expanded MRP definition.
 #'
-getExpandedContent <- function(table_name, path_to_mrp_tables) {
+getExpandedContent <- function(mrp_type) {
+
+  #path to the directory containing the MRP Excel files.
+  path_to_mrp_tables <- file.path(MRP_PAIR_PATH, paste0("MRP_", mrp_type))
 
   # Load the MRP definition from the Excel file
-  mrp_columnnames <- MRP_TABLE_COLUMN_NAMES[[table_name]]
-  mrp_definition <- etlutils::readFirstExcelFileSheet(path_to_mrp_tables, table_name, mrp_columnnames)
+  mrp_columnnames <- getPairListColumnNames(mrp_type)
+  mrp_definition <- etlutils::readFirstExcelFileSheet(path_to_mrp_tables, mrp_type, mrp_columnnames)
   if (is.null(mrp_definition)) {
-    stop(paste0("No or empty ", table_name, " MRP definition table found in the specified path: ", path_to_mrp_tables))
+    stop(paste0("No or empty ", mrp_type, " MRP definition table found in the specified path: ", path_to_mrp_tables))
   }
   # Compute the hash of the current MRP definition
   content_hash <- digest::digest(mrp_definition$excel_file_content, algo = "sha256")
@@ -146,23 +98,21 @@ getExpandedContent <- function(table_name, path_to_mrp_tables) {
 
   if (is.null(processed_content_hash)) {
     # If the hash is not found, process the MRP definition
-    preprocess_function_name <- paste0("cleanAndExpandDefinition", gsub("_", "", table_name))
-    preprocess_function <- get(preprocess_function_name, mode = "function", inherits = TRUE)
-    processed_content <- preprocess_function(mrp_definition$excel_file_content, table_name)
+    processed_content <- getMRPTypeFunction("cleanAndExpandDefinition", mrp_type)(mrp_definition$excel_file_content)
     processed_content_hash <- digest::digest(processed_content, algo = "sha256")
 
-    output_dir <- file.path(path_to_mrp_tables, paste0(table_name, "_content"))
+    output_dir <- file.path(path_to_mrp_tables, paste0(mrp_type, "_content"))
     if (!dir.exists(output_dir)) {
       dir.create(output_dir, recursive = TRUE)
     }
 
-    file_path_part <- paste0(path_to_mrp_tables, "/", table_name, "_content")
+    file_path_part <- paste0(path_to_mrp_tables, "/", mrp_type, "_content")
 
     # Write content and processed content to Excel files
     openxlsx::write.xlsx(content, file = file.path(file_path_part,
-                                                   paste0(table_name, "_MRP_Table.xlsx")), overwrite = TRUE)
+                                                   paste0(mrp_type, "_MRP_Table.xlsx")), overwrite = TRUE)
     openxlsx::write.xlsx(processed_content, file = file.path(file_path_part,
-                                                             paste0(table_name, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
+                                                             paste0(mrp_type, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
 
     # Load or init storage tables locally
     input_data_files_path <- paste0(path_to_mrp_tables, "/input_data_files.RData")

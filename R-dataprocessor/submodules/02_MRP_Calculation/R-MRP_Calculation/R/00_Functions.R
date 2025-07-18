@@ -13,91 +13,118 @@ if (!exists("DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS")) {
 #
 # Type of MRP
 #
-MRP_CALCULATION_TYPE <- list(
-  "Drug_Disease" = "Drug-Disease",
-  "Drug_Drug" = "Drug-Drug",
-  "Drug_DrugGroup" = "Drug-Drug",
-  "Drug_Niereninsuffizienz" = "Drug-Niereninsuffizienz"
+MRP_TYPE <- etlutils::namedVectorByParam(
+  "Drug_Disease",
+  "Drug_Drug"#,
+  #"Drug_DrugGroup",
+  #"Drug_Niereninsuffizienz""
 )
 
 #
 # Load Einrichtungskontakt Encounters without retrolective MRP evaluation
 #
-getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function(mrp_calculation_type) {
-  #
-  # 1.) Get all Einrichtungskontakt encounters that ended before now and do not have a retrolective MRP evaluation
-  #
-  query <- paste0(
-    "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
-    "FROM v_encounter_last_version\n",
-    "WHERE enc_period_end <= '", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "'\n",
-    "AND enc_type_code = 'einrichtungskontakt'\n",
-    "AND enc_id NOT IN (\n",
-    "  SELECT enc_id FROM v_dp_mrp_calculations\n",
-    "  WHERE mrp_calculation_type = '", mrp_calculation_type, "'\n",
-    ")"
-  )
-  encounters <- etlutils::dbGetReadOnlyQuery(query)
-  encounters[, `:=`(study_phase = character(), ward_name = character())]
+getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
 
-  if (!nrow(encounters)) {
-    return(encounters)
+  encounters_per_mrp_type <- list()
+  #
+  # 1.) Get all Einrichtungskontakt encounters that ended before now and do not
+  #     have a retrolective MRP evaluation for a given type
+  #
+
+  for (mrp_type in names(MRP_TYPE)) {
+    query <- paste0(
+      "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
+      "FROM v_encounter_last_version\n",
+      "WHERE enc_period_end <= '", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "'\n",
+      "AND enc_type_code = 'einrichtungskontakt'\n",
+      "AND enc_id NOT IN (\n",
+      "  SELECT enc_id FROM v_dp_mrp_calculations\n",
+      "  WHERE mrp_calculation_type = '", mrp_type, "'\n",
+      ")"
+    )
+    mrp_encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getEncountersWithoutRetrolectiveMRPEvaluationFromDB() - ", mrp_type))
+    encounters_per_mrp_type[[mrp_type]] <- mrp_encounters
   }
 
-  #
-  # 2.) Add the Study Phase to all Encounters
-  #
-  column_names <- c("fall_fe_id",
-                    "input_datetime",
-                    "record_id",
-                    "fall_fhir_enc_id",
-                    "fall_pat_id",
-                    "fall_id",
-                    "fall_studienphase",
-                    "fall_station")
-  query <- paste0(
-    "SELECT ", paste(column_names, collapse = ", "), " \n",
-    "FROM v_fall_fe\n",
-    "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(encounters$enc_id), "\n",
-    "ORDER BY input_datetime"
-  )
-  encs_fall_fe <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getEncountersWithoutRetrolectiveMRPEvaluationFromDB()_enc_fall_fe")
+  encounters <- unique(data.table::rbindlist(encounters_per_mrp_type, use.names = TRUE))
+  encounters[, `:=`(study_phase = character(), ward_name = character())]
 
-  #
-  # 2a.) Remove all Encounters which were never on a relevant ward (their FHIR ID is not in the fall_fe table)
-  #
-  encounters <- encounters[enc_id %in% encs_fall_fe$fall_fhir_enc_id]
+  if (nrow(encounters)) {
 
-  #
-  # 2b.) Add the Study Phase to all remaining Encounters
-  #
-  for (current_enc_id in encounters$enc_id) {
-    fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id %in% current_enc_id]
+    #
+    # 2.) Add the Study Phase to all Encounters
+    #
+    column_names <- c("fall_fe_id",
+                      "input_datetime",
+                      "record_id",
+                      "fall_fhir_enc_id",
+                      "fall_pat_id",
+                      "fall_id",
+                      "fall_studienphase",
+                      "fall_station")
+    query <- paste0(
+      "SELECT ", paste(column_names, collapse = ", "), " \n",
+      "FROM v_fall_fe\n",
+      "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(encounters$enc_id), "\n",
+      "ORDER BY input_datetime"
+    )
+    encs_fall_fe <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getEncountersWithoutRetrolectiveMRPEvaluationFromDB()_enc_fall_fe")
 
-    new_study_phase <- NA_character_
-    new_ward_name <- NA_character_
+    #
+    # 2a.) Remove all Encounters which were never on a relevant ward (their FHIR ID is not in the fall_fe table)
+    #
+    encounters <- encounters[enc_id %in% encs_fall_fe$fall_fhir_enc_id]
 
-    if (nrow(fall_fe_rows) > 0) {
-      fall_fe_row <- fall_fe_rows[.N]  # last row
-      if (!is.na(fall_fe_row$fall_studienphase) && fall_fe_row$fall_studienphase != "PhaseBTest") {
-        fall_fe_row <- fall_fe_rows[1]  # first row
+    #
+    # 2b.) Add the Study Phase to all remaining Encounters
+    #
+    for (current_enc_id in encounters$enc_id) {
+      fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id == current_enc_id]
+
+      new_study_phase <- "PhaseA"
+      new_ward_name <- NA_character_
+
+      # Aim: Calculate test MRP immediately if the current study phase last found
+      # for the case is PhaseBTest. However, if the current study phase is not
+      # PhaseBTest, then the study phase at admission applies. However, if this is
+      # PhaseBTest, then PhaseA is set.
+      if (nrow(fall_fe_rows) > 0) {
+        fall_fe_row <- fall_fe_rows[.N]  # last row -> last study phase of the encounter
+        new_ward_name <- fall_fe_row$fall_station
+        if (fall_fe_row$fall_studienphase %in% "PhaseBTest") {
+          new_study_phase <- "PhaseBTest"
+        } else {
+          fall_fe_row <- fall_fe_rows[1]  # first row -> study phase at admission
+          # no study phase or test phase at admission -> PhaseA
+          if (is.na(fall_fe_row$fall_studienphase) || fall_fe_row$fall_studienphase == "PhaseBTest") {
+            new_study_phase <- "PhaseA"
+          } else {
+            new_study_phase <- fall_fe_row$fall_studienphase # can be PhaseA or PhaseB
+          }
+        }
       }
-      new_study_phase <- fall_fe_row$fall_studienphase
-      new_ward_name <- fall_fe_row$fall_station
+      encounters[enc_id %in% current_enc_id, `:=`(
+        study_phase = new_study_phase,
+        ward_name = new_ward_name
+      )]
     }
-
-    encounters[enc_id %in% current_enc_id, `:=`(
-      study_phase = new_study_phase,
-      ward_name = new_ward_name
-    )]
   }
 
   #
   # 3.) Remove all Encounters with Study Phase "Phase_B" and an end date within the last 14 days
   #
   encounters <- encounters[!(study_phase %in% "Phase_B" & enc_period_end > (Sys.Date() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
+  # Replace the sublists in encounters_per_mrp_type by the same encounters with study_phase and ward_name from encounters
+  for (mrp_type in names(encounters_per_mrp_type)) {
+    encs <- encounters_per_mrp_type[[mrp_type]]
+    # Merge with enriched encounters to get study_phase and ward_name
+    encs <- merge(encs, encounters[, .(enc_id, study_phase, ward_name)], by = "enc_id", all.x = TRUE)
+    encounters_per_mrp_type[[mrp_type]] <- encs
+  }
 
-  return(encounters)
+  encounters_per_mrp_type[["ALL_TYPES"]] <- encounters
+
+  return(encounters_per_mrp_type)
 }
 
 #
@@ -262,63 +289,7 @@ getObservationsFromDB <- function(patient_references) {
                                                       "obs_patient_ref",
                                                       "obs_code_system",
                                                       "obs_code_code",
-                                                      "obs_effectivedatetime",
-                                                      "obs_issued",
-                                                      "obs_valuerange_low_value",
-                                                      "obs_valuerange_low_unit",
-                                                      "obs_valuerange_low_system",
-                                                      "obs_valuerange_low_code",
-                                                      "obs_valuerange_high_value",
-                                                      "obs_valuerange_high_unit",
-                                                      "obs_valuerange_high_system",
-                                                      "obs_valuerange_high_code",
-                                                      "obs_valueratio_numerator_value",
-                                                      "obs_valueratio_numerator_comparator",
-                                                      "obs_valueratio_numerator_unit",
-                                                      "obs_valueratio_numerator_system",
-                                                      "obs_valueratio_numerator_code",
-                                                      "obs_valueratio_denominator_value",
-                                                      "obs_valueratio_denominator_comparator",
-                                                      "obs_valueratio_denominator_unit",
-                                                      "obs_valueratio_denominator_system",
-                                                      "obs_valueratio_denominator_code",
-                                                      "obs_valuequantity_value",
-                                                      "obs_valuequantity_comparator",
-                                                      "obs_valuequantity_unit",
-                                                      "obs_valuequantity_system",
-                                                      "obs_valuequantity_code",
-                                                      "obs_valuecodeableconcept_system",
-                                                      "obs_valuecodeableconcept_version",
-                                                      "obs_valuecodeableconcept_code",
-                                                      "obs_valuecodeableconcept_display",
-                                                      "obs_valuecodeableconcept_text",
-                                                      "obs_referencerange_low_value",
-                                                      "obs_referencerange_low_unit",
-                                                      "obs_referencerange_low_system",
-                                                      "obs_referencerange_low_code",
-                                                      "obs_referencerange_high_value",
-                                                      "obs_referencerange_high_unit",
-                                                      "obs_referencerange_high_system",
-                                                      "obs_referencerange_high_code",
-                                                      "obs_referencerange_type_system",
-                                                      "obs_referencerange_type_version",
-                                                      "obs_referencerange_type_code",
-                                                      "obs_referencerange_type_display",
-                                                      "obs_referencerange_type_text",
-                                                      "obs_referencerange_appliesto_system",
-                                                      "obs_referencerange_appliesto_version",
-                                                      "obs_referencerange_appliesto_code",
-                                                      "obs_referencerange_appliesto_display",
-                                                      "obs_referencerange_appliesto_text",
-                                                      "obs_referencerange_age_low_value",
-                                                      "obs_referencerange_age_low_unit",
-                                                      "obs_referencerange_age_low_system",
-                                                      "obs_referencerange_age_low_code",
-                                                      "obs_referencerange_age_high_value",
-                                                      "obs_referencerange_age_high_unit",
-                                                      "obs_referencerange_age_high_system",
-                                                      "obs_referencerange_age_high_code",
-                                                      "obs_referencerange_text"),
+                                                      "obs_effectivedatetime"),
                                      patient_references = patient_references,
                                      status_exclusion = c("registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834407
                                      additional_conditions = c("obs_category_code = 'laboratory'",
@@ -409,18 +380,13 @@ appendATCColumn <- function(medications, medication_resources) {
 # Prepare Resources for MRP Calculation #
 #########################################
 
-getResourcesForMRPCalculation <- function(mrp_calculation_type) {
-
-  # 1.) Get all Einrichtungskontakt encounters that ended at least 14 days ago
-  #     and do not have a retrolective MRP evaluation for Drug_Disease
-  main_encounters <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB(mrp_calculation_type)
+getResourcesForMRPCalculation <- function(main_encounters) {
 
   if (!nrow(main_encounters)) {
     etlutils::catWarningMessage(paste0(
       "No Einrichtungskontakt encounters found that ended at least ",
       DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS,
-      " days ago and do not have a retrolective MRP evaluation for type '",
-      mrp_calculation_type, "'.\n"
+      " days ago and do not have any retrolective MRP evaluation.\n"
     ))
     return(list())
   }
@@ -479,7 +445,7 @@ getResourcesForMRPCalculation <- function(mrp_calculation_type) {
   # 6.) Get existing ret_id's for the medication analyses
   getExistingRetrolectiveMRPEvaluationIDs <- function(medication_analyses_ids) {
     query <- paste0(
-      "SELECT meda_id, ret_id\n",
+      "SELECT meda_id, ret_id, redcap_repeat_instance\n",
       "FROM v_dp_mrp_calculations\n",
       "WHERE meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids))
     return(etlutils::dbGetReadOnlyQuery(query))
