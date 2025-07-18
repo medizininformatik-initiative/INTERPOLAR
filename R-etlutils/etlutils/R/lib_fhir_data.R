@@ -230,5 +230,5 @@ fhirdataGetAllEncounters <- function(encounter_ids, common_encounter_fhir_identi
     }
   }
 
-  return(encounters)
+  return(unique(encounters))
 }
