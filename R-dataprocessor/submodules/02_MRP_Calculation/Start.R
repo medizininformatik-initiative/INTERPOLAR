@@ -127,7 +127,7 @@ calculateMRPs <- function() {
               match <- match_atc_and_item2_codes[i]
               meda_id_value <- meda_id # we need this renaming for the following comparison
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
-              existing_redcap_repeat_instances <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, redcap_repeat_instance]
+              existing_redcap_repeat_instances <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_redcap_repeat_instance]
 
               next_index <- if (length(existing_ret_ids) == 0) 1 else max(as.integer(sub(ret_id_prefix, "", existing_ret_ids)), na.rm = TRUE) + 1
               ret_id <- paste0(ret_id_prefix, next_index)
@@ -135,7 +135,7 @@ calculateMRPs <- function() {
               redcap_repeat_instance <- if (length(existing_redcap_repeat_instances) == 0) 1 else max(existing_redcap_repeat_instances, na.rm = TRUE) + 1
 
               # always updating the references to the existing ret_ids
-              resources$existing_retrolective_mrp_evaluation_ids <- etlutils::addTableRow(resources$existing_retrolective_mrp_evaluation_ids, meda_id, ret_id, redcap_repeat_instance)
+              resources$existing_retrolective_mrp_evaluation_ids <- etlutils::addTableRow(resources$existing_retrolective_mrp_evaluation_ids, meda_id, ret_id, ret_redcap_repeat_instance)
 
               # Create new row for table retrolektive_mrpbewertung
               retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
@@ -160,7 +160,8 @@ calculateMRPs <- function() {
                 meda_id = meda_id,
                 study_phase = meda_study_phase,
                 ward_name = meda_ward_name,
-                ret_id = retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows)]]$ret_id,
+                ret_id = ret_id,
+                ret_redcap_repeat_instance = redcap_repeat_instance,
                 mrp_proxy_type = match$proxy_type,
                 mrp_proxy_code = match$proxy_code,
                 input_file_processed_content_hash = input_file_processed_content_hash
@@ -176,6 +177,7 @@ calculateMRPs <- function() {
               study_phase = meda_study_phase,
               ward_name = meda_ward_name,
               ret_id = NA_character_,
+              ret_redcap_repeat_instance = NA_character_,
               mrp_proxy_type = NA_character_,
               mrp_proxy_code = NA_character_,
               input_file_processed_content_hash = input_file_processed_content_hash
@@ -196,3 +198,7 @@ calculateMRPs <- function() {
 
   return(mrp_table_lists_all)
 }
+
+etlutils::runLevel2("MRP Calculation", {
+  calculateMRPs()
+})

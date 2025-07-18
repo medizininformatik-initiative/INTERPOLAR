@@ -445,7 +445,7 @@ getResourcesForMRPCalculation <- function(main_encounters) {
   # 6.) Get existing ret_id's for the medication analyses
   getExistingRetrolectiveMRPEvaluationIDs <- function(medication_analyses_ids) {
     query <- paste0(
-      "SELECT meda_id, ret_id, redcap_repeat_instance\n",
+      "SELECT meda_id, ret_id, ret_redcap_repeat_instance\n",
       "FROM v_dp_mrp_calculations\n",
       "WHERE meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids))
     return(etlutils::dbGetReadOnlyQuery(query))
