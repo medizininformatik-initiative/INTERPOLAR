@@ -245,8 +245,42 @@ createFrontendTables <- function() {
     # patient multiple times on the same or different wards)
     pids <- unique(pids_per_ward$patient_id)
     pids <- etlutils::fhirdataExtractIDs(pids)
+    pids <- pids[!is.na(pids) & pids != "EMPTY_DATA"]
     patients <- loadResourcesLastVersionByOwnIDFromDB("Patient", pids)
     return(patients)
+  }
+
+  # Restore pids_per_ward from previous runs from frontend data (to find encounters, which were not finished in the previous run)
+  getPreviousPidsPerWard <- function() {
+    query <- paste0(
+      "SELECT DISTINCT t1.fall_station, t1.fall_pat_id, t1.fall_fhir_enc_id, t1.last_processing_nr\n",
+      "FROM v_fall_fe t1\n",
+      "WHERE NOT EXISTS (\n",
+      "  SELECT 1\n",
+      "  FROM v_fall_fe t2\n",
+      "  WHERE t2.fall_pat_id = t1.fall_pat_id\n",
+      "    AND t2.fall_fhir_enc_id = t1.fall_fhir_enc_id\n",
+      "    AND t2.fall_status = 'finished'\n",
+      ")"
+    )
+    previous_pids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getPidsFromDatabase()")
+    previous_pids_per_ward <- previous_pids[, .SD[which.max(last_processing_nr)], by = .(fall_pat_id, fall_fhir_enc_id)]
+    previous_pids_per_ward[, last_processing_nr := NULL]
+    data.table::setnames(previous_pids_per_ward,
+                         old = c("fall_station", "fall_pat_id", "fall_fhir_enc_id"),
+                         new = c("ward_name", "patient_id", "encounter_id"))
+    return(previous_pids_per_ward)
+  }
+
+  # Read the latest imported datasets from the pids_per_ward table
+  getPidsPerWard <- function() {
+    pids_per_ward <- etlutils::dbGetReadOnlyQuery(
+      query = paste0("SELECT ward_name, patient_id, encounter_id FROM v_pids_per_ward_last_import\n"),
+      lock_id = "load last imported datasets from pids_per_ward")
+    pids_per_ward <- pids_per_ward[!is.na(patient_id)]
+    previous_pids_per_ward <- getPreviousPidsPerWard()
+    pids_per_ward <- unique(rbind(pids_per_ward, previous_pids_per_ward, use.names = TRUE))
+    return(pids_per_ward)
   }
 
   # Function to retrieve an existing record_id for a given patient ID
@@ -351,7 +385,7 @@ createFrontendTables <- function() {
 
     existing_repeat_instances <- getExistingFallFeRedcapRepeatInstance(existing_record_ids)
 
-    encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = pids_per_ward$encounter_id,
+    encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = unique(pids_per_ward$encounter_id),
                                                      common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
                                                      lock_id_extension = "CreateEncounterFrontendTable()_")
 
@@ -560,11 +594,8 @@ createFrontendTables <- function() {
     return(enc_frontend_table)
   }
 
-  # Read the latest imported datasets from the pids_per_ward table
-  pids_per_ward <- etlutils::dbGetReadOnlyQuery(
-    query = paste0("SELECT * FROM v_pids_per_ward_last_import\n"),
-    lock_id = "load last imported datasets from pids_per_ward")
-  pids_per_ward <- pids_per_ward[!is.na(patient_id)]
+  # Load the pids_per_ward table from the database and combine it with the previous pids_per_ward table
+  pids_per_ward <- getPidsPerWard()
 
   # No pids_per_ward table found -> stop
   if (!nrow(pids_per_ward)) {
