@@ -1,3 +1,46 @@
+#' Create a named vector based on variable names.
+#'
+#' This function creates a named vector from the provided variables. The names of the
+#' vector elements are automatically taken from the variable names.
+#'
+#' @param ... One or more variables to include in the named vector.
+#'
+#' @return A named vector where the names correspond to the variable names.
+#'
+#' @examples
+#' a <- 1
+#' b <- 2
+#' c <- 3
+#' named_vec <- namedVectorByParam(a, b, c)
+#' print(named_vec)  # Output: a b c
+#'
+#' @export
+namedVectorByParam <- function(...) {
+  params <- c(...)
+  arg_names <- as.character(substitute(list(...)))[-1L]
+  setNames(params, arg_names)
+}
+
+#' Create a named vector based on the values of a vector.
+#'
+#' This function takes a vector as input and returns a named vector where the names
+#' are identical to the values of the vector.
+#'
+#' @param ... A vector from which a named vector will be created.
+#'
+#' @return A named vector where the names are identical to the values of the input vector.
+#'
+#' @examples
+#' values <- c("apple", "banana", "cherry", NA_character_)
+#' named_vec <- namedVectorByValue(values)
+#' print(named_vec)
+#'
+#' @export
+namedVectorByValue <- function(...) {
+  x <- c(...)
+  setNames(x, as.character(x))
+}
+
 #'
 #' Creates a named list of all parameters. The names are the variable names of the parameters.
 #'
