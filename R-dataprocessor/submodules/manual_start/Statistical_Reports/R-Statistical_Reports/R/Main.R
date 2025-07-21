@@ -67,6 +67,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   # this table can have multiple entries per main encounter due to transferral to another ward,
   # it should include the encounter level "Versorgungsstellenkontakt"
 
+  # TODO: check if the appropriate views are used -------
   patient_fe_table <- getPatientFeData(lock_id = "statistical reports[4]",
                                   table_name = "v_patient_fe")
   # --> this table should only have one entry per patient (error if not)
@@ -80,13 +81,17 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   # --> this table shows only the last version of each medikationsanalyse_fe entry
 
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
+    addCuratedEncPeriodEnd() |>
     addMainEncId() |>
     addMainEncPeriodStart() |>
     calculateAge() |>
     addWardName(pids_per_ward_table) |>
     addRecordId(patient_fe_table) |>
-    addFallIdAndStudienphase(fall_fe_table) |>
-    addMedaIdAndMedaDat(medikationsanalyse_fe_table)
+    addFallIdAndStudienphase(fall_fe_table)
+
+  complete_fe_table <-mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
+    addMedaIdAndMedaDat(medikationsanalyse_fe_table) |>
+    addEncIdToFeData(complete_table)
 
   FAS1 <- defineFAS1(complete_table)
   F1_data <- prepareF1data(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
@@ -98,9 +103,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   writeTableLocal(complete_table)
   writeTableLocal(F1_data)
   writeTableLocal(FAS1)
-  writeTableLocal(patient_fe_table)
-  writeTableLocal(fall_fe_table)
-  writeTableLocal(medikationsanalyse_fe_table)
+  writeTableLocal(complete_fe_table)
 
   statistical_report <- calculateF1(F1_data) #|>
   # calculateF2(F2_data)

@@ -50,6 +50,43 @@ mergePatEnc <- function(patient_table, encounter_table) {
 }
 
 #------------------------------------------------------------------------------#
+#' Add Curated Encounter End Date
+#'
+#' This function adds a new column `curated_enc_period_end` to the encounter table,
+#' handling missing (`NA`) end dates for ongoing hospital stays. If the encounter
+#' is marked as `"in-progress"` and has no `enc_period_end`, the current system
+#' date is inserted to allow downstream time-based operations.
+#'
+#' @param encounter_table A data frame containing encounter-level data, with columns
+#'   `enc_period_end` and `enc_status`.
+#'
+#' @return A data frame identical to `encounter_table` with an added column
+#'   `curated_enc_period_end`, located immediately after `enc_period_end`.
+#'
+#' @details
+#' The function is especially useful for ensuring valid time intervals in joins
+#' or filters where open-ended encounters (i.e., missing `enc_period_end`)
+#' would otherwise break logic or be excluded.
+#'
+#' - If `enc_period_end` is `NA` and `enc_status` is `"in-progress"`, then
+#'   `curated_enc_period_end` is set to the current system date (`Sys.Date()`).
+#' - Otherwise, `curated_enc_period_end` takes the value of `enc_period_end`.
+#'
+#' @importFrom dplyr mutate case_when relocate
+#' @export
+addCuratedEncPeriodEnd <- function(encounter_table) {
+
+  encounter_table_with_curated_enc_period_end <- encounter_table |>
+    dplyr::mutate(curated_enc_period_end = dplyr::case_when(
+      is.na(enc_period_end) & enc_status == "in-progress" ~ Sys.time(),
+      TRUE ~ enc_period_end
+    )) |>
+    dplyr::relocate(curated_enc_period_end, .after = enc_period_end)
+
+  return(encounter_table_with_curated_enc_period_end)
+}
+
+#------------------------------------------------------------------------------#
 
 #' Add Main Encounter ID to Encounter Table
 #'
@@ -169,7 +206,6 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
   return(encounter_table_with_MainEncPeriodStart)
 }
 
-
 #------------------------------------------------------------------------------#
 
 #' Calculate Patient Age at Main Encounter Start
@@ -227,7 +263,7 @@ addWardName <- function(merged_table_with_main_enc,pids_per_ward_table) {
     dplyr::left_join(pids_per_ward_table |>
                        dplyr::select(ward_name, patient_id, encounter_id),
                      by = c("enc_id" = "encounter_id", "pat_id" = "patient_id")) |>
-    dplyr::relocate(ward_name, .after = enc_period_end) |>
+    dplyr::relocate(ward_name, .after = curated_enc_period_end) |>
     dplyr::distinct()
   return(merged_table_with_ward)
 }
@@ -313,50 +349,148 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
 
 #------------------------------------------------------------------------------#
 
-#' Add Medication Analysis Data to Merged Encounter Table
+#' Merge Patient Front-End and Fall Front-End Tables
 #'
-#' This function merges medication analysis metadata (`meda_id`, `meda_dat`)
-#' into a preprocessed table containing encounter and case-level information.
-#' It aligns medication records to the corresponding hospital stay segment
-#' based on `record_id`, `fall_id_KIS`, and temporal overlap (`meda_dat` falls
-#' within `enc_period_start` and `enc_period_end`).
+#' This function merges patient front-end (`patient_fe_table`) and case-level front-end
+#' (`fall_fe_table`) data based on shared identifiers (`record_id` and `pat_id`).
+#' The goal is to enrich the patient-level data with associated case-level details.
 #'
-#' @param merged_table_with_fall_id_and_studienphase A data frame containing merged patient,
-#'   encounter, ward, and fall data. Must include `record_id`, `fall_id_KIS`, `enc_period_start`,
-#'   and `enc_period_end`.
-#' @param medikationsanalyse_fe_table A data frame containing the latest version of
-#'   medication analysis front-end data. Must include `record_id`, `fall_meda_id`,
-#'   `meda_id`, and `meda_dat`.
+#' @param patient_fe_table A data frame containing front-end patient data, including
+#'   at least `record_id`, `pat_id`, and `input_datetime`.
 #'
-#' @return A data frame containing all columns of the input `merged_table_with_fall_id_and_studienphase`,
-#'   plus `meda_id` and `meda_dat`, matched by time window and identifiers.
+#' @param fall_fe_table A data frame containing front-end fall/case data, including
+#'   at least `record_id`, `fall_pat_id`, `fall_fhir_enc_id`, `fall_id`, `fall_studienphase`,
+#'   `fall_station`, and `fall_aufn_dat`.
+#'
+#' @return A merged data frame with the selected columns from both input tables.
+#'   The `input_datetime` column from the patient table is dropped prior to the join.
 #'
 #' @details
-#' The merge is performed using a non-equi join based on:
-#' - `record_id` match
-#' - `fall_id_KIS` matching `fall_meda_id`
-#' - `meda_dat` occurring within the `enc_period_start` and `enc_period_end`
+#' The merge operation:
+#' - Performs a left join using `record_id` and `pat_id` (matched to `fall_pat_id`),
+#' - Adds fall-specific columns such as `fall_fhir_enc_id`, `fall_id`, and `fall_studienphase`
+#'   to the patient FE data.
+#' - Removes duplicate rows after the merge.
+#'
+#' This is useful for linking case trajectories from the FE system with individual
+#' patient-level data in analytical workflows.
+#'
+#'
+#' @importFrom dplyr left_join select distinct
+#' @export
+mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
+
+  complete_fe_table <- patient_fe_table |>
+    dplyr::select(-input_datetime) |>
+    dplyr::left_join(fall_fe_table |>
+                       dplyr::select(record_id, fall_fhir_enc_id, fall_pat_id, fall_id,
+                                     fall_studienphase, fall_station, fall_aufn_dat),
+                     by = c("pat_id" = "fall_pat_id",
+                            "record_id")) |>
+    dplyr::distinct() |>
+    dplyr::rename(fall_id_cis = fall_id,
+                  fall_fhir_main_enc_id = fall_fhir_enc_id)
+  return(complete_fe_table)
+}
+
+
+#------------------------------------------------------------------------------#
+
+#' Add Medication Analysis data to Merged FE Table
+#'
+#' This function merges medication analysis data (`meda_id`, `meda_dat`, `meda_mrp_detekt`, `medikationsanalyse_complete`)
+#' into a merged front-end table that contains patient and case-level information.
+#' The merge is based on matching both `record_id` and `fall_id_cis` to `fall_meda_id`.
+#' It retains all original columns from the merged patient and fall data,
+#' and adds the medication analysis fields. In this step, it may happen, that a meda_id is added
+#' to a fall record that it doesen't belong to (e.g. it is the fall record of a different ward).
+#' This is fixed in the next step after adding only the fitting Versorungsstellenkontakt
+#' enc_id with the ovberlapping period_start/end and meda_dat.
+#'
+#' @param merged_fe_pat_fall_table A data frame that includes merged patient and fall data.
+#'   Must include `record_id` and `fall_id_cis`.
+#' @param medikationsanalyse_fe_table A data frame with medication analysis entries from the front-end system.
+#'   Must include `record_id`, `fall_meda_id`, `meda_id`, `meda_dat`, `meda_mrp_detekt`, and `medikationsanalyse_complete`.
+#'
+#' @return A data frame containing all original columns from `merged_fe_pat_fall_table`,
+#'   plus matched medication analysis fields: `meda_id`, `meda_dat`, `meda_mrp_detekt`, and `medikationsanalyse_complete`.
+#'
+#' @details
+#' The join is based on:
+#' - Equality of `record_id`
+#' - Equality of `fall_id_cis` and `fall_meda_id`
 #'
 #' @note
-#' - Open-ended encounters (i.e., missing `enc_period_end`) should be handled explicitly.
-#'   Currently, if `enc_period_end` is `NA`, no `meda_id` will match — a fix is pending.
-#' - If multiple medication analyses exist within a ward stay, all matching rows will be retained.
-#'   Downstream filtering (e.g., deduplication or priority logic) may be needed depending on use-case.
+#' - Multiple medication analysis entries per fall are retained.
 #'
-#' @importFrom dplyr left_join relocate distinct join_by between
+#' @importFrom dplyr left_join select distinct
 #' @export
-# TODO: fix for open enc_period_end -------------
-# TODO: check logic for multiple medas per Versorgunsgstellenkontakt ------------
-addMedaIdAndMedaDat <- function(merged_table_with_fall_id_and_studienphase, medikationsanalyse_fe_table) {
+addMedaIdAndMedaDat <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 
-  merged_table_with_meda_id <- merged_table_with_fall_id_and_studienphase |>
+  merged_fe_pat_fall_meda_table <- merged_fe_pat_fall_table |>
     dplyr::left_join(medikationsanalyse_fe_table |>
-                       dplyr::select(record_id, fall_meda_id, meda_id, meda_dat) |>
+                       dplyr::select(record_id, fall_meda_id, meda_id, meda_dat, meda_mrp_detekt, medikationsanalyse_complete) |>
                        dplyr::distinct(),
-                     by = dplyr::join_by(record_id == record_id,
-                                         fall_id_KIS == fall_meda_id,
-                                         dplyr::between(y$meda_dat, x$enc_period_start, x$enc_period_end))) |>
-    dplyr::relocate(meda_id, meda_dat, .after = enc_period_end) |>
+                     by = c("record_id",
+                            "fall_id_cis" = "fall_meda_id"),
+                     relationship = "many-to-many") |>
     dplyr::distinct()
-  return(merged_table_with_meda_id)
+  return(merged_fe_pat_fall_meda_table)
 }
+
+#------------------------------------------------------------------------------#
+#' Add Encounter ID to Front-End Medication Analysis Table
+#'
+#' This function enriches a merged front-end data table (`merged_fe_pat_fall_meda_table`) with `enc_id`
+#' and additional sub-encounter-related dates by performing a multi-key, non-equi join with the complete FHIR data.
+#' The join ensures that medication analysis entries (`meda_dat`) are matched to the corresponding ward stay segment.
+#'
+#' @param merged_fe_pat_fall_meda_table A data frame containing merged patient, fall, and medication analysis data,
+#'   typically resulting from `addMedaIdAndMedaDat()`. Must include `meda_dat`, `pat_id`, `record_id`,
+#'   `fall_id_cis`, `pat_cis_pid`, `fall_fhir_main_enc_id`, `fall_studienphase`, `fall_station`, and `fall_aufn_dat`.
+#'
+#' @param complete_table A data frame containing full encounter-level data. Must include columns:
+#'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `fall_id_cis`, `pat_id`, `pat_identifier_value`, `record_id`,
+#'   `enc_period_start`, `curated_enc_period_end`, `ward_name`, `studienphase`, `enc_status`.
+#'
+#' @return A data frame containing all original columns from `merged_fe_pat_fall_meda_table` plus the
+#'   matched `enc_id` and related encounter period dates. Only rows where a valid encounter match is found are retained.
+#'
+#' @details
+#' The join is based on a combination of:
+#' - Identifiers (`pat_id`, `pat_identifier_value`, `record_id`, `main_enc_id`, `fall_id_cis`)
+#' - Temporal matching: `meda_dat` must lie within `[enc_period_start, curated_enc_period_end]`
+#' - Additional context: `studienphase`, `ward_name`, and `main_enc_period_start` must match the fall metadata
+#'
+#' Rows with no matching `enc_id` (e.g., due to unmatched date windows or inconsistencies) are excluded post-join.
+#'
+#' @note
+#' - Make sure `curated_enc_period_end` is preprocessed (e.g., using `addCuratedEncperiodEnd()`) to avoid NAs.
+#' - This function is useful when matching granular front-end entries (e.g., medication records) to sub-encounter blocks.
+#'
+#' @importFrom dplyr left_join select distinct filter join_by between
+#' @export
+addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, complete_table) {
+  merged_fe_pat_fall_meda_table_with_enc_id <- merged_fe_pat_fall_meda_table |>
+    dplyr::left_join(complete_table |>
+                       dplyr::select(enc_id, main_enc_id, main_enc_period_start, fall_id_cis,
+                                     pat_id, pat_identifier_value, record_id, enc_period_start,
+                                     curated_enc_period_end, ward_name, studienphase,
+                                     enc_status) |>
+                       dplyr::distinct(),
+                     by = dplyr::join_by(pat_id == pat_id,
+                                         pat_cis_pid == pat_identifier_value,
+                                         record_id == record_id,
+                                         fall_fhir_main_enc_id == main_enc_id,
+                                         fall_id_cis == fall_id_cis,
+                                         fall_studienphase == studienphase,
+                                         fall_station == ward_name,
+                                         fall_aufn_dat == main_enc_period_start,
+                                         dplyr::between(meda_dat,
+                                                        enc_period_start, curated_enc_period_end))) |>
+    dplyr::filter(!is.na(enc_id)) |>
+    dplyr::distinct()
+  return(merged_fe_pat_fall_meda_table_with_enc_id)
+}
+
+
