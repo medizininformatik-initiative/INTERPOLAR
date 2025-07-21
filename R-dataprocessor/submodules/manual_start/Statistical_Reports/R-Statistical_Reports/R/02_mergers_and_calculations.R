@@ -267,7 +267,7 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
 #' Merge Fall ID and Studienphase into Merged Table
 #'
 #' This function enriches a merged dataset with additional information from a front-end fall data table.
-#' It performs a left join to append the KIS Fall ID (`fall_id`) and study phase (`fall_studienphase`) based on
+#' It performs a left join to append the cis Fall ID (`fall_id`) and study phase (`fall_studienphase`) based on
 #' multiple matching keys, and renames the resulting columns for clarity.
 #'
 #' @param merged_table_with_record_id A data frame or tibble that must contain the following columns:
@@ -276,9 +276,9 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
 #'   `record_id`, `fall_fhir_enc_id`, `fall_pat_id`, `fall_id`, `fall_studienphase`, `fall_station`, and `fall_aufn_dat`.
 #'
 #' @return A data frame identical to `merged_table_with_record_id`, but with two additional columns:
-#'   \item{`fall_id_KIS`}{KIS Fall ID, renamed from `fall_id`}
+#'   \item{`fall_id_cis`}{cis Fall ID, renamed from `fall_id`}
 #'   \item{`studienphase`}{Study phase, renamed from `fall_studienphase`}
-#' The new columns are relocated for readability: `fall_id_KIS` is placed after `enc_identifier_value`,
+#' The new columns are relocated for readability: `fall_id_cis` is placed after `enc_identifier_value`,
 #' and `studienphase` is placed after `ward_name`.
 #'
 #' @details
@@ -303,13 +303,14 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
                      by = c("record_id" = "record_id", "main_enc_id" = "fall_fhir_enc_id",
                             "pat_id" = "fall_pat_id", "ward_name" = "fall_station",
                             "main_enc_period_start" = "fall_aufn_dat")) |>
-    dplyr::rename(fall_id_KIS = fall_id,
+    dplyr::rename(fall_id_cis = fall_id,
                   studienphase = fall_studienphase) |>
-    dplyr::relocate(fall_id_KIS, .after = enc_identifier_value) |>
+    dplyr::relocate(fall_id_cis, .after = enc_identifier_value) |>
     dplyr::relocate(studienphase, .after = ward_name) |>
     dplyr::distinct()
   return(merged_table_with_fall_id_and_studienphase)
 }
+
 #------------------------------------------------------------------------------#
 
 #' Add Medication Analysis Data to Merged Encounter Table

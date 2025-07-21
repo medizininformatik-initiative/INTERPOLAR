@@ -12,7 +12,7 @@
 #'
 #' @return A data frame containing:
 #'   - `pat_id`: Patient FHIR identifier
-#'   - `pat_identifier_value`: KIS (hospital system) patient identifier
+#'   - `pat_identifier_value`: cis (hospital system) patient identifier
 #'   - `pat_birthdate`: Patient's birthdate (expected in `Date` format)
 #'   - `pat_gender`: patient's gender
 #'   - `pat_deceaseddatetime`: Date and time of death, if available
@@ -47,7 +47,7 @@ getPatientData <- function(lock_id, table_name) {
   }
 
   if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
-    stop("The patient table contains multiple rows for the same patient identifier (KIS). Please check the data.")
+    stop("The patient table contains multiple rows for the same patient identifier (cis). Please check the data.")
   }
 
   return(patient_table)
@@ -171,7 +171,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #'
 #' This function retrieves patient data from a specified database table and processes it by
 #' filtering out duplicate entries and arranging the data. It performs checks for duplicate
-#' patient IDs and issues errors if duplicates are found based on either the FHIR or KIS identifiers.
+#' patient IDs and issues errors if duplicates are found based on either the FHIR or cis identifiers.
 #'
 #' @param lock_id A character string used to lock the database table and ensure safe data retrieval.
 #' This is important for managing concurrent data access in environments where multiple processes might access
@@ -185,7 +185,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' @details The function constructs an SQL query to select relevant columns from the specified table,
 #' retrieves the data while checking for read-only access, and processes it to remove duplicates and
 #' arrange the records. If there are multiple rows for a single `pat_id` (related to the FHIR identifier)
-#' or `pat_cis_pid` (related to the KIS identifier), errors are issued to indicate potential data issues.
+#' or `pat_cis_pid` (related to the cis identifier), errors are issued to indicate potential data issues.
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
 #' @importFrom dplyr distinct arrange
@@ -204,7 +204,7 @@ getPatientFeData <- function(lock_id, table_name) {
   }
 
   if (checkMultipleRows(patient_fe_table, c("pat_cis_pid"))) {
-    stop("The patient_fe table contains multiple rows for the same patient identifier (KIS). Please check the data.")
+    stop("The patient_fe table contains multiple rows for the same patient identifier (cis). Please check the data.")
   }
 
   return(patient_fe_table)
@@ -225,7 +225,7 @@ getPatientFeData <- function(lock_id, table_name) {
 #'   \item{record_id}{Unique record identifier for the patient in RedCap}
 #'   \item{fall_fhir_enc_id}{FHIR-based encounter ID}
 #'   \item{fall_pat_id}{FHIR-based Patient ID}
-#'   \item{fall_id}{Fall ID from the hospital intern system (KIS)}
+#'   \item{fall_id}{Fall ID from the hospital intern system (cis)}
 #'   \item{fall_studienphase}{Study phase associated with the case}
 #'   \item{fall_station}{INTERPOLAR-ward fromt he pids_per_ward table}
 #'   \item{fall_aufn_dat}{Admission date of the main encounter}
@@ -281,7 +281,7 @@ getFallFeData <- function(lock_id, table_name) {
 #'   \item `record_id` – Unique identifier for the patient record.
 #'   \item `meda_anlage` – identifier of the person who created the medication analysis.
 #'   \item `meda_edit` – identifier of the person who last edited the medication analysis.
-#'   \item `fall_meda_id` – Identifier linking to the specific encounter (KIS id).
+#'   \item `fall_meda_id` – Identifier linking to the specific encounter (cis id).
 #'   \item `meda_id` – Identifier for the medication analysis instance.
 #'   \item `meda_typ` – Type of medication analysis.
 #'   \item `meda_dat` – Date of the medication analysis.

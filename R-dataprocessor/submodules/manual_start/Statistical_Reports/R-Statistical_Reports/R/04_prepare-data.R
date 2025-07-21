@@ -6,7 +6,7 @@
 #'
 #' @param FAS1 A data frame or tibble representing the FAS1 dataset. It must include the following columns:
 #'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `enc_identifier_value`, `pat_id`,
-#'   `pat_identifier_value`, `record_id`, `fall_id_KIS`, `enc_type_code`,
+#'   `pat_identifier_value`, `record_id`, `fall_id_cis`, `enc_type_code`,
 #'   `age_at_hospitalization`, `enc_period_start`, `calendar_week`, `enc_period_end`,
 #'   `ward_name`, `studienphase`, and `enc_status`.
 #' @param REPORT_PERIOD_START A POSIXct date-time object representing the start of the reporting period.
@@ -17,7 +17,7 @@
 #'   \item{`pat_id`}{Patient ID}
 #'   \item{`main_enc_id`}{Main encounter ID}
 #'   \item{`record_id`}{Record ID of the patient in frontend}
-#'   \item{`fall_id_KIS`}{Case ID from clinical information system shown in frontend}
+#'   \item{`fall_id_cis`}{Case ID from clinical information system shown in frontend}
 #'   \item{`calendar_week`}{Calendar week of admission to the first INTERPOLAR ward}
 #'   \item{`ward_name`}{Name of the INTERPOLAR-ward}
 #'
@@ -36,7 +36,7 @@ prepareF1data <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
   F1_prep_raw <- FAS1 |>
     dplyr::filter(!is.na(ward_name)) |>  # only encounters with ward name
     dplyr::distinct(enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
-                    record_id, fall_id_KIS, enc_type_code, age_at_hospitalization, enc_period_start, calendar_week,
+                    record_id, fall_id_cis, enc_type_code, age_at_hospitalization, enc_period_start, calendar_week,
                     enc_period_end, ward_name, studienphase, enc_status)
 
   if (anyNA(F1_prep_raw$enc_period_start)) {
@@ -53,7 +53,7 @@ prepareF1data <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
                 selection_variable = enc_period_start) |>
       dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only admission to INTEROPLAR ward in reporting period
       dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END)) |>
-      dplyr::distinct(pat_id, main_enc_id, record_id, fall_id_KIS, calendar_week, ward_name) |>
+      dplyr::distinct(pat_id, main_enc_id, record_id, fall_id_cis, calendar_week, ward_name) |>
       dplyr::mutate(dplyr::across(c(ward_name, calendar_week), as.character))
 
     return(F1_prep)
