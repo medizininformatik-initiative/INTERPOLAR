@@ -21,7 +21,7 @@ getPairListColumnNamesDrugDrug <- function() {
     "ATC2_INCLUSION")
 }
 
-getCategoryDisplayDrugDisease <- function() {"Drug-Drug"} # same as DrugDrugGroup
+getCategoryDisplayDrugDrug <- function() {"Drug-Drug"}
 
 #' Clean and Expand Drug_Drug_MRP Definition Table
 #'
@@ -166,9 +166,10 @@ matchATCandATC2Codes <- function(active_requests, mrp_table_list_by_atc) {
 
 
 getSplittedMRPTablesDrugDrug <- function(drug_drug_mrp_tables) {
+  drug_drug_mrp_table_content <- drug_drug_mrp_tables$processed_content
   list(
-    # Split drug_disease_mrp_tables by ATC
-    by_atc = etlutils::splitTableToList(drug_drug_mrp_tables, "ATC_FOR_CALCULATION")
+    # Split drug_drug_mrp_tables by ATC
+    by_atc = etlutils::splitTableToList(drug_drug_mrp_table_content, "ATC_FOR_CALCULATION")
   )
 }
 

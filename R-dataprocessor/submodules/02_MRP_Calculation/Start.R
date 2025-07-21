@@ -1,6 +1,6 @@
 getMRPTypeFunction <- function(prefix, mrp_type) {
   mrp_type_cleaned <- gsub("_", "", mrp_type)
-  function_name <- paste0(prefix, mrp_type_cleaned, suffix)
+  function_name <- paste0(prefix, mrp_type_cleaned)
   return(get(function_name, mode = "function"))
 }
 
@@ -25,13 +25,14 @@ getMRPPairLists <- function() {
   return(mrp_pair_lists)
 }
 
-#' Calculate Drug-Disease Medication-Related Problems (MRPs)
+#' Calculate Medication-Related Problems (MRPs) for All Types
 #'
-#' This function analyzes potential drug-disease interactions across a set of patient
-#' encounters. It evaluates predefined MRP (medication-related problem) rules for
-#' contraindications between active medications and known patient diagnoses.
+#' This function analyzes potential medication-related problems (MRPs) across a set of patient
+#' encounters. It evaluates predefined MRP rules for contraindications between active medications
+#' and known patient diagnoses or co-medications. The function supports multiple MRP types
+#' (e.g., Drug-Disease, Drug-Drug) and consolidates results into unified output tables.
 #'
-#' For each encounter, the function:
+#' For each MRP type and each encounter, the function:
 #' \itemize{
 #'   \item Gathers all active medications and patient conditions.
 #'   \item Matches medication ATC codes against MRP definitions.
@@ -40,25 +41,10 @@ getMRPPairLists <- function() {
 #'   \item Compiles results into descriptive and audit tables.
 #' }
 #'
-#' @param drug_disease_mrp_tables A `data.table` containing MRP rules for drug-disease
-#'   interactions. Expected columns include:
-#'   \describe{
-#'     \item{ATC_FOR_CALCULATION}{ATC code used for rule evaluation}
-#'     \item{ICD}{Target ICD code (contraindicated condition)}
-#'     \item{ICD_VALIDITY_DAYS}{Validity period for the ICD diagnosis}
-#'     \item{ICD_PROXY_ATC}{Optional proxy ATC code used if no direct ICD is found}
-#'     \item{ICD_PROXY_ATC_VALIDITY_DAYS}{Validity window for proxy ATC usage}
-#'     \item{ICD_PROXY_OPS}{Optional OPS code used as an ICD proxy}
-#'     \item{ICD_PROXY_OPS_VALIDITY_DAYS}{Validity window for proxy OPS usage}
-#'   }
-#'
-#' @param input_file_processed_content_hash A string hash identifying the content version of the input file
-#'   used during calculation (useful for reproducibility and auditing).
-#'
 #' @return A named list with two `data.table` objects:
 #' \describe{
-#'   \item{retrolektive_mrpbewertung_fe}{MRP evaluations found for each encounter, ready for reporting or REDCap import.}
-#'   \item{dp_mrp_calculations}{Audit log of all MRP evaluation steps, including proxy type and code used.}
+#'   \item{retrolektive_mrpbewertung_fe}{Combined MRP evaluations across all types, ready for reporting or REDCap import.}
+#'   \item{dp_mrp_calculations}{Combined audit log of all MRP evaluation steps, including proxy type and code used.}
 #' }
 #'
 #' @details
@@ -67,13 +53,13 @@ getMRPPairLists <- function() {
 #' - If no ICD match is found, `matchICDProxies()` evaluates proxy rules (ATC/OPS).
 #' - Each match results in one entry in both output tables.
 #' - If no match is found for an encounter, a placeholder entry is created in `dp_mrp_calculations`.
+#' - The function merges all MRP types into two unified output tables.
 #'
 calculateMRPs <- function() {
-
-  # # 1.) Get all Einrichtungskontakt encounters that ended at least 14 days ago
-  # #     and do not have a retrolective MRP evaluation for Drug_Disease
-  main_encounters_by_mrptype <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
-  main_encounters <- main_encounters_by_mrptype[["ALL_TYPES"]]
+  # Get all Einrichtungskontakt encounters that ended at least 14 days ago
+  # and do not have a retrolective MRP evaluation for Drug_Disease
+  main_encounters_by_mrp_type <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
+  main_encounters <- main_encounters_by_mrp_type[["ALL_TYPES"]]
 
   mrp_table_lists_all <- list()
 
@@ -82,9 +68,11 @@ calculateMRPs <- function() {
     mrp_pair_lists <- getMRPPairLists()
 
     for (mrp_type in names(mrp_pair_lists)) {
+
       etlutils::runLevel3(paste0("Calculate ", mrp_type, " MRPs"), {
 
         mrp_pair_list <- mrp_pair_lists[[mrp_type]]
+        input_file_processed_content_hash <- mrp_pair_list$processed_content_hash
         splitted_mrp_tables <- getMRPTypeFunction("getSplittedMRPTables", mrp_type)(mrp_pair_list)
 
         # Initialize empty lists for results
@@ -123,17 +111,14 @@ calculateMRPs <- function() {
 
           if (nrow(match_atc_and_item2_codes)) {
             # Iterate over matched results and create new rows for retrolektive_mrpbewertung and dp_mrp_calculations
-            for (i in seq_len(nrow(match_atc_and_item2_codes))) {
-              match <- match_atc_and_item2_codes[i]
+            for (match in seq_len(nrow(match_atc_and_item2_codes))) {
+              match <- match_atc_and_item2_codes[match]
               meda_id_value <- meda_id # we need this renaming for the following comparison
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
               existing_redcap_repeat_instances <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_redcap_repeat_instance]
-
               next_index <- if (length(existing_ret_ids) == 0) 1 else max(as.integer(sub(ret_id_prefix, "", existing_ret_ids)), na.rm = TRUE) + 1
               ret_id <- paste0(ret_id_prefix, next_index)
-
-              redcap_repeat_instance <- if (length(existing_redcap_repeat_instances) == 0) 1 else max(existing_redcap_repeat_instances, na.rm = TRUE) + 1
-
+              ret_redcap_repeat_instance <- if (length(existing_redcap_repeat_instances) == 0) 1 else max(as.integer(existing_redcap_repeat_instances), na.rm = TRUE) + 1
               # always updating the references to the existing ret_ids
               resources$existing_retrolective_mrp_evaluation_ids <- etlutils::addTableRow(resources$existing_retrolective_mrp_evaluation_ids, meda_id, ret_id, ret_redcap_repeat_instance)
 
@@ -150,7 +135,7 @@ calculateMRPs <- function() {
                 ret_atc2 = if (is.null(match$atc2_code)) NA else match$atc2_code,
                 retrolektive_mrpbewertung_complete = ret_status,
                 redcap_repeat_instrument = "retrolektive_mrpbewertung",
-                redcap_repeat_instance = redcap_repeat_instance
+                redcap_repeat_instance = ret_redcap_repeat_instance
               )
 
               # Create new row for table dp_mrp_calculations
@@ -161,7 +146,7 @@ calculateMRPs <- function() {
                 study_phase = meda_study_phase,
                 ward_name = meda_ward_name,
                 ret_id = ret_id,
-                ret_redcap_repeat_instance = redcap_repeat_instance,
+                ret_redcap_repeat_instance = ret_redcap_repeat_instance,
                 mrp_proxy_type = match$proxy_type,
                 mrp_proxy_code = match$proxy_code,
                 input_file_processed_content_hash = input_file_processed_content_hash
@@ -188,17 +173,35 @@ calculateMRPs <- function() {
         retrolektive_mrpbewertung <- data.table::rbindlist(retrolektive_mrpbewertung_rows, use.names = TRUE, fill = TRUE)
         dp_mrp_calculations <- data.table::rbindlist(dp_mrp_calculations_rows, use.names = TRUE, fill = TRUE)
 
-        return(list(
+        mrp_table_lists_all[[mrp_type]] <- list(
           retrolektive_mrpbewertung_fe = retrolektive_mrpbewertung,
           dp_mrp_calculations = dp_mrp_calculations
-        ))
+        )
       })
     }
   }
+  # Merge all MRP tables into a single list for output
+  mrp_table_lists_all_merged <- list(
+    retrolektive_mrpbewertung_fe = data.table::rbindlist(
+      lapply(mrp_table_lists_all, `[[`, "retrolektive_mrpbewertung_fe"),
+      use.names = TRUE, fill = TRUE
+    ),
+    dp_mrp_calculations = data.table::rbindlist(
+      lapply(mrp_table_lists_all, `[[`, "dp_mrp_calculations"),
+      use.names = TRUE, fill = TRUE
+    )
+  )
 
-  return(mrp_table_lists_all)
+  return(mrp_table_lists_all_merged)
 }
 
 etlutils::runLevel2("MRP Calculation", {
-  calculateMRPs()
+  mrp_table_lists_all <- calculateMRPs()
+})
+
+etlutils::runLevel2("Write Retrolective MRP calculation to database", {
+  etlutils::dbWriteTables(
+    tables = mrp_table_lists_all,
+    lock_id = "Write Retrolective MRP calculation to database",
+    stop_if_table_not_empty = FALSE)
 })
