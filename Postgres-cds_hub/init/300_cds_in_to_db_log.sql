@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 22:42:12
--- Rights definition file size        : 14274 Byte
+-- Rights definition file last update : 2025-07-01 10:58:41
+-- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-17 22:50:24
+-- Create time: 2025-07-16 11:46:13
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  120_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -4420,6 +4420,11 @@ BEGIN
                                 loc_name,
                                 loc_description,
                                 loc_alias,
+                                loc_physicaltype_system,
+                                loc_physicaltype_version,
+                                loc_physicaltype_code,
+                                loc_physicaltype_display,
+                                loc_physicaltype_text,
                                 input_datetime,
                                 last_check_datetime,
                                 input_processing_nr,
@@ -4445,6 +4450,11 @@ BEGIN
                                 current_record.loc_name,
                                 current_record.loc_description,
                                 current_record.loc_alias,
+                                current_record.loc_physicaltype_system,
+                                current_record.loc_physicaltype_version,
+                                current_record.loc_physicaltype_code,
+                                current_record.loc_physicaltype_display,
+                                current_record.loc_physicaltype_text,
                                 current_record.input_datetime,
                                 last_pro_datetime,
                                 last_pro_nr,
