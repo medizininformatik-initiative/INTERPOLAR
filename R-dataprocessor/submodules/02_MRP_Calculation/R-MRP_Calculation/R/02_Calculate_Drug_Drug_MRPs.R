@@ -1,3 +1,10 @@
+#' Get Column Names for Drug-Drug MRP Pair List
+#'
+#' Returns a named character vector of relevant column names used in the
+#' Drug-Drug medication-related problem (MRP) pair list.
+#' These columns define the structure of the MRP rule table.
+#'
+#' @return A named character vector of column names relevant to Drug-Drug MRP definitions.
 getPairListColumnNamesDrugDrug <- function() {
   etlutils::namedVectorByValue(
     "ATC_DISPLAY",
@@ -21,6 +28,12 @@ getPairListColumnNamesDrugDrug <- function() {
     "ATC2_INCLUSION")
 }
 
+#' Get Category Display Name for Drug-Drug MRPs
+#'
+#' Returns the display label for the MRP category "Drug-Drug", used for
+#' tagging or labeling MRPs in evaluation outputs.
+#'
+#' @return A character string: \code{"Drug-Drug"}
 getCategoryDisplayDrugDrug <- function() {"Drug-Drug"}
 
 #' Clean and Expand Drug_Drug_MRP Definition Table
@@ -164,7 +177,20 @@ matchATCandATC2Codes <- function(active_requests, mrp_table_list_by_atc) {
   return(data.table::rbindlist(matched_rows, fill = TRUE))
 }
 
-
+#' Split Drug-Drug MRP Table into Lookup Structures
+#'
+#' Takes a full Drug-Drug MRP table and splits it into a list of lookup tables
+#' for more efficient evaluation during MRP calculation. Currently, the table is split
+#' by the column \code{ATC_FOR_CALCULATION}, enabling fast matching during runtime.
+#'
+#' @param drug_drug_mrp_tables A named list containing the key \code{processed_content}, which holds
+#'   the full MRP definition table for Drug-Drug interactions as a \code{data.table}.
+#'
+#' @return A list with named elements containing split tables. Specifically:
+#' \describe{
+#'   \item{by_atc}{A list of data.tables indexed by \code{ATC_FOR_CALCULATION}.}
+#' }
+#'
 getSplittedMRPTablesDrugDrug <- function(drug_drug_mrp_tables) {
   drug_drug_mrp_table_content <- drug_drug_mrp_tables$processed_content
   list(
@@ -173,6 +199,22 @@ getSplittedMRPTablesDrugDrug <- function(drug_drug_mrp_tables) {
   )
 }
 
+#' Calculate Drug-Drug Medication-Related Problems (MRPs)
+#'
+#' Evaluates potential drug-drug interactions based on a patient's active
+#' \code{MedicationRequest} resources. For each medication, it checks against
+#' predefined interaction rules indexed by \code{ATC_FOR_CALCULATION}.
+#'
+#' @param active_requests A \code{data.table} of active medications for the encounter,
+#'   expected to contain ATC codes.
+#' @param splitted_mrp_tables A list of split MRP tables as returned by \code{getSplittedMRPTablesDrugDrug()}.
+#' @param resources A list of all patient-related FHIR resources (not used here, but required by interface).
+#' @param patient_id The internal patient ID (not used here, but required by interface).
+#' @param meda_datetime The datetime of medication analysis (not used here, but required by interface).
+#'
+#' @return A \code{data.table} with matched Drug-Drug MRP results. The format is
+#'   compatible with downstream processing for MRP reporting and audit.
+#'
 calculateMRPsDrugDrug <- function(active_requests, splitted_mrp_tables, resources, patient_id, meda_datetime) { # don't remove the unused parameters!
   matchATCandATC2Codes(active_requests, splitted_mrp_tables$by_atc)
 }

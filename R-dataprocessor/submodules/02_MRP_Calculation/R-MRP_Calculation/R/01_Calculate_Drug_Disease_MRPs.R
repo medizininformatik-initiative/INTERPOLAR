@@ -1,3 +1,11 @@
+#' Get Column Names for Drug-Disease MRP Pair List
+#'
+#' Returns a named character vector of relevant column names used in the
+#' Drug-Disease medication-related problem (MRP) pair list.
+#' These columns define the structure of the MRP rule table, including
+#' primary ATC codes, condition codes (ICD), proxy rules, and laboratory proxies (LOINC).
+#'
+#' @return A named character vector of column names relevant to Drug-Disease MRP definitions.
 getPairListColumnNamesDrugDisease <- function() {
   etlutils::namedVectorByValue(
     #"SMPC_NAME",
@@ -26,6 +34,12 @@ getPairListColumnNamesDrugDisease <- function() {
     "LOINC_CUTOFF_ABSOLUTE")
 }
 
+#' Get Category Display Name for Drug-Disease MRPs
+#'
+#' Returns the display label for the MRP category "Drug-Disease", used for
+#' tagging or labeling MRPs in evaluation outputs.
+#'
+#' @return A character string: \code{"Drug-Disease"}
 getCategoryDisplayDrugDisease <- function() {"Drug-Disease"}
 
 #' Clean and Expand Drug_Disease_MRP Definition Table
@@ -416,7 +430,6 @@ matchICDProxies <- function(
         }
       }
     }
-
     return(matched)
   }
 
@@ -454,6 +467,23 @@ matchICDProxies <- function(
   return(data.table::rbindlist(c(atc_matches, ops_matches), fill = TRUE))
 }
 
+#' Split Drug-Disease MRP Table into Lookup Structures
+#'
+#' Takes a full Drug-Disease MRP table and splits it into multiple lookup tables
+#' to support efficient MRP evaluation. Splitting is done by relevant rule keys such as:
+#' ATC codes, ICD codes, and proxy definitions (ATC and OPS).
+#'
+#' @param drug_disease_mrp_tables A named list containing the key \code{processed_content},
+#'   which holds the complete MRP definition table for Drug-Disease interactions as a \code{data.table}.
+#'
+#' @return A list of named \code{data.table} lookup structures:
+#' \describe{
+#'   \item{by_atc}{Split by \code{ATC_FOR_CALCULATION}, used for direct ATC code matching.}
+#'   \item{by_icd}{Split by \code{ICD}, used to match ICD codes from conditions.}
+#'   \item{by_atc_proxy}{Split by \code{ICD_PROXY_ATC}, used for proxy rules based on medication.}
+#'   \item{by_ops_proxy}{Split by \code{ICD_PROXY_OPS}, used for proxy rules based on procedures.}
+#' }
+#'
 getSplittedMRPTablesDrugDisease <- function(drug_disease_mrp_tables) {
   drug_disease_mrp_table_content <- drug_disease_mrp_tables$processed_content
   list(
@@ -464,6 +494,20 @@ getSplittedMRPTablesDrugDisease <- function(drug_disease_mrp_tables) {
   )
 }
 
+#' Calculate Drug-Disease Medication-Related Problems (MRPs)
+#'
+#' Detects MRPs by evaluating combinations of medications (ATC codes) and diseases (ICD codes).
+#' If direct ICD matches are not found for an ATC, proxy rules are applied using medication
+#' and procedure history to infer possible conditions.
+#'
+#' @param active_requests A \code{data.table} of the patient's active medications (e.g. FHIR MedicationRequest).
+#' @param splitted_mrp_tables A list of lookup tables created by \code{getSplittedMRPTablesDrugDisease()}.
+#' @param resources A named list of all FHIR resource tables relevant to the encounter (conditions, medications, procedures, etc.).
+#' @param patient_id A character string representing the internal patient ID.
+#' @param meda_datetime A POSIXct timestamp representing the time of medication evaluation.
+#'
+#' @return A \code{data.table} containing matched Drug-Disease MRPs, including both direct and proxy-based findings.
+#'
 calculateMRPsDrugDisease <- function(active_requests, splitted_mrp_tables, resources, patient_id, meda_datetime) {
   match_atc_and_icd_codes <- data.table::data.table()
   # Match ATC-codes between encounter data and MRP definitions
