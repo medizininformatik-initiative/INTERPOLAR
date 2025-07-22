@@ -16,6 +16,7 @@
 #' during the reporting period. Includes columns:
 #'   \item{`pat_id`}{Patient ID}
 #'   \item{`main_enc_id`}{Main encounter ID}
+#'   \item{`enc_id`}{Sub-Encounter ID}
 #'   \item{`record_id`}{Record ID of the patient in frontend}
 #'   \item{`fall_id_cis`}{Case ID from clinical information system shown in frontend}
 #'   \item{`calendar_week`}{Calendar week of admission to the first INTERPOLAR ward}
@@ -53,7 +54,7 @@ prepareF1data <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
                 selection_variable = enc_period_start) |>
       dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only admission to INTEROPLAR ward in reporting period
       dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END)) |>
-      dplyr::distinct(pat_id, main_enc_id, record_id, fall_id_cis, calendar_week, ward_name) |>
+      dplyr::distinct(pat_id, main_enc_id, enc_id, record_id, fall_id_cis, calendar_week, ward_name) |>
       dplyr::mutate(dplyr::across(c(ward_name, calendar_week), as.character))
 
     return(F1_prep)

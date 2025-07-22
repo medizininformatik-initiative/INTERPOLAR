@@ -285,8 +285,20 @@ getFallFeData <- function(lock_id, table_name) {
 #'   \item `meda_id` – Identifier for the medication analysis instance.
 #'   \item `meda_typ` – Type of medication analysis.
 #'   \item `meda_dat` – Date of the medication analysis.
+#'   \item `meda_gewicht_aktuell` – Current weight of the patient at the time of analysis.
+#'   \item `meda_gewicht_aktl_einheit` – Unit of measurement for the current weight.
+#'   \item `meda_groesse` – Height of the patient at the time of analysis.
+#'   \item `meda_groesse_einheit` – Unit of measurement for the height.
+#'   \item `meda_nieren_insuf_chron` – Flag indicating if the patient has chronic kidney insufficiency.
+#'   \item `meda_nieren_insuf_ausmass` – Degree of chronic kidney insufficiency.
+#'   \item `meda_nieren_insuf_dialysev` – Flag indicating if the patient is on dialysis.
+#'   \item `meda_leber_insuf` – Flag indicating if the patient has liver insufficiency.
+#'   \item `meda_leber_insuf_ausmass` – Degree of liver insufficiency.
+#'   \item `meda_schwanger_mo` – Flag indicating if the patient is pregnant.
 #'   \item `meda_ma_thueberw` – Flag indicating if medication analysis is marked for representment
 #'   \item `meda_mrp_detekt` – Flag indicating if a medication-related problem (MRP) was detected.
+#'   \item `meda_aufwand_zeit` – Time spent on the medication analysis.
+#'   \item `meda_notiz` – Additional notes related to the medication analysis.
 #'   \item `medikationsanalyse_complete` – Completion status of the form.
 #' }
 #'
@@ -299,7 +311,10 @@ getFallFeData <- function(lock_id, table_name) {
 getMedikationsanalyseFeData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT record_id, meda_anlage, meda_edit, fall_meda_id, ",
-                  "meda_id, meda_typ, meda_dat, meda_ma_thueberw, meda_mrp_detekt, ",
+                  "meda_id, meda_typ, meda_dat, meda_gewicht_aktuell, meda_gewicht_aktl_einheit, ",
+                  "meda_groesse, meda_groesse_einheit, meda_nieren_insuf_chron, meda_nieren_insuf_ausmass, ",
+                  "meda_nieren_insuf_dialysev, meda_leber_insuf, meda_leber_insuf_ausmass, meda_schwanger_mo, ",
+                  "meda_ma_thueberw, meda_mrp_detekt, meda_aufwand_zeit, meda_notiz, ",
                   "medikationsanalyse_complete FROM ", table_name, "\n")
 
   medikationsanalyse_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
@@ -307,4 +322,58 @@ getMedikationsanalyseFeData <- function(lock_id, table_name) {
     dplyr::arrange(record_id, fall_meda_id, meda_dat)
 
   return(medikationsanalyse_fe_table)
+}
+
+#------------------------------------------------------------------------------#
+
+#' Retrieve MRP Documentation Validation Data from Front-End Table
+#'
+#' This function queries the specified front-end database table for MRP (Medication-Related Problems)
+#' documentation validation data. It returns detailed metadata for each MRP entry, including
+#' associated medication, indication, product, and intervention classifications.
+#'
+#' @param lock_id A string identifier used to access the read-only connection to the database.
+#'   Typically used to lock the appropriate source for ETL processing.
+#' @param table_name A string representing the name of the front-end table to query (e.g.,
+#'   `"v_mrp_dokumentation_validierung_fe"`).
+#'
+#' @return A `data.frame` containing the selected MRP documentation validation variables,
+#'   arranged by `record_id`, `mrp_meda_id`, and `mrp_id`.
+#'
+#' @details
+#' The function fetches and returns the following:
+#' - Identifiers: `record_id`, `mrp_anlage`, `mrp_edit`, `mrp_meda_id`, `mrp_id`
+#' - Descriptors: `mrp_kurzbeschr`, `mrp_hinweisgeber`, `mrp_hinweisgeber_oth`
+#' - Medication fields: `mrp_wirkstoff`, `mrp_atc1` to `mrp_atc5`
+#' - Product-related fields: `mrp_med_prod`, `mrp_med_prod_sonst`
+#' - Problem indicators: `mrp_pigrund___1` to `mrp_pigrund___27`
+#' - Intervention categories: `mrp_ip_klasse_01`, `mrp_ip_klasse_disease`, `mrp_ip_klasse_nieren_insuf`
+#' - Measures taken (AM and organizational): `mrp_massn_am___1` to `mrp_massn_am___10`,
+#'   `mrp_massn_orga___1` to `mrp_massn_orga___8`
+#' - MRP details and intervention realization: `mrp_notiz`, `mrp_dokup_hand_emp_akz`, `mrp_merp`, and completion status
+#'
+#' The function ensures uniqueness using `distinct()` and sorts results by `record_id`,
+#' `mrp_meda_id`, and `mrp_id` for easier downstream processing.
+#'
+#' @importFrom etlutils dbGetReadOnlyQuery
+#' @importFrom dplyr distinct arrange
+#' @export
+getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
+
+  query <- paste0("SELECT record_id, mrp_anlage, mrp_edit, ",
+                  "mrp_meda_id, mrp_id, mrp_kurzbeschr, mrp_hinweisgeber, mrp_hinweisgeber_oth, ",
+                  "mrp_wirkstoff, ",
+                  paste0("mrp_atc", 1:5, collapse = ", "), ", ",
+                  "mrp_med_prod, mrp_med_prod_sonst, ",
+                  paste0("mrp_pigrund___", 1:27, collapse = ", "), ", ",
+                  "mrp_ip_klasse_01, mrp_ip_klasse_disease, mrp_ip_klasse_nieren_insuf, ",
+                  paste0("mrp_massn_am___", 1:10, collapse = ", "), ", ",
+                  paste0("mrp_massn_orga___", 1:8, collapse = ", "), ", ",
+                  "mrp_notiz, mrp_dokup_hand_emp_akz, mrp_merp, mrpdokumentation_validierung_complete ",
+                  "FROM ", table_name, "\n")
+
+  mrp_dokumentation_validierung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    dplyr::arrange(record_id, mrp_meda_id, mrp_id)
+  return(mrp_dokumentation_validierung_fe_table)
 }

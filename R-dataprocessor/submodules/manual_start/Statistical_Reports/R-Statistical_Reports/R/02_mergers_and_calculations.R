@@ -425,11 +425,10 @@ mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 #'
 #' @importFrom dplyr left_join select distinct
 #' @export
-addMedaIdAndMedaDat <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
+addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 
   merged_fe_pat_fall_meda_table <- merged_fe_pat_fall_table |>
     dplyr::left_join(medikationsanalyse_fe_table |>
-                       dplyr::select(record_id, fall_meda_id, meda_id, meda_dat, meda_mrp_detekt, medikationsanalyse_complete) |>
                        dplyr::distinct(),
                      by = c("record_id",
                             "fall_id_cis" = "fall_meda_id"),
@@ -446,7 +445,7 @@ addMedaIdAndMedaDat <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_
 #' The join ensures that medication analysis entries (`meda_dat`) are matched to the corresponding ward stay segment.
 #'
 #' @param merged_fe_pat_fall_meda_table A data frame containing merged patient, fall, and medication analysis data,
-#'   typically resulting from `addMedaIdAndMedaDat()`. Must include `meda_dat`, `pat_id`, `record_id`,
+#'   typically resulting from `addMedaData()`. Must include `meda_dat`, `pat_id`, `record_id`,
 #'   `fall_id_cis`, `pat_cis_pid`, `fall_fhir_main_enc_id`, `fall_studienphase`, `fall_station`, and `fall_aufn_dat`.
 #'
 #' @param complete_table A data frame containing full encounter-level data. Must include columns:
@@ -489,8 +488,46 @@ addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, complete_table) {
                                          dplyr::between(meda_dat,
                                                         enc_period_start, curated_enc_period_end))) |>
     dplyr::filter(!is.na(enc_id)) |>
-    dplyr::distinct()
+    dplyr::distinct() |>
+    dplyr::relocate(enc_id, enc_period_start, curated_enc_period_end, enc_status, .after = fall_aufn_dat)
   return(merged_fe_pat_fall_meda_table_with_enc_id)
 }
 
+#------------------------------------------------------------------------------#
 
+#' Merge MRP Documentation Data with Medication Analysis Table
+#'
+#' This function merges MRP (Medication-Related Problems) documentation validation data
+#' into a processed table that already includes medication analysis data, encounter linkage,
+#' and patient/case-level identifiers.
+#'
+#' @param merged_fe_pat_fall_meda_table_with_enc_id A data frame containing merged patient,
+#'   case, and encounter data, enriched with medication analysis IDs (`meda_id`) and linked
+#'   to a specific hospital stay segment.
+#' @param mrp_dokumentation_validierung_fe_table A data frame containing MRP documentation
+#'   validation entries as retrieved by `getMRPDokumentationValidierungFeData()`.
+#'
+#' @return A data frame that includes all columns from `merged_fe_pat_fall_meda_table_with_enc_id`
+#'   along with matching MRP documentation fields (e.g., `mrp_id`, `mrp_kurzbeschr`, `mrp_hinweisgeber`, etc.)
+#'   based on `record_id` and `meda_id`.
+#'
+#' @details
+#' The merge operation is performed on the following keys:
+#' - `record_id` (common to both datasets)
+#' - `meda_id` from the medication analysis table matched to `mrp_meda_id` in the MRP documentation table
+#'
+#' Duplicate entries are removed post-merge using `dplyr::distinct()`.
+#'
+#' @importFrom dplyr left_join distinct
+#' @export
+addMRPDokuData <- function(merged_fe_pat_fall_meda_table_with_enc_id, mrp_dokumentation_validierung_fe_table) {
+
+  merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku <- merged_fe_pat_fall_meda_table_with_enc_id |>
+    dplyr::left_join(mrp_dokumentation_validierung_fe_table |>
+                       dplyr::distinct(),
+                     by = c("record_id",
+                            "meda_id" = "mrp_meda_id")
+    ) |>
+    dplyr::distinct()
+  return(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku)
+}

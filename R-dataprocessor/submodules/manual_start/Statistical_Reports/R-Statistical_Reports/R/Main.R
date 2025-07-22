@@ -80,6 +80,10 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
                                   table_name = "v_medikationsanalyse_fe_last_import")
   # --> this table shows only the last version of each medikationsanalyse_fe entry
 
+  mrp_dokumentation_validierung_fe_table <- getMRPDokumentationValidierungFeData(lock_id = "statistical reports[7]",
+                                  table_name = "v_mrpdokumentation_validierung_fe_last_import")
+  # --> this table shows only the last version of each mrp_dokumentation_validierung_fe entry
+
   complete_table <- mergePatEnc(patient_table, encounter_table) |>
     addCuratedEncPeriodEnd() |>
     addMainEncId() |>
@@ -90,8 +94,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
     addFallIdAndStudienphase(fall_fe_table)
 
   complete_fe_table <-mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
-    addMedaIdAndMedaDat(medikationsanalyse_fe_table) |>
-    addEncIdToFeData(complete_table)
+    addMedaData(medikationsanalyse_fe_table) |>
+    addEncIdToFeData(complete_table) |>
+    addMRPDokuData(mrp_dokumentation_validierung_fe_table)
 
   FAS1 <- defineFAS1(complete_table)
   F1_data <- prepareF1data(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
