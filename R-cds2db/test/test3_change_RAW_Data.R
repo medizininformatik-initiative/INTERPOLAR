@@ -184,6 +184,7 @@ if (exists("DEBUG_DAY")) {
     dt_enc[1, enc_id := "UKB-0001-E-1-A-1-V-2"]
     dt_enc[1, enc_status := "finished"]
     dt_enc[1, enc_location_identifier_value := "[1.1.1.1]Nicht-IP-Raum 5 ~ [2.1.1.1]Nicht-IP-Bett 5"]
+    dt_enc[1, enc_period_start := getFormattedRAWDateTime(DEBUG_DATES[3], offset_days = 0.5)]
     dt_enc[1, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[4], offset_days = 0.5)]
 
     dt_enc[2, enc_id := "UKB-0001-E-1-A-1-V-3"]
@@ -217,6 +218,8 @@ if (exists("DEBUG_DAY")) {
                      enc_id := "UKB-0001-E-1-A-1-V-3"]
     dt_enc <- dt_enc[enc_id == "UKB-0001-E-1-A-1-V-3",
                      enc_location_identifier_value := "[1.1.1.1]Raum 9 ~ [2.1.1.1]Bett 9"]
+    dt_enc <- dt_enc[enc_id == "UKB-0001-E-1-A-1-V-3",
+                     enc_period_start := getFormattedRAWDateTime(DEBUG_DATES[4], offset_days = 0.5)]
 
     pids_per_wards <- resource_tables$pids_per_ward
     pids_per_wards <- pids_per_wards[-1]
