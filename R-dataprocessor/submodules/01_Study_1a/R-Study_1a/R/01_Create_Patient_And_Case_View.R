@@ -279,7 +279,11 @@ createFrontendTables <- function() {
       lock_id = "load last imported datasets from pids_per_ward")
     pids_per_ward <- pids_per_ward[!is.na(patient_id)]
     previous_pids_per_ward <- getPreviousPidsPerWard()
-    pids_per_ward <- unique(rbind(pids_per_ward, previous_pids_per_ward, use.names = TRUE))
+    # Filter all rows from previous_pids_per_ward where the patient_id does not appear in the table pids_per_ward.
+    previous_pids_per_ward_filtered <- previous_pids_per_ward[
+      !patient_id %in% pids_per_ward$patient_id
+    ]
+    pids_per_ward <- unique(rbind(pids_per_ward, previous_pids_per_ward_filtered, use.names = TRUE))
     return(pids_per_ward)
   }
 
