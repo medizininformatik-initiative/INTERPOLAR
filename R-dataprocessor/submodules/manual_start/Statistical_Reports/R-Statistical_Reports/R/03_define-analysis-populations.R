@@ -42,7 +42,7 @@ defineFAS1 <- function(complete_table) {
     dplyr::distinct()
 
   FAS1 <- FAS1_raw |>
-    dplyr::select(-c(enc_partof_ref, enc_class_code, pat_birthdate, enc_class_system, enc_type_system,
+    dplyr::select(-c(enc_partof_ref, enc_class_code, enc_class_system, enc_type_system,
                      enc_servicetype_system, enc_servicetype_code, enc_hospitalization_admitsource_system,
                      enc_hospitalization_admitsource_code, enc_hospitalization_dischargedisposition_system,
                      enc_hospitalization_dischargedisposition_code, enc_location_physicaltype_system,

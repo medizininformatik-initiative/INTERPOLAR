@@ -231,7 +231,8 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 
   merged_table_with_age <- merged_table_with_MainEncPeriodStart |>
     dplyr::mutate(age_at_hospitalization = floor(as.numeric(difftime(as.Date(main_enc_period_start), pat_birthdate)) / 365.25)) |>
-    dplyr::relocate(age_at_hospitalization, .after = pat_birthdate)
+    dplyr::relocate(age_at_hospitalization, .after = pat_birthdate) |>
+    dplyr::select(-pat_birthdate)
 
   return(merged_table_with_age)
 }
