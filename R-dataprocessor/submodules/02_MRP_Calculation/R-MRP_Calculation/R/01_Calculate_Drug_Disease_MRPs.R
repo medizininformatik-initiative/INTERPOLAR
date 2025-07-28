@@ -1,17 +1,63 @@
+#' Get Column Names for Drug-Disease MRP Pair List
+#'
+#' Returns a named character vector of relevant column names used in the
+#' Drug-Disease medication-related problem (MRP) pair list.
+#' These columns define the structure of the MRP rule table, including
+#' primary ATC codes, condition codes (ICD), proxy rules, and laboratory proxies (LOINC).
+#'
+#' @return A named character vector of column names relevant to Drug-Disease MRP definitions.
+getPairListColumnNamesDrugDisease <- function() {
+  etlutils::namedVectorByValue(
+    #"SMPC_NAME",
+    #"SMPC_VERSION",
+    "ATC_DISPLAY",
+    "ATC_PRIMARY",
+    "ATC_SYSTEMIC_SY",
+    "ATC_DERMATIC_D",
+    "ATC_OPHTHALMOLOGIC_OP",
+    "ATC_INHALATIVE_I",
+    "ATC_OTHER_OT",
+    "ATC_INCLUSION",
+    "CONDITION_DISPLAY",
+    "CONDITION_DISPLAY_CLUSTER",
+    "ICD",
+    "ICD_VALIDITY_DAYS",
+    "ICD_PROXY_ATC",
+    "ICD_PROXY_ATC_VALIDITY_DAYS",
+    "ICD_PROXY_OPS",
+    "ICD_PROXY_OPS_VALIDITY_DAYS",
+    "LOINC_PRIMARY_PROXY",
+    "LOINC_UNIT",
+    "LOINC_DISPLAY",
+    "LOINC_VALIDITY_DAYS",
+    "LOINC_CUTOFF_REFERENCE",
+    "LOINC_CUTOFF_ABSOLUTE")
+}
+
+#' Get Category Display Name for Drug-Disease MRPs
+#'
+#' Returns the display label for the MRP category "Drug-Disease", used for
+#' tagging or labeling MRPs in evaluation outputs.
+#'
+#' @return A character string: \code{"Drug-Disease"}
+getCategoryDisplayDrugDisease <- function() {"Drug-Disease"}
+
 #' Clean and Expand Drug_Disease_MRP Definition Table
 #'
 #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
 #' splitting and trimming values, and expanding concatenated ICD codes.
 #'
 #' @param drug_disease_mrp_definition A data.table containing the MRP definition table.
+#' @param mrp_type A character string representing the base name of the MRP definition (e.g., `"Drug_Disease"`).
 #'
 #' @return A cleaned and expanded data.table containing the MRP definition table.
 #'
 #' @export
-cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
+cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, mrp_type) {
 
   # Remove not nesessary columns
-  drug_disease_mrp_definition <- drug_disease_mrp_definition[, c("SMPC_NAME", "SMPC_VERSION") := NULL]
+  mrp_columnnames <- getPairListColumnNames(mrp_type)
+  drug_disease_mrp_definition <- drug_disease_mrp_definition[, ..mrp_columnnames]
 
   # Remove rows with all empty code columns
   proxy_column_names <- names(drug_disease_mrp_definition)[
@@ -140,27 +186,6 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition) {
   drug_disease_mrp_definition <- unique(drug_disease_mrp_definition)
 
   return(drug_disease_mrp_definition)
-}
-
-#' Filter active MedicationRequests for an encounter within a specific time window
-#'
-#' @param medication_requests A \code{data.table} of MedicationRequest resources. Must contain columns \code{medreq_encounter_ref} and \code{medreq_authoredon}.
-#' @param enc_period_start POSIXct. The start datetime of the encounter period.
-#' @param meda_datetime POSIXct. The datetime of the medication analysis (cutoff point).
-#'
-#' @return A \code{data.table} with filtered active medication requests for the given encounter and time range.
-#'
-extractActiveATCCodes <- function(medication_requests, enc_period_start, meda_datetime) {
-
-  active_requests <- medication_requests[
-    !is.na(start_date) &
-      start_date >= enc_period_start &
-      start_date <= meda_datetime &
-      (is.na(end_date) |
-         end_date > meda_datetime)
-  ]
-  atc_codes <- active_requests[, c("atc_code")]
-  return(atc_codes)
 }
 
 #' Get relevant patient conditions up to a given date
@@ -405,7 +430,6 @@ matchICDProxies <- function(
         }
       }
     }
-
     return(matched)
   }
 
@@ -443,192 +467,86 @@ matchICDProxies <- function(
   return(data.table::rbindlist(c(atc_matches, ops_matches), fill = TRUE))
 }
 
+#' Split Drug-Disease MRP Table into Lookup Structures
+#'
+#' Takes a full Drug-Disease MRP table and splits it into multiple lookup tables
+#' to support efficient MRP evaluation. Splitting is done by relevant rule keys such as:
+#' ATC codes, ICD codes, and proxy definitions (ATC and OPS).
+#'
+#' @param drug_disease_mrp_tables A named list containing the key \code{processed_content},
+#'   which holds the complete MRP definition table for Drug-Disease interactions as a \code{data.table}.
+#'
+#' @return A list of named \code{data.table} lookup structures:
+#' \describe{
+#'   \item{by_atc}{Split by \code{ATC_FOR_CALCULATION}, used for direct ATC code matching.}
+#'   \item{by_icd}{Split by \code{ICD}, used to match ICD codes from conditions.}
+#'   \item{by_atc_proxy}{Split by \code{ICD_PROXY_ATC}, used for proxy rules based on medication.}
+#'   \item{by_ops_proxy}{Split by \code{ICD_PROXY_OPS}, used for proxy rules based on procedures.}
+#' }
+#'
+getSplittedMRPTablesDrugDisease <- function(drug_disease_mrp_tables) {
+  drug_disease_mrp_table_content <- drug_disease_mrp_tables$processed_content
+  list(
+    by_atc = etlutils::splitTableToList(drug_disease_mrp_table_content, "ATC_FOR_CALCULATION"),
+    by_icd = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD"),
+    by_atc_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD_PROXY_ATC"),
+    by_ops_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD_PROXY_OPS")
+  )
+}
 
 #' Calculate Drug-Disease Medication-Related Problems (MRPs)
 #'
-#' This function analyzes potential drug-disease interactions across a set of patient
-#' encounters. It evaluates predefined MRP (medication-related problem) rules for
-#' contraindications between active medications and known patient diagnoses.
+#' Detects MRPs by evaluating combinations of medications (ATC codes) and diseases (ICD codes).
+#' If direct ICD matches are not found for an ATC, proxy rules are applied using medication
+#' and procedure history to infer possible conditions.
 #'
-#' For each encounter, the function:
-#' \itemize{
-#'   \item Gathers all active medications and patient conditions.
-#'   \item Matches medication ATC codes against MRP definitions.
-#'   \item Attempts to find matching ICD codes directly from patient conditions.
-#'   \item If no direct ICD matches are found, evaluates proxy rules (using ATC or OPS codes).
-#'   \item Compiles results into descriptive and audit tables.
-#' }
+#' @param active_requests A \code{data.table} of the patient's active medications (e.g. FHIR MedicationRequest).
+#' @param splitted_mrp_tables A list of lookup tables created by \code{getSplittedMRPTablesDrugDisease()}.
+#' @param resources A named list of all FHIR resource tables relevant to the encounter (conditions, medications, procedures, etc.).
+#' @param patient_id A character string representing the internal patient ID.
+#' @param meda_datetime A POSIXct timestamp representing the time of medication evaluation.
 #'
-#' @param drug_disease_mrp_tables A `data.table` containing MRP rules for drug-disease
-#'   interactions. Expected columns include:
-#'   \describe{
-#'     \item{ATC_FOR_CALCULATION}{ATC code used for rule evaluation}
-#'     \item{ICD}{Target ICD code (contraindicated condition)}
-#'     \item{ICD_VALIDITY_DAYS}{Validity period for the ICD diagnosis}
-#'     \item{ICD_PROXY_ATC}{Optional proxy ATC code used if no direct ICD is found}
-#'     \item{ICD_PROXY_ATC_VALIDITY_DAYS}{Validity window for proxy ATC usage}
-#'     \item{ICD_PROXY_OPS}{Optional OPS code used as an ICD proxy}
-#'     \item{ICD_PROXY_OPS_VALIDITY_DAYS}{Validity window for proxy OPS usage}
-#'   }
+#' @return A \code{data.table} containing matched Drug-Disease MRPs, including both direct and proxy-based findings.
 #'
-#' @param input_file_processed_content_hash A string hash identifying the content version of the input file
-#'   used during calculation (useful for reproducibility and auditing).
-#'
-#' @return A named list with two `data.table` objects:
-#' \describe{
-#'   \item{retrolektive_mrpbewertung_fe}{MRP evaluations found for each encounter, ready for reporting or REDCap import.}
-#'   \item{dp_mrp_calculations}{Audit log of all MRP evaluation steps, including proxy type and code used.}
-#' }
-#'
-#' @details
-#' - The function uses `getResourcesForMRPCalculation()` to load relevant FHIR resources.
-#' - ATC codes are matched using `matchATCCodes()`, ICDs using `matchICDCodes()`.
-#' - If no ICD match is found, `matchICDProxies()` evaluates proxy rules (ATC/OPS).
-#' - Each match results in one entry in both output tables.
-#' - If no match is found for an encounter, a placeholder entry is created in `dp_mrp_calculations`.
-#'
-calculateDrugDiseaseMRPs <- function(drug_disease_mrp_tables, input_file_processed_content_hash) {
-  resources <- getResourcesForMRPCalculation(MRP_CALCULATION_TYPE$Drug_Disease)
+calculateMRPsDrugDisease <- function(active_requests, splitted_mrp_tables, resources, patient_id, meda_datetime) {
+  match_atc_and_icd_codes <- data.table::data.table()
+  # Match ATC-codes between encounter data and MRP definitions
+  match_atc_codes <- matchATCCodes(active_requests, splitted_mrp_tables$by_atc)
+  # Get and match ICD-codes of the patient
+  if (nrow(match_atc_codes)) {
+    # Get relevant conditions
+    relevant_conditions <- getRelevantConditions(resources$conditions, patient_id, meda_datetime)
+    # Match ICD codes against MRP definitions and ATC codes
+    match_atc_and_icd_codes <- matchICDCodes(
+      relevant_conditions = relevant_conditions,
+      drug_disease_mrp_tables_by_icd = splitted_mrp_tables$by_icd,
+      match_atc_codes = match_atc_codes,
+      meda_datetime = meda_datetime,
+      patient_id = patient_id
+    )
+    matched_atcs <- unique(match_atc_and_icd_codes$atc)
+    unmatched_atcs <- match_atc_codes[!(atc_code %in% matched_atcs)]
 
-  if (!length(resources)) {
-    return(list())
-  }
+    if (nrow(unmatched_atcs)) {
+      # No ICD matches found, check ATC and OPS Proxys for ICDs
 
-  # Split drug_disease_mrp_tables by ATC and ICD
-  drug_disease_mrp_tables_by_atc <- etlutils::splitTableToList(drug_disease_mrp_tables, "ATC_FOR_CALCULATION")
-  drug_disease_mrp_tables_by_icd <- etlutils::splitTableToList(drug_disease_mrp_tables, "ICD")
-  drug_disease_mrp_tables_by_atc_proxy <- etlutils::splitTableToList(drug_disease_mrp_tables, "ICD_PROXY_ATC")
-  drug_disease_mrp_tables_by_ops_proxy <- etlutils::splitTableToList(drug_disease_mrp_tables, "ICD_PROXY_OPS")
-
-  # Initialize empty lists for results
-  retrolektive_mrpbewertung_rows <- list()
-  dp_mrp_calculations_rows <- list()
-
-  for (encounter_id in resources$main_encounters$enc_id) {
-
-    # Get encounter data and patient ID
-    encounter <- resources$main_encounters[enc_id == encounter_id]
-    patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
-    meda <- resources$encounters_first_medication_analysis[[encounter_id]]
-    meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_
-    meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
-    meda_study_phase <- encounter$study_phase
-    meda_ward_name <- encounter$ward_name
-    record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
-    # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
-    ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
-    ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
-    kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
-
-    # Get active MedicationRequests for the encounter
-    active_atc <- extractActiveATCCodes(resources$medication_requests, encounter$enc_period_start, meda_datetime)
-
-    if (nrow(active_atc) && meda_study_phase != "PhaseA") {
-      # Match ATC-codes between encounter data and MRP definitions
-      match_atc_codes <- matchATCCodes(active_atc, drug_disease_mrp_tables_by_atc)
-      # Get and match ICD-codes of the patient
-      if (nrow(match_atc_codes)) {
-        # Get relevant conditions
-        relevant_conditions <- getRelevantConditions(resources$conditions, patient_id, meda_datetime)
-        # Match ICD codes against MRP definitions and ATC codes
-        match_atc_and_icd_codes <- matchICDCodes(
-          relevant_conditions = relevant_conditions,
-          drug_disease_mrp_tables_by_icd = drug_disease_mrp_tables_by_icd,
-          match_atc_codes = match_atc_codes,
-          meda_datetime = meda_datetime,
-          patient_id = patient_id
-        )
-        matched_atcs <- unique(match_atc_and_icd_codes$atc)
-        unmatched_atcs <- match_atc_codes[!(atc_code %in% matched_atcs)]
-
-        if (nrow(unmatched_atcs)) {
-          # No ICD matches found, check ATC and OPS Proxys for ICDs
-          match_icd_proxies <- matchICDProxies(
-            medication_resources = list(
-              medication_requests = resources$medication_requests[medreq_patient_ref == paste0("Patient/", patient_id)],
-              medication_statements = resources$medication_statements[medstat_patient_ref == paste0("Patient/", patient_id)],
-              medication_administrations = resources$medication_administrations[medadm_patient_ref == paste0("Patient/", patient_id)]
-            ),
-            procedure_resources = resources$procedures[proc_patient_ref == paste0("Patient/", patient_id)],
-            drug_disease_mrp_tables_by_atc_proxy = drug_disease_mrp_tables_by_atc_proxy,
-            drug_disease_mrp_tables_by_ops_proxy = drug_disease_mrp_tables_by_ops_proxy,
-            meda_datetime = meda_datetime,
-            match_atc_codes = unmatched_atcs$atc_code
-          )
-          if (nrow(match_icd_proxies)) {
-            match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
-          }
-        }
-      } else {
-        # No active medication requests found for this encounter
-        match_atc_and_icd_codes <- data.table::data.table()
-      }
-    } else {
-      match_atc_and_icd_codes <- data.table::data.table()
-    }
-
-    if (nrow(match_atc_and_icd_codes)) {
-      # Iterate over matched results and create new rows for retrolektive_mrpbewertung and dp_mrp_calculations
-      for (i in seq_len(nrow(match_atc_and_icd_codes))) {
-        match <- match_atc_and_icd_codes[i]
-        meda_id_value <- meda_id # we need this renaming for the following comparison
-        existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
-
-        next_index <- if (length(existing_ret_ids) == 0) 1 else max(as.integer(sub(ret_id_prefix, "", existing_ret_ids)), na.rm = TRUE) + 1
-        ret_id <- paste0(ret_id_prefix, next_index)
-        # always updating the references to the existing ret_ids
-        resources$existing_retrolective_mrp_evaluation_ids <- etlutils::addTableRow(resources$existing_retrolective_mrp_evaluation_ids, meda_id, ret_id)
-
-        # Create new row for table retrolektive_mrpbewertung
-        retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
-          record_id = record_id,
-          ret_id = ret_id,
-          ret_meda_id = meda_id,
-          ret_meda_dat1 = meda_datetime,
-          ret_kurzbeschr = paste0(kurzbeschr_prefix, match$kurzbeschr),
-          ret_atc1 = match$atc_code,
-          ret_ip_klasse_01 = MRP_CALCULATION_TYPE$Drug_Disease,
-          ret_ip_klasse_disease = match$icd,
-          retrolektive_mrpbewertung_complete = ret_status,
-          redcap_repeat_instrument = "retrolektive_mrpbewertung",
-          redcap_repeat_instance = i
-        )
-
-        # Create new row for table dp_mrp_calculations
-        dp_mrp_calculations_rows[[length(dp_mrp_calculations_rows) + 1]] <- list(
-          enc_id = encounter_id,
-          mrp_calculation_type = MRP_CALCULATION_TYPE$Drug_Disease,
-          meda_id = meda_id,
-          study_phase = meda_study_phase,
-          ward_name = meda_ward_name,
-          ret_id = retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows)]]$ret_id,
-          mrp_proxy_type = match$proxy_type,
-          mrp_proxy_code = match$proxy_code,
-          input_file_processed_content_hash = input_file_processed_content_hash
-        )
-
-      }
-    } else {
-      # No matches found for this encounter
-      dp_mrp_calculations_rows[[length(dp_mrp_calculations_rows) + 1]] <- list(
-        enc_id = encounter_id,
-        mrp_calculation_type = MRP_CALCULATION_TYPE$Drug_Disease,
-        meda_id = meda_id,
-        study_phase = meda_study_phase,
-        ward_name = meda_ward_name,
-        ret_id = NA_character_,
-        mrp_proxy_type = NA_character_,
-        mrp_proxy_code = NA_character_,
-        input_file_processed_content_hash = input_file_processed_content_hash
+      patient_ref <- paste0("Patient/", patient_id)
+      match_icd_proxies <- matchICDProxies(
+        medication_resources = list(
+          medication_requests = resources$medication_requests[medreq_patient_ref %in% patient_ref],
+          medication_statements = resources$medication_statements[medstat_patient_ref %in% patient_ref],
+          medication_administrations = resources$medication_administrations[medadm_patient_ref %in% patient_ref]
+        ),
+        procedure_resources = resources$procedures[proc_patient_ref %in% patient_ref],
+        drug_disease_mrp_tables_by_atc_proxy = splitted_mrp_tables$by_atc_proxy,
+        drug_disease_mrp_tables_by_ops_proxy = splitted_mrp_tables$by_ops_proxy,
+        meda_datetime = meda_datetime,
+        match_atc_codes = unmatched_atcs$atc_code
       )
+      if (nrow(match_icd_proxies)) {
+        match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
+      }
     }
   }
-  # Combine all collected rows into data.tables
-  retrolektive_mrpbewertung <- data.table::rbindlist(retrolektive_mrpbewertung_rows, use.names = TRUE, fill = TRUE)
-  dp_mrp_calculations <- data.table::rbindlist(dp_mrp_calculations_rows, use.names = TRUE, fill = TRUE)
-
-  return(list(
-    retrolektive_mrpbewertung_fe = retrolektive_mrpbewertung,
-    dp_mrp_calculations = dp_mrp_calculations
-  ))
+  return(match_atc_and_icd_codes)
 }
