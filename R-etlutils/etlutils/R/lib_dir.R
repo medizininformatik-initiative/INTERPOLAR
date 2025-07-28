@@ -213,7 +213,7 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
 #' It calculates the save path using `fhircrackr::pastep` and applies styling to the table using `kableExtra`.
 #' The table format is flexible, supporting "html" outputs.
 #'
-#' @importFrom kableExtra kable kable_styling save_kable
+#' @importFrom kableExtra kable kable_styling save_kable kable_paper
 #' @importFrom fhircrackr pastep
 #' @export
 #'
@@ -231,7 +231,8 @@ writeTableGlobal <- function(table, filename_without_extension = NA, project_sub
       project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
     }
     kableExtra::kable(table, format = "html", caption = caption, escape = FALSE) |>
-      kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
+      # kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
+      kableExtra::kable_paper("hover", full_width = F) |>
       kableExtra::footnote(footnote, footnote_as_chunk = T, general_title = "") |>
       kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
   }
@@ -259,7 +260,7 @@ writeTableGlobal <- function(table, filename_without_extension = NA, project_sub
 #' It calculates the save path using `fhircrackr::pastep` and applies styling to the table using `kableExtra`.
 #' The table format is flexible, supporting "html" outputs.
 #'
-#' @importFrom kableExtra kable kable_styling save_kable
+#' @importFrom kableExtra kable kable_styling save_kable kable_paper
 #' @importFrom fhircrackr pastep
 #' @export
 #'
@@ -277,7 +278,8 @@ writeTableLocal <- function(table, filename_without_extension = NA, project_sub_
       project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
     }
     kableExtra::kable(table, format = "html", caption = caption, escape = FALSE) |>
-      kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
+      # kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
+      kableExtra::kable_paper("hover", full_width = F) |>
       kableExtra::footnote(footnote, footnote_as_chunk = T, general_title = "") |>
       kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
   }

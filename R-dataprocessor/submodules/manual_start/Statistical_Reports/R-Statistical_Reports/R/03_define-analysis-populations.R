@@ -7,7 +7,7 @@
 #'   `enc_type_code`, `enc_class_code`, `main_enc_id`, `ward_name`, and `age_at_hospitalization`.
 #'
 #' @return A data frame representing the FAS1 group, including only those inpatient encounters from INTERPOLAR wards
-#' involving patients aged 18 and over. The resulting dataset adds a `calendar_week` column and excludes irrelevant columns.
+#' involving patients aged 18 and over.
 #'
 #' @details
 #' The function applies a series of filters to identify the FAS1 group:
@@ -15,7 +15,6 @@
 #' - Encounters must have a non-missing `ward_name`, denoting an INTERPOLAR encounter obtained from the Versorgungsstellenkontakte in the `pids_per_ward` table.
 #' - Patients in these encounters must be adults, defined as individuals aged 18 or over (`age_at_hospitalization >= 18`).
 #'
-#' The function also calculates and adds the `calendar_week` for the `enc_period_start` date and removes columns not essential to the FAS1 analysis.
 #'
 #' @seealso
 #' \code{\link[dplyr]{filter}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{select}}, \code{\link[dplyr]{distinct}},
@@ -40,7 +39,6 @@ defineFAS1 <- function(complete_table) {
     dplyr::filter(main_enc_id %in% inpatient_encounters) |> # only IMP patients
     dplyr::filter(main_enc_id %in% INTERPOLAR_encounters) |> # only main encounters with any INTERPOLAR ward visit
     dplyr::filter(age_at_hospitalization >= 18) |> # only adults
-    dplyr::mutate(calendar_week = data.table::isoweek(enc_period_start), .after = enc_period_start) |> # add calendar week
     dplyr::distinct()
 
   FAS1 <- FAS1_raw |>

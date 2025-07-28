@@ -30,10 +30,10 @@ calculateF1 <- function(F1_prep) {
     F1_grouped_counts <- F1_prep |>
       dplyr::group_by(ward_name, calendar_week) |>
       dplyr::summarise(
-        F1_encounters = dplyr::n_distinct(main_enc_id),
-        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_cis),
         F1_patients = dplyr::n_distinct(pat_id),
         F1_patients_also_in_fe = dplyr::n_distinct(record_id),
+        F1_encounters = dplyr::n_distinct(main_enc_id),
+        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_cis),
         .groups = 'drop'
       )
 
@@ -41,10 +41,10 @@ calculateF1 <- function(F1_prep) {
       dplyr::summarise(
         ward_name = "all wards",
         calendar_week = "all weeks",
-        F1_encounters = dplyr::n_distinct(main_enc_id),
-        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_cis),
         F1_patients = dplyr::n_distinct(pat_id),
-        F1_patients_also_in_fe = dplyr::n_distinct(record_id)
+        F1_patients_also_in_fe = dplyr::n_distinct(record_id),
+        F1_encounters = dplyr::n_distinct(main_enc_id),
+        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_cis)
     )
 
     F1 <- dplyr::bind_rows(F1_grouped_counts, F1_total_counts)
@@ -53,6 +53,107 @@ calculateF1 <- function(F1_prep) {
 }
 
 #------------------------------------------------------------------------------#
+#' Calculate Front-End Summary Metrics
+#'
+#' Summarizes front-end medication analysis and MRP documentation statistics by ward
+#' and for all wards combined. Provides counts for patients, encounters, medication analyses,
+#' and various MRP outcomes.
+#'
+#' @param fe_summary_data A data frame prepared by `prepareFeSummaryData()` containing
+#'   deduplicated front-end data with patient, encounter, ward, and MRP-level variables.
+#'
+#' @return A data frame with summarized counts per `ward_name`, including a row for `"all wards"`.
+#'   The columns include:
+#'   - `patients`: Number of distinct patients
+#'   - `encounters`: Number of distinct hospital stays
+#'   - `medication_analyses`: Total medication analyses
+#'   - `medication_analyses_complete`: Analyses marked "Complete"
+#'   - `MRP`: Total MRP entries
+#'   - `MRP_documentation_complete`: MRP documentation completed
+#'   - `MRP_resolved`: MRPs marked as resolved with intervention implemented
+#'   - `MRP_resolution_non_informative`: MRPs with documentation but no clear resolution
+#'   - `contraindications`: MRPs flagged as contraindications
+#'   - `MRP_drug_drug`: Drug-drug interactions
+#'   - `MRP_drug_disease`: Drug-disease interactions
+#'   - `MRP_drug_renal_insufficiency`: Drug interactions with renal insufficiency
+#'
+#' @details
+#' - Summarization is grouped by `ward_name` derived from `fall_station`
+#' - Uses `dplyr::n_distinct()` for robust unique counts
+#'
+#' @importFrom dplyr group_by summarise bind_rows n_distinct rename
+#' @export
+calculateFeSummary <- function(fe_summary_data) {
+
+  fe_grouped_counts <- fe_summary_data |>
+    dplyr::rename(ward_name = fall_station) |>
+    dplyr::group_by(ward_name) |>
+    dplyr::summarise(
+      patients = dplyr::n_distinct(pat_id),
+      encounters = dplyr::n_distinct(fall_fhir_main_enc_id),
+      medication_analyses = dplyr::n_distinct(meda_id),
+      medication_analyses_complete = dplyr::n_distinct(ifelse(
+        medikationsanalyse_complete == "Complete", meda_id, NA), na.rm = TRUE),
+      MRP = dplyr::n_distinct(mrp_id, na.rm = TRUE),
+      MRP_documentation_complete = dplyr::n_distinct(ifelse(
+        mrpdokumentation_validierung_complete == "Complete", mrp_id, NA), na.rm = TRUE),
+      MRP_resolved = dplyr::n_distinct(ifelse(
+        mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt",
+        mrp_id, NA), na.rm = TRUE),
+      MRP_resolution_non_informative = dplyr::n_distinct(ifelse(
+        mrp_dokup_hand_emp_akz %in% c("Arzt / Pflege informiert",
+                                      "Intervention vorgeschlagen, Umsetzung unbekannt"),
+        mrp_id, NA), na.rm = TRUE),
+      contraindications = dplyr::n_distinct(ifelse(
+        Kontraindikation == "Checked", mrp_id, NA), na.rm = TRUE),
+      MRP_drug_drug = dplyr::n_distinct(ifelse(
+        mrp_ip_klasse_01 == "Drug-Drug",
+        mrp_id, NA), na.rm = TRUE),
+      MRP_drug_disease = dplyr::n_distinct(ifelse(
+        mrp_ip_klasse_01 == "Drug-Disease",
+        mrp_id, NA), na.rm = TRUE),
+      MRP_drug_renal_insufficiency = dplyr::n_distinct(ifelse(
+        mrp_ip_klasse_01 == "Drug-Niereninsuffizienz",
+        mrp_id, NA), na.rm = TRUE),
+      .groups = 'drop'
+    )
+
+  fe_total_counts <- fe_summary_data |>
+    dplyr::summarise(
+      ward_name = "all wards",
+      patients = dplyr::n_distinct(pat_id),
+      encounters = dplyr::n_distinct(fall_fhir_main_enc_id),
+      medication_analyses = dplyr::n_distinct(meda_id),
+      medication_analyses_complete = dplyr::n_distinct(ifelse(
+        medikationsanalyse_complete == "Complete", meda_id, NA), na.rm = TRUE),
+      MRP = dplyr::n_distinct(mrp_id, na.rm = TRUE),
+      MRP_documentation_complete = dplyr::n_distinct(ifelse(
+        mrpdokumentation_validierung_complete == "Complete", mrp_id, NA), na.rm = TRUE),
+      MRP_resolved = dplyr::n_distinct(ifelse(
+        mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA), na.rm = TRUE),
+      MRP_resolution_non_informative = dplyr::n_distinct(ifelse(
+        mrp_dokup_hand_emp_akz %in% c("Arzt / Pflege informiert",
+                                      "Intervention vorgeschlagen, Umsetzung unbekannt"),
+        mrp_id, NA), na.rm = TRUE),
+      contraindications = dplyr::n_distinct(ifelse(
+        Kontraindikation == "Checked", mrp_id, NA), na.rm = TRUE),
+      MRP_drug_drug = dplyr::n_distinct(ifelse(
+        mrp_ip_klasse_01 == "Drug-Drug",
+        mrp_id, NA), na.rm = TRUE),
+      MRP_drug_disease = dplyr::n_distinct(ifelse(
+        mrp_ip_klasse_01 == "Drug-Disease",
+        mrp_id, NA), na.rm = TRUE),
+      MRP_drug_renal_insufficiency = dplyr::n_distinct(ifelse(
+        mrp_ip_klasse_01 == "Drug-Niereninsuffizienz",
+        mrp_id, NA), na.rm = TRUE)
+    )
+
+    fe_summary <- dplyr::bind_rows(fe_grouped_counts, fe_total_counts)
+
+    return(fe_summary)
+}
+
+
 # TODO: calculate F2 counts ---------
 calculateF2 <- function(F2_prep) {
   return(F2)
