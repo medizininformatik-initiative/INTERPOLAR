@@ -220,7 +220,8 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
 #' @seealso
 #' \code{\link[kableExtra]{kable}}, \code{\link[kableExtra]{kable_styling}}, \code{\link[kableExtra]{save_kable}}
 #'
-writeTableGlobal <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html", caption=NA, footnote = "") {
+writeTableGlobal <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html",
+                             caption=NA, footnote = "", colnames = NA) {
   if (!is.null(table)) {
     if (is.na(filename_without_extension)) {
       filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
@@ -230,10 +231,10 @@ writeTableGlobal <- function(table, filename_without_extension = NA, project_sub
     } else {
       project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
     }
-    kableExtra::kable(table, format = "html", caption = caption, escape = FALSE) |>
+    kableExtra::kable(table, format = "html", caption = caption, escape = FALSE, col.names = colnames) |>
       # kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
       kableExtra::kable_paper("hover", full_width = F) |>
-      kableExtra::footnote(footnote, footnote_as_chunk = T, general_title = "") |>
+      kableExtra::footnote(footnote, footnote_as_chunk = F, general_title = "") |>
       kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
   }
   else {
@@ -267,7 +268,8 @@ writeTableGlobal <- function(table, filename_without_extension = NA, project_sub
 #' @seealso
 #' \code{\link[kableExtra]{kable}}, \code{\link[kableExtra]{kable_styling}}, \code{\link[kableExtra]{save_kable}}
 #'
-writeTableLocal <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html", caption=NA, footnote = "") {
+writeTableLocal <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html",
+                            caption=NA, footnote = "", colnames = NA) {
   if (!is.null(table)) {
     if (is.na(filename_without_extension)) {
       filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
@@ -277,10 +279,10 @@ writeTableLocal <- function(table, filename_without_extension = NA, project_sub_
     } else {
       project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
     }
-    kableExtra::kable(table, format = "html", caption = caption, escape = FALSE) |>
+    kableExtra::kable(table, format = "html", caption = caption, escape = FALSE, col.names = colnames) |>
       # kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
       kableExtra::kable_paper("hover", full_width = F) |>
-      kableExtra::footnote(footnote, footnote_as_chunk = T, general_title = "") |>
+      kableExtra::footnote(footnote, footnote_as_chunk = F, general_title = "") |>
       kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
   }
   else {

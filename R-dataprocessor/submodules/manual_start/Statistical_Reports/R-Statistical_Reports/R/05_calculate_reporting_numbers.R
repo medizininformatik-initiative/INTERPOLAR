@@ -78,7 +78,7 @@ calculateF1 <- function(F1_prep) {
 #'   - `MRP_drug_renal_insufficiency`: Drug interactions with renal insufficiency
 #'
 #' @details
-#' - Summarization is grouped by `ward_name` derived from `fall_station`
+#' - Summarization is grouped by `ward_name` derived from `ward_name`
 #' - Uses `dplyr::n_distinct()` for robust unique counts
 #'
 #' @importFrom dplyr group_by summarise bind_rows n_distinct rename
@@ -86,11 +86,10 @@ calculateF1 <- function(F1_prep) {
 calculateFeSummary <- function(fe_summary_data) {
 
   fe_grouped_counts <- fe_summary_data |>
-    dplyr::rename(ward_name = fall_station) |>
     dplyr::group_by(ward_name) |>
     dplyr::summarise(
       patients = dplyr::n_distinct(pat_id),
-      encounters = dplyr::n_distinct(fall_fhir_main_enc_id),
+      encounters = dplyr::n_distinct(main_enc_id),
       medication_analyses = dplyr::n_distinct(meda_id),
       medication_analyses_complete = dplyr::n_distinct(ifelse(
         medikationsanalyse_complete == "Complete", meda_id, NA), na.rm = TRUE),
@@ -122,7 +121,7 @@ calculateFeSummary <- function(fe_summary_data) {
     dplyr::summarise(
       ward_name = "all wards",
       patients = dplyr::n_distinct(pat_id),
-      encounters = dplyr::n_distinct(fall_fhir_main_enc_id),
+      encounters = dplyr::n_distinct(main_enc_id),
       medication_analyses = dplyr::n_distinct(meda_id),
       medication_analyses_complete = dplyr::n_distinct(ifelse(
         medikationsanalyse_complete == "Complete", meda_id, NA), na.rm = TRUE),
@@ -153,8 +152,56 @@ calculateFeSummary <- function(fe_summary_data) {
     return(fe_summary)
 }
 
+#------------------------------------------------------------------------------#
 
-# TODO: calculate F2 counts ---------
+#' Add Front-End Summary Statistics to F1 Report
+#'
+#' Enriches the F1 statistical report with front-end documentation metrics
+#' (e.g., medication analyses, MRP documentation) aggregated at the ward level.
+#'
+#' @param F1 A data frame containing the initial F1 report with patient and encounter-level metrics.
+#' Typically produced by `calculateF1()`.
+#' @param report_data_F1_with_fe A data frame containing individual-level data
+#' enriched with front-end variables (from `addFeDataToF1data()`).
+#'
+#' @return A data frame that merges F1-level statistics with aggregated
+#' front-end documentation summaries per ward and patient/encounter group.
+#'
+#' @details
+#' This function works in two steps:
+#' \enumerate{
+#'   \item Aggregates front-end documentation metrics using `calculateFeSummary()`.
+#'   \item Merges the result into the existing F1 table via a left join, matching on:
+#'     \itemize{
+#'       \item `ward_name`
+#'       \item `F1_patients` (from F1) = `patients` (from FE summary)
+#'       \item `F1_encounters` (from F1) = `encounters` (from FE summary)
+#'     }
+#' }
+#'
+#' This enables reporting on the extent and completeness of front-end data
+#' for each ward's F1 population.
+#'
+#' @seealso [calculateFeSummary()], [calculateF1()], [addFeDataToF1data()]
+#'
+#' @importFrom dplyr left_join
+#' @export
+calculateFeAddOnToF1 <- function(F1, report_data_F1_with_fe) {
+
+  report_with_fe_prep <- report_data_F1_with_fe |>
+    calculateFeSummary()
+
+  report_with_fe <- F1 |>
+    dplyr::left_join(report_with_fe_prep,
+                     by = c("ward_name",
+                            "F1_patients" = "patients",
+                            "F1_encounters" = "encounters"))
+  return(report_with_fe)
+
+}
+
+
+# TODO: calculate F2 counts ------------------------------------------------------------
 calculateF2 <- function(F2_prep) {
   return(F2)
 }

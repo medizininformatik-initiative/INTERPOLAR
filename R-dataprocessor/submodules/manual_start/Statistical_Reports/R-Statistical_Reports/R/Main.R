@@ -1,66 +1,81 @@
 #' Create Statistical Report for INTERPOLAR Ward Metrics
 #'
-#' This function orchestrates the creation of a comprehensive statistical report
-#' by extracting, processing, and summarizing patient-, encounter-, and front-end-level data.
-#' The report focuses on hospitalized patients in INTERPOLAR wards and computes
-#' key metrics within a specified reporting period.
+#' Generates a comprehensive statistical report for patients hospitalized on INTERPOLAR wards,
+#' using patient, encounter, and front-end documentation data within a defined reporting period.
+#' The report computes base population metrics (F1) and a summary of medication safety documentation
+#' for internal monitoring and evaluation.
 #'
-#' @param REPORT_PERIOD_START Character string in `"YYYY-MM-DD"` format specifying the start date of the reporting period.
-#' @param REPORT_PERIOD_END Character string in `"YYYY-MM-DD"` format specifying the end date of the reporting period. Defaults to `Sys.Date()`.
+#' @param REPORT_PERIOD_START Character string in `"YYYY-MM-DD"` format.
+#'   Start date of the reporting period.
+#' @param REPORT_PERIOD_END Character string in `"YYYY-MM-DD"` format.
+#'   End date of the reporting period. Defaults to `Sys.Date()`.
 #'
-#' @return Invisibly returns `NULL`. The function is used for its side effects:
-#' writing summary tables to local/global output and producing structured
-#' statistical reports for internal review.
+#' @return Invisibly returns `NULL`. This function is called for its side effects:
+#' writing local and global summary tables and producing a structured internal report.
 #'
 #' @details
-#' This function performs the following steps:
+#' The function performs the following main steps:
+#'
 #' \enumerate{
-#'   \item Fetches patient, encounter, and ward-stay data via:
+#'   \item Fetches source tables:
 #'     \itemize{
-#'       \item `getPatientData()`
-#'       \item `getEncounterData()`
-#'       \item `getPidsPerWardData()`
+#'       \item `getPatientData()` – one row per patient
+#'       \item `getEncounterData()` – multiple rows per encounter possible
+#'       \item `getPidsPerWardData()` – ward stays per sub-encounter
+#'       \item `getPatientFeData()` – one row per patient
+#'       \item `getFallFeData()` – one or more rows per case
+#'       \item `getMedikationsanalyseFeData()` – latest version per entry
+#'       \item `getMRPDokumentationValidierungFeData()` – latest version per entry
 #'     }
-#'   \item Retrieves front-end documentation from:
+#'
+#'   \item Constructs the core encounter-patient dataset:
 #'     \itemize{
-#'       \item `getPatientFeData()`
-#'       \item `getFallFeData()`
-#'       \item `getMedikationsanalyseFeData()`
-#'       \item `getMRPDokumentationValidierungFeData()`
-#'     }
-#'   \item Constructs a complete encounter-patient dataset using:
-#'     \itemize{
-#'       \item `mergePatEnc()`, `addMainEncId()`, `addMainEncPeriodStart()`,
+#'       \item `mergePatEnc()`, `addCuratedEncPeriodEnd()`, `addMainEncId()`, `addMainEncPeriodStart()`,
 #'       \item `calculateAge()`, `addWardName()`, `addRecordId()`, `addFallIdAndStudienphase()`
 #'     }
-#'   \item Merges front-end data into a comprehensive table via:
+#'
+#'   \item Merges and enriches front-end documentation:
 #'     \itemize{
 #'       \item `mergePatFeFallFe()`, `addMedaData()`, `addEncIdToFeData()`, `addMRPDokuData()`
 #'     }
-#'   \item Defines FAS1 (base population) using `defineFAS1()`.
-#'   \item Prepares F1 metrics via `prepareF1data()` and calculates stats with `calculateF1()`.
-#'   \item Prepares and summarizes front-end documentation data via:
+#'
+#'   \item Defines the FAS1 base population with `defineFAS1()`
+#'
+#'   \item Prepares and calculates key F1 metrics:
 #'     \itemize{
-#'       \item `prepareFeSummaryData()`
-#'       \item `calculateFeSummary()`
+#'       \item `prepareF1data()`, `addFeDataToF1data()`, `calculateF1()`, `calculateFeAddOnToF1()`
 #'     }
-#'   \item Writes key intermediate and final results using:
+#'
+#'   \item Summarizes medication and MRP documentation activity:
 #'     \itemize{
-#'       \item `writeTableLocal()` (debugging, reproducibility)
-#'       \item `writeTableGlobal()` (formal output)
+#'       \item `prepareFeSummaryData()`, `calculateFeSummary()`
+#'     }
+#'
+#'   \item Writes outputs:
+#'     \itemize{
+#'       \item `writeTableLocal()` – intermediate data for verification
+#'       \item `writeTableGlobal()` – final reports with captions and footnotes
 #'     }
 #' }
 #'
 #' @section Output:
-#' - Writes intermediate datasets like `FAS1`, `F1_data`, `complete_fe_table`, and `fe_summary_data` to local output for traceability.
-#' - Writes final tables such as `statistical_report` (F1 metrics) and `fe_summary` (Front-End summary) to global output with captions and footnotes.
+#' - **Local output**: `complete_FHIR_table`, `FAS1`, `report_data`, `complete_fe_table`, `fe_summary_data`
+#' - **Global output**:
+#'   \itemize{
+#'     \item `statistical_report`: F1 metrics with front-end add-ons
+#'     \item `fe_summary`: Overall summary of front-end documentation
+#'   }
+#' Tables include captions describing the reporting period and footnotes explaining relevant metric assumptions.
 #'
-#' @note Additional analyses (e.g., F2 metrics) are scaffolded in the function but currently inactive. These may be enabled in future iterations.
+#' @note
+#' Additional functionality for F2 metrics is scaffolded in the function but currently inactive.
+#' Future versions may support Quarto or PDF report rendering.
 #'
-#' @seealso [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
-#'   [mergePatEnc()], [defineFAS1()], [prepareF1data()], [calculateF1()],
-#'   [prepareFeSummaryData()], [calculateFeSummary()],
-#'   [writeTableLocal()], [writeTableGlobal()]
+#' @seealso
+#' [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
+#' [mergePatEnc()], [defineFAS1()], [prepareF1data()], [calculateF1()],
+#' [prepareFeSummaryData()], [calculateFeSummary()],
+#' [writeTableLocal()], [writeTableGlobal()]
 #'
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
@@ -114,8 +129,11 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
     addMRPDokuData(mrp_dokumentation_validierung_fe_table)
 
   FAS1 <- defineFAS1(complete_FHIR_table)
-  F1_data <- prepareF1data(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END)
+
   fe_summary_data <- prepareFeSummaryData(complete_fe_table, REPORT_PERIOD_START, REPORT_PERIOD_END)
+
+  report_data <- prepareF1data(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END) |>
+    addFeDataToF1data(fe_summary_data)
 
   # FAS2_1 <- defineFAS2_1(FAS1, REPORT_PERIOD_END)
   # F2_data <- prepareF2data(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
@@ -123,22 +141,37 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   # Print datasets for verification to outputLocal
   writeTableLocal(complete_FHIR_table)
   writeTableLocal(FAS1)
-  writeTableLocal(F1_data)
+  writeTableLocal(report_data)
   writeTableLocal(complete_fe_table)
   writeTableLocal(fe_summary_data)
 
   fe_summary <- calculateFeSummary(fe_summary_data)
 
-  statistical_report <- calculateF1(F1_data) #|>
+  statistical_report <- calculateF1(report_data) |>
+    calculateFeAddOnToF1(report_data)
   # calculateF2(F2_data)
+
 
   # print report to outputGlobal
   writeTableGlobal(statistical_report,
              caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
-             footnote = "F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)")
+             footnote = c("F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)",
+                          "Medication analysis and mrp counts: only for first medication analysis of initial INTERPOLAR ward contact for each case"),
+             colnames = c("ward", "calendar week", "F1 (patients)", "F1 (patients also in frontend)",
+                          "F1 (encounters)", "F1 (encounters also in frontend)", "medication analyses",
+                          "completed medication analyses", "MRP", "completed MRP documention",
+                          "resolved MRP", "MRP resolution not informative", "contraindications",
+                          "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency")
+  )
 
   writeTableGlobal(fe_summary,
-             caption = paste0("Front-End Summary for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END))
+             caption = paste0("Front-End Summary for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
+             footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all INTERPOLAR ward contacts for each case"),
+             colnames = c("ward", "patients", "encounters", "medication analyses",
+                          "completed medication analyses", "MRP", "completed MRP documention",
+                          "resolved MRP", "MRP resolution not informative", "contraindications",
+                          "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency")
+             )
 
   #TODO: implement pdf / quarto option ----------
 }
