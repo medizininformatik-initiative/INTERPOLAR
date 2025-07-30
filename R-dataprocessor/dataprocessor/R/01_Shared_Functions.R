@@ -193,3 +193,10 @@ getStudyPhase <- function(ward_name) {
   }
   return(NULL)
 }
+
+#
+# Check if the study has no or not only Phase A wards defined in the configuration.
+#
+hasPhaseBWards <- function() {
+  return(length(WARDS_PHASE_B) > 0 || length(WARDS_PHASE_B_TEST) > 0)
+}

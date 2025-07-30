@@ -587,6 +587,7 @@ getMRPPairLists <- function() {
 #' - The function merges all MRP types into two unified output tables.
 #'
 calculateMRPs <- function() {
+
   # Get all Einrichtungskontakt encounters that ended at least 14 days ago
   # and do not have a retrolective MRP evaluation for Drug_Disease
   main_encounters_by_mrp_type <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
