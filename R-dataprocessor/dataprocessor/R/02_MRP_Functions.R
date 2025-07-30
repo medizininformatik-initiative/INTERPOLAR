@@ -98,7 +98,7 @@ getExpandedContent <- function(mrp_type) {
 
   if (is.null(processed_content_hash)) {
     # If the hash is not found, process the MRP definition
-    processed_content <- getMRPTypeFunction("cleanAndExpandDefinition", mrp_type)(mrp_definition$excel_file_content)
+    processed_content <- getMRPTypeFunction("cleanAndExpandDefinition", mrp_type)(mrp_definition$excel_file_content, mrp_type)
     processed_content_hash <- digest::digest(processed_content, algo = "sha256")
 
     output_dir <- file.path(path_to_mrp_tables, paste0(mrp_type, "_content"))
