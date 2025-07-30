@@ -27,7 +27,15 @@ runSubmodules <- function() {
     submodule_dirs <- submodule_dirs[basename(submodule_dirs) %in% START_DATA_PROCESSOR_ARGS]
 
     if (length(submodule_dirs) == 0) {
-      stop("Submodulname (START_DATA_PROCESSOR_ARGS) nicht in manuell zu startenden Submodulen enthalten.")
+      stop(paste("Submodule(s)",  paste(START_DATA_PROCESSOR_ARGS, collapse = ", "),
+      "not found in ./R-dataprocessor/submodules/manual_start."))
+    }
+
+    submodules_not_existing <- setdiff(START_DATA_PROCESSOR_ARGS, basename(submodule_dirs))
+
+    if (length(submodules_not_existing) > 0) {
+      warning(paste("Submodule(s)", paste(submodules_not_existing, collapse = ", "),
+                    "not found in ./R-dataprocessor/submodules/manual_start."))
     }
   }
 
