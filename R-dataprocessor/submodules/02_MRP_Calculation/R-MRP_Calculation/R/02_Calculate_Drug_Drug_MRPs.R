@@ -52,7 +52,7 @@ cleanAndExpandDefinitionDrugDrug <- function(drug_drug_mrp_definition, mrp_type)
   # Remove not nesessary columns
   mrp_columnnames <- getPairListColumnNames(mrp_type)
   drug_drug_mrp_definition <- drug_drug_mrp_definition[,  ..mrp_columnnames]
-  drug_drug_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_drug_mrp_definition, relevant_column_names)
+  drug_drug_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_drug_mrp_definition, code_column_names)
 
   computeATCForCalculation <- function(data_table, primary_col, inclusion_col, output_col, secondary_cols) {
     suffix_map <- setNames(secondary_cols, sub(".*_", "", secondary_cols))
@@ -95,20 +95,21 @@ cleanAndExpandDefinitionDrugDrug <- function(drug_drug_mrp_definition, mrp_type)
     secondary_cols = c("ATC2_SYSTEMIC_SY", "ATC2_DERMATIKA_D", "ATC2_OPHTHALMIKA_O", "ATC2_INHALANDA_I", "ATC2_SONSTIGE_SO")
   )
 
-  relevant_column_names <- c("ATC_FOR_CALCULATION", "ATC2_FOR_CALCULATION")
+  code_column_names <- c("ATC_FOR_CALCULATION", "ATC2_FOR_CALCULATION")
+
   # SPLIT and TRIM: ICD and proxy column:
   # split the whitespace separated lists in ICD and proxy columns in a single row per code
-  drug_drug_mrp_definition <- etlutils::splitColumnsToRows(drug_drug_mrp_definition, relevant_column_names)
+  drug_drug_mrp_definition <- etlutils::splitColumnsToRows(drug_drug_mrp_definition, code_column_names)
   # trim all values in the whole table
   etlutils::trimTableValues(drug_drug_mrp_definition)
   # After the replacing of special signs with an empty string their can be new empty rows in this both columns
-  drug_drug_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_drug_mrp_definition, relevant_column_names)
+  drug_drug_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_drug_mrp_definition, code_column_names)
 
   # Remove duplicate rows
   drug_drug_mrp_definition <- unique(drug_drug_mrp_definition)
 
   # Clean rows with NA or empty values in relevant columns
-  for (col in relevant_column_names) {
+  for (col in code_column_names) {
     drug_drug_mrp_definition[[col]] <- ifelse(
       is.na(drug_drug_mrp_definition[[col]]) |
         !nzchar(trimws(drug_drug_mrp_definition[[col]])),
