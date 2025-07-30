@@ -30,10 +30,10 @@ calculateF1 <- function(F1_prep) {
     F1_grouped_counts <- F1_prep |>
       dplyr::group_by(ward_name, calendar_week) |>
       dplyr::summarise(
-        F1_patients = dplyr::n_distinct(pat_id),
-        F1_patients_also_in_fe = dplyr::n_distinct(record_id),
-        F1_encounters = dplyr::n_distinct(main_enc_id),
-        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_cis),
+        F1_patients = dplyr::n_distinct(pat_id, na.rm = TRUE),
+        F1_patients_also_in_fe = dplyr::n_distinct(record_id, na.rm = TRUE),
+        F1_encounters = dplyr::n_distinct(main_enc_id, na.rm = TRUE),
+        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_cis, na.rm = TRUE),
         .groups = 'drop'
       )
 
@@ -41,10 +41,10 @@ calculateF1 <- function(F1_prep) {
       dplyr::summarise(
         ward_name = "all wards",
         calendar_week = "all weeks",
-        F1_patients = dplyr::n_distinct(pat_id),
-        F1_patients_also_in_fe = dplyr::n_distinct(record_id),
-        F1_encounters = dplyr::n_distinct(main_enc_id),
-        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_cis)
+        F1_patients = dplyr::n_distinct(pat_id, na.rm = TRUE),
+        F1_patients_also_in_fe = dplyr::n_distinct(record_id, na.rm = TRUE),
+        F1_encounters = dplyr::n_distinct(main_enc_id, na.rm = TRUE),
+        F1_encounters_also_in_fe = dplyr::n_distinct(fall_id_cis, na.rm = TRUE)
     )
 
     F1 <- dplyr::bind_rows(F1_grouped_counts, F1_total_counts)
@@ -88,9 +88,9 @@ calculateFeSummary <- function(fe_summary_data) {
   fe_grouped_counts <- fe_summary_data |>
     dplyr::group_by(ward_name) |>
     dplyr::summarise(
-      patients = dplyr::n_distinct(pat_id),
-      encounters = dplyr::n_distinct(main_enc_id),
-      medication_analyses = dplyr::n_distinct(meda_id),
+      patients = dplyr::n_distinct(pat_id, na.rm = TRUE),
+      encounters = dplyr::n_distinct(main_enc_id, na.rm = TRUE),
+      medication_analyses = dplyr::n_distinct(meda_id, na.rm = TRUE),
       medication_analyses_complete = dplyr::n_distinct(ifelse(
         medikationsanalyse_complete == "Complete", meda_id, NA), na.rm = TRUE),
       MRP = dplyr::n_distinct(mrp_id, na.rm = TRUE),
@@ -120,9 +120,9 @@ calculateFeSummary <- function(fe_summary_data) {
   fe_total_counts <- fe_summary_data |>
     dplyr::summarise(
       ward_name = "all wards",
-      patients = dplyr::n_distinct(pat_id),
-      encounters = dplyr::n_distinct(main_enc_id),
-      medication_analyses = dplyr::n_distinct(meda_id),
+      patients = dplyr::n_distinct(pat_id, na.rm = TRUE),
+      encounters = dplyr::n_distinct(main_enc_id, na.rm = TRUE),
+      medication_analyses = dplyr::n_distinct(meda_id, na.rm = TRUE),
       medication_analyses_complete = dplyr::n_distinct(ifelse(
         medikationsanalyse_complete == "Complete", meda_id, NA), na.rm = TRUE),
       MRP = dplyr::n_distinct(mrp_id, na.rm = TRUE),

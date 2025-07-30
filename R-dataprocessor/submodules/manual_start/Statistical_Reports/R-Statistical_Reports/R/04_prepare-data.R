@@ -66,17 +66,20 @@ prepareF1data <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
 #' Prepare Front-End Summary Data for Reporting Period
 #'
 #' Filters and reduces the complete front-end dataset to the relevant summary variables for
-#' reporting within a defined period. Only entries with a `enc_period_start` timestamp falling
+#' reporting within a defined period. Only entries with a `fall_aufn_dat` timestamp falling
 #' within the specified `REPORT_PERIOD_START` and `REPORT_PERIOD_END` range are retained.
+#' To show all frontend cases, this is needed (instead of using the enc_period_start),
+#' because the frontend only provides the main encounter start date and cases without medication
+#' analysis are not assigned to a sub-encounter.
 #'
 #' @param complete_fe_table A data frame containing merged front-end data, including medication analysis
 #'   and MRP documentation information. Must include at least `pat_id`, `record_id`, `fall_id_cis`,
-#'   `enc_id`, `enc_period_start`, and relevant MRP fields.
+#'   `enc_id`, `fall_aufn_dat`, and relevant MRP fields.
 #' @param REPORT_PERIOD_START A character string representing the start of the reporting period (format: "YYYY-MM-DD").
 #' @param REPORT_PERIOD_END A character string representing the end of the reporting period (format: "YYYY-MM-DD").
 #'
 #' @return A filtered and deduplicated data frame containing selected columns of interest
-#'   for encounters with starting date (`enc_period_start`) within the reporting period.
+#'   for encounters with starting date (`fall_aufn_dat`) within the reporting period.
 #'
 #' @details
 #' The resulting dataset includes distinct rows based on identifiers and key variables such as:
@@ -85,7 +88,7 @@ prepareF1data <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
 #' - `mrp_merp`
 #' - `mrpdokumentation_validierung_complete`
 #'
-#' Time filtering is performed with `enc_period_start >= REPORT_PERIOD_START` and `< REPORT_PERIOD_END`.
+#' Time filtering is performed with `fall_aufn_dat >= REPORT_PERIOD_START` and `< REPORT_PERIOD_END`.
 #'
 #' @importFrom dplyr distinct filter
 #' @export
@@ -93,15 +96,15 @@ prepareFeSummaryData <- function(complete_fe_table,REPORT_PERIOD_START,REPORT_PE
 
   fe_summary_prep <- complete_fe_table |>
     dplyr::distinct(pat_id, pat_cis_pid, record_id, fall_fhir_main_enc_id,
-                    fall_id_cis, fall_station, enc_id, enc_status, meda_id,
+                    fall_id_cis, fall_station, fall_aufn_dat, enc_id, enc_status, meda_id,
                     meda_dat, enc_period_start, medikationsanalyse_complete, mrp_id,
                     mrp_pigrund___21, mrp_ip_klasse_01, mrp_dokup_hand_emp_akz,
                     mrp_merp, mrpdokumentation_validierung_complete) |>
     dplyr::rename(Kontraindikation = mrp_pigrund___21,
                   main_enc_id = fall_fhir_main_enc_id,
                   ward_name = fall_station) |>
-    dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only sub-encounter start date in reporting period
-    dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END))
+    dplyr::filter(fall_aufn_dat >= as.POSIXct(REPORT_PERIOD_START)) |> # only main-encounter start date in reporting period
+    dplyr::filter(fall_aufn_dat < as.POSIXct(REPORT_PERIOD_END))
 
   return(fe_summary_prep)
 }

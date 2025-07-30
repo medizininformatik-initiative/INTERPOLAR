@@ -488,7 +488,7 @@ addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, complete_table) {
                                          fall_aufn_dat == main_enc_period_start,
                                          dplyr::between(meda_dat,
                                                         enc_period_start, curated_enc_period_end))) |>
-    dplyr::filter(!is.na(enc_id)) |>
+    dplyr::filter(!(is.na(enc_id) & !is.na(meda_id))) |>
     dplyr::distinct() |>
     dplyr::relocate(enc_id, enc_period_start, curated_enc_period_end, enc_status, .after = fall_aufn_dat)
   return(merged_fe_pat_fall_meda_table_with_enc_id)
