@@ -14,6 +14,14 @@ rm(list = ls())
 library(etlutils)
 library(dataprocessor)
 
+# retrieve submodule names for manual start from the command line arguments
+# for test purposes, the submodule name can be set manually when running the script interactively
+if (!interactive()) {
+  START_DATA_PROCESSOR_ARGS <- commandArgs(trailingOnly = TRUE)
+} else {
+  START_DATA_PROCESSOR_ARGS <- as.character(c())
+}
+
 status <- dataprocessor::processData()
 if (!interactive()) {
   quit(status = status, save = "no")

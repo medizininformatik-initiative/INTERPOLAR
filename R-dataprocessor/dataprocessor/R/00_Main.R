@@ -3,14 +3,34 @@
 #' This function iterates over the submodule directories in the package, sourcing all R scripts in the directory.
 #' If a Start.R file is present, it will be sourced after all other R scripts in the submodule directory.
 #'
+#' If a manual submodule should be started independently, it must be specified as a command-line argument for the dataprocessor
+#' using its name according to the manual_start subdirectory of the submodules directory.
+#'
 runSubmodules <- function() {
 
-  # Path to the submodules directory
-  #submodule_path <- system.file("submodules", package = "dataprocessor")
-  submodule_path <- "./R-dataprocessor/submodules"
+  if (length(START_DATA_PROCESSOR_ARGS) == 0) {
+    # Path to the submodules directory
+    #submodule_path <- system.file("submodules", package = "dataprocessor")
+    submodule_path <- "./R-dataprocessor/submodules"
 
-  # Get list of submodule directories
-  submodule_dirs <- list.dirs(submodule_path, recursive = FALSE)
+    # Get list of submodule directories
+    submodule_dirs <- list.dirs(submodule_path, recursive = FALSE)
+
+  } else {
+    # Path to the manual submodules directory
+    submodule_path <- "./R-dataprocessor/submodules/manual_start"
+
+    # Get list of all manual submodule directories
+    submodule_dirs <- list.dirs(submodule_path, recursive = FALSE)
+
+    # reduce list to requested manual submodule directories
+    submodule_dirs <- submodule_dirs[basename(submodule_dirs) %in% START_DATA_PROCESSOR_ARGS]
+
+    if (length(submodule_dirs) == 0) {
+      stop("Submodulname (START_DATA_PROCESSOR_ARGS) nicht in manuell zu startenden Submodulen enthalten.")
+    }
+  }
+
 
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
