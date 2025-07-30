@@ -291,26 +291,34 @@ isDefinedAndTrue <- function(variable_name, envir = parent.frame()) {
   return(exists(variable_name, envir = envir) && isTRUE(get(variable_name, envir = envir)))
 }
 
-#' Check if a Variable is Defined and Not an Empty String
+#' Check if a Variable is Defined and Not Empty
 #'
 #' This function checks if a given variable is defined in the specified environment and whether its
-#' value is a non-empty string (i.e., a character of length at least 1 that is not "").
+#' value is neither an empty string (i.e., `""`) nor an empty vector (i.e., `character(0)` or `numeric(0)`).
 #'
 #' @param variable_name The name of the variable to check, provided as a string.
 #' @param envir The environment in which to check for the variable. Defaults to the current environment.
 #'
-#' @return TRUE if the variable is defined and contains a non-empty string, otherwise FALSE.
+#' @return TRUE if the variable is defined and contains at least one non-empty value, otherwise FALSE.
 #'
 #' @examples
 #' var1 <- "some text"
 #' var2 <- ""
+#' var3 <- character(0)
+#' var4 <- list()
 #' isDefinedAndNotEmpty("var1")  # Returns TRUE
 #' isDefinedAndNotEmpty("var2")  # Returns FALSE
-#' isDefinedAndNotEmpty("var3")  # Returns FALSE, since var3 is not defined
+#' isDefinedAndNotEmpty("var3")  # Returns FALSE
+#' isDefinedAndNotEmpty("var4")  # Returns FALSE
+#' isDefinedAndNotEmpty("varX")  # Returns FALSE, since varX is not defined
 #'
 #' @export
 isDefinedAndNotEmpty <- function(variable_name, envir = parent.frame()) {
-  return(exists(variable_name, envir = envir) && nzchar(get(variable_name, envir = envir)))
+  if (!exists(variable_name, envir = envir)) {
+    return(FALSE)
+  }
+  val <- get(variable_name, envir = envir)
+  return(length(val) > 0 && any(nzchar(val)))
 }
 
 #' Check for the existence of mandatory parameters
