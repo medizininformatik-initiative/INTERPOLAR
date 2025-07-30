@@ -64,8 +64,8 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, mrp
     (grepl("PROXY|ATC", names(drug_disease_mrp_definition))) &
       !grepl("DISPLAY|INCLUSION|VALIDITY_DAYS", names(drug_disease_mrp_definition))
   ]
-  relevant_column_names <- c("ICD", proxy_column_names)
-  drug_disease_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_disease_mrp_definition, relevant_column_names)
+  code_column_names <- c("ICD", proxy_column_names)
+  drug_disease_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_disease_mrp_definition, code_column_names)
 
   # ICD column:
   # remove white spaces around plus signs
@@ -110,23 +110,23 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, mrp
     }
   )]
 
-  relevant_column_names <- c(relevant_column_names[!startsWith(relevant_column_names, "ATC")], "ATC_FOR_CALCULATION")
+  code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
   # SPLIT and TRIM: ICD and proxy column:
   # split the whitespace separated lists in ICD and proxy columns in a single row per code
-  drug_disease_mrp_definition <- etlutils::splitColumnsToRows(drug_disease_mrp_definition, relevant_column_names)
+  drug_disease_mrp_definition <- etlutils::splitColumnsToRows(drug_disease_mrp_definition, code_column_names)
   # trim all values in the whole table
   etlutils::trimTableValues(drug_disease_mrp_definition)
   # ICD column: remove tailing points from ICD codes
   etlutils::replacePatternsInColumn(drug_disease_mrp_definition, 'ICD', '\\.$', '')
   # remove rows with empty ICD code and empty proxy codes (ATC, LOINC, OPS) again.
   # After the replacing of special signs with an empty string their can be new empty rows in this both columns
-  drug_disease_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_disease_mrp_definition, relevant_column_names)
+  drug_disease_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_disease_mrp_definition, code_column_names)
 
   # Remove duplicate rows
   drug_disease_mrp_definition <- unique(drug_disease_mrp_definition)
 
-  # Clean rows with NA or empty values in relevant columns
-  for (col in relevant_column_names) {
+  # Clean rows with NA or empty values in relevant code columns
+  for (col in code_column_names) {
     drug_disease_mrp_definition[[col]] <- ifelse(
       is.na(drug_disease_mrp_definition[[col]]) |
         !nzchar(trimws(drug_disease_mrp_definition[[col]])),
