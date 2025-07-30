@@ -38,6 +38,10 @@ importDB2Redcap <- function() {
     # Get REDCap metadata to retrieve valid field names
     valid_fields <- tryRedcap(function() getRedcapFieldNames(frontend_connection))
 
+    # Exclude medikationsanalyse and mrpdokumentation_validierung
+    excluded_tables <- c("medikationsanalyse", "mrpdokumentation_validierung", "risikofaktor", "trigger")
+    table_names <- setdiff(table_names, excluded_tables)
+
     # Iterate over tables and columns to fetch and send data
     for (i in seq_along(table_names)) {
 
@@ -59,9 +63,20 @@ importDB2Redcap <- function() {
       # Keep only columns that exist in REDCap
       data_from_db <- data_from_db[, names(data_from_db) %in% valid_fields, with = FALSE]
 
-      colname <- paste0(table_name, "_additional_values")
-      if (colname %in% names(data_from_db)) {
-        data_from_db[[colname]] <- etlutils::redcapEscape(data_from_db[[colname]])
+      # Escape double quotes in character columns (CSV-compliant escaping)
+      char_cols <- names(data_from_db)[sapply(data_from_db, is.character)]
+      toml_cols <- char_cols[grepl("_additional_values$", char_cols)]
+
+      for (colname in char_cols) {
+        # redcap can sometimes misinterpret double quotation marks, even if they are CSV-compliant
+        # escaped. Therefore, we replace them with single quotation marks in all text fields.
+        if (!(colname %in% toml_cols)) {
+          data_from_db[[colname]] <- gsub('"', '\'', data_from_db[[colname]], fixed = TRUE)
+        } else {
+          # Additional_value fields are toml files that require double quotation marks, so it is
+          # important to ensure that these are retained.
+          data_from_db[[colname]] <- etlutils::redcapEscape(data_from_db[[colname]])
+        }
       }
 
       tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db))
@@ -108,7 +123,6 @@ importDB2Redcap <- function() {
       # Reformat the table in the needed structure (remaining columns are record_id
       # and the renamed column redcap_data_access_group)
       record_ids_with_data_access_group <- record_ids_with_data_access_group[, .(record_id, redcap_data_access_group = unique_group_name)]
-
     }
 
     etlutils::runLevel2Line("Write data to Redcap", {
