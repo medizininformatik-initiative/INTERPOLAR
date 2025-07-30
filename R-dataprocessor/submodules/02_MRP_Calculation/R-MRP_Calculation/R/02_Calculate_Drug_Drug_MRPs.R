@@ -52,6 +52,8 @@ cleanAndExpandDefinitionDrugDrug <- function(drug_drug_mrp_definition, mrp_type)
   # Remove not nesessary columns
   mrp_columnnames <- getPairListColumnNames(mrp_type)
   drug_drug_mrp_definition <- drug_drug_mrp_definition[,  ..mrp_columnnames]
+
+  code_column_names <- c("ATC_PRIMARY", "ATC2_PRIMARY")
   drug_drug_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_drug_mrp_definition, code_column_names)
 
   computeATCForCalculation <- function(data_table, primary_col, inclusion_col, output_col, secondary_cols) {
