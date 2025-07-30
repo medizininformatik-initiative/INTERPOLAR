@@ -8,37 +8,27 @@
 #'
 runSubmodules <- function() {
 
-  if (length(START_DATA_PROCESSOR_ARGS) == 0) {
-    # Path to the submodules directory
-    #submodule_path <- system.file("submodules", package = "dataprocessor")
-    submodule_path <- "./R-dataprocessor/submodules"
+  # Paths to the submodule directory and the manual start submodule directory
+  #submodule_path <- system.file("submodules", package = "dataprocessor")
+  submodule_path <- "./R-dataprocessor/submodules"
+  manual_start_path <- "./R-dataprocessor/submodules/manual_start"
 
-    # Get list of submodule directories
-    submodule_dirs <- list.dirs(submodule_path, recursive = FALSE)
+  # Get lists of submodule directories
+  submodule_dirs <- list.dirs(submodule_path, recursive = FALSE)
+  manual_start_submodule_dirs <- list.dirs(manual_start_path, recursive = FALSE)
 
+  # Check if any submodule directories were specified in the command line arguments
+  if (!interactive()) {
+    called_manual_start_submodule_dirs <- manual_start_submodule_dirs[
+      basename(manual_start_submodule_dirs) %in% commandArgs(trailingOnly = TRUE)]
   } else {
-    # Path to the manual submodules directory
-    submodule_path <- "./R-dataprocessor/submodules/manual_start"
+    called_manual_start_submodule_dirs <- as.character(c())
 
-    # Get list of all manual submodule directories
-    submodule_dirs <- list.dirs(submodule_path, recursive = FALSE)
 
-    # reduce list to requested manual submodule directories
-    submodule_dirs <- submodule_dirs[basename(submodule_dirs) %in% START_DATA_PROCESSOR_ARGS]
-
-    if (length(submodule_dirs) == 0) {
-      stop(paste("Submodule(s)",  paste(START_DATA_PROCESSOR_ARGS, collapse = ", "),
-      "not found in ./R-dataprocessor/submodules/manual_start."))
-    }
-
-    submodules_not_existing <- setdiff(START_DATA_PROCESSOR_ARGS, basename(submodule_dirs))
-
-    if (length(submodules_not_existing) > 0) {
-      warning(paste("Submodule(s)", paste(submodules_not_existing, collapse = ", "),
-                    "not found in ./R-dataprocessor/submodules/manual_start."))
-    }
   }
-
+  if(length(called_manual_start_submodule_dirs) > 0) {
+    submodule_dirs <- called_manual_start_submodule_dirs
+  }
 
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
