@@ -596,7 +596,7 @@ calculateMRPs <- function() {
   mrp_table_lists_all <- list()
 
   resources <- getResourcesForMRPCalculation(main_encounters)
-  browser()
+
   if (length(resources)) {
     mrp_pair_lists <- getMRPPairLists()
 
