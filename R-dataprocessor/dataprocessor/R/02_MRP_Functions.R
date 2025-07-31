@@ -164,8 +164,7 @@ getExpandedContent <- function(mrp_type) {
     # Save the updated data tables back to the database
     etlutils::dbWriteTables(
       tables = etlutils::namedListByParam(input_data_files, input_data_files_processed_content),
-      lock_id = "Write input data files to database",
-      stop_if_table_not_empty = TRUE)
+      lock_id = "Write input data files to database")
 
   } else {
     # Load processed content
