@@ -1,5 +1,6 @@
-# Ein Patient
+# Ein Patient, zur Testung der MRP Calculation
 # Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1, Bett 1, bekommt Medikamente + Diagnose + Medikationsanalyse
+# Ergebnis: 2x Drug-Disease-MRPs (Drug-Disease und Drug-DrugProxy) 1x Drug-Drug-MRP 1x Drug-DrugGroup-MRP
 # Tag 2: Versorgungsstellenkontakt wird entlassen
 if (exists("DEBUG_DAY")) {
 
@@ -106,76 +107,101 @@ if (exists("DEBUG_DAY")) {
       changeDataForPID(dt_con, pats[[i]], "medreq_meta_lastupdated", lastupdated)
     }
 
-    # Ressources for Drug-Disease MRP
-    dt_med <- dt_med[1,]
-    dt_med[1, `:=`(
-      med_id = "[1]UKB-0001-M-1",
-      med_code_code = "[1.1.1]14022620 ~ [1.2.1]A10BA02"
-    )]
-    dt_med <- rbind(dt_med, dt_med[1])
-    dt_med[2, `:=`(
-      med_id = "[1]UKB-0001-M-2",
-      med_code_code = "[1.1.1]14022620 ~ [1.2.1]N07BB03"
-    )]
-    dt_med <- rbind(dt_med, dt_med[1])
-    dt_med[3, `:=`(
-      med_id = "[1]UKB-0001-M-3",
-      med_code_code = "[1.1.1]14022620 ~ [1.2.1]N02AA01"
+    # Add medication resources to the Medication table
+    dt_med <- dt_med[1]  # Basiszeile
+    new_values <- data.table(
+      med_id = c(
+        # Drug-Disease MRP
+        "[1]UKB-0001-M-1",
+        "[1]UKB-0001-M-2",
+        "[1]UKB-0001-M-3",
+        # Drug-Drug MRP
+        "[1]UKB-0001-M-4",
+        "[1]UKB-0001-M-5",
+        # Drug-DrugGroup MRP
+        "[1]UKB-0001-M-6",
+        "[1]UKB-0001-M-7"
+      ),
+      med_code_code = c(
+        # Drug-Disease MRP
+        "[1.1.1]14022620 ~ [1.2.1]A10BA02",
+        "[1.1.1]14022620 ~ [1.2.1]N07BB03",
+        "[1.1.1]14022620 ~ [1.2.1]N02AA01",
+        # Drug-Drug MRP
+        "[1.1.1]14022620 ~ [1.2.1]N06AX22",
+        "[1.1.1]14022620 ~ [1.2.1]J01MA02",
+        # Drug-DrugGroup MRP
+        "[1.1.1]14022620 ~ [1.2.1]N06BA09",
+        "[1.1.1]14022620 ~ [1.2.1]C02KC01"
+      )
+    )
+    dt_med <- dt_med[rep(1, nrow(new_values))]
+    dt_med[, `:=`(
+      med_id = new_values$med_id,
+      med_code_code = new_values$med_code_code
     )]
 
-    dt_medreq <- rbind(
-      dt_medreq,
-      data.table::data.table(
+    # Add medication resources to the MedicationRequest table
+    medreq_data <- data.table::rbindlist(list(
+      # Drug-Disease MRP
+      data.table(
         medreq_id = c("[1]UKB-0001-MR-1", "[1]UKB-0001-MR-2", "[1]UKB-0001-MR-3"),
         medreq_patient_ref = "[1.1]Patient/UKB-0001",
-        medreq_medicationreference_ref = c("[1]Medication/UKB-0001-M-1", "[1]Medication/UKB-0001-M-2", "[1]Medication/UKB-0001-M-3"),
-        medreq_authoredon = c(
-          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.8),
-          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.7),
-          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.6)
+        medreq_medicationreference_ref = c(
+          "[1]Medication/UKB-0001-M-1",
+          "[1]Medication/UKB-0001-M-2",
+          "[1]Medication/UKB-0001-M-3"
+        ),
+        medreq_doseinstruc_timing_repeat_boundsperiod_start = c(
+          getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.8),
+          getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.7),
+          getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.6)
         )
       ),
-      fill = TRUE
-    )
+      # Drug-Drug MRP
+      data.table(
+        medreq_id = c("[1]UKB-0001-MR-4", "[1]UKB-0001-MR-5"),
+        medreq_patient_ref = "[1.1]Patient/UKB-0001",
+        medreq_medicationreference_ref = c(
+          "[1]Medication/UKB-0001-M-4",
+          "[1]Medication/UKB-0001-M-5"
+        ),
+        medreq_doseinstruc_timing_repeat_boundsperiod_start = rep(
+          getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5), 2
+        ),
+        medreq_doseinstruc_timing_repeat_boundsperiod_end = rep(
+          getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.2), 2
+        )
+      ),
+      # Drug-DrugGroup MRP
+      data.table(
+        medreq_id = c("[1]UKB-0001-MR-6", "[1]UKB-0001-MR-7"),
+        medreq_patient_ref = "[1.1]Patient/UKB-0001",
+        medreq_medicationreference_ref = c(
+          "[1]Medication/UKB-0001-M-6",
+          "[1]Medication/UKB-0001-M-7"
+        ),
+        medreq_doseinstruc_timing_repeat_boundsperiod_start = rep(
+          getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5), 2
+        ),
+        medreq_doseinstruc_timing_repeat_boundsperiod_end = rep(
+          getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.2), 2
+        )
+      )
+    ), fill = TRUE)
+    dt_medreq <- rbind(dt_medreq, medreq_data, fill = TRUE)
 
+
+    # Add Contion table for Drug-Disease MRP
     dt_con <- dt_con[1,] # keep only one row
     dt_con[nrow(dt_con), `:=`(
       con_id = "[1]UKB-0001-C-2",
       con_patient_ref = "[1.1]Patient/UKB-0001",
       con_code_code = "[1.1.1]R10.0",
-      con_recordeddate = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.7),
-      con_onsetperiod_start = getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.7)
+      con_recordeddate = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.7),
+      con_onsetperiod_start = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.7)
     )]
 
-    # Ressources for Drug-Drug MRP
-    dt_med <- rbind(dt_med, dt_med[1])
-    dt_med[4, `:=`(
-      med_id = "[1]UKB-0001-M-4",
-      med_code_code = "[1.1.1]14022620 ~ [1.2.1]N06AX22"
-    )]
-    dt_med <- rbind(dt_med, dt_med[1])
-    dt_med[5, `:=`(
-      med_id = "[1]UKB-0001-M-5",
-      med_code_code = "[1.1.1]14022620 ~ [1.2.1]J01MA02"
-    )]
-
-    dt_medreq <- rbind(
-      dt_medreq,
-      data.table::data.table(
-        medreq_id = c("[1]UKB-0001-MR-4", "[1]UKB-0001-MR-5"),
-        medreq_patient_ref = "[1.1]Patient/UKB-0001",
-        medreq_medicationreference_ref = c("[1]Medication/UKB-0001-M-4", "[1]Medication/UKB-0001-M-5"),
-        medreq_doseinstruc_timing_repeat_boundsperiod_start = c(
-          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.5),
-          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.5)
-        ),
-        medreq_doseinstruc_timing_repeat_boundsperiod_end = c(
-          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.2),
-          getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = 0.2)
-        )
-      ),
-      fill = TRUE
-    )
     #########################################################
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-1-A-1-V-1",
                      enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 1"]
