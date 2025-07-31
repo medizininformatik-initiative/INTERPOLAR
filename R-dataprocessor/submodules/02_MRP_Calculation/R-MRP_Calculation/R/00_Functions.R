@@ -164,16 +164,22 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
   }
 
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, column_names, where_clause)
-
   etlutils::dbGetReadOnlyQuery(query)
 }
 
 #
 # Extract new column 'med_id' from medication reference
 #
+# dt <- data.table(x_medicationreference_ref = c("abc/123", NA, "def/456"))
+# dt <- addMedicationIdColumn(dt)
+#
 addMedicationIdColumn <- function(medication_resources) {
   med_ref_col_name <- colnames(medication_resources)[endsWith(colnames(medication_resources), "_medicationreference_ref")]
-  medication_resources[, med_id := etlutils::fhirdataExtractIDs(get(med_ref_col_name), unique = FALSE)]
+  medication_resources[, med_id := vapply(
+    get(med_ref_col_name),
+    function(x) if (is.na(x) || trimws(x) == "") NA_character_ else etlutils::fhirdataExtractIDs(x, unique = FALSE),
+    character(1) # return value is always single string
+  )]
   return(medication_resources)
 }
 
@@ -581,6 +587,7 @@ getMRPPairLists <- function() {
 #' - The function merges all MRP types into two unified output tables.
 #'
 calculateMRPs <- function() {
+
   # Get all Einrichtungskontakt encounters that ended at least 14 days ago
   # and do not have a retrolective MRP evaluation for Drug_Disease
   main_encounters_by_mrp_type <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
@@ -589,7 +596,7 @@ calculateMRPs <- function() {
   mrp_table_lists_all <- list()
 
   resources <- getResourcesForMRPCalculation(main_encounters)
-  browser()
+
   if (length(resources)) {
     mrp_pair_lists <- getMRPPairLists()
 
