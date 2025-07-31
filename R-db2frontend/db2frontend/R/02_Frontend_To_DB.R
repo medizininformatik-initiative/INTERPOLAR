@@ -31,32 +31,31 @@ importRedcap2DB <- function() {
     # Aktuelle Lösung: Die Tabellen Risikofaktoren und Trigger werden nicht in das Frontend importiert.
     # Ob diese Instanzen überhaupt eine Relevanz haben, muss noch geklärt werden.
     if(!(form_name %in% c("risikofaktor", "trigger"))) {
-
-      dt <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
+      data_from_redcap <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
 
       # Remove the redcap_data_access_group values, as they are not needed in the database
-      dt[, redcap_data_access_group := NA]
+      data_from_redcap[, redcap_data_access_group := NA]
 
       # Ensure that the redcap_repeat_instrument column is set to the form name
       # For unknown reasons, Redcap sometimes creates invalid entries where the
       # redcap_repeat_instrument column is not NA but does not contain the form name.
-      data.table::set(dt, j = "redcap_repeat_instrument", value = ifelse(!is.na(dt$redcap_repeat_instrument), form_name, NA))
+      data.table::set(data_from_redcap, j = "redcap_repeat_instrument", value = ifelse(!is.na(data_from_redcap$redcap_repeat_instrument), form_name, NA))
 
       # Redcap creates invalid entries for unknown reasons where the _complete column is NA, which
       # should never be and leads to an error when we transfer these records back to Redcap. We
       # therefore delete them here.
       complete_column_name <- paste0(form_name, "_complete")
-      dt <- dt[!is.na(dt[[complete_column_name]]), ]
+      data_from_redcap <- data_from_redcap[!is.na(data_from_redcap[[complete_column_name]]), ]
 
       colname <- paste0(form_name, "_additional_values")
-      if (colname %in% names(dt)) {
+      if (colname %in% names(data_from_redcap)) {
         dt[[colname]] <- etlutils::redcapUnescape(dt[[colname]])
       }
 
       table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
-      etlutils::writeRData(dt, paste0(table_filename_prefix, "frontend2db_", i, "_", form_name))
+      etlutils::writeRData(data_from_redcap, paste0(table_filename_prefix, "frontend2db_", i, "_", form_name))
 
-      tables2Export[[form_name]] <- dt
+      tables2Export[[form_name]] <- data_from_redcap
     }
   }
 
