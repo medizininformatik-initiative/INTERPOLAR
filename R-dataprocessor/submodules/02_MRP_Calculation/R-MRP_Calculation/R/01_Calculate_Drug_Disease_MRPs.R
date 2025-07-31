@@ -73,42 +73,13 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, mrp
   # replace all invalid chars in the ICD codes by a simple whitespace -> can be trimmed and splitted
   drug_disease_mrp_definition[, ICD := sapply(ICD, function(text) gsub('[^0-9A-Za-z. +]', '', text))]
 
-  secondary_atc_cols <- setdiff(
-    grep("^ATC_", proxy_column_names, value = TRUE),
-    "ATC_PRIMARY"
+  computeATCForCalculation(
+    data_table = drug_disease_mrp_definition,
+    primary_col = "ATC_PRIMARY",
+    inclusion_col = "ATC_INCLUSION",
+    output_col = "ATC_FOR_CALCULATION",
+    secondary_cols = c("ATC_SYSTEMIC_SY", "ATC_DERMATIC_D", "ATC_OPHTHALMOLOGIC_OP", "ATC_INHALATIVE_I", "ATC_OTHER_OT")
   )
-  suffix_map <- setNames(secondary_atc_cols, sub(".*_", "", secondary_atc_cols))
-
-  drug_disease_mrp_definition[, ATC_FOR_CALCULATION := apply(
-    drug_disease_mrp_definition, 1, function(row) {
-      # Split the ATC_INCLUSION field by whitespace to handle multiple inclusion terms (e.g., "SY OP" -> c("SY", "OP"))
-      inclusions <- trimws(unlist(strsplit(row[["ATC_INCLUSION"]], "\\s+")))
-      # Initialize a vector to collect all secondary ATC codes from all inclusions
-      all_secondary <- character(0)
-
-      for (inclusion in inclusions) {
-        if (inclusion == "alle") {
-          raw_values <- row[secondary_atc_cols]
-        } else if (inclusion == "keine weiteren") {
-          raw_values <- character(0)
-        } else {
-          suffixes <- trimws(unlist(strsplit(inclusion, ",")))
-          cols <- suffix_map[suffixes]
-          raw_values <- row[cols]
-        }
-        # Append the raw values for this inclusion to the overall secondary list
-        all_secondary <- c(all_secondary, raw_values)
-      }
-
-      # Combine all collected secondary ATC codes into a single vector, splitting by whitespace
-      secondary <- unlist(strsplit(paste(na.omit(all_secondary), collapse = " "), "\\s+"))
-      # Merge primary and secondary ATC codes, remove duplicates and empty strings
-      all_atc <- unique(c(row[["ATC_PRIMARY"]], secondary))
-      all_atc <- all_atc[nzchar(all_atc)]
-      # Collapse the final list of ATC codes into a single space-separated string
-      paste(all_atc, collapse = " ")
-    }
-  )]
 
   code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
   # SPLIT and TRIM: ICD and proxy column:

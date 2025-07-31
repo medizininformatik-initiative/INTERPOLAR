@@ -56,32 +56,6 @@ cleanAndExpandDefinitionDrugDrug <- function(drug_drug_mrp_definition, mrp_type)
   code_column_names <- c("ATC_PRIMARY", "ATC2_PRIMARY")
   drug_drug_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_drug_mrp_definition, code_column_names)
 
-  computeATCForCalculation <- function(data_table, primary_col, inclusion_col, output_col, secondary_cols) {
-    suffix_map <- setNames(secondary_cols, sub(".*_", "", secondary_cols))
-
-    data_table[, (output_col) := apply(.SD, 1, function(row) {
-      inclusions <- trimws(unlist(strsplit(row[[inclusion_col]], "\\s+")))
-      all_secondary <- character(0)
-
-      for (inclusion in inclusions) {
-        if (inclusion == "alle") {
-          raw_values <- row[secondary_cols]
-        } else if (inclusion == "keine weiteren") {
-          raw_values <- character(0)
-        } else {
-          suffixes <- trimws(unlist(strsplit(inclusion, ",")))
-          cols <- suffix_map[suffixes]
-          raw_values <- row[cols]
-        }
-        all_secondary <- c(all_secondary, raw_values)
-      }
-      secondary <- unlist(strsplit(paste(na.omit(all_secondary), collapse = " "), "\\s+"))
-      all_atc <- unique(c(row[[primary_col]], secondary))
-      all_atc <- all_atc[nzchar(all_atc)]
-      paste(all_atc, collapse = " ")
-    }), .SDcols = c(primary_col, inclusion_col, secondary_cols)]
-  }
-
   computeATCForCalculation(
     data_table = drug_drug_mrp_definition,
     primary_col = "ATC_PRIMARY",
@@ -132,54 +106,6 @@ cleanAndExpandDefinitionDrugDrug <- function(drug_drug_mrp_definition, mrp_type)
   return(drug_drug_mrp_definition)
 }
 
-#' Match ATC and ATC2 codes between active medication requests and MRP definitions
-#'
-#' This function compares ATC codes from a list of active medication requests with MRP rule definitions
-#' in \code{mrp_table_list_by_atc}. It checks whether any defined interactions (via the \code{ATC2_FOR_CALCULATION}
-#' field) also occur in the active medications. For each matched ATC–ATC2 pair, it returns a descriptive
-#' entry indicating a potential contraindication.
-#'
-#' @param active_requests A \code{data.table} containing at least the column \code{atc_code},
-#'        which lists ATC codes of currently active medication requests.
-#' @param mrp_table_list_by_atc A named list of \code{data.table}s, where each name corresponds to an
-#'        ATC code, and each table contains MRP rule definitions, including a column \code{ATC2_FOR_CALCULATION}.
-#'
-#' @return A \code{data.table} with the columns:
-#'   \describe{
-#'     \item{\code{atc_code}}{The ATC code from the active request matching the MRP rule.}
-#'     \item{\code{atc2_code}}{The interacting ATC2 code also found in the active requests.}
-#'     \item{\code{proxy_code}}{Currently unused (placeholder).}
-#'     \item{\code{proxy_type}}{Currently unused (placeholder).}
-#'     \item{\code{kurzbeschr}}{A short textual description of the interaction.}
-#'   }
-matchATCandATC2Codes <- function(active_requests, mrp_table_list_by_atc) {
-  matched_rows <- list()
-  active_atcs <- unique(active_requests$atc_code)
-  used_keys <- intersect(names(mrp_table_list_by_atc), active_atcs)
-
-  for (atc_code in used_keys) {
-    mrp_rows <- mrp_table_list_by_atc[[atc_code]]
-    mrp_rows <- mrp_rows[ATC2_FOR_CALCULATION %in% active_atcs]
-
-    for (j in seq_len(nrow(mrp_rows))) {
-      rule <- mrp_rows[j]
-      atc2_code <- rule$ATC2_FOR_CALCULATION
-
-      matched_rows[[length(matched_rows) + 1]] <- data.table::data.table(
-        atc_code = atc_code,
-        atc2_code = atc2_code,
-        proxy_code = NA_character_,
-        proxy_type = NA_character_,
-        kurzbeschr = paste0(
-          rule$ATC_DISPLAY, " (", atc_code, ") ist bei ",
-          rule$ATC2_DISPLAY, " (", atc2_code, ") kontrainduziert."
-        )
-      )
-    }
-  }
-  return(data.table::rbindlist(matched_rows, fill = TRUE))
-}
-
 #' Split Drug-Drug MRP Table into Lookup Structures
 #'
 #' Takes a full Drug-Drug MRP table and splits it into a list of lookup tables
@@ -219,5 +145,5 @@ getSplittedMRPTablesDrugDrug <- function(drug_drug_mrp_tables) {
 #'   compatible with downstream processing for MRP reporting and audit.
 #'
 calculateMRPsDrugDrug <- function(active_requests, splitted_mrp_tables, resources, patient_id, meda_datetime) { # don't remove the unused parameters!
-  matchATCandATC2Codes(active_requests, splitted_mrp_tables$by_atc)
+  matchATCCodePairs(active_requests, splitted_mrp_tables$by_atc)
 }
