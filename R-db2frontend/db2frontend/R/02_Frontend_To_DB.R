@@ -49,7 +49,7 @@ importRedcap2DB <- function() {
 
       colname <- paste0(form_name, "_additional_values")
       if (colname %in% names(data_from_redcap)) {
-        dt[[colname]] <- etlutils::redcapUnescape(dt[[colname]])
+        data_from_redcap[[colname]] <- etlutils::redcapUnescape(data_from_redcap[[colname]])
       }
 
       table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
