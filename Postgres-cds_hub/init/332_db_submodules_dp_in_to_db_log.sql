@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-23 09:23:55
+-- Rights definition file last update : 2025-07-01 10:58:41
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-23 09:28:47
+-- Create time: 2025-07-18 15:53:25
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  331_cre_table_dataproc_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -153,6 +153,7 @@ BEGIN
                                 ward_name,
                                 study_phase,
                                 ret_id,
+                                ret_redcap_repeat_instance,
                                 mrp_proxy_type,
                                 mrp_proxy_code,
                                 input_file_processed_content_hash,
@@ -169,6 +170,7 @@ BEGIN
                                 current_record.ward_name,
                                 current_record.study_phase,
                                 current_record.ret_id,
+                                current_record.ret_redcap_repeat_instance,
                                 current_record.mrp_proxy_type,
                                 current_record.mrp_proxy_code,
                                 current_record.input_file_processed_content_hash,

@@ -164,6 +164,8 @@ tomlAppendVector <- function(toml_string, vec, key = NULL, comment = NULL) {
     toml_string <- paste0(toml_string, "\n")
   }
 
+  if (length(vec) == 0) return(toml_string)
+
   if (isSimpleNAorNULL(key)) {
     key <- deparse(substitute(vec))
   }
