@@ -1,6 +1,6 @@
 # chance the working directory to the main directory
-if (grepl('/cdstoolchain$', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
+if (grepl('/cdstoolchain', getwd())) setwd("../..")
+if (grepl('/R-cdstoolchain', getwd())) setwd("../")
 
 # free memory
 rm(list = ls())
@@ -13,29 +13,48 @@ library(db2frontend)
 # Reset error status
 options(error = NULL)
 
-DEBUG_DATES <- c("2025-03-03 13:55:45 CET",
-                 "2025-03-04 13:55:45 CET",
-                 "2025-03-05 13:55:45 CET",
-                 "2025-03-06 13:55:45 CET")
-
 start_full <- Sys.time()
-day_times <- c()
-DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS <<- 0
+datetime_minus_2_day <- start_full - as.difftime(2, units = "days")
+datetime_minus_1_day <- start_full - as.difftime(1, units = "days")
 
-for (i in seq_along(DEBUG_DATES)) {
-  DEBUG_DAY <- i
+getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_days = 1) {
+  datetime <- as.POSIXct(datetime)
+  # Subtract the specified number of days from the given datetime
+  datetime <- datetime - offset_days * 86400
+
+  # Format as "[1.1]YYYY-MM-DDTHH:MM:SS+02:00"
+  format(datetime, "[1.1]%Y-%m-%dT%H:%M:%S%z")
+}
+
+DEBUG_DATES <- c(datetime_minus_2_day,
+                 datetime_minus_1_day,
+                 start_full
+                 #"2025-03-03 13:55:45 CET",
+                 #"2025-03-04 13:55:45 CET",
+                 #"2025-03-05 13:55:45 CET",
+                 #"2025-03-06 13:55:45 CET",
+                 #"2025-03-07 13:55:45 CET",
+                 #"2025-03-08 13:55:45 CET"
+)
+
+day_times <- c()
+
+for (debug_day_index in seq_along(DEBUG_DATES)) {
+  DEBUG_DAY <- debug_day_index
   start_day <- Sys.time()
   source("./R-cdstoolchain/StartCDSToolChain.R")
   end_day <- Sys.time()
   diff <- capture.output(print(end_day - start_day))
-  day_times <- append(day_times, paste("Day", i, "took", diff))
-  print(day_times[i])
+  day_times <- append(day_times, paste("Day", debug_day_index, "took", diff))
+  print(day_times[debug_day_index])
+  print(getFormattedRAWDateTime(datetime_minus_2_day, 0.2))
+  browser()
 }
 end_full <- Sys.time()
 
 cat("\nAll days took:")
-for (i in seq_along(day_times)) {
-  print(day_times[i])
+for (debug_day_index in seq_along(day_times)) {
+  print(day_times[debug_day_index])
 }
 
 diff <- capture.output(print(end_full - start_full))

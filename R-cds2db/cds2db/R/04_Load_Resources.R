@@ -392,6 +392,15 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
     resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
   }
 
+  # If there are no new patients in the pids_per_ward table, create an empty table with the correct columns
+  if (!nrow(resource_tables[["pids_per_ward"]])) {
+    resource_tables[["pids_per_ward"]] <- data.table(
+      patient_id = "EMPTY_DATA",
+      encounter_id = "EMPTY_DATA",
+      ward_name = NA_character_
+    )
+  }
+
   #########################
   # START: FOR DEBUG ONLY #
   #########################

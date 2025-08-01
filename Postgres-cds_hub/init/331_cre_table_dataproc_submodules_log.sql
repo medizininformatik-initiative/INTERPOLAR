@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-02 16:19:58
+-- Rights definition file last update : 2025-07-01 10:58:41
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-07-04 14:36:18
+-- Create time: 2025-07-18 15:53:24
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  331_cre_table_dataproc_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -119,6 +119,12 @@ BEGIN
             ALTER TABLE db_log.dp_mrp_calculations ADD ret_id varchar;   -- optional – Redcap ID of the generated retrolective_mrpbewertung_fe (varchar)
         END IF; -- column (ret_id)
 
+        IF NOT EXISTS ( -- column not exists (ret_redcap_repeat_instance)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'ret_redcap_repeat_instance'
+        ) THEN
+            ALTER TABLE db_log.dp_mrp_calculations ADD ret_redcap_repeat_instance varchar;   -- optional – Redcap repeat instance id (varchar)
+        END IF; -- column (ret_redcap_repeat_instance)
+
         IF NOT EXISTS ( -- column not exists (mrp_proxy_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'mrp_proxy_type'
         ) THEN
@@ -151,6 +157,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ward_name), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(study_phase), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_id), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_redcap_repeat_instance), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_proxy_type), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_proxy_code), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(input_file_processed_content_hash), ''#NULL#'') || ''|||'' ||''#''
@@ -169,6 +176,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ward_name), '#NULL#') || '|||' || -- hash from: Name of the ward where the patient was during the medication analysis or the very first relevant ward (ward_name)
           COALESCE(db.to_char_immutable(study_phase), '#NULL#') || '|||' || -- hash from: Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (study_phase)
           COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: optional – Redcap ID of the generated retrolective_mrpbewertung_fe (ret_id)
+          COALESCE(db.to_char_immutable(ret_redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: optional – Redcap repeat instance id (ret_redcap_repeat_instance)
           COALESCE(db.to_char_immutable(mrp_proxy_type), '#NULL#') || '|||' || -- hash from: optional – ICD, ATC, OPS, LOINC (mrp_proxy_type)
           COALESCE(db.to_char_immutable(mrp_proxy_code), '#NULL#') || '|||' || -- hash from: optional – Code of the proxy (mrp_proxy_code)
           COALESCE(db.to_char_immutable(input_file_processed_content_hash), '#NULL#') || '|||' || -- hash from: Processed content hash from input_data_files_processed_content of the MRP list (input_file_processed_content_hash)
@@ -191,6 +199,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ward_name), '#NULL#') || '|||' || -- hash from: Name of the ward where the patient was during the medication analysis or the very first relevant ward (ward_name)
           COALESCE(db.to_char_immutable(study_phase), '#NULL#') || '|||' || -- hash from: Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (study_phase)
           COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: optional – Redcap ID of the generated retrolective_mrpbewertung_fe (ret_id)
+          COALESCE(db.to_char_immutable(ret_redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: optional – Redcap repeat instance id (ret_redcap_repeat_instance)
           COALESCE(db.to_char_immutable(mrp_proxy_type), '#NULL#') || '|||' || -- hash from: optional – ICD, ATC, OPS, LOINC (mrp_proxy_type)
           COALESCE(db.to_char_immutable(mrp_proxy_code), '#NULL#') || '|||' || -- hash from: optional – Code of the proxy (mrp_proxy_code)
           COALESCE(db.to_char_immutable(input_file_processed_content_hash), '#NULL#') || '|||' || -- hash from: Processed content hash from input_data_files_processed_content of the MRP list (input_file_processed_content_hash)
@@ -230,6 +239,7 @@ COMMENT ON COLUMN db_log.dp_mrp_calculations.meda_id IS 'optional - Redcap ID of
 COMMENT ON COLUMN db_log.dp_mrp_calculations.ward_name IS 'Name of the ward where the patient was during the medication analysis or the very first relevant ward (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.study_phase IS 'Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.ret_id IS 'optional – Redcap ID of the generated retrolective_mrpbewertung_fe (varchar)';
+COMMENT ON COLUMN db_log.dp_mrp_calculations.ret_redcap_repeat_instance IS 'optional – Redcap repeat instance id (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.mrp_proxy_type IS 'optional – ICD, ATC, OPS, LOINC (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.mrp_proxy_code IS 'optional – Code of the proxy (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.input_file_processed_content_hash IS 'Processed content hash from input_data_files_processed_content of the MRP list (varchar)';
@@ -388,6 +398,27 @@ IF EXISTS ( -- target column
 END IF; -- target column
 
 -- index by definition table for dp_mrp_calculations ----------------------------------------------------
+--- idx_dp_mrp_calculations_ret_redcap_repeat_instance - create btree index on \bid\b --------------------
+IF EXISTS ( -- target column
+    SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'ret_redcap_repeat_instance'
+) THEN
+    IF EXISTS ( -- INDEX available
+        SELECT 1 FROM pg_indexes where substr(indexname,1,63) = substr('idx_dp_mrp_calculations_ret_redcap_repeat_instance',1,63) AND schemaname = 'db_log' AND tablename = 'dp_mrp_calculations'
+    ) THEN -- check current status
+        IF EXISTS ( -- INDEX nicht auf akuellen Stand
+            SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            AND schemaname = 'db_log' AND tablename = 'dp_mrp_calculations' AND substr(indexname,1,63)=substr('idx_dp_mrp_calculations_ret_redcap_repeat_instance',1,63)
+	    AND indexdef != 'CREATE INDEX idx_dp_mrp_calculations_ret_redcap_repeat_instance ON db_log.dp_mrp_calculations USING btree (ret_redcap_repeat_instance)'
+        ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+        ALTER INDEX db_log.idx_dp_mrp_calculations_ret_redcap_repeat_instance RENAME TO del_dp_mrp_calculations_ret_redcap_repeat_instance;
+	    DROP INDEX IF EXISTS db_log.del_dp_mrp_calculations_ret_redcap_repeat_instance;
+	    CREATE INDEX idx_dp_mrp_calculations_ret_redcap_repeat_instance ON db_log.dp_mrp_calculations USING btree (ret_redcap_repeat_instance);
+        END IF; -- check current status
+    ELSE -- (easy) Create new
+        CREATE INDEX idx_dp_mrp_calculations_ret_redcap_repeat_instance ON db_log.dp_mrp_calculations USING btree (ret_redcap_repeat_instance);
+    END IF; -- INDEX available
+END IF; -- target column
+
 
 
 ------------------------------------------------------------------------------------------------
