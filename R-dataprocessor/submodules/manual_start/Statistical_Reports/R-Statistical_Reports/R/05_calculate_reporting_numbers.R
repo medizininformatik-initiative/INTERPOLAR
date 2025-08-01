@@ -7,7 +7,7 @@
 #'   `main_enc_id`, `fall_id_cis`, `pat_id`, `record_id`, `ward_name`, and `calendar_week`.
 #'
 #' @return A tibble containing aggregated counts of F1-relevant metrics. The result includes:
-#'   \item{`ward_name`}{Ward name or `"all wards"` for total counts.}
+#'   \item{`ward_name`}{Ward name or `"all"` for total counts.}
 #'   \item{`calendar_week`}{Calendar week or `"all weeks"` for total counts.}
 #'   \item{`F1_encounters`}{Number of distinct main encounters.}
 #'   \item{`F1_encounters_also_in_fe`}{Number of main encounters matched in the front-end data (`fall_id_cis`).}
@@ -18,7 +18,7 @@
 #' The function performs two levels of aggregation:
 #' \itemize{
 #'   \item Grouped by `ward_name` and `calendar_week`.
-#'   \item Total row for all wards and all calendar weeks.
+#'   \item Total row for all and all calendar weeks.
 #' }
 #'
 #' This helps in comparing study and front-end data coverage over time and location.
@@ -39,8 +39,8 @@ calculateF1 <- function(F1_prep) {
 
     F1_total_counts <- F1_prep |>
       dplyr::summarise(
-        ward_name = "all wards",
-        calendar_week = "all weeks",
+        ward_name = "all",
+        calendar_week = "all",
         F1_patients = dplyr::n_distinct(pat_id, na.rm = TRUE),
         F1_patients_also_in_fe = dplyr::n_distinct(record_id, na.rm = TRUE),
         F1_encounters = dplyr::n_distinct(main_enc_id, na.rm = TRUE),
@@ -62,7 +62,7 @@ calculateF1 <- function(F1_prep) {
 #' @param fe_summary_data A data frame prepared by `prepareFeSummaryData()` containing
 #'   deduplicated front-end data with patient, encounter, ward, and MRP-level variables.
 #'
-#' @return A data frame with summarized counts per `ward_name`, including a row for `"all wards"`.
+#' @return A data frame with summarized counts per `ward_name`, including a row for `"all"`.
 #'   The columns include:
 #'   - `patients`: Number of distinct patients
 #'   - `encounters`: Number of distinct hospital stays
@@ -79,14 +79,15 @@ calculateF1 <- function(F1_prep) {
 #'
 #' @details
 #' - Summarization is grouped by `ward_name` derived from `ward_name`
+#'  and `calendar_week` if available and given as input for grouping_variables.
 #' - Uses `dplyr::n_distinct()` for robust unique counts
 #'
 #' @importFrom dplyr group_by summarise bind_rows n_distinct rename
 #' @export
-calculateFeSummary <- function(fe_summary_data) {
+calculateFeSummary <- function(fe_summary_data, grouping_variables = c("ward_name")) {
 
   fe_grouped_counts <- fe_summary_data |>
-    dplyr::group_by(ward_name) |>
+    dplyr::group_by(across(all_of(grouping_variables))) |>
     dplyr::summarise(
       patients = dplyr::n_distinct(pat_id, na.rm = TRUE),
       encounters = dplyr::n_distinct(main_enc_id, na.rm = TRUE),
@@ -119,7 +120,7 @@ calculateFeSummary <- function(fe_summary_data) {
 
   fe_total_counts <- fe_summary_data |>
     dplyr::summarise(
-      ward_name = "all wards",
+      across(any_of(c('ward_name', 'calendar_week')), ~"all"),
       patients = dplyr::n_distinct(pat_id, na.rm = TRUE),
       encounters = dplyr::n_distinct(main_enc_id, na.rm = TRUE),
       medication_analyses = dplyr::n_distinct(meda_id, na.rm = TRUE),
@@ -165,7 +166,7 @@ calculateFeSummary <- function(fe_summary_data) {
 #' enriched with front-end variables (from `addFeDataToF1data()`).
 #'
 #' @return A data frame that merges F1-level statistics with aggregated
-#' front-end documentation summaries per ward and patient/encounter group.
+#' front-end documentation summaries per ward and calendar week.
 #'
 #' @details
 #' This function works in two steps:
@@ -189,11 +190,12 @@ calculateFeSummary <- function(fe_summary_data) {
 calculateFeAddOnToF1 <- function(F1, report_data_F1_with_fe) {
 
   report_with_fe_prep <- report_data_F1_with_fe |>
-    calculateFeSummary()
+    calculateFeSummary(grouping_variables = c("ward_name", "calendar_week"))
 
   report_with_fe <- F1 |>
     dplyr::left_join(report_with_fe_prep,
                      by = c("ward_name",
+                            "calendar_week",
                             "F1_patients" = "patients",
                             "F1_encounters" = "encounters"))
   return(report_with_fe)
