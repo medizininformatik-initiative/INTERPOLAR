@@ -765,7 +765,7 @@ calculateMRPs <- function() {
                 ret_meda_dat1 = meda_datetime,
                 ret_kurzbeschr = paste0(kurzbeschr_prefix, match$kurzbeschr),
                 ret_atc1 = match$atc_code,
-                ret_ip_klasse_01 = ifelse(mrp_type == "Drug_DrugGroup", getCategoryDisplay("Drug_Drug"), getCategoryDisplay(mrp_type)),
+                ret_ip_klasse_01 = getCategoryDisplay(mrp_type),
                 ret_ip_klasse_disease = if (is.null(match$icd)) NA else match$icd,
                 ret_atc2 = if (is.null(match$atc2_code)) NA else match$atc2_code,
                 retrolektive_mrpbewertung_complete = ret_status,

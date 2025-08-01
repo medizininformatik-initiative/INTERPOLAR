@@ -28,8 +28,8 @@ getPairListColumnNamesDrugDrugGroup <- function() {
 #' Returns the display label for the MRP category "Drug-Drug", used for
 #' tagging or labeling MRPs in evaluation outputs.
 #'
-#' @return A character string: \code{"Drug-DrugGroup"}
-getCategoryDisplayDrugDrugGroup <- function() {"Drug-DrugGroup"}
+#' @return A character string: \code{"Drug-Drug"}
+getCategoryDisplayDrugDrugGroup <- function() {"Drug-Drug"}
 
 #' Clean and Expand Drug_Drug_MRP Definition Table
 #'
