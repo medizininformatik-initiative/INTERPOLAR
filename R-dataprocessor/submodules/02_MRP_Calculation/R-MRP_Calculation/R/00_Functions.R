@@ -15,8 +15,8 @@ if (!exists("DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS")) {
 #
 MRP_TYPE <- etlutils::namedVectorByParam(
   "Drug_Disease",
-  "Drug_Drug"#,
-  #"Drug_DrugGroup",
+  "Drug_Drug",
+  "Drug_DrugGroup"#,
   #"Drug_Niereninsuffizienz""
 )
 
@@ -554,6 +554,108 @@ getMRPPairLists <- function() {
     })
   }
   return(mrp_pair_lists)
+}
+
+#' Compute combined ATC codes for calculation
+#'
+#' Diese Funktion berechnet eine kombinierte Liste von ATC-Codes, basierend auf einer
+#' primären ATC-Spalte und optionalen Sekundärspalten, die durch eine Einschluss-Spalte
+#' gesteuert werden.
+#'
+#' Wenn die Einschluss-Spalte oder die Sekundärspalten nicht vorhanden sind, wird einfach
+#' die primäre ATC-Spalte als Ergebnis in der Ausgabespalte gespeichert.
+#'
+#' @param data_table data.table Das Datentable mit den zu verarbeitenden Daten.
+#' @param primary_col character Name der Spalte mit den primären ATC-Codes.
+#' @param inclusion_col character Name der Spalte mit den Einschlussbedingungen (Worte wie "alle", "keine weiteren" oder Suffix-Listen). Kann fehlen.
+#' @param output_col character Name der Spalte, in die das Ergebnis geschrieben wird.
+#' @param secondary_cols character Vektor mit Namen der Sekundärspalten, die abhängig von inclusion_col ergänzt werden können.
+#'
+#' @return NULL. Die Funktion verändert \code{data_table} direkt und fügt/überschreibt die Spalte \code{output_col}.
+#'
+#' @details
+#' Die Funktion parst die Werte in \code{inclusion_col} pro Zeile, um zu entscheiden,
+#' welche Sekundärspalten (nach Suffix) zusätzlich zu \code{primary_col} in der
+#' Ergebnis-Spalte \code{output_col} enthalten sein sollen.
+#'
+computeATCForCalculation <- function(data_table, primary_col, inclusion_col, output_col, secondary_cols) {
+
+  if (!(inclusion_col %in% names(data_table)) || !any(secondary_cols %in% names(data_table))) {
+    data_table[, (output_col) := data_table[[primary_col]]]
+    return(NULL)
+  }
+
+  suffix_map <- setNames(secondary_cols, sub(".*_", "", secondary_cols))
+
+  data_table[, (output_col) := apply(.SD, 1, function(row) {
+    inclusions <- trimws(unlist(strsplit(row[[inclusion_col]], "\\s+")))
+    all_secondary <- character(0)
+
+    for (inclusion in inclusions) {
+      if (inclusion == "alle") {
+        raw_values <- row[secondary_cols]
+      } else if (inclusion == "keine weiteren") {
+        raw_values <- character(0)
+      } else {
+        suffixes <- trimws(unlist(strsplit(inclusion, ",")))
+        cols <- suffix_map[suffixes]
+        raw_values <- row[cols]
+      }
+      all_secondary <- c(all_secondary, raw_values)
+    }
+    secondary <- unlist(strsplit(paste(na.omit(all_secondary), collapse = " "), "\\s+"))
+    all_atc <- unique(c(row[[primary_col]], secondary))
+    all_atc <- all_atc[nzchar(all_atc)]
+    paste(all_atc, collapse = " ")
+  }), .SDcols = c(primary_col, inclusion_col, secondary_cols)]
+}
+
+#' Match ATC and ATC2 codes between active medication requests and MRP definitions
+#'
+#' This function compares ATC codes from a list of active medication requests with MRP rule definitions
+#' in \code{mrp_table_list_by_atc}. It checks whether any defined interactions (via the \code{ATC2_FOR_CALCULATION}
+#' field) also occur in the active medications. For each matched ATC–ATC2 pair, it returns a descriptive
+#' entry indicating a potential contraindication.
+#'
+#' @param active_requests A \code{data.table} containing at least the column \code{atc_code},
+#'        which lists ATC codes of currently active medication requests.
+#' @param mrp_table_list_by_atc A named list of \code{data.table}s, where each name corresponds to an
+#'        ATC code, and each table contains MRP rule definitions, including a column \code{ATC2_FOR_CALCULATION}.
+#'
+#' @return A \code{data.table} with the columns:
+#'   \describe{
+#'     \item{\code{atc_code}}{The ATC code from the active request matching the MRP rule.}
+#'     \item{\code{atc2_code}}{The interacting ATC2 code also found in the active requests.}
+#'     \item{\code{proxy_code}}{Currently unused (placeholder).}
+#'     \item{\code{proxy_type}}{Currently unused (placeholder).}
+#'     \item{\code{kurzbeschr}}{A short textual description of the interaction.}
+#'   }
+matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
+  matched_rows <- list()
+  active_atcs <- unique(active_requests$atc_code)
+  used_keys <- intersect(names(mrp_table_list_by_atc), active_atcs)
+
+  for (atc_code in used_keys) {
+    mrp_rows <- mrp_table_list_by_atc[[atc_code]]
+    mrp_rows <- mrp_rows[ATC2_FOR_CALCULATION %in% active_atcs]
+
+    for (j in seq_len(nrow(mrp_rows))) {
+      rule <- mrp_rows[j]
+      atc2_code <- rule$ATC2_FOR_CALCULATION
+
+      matched_rows[[length(matched_rows) + 1]] <- data.table::data.table(
+        atc_code = atc_code,
+        atc2_code = atc2_code,
+        proxy_code = NA_character_,
+        proxy_type = NA_character_,
+        kurzbeschr = paste0(
+          rule$ATC_DISPLAY, " (", atc_code, ") ist bei ",
+          rule$ATC2_DISPLAY, " (", atc2_code, ") kontrainduziert."
+        )
+      )
+    }
+  }
+  return(data.table::rbindlist(matched_rows, fill = TRUE))
 }
 
 #' Calculate Medication-Related Problems (MRPs) for All Types
