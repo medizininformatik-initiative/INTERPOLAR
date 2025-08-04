@@ -63,6 +63,9 @@ getActiveEncounterPIDsFromDB <- function() {
   # Run the SQL query and return patient IDs
   patient_ids_active <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getActiveEncounterPIDsFromDB()")
 
+  print(paste0("Active patient IDs in encounter table:\n",
+               paste0(patient_ids_active$enc_patient_ref, collapse = ", ")))
+
   return(patient_ids_active$enc_patient_ref)
 }
 
