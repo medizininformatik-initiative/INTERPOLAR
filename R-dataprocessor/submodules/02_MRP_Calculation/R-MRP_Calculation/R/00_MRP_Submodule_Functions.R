@@ -548,8 +548,8 @@ getCategoryDisplay <- function(mrp_type) {
 getMRPPairLists <- function() {
   mrp_pair_lists <- list()
   for (mrp_type in MRP_TYPE) {
-    etlutils::runLevel3(paste0("Load and expand ", mrp_type, " Definition"), {
-      mrp_content <- getExpandedContent(mrp_type)
+    etlutils::runLevel3Line(paste0("Load and expand ", mrp_type, " Definition"), {
+      mrp_content <- getExpandedExcelContent(mrp_type, table_name_prefix = "MRP_")
       if (!is.null(mrp_content)) {
         mrp_pair_lists[[mrp_type]] <- mrp_content
       }
