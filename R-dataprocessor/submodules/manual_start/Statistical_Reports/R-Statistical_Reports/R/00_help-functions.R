@@ -97,6 +97,39 @@ checkMultipleRows <- function(data, grouping_vars) {
   return(nrow(data_check_multiple_row) > 0)
 }
 
+#------------------------------------------------------------------------------#
+
+#' Parse Named Command-Line Arguments
+#'
+#' Extracts and parses named command-line arguments passed in the format `name=value`
+#' when the R script is executed from the command line.
+#'
+#' @return A named character vector where each element corresponds to a parsed
+#' command-line argument, with argument names as the vector names.
+#'
+#' @details
+#' This function is useful for command-line R scripts where parameters
+#' are passed as `name=value` pairs (e.g., `Rscript script.R param1=value1 param2=value2`).
+#'
+#' Arguments without an `=` sign are ignored.
+#'
+#' @export
+
+parse_named_args <- function() {
+  command_arguments <- commandArgs(trailingOnly = TRUE)
+
+  named_args <- command_arguments[grepl("=", command_arguments)]
+
+  # Convert to named character vector
+  parsed <- sapply(named_args, function(arg) {
+    parts <- strsplit(arg, "=", fixed = TRUE)[[1]]
+    setNames(parts[2], parts[1])
+  })
+
+  return(parsed)
+}
+
+
 
 
 

@@ -3,7 +3,9 @@
 #' Generates a comprehensive statistical report for patients hospitalized on INTERPOLAR wards,
 #' using patient, encounter, and front-end documentation data within a defined reporting period.
 #' The report computes base population metrics (F1) and a summary of medication safety documentation
-#' for internal monitoring and evaluation.
+#' for internal monitoring and evaluation. REPORT_PERIOD_START and REPORT_PERIOD_END can be set
+#' via command line arguments. Defaults are set to `"2025-01-01"` for the start date and the
+#' current date for the end date.
 #'
 #' @param REPORT_PERIOD_START Character string in `"YYYY-MM-DD"` format.
 #'   Start date of the reporting period.
@@ -79,7 +81,17 @@
 #'
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
-                                    REPORT_PERIOD_END = Sys.Date()) {
+                                    REPORT_PERIOD_END = as.character(Sys.Date())) {
+
+  if (!interactive()) {
+  named_args <- parse_named_args()
+  if ("REPORT_PERIOD_START" %in% names(named_args)) {
+    REPORT_PERIOD_START <- named_args[["REPORT_PERIOD_START"]]
+  }
+  if ("REPORT_PERIOD_END" %in% names(named_args)) {
+    REPORT_PERIOD_END <- named_args[["REPORT_PERIOD_END"]]
+  }
+  }
 
   # TODO: include the start and end date in an interactive way ----------
 
