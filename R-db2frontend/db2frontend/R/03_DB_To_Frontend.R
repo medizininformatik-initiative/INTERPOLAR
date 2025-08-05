@@ -121,10 +121,12 @@ importDB2Redcap <- function() {
   # END: FOR DEBUG ONLY #
   #######################
 
-  # Import data into REDCap
-  for (table_name in names(data_to_import)) {
-    tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]]))
-  }
+  etlutils::runLevel2Line("Import data into frontend", {
+    # Import data into REDCap
+    for (table_name in names(data_to_import)) {
+      tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]]))
+    }
+  })
 
   etlutils::runLevel2Line("Update data access groups", {
 
