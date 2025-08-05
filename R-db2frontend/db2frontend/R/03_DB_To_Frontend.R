@@ -42,19 +42,44 @@ importDB2Redcap <- function() {
     excluded_tables <- c("medikationsanalyse", "mrpdokumentation_validierung", "risikofaktor", "trigger")
     table_names <- setdiff(table_names, excluded_tables)
 
+
+    #########################
+    # START: FOR DEBUG ONLY #
+    #########################
+    # Load debug data from files as mocked data from the database.
+    debug_redcap_data_from_db <- list()
+    # This variable should be set to change the downloaded RAW data for DEBUG
+    # purposes. It contains paths to scripts that is sourced at this point in the given order
+    if (exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAMES") && length(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAMES)) {
+      for (script_name in DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAMES) {
+        source(script_name, local = TRUE) # this should register the functions loadDebugREDCapData() and changeDebugREDCapData(data_to_import)
+      }
+    }
+    if (exists("loadDebugREDCapData")) {
+      debug_redcap_data_from_db <- loadDebugREDCapData()
+      table_names <- unique(c(table_names, names(debug_redcap_data_from_db)))
+    }
+    #######################
+    # END: FOR DEBUG ONLY #
+    #######################
+
+    data_to_import <- list()
     # Iterate over tables and columns to fetch and send data
     for (i in seq_along(table_names)) {
 
       table_name <- table_names[i]
 
-      db_generated_id_column_name <- paste0(table_name, "_fe_id")
-      columns <- c(db_generated_id_column_name, table_description[[table_name]]$COLUMN_NAME)
+      data_from_db <- debug_redcap_data_from_db[[table_name]]
+      if (is.null(data_from_db)) {
+        db_generated_id_column_name <- paste0(table_name, "_fe_id")
+        columns <- c(db_generated_id_column_name, table_description[[table_name]]$COLUMN_NAME)
 
-      # Create SQL query dynamically based on columns
-      query <- sprintf("SELECT %s FROM v_%s", paste(columns, collapse = ", "), table_name)
+        # Create SQL query dynamically based on columns
+        query <- sprintf("SELECT %s FROM v_%s", paste(columns, collapse = ", "), table_name)
 
-      # Fetch data from the database
-      data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
+        # Fetch data from the database
+        data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
+      }
 
       table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
       etlutils::writeRData(data_from_db, paste0(table_filename_prefix, "db2frontend_", i, "_", table_name))
@@ -78,14 +103,28 @@ importDB2Redcap <- function() {
           data_from_db[[colname]] <- etlutils::redcapEscape(data_from_db[[colname]])
         }
       }
-
-      tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db))
+      data_to_import[[table_name]] <- data_from_db
 
       if (table_name %in% "fall") {
         record_ids_with_data_access_group <- unique(data_from_db[, c("record_id", "fall_station")])
       }
     }
   })
+
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+  if (exists("changeDebugREDCapData")) {
+    data_to_import <- changeDebugREDCapData(data_to_import)
+  }
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
+  # Import data into REDCap
+  for (table_name in names(data_to_import)) {
+    tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]]))
+  }
 
   etlutils::runLevel2Line("Update data access groups", {
 
