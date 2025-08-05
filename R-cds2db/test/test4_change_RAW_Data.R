@@ -8,7 +8,7 @@ if (exists("DEBUG_DAY")) {
     # clear database on Day 1
     etlutils::dbReset()
     pats <- c("UKB-0001") # present at day 1
-  } else{
+  } else {
     pats <- c("UKB-0001")
     # Load all encounters from the database which, according to the database,
     # have not yet ended on the 'current' date and determine the PIDs.
@@ -213,21 +213,22 @@ if (exists("DEBUG_DAY")) {
     # Day 2: Versorgungsstellenkontakt wird entlassen
 
     dt_pat <- dt_pat[-1]
-    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.1))
+    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.1))
     changeDataForPID(dt_enc, pats$`UKB-0001`, colnames_pattern_diagnosis, NA)
 
+    enc_end <- getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.2)
     dt_enc[1, enc_id := "UKB-0001-E-1"]
     dt_enc[1, enc_status := "finished"]
     dt_enc[1, enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 1"]
-    dt_enc[1, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.2)]
+    dt_enc[1, enc_period_end := enc_end]
 
     dt_enc[2, enc_id := "UKB-0001-E-1-A-1"]
     dt_enc[2, enc_status := "finished"]
-    dt_enc[2, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.2)]
+    dt_enc[2, enc_period_end := enc_end]
 
     dt_enc[3, enc_id := "UKB-0001-E-1-A-1-V-1"]
     dt_enc[3, enc_status := "finished"]
-    dt_enc[3, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[2], offset_days = 0.2)]
+    dt_enc[3, enc_period_end := enc_end]
 
     pids_per_wards <- resource_tables$pids_per_ward
     pids_per_wards <- pids_per_wards[-1]
@@ -240,4 +241,5 @@ if (exists("DEBUG_DAY")) {
   resource_tables[["Medication"]] <- dt_med
   resource_tables[["Condition"]] <- dt_con
   resource_tables[["pids_per_ward"]] <- pids_per_wards
+
 }
