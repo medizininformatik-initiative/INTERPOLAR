@@ -558,6 +558,23 @@ getMRPPairLists <- function() {
   return(mrp_pair_lists)
 }
 
+#' Load LOINC Mapping Definition from Excel
+#'
+#' Retrieves and expands the LOINC mapping definition from the corresponding Excel file
+#' using \code{getExpandedExcelContent}. This function is typically used in MRP pipelines
+#' to load mapping data for LOINC codes.
+#'
+#' Internally wrapped in a level 3 logging block for structured ETL logging.
+#'
+#' @return A \code{data.frame} (or compatible object) containing the expanded LOINC mapping definition.
+#'
+getLOINCMapping <- function() {
+  etlutils::runLevel3Line(paste0("Load LOINC_Mapping Definition"), {
+    loinc_mapping <- getExpandedExcelContent("LOINC_Mapping")
+  })
+  return(loinc_mapping)
+}
+
 #' Compute combined ATC codes for calculation
 #'
 #' Diese Funktion berechnet eine kombinierte Liste von ATC-Codes, basierend auf einer
@@ -658,6 +675,28 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
     }
   }
   return(data.table::rbindlist(matched_rows, fill = TRUE))
+}
+
+#' Filter active MedicationRequests for an encounter within a specific time window
+#'
+#' @param medication_requests A \code{data.table} of MedicationRequest resources. Must contain columns \code{medreq_encounter_ref} and \code{medreq_authoredon}.
+#' @param enc_period_start POSIXct. The start datetime of the encounter period.
+#' @param meda_datetime POSIXct. The datetime of the medication analysis (cutoff point).
+#'
+#' @return A \code{data.table} with filtered active medication requests for the given encounter and time range.
+#'
+#' @export
+getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
+
+  active_requests <- medication_requests[
+    !is.na(start_date) &
+      start_date >= enc_period_start &
+      start_date <= meda_datetime &
+      (is.na(end_date) |
+         end_date >= meda_datetime)
+  ]
+  atc_codes <- active_requests[, c("atc_code")]
+  return(atc_codes)
 }
 
 #' Calculate Medication-Related Problems (MRPs) for All Types
