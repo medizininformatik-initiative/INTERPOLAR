@@ -82,31 +82,32 @@ validateLOINCCodes <- function(data, column_name) {
 getExpandedContent <- function(mrp_type) {
 
   #path to the directory containing the MRP Excel files.
-  path_to_mrp_tables <- file.path(MRP_PAIR_PATH, paste0("MRP_", mrp_type))
-
+  table_dir <- file.path(INPUT_REPO_PATH, paste0(table_name_prefix, table_name))
   # Load the MRP definition from the Excel file
+  columnnames <- getRelevantColumnNames(table_name)
+  file_definition <- etlutils::readFirstExcelFileSheet(table_dir, table_name, columnnames)
   mrp_columnnames <- getPairListColumnNames(mrp_type)
   mrp_definition <- etlutils::readFirstExcelFileSheet(path_to_mrp_tables, mrp_type, mrp_columnnames)
   if (is.null(mrp_definition)) {
     stop(paste0("No or empty ", mrp_type, " MRP definition table found in the specified path: ", path_to_mrp_tables))
   }
   # Compute the hash of the current MRP definition
-  content_hash <- digest::digest(mrp_definition$excel_file_content, algo = "sha256")
-  file_name <- mrp_definition$excel_file_name
-  content <- mrp_definition$excel_file_content
-  processed_content_hash <- getStoredProcessedContentHash(content_hash, path_to_mrp_tables)
+  content_hash <- digest::digest(file_definition$excel_file_content, algo = "sha256")
+  file_name <- file_definition$excel_file_name
+  content <- file_definition$excel_file_content
+  processed_content_hash <- getStoredProcessedContentHash(content_hash, table_dir)
 
   if (is.null(processed_content_hash)) {
     # If the hash is not found, process the MRP definition
     processed_content <- getMRPTypeFunction("cleanAndExpandDefinition", mrp_type)(mrp_definition$excel_file_content, mrp_type)
     processed_content_hash <- digest::digest(processed_content, algo = "sha256")
 
-    output_dir <- file.path(path_to_mrp_tables, paste0(mrp_type, "_content"))
+    output_dir <- file.path(table_dir, paste0(table_name, "_content"))
     if (!dir.exists(output_dir)) {
       dir.create(output_dir, recursive = TRUE)
     }
 
-    file_path_part <- paste0(path_to_mrp_tables, "/", mrp_type, "_content")
+    file_path_part <- paste0(table_dir, "/", table_name, "_content")
 
     # Write content and processed content to Excel files
     openxlsx::write.xlsx(content, file = file.path(file_path_part,
@@ -115,8 +116,8 @@ getExpandedContent <- function(mrp_type) {
                                                              paste0(mrp_type, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
 
     # Load or init storage tables locally
-    input_data_files_path <- paste0(path_to_mrp_tables, "/input_data_files.RData")
-    input_data_files_processed_path <- paste0(path_to_mrp_tables, "/input_data_files_processed_content.RData")
+    input_data_files_path <- paste0(table_dir, "/input_data_files.RData")
+    input_data_files_processed_path <- paste0(table_dir, "/input_data_files_processed_content.RData")
 
     if (file.exists(input_data_files_path)) {
       input_data_files <- readRDS(input_data_files_path)
@@ -169,7 +170,7 @@ getExpandedContent <- function(mrp_type) {
   } else {
     # Load processed content
     #TODO: Replace with database functionality
-    input_data_files_processed_content <- readRDS(paste0(path_to_mrp_tables, "/input_data_files_processed_content.RData"))
+    input_data_files_processed_content <- readRDS(paste0(table_dir, "/input_data_files_processed_content.RData"))
     matching_row <- input_data_files_processed_content[processed_content_hash == get("processed_content_hash")]
     processed_content <- unserialize(base64enc::base64decode(matching_row$processed_content))
   }

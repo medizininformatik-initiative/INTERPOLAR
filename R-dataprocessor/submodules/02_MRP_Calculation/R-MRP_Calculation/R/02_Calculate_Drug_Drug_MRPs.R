@@ -5,7 +5,7 @@
 #' These columns define the structure of the MRP rule table.
 #'
 #' @return A named character vector of column names relevant to Drug-Drug MRP definitions.
-getPairListColumnNamesDrugDrug <- function() {
+getRelevantColumnNamesDrugDrug <- function() {
   etlutils::namedVectorByValue(
     "ATC_DISPLAY",
     #"SMPC_NAME",
@@ -47,10 +47,10 @@ getCategoryDisplayDrugDrug <- function() {"Drug-Drug"}
 #' @return A cleaned and expanded data.table containing the MRP definition table.
 #'
 #' @export
-cleanAndExpandDefinitionDrugDrug <- function(drug_drug_mrp_definition, mrp_type) {
+processExcelContentDrugDrug <- function(drug_drug_mrp_definition, mrp_type) {
 
   # Remove not nesessary columns
-  mrp_columnnames <- getPairListColumnNames(mrp_type)
+  mrp_columnnames <- getRelevantColumnNames(mrp_type)
   drug_drug_mrp_definition <- drug_drug_mrp_definition[,  ..mrp_columnnames]
 
   code_column_names <- c("ATC_PRIMARY", "ATC2_PRIMARY")

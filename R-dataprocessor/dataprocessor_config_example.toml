@@ -121,7 +121,7 @@ OBSERVATION_BMI_CODES          = "39156-5"
 # If a different branch is selected, navigate to the subrepository directory: cd Input-Repo/INTERPOLAR-WP7
 # Then check out the main branch: git checkout main
 # To update the main- and the subrepository, use the following command: git pull && git submodule update --recursive
-MRP_PAIR_PATH = ["./Input-Repo/INTERPOLAR-WP7"]
+INPUT_REPO_PATH = ["./Input-Repo/INTERPOLAR-WP7"]
 
 # Default value that applies to the validity period in days for the laboratory values
 DEFAULT_LOINC_VALIDITY_DAYS = 7

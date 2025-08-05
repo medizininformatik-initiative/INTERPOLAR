@@ -6,7 +6,7 @@
 #' primary ATC codes, condition codes (ICD), proxy rules, and laboratory proxies (LOINC).
 #'
 #' @return A named character vector of column names relevant to Drug-Disease MRP definitions.
-getPairListColumnNamesDrugDisease <- function() {
+getRelevantColumnNamesDrugDisease <- function() {
   etlutils::namedVectorByValue(
     #"SMPC_NAME",
     #"SMPC_VERSION",
@@ -53,10 +53,10 @@ getCategoryDisplayDrugDisease <- function() {"Drug-Disease"}
 #' @return A cleaned and expanded data.table containing the MRP definition table.
 #'
 #' @export
-cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, mrp_type) {
+processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type) {
 
   # Remove not nesessary columns
-  mrp_columnnames <- getPairListColumnNames(mrp_type)
+  mrp_columnnames <- getRelevantColumnNames(mrp_type)
   drug_disease_mrp_definition <- drug_disease_mrp_definition[, ..mrp_columnnames]
 
   # Remove rows with all empty code columns
@@ -108,14 +108,14 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, mrp
 
   # check column ATC and ATC_PROXY for correct ATC codes
   atc_columns <- grep("ATC(?!.*(DISPLAY|INCLUSION|VALIDITY_DAYS))", names(drug_disease_mrp_definition), value = TRUE, perl = TRUE)
-  atc_errors <- validateATCCodes(drug_disease_mrp_definition, atc_columns)
+  invalid_atcs <- etlutils::getInvalidATCCodes(drug_disease_mrp_definition, atc_columns)
 
   # check column LOINC_PROXY for correct LOINC codes
-  loinc_errors <- validateLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY")
+  invalid_loincs <- etlutils::getInvalidLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY")
 
   error_messages <- c(
-    formatCodeErrors(atc_errors, "ATC"),
-    formatCodeErrors(loinc_errors, "LOINC")
+    formatCodeErrors(invalid_atcs, "ATC"),
+    formatCodeErrors(invalid_loincs, "LOINC")
   )
 
   if (length(error_messages) > 0) {

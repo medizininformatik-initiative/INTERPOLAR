@@ -122,7 +122,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
     encounters_per_mrp_type[[mrp_type]] <- encs
   }
 
-  encounters_per_mrp_type[["ALL_TYPES"]] <- encounters
+  encounters_per_mrp_type[["ALL_MRP_TYPES"]] <- encounters
 
   return(encounters_per_mrp_type)
 }
@@ -494,33 +494,35 @@ getResourcesForMRPCalculation <- function(main_encounters) {
 # MRP Calculation #
 ###################
 
-#' Retrieve a MRP-Specific Function Dynamically
+#' Dynamically Retrieve a Function by Concatenating Prefix and Suffix
 #'
-#' This helper function constructs a function name based on a given prefix and MRP type,
-#' removes underscores, and retrieves the corresponding function from the global environment.
+#' This utility function dynamically constructs a function name by concatenating a given
+#' prefix and a suffix (with underscores removed) and retrieves the corresponding function
+#' from the global environment. This allows flexible referencing of functions that follow
+#' a naming convention (e.g., `getRelevantColumnNamesDrugDisease`).
 #'
-#' @param prefix A \code{character} string prefix, e.g., \code{"getPairListColumnNames"} or \code{"getCategoryDisplay"}.
-#' @param mrp_type A \code{character} string representing the MRP type, e.g., \code{"Drug_Disease"}.
+#' @param prefix A \code{character} string specifying the function name prefix.
+#' @param suffix A \code{character} string used as the function name suffix. Underscores
+#'   in the suffix will be removed before concatenation.
 #'
-#' @return A reference to the requested function.
+#' @return A reference to the requested function object.
 #'
-getMRPTypeFunction <- function(prefix, mrp_type) {
-  mrp_type_cleaned <- gsub("_", "", mrp_type)
-  function_name <- paste0(prefix, mrp_type_cleaned)
+getFunctionByName <- function(prefix, suffix) {
+  suffix_cleaned <- gsub("_", "", suffix)
+  function_name <- paste0(prefix, suffix_cleaned)
   return(get(function_name, mode = "function"))
 }
 
-#' Get Relevant Column Names for a Specific MRP Pair List
+#' Get Relevant Column Names of a Specific Excel File
 #'
-#' Calls a dynamically resolved function to retrieve all relevant column names
-#' required for a given MRP type (e.g., Drug-Disease).
+#' Calls a dynamically resolved function to retrieve all relevant column names.
 #'
-#' @param mrp_type A \code{character} string specifying the MRP type (e.g., \code{"Drug_Disease"}).
+#' @param table_name A \code{character} string specifying the MRP type (e.g., \code{"Drug_Disease"}) or LOINC Mapping.
 #'
-#' @return A named \code{character} vector of column names for the MRP definition.
+#' @return A named \code{character} vector of column names.
 #'
-getPairListColumnNames <- function(mrp_type) {
-  getMRPTypeFunction("getPairListColumnNames", mrp_type)()
+getRelevantColumnNames <- function(table_name) {
+  getFunctionByName("getRelevantColumnNames", table_name)()
 }
 
 #' Get Display Label for a Given MRP Type
@@ -533,7 +535,7 @@ getPairListColumnNames <- function(mrp_type) {
 #' @return A \code{character} string with the display name for the MRP category.
 #'
 getCategoryDisplay <- function(mrp_type) {
-  getMRPTypeFunction("getCategoryDisplay", mrp_type)()
+  getFunctionByName("getCategoryDisplay", mrp_type)()
 }
 
 #' Load and Expand All Available MRP Pair Definitions
@@ -693,7 +695,7 @@ calculateMRPs <- function() {
   # Get all Einrichtungskontakt encounters that ended at least 14 days ago
   # and do not have a retrolective MRP evaluation for Drug_Disease
   main_encounters_by_mrp_type <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
-  main_encounters <- main_encounters_by_mrp_type[["ALL_TYPES"]]
+  main_encounters <- main_encounters_by_mrp_type[["ALL_MRP_TYPES"]]
 
   mrp_table_lists_all <- list()
 
@@ -708,7 +710,7 @@ calculateMRPs <- function() {
 
         mrp_pair_list <- mrp_pair_lists[[mrp_type]]
         input_file_processed_content_hash <- mrp_pair_list$processed_content_hash
-        splitted_mrp_tables <- getMRPTypeFunction("getSplittedMRPTables", mrp_type)(mrp_pair_list)
+        splitted_mrp_tables <- getFunctionByName("getSplittedMRPTables", mrp_type)(mrp_pair_list)
 
         # Initialize empty lists for results
         retrolektive_mrpbewertung_rows <- list()
@@ -735,7 +737,7 @@ calculateMRPs <- function() {
           match_atc_and_item2_codes <- data.table::data.table()
 
           if (nrow(active_requests) && meda_study_phase != "PhaseA") {
-            match_atc_and_item2_codes <- getMRPTypeFunction("calculateMRPs", mrp_type)(
+            match_atc_and_item2_codes <- getFunctionByName("calculateMRPs", mrp_type)(
               active_requests = active_requests,
               splitted_mrp_tables = splitted_mrp_tables,
               resources = resources,
