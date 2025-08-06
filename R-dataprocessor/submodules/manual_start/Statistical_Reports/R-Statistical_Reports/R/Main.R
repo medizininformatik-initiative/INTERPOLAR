@@ -93,7 +93,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
   }
   }
 
-  # TODO: include the start and end date in an interactive way ----------
+  print(paste0("Report period start: ", REPORT_PERIOD_START,
+               ", Report period end: ", REPORT_PERIOD_END))
 
   patient_table <- getPatientData(lock_id = "statistical reports[1]",
                                     table_name = "v_patient_last_version")
