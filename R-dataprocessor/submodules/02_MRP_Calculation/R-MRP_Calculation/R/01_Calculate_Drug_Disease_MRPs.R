@@ -359,49 +359,49 @@ matchICDProxies <- function(
     meda_datetime,
     match_atc_codes
 ) {
-  matchProxy <- function(all_items, proxy_table_list, proxy_type, code_column, rule_proxy_col, rule_validity_col) {
-    matched <- list()
+  matchProxy <- function(all_items, proxy_tables, proxy_type, code_column, proxy_col_name, validity_days_col_name) {
+    mrp_matches <- list()
     used_codes <- unique(all_items[!is.na(code), code])
-    matching_proxies <- intersect(names(proxy_table_list), used_codes)
+    matching_proxies <- intersect(names(proxy_tables), used_codes)
 
     for (proxy_code in matching_proxies) {
-      rules <- proxy_table_list[[proxy_code]]
-      rules <- rules[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(rule_proxy_col)) & get(rule_proxy_col) != ""]
+      single_proxy_sub_table <- proxy_tables[[proxy_code]]
+      match_proxy_row <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(proxy_col_name)) & get(proxy_col_name) != ""]
 
-      for (i in seq_len(nrow(rules))) {
-        rule <- rules[i]
-        validity <- rule[[rule_validity_col]]
-        fallback_validity <- rule$ICD_VALIDITY_DAYS
-        validity_days <- if (!is.na(validity) && validity != "") validity else fallback_validity
+      for (i in seq_len(nrow(match_proxy_row))) {
+        match_proxy_row <- match_proxy_row[i]
+        proxy_validity_days <- match_proxy_row[[validity_days_col_name]]
+        fallback_validity_days <- match_proxy_row$ICD_VALIDITY_DAYS
+        validity_days <- if (!is.na(proxy_validity_days) && proxy_validity_days != "") proxy_validity_days else fallback_validity_days
 
         recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
 
         if (!nrow(recources_with_proxy)) next
 
-        match_found <- if (tolower(validity_days) == "unbegrenzt") {
+        mrp_match_found <- if (tolower(validity_days) == "unbegrenzt") {
           any(recources_with_proxy$start_date <= meda_datetime)
         } else {
           validity_days_num <- as.numeric(validity_days)
           any(recources_with_proxy$start_date <= meda_datetime & (recources_with_proxy$end_date + validity_days_num) >= meda_datetime )
         }
 
-        if (match_found) {
-          matched[[length(matched) + 1]] <- data.table::data.table(
-            icd_code = rule$ICD,
-            atc_code = rule$ATC_FOR_CALCULATION,
+        if (mrp_match_found) {
+          mrp_matches[[length(mrp_matches) + 1]] <- data.table::data.table(
+            icd_code = match_proxy_row$ICD,
+            atc_code = match_proxy_row$ATC_FOR_CALCULATION,
             proxy_code = proxy_code,
             proxy_type = proxy_type,
             kurzbeschr = sprintf(
               "%s (%s) ist bei %s (%s) kontrainduziert.\n%s ist als %s-Proxy für %s verwendet worden.",
-              rule$ATC_DISPLAY, rule$ATC_FOR_CALCULATION,
-              rule$CONDITION_DISPLAY_CLUSTER, rule$ICD,
-              proxy_code, proxy_type, rule$ICD
+              match_proxy_row$ATC_DISPLAY, match_proxy_row$ATC_FOR_CALCULATION,
+              match_proxy_row$CONDITION_DISPLAY_CLUSTER, match_proxy_row$ICD,
+              proxy_code, proxy_type, match_proxy_row$ICD
             )
           )
         }
       }
     }
-    return(matched)
+    return(mrp_matches)
   }
 
   #  Combine all medication rows
@@ -418,21 +418,21 @@ matchICDProxies <- function(
   # ATC-Proxy-Matching
   atc_matches <- matchProxy(
     all_items = all_medications,
-    proxy_table_list = drug_disease_mrp_tables_by_atc_proxy,
+    proxy_tables = drug_disease_mrp_tables_by_atc_proxy,
     proxy_type = "ATC",
     code_column = "code",
-    rule_proxy_col = "ICD_PROXY_ATC",
-    rule_validity_col = "ICD_PROXY_ATC_VALIDITY_DAYS"
+    proxy_col_name = "ICD_PROXY_ATC",
+    validity_days_col_name = "ICD_PROXY_ATC_VALIDITY_DAYS"
   )
 
   # OPS-Proxy-Matching
   ops_matches <- matchProxy(
     all_items = all_procedures,
-    proxy_table_list = drug_disease_mrp_tables_by_ops_proxy,
+    proxy_tables = drug_disease_mrp_tables_by_ops_proxy,
     proxy_type = "OPS",
     code_column = "code",
-    rule_proxy_col = "ICD_PROXY_OPS",
-    rule_validity_col = "ICD_PROXY_OPS_VALIDITY_DAYS"
+    proxy_col_name = "ICD_PROXY_OPS",
+    validity_days_col_name = "ICD_PROXY_OPS_VALIDITY_DAYS"
   )
 
   return(data.table::rbindlist(c(atc_matches, ops_matches), fill = TRUE))
