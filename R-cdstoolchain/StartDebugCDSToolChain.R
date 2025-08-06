@@ -17,16 +17,7 @@ start_full <- Sys.time()
 datetime_minus_2_day <- start_full - as.difftime(2, units = "days")
 datetime_minus_1_day <- start_full - as.difftime(1, units = "days")
 
-getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_days = 1) {
-  datetime <- as.POSIXct(datetime)
-  # Subtract the specified number of days from the given datetime
-  datetime <- datetime - offset_days * 86400
-
-  # Format as "[1.1]YYYY-MM-DDTHH:MM:SS+02:00"
-  format(datetime, "[1.1]%Y-%m-%dT%H:%M:%S%z")
-}
-
-DEBUG_DATES <- c(datetime_minus_2_day,
+DEBUG_DATES <- c(#datetime_minus_2_day,
                  datetime_minus_1_day,
                  start_full
                  #"2025-03-03 13:55:45 CET",
@@ -47,8 +38,7 @@ for (debug_day_index in seq_along(DEBUG_DATES)) {
   diff <- capture.output(print(end_day - start_day))
   day_times <- append(day_times, paste("Day", debug_day_index, "took", diff))
   print(day_times[debug_day_index])
-  print(getFormattedRAWDateTime(datetime_minus_2_day, 0.2))
-  browser()
+#  browser()
 }
 end_full <- Sys.time()
 
