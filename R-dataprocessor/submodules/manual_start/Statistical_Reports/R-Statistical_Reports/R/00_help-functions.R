@@ -123,8 +123,8 @@ parse_named_args <- function() {
   # Convert to named character vector
   parsed <- sapply(named_args, function(arg) {
     parts <- strsplit(arg, "=", fixed = TRUE)[[1]]
-    setNames(parts[2], parts[1])
-  })
+    parts <- setNames(parts[2], parts[1])
+  }, USE.NAMES = FALSE)
 
   return(parsed)
 }
