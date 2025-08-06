@@ -202,8 +202,8 @@ isATC7 <- function(codes) {
 #'
 #' @return A logical vector indicating whether each code is a valid LOINC code.
 #'
-#' @details A valid LOINC code matches the pattern `^\d{1,5}-\d$`:
-#' - 1 to 5 digits
+#' @details A valid LOINC code matches the pattern `^\d{1,6}-\d$`:
+#' - 1 to 6 digits
 #' - Followed by a hyphen (`-`)
 #' - Ending with exactly 1 digit.
 #'
@@ -214,7 +214,7 @@ isATC7 <- function(codes) {
 #'
 #' @export
 isLOINC <- function(codes) {
-  ifelse(is.na(codes), NA, grepl("^\\d{1,5}-\\d$", codes, perl = TRUE))
+  ifelse(is.na(codes), NA, grepl("^\\d{1,6}-\\d$", codes, perl = TRUE))
 }
 
 ###########
