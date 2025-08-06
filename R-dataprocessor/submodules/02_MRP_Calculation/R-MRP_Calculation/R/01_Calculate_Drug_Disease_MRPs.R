@@ -368,36 +368,36 @@ matchICDProxies <- function(
       single_proxy_sub_table <- proxy_tables[[proxy_code]]
       match_proxy_row <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(proxy_col_name)) & get(proxy_col_name) != ""]
 
-      for (i in seq_len(nrow(match_proxy_row))) {
-        match_proxy_row <- match_proxy_row[i]
-        proxy_validity_days <- match_proxy_row[[validity_days_col_name]]
-        fallback_validity_days <- match_proxy_row$ICD_VALIDITY_DAYS
-        validity_days <- if (!is.na(proxy_validity_days) && proxy_validity_days != "") proxy_validity_days else fallback_validity_days
+      recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
+      if (nrow(recources_with_proxy)) {
 
-        recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
+        for (i in seq_len(nrow(match_proxy_row))) {
+          match_proxy_row <- match_proxy_row[i]
+          proxy_validity_days <- match_proxy_row[[validity_days_col_name]]
+          fallback_validity_days <- match_proxy_row$ICD_VALIDITY_DAYS
+          validity_days <- if (!is.na(proxy_validity_days) && trimws(proxy_validity_days) != "") proxy_validity_days else fallback_validity_days
+          validity_days <- as.integer(validity_days)
+          # All non integer values are considered as unlimited validity duration
+          if (is.na(validity_days)) {
+            validity_days <- .Machine$integer.max
+          }
 
-        if (!nrow(recources_with_proxy)) next
+          mrp_match_found <- any(recources_with_proxy$start_date <= meda_datetime & (is.na(recources_with_proxy$end_date) | recources_with_proxy$end_date + validity_days >= meda_datetime))
 
-        mrp_match_found <- if (tolower(validity_days) == "unbegrenzt") {
-          any(recources_with_proxy$start_date <= meda_datetime)
-        } else {
-          validity_days_num <- as.numeric(validity_days)
-          any(recources_with_proxy$start_date <= meda_datetime & (recources_with_proxy$end_date + validity_days_num) >= meda_datetime )
-        }
-
-        if (mrp_match_found) {
-          mrp_matches[[length(mrp_matches) + 1]] <- data.table::data.table(
-            icd_code = match_proxy_row$ICD,
-            atc_code = match_proxy_row$ATC_FOR_CALCULATION,
-            proxy_code = proxy_code,
-            proxy_type = proxy_type,
-            kurzbeschr = sprintf(
-              "%s (%s) ist bei %s (%s) kontrainduziert.\n%s ist als %s-Proxy für %s verwendet worden.",
-              match_proxy_row$ATC_DISPLAY, match_proxy_row$ATC_FOR_CALCULATION,
-              match_proxy_row$CONDITION_DISPLAY_CLUSTER, match_proxy_row$ICD,
-              proxy_code, proxy_type, match_proxy_row$ICD
+          if (mrp_match_found) {
+            mrp_matches[[length(mrp_matches) + 1]] <- data.table::data.table(
+              icd_code = match_proxy_row$ICD,
+              atc_code = match_proxy_row$ATC_FOR_CALCULATION,
+              proxy_code = proxy_code,
+              proxy_type = proxy_type,
+              kurzbeschr = sprintf(
+                "%s (%s) ist bei %s (%s) kontrainduziert.\n%s ist als %s-Proxy für %s verwendet worden.",
+                match_proxy_row$ATC_DISPLAY, match_proxy_row$ATC_FOR_CALCULATION,
+                match_proxy_row$CONDITION_DISPLAY_CLUSTER, match_proxy_row$ICD,
+                proxy_code, proxy_type, match_proxy_row$ICD
+              )
             )
-          )
+          }
         }
       }
     }
