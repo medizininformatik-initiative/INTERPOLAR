@@ -382,9 +382,10 @@ createFrontendTables <- function() {
       query <- paste0(
         "SELECT ", paste(column_names, collapse = ", "), " \n",
         "FROM v_fall_fe\n",
-        "WHERE record_id IN ", etlutils::fhirdbGetQueryList(existing_record_ids), "\n"
+        "WHERE record_id IN ", etlutils::fhirdbGetQueryList(existing_record_ids$record_id), "\n"
       )
-      return(etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingFallFeRedcapRepeatInstance()"))
+      existing_fallfe_redcap_repeat_instance <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingFallFeRedcapRepeatInstance()")
+      return(existing_fallfe_redcap_repeat_instance)
     }
 
     existing_repeat_instances <- getExistingFallFeRedcapRepeatInstance(existing_record_ids)
