@@ -368,36 +368,35 @@ matchICDProxies <- function(
       rules <- proxy_table_list[[proxy_code]]
       rules <- rules[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(rule_proxy_col)) & get(rule_proxy_col) != ""]
 
-      for (i in seq_len(nrow(rules))) {
-        rule <- rules[i]
-        validity <- rule[[rule_validity_col]]
-        fallback_validity <- rule$ICD_VALIDITY_DAYS
-        validity_days <- if (!is.na(validity) && validity != "") validity else fallback_validity
+      recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
+      if (nrow(recources_with_proxy)) {
+        for (i in seq_len(nrow(rules))) {
+          rule <- rules[i]
 
-        recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
+          validity <- rule[[rule_validity_col]]
+          fallback_validity <- rule$ICD_VALIDITY_DAYS
+          validity <- if (!is.na(validity) && trimws(validity) != "") validity else fallback_validity
+          validity_days <- as.integer(validity)
+          if (is.na(validity_days)) {
+            validity_days <- .Machine$integer.max
+          }
 
-        if (!nrow(recources_with_proxy)) next
+          match_found <- any(recources_with_proxy$start_date <= meda_datetime & (is.na(recources_with_proxy$end_date) | recources_with_proxy$end_date + validity_days >= meda_datetime))
 
-        match_found <- if (tolower(validity_days) == "unbegrenzt") {
-          any(recources_with_proxy$start_date <= meda_datetime)
-        } else {
-          validity_days_num <- as.numeric(validity_days)
-          any(recources_with_proxy$start_date <= meda_datetime & (recources_with_proxy$end_date + validity_days_num) >= meda_datetime )
-        }
-
-        if (match_found) {
-          matched[[length(matched) + 1]] <- data.table::data.table(
-            icd_code = rule$ICD,
-            atc_code = rule$ATC_FOR_CALCULATION,
-            proxy_code = proxy_code,
-            proxy_type = proxy_type,
-            kurzbeschr = sprintf(
-              "%s (%s) ist bei %s (%s) kontrainduziert.\n%s ist als %s-Proxy für %s verwendet worden.",
-              rule$ATC_DISPLAY, rule$ATC_FOR_CALCULATION,
-              rule$CONDITION_DISPLAY_CLUSTER, rule$ICD,
-              proxy_code, proxy_type, rule$ICD
+          if (match_found) {
+            matched[[length(matched) + 1]] <- data.table::data.table(
+              icd_code = rule$ICD,
+              atc_code = rule$ATC_FOR_CALCULATION,
+              proxy_code = proxy_code,
+              proxy_type = proxy_type,
+              kurzbeschr = sprintf(
+                "%s (%s) ist bei %s (%s) kontrainduziert.\n%s ist als %s-Proxy für %s verwendet worden.",
+                rule$ATC_DISPLAY, rule$ATC_FOR_CALCULATION,
+                rule$CONDITION_DISPLAY_CLUSTER, rule$ICD,
+                proxy_code, proxy_type, rule$ICD
+              )
             )
-          )
+          }
         }
       }
     }
