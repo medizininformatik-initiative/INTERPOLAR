@@ -47,6 +47,15 @@ importRedcap2DB <- function() {
       complete_column_name <- paste0(form_name, "_complete")
       data_from_redcap <- data_from_redcap[!is.na(data_from_redcap[[complete_column_name]]), ]
 
+      # remove all columns that start with "db_filter" (they are only for frontend view filtering)
+      data_from_redcap[, grep("^db_filter", names(dt), value = TRUE) := NULL]
+
+      # Filter out records with an invalid fall_meda_id (sometimes REDCap creates
+      # empty instruments when the record_id is created)
+      if (form_name == "medikationsanalyse") {
+        data_from_redcap <- data_from_redcap[!is.na(data_from_redcap$fall_meda_id), ]
+      }
+
       colname <- paste0(form_name, "_additional_values")
       if (colname %in% names(data_from_redcap)) {
         data_from_redcap[[colname]] <- etlutils::redcapUnescape(data_from_redcap[[colname]])

@@ -414,7 +414,8 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     patient_id <- etlutils::fhirdataExtractIDs(main_encounter$enc_patient_ref)
     target_record_id <- record_ids[pat_id %in% patient_id, record_id][1]
 
-    encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id]
+    # meda_dat can be NA but we always need this value -> remove rows with NA
+    encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id & !is.na(meda_dat)]
 
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
     if (nrow(encounter_medication_analyses)) {
@@ -752,6 +753,16 @@ calculateMRPs <- function() {
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
               existing_redcap_repeat_instances <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_redcap_repeat_instance]
               next_index <- if (length(existing_ret_ids) == 0) 1 else max(as.integer(sub(ret_id_prefix, "", existing_ret_ids)), na.rm = TRUE) + 1
+
+              ids <- as.integer(sub(ret_id_prefix, "", existing_ret_ids))
+              next_index <- if (length(existing_ret_ids) == 0) {
+                1
+              } else {
+                max_val <- suppressWarnings(max(ids, na.rm = TRUE))
+                # INF or -INF values are not finite. This case should never happen.
+                if (is.finite(max_val)) max_val + 1 else 1
+              }
+
               ret_id <- paste0(ret_id_prefix, next_index)
               ret_redcap_repeat_instance <- if (length(existing_redcap_repeat_instances) == 0) 1 else max(as.integer(existing_redcap_repeat_instances), na.rm = TRUE) + 1
               # always updating the references to the existing ret_ids
