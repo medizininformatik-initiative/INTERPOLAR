@@ -295,7 +295,11 @@ getObservationsFromDB <- function(patient_references) {
                                                       "obs_patient_ref",
                                                       "obs_code_system",
                                                       "obs_code_code",
-                                                      "obs_effectivedatetime"),
+                                                      "obs_effectivedatetime",
+                                                      "obs_valuequantity_value",
+                                                      "obs_valuequantity_unit",
+                                                      "obs_referencerange_low_value",
+                                                      "obs_referencerange_high_value"),
                                      patient_references = patient_references,
                                      status_exclusion = c("registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834407
                                      additional_conditions = c("obs_category_code = 'laboratory'",
@@ -777,13 +781,18 @@ calculateMRPs <- function() {
           match_atc_and_item2_codes <- data.table::data.table()
 
           if (nrow(active_requests) && meda_study_phase != "PhaseA") {
-            match_atc_and_item2_codes <- getFunctionByName("calculateMRPs", mrp_type)(
+            fun <- getFunctionByName("calculateMRPs", mrp_type)
+            args <- list(
               active_requests = active_requests,
               splitted_mrp_tables = splitted_mrp_tables,
               resources = resources,
               patient_id = patient_id,
               meda_datetime = meda_datetime
             )
+            if (mrp_type == "Drug_Disease") {
+              args$loinc_mapping <- loinc_mapping
+            }
+            match_atc_and_item2_codes <- do.call(fun, args)
           }
 
           if (nrow(match_atc_and_item2_codes)) {
