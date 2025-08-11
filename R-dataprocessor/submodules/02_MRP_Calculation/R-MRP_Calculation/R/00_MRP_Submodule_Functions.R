@@ -888,6 +888,14 @@ calculateMRPs <- function() {
     )
   )
 
+  # Write the merged tables to RData files
+  lapply(names(mrp_table_lists_all_merged), function(name) {
+    writeRData(
+      object = mrp_table_lists_all_merged[[name]],
+      filename_without_extension = paste0("dataprocessor_", name)
+    )
+  })
+
   return(mrp_table_lists_all_merged)
 }
 
