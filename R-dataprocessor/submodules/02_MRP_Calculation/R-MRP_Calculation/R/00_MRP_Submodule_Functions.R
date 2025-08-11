@@ -47,7 +47,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   }
 
   encounters <- unique(data.table::rbindlist(encounters_per_mrp_type, use.names = TRUE))
-  encounters[, `:=`(study_phase = character(), ward_name = character())]
+  encounters[, study_phase := character()]
 
   if (nrow(encounters)) {
 
@@ -82,7 +82,6 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
       fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id == current_enc_id]
 
       new_study_phase <- "PhaseA"
-      new_ward_name <- NA_character_
 
       # Aim: Calculate test MRP immediately if the current study phase last found
       # for the case is PhaseBTest. However, if the current study phase is not
@@ -90,7 +89,6 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
       # PhaseBTest, then PhaseA is set.
       if (nrow(fall_fe_rows) > 0) {
         fall_fe_row <- fall_fe_rows[.N]  # last row -> last study phase of the encounter
-        new_ward_name <- fall_fe_row$fall_station
         if (fall_fe_row$fall_studienphase %in% "PhaseBTest") {
           new_study_phase <- "PhaseBTest"
         } else {
@@ -104,8 +102,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
         }
       }
       encounters[enc_id %in% current_enc_id, `:=`(
-        study_phase = new_study_phase,
-        ward_name = new_ward_name
+        study_phase = new_study_phase
       )]
     }
   }
@@ -114,11 +111,11 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   # 3.) Remove all Encounters with Study Phase "Phase_B" and an end date within the last 14 days
   #
   encounters <- encounters[!(study_phase %in% "Phase_B" & enc_period_end > (Sys.Date() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
-  # Replace the sublists in encounters_per_mrp_type by the same encounters with study_phase and ward_name from encounters
+  # Replace the sublists in encounters_per_mrp_type by the same encounters with study_phase from encounters
   for (mrp_type in names(encounters_per_mrp_type)) {
     encs <- encounters_per_mrp_type[[mrp_type]]
-    # Merge with enriched encounters to get study_phase and ward_name
-    encs <- merge(encs, encounters[, .(enc_id, study_phase, ward_name)], by = "enc_id", all.x = TRUE)
+    # Merge with enriched encounters to get study_phase
+    encs <- merge(encs, encounters[, .(enc_id, study_phase)], by = "enc_id", all.x = TRUE)
     encounters_per_mrp_type[[mrp_type]] <- encs
   }
 
@@ -418,7 +415,8 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     patient_id <- etlutils::fhirdataExtractIDs(main_encounter$enc_patient_ref)
     target_record_id <- record_ids[pat_id %in% patient_id, record_id][1]
 
-    encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id]
+    # meda_dat can be NA but we always need this value -> remove rows with NA
+    encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id & !is.na(meda_dat)]
 
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
     if (nrow(encounter_medication_analyses)) {
@@ -435,7 +433,7 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     }
   }
 
-  # 5.) Add study_phase and ward_name from the corresponding Encounter (matched via enc_id == fall_fhir_enc_id)
+# 5.) Add study_phase from the corresponding Encounter (matched via enc_id == fall_fhir_enc_id)
   #     to the medication analysis
   for (main_enc_id in names(encounters_first_medication_analysis)) {
     medication_analysis <- encounters_first_medication_analysis[[main_enc_id]]
@@ -445,7 +443,6 @@ getResourcesForMRPCalculation <- function(main_encounters) {
 
       if (nrow(matching_encounter) >= 1) {
         medication_analysis$study_phase <- matching_encounter$study_phase[1]
-        medication_analysis$ward_name <- matching_encounter$ward_name[1]
       }
 
       encounters_first_medication_analysis[[main_enc_id]] <- medication_analysis
@@ -772,7 +769,6 @@ calculateMRPs <- function() {
           meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_
           meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
           meda_study_phase <- encounter$study_phase
-          meda_ward_name <- encounter$ward_name
           record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
           # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
           ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
@@ -806,6 +802,16 @@ calculateMRPs <- function() {
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
               existing_redcap_repeat_instances <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_redcap_repeat_instance]
               next_index <- if (length(existing_ret_ids) == 0) 1 else max(as.integer(sub(ret_id_prefix, "", existing_ret_ids)), na.rm = TRUE) + 1
+
+              ids <- as.integer(sub(ret_id_prefix, "", existing_ret_ids))
+              next_index <- if (length(existing_ret_ids) == 0) {
+                1
+              } else {
+                max_val <- suppressWarnings(max(ids, na.rm = TRUE))
+                # INF or -INF values are not finite. This case should never happen.
+                if (is.finite(max_val)) max_val + 1 else 1
+              }
+
               ret_id <- paste0(ret_id_prefix, next_index)
               ret_redcap_repeat_instance <- if (length(existing_redcap_repeat_instances) == 0) 1 else max(as.integer(existing_redcap_repeat_instances), na.rm = TRUE) + 1
               # always updating the references to the existing ret_ids
@@ -833,7 +839,7 @@ calculateMRPs <- function() {
                 mrp_calculation_type = mrp_type,
                 meda_id = meda_id,
                 study_phase = meda_study_phase,
-                ward_name = meda_ward_name,
+                ward_name = NA_character, # deprecated -> this value will remain NA all the time
                 ret_id = ret_id,
                 ret_redcap_repeat_instance = ret_redcap_repeat_instance,
                 mrp_proxy_type = match$proxy_type,
@@ -849,7 +855,7 @@ calculateMRPs <- function() {
               mrp_calculation_type = mrp_type,
               meda_id = meda_id,
               study_phase = meda_study_phase,
-              ward_name = meda_ward_name,
+              ward_name = NA_character, # deprecated -> this value will remain NA all the time
               ret_id = NA_character_,
               ret_redcap_repeat_instance = NA_character_,
               mrp_proxy_type = NA_character_,
