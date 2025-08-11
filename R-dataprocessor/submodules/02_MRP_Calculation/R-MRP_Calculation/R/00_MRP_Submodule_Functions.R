@@ -765,6 +765,9 @@ calculateMRPs <- function() {
           # Get encounter data and patient ID
           encounter <- resources$main_encounters[enc_id == encounter_id]
           patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
+          encounter_ref <- paste0("Encounter/", encounter_id)
+          medication_requests <- resources$medication_requests[medreq_encounter_ref == encounter_ref]
+
           meda <- resources$encounters_first_medication_analysis[[encounter_id]]
           meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_
           meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
@@ -777,7 +780,7 @@ calculateMRPs <- function() {
           kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
 
           # Get active MedicationRequests for the encounter
-          active_requests <- getActiveMedicationRequests(resources$medication_requests, encounter$enc_period_start, meda_datetime)
+          active_requests <- getActiveMedicationRequests(medication_requests, encounter$enc_period_start, meda_datetime)
           match_atc_and_item2_codes <- data.table::data.table()
 
           if (nrow(active_requests) && meda_study_phase != "PhaseA") {
