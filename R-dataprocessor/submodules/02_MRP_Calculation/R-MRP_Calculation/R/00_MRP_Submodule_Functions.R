@@ -840,7 +840,7 @@ calculateMRPs <- function() {
                 mrp_calculation_type = mrp_type,
                 meda_id = meda_id,
                 study_phase = meda_study_phase,
-                ward_name = NA_character, # deprecated -> this value will remain NA all the time
+                ward_name = NA_character_, # deprecated -> this value will remain NA all the time
                 ret_id = ret_id,
                 ret_redcap_repeat_instance = ret_redcap_repeat_instance,
                 mrp_proxy_type = match$proxy_type,
@@ -856,7 +856,7 @@ calculateMRPs <- function() {
               mrp_calculation_type = mrp_type,
               meda_id = meda_id,
               study_phase = meda_study_phase,
-              ward_name = NA_character, # deprecated -> this value will remain NA all the time
+              ward_name = NA_character_, # deprecated -> this value will remain NA all the time
               ret_id = NA_character_,
               ret_redcap_repeat_instance = NA_character_,
               mrp_proxy_type = NA_character_,
