@@ -188,6 +188,7 @@ getMedicationRequestsFromDB <- function(patient_references) {
                                             column_names = c("medreq_id",
                                                              "medreq_encounter_ref",
                                                              "medreq_patient_ref",
+                                                             "medreq_encounter_ref",
                                                              "medreq_medicationreference_ref",
                                                              "medreq_authoredon",
                                                              "medreq_doseinstruc_timing_repeat_boundsperiod_start",
