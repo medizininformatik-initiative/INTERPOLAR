@@ -509,7 +509,11 @@ matchICDProxies <- function(
   matchProxy <- function(all_items, proxy_tables, proxy_type, code_column, proxy_col_name, validity_days_col_name, additional_matching_function = NULL, additional_table = NULL) {
     mrp_matches <- list()
     used_codes <- unique(all_items[!is.na(code), code])
-    matching_proxies <- intersect(names(proxy_tables), used_codes)
+    matching_proxies <- names(proxy_tables)[
+      vapply(names(proxy_tables), function(key) {
+        any(startsWith(used_codes, key))
+      }, logical(1))
+    ]
 
     for (proxy_code in matching_proxies) {
       single_proxy_sub_table <- proxy_tables[[proxy_code]]
