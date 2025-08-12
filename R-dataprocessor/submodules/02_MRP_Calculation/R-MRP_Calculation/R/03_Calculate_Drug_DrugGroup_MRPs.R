@@ -97,6 +97,11 @@ processExcelContentDrugDrugGroup <- function(drug_druggroup_mrp_definition, mrp_
     stop(paste(error_messages, collapse = "\n"))
   }
 
+  # Remove rows where ATC_PRIMARY and ATC2_PRIMARY are the same
+  drug_druggroup_mrp_definition <- drug_druggroup_mrp_definition[
+    get(code_column_names[1]) != get(code_column_names[2])
+  ]
+
   return(drug_druggroup_mrp_definition)
 }
 
