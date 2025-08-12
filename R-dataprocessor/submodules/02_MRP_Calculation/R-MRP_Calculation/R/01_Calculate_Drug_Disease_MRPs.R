@@ -346,12 +346,14 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, additional_
 
   if (!is.na(cutoff_reference) && cutoff_reference != "") {
     # Parse the cutoff string into its components: operator, multiplier, and ULN/LLN
-    # Possible cutoff formats: "> ULN", "< LLN", ">= 3*ULN", "<= 2*LLN", "3*ULN"
+    # Possible cutoff formats: "> ULN", "< LLN", ">= 3*ULN", "<= 2*LLN"
     parseCutoff <- function(cutoff) {
-      pattern <- "^([<>]=?)\\s*(\\d*\\.*\\d*)\\*?\\s*(ULN|LLN)$"
+      # Result are the parts in the round brackets
+      pattern <- "^([<>]=?)\\s*(\\d*\\.?\\d*)\\*?\\s*(ULN|LLN)$"
       matches <- regexec(pattern, cutoff)
       parts <- regmatches(cutoff, matches)[[1]]
 
+      # 1= full string, 2= operator, 3= multiplier, 4= ULN/LLN
       if (length(parts) == 4) {
         operator <- parts[2]
         multiplier <- as.numeric(ifelse(parts[3] == "", 1, parts[3]))
