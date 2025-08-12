@@ -1,3 +1,6 @@
+# Environment for caching
+.submodule_env <- new.env()
+
 ###########
 # General #
 ###########
@@ -434,7 +437,7 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     }
   }
 
-# 5.) Add study_phase from the corresponding Encounter (matched via enc_id == fall_fhir_enc_id)
+  # 5.) Add study_phase from the corresponding Encounter (matched via enc_id == fall_fhir_enc_id)
   #     to the medication analysis
   for (main_enc_id in names(encounters_first_medication_analysis)) {
     medication_analysis <- encounters_first_medication_analysis[[main_enc_id]]
@@ -572,7 +575,11 @@ getMRPPairLists <- function() {
 #'
 getLOINCMapping <- function() {
   etlutils::runLevel3Line(paste0("Load LOINC_Mapping Definition"), {
-    loinc_mapping <- getExpandedExcelContent("LOINC_Mapping")
+    loinc_mapping <- .submodule_env[["LOINC_MAPPING"]]
+    if (is.null(loinc_mapping)) {
+      loinc_mapping <- getExpandedExcelContent("LOINC_Mapping")
+      .submodule_env[["LOINC_MAPPING"]] <- loinc_mapping
+    }
   })
   return(loinc_mapping)
 }
@@ -744,7 +751,6 @@ calculateMRPs <- function() {
 
   if (length(resources)) {
     mrp_pair_lists <- getMRPPairLists()
-    loinc_mapping <- getLOINCMapping()
 
     for (mrp_type in names(mrp_pair_lists)) {
 
@@ -789,9 +795,6 @@ calculateMRPs <- function() {
               patient_id = patient_id,
               meda_datetime = meda_datetime
             )
-            if (mrp_type == "Drug_Disease") {
-              args$loinc_mapping <- loinc_mapping
-            }
             match_atc_and_item2_codes <- do.call(fun, args)
           }
 

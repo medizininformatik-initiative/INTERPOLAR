@@ -657,7 +657,8 @@ getSplittedMRPTablesDrugDisease <- function(drug_disease_mrp_tables) {
 #'
 #' @return A \code{data.table} containing matched Drug-Disease MRPs, including both direct and proxy-based findings.
 #'
-calculateMRPsDrugDisease <- function(active_requests, splitted_mrp_tables, resources, patient_id, meda_datetime, loinc_mapping) {
+calculateMRPsDrugDisease <- function(active_requests, splitted_mrp_tables, resources, patient_id, meda_datetime) {
+  loinc_mapping <- getLOINCMapping()
   match_atc_and_icd_codes <- data.table::data.table()
   # Match ATC-codes between encounter data and MRP definitions
   match_atc_codes <- matchATCCodes(active_requests, splitted_mrp_tables$by_atc)
