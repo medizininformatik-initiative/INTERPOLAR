@@ -1,3 +1,6 @@
+# Environment for caching
+.submodule_env <- new.env()
+
 ###########
 # General #
 ###########
@@ -47,7 +50,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   }
 
   encounters <- unique(data.table::rbindlist(encounters_per_mrp_type, use.names = TRUE))
-  encounters[, `:=`(study_phase = character(), ward_name = character())]
+  encounters[, study_phase := character()]
 
   if (nrow(encounters)) {
 
@@ -82,7 +85,6 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
       fall_fe_rows <- encs_fall_fe[fall_fhir_enc_id == current_enc_id]
 
       new_study_phase <- "PhaseA"
-      new_ward_name <- NA_character_
 
       # Aim: Calculate test MRP immediately if the current study phase last found
       # for the case is PhaseBTest. However, if the current study phase is not
@@ -90,7 +92,6 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
       # PhaseBTest, then PhaseA is set.
       if (nrow(fall_fe_rows) > 0) {
         fall_fe_row <- fall_fe_rows[.N]  # last row -> last study phase of the encounter
-        new_ward_name <- fall_fe_row$fall_station
         if (fall_fe_row$fall_studienphase %in% "PhaseBTest") {
           new_study_phase <- "PhaseBTest"
         } else {
@@ -104,8 +105,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
         }
       }
       encounters[enc_id %in% current_enc_id, `:=`(
-        study_phase = new_study_phase,
-        ward_name = new_ward_name
+        study_phase = new_study_phase
       )]
     }
   }
@@ -114,15 +114,15 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   # 3.) Remove all Encounters with Study Phase "Phase_B" and an end date within the last 14 days
   #
   encounters <- encounters[!(study_phase %in% "Phase_B" & enc_period_end > (Sys.Date() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
-  # Replace the sublists in encounters_per_mrp_type by the same encounters with study_phase and ward_name from encounters
+  # Replace the sublists in encounters_per_mrp_type by the same encounters with study_phase from encounters
   for (mrp_type in names(encounters_per_mrp_type)) {
     encs <- encounters_per_mrp_type[[mrp_type]]
-    # Merge with enriched encounters to get study_phase and ward_name
-    encs <- merge(encs, encounters[, .(enc_id, study_phase, ward_name)], by = "enc_id", all.x = TRUE)
+    # Merge with enriched encounters to get study_phase
+    encs <- merge(encs, encounters[, .(enc_id, study_phase)], by = "enc_id", all.x = TRUE)
     encounters_per_mrp_type[[mrp_type]] <- encs
   }
 
-  encounters_per_mrp_type[["ALL_TYPES"]] <- encounters
+  encounters_per_mrp_type[["ALL_MRP_TYPES"]] <- encounters
 
   return(encounters_per_mrp_type)
 }
@@ -191,6 +191,7 @@ getMedicationRequestsFromDB <- function(patient_references) {
                                             column_names = c("medreq_id",
                                                              "medreq_encounter_ref",
                                                              "medreq_patient_ref",
+                                                             "medreq_encounter_ref",
                                                              "medreq_medicationreference_ref",
                                                              "medreq_authoredon",
                                                              "medreq_doseinstruc_timing_repeat_boundsperiod_start",
@@ -295,7 +296,11 @@ getObservationsFromDB <- function(patient_references) {
                                                       "obs_patient_ref",
                                                       "obs_code_system",
                                                       "obs_code_code",
-                                                      "obs_effectivedatetime"),
+                                                      "obs_effectivedatetime",
+                                                      "obs_valuequantity_value",
+                                                      "obs_valuequantity_unit",
+                                                      "obs_referencerange_low_value",
+                                                      "obs_referencerange_high_value"),
                                      patient_references = patient_references,
                                      status_exclusion = c("registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834407
                                      additional_conditions = c("obs_category_code = 'laboratory'",
@@ -432,7 +437,7 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     }
   }
 
-  # 5.) Add study_phase and ward_name from the corresponding Encounter (matched via enc_id == fall_fhir_enc_id)
+  # 5.) Add study_phase from the corresponding Encounter (matched via enc_id == fall_fhir_enc_id)
   #     to the medication analysis
   for (main_enc_id in names(encounters_first_medication_analysis)) {
     medication_analysis <- encounters_first_medication_analysis[[main_enc_id]]
@@ -442,7 +447,6 @@ getResourcesForMRPCalculation <- function(main_encounters) {
 
       if (nrow(matching_encounter) >= 1) {
         medication_analysis$study_phase <- matching_encounter$study_phase[1]
-        medication_analysis$ward_name <- matching_encounter$ward_name[1]
       }
 
       encounters_first_medication_analysis[[main_enc_id]] <- medication_analysis
@@ -495,33 +499,35 @@ getResourcesForMRPCalculation <- function(main_encounters) {
 # MRP Calculation #
 ###################
 
-#' Retrieve a MRP-Specific Function Dynamically
+#' Dynamically Retrieve a Function by Concatenating Prefix and Suffix
 #'
-#' This helper function constructs a function name based on a given prefix and MRP type,
-#' removes underscores, and retrieves the corresponding function from the global environment.
+#' This utility function dynamically constructs a function name by concatenating a given
+#' prefix and a suffix (with underscores removed) and retrieves the corresponding function
+#' from the global environment. This allows flexible referencing of functions that follow
+#' a naming convention (e.g., `getRelevantColumnNamesDrugDisease`).
 #'
-#' @param prefix A \code{character} string prefix, e.g., \code{"getPairListColumnNames"} or \code{"getCategoryDisplay"}.
-#' @param mrp_type A \code{character} string representing the MRP type, e.g., \code{"Drug_Disease"}.
+#' @param prefix A \code{character} string specifying the function name prefix.
+#' @param suffix A \code{character} string used as the function name suffix. Underscores
+#'   in the suffix will be removed before concatenation.
 #'
-#' @return A reference to the requested function.
+#' @return A reference to the requested function object.
 #'
-getMRPTypeFunction <- function(prefix, mrp_type) {
-  mrp_type_cleaned <- gsub("_", "", mrp_type)
-  function_name <- paste0(prefix, mrp_type_cleaned)
+getFunctionByName <- function(prefix, suffix) {
+  suffix_cleaned <- gsub("_", "", suffix)
+  function_name <- paste0(prefix, suffix_cleaned)
   return(get(function_name, mode = "function"))
 }
 
-#' Get Relevant Column Names for a Specific MRP Pair List
+#' Get Relevant Column Names of a Specific Excel File
 #'
-#' Calls a dynamically resolved function to retrieve all relevant column names
-#' required for a given MRP type (e.g., Drug-Disease).
+#' Calls a dynamically resolved function to retrieve all relevant column names.
 #'
-#' @param mrp_type A \code{character} string specifying the MRP type (e.g., \code{"Drug_Disease"}).
+#' @param table_name A \code{character} string specifying the MRP type (e.g., \code{"Drug_Disease"}) or LOINC Mapping.
 #'
-#' @return A named \code{character} vector of column names for the MRP definition.
+#' @return A named \code{character} vector of column names.
 #'
-getPairListColumnNames <- function(mrp_type) {
-  getMRPTypeFunction("getPairListColumnNames", mrp_type)()
+getRelevantColumnNames <- function(table_name) {
+  getFunctionByName("getRelevantColumnNames", table_name)()
 }
 
 #' Get Display Label for a Given MRP Type
@@ -534,7 +540,7 @@ getPairListColumnNames <- function(mrp_type) {
 #' @return A \code{character} string with the display name for the MRP category.
 #'
 getCategoryDisplay <- function(mrp_type) {
-  getMRPTypeFunction("getCategoryDisplay", mrp_type)()
+  getFunctionByName("getCategoryDisplay", mrp_type)()
 }
 
 #' Load and Expand All Available MRP Pair Definitions
@@ -547,14 +553,35 @@ getCategoryDisplay <- function(mrp_type) {
 getMRPPairLists <- function() {
   mrp_pair_lists <- list()
   for (mrp_type in MRP_TYPE) {
-    etlutils::runLevel3(paste0("Load and expand ", mrp_type, " Definition"), {
-      mrp_content <- getExpandedContent(mrp_type)
+    etlutils::runLevel3Line(paste0("Load and expand ", mrp_type, " Definition"), {
+      mrp_content <- getExpandedExcelContent(mrp_type, table_name_prefix = "MRP_")
       if (!is.null(mrp_content)) {
         mrp_pair_lists[[mrp_type]] <- mrp_content
       }
     })
   }
   return(mrp_pair_lists)
+}
+
+#' Load LOINC Mapping Definition from Excel
+#'
+#' Retrieves and expands the LOINC mapping definition from the corresponding Excel file
+#' using \code{getExpandedExcelContent}. This function is typically used in MRP pipelines
+#' to load mapping data for LOINC codes.
+#'
+#' Internally wrapped in a level 3 logging block for structured ETL logging.
+#'
+#' @return A \code{data.frame} (or compatible object) containing the expanded LOINC mapping definition.
+#'
+getLOINCMapping <- function() {
+  etlutils::runLevel3Line(paste0("Load LOINC_Mapping Definition"), {
+    loinc_mapping <- .submodule_env[["LOINC_MAPPING"]]
+    if (is.null(loinc_mapping)) {
+      loinc_mapping <- getExpandedExcelContent("LOINC_Mapping")
+      .submodule_env[["LOINC_MAPPING"]] <- loinc_mapping
+    }
+  })
+  return(loinc_mapping)
 }
 
 #' Compute combined ATC codes for calculation
@@ -659,6 +686,28 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
   return(data.table::rbindlist(matched_rows, fill = TRUE))
 }
 
+#' Filter active MedicationRequests for an encounter within a specific time window
+#'
+#' @param medication_requests A \code{data.table} of MedicationRequest resources. Must contain columns \code{medreq_encounter_ref} and \code{medreq_authoredon}.
+#' @param enc_period_start POSIXct. The start datetime of the encounter period.
+#' @param meda_datetime POSIXct. The datetime of the medication analysis (cutoff point).
+#'
+#' @return A \code{data.table} with filtered active medication requests for the given encounter and time range.
+#'
+#' @export
+getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
+
+  active_requests <- medication_requests[
+    !is.na(start_date) &
+      start_date >= enc_period_start &
+      start_date <= meda_datetime &
+      (is.na(end_date) |
+         end_date >= meda_datetime)
+  ]
+  atc_codes <- active_requests[, c("atc_code")]
+  return(atc_codes)
+}
+
 #' Calculate Medication-Related Problems (MRPs) for All Types
 #'
 #' This function analyzes potential medication-related problems (MRPs) across a set of patient
@@ -694,7 +743,7 @@ calculateMRPs <- function() {
   # Get all Einrichtungskontakt encounters that ended at least 14 days ago
   # and do not have a retrolective MRP evaluation for Drug_Disease
   main_encounters_by_mrp_type <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
-  main_encounters <- main_encounters_by_mrp_type[["ALL_TYPES"]]
+  main_encounters <- main_encounters_by_mrp_type[["ALL_MRP_TYPES"]]
 
   mrp_table_lists_all <- list()
 
@@ -709,7 +758,7 @@ calculateMRPs <- function() {
 
         mrp_pair_list <- mrp_pair_lists[[mrp_type]]
         input_file_processed_content_hash <- mrp_pair_list$processed_content_hash
-        splitted_mrp_tables <- getMRPTypeFunction("getSplittedMRPTables", mrp_type)(mrp_pair_list)
+        splitted_mrp_tables <- getFunctionByName("getSplittedMRPTables", mrp_type)(mrp_pair_list)
 
         # Initialize empty lists for results
         retrolektive_mrpbewertung_rows <- list()
@@ -720,11 +769,13 @@ calculateMRPs <- function() {
           # Get encounter data and patient ID
           encounter <- resources$main_encounters[enc_id == encounter_id]
           patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
+          encounter_ref <- paste0("Encounter/", encounter_id)
+          medication_requests <- resources$medication_requests[medreq_encounter_ref == encounter_ref]
+
           meda <- resources$encounters_first_medication_analysis[[encounter_id]]
           meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_
           meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
           meda_study_phase <- encounter$study_phase
-          meda_ward_name <- encounter$ward_name
           record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
           # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
           ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
@@ -732,17 +783,19 @@ calculateMRPs <- function() {
           kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
 
           # Get active MedicationRequests for the encounter
-          active_requests <- getActiveMedicationRequests(resources$medication_requests, encounter$enc_period_start, meda_datetime)
+          active_requests <- getActiveMedicationRequests(medication_requests, encounter$enc_period_start, meda_datetime)
           match_atc_and_item2_codes <- data.table::data.table()
 
           if (nrow(active_requests) && meda_study_phase != "PhaseA") {
-            match_atc_and_item2_codes <- getMRPTypeFunction("calculateMRPs", mrp_type)(
+            fun <- getFunctionByName("calculateMRPs", mrp_type)
+            args <- list(
               active_requests = active_requests,
               splitted_mrp_tables = splitted_mrp_tables,
               resources = resources,
               patient_id = patient_id,
               meda_datetime = meda_datetime
             )
+            match_atc_and_item2_codes <- do.call(fun, args)
           }
 
           if (nrow(match_atc_and_item2_codes)) {
@@ -790,7 +843,7 @@ calculateMRPs <- function() {
                 mrp_calculation_type = mrp_type,
                 meda_id = meda_id,
                 study_phase = meda_study_phase,
-                ward_name = meda_ward_name,
+                ward_name = NA_character_, # deprecated -> this value will remain NA all the time
                 ret_id = ret_id,
                 ret_redcap_repeat_instance = ret_redcap_repeat_instance,
                 mrp_proxy_type = match$proxy_type,
@@ -806,7 +859,7 @@ calculateMRPs <- function() {
               mrp_calculation_type = mrp_type,
               meda_id = meda_id,
               study_phase = meda_study_phase,
-              ward_name = meda_ward_name,
+              ward_name = NA_character_, # deprecated -> this value will remain NA all the time
               ret_id = NA_character_,
               ret_redcap_repeat_instance = NA_character_,
               mrp_proxy_type = NA_character_,
@@ -838,5 +891,87 @@ calculateMRPs <- function() {
     )
   )
 
+  # Write the merged tables to RData files
+  lapply(names(mrp_table_lists_all_merged), function(name) {
+    writeRData(
+      object = mrp_table_lists_all_merged[[name]],
+      filename_without_extension = paste0("dataprocessor_", name)
+    )
+  })
+
   return(mrp_table_lists_all_merged)
+}
+
+#' Get Relevant Column Names for LOINC Mapping Table
+#'
+#' This function returns a named vector of selected column names that are relevant
+#' for processing or analyzing the \code{LOINC_Mapping} table.
+#'
+#' Only a curated subset of columns is included; many other columns commonly found in
+#' LOINC mapping tables are excluded for simplicity or irrelevance to the current use case.
+#'
+#' @return A named character vector containing relevant column names for the LOINC mapping table.
+#'
+getRelevantColumnNamesLOINCMapping <- function() {
+  etlutils::namedVectorByValue(
+    #"SORT_NUM",
+    "LOINC",
+    "LOINC_PRIMARY",
+    #"COMPARABILITY_TO_LOINC_PRIMARY",
+    #"COMMENT_COMPARABILITY",
+    #"MII_TOP_300",
+    "GERMAN_NAME_LOINC_PRIMARY",
+    #"SEARCH_NAME",
+    "UNIT",
+    #"EXPECTED_VALUES_HEALTHY",
+    "CONVERSION_FACTOR",
+    "CONVERSION_UNIT"
+    #"LONG_COMMON_NAME",
+    #"in_IP_Mapping_since",
+    #"EXAMPLE_UNITS",
+    #"EXAMPLE_UCUM_UNITS",
+    #"COMMON_TEST_RANK",
+    #"ComMaps",
+    #"ComInst",
+    #"COMPONENT",
+    #"PROPERTY",
+    #"TIME_ASPCT",
+    #"SYSTEM",
+    #"SCALE_TYP",
+    #"METHOD_TYP",
+    #"CLASS",
+    #"DefinitionDescription",
+    #"STATUS",
+    #"CLASSTYPE",
+    #"FORMULA",
+    #"EXMPL_ANSWERS",
+    #"UNITSREQUIRED",
+    #"RELATEDNAMES2",
+    #"SHORTNAME",
+    #"ORDER_OBS",
+    #"COMMON_ORDER_RANK",
+    #"COMMON_SI_TEST_RANK",
+    #"PanelType",
+    #"AssociatedObservations",
+    #"DisplayName"
+  )
+}
+
+#' Process Excel Content for LOINC Mapping
+#'
+#' This function processes the raw Excel content for the \code{LOINC_Mapping} table
+#' by selecting only the relevant columns and filtering out rows without a valid
+#' \code{LOINC_PRIMARY} value.
+#'
+#' @param processExcelContent A \code{data.table} containing the raw content of the Excel file.
+#' @param table_name A \code{character} string specifying the table name (e.g., \code{"LOINC_Mapping"}).
+#'
+#' @return A cleaned \code{data.table} with only the relevant columns and valid entries.
+#'
+processExcelContentLOINCMapping <- function(processExcelContent, table_name) {
+  # Remove not nesessary columns
+  columnnames <- getRelevantColumnNames(table_name)
+  processExcelContent <- processExcelContent[, ..columnnames]
+  processExcelContent <- processExcelContent[!is.na(LOINC_PRIMARY) & trimws(LOINC_PRIMARY) != ""]
+  return(processExcelContent)
 }
