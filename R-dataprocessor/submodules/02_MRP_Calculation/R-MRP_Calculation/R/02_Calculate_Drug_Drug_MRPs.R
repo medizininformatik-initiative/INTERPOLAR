@@ -94,10 +94,9 @@ processExcelContentDrugDrug <- function(drug_drug_mrp_definition, mrp_type) {
     )
   }
 
-  # check column ATC and ATC_PROXY for correct ATC codes
-  atc_columns <- grep("ATC(?!.*(DISPLAY|INCLUSION|VALIDITY_DAYS))", names(drug_drug_mrp_definition), value = TRUE, perl = TRUE)
-  atc_errors <- validateATCCodes(drug_drug_mrp_definition, atc_columns)
-  error_messages <- formatCodeErrors(atc_errors, "ATC")
+  # check column ATC_PRIMARY and ATC2_PRIMARY for correct ATC codes
+  invalid_atcs <- etlutils::getInvalidCodes(drug_drug_mrp_definition, code_column_names, etlutils::isATC)
+  error_messages <- formatCodeErrors(invalid_atcs, "ATC")
 
   if (length(error_messages) > 0) {
     stop(paste(error_messages, collapse = "\n"))

@@ -107,14 +107,15 @@ processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type
   }
 
   # check column ATC and ATC_PROXY for correct ATC codes
-  atc_columns <- grep("ATC(?!.*(DISPLAY|INCLUSION|VALIDITY_DAYS))", names(drug_disease_mrp_definition), value = TRUE, perl = TRUE)
-  invalid_atcs <- etlutils::getInvalidATCCodes(drug_disease_mrp_definition, atc_columns)
+  invalid_atcs <- etlutils::getInvalidCodes(drug_disease_mrp_definition, "ATC_FOR_CALCULATION", etlutils::isATC)
+  invalid_atcs_proxy <- etlutils::getInvalidCodes(drug_disease_mrp_definition, "ICD_PROXY_ATC", etlutils::isATC7orSmaller)
 
   # check column LOINC_PROXY for correct LOINC codes
-  invalid_loincs <- etlutils::getInvalidLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY")
+  invalid_loincs <- etlutils::getInvalidCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY", etlutils::isLOINC)
 
   error_messages <- c(
     formatCodeErrors(invalid_atcs, "ATC"),
+    formatCodeErrors(invalid_atcs_proxy, "ATC_PROXY"),
     formatCodeErrors(invalid_loincs, "LOINC")
   )
 
