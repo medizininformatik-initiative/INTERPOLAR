@@ -1,3 +1,5 @@
+DEBUG_DAYS_COUNT <- 2
+
 # Ein Patient, zur Testung der MRP Calculation
 # Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1, Bett 1, bekommt Medikamente + Diagnose + Medikationsanalyse
 # Ergebnis: 2x Drug-Disease-MRPs (Drug-Disease und Drug-DrugProxy) 1x Drug-Drug-MRP 1x Drug-DrugGroup-MRP

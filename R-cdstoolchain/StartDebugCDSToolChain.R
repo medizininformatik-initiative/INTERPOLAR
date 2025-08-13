@@ -14,24 +14,92 @@ library(db2frontend)
 options(error = NULL)
 
 start_full <- Sys.time()
-datetime_minus_2_day <- start_full - as.difftime(2, units = "days")
-datetime_minus_1_day <- start_full - as.difftime(1, units = "days")
 
-DEBUG_DATES <- c(#datetime_minus_2_day,
-                 datetime_minus_1_day,
-                 start_full
-                 #"2025-03-03 13:55:45 CET",
-                 #"2025-03-04 13:55:45 CET",
-                 #"2025-03-05 13:55:45 CET",
-                 #"2025-03-06 13:55:45 CET",
-                 #"2025-03-07 13:55:45 CET",
-                 #"2025-03-08 13:55:45 CET"
+# Create a vector of debug dates from now - count days in the past until now
+initDebugDates <- function(count) {
+  now <- Sys.time()
+  count <- as.integer(count)
+  count <- max(1, count)  # Ensure count is at least 1
+  dates <- c()
+  for (i in 1:count - 1) {
+    # Create a date that is i days before now
+    date <- now - as.difftime(i, units = "days")
+    dates <- c(date, dates)
+  }
+  day_names <- c()
+  for (i in length(dates):1) {
+    day_names <- c(day_names, paste0("datetime_minus_", i - 1, "_days"))
+  }
+  names(dates) <- day_names
+  return(dates)
+}
+
+############################
+### START TEST DEFINITON ###
+############################
+
+#################
+# DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
+# a config file. If the path is not set, then only the default config file
+# is used and no default values are overwritten by the debug config file.
+#################
+DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
+  cds2db = "./R-cds2db/test/test_cds2db_config.toml",
+  dataprocessor = "",
+  db2frontend = ""
 )
+
+#################
+# If this parameter is given, then no request is sent to the FHIR server, but
+# all data is loaded from this folder from RData files
+#################
+DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
+
+#################
+# This variable should be set to change the downloaded RAW data for DEBUG
+# purposes. It contains a path to a script that is sourced after the downloaded
+# and cracking of the FHIR RAW data.
+#################
+DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES <- c(
+  "./R-cds2db/test/test_common_data_preparation.R",
+  "./R-cds2db/test/test3_change_RAW_Data.R"
+)
+
+#################
+# This variable can be used to define the path where REDCap mock data are stored.
+# In the difference to the variable DEBUG_PATH_TO_RAW_RDATA_FILES nothing happens,
+# if this variable is defined or not defined. It must be used explicitly in the
+# code to load the REDCap mock data from this path.
+#################
+DEBUG_PATH_TO_REDCAP_RDATA_FILES <- "./R-cds2db/test/tables/"
+
+#################
+# If the data that should be exported to REDCap must be changed for test or debug
+# purposes, then this variable can be used to define a path to a script that
+# is sourced when the data is prepared for REDCap export.
+#################
+DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAMES = c(
+#  "./R-cds2db/test/test4_change_REDCap_Data.R"
+)
+
+##########################
+### END TEST DEFINITON ###
+##########################
+
+
+# Source all change RAW data scripts. They must define DEBUG_DAYS_COUNT and run
+#the real test code only if DEBUG_DATES is defnied!
+rm("DEBUG_DATES")
+for (script_name in DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES) {
+  source(script_name, local = TRUE)
+}
+DEBUG_DATES <- initDebugDates(DEBUG_DAYS_COUNT)
 
 day_times <- c()
 
 for (debug_day_index in seq_along(DEBUG_DATES)) {
   DEBUG_DAY <- debug_day_index
+
   start_day <- Sys.time()
   source("./R-cdstoolchain/StartCDSToolChain.R")
   end_day <- Sys.time()
