@@ -1,3 +1,4 @@
+# Define the days count for this test
 DEBUG_DAYS_COUNT <- 2
 
 # Ein Patient, zur Testung der MRP Calculation
@@ -5,6 +6,9 @@ DEBUG_DAYS_COUNT <- 2
 # Ergebnis: 2x Drug-Disease-MRPs (Drug-Disease und Drug-DrugProxy) 1x Drug-Drug-MRP 1x Drug-DrugGroup-MRP
 # Tag 2: Versorgungsstellenkontakt wird entlassen
 if (exists("DEBUG_DAY")) {
+
+  # Load the necessary libraries
+  source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
 
   if (DEBUG_DAY == 1) {
     # clear database on Day 1

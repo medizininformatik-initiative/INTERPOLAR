@@ -1,3 +1,4 @@
+# Define the days count for this test
 DEBUG_DAYS_COUNT <- 7
 
 # Ein Patient
@@ -14,6 +15,9 @@ DEBUG_DAYS_COUNT <- 7
 #TODO: MRP-haltige Medikation und Medikationsanalsyse anlegen für beide Fälle -> prüfen, ob der Stationsname für das MRP stimmt, wenn die Medikationsanalyse immer auf dem ersten IP-Station stattfand.
 
 if (exists("DEBUG_DAY")) {
+
+  # Load the necessary libraries
+  source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
 
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
