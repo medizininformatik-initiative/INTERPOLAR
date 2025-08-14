@@ -81,6 +81,11 @@ processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type
     secondary_cols = c("ATC_SYSTEMIC_SY", "ATC_DERMATIC_D", "ATC_OPHTHALMOLOGIC_OP", "ATC_INHALATIVE_I", "ATC_OTHER_OT")
   )
 
+  # To prevent a large number of meaningless MRPs from being found, all lines for proxy codes that essentially
+  # mean the same thing must be combined. The reason for this is that a short form of an ICD code (e.g., K70)
+  # results in a large number of individual codes, which then all generate their own MRP for the LOINC proxy
+  # because LOINC says that the patient has all these diseases.
+
   code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
   # Create a new column for the full ICD list
   drug_disease_mrp_definition[, ICD_FULL_LIST := ICD]
