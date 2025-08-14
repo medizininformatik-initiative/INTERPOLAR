@@ -693,40 +693,41 @@ dbGetReadOnlyColumns <- function(table_name) {
 #'   operation if logging is enabled.
 #'
 dbAddContent <- function(table_name, table, lock_id = NULL) {
-
-  if (!length(table) || !nrow(table)) {
-    return()
-  }
+  if (!length(table) || !nrow(table)) return()
 
   # Convert table name to lower case for PostgreSQL
   table_name <- tolower(table_name)
 
   # TODO: siehe Kommentar an der Funktion dbGetReadOnlyColumns
+  # Remove read-only columns if present
   readonly_cols <- dbGetReadOnlyColumns(table_name)
   cols_to_remove <- intersect(readonly_cols, colnames(table))
   if (length(cols_to_remove) > 0) {
     table[, (cols_to_remove) := NULL]
   }
 
-  # Measure start time
   time0 <- Sys.time()
-  # Get row count for reporting
   row_count <- nrow(table)
+
+  # ensure all empty strings are set to NA because RedCap would change it too and this
+  # will produce different datasets
   if (row_count > 0) {
-
-    # ensure all empty strings are set to NA because RedCap would change it too and this
-    # will produce different datasets
+    # Normalize empty strings to NA for character columns
     char_cols <- names(table)[sapply(table, is.character)]
-    table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)), .SDcols = char_cols]
+    if (length(char_cols)) {
+      table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)), .SDcols = char_cols]
+    }
 
-    # Append table content
+    # Lock + connection with guaranteed cleanup
     dbLock(lock_id)
+    on.exit(dbUnlock(lock_id), add = TRUE)
+
     db_connection <- dbGetWriteConnection()
+    on.exit(dbDisconnect(db_connection), add = TRUE)
+
     RPostgres::dbAppendTable(db_connection, table_name, table)
-    dbDisconnect(db_connection)
-    dbUnlock(lock_id)
   }
-  # Calculate and print duration of operation
+
   duration <- difftime(Sys.time(), time0, units = 'secs')
   dbLog("Inserted in ", table_name, ", ", row_count, " rows (took ", duration, " seconds)")
 }
