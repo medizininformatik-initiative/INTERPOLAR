@@ -870,11 +870,11 @@ dbReadTable <- function(table_name, lock_id = NULL) {
   # Postgres only accepts lower case names -> convert them hard here
   table_name <- tolower(table_name)
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id, readonly = TRUE), add = TRUE)
   dbLog("dbReadTable: ", table_name)
   db_connection <- dbGetReadConnection()
+  on.exit(dbDisconnect(db_connection), add = TRUE)
   table <- data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
-  dbDisconnect(db_connection)
-  dbUnlock(lock_id, readonly = TRUE)
   return(table)
 }
 
