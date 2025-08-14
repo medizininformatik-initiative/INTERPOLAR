@@ -82,6 +82,8 @@ processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type
   )
 
   code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
+  # Create a new column for the full ICD list
+  drug_disease_mrp_definition[, ICD_FULL_LIST := ICD]
   # SPLIT and TRIM: ICD and proxy column:
   # split the whitespace separated lists in ICD and proxy columns in a single row per code
   drug_disease_mrp_definition <- etlutils::splitColumnsToRows(drug_disease_mrp_definition, code_column_names)
@@ -517,17 +519,20 @@ matchICDProxies <- function(
 
     for (proxy_code in matching_proxies) {
       single_proxy_sub_table <- proxy_tables[[proxy_code]]
-      match_proxy_row <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(proxy_col_name)) & get(proxy_col_name) != ""]
+      match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(proxy_col_name)) & get(proxy_col_name) != ""]
+
+      match_proxy_rows[, ICD := NA_character_]
+      match_proxy_rows <- unique(match_proxy_rows)
 
       recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
       if (nrow(recources_with_proxy)) {
 
-        for (i in seq_len(nrow(match_proxy_row))) {
-          match_proxy_row <- match_proxy_row[i]
+        for (i in seq_len(nrow(match_proxy_rows))) {
+          match_proxy_row <- match_proxy_rows[i]
           proxy_validity_days <- match_proxy_row[[validity_days_col_name]]
           fallback_validity_days <- match_proxy_row$ICD_VALIDITY_DAYS
           validity_days <- if (!is.na(proxy_validity_days) && trimws(proxy_validity_days) != "") proxy_validity_days else fallback_validity_days
-          validity_days <- as.integer(validity_days)
+          validity_days <- suppressWarnings(as.integer(validity_days))
           # All non integer values are considered as unlimited validity duration
           if (is.na(validity_days)) {
             validity_days <- .Machine$integer.max
@@ -552,11 +557,15 @@ matchICDProxies <- function(
             }
           }
           if (nrow(valid_proxy_rows)) {
-            kurzbeschr <- sprintf(
-              "%s (%s) ist bei %s (%s) kontrainduziert.\n%s ist als %s-Proxy für %s verwendet worden.",
+            kurzbeschr <- sprintf(paste0(
+              "%s (%s) ist bei %s kontrainduziert.\n",
+              "%s ist als %s-Proxy für %s verwendet worden.\n",
+              "\n",
+              "Komplette Liste der ICD Codes die der Proxy-Code bedeuten kann: \n",
+              "%s"),
               match_proxy_row$ATC_DISPLAY, match_proxy_row$ATC_FOR_CALCULATION,
-              match_proxy_row$CONDITION_DISPLAY_CLUSTER, match_proxy_row$ICD,
-              proxy_code, proxy_type, match_proxy_row$ICD)
+              match_proxy_row$CONDITION_DISPLAY_CLUSTER, proxy_code, proxy_type,
+              match_proxy_row$CONDITION_DISPLAY_CLUSTER, match_proxy_row$ICD_FULL_LIST)
 
             if(!is.na(mrp_match_description)) {
               kurzbeschr <- paste(kurzbeschr, mrp_match_description, sep = "\n")
