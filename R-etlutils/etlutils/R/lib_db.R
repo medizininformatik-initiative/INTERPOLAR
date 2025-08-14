@@ -1342,14 +1342,15 @@ dbGetInfo <- function(readonly = TRUE) {
 #' @export
 dbReset <- function() {
   con <- dbGetAdminConnection()
+  on.exit(dbDisconnect(con), add = TRUE)
 
   # Convert schemas vector into SQL-friendly format
   schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
-
   query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")
 
   lock_id <- "Clear database"
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id), add = TRUE)
 
   # Get all tables to clear
   tables <- DBI::dbGetQuery(con, query)
@@ -1390,11 +1391,6 @@ dbReset <- function() {
   } else {
     print("All tables have been successfully truncated.")
   }
-
-  dbUnlock(lock_id)
-
-  # Close connection
-  dbDisconnect(con)
 }
 
 #' Remove Special Characters from a SQL comment.
