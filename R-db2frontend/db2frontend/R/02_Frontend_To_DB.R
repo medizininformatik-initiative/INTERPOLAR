@@ -75,5 +75,5 @@ importRedcap2DB <- function() {
     tables2Export[[i]] <- etlutils::dbConvertToDBTypes(tables2Export[[i]], table_name)
     tables[[table_name]] <- tables2Export[[i]]
   }
-  etlutils::dbWriteTables(tables, lock_id = "importRedcap2DB()")
+  etlutils::dbWriteTables(tables, lock_id = "importRedcap2DB()", ignore_missing_db_columns = TRUE)
 }

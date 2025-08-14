@@ -33,24 +33,47 @@ for (arg in args) {
 }
 
 resetMemory <- function() {
-  rm(list = setdiff(ls(), c("DEBUG_DAY", "DEBUG_DATES")))
+  rm(list = setdiff(ls(), c(
+    "DEBUG_DAY",
+    "DEBUG_DATES",
+    "DEBUG_MODULES_PATH_TO_CONFIG_TOML",
+
+    "DEBUG_PATH_TO_RAW_RDATA_FILES",
+    "DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME",
+
+    "DEBUG_PATH_TO_REDCAP_RDATA_FILES",
+    "DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME"
+  )))
+}
+
+setDebugPathToConfigToml <- function(module_name) {
+  # DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
+  # a config file. If the path is not set, then only the default config file
+  # is used and no default values are overwritten by the debug config file.
+  if (exists("DEBUG_MODULES_PATH_TO_CONFIG_TOML") && module_name %in% names(DEBUG_MODULES_PATH_TO_CONFIG_TOML)) {
+    DEBUG_PATH_TO_CONFIG_TOML <- DEBUG_MODULES_PATH_TO_CONFIG_TOML[[module_name]]
+  }
 }
 
 tryCatch({
   if (!etlutils::isErrorOccured()) {
     resetMemory()
+    setDebugPathToConfigToml("cds2db")
     cds2db::retrieve()
   }
   if (!etlutils::isErrorOccured()) {
     resetMemory()
+    setDebugPathToConfigToml("db2frontend")
     db2frontend::startFrontend2DB()
   }
   if (!etlutils::isErrorOccured()) {
     resetMemory()
+    setDebugPathToConfigToml("dataprocessor")
     dataprocessor::processData()
   }
   if (!etlutils::isErrorOccured()) {
     resetMemory()
+    setDebugPathToConfigToml("db2frontend")
     db2frontend::startDB2Frontend()
   }
   if (etlutils::isErrorOccured()) {

@@ -1,11 +1,23 @@
+# Define the days count for this test
+DEBUG_DAYS_COUNT <- 7
+
 # Ein Patient
 # Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1, Bett 1
 # Tag 2: Versorgungsstellenkontakt auf Station 1 Zimmer 1, Bett 2
 # Tag 3: Versorgungsstellenkontakt auf nicht-IP-Station
 # Tag 4: Versorgungsstellenkontakt auf Station 2 Zimmer 9, Bett 9
-# Tag 5: Versorgungsstellenkontakt wird entlassen
-# Tag 6: Neuer Encounter auf neuer Station 3 Zimmer 666, Bett 666
+# Tag 5: Encounter wird entlassen
+# Tag 6: Neuer Encounter und neuer Versorgungsstellenkontakt auf neuer Station 3 Zimmer 666, Bett 666
+# Tag 7: Versorgungsstellenkontakt auf Station 3 Zimmer 777, Bett 777
+
+#TODO: Tag 8: Verlegung auf Nicht Interpolar-Station
+#TODO: Tag 9: Entlassung von Nicht Interpolar-Station
+#TODO: MRP-haltige Medikation und Medikationsanalsyse anlegen für beide Fälle -> prüfen, ob der Stationsname für das MRP stimmt, wenn die Medikationsanalyse immer auf dem ersten IP-Station stattfand.
+
 if (exists("DEBUG_DAY")) {
+
+  # Load the necessary libraries
+  source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
 
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
@@ -224,8 +236,11 @@ if (exists("DEBUG_DAY")) {
     pids_per_wards <- resource_tables$pids_per_ward
     pids_per_wards <- pids_per_wards[-1]
 
-  } else if (DEBUG_DAY == 6) {
+  } else if (DEBUG_DAY == 6 || DEBUG_DAY == 7) {
     # Day 6: New Encounter on ward Station 3 Zimmer 666, Bett 666
+    # Day 6: New Encounter on ward Station 3 Zimmer 777, Bett 777
+
+    num <- if (DEBUG_DAY == 6) 666 else 777
 
     # Set all encounter to "in-progress", delete end date, set start date to last debug day and diagnoses and set
     # the encounter last updated date to the current date with a small offset
@@ -245,7 +260,7 @@ if (exists("DEBUG_DAY")) {
 
     # Neuer Encounter auf neuer Station 3 Zimmer 666, Bett 666
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-2-A-1-V-1",
-                     enc_location_identifier_value := "[1.1.1.1]Raum 666 ~ [2.1.1.1]Bett 666"]
+                     enc_location_identifier_value := paste0("[1.1.1.1]Raum ", num, " ~ [2.1.1.1]Bett ", num)]
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-2",
                      enc_identifier_value := "UKB-0001-E-2"]
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-2-A-1",

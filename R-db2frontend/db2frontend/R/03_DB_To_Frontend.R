@@ -49,9 +49,10 @@ importDB2Redcap <- function() {
     # Load debug data from files as mocked data from the database.
     debug_redcap_data_from_db <- list()
     # This variable should be set to change the downloaded RAW data for DEBUG
-    # purposes. It contains paths to scripts that is sourced at this point in the given order
-    if (exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAMES") && length(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAMES)) {
-      for (script_name in DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAMES) {
+    # purposes. It contains paths to scripts that is sourced at this point in the given order.
+    # Usually this is exactly one script, but it can be more than one.
+    if (exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME") && length(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)) {
+      for (script_name in DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME) {
         source(script_name, local = TRUE) # this should register the functions loadDebugREDCapData() and changeDebugREDCapData(data_to_import)
       }
     }
