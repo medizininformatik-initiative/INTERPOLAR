@@ -934,7 +934,7 @@ dbIsTableEmptyBeforeWrite <- function(table_name) {
 #' @seealso \code{\link[DBI]{dbWriteTable}} for writing tables to a database.
 #'
 #' @export
-dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALSE) {
+dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALSE, ignore_missing_db_columns = FALSE) {
   table_names <- names(tables)
   db_connection <- dbGetWriteConnection()
   db_table_names <- dbListTableNames(db_connection)
@@ -949,6 +949,27 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
 
   # Restrict `table_names` to only those found in both `tables` and the database
   table_names <- intersect(table_names, db_table_names)
+
+  # Optionally drop columns that do not exist in the DB schema
+  if (isTRUE(ignore_missing_db_columns) && length(table_names) > 0) {
+    for (table_name in table_names) {
+      # List columns of the DB table
+      db_connection <- dbGetWriteConnection()
+      db_cols <- DBI::dbListFields(db_connection, table_name)
+      dbDisconnect(db_connection)
+      # Keep only columns that exist in DB
+      incoming <- tables[[table_name]]
+      keep <- intersect(names(incoming), db_cols)
+      # If there are any extra columns, drop them
+      if (length(keep) && length(keep) < ncol(incoming)) {
+        # Keep only DB columns (preserve order as in incoming)
+        tables[[table_name]] <- incoming[, ..keep, drop = FALSE]
+      } else if (length(keep) == 0L) {
+        # No matching columns at all -> write nothing
+        tables[[table_name]] <- incoming[0, ]
+      }
+    }
+  }
 
   # 1. Check if any tables are not empty when `stop_if_table_not_empty` is TRUE
   # Check if tables are empty if required
