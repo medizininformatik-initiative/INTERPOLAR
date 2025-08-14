@@ -936,15 +936,18 @@ dbIsTableEmptyBeforeWrite <- function(table_name) {
 #' @export
 dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALSE, ignore_missing_db_columns = FALSE) {
   table_names <- names(tables)
+
   db_connection <- dbGetWriteConnection()
+  on.exit(dbDisconnect(db_connection), add = TRUE)
   db_table_names <- dbListTableNames(db_connection)
-  dbDisconnect(db_connection)
 
   # Stop with error if there are tables that do not exist in the database
   missing_db_table_names <- setdiff(table_names, db_table_names)
   if (length(missing_db_table_names) > 0) {
-    stop(paste("The following tables are not found in the database. Perhaps the database was not initialized correctly?\n  ",
-               paste(missing_db_table_names, collapse = "\n   ")))
+    stop(paste(
+      "The following tables are not found in the database. Perhaps the database was not initialized correctly?\n  ",
+      paste(missing_db_table_names, collapse = "\n   ")
+    ))
   }
 
   # Restrict `table_names` to only those found in both `tables` and the database
@@ -953,17 +956,16 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
   # Optionally drop columns that do not exist in the DB schema
   if (isTRUE(ignore_missing_db_columns) && length(table_names) > 0) {
     for (table_name in table_names) {
-      # List columns of the DB table
-      db_connection <- dbGetWriteConnection()
-      db_cols <- DBI::dbListFields(db_connection, table_name)
-      dbDisconnect(db_connection)
-      # Keep only columns that exist in DB
+      con_cols <- dbGetWriteConnection()
+      on.exit(dbDisconnect(con_cols), add = TRUE)
+      db_cols <- DBI::dbListFields(con_cols, table_name)
+
       incoming <- tables[[table_name]]
       keep <- intersect(names(incoming), db_cols)
-      # If there are any extra columns, drop them
+
       if (length(keep) && length(keep) < ncol(incoming)) {
-        # Keep only DB columns (preserve order as in incoming)
-        tables[[table_name]] <- incoming[, ..keep, drop = FALSE]
+        # Keep only DB columns (preserve incoming order)
+        tables[[table_name]] <- incoming[, ..keep]
       } else if (length(keep) == 0L) {
         # No matching columns at all -> write nothing
         tables[[table_name]] <- incoming[0, ]
@@ -971,9 +973,8 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
     }
   }
 
-  # 1. Check if any tables are not empty when `stop_if_table_not_empty` is TRUE
-  # Check if tables are empty if required
-  if (stop_if_table_not_empty) {
+  # Check emptiness if required
+  if (isTRUE(stop_if_table_not_empty) && length(table_names) > 0) {
     non_empty_tables <- table_names[!sapply(table_names, function(table_name) {
       dbIsTableEmptyBeforeWrite(table_name)
     })]
@@ -983,15 +984,15 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
     }
   }
 
-  # 2. Write tables to DB (only if all tables are empty or if `stop_if_table_not_empty` is FALSE)
+  # Write tables (lock guaranteed to be released)
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id), add = TRUE)
+
   for (table_name in table_names) {
     table <- tables[[table_name]]
-    # Proceed with writing table data to the database
-    dbCheckColumsWidthBeforeWrite(table_name, table)  # Check column widths
-    dbAddContent(table_name, table)   # Add table content
+    dbCheckColumsWidthBeforeWrite(table_name, table)
+    dbAddContent(table_name, table)
   }
-  dbUnlock(lock_id)
 }
 
 #' Write a Single Table to a PostgreSQL Database
