@@ -816,16 +816,12 @@ dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
 #'
 #' @export
 dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
-  # Lock the database
   dbLock(lock_id)
-  # Log the query
+  on.exit(dbUnlock(lock_id, readonly), add = TRUE)
   dbLog("dbGetQuery:\n", query)
-  # Execute the query with parameters
   db_connection <- dbGetConnection(readonly)
+  on.exit(dbDisconnect(db_connection), add = TRUE)
   table <- data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
-  dbDisconnect(db_connection)
-  # Unlock the database
-  dbUnlock(lock_id, readonly)
   return(table)
 }
 
