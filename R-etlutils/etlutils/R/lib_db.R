@@ -1053,11 +1053,12 @@ dbWriteTable <- function(table, table_name = NA, lock_id = NULL, stop_if_table_n
 #'
 #' @export
 dbReadTables <- function(table_names = NA, lock_id = NULL) {
-  # Establish a read-only database connection
+  # Establish a read-only database connection to list tables
   db_connection <- dbGetReadConnection()
+  on.exit(dbDisconnect(db_connection), add = TRUE)  # ensure connection is closed
+
   # Get the list of tables in the database
   db_table_names <- dbListTableNames(db_connection)
-  dbDisconnect(db_connection)
 
   # If no table names are provided, read all available tables
   if (isSimpleNA(table_names)) {
@@ -1066,8 +1067,11 @@ dbReadTables <- function(table_names = NA, lock_id = NULL) {
 
   # Initialize an empty list to store the results
   tables <- list()
-  # Lock the database before reading
+
+  # Lock the database before reading; guarantee unlock even on error
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id, readonly = TRUE), add = TRUE)
+
   # Loop through each requested table
   for (table_name in table_names) {
     # Handle views prefixed with "v_"
@@ -1075,17 +1079,15 @@ dbReadTables <- function(table_names = NA, lock_id = NULL) {
       table_name <- paste0("v_", table_name)
     }
     # Extract the corresponding resource table name
-    if (grepl("^v_", table_name)) {
-      resource_table_name <- sub("^v_", "", table_name)
+    resource_table_name <- if (grepl("^v_", table_name)) {
+      sub("^v_", "", table_name)
     } else {
-      resource_table_name <- table_name
+      table_name
     }
-    # Read the table and store it in the list
+    # Read the table via wrapper (does its own logging etc.)
     tables[[resource_table_name]] <- dbReadTable(table_name)
   }
-  # Unlock the database after reading
-  dbUnlock(lock_id, readonly = TRUE)
-  # Return the list of read tables
+
   return(tables)
 }
 
