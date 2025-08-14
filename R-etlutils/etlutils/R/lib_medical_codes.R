@@ -186,11 +186,11 @@ isATC7orSmaller <- function(codes) {
 #' @examples
 #' # Example usage:
 #' codes <- c("A01AB07", "B03AA02", "INVALID", NA)
-#' isATC7(codes)
+#' isATC(codes)
 #' # Returns: TRUE, TRUE, FALSE, NA
 #'
 #' @export
-isATC7 <- function(codes) {
+isATC <- function(codes) {
   ifelse(is.na(codes), NA, grepl(MED_CODES_PATTERN$ATC7, codes, perl = TRUE))
 }
 
@@ -265,56 +265,25 @@ catEmptyCodeWarnings <- function(list) {
   }
 }
 
-#' Validate ATC Codes in Multiple Columns
+#' Validate Codes in Specified Columns
 #'
 #' This function checks whether the values in specified columns of a data table
-#' are valid ATC7 codes and issues warnings for any invalid values.
+#' are valid according to a given validator function, and returns invalid codes.
 #'
-#' @param dt A data table containing the columns to validate.
-#' @param columns A character vector specifying the column names to check for ATC7 validity.
+#' @param dt A data.table containing the columns to validate.
+#' @param columns A character vector specifying the column names to check.
+#' @param validator_fn A function that takes a vector and returns TRUE/FALSE for each element.
 #'
-#' @details The function filters out \code{NA} values and validates each value in the specified
-#' columns using \code{etlutils::isATC7}. If invalid ATC7 codes are found, a warning is issued
-#' for each column.
-#'
-#' @return This function does not return any value. It issues warnings for invalid codes.
-#'
+#' @return A named list of invalid codes per column (empty list if all valid).
 #' @export
-getInvalidATCCodes <- function(dt, columns) {
+getInvalidCodes <- function(dt, columns, validator_fn) {
   errors <- list()
   for (column in columns) {
-    invalid_codes <- dt[[column]][!etlutils::isATC7orSmaller(data[[column]]) & !is.na(data[[column]])]
+    values <- dt[[column]]
+    invalid_codes <- values[!validator_fn(values) & !is.na(values)]
     if (length(invalid_codes) > 0) {
       errors[[column]] <- invalid_codes
     }
   }
   return(errors)
-}
-
-#' Validate LOINC Codes in a Column
-#'
-#' This function validates whether all non-NA values in a specified column of a data table
-#' conform to the standard LOINC format.
-#'
-#' @param dt A data.table containing the column to validate.
-#' @param column_name The name of the column to check for valid LOINC codes.
-#'
-#' @details A valid LOINC code matches the pattern `^\d{1,5}-\d$`:
-#' - 1 to 5 digits
-#' - Followed by a hyphen (`-`)
-#' - Ending with exactly 1 digit.
-#'
-#' If invalid codes are found, the function will issue a warning with the invalid codes.
-#'
-#' @return The function does not return any value but will issue a warning
-#' if invalid LOINC codes are found in the column.
-#'
-#' @export
-getInvalidLOINCCodes <- function(dt, column_name) {
-  column_values <- dt[[column_name]]
-  invalid_codes <- column_values[!etlutils::isLOINC(column_values) & !is.na(column_values)]
-  if (length(invalid_codes) > 0) {
-    return(setNames(list(invalid_codes), column_name))
-  }
-  return(list())
 }

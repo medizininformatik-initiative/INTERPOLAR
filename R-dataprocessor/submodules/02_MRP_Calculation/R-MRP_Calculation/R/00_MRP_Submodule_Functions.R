@@ -917,7 +917,7 @@ getRelevantColumnNamesLOINCMapping <- function() {
     #"SORT_NUM",
     "LOINC",
     "LOINC_PRIMARY",
-    #"COMPARABILITY_TO_LOINC_PRIMARY",
+    "COMPARABILITY_TO_LOINC_PRIMARY",
     #"COMMENT_COMPARABILITY",
     #"MII_TOP_300",
     "GERMAN_NAME_LOINC_PRIMARY",
@@ -973,5 +973,9 @@ processExcelContentLOINCMapping <- function(processExcelContent, table_name) {
   columnnames <- getRelevantColumnNames(table_name)
   processExcelContent <- processExcelContent[, ..columnnames]
   processExcelContent <- processExcelContent[!is.na(LOINC_PRIMARY) & trimws(LOINC_PRIMARY) != ""]
+
+  # Filter for only the primary LOINC codes that are quantitativ
+  processExcelContent <- processExcelContent[COMPARABILITY_TO_LOINC_PRIMARY == "1 - quantitativ"]
+
   return(processExcelContent)
 }
