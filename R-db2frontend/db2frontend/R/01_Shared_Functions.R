@@ -45,7 +45,7 @@ getRedcapConnection <- function() {
 getFrontendTableDescription <- function() {
   table_description_path <- system.file("extdata", "Frontend_Table_Description.xlsx", package = "db2frontend")
   table_description <- etlutils::loadTableDescriptionFile(table_description_path, "frontend_table_description")
-  table_description <- etlutils::splitTableToList(table_description, "TABLE_NAME")
+  table_description <- etlutils::splitTableToList(table_description, "TABLE_NAME", TRUE)
   return(table_description)
 }
 
