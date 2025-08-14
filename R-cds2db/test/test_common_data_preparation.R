@@ -69,19 +69,50 @@ retainRAWTables <- function(...) {
 #'
 #' @param datetime A `POSIXct` object representing the datetime to be formatted.
 #'                 Defaults to the current system time (`Sys.time()`).
-#' @param offset_days An integer specifying how many days should be subtracted from `datetime`.
+#' @param offset_days_minus An integer specifying how many days should be subtracted from `datetime`.
 #'                    Defaults to `2`.
 #'
 #' @return A character string with the formatted datetime.
 #'
-getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_days = 1) {
+getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_days_minus = 1) {
   datetime <- as.POSIXct(datetime)
   # Subtract the specified number of days from the given datetime
-  datetime <- datetime - offset_days * 86400
+  datetime <- datetime - offset_days_minus * 86400
 
   # Format as "[1.1]YYYY-MM-DDTHH:MM:SS+02:00"
   format(datetime, "[1.1]%Y-%m-%dT%H:%M:%S%z")
 }
+
+#' Get a RAW-formatted datetime from DEBUG_DATES with additive offset
+#'
+#' Returns a RAW-formatted datetime string based on \code{DEBUG_DATES[debug_date_index]} and an
+#' additive day offset. Internally delegates to \code{getFormattedRAWDateTime()} and passes the
+#' negated offset so that positive values in \code{offset_days} shift the datetime forward.
+#'
+#' @param offset_days Integer number of days to add to the selected debug date. Defaults to \code{0}.
+#' @param debug_date_index Integer index into \code{DEBUG_DATES} selecting the base datetime.
+#'
+#' @return Character string in the RAW datetime format produced by
+#'   \code{getFormattedRAWDateTime()}.
+#'
+#' @examples
+#' \dontrun{
+#' # Shift DEBUG_DATES[1] by +2 days and format as RAW timestamp
+#' getDebugDatesRAWDateTime(offset_days = 0.2, debug_date_index = 1)
+#'
+#' # Use the date as-is (no shift)
+#' getDebugDatesRAWDateTime(debug_date_index = 2)
+#' }
+#'
+#' @export
+getDebugDatesRAWDateTime <- function(offset_days = 0, debug_date_index = DEBUG_DAY) {
+  datetime <- DEBUG_DATES[debug_date_index]
+  # Get the formatted RAW datetime
+  raw_datetime <- getFormattedRAWDateTime(datetime, -as.numeric(offset_days))
+  # Return the formatted datetime
+  return(raw_datetime)
+}
+
 
 #' Update values in a data.table based on patient ID and column name pattern
 #'
@@ -130,4 +161,52 @@ changeDataForPID <- function(table, pid, pattern, new_value) {
     # Update matching columns
     table[rows_to_update, (matching_columns) := lapply(.SD, function(x) new_value), .SDcols = matching_columns]
   }
+}
+
+#' Get column names from a data.table matching a given pattern
+#'
+#' This function returns all column names from a \code{data.table} that match a given
+#' regular expression pattern.
+#'
+#' @param dt A \code{data.table} from which the column names will be extracted.
+#' @param pattern A character string containing a regular expression to match against
+#'   column names.
+#'
+#' @return A character vector containing the names of all matching columns.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(enc_diagnosis_a = 1, enc_diagnosis_b = 2, enc_servicetype_x = 3)
+#' getColNames(dt, "^enc_diagnosis_")
+#' getColNames(dt, "^enc_servicetype_")
+#'
+#' @export
+getColNames <- function(dt, pattern) {
+  grep(pattern, names(dt), value = TRUE)
+}
+
+#' Extract values from a RAW-formatted column
+#'
+#' This function extracts the part of each string value that comes **after** the first closing
+#' square bracket (`]`). If there is no closing bracket in a value, the value is returned unchanged.
+#'
+#' Typical RAW values may look like `"[1.2]2024-08-13T10:15:00+02:00"`, where the prefix in square
+#' brackets contains numeric components separated by dots. The shortest valid form could be
+#' a single digit in square brackets (e.g., `"[5]"`).
+#'
+#' @param dt_raw A \code{data.table} containing the column to be processed.
+#' @param column_name A character string with the name of the column to process.
+#'
+#' @return A character vector with the extracted values.
+#'
+#' @examples
+#' library(data.table)
+#' dt <- data.table(raw_col = c("[1.2]2024-08-13", "[5]", "no_brackets"))
+#' extractValueFromRAW(dt, "raw_col")
+#' # Returns: c("2024-08-13", "", "no_brackets")
+#'
+#' @export
+extractValueFromRAW <- function(dt_raw, column_name) {
+  values <- dt_raw[[column_name]]
+  sub("^\\[[0-9]+(\\.[0-9]+)*\\](.*)$", "\\2", values)
 }
