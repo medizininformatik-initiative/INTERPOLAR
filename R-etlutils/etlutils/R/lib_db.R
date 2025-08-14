@@ -818,7 +818,8 @@ dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
 dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id, readonly), add = TRUE)
-  dbLog("dbGetQuery:\n", query)
+  dbLog("dbGetQuery:\n", query,
+        if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")))
   db_connection <- dbGetConnection(readonly)
   on.exit(dbDisconnect(db_connection), add = TRUE)
   table <- data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
