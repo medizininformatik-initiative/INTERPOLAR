@@ -1027,7 +1027,9 @@ dbWriteTable <- function(table, table_name = NA, lock_id = NULL, stop_if_table_n
   tables <- list(table)
   names(tables) <- table_name
   # Call the dbWriteTables function to perform the writing operation
-  dbWriteTables(tables, stop_if_table_not_empty, lock_id)
+  dbWriteTables(tables,
+                lock_id = lock_id,
+                stop_if_table_not_empty = stop_if_table_not_empty)
 }
 
 #' Read Multiple Tables from a PostgreSQL Database
