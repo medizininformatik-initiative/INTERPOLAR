@@ -1152,7 +1152,7 @@ test_that("fillNAWithLastRowValue handles single column data.table", {
 
 test_that("splitTableToList splits the data.table correctly by specified column", {
   dt <- data.table(SCRIPTNAME = c("A", "A", "B", "B", "C"), VALUE = 1:5)
-  result <- splitTableToList(dt, "SCRIPTNAME")
+  result <- splitTableToList(dt, "SCRIPTNAME", TRUE)
 
   expect_equal(length(result), 3)
   expect_equal(names(result), c("A", "B", "C"))
@@ -1164,7 +1164,7 @@ test_that("splitTableToList splits the data.table correctly by specified column"
 
 test_that("splitTableToList handles NA values in the split column correctly", {
   dt <- data.table(SCRIPTNAME = c("A", NA, "B", NA, "C"), VALUE = 1:5)
-  result <- splitTableToList(dt, "SCRIPTNAME")
+  result <- splitTableToList(dt, "SCRIPTNAME", TRUE)
 
   expect_equal(length(result), 3)
   expect_equal(names(result), c("A", "B", "C"))

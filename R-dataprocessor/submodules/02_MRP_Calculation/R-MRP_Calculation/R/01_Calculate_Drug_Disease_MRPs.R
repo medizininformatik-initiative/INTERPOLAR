@@ -651,11 +651,11 @@ matchICDProxies <- function(
 getSplittedMRPTablesDrugDisease <- function(drug_disease_mrp_tables) {
   drug_disease_mrp_table_content <- drug_disease_mrp_tables$processed_content
   list(
-    by_atc = etlutils::splitTableToList(drug_disease_mrp_table_content, "ATC_FOR_CALCULATION", FALSE),
-    by_icd = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD", FALSE),
-    by_atc_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD_PROXY_ATC", FALSE),
-    by_ops_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD_PROXY_OPS", FALSE),
-    by_loinc_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "LOINC_PRIMARY_PROXY", FALSE)
+    by_atc = etlutils::splitTableToList(drug_disease_mrp_table_content, "ATC_FOR_CALCULATION"),
+    by_icd = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD"),
+    by_atc_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD_PROXY_ATC"),
+    by_ops_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD_PROXY_OPS"),
+    by_loinc_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "LOINC_PRIMARY_PROXY")
   )
 }
 
