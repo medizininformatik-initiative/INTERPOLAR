@@ -784,11 +784,11 @@ dbDeleteContent <- function(table_name, lock_id = NULL) {
 #'
 dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id, readonly), add = TRUE)
   dbLog("dbExecute:\n", statement)
   db_connection <- dbGetConnection(readonly)
+  on.exit(dbDisconnect(db_connection), add = TRUE)
   DBI::dbExecute(db_connection, statement)
-  dbDisconnect(db_connection)
-  dbUnlock(lock_id, readonly)
 }
 
 #' Execute a SQL Query on a PostgreSQL Database
