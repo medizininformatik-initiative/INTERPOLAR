@@ -123,7 +123,7 @@ getSplittedMRPTablesDrugDrugGroup <- function(drug_drug_mrp_tables) {
   drug_drug_mrp_table_content <- drug_drug_mrp_tables$processed_content
   list(
     # Split drug_drug_mrp_tables by ATC
-    by_atc = etlutils::splitTableToList(drug_drug_mrp_table_content, "ATC_FOR_CALCULATION")
+    by_atc = etlutils::splitTableToList(drug_drug_mrp_table_content, "ATC_FOR_CALCULATION", FALSE)
   )
 }
 
