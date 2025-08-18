@@ -10,7 +10,7 @@ Zählung von Patienten, Fällen, Medikationsanalysen und MRPs in FHIR und Fronte
 
 gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataprocessor/reports)
 
--   statistical_reports.html beinhaltet Zählungen für die FAS1 gesplittet nach Station und Aufnahmewoche (nur erster Kontakt eines Falls auf einer INTERPOLAR-Station und davon nur die erste Medikationanalyse und dazugehörige MRPs)
+-   statistical_reports.html beinhaltet Zählungen für die Full Analysis Set 1 (FAS1) gesplittet nach Station und Aufnahmewoche (nur erster Kontakt eines Falls auf einer INTERPOLAR-Station und davon nur die erste Medikationanalyse und dazugehörige MRPs)
 
 -   fe_summary.html beinhaltet die Zählungen für alle im Frontend dokumentierten Fälle, gesplittet nach Station
 
@@ -35,3 +35,7 @@ ausführbar über Aufruf des dataprocessors mit folgenden Argumenten:
 ``` console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R Statistical_Reports REPORT_PERIOD_START=2025-07-01 REPORT_PERIOD_END=2025-07-31
 ```
+### Vorraussetzungen
+
+- über Patient.indentifier.type.coding.code(FHIR) bzw. pat_identifier_type_code(INTERPOLAR-DB) == "MR" kann für jeden Patienten ein eindeutiger organisationsinterner Patienten-Identifier (PID) identifieziert werden (gemäß https://ig.fhir.de/basisprofile-de/1.5.0/ig-markdown-OrganisationsinternerPatienten-Identifier.html )
+- über die pids_per_ward Tabelle (INTERPOLAR-DB) sind die Fälle auf Versorgungsstellenkontakt-Ebene einer Station zugeordnet (INTERPOLAR-Stationsaufenthalt) (encounter_id in pids_per_ward zeigt (unter Anderem) alle INTERPOLAR-Versorgungsstellenkontakte eines Falls)
