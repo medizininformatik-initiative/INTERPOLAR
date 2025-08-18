@@ -35,7 +35,14 @@ ausführbar über Aufruf des dataprocessors mit folgenden Argumenten:
 ``` console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R Statistical_Reports REPORT_PERIOD_START=2025-07-01 REPORT_PERIOD_END=2025-07-31
 ```
-### Vorraussetzungen
 
-- über Patient.indentifier.type.coding.code(FHIR) bzw. pat_identifier_type_code(INTERPOLAR-DB) == "MR" kann für jeden Patienten ein eindeutiger organisationsinterner Patienten-Identifier (PID) identifieziert werden (gemäß https://ig.fhir.de/basisprofile-de/1.5.0/ig-markdown-OrganisationsinternerPatienten-Identifier.html )
-- über die pids_per_ward Tabelle (INTERPOLAR-DB) sind die Fälle auf Versorgungsstellenkontakt-Ebene einer Station zugeordnet (INTERPOLAR-Stationsaufenthalt) (encounter_id in pids_per_ward zeigt (unter Anderem) alle INTERPOLAR-Versorgungsstellenkontakte eines Falls)
+### Annahmen
+
+-   über Patient.indentifier.type.coding.code(FHIR) bzw. pat_identifier_type_code(INTERPOLAR-DB) == "MR" kann für jeden Patienten ein eindeutiger organisationsinterner Patienten-Identifier (PID) identifiziert werden (gemäß <https://ig.fhir.de/basisprofile-de/1.5.0/ig-markdown-OrganisationsinternerPatienten-Identifier.html> )
+-   über die pids_per_ward Tabelle (INTERPOLAR-DB) sind die Fälle auf Versorgungsstellenkontakt-Ebene einer Station zugeordnet (INTERPOLAR-Stationsaufenthalt): encounter_id in pids_per_ward zeigt (unter Anderem) alle INTERPOLAR-Versorgungsstellenkontakte eines Falls
+-   Versorgungsstellenkontakte die kein Enddatum haben und in-progress sind, befinden sich aktuell noch auf der Station
+
+### Details
+
+-   die aggregierten Kennzahlen umfassen nur solche Fälle, die die Kriterien für die INTERPOLAR-Kohorte (Full Analysis Set 1 / FAS1) erfüllen (stationäre Fälle \>18 Jahre, die auf einer INTERPOLAR-Station aufgenommen wurden)
+-   nur Medikationsanalysen deren Datum innerhalb eines INTERPOLAR-Stationsaufenthaltes liegen, werden gezählt (d.h. die Medikationsanalyse muss innerhalb des Zeitraumes des INTERPOLAR-Versorgungsstellenkontaktes liegen)

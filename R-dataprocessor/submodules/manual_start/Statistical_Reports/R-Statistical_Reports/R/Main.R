@@ -61,11 +61,11 @@
 #' }
 #'
 #' @section Output:
-#' - **Local output**: `complete_FHIR_table`, `full_analysis_set_1`, `report_data`, `complete_fe_table`, `fe_summary_data`
+#' - **Local output**: `FHIR_table`, `full_analysis_set_1`, `statistical_report_data`, `frontend_table`, `frontend_summary_data`
 #' - **Global output**:
 #'   \itemize{
 #'     \item `statistical_report`: F1 metrics with front-end add-ons
-#'     \item `fe_summary`: Overall summary of front-end documentation
+#'     \item `frontend_summary`: Overall summary of front-end documentation
 #'   }
 #' Tables include captions describing the reporting period and footnotes explaining relevant metric assumptions.
 #'
@@ -127,7 +127,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
                                   table_name = "v_mrpdokumentation_validierung_fe_last_import")
   # --> this table shows only the last version of each mrp_dokumentation_validierung_fe entry
 
-  complete_FHIR_table <- mergePatEnc(patient_table, encounter_table) |>
+  FHIR_table <- mergePatEnc(patient_table, encounter_table) |>
     addCuratedEncPeriodEnd() |>
     addMainEncId() |>
     addMainEncPeriodStart() |>
@@ -136,32 +136,32 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
     addRecordId(patient_fe_table) |>
     addFallIdAndStudienphase(fall_fe_table)
 
-  complete_fe_table <-mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
+  full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table)
+
+  frontend_table <-mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
     addMedaData(medikationsanalyse_fe_table) |>
-    addEncIdToFeData(complete_FHIR_table) |>
+    addEncIdToFeData(full_analysis_set_1) |>
     addMRPDokuData(mrp_dokumentation_validierung_fe_table)
 
-  full_analysis_set_1 <- defineFullAnalysisSet1(complete_FHIR_table)
+  frontend_summary_data <- prepareFeSummaryData(frontend_table, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
-  fe_summary_data <- prepareFeSummaryData(complete_fe_table, REPORT_PERIOD_START, REPORT_PERIOD_END)
-
-  report_data <- prepareF1data(full_analysis_set_1, REPORT_PERIOD_START, REPORT_PERIOD_END) |>
-    addFeDataToF1data(fe_summary_data)
+  statistical_report_data <- prepareF1data(full_analysis_set_1, REPORT_PERIOD_START, REPORT_PERIOD_END) |>
+    addFeDataToF1data(frontend_summary_data)
 
   # FAS2_1 <- defineFAS2_1(full_analysis_set_1, REPORT_PERIOD_END)
   # F2_data <- prepareF2data(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
   # Print datasets for verification to outputLocal
-  writeTableLocal(complete_FHIR_table)
+  writeTableLocal(FHIR_table)
   writeTableLocal(full_analysis_set_1)
-  writeTableLocal(report_data)
-  writeTableLocal(complete_fe_table)
-  writeTableLocal(fe_summary_data)
+  writeTableLocal(statistical_report_data)
+  writeTableLocal(frontend_table)
+  writeTableLocal(frontend_summary_data)
 
-  fe_summary <- calculateFeSummary(fe_summary_data)
+  frontend_summary <- calculateFeSummary(frontend_summary_data)
 
-  statistical_report <- calculateF1(report_data) |>
-    calculateFeAddOnToF1(report_data)
+  statistical_report <- calculateF1(statistical_report_data) |>
+    calculateFeAddOnToF1(statistical_report_data)
   # calculateF2(F2_data)
 
 
@@ -177,7 +177,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
                           "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency")
   )
 
-  writeTableGlobal(fe_summary,
+  writeTableGlobal(frontend_summary,
              caption = paste0("Front-End Summary for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
              footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all INTERPOLAR ward contacts for each case"),
              colnames = c("ward", "patients", "encounters", "medication analyses",

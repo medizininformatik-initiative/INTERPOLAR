@@ -383,7 +383,7 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
 #' @export
 mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 
-  complete_fe_table <- patient_fe_table |>
+  frontend_table <- patient_fe_table |>
     dplyr::select(-input_datetime) |>
     dplyr::left_join(fall_fe_table |>
                        dplyr::select(record_id, fall_fhir_enc_id, fall_pat_id, fall_id,
@@ -393,7 +393,7 @@ mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
     dplyr::distinct() |>
     dplyr::rename(fall_id_cis = fall_id,
                   fall_fhir_main_enc_id = fall_fhir_enc_id)
-  return(complete_fe_table)
+  return(frontend_table)
 }
 
 
@@ -451,7 +451,7 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 #'   typically resulting from `addMedaData()`. Must include `meda_dat`, `pat_id`, `record_id`,
 #'   `fall_id_cis`, `pat_cis_pid`, `fall_fhir_main_enc_id`, `fall_studienphase`, `fall_station`, and `fall_aufn_dat`.
 #'
-#' @param complete_table A data frame containing full encounter-level data. Must include columns:
+#' @param full_analysis_set_1 A data frame containing full encounter-level data. Must include columns:
 #'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `fall_id_cis`, `pat_id`, `pat_identifier_value`, `record_id`,
 #'   `enc_period_start`, `curated_enc_period_end`, `ward_name`, `studienphase`, `enc_status`.
 #'
@@ -472,9 +472,9 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 #'
 #' @importFrom dplyr left_join select distinct filter join_by between
 #' @export
-addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, complete_table) {
+addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1) {
   merged_fe_pat_fall_meda_table_with_enc_id <- merged_fe_pat_fall_meda_table |>
-    dplyr::left_join(complete_table |>
+    dplyr::left_join(full_analysis_set_1 |>
                        dplyr::select(enc_id, main_enc_id, main_enc_period_start, fall_id_cis,
                                      pat_id, pat_identifier_value, record_id, enc_period_start,
                                      curated_enc_period_end, ward_name, studienphase,

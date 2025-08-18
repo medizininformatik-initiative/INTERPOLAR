@@ -59,7 +59,7 @@ calculateF1 <- function(F1_prep) {
 #' and for all wards combined. Provides counts for patients, encounters, medication analyses,
 #' and various MRP outcomes.
 #'
-#' @param fe_summary_data A data frame prepared by `prepareFeSummaryData()` containing
+#' @param frontend_summary_data A data frame prepared by `prepareFeSummaryData()` containing
 #'   deduplicated front-end data with patient, encounter, ward, and MRP-level variables.
 #'
 #' @param grouping_variables A character vector specifying the variables to group by.
@@ -86,9 +86,9 @@ calculateF1 <- function(F1_prep) {
 #'
 #' @importFrom dplyr group_by summarise bind_rows n_distinct rename
 #' @export
-calculateFeSummary <- function(fe_summary_data, grouping_variables = c("ward_name")) {
+calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("ward_name")) {
 
-  fe_grouped_counts <- fe_summary_data |>
+  fe_grouped_counts <- frontend_summary_data |>
     dplyr::group_by(across(all_of(grouping_variables))) |>
     dplyr::summarise(
       patients = dplyr::n_distinct(pat_id, na.rm = TRUE),
@@ -120,7 +120,7 @@ calculateFeSummary <- function(fe_summary_data, grouping_variables = c("ward_nam
       .groups = 'drop'
     )
 
-  fe_total_counts <- fe_summary_data |>
+  fe_total_counts <- frontend_summary_data |>
     dplyr::summarise(
       across(any_of(c('ward_name', 'calendar_week')), ~"all"),
       patients = dplyr::n_distinct(pat_id, na.rm = TRUE),
@@ -150,9 +150,9 @@ calculateFeSummary <- function(fe_summary_data, grouping_variables = c("ward_nam
         mrp_id, NA), na.rm = TRUE)
     )
 
-    fe_summary <- dplyr::bind_rows(fe_grouped_counts, fe_total_counts)
+    frontend_summary <- dplyr::bind_rows(fe_grouped_counts, fe_total_counts)
 
-    return(fe_summary)
+    return(frontend_summary)
 }
 
 #------------------------------------------------------------------------------#
@@ -164,7 +164,7 @@ calculateFeSummary <- function(fe_summary_data, grouping_variables = c("ward_nam
 #'
 #' @param F1 A data frame containing the initial F1 report with patient and encounter-level metrics.
 #' Typically produced by `calculateF1()`.
-#' @param report_data_F1_with_fe A data frame containing individual-level data
+#' @param statistical_report_data_F1_with_fe A data frame containing individual-level data
 #' enriched with front-end variables (from `addFeDataToF1data()`).
 #'
 #' @return A data frame that merges F1-level statistics with aggregated
@@ -189,9 +189,9 @@ calculateFeSummary <- function(fe_summary_data, grouping_variables = c("ward_nam
 #'
 #' @importFrom dplyr left_join
 #' @export
-calculateFeAddOnToF1 <- function(F1, report_data_F1_with_fe) {
+calculateFeAddOnToF1 <- function(F1, statistical_report_data_F1_with_fe) {
 
-  report_with_fe_prep <- report_data_F1_with_fe |>
+  report_with_fe_prep <- statistical_report_data_F1_with_fe |>
     calculateFeSummary(grouping_variables = c("ward_name", "calendar_week"))
 
   report_with_fe <- F1 |>
