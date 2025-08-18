@@ -258,12 +258,14 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 #'
 #' @importFrom dplyr left_join select relocate distinct
 #' @export
-addWardName <- function(merged_table_with_main_enc,pids_per_ward_table) {
-  # TODO: check multiple rows for one encounter (e.g. ward change)
+addWardName <- function(merged_table_with_main_enc, pids_per_ward_table) {
   merged_table_with_ward <- merged_table_with_main_enc |>
     dplyr::left_join(pids_per_ward_table |>
                        dplyr::select(ward_name, patient_id, encounter_id),
                      by = c("enc_id" = "encounter_id", "pat_id" = "patient_id")) |>
+    dplyr::mutate(ward_name = dplyr::if_else(enc_type_code == "versorgungsstellenkontakt",
+                                             ward_name,
+                                             NA_character_)) |>
     dplyr::relocate(ward_name, .after = curated_enc_period_end) |>
     dplyr::distinct()
   return(merged_table_with_ward)
