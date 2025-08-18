@@ -210,3 +210,157 @@ extractValueFromRAW <- function(dt_raw, column_name) {
   values <- dt_raw[[column_name]]
   sub("^\\[[0-9]+(\\.[0-9]+)*\\](.*)$", "\\2", values)
 }
+
+#
+# Add encounters with type "Versorgungstellenkontakt"
+#
+addVersorgungstellenkontakt <- function(dt_enc, colnames_pattern_servicetype, pattern = "-A-(\\d+)$") {
+  enc_servicetype_colnames <- getColNames(dt_enc, colnames_pattern_servicetype)
+
+  rows_to_duplicate <- dt_enc[grepl(pattern, enc_id)]
+  if (nrow(rows_to_duplicate) == 0) return(dt_enc)
+
+  rows_to_duplicate[, enc_partof_ref := sub("(Encounter/).*",
+                                            paste0("\\1", sub(".*]", "", enc_id)), enc_partof_ref)]
+  rows_to_duplicate[, enc_id := sub(pattern, "-A-\\1-V-\\1", enc_id)]
+  rows_to_duplicate[, enc_type_code := sub("\\](.*)", "]versorgungsstellenkontakt", enc_type_code)]
+  rows_to_duplicate[, enc_type_display := sub("\\](.*)", "]Versorgungsstellenkontakt", enc_type_display)]
+  rows_to_duplicate[, (enc_servicetype_colnames) := NA]
+  rows_to_duplicate[, enc_location_physicaltype_code := "[1.1.1.1]ro ~ [2.1.1.1]bd"]
+
+  return(rbind(dt_enc, rows_to_duplicate))
+}
+
+updateEncounterStatus <- function(dt, pid, status, start = NULL, end = NULL, colnames_pattern_to_clear = "^enc_diagnosis_") {
+  changeDataForPID(dt, pid, "enc_status", status)
+  if (!is.null(start)) changeDataForPID(dt, pid, "enc_period_start", start)
+  if (!is.null(end)) changeDataForPID(dt, pid, "enc_period_end", end)
+  if (!is.null(colnames_pattern_to_clear)) changeDataForPID(dt, pid, colnames_pattern_to_clear, NA)
+  changeDataForPID(dt, pid, "enc_meta_lastupdated", getDebugDatesRAWDateTime(-0.1))
+  return(dt)
+}
+
+setBedAndRoom <- function(dt, encounter_id, room, bed) {
+  dt[enc_id == encounter_id,
+     enc_location_identifier_value := paste0("[1.1.1.1]", room, " ~ [2.1.1.1]", bed)]
+  return(dt)
+}
+
+updateWard <- function(pids_per_wards, enc_id, ward_names, filter_val, filter_col = "patient_id") {
+  pids_per_wards[get(filter_col) == filter_val,
+                 `:=`(encounter_id = enc_id,
+                      ward_name    = ward_names)]
+  return(pids_per_wards)
+}
+
+finishAndStartEncounter <- function(dt_enc,
+                                    pid,
+                                    old_row_idx,
+                                    old_room, old_bed, old_end_offset,
+                                    new_row_idx,
+                                    new_enc_id, new_room, new_bed, new_start_offset) {
+  dt_enc <- updateEncounterStatus(dt_enc, pid, "finished")
+  dt_enc[old_row_idx, enc_location_identifier_value :=
+           paste0("[1.1.1.1]", old_room, " ~ [2.1.1.1]", old_bed)]
+  dt_enc[old_row_idx, enc_period_end := getDebugDatesRAWDateTime(old_end_offset)]
+
+  dt_enc[new_row_idx, `:=`(
+    enc_id = new_enc_id,
+    enc_status = "in-progress",
+    enc_location_identifier_value = paste0("[1.1.1.1]", new_room, " ~ [2.1.1.1]", new_bed),
+    enc_period_start = getDebugDatesRAWDateTime(new_start_offset),
+    enc_period_end = NA
+  )]
+
+  return(dt_enc)
+}
+
+#' Shift and Duplicate Encounters for Specific Patients
+#'
+#' This function duplicates rows in the encounter table (`dt_enc`) for certain
+#' patients or for all patients with encounter type "[1.1.1]versorgungsstellenkontakt".
+#' After duplication, non-"versorgungsstellenkontakt" encounters for those patients
+#' are removed. The patient table (`dt_pat`) is cleared.
+#'
+#' @param dt_enc data.table of encounters. Must contain columns `enc_type_code` and `enc_patient_ref`.
+#' @param dt_pat data.table of patients. Will be emptied in this function.
+#' @param patient_refs Optional character vector of patient references to duplicate. If NULL, all patients with
+#'   "[1.1.1]versorgungsstellenkontakt" encounters will be duplicated.
+#'
+#' @return A list with two elements:
+#'   - `dt_enc`: Modified encounter table after duplication and filtering.
+#'   - `dt_pat`: Empty patient table.
+#'
+truncateAndDuplicateEncounter <- function(dt_enc, patient_refs = NULL) {
+  # Determine how many times each row should be repeated
+  if (is.null(patient_refs)) {
+    # Duplicate only rows of type "[1.1.1]versorgungsstellenkontakt" for all patients
+    times_vec <- ifelse(dt_enc$enc_type_code == "[1.1.1]versorgungsstellenkontakt", 2, 1)
+  } else {
+    # Duplicate only matching rows for specified patient_refs
+    times_vec <- ifelse(
+      dt_enc$enc_type_code == "[1.1.1]versorgungsstellenkontakt" &
+        dt_enc$enc_patient_ref %in% patient_refs,
+      2,
+      1
+    )
+  }
+  # Duplicate rows according to times_vec
+  dt_enc <- dt_enc[rep(seq_len(.N), times = times_vec)]
+  # Identify patients who were duplicated
+  doubled_patients <- unique(dt_enc$enc_patient_ref[times_vec == 2])
+  # Remove all other encounters for these patients that are not "[1.1.1]versorgungsstellenkontakt"
+  dt_enc <- dt_enc[
+    !(enc_patient_ref %in% doubled_patients & enc_type_code != "[1.1.1]versorgungsstellenkontakt")
+  ]
+  # Return list with modified encounter table and empty patient table
+  return(dt_enc)
+}
+
+dischargeEncounter <- function(dt_enc, patient_id, enc_id, encounter_number, room, bed, debug_day) {
+  # Set all encounters of this patient to finished
+  dt_enc <- updateEncounterStatus(dt_enc, patient_id, "finished")
+
+  # Update matching encounter rows
+  dt_enc[grepl(paste0("^\\[1\\]", patient_id, "-E-", encounter_number), enc_id), `:=`(
+    enc_status = "finished",
+    enc_period_end = getDebugDatesRAWDateTime(-0.5)
+  )]
+  # Set room & bed for the specific Versorgungsstellenkontakt
+  dt_enc <- setBedAndRoom(dt_enc, enc_id, room, bed)
+  # Adjust start time for this contact
+  dt_enc <- dt_enc[enc_id == enc_id,
+                   enc_period_start := getDebugDatesRAWDateTime(-0.5, debug_day - 1)]
+
+  return(dt_enc)
+}
+
+startNewEncounter <- function(dt_enc, patient_id, encounter_number,
+                              room, bed, debug_day, start_offset = 0) {
+  # Construct encounter IDs
+  base_enc_id <- paste0("[1]", patient_id, "-E-", encounter_number)
+  abt_enc_id  <- paste0(base_enc_id, "-A-1")
+  vs_enc_id   <- paste0(abt_enc_id, "-V-1")
+
+  # Update encounter status (in-progress, with custom start offset)
+  dt_enc <- updateEncounterStatus(
+    dt_enc,
+    pid   = patient_id,
+    status = "in-progress",
+    start  = getDebugDatesRAWDateTime(-0.5, debug_day + start_offset),
+    end    = NA
+  )
+
+  # Replace enc_id (make sure new Encounter number is applied everywhere)
+  dt_enc <- dt_enc[, enc_id := gsub(paste0("\\[1\\]", patient_id, "-E-1"), base_enc_id, enc_id)]
+  # Set bed & room for Versorgungsstellenkontakt
+  dt_enc <- setBedAndRoom(dt_enc, vs_enc_id, room, bed)
+  # Update identifiers and references
+  dt_enc <- dt_enc[enc_id == base_enc_id,
+                   enc_identifier_value := paste0(patient_id, "-E-", encounter_number)]
+  dt_enc <- dt_enc[enc_id == abt_enc_id,
+                   enc_partof_ref := paste0("Encounter/", patient_id, "-E-", encounter_number)]
+  dt_enc <- dt_enc[enc_id == vs_enc_id,
+                   enc_partof_ref := paste0("Encounter/", abt_enc_id)]
+  return(dt_enc)
+}
