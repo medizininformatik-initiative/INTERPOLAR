@@ -7,11 +7,12 @@
 #' @param lock_id A character string specifying the lock ID for the database query.
 #'   This ensures safe access to the database during query execution and may support concurrent processing.
 #' @param table_name A character string specifying the name of the database table to query.
-#'   The table must contain at least the following columns: `pat_id`, `pat_identifier_value`,
+#'   The table must contain at least the following columns: `pat_id`, `pat_identifier_type_code`, `pat_identifier_value`,
 #'   `pat_birthdate`, `pat_gender` ,`pat_deceaseddatetime`, `pat_meta_lastupdated`, and `input_datetime`.
 #'
 #' @return A data frame containing:
 #'   - `pat_id`: Patient FHIR identifier
+#'   - `pat_identifier_type_code`: Type of identifier (should be MR for medical record number)
 #'   - `pat_identifier_value`: cis (hospital system) patient identifier
 #'   - `pat_birthdate`: Patient's birthdate (expected in `Date` format)
 #'   - `pat_gender`: patient's gender
@@ -23,8 +24,8 @@
 #' @details
 #' The function performs the following steps:
 #' 1. Executes a SQL query to retrieve required patient-related columns from the specified table.
-#' 2. Removes any exact duplicate rows from the result.
-#' 3. Sorts the data by `pat_id`.
+#' 2. Filters the results to include only rows where `pat_identifier_type_code` is "MR" (medical record number).
+#' 3. filters unique entries for the selected variables and sorts the data by `pat_id`.
 #' 4. Checks for potential duplicates in:
 #'    - `pat_id`: should uniquely identify patients in FHIR
 #'    - `pat_identifier_value`: should uniquely identify patients in the hospital system
@@ -34,11 +35,13 @@
 #' @export
 getPatientData <- function(lock_id, table_name) {
 
-  query <- paste0("SELECT pat_id, pat_identifier_value, pat_birthdate, pat_gender, ",
+  query <- paste0("SELECT pat_id, pat_identifier_type_code, pat_identifier_value, pat_birthdate, pat_gender, ",
   "pat_deceaseddatetime, ",
   "pat_meta_lastupdated, input_datetime FROM ", table_name, "\n")
 
   patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::filter(pat_identifier_type_code == "MR") |>
+    dplyr::select(-pat_identifier_type_code) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
 
