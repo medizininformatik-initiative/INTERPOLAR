@@ -2,6 +2,6 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @import data.table
+# #' @import data.table
 ## usethis namespace: end
 NULL

@@ -1,10 +1,10 @@
-#' Prepare F1 Dataset from FAS1
+#' Prepare F1 Dataset from Full Analysis Set 1 (FAS1)
 #'
-#' This function filters and prepares the F1 dataset from the FAS1 cohort. It identifies the first
+#' This function filters and prepares the F1 dataset from the Full Analysis Set 1 (FAS1) cohort. It identifies the first
 #' qualifying INTERPOLAR ward (as defined for the pids_per_ward table) contact per main encounter during the reporting period. It includes
 #' checks for data quality, such as missing start dates or duplicate entries with identical start dates.
 #'
-#' @param FAS1 A data frame or tibble representing the FAS1 dataset. It must include the following columns:
+#' @param full_analysis_set_1 A data frame or tibble representing the full_analysis_set_1 dataset. It must include the following columns:
 #'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `enc_identifier_value`, `pat_id`,
 #'   `pat_identifier_value`, `record_id`, `fall_id_cis`, `enc_type_code`,
 #'   `age_at_hospitalization`, `enc_period_start`, `calendar_week`, `enc_period_end`,
@@ -33,8 +33,8 @@
 #'
 #' @importFrom dplyr filter distinct select mutate across
 #' @export
-prepareF1data <- function(FAS1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
-  F1_prep_raw <- FAS1 |>
+prepareF1data <- function(full_analysis_set_1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
+  F1_prep_raw <- full_analysis_set_1 |>
     dplyr::filter(!is.na(ward_name)) |>  # only encounters with ward name
     dplyr::mutate(calendar_week = data.table::isoweek(enc_period_start), .after = enc_period_start) |> # add calendar week
     dplyr::distinct(enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,

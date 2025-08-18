@@ -62,6 +62,8 @@ calculateF1 <- function(F1_prep) {
 #' @param fe_summary_data A data frame prepared by `prepareFeSummaryData()` containing
 #'   deduplicated front-end data with patient, encounter, ward, and MRP-level variables.
 #'
+#' @param grouping_variables A character vector specifying the variables to group by.
+#'
 #' @return A data frame with summarized counts per `ward_name`, including a row for `"all"`.
 #'   The columns include:
 #'   - `patients`: Number of distinct patients

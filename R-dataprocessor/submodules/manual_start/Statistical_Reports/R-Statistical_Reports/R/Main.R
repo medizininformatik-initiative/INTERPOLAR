@@ -41,7 +41,7 @@
 #'       \item `mergePatFeFallFe()`, `addMedaData()`, `addEncIdToFeData()`, `addMRPDokuData()`
 #'     }
 #'
-#'   \item Defines the FAS1 base population with `defineFAS1()`
+#'   \item Defines the Full Analysis Set 1 (FAS1) base population with `defineFullAnalysisSet1()`
 #'
 #'   \item Prepares and calculates key F1 metrics:
 #'     \itemize{
@@ -61,7 +61,7 @@
 #' }
 #'
 #' @section Output:
-#' - **Local output**: `complete_FHIR_table`, `FAS1`, `report_data`, `complete_fe_table`, `fe_summary_data`
+#' - **Local output**: `complete_FHIR_table`, `full_analysis_set_1`, `report_data`, `complete_fe_table`, `fe_summary_data`
 #' - **Global output**:
 #'   \itemize{
 #'     \item `statistical_report`: F1 metrics with front-end add-ons
@@ -75,7 +75,7 @@
 #'
 #' @seealso
 #' [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
-#' [mergePatEnc()], [defineFAS1()], [prepareF1data()], [calculateF1()],
+#' [mergePatEnc()], [defineFullAnalysisSet1()], [prepareF1data()], [calculateF1()],
 #' [prepareFeSummaryData()], [calculateFeSummary()],
 #' [writeTableLocal()], [writeTableGlobal()]
 #'
@@ -84,13 +84,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
                                     REPORT_PERIOD_END = as.character(Sys.Date())) {
 
   if (!interactive()) {
-  named_args <- parse_named_args()
-  if ("REPORT_PERIOD_START" %in% names(named_args)) {
-    REPORT_PERIOD_START <- named_args[["REPORT_PERIOD_START"]]
-  }
-  if ("REPORT_PERIOD_END" %in% names(named_args)) {
-    REPORT_PERIOD_END <- named_args[["REPORT_PERIOD_END"]]
-  }
+    named_args <- parse_named_args()
+    if ("REPORT_PERIOD_START" %in% names(named_args)) {
+      REPORT_PERIOD_START <- named_args[["REPORT_PERIOD_START"]]
+    }
+    if ("REPORT_PERIOD_END" %in% names(named_args)) {
+      REPORT_PERIOD_END <- named_args[["REPORT_PERIOD_END"]]
+    }
   }
 
   print(paste0("Report period start: ", REPORT_PERIOD_START,
@@ -141,19 +141,19 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
     addEncIdToFeData(complete_FHIR_table) |>
     addMRPDokuData(mrp_dokumentation_validierung_fe_table)
 
-  FAS1 <- defineFAS1(complete_FHIR_table)
+  full_analysis_set_1 <- defineFullAnalysisSet1(complete_FHIR_table)
 
   fe_summary_data <- prepareFeSummaryData(complete_fe_table, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
-  report_data <- prepareF1data(FAS1, REPORT_PERIOD_START, REPORT_PERIOD_END) |>
+  report_data <- prepareF1data(full_analysis_set_1, REPORT_PERIOD_START, REPORT_PERIOD_END) |>
     addFeDataToF1data(fe_summary_data)
 
-  # FAS2_1 <- defineFAS2_1(FAS1, REPORT_PERIOD_END)
+  # FAS2_1 <- defineFAS2_1(full_analysis_set_1, REPORT_PERIOD_END)
   # F2_data <- prepareF2data(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
   # Print datasets for verification to outputLocal
   writeTableLocal(complete_FHIR_table)
-  writeTableLocal(FAS1)
+  writeTableLocal(full_analysis_set_1)
   writeTableLocal(report_data)
   writeTableLocal(complete_fe_table)
   writeTableLocal(fe_summary_data)
