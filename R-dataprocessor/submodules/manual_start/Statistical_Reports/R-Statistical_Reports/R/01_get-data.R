@@ -45,6 +45,10 @@ getPatientData <- function(lock_id, table_name) {
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
 
+  if (nrow(patient_table) == 0) {
+    stop("The patient table is empty. Please check the data.")
+  }
+
   if (checkMultipleRows(patient_table, c("pat_id"))) {
     stop("The patient table contains multiple rows for the same pat_id(FHIR). Please check the data.")
   }
@@ -125,6 +129,10 @@ getEncounterData <- function(lock_id, table_name) {
     dplyr::distinct() |>
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
 
+  if (nrow(encounter_table) == 0) {
+    stop("The encounter table is empty. Please check the data.")
+  }
+
   return(encounter_table)
 }
 
@@ -165,6 +173,10 @@ getPidsPerWardData <- function(lock_id, table_name) {
     dplyr::distinct() |>
     dplyr::arrange(patient_id, encounter_id, input_datetime)
 
+  if (nrow(pids_per_ward_table) == 0) {
+    stop("The pids_per_ward table is empty. Please check the data.")
+  }
+
   return(pids_per_ward_table)
 }
 
@@ -201,6 +213,10 @@ getPatientFeData <- function(lock_id, table_name) {
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
+
+  if (nrow(patient_fe_table) == 0) {
+    stop("The patient_fe table is empty. Please check the data.")
+  }
 
   if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
     stop("The patient_fe table contains multiple rows for the same pat_id(FHIR). Please check the data.")
@@ -263,6 +279,10 @@ getFallFeData <- function(lock_id, table_name) {
     dplyr::select(-input_datetime) |>
     dplyr::distinct()
 
+  if (nrow(fall_fe_table) == 0) {
+    stop("The fall_fe table is empty. Please check the data.")
+  }
+
   return(fall_fe_table)
 }
 
@@ -324,6 +344,10 @@ getMedikationsanalyseFeData <- function(lock_id, table_name) {
     dplyr::distinct() |>
     dplyr::arrange(record_id, fall_meda_id, meda_dat)
 
+  if (nrow(medikationsanalyse_fe_table) == 0) {
+    stop("The medikationsanalyse_fe table is empty. Please check the data.")
+  }
+
   return(medikationsanalyse_fe_table)
 }
 
@@ -378,5 +402,10 @@ getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
   mrp_dokumentation_validierung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id, mrp_meda_id, mrp_id)
+
+  if (nrow(mrp_dokumentation_validierung_fe_table) == 0) {
+    stop("The mrp_dokumentation_validierung_fe table is empty. Please check the data.")
+  }
+
   return(mrp_dokumentation_validierung_fe_table)
 }
