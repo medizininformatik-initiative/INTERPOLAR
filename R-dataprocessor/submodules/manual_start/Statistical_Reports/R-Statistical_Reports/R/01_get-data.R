@@ -108,21 +108,23 @@ getPatientData <- function(lock_id, table_name) {
 #' @export
 
 # TODO: check all variables in table _description_relevant for manifestations and importance to include them ------------
-
+# (bottom variables not in use)
+# TOASK: muss enc_identifier_value weiter gefiltern werden? (enc_identifier_type_code == "VN"?)---------
 getEncounterData <- function(lock_id, table_name) {
 
-  query <- paste0("SELECT enc_id, enc_identifier_value, ",
+  query <- paste0("SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, ",
+                  "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
+                  "input_datetime, ",
 
-                  "enc_patient_ref, enc_partof_ref, enc_class_system, enc_class_code, ",
-                  "enc_type_system, enc_type_code, enc_servicetype_system, enc_servicetype_code, ",
-                  "enc_period_start, enc_period_end, enc_status, ",
+                  "enc_class_system, enc_type_system, enc_servicetype_system, enc_servicetype_code, ",
                   "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
                   "enc_hospitalization_dischargedisposition_system, enc_hospitalization_dischargedisposition_code, ",
                   "enc_location_ref, enc_location_identifier_value, enc_location_status, ",
                   "enc_location_physicaltype_system, enc_location_physicaltype_code, ",
                   "enc_serviceprovider_identifier_type_system, enc_serviceprovider_identifier_type_code, ",
                   "enc_serviceprovider_identifier_system, enc_serviceprovider_identifier_value, ",
-                  "enc_meta_lastupdated, input_datetime ",
+                  "enc_meta_lastupdated ",
+
                   "FROM ", table_name, "\n")
 
   encounter_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
