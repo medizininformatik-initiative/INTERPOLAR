@@ -109,7 +109,7 @@ processData <- function(reset_lock_only = FALSE) {
 
     etlutils::runLevel2("Source function script", {
       source("./R-dataprocessor/dataprocessor/R/01_Shared_Functions.R")
-      source("./R-dataprocessor/dataprocessor/R/02_MRP_Functions.R")
+      source("./R-dataprocessor/dataprocessor/R/02_Input_Files_Functions.R")
     })
 
     etlutils::runLevel2("Run dataprocessor submodules", {

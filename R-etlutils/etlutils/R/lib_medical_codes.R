@@ -186,11 +186,11 @@ isATC7orSmaller <- function(codes) {
 #' @examples
 #' # Example usage:
 #' codes <- c("A01AB07", "B03AA02", "INVALID", NA)
-#' isATC7(codes)
+#' isATC(codes)
 #' # Returns: TRUE, TRUE, FALSE, NA
 #'
 #' @export
-isATC7 <- function(codes) {
+isATC <- function(codes) {
   ifelse(is.na(codes), NA, grepl(MED_CODES_PATTERN$ATC7, codes, perl = TRUE))
 }
 
@@ -202,8 +202,8 @@ isATC7 <- function(codes) {
 #'
 #' @return A logical vector indicating whether each code is a valid LOINC code.
 #'
-#' @details A valid LOINC code matches the pattern `^\d{1,5}-\d$`:
-#' - 1 to 5 digits
+#' @details A valid LOINC code matches the pattern `^\d{1,6}-\d$`:
+#' - 1 to 6 digits
 #' - Followed by a hyphen (`-`)
 #' - Ending with exactly 1 digit.
 #'
@@ -214,7 +214,7 @@ isATC7 <- function(codes) {
 #'
 #' @export
 isLOINC <- function(codes) {
-  ifelse(is.na(codes), NA, grepl("^\\d{1,5}-\\d$", codes, perl = TRUE))
+  ifelse(is.na(codes), NA, grepl("^\\d{1,6}-\\d$", codes, perl = TRUE))
 }
 
 ###########
@@ -263,4 +263,27 @@ catEmptyCodeWarnings <- function(list) {
   for (i in 1:length(list)) {
     if (nchar(c(list[i])) < 1) message('no valid code for ', paste0(sys.call()[-1], '$', names(list)[i]), ' found in assets/ALL-CODES.RData \n')
   }
+}
+
+#' Validate Codes in Specified Columns
+#'
+#' This function checks whether the values in specified columns of a data table
+#' are valid according to a given validator function, and returns invalid codes.
+#'
+#' @param dt A data.table containing the columns to validate.
+#' @param columns A character vector specifying the column names to check.
+#' @param validator_fn A function that takes a vector and returns TRUE/FALSE for each element.
+#'
+#' @return A named list of invalid codes per column (empty list if all valid).
+#' @export
+getInvalidCodes <- function(dt, columns, validator_fn) {
+  errors <- list()
+  for (column in columns) {
+    values <- dt[[column]]
+    invalid_codes <- values[!validator_fn(values) & !is.na(values)]
+    if (length(invalid_codes) > 0) {
+      errors[[column]] <- invalid_codes
+    }
+  }
+  return(errors)
 }

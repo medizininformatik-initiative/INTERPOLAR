@@ -1,8 +1,14 @@
+# Define the days count for this test
+DEBUG_DAYS_COUNT <- 2
+
 # Ein Patient, zur Testung der MRP Calculation
 # Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1, Bett 1, bekommt Medikamente + Diagnose + Medikationsanalyse
 # Ergebnis: 2x Drug-Disease-MRPs (Drug-Disease und Drug-DrugProxy) 1x Drug-Drug-MRP 1x Drug-DrugGroup-MRP
 # Tag 2: Versorgungsstellenkontakt wird entlassen
 if (exists("DEBUG_DAY")) {
+
+  # Load the necessary libraries
+  source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
 
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
@@ -30,6 +36,7 @@ if (exists("DEBUG_DAY")) {
   dt_medreq <- resource_tables[["MedicationRequest"]]
   dt_med <- resource_tables[["Medication"]]
   dt_con <- resource_tables[["Condition"]]
+  dt_obs <- resource_tables[["Observation"]]
 
   # Identify columns starting with "enc_diagnosis_" and "enc_servicetype_" as
   # vector of column names
@@ -115,6 +122,7 @@ if (exists("DEBUG_DAY")) {
         "[1]UKB-0001-M-1",
         "[1]UKB-0001-M-2",
         "[1]UKB-0001-M-3",
+        "[1]UKB-0001-M-8", #for LOINC-Proxy
         # Drug-Drug MRP
         "[1]UKB-0001-M-4",
         "[1]UKB-0001-M-5",
@@ -127,6 +135,7 @@ if (exists("DEBUG_DAY")) {
         "[1.1.1]14022620 ~ [1.2.1]A10BA02",
         "[1.1.1]14022620 ~ [1.2.1]N07BB03",
         "[1.1.1]14022620 ~ [1.2.1]N02AA01",
+        "[1.1.1]14022620 ~ [1.2.1]C02KX01", # for LOINC-Proxy
         # Drug-Drug MRP
         "[1.1.1]14022620 ~ [1.2.1]N06AX22",
         "[1.1.1]14022620 ~ [1.2.1]J01MA02",
@@ -147,14 +156,17 @@ if (exists("DEBUG_DAY")) {
       data.table(
         medreq_id = c("[1]UKB-0001-MR-1", "[1]UKB-0001-MR-2", "[1]UKB-0001-MR-3"),
         medreq_patient_ref = "[1.1]Patient/UKB-0001",
+        medreq_encounter_ref = "[1.1]Encounter/UKB-0001-E-1",
         medreq_medicationreference_ref = c(
           "[1]Medication/UKB-0001-M-1",
           "[1]Medication/UKB-0001-M-2",
-          "[1]Medication/UKB-0001-M-3"
+          "[1]Medication/UKB-0001-M-3",
+          "[1]Medication/UKB-0001-M-8"
         ),
         medreq_doseinstruc_timing_repeat_boundsperiod_start = c(
           getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.8),
           getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.7),
+          getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.6),
           getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.6)
         )
       ),
@@ -162,6 +174,7 @@ if (exists("DEBUG_DAY")) {
       data.table(
         medreq_id = c("[1]UKB-0001-MR-4", "[1]UKB-0001-MR-5"),
         medreq_patient_ref = "[1.1]Patient/UKB-0001",
+        medreq_encounter_ref = "[1.1]Encounter/UKB-0001-E-1",
         medreq_medicationreference_ref = c(
           "[1]Medication/UKB-0001-M-4",
           "[1]Medication/UKB-0001-M-5"
@@ -177,6 +190,7 @@ if (exists("DEBUG_DAY")) {
       data.table(
         medreq_id = c("[1]UKB-0001-MR-6", "[1]UKB-0001-MR-7"),
         medreq_patient_ref = "[1.1]Patient/UKB-0001",
+        medreq_encounter_ref = "[1.1]Encounter/UKB-0001-E-1",
         medreq_medicationreference_ref = c(
           "[1]Medication/UKB-0001-M-6",
           "[1]Medication/UKB-0001-M-7"
@@ -192,7 +206,7 @@ if (exists("DEBUG_DAY")) {
     dt_medreq <- rbind(dt_medreq, medreq_data, fill = TRUE)
 
 
-    # Add Contion table for Drug-Disease MRP
+    # Add Condition table for Drug-Disease MRP
     dt_con <- dt_con[1,] # keep only one row
     dt_con[nrow(dt_con), `:=`(
       con_id = "[1]UKB-0001-C-2",
@@ -201,6 +215,43 @@ if (exists("DEBUG_DAY")) {
       con_recordeddate = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.7),
       con_onsetperiod_start = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.7)
     )]
+
+    # Add Observation table for Drug-Disease MRP
+    new_obs_values <- list(
+      list(
+        obs_id = "[1]UKB-0001-O-1",
+        obs_patient_ref = "[1.1]Patient/UKB-0001",
+        obs_code_code = "[1.1.1]1920-8",
+        obs_valuequantity_value = "[1.1]9",
+        obs_valuequantity_unit = "[1.1]ukat/L",
+        obs_referencerange_low_value = "[1.1]1",
+        obs_referencerange_high_value = "[1.1]2",
+        obs_effectivedatetime = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.7)
+      ),
+      list(
+        obs_id = "[1]UKB-0001-O-2",
+        obs_patient_ref = "[1.1]Patient/UKB-0001",
+        obs_code_code = "[1.1.1]14631-6",
+        obs_valuequantity_value = "[1.1]0.3",
+        obs_valuequantity_unit = "[1.1]ukat/L",
+        obs_referencerange_low_value = "[1.1]1",
+        obs_referencerange_high_value = "[1.1]2",
+        obs_effectivedatetime = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.6)
+      )
+    )
+
+    for (num in 1:2) {
+      dt_obs[num, `:=`(
+        obs_id = new_obs_values[[num]]$obs_id,
+        obs_patient_ref = new_obs_values[[num]]$obs_patient_ref,
+        obs_code_code = new_obs_values[[num]]$obs_code_code,
+        obs_valuequantity_value = new_obs_values[[num]]$obs_valuequantity_value,
+        obs_valuequantity_unit = new_obs_values[[num]]$obs_valuequantity_unit,
+        obs_referencerange_low_value = new_obs_values[[num]]$obs_referencerange_low_value,
+        obs_referencerange_high_value = new_obs_values[[num]]$obs_referencerange_high_value,
+        obs_effectivedatetime = new_obs_values[[num]]$obs_effectivedatetime
+      )]
+    }
 
     #########################################################
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-1-A-1-V-1",
@@ -240,6 +291,7 @@ if (exists("DEBUG_DAY")) {
   resource_tables[["MedicationRequest"]] <- dt_medreq
   resource_tables[["Medication"]] <- dt_med
   resource_tables[["Condition"]] <- dt_con
+  resource_tables[["Observation"]] <- dt_obs
   resource_tables[["pids_per_ward"]] <- pids_per_wards
 
 }

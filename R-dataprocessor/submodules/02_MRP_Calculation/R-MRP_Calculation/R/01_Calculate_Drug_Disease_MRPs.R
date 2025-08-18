@@ -6,7 +6,7 @@
 #' primary ATC codes, condition codes (ICD), proxy rules, and laboratory proxies (LOINC).
 #'
 #' @return A named character vector of column names relevant to Drug-Disease MRP definitions.
-getPairListColumnNamesDrugDisease <- function() {
+getRelevantColumnNamesDrugDisease <- function() {
   etlutils::namedVectorByValue(
     #"SMPC_NAME",
     #"SMPC_VERSION",
@@ -53,10 +53,10 @@ getCategoryDisplayDrugDisease <- function() {"Drug-Disease"}
 #' @return A cleaned and expanded data.table containing the MRP definition table.
 #'
 #' @export
-cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, mrp_type) {
+processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type) {
 
   # Remove not nesessary columns
-  mrp_columnnames <- getPairListColumnNames(mrp_type)
+  mrp_columnnames <- getRelevantColumnNames(mrp_type)
   drug_disease_mrp_definition <- drug_disease_mrp_definition[, ..mrp_columnnames]
 
   # Remove rows with all empty code columns
@@ -82,6 +82,8 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, mrp
   )
 
   code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
+  # Create a new column for the full ICD list
+  drug_disease_mrp_definition[, ICD_FULL_LIST := ICD]
   # SPLIT and TRIM: ICD and proxy column:
   # split the whitespace separated lists in ICD and proxy columns in a single row per code
   drug_disease_mrp_definition <- etlutils::splitColumnsToRows(drug_disease_mrp_definition, code_column_names)
@@ -107,15 +109,16 @@ cleanAndExpandDefinitionDrugDisease <- function(drug_disease_mrp_definition, mrp
   }
 
   # check column ATC and ATC_PROXY for correct ATC codes
-  atc_columns <- grep("ATC(?!.*(DISPLAY|INCLUSION|VALIDITY_DAYS))", names(drug_disease_mrp_definition), value = TRUE, perl = TRUE)
-  atc_errors <- validateATCCodes(drug_disease_mrp_definition, atc_columns)
+  invalid_atcs <- etlutils::getInvalidCodes(drug_disease_mrp_definition, "ATC_FOR_CALCULATION", etlutils::isATC)
+  invalid_atcs_proxy <- etlutils::getInvalidCodes(drug_disease_mrp_definition, "ICD_PROXY_ATC", etlutils::isATC7orSmaller)
 
   # check column LOINC_PROXY for correct LOINC codes
-  loinc_errors <- validateLOINCCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY")
+  invalid_loincs <- etlutils::getInvalidCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY", etlutils::isLOINC)
 
   error_messages <- c(
-    formatCodeErrors(atc_errors, "ATC"),
-    formatCodeErrors(loinc_errors, "LOINC")
+    formatCodeErrors(invalid_atcs, "ATC"),
+    formatCodeErrors(invalid_atcs_proxy, "ATC_PROXY"),
+    formatCodeErrors(invalid_loincs, "LOINC")
   )
 
   if (length(error_messages) > 0) {
@@ -301,14 +304,136 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
   return(data.table::rbindlist(matched_rows, fill = TRUE))
 }
 
-#' Match ICD Proxies Using ATC and OPS Codes
+#' Match LOINC Cutoff Reference Against Observation Values
 #'
-#' This function analyzes a patient's medication and procedure data to infer ICD diagnoses
+#' This function checks whether any laboratory observation exceeds or falls below
+#' a defined cutoff threshold as specified in the `LOINC_CUTOFF_REFERENCE` field
+#' from drug–disease MRP (medication risk profile) proxy rules.
+#'
+#' Supported `cutoff_reference` formats include:
+#' \itemize{
+#'   \item `"> ULN"` — greater than upper limit of normal
+#'   \item `"< LLN"` — less than lower limit of normal
+#'   \item `">= 3*ULN"` — greater than or equal to three times ULN
+#'   \item `"< 2*LLN"` — less than two times LLN
+#' }
+#'
+#' The function parses the cutoff expression into an operator, an optional multiplier,
+#' and a reference bound (`ULN` or `LLN`). It then evaluates whether any observation
+#' matches this condition.
+#'
+#' @param observation_resources A `data.table` of lab observations with the columns:
+#'   \describe{
+#'     \item{code}{LOINC code of the observation}
+#'     \item{value}{The measured lab value}
+#'     \item{unit}{Unit of the measurement}
+#'     \item{referenceRangeLow}{Lower reference bound (LLN)}
+#'     \item{referenceRangeHigh}{Upper reference bound (ULN)}
+#'     \item{start_date}{Date/time of observation}
+#'   }
+#' @param match_proxy_row A single-row `data.table` from the drug–disease proxy table
+#'   containing at least the column `LOINC_CUTOFF_REFERENCE`.
+#' @param additional_table A lookup `data.table` containing LOINC metadata, including
+#'   columns:
+#'   \describe{
+#'     \item{LOINC}{LOINC code}
+#'     \item{GERMAN_NAME_LOINC_PRIMARY}{German display name of the LOINC}
+#'   }
+#'
+#' @return A character string describing the match if the cutoff was met, otherwise `NA_character_`.
+#'
+matchLOINCCutoff <- function(observation_resources, match_proxy_row, additional_table) {
+  match_description <- NA_character_
+  cutoff_reference <- match_proxy_row$LOINC_CUTOFF_REFERENCE
+  cutoff_reference <- trimws(cutoff_reference)
+
+  if (!is.na(cutoff_reference) && cutoff_reference != "") {
+    # Parse the cutoff string into its components: operator, multiplier, and ULN/LLN
+    # Possible cutoff formats: "> ULN", "< LLN", ">= 3*ULN", "<= 2*LLN"
+    parseCutoff <- function(cutoff) {
+      # Result are the parts in the round brackets
+      pattern <- "^([<>]=?)\\s*(\\d*\\.?\\d*)\\*?\\s*(ULN|LLN)$"
+      matches <- regexec(pattern, cutoff)
+      parts <- regmatches(cutoff, matches)[[1]]
+
+      # 1= full string, 2= operator, 3= multiplier, 4= ULN/LLN
+      if (length(parts) == 4) {
+        operator <- parts[2]
+        multiplier <- as.numeric(ifelse(parts[3] == "", 1, parts[3]))
+        reference <- parts[4]
+        list(operator = operator, multiplier = multiplier, reference = reference)
+      }
+    }
+
+    # Get parsed cutoff components
+    cutoff <- parseCutoff(cutoff_reference)
+    if (!is.null(cutoff)) {
+      # Determine which column to use as the reference limit
+      reference_col <- if (cutoff$reference == "ULN") {
+        "referenceRangeHigh"
+      } else if (cutoff$reference == "LLN") {
+        "referenceRangeLow"
+      } else {
+        NA  # Invalid reference keyword
+      }
+
+      if(!is.na(reference_col)) {
+        # Filter only valid observation rows (non-NA values)
+        obs <- observation_resources[!is.na(value) & !is.na(get(reference_col))]
+
+        if (nrow(obs)) {
+          # Calculate the threshold based on the multiplier
+          threshold <- obs[[reference_col]] * cutoff$multiplier
+
+          # Vectorized comparison of lab values to threshold using specified operator
+          match_found <- switch(
+            cutoff$operator,
+            ">"  = obs$value >  threshold,
+            ">=" = obs$value >= threshold,
+            "<"  = obs$value <  threshold,
+            "<=" = obs$value <= threshold,
+            rep(FALSE, nrow(obs))  # fallback for unknown operator
+          )
+
+          match_found <- ifelse(is.na(match_found), FALSE, match_found)
+
+          if (any(match_found)) {
+
+            cutoff_description <- list(
+              matched_values = obs$value[match_found],
+              matched_code = obs$code[match_found],
+              matched_unit = obs$unit[match_found],
+              matched_start_date = obs$start_date[match_found],
+              matched_referenceRangeLow = obs$referenceRangeLow[match_found],
+              matched_referenceRangeHigh = obs$referenceRangeHigh[match_found],
+              operator = cutoff$operator,
+              multiplier = cutoff$multiplier,
+              reference = cutoff$reference
+            )
+
+            loinc_description <- additional_table$processed_content[LOINC == cutoff_description$matched_code, GERMAN_NAME_LOINC_PRIMARY]
+            # Create a description of the match
+            match_description <- paste0("Beim Laborparameter ", loinc_description, " (", cutoff_description$matched_code,
+                                        ") wurde gemessen: \n ", "Wert: ", cutoff_description$matched_values, " (",
+                                        cutoff_description$matched_unit,") \n", "Referenbereich: ", cutoff_description$matched_referenceRangeLow,
+                                        " - ", cutoff_description$matched_referenceRangeHigh, " \n ",
+                                        "Zeitpunkt: ", cutoff_description$matched_start_date)
+          }
+        }
+      }
+    }
+  }
+  return(match_description)
+}
+
+#' Match ICD Proxies Using ATC, OPS, and LOINC Codes
+#'
+#' This function analyzes a patient's medication, procedure, and observation data to infer ICD diagnoses
 #' based on proxy rules defined in drug-disease MRP (medication risk profile) tables. These rules
-#' define ATC (Anatomical Therapeutic Chemical) or OPS (Operationen- und Prozedurenschlüssel, i.e. German procedure)
-#' codes as proxies for ICD diagnoses.
+#' define ATC (Anatomical Therapeutic Chemical), OPS (Operationen- und Prozedurenschlüssel, i.e. German procedure),
+#' or LOINC (Logical Observation Identifiers Names and Codes) codes as proxies for ICD diagnoses.
 #'
-#' The function evaluates whether proxy events (e.g., medication or procedure entries) occurred within
+#' The function evaluates whether proxy events (e.g., medication, procedure, or lab measurement entries) occurred within
 #' a rule-defined time window relative to a reference datetime. Matching proxies are returned
 #' as suggested ICD codes with context descriptions.
 #'
@@ -316,19 +441,32 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 #'   - `medication_requests`
 #'   - `medication_statements`
 #'   - `medication_administrations`
-#'   Each must include columns `atc_code` and `start_date`.
+#'   Each must include columns `atc_code`, `start_date`, and optionally `end_date`.
 #'
 #' @param procedure_resources A `data.table` containing procedures with columns:
 #'   - `proc_code_code`: the OPS code
 #'   - `start_date`: date of the procedure
+#'   - `end_date`: optional end date of the procedure
+#'
+#' @param observation_resources A `data.table` containing lab or observation data with columns:
+#'   - `obs_code_code`: the LOINC code
+#'   - `obs_valuequantity_value`: measured value
+#'   - `obs_valuequantity_unit`: measurement unit
+#'   - `obs_referencerange_low_value` / `obs_referencerange_high_value`: reference range
+#'   - `start_date`: date of measurement
+#'   - `end_date`: optional end date
 #'
 #' @param drug_disease_mrp_tables_by_atc_proxy A named list of `data.table`s, one per ATC code,
-#'   containing MRP rules. Each table should include the columns: `ICD`, `ICD_PROXY_ATC`,
+#'   containing MRP rules. Each table should include: `ICD`, `ICD_PROXY_ATC`,
 #'   `ICD_PROXY_ATC_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
 #'
 #' @param drug_disease_mrp_tables_by_ops_proxy A named list of `data.table`s, one per OPS code,
 #'   containing MRP rules. Each table should include: `ICD`, `ICD_PROXY_OPS`,
 #'   `ICD_PROXY_OPS_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
+#'
+#' @param drug_disease_mrp_tables_by_loinc_proxy A named list of `data.table`s, one per LOINC code,
+#'   containing MRP rules. Each table should include: `ICD`, `LOINC_PRIMARY_PROXY`,
+#'   `LOINC_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
 #'
 #' @param meda_datetime A `Date` or `POSIXct` object representing the reference datetime
 #'   for evaluating proxy validity windows.
@@ -336,12 +474,18 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 #' @param match_atc_codes A character vector of ATC codes that are being evaluated (e.g.,
 #'   medication in question triggering the contraindication check).
 #'
+#' @param loinc_matching_function A function used for additional matching logic when evaluating LOINC proxies.
+#'   It must accept arguments `observation_resources`, `match_proxy_row`, and `additional_table`
+#'   and return either `NA` (no match) or a character description of the match reasoning.
+#'
+#' @param loinc_mapping_table A `data.table` containing metadata for LOINC codes (e.g., German names).
+#'
 #' @return A `data.table` of inferred ICD proxies with columns:
 #' \describe{
 #'   \item{icd_code}{The ICD code inferred via proxy}
 #'   \item{atc_code}{The ATC code evaluated (from the rule)}
-#'   \item{proxy_code}{The matching ATC or OPS proxy code that triggered the inference}
-#'   \item{proxy_type}{One of `"ATC"` or `"OPS"`}
+#'   \item{proxy_code}{The matching ATC, OPS, or LOINC proxy code that triggered the inference}
+#'   \item{proxy_type}{One of `"ATC"`, `"OPS"`, or `"LOINC"`}
 #'   \item{kurzbeschr}{A short German description of the match reasoning}
 #' }
 #'
@@ -350,57 +494,95 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 #' - Only rules with a valid, non-empty proxy field are evaluated.
 #' - Validity periods can be numerical (in days) or `"unbegrenzt"` (no time restriction).
 #' - Matching is performed via `grepl` with `fixed = TRUE` for proxy codes.
+#' - For LOINC proxies, an additional matching function can refine matches based on lab values and reference ranges.
 #'
 matchICDProxies <- function(
     medication_resources,
     procedure_resources,
+    observation_resources,
     drug_disease_mrp_tables_by_atc_proxy,
     drug_disease_mrp_tables_by_ops_proxy,
+    drug_disease_mrp_tables_by_loinc_proxy,
     meda_datetime,
-    match_atc_codes
+    match_atc_codes,
+    loinc_matching_function,
+    loinc_mapping_table
 ) {
-  matchProxy <- function(all_items, proxy_table_list, proxy_type, code_column, rule_proxy_col, rule_validity_col) {
-    matched <- list()
+  matchProxy <- function(all_items, proxy_tables, proxy_type, code_column, proxy_col_name, validity_days_col_name, additional_matching_function = NULL, additional_table = NULL) {
+    mrp_matches <- list()
     used_codes <- unique(all_items[!is.na(code), code])
-    matching_proxies <- intersect(names(proxy_table_list), used_codes)
+    matching_proxies <- names(proxy_tables)[
+      vapply(names(proxy_tables), function(key) {
+        any(startsWith(used_codes, key))
+      }, logical(1))
+    ]
 
     for (proxy_code in matching_proxies) {
-      rules <- proxy_table_list[[proxy_code]]
-      rules <- rules[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(rule_proxy_col)) & get(rule_proxy_col) != ""]
+      single_proxy_sub_table <- proxy_tables[[proxy_code]]
+      match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(proxy_col_name)) & get(proxy_col_name) != ""]
+
+      match_proxy_rows[, ICD := NA_character_]
+      match_proxy_rows <- unique(match_proxy_rows)
 
       recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
       if (nrow(recources_with_proxy)) {
-        for (i in seq_len(nrow(rules))) {
-          rule <- rules[i]
 
-          validity <- rule[[rule_validity_col]]
-          fallback_validity <- rule$ICD_VALIDITY_DAYS
-          validity <- if (!is.na(validity) && trimws(validity) != "") validity else fallback_validity
-          validity_days <- as.integer(validity)
+        for (i in seq_len(nrow(match_proxy_rows))) {
+          match_proxy_row <- match_proxy_rows[i]
+          proxy_validity_days <- match_proxy_row[[validity_days_col_name]]
+          fallback_validity_days <- match_proxy_row$ICD_VALIDITY_DAYS
+          validity_days <- if (!is.na(proxy_validity_days) && trimws(proxy_validity_days) != "") proxy_validity_days else fallback_validity_days
+          validity_days <- suppressWarnings(as.integer(validity_days))
+          # All non integer values are considered as unlimited validity duration
           if (is.na(validity_days)) {
             validity_days <- .Machine$integer.max
           }
 
-          match_found <- any(recources_with_proxy$start_date <= meda_datetime & (is.na(recources_with_proxy$end_date) | recources_with_proxy$end_date + validity_days >= meda_datetime))
+          valid_proxy_rows <- recources_with_proxy[
+            start_date <= meda_datetime &
+              (is.na(end_date) | end_date + validity_days >= meda_datetime)
+          ]
 
-          if (match_found) {
-            matched[[length(matched) + 1]] <- data.table::data.table(
-              icd_code = rule$ICD,
-              atc_code = rule$ATC_FOR_CALCULATION,
+          mrp_match_description <- NA
+          if (nrow(valid_proxy_rows) && !is.null(additional_matching_function)) {
+            # Call the external custom function
+            mrp_match_description <- additional_matching_function(
+              observation_resources = valid_proxy_rows,
+              match_proxy_row = match_proxy_row,
+              additional_table = additional_table
+            )
+            # If the matching function returns NA, skip this proxy match
+            if (is.na(mrp_match_description)) {
+              valid_proxy_rows <- valid_proxy_rows[0]
+            }
+          }
+          if (nrow(valid_proxy_rows)) {
+            kurzbeschr <- sprintf(paste0(
+              "%s (%s) ist bei %s kontrainduziert.\n",
+              "%s ist als %s-Proxy für %s verwendet worden.\n",
+              "\n",
+              "Komplette Liste der ICD Codes die der Proxy-Code bedeuten kann: \n",
+              "%s"),
+              match_proxy_row$ATC_DISPLAY, match_proxy_row$ATC_FOR_CALCULATION,
+              match_proxy_row$CONDITION_DISPLAY_CLUSTER, proxy_code, proxy_type,
+              match_proxy_row$CONDITION_DISPLAY_CLUSTER, match_proxy_row$ICD_FULL_LIST)
+
+            if(!is.na(mrp_match_description)) {
+              kurzbeschr <- paste(kurzbeschr, mrp_match_description, sep = "\n")
+            }
+
+            mrp_matches[[length(mrp_matches) + 1]] <- data.table::data.table(
+              icd_code = match_proxy_row$ICD,
+              atc_code = match_proxy_row$ATC_FOR_CALCULATION,
               proxy_code = proxy_code,
               proxy_type = proxy_type,
-              kurzbeschr = sprintf(
-                "%s (%s) ist bei %s (%s) kontrainduziert.\n%s ist als %s-Proxy für %s verwendet worden.",
-                rule$ATC_DISPLAY, rule$ATC_FOR_CALCULATION,
-                rule$CONDITION_DISPLAY_CLUSTER, rule$ICD,
-                proxy_code, proxy_type, rule$ICD
-              )
+              kurzbeschr = kurzbeschr
             )
           }
         }
       }
     }
-    return(matched)
+    return(mrp_matches)
   }
 
   #  Combine all medication rows
@@ -410,31 +592,43 @@ matchICDProxies <- function(
     medication_resources$medication_administrations[, .(code = atc_code, start_date, end_date)],
     fill = TRUE
   )
-
   #  Combine all procedures rows
   all_procedures <- procedure_resources[, .(code = proc_code_code, start_date, end_date)]
-
+  #  Combine all observation rows
+  all_observations <- observation_resources[, .(code = obs_code_code, value = obs_valuequantity_value,
+                                                unit = obs_valuequantity_unit, referenceRangeLow = obs_referencerange_low_value,
+                                                referenceRangeHigh = obs_referencerange_high_value, start_date = start_date, end_date = as.Date(NA))]
   # ATC-Proxy-Matching
   atc_matches <- matchProxy(
     all_items = all_medications,
-    proxy_table_list = drug_disease_mrp_tables_by_atc_proxy,
+    proxy_tables = drug_disease_mrp_tables_by_atc_proxy,
     proxy_type = "ATC",
     code_column = "code",
-    rule_proxy_col = "ICD_PROXY_ATC",
-    rule_validity_col = "ICD_PROXY_ATC_VALIDITY_DAYS"
+    proxy_col_name = "ICD_PROXY_ATC",
+    validity_days_col_name = "ICD_PROXY_ATC_VALIDITY_DAYS"
   )
-
   # OPS-Proxy-Matching
   ops_matches <- matchProxy(
     all_items = all_procedures,
-    proxy_table_list = drug_disease_mrp_tables_by_ops_proxy,
+    proxy_tables = drug_disease_mrp_tables_by_ops_proxy,
     proxy_type = "OPS",
     code_column = "code",
-    rule_proxy_col = "ICD_PROXY_OPS",
-    rule_validity_col = "ICD_PROXY_OPS_VALIDITY_DAYS"
+    proxy_col_name = "ICD_PROXY_OPS",
+    validity_days_col_name = "ICD_PROXY_OPS_VALIDITY_DAYS"
+  )
+  # LOINC-Proxy-Matching
+  loinc_matches <- matchProxy(
+    all_items = all_observations,
+    proxy_tables = drug_disease_mrp_tables_by_loinc_proxy,
+    proxy_type = "LOINC",
+    code_column = "code",
+    proxy_col_name = "LOINC_PRIMARY_PROXY",
+    validity_days_col_name = "LOINC_VALIDITY_DAYS",
+    additional_matching_function = loinc_matching_function,
+    additional_table = loinc_mapping_table
   )
 
-  return(data.table::rbindlist(c(atc_matches, ops_matches), fill = TRUE))
+  return(data.table::rbindlist(c(atc_matches, ops_matches, loinc_matches), fill = TRUE))
 }
 
 #' Split Drug-Disease MRP Table into Lookup Structures
@@ -460,7 +654,8 @@ getSplittedMRPTablesDrugDisease <- function(drug_disease_mrp_tables) {
     by_atc = etlutils::splitTableToList(drug_disease_mrp_table_content, "ATC_FOR_CALCULATION"),
     by_icd = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD"),
     by_atc_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD_PROXY_ATC"),
-    by_ops_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD_PROXY_OPS")
+    by_ops_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "ICD_PROXY_OPS"),
+    by_loinc_proxy = etlutils::splitTableToList(drug_disease_mrp_table_content, "LOINC_PRIMARY_PROXY")
   )
 }
 
@@ -479,6 +674,7 @@ getSplittedMRPTablesDrugDisease <- function(drug_disease_mrp_tables) {
 #' @return A \code{data.table} containing matched Drug-Disease MRPs, including both direct and proxy-based findings.
 #'
 calculateMRPsDrugDisease <- function(active_requests, splitted_mrp_tables, resources, patient_id, meda_datetime) {
+  loinc_mapping <- getLOINCMapping()
   match_atc_and_icd_codes <- data.table::data.table()
   # Match ATC-codes between encounter data and MRP definitions
   match_atc_codes <- matchATCCodes(active_requests, splitted_mrp_tables$by_atc)
@@ -499,7 +695,6 @@ calculateMRPsDrugDisease <- function(active_requests, splitted_mrp_tables, resou
 
     if (nrow(unmatched_atcs)) {
       # No ICD matches found, check ATC and OPS Proxys for ICDs
-
       patient_ref <- paste0("Patient/", patient_id)
       match_icd_proxies <- matchICDProxies(
         medication_resources = list(
@@ -508,10 +703,14 @@ calculateMRPsDrugDisease <- function(active_requests, splitted_mrp_tables, resou
           medication_administrations = resources$medication_administrations[medadm_patient_ref %in% patient_ref]
         ),
         procedure_resources = resources$procedures[proc_patient_ref %in% patient_ref],
+        observation_resources = resources$observations[obs_patient_ref %in% patient_ref],
         drug_disease_mrp_tables_by_atc_proxy = splitted_mrp_tables$by_atc_proxy,
         drug_disease_mrp_tables_by_ops_proxy = splitted_mrp_tables$by_ops_proxy,
+        drug_disease_mrp_tables_by_loinc_proxy = splitted_mrp_tables$by_loinc_proxy,
         meda_datetime = meda_datetime,
-        match_atc_codes = unmatched_atcs$atc_code
+        match_atc_codes = unmatched_atcs$atc_code,
+        loinc_matching_function = matchLOINCCutoff,
+        loinc_mapping_table = loinc_mapping
       )
       if (nrow(match_icd_proxies)) {
         match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)

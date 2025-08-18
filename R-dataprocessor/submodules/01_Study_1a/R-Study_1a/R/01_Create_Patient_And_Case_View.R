@@ -519,15 +519,15 @@ createFrontendTables <- function() {
         fall_additional_values <- ""
 
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             unique(pids_per_ward_encounters$encounter_id),
+                                                             sort(unique(pids_per_ward_encounters$encounter_id)),
                                                              key = "pids_per_ward_encounters",
                                                              comment = "FHIR ID of all Encounters of this medical case that were in the pids_per_ward table")
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             pid_main_encounter_ids,
+                                                             sort(pid_main_encounter_ids),
                                                              key = "main_encounters",
                                                              comment = "FHIR ID of all main Encounter(s) for the medical case (should be exactly one)")
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             unique(pid_part_of_encounters$enc_id),
+                                                             sort(unique(pid_part_of_encounters$enc_id)),
                                                              key = "part_encounters",
                                                              comment = "FHIR ID of all Encounters for the medical case at this point which are not the main Encounter")
         data.table::set(enc_frontend_table, target_index, "fall_additional_values", fall_additional_values)
