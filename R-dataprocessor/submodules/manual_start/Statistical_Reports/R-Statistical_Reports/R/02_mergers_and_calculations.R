@@ -35,6 +35,7 @@ mergePatEnc <- function(patient_table, encounter_table) {
       enc_identifier_value,
       pat_id,
       pat_identifier_value,
+      enc_identifier_type_code,
       enc_partof_ref,
       enc_class_code,
       enc_type_code,
@@ -70,6 +71,8 @@ mergePatEnc <- function(patient_table, encounter_table) {
 #'
 #' - If `enc_period_end` is `NA` and `enc_status` is `"in-progress"`, then
 #'   `curated_enc_period_end` is set to the current system date (`Sys.Date()`).
+#' - If `enc_period_end` is `NA` and `enc_status` is `"onleave"`, then
+#'  `curated_enc_period_end` is set to `enc_period_start`.
 #' - Otherwise, `curated_enc_period_end` takes the value of `enc_period_end`.
 #'
 #' @importFrom dplyr mutate case_when relocate
@@ -79,9 +82,14 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
   encounter_table_with_curated_enc_period_end <- encounter_table |>
     dplyr::mutate(curated_enc_period_end = dplyr::case_when(
       is.na(enc_period_end) & enc_status == "in-progress" ~ Sys.time(),
+      is.na(enc_period_end) & enc_status == "onleave" ~ enc_period_start,
       TRUE ~ enc_period_end
     )) |>
     dplyr::relocate(curated_enc_period_end, .after = enc_period_end)
+
+  if(any(is.na(encounter_table_with_curated_enc_period_end$curated_enc_period_end))) {
+    stop("There are NA values in curated_enc_period_end. Please check the data.")
+  }
 
   return(encounter_table_with_curated_enc_period_end)
 }
@@ -133,6 +141,13 @@ addMainEncId <- function(encounter_table) {
                        dplyr::distinct(enc_id, enc_identifier_value)),
                        c("enc_identifier_value"))) {
     stop("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value. Main_enc_id not defined. Please check the data.")
+  }
+
+  if(checkMultipleRows((encounter_table |>
+                        dplyr::filter(enc_type_code == "einrichtungskontakt") |>
+                        dplyr::distinct(enc_id, enc_identifier_value)),
+                       c("enc_id"))) {
+    stop("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id. Main_enc_id not defined. Please check the data.")
   }
 
   encounter_table_with_main_enc <- encounter_table |>
@@ -489,7 +504,9 @@ addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1)
                                          fall_station == ward_name,
                                          fall_aufn_dat == main_enc_period_start,
                                          dplyr::between(meda_dat,
-                                                        enc_period_start, curated_enc_period_end))) |>
+                                                        enc_period_start,
+                                                        curated_enc_period_end
+                                                        ))) |>
     dplyr::filter(!(is.na(enc_id) & !is.na(meda_id))) |>
     dplyr::distinct() |>
     dplyr::relocate(enc_id, enc_period_start, curated_enc_period_end, enc_status, .after = fall_aufn_dat)

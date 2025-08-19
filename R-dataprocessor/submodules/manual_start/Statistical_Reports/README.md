@@ -41,7 +41,12 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 -   die Kontaktebenen eines Falls sind über partOf-Beziehungen verknüpft; falls nicht müssen alle Encounter-Ressourcen eines Falles den selben enc_identifier_value haben
 -   über Patient.indentifier.type.coding.code(FHIR) bzw. pat_identifier_type_code(INTERPOLAR-DB) == "MR" kann für jeden Patienten ein eindeutiger organisationsinterner Patienten-Identifier (PID) identifiziert werden (gemäß <https://ig.fhir.de/basisprofile-de/1.5.0/ig-markdown-OrganisationsinternerPatienten-Identifier.html> )
 -   über die pids_per_ward Tabelle (INTERPOLAR-DB) sind die Fälle auf Versorgungsstellenkontakt-Ebene einer Station zugeordnet (INTERPOLAR-Stationsaufenthalt): encounter_id in pids_per_ward zeigt (unter Anderem) alle INTERPOLAR-Versorgungsstellenkontakte eines Falls
--   Versorgungsstellenkontakte die kein Enddatum haben und in-progress sind, befinden sich aktuell noch auf der Station
+-   INTERPOLAR-Versorgungsstellenkontakte besitzen ein Start-Datum, welches das Aufnahmedatum auf der INTERPOLAR Station darstellt (enc_period_start)
+-   verschiedene INTERPOLAR-Versorgungstellenkontakte eines Falls dürfen nicht das selbe Start-Datum haben (keine gleichzeitige Aufnahme auf verschiedenen Stationen)
+-   Versorgungsstellenkontakte die kein Enddatum haben und 'in-progress' sind, befinden sich aktuell noch auf der Station (für Berechnungen wird End-Datum auf aktuelles Datum gesetzt)
+-   Encounter-Ressourcen aller Hierarchie-Ebenen besitzen ein End-Datum, wenn der Status auf 'finished' gesetzt ist (gemäß Invarianten des Implementation Guide)
+-   Encounter-Ressources mit status 'planned', 'cancelled', 'entered-in-error' & 'unknown' werden nicht für die Zählungen berücksichtigt
+-   für Encounter-Ressourcen mit status 'onleave' und fehlendem End-Datum, wird für Berechnungen das End-Datum auf deren Start-Datum gesetzt
 
 ### Details
 

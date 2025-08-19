@@ -83,9 +83,10 @@ getPatientData <- function(lock_id, table_name) {
 #'   - `enc_serviceprovider_identifier_type_system`, `enc_serviceprovider_identifier_type_code`
 #'   - `enc_serviceprovider_identifier_system`, `enc_serviceprovider_identifier_value`
 #'   - `enc_meta_lastupdated`, `input_datetime`
+#'   - `enc_identifier_type_code`
 #'
 #' @return A data frame with distinct encounter records, including:
-#'   - IDs and references (`enc_id`, `enc_patient_ref`, `enc_partof_ref`, `enc_identifier_value`)
+#'   - IDs and references (`enc_id`, `enc_patient_ref`, `enc_partof_ref`, `enc_identifier_value`, `enc_identifier_type_code`)
 #'   - Classification and type (`enc_class_*`, `enc_type_*`)
 #'   - Service and hospitalization info (`enc_servicetype_*`, `enc_status`, `enc_hospitalization_*`)
 #'   - Encounter period (`enc_period_start`, `enc_period_end`)
@@ -96,25 +97,24 @@ getPatientData <- function(lock_id, table_name) {
 #' @details
 #' This function performs the following:
 #' 1. Builds and runs a SQL query selecting the full encounter dataset from the specified table.
-#' 2. Removes any exact duplicates using `dplyr::distinct()`.
-#' 3. Sorts the data by patient reference, encounter ID, time-related fields, and status-related fields
+#' 2. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown" to focus on relevant records.
+#' 3. Removes any exact duplicates using `dplyr::distinct()`.
+#' 4. Sorts the data by patient reference, encounter ID, time-related fields, and status-related fields
 #'    to ensure consistency and clarity in downstream processing.
+#' 5. Checks for empty results and unexpected status values, issuing errors if necessary.
 #'
-#' Note:
-#' - The function assumes that all required columns exist in the source table.
-#' - It is recommended to inspect the schema if issues arise due to missing columns or mismatched field types.
 #'
-#' @importFrom dplyr distinct arrange
+#' @importFrom dplyr distinct arrange filter
 #' @export
 
 # TODO: check all variables in table _description_relevant for manifestations and importance to include them ------------
 # (bottom variables not in use)
-# TOASK: muss enc_identifier_value weiter gefiltern werden? (enc_identifier_type_code == "VN"?)---------
+# TOASK: muss enc_identifier_value weiter gefiltern werden um fallnummer zu filtern? (enc_identifier_type_code == "VN"?)---------
 getEncounterData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, ",
                   "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-                  "input_datetime, ",
+                  "input_datetime, enc_identifier_type_code, ",
 
                   "enc_class_system, enc_type_system, enc_servicetype_system, enc_servicetype_code, ",
                   "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
@@ -128,11 +128,23 @@ getEncounterData <- function(lock_id, table_name) {
                   "FROM ", table_name, "\n")
 
   encounter_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::filter(!enc_status %in% c("planned", "cancelled", "entered-in-error", "unknown")) |>
     dplyr::distinct() |>
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
 
   if (nrow(encounter_table) == 0) {
     stop("The encounter table is empty. Please check the data.")
+  }
+
+  if (any(!encounter_table$status %in% c("finished", "in-progress", "onleave"))) {
+    stop("The encounter table contains status with unexpected status values
+         (other than https://simplifier.net/packages/de.basisprofil.r4/1.5.0/files/2461103 ).
+         Please check the data.")
+  }
+
+  if (any(encounter_table$status == "finished" & is.na(encounter_table$enc_period_end))) {
+    stop("The encounter table contains finished encounters without an end date.
+         Please check the data.")
   }
 
   return(encounter_table)
