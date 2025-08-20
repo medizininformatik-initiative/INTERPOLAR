@@ -8,7 +8,7 @@
 #'   This ensures safe access to the database during query execution and may support concurrent processing.
 #' @param table_name A character string specifying the name of the database table to query.
 #'   The table must contain at least the following columns: `pat_id`, `pat_identifier_type_code`, `pat_identifier_value`,
-#'   `pat_birthdate`, `pat_gender` ,`pat_deceaseddatetime`, `pat_meta_lastupdated`, and `input_datetime`.
+#'   `pat_birthdate`, `pat_gender` ,`pat_deceaseddatetime`, and `input_datetime`.
 #'
 #' @return A data frame containing:
 #'   - `pat_id`: Patient FHIR identifier
@@ -17,31 +17,40 @@
 #'   - `pat_birthdate`: Patient's birthdate (expected in `Date` format)
 #'   - `pat_gender`: patient's gender
 #'   - `pat_deceaseddatetime`: Date and time of death, if available
-#'   - `pat_meta_lastupdated`: Timestamp of last update to patient data
 #'   - `input_datetime`: Timestamp of data input
 #'   The result is sorted by `pat_id` and includes only distinct rows.
 #'
 #' @details
 #' The function performs the following steps:
 #' 1. Executes a SQL query to retrieve required patient-related columns from the specified table.
-#' 2. Filters the results to include only rows where `pat_identifier_type_code` is "MR" (medical record number).
+#' 2. Filters the results to include only rows where one or more of the following conditions are met:
+#'     - `pat_identifier_system` matches the FHIR identifier system for patients displayed in the frontend.
+#'     - `pat_identifier_type_system` matches the FHIR identifier type system for patients displayed in the frontend.
+#'     - `pat_identifier_type_code` matches the FHIR identifier type code for patients displayed in the frontend.
+#' The constants used for filtering are:
+#' - `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM`
+#' - `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM`
+#' - `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE`
 #' 3. filters unique entries for the selected variables and sorts the data by `pat_id`.
 #' 4. Checks for potential duplicates in:
 #'    - `pat_id`: should uniquely identify patients in FHIR
 #'    - `pat_identifier_value`: should uniquely identify patients in the hospital system
 #'    If duplicates are found, errors are issued for manual inspection.
 #'
-#' @importFrom dplyr distinct arrange
+#' @importFrom dplyr distinct arrange filter
 #' @export
 getPatientData <- function(lock_id, table_name) {
 
-  query <- paste0("SELECT pat_id, pat_identifier_type_code, pat_identifier_value, pat_birthdate, pat_gender, ",
-  "pat_deceaseddatetime, ",
-  "pat_meta_lastupdated, input_datetime FROM ", table_name, "\n")
+  query <- paste0("SELECT pat_id, pat_identifier_system, pat_identifier_type_system, ",
+                  "pat_identifier_type_code, pat_identifier_value, pat_birthdate, pat_gender, ",
+                  "pat_deceaseddatetime, input_datetime FROM ", table_name, "\n")
 
   patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
-    dplyr::filter(pat_identifier_type_code == "MR") |>
-    dplyr::select(-pat_identifier_type_code) |>
+    dplyr::filter(
+      grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system) |
+        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system) |
+        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)
+    ) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
 
@@ -84,9 +93,11 @@ getPatientData <- function(lock_id, table_name) {
 #'   - `enc_serviceprovider_identifier_system`, `enc_serviceprovider_identifier_value`
 #'   - `enc_meta_lastupdated`, `input_datetime`
 #'   - `enc_identifier_type_code`
+#'   - `enc_identifier_system`
 #'
 #' @return A data frame with distinct encounter records, including:
-#'   - IDs and references (`enc_id`, `enc_patient_ref`, `enc_partof_ref`, `enc_identifier_value`, `enc_identifier_type_code`)
+#'   - IDs and references (`enc_id`, `enc_patient_ref`, `enc_partof_ref`, `enc_identifier_value`,
+#'   `enc_identifier_type_code`, `enc_identifier_system`)
 #'   - Classification and type (`enc_class_*`, `enc_type_*`)
 #'   - Service and hospitalization info (`enc_servicetype_*`, `enc_status`, `enc_hospitalization_*`)
 #'   - Encounter period (`enc_period_start`, `enc_period_end`)
@@ -97,11 +108,13 @@ getPatientData <- function(lock_id, table_name) {
 #' @details
 #' This function performs the following:
 #' 1. Builds and runs a SQL query selecting the full encounter dataset from the specified table.
-#' 2. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown" to focus on relevant records.
-#' 3. Removes any exact duplicates using `dplyr::distinct()`.
-#' 4. Sorts the data by patient reference, encounter ID, time-related fields, and status-related fields
+#' 2. Filters out einrichtungskontakt encounters that do not match the expected FHIR identifier system for encounters
+#'   (if defined as `COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM`).
+#' 3. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown" to focus on relevant records.
+#' 4. Removes any exact duplicates using `dplyr::distinct()`.
+#' 5. Sorts the data by patient reference, encounter ID, time-related fields, and status-related fields
 #'    to ensure consistency and clarity in downstream processing.
-#' 5. Checks for empty results and unexpected status values, issuing errors if necessary.
+#' 6. Checks for empty results and unexpected status values, issuing errors if necessary.
 #'
 #'
 #' @importFrom dplyr distinct arrange filter
@@ -109,12 +122,11 @@ getPatientData <- function(lock_id, table_name) {
 
 # TODO: check all variables in table _description_relevant for manifestations and importance to include them ------------
 # (bottom variables not in use)
-# TOASK: muss enc_identifier_value weiter gefiltern werden um fallnummer zu filtern? (enc_identifier_type_code == "VN"?)---------
 getEncounterData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, ",
                   "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-                  "input_datetime, enc_identifier_type_code, ",
+                  "input_datetime, enc_identifier_type_code, enc_identifier_system, ",
 
                   "enc_class_system, enc_type_system, enc_servicetype_system, enc_servicetype_code, ",
                   "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
@@ -127,13 +139,35 @@ getEncounterData <- function(lock_id, table_name) {
 
                   "FROM ", table_name, "\n")
 
-  encounter_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+  encounter_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
+
+  if (etlutils::isDefinedAndNotEmpty("COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+    encounter_table <- encounter_table_raw |>
+      dplyr::filter(!(enc_type_code == "einrichtungskontakt" &
+                      !enc_identifier_system %in% COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM))
+  } else {
+    encounter_table <- encounter_table_raw
+  }
+
+  encounter_table <- encounter_table |>
     dplyr::filter(!enc_status %in% c("planned", "cancelled", "entered-in-error", "unknown")) |>
     dplyr::distinct() |>
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
 
   if (nrow(encounter_table) == 0) {
     stop("The encounter table is empty. Please check the data.")
+  }
+
+  if (nrow(encounter_table |>
+           dplyr::filter(enc_type_code == "einrichtungskontakt")) == 0) {
+    stop("The encounter table does not contain any encounters of type 'einrichtungskontakt'.
+         Please check the data or the definition of COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
+  }
+
+  if (nrow(encounter_table |>
+           dplyr::filter(enc_type_code == "versorgungsstellenkontakt")) == 0) {
+    stop("The encounter table does not contain any encounters of type 'versorgungsstellenkontakt'.
+         Please check the data.")
   }
 
   if (any(!encounter_table$status %in% c("finished", "in-progress", "onleave"))) {

@@ -23,14 +23,17 @@
 #' This merged dataset is used for further filtering, enrichment, or analysis involving both patient
 #' and encounter context.
 #'
-#' @importFrom dplyr mutate left_join
+#' @importFrom dplyr mutate left_join select relocate
 #' @export
 
 mergePatEnc <- function(patient_table, encounter_table) {
 
   merged_table <- encounter_table |>
     dplyr::mutate(pat_id = sub("^Patient/", "", enc_patient_ref), .keep = "unused") |>
-    dplyr::left_join(patient_table, by = "pat_id", suffix = c("_enc", "_pat")) |>
+    dplyr::left_join(patient_table |>
+                       dplyr::select(c(pat_id, pat_identifier_value, pat_birthdate, pat_gender,
+                                       pat_deceaseddatetime, input_datetime)),
+                     by = "pat_id", suffix = c("_enc", "_pat")) |>
     dplyr::relocate(
       enc_identifier_value,
       pat_id,
@@ -147,7 +150,7 @@ addMainEncId <- function(encounter_table) {
                         dplyr::filter(enc_type_code == "einrichtungskontakt") |>
                         dplyr::distinct(enc_id, enc_identifier_value)),
                        c("enc_id"))) {
-    stop("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id. Main_enc_id not defined. Please check the data.")
+    stop("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id. Main_enc_id not defined. Please check the data and eventually define COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
   }
 
   encounter_table_with_main_enc <- encounter_table |>
