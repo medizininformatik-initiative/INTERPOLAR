@@ -27,6 +27,8 @@ if (exists("DEBUG_DAY")) {
 
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
+  # resources are a list of data tables from outside we want to change for the test
+  testSetResourceTables(resource_tables)
 
   pats <- c("UKB-0001", "UKB-0002") # present at day 1
 
@@ -46,33 +48,22 @@ if (exists("DEBUG_DAY")) {
   # Convenience list of patient IDs
   pats <- namedListByValue(pats)
 
-  #resource_tables <- retainRAWTables("Patient", "Encounter")
-  resource_tables <- getFilteredRAWResources(pats)
-  # short reference to Encounter table
-  dt_enc <- resource_tables[["Encounter"]]
-  dt_pat <- resource_tables[["Patient"]]
-  pids_per_wards <- resource_tables[["pids_per_ward"]]
-
-  # Identify columns starting with "enc_diagnosis_" as vector of column names
-  colnames_pattern_diagnosis <- "^enc_diagnosis_"
-  enc_diagnosis_cols <- getColNames(dt_enc, colnames_pattern_diagnosis)
-
-  # Remove multiple diagnoses to prevent splitting the main encounter to multiple
-  # lines after fhir_melt (= set first value before " ~ " and remove the rest)
-  dt_enc[, (enc_diagnosis_cols) := lapply(.SD, function(x) sub(" ~ .*", "", x)), .SDcols = enc_diagnosis_cols]
+  testFilterRAWResources(pats)
+  testRemoveMultipleDiagnoses()
 
   # set the enc_period_start of all encounters of a patient to the current date
   # minus an offset
   for (i in c(1:length(pats))) {
-    changeDataForPID(dt_enc, paste0("UKB-000", i), "enc_period_start", getDebugDatesRAWDateTime(-i, 1))
-    changeDataForPID(dt_enc, paste0("UKB-000", i), "enc_partof_ref", paste0("[1.1]Encounter/UKB-000", i, "-E-1-A-1"))
+    testChangeDataForPIDEncounter(paste0("UKB-000", i), "enc_period_start", getDebugDatesRAWDateTime(-i, 1))
+    testChangeDataForPIDEncounter(paste0("UKB-000", i), "enc_partof_ref", paste0("[1.1]Encounter/UKB-000", i, "-E-1-A-1"))
   }
 
   ### Add encounters with type "Versorgungstellenkontakt" ###
-  colnames_pattern_servicetype <- "^enc_servicetype_"
-  dt_enc <- addVersorgungstellenkontakt(dt_enc, colnames_pattern_servicetype)
+  #dt_enc <- testGetResourceTable("Encounter")
 
-  if (DEBUG_DAY == 1) {
+  testAddEncounterLevel3()
+
+  if (DEBUG_DAY >= 1) {
     # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
 
     # Set all encounter to "in-progress", delete end date and diagnoses and set
@@ -81,18 +72,18 @@ if (exists("DEBUG_DAY")) {
     # Set enc_location_identifier_value for the Versorgungsstellenkontakt (Raum 1, Bett 1)
     # Change pids_per_wards to the correct encounter id and ward name (Station 1)
 
-    dt_enc <- updateEncounterStatus(dt_enc, pid = "UKB-0001", status = "in-progress", end = NA)
-    dt_enc <- setBedAndRoom(dt_enc, "[1]UKB-0001-E-1-A-1-V-1", "Raum 1-1", "Bett 1-1")
+    testUpdateEncounterStatus("UKB-0001", "in-progress", end = NA)
+    dt_enc <- setBedAndRoom(dt_enc, "UKB-0001-E-1-A-1-V-1", "Raum 1-1", "Bett 1-1")
     pids_per_wards <- updateWard(pids_per_wards, "UKB-0001-E-1", "Station 1-1", "UKB-0001")
 
     # Patient 2 Tag 1: Versorgungsstellenkontakt auf nicht-IP-Station
-    dt_enc <- updateEncounterStatus(dt_enc, "UKB-0002", "in-progress", end = NA)
-    dt_enc <- setBedAndRoom(dt_enc, "[1]UKB-0002-E-1-A-1-V-1", "Nicht-IP-Raum 2-1", "Nicht-IP-Bett 2-1")
+    testUpdateEncounterStatus("UKB-0002", "in-progress", end = NA)
+    dt_enc <- setBedAndRoom(dt_enc, "UKB-0002-E-1-A-1-V-1", "Nicht-IP-Raum 2-1", "Nicht-IP-Bett 2-1")
     pids_per_wards <- pids_per_wards[!patient_id %in% "UKB-0002"]
 
-  } else if (DEBUG_DAY == 2) {
+  } else if (DEBUG_DAY >= 2) {
     # prepare encounter and patient data
-    dt_enc <- truncateAndDuplicateEncounter(dt_enc)
+    dt_enc <- duplicateEncounterLevel3(dt_enc)
     # Patient 1 Tag 2: Versorgungsstellenkontakt auf nicht-IP-Station Zimmer Nicht-IP-Raum 1-1, Bett Nicht-IP-Bett 1-1
 
     # Remove Einrichtungs- und Abteilungskontakt from encounter table and duplicate Versorgungsstellenkontakt
@@ -104,38 +95,34 @@ if (exists("DEBUG_DAY")) {
     # And enc_period_start to debug day 2 and enc_period_enc to NA and enc_status to "in-progress"
     # Clean pids_per_wards
 
-    dt_enc <- setBedAndRoom(dt_enc, "[1]UKB-0001-E-1-A-1-V-1", "Raum 1-1", "Bett 1-1")
-    dt_enc <- finishAndStartEncounter(
-      dt_enc,
-      pid = "UKB-0001",
-      old_row_idx = 1,
-      old_room = "Raum 1-1", old_bed = "Bett 1-1", old_end_offset = -0.5,
-      new_row_idx = 2,
-      new_enc_id = "UKB-0001-E-1-A-1-V-2",
-      new_room = "Nicht-IP-Raum 1-1", new_bed = "Nicht-IP-Bett 1-1", new_start_offset = -0.5
-    )
+    dt_enc <- finishAndStartEncounterLevel3(dt_enc, "UKB-0001-E-1-A-1-V-1")
+    dt_enc <- setBedAndRoom(dt_enc, "UKB-0001-E-1-A-1-V-2", "Nicht-IP-Raum 1-1", "Nicht-IP-Bett 1-1")
+
+    dt_pat <- removePatient("UKB-0001")
+    pids_per_wards <- removePatientFromWard("UKB-0001")
+
 
     dt_pat <- dt_pat[pat_id != "[1]UKB-0001"]
     pids_per_wards <- pids_per_wards[patient_id != "UKB-0001"]
 
     # Patient 2 Tag 2: Versorgungsstellenkontakt auf Station 2-1 Zimmer 2-1, Bett 2-1
     dt_enc <- setBedAndRoom(dt_enc, "[1]UKB-0002-E-1-A-1-V-1", "Nicht-IP-Raum 2-1", "Nicht-IP-Bett 2-1")
-    dt_enc <- finishAndStartEncounter(dt_enc, "UKB-0002", 3,
+    dt_enc <- finishAndStartEncounterLevel3(dt_enc, "UKB-0002", 3,
                                       "Nicht-IP-Raum 2-1", "Nicht-IP-Bett 2-1", -0.5,
                                       4, "UKB-0002-E-1-A-1-V-2",
                                       "Raum 2-1", "Bett 2-1", -0.5)
     pids_per_wards <- updateWard(pids_per_wards, "UKB-0002-E-1-A-1-V-2", "Station 2-1", "UKB-0002")
 
-  } else if (DEBUG_DAY == 3) {
+  } else if (DEBUG_DAY >= 3) {
     # prepare encounter and patient data
-    dt_enc <- truncateAndDuplicateEncounter(dt_enc)
+    dt_enc <- duplicateEncounterLevel3(dt_enc)
     dt_pat <- dt_pat[0]
     dt_enc[enc_id == "[1]UKB-0001-E-1-A-1-V-1", enc_id := "[1]UKB-0001-E-1-A-1-V-2"]
     dt_enc[enc_id == "[1]UKB-0002-E-1-A-1-V-1", enc_id := "[1]UKB-0002-E-1-A-1-V-2"]
 
     # Patient 1 Tag 3: Versorgungsstellenkontakt auf Station 1-2 Zimmer 1-2, Bett 1-2
     dt_enc <- setBedAndRoom(dt_enc, "[1]UKB-0001-E-1-A-1-V-2", "Nicht-IP-Raum 1-1", "Nicht-IP-Bett 1-1")
-    dt_enc <- finishAndStartEncounter(
+    dt_enc <- finishAndStartEncounterLevel3(
       dt_enc,
       pid = "UKB-0001",
       old_row_idx = 1,
@@ -148,14 +135,14 @@ if (exists("DEBUG_DAY")) {
 
     # Patient 2 Tag 3: Versorgungsstellenkontakt auf Station 2-1 Zimmer 2-2, Bett 2-2
     dt_enc <- setBedAndRoom(dt_enc, "[1]UKB-0002-E-1-A-1-V-2", "Raum 2-1", "Bett 2-1")
-    dt_enc <- finishAndStartEncounter(dt_enc, "UKB-0002", 3,
+    dt_enc <- finishAndStartEncounterLevel3(dt_enc, "UKB-0002", 3,
                                       "Raum 2-1", "Bett 2-1", -0.1,
                                       4, "UKB-0002-E-1-A-1-V-3",
                                       "Raum 2-2", "Bett 2-2", -0.1)
     pids_per_wards <- updateWard(pids_per_wards, "UKB-0002-E-1-A-1-V-3", "Station 2-1", "UKB-0002")
 
 
-  } else if (DEBUG_DAY == 4) {
+  } else if (DEBUG_DAY >= 4) {
     # prepare encounter and patient data
     dt_enc[enc_id == "[1]UKB-0001-E-1-A-1-V-1", enc_id := "[1]UKB-0001-E-1-A-1-V-3"]
     dt_enc[enc_id == "[1]UKB-0002-E-1-A-1-V-1", enc_id := "[1]UKB-0002-E-1-A-1-V-3"]
@@ -174,17 +161,17 @@ if (exists("DEBUG_DAY")) {
     pids_per_wards <- pids_per_wards[patient_id != "UKB-0001"]
 
     # Patient 2 Tag 4: nicht-IP-Station
-    dt_enc <- truncateAndDuplicateEncounter(dt_enc, patient_refs = "[1.1]Patient/UKB-0002")
+    dt_enc <- duplicateEncounterLevel3(dt_enc, patient_refs = "[1.1]Patient/UKB-0002")
     dt_pat <- dt_pat[0]
     dt_enc <- setBedAndRoom(dt_enc, "[1]UKB-0001-E-1-A-1-V-3", "Raum 2-2", "Bett 2-2")
-    dt_enc <- finishAndStartEncounter(dt_enc, "UKB-0002", 4,
+    dt_enc <- finishAndStartEncounterLevel3(dt_enc, "UKB-0002", 4,
                                       "Raum 2-2", "Bett 2-2", -0.5,
                                       5, "UKB-0002-E-1-A-1-V-4",
                                       "Nicht-IP-Raum 2-2", "Nicht-IP-Bett 2-2", -0.5)
     dt_pat <- dt_pat[pat_id != "[1]UKB-0002"]
     pids_per_wards <- pids_per_wards[patient_id != "UKB-0002"]
 
-  } else if (DEBUG_DAY == 5) {
+  } else if (DEBUG_DAY >= 5) {
     # Patient 1 Tag 5: Neuer Encounter und neuer Versorgungsstellenkontakt auf gleicher IP-Station 1-1 Zimmer 1-3, Bett 1-3
     dt_enc <- startNewEncounter(
       dt_enc,
@@ -239,11 +226,11 @@ if (exists("DEBUG_DAY")) {
 
    } else if (DEBUG_DAY == 7) {
      # prepare encounter and patient data
-     dt_enc <- truncateAndDuplicateEncounter(dt_enc)
+     dt_enc <- duplicateEncounterLevel3(dt_enc)
      dt_enc[enc_id == "[1]UKB-0001-E-1-A-1-V-1", enc_id := "[1]UKB-0001-E-2-A-1-V-1"]
      dt_enc[enc_id == "[1]UKB-0002-E-1-A-1-V-1", enc_id := "[1]UKB-0002-E-2-A-1-V-1"]
     # Patient 1 Tag 7: Versorgungsstellenkontakt auf Nicht IP-Station Zimmer Nicht-IP-Raum 1-2, Bett Nicht-IP-Bett 1-2
-    dt_enc <- finishAndStartEncounter(
+    dt_enc <- finishAndStartEncounterLevel3(
       dt_enc,
       pid = "UKB-0001",
       old_row_idx = 1,
@@ -256,7 +243,7 @@ if (exists("DEBUG_DAY")) {
     pids_per_wards <- pids_per_wards[patient_id != "UKB-0001"]
 
     # Patient 2 Tag 7: Versorgungsstellenkontakt auf Station 2-2 Zimmer 2-3, Bett 2-3
-    dt_enc <- finishAndStartEncounter(
+    dt_enc <- finishAndStartEncounterLevel3(
       dt_enc,
       pid = "UKB-0002",
       old_row_idx = 3,
@@ -300,8 +287,6 @@ if (exists("DEBUG_DAY")) {
     pids_per_wards <- pids_per_wards[patient_id != "UKB-0002"]
   }
 
-  # Update the Encounter table in the resource_tables list
-  resource_tables[["Encounter"]] <- dt_enc
-  resource_tables[["Patient"]] <- dt_pat
-  resource_tables[["pids_per_ward"]] <- pids_per_wards
+  # Update the resource_tables list with the modified data tables
+  resource_tables <- testGetResources()
 }

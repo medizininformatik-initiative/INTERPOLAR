@@ -1,3 +1,41 @@
+##############
+# enc_lvl_1 = Einrichtungskontakt
+# enc_lvl_2 = Abteilungskontakt
+# enc_lvl_3 = Versorgungsstellenkontakt
+##############
+
+.test_env <- new.env(parent = emptyenv())
+
+testSetResourceTables <- function(resource_tables) {
+  # Set the resources in the environment
+  assign("resource_tables", resource_tables, envir = .test_env)
+}
+
+testGetResourceTables <- function() {
+  # Get the resources from the environment
+  get("resource_tables", envir = .test_env)
+}
+
+testGetResourceTable <- function(resource_name) {
+  # Get a specific resource table from the environment
+  resource_tables <- get("resource_tables", envir = .test_env)
+  return(resource_tables[[resource_name]])
+}
+
+testSetResourceTable <- function(resource_name, resource_table) {
+  # Set a specific resource table in the environment
+  resource_tables <- get("resource_tables", envir = .test_env)
+  resource_tables[[resource_name]] <- resource_table
+  assign("resource_tables", resource_tables, envir = .test_env)
+}
+
+testEnsureRAWId <- function(id) {
+  if (!startsWith(id, "[1]")) {
+    id <- paste0("[1]", id)
+  }
+  return(id)
+}
+
 #' Filter raw resource tables based on patient IDs
 #'
 #' This function filters resource tables from `resource_tables` based on patient IDs provided as input.
@@ -16,11 +54,11 @@
 #' @return A named list of `data.table` objects, where each table is filtered based on patient
 #'         identifiers if applicable.
 #'
-getFilteredRAWResources <- function(patient_ids) {
+testFilterRAWResources <- function(patient_ids) {
   filtered_resources <- list()
   ids <- etlutils::getAfterLastSlash(patient_ids)
   refs <- paste0("[1.1]Patient/", ids)
-
+  resource_tables <- testGetResourceTables()
   for (resource_name in names(resource_tables)) {
     pid_column <- if (resource_name == "pids_per_ward") "patient_id" else etlutils::fhirdbGetPIDColumn(resource_name)
     resource_table <- resource_tables[[resource_name]]
@@ -36,9 +74,9 @@ getFilteredRAWResources <- function(patient_ids) {
       filtered_resources[[resource_name]] <- resource_table
     }
   }
-
-  return(filtered_resources)
+  testSetResourceTables(filtered_resources)
 }
+
 #' Retain specific resource tables while clearing others
 #'
 #' This function retains only the specified tables from `resource_tables`, while all other tables
@@ -50,7 +88,7 @@ getFilteredRAWResources <- function(patient_ids) {
 #' @return A modified named list of `data.table` objects, where only the specified tables remain
 #'         unchanged, and all others are cleared (empty but with the same structure).
 #'
-retainRAWTables <- function(...) {
+testRetainRAWTables <- function(...) {
   table_names <- c(..., "pids_per_ward")
   for (name in names(resource_tables)) {
     if (!(name %in% table_names)) {
@@ -133,7 +171,6 @@ getDebugDatesRAWDateTime <- function(offset_days = 0, debug_date_index = DEBUG_D
 #'
 #' @return The modified `data.table` with updated values in the specified columns.
 #'
-#' @export
 changeDataForPID <- function(table, pid, pattern, new_value) {
   colnames <- names(table)
 
@@ -161,7 +198,22 @@ changeDataForPID <- function(table, pid, pattern, new_value) {
     # Update matching columns
     table[rows_to_update, (matching_columns) := lapply(.SD, function(x) new_value), .SDcols = matching_columns]
   }
+  return(table)
 }
+
+testChangeDataForPIDEncounter <- function(pid, pattern, new_value) {
+  # Get the Encounter table
+  dt_enc <- testGetResourceTable("Encounter")
+
+  # Change data for the specified PID
+  dt_enc <- changeDataForPID(dt_enc, pid, pattern, new_value)
+
+  # Update the Encounter table in the environment
+  testSetResourceTable("Encounter", dt_enc)
+
+  return(dt_enc)
+}
+
 
 #' Get column names from a data.table matching a given pattern
 #'
@@ -214,7 +266,11 @@ extractValueFromRAW <- function(dt_raw, column_name) {
 #
 # Add encounters with type "Versorgungstellenkontakt"
 #
-addVersorgungstellenkontakt <- function(dt_enc, colnames_pattern_servicetype, pattern = "-A-(\\d+)$") {
+testAddEncounterLevel3 <- function() {
+  pattern = "-A-(\\d+)$" # Pattern to match the end of the enc_id for duplication
+  colnames_pattern_servicetype <- "^enc_servicetype_" # Pattern for service type columns
+
+  dt_enc <- testGetResourceTable("Encounter")
   enc_servicetype_colnames <- getColNames(dt_enc, colnames_pattern_servicetype)
 
   rows_to_duplicate <- dt_enc[grepl(pattern, enc_id)]
@@ -228,19 +284,50 @@ addVersorgungstellenkontakt <- function(dt_enc, colnames_pattern_servicetype, pa
   rows_to_duplicate[, (enc_servicetype_colnames) := NA]
   rows_to_duplicate[, enc_location_physicaltype_code := "[1.1.1.1]ro ~ [2.1.1.1]bd"]
 
-  return(rbind(dt_enc, rows_to_duplicate))
+  dt_enc <- rbind(dt_enc, rows_to_duplicate)
+  testSetResourceTable("Encounter", dt_enc)
+
+  return(dt_enc)
 }
 
-updateEncounterStatus <- function(dt, pid, status, start = NULL, end = NULL, colnames_pattern_to_clear = "^enc_diagnosis_") {
-  changeDataForPID(dt, pid, "enc_status", status)
-  if (!is.null(start)) changeDataForPID(dt, pid, "enc_period_start", start)
-  if (!is.null(end)) changeDataForPID(dt, pid, "enc_period_end", end)
-  if (!is.null(colnames_pattern_to_clear)) changeDataForPID(dt, pid, colnames_pattern_to_clear, NA)
-  changeDataForPID(dt, pid, "enc_meta_lastupdated", getDebugDatesRAWDateTime(-0.1))
-  return(dt)
+extractPID <- function(enc_id) {
+  # Extract the patient ID from the encounter ID
+  # Example: "[1]UKB-0001-E-1-A-1-V-1" -> "UKB-0001"
+  #          "UKB-0001-E-1-A-1-V-1"    -> "UKB-0001"
+  match <- regmatches(enc_id, regexpr("(\\[[0-9]+\\])?(.*?)-", enc_id))
+  if (length(match) > 0 && nzchar(match)) {
+    # Remove the optional [number] if present and the last “-” along with the rest
+    return(sub("(\\[[0-9]+\\])?", "", sub("-.*", "", match)))
+  }
+  stop("Can not extract PID from enc_id: ", enc_id)
+}
+
+testUpdateEncounterStatus <- function(pid, status, start = NULL, end = NULL, colnames_pattern_to_clear = "^enc_diagnosis_") {
+  dt_enc <- testGetResourceTable("Encounter")
+  changeDataForPID(dt_enc, pid, "enc_status", status)
+  if (!is.null(start)) changeDataForPID(dt_enc, pid, "enc_period_start", start)
+  if (!is.null(end)) changeDataForPID(dt_enc, pid, "enc_period_end", end)
+  if (!is.null(colnames_pattern_to_clear)) changeDataForPID(dt_enc, pid, colnames_pattern_to_clear, NA)
+  changeDataForPID(dt_enc, pid, "enc_meta_lastupdated", getDebugDatesRAWDateTime(-0.1))
+
+  testSetResourceTable("Encounter", dt_enc)
+
+  return(dt_enc)
+}
+
+testRemoveMultipleDiagnoses <- function() {
+  # Identify columns starting with "enc_diagnosis_" as vector of column names
+  colnames_pattern_diagnosis <- "^enc_diagnosis_"
+  dt_enc <- testGetResourceTable("Encounter")
+  enc_diagnosis_cols <- getColNames(dt_enc, colnames_pattern_diagnosis)
+
+  # Remove multiple diagnoses to prevent splitting the main encounter to multiple
+  # lines after fhir_melt (= set first value before " ~ " and remove the rest)
+  dt_enc[, (enc_diagnosis_cols) := lapply(.SD, function(x) sub(" ~ .*", "", x)), .SDcols = enc_diagnosis_cols]
 }
 
 setBedAndRoom <- function(dt, encounter_id, room, bed) {
+  encounter_id <- testEnsureRAWId(encounter_id)
   dt[enc_id == encounter_id,
      enc_location_identifier_value := paste0("[1.1.1.1]", room, " ~ [2.1.1.1]", bed)]
   return(dt)
@@ -253,68 +340,87 @@ updateWard <- function(pids_per_wards, enc_id, ward_names, filter_val, filter_co
   return(pids_per_wards)
 }
 
-finishAndStartEncounter <- function(dt_enc,
-                                    pid,
-                                    old_row_idx,
-                                    old_room, old_bed, old_end_offset,
-                                    new_row_idx,
-                                    new_enc_id, new_room, new_bed, new_start_offset) {
-  dt_enc <- updateEncounterStatus(dt_enc, pid, "finished")
-  dt_enc[old_row_idx, enc_location_identifier_value :=
-           paste0("[1.1.1.1]", old_room, " ~ [2.1.1.1]", old_bed)]
-  dt_enc[old_row_idx, enc_period_end := getDebugDatesRAWDateTime(old_end_offset)]
+#' Increment the last numeric suffix after the final dash
+#'
+#' Takes an encounter id (or similar string) and increments the last number
+#' following the final dash ("-").
+#'
+#' @param x Character scalar, e.g. \code{"[1]UKB-0002-E-1-A-1-V-1"}.
+#'
+#' @return Modified string with the last number incremented by 1.
+#'
+#' @examples
+#' incrementLastDashNumber("[1]UKB-0002-E-1-A-1-V-1")
+#' # Returns "[1]UKB-0002-E-1-A-1-V-2"
+#'
+#' incrementLastDashNumber("ABC-99")
+#' # Returns "ABC-100"
+#'
+#' @export
+incrementLastDashNumber <- function(x) {
+  sub("-(\\d+)$", function(m) {
+    num <- as.integer(sub("-(\\d+)$", "\\1", m))
+    paste0("-", num + 1)
+  }, x)
+}
 
-  dt_enc[new_row_idx, `:=`(
-    enc_id = new_enc_id,
-    enc_status = "in-progress",
-    enc_location_identifier_value = paste0("[1.1.1.1]", new_room, " ~ [2.1.1.1]", new_bed),
-    enc_period_start = getDebugDatesRAWDateTime(new_start_offset),
-    enc_period_end = NA
-  )]
+#' Duplicate Encounter Level 3 and increment enc_id
+#'
+#' This function duplicates the row in `dt_enc` with the given `enc_lvl_3_id`.
+#' The duplicate gets a new `enc_id` with the last numeric part (after the final dash)
+#' incremented by 1. Optionally, all other encounters of the same patient are removed.
+#'
+#' @param dt_enc data.table of encounters. Must contain column `enc_id`.
+#' @param enc_lvl_3_id Character scalar. The encounter ID to duplicate.
+#' @param remove_all_other_encs Logical. If TRUE, all other encounters of the same patient
+#'   are removed. Default = TRUE.
+#'
+#' @return Modified `dt_enc` with the duplicated row.
+#'
+duplicateEncounterLevel3 <- function(
+    dt_enc,
+    enc_lvl_3_id
+    #,remove_all_other_encs = TRUE
+    ) {
+  # Ensure the id carries a "[1]" prefix for level-3 format if missing
+  enc_lvl_3_id <- testEnsureRAWId(enc_lvl_3_id)
+
+  # Extract the row to duplicate
+  dup_row <- dt_enc[enc_id == enc_lvl_3_id]
+
+  if (nrow(dup_row) == 1) {
+    # Increment enc_id in duplicate
+    dup_row[, enc_id := incrementLastDashNumber(enc_id)]
+    # Append to table
+    dt_enc <- data.table::rbindlist(list(dt_enc, dup_row), use.names = TRUE)
+  }
+
+  # if (isTRUE(remove_all_other_encs)) {
+  #   # Derive patient id from encounter id
+  #   pid <- extractPID(enc_lvl_3_id)
+  #   # Remove all other encounters of the same patient, keep only original and new enc_id
+  #   same_patient <- grepl(paste0("^\\[[0-9]+\\]", pid, "-E-"), dt_enc$enc_id)
+  #   keep_ids <- c(enc_lvl_3_id, dup_row$enc_id)
+  #   dt_enc <- dt_enc[!(same_patient & !(enc_id %in% keep_ids))]
+  # }
 
   return(dt_enc)
 }
 
-#' Shift and Duplicate Encounters for Specific Patients
-#'
-#' This function duplicates rows in the encounter table (`dt_enc`) for certain
-#' patients or for all patients with encounter type "[1.1.1]versorgungsstellenkontakt".
-#' After duplication, non-"versorgungsstellenkontakt" encounters for those patients
-#' are removed. The patient table (`dt_pat`) is cleared.
-#'
-#' @param dt_enc data.table of encounters. Must contain columns `enc_type_code` and `enc_patient_ref`.
-#' @param dt_pat data.table of patients. Will be emptied in this function.
-#' @param patient_refs Optional character vector of patient references to duplicate. If NULL, all patients with
-#'   "[1.1.1]versorgungsstellenkontakt" encounters will be duplicated.
-#'
-#' @return A list with two elements:
-#'   - `dt_enc`: Modified encounter table after duplication and filtering.
-#'   - `dt_pat`: Empty patient table.
-#'
-truncateAndDuplicateEncounter <- function(dt_enc, patient_refs = NULL) {
-  # Determine how many times each row should be repeated
-  if (is.null(patient_refs)) {
-    # Duplicate only rows of type "[1.1.1]versorgungsstellenkontakt" for all patients
-    times_vec <- ifelse(dt_enc$enc_type_code == "[1.1.1]versorgungsstellenkontakt", 2, 1)
-  } else {
-    # Duplicate only matching rows for specified patient_refs
-    times_vec <- ifelse(
-      dt_enc$enc_type_code == "[1.1.1]versorgungsstellenkontakt" &
-        dt_enc$enc_patient_ref %in% patient_refs,
-      2,
-      1
-    )
-  }
-  # Duplicate rows according to times_vec
-  dt_enc <- dt_enc[rep(seq_len(.N), times = times_vec)]
-  # Identify patients who were duplicated
-  doubled_patients <- unique(dt_enc$enc_patient_ref[times_vec == 2])
-  # Remove all other encounters for these patients that are not "[1.1.1]versorgungsstellenkontakt"
-  dt_enc <- dt_enc[
-    !(enc_patient_ref %in% doubled_patients & enc_type_code != "[1.1.1]versorgungsstellenkontakt")
-  ]
-  # Return list with modified encounter table and empty patient table
-  return(dt_enc)
+finishAndStartEncounterLevel3 <- function(dt_enc, enc_lvl_3_id, day_offset = -0.5) {
+  dt_enc <- resource_tables[["Encounter"]]
+  dt_enc <- updateEncounterStatus(dt_enc, pid, "finished")
+  end_start_datetime <- getDebugDatesRAWDateTime(day_offset)
+  dt_enc[enc_id == enc_lvl_3_id, enc_period_end := end_start_datetime]
+  dt_enc <- duplicateEncounterLevel3(dt_enc, enc_lvl_3_id)
+
+  dt_enc[nrow(dt_enc), `:=`(
+    enc_status = "in-progress",
+    enc_period_start = end_start_datetime,
+    enc_period_end = NA
+  )]
+
+  resource_tables[["Encounter"]] <<- dt_enc
 }
 
 dischargeEncounter <- function(dt_enc, patient_id, enc_id, encounter_number, room, bed, debug_day) {
