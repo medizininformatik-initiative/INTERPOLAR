@@ -12,7 +12,61 @@ gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataproce
 
 -   statistical_reports.html beinhaltet Zählungen für die Full Analysis Set 1 (FAS1) gesplittet nach Station und Aufnahmewoche (nur erster Kontakt eines Falls auf einer INTERPOLAR-Station und davon nur die erste Medikationanalyse und dazugehörige MRPs)
 
+    -   F1: Kumulative Anzahl der hospitalisierten Fälle auf INTERPOLAR-Stationen (\>18 Jahre, erster Kontakt mit einer INTERPOLAR-Station)
+
+        -   Anzahl der Patienten in den FHIR Tabellen der INTERPOLAR-Datenbank
+
+        -   Anzahl der ebenfalls im Frontend aufgeführten Patienten
+
+        -   Anzahl der Fälle in den FHIR Tabellen der INTERPOLAR-Datenbank
+
+        -   Anzahl der ebenfalls im Frontend aufgeführten Fälle
+
+    -   Anzahl der angelegten Medikationsanalysen
+
+    -   Anzahl der abgeschlossenen Medikationsanalysen (status: "completed")
+
+    -   Anzahl der dokumentierten MRP
+
+    -   Anzahl der abgeschlossenen MRP-Dokumentationen (status: "completed")
+
+    -   Anzahl der gelösten MRP (im Sinne von: vorgeschlagene Intervention umgesetzt)
+
+    -   Anzahl der MRP mit nicht-informativem Lösungszustand ("Arzt / Pflege informiert", "Intervention vorgeschlagen, Umsetzung unbekannt")
+
+    -   Anzahl der Kontraindikationen
+
+    -   Anzahl von drug-drug Kontraindikationen
+
+    -   Anzahl von drug-disease Kontraindikationen
+
+    -   Anzahl von drug-Niereninsuffizienz Kontraindikationen
+
 -   fe_summary.html beinhaltet die Zählungen für alle im Frontend dokumentierten Fälle, gesplittet nach Station
+
+    -   Anzahl der im Frontend aufgeführten Patienten
+
+    -   Anzahl der im Frontend aufgeführten Fälle
+
+    -   Anzahl der angelegten Medikationsanalysen
+
+    -   Anzahl der abgeschlossenen Medikationsanalysen (status: "completed")
+
+    -   Anzahl der dokumentierten MRP
+
+    -   Anzahl der abgeschlossenen MRP-Dokumentationen (status: "completed")
+
+    -   Anzahl der gelösten MRP (im Sinne von: vorgeschlagene Intervention umgesetzt)
+
+    -   Anzahl der MRP mit nicht-informativem Lösungszustand ("Arzt / Pflege informiert", "Intervention vorgeschlagen, Umsetzung unbekannt")
+
+    -   Anzahl der Kontraindikationen
+
+    -   Anzahl von drug-drug Kontraindikationen
+
+    -   Anzahl von drug-disease Kontraindikationen
+
+    -   Anzahl von drug-Niereninsuffizienz Kontraindikationen
 
 ### Konfiguration
 
