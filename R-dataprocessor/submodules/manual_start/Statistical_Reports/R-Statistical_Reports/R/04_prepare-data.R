@@ -32,10 +32,11 @@
 #' }
 #'
 #' @importFrom dplyr filter distinct select mutate across
+#' @importFrom data.table isoweek
 #' @export
 prepareF1data <- function(full_analysis_set_1,REPORT_PERIOD_START,REPORT_PERIOD_END) {
   F1_prep_raw <- full_analysis_set_1 |>
-    dplyr::filter(!is.na(ward_name)) |>  # only encounters with ward name
+    dplyr::filter(!is.na(ward_name)) |>  # only encounters with ward name (see addWardName)
     dplyr::mutate(calendar_week = data.table::isoweek(enc_period_start), .after = enc_period_start) |> # add calendar week
     dplyr::distinct(enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
                     record_id, fall_id_cis, enc_type_code, age_at_hospitalization, enc_period_start, calendar_week,

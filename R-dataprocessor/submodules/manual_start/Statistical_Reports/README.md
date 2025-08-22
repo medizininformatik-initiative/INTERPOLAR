@@ -70,7 +70,7 @@ gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataproce
 
 ### Konfiguration
 
-abgefragter Zeitraum kofigurierbar
+abgefragter Zeitraum konfigurierbar
 
 -   alle Fälle werden gezählt, die innerhalb dieses Zeitraumes auf einer INTERPOLAR-Station (in statistical_reports.html über Versorgungsstellenkontakt) bzw. in der Einrichtung (in fe_summary.html über Einrichtungskontakt) aufgenommen wurden; dabei zählt der Start-Tag dazu, der End-Tag nicht
 
@@ -92,6 +92,8 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 
 ### Annahmen
 
+(nach bestem Wissen und Gewissen gemäß MII KDS Implementation-Guide (mit Bitte um Korrektur falls nicht korrekt umgesetzt) sowie ggf. für die Analyse nötige Erweiterungen)
+
 -   der eindeutige organisationsinterner Patienten-Identifier (PID) kann über die in der dataprocessor_config.toml bereits implementierten Filter festgelegt werden (FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM/\_TYPE_SYSTEM/\_TYPE_CODE). Dabei muss mindestens eine der drei Bedingungen zutreffen.
 -   die Kontaktebenen eines Falls sind über partOf-Beziehungen verknüpft; falls nicht müssen alle Encounter-Ressourcen eines Falles den selben enc_identifier_value tragen.
 -   falls es für einen Fall verschiedene enc_identifier_values im Einrichtungskontakt geben kann, muss über COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM in der dataprocessor_config.toml festgelegt werden, aus welchem System die eigentliche Aufnahmenummer/Fallnummer stammt
@@ -103,6 +105,8 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 -   Encounter-Ressourcen aller Hierarchie-Ebenen besitzen ein End-Datum, wenn der Status auf 'finished' gesetzt ist (gemäß Invarianten des Implementation Guide)
 -   Encounter-Ressources mit status 'planned', 'cancelled', 'entered-in-error' & 'unknown' werden nicht für die Zählungen berücksichtigt
 -   für Encounter-Ressourcen mit status 'onleave' und fehlendem End-Datum, wird für Berechnungen das End-Datum auf deren Start-Datum gesetzt
+-   Ecounter-Ressourcen mit class_code 'PRENC', 'VR', 'HH' werden nicht für die Zählungen berücksichtigt; 'AMB' und 'SS' könnten ggf. für komplexere Analysen benötigt werden (z.B. Ermittlung eines OP Aufenthalts), werden aber aktuell nicht in die Berechnungen einbezogen
+-   stationäre INTERPOLAR-Kontakte tragen enc_class_code == "IMP" mindestens im Einrichtungskontakt
 
 ### Details
 

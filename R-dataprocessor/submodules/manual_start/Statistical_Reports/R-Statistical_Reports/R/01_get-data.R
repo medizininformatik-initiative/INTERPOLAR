@@ -110,11 +110,12 @@ getPatientData <- function(lock_id, table_name) {
 #' 1. Builds and runs a SQL query selecting the full encounter dataset from the specified table.
 #' 2. Filters out einrichtungskontakt encounters that do not match the expected FHIR identifier system for encounters
 #'   (if defined as `COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM`).
-#' 3. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown" to focus on relevant records.
-#' 4. Removes any exact duplicates using `dplyr::distinct()`.
-#' 5. Sorts the data by patient reference, encounter ID, time-related fields, and status-related fields
+#' 3. Filters out encounters with class codes "PRENC", "VR", or "HH" to exclude non-relevant records.
+#' 4. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown" to focus on relevant records.
+#' 5. Removes any exact duplicates using `dplyr::distinct()`.
+#' 6. Sorts the data by patient reference, encounter ID, time-related fields, and status-related fields
 #'    to ensure consistency and clarity in downstream processing.
-#' 6. Checks for empty results and unexpected status values, issuing errors if necessary.
+#' 7. Checks for empty results and unexpected status values, issuing errors if necessary.
 #'
 #'
 #' @importFrom dplyr distinct arrange filter
@@ -150,6 +151,7 @@ getEncounterData <- function(lock_id, table_name) {
   }
 
   encounter_table <- encounter_table |>
+    dplyr::filter(!enc_class_code %in% c("PRENC","VR","HH")) |>
     dplyr::filter(!enc_status %in% c("planned", "cancelled", "entered-in-error", "unknown")) |>
     dplyr::distinct() |>
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)

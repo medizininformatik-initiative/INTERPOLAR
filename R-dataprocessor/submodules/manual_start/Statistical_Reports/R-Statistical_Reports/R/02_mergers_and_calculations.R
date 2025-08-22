@@ -155,7 +155,7 @@ addMainEncId <- function(encounter_table) {
 
   encounter_table_with_main_enc <- encounter_table |>
     dplyr::left_join(encounter_table |>
-                       dplyr::filter(enc_type_code == "einrichtungskontakt") |>
+                       dplyr::filter(enc_type_code == "einrichtungskontakt" & enc_class_code == "IMP") |>
                        dplyr::distinct(enc_id, enc_identifier_value),
                      by = "enc_identifier_value",
                      suffix = c("", "_einrichtungskontakt")) |>
@@ -259,17 +259,28 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 
 #' Add Ward Name to Patient Encounters
 #'
-#' This function adds ward names to a table of patient encounters by merging it with a table that provides ward names for each patient and encounter.
+#' This function adds ward names to a table of patient encounters by merging it with a table that
+#' provides ward names for each patient and encounter.
 #' It ensures ward names are placed after the `enc_period_end` column and removes duplicate rows.
 #'
-#' @param merged_table_with_main_enc A data frame containing patient encounters. Must include `enc_id`, `pat_id`, and `enc_period_end`.
-#' @param pids_per_ward_table A data frame containing ward names along with corresponding patient and encounter IDs of the "Versogungsstellenkontakt". Must include `ward_name`, `patient_id`, and `encounter_id`.
+#' @param merged_table_with_main_enc A data frame containing patient encounters. Must include
+#' `enc_id`, `pat_id`, and `enc_period_end`.
+#' @param pids_per_ward_table A data frame containing ward names along with corresponding patient
+#' and encounter IDs of the "Versogungsstellenkontakt". Must include `ward_name`, `patient_id`, and
+#' `encounter_id`.
 #'
-#' @return A data frame similar to the input `merged_table_with_main_enc`, but with the `ward_name` column added and located after the `enc_period_end` column. Duplicate rows in the output are removed.
+#' @return A data frame similar to the input `merged_table_with_main_enc`, but with the `ward_name`
+#' column added and located after the `enc_period_end` column. Duplicate rows in the output are
+#' removed.
 #'
 #' @details
-#' The function performs a left join between `merged_table_with_main_enc` and `pids_per_ward_table` based on patient and encounter IDs. It relocates the `ward_name` column to directly follow `enc_period_end`, ensuring that the returned table is free of duplicate rows.
-#' Note: The current implementation assumes complete join coverage and may require logic refinement for handling situations with multiple rows for a single encounter.
+#' The function performs a left join between `merged_table_with_main_enc` and `pids_per_ward_table`
+#' based on patient and encounter IDs. It uses the `enc_id` and `pat_id` from the encounter_table
+#' to match with `encounter_id` and `patient_id` in the pids_per_ward_table.
+#' it ensures that ward names are added only to INTERPOLAR Versorgungsstellenkontakte (i.e., those with
+#' `enc_type_code` of "versorgungsstellenkontakt" and enc_class_code not in "AMB" or "SS").
+#' It relocates the `ward_name` column to directly follow
+#' `enc_period_end`, ensuring that the returned table is free of duplicate rows.
 #'
 #' @seealso
 #' \code{\link[dplyr]{left_join}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{distinct}}
@@ -281,7 +292,8 @@ addWardName <- function(merged_table_with_main_enc, pids_per_ward_table) {
     dplyr::left_join(pids_per_ward_table |>
                        dplyr::select(ward_name, patient_id, encounter_id),
                      by = c("enc_id" = "encounter_id", "pat_id" = "patient_id")) |>
-    dplyr::mutate(ward_name = dplyr::if_else(enc_type_code == "versorgungsstellenkontakt",
+    dplyr::mutate(ward_name = dplyr::if_else(enc_type_code == "versorgungsstellenkontakt" &
+                                               !enc_class_code %in% c("AMB","SS"),
                                              ward_name,
                                              NA_character_)) |>
     dplyr::relocate(ward_name, .after = curated_enc_period_end) |>
