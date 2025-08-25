@@ -47,9 +47,15 @@ getPatientData <- function(lock_id, table_name) {
 
   patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::filter(
-      grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system) |
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system) |
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)
+      grepl(ifelse(exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM"),
+                   FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, ""),
+            pat_identifier_system) |
+        grepl(ifelse(exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM"),
+                     FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, ""),
+              pat_identifier_type_system) |
+        grepl(ifelse(exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE"),
+                     FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, ""),
+              pat_identifier_type_code)
     ) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
