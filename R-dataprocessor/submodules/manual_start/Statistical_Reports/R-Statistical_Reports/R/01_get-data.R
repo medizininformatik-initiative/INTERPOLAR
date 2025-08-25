@@ -47,16 +47,23 @@ getPatientData <- function(lock_id, table_name) {
 
   patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::filter(
-      grepl(ifelse(exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM"),
-                   FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, ""),
-            pat_identifier_system) |
-        grepl(ifelse(exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM"),
-                     FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, ""),
-              pat_identifier_type_system) |
-        grepl(ifelse(exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE"),
-                     FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, ""),
-              pat_identifier_type_code)
-    ) |>
+      (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
+         !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*","") &
+         grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system)) |
+        (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") &
+           !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*","") &
+           grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system)) |
+        (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") &
+           !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*","") &
+           grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)) |
+        # keep all rows if all filters are inactive or missing
+        ((!exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") |
+            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*","")) &
+           (!exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") |
+              FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*","")) &
+           (!exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") |
+              FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*",""))
+        )) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
 
