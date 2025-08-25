@@ -115,7 +115,7 @@ checkMultipleRows <- function(data, grouping_vars) {
 #'
 #' @export
 
-parse_named_args <- function() {
+parseNamedArgs <- function() {
   command_arguments <- commandArgs(trailingOnly = TRUE)
 
   named_args <- command_arguments[grepl("=", command_arguments)]
@@ -130,7 +130,71 @@ parse_named_args <- function() {
 }
 
 
+#------------------------------------------------------------------------------#
 
+#' Split Multi-System Variable into Separate Columns
+#'
+#' Transforms a long-format dataset containing codes and system identifiers into
+#' a wider format by creating two new columns corresponding to two distinct systems.
+#' Each row will have at most one code per system; groups with multiple codes per
+#' system will trigger an error.
+#'
+#' @param data A data frame or tibble containing the original dataset.
+#' @param system1 Character vector specifying the first system(s) of interest.
+#' @param codes1 Character vector specifying codes to include in the first system.
+#' @param system2 Character vector specifying the second system(s) of interest.
+#' @param codes2 Character vector specifying codes to include in the second system.
+#' @param var_code String; the name of the column in `data` containing the code values.
+#' @param var_system String; the name of the column in `data` containing the system identifiers.
+#' @param var_new_system_1 String; the name of the new column to create for system 1 codes.
+#' @param var_new_system_2 String; the name of the new column to create for system 2 codes.
+#'
+#' @return A data frame in which:
+#' \itemize{
+#'   \item The original `var_code` and `var_system` columns are removed.
+#'   \item Two new columns (`var_new_system_1` and `var_new_system_2`) contain
+#'         the corresponding code for each system or `NA` if none exists.
+#'   \item If a group has multiple codes for the same system, an error is thrown.
+#' }
+#'
+#' @details
+#' The function first assigns codes to their respective new system columns using
+#' the provided `system` and `codes` vectors. It then groups by all other columns
+#' and ensures that each group has at most one code per system. If multiple codes
+#' exist in a group, the function stops with an informative error.
+#'
+#' @importFrom dplyr mutate if_else select all_of across group_by summarise
+#'
+#' @export
+PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_code, var_system, var_new_system_1, var_new_system_2) {
+
+  data <- data |>
+    dplyr::mutate(!!var_new_system_1 := dplyr::if_else(get(var_system) %in% system1 | get(var_code) %in% codes1,
+                                                       get(var_code), NA_character_)) |>
+    dplyr::mutate(!!var_new_system_2 := dplyr::if_else(get(var_system) %in% system2 | get(var_code) %in% codes2,
+                                                       get(var_code), NA_character_)) |>
+    dplyr::select(-dplyr::all_of(c(var_code, var_system))) |>
+    dplyr::group_by(dplyr::across(-dplyr::all_of(c(var_new_system_1, var_new_system_2)))) |>
+    dplyr::summarise(
+      !!var_new_system_1 := {
+        vals <- na.omit(.data[[var_new_system_1]])
+        if (length(unique(vals)) > 1) {
+          stop(paste0("Multiple ",var_new_system_1," values in group"))
+        }
+        if (length(vals) == 0) NA_character_ else vals[1]
+      },
+      !!var_new_system_2 := {
+        vals <- na.omit(.data[[var_new_system_2]])
+        if (length(unique(vals)) > 1) {
+          stop(paste0("Multiple ",var_new_system_2," values in group"))
+        }
+        if (length(vals) == 0) NA_character_ else vals[1]
+      },
+      .groups = "drop"
+    )
+  return(data)
+
+}
 
 
 

@@ -84,7 +84,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
                                     REPORT_PERIOD_END = as.character(Sys.Date())) {
 
   if (!interactive()) {
-    named_args <- parse_named_args()
+    named_args <- parseNamedArgs()
     if ("REPORT_PERIOD_START" %in% names(named_args)) {
       REPORT_PERIOD_START <- named_args[["REPORT_PERIOD_START"]]
     }

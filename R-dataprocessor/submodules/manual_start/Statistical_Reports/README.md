@@ -94,6 +94,9 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 
 (nach bestem Wissen und Gewissen gemäß MII KDS Implementation-Guide (mit Bitte um Korrektur falls nicht korrekt umgesetzt) sowie ggf. für die Analyse nötige Erweiterungen)
 
+-   Encounter-Ressourcen sind über das dreistufige-Encounter Modell abgebildet (für das Reporting sind Einrichtungskontakt und vor allem Versorgungstellenkontakt von Bedeutung)
+-   Encounter.status, Encounter.class & Encounter.type:Kontaktebene sind gemäß den entsprechenden Bindings implementiert ( <http://fhir.de/ValueSet/EncounterStatusDe> , <http://fhir.de/ValueSet/EncounterClassDE> , <http://fhir.de/CodeSystem/Kontaktebene> )
+-   falls neben normalstationären Kontakten weitere Kontakte in FHIR abgebildet werden, sind diese über Encounter.type:Kontaktart mit entsprechendem Binding implementiert ( <http://fhir.de/CodeSystem/kontaktart-de> )
 -   der eindeutige organisationsinterner Patienten-Identifier (PID) kann über die in der dataprocessor_config.toml bereits implementierten Filter festgelegt werden (FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM/\_TYPE_SYSTEM/\_TYPE_CODE). Dabei muss mindestens eine der drei Bedingungen zutreffen.
 -   die Kontaktebenen eines Falls sind über partOf-Beziehungen verknüpft; falls nicht müssen alle Encounter-Ressourcen eines Falles den selben enc_identifier_value tragen.
 -   falls es für einen Fall verschiedene enc_identifier_values im Einrichtungskontakt geben kann, muss über COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM in der dataprocessor_config.toml festgelegt werden, aus welchem System die eigentliche Aufnahmenummer/Fallnummer stammt
@@ -107,6 +110,7 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 -   für Encounter-Ressourcen mit status 'onleave' und fehlendem End-Datum, wird für Berechnungen das End-Datum auf deren Start-Datum gesetzt
 -   Ecounter-Ressourcen mit class_code 'PRENC', 'VR', 'HH' werden nicht für die Zählungen berücksichtigt; 'AMB' und 'SS' könnten ggf. für komplexere Analysen benötigt werden (z.B. Ermittlung eines OP Aufenthalts), werden aber aktuell nicht in die Berechnungen einbezogen
 -   stationäre INTERPOLAR-Kontakte tragen enc_class_code == "IMP" mindestens im Einrichtungskontakt
+-   Kontakte mit Kontaktart "begleitperson" werden in den Zählungen nicht berücksichtigt. Die Kontaktarten "vorstationaer", "nachstationaer", "ub", "konsil" und "operation" könnten als Sekundärkontakte für komplexere Analysen benötigt werden, werden aber aktuell nicht in die Berechnungen einbezogen. Die Kontaktarten "teilstationaer", "tagesklinik", "nachtklinik", "normalstationaer", "intensivstationaer" im Versorgungsstellenkontakt werden für INTERPOLAR Stationskontakte in den Zählungen berücksichtigt.
 
 ### Details
 

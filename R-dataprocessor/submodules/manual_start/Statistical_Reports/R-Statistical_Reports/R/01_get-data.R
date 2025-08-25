@@ -140,9 +140,9 @@ getEncounterData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, ",
                   "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-                  "input_datetime, enc_identifier_type_code, enc_identifier_system, ",
+                  "input_datetime, enc_identifier_type_code, enc_identifier_system, enc_type_system, ",
 
-                  "enc_class_system, enc_type_system, enc_servicetype_system, enc_servicetype_code, ",
+                  "enc_class_system, enc_servicetype_system, enc_servicetype_code, ",
                   "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
                   "enc_hospitalization_dischargedisposition_system, enc_hospitalization_dischargedisposition_code, ",
                   "enc_location_ref, enc_location_identifier_value, enc_location_status, ",
@@ -167,33 +167,62 @@ getEncounterData <- function(lock_id, table_name) {
     dplyr::filter(!enc_class_code %in% c("PRENC","VR","HH")) |>
     dplyr::filter(!enc_status %in% c("planned", "cancelled", "entered-in-error", "unknown")) |>
     dplyr::distinct() |>
+    PivotWiderTwoSystems(system1 = "http://fhir.de/CodeSystem/Kontaktebene",
+                         codes1 = c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt"),
+                         system2 = "http://fhir.de/CodeSystem/kontaktart-de",
+                         codes2 = c("begleitperson", "vorstationaer", "nachstationaer", "teilstationaer",
+                                    "tagesklinik", "nachtklinik", "normalstationaer", "intensivstationaer",
+                                    "ub", "konsil", "stationsaequivalent", "operation"),
+                         var_code = "enc_type_code",
+                         var_system = "enc_type_system",
+                         var_new_system_1 = "enc_type_code_Kontaktebene",
+                         var_new_system_2 = "enc_type_code_Kontaktart") |>
+    dplyr::filter(!enc_type_code_Kontaktart %in% c("begleitperson")) |>
+    dplyr::distinct() |>
     dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
 
   if (nrow(encounter_table) == 0) {
     stop("The encounter table is empty. Please check the data.")
   }
 
+  if (any(!encounter_table$enc_type_code_Kontaktebene %in% c("einrichtungskontakt", "abteilungskontakt",
+                                                           "versorgungsstellenkontakt"))) {
+    stop("The encounter table contains type codes with unexpected values or NA. Please check the data.")
+  }
+
   if (nrow(encounter_table |>
-           dplyr::filter(enc_type_code == "einrichtungskontakt")) == 0) {
+           dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt")) == 0) {
     stop("The encounter table does not contain any encounters of type 'einrichtungskontakt'.
          Please check the data or the definition of COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
   }
 
   if (nrow(encounter_table |>
-           dplyr::filter(enc_type_code == "versorgungsstellenkontakt")) == 0) {
+           dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt")) == 0) {
     stop("The encounter table does not contain any encounters of type 'versorgungsstellenkontakt'.
          Please check the data.")
   }
 
-  if (any(!encounter_table$status %in% c("finished", "in-progress", "onleave"))) {
-    stop("The encounter table contains status with unexpected status values
-         (other than https://simplifier.net/packages/de.basisprofil.r4/1.5.0/files/2461103 ).
+  if (any(!encounter_table$enc_status %in% c("finished", "in-progress", "onleave"))) {
+    stop("The encounter table contains status with unexpected status values or NA. Please check the data.")
+  }
+
+  if (any(encounter_table$enc_status == "finished" & is.na(encounter_table$enc_period_end))) {
+    stop("The encounter table contains finished encounters without an end date.
          Please check the data.")
   }
 
-  if (any(encounter_table$status == "finished" & is.na(encounter_table$enc_period_end))) {
-    stop("The encounter table contains finished encounters without an end date.
-         Please check the data.")
+  if (any((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
+          !is.na(encounter_table$enc_class_code))) {
+    stop("The encounter table contains class codes with unexpected values. Please check the data.")
+  }
+
+  if (any((!encounter_table$enc_type_code_Kontaktart %in% c("vorstationaer", "nachstationaer",
+                                                           "teilstationaer", "tagesklinik",
+                                                           "nachtklinik", "normalstationaer",
+                                                           "intensivstationaer", "ub", "konsil",
+                                                           "stationsaequivalent", "operation")) &
+          !is.na(encounter_table$enc_type_code_Kontaktart))) {
+    stop("The encounter table contains type codes with unexpected values. Please check the data.")
   }
 
   return(encounter_table)

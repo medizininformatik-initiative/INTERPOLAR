@@ -6,7 +6,7 @@
 #'
 #' @param full_analysis_set_1 A data frame or tibble representing the full_analysis_set_1 dataset. It must include the following columns:
 #'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `enc_identifier_value`, `pat_id`,
-#'   `pat_identifier_value`, `record_id`, `fall_id_cis`, `enc_type_code`,
+#'   `pat_identifier_value`, `record_id`, `fall_id_cis`, `enc_type_code_Kontaktebene`,
 #'   `age_at_hospitalization`, `enc_period_start`, `calendar_week`, `enc_period_end`,
 #'   `ward_name`, `studienphase`, and `enc_status`.
 #' @param REPORT_PERIOD_START A POSIXct date-time object representing the start of the reporting period.
@@ -39,7 +39,7 @@ prepareF1data <- function(full_analysis_set_1,REPORT_PERIOD_START,REPORT_PERIOD_
     dplyr::filter(!is.na(ward_name)) |>  # only encounters with ward name (see addWardName)
     dplyr::mutate(calendar_week = data.table::isoweek(enc_period_start), .after = enc_period_start) |> # add calendar week
     dplyr::distinct(enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
-                    record_id, fall_id_cis, enc_type_code, age_at_hospitalization, enc_period_start, calendar_week,
+                    record_id, fall_id_cis, enc_type_code_Kontaktebene, age_at_hospitalization, enc_period_start, calendar_week,
                     enc_period_end, ward_name, studienphase, enc_status)
 
   if (anyNA(F1_prep_raw$enc_period_start)) {

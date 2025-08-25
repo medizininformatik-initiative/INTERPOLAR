@@ -9,7 +9,7 @@
 #'   - Additional patient attributes such as birthdate, identifier, etc.
 #' @param encounter_table A data frame containing encounter information, including at least:
 #'   - `enc_patient_ref`: A reference to the patient (format: "Patient/<pat_id>")
-#'   - Other encounter attributes such as `enc_id`, `enc_type_code`, etc.
+#'   - Other encounter attributes such as `enc_id`, `enc_type_code_Kontaktebene`, etc.
 #'
 #' @return A data frame that merges the encounter data with patient data, based on the extracted patient ID.
 #'   The resulting table includes all columns from both input tables.
@@ -41,7 +41,8 @@ mergePatEnc <- function(patient_table, encounter_table) {
       enc_identifier_type_code,
       enc_partof_ref,
       enc_class_code,
-      enc_type_code,
+      enc_type_code_Kontaktebene,
+      enc_type_code_Kontaktart,
       pat_birthdate,
       pat_gender,
       enc_period_start,
@@ -111,7 +112,7 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #'   Must include the following columns:
 #'   - `enc_id`: Unique identifier of the encounter.
 #'   - `enc_partof_ref`: Reference to the parent encounter (e.g., "Encounter/123").
-#'   - `enc_type_code`: Type of the encounter (e.g., "einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt").
+#'   - `enc_type_code_Kontaktebene`: Type of the encounter (e.g., "einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt").
 #'   - `enc_class_code`: Class of the encounter (e.g., "IMP" for inpatient).
 #'   - `enc_identifier_value`: Identifier value for the encounter, used to identify top-level encounters.
 #'
@@ -135,19 +136,19 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #' @export
 addMainEncId <- function(encounter_table) {
 
-  if(any(encounter_table$enc_type_code != "einrichtungskontakt" & is.na(encounter_table$enc_partof_ref) & is.na(encounter_table$enc_identifier_value))) {
+  if(any(encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" & is.na(encounter_table$enc_partof_ref) & is.na(encounter_table$enc_identifier_value))) {
     stop("Some encounters of type other than 'einrichtungskontakt' have no parent reference or identifier value. Main_enc_id not defined. Please check the data.")
   }
 
   if(checkMultipleRows((encounter_table |>
-                       dplyr::filter(enc_type_code == "einrichtungskontakt") |>
+                       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
                        dplyr::distinct(enc_id, enc_identifier_value)),
                        c("enc_identifier_value"))) {
     stop("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value. Main_enc_id not defined. Please check the data.")
   }
 
   if(checkMultipleRows((encounter_table |>
-                        dplyr::filter(enc_type_code == "einrichtungskontakt") |>
+                        dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
                         dplyr::distinct(enc_id, enc_identifier_value)),
                        c("enc_id"))) {
     stop("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id. Main_enc_id not defined. Please check the data and eventually define COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
@@ -155,25 +156,25 @@ addMainEncId <- function(encounter_table) {
 
   encounter_table_with_main_enc <- encounter_table |>
     dplyr::left_join(encounter_table |>
-                       dplyr::filter(enc_type_code == "einrichtungskontakt" & enc_class_code == "IMP") |>
+                       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt" & enc_class_code == "IMP") |>
                        dplyr::distinct(enc_id, enc_identifier_value),
                      by = "enc_identifier_value",
                      suffix = c("", "_einrichtungskontakt")) |>
     dplyr::mutate(main_enc_id = dplyr::case_when(
 
       is.na(enc_partof_ref) &
-        enc_type_code != "einrichtungskontakt" ~ enc_id_einrichtungskontakt,
+        enc_type_code_Kontaktebene != "einrichtungskontakt" ~ enc_id_einrichtungskontakt,
 
       # Top-level: einrichtungskontakt
       is.na(enc_partof_ref) &
-        enc_type_code == "einrichtungskontakt" &
+        enc_type_code_Kontaktebene == "einrichtungskontakt" &
         enc_class_code == "IMP" ~ enc_id,
 
       # Middle-level: abteilungskontakt
-      enc_type_code == "abteilungskontakt" ~ sub("^Encounter/", "", enc_partof_ref),
+      enc_type_code_Kontaktebene == "abteilungskontakt" ~ sub("^Encounter/", "", enc_partof_ref),
 
       # Bottom-level: versorgungsstellenkontakt
-      enc_type_code == "versorgungsstellenkontakt" ~ {
+      enc_type_code_Kontaktebene == "versorgungsstellenkontakt" ~ {
         parent_id <- sub("^Encounter/", "", enc_partof_ref)
         grandparent_ref <- encounter_table$enc_partof_ref[match(parent_id, encounter_table$enc_id)]
         sub("^Encounter/", "", grandparent_ref)
@@ -219,7 +220,7 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
                          dplyr::rename(main_enc_id = enc_id, main_enc_period_start = enc_period_start),
         by = "main_enc_id") |>
       dplyr::relocate(main_enc_period_start, .after = main_enc_id) |>
-    dplyr::arrange(main_enc_period_start, enc_class_code, enc_type_code, enc_period_start, enc_period_end)
+    dplyr::arrange(main_enc_period_start, enc_class_code, enc_type_code_Kontaktebene, enc_period_start, enc_period_end)
 
   return(encounter_table_with_MainEncPeriodStart)
 }
@@ -264,7 +265,7 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 #' It ensures ward names are placed after the `enc_period_end` column and removes duplicate rows.
 #'
 #' @param merged_table_with_main_enc A data frame containing patient encounters. Must include
-#' `enc_id`, `pat_id`, and `enc_period_end`.
+#' `enc_id`, `pat_id`,`enc_period_end` and encounter type/class columns.
 #' @param pids_per_ward_table A data frame containing ward names along with corresponding patient
 #' and encounter IDs of the "Versogungsstellenkontakt". Must include `ward_name`, `patient_id`, and
 #' `encounter_id`.
@@ -278,24 +279,27 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 #' based on patient and encounter IDs. It uses the `enc_id` and `pat_id` from the encounter_table
 #' to match with `encounter_id` and `patient_id` in the pids_per_ward_table.
 #' it ensures that ward names are added only to INTERPOLAR Versorgungsstellenkontakte (i.e., those with
-#' `enc_type_code` of "versorgungsstellenkontakt" and enc_class_code not in "AMB" or "SS").
+#' `enc_type_code_Kontaktebene` of "versorgungsstellenkontakt" and enc_class_code not in "AMB" or "SS")
+#' and not of certain types (e.g., "vorstationaer", "nachstationaer", "ub", "konsil", "operation").
 #' It relocates the `ward_name` column to directly follow
 #' `enc_period_end`, ensuring that the returned table is free of duplicate rows.
 #'
 #' @seealso
 #' \code{\link[dplyr]{left_join}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{distinct}}
 #'
-#' @importFrom dplyr left_join select relocate distinct
+#' @importFrom dplyr left_join select relocate distinct if_else
 #' @export
 addWardName <- function(merged_table_with_main_enc, pids_per_ward_table) {
   merged_table_with_ward <- merged_table_with_main_enc |>
     dplyr::left_join(pids_per_ward_table |>
                        dplyr::select(ward_name, patient_id, encounter_id),
                      by = c("enc_id" = "encounter_id", "pat_id" = "patient_id")) |>
-    dplyr::mutate(ward_name = dplyr::if_else(enc_type_code == "versorgungsstellenkontakt" &
-                                               !enc_class_code %in% c("AMB","SS"),
-                                             ward_name,
-                                             NA_character_)) |>
+    dplyr::mutate(ward_name = dplyr::if_else(
+      enc_type_code_Kontaktebene == "versorgungsstellenkontakt" &
+        !enc_class_code %in% c("AMB","SS") &
+        !enc_type_code_Kontaktart %in% c("vorstationaer", "nachstationaer",
+                                         "ub", "konsil", "operation"),
+      ward_name, NA_character_)) |>
     dplyr::relocate(ward_name, .after = curated_enc_period_end) |>
     dplyr::distinct()
   return(merged_table_with_ward)
