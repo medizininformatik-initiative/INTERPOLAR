@@ -32,7 +32,7 @@ mergePatEnc <- function(patient_table, encounter_table) {
     dplyr::mutate(pat_id = sub("^Patient/", "", enc_patient_ref), .keep = "unused") |>
     dplyr::left_join(patient_table |>
                        dplyr::select(c(pat_id, pat_identifier_value, pat_birthdate, pat_gender,
-                                       pat_deceaseddatetime, input_datetime)),
+                                       pat_deceaseddatetime)),
                      by = "pat_id", suffix = c("_enc", "_pat")) |>
     dplyr::relocate(
       enc_identifier_value,
@@ -418,7 +418,6 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
 mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 
   frontend_table <- patient_fe_table |>
-    dplyr::select(-input_datetime) |>
     dplyr::left_join(fall_fe_table |>
                        dplyr::select(record_id, fall_fhir_enc_id, fall_pat_id, fall_id,
                                      fall_studienphase, fall_station, fall_aufn_dat),

@@ -43,7 +43,7 @@ getPatientData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT pat_id, pat_identifier_system, pat_identifier_type_system, ",
                   "pat_identifier_type_code, pat_identifier_value, pat_birthdate, pat_gender, ",
-                  "pat_deceaseddatetime, input_datetime FROM ", table_name, "\n")
+                  "pat_deceaseddatetime FROM ", table_name, "\n")
 
   patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::filter(
@@ -140,7 +140,7 @@ getEncounterData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, ",
                   "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-                  "input_datetime, enc_identifier_type_code, enc_identifier_system, enc_type_system, ",
+                  "enc_identifier_type_code, enc_identifier_system, enc_type_system, ",
 
                   "enc_class_system, enc_servicetype_system, enc_servicetype_code, ",
                   "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
@@ -179,7 +179,7 @@ getEncounterData <- function(lock_id, table_name) {
                          var_new_system_2 = "enc_type_code_Kontaktart") |>
     dplyr::filter(!enc_type_code_Kontaktart %in% c("begleitperson")) |>
     dplyr::distinct() |>
-    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status, input_datetime)
+    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status)
 
   if (nrow(encounter_table) == 0) {
     stop("The encounter table is empty. Please check the data.")
@@ -258,12 +258,12 @@ getEncounterData <- function(lock_id, table_name) {
 #' @export
 getPidsPerWardData <- function(lock_id, table_name) {
 
-  query <- paste0("SELECT ward_name, patient_id, encounter_id, input_datetime ",
+  query <- paste0("SELECT ward_name, patient_id, encounter_id ",
                   "FROM ", table_name, "\n")
 
   pids_per_ward_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
-    dplyr::arrange(patient_id, encounter_id, input_datetime)
+    dplyr::arrange(patient_id, encounter_id)
 
   if (nrow(pids_per_ward_table) == 0) {
     stop("The pids_per_ward table is empty. Please check the data.")
@@ -299,8 +299,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' @export
 getPatientFeData <- function(lock_id, table_name) {
 
-  query <- paste0("SELECT pat_id, pat_cis_pid, record_id, ",
-                  "input_datetime FROM ", table_name, "\n")
+  query <- paste0("SELECT pat_id, pat_cis_pid, record_id FROM ", table_name, "\n")
 
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
@@ -361,14 +360,13 @@ getFallFeData <- function(lock_id, table_name) {
   query <- paste0("SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
                   "fall_id, fall_studienphase, fall_station, fall_aufn_dat, ",
                   "fall_status, fall_ent_dat, fall_additional_values, ",
-                  "fall_complete, input_datetime FROM ", table_name, "\n")
+                  "fall_complete FROM ", table_name, "\n")
 
   fall_fe_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
-    dplyr::arrange(record_id, input_datetime)
+    dplyr::arrange(record_id)
 
   fall_fe_table <- fall_fe_table_raw |>
-    dplyr::select(-input_datetime) |>
     dplyr::distinct()
 
   if (nrow(fall_fe_table) == 0) {
