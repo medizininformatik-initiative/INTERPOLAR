@@ -92,6 +92,9 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
     dplyr::relocate(curated_enc_period_end, .after = enc_period_end)
 
   if(any(is.na(encounter_table_with_curated_enc_period_end$curated_enc_period_end))) {
+    print(encounter_table_with_curated_enc_period_end |>
+            dplyr::filter(is.na(curated_enc_period_end)),
+          width = Inf)
     stop("There are NA values in curated_enc_period_end. Please check the data.")
   }
 
@@ -136,7 +139,11 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #' @export
 addMainEncId <- function(encounter_table) {
 
-  if(any(encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" & is.na(encounter_table$enc_partof_ref) & is.na(encounter_table$enc_identifier_value))) {
+  if(any(encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" & is.na(encounter_table$enc_partof_ref) &
+         is.na(encounter_table$enc_identifier_value))) {
+    print(encounter_table |>
+            dplyr::filter(enc_type_code_Kontaktebene != "einrichtungskontakt" &
+                            is.na(enc_partof_ref) & is.na(enc_identifier_value)), width = Inf)
     stop("Some encounters of type other than 'einrichtungskontakt' have no parent reference or identifier value. Main_enc_id not defined. Please check the data.")
   }
 

@@ -43,6 +43,8 @@ prepareF1data <- function(full_analysis_set_1,REPORT_PERIOD_START,REPORT_PERIOD_
                     enc_period_end, ward_name, studienphase, enc_status)
 
   if (anyNA(F1_prep_raw$enc_period_start)) {
+    print(F1_prep_raw |>
+            dplyr::filter(is.na(enc_period_start)), width = Inf)
     stop("Starting day undefined for a INTERPOLAR-ward contact (NA start date). Please check the data.")
   }
 

@@ -85,15 +85,18 @@ selectMin <- function(data, grouping_variables, selection_variable) {
 #' # Check for multiple rows in each group
 #' check_multiple_rows(data, grouping_vars = "group")
 #'
-#' @importFrom dplyr group_by add_count filter ungroup
+#' @importFrom dplyr group_by add_count filter ungroup across all_of
 #'
 #' @export
 checkMultipleRows <- function(data, grouping_vars) {
   data_check_multiple_row <- data |>
-    dplyr::group_by(across(all_of(grouping_vars))) |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
     dplyr::add_count() |>
     dplyr::filter(n > 1) |>
     dplyr::ungroup()
+  if (nrow(data_check_multiple_row) > 0) {
+    print(data_check_multiple_row, width = Inf)
+  }
   return(nrow(data_check_multiple_row) > 0)
 }
 
@@ -179,6 +182,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
       !!var_new_system_1 := {
         vals <- na.omit(.data[[var_new_system_1]])
         if (length(unique(vals)) > 1) {
+          print(unique(vals), width = Inf)
           stop(paste0("Multiple ",var_new_system_1," values in group"))
         }
         if (length(vals) == 0) NA_character_ else vals[1]
@@ -186,6 +190,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
       !!var_new_system_2 := {
         vals <- na.omit(.data[[var_new_system_2]])
         if (length(unique(vals)) > 1) {
+          print(unique(vals), width = Inf)
           stop(paste0("Multiple ",var_new_system_2," values in group"))
         }
         if (length(vals) == 0) NA_character_ else vals[1]

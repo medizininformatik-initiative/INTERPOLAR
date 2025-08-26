@@ -185,34 +185,52 @@ getEncounterData <- function(lock_id, table_name) {
     stop("The encounter table is empty. Please check the data.")
   }
 
-  if (any(!encounter_table$enc_type_code_Kontaktebene %in% c("einrichtungskontakt", "abteilungskontakt",
-                                                           "versorgungsstellenkontakt"))) {
-    stop("The encounter table contains type codes with unexpected values or NA. Please check the data.")
+  if (any(encounter_table$enc_class_code == "IMP" &
+          !encounter_table$enc_type_code_Kontaktebene %in% c("einrichtungskontakt", "abteilungskontakt",
+                                                             "versorgungsstellenkontakt"))) {
+    print(encounter_table |>
+            dplyr::filter (enc_class_code == "IMP" & !enc_type_code_Kontaktebene %in%
+                             c("einrichtungskontakt", "abteilungskontakt",
+                               "versorgungsstellenkontakt")), width=Inf)
+    stop("The encounter table contains IMP type codes for Kontaktebene with unexpected values or NA. Please check the data.")
   }
 
   if (nrow(encounter_table |>
            dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt")) == 0) {
+    print(encounter_table, width=Inf)
     stop("The encounter table does not contain any encounters of type 'einrichtungskontakt'.
          Please check the data or the definition of COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
   }
 
   if (nrow(encounter_table |>
            dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt")) == 0) {
+    print(encounter_table, width=Inf)
     stop("The encounter table does not contain any encounters of type 'versorgungsstellenkontakt'.
          Please check the data.")
   }
 
-  if (any(!encounter_table$enc_status %in% c("finished", "in-progress", "onleave"))) {
-    stop("The encounter table contains status with unexpected status values or NA. Please check the data.")
+  if (any(encounter_table$enc_class_code == "IMP"  &
+          !encounter_table$enc_status %in% c("finished", "in-progress", "onleave"))) {
+    print(encounter_table |>
+            dplyr::filter(enc_class_code == "IMP"  & !enc_status %in% c("finished", "in-progress", "onleave")),
+          width=Inf)
+    stop("The encounter table contains IMP status with unexpected status values or NA. Please check the data.")
   }
 
-  if (any(encounter_table$enc_status == "finished" & is.na(encounter_table$enc_period_end))) {
-    stop("The encounter table contains finished encounters without an end date.
+  if (any(encounter_table$enc_class_code == "IMP"  &
+          encounter_table$enc_status == "finished" & is.na(encounter_table$enc_period_end))) {
+    print(encounter_table |>
+            dplyr::filter(enc_class_code == "IMP"  & enc_status == "finished" & is.na(encounter_table$enc_period_end)),
+          width=Inf)
+    stop("The encounter table contains finished IMP encounters without an end date.
          Please check the data.")
   }
 
   if (any((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
           !is.na(encounter_table$enc_class_code))) {
+    print(encounter_table |>
+            dplyr::filter((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
+                            !is.na(encounter_table$enc_class_code)), width=Inf)
     stop("The encounter table contains class codes with unexpected values. Please check the data.")
   }
 
@@ -222,7 +240,14 @@ getEncounterData <- function(lock_id, table_name) {
                                                            "intensivstationaer", "ub", "konsil",
                                                            "stationsaequivalent", "operation")) &
           !is.na(encounter_table$enc_type_code_Kontaktart))) {
-    stop("The encounter table contains type codes with unexpected values. Please check the data.")
+    print(encounter_table |>
+            dplyr::filter((!enc_type_code_Kontaktart %in% c("vorstationaer", "nachstationaer",
+                                                                            "teilstationaer", "tagesklinik",
+                                                                            "nachtklinik", "normalstationaer",
+                                                                            "intensivstationaer", "ub", "konsil",
+                                                                            "stationsaequivalent", "operation")) &
+                            !is.na(enc_type_code_Kontaktart)), width=Inf)
+    stop("The encounter table contains type codes for Kontaktart with unexpected values. Please check the data.")
   }
 
   return(encounter_table)
