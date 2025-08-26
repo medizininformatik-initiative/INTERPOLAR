@@ -129,7 +129,8 @@ testPrepareRAWResources <- function(patient_ids) {
 
   enc_templates <- enc_templates[order(enc_id)]
 
-  resource_tables[["Encounter"]] <- resource_tables[["Encounter"]][0]
+  filtered_resources[["Encounter"]] <- filtered_resources[["Encounter"]][0]
+  filtered_resources[["pids_per_ward"]] <- filtered_resources[["pids_per_ward"]][0]
 
   assign("enc_templates", enc_templates, envir = .test_env)
 
@@ -350,170 +351,131 @@ testRemoveMultipleDiagnoses <- function() {
 
 # Set bed and room for a specific encounter
 testSetBedAndRoom <- function(dt_enc, room, bed) {
-  encounter_id <- dt_enc$enc_id[1]
-  encounter_id <- testEnsureRAWId(encounter_id)
-  dt_enc[enc_id == encounter_id,
+  # Get the encounter ID of the Versorgungsstellenkontakt
+  enc_level_3_id <- dt_enc$enc_id[grepl(enc_level_3_id_pattern, dt_enc$enc_id)]
+
+  dt_enc[enc_id == enc_level_3_id,
          enc_location_identifier_value := paste0("[1.1.1.1]", room, " ~ [2.1.1.1]", bed)]
   return(dt_enc)
 }
 
-#' Remove patients from pids_per_ward
-#'
-#' @param remove_pids Character vector of patient IDs to remove
-#' @return Modified data.table without the removed patients
-testRemoveFromWard <- function(remove_pids) {
-  pids_per_wards <- testGetResourceTable("pids_per_ward")
-
-  pids_per_wards <- pids_per_wards[!patient_id %in% remove_pids]
-
-  testSetResourceTable("pids_per_ward", pids_per_wards)
-  return(pids_per_wards)
+# Extract patient ID from encounter ID
+extractPID <- function(enc_ids) {
+  enc_ids <- as.character(enc_ids)
+  no_prefix <- gsub("^\\[[0-9]+\\]", "", enc_ids)
+  pids <- sub("-E-.*", "", no_prefix)
+  return(pids)
 }
 
 #' Update ward assignment for a patient in pids_per_ward
 #'
 #' @param enc_id Encounter ID to assign
 #' @param ward_names Ward name(s) to assign
-#' @param pat_id Patient ID used to identify the row(s) to update
 #' @return Modified data.table with updated ward assignment
-testUpdateWard <- function(enc_id, ward_names, pat_id) {
+testUpdateWard <- function(enc_ids, ward_names = NULL) {
   pids_per_wards <- testGetResourceTable("pids_per_ward")
+  pids <- unique(extractPID(enc_ids))
 
-  pids_per_wards[patient_id == pat_id,
-                 `:=`(encounter_id = enc_id,
-                      ward_name    = ward_names)]
+  pids_per_wards <- pids_per_wards[!patient_id %in% pids]
+
+  if (!is.null(ward_names)) {
+    new_pids_rows <- data.table::data.table(
+      patient_id   = extractPID(enc_ids),
+      encounter_id = enc_ids,
+      ward_name    = ward_names
+    )
+    pids_per_wards <- rbind(pids_per_wards, new_pids_rows)
+  }
 
   testSetResourceTable("pids_per_ward", pids_per_wards)
   return(pids_per_wards)
 }
 
-#TODO: noch relevant?
-testAddPartOf <- function() {
-  dt_enc <- testGetResourceTable("Encounter")
+# Helper function to increment encounter ID based on level
+incrementEncounterId <- function(x, level) {
+  if (grepl("-E-\\d+$", x)) {
+    # Level 1: ...-E-n
+    pattern <- "^(.*-E-)(\\d+)$"
+    parts <- sub(pattern, "\\1|\\2", x)
+    split <- strsplit(parts, "\\|")[[1]]
 
-  # 1) Wenn es auf -V-<zahl> endet → Parent ist ohne den V-Teil
-  dt_enc[grepl("-V-\\d+$", enc_id),
-         enc_partof_ref := sub("^\\[1\\]", "[1.1]Encounter/", sub("-V-\\d+$", "", enc_id))]
+    prefixE <- split[1]
+    numE    <- as.integer(split[2])
+    numA    <- 0
+    numV    <- 0
 
-  # 2) Wenn es auf -A-<zahl> endet → Parent ist ohne den A-Teil
-  dt_enc[grepl("-A-\\d+$", enc_id),
-         enc_partof_ref := sub("^\\[1\\]", "[1.1]Encounter/", sub("-A-\\d+$", "", enc_id))]
+  } else if (grepl("-E-\\d+-A-\\d+$", x)) {
+    # Level 2: ...-E-n-A-m
+    pattern <- "^(.*-E-)(\\d+)(-A-)(\\d+)$"
+    parts <- sub(pattern, "\\1|\\2|\\3|\\4", x)
+    split <- strsplit(parts, "\\|")[[1]]
 
-  # 3) Wenn es auf -E-<zahl> endet → Kein Parent (NA)
-  dt_enc[grepl("-E-\\d+$", enc_id),
-         enc_partof_ref := NA_character_]
+    prefixE <- split[1]
+    numE    <- as.integer(split[2])
+    midA    <- split[3]
+    numA    <- as.integer(split[4])
+    numV    <- 0
 
-  testSetResourceTable("Encounter", dt_enc)
-  return(dt_enc)
-}
+  } else if (grepl("-E-\\d+-A-\\d+-V-\\d+$", x)) {
+    # Level 3: ...-E-n-A-m-V-k
+    pattern <- "^(.*-E-)(\\d+)(-A-)(\\d+)(-V-)(\\d+)$"
+    parts <- sub(pattern, "\\1|\\2|\\3|\\4|\\5|\\6", x)
+    split <- strsplit(parts, "\\|")[[1]]
 
-# Increment the last number in an encounter ID
-incrementEncounterId <- function(x, level = c("E", "A", "V")) {
-  level <- match.arg(level)
+    prefixE <- split[1]
+    numE    <- as.integer(split[2])
+    midA    <- split[3]
+    numA    <- as.integer(split[4])
+    midV    <- split[5]
+    numV    <- as.integer(split[6])
+  } else {
+    stop("Encounter-ID Format nicht erkannt: ", x)
+  }
 
-  # Extrahiere Teile: Prefix, E, A, V
-  pattern <- "^(.*-E-)(\\d+)(-A-)(\\d+)(-V-)(\\d+)$"
-  parts <- sub(pattern, "\\1|\\2|\\3|\\4|\\5|\\6", x)
-  split <- strsplit(parts, "\\|")[[1]]
-
-  prefixE <- split[1]
-  numE    <- as.integer(split[2])
-  midA    <- split[3]
-  numA    <- as.integer(split[4])
-  midV    <- split[5]
-  numV    <- as.integer(split[6])
-
-  # Je nach Ebene hochzählen/resetten
-  if (level == "E") {
+  # Increment based on level
+  if (level == 1) {
     numE <- numE + 1
     numA <- 1
     numV <- 1
-  } else if (level == "A") {
+    new_id <- paste0(prefixE, numE)
+  } else if (level == 2) {
     numA <- numA + 1
     numV <- 1
-  } else if (level == "V") {
+    new_id <- paste0(prefixE, numE, midA, numA)
+  } else if (level == 3) {
     numV <- numV + 1
+    new_id <- paste0(prefixE, numE, midA, numA, midV, numV)
+  } else {
+    stop("Ungültiges Level: ", level)
   }
 
-  # Zusammensetzen
-  new_id <- paste0(prefixE, numE, midA, numA, midV, numV)
   return(new_id)
 }
 
 # Get the last encounter of a patient in level-3
-testGetEncounterLevel3 <- function(pid, last_only = TRUE) {
+testGetEncounterLevel <- function(pid, enc_level, last_only = TRUE) {
   dt_enc <- testGetResourceTable("Encounter")
-  # Ensure the id carries a "[1]" prefix for level-3 format if missing
-  pid <- testEnsureRAWId(pid)
 
-  # Filter encounters for the given patient ID
-  enc_lvl_3_id <- paste0(pid, "-E-\\d+-A-\\d+-V-\\d+")
-  dt_enc <- dt_enc[grepl(enc_lvl_3_id, enc_id)]
+  pid_plain <- gsub("^\\[[0-9]+\\]", "", pid)   # z.B. "UKB-0001"
+  pid_prefix <- paste0("\\[\\d+\\]", pid_plain) # z.B. "\[1\]UKB-0001"
+
+  if (enc_level == 1) {
+    regex_pattern <- paste0("(^", pid_plain, "-E-\\d+$)|(^", pid_prefix, "-E-\\d+$)")
+  } else if (enc_level == 2) {
+    regex_pattern <- paste0("(^", pid_plain, "-E-\\d+-A-\\d+$)|(^", pid_prefix, "-E-\\d+-A-\\d+$)")
+  } else if (enc_level == 3) {
+    regex_pattern <- paste0("(^", pid_plain, "-E-\\d+-A-\\d+-V-\\d+$)|(^", pid_prefix, "-E-\\d+-A-\\d+-V-\\d+$)")
+  } else {
+    stop("Invalid encounter level: ", enc_level)
+  }
+
+  dt_enc <- dt_enc[grepl(regex_pattern, enc_id)]
 
   if (last_only && nrow(dt_enc) > 0) {
     # Return only the last encounter of this patient
     dt_enc <- dt_enc[nrow(dt_enc)]
   }
   return(dt_enc)
-}
-
-#TODO: Wir brauchen noch eine Funktion, die alle offenen Encounter eines Patienten schließt
-dischargeEncounter <- function(dt_enc, patient_id, enc_id, encounter_number, room, bed, debug_day) {
-  # Set all encounters of this patient to finished
-  dt_enc <- updateEncounterStatus(dt_enc, patient_id, "finished")
-
-  # Update matching encounter rows
-  dt_enc[grepl(paste0("^\\[1\\]", patient_id, "-E-", encounter_number), enc_id), `:=`(
-    enc_status = "finished",
-    enc_period_end = getDebugDatesRAWDateTime(-0.5)
-  )]
-  # Set room & bed for the specific Versorgungsstellenkontakt
-  testSetBedAndRoom(enc_id, room, bed)
-  # Adjust start time for this contact
-  dt_enc <- dt_enc[enc_id == enc_id,
-                   enc_period_start := getDebugDatesRAWDateTime(-0.5, debug_day - 1)]
-
-  return(dt_enc)
-}
-
-# TODO: Funktion nochmal checken und an gegebener Stelle aufrufen
-# Diese Funktion soll die Verlegung eines Patienten in eine andere Versorgungsstelle darstellen
-testTransferWardInternal <- function(pid, room, bed) {
-  dt_enc <- testGetResourceTable("Encounter")
-  # Hole den letzten offenen Versorgungsstellenkontakt der PID
-  enc_level_3 <- testGetEncounterLevel3(pid)
-  enc_id <- enc_level_3$enc_id
-
-  # setze die endzeit alten Kontaktes auf die startzeit
-  # setze den status auf finished des alten Kontaktes
-  end_start_datetime <- getDebugDatesRAWDateTime(-0.5)
-  dt_enc[enc_id == enc_id, `:=`(
-         enc_status = "finished",
-         enc_period_end = end_start_datetime
-         )]
-
-  # Setze die startzeit des Duplikats auf die endzeit des alten Kontaktes
-  enc_level_3[enc_perid_start := end_start_datetime]
-  # setze die enc_id um 1 hoch beim Duplikat
-  enc_level_3[, enc_id := incrementEncounterId(enc_id, "V")]
-  # Set bed & room for Versorgungsstellenkontakt
-  enc_level_3 <- testSetBedAndRoom(enc_level_3, room, bed)
-
-  # beide Tabellen zusammenführen
-  dt_enc <- data.table::rbindlist(list(dt_enc, enc_level_3), use.names = TRUE)
-
-  # Set the Encounter table back to the environment
-  testSetResourceTable("Encounter", dt_enc)
-}
-
-#TODO: Diese Funktion schreiben
-# Diese Funktion soll die Verlegung eines Patienten in eine andere Abteilung darstellen
-testTransferWardDepartment <- function(pid, room, bed, change_department, ward_name = NULL) {
-}
-
-#TODO: Wird diese Funktion benötigt, wenn ja wofür genau?
-# Es wird doch noch eine Funktion benötigt, die den Patienten in eine andere Einrichtung verlegt
-testTransfer <- function(pid, room, bed, change_department, ward_name = NULL) {
 }
 
 # Get encounter templates for a specific patient ID
@@ -525,12 +487,10 @@ getEncounterTemplates <- function(pid, encounter_level = NA){
   return(enc_templates)
 }
 
-# TODO: Diese Funktion noch zuende schreiben
-# Diese Funktion soll eine neue Aufnahme für einen Patienten erstellen (Neuer Einrichtungskontakt)
+# This function admits a patient (creates a new encounter for the patient)
 testAdmission <- function(pid, room, bed, ward_name = NULL) {
   # Get the Encounter table
   dt_enc <- testGetResourceTable("Encounter")
-
   enc_templates <- getEncounterTemplates(pid)
 
   # Create a new encounter for the patient
@@ -541,23 +501,122 @@ testAdmission <- function(pid, room, bed, ward_name = NULL) {
   # Set encounter partof references in all 3 encounter ids
   part_of_ref_pattern <- paste0("\\[1.1\\]Encounter/", pid, "-E-")
   enc_templates[, enc_partof_ref := gsub(paste0(part_of_ref_pattern, "1"), paste0(part_of_ref_pattern, enc_level_1_index), enc_partof_ref)]
+  # Set encounter start date to current debug day -0.5
+  enc_templates[, enc_period_start := getDebugDatesRAWDateTime(-0.5)]
+  enc_templates[, enc_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
 
-  # # Set bed & room for Versorgungsstellenkontakt
-  # enc_templates <- testSetBedAndRoom(enc_templates, enc_id_level3, room, bed)
-  #
-  # # Update the ward information
-  # if (is.null(ward_name)) {
-  #   testRemoveFromWard(pid)
-  # } else {
-  #   testUpdateWard(enc_id = paste0("[1]", pid, "-E-", encounter_number, "-A-1"),
-  #                  ward_names = ward_name,
-  #                  filter_val = pid)
-  # }
+  # Set bed & room for Versorgungsstellenkontakt
+  enc_templates <- testSetBedAndRoom(enc_templates, room, bed)
 
-  # beide Tabellen zusammenführen
+  # Update the ward information
+  if (!is.null(ward_name)) {
+    testUpdateWard(enc_ids = enc_templates$enc_id,
+                   ward_names = ward_name)
+  }
+
+  # Append the new encounter to the Encounter table
   dt_enc <- data.table::rbindlist(list(dt_enc, enc_templates), use.names = TRUE)
 
   # Set the Encounter table back to the environment
+  testSetResourceTable("Encounter", dt_enc)
+
+  return(dt_enc)
+}
+
+# Helper: close the last open encounter of a given level and create a new one
+# - dt_enc: Encounter table (data.table)
+# - pid: patient ID
+# - level: encounter level (2 = Abteilung, 3 = Versorgungsstelle)
+# - room, bed: optional, only relevant for Versorgungsstellenkontakte
+transferEncounterLevel <- function(dt_enc, pid, level, room = NULL, bed = NULL) {
+  # Get the last open encounter of the given level
+  enc_last <- testGetEncounterLevel(pid, enc_level = level)
+  enc_id_last <- enc_last$enc_id
+
+  # Close the old contact
+  end_start_datetime <- getDebugDatesRAWDateTime(-0.5)
+  dt_enc[enc_id == enc_id_last, `:=`(
+    enc_status = "[1]finished",
+    enc_period_end = end_start_datetime
+  )]
+
+  # Prepare the new contact
+  enc_last[, enc_period_start := end_start_datetime]
+  enc_last[, enc_period_end := NA]
+  enc_last[, enc_status := "[1]in-progress"]
+  enc_last[, enc_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+
+  # Increment the encounter ID
+  enc_last[, enc_id := incrementEncounterId(enc_id_last, level)]
+
+  # Optionally set room and bed
+  if (!is.null(room) && !is.null(bed)) {
+    enc_last <- testSetBedAndRoom(enc_last, room, bed)
+  }
+
+  # Return both tables: updated dt_enc and the new row
+  list(dt_enc = dt_enc, new_enc_row = enc_last)
+}
+
+# This function represents the transfer of a patient to another Versorgungsstelle
+testTransferWardInternal <- function(pid, room = NULL, bed = NULL, ward_name = NULL) {
+  dt_enc <- testGetResourceTable("Encounter")
+  enc_level_3_rows <- transferEncounterLevel(dt_enc, pid, level = 3, room, bed)
+  # Update the ward information
+  testUpdateWard(enc_ids = enc_level_3_rows$new_enc_row[["enc_id"]],
+                 ward_names = ward_name)
+  # Merge the updated old contact and the new one into the Encounter table
+  dt_enc <- data.table::rbindlist(list(enc_level_3_rows$dt_enc, enc_level_3_rows$new_enc_row), use.names = TRUE)
+  testSetResourceTable("Encounter", dt_enc)
+}
+
+# This function represents the transfer of a patient to another Abteilung
+testTransferWardDepartment <- function(pid, room = NULL, bed = NULL, ward_name = NULL) {
+  dt_enc <- testGetResourceTable("Encounter")
+  # Step 1: Transfer the Abteilungskontakte (level 2)
+  enc_level_2_rows <- transferEncounterLevel(dt_enc, pid, level = 2)
+  # Get the encounter index of the new Abteilungskontakt
+  enc_level_2_row_index <- sub(".*-(\\d+)$", "\\1", enc_level_2_rows$new_enc_row[["enc_id"]])
+
+  # Step 2: Transfer the Versorgungsstellenkontakte (level 3)
+  enc_level_3_rows <- transferEncounterLevel(dt_enc, pid, level = 3, room = room, bed = bed)
+  # Update the encounter ID of the new Versorgungsstellenkontakt to match the new Abteilungskontakt
+  enc_level_3_rows$new_enc_row[, enc_id := sub("-A-\\d+-V-\\d+$", paste0("-A-", enc_level_2_row_index, "-V-1"), enc_id)]
+
+
+  # Step 3: If ward name is given, update mapping
+  testUpdateWard(enc_ids   = enc_level_3_rows$new_enc_row[["enc_id"]],
+                 ward_names = ward_name)
+
+  # Step 4: Merge all into Encounter table
+  dt_enc <- data.table::rbindlist(
+    list(enc_level_2_rows$new_enc_row, enc_level_3_rows$dt_enc, enc_level_3_rows$new_enc_row),
+    use.names = TRUE
+  )
+  testSetResourceTable("Encounter", dt_enc)
+}
+
+# This function discharges a patient (closes all encounters of the current case)
+testDischarge <- function(pid) {
+  dt_enc <- testGetResourceTable("Encounter")
+
+  # Get discharge datetime (0.5 days before current debug day)
+  discharge_datetime <- getDebugDatesRAWDateTime(-0.5)
+
+  pid_ref <- paste0("[1.1]Patient/", pid)
+
+  # Close all encounters of this patient
+  dt_enc[enc_patient_ref == pid_ref & enc_status != "finished", `:=`(
+    enc_status = "[1]finished",
+    enc_period_end = discharge_datetime,
+    enc_meta_lastupdated = getDebugDatesRAWDateTime(-0.1)
+  )]
+
+  # Update the ward information
+  enc_ids <- dt_enc[enc_patient_ref == pid_ref, enc_id]
+  testUpdateWard(enc_ids = enc_ids, ward_names = NULL)
+
+  # Save back to environment
   testSetResourceTable("Encounter", dt_enc)
 
   return(dt_enc)
@@ -693,14 +752,56 @@ testAdmission <- function(pid, room, bed, ward_name = NULL) {
 #   return(dt_enc)
 # }
 
-# extractPID <- function(enc_id) {
-#   # Extract the patient ID from the encounter ID
-#   # Example: "[1]UKB-0001-E-1-A-1-V-1" -> "UKB-0001"
-#   #          "UKB-0001-E-1-A-1-V-1"    -> "UKB-0001"
-#   match <- regmatches(enc_id, regexpr("(\\[[0-9]+\\])?(.*?)-", enc_id))
-#   if (length(match) > 0 && nzchar(match)) {
-#     # Remove the optional [number] if present and the last “-” along with the rest
-#     return(sub("(\\[[0-9]+\\])?", "", sub("-.*", "", match)))
-#   }
-#   stop("Can not extract PID from enc_id: ", enc_id)
+# # TODO: Funktion nochmal checken und an gegebener Stelle aufrufen
+# # This function represents the transfer of a patient to another ward (Versorgungsstelle)
+# testTransferWardInternal <- function(pid, room, bed) {
+#   dt_enc <- testGetResourceTable("Encounter")
+#
+#   # Get the last open Versorgungsstellenkontakt for the given PID
+#   enc_level_3 <- testGetEncounterLevel(pid, enc_level = 3)
+#   enc_id_level_3 <- enc_level_3$enc_id
+#
+#   # Close the old contact:
+#   # - set the end time to the transfer time
+#   # - set the status to "finished"
+#   end_start_datetime <- getDebugDatesRAWDateTime(-0.5)
+#   dt_enc[enc_id == enc_id_level_3, `:=`(
+#     enc_status = "finished",
+#     enc_period_end = end_start_datetime
+#   )]
+#
+#   # Prepare the duplicate (new contact):
+#   # - set the start time to the same as the end time of the old contact
+#   enc_level_3[, enc_period_start := end_start_datetime]
+#
+#   # Increment the encounter ID for the new Versorgungsstellenkontakt
+#   enc_level_3[, enc_id := incrementEncounterId(enc_id, "V")]
+#
+#   # Set the room and bed for the new contact
+#   enc_level_3 <- testSetBedAndRoom(enc_level_3, room, bed)
+#
+#   # Merge the updated old contact and the new one into the Encounter table
+#   dt_enc <- data.table::rbindlist(list(dt_enc, enc_level_3), use.names = TRUE)
+#
+#   # Write the updated Encounter table back to the environment
+#   testSetResourceTable("Encounter", dt_enc)
+# }
+
+# testAddPartOf <- function() {
+#   dt_enc <- testGetResourceTable("Encounter")
+#
+#   # 1) Wenn es auf -V-<zahl> endet → Parent ist ohne den V-Teil
+#   dt_enc[grepl("-V-\\d+$", enc_id),
+#          enc_partof_ref := sub("^\\[1\\]", "[1.1]Encounter/", sub("-V-\\d+$", "", enc_id))]
+#
+#   # 2) Wenn es auf -A-<zahl> endet → Parent ist ohne den A-Teil
+#   dt_enc[grepl("-A-\\d+$", enc_id),
+#          enc_partof_ref := sub("^\\[1\\]", "[1.1]Encounter/", sub("-A-\\d+$", "", enc_id))]
+#
+#   # 3) Wenn es auf -E-<zahl> endet → Kein Parent (NA)
+#   dt_enc[grepl("-E-\\d+$", enc_id),
+#          enc_partof_ref := NA_character_]
+#
+#   testSetResourceTable("Encounter", dt_enc)
+#   return(dt_enc)
 # }
