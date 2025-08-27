@@ -96,7 +96,9 @@ services:
     volumes:
       - cds_hub_db-data:/var/lib/postgresql/data
       - ./Postgres-cds_hub/postgresql.conf:/etc/postgresql.conf
-      - ./Postgres-cds_hub/init/:/docker-entrypoint-initdb.d/
+      # Zur automatischen Initialisierung die nachfolgende Zeile einkommentieren, siehe Hinweise unter https://medizininformatik-initiative.github.io/INTERPOLAR/Install
+      # - ./Postgres-cds_hub/init/:/docker-entrypoint-initdb.d/
+      - ./Postgres-cds_hub/init/:/cds_hub-initdb.d/
 
   # Web-administration of cds_hub__db (optional)
   pgadmin:
