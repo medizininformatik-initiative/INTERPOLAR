@@ -24,6 +24,14 @@ title: Installationsanleitung
     ```docker-compose up``` \
     Falls Sie Änderungen z.B. an Dockerfiles oder am R Code vorgenommen haben, nutzen Sie bitte den '--build' Parameter, um die erneute Erstellung der Docker Images zu erzwingen. Der Build-Vorgang kann mehrere Minuten in Anspruch nehmen.: \
     ```docker-compose up --build```
+  1. Bei einer Neuinstallation der CDS Tool Chain, also falls **kein** Upgrade einer bestehenden CDS Tool Chain Installation gemacht wird, erfolgt die Initialisierung der _cds_hub_ Datenbank seit [Version v1.2.0](https://github.com/medizininformatik-initiative/INTERPOLAR/releases/tag/v1.2.0) nicht mehr automatisch, sondern manuell über den folgenden Befehl:
+     ```cmd
+     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d cds_hub_db < `find Postgres-cds_hub/init -maxdepth 1 -name '*.sql' | sort`
+     ```
+     Bei einem Upgrade der CDS Tool Chain ist in der Regel einer Aktualisierung der Datenbank (Migration) erforderlich, welche über den folgenden Befehl aufgerufen wird:
+     ```cmd
+     docker compose exec -w /cds_hub-initdb.d cds_hub psql -U cds_hub_db_admin -d cds_hub_db -f ./migration/migration.sql
+     ```
   1. Die cds_hub_db (Postges-Datenbank) erreichen Sie im Browser (PGAdmin) über die URL: [http://127.0.0.1:8089/](http://127.0.0.1:8089/)
      * Die Zugangsdaten für pgadmin entnehmen Sie bitte der [docker-compose.yml](/docker-compose.yml#L94) (services -> pgadmin) bzw. können Sie diese dort anpassen.
      * ggf. muss im pgadmin die Verbindung zur cds_hub_db mit den Zugangsdaten aus der [docker-compose.yml](/docker-compose.yml#L63) (services -> cds_hub: POSTGRES_USER, POSTGRES_DB) bzw. der Passwort-Datei (secrets -> cds_hub_db_admin.password, Postgres-cds_ub/.env_cds_hub_db_admin.password) angelegt werden. Weitere Informationen siehe [Postgres-cds_hub/Readme.md](Postgres-cds_hub/Readme.md)
