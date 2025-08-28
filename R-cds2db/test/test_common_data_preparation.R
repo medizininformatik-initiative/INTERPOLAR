@@ -109,6 +109,7 @@ testPrepareRAWResources <- function(patient_ids) {
       filtered_resources[[resource_name]] <- resource_table
     }
   }
+
   # Add template for encounter table
   enc_templates <- data.table::copy(resource_tables[["Encounter"]])
   # Filter encounter IDs based on the provided patient IDs
@@ -118,7 +119,6 @@ testPrepareRAWResources <- function(patient_ids) {
   enc_templates <- enc_templates[grepl("-1$", enc_id)]
   # Add encounters with type "Versorgungstellenkontakt"
   enc_templates <- testAddEncounterLevel3(enc_templates)
-
   # Change encounter data
   enc_templates <- enc_templates[grepl("-(A|V)-1$", enc_id),
                                  enc_partof_ref := paste0("[1.1]Encounter/", sub("-(A|V)-1$", "", enc_id))]
@@ -126,13 +126,45 @@ testPrepareRAWResources <- function(patient_ids) {
   enc_templates[, enc_period_start := getDebugDatesRAWDateTime(-0.5)]
   enc_templates[, enc_period_end := NA]
   enc_templates[, enc_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
-
   enc_templates <- enc_templates[order(enc_id)]
 
+  # Add template for MedicationRequest table
+  med_req_templates <- data.table::copy(resource_tables[["MedicationRequest"]])
+  med_req_templates <- rbind(med_req_templates, as.list(rep(NA_character_, ncol(med_req_templates))))
+  med_req_templates[, medreq_status := "[1]active"]
+  med_req_templates[, medreq_doseinstruc_timing_repeat_boundsperiod_start := getDebugDatesRAWDateTime(-0.5)]
+  med_req_templates[, medreq_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+
+  # Add template for Condition table
+  med_templates <- data.table::copy(resource_tables[["Medication"]])
+  med_templates <- med_templates[1]
+  med_templates[, med_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+
+
+  # Add template for Condition table
+  con_templates <- data.table::copy(resource_tables[["Condition"]])
+  con_templates <- con_templates[1]
+  con_templates[, con_recordeddate := getDebugDatesRAWDateTime(-0.5)]
+  con_templates[, con_onsetperiod_start := getDebugDatesRAWDateTime(-0.5)]
+  con_templates[, con_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+
+  # Add template for Observation table
+  obs_templates <- data.table::copy(resource_tables[["Observation"]])
+  obs_templates <- obs_templates[1]
+  obs_templates[, obs_effectivedatetime := getDebugDatesRAWDateTime(-0.5)]
+  obs_templates[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+
   filtered_resources[["Encounter"]] <- filtered_resources[["Encounter"]][0]
+  filtered_resources[["MedicationRequest"]] <- filtered_resources[["MedicationRequest"]][0]
+  filtered_resources[["Condition"]] <- filtered_resources[["Condition"]][0]
+  filtered_resources[["Observation"]] <- filtered_resources[["Observation"]][0]
   filtered_resources[["pids_per_ward"]] <- filtered_resources[["pids_per_ward"]][0]
 
   assign("enc_templates", enc_templates, envir = .test_env)
+  assign("med_req_templates", med_req_templates, envir = .test_env)
+  assign("med_templates", med_templates, envir = .test_env)
+  assign("con_templates", con_templates, envir = .test_env)
+  assign("obs_templates", obs_templates, envir = .test_env)
 
   testSetResourceTables(filtered_resources)
 }
@@ -580,9 +612,9 @@ testTransferWardDepartment <- function(pid, room = NULL, bed = NULL, ward_name =
 
   # Step 2: Transfer the Versorgungsstellenkontakte (level 3)
   enc_level_3_rows <- transferEncounterLevel(dt_enc, pid, level = 3, room = room, bed = bed)
-  # Update the encounter ID of the new Versorgungsstellenkontakt to match the new Abteilungskontakt
+  # Update the encounter ID and partof of the new Versorgungsstellenkontakt to match the new Abteilungskontakt
   enc_level_3_rows$new_enc_row[, enc_id := sub("-A-\\d+-V-\\d+$", paste0("-A-", enc_level_2_row_index, "-V-1"), enc_id)]
-
+  enc_level_3_rows$new_enc_row[, enc_partof_ref := sub("-E-\\d+-A-\\d+$", paste0("-E-", enc_level_2_row_index), enc_partof_ref)]
 
   # Step 3: If ward name is given, update mapping
   testUpdateWard(enc_ids   = enc_level_3_rows$new_enc_row[["enc_id"]],
@@ -606,7 +638,7 @@ testDischarge <- function(pid) {
   pid_ref <- paste0("[1.1]Patient/", pid)
 
   # Close all encounters of this patient
-  dt_enc[enc_patient_ref == pid_ref & enc_status != "finished", `:=`(
+  dt_enc[enc_patient_ref == pid_ref & enc_status != "[1]finished", `:=`(
     enc_status = "[1]finished",
     enc_period_end = discharge_datetime,
     enc_meta_lastupdated = getDebugDatesRAWDateTime(-0.1)
@@ -622,186 +654,194 @@ testDischarge <- function(pid) {
   return(dt_enc)
 }
 
-#TODO: Können die Funktionen alle weg?
-#############################
-######OLD_FUNCTIONS##########
-#############################
+runCodeForDebugDay <- function(debug_day, code_block) {
+  current_debug_day <- get("DEBUG_DAY", envir = .GlobalEnv)
+  if (current_debug_day >= debug_day) {
+    assign("DEBUG_DAY", debug_day, envir = .GlobalEnv)
+    eval(substitute(code_block))
+    assign("DEBUG_DAY", current_debug_day, envir = .GlobalEnv)
+  }
+}
+
+duplicatePatients <- function(count) {
+  replacePatientId <- function(old_id, new_id, resource_table, resource_name) {
+    id_column <- etlutils::fhirdbGetIDColumn(resource_name)
+    identifier_column <- etlutils::fhirdbGetIdentifierColumn(resource_name)
+    pid_ref_column <- if (resource_name == "pids_per_ward") "patient_id" else etlutils::fhirdbGetPIDColumn(resource_name)
+    enc_ref_column <- if (resource_name == "pids_per_ward") "encounter_id" else etlutils::fhirdbGetEncIDColumn(resource_name)
+
+    columns_to_replace <- c(id_column, identifier_column, pid_ref_column, enc_ref_column)
+
+    for (col in columns_to_replace) {
+      if (col %in% names(resource_table)) {
+        if (endsWith(col, "_ref")) {
+          resource_table[, (col) := sub(
+            paste0("(^\\[[^]]+\\][^/]+/)", old_id),
+            paste0("\\1", new_id),
+            get(col)
+          )]
+        } else {
+          resource_table[, (col) := sub(
+            paste0("(^\\[[^]]+\\])", old_id, "(?=-E|$)"),
+            paste0("\\1", new_id),
+            get(col),
+            perl = TRUE
+          )]
+        }
+      }
+    }
+    return(resource_table)
+  }
+
+  # Copy ressource tables
+  resource_tables <- testGetResourceTables()
+  # Get patient table
+  dt_pat <- resource_tables[["Patient"]]
+  new_resource_tables <- lapply(resource_tables, data.table::copy)
+
+  # iterate over all resource_tables
+  for (i in 1:count) {
+    for (resource_name in names(resource_tables)) {
+      resource_table <- data.table::copy(resource_tables[[resource_name]])
+      for (pat_id in dt_pat$pat_id) {
+        pat_id <- sub("^\\[[^]]+\\]", "", pat_id)
+        new_resource_table <- replacePatientId(pat_id, paste0(pat_id, "_", i), resource_table, resource_name)
+        new_resource_tables[[resource_name]] <- rbind(new_resource_tables[[resource_name]], new_resource_table)
+      }
+    }
+  }
+  testSetResourceTables(new_resource_tables)
+}
+
+addDrugs <- function(pid, codes) {
+  # Load template tables from environment
+  med_req_templates <- get("med_req_templates", envir = .test_env)
+  med_templates <- get("med_templates", envir = .test_env)
+
+  # Get current resource tables
+  resource_tables <- testGetResourceTables()
+
+  # Determine the next available index for encounters, MedicationRequests, and Medications
+  enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
+  med_req_index <- nrow(resource_tables[["MedicationRequest"]][grepl(paste0("^\\[1\\]", pid, "-MR-\\d+$"), medreq_id)]) + 1
+  med_index <- nrow(resource_tables[["Medication"]][grepl(paste0("^\\[1\\]", pid, "-M-\\d+$"), med_id)]) + 1
+
+  # Create MedicationRequest entries for each code
+  med_req_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
+    dt <- data.table::copy(med_req_templates)
+    # Generate unique ID for MedicationRequest
+    dt[, medreq_id := paste0("[1]", pid, "-E-", enc_index, "-MR-", med_req_index + (i - 1))]
+    dt[, medreq_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-MR-", med_req_index + (i - 1))]
+    # Reference patient and encounter
+    dt[, medreq_patient_ref := paste0("[1.1]Patient/", pid)]
+    dt[, medreq_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
+    # Reference the corresponding Medication
+    dt[, medreq_medicationreference_ref := paste0("[1]Medication/", pid, "-M-", med_index + (i - 1))]
+    dt
+  }))
+
+  # Create Medication entries for each code
+  med_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
+    dt <- data.table::copy(med_templates)
+    # Generate unique ID for Medication
+    dt[, med_id := paste0("[1]", pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))]
+    dt[, med_identifier_value := paste0("[1.1]", pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))]
+    # Assign the drug code
+    dt[, med_code_code := paste0("[1.1.1]", codes[i])]
+    dt
+  }))
+
+  # Append the new entries to the resource tables
+  resource_tables[["Medication"]] <- rbind(resource_tables[["Medication"]], med_dt, fill = TRUE)
+  resource_tables[["MedicationRequest"]] <- rbind(resource_tables[["MedicationRequest"]], med_req_dt, fill = TRUE)
+
+  # Save the updated resource tables
+  testSetResourceTables(resource_tables)
+}
+
+addConditions <- function(pid, codes) {
+  # Load template table for Condition
+  con_templates <- get("con_templates", envir = .test_env)
+
+  # Get current resource tables
+  resource_tables <- testGetResourceTables()
+
+  # Determine next available index for Conditions and Encounter for this patient
+  enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
+  con_index <- nrow(resource_tables[["Condition"]][grepl(paste0("^\\[1\\]", pid, "-C-\\d+$"), con_id)]) + 1
+
+  # Create Condition entries for each code
+  con_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
+    dt <- data.table::copy(con_templates)
+    # Generate unique Condition ID
+    dt[, con_id := paste0("[1]", pid, "-E-", enc_index, "-D-", con_index + (i - 1))]
+    dt[, con_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-D-", obs_index + (i - 1))]
+    # Reference the patient and encounter
+    dt[, con_patient_ref := paste0("[1.1]Patient/", pid)]
+    dt[, con_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
+    # Assign the condition code
+    dt[, con_code_code := paste0("[1.1.1]", codes[i])]
+    dt
+  }))
+
+  # Append the new entries to the Condition table
+  resource_tables[["Condition"]] <- rbind(resource_tables[["Condition"]], con_dt, fill = TRUE)
+
+  # Save updated resource tables
+  testSetResourceTables(resource_tables)
+}
+
+addObservations <- function(pid, codes) {
+  # Load template table for Observation
+  obs_templates <- get("obs_templates", envir = .test_env)
+
+  # Get current resource tables
+  resource_tables <- testGetResourceTables()
+
+  # Determine next available index for Observations and Encounter for this patient
+  enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
+  obs_index <- nrow(resource_tables[["Observation"]][grepl(paste0("^\\[1\\]", pid, "-O-\\d+$"), obs_id)]) + 1
+
+  # Create Observation entries for each code
+  obs_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
+    dt <- data.table::copy(obs_templates)
+    # Generate unique Observation ID
+    dt[, obs_id := paste0("[1]", pid, "-E-", enc_index, "-OL-", obs_index + (i - 1))]
+    dt[, obs_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-OL-", obs_index + (i - 1))]
+    # Reference the patient and encounter
+    dt[, obs_patient_ref := paste0("[1.1]Patient/", pid)]
+    dt[, obs_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
+    # Assign the observation code
+    dt[, obs_code_code := paste0("[1.1.1]", codes[i])]
+    dt
+  }))
+
+  # Append the new entries to the Observation table
+  resource_tables[["Observation"]] <- rbind(resource_tables[["Observation"]], obs_dt, fill = TRUE)
+
+  # Save updated resource tables
+  testSetResourceTables(resource_tables)
+}
 
 
-# startNewEncounter <- function(dt_enc, patient_id, encounter_number,
-#                               room, bed, debug_day, start_offset = 0) {
-#   # Construct encounter IDs
-#   enc_id_level1 <- paste0("[1]", patient_id, "-E-", encounter_number)
-#   enc_id_level2  <- paste0(enc_id_level1, "-A-1")
-#   enc_id_level3   <- paste0(enc_id_level2, "-V-1")
-#
-#   # Update encounter status (in-progress, with custom start offset)
-#   dt_enc <- testUpdateEncounterStatus(
-#     dt_enc,
-#     pid   = patient_id,
-#     status = "[1]in-progress",
-#     start  = getDebugDatesRAWDateTime(-0.5, DEBUG_DAY + start_offset),
-#     end    = NA
-#   )
-#
-#   # Replace enc_id (make sure new Encounter number is applied everywhere)
-#   dt_enc <- dt_enc[, enc_id := gsub(paste0("\\[1\\]", patient_id, "-E-1"), enc_id_level1, enc_id)]
-#   # Set bed & room for Versorgungsstellenkontakt
-#   dt_enc <- testSetBedAndRoom(dt_enc, enc_id_level3, room, bed)
-#   # Update references
-#   dt_enc <- dt_enc[enc_id == enc_id_level2,
-#                    enc_partof_ref := paste0("[1.1]Encounter/", patient_id, "-E-", encounter_number)]
-#   dt_enc <- dt_enc[enc_id == enc_id_level3,
-#                    enc_partof_ref := paste0("[1.1]Encounter/", enc_id_level2)]
-#   return(dt_enc)
-# }
 
-# startNewEncounter <- function(dt_enc, patient_id, encounter_number,
-#                               room, bed, debug_day, start_offset = 0) {
-#   # Construct encounter IDs
-#   base_enc_id <- paste0("[1]", patient_id, "-E-", encounter_number)
-#   abt_enc_id  <- paste0(base_enc_id, "-A-1")
-#   vs_enc_id   <- paste0(abt_enc_id, "-V-1")
+# getNextPatientId <- function(pat_id, dt_pat) {
+#   # Extract numeric suffix
+#   num_suffix <- as.integer(sub(".*-(\\d+)$", "\\1", pat_id))
+#   # Get Id prefix (before the suffix)
+#   id_prefix <- sub("-(\\d+)$", "", pat_id)
+#   # Filter rows in dt_pat with the same prefix
+#   similar_ids <- dt_pat[grepl(paste0("^", id_prefix, "-"), pat_id), pat_id]
+#   # Extract numeric suffixes from similar IDs
+#   suffixes <- as.integer(sub(".*-(\\d+)$", "\\1", similar_ids))
+#   # Determine the maximum suffix
+#   if (length(suffixes) > 0) {
+#     num_suffix <- max(suffixes, na.rm = TRUE)
+#   } else {
+#     num_suffix <- 0
+#   }
+#   # Create new patient ID by incrementing the maximum suffix
+#   new_pat_id <- paste0(id_prefix, "-", num_suffix + 1)
 #
-#   # Update encounter status (in-progress, with custom start offset)
-#   dt_enc <- updateEncounterStatus(
-#     dt_enc,
-#     pid   = patient_id,
-#     status = "in-progress",
-#     start  = getDebugDatesRAWDateTime(-0.5, debug_day + start_offset),
-#     end    = NA
-#   )
-#
-#   # Replace enc_id (make sure new Encounter number is applied everywhere)
-#   dt_enc <- dt_enc[, enc_id := gsub(paste0("\\[1\\]", patient_id, "-E-1"), base_enc_id, enc_id)]
-#   # Set bed & room for Versorgungsstellenkontakt
-#   testSetBedAndRoom(vs_enc_id, room, bed)
-#   # Update identifiers and references
-#   dt_enc <- dt_enc[enc_id == base_enc_id,
-#                    enc_identifier_value := paste0(patient_id, "-E-", encounter_number)]
-#   dt_enc <- dt_enc[enc_id == abt_enc_id,
-#                    enc_partof_ref := paste0("Encounter/", patient_id, "-E-", encounter_number)]
-#   dt_enc <- dt_enc[enc_id == vs_enc_id,
-#                    enc_partof_ref := paste0("Encounter/", abt_enc_id)]
-#   return(dt_enc)
-# }
-
-# testTransferWardInternal <- function(dt_enc, enc_lvl_3_id, day_offset = -0.5) {
-#   dt_enc <- resource_tables[["Encounter"]]
-#   dt_enc <- updateEncounterStatus(dt_enc, pid, "finished")
-#   end_start_datetime <- getDebugDatesRAWDateTime(day_offset)
-#   dt_enc[enc_id == enc_lvl_3_id, enc_period_end := end_start_datetime]
-#   testTransferEncounterLevel3(enc_lvl_3_id)
-#
-#   dt_enc[nrow(dt_enc), `:=`(
-#     enc_status = "in-progress",
-#     enc_period_start = end_start_datetime,
-#     enc_period_end = NA
-#   )]
-#
-#   resource_tables[["Encounter"]] <<- dt_enc
-# }
-
-# Duplicate Encounter Level 3 and increment enc_id
-# testTransferEncounterLevel3 <- function(pid) {
-#   dt_enc <- testGetResourceTable("Encounter")
-#
-#   # Extract the row to duplicate
-#   transfer_row <-  testGetEncounterLevel3(pid)
-#   # Increment enc_id in duplicate
-#   transfer_row[, enc_id := incrementLastDashNumber(enc_id)]
-#   # Append to table
-#   dt_enc <- data.table::rbindlist(list(dt_enc, transfer_row), use.names = TRUE)
-#
-#   testSetResourceTable("Encounter", dt_enc)
-#
-#   return(dt_enc)
-# }
-
-#' #' Increment the last numeric suffix after the final dash
-#' #'
-#' #' Takes an encounter id (or similar string) and increments the last number
-#' #' following the final dash ("-").
-#' #'
-#' #' @param x Character scalar, e.g. \code{"[1]UKB-0002-E-1-A-1-V-1"}.
-#' #'
-#' #' @return Modified string with the last number incremented by 1.
-#' #'
-#' #' @examples
-#' #' incrementLastDashNumber("[1]UKB-0002-E-1-A-1-V-1")
-#' #' # Returns "[1]UKB-0002-E-1-A-1-V-2"
-#' #'
-#' #' incrementLastDashNumber("ABC-99")
-#' #' # Returns "ABC-100"
-#' #'
-#' #' @export
-#' incrementLastDashNumber <- function(x) {
-#'   sub("-(\\d+)$", function(m) {
-#'     num <- as.integer(sub("-(\\d+)$", "\\1", m))
-#'     paste0("-", num + 1)
-#'   }, x)
-#' }
-
-# testUpdateEncounterStatus <- function(dt_enc, pid, status, start = NULL, end = NULL, colnames_pattern_to_clear = "^enc_diagnosis_") {
-#   changeDataForPID(dt_enc, pid, "enc_status", status)
-#   if (!is.null(start)) changeDataForPID(dt_enc, pid, "enc_period_start", start)
-#   if (!is.null(end)) changeDataForPID(dt_enc, pid, "enc_period_end", end)
-#   if (!is.null(colnames_pattern_to_clear)) changeDataForPID(dt_enc, pid, colnames_pattern_to_clear, NA)
-#   changeDataForPID(dt_enc, pid, "enc_meta_lastupdated", getDebugDatesRAWDateTime(-0.1))
-#
-#   return(dt_enc)
-# }
-
-# # TODO: Funktion nochmal checken und an gegebener Stelle aufrufen
-# # This function represents the transfer of a patient to another ward (Versorgungsstelle)
-# testTransferWardInternal <- function(pid, room, bed) {
-#   dt_enc <- testGetResourceTable("Encounter")
-#
-#   # Get the last open Versorgungsstellenkontakt for the given PID
-#   enc_level_3 <- testGetEncounterLevel(pid, enc_level = 3)
-#   enc_id_level_3 <- enc_level_3$enc_id
-#
-#   # Close the old contact:
-#   # - set the end time to the transfer time
-#   # - set the status to "finished"
-#   end_start_datetime <- getDebugDatesRAWDateTime(-0.5)
-#   dt_enc[enc_id == enc_id_level_3, `:=`(
-#     enc_status = "finished",
-#     enc_period_end = end_start_datetime
-#   )]
-#
-#   # Prepare the duplicate (new contact):
-#   # - set the start time to the same as the end time of the old contact
-#   enc_level_3[, enc_period_start := end_start_datetime]
-#
-#   # Increment the encounter ID for the new Versorgungsstellenkontakt
-#   enc_level_3[, enc_id := incrementEncounterId(enc_id, "V")]
-#
-#   # Set the room and bed for the new contact
-#   enc_level_3 <- testSetBedAndRoom(enc_level_3, room, bed)
-#
-#   # Merge the updated old contact and the new one into the Encounter table
-#   dt_enc <- data.table::rbindlist(list(dt_enc, enc_level_3), use.names = TRUE)
-#
-#   # Write the updated Encounter table back to the environment
-#   testSetResourceTable("Encounter", dt_enc)
-# }
-
-# testAddPartOf <- function() {
-#   dt_enc <- testGetResourceTable("Encounter")
-#
-#   # 1) Wenn es auf -V-<zahl> endet → Parent ist ohne den V-Teil
-#   dt_enc[grepl("-V-\\d+$", enc_id),
-#          enc_partof_ref := sub("^\\[1\\]", "[1.1]Encounter/", sub("-V-\\d+$", "", enc_id))]
-#
-#   # 2) Wenn es auf -A-<zahl> endet → Parent ist ohne den A-Teil
-#   dt_enc[grepl("-A-\\d+$", enc_id),
-#          enc_partof_ref := sub("^\\[1\\]", "[1.1]Encounter/", sub("-A-\\d+$", "", enc_id))]
-#
-#   # 3) Wenn es auf -E-<zahl> endet → Kein Parent (NA)
-#   dt_enc[grepl("-E-\\d+$", enc_id),
-#          enc_partof_ref := NA_character_]
-#
-#   testSetResourceTable("Encounter", dt_enc)
-#   return(dt_enc)
+#   return(new_pat_id)
 # }
