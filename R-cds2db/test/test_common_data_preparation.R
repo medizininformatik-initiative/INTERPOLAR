@@ -29,6 +29,15 @@ testSetResourceTable <- function(resource_name, resource_table) {
   assign("resource_tables", resource_tables, envir = .test_env)
 }
 
+runCodeForDebugDay <- function(debug_day, code_block) {
+  current_debug_day <- get("DEBUG_DAY", envir = .GlobalEnv)
+  if (current_debug_day >= debug_day) {
+    assign("DEBUG_DAY", debug_day, envir = .GlobalEnv)
+    eval(substitute(code_block))
+    assign("DEBUG_DAY", current_debug_day, envir = .GlobalEnv)
+  }
+}
+
 testEnsureRAWId <- function(id) {
   if (!startsWith(id, "[1]")) {
     id <- paste0("[1]", id)
@@ -652,15 +661,6 @@ testDischarge <- function(pid) {
   testSetResourceTable("Encounter", dt_enc)
 
   return(dt_enc)
-}
-
-runCodeForDebugDay <- function(debug_day, code_block) {
-  current_debug_day <- get("DEBUG_DAY", envir = .GlobalEnv)
-  if (current_debug_day >= debug_day) {
-    assign("DEBUG_DAY", debug_day, envir = .GlobalEnv)
-    eval(substitute(code_block))
-    assign("DEBUG_DAY", current_debug_day, envir = .GlobalEnv)
-  }
 }
 
 duplicatePatients <- function(count) {
