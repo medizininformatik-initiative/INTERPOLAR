@@ -11,33 +11,31 @@ loadDebugREDCapDataTemplatesFromFile <- function(table_names) {
 }
 
 isDebugDay <- function(index = NULL) {
-  return(exists("DEBUG_DAY") && !is.null(index) && DEBUG_DAY == index)
+  return(exists("DEBUG_DAY") && (is.null(index) || DEBUG_DAY == index))
 }
 
-
-
-
-
 if (isDebugDay()) {
-
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
-  #DEBUG_PATH_TO_REDCAP_RDATA_FILES <- "./R-cds2db/test/tables/"
-  templates <- loadDebugREDCapDataTemplatesFromFile(c("medikationsanalyse"))
+  template <- loadDebugREDCapDataTemplatesFromFile(c("medikationsanalyse"))$medikationsanalyse
 
-  if (isDebugDay(1)) {
-    data_to_import[["medikationsanalyse"]] <- templates["medikationsanalyse"]
-    templates$medikationsanalyse
-    # Set the date of the Mediaktionsanylyse just before the end date of all MedicationRequests
-    redcap_tables$medikationsanalyse$meda_dat <- getOffsetDateTime(DEBUG_DATES[DEBUG_DAY], 0.21)
-    redcap_tables$medikationsanalyse$record_id <- redcap_tables$patient$record_id[1]
-  } else if (isDebugDay(2)) {
-  } else if (isDebugDay(3)) {
-  } else if (isDebugDay(4)) {
-  } else if (isDebugDay(5)) {
-  } else if (isDebugDay(6)) {
-  } else if (isDebugDay(7)) {
-  } else if (isDebugDay(8)) {
+  getRecordID <- function(pid) {
+    data_to_import$patient$record_id[which(data_to_import$patient$pat_id == pid)][1]
+  }
+
+  getPatientIdsByLevel <- function(last_index, duplicate_level = 2) {
+    ids <- data_to_import$patient$pat_id
+    underscore_counts <- stringr::str_count(ids, "_")
+    pattern <- paste0("_", last_index, "$")
+    matching_ids <- ids[underscore_counts == duplicate_level & grepl(pattern, ids)]
+  }
+
+  dt_pat_ids <- getPatientIdsByLevel(DEBUG_DAY)
+
+  for (pid in dt_pat_ids) {
+    template$meda_dat <- getDebugDatesRAWDateTime(-1.5)
+    template$record_id <- getRecordID(pid)
+    data_to_import[["medikationsanalyse"]] <- rbind(data_to_import[["medikationsanalyse"]], template)
   }
 
 }

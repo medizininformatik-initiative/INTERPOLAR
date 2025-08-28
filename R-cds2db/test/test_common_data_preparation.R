@@ -45,10 +45,8 @@ testEnsureRAWId <- function(id) {
   return(id)
 }
 
-testEnsureSimpleId <- function(id) {
-  if (startsWith(id, "[1]")) {
-    id <- sub("^\\[1\\]", "", id)
-  }
+extractSimpleId <- function(id) {
+  id <- sub("^\\[[0-9]+(\\.[0-9]+)*\\]", "", id)
   return(id)
 }
 
@@ -416,6 +414,7 @@ extractPID <- function(enc_ids) {
 testUpdateWard <- function(enc_ids, ward_names = NULL) {
   pids_per_wards <- testGetResourceTable("pids_per_ward")
   pids <- unique(extractPID(enc_ids))
+  enc_ids <- extractSimpleId(enc_ids)
 
   pids_per_wards <- pids_per_wards[!patient_id %in% pids]
 
@@ -674,7 +673,15 @@ duplicatePatients <- function(count) {
 
     for (col in columns_to_replace) {
       if (col %in% names(resource_table)) {
-        if (endsWith(col, "_ref")) {
+        if (resource_name == "pids_per_ward") {
+          # special in pids_per_ward: IDs without [] prefix
+          resource_table[, (col) := sub(
+            paste0("(^)", old_id, "(?=-E|$)"),
+            paste0("\\1", new_id),
+            get(col),
+            perl = TRUE
+          )]
+        } else if (endsWith(col, "_ref")) {
           resource_table[, (col) := sub(
             paste0("(^\\[[^]]+\\][^/]+/)", old_id),
             paste0("\\1", new_id),
@@ -703,10 +710,16 @@ duplicatePatients <- function(count) {
   for (i in 1:count) {
     for (resource_name in names(resource_tables)) {
       resource_table <- data.table::copy(resource_tables[[resource_name]])
-      for (pat_id in dt_pat$pat_id) {
+      pat_ids <- dt_pat$pat_id
+      if (any(grepl("_", pat_ids))) {
+        dash_counts <- stringr::str_count(pat_ids, "_")
+        max_dashes <- max(dash_counts)
+        pat_ids <- pat_ids[dash_counts == max_dashes]
+      }
+      for (pat_id in pat_ids) {
         pat_id <- sub("^\\[[^]]+\\]", "", pat_id)
         new_resource_table <- replacePatientId(pat_id, paste0(pat_id, "_", i), resource_table, resource_name)
-        new_resource_tables[[resource_name]] <- rbind(new_resource_tables[[resource_name]], new_resource_table)
+        new_resource_tables[[resource_name]] <- unique(rbind(new_resource_tables[[resource_name]], new_resource_table))
       }
     }
   }
@@ -723,8 +736,8 @@ addDrugs <- function(pid, codes) {
 
   # Determine the next available index for encounters, MedicationRequests, and Medications
   enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
-  med_req_index <- nrow(resource_tables[["MedicationRequest"]][grepl(paste0("^\\[1\\]", pid, "-MR-\\d+$"), medreq_id)]) + 1
-  med_index <- nrow(resource_tables[["Medication"]][grepl(paste0("^\\[1\\]", pid, "-M-\\d+$"), med_id)]) + 1
+  med_req_index <- nrow(resource_tables[["MedicationRequest"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-MR-\\d+$"), medreq_id)]) + 1
+  med_index <- nrow(resource_tables[["Medication"]][grepl(paste0("^\\[1\\]", pid, "-MR-", med_req_index - 1, "-M-\\d+$"), med_id)]) + 1
 
   # Create MedicationRequest entries for each code
   med_req_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
@@ -745,7 +758,7 @@ addDrugs <- function(pid, codes) {
     dt <- data.table::copy(med_templates)
     # Generate unique ID for Medication
     dt[, med_id := paste0("[1]", pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))]
-    dt[, med_identifier_value := paste0("[1.1]", pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))]
+    dt[, med_identifier_value := paste0("[1.1]", pid, "-MR-", med_req_index - 1, "-M-", med_index + (i - 1))]
     # Assign the drug code
     dt[, med_code_code := paste0("[1.1.1]", codes[i])]
     dt
@@ -768,14 +781,14 @@ addConditions <- function(pid, codes) {
 
   # Determine next available index for Conditions and Encounter for this patient
   enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
-  con_index <- nrow(resource_tables[["Condition"]][grepl(paste0("^\\[1\\]", pid, "-C-\\d+$"), con_id)]) + 1
+  con_index <- nrow(resource_tables[["Condition"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-C-\\d+$"), con_id)]) + 1
 
   # Create Condition entries for each code
   con_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
     dt <- data.table::copy(con_templates)
     # Generate unique Condition ID
     dt[, con_id := paste0("[1]", pid, "-E-", enc_index, "-D-", con_index + (i - 1))]
-    dt[, con_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-D-", obs_index + (i - 1))]
+    dt[, con_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-D-", con_index + (i - 1))]
     # Reference the patient and encounter
     dt[, con_patient_ref := paste0("[1.1]Patient/", pid)]
     dt[, con_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
@@ -791,7 +804,7 @@ addConditions <- function(pid, codes) {
   testSetResourceTables(resource_tables)
 }
 
-addObservations <- function(pid, codes) {
+addObservations <- function(pid, codes, value = NULL, unit = NULL, referencerange_low = NULL, referencerange_high = NULL) {
   # Load template table for Observation
   obs_templates <- get("obs_templates", envir = .test_env)
 
@@ -800,7 +813,7 @@ addObservations <- function(pid, codes) {
 
   # Determine next available index for Observations and Encounter for this patient
   enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
-  obs_index <- nrow(resource_tables[["Observation"]][grepl(paste0("^\\[1\\]", pid, "-O-\\d+$"), obs_id)]) + 1
+  obs_index <- nrow(resource_tables[["Observation"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-O-\\d+$"), obs_id)]) + 1
 
   # Create Observation entries for each code
   obs_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
@@ -813,6 +826,11 @@ addObservations <- function(pid, codes) {
     dt[, obs_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
     # Assign the observation code
     dt[, obs_code_code := paste0("[1.1.1]", codes[i])]
+    # Optional fields
+    if (!is.null(value)) dt[, obs_valuequantity_value := paste0("[1.1]", value)]
+    if (!is.null(unit)) dt[, obs_valuequantity_code := paste0("[1.1]", unit)]
+    if (!is.null(referencerange_low)) dt[, obs_referencerange_low_value := paste0("[1.1]", referencerange_low)]
+    if (!is.null(referencerange_high)) dt[, obs_referencerange_high_value := paste0("[1.1]", referencerange_high)]
     dt
   }))
 

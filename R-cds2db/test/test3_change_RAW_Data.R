@@ -1,6 +1,8 @@
 # Define the days count for this test
 DEBUG_DAYS_COUNT <- 8
 
+WARDS_PHASE_B_TEST <- c("Station 1-1", "Station 1-2", "Station 2-1", "Station 2-2", "Station 2-3")
+
 # Patient UKB-0001
 # Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
 # Tag 2: Versorgungsstellenkontakt auf Nicht IP-Station Zimmer Nicht-IP-Raum 1-1, Bett Nicht-IP-Bett 1-1
@@ -22,7 +24,6 @@ DEBUG_DAYS_COUNT <- 8
 # Tag 8: Entlassung von IP-Station
 
 #TODO: MRP-haltige Medikation und Medikationsanalsyse anlegen für beide Fälle -> prüfen, ob der Stationsname für das MRP stimmt, wenn die Medikationsanalyse immer auf dem ersten IP-Station stattfand.
-
 if (exists("DEBUG_DAY")) {
 
   # Load the necessary libraries
@@ -137,25 +138,28 @@ if (exists("DEBUG_DAY")) {
 
   runCodeForDebugDay(1, {
     #UKB-0001_1 -> Drug_Disease_Interaction             -> MedicationRequest - N02AA01
-    addDrug("UKB-0001_1", "N02AA01")
+    addDrugs("UKB-0001_1", "N02AA01")
     #UKB-0001_2 -> Drug_Drug_Interaction                -> NULL
     #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> MedicationRequest - N06BA09
-    addDrug("UKB-0001_3", "N06BA09")
+    addDrugs("UKB-0001_3", "N06BA09")
     #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> NULL
 
     #UKB-0002_1 -> Drug_Disease_Interaction (Pro.LOINC) -> MedicationRequest - C02KX01
-    addDrug("UKB-0002_1", "C02KX01")
+    addDrugs("UKB-0002_1", "C02KX01")
+    #UKB-0002_2 -> Drug_Disease_Interaction (LOINC Cut) -> MedicationRequest - C03DA02
+    addDrugs("UKB-0002_2", "C03DA02")
   })
   runCodeForDebugDay(2, {
     #UKB-0001_1 -> Drug_Disease_Interaction             -> NULL
     #UKB-0001_2 -> Drug_Drug_Interaction                -> MedicationRequests - N06AX22 + J01MA02
-    addDrug("UKB-0001_2", c("N06AX22", "J01MA02"))
+    addDrugs("UKB-0001_2", c("N06AX22", "J01MA02"))
     #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> MedicationRequest C02KC01
-    addDrug("UKB-0001_3", "C02KC01")
+    addDrugs("UKB-0001_3", "C02KC01")
     #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> NULL
-
     #UKB-0002_1 -> Drug_Disease_Interaction (Pro.LOINC) -> Observation - 14631-6
-    addObservation("UKB-0002_1", "14631-6")
+    addObservations("UKB-0002_1", "14631-6")
+    #UKB-0002_2 -> Drug_Disease_Interaction (LOINC Cut) -> Observation - 2823-3
+    addObservations("UKB-0002_2", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
   })
   runCodeForDebugDay(3, {
     #UKB-0001_1 -> Drug_Disease_Interaction             -> Diagnosis - R10.0
@@ -163,7 +167,7 @@ if (exists("DEBUG_DAY")) {
     #UKB-0001_2 -> Drug_Drug_Interaction                -> Medikationsanalyse
     #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> Medikationsanalyse
     #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> MedicationRequest - A10BA02
-    addDrug("UKB-0001_4", "A10BA02")
+    addDrugs("UKB-0001_4", "A10BA02")
   })
   runCodeForDebugDay(4, {
     #UKB-0001_1 -> Drug_Disease_Interaction             -> NULL
@@ -176,7 +180,7 @@ if (exists("DEBUG_DAY")) {
     #UKB-0001_2 -> Drug_Drug_Interaction                -> NULL
     #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> NULL
     #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> MedicationRequest - N07BB03
-    addDrug("UKB-0001_4", "N07BB03")
+    addDrugs("UKB-0001_4", "N07BB03")
   })
   runCodeForDebugDay(6, {
     #UKB-0001_1 -> Drug_Disease_Interaction             -> NULL
@@ -196,34 +200,7 @@ if (exists("DEBUG_DAY")) {
     #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> NULL
     #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> NULL
   })
-
-  duplicatePatients(4)
-  runCodeForDebugDay(1, {
-
-  })
-  runCodeForDebugDay(2, {
-
-  })
-  runCodeForDebugDay(3, {
-
-  })
-  runCodeForDebugDay(4, {
-
-  })
-  runCodeForDebugDay(5, {
-
-  })
-  runCodeForDebugDay(6, {
-
-  })
-  runCodeForDebugDay(7, {
-
-  })
-  runCodeForDebugDay(8, {
-
-  })
-
-
+  duplicatePatients(10)
   # Update the resource_tables list with the modified data tables
   resource_tables <- testGetResourceTables()
 }

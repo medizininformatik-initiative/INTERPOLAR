@@ -75,12 +75,11 @@ DEBUG_PATH_TO_REDCAP_RDATA_FILES <- "./R-cds2db/test/tables/"
 # purposes, then this variable can be used to define a path to a script that
 # is sourced when the data is prepared for REDCap export.
 #################
-#DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- "./R-cds2db/test/test4_change_REDCap_Data.R"
+DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- "./R-cds2db/test/test4_change_REDCap_Data.R"
 
 ##########################
 ### END TEST DEFINITON ###
 ##########################
-
 
 # Source all change RAW data scripts. They must define DEBUG_DAYS_COUNT and run
 # the real test code only if DEBUG_DATES is defnied!
