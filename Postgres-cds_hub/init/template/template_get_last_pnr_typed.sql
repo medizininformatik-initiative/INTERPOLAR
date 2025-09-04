@@ -1,3 +1,10 @@
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
 ------------------------------
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.<%COPY_FUNC_NAME%>()
@@ -34,3 +41,8 @@ EXCEPTION
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $$ LANGUAGE plpgsql;
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;

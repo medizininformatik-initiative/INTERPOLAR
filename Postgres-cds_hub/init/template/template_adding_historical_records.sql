@@ -1,3 +1,11 @@
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 CREATE OR REPLACE FUNCTION db.add_hist_raw_records()
 RETURNS TEXT
 SECURITY DEFINER
@@ -52,3 +60,8 @@ BEGIN
     RETURN 'Ende ohne Funktionsausführung';
 END;
 $$ LANGUAGE plpgsql;
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;

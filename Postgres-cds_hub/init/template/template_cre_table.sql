@@ -28,10 +28,14 @@
 DO
 $$
 BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
 ------------------------------------------------------------------------------------------------
 
 <%LOOP_TABS_SUB_cre_table_INDEX_ID%>
 
 ------------------------------------------------------------------------------------------------
+    END IF; -- do migration
 END
 $$;
