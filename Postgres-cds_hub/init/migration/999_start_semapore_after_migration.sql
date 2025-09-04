@@ -17,6 +17,11 @@ BEGIN
       UPDATE db_config.db_parameter SET parameter_value = 
       (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date')||'-'||(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version')||' | '||parameter_value
       WHERE parameter_name = 'last_valid_release_version_log';
+
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_nr_last_migration_start')
+      WHERE parameter_name = 'release_version_nr';
+
+      UPDATE db_config.db_parameter SET parameter_value=-1 WHERE parameter_name='current_migration_flag';
    END IF;
 
 

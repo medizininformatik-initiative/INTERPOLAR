@@ -23,6 +23,17 @@ BEGIN
             WHERE pc_name='semaphor_cron_job_data_transfer';
         END IF; -- Ende der inneren IF-Bedingung
     END IF; -- Ende der äußeren IF-Bedingung
+    
+
+    -- initialize the current migration flag -----------------------------------------------------------
+    IF NOT EXISTS (
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag'
+    ) THEN
+        INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
+        VALUES ('current_migration_flag',-1,'current migration flag');
+    ELSE
+        UPDATE db_config.db_parameter SET parameter_value=-1 WHERE parameter_name='current_migration_flag';
+    END IF;
 END
 $$;
 
