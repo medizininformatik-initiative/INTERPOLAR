@@ -138,6 +138,12 @@ services:
     restart: "no"
     environment:
       TZ: Europe/Berlin
+      # There are some environment variables for curl regarding certificates. 
+      # Please set them as needed. See also section 'volumes' below and 
+      # the curl documentation https://curl.se/docs/sslcerts.html
+      #CURL_CA_BUNDLE: /etc/ssl/certs/<CHAIN.pem>
+      #SSL_CERT_FILE: /etc/ssl/certs/<self-signed_cert_FHIR-Server.pem>
+      #SSL_CERT_DIR: /etc/ssl/certs
     volumes:
       - ./.git:/src/.git:ro
       - ./outputLocal:/src/outputLocal
@@ -150,7 +156,7 @@ services:
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
       #- <Path_to_INTERPOLAR-WP7_folder>:/src/Input-Repo/INTERPOLAR-WP7
       # Include certificates, e.g. self-signed certificates of the FHIR-Server,
-      # incl. root-CA or CHAIN if needed.
+      # incl. root-CA or CHAIN if needed. See also section 'environment' above.
       #- <self-signed_cert_FHIR-Server.pem>:/etc/ssl/certs/<self-signed_cert_FHIR-Server.pem>
       #- <root-CA_cert.pem>:/etc/ssl/certs/<root-CA_cert.pem>
       #- <CHAIN.pem>:/etc/ssl/certs/<CHAIN.pem>
