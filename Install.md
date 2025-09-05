@@ -26,7 +26,7 @@ title: Installationsanleitung
     ```docker-compose up --build```
   1. Bei einer Neuinstallation der CDS Tool Chain, also falls **kein** Upgrade einer bestehenden CDS Tool Chain Installation gemacht wird, erfolgt die Initialisierung der _cds_hub_ Datenbank seit [Version v1.2.0](https://github.com/medizininformatik-initiative/INTERPOLAR/releases/tag/v1.2.0) nicht mehr automatisch, sondern manuell über den folgenden Befehl:
      ```cmd
-     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d cds_hub_db < `find Postgres-cds_hub/init -maxdepth 1 -name '*.sql' | sort`
+     cat $(find Postgres-cds_hub/init -maxdepth 1 -name '*.sql' | sort) | docker compose exec -T cds_hub psql -U cds_hub_db_admin -d cds_hub_db
      ```
      Bei einem Upgrade der CDS Tool Chain ist in der Regel einer Aktualisierung der Datenbank (Migration) erforderlich, welche über den folgenden Befehl aufgerufen wird:
      ```cmd
