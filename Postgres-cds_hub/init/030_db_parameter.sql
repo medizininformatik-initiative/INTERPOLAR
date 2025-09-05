@@ -135,9 +135,9 @@ BEGIN
    IF EXISTS (
       SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'release_version_nr' AND parameter_value < release_version_nr
    ) THEN
-      UPDATE db_config.db_parameter SET parameter_value=1 WHERE parameter_name='current_migration_flag'; - do - skirpt is newer then in database
+      UPDATE db_config.db_parameter SET parameter_value=1 WHERE parameter_name='current_migration_flag'; -- do - skirpt is newer then in database
    ELSE
-      UPDATE db_config.db_parameter SET parameter_value=0 WHERE parameter_name='current_migration_flag'; - dont - skript is older or same then in database
+      UPDATE db_config.db_parameter SET parameter_value=0 WHERE parameter_name='current_migration_flag'; -- dont - skript is older or same then in database
    END IF;
 END
 $$;
