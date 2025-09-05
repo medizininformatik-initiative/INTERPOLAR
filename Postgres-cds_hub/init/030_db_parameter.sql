@@ -133,7 +133,7 @@ BEGIN
    -- Detect whether the current database version is older than migration scripts and whether these need to be executed
    -- 1-do | 0-dont flag to prevent downward migration across scripts for non-additive changes
    IF EXISTS (
-      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'release_version_nr' AND parameter_value < release_version_nr
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'release_version_nr' AND CAST( parameter_value AS INTEGER) < release_version_nr
    ) THEN
       UPDATE db_config.db_parameter SET parameter_value=1 WHERE parameter_name='current_migration_flag'; -- do - skirpt is newer then in database
    ELSE
