@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-20 11:15:33
+-- Rights definition file last update : 2025-07-01 13:49:10
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-20 11:57:12
+-- Create time: 2025-09-04 15:37:56
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  341_cre_table_dataproc_core_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -42,8 +42,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'input_data_files'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'input_data_files') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files' AND column_name = 'input_datetime'
@@ -110,7 +112,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files' AND column_name = 'hash_index_col'
@@ -139,7 +143,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.input_data_files ADD
@@ -166,8 +172,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content' AND column_name = 'input_datetime'
@@ -222,7 +230,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content' AND column_name = 'hash_index_col'
@@ -247,7 +257,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.input_data_files_processed_content ADD
@@ -293,6 +305,14 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.input_data_files_processed_
 -- Output off
 \o /dev/null
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.input_data_files.input_data_files_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.input_data_files.file_name IS 'table file name (varchar)';
 COMMENT ON COLUMN db_log.input_data_files.content_hash IS 'hashed table content (varchar)';
@@ -303,6 +323,18 @@ COMMENT ON COLUMN db_log.input_data_files.last_check_datetime IS 'Time at which 
 COMMENT ON COLUMN db_log.input_data_files.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.input_data_files.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.input_data_files.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.input_data_files_processed_content.input_data_files_processed_content_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.input_data_files_processed_content.processed_content_hash IS 'hashed processed table content (varchar)';
 COMMENT ON COLUMN db_log.input_data_files_processed_content.processed_content IS 'processed table content (varchar)';
@@ -311,6 +343,10 @@ COMMENT ON COLUMN db_log.input_data_files_processed_content.last_check_datetime 
 COMMENT ON COLUMN db_log.input_data_files_processed_content.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.input_data_files_processed_content.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.input_data_files_processed_content.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 
 -- Output on
 \o
@@ -321,6 +357,9 @@ COMMENT ON COLUMN db_log.input_data_files_processed_content.last_processing_nr I
 DO
 $$
 BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
 ------------------------------------------------------------------------------------------------
 
 ------------------------- Index for db_log - input_data_files ---------------------------------
@@ -603,6 +642,7 @@ END IF; -- target column
 
 
 ------------------------------------------------------------------------------------------------
+    END IF; -- do migration
 END
 $$;
 

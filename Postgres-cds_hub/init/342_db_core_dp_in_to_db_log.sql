@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-20 11:15:33
+-- Rights definition file last update : 2025-07-01 13:49:10
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-20 11:57:13
+-- Create time: 2025-09-04 15:37:57
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  341_cre_table_dataproc_core_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -27,6 +27,14 @@
 -- SCHEMA_3:  
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
+
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
 
 ------------------------------
 CREATE OR REPLACE FUNCTION db.copy_core_dp_in_to_db_log()
@@ -461,4 +469,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 -----------------------------
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 

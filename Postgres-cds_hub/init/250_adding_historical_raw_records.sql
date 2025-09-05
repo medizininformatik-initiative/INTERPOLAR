@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 22:42:12
--- Rights definition file size        : 14274 Byte
+-- Rights definition file last update : 2025-07-01 13:49:10
+-- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-06-17 22:55:30
+-- Create time: 2025-09-04 15:35:53
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
@@ -26,6 +26,14 @@
 -- SCHEMA_3:  
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
+
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION db.add_hist_raw_records()
 RETURNS TEXT
@@ -2622,4 +2630,9 @@ SELECT
     RETURN 'Ende ohne Funktionsausführung';
 END;
 $$ LANGUAGE plpgsql;
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 

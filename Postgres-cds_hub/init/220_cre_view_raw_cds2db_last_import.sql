@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 22:42:12
--- Rights definition file size        : 14274 Byte
+-- Rights definition file last update : 2025-07-01 13:49:10
+-- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-06-17 22:55:29
+-- Create time: 2025-09-04 15:35:52
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  220_cre_view_raw_cds2db_last_import.sql
 -- TEMPLATE:  template_cre_view_last_import.sql
@@ -27,6 +27,13 @@
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
 --Create View for frontend tables for schema cds2db_out
 
 CREATE OR REPLACE VIEW cds2db_out.v_encounter_raw_last_import AS (
@@ -142,4 +149,9 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward_raw_last_import TO cds2db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 

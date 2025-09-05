@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-02 16:19:58
+-- Rights definition file last update : 2025-07-01 13:49:10
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-07-04 14:36:12
+-- Create time: 2025-09-04 15:37:22
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -27,6 +27,14 @@
 -- SCHEMA_3:  
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
+
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
 
 ------------------------------
 CREATE OR REPLACE FUNCTION db.copy_fe_dp_in_to_db_log()
@@ -1685,4 +1693,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 -----------------------------
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 
