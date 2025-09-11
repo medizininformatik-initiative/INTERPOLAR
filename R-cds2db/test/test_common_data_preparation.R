@@ -663,8 +663,15 @@ testDischarge <- function(pid) {
 }
 
 duplicatePatients <- function(count) {
-  replacePatientId <- function(old_id, new_id, resource_table, resource_name) {
+
+  addPatientIdIndex <- function(old_id, index, resource_table, resource_name) {
+    new_id <- paste0(old_id, "_", index)
     id_column <- etlutils::fhirdbGetIDColumn(resource_name)
+
+    if (resource_name == "Patient") {
+      resource_table[pat_id == testEnsureRAWId(old_id), pat_name_family := paste0(pat_name_family, "_", index)]
+    }
+
     identifier_column <- etlutils::fhirdbGetIdentifierColumn(resource_name)
     pid_ref_column <- if (resource_name == "pids_per_ward") "patient_id" else etlutils::fhirdbGetPIDColumn(resource_name)
     enc_ref_column <- if (resource_name == "pids_per_ward") "encounter_id" else etlutils::fhirdbGetEncIDColumn(resource_name)
@@ -718,7 +725,7 @@ duplicatePatients <- function(count) {
       }
       for (pat_id in pat_ids) {
         pat_id <- sub("^\\[[^]]+\\]", "", pat_id)
-        new_resource_table <- replacePatientId(pat_id, paste0(pat_id, "_", i), resource_table, resource_name)
+        new_resource_table <- addPatientIdIndex(pat_id, i, resource_table, resource_name)
         new_resource_tables[[resource_name]] <- unique(rbind(new_resource_tables[[resource_name]], new_resource_table))
       }
     }
