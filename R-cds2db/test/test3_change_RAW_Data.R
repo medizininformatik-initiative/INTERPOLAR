@@ -37,7 +37,7 @@ if (exists("DEBUG_DAY")) {
 
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
-    #etlutils::dbReset()
+    etlutils::dbReset()
   } else {
     # Load all encounters from the database which, according to the database,
     # have not yet ended on the 'current' date and determine the PIDs.
