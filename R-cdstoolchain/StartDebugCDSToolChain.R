@@ -83,7 +83,9 @@ DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- "./R-cds2db/test/test4_change_REDCap_Dat
 
 # Source all change RAW data scripts. They must define DEBUG_DAYS_COUNT and run
 # the real test code only if DEBUG_DATES is defnied!
-rm("DEBUG_DATES")
+if (exists("DEBUG_DATES")) {
+  rm("DEBUG_DATES")
+}
 for (script_name in DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME) {
   source(script_name, local = TRUE)
 }
