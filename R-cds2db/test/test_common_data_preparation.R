@@ -127,8 +127,8 @@ testPrepareRAWResources <- function(patient_ids) {
   # Add encounters with type "Versorgungstellenkontakt"
   enc_templates <- testAddEncounterLevel3(enc_templates)
   # Change encounter data
-  enc_templates <- enc_templates[grepl("-(A|V)-1$", enc_id),
-                                 enc_partof_ref := paste0("[1.1]Encounter/", sub("-(A|V)-1$", "", enc_id))]
+  enc_templates[grepl("-(A|V)-1$", enc_id),
+                enc_partof_ref := paste0("[1.1]Encounter/", sub("^\\[[^]]+\\]", "", sub("-(A|V)-1$", "", enc_id)))]
   enc_templates[, enc_status := "[1]in-progress"]
   enc_templates[, enc_period_start := getDebugDatesRAWDateTime(-0.5)]
   enc_templates[, enc_period_end := NA]
@@ -622,7 +622,7 @@ testTransferWardDepartment <- function(pid, room = NULL, bed = NULL, ward_name =
   enc_level_3_rows <- transferEncounterLevel(dt_enc, pid, level = 3, room = room, bed = bed)
   # Update the encounter ID and partof of the new Versorgungsstellenkontakt to match the new Abteilungskontakt
   enc_level_3_rows$new_enc_row[, enc_id := sub("-A-\\d+-V-\\d+$", paste0("-A-", enc_level_2_row_index, "-V-1"), enc_id)]
-  enc_level_3_rows$new_enc_row[, enc_partof_ref := sub("-E-\\d+-A-\\d+$", paste0("-E-", enc_level_2_row_index), enc_partof_ref)]
+  enc_level_3_rows$new_enc_row[, enc_partof_ref := sub("-A-\\d+$", paste0("-A-", enc_level_2_row_index), enc_partof_ref)]
 
   # Step 3: If ward name is given, update mapping
   testUpdateWard(enc_ids   = enc_level_3_rows$new_enc_row[["enc_id"]],
@@ -676,7 +676,8 @@ duplicatePatients <- function(count) {
     pid_ref_column <- if (resource_name == "pids_per_ward") "patient_id" else etlutils::fhirdbGetPIDColumn(resource_name)
     enc_ref_column <- if (resource_name == "pids_per_ward") "encounter_id" else etlutils::fhirdbGetEncIDColumn(resource_name)
 
-    columns_to_replace <- c(id_column, identifier_column, pid_ref_column, enc_ref_column)
+    # Unique if id_column and any reference columns are the same
+    columns_to_replace <- unique(c(id_column, identifier_column, pid_ref_column, enc_ref_column, "enc_partof_ref"))
 
     for (col in columns_to_replace) {
       if (col %in% names(resource_table)) {
