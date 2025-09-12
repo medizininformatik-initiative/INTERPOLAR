@@ -1,3 +1,12 @@
+getRedcapURL <- function() {
+  if (exists("VM_PORT_INDEX")) {
+    url <- paste0("http://127.0.0.1:", VM_PORT_INDEX, "8082/redcap/api/")
+  } else {
+    url <- REDCAP_URL
+  }
+  return(url)
+}
+
 #' Establish a Valid Connection to REDCap
 #'
 #' This function establishes a connection to a REDCap server using a specified API token
@@ -14,7 +23,7 @@
 getRedcapConnection <- function() {
   # Attempt to connect to REDCap
   frontend_connection <- tryCatch({
-    redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
+    redcapAPI::redcapConnection(url = getRedcapURL(), token = REDCAP_TOKEN)
   }, error = function(e) {
     stop("Failed to establish a REDCap connection. Error: ", e$message)
   })

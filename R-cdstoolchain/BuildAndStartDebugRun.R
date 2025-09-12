@@ -7,8 +7,6 @@ if (grepl('/R-cdstoolchain', getwd())) setwd("../")
 
 # ---- Config ------------------------------------------------------------------
 
-VM_PORT_INDEX <- 4 # will be set as port prefix in config files (1-5)
-
 package_dirs <- c(
   "R-etlutils/etlutils",
   "R-cds2db/cds2db",
@@ -32,43 +30,6 @@ ensurePackages <- function(pkgs) {
 logInfo <- function(...) {
   # Simple logger
   cat(paste0("[", format(Sys.time(), "%H:%M:%S"), "] ", paste0(...), "\n"))
-}
-
-# Replace the single digit before fixed suffixes with VM_PORT_INDEX (minimal change)
-patchConfigPorts <- function(VM_PORT_INDEX) {
-  stopifnot(VM_PORT_INDEX %in% 1:5)
-
-  # REDCap config: REDCAP_URL = "http://127.0.0.1:X8082/redcap/api/"
-  redcap_path <- "R-db2frontend/db2frontend_config.toml"
-  rc_lines <- readLines(redcap_path, warn = FALSE)
-  rc_before <- grep('^\\s*REDCAP_URL\\s*=\\s*".*"', rc_lines, value = TRUE)
-
-  rc_pattern <- '(REDCAP_URL\\s*=\\s*"http://127\\.0\\.0\\.1:)\\d(8082/redcap/api/")'
-  rc_repl    <- paste0("\\1", VM_PORT_INDEX, "\\2")
-
-  rc_lines2 <- sub(rc_pattern, rc_repl, rc_lines)
-  rc_after  <- grep('^\\s*REDCAP_URL\\s*=\\s*".*"', rc_lines2, value = TRUE)
-
-  writeLines(rc_lines2, redcap_path)
-  logInfo("Patched REDCAP_URL in ", redcap_path,
-          "\n  before: ", rc_before %||% "<not found>",
-          "\n  after : ",  rc_after  %||% "<not found>")
-
-  # DB config: DB_PORT = X5432
-  db_path <- "cds_hub_db_config.toml"
-  db_lines <- readLines(db_path, warn = FALSE)
-  db_before <- grep('^\\s*DB_PORT\\s*=\\s*\\d+', db_lines, value = TRUE)
-
-  db_pattern <- '(DB_PORT\\s*=\\s*)\\d(5432)\\b'
-  db_repl    <- paste0("\\1", VM_PORT_INDEX, "\\2")
-
-  db_lines2 <- sub(db_pattern, db_repl, db_lines)
-  db_after  <- grep('^\\s*DB_PORT\\s*=\\s*\\d+', db_lines2, value = TRUE)
-
-  writeLines(db_lines2, db_path)
-  logInfo("Patched DB_PORT in ", db_path,
-          "\n  before: ", db_before %||% "<not found>",
-          "\n  after : ",  db_after  %||% "<not found>")
 }
 
 buildAndInstall <- function(pkg_dir) {
@@ -106,9 +67,6 @@ buildAndInstall <- function(pkg_dir) {
 # ---- Orchestration (scoped so on.exit works) ---------------------------------
 local({
   ensurePackages(c("withr", "roxygen2", "pkgbuild", "testthat"))
-
-  # Patch configs upfront based on VM_PORT_INDEX
-  patchConfigPorts(VM_PORT_INDEX)
 
   start_time <- Sys.time()
   on.exit({

@@ -157,6 +157,17 @@ dbLog <- function(...) {
   return(log)
 }
 
+dbGetPort <- function() {
+  port <- .lib_db_env[["DB_PORT"]]
+  if (exists("VM_PORT_INDEX")) {
+    if (nchar(port == 5)) {
+      port <- substr(port, 2, 5)
+    }
+    port <- paste0(VM_PORT_INDEX, port)
+  }
+  return(port)
+}
+
 #' Get a PostgreSQL Database Connection
 #'
 #' This function retrieves a PostgreSQL database connection from the environment
@@ -187,7 +198,7 @@ dbGetConnection <- function(readonly) {
       "Attempting to connect with: \n",
       "dbname=", .lib_db_env[["DB_NAME"]], "\n",
       "host=", .lib_db_env[["DB_HOST"]], "\n",
-      "port=", .lib_db_env[["DB_PORT"]], "\n",
+      "port=", dbGetPort(), "\n",
       "user=", .lib_db_env[["DB_USER"]], "\n",
       "schema=", schema_name, "\n"
     )
@@ -197,7 +208,7 @@ dbGetConnection <- function(readonly) {
     RPostgres::Postgres(),
     dbname = .lib_db_env[["DB_NAME"]],
     host = .lib_db_env[["DB_HOST"]],
-    port = .lib_db_env[["DB_PORT"]],
+    port = dbGetPort(),
     user = .lib_db_env[["DB_USER"]],
     password = .lib_db_env[["DB_PASSWORD"]],
     options = paste0("-c search_path=", schema_name),
@@ -227,7 +238,7 @@ dbGetAdminConnection <- function() {
     RPostgres::Postgres(),
     dbname = .lib_db_env[["DB_NAME"]],
     host = .lib_db_env[["DB_HOST"]],
-    port = .lib_db_env[["DB_PORT"]],
+    port = dbGetPort(),
     user = .lib_db_env[["DB_ADMIN_USER"]],
     password = .lib_db_env[["DB_ADMIN_PASSWORD"]],
     #options = paste0("-c search_path=", .lib_db_env[["DB_ADMIN_SCHEMA"]]),

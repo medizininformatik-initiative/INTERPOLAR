@@ -39,6 +39,11 @@ initDebugDates <- function(count) {
 ############################
 
 #################
+# Replace the single digit before fixed suffixes with VM_PORT_INDEX (minimal change)
+#################
+VM_PORT_INDEX <- 4
+
+#################
 # DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
 # a config file. If the path is not set, then only the default config file
 # is used and no default values are overwritten by the debug config file.
