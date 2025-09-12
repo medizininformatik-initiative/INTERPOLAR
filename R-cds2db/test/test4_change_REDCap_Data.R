@@ -33,8 +33,19 @@ if (isDebugDay()) {
   dt_pat_ids <- getPatientIdsByLevel(DEBUG_DAY)
 
   for (pid in dt_pat_ids) {
-    template$meda_dat <- getDebugDatesRAWDateTime(-1.5)
+    # Clean and add correct medication analysis datetime
+    meda_datetime <- getDebugDatesRAWDateTime(-1.5)
+    meda_datetime_cleaned <- sub("^\\[.*?\\]", "", meda_datetime)
+    template$meda_dat <- lubridate::ymd_hms(meda_datetime_cleaned)
+    # set the record_id in the template based on the current patient id
     template$record_id <- getRecordID(pid)
+    # join with the encounter table to populate fall_meda_id in the template
+    template[data_to_import$fall, on = "record_id", fall_meda_id := i.fall_id]
+    # count how many entries already exist in "medikationsanalyse" for this fall_meda_id
+    count <- data_to_import$medikationsanalyse[fall_meda_id == template$fall_meda_id, .N]
+    # create a new meda_id by appending "-(count + 1)" to the fall_meda_id
+    template[, meda_id := paste0(fall_meda_id, "-", count + 1)]
+    # append the updated template row into the "medikationsanalyse" table
     data_to_import[["medikationsanalyse"]] <- rbind(data_to_import[["medikationsanalyse"]], template)
   }
 
