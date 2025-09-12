@@ -541,6 +541,7 @@ testAdmission <- function(pid, room, bed, ward_name = NULL) {
   # Set encounter partof references in all 3 encounter ids
   part_of_ref_pattern <- paste0("\\[1.1\\]Encounter/", pid, "-E-")
   enc_templates[, enc_partof_ref := gsub(paste0(part_of_ref_pattern, "1"), paste0(part_of_ref_pattern, enc_level_1_index), enc_partof_ref)]
+  enc_templates[, enc_identifier_value := enc_id]
   # Set encounter start date to current debug day -0.5
   enc_templates[, enc_period_start := getDebugDatesRAWDateTime(-0.5)]
   enc_templates[, enc_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]

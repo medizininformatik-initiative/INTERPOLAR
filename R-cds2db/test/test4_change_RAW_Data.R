@@ -133,7 +133,7 @@ if (exists("DEBUG_DAY")) {
       med_code_code = c(
         # Drug-Disease MRP
         "[1.1.1]14022620 ~ [1.2.1]A10BA02",
-        "[1.1.1]14022620 ~ [1.2.1]N07BB03",
+        "[1.1.1]14022620 ~ [1.2.1]N07BB03", # for Drug-Proxy
         "[1.1.1]14022620 ~ [1.2.1]N02AA01",
         "[1.1.1]14022620 ~ [1.2.1]C02KX01", # for LOINC-Proxy
         # Drug-Drug MRP
