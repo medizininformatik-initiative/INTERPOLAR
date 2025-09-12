@@ -101,6 +101,60 @@ checkMultipleRows <- function(data, grouping_vars) {
 }
 
 #------------------------------------------------------------------------------#
+#' Flag Groups with Multiple Rows by Adding a Processing Exclusion Reason
+#'
+#' This function checks whether groups defined by a set of variables contain
+#' multiple rows. If so, it assigns a specified processing exclusion reason
+#' to those rows. Existing values in the column `processing_exclusion_reason`
+#' are preserved (prior exclusion reason) and remain NA for groups with only one row.
+#'
+#' @param data A `data.frame` or `tibble` containing the input data.
+#' @param grouping_vars A character vector of column names used to define groups.
+#' @param processing_exclusion_reason_name A character string specifying the
+#'   reason to assign when a group contains more than one row.
+#'
+#' @return A `tibble` with the same structure as `data`, but with the column
+#'   `processing_exclusion_reason` updated for groups with multiple rows.
+#'
+#' @details
+#' - Groups are defined by the variables provided in `grouping_vars`.
+#' - If a group contains more than one row, all rows in that group will be
+#'   assigned the value from `processing_exclusion_reason_name` in the column
+#'   `processing_exclusion_reason`. If the column already has a value, it will be
+#'   preserved.
+#' - If a group has only one row, the existing value in
+#'   `processing_exclusion_reason` is preserved.
+#'
+#' @examples
+#' library(dplyr)
+#' df <- data.frame(
+#'   patient_id = c(1, 1, 2, 3, 3, 3),
+#'   value = c(10, 12, 5, 7, 8, 9),
+#'   processing_exclusion_reason = NA_character_
+#' )
+#' df_flagged <- addMultipleRowsProcessingExclusionReason(
+#'   data = df,
+#'   grouping_vars = c("patient_id"),
+#'   processing_exclusion_reason_name = "Multiple entries for patient"
+#' )
+#' df_flagged
+#'
+#' @importFrom dplyr group_by add_count mutate if_else ungroup select across all_of
+#'
+#' @export
+addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars, processing_exclusion_reason_name) {
+  data_add_multiple_row_reason <- data |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
+    dplyr::add_count() |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(n > 1 & is.na(processing_exclusion_reason),
+                                                       processing_exclusion_reason_name,
+                                                       processing_exclusion_reason)) |>
+    dplyr::ungroup() |>
+    dplyr::select(-n)
+  return(data_add_multiple_row_reason)
+}
+
+#------------------------------------------------------------------------------#
 
 #' Parse Named Command-Line Arguments
 #'

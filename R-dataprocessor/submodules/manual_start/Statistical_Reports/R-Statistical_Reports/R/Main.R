@@ -98,7 +98,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
 
   patient_table <- getPatientData(lock_id = "statistical reports[1]",
                                     table_name = "v_patient_last_version")
-  # --> this table should only have one entry per patient (error if not)
+  # --> this table should only have one entry per patient (warning if not)
 
   encounter_table <- getEncounterData(lock_id = "statistical reports[2]",
                                         table_name = "v_encounter_last_version")

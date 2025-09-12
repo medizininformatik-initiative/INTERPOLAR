@@ -35,7 +35,7 @@
 #' 4. Checks for potential duplicates in:
 #'    - `pat_id`: should uniquely identify patients in FHIR
 #'    - `pat_identifier_value`: should uniquely identify patients in the hospital system
-#'    If duplicates are found, errors are issued for manual inspection.
+#'    If duplicates are found, warnings are issued for manual inspection.
 #'
 #' @importFrom dplyr distinct arrange filter
 #' @export
@@ -65,18 +65,25 @@ getPatientData <- function(lock_id, table_name) {
               FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*",""))
         )) |>
     dplyr::distinct() |>
-    dplyr::arrange(pat_id)
+    dplyr::arrange(pat_id) |>
+    dplyr::mutate(processing_exclusion_reason = NA_character_)
 
   if (nrow(patient_table) == 0) {
     stop("The patient table is empty. Please check the data.")
   }
 
   if (checkMultipleRows(patient_table, c("pat_id"))) {
-    stop("The patient table contains multiple rows for the same pat_id(FHIR). Please check the data.")
+    warning("The patient table contains multiple rows for the same pat_id(FHIR). Please check the data.")
+    patient_table <- addMultipleRowsProcessingExclusionReason(patient_table,
+                                                              c("pat_id"),
+                                                              "multiple_rows_per_pat_id")
   }
 
   if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
-    stop("The patient table contains multiple rows for the same patient identifier (cis). Please check the data.")
+    warning("The patient table contains multiple rows for the same patient identifier (cis). Please check the data.")
+    patient_table <- addMultipleRowsProcessingExclusionReason(patient_table,
+                                                              c("pat_identifier_value"),
+                                                              "multiple_rows_per_pat_identifier_value")
   }
 
   return(patient_table)
