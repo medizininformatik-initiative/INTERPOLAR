@@ -19,18 +19,8 @@ if (isDebugDay()) {
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   template <- loadDebugREDCapDataTemplatesFromFile(c("medikationsanalyse"))$medikationsanalyse
 
-  getRecordID <- function(pid) {
-    data_to_import$patient$record_id[which(data_to_import$patient$pat_id == pid)][1]
-  }
-
-  getPatientIdsByLevel <- function(last_index, duplicate_level = 1) {
-    ids <- data_to_import$patient$pat_id
-    underscore_counts <- stringr::str_count(ids, "_")
-    pattern <- paste0("_", last_index, "$")
-    matching_ids <- ids[underscore_counts == duplicate_level & grepl(pattern, ids)]
-  }
-
-  dt_pat_ids <- getPatientIdsByLevel(DEBUG_DAY)
+  dt_patient <- data_to_import$patient
+  dt_pat_ids <- filterPatientIdsByLevel(dt_patient$pat_id, 1, 1:6)
 
   for (pid in dt_pat_ids) {
     # Clean and add correct medication analysis datetime
@@ -38,7 +28,7 @@ if (isDebugDay()) {
     meda_datetime_cleaned <- sub("^\\[.*?\\]", "", meda_datetime)
     template$meda_dat <- lubridate::ymd_hms(meda_datetime_cleaned)
     # set the record_id in the template based on the current patient id
-    template$record_id <- getRecordID(pid)
+    template$record_id <- getRecordID(dt_patient, pid)
     # join with the encounter table to populate fall_meda_id in the template
     template[data_to_import$fall, on = "record_id", fall_meda_id := i.fall_id]
     # count how many entries already exist in "medikationsanalyse" for this fall_meda_id

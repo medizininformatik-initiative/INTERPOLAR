@@ -850,7 +850,22 @@ addObservations <- function(pid, codes, value = NULL, unit = NULL, referencerang
   testSetResourceTables(resource_tables)
 }
 
+##################################
+########REDCAP-FUNCTIONS##########
+##################################
 
+# Helper function to get record_id for a given patient ID
+getRecordID <- function(all_pids, pid) {
+  all_pids$record_id[which(all_pids$pat_id == pid)][1]
+}
+
+# Helper function to filter patient IDs by duplicate level and last indices
+filterPatientIdsByLevel <- function(all_pids, duplicate_level, last_indices) {
+  underscore_counts <- stringr::str_count(all_pids, "_")
+  # build regex for multiple indices, e.g. "_(1|2|3|4|5|6)$"
+  pattern <- paste0("_(?:", paste(last_indices, collapse = "|"), ")$")
+  matching_ids <- all_pids[underscore_counts == duplicate_level & grepl(pattern, all_pids)]
+}
 
 # getNextPatientId <- function(pat_id, dt_pat) {
 #   # Extract numeric suffix
