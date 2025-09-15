@@ -145,6 +145,7 @@ testPrepareRAWResources <- function(patient_ids) {
   # Add template for Condition table
   med_templates <- data.table::copy(resource_tables[["Medication"]])
   med_templates <- med_templates[1]
+  med_templates[, med_code_system := "[1.1.1]http://fhir.de/CodeSystem/bfarm/atc"]
   med_templates[, med_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
 
 
@@ -758,7 +759,7 @@ addDrugs <- function(pid, codes) {
     dt[, medreq_patient_ref := paste0("[1.1]Patient/", pid)]
     dt[, medreq_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
     # Reference the corresponding Medication
-    dt[, medreq_medicationreference_ref := paste0("[1]Medication/", pid, "-M-", med_index + (i - 1))]
+    dt[, medreq_medicationreference_ref := paste0("[1]Medication/", pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))]
     dt
   }))
 
