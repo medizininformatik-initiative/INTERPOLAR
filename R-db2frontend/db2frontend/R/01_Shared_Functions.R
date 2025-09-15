@@ -1,6 +1,6 @@
 getRedcapURL <- function() {
-  if (exists("VM_PORT_INDEX")) {
-    url <- paste0("http://127.0.0.1:", VM_PORT_INDEX, "8082/redcap/api/")
+  if (exists("DEBUG_VM_PORT_INDEX")) {
+    url <- paste0("http://127.0.0.1:", DEBUG_VM_PORT_INDEX, "8082/redcap/api/")
   } else {
     url <- REDCAP_URL
   }

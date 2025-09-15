@@ -39,9 +39,9 @@ initDebugDates <- function(count) {
 ############################
 
 #################
-# Replace the single digit before fixed suffixes with VM_PORT_INDEX (minimal change)
+# Replace the single digit before fixed suffixes with DEBUG_VM_PORT_INDEX (minimal change)
 #################
-VM_PORT_INDEX <- 4
+DEBUG_VM_PORT_INDEX <- 4
 
 #################
 # DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to

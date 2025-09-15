@@ -159,11 +159,11 @@ dbLog <- function(...) {
 
 dbGetPort <- function() {
   port <- .lib_db_env[["DB_PORT"]]
-  if (exists("VM_PORT_INDEX")) {
+  if (exists("DEBUG_VM_PORT_INDEX")) {
     if (nchar(port == 5)) {
       port <- substr(port, 2, 5)
     }
-    port <- paste0(VM_PORT_INDEX, port)
+    port <- paste0(DEBUG_VM_PORT_INDEX, port)
   }
   return(port)
 }
