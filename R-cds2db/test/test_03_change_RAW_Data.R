@@ -34,7 +34,7 @@ if (exists("DEBUG_DAY")) {
   pid1 <- "UKB-0001"
   pid2 <- "UKB-0002"
   pats <- c(pid1, pid2) # present at day 1
-
+browser()
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
     etlutils::dbReset()
@@ -105,7 +105,7 @@ if (exists("DEBUG_DAY")) {
     # Patient 1 Tag 7: Versorgungsstellenkontakt auf Nicht IP-Station Zimmer Nicht-IP-Raum 1-2, Bett Nicht-IP-Bett 1-2
     testTransferWardInternal(pid1, "Nicht-IP-Raum 1-2", "Nicht-IP-Bett 1-2")
     # Patient 2 Tag 7: Versorgungsstellenkontakt auf Station 2-2 Zimmer 2-3, Bett 2-3
-    testTransferWardInternal(pid2, "Raum 2-3", "Bett 2-3", "Station 2-3")
+    testTransferWardInternal(pid2, "Raum 2-1", "Bett 2-3", "Station 2-3")
   })
   runCodeForDebugDay(8, {
     # Patient 1 Tag 8: Entlassung von Nicht IP-Station

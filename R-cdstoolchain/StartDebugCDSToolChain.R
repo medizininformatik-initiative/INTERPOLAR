@@ -1,4 +1,4 @@
-# chance the working directory to the main directory
+# change the working directory to the main directory
 if (grepl('/cdstoolchain', getwd())) setwd("../..")
 if (grepl('/R-cdstoolchain', getwd())) setwd("../")
 
@@ -65,7 +65,7 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 # purposes. It contains a path to a script that is sourced after the downloaded
 # and cracking of the FHIR RAW data.
 #################
-DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- "./R-cds2db/test/test3_change_RAW_Data.R"
+DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- "./R-cds2db/test/test_04_change_RAW_Data.R"
 
 #################
 # This variable can be used to define the path where REDCap mock data are stored.
@@ -80,7 +80,7 @@ DEBUG_PATH_TO_REDCAP_RDATA_FILES <- "./R-cds2db/test/tables/"
 # purposes, then this variable can be used to define a path to a script that
 # is sourced when the data is prepared for REDCap export.
 #################
-DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- "./R-cds2db/test/test4_change_REDCap_Data.R"
+DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- "./R-cds2db/test/test_04_change_REDCap_Data.R"
 
 ##########################
 ### END TEST DEFINITON ###
