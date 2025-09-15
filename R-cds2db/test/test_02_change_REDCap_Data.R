@@ -24,7 +24,7 @@ if (isDebugDay()) {
 
   for (pid in dt_pat_ids) {
     # Clean and add correct medication analysis datetime
-    meda_datetime <- getDebugDatesRAWDateTime(-1.5)
+    meda_datetime <- getDebugDatesRAWDateTime(0.5)
     meda_datetime_cleaned <- sub("^\\[.*?\\]", "", meda_datetime)
     template$meda_dat <- lubridate::ymd_hms(meda_datetime_cleaned)
     # set the record_id in the template based on the current patient id
