@@ -40,16 +40,26 @@ prepareF1data <- function(full_analysis_set_1,REPORT_PERIOD_START,REPORT_PERIOD_
     dplyr::mutate(calendar_week = data.table::isoweek(enc_period_start), .after = enc_period_start) |> # add calendar week
     dplyr::distinct(enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
                     record_id, fall_id_cis, enc_type_code_Kontaktebene, age_at_hospitalization, enc_period_start, calendar_week,
-                    enc_period_end, ward_name, studienphase, enc_status)
+                    enc_period_end, ward_name, studienphase, enc_status, processing_exclusion_reason)
 
   if (anyNA(F1_prep_raw$enc_period_start)) {
+    F1_prep_raw <- F1_prep_raw |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(enc_period_start) &
+                                                                   is.na(processing_exclusion_reason),
+                                                                 "Missing_start_date_ward_contact",
+                                                                 processing_exclusion_reason))
     print(F1_prep_raw |>
             dplyr::filter(is.na(enc_period_start)), width = Inf)
-    stop("Starting day undefined for a INTERPOLAR-ward contact (NA start date). Please check the data.")
+    warning("Starting day undefined for a INTERPOLAR-ward contact (NA start date). Please check the data.")
   }
 
   if (checkMultipleRows(F1_prep_raw, c("main_enc_id","enc_period_start"))) {
-    stop("First INTERPOLAR-ward contact undefinded for a main encounter (multiple rows with same start date). Please check the data.")
+    F1_prep_raw <- F1_prep_raw |>
+      addMultipleRowsProcessingExclusionReason(grouping_variables = c("main_enc_id","enc_period_start"),
+                                               reason = "Multiple_rows_same_start_date_ward_contact")
+
+    warning("First INTERPOLAR-ward contact undefinded for a main encounter (multiple rows with same start date).
+            Please check the data.")
   }
 
   else {
@@ -58,6 +68,7 @@ prepareF1data <- function(full_analysis_set_1,REPORT_PERIOD_START,REPORT_PERIOD_
                 selection_variable = enc_period_start) |>
       dplyr::filter(enc_period_start >= as.POSIXct(REPORT_PERIOD_START)) |> # only admission to INTEROPLAR ward in reporting period
       dplyr::filter(enc_period_start < as.POSIXct(REPORT_PERIOD_END)) |>
+      dplyr::filter(is.na(processing_exclusion_reason)) |> # only encounters without processing exclusion reason
       dplyr::distinct(pat_id, main_enc_id, enc_id, record_id, fall_id_cis, calendar_week, ward_name) |>
       dplyr::mutate(dplyr::across(c(ward_name, calendar_week), as.character))
 
@@ -98,6 +109,7 @@ prepareF1data <- function(full_analysis_set_1,REPORT_PERIOD_START,REPORT_PERIOD_
 prepareFeSummaryData <- function(frontend_table,REPORT_PERIOD_START,REPORT_PERIOD_END) {
 
   frontend_summary_prep <- frontend_table |>
+    dplyr::filter(is.na(processing_exclusion_reason)) |> # only encounters without processing exclusion reason
     dplyr::distinct(pat_id, pat_cis_pid, record_id, fall_fhir_main_enc_id,
                     fall_id_cis, fall_station, fall_aufn_dat, enc_id, enc_status, meda_id,
                     meda_dat, enc_period_start, medikationsanalyse_complete, mrp_id,

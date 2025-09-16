@@ -237,7 +237,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
         vals <- na.omit(.data[[var_new_system_1]])
         if (length(unique(vals)) > 1) {
           print(unique(vals), width = Inf)
-          stop(paste0("Multiple ",var_new_system_1," values in group"))
+          stop(paste0("Unexpected ",var_new_system_1," values"))
         }
         if (length(vals) == 0) NA_character_ else vals[1]
       },
@@ -245,7 +245,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
         vals <- na.omit(.data[[var_new_system_2]])
         if (length(unique(vals)) > 1) {
           print(unique(vals), width = Inf)
-          stop(paste0("Multiple ",var_new_system_2," values in group"))
+          stop(paste0("Unexpected ",var_new_system_2," values"))
         }
         if (length(vals) == 0) NA_character_ else vals[1]
       },

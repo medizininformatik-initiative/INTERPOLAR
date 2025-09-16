@@ -32,8 +32,12 @@ mergePatEnc <- function(patient_table, encounter_table) {
     dplyr::mutate(pat_id = sub("^Patient/", "", enc_patient_ref), .keep = "unused") |>
     dplyr::left_join(patient_table |>
                        dplyr::select(c(pat_id, pat_identifier_value, pat_birthdate, pat_gender,
-                                       pat_deceaseddatetime)),
+                                       pat_deceaseddatetime, processing_exclusion_reason)),
                      by = "pat_id", suffix = c("_enc", "_pat")) |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(!is.na(processing_exclusion_reason_pat),
+                                                               processing_exclusion_reason_pat,
+                                                               processing_exclusion_reason_enc),
+                  .keep = "unused") |>
     dplyr::relocate(
       enc_identifier_value,
       pat_id,
@@ -92,10 +96,15 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
     dplyr::relocate(curated_enc_period_end, .after = enc_period_end)
 
   if(any(is.na(encounter_table_with_curated_enc_period_end$curated_enc_period_end))) {
+    encounter_table_with_curated_enc_period_end <- encounter_table_with_curated_enc_period_end |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(curated_enc_period_end) &
+                                                                   is.na(processing_exclusion_reason),
+                                                                 "NA_in_curated_enc_period_end",
+                                                                 processing_exclusion_reason))
     print(encounter_table_with_curated_enc_period_end |>
             dplyr::filter(is.na(curated_enc_period_end)),
           width = Inf)
-    stop("There are NA values in curated_enc_period_end. Please check the data.")
+    warning("There are NA values in curated_enc_period_end. Please check the data.")
   }
 
   return(encounter_table_with_curated_enc_period_end)
@@ -141,24 +150,33 @@ addMainEncId <- function(encounter_table) {
 
   if(any(encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" & is.na(encounter_table$enc_partof_ref) &
          is.na(encounter_table$enc_identifier_value))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_type_code_Kontaktebene != "einrichtungskontakt" &
+                                                                   is.na(enc_partof_ref) & is.na(enc_identifier_value) &
+                                                                   is.na(processing_exclusion_reason),
+                                                                 "No_enc_partof_ref_or_enc_identifier_value_for_non_einrichtungskontakt",
+                                                                 processing_exclusion_reason))
     print(encounter_table |>
             dplyr::filter(enc_type_code_Kontaktebene != "einrichtungskontakt" &
                             is.na(enc_partof_ref) & is.na(enc_identifier_value)), width = Inf)
-    stop("Some encounters of type other than 'einrichtungskontakt' have no parent reference or identifier value. Main_enc_id not defined. Please check the data.")
+    warning("Some encounters of type other than 'einrichtungskontakt' have no parent reference or identifier value.
+            Main_enc_id not defined. Please check the data.")
   }
 
   if(checkMultipleRows((encounter_table |>
                        dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
                        dplyr::distinct(enc_id, enc_identifier_value)),
                        c("enc_identifier_value"))) {
-    stop("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value. Main_enc_id not defined. Please check the data.")
+    stop("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value. Main_enc_id not defined.
+         Please check the data.")
   }
 
   if(checkMultipleRows((encounter_table |>
                         dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
                         dplyr::distinct(enc_id, enc_identifier_value)),
                        c("enc_id"))) {
-    stop("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id. Main_enc_id not defined. Please check the data and eventually define COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
+    stop("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id. Main_enc_id not defined.
+         Please check the data and eventually define COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
   }
 
   encounter_table_with_main_enc <- encounter_table |>
@@ -515,6 +533,7 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1) {
   merged_fe_pat_fall_meda_table_with_enc_id <- merged_fe_pat_fall_meda_table |>
     dplyr::left_join(full_analysis_set_1 |>
+                       dplyr::filter(is.na(processing_exclusion_reason)) |>
                        dplyr::select(enc_id, main_enc_id, main_enc_period_start, fall_id_cis,
                                      pat_id, pat_identifier_value, record_id, enc_period_start,
                                      curated_enc_period_end, ward_name, studienphase,

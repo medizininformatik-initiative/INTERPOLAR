@@ -74,16 +74,14 @@ getPatientData <- function(lock_id, table_name) {
 
   if (checkMultipleRows(patient_table, c("pat_id"))) {
     warning("The patient table contains multiple rows for the same pat_id(FHIR). Please check the data.")
-    patient_table <- addMultipleRowsProcessingExclusionReason(patient_table,
-                                                              c("pat_id"),
-                                                              "multiple_rows_per_pat_id")
+    patient_table <- patient_table |>
+      addMultipleRowsProcessingExclusionReason(c("pat_id"),"multiple_rows_per_pat_id")
   }
 
   if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
     warning("The patient table contains multiple rows for the same patient identifier (cis). Please check the data.")
-    patient_table <- addMultipleRowsProcessingExclusionReason(patient_table,
-                                                              c("pat_identifier_value"),
-                                                              "multiple_rows_per_pat_identifier_value")
+    patient_table <- patient_table |>
+      addMultipleRowsProcessingExclusionReason(c("pat_identifier_value"),"multiple_rows_per_pat_identifier_value")
   }
 
   return(patient_table)
@@ -186,7 +184,8 @@ getEncounterData <- function(lock_id, table_name) {
                          var_new_system_2 = "enc_type_code_Kontaktart") |>
     dplyr::filter(!enc_type_code_Kontaktart %in% c("begleitperson")) |>
     dplyr::distinct() |>
-    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status)
+    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status) |>
+    dplyr::mutate(processing_exclusion_reason = NA_character_)
 
   if (nrow(encounter_table) == 0) {
     stop("The encounter table is empty. Please check the data.")
@@ -195,11 +194,18 @@ getEncounterData <- function(lock_id, table_name) {
   if (any(encounter_table$enc_class_code == "IMP" &
           !encounter_table$enc_type_code_Kontaktebene %in% c("einrichtungskontakt", "abteilungskontakt",
                                                              "versorgungsstellenkontakt"))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = ifelse(enc_class_code == "IMP" &
+                                                           !enc_type_code_Kontaktebene %in% c("einrichtungskontakt", "abteilungskontakt",
+                                                                                               "versorgungsstellenkontakt") &
+                                                           is.na(processing_exclusion_reason),
+                                                         "unexpected_imp_kontaktebene", processing_exclusion_reason))
+
     print(encounter_table |>
             dplyr::filter (enc_class_code == "IMP" & !enc_type_code_Kontaktebene %in%
                              c("einrichtungskontakt", "abteilungskontakt",
                                "versorgungsstellenkontakt")), width=Inf)
-    stop("The encounter table contains IMP type codes for Kontaktebene with unexpected values or NA. Please check the data.")
+    warning("The encounter table contains IMP type codes for Kontaktebene with unexpected values or NA. Please check the data.")
   }
 
   if (nrow(encounter_table |>
@@ -218,27 +224,42 @@ getEncounterData <- function(lock_id, table_name) {
 
   if (any(encounter_table$enc_class_code == "IMP"  &
           !encounter_table$enc_status %in% c("finished", "in-progress", "onleave"))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = ifelse(enc_class_code == "IMP" &
+                                                           !enc_status %in% c("finished", "in-progress", "onleave") &
+                                                           is.na(processing_exclusion_reason),
+                                                         "unexpected_imp_status", processing_exclusion_reason))
     print(encounter_table |>
             dplyr::filter(enc_class_code == "IMP"  & !enc_status %in% c("finished", "in-progress", "onleave")),
           width=Inf)
-    stop("The encounter table contains IMP status with unexpected status values or NA. Please check the data.")
+    warning("The encounter table contains IMP status with unexpected status values or NA. Please check the data.")
   }
 
   if (any(encounter_table$enc_class_code == "IMP"  &
           encounter_table$enc_status == "finished" & is.na(encounter_table$enc_period_end))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = ifelse(enc_class_code == "IMP" &
+                                                           enc_status == "finished" & is.na(enc_period_end) &
+                                                           is.na(processing_exclusion_reason),
+                                                         "imp_finished_without_end_date", processing_exclusion_reason))
     print(encounter_table |>
             dplyr::filter(enc_class_code == "IMP"  & enc_status == "finished" & is.na(encounter_table$enc_period_end)),
           width=Inf)
-    stop("The encounter table contains finished IMP encounters without an end date.
+    warning("The encounter table contains finished IMP encounters without an end date.
          Please check the data.")
   }
 
   if (any((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
           !is.na(encounter_table$enc_class_code))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = ifelse((!enc_class_code %in% c("AMB", "SS", "IMP")) &
+                                                           !is.na(enc_class_code) &
+                                                           is.na(processing_exclusion_reason),
+                                                         "unexpected_class_code", processing_exclusion_reason))
     print(encounter_table |>
             dplyr::filter((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
                             !is.na(encounter_table$enc_class_code)), width=Inf)
-    stop("The encounter table contains class codes with unexpected values. Please check the data.")
+    warning("The encounter table contains class codes with unexpected values. Please check the data.")
   }
 
   if (any((!encounter_table$enc_type_code_Kontaktart %in% c("vorstationaer", "nachstationaer",
@@ -247,6 +268,15 @@ getEncounterData <- function(lock_id, table_name) {
                                                            "intensivstationaer", "ub", "konsil",
                                                            "stationsaequivalent", "operation")) &
           !is.na(encounter_table$enc_type_code_Kontaktart))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = ifelse((!enc_type_code_Kontaktart %in% c("vorstationaer", "nachstationaer",
+                                                                                           "teilstationaer", "tagesklinik",
+                                                                                           "nachtklinik", "normalstationaer",
+                                                                                           "intensivstationaer", "ub", "konsil",
+                                                                                           "stationsaequivalent", "operation")) &
+                                                           !is.na(enc_type_code_Kontaktart) &
+                                                           is.na(processing_exclusion_reason),
+                                                         "unexpected_kontaktart_code", processing_exclusion_reason))
     print(encounter_table |>
             dplyr::filter((!enc_type_code_Kontaktart %in% c("vorstationaer", "nachstationaer",
                                                                             "teilstationaer", "tagesklinik",
@@ -254,7 +284,7 @@ getEncounterData <- function(lock_id, table_name) {
                                                                             "intensivstationaer", "ub", "konsil",
                                                                             "stationsaequivalent", "operation")) &
                             !is.na(enc_type_code_Kontaktart)), width=Inf)
-    stop("The encounter table contains type codes for Kontaktart with unexpected values. Please check the data.")
+    warning("The encounter table contains type codes for Kontaktart with unexpected values. Please check the data.")
   }
 
   return(encounter_table)
@@ -335,18 +365,23 @@ getPatientFeData <- function(lock_id, table_name) {
 
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
-    dplyr::arrange(pat_id)
+    dplyr::arrange(pat_id) |>
+    dplyr::mutate(processing_exclusion_reason = NA_character_)
 
   if (nrow(patient_fe_table) == 0) {
     stop("The patient_fe table is empty. Please check the data.")
   }
 
   if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
-    stop("The patient_fe table contains multiple rows for the same pat_id(FHIR). Please check the data.")
+    patient_fe_table <- patient_fe_table |>
+      addMultipleRowsProcessingExclusionReason(c("pat_id"),"multiple_rows_per_pat_id_in_fe")
+    warning("The patient_fe table contains multiple rows for the same pat_id(FHIR). Please check the data.")
   }
 
   if (checkMultipleRows(patient_fe_table, c("pat_cis_pid"))) {
-    stop("The patient_fe table contains multiple rows for the same patient identifier (cis). Please check the data.")
+    patient_fe_table <- patient_fe_table |>
+      addMultipleRowsProcessingExclusionReason(c("pat_cis_pid"),"multiple_rows_per_pat_identifier_in_fe")
+    warning("The patient_fe table contains multiple rows for the same patient identifier (cis). Please check the data.")
   }
 
   return(patient_fe_table)
