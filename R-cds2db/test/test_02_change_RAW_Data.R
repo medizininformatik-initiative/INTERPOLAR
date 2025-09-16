@@ -72,8 +72,8 @@ if (exists("DEBUG_DAY")) {
     #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> MedicationRequest - A10BA02 + N07BB03(ATC-Proxy)
     addDrugs("UKB-0001_4", c("A10BA02", "N07BB03"))
     #UKB-0001_5 -> Drug_Disease_Interaction (Pro.LOINC) -> MedicationRequest - C02KX01 + Observation - 14631-6
-    addDrugs("UKB-0001_1", "C02KX01")
-    addObservations("UKB-0001_1", "14631-6")
+    addDrugs("UKB-0001_5", "C02KX01")
+    addObservations("UKB-0001_5", "14631-6")
     #UKB-0001_6 -> Drug_Disease_Interaction (LOINC Cut) -> MedicationRequest - C03DA02 + Observation - 2823-3
     addDrugs("UKB-0001_6", "C03DA02")
     addObservations("UKB-0001_6", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
