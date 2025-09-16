@@ -394,10 +394,7 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
 #' @export
 addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table) {
   merged_table_with_fall_id_and_studienphase <- merged_table_with_record_id |>
-    dplyr::left_join(fall_fe_table |>
-                       dplyr::select(record_id, fall_fhir_enc_id, fall_pat_id, fall_id, fall_studienphase,
-                                     fall_station, fall_aufn_dat) |>
-                       dplyr::distinct(),
+    dplyr::left_join(fall_fe_table,
                      by = c("record_id" = "record_id", "main_enc_id" = "fall_fhir_enc_id",
                             "pat_id" = "fall_pat_id", "ward_name" = "fall_station",
                             "main_enc_period_start" = "fall_aufn_dat")) |>
@@ -443,9 +440,7 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
 mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 
   frontend_table <- patient_fe_table |>
-    dplyr::left_join(fall_fe_table |>
-                       dplyr::select(record_id, fall_fhir_enc_id, fall_pat_id, fall_id,
-                                     fall_studienphase, fall_station, fall_aufn_dat),
+    dplyr::left_join(fall_fe_table,
                      by = c("pat_id" = "fall_pat_id",
                             "record_id")) |>
     dplyr::distinct() |>

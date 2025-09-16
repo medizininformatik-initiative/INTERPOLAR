@@ -406,10 +406,6 @@ getPatientFeData <- function(lock_id, table_name) {
 #'   \item{fall_studienphase}{Study phase associated with the case}
 #'   \item{fall_station}{INTERPOLAR-ward fromt he pids_per_ward table}
 #'   \item{fall_aufn_dat}{Admission date of the main encounter}
-#'   \item{fall_status}{Status of the encounter}
-#'   \item{fall_ent_dat}{Discharge date of the main encounter}
-#'   \item{fall_additional_values}{information on associated sub-encounters}
-#'   \item{fall_complete}{flag indicating completeness}
 #'
 #' @details
 #' The function executes a SQL `SELECT` query on the specified `table_name`, retrieving all expected columns. It then:
@@ -425,16 +421,22 @@ getPatientFeData <- function(lock_id, table_name) {
 getFallFeData <- function(lock_id, table_name) {
 
   query <- paste0("SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
-                  "fall_id, fall_studienphase, fall_station, fall_aufn_dat, ",
-                  "fall_status, fall_ent_dat, fall_additional_values, ",
-                  "fall_complete FROM ", table_name, "\n")
+                  "fall_id, fall_studienphase, fall_station, fall_aufn_dat ",
+                  "FROM ", table_name, "\n")
 
-  fall_fe_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+  fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id)
 
-  fall_fe_table <- fall_fe_table_raw |>
-    dplyr::distinct()
+  if (any(is.na(fall_fe_table$fall_studienphase))) {
+    warning("The fall_fe table contains NA values in fall_studienphase. These will be replaced with 'PhaseA'.")
+
+    fall_fe_table <- fall_fe_table |>
+      dplyr::mutate(fall_studienphase = dplyr::if_else(is.na(fall_studienphase),
+                                                       "PhaseA",
+                                                       fall_studienphase)) |>
+      dplyr::distinct()
+  }
 
   if (nrow(fall_fe_table) == 0) {
     stop("The fall_fe table is empty. Please check the data.")
