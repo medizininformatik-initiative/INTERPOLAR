@@ -505,13 +505,14 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 #' and additional sub-encounter-related dates by performing a multi-key, non-equi join with the complete FHIR data.
 #' The join ensures that medication analysis entries (`meda_dat`) are matched to the corresponding ward stay segment.
 #'
+#'
 #' @param merged_fe_pat_fall_meda_table A data frame containing merged patient, fall, and medication analysis data,
 #'   typically resulting from `addMedaData()`. Must include `meda_dat`, `pat_id`, `record_id`,
 #'   `fall_id_cis`, `pat_cis_pid`, `fall_fhir_main_enc_id`, `fall_studienphase`, `fall_station`, and `fall_aufn_dat`.
 #'
 #' @param full_analysis_set_1 A data frame containing full encounter-level data. Must include columns:
 #'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `fall_id_cis`, `pat_id`, `pat_identifier_value`, `record_id`,
-#'   `enc_period_start`, `curated_enc_period_end`, `ward_name`, `studienphase`, `enc_status`.
+#'   `enc_period_start`, `curated_enc_period_end`, `ward_name`, `studienphase`, `enc_status`, and `processing_exclusion_reason`.
 #'
 #' @return A data frame containing all original columns from `merged_fe_pat_fall_meda_table` plus the
 #'   matched `enc_id` and related encounter period dates. Only rows where a valid encounter match is found are retained.
@@ -522,6 +523,7 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 #' - Temporal matching: `meda_dat` must lie within `[enc_period_start, curated_enc_period_end]`
 #' - Additional context: `studienphase`, `ward_name`, and `main_enc_period_start` must match the fall metadata
 #'
+#' The function filters the `full_analysis_set_1` to only include main encounters without any processing exclusion reason.
 #' Rows with no matching `enc_id` (e.g., due to unmatched date windows or inconsistencies) are excluded post-join.
 #'
 #' @note
@@ -533,7 +535,9 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1) {
   merged_fe_pat_fall_meda_table_with_enc_id <- merged_fe_pat_fall_meda_table |>
     dplyr::left_join(full_analysis_set_1 |>
-                       dplyr::filter(is.na(processing_exclusion_reason)) |>
+                       dplyr::group_by(main_enc_id) |>
+                       dplyr::filter(all(is.na(processing_exclusion_reason))) |>  # only use main encounters without exclusion reason
+                        dplyr::ungroup() |>
                        dplyr::select(enc_id, main_enc_id, main_enc_period_start, fall_id_cis,
                                      pat_id, pat_identifier_value, record_id, enc_period_start,
                                      curated_enc_period_end, ward_name, studienphase,

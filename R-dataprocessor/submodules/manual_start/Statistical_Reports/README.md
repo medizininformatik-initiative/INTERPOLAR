@@ -1,6 +1,6 @@
 # "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienforschritts
 
-## Version 0.1 (20.08.2025)
+## Version 0.1 (16.09.2025)
 
 ### Funktion
 
@@ -21,6 +21,8 @@ gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataproce
         -   Anzahl der Fälle in den FHIR Tabellen der INTERPOLAR-Datenbank
 
         -   Anzahl der ebenfalls im Frontend aufgeführten Fälle
+        
+    -   Anzahl nicht verwertbarer Fälle aus FHIR (unplausible oder fehlende Daten)
 
     -   Anzahl der angelegten Medikationsanalysen
 
@@ -41,6 +43,8 @@ gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataproce
     -   Anzahl von drug-disease Kontraindikationen
 
     -   Anzahl von drug-Niereninsuffizienz Kontraindikationen
+    
+    -   Anzahl nicht verwertbarer Fälle aus dem Frontend (unplausible oder fehlende Daten)
 
 -   fe_summary.html beinhaltet die Zählungen für alle im Frontend dokumentierten Fälle, gesplittet nach Station
 
@@ -67,6 +71,8 @@ gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataproce
     -   Anzahl von drug-disease Kontraindikationen
 
     -   Anzahl von drug-Niereninsuffizienz Kontraindikationen
+    
+    -   Anzahl nicht verwertbarer Fälle aus dem Frontend (unplausible oder fehlende Daten)
 
 ### Details
 

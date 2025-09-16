@@ -171,10 +171,12 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
              footnote = c("F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)",
                           "Medication analysis and mrp counts: only for first medication analysis of initial INTERPOLAR ward contact for each case"),
              colnames = c("ward", "calendar week", "F1 (patients)", "F1 (patients also in frontend)",
-                          "F1 (encounters)", "F1 (encounters also in frontend)", "medication analyses",
+                          "F1 (encounters)", "F1 (encounters also in frontend)",
+                          "processing excluded F1 encounters","medication analyses",
                           "completed medication analyses", "MRP", "completed MRP documention",
                           "resolved MRP", "MRP resolution not informative", "contraindications",
-                          "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency")
+                          "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
+                          "processing excluded frontend encounters")
   )
 
   writeTableGlobal(frontend_summary,
@@ -183,7 +185,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
              colnames = c("ward", "patients", "encounters", "medication analyses",
                           "completed medication analyses", "MRP", "completed MRP documention",
                           "resolved MRP", "MRP resolution not informative", "contraindications",
-                          "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency")
+                          "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
+                          "processing excluded frontend encounters")
              )
 
   #TODO: implement pdf / quarto option ----------
