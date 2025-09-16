@@ -863,8 +863,13 @@ getRecordID <- function(all_pids, pid) {
 # Helper function to filter patient IDs by duplicate level and last indices
 filterPatientIdsByLevel <- function(all_pids, duplicate_level, last_indices) {
   underscore_counts <- stringr::str_count(all_pids, "_")
-  # build regex for multiple indices, e.g. "_(1|2|3|4|5|6)$"
-  pattern <- paste0("_(?:", paste(last_indices, collapse = "|"), ")$")
+  if (duplicate_level == 0) {
+    # pattern like "(1|2|3)$" → no underscore before the number
+    pattern <- paste0("(?:", paste(last_indices, collapse = "|"), ")$")
+  } else {
+    # pattern like "_(1|2|3)$" → underscore before the number
+    pattern <- paste0("_(?:", paste(last_indices, collapse = "|"), ")$")
+  }
   matching_ids <- all_pids[underscore_counts == duplicate_level & grepl(pattern, all_pids)]
 }
 
