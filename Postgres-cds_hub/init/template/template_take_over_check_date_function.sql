@@ -202,7 +202,7 @@ EXCEPTION
     RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - new_last_pro_nr:'||new_last_pro_nr;
 END;
 $inner$ LANGUAGE plpgsql;
-$f$
+$f$;
 -----------------------------
 
 --------------------------------------------------------------------

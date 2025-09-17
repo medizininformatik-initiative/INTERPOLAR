@@ -62,7 +62,7 @@ BEGIN
     RETURN 'Ende ohne Funktionsausführung';
 END;
 $inner$ LANGUAGE plpgsql;
-$f$
+$f$;
 --------------------------------------------------------------------
     END IF; -- do migration
 END
