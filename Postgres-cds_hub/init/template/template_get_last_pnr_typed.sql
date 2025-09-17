@@ -6,11 +6,12 @@ BEGIN
     ) THEN
 --------------------------------------------------------------------
 ------------------------------
+EXECUTE $f$
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.<%COPY_FUNC_NAME%>()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     erg TEXT;
     temp VARCHAR;
@@ -40,8 +41,8 @@ EXCEPTION
 
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
-$$ LANGUAGE plpgsql;
-
+$inner$ LANGUAGE plpgsql;
+$f$
 --------------------------------------------------------------------
     END IF; -- do migration
 END

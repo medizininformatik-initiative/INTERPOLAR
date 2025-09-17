@@ -5,11 +5,13 @@ BEGIN
         SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
 --------------------------------------------------------------------
+EXECUTE $f$
+--------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION db.add_hist_raw_records()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     erg VARCHAR;
 BEGIN
@@ -59,8 +61,8 @@ BEGIN
 
     RETURN 'Ende ohne Funktionsausführung';
 END;
-$$ LANGUAGE plpgsql;
-
+$inner$ LANGUAGE plpgsql;
+$f$
 --------------------------------------------------------------------
     END IF; -- do migration
 END

@@ -5,12 +5,12 @@ BEGIN
         SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
 --------------------------------------------------------------------
-
+EXECUTE $f$
 ------------------------------
 CREATE OR REPLACE FUNCTION db.<%COPY_FUNC_NAME%>()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     record_count INT:=0;
     current_record record;
@@ -146,10 +146,9 @@ EXCEPTION
 
     RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - last_pro_nr:'||last_pro_nr;
 END;
-$$ LANGUAGE plpgsql;
-
+$inner$ LANGUAGE plpgsql;
 -----------------------------
-
+$f$
 --------------------------------------------------------------------
     END IF; -- do migration
 END

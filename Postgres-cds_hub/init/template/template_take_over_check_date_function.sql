@@ -5,12 +5,12 @@ BEGIN
         SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
 --------------------------------------------------------------------
-
+EXECUTE $f$
 ------------------------------
 CREATE OR REPLACE FUNCTION db.<%COPY_FUNC_NAME%>()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     current_record record;
     new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
@@ -201,8 +201,8 @@ EXCEPTION
 
     RETURN 'Fehler db.<%COPY_FUNC_NAME%> - '||SQLSTATE||' - new_last_pro_nr:'||new_last_pro_nr;
 END;
-$$ LANGUAGE plpgsql;
-
+$inner$ LANGUAGE plpgsql;
+$f$
 -----------------------------
 
 --------------------------------------------------------------------
