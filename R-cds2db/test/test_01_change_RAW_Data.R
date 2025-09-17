@@ -1,12 +1,38 @@
-# Define the days count for this test
-DEBUG_DAYS_COUNT <- 3
-
-WARDS_PHASE_B_TEST <- c("Station 1-1", "Station 1-2")
-
 # Patient UKB-0001
 # Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
 # Tag 2: Entlassung
 # Tag 3: Wiederaufnahme Versorgungsstellenkontakt auf Station 1-2 Zimmer 1-2, Bett 1-2
+
+#################################
+# Start Define global variables #
+#################################
+
+# Define the days count for this test
+DEBUG_DAYS_COUNT <- 3
+
+###
+# DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
+# a config file. If the path is not set, then only the default config file
+# is used and no default values are overwritten by the debug config file.
+###
+DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
+  cds2db = "./R-cds2db/test/test_cds2db_config.toml",
+  dataprocessor = "",
+  db2frontend = ""
+)
+
+###
+# If this parameter is given, then no request is sent to the FHIR server, but
+# all data is loaded from this folder from RData files
+###
+DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
+
+#WARDS_PHASE_B_TEST <- c("Station 1-1", "Station 1-2")
+
+###############################
+# End Define global variables #
+###############################
+
 
 if (exists("DEBUG_DAY")) {
 
@@ -60,8 +86,6 @@ if (exists("DEBUG_DAY")) {
     # Patient 1 Tag 5: Neuer Encounter und neuer Versorgungsstellenkontakt auf gleicher IP-Station 1-1 Zimmer 1-3, Bett 1-3
     testAdmission(pid1, "Raum 1-2", "Bett 1-2", "Station 1-2")
   })
-
-  duplicatePatients(2)
 
   # Update the resource_tables list with the modified data tables
   resource_tables <- testGetResourceTables()

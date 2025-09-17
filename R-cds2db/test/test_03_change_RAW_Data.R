@@ -1,8 +1,3 @@
-# Define the days count for this test
-DEBUG_DAYS_COUNT <- 8
-
-WARDS_PHASE_B_TEST <- c("Station 1-1", "Station 1-2", "Station 2-1", "Station 2-2", "Station 2-3")
-
 # Patient UKB-0001
 # Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
 # Tag 2: Versorgungsstellenkontakt auf Nicht IP-Station Zimmer Nicht-IP-Raum 1-1, Bett Nicht-IP-Bett 1-1
@@ -23,6 +18,36 @@ WARDS_PHASE_B_TEST <- c("Station 1-1", "Station 1-2", "Station 2-1", "Station 2-
 # Tag 7: Versorgungsstellenkontakt auf Station 2-2 Zimmer 2-3, Bett 2-3
 # Tag 8: Entlassung von IP-Station
 
+#################################
+# Start Define global variables #
+#################################
+
+# Define the days count for this test
+DEBUG_DAYS_COUNT <- 8
+
+###
+# DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
+# a config file. If the path is not set, then only the default config file
+# is used and no default values are overwritten by the debug config file.
+###
+DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
+  cds2db = "./R-cds2db/test/test_cds2db_config.toml",
+  dataprocessor = "",
+  db2frontend = ""
+)
+
+###
+# If this parameter is given, then no request is sent to the FHIR server, but
+# all data is loaded from this folder from RData files
+###
+DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
+
+WARDS_PHASE_B_TEST <- c("Station 1-1", "Station 1-2", "Station 2-1", "Station 2-2", "Station 2-3")
+
+###############################
+# End Define global variables #
+###############################
+
 #TODO: MRP-haltige Medikation und Medikationsanalsyse anlegen für beide Fälle -> prüfen, ob der Stationsname für das MRP stimmt, wenn die Medikationsanalyse immer auf dem ersten IP-Station stattfand.
 if (exists("DEBUG_DAY")) {
 
@@ -34,7 +59,7 @@ if (exists("DEBUG_DAY")) {
   pid1 <- "UKB-0001"
   pid2 <- "UKB-0002"
   pats <- c(pid1, pid2) # present at day 1
-browser()
+
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
     etlutils::dbReset()
@@ -64,6 +89,10 @@ browser()
   # dt_enc <- testGetResourceTable("Encounter")
   # pids_per_wards <- testGetResourceTable("pids_per_ward")
   current_debug_day <- DEBUG_DAY
+
+  ##########
+  # Generate Admission, Transfer and Discharge events for two patients #
+  ##########
 
   runCodeForDebugDay(1, {
     # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
@@ -114,27 +143,16 @@ browser()
     testDischarge(pid2)
   })
 
+
+  ##########
+  # Duplicate patients for every MRP type
+  ##########
   duplicatePatients(4)
 
-  # Patient UKB-0001
-  # Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
-  # Tag 2: Versorgungsstellenkontakt auf Nicht IP-Station Zimmer Nicht-IP-Raum 1-1, Bett Nicht-IP-Bett 1-1
-  # Tag 3: Versorgungsstellenkontakt auf Station 1-2 Zimmer 1-2, Bett 1-2
-  # Tag 4: Encounter wird entlassen
-  # Tag 5: Neuer Encounter und neuer Versorgungsstellenkontakt auf gleicher IP-Station 1-1 Zimmer 1-3, Bett 1-3
-  # Tag 6: keine Verlegung
-  # Tag 7: Versorgungsstellenkontakt auf Nicht IP-Station Zimmer Nicht-IP-Raum 1-2, Bett Nicht-IP-Bett 1-2
-  # Tag 8: Entlassung von Nicht IP-Station
 
-  # Patient UKB-0002
-  # Tag 1: Versorgungsstellenkontakt auf nicht-IP-Station
-  # Tag 2: Versorgungsstellenkontakt auf Station 2-1 Zimmer 2-1, Bett 2-1
-  # Tag 3: Abteilungswechsel auf Station 2-3 Zimmer 2-3, Bett 2-3
-  # Tag 4: Versorgungsstellenkontakt auf nicht-IP-Station
-  # Tag 5: Encounter wird entlassen
-  # Tag 6: Neuer Encounter und neuer Versorgungsstellenkontakt auf nicht-IP-Station
-  # Tag 7: Versorgungsstellenkontakt auf Station 2-2 Zimmer 2-3, Bett 2-3
-  # Tag 8: Entlassung von IP-Station
+  ##########
+  # Add Medication, Conditions and Observations for all MRP types to the duplicated patients
+  ##########
 
   runCodeForDebugDay(1, {
     #UKB-0001_1 -> Drug_Disease_Interaction             -> MedicationRequest - N02AA01

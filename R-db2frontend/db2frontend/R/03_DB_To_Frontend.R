@@ -101,7 +101,7 @@ importDB2Redcap <- function() {
   #########################
   # START: FOR DEBUG ONLY #
   #########################
-  if (exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME") && length(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)) {
+  if (exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME") && !is.na(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)) {
     for (script_name in DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME) {
       source(script_name, local = TRUE) # this should change the data_to_import list
     }

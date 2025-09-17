@@ -1,14 +1,41 @@
-# Define the days count for this test
-DEBUG_DAYS_COUNT <- 2
-
-WARDS_PHASE_B_TEST <- c("Station 1-1")
-
 # Patient UKB-0001 6x dupliziert -> UKB-0001_1 bis UKB-0001_6
 # Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
-#        Erster Patient hat nichts, alle anderen haben jeweils ein MRP und eine Medikationsanalyse
+#        Erster Patient hat nichts, alle anderen haben jeweils ein MRP und eine
+#        Medikationsanalyse (diese kommt aus der zugehörigne change_REDCap_Data.R)
 # Tag 2: Encounter wird entlassen
 
 # Ergebnis: Am Ende soll im Redcap nach Tag 2 für UKB-0001_1 bis UKB-0001_6 jeweils ein MRP und eine Medikationsanalyse vorliegen
+
+#################################
+# Start Define global variables #
+#################################
+
+# Define the days count for this test
+DEBUG_DAYS_COUNT <- 2
+
+###
+# DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
+# a config file. If the path is not set, then only the default config file
+# is used and no default values are overwritten by the debug config file.
+###
+DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
+  cds2db = "./R-cds2db/test/test_cds2db_config.toml",
+  dataprocessor = "",
+  db2frontend = ""
+)
+
+###
+# If this parameter is given, then no request is sent to the FHIR server, but
+# all data is loaded from this folder from RData files
+###
+DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
+
+WARDS_PHASE_B_TEST <- c("Station 1-1")
+
+###############################
+# End Define global variables #
+###############################
+
 
 if (exists("DEBUG_DAY")) {
 
