@@ -1,3 +1,4 @@
+-- Script is not automatically generated
 -- View "v_cron_jobs" in schema "db_config" - Übersicht der cron jobs
 ------------------------------------------------------------------------------------------------
 CREATE OR REPLACE VIEW db_config.v_cron_jobs AS

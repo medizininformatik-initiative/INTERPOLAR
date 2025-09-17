@@ -1,3 +1,4 @@
+-- Script is not automatically generated
 -- ###################### PARAMETER ############################
 DO
 $$
