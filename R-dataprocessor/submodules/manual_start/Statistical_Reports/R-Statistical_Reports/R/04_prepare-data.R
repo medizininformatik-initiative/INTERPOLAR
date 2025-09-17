@@ -39,6 +39,7 @@
 #'   \item The data is limited to entries where `enc_period_start` falls within the specified
 #'        reporting period.
 #' }
+#' Note: studienphase is not included in the output, as it is not used for the F1 report.
 #'
 #' @importFrom dplyr filter distinct select mutate across
 #' @importFrom data.table isoweek
@@ -50,7 +51,9 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
     dplyr::distinct(
       enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
       record_id, fall_id_cis, enc_type_code_Kontaktebene, age_at_hospitalization, enc_period_start,
-      calendar_week, enc_period_end, ward_name, studienphase, enc_status, processing_exclusion_reason
+      calendar_week, enc_period_end, ward_name,
+      # studienphase,
+      enc_status, processing_exclusion_reason
     )
 
   if (anyNA(F1_prep_raw$enc_period_start)) {

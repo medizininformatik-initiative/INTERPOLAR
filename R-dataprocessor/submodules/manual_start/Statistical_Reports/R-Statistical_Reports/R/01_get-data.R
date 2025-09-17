@@ -484,20 +484,24 @@ getFallFeData <- function(lock_id, table_name) {
   )
 
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    # temporary remove fall_studienphase, since it is not used at the moment (transformation dependent on purpose)
+    dplyr::select(-fall_studienphase) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id)
 
-  if (any(is.na(fall_fe_table$fall_studienphase))) {
-    warning("The fall_fe table contains NA values in fall_studienphase.
-            These will be replaced with 'PhaseA'.")
+  # temporary deactivate, since fall_studienphase is not used at the moment
 
-    fall_fe_table <- fall_fe_table |>
-      dplyr::mutate(fall_studienphase = dplyr::if_else(is.na(fall_studienphase),
-        "PhaseA",
-        fall_studienphase
-      )) |>
-      dplyr::distinct()
-  }
+  # if (any(is.na(fall_fe_table$fall_studienphase))) {
+  #   warning("The fall_fe table contains NA values in fall_studienphase.
+  #           These will be replaced with 'PhaseA'.")
+  #
+  #   fall_fe_table <- fall_fe_table |>
+  #     dplyr::mutate(fall_studienphase = dplyr::if_else(is.na(fall_studienphase),
+  #       "PhaseA",
+  #       fall_studienphase
+  #     )) |>
+  #     dplyr::distinct()
+  # }
 
   if (nrow(fall_fe_table) == 0) {
     stop("The fall_fe table is empty. Please check the data.")

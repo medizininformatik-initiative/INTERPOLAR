@@ -431,6 +431,8 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
 #' }
 #' After the join, the function renames and relocates the relevant columns, and ensures uniqueness
 #' using `distinct()`.
+#' Note: fall_studienphase is currently not used in the analysis, therefore it is commented out.
+#'
 #'
 #' @importFrom dplyr left_join select rename relocate distinct
 #' @export
@@ -444,11 +446,11 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
       )
     ) |>
     dplyr::rename(
-      fall_id_cis = fall_id,
-      studienphase = fall_studienphase
+      fall_id_cis = fall_id # ,
+      # studienphase = fall_studienphase
     ) |>
     dplyr::relocate(fall_id_cis, .after = enc_identifier_value) |>
-    dplyr::relocate(studienphase, .after = ward_name) |>
+    # dplyr::relocate(studienphase, .after = ward_name) |>
     dplyr::distinct()
   return(merged_table_with_fall_id_and_studienphase)
 }
@@ -589,6 +591,7 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 #' avoid NAs.
 #' - This function is useful when matching granular front-end entries (e.g., medication records) to
 #' sub-encounter blocks.
+#' - fall_studienphase is currently not used in the analysis, therefore it is commented out.
 #'
 #' @importFrom dplyr left_join select distinct filter join_by between
 #' @export
@@ -602,7 +605,8 @@ addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1)
         dplyr::select(
           enc_id, main_enc_id, main_enc_period_start, fall_id_cis,
           pat_id, pat_identifier_value, record_id, enc_period_start,
-          curated_enc_period_end, ward_name, studienphase,
+          curated_enc_period_end, ward_name,
+          # studienphase,
           enc_status
         ) |>
         dplyr::distinct(),
@@ -612,7 +616,7 @@ addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1)
         record_id == record_id,
         fall_fhir_main_enc_id == main_enc_id,
         fall_id_cis == fall_id_cis,
-        fall_studienphase == studienphase,
+        # fall_studienphase == studienphase,
         fall_station == ward_name,
         fall_aufn_dat == main_enc_period_start,
         dplyr::between(
