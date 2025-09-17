@@ -29,7 +29,7 @@ END IF; -- Zieltabele
 
 ----------------------------------------------------
 -- Index
-IF NOT EXISTS (
+IF EXISTS (
         SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag' AND parameter_value='1'
     ) THEN
 ------------------------------------------------------------------------------------------------
@@ -399,9 +399,12 @@ $inner$ LANGUAGE plpgsql; -- db.log_table_view_structure
 $f$;
 ------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------
+
+----------------------------------------------------
+SELECT db.log_table_view_structure(); -- initiales Ausführen
+----------------------------------------------------
+
     END IF; -- current migration
 END
 $$;
 
-----------------------------------------------------
-SELECT db.log_table_view_structure(); -- initiales Ausführen
