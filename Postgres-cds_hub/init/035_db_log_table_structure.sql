@@ -25,11 +25,11 @@ IF NOT EXISTS ( -- Zieltabele existiert nicht
       input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
       last_change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
     );
-    END IF; -- Zieltabele
+END IF; -- Zieltabele
 
 ----------------------------------------------------
 -- Index
-    IF NOT EXISTS (
+IF NOT EXISTS (
         SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag' AND parameter_value='1'
     ) THEN
 ------------------------------------------------------------------------------------------------
@@ -126,9 +126,6 @@ IF NOT EXISTS ( -- Zieltabele existiert nicht
         END IF; -- Zielspalte
 ------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------
-    END IF; -- current migration
-END
-$$;
 
 ----------------------------------------------------
 -- Berechtigungen
@@ -138,12 +135,6 @@ GRANT UPDATE ON db_config.log_table_structure TO db_user;
 
 -- Erstelle die Funktion zur Extraktion der Struktur
 ----------------------------------------------------
-DO
-$$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag' AND parameter_value='1'
-    ) THEN
 ------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------
 EXECUTE $f$
@@ -405,7 +396,7 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql; -- db.log_table_view_structure
 -----------------
-$f$
+$f$;
 ------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------
     END IF; -- current migration

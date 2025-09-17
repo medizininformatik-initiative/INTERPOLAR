@@ -271,7 +271,7 @@ EXCEPTION
     )) AS t(res TEXT) INTO erg;
 END;
 $inner$ LANGUAGE plpgsql; -- db.cron_job_data_transfer
-$f$
+$f$;
 ------------------------
 
 DO
@@ -400,7 +400,7 @@ EXCEPTION
     RETURN FALSE;
 END;
 $inner$ LANGUAGE plpgsql; -- db.data_transfer_stop
-$f$
+$f$;
 ------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO cds2db_user;
@@ -526,7 +526,7 @@ EXCEPTION
     RETURN FALSE;
 END;
 $inner$ LANGUAGE plpgsql; -- db.data_transfer_start
-$f$
+$f$;
 ------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_start(VARCHAR,VARCHAR,BOOLEAN) TO cds2db_user;
@@ -570,7 +570,7 @@ EXCEPTION
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $inner$ LANGUAGE plpgsql; -- db.data_transfer_get_lock_module
-$f$
+$f$;
 ------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO cds2db_user;
@@ -697,7 +697,7 @@ EXCEPTION
     RETURN FALSE;
 END;
 $inner$ LANGUAGE plpgsql; -- db.data_transfer_reset_lock
-$f$
+$f$;
 ------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO cds2db_user;
@@ -757,7 +757,7 @@ EXCEPTION
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $inner$ LANGUAGE plpgsql; --db.data_transfer_status
-$f$
+$f$;
 ------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO cds2db_user;
