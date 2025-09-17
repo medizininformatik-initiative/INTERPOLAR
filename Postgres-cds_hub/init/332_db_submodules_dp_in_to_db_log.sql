@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 15:54:35
+-- Create time: 2025-09-17 16:37:47
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  331_cre_table_dataproc_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -336,7 +336,7 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql;
 -----------------------------
-$f$
+$f$;
 --------------------------------------------------------------------
     END IF; -- do migration
 END

@@ -146,10 +146,12 @@ BEGIN
     ) THEN
 ------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------
+EXECUTE $f$
+-----------------
 CREATE OR REPLACE FUNCTION db.log_table_view_structure()
 RETURNS VOID 
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     temp VARCHAR;
     err_section VARCHAR;
@@ -401,7 +403,9 @@ EXCEPTION
         last_processing_nr => CAST(num AS INT)                          -- last_processing_nr (INT) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
 END;
-$$ LANGUAGE plpgsql; -- db.log_table_view_structure
+$inner$ LANGUAGE plpgsql; -- db.log_table_view_structure
+-----------------
+$f$
 ------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------
     END IF; -- current migration

@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 15:52:17
+-- Create time: 2025-09-17 16:35:32
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -1636,7 +1636,7 @@ EXCEPTION
     RETURN 'Fehler db.take_over_last_check_date - '||SQLSTATE||' - new_last_pro_nr:'||new_last_pro_nr;
 END;
 $inner$ LANGUAGE plpgsql;
-$f$
+$f$;
 -----------------------------
 
 --------------------------------------------------------------------

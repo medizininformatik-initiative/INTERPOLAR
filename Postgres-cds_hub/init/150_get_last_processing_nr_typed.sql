@@ -85,7 +85,7 @@ EXCEPTION
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $inner$ LANGUAGE plpgsql;
-$f$
+$f$;
 --------------------------------------------------------------------
     END IF; -- do migration
 END

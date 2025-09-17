@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-09-17 15:52:25
+-- Create time: 2025-09-17 16:35:41
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
@@ -2632,7 +2632,7 @@ SELECT
     RETURN 'Ende ohne Funktionsausführung';
 END;
 $inner$ LANGUAGE plpgsql;
-$f$
+$f$;
 --------------------------------------------------------------------
     END IF; -- do migration
 END

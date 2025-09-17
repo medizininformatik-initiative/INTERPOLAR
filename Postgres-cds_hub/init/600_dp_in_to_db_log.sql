@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 15:53:54
+-- Create time: 2025-09-17 16:37:14
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1692,7 +1692,7 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql;
 -----------------------------
-$f$
+$f$;
 --------------------------------------------------------------------
     END IF; -- do migration
 END

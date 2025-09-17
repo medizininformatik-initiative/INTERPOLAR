@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 15:52:09
+-- Create time: 2025-09-17 16:35:24
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -4794,7 +4794,7 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql;
 -----------------------------
-$f$
+$f$;
 --------------------------------------------------------------------
     END IF; -- do migration
 END
