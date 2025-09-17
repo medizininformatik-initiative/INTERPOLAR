@@ -1,29 +1,36 @@
+-- Script is not automatically generated
 -- Table "log_table_structure" in schema "db_config" - Dokumentation der umgesetzen Änderung der Datenbankstrucktur
 ----------------------------------------------------
-CREATE TABLE IF NOT EXISTS db_config.log_table_structure (
-  id SERIAL PRIMARY KEY,
-  object_type VARCHAR, -- TABLE, VIEW, FUNCTION, TRIGGER
-  schema_name VARCHAR, -- Schemaname
-  table_name VARCHAR, -- Tabellen- / View- / Funktions- oder Triggername
-  column_name VARCHAR, -- Spaltenbezeichnung (Tabelle) bzw. Triggereigenschaften
-  data_type VARCHAR,
-  is_nullable VARCHAR,
-  column_default VARCHAR,
-  definition VARCHAR, -- SQL Definition von View, Funktionen bzw. Trigger
-  status VARCHAR, -- A -Aktuell  / H - Historie für Wiederkehrende Änderungen im zeitlichen Verlauf 
-  version_info VARCHAR, -- Dokumentation der Release-Version und des Datums
-  input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-  last_change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
-);
-
-----------------------------------------------------
--- Index
-
 DO
 $$
 BEGIN
+
+IF NOT EXISTS ( -- Zieltabele existiert nicht
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'db_config' AND table_name = 'log_table_structure'
+    ) THEN
+
+    CREATE TABLE IF NOT EXISTS db_config.log_table_structure (
+      id SERIAL PRIMARY KEY,
+      object_type VARCHAR, -- TABLE, VIEW, FUNCTION, TRIGGER
+      schema_name VARCHAR, -- Schemaname
+      table_name VARCHAR, -- Tabellen- / View- / Funktions- oder Triggername
+      column_name VARCHAR, -- Spaltenbezeichnung (Tabelle) bzw. Triggereigenschaften
+      data_type VARCHAR,
+      is_nullable VARCHAR,
+      column_default VARCHAR,
+      definition VARCHAR, -- SQL Definition von View, Funktionen bzw. Trigger
+      status VARCHAR, -- A -Aktuell  / H - Historie für Wiederkehrende Änderungen im zeitlichen Verlauf 
+      version_info VARCHAR, -- Dokumentation der Release-Version und des Datums
+      input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
+      last_change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
+    );
+    END IF; -- Zieltabele
+
+----------------------------------------------------
+-- Index
     IF NOT EXISTS (
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag' AND parameter_value=1
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag' AND parameter_value='1'
     ) THEN
 ------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------
@@ -135,7 +142,7 @@ DO
 $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag' AND parameter_value=1
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag' AND parameter_value='1'
     ) THEN
 ------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------

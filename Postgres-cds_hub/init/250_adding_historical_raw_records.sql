@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-09-04 15:35:53
+-- Create time: 2025-09-17 15:52:25
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
@@ -34,11 +34,13 @@ BEGIN
         SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
 --------------------------------------------------------------------
+EXECUTE $f$
+--------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION db.add_hist_raw_records()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     erg VARCHAR;
 BEGIN
@@ -2629,8 +2631,8 @@ SELECT
 
     RETURN 'Ende ohne Funktionsausführung';
 END;
-$$ LANGUAGE plpgsql;
-
+$inner$ LANGUAGE plpgsql;
+$f$
 --------------------------------------------------------------------
     END IF; -- do migration
 END

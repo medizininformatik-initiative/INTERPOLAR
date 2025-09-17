@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-09-04 15:33:19
+-- Create time: 2025-09-17 15:49:46
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -36,11 +36,12 @@ BEGIN
     ) THEN
 --------------------------------------------------------------------
 ------------------------------
+EXECUTE $f$
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.get_last_processing_nr_typed()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     erg TEXT;
     temp VARCHAR;
@@ -83,8 +84,8 @@ EXCEPTION
 
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
-$$ LANGUAGE plpgsql;
-
+$inner$ LANGUAGE plpgsql;
+$f$
 --------------------------------------------------------------------
     END IF; -- do migration
 END

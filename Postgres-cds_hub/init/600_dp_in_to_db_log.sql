@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-04 15:37:22
+-- Create time: 2025-09-17 15:53:54
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -35,12 +35,12 @@ BEGIN
         SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
 --------------------------------------------------------------------
-
+EXECUTE $f$
 ------------------------------
 CREATE OR REPLACE FUNCTION db.copy_fe_dp_in_to_db_log()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     record_count INT:=0;
     current_record record;
@@ -1690,10 +1690,9 @@ EXCEPTION
 
     RETURN 'Fehler db.copy_fe_dp_in_to_db_log - '||SQLSTATE||' - last_pro_nr:'||last_pro_nr;
 END;
-$$ LANGUAGE plpgsql;
-
+$inner$ LANGUAGE plpgsql;
 -----------------------------
-
+$f$
 --------------------------------------------------------------------
     END IF; -- do migration
 END

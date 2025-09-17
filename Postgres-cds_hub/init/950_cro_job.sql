@@ -1,8 +1,17 @@
+-- Script is not automatically generated
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+------------------------
 CREATE OR REPLACE FUNCTION db.cron_job_data_transfer()
 RETURNS VOID
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     temp VARCHAR;
     erg TEXT;
@@ -261,10 +270,12 @@ EXCEPTION
     'UPDATE db_config.db_process_control SET pc_value=''INTerrupted wegen Fehler in '||err_section||''', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_value not like ''Ongoing%'' and pc_value=''ReadyToConnect'' and pc_name=''semaphor_cron_job_data_transfer'''
     )) AS t(res TEXT) INTO erg;
 END;
-$$ LANGUAGE plpgsql; -- db.cron_job_data_transfer
+$inner$ LANGUAGE plpgsql; -- db.cron_job_data_transfer
+$f$
+------------------------
 
 DO
-$$
+$inner$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM cron.job j WHERE j.active IS TRUE AND command='SELECT db.cron_job_data_transfer();'
@@ -273,14 +284,16 @@ BEGIN
         PERFORM cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
     END IF;
 END
-$$;
+$inner$;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Anhalten
 CREATE OR REPLACE FUNCTION db.data_transfer_stop(module VARCHAR DEFAULT 'Interpolar_Module_bitte_angeben', msg VARCHAR DEFAULT 'Interpolar_Aufrufposition_bitte_angeben')
 RETURNS BOOLEAN
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     num INT;
     status VARCHAR;
@@ -386,7 +399,9 @@ EXCEPTION
 
     RETURN FALSE;
 END;
-$$ LANGUAGE plpgsql; -- db.data_transfer_stop
+$inner$ LANGUAGE plpgsql; -- db.data_transfer_stop
+$f$
+------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO db2dataprocessor_user;
@@ -394,11 +409,13 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO db2frontend
 GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Starten
 CREATE OR REPLACE FUNCTION db.data_transfer_start(module VARCHAR DEFAULT 'Interpolar_Module_bitte_angeben', msg VARCHAR DEFAULT 'Interpolar_Aufrufposition_bitte_angeben', read_only BOOLEAN DEFAULT FALSE)
 RETURNS BOOLEAN
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     num INT;
     status VARCHAR;
@@ -508,7 +525,9 @@ EXCEPTION
 
     RETURN FALSE;
 END;
-$$ LANGUAGE plpgsql; -- db.data_transfer_start
+$inner$ LANGUAGE plpgsql; -- db.data_transfer_start
+$f$
+------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_start(VARCHAR,VARCHAR,BOOLEAN) TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_start(VARCHAR,VARCHAR,BOOLEAN) TO db2dataprocessor_user;
@@ -516,11 +535,13 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_start(VARCHAR,VARCHAR,BOOLEAN) TO db2
 GRANT EXECUTE ON FUNCTION db.data_transfer_start(VARCHAR,VARCHAR,BOOLEAN) TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+------------------------
 -- Funktion um das Modul auszugeben welches die letzte Semaphore gespeert hat
 CREATE OR REPLACE FUNCTION db.data_transfer_get_lock_module()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     status TEXT;
     temp VARCHAR;
@@ -548,7 +569,9 @@ EXCEPTION
 
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
-$$ LANGUAGE plpgsql; -- db.data_transfer_get_lock_module
+$inner$ LANGUAGE plpgsql; -- db.data_transfer_get_lock_module
+$f$
+------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO db2dataprocessor_user;
@@ -556,11 +579,13 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO db2frontend_user
 GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Starten im Fehlerfall - schreiben eines Errorlog EINTrages
 CREATE OR REPLACE FUNCTION db.data_transfer_reset_lock(module VARCHAR DEFAULT 'Interpolar_Module_bitte_angeben')
 RETURNS BOOLEAN
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     num INT;
     status VARCHAR;
@@ -671,7 +696,9 @@ EXCEPTION
 
     RETURN FALSE;
 END;
-$$ LANGUAGE plpgsql; -- db.data_transfer_reset_lock
+$inner$ LANGUAGE plpgsql; -- db.data_transfer_reset_lock
+$f$
+------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO db2dataprocessor_user;
@@ -679,11 +706,13 @@ GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO db2frontend_us
 GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO db_user;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+------------------------
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.data_transfer_status()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     status TEXT;
     temp VARCHAR;
@@ -727,7 +756,9 @@ EXCEPTION
     
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
-$$ LANGUAGE plpgsql; --db.data_transfer_status
+$inner$ LANGUAGE plpgsql; --db.data_transfer_status
+$f$
+------------------------
 
 GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO db2dataprocessor_user;
@@ -743,3 +774,8 @@ GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO cds2db_user;
 GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO db2dataprocessor_user;
 GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO db2frontend_user;
 GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO db_user;
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;

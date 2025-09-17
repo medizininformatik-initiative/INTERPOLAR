@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-04 15:30:52
+-- Create time: 2025-09-17 15:47:15
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  120_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -35,12 +35,12 @@ BEGIN
         SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
 --------------------------------------------------------------------
-
+EXECUTE $f$
 ------------------------------
 CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     record_count INT:=0;
     current_record record;
@@ -4762,10 +4762,9 @@ EXCEPTION
 
     RETURN 'Fehler db.copy_raw_cds_in_to_db_log - '||SQLSTATE||' - last_pro_nr:'||last_pro_nr;
 END;
-$$ LANGUAGE plpgsql;
-
+$inner$ LANGUAGE plpgsql;
 -----------------------------
-
+$f$
 --------------------------------------------------------------------
     END IF; -- do migration
 END
