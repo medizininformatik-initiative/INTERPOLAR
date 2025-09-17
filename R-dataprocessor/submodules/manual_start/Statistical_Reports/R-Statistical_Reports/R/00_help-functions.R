@@ -27,7 +27,7 @@
 selectMax <- function(data, grouping_variables, selection_variable) {
   data_current <- data |>
     dplyr::group_by(across(all_of(grouping_variables))) |>
-    dplyr::slice_max({{selection_variable}}) |>
+    dplyr::slice_max({{ selection_variable }}) |>
     dplyr::ungroup()
   return(data_current)
 }
@@ -62,7 +62,7 @@ selectMax <- function(data, grouping_variables, selection_variable) {
 selectMin <- function(data, grouping_variables, selection_variable) {
   data_current <- data |>
     dplyr::group_by(across(all_of(grouping_variables))) |>
-    dplyr::slice_min({{selection_variable}}) |>
+    dplyr::slice_min({{ selection_variable }}) |>
     dplyr::ungroup()
   return(data_current)
 }
@@ -71,7 +71,8 @@ selectMin <- function(data, grouping_variables, selection_variable) {
 
 #' Check for Multiple Rows Within Each Group
 #'
-#' This function checks whether there are multiple rows for the same group in a dataset, based on specified grouping variables.
+#' This function checks whether there are multiple rows for the same group in a dataset, based on
+#' specified grouping variables.
 #'
 #' @param data A data frame containing the dataset to be checked.
 #' @param grouping_vars A character vector specifying the columns used for grouping.
@@ -79,7 +80,8 @@ selectMin <- function(data, grouping_variables, selection_variable) {
 #' @return A logical value: `TRUE` if there are groups with multiple rows, otherwise `FALSE`.
 #'
 #' @details
-#' The function groups the data by the specified grouping variables, counts the number of rows in each group, and checks whether any group contains more than one row.
+#' The function groups the data by the specified grouping variables, counts the number of rows in
+#' each group, and checks whether any group contains more than one row.
 #'
 #'
 #' # Check for multiple rows in each group
@@ -142,13 +144,16 @@ checkMultipleRows <- function(data, grouping_vars) {
 #' @importFrom dplyr group_by add_count mutate if_else ungroup select across all_of
 #'
 #' @export
-addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars, processing_exclusion_reason_name) {
+addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars,
+                                                     processing_exclusion_reason_name) {
   data_add_multiple_row_reason <- data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
     dplyr::add_count() |>
-    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(n > 1 & is.na(processing_exclusion_reason),
-                                                       processing_exclusion_reason_name,
-                                                       processing_exclusion_reason)) |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(n > 1 &
+      is.na(processing_exclusion_reason),
+    processing_exclusion_reason_name,
+    processing_exclusion_reason
+    )) |>
     dplyr::ungroup() |>
     dplyr::select(-n)
   return(data_add_multiple_row_reason)
@@ -223,13 +228,17 @@ parseNamedArgs <- function() {
 #' @importFrom dplyr mutate if_else select all_of across group_by summarise
 #'
 #' @export
-PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_code, var_system, var_new_system_1, var_new_system_2) {
-
+PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_code, var_system,
+                                 var_new_system_1, var_new_system_2) {
   data <- data |>
-    dplyr::mutate(!!var_new_system_1 := dplyr::if_else(get(var_system) %in% system1 | get(var_code) %in% codes1,
-                                                       get(var_code), NA_character_)) |>
-    dplyr::mutate(!!var_new_system_2 := dplyr::if_else(get(var_system) %in% system2 | get(var_code) %in% codes2,
-                                                       get(var_code), NA_character_)) |>
+    dplyr::mutate(!!var_new_system_1 := dplyr::if_else(get(var_system) %in% system1 |
+      get(var_code) %in% codes1,
+    get(var_code), NA_character_
+    )) |>
+    dplyr::mutate(!!var_new_system_2 := dplyr::if_else(get(var_system) %in% system2 |
+      get(var_code) %in% codes2,
+    get(var_code), NA_character_
+    )) |>
     dplyr::select(-dplyr::all_of(c(var_code, var_system))) |>
     dplyr::group_by(dplyr::across(-dplyr::all_of(c(var_new_system_1, var_new_system_2)))) |>
     dplyr::summarise(
@@ -237,7 +246,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
         vals <- na.omit(.data[[var_new_system_1]])
         if (length(unique(vals)) > 1) {
           print(unique(vals), width = Inf)
-          stop(paste0("Unexpected ",var_new_system_1," values"))
+          stop(paste0("Unexpected ", var_new_system_1, " values"))
         }
         if (length(vals) == 0) NA_character_ else vals[1]
       },
@@ -245,15 +254,11 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
         vals <- na.omit(.data[[var_new_system_2]])
         if (length(unique(vals)) > 1) {
           print(unique(vals), width = Inf)
-          stop(paste0("Unexpected ",var_new_system_2," values"))
+          stop(paste0("Unexpected ", var_new_system_2, " values"))
         }
         if (length(vals) == 0) NA_character_ else vals[1]
       },
       .groups = "drop"
     )
   return(data)
-
 }
-
-
-

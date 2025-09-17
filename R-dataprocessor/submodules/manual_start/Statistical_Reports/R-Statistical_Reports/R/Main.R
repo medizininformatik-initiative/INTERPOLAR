@@ -32,7 +32,8 @@
 #'
 #'   \item Constructs the core encounter-patient dataset:
 #'     \itemize{
-#'       \item `mergePatEnc()`, `addCuratedEncPeriodEnd()`, `addMainEncId()`, `addMainEncPeriodStart()`,
+#'       \item `mergePatEnc()`, `addCuratedEncPeriodEnd()`, `addMainEncId()`,
+#'             `addMainEncPeriodStart()`,
 #'       \item `calculateAge()`, `addWardName()`, `addRecordId()`, `addFallIdAndStudienphase()`
 #'     }
 #'
@@ -61,13 +62,15 @@
 #' }
 #'
 #' @section Output:
-#' - **Local output**: `FHIR_table`, `full_analysis_set_1`, `statistical_report_data`, `frontend_table`, `frontend_summary_data`
+#' - **Local output**: `FHIR_table`, `full_analysis_set_1`, `statistical_report_data`,
+#'                     `frontend_table`, `frontend_summary_data`
 #' - **Global output**:
 #'   \itemize{
 #'     \item `statistical_report`: F1 metrics with front-end add-ons
 #'     \item `frontend_summary`: Overall summary of front-end documentation
 #'   }
-#' Tables include captions describing the reporting period and footnotes explaining relevant metric assumptions.
+#' Tables include captions describing the reporting period and footnotes explaining relevant metric
+#' assumptions.
 #'
 #' @note
 #' Additional functionality for F2 metrics is scaffolded in the function but currently inactive.
@@ -80,9 +83,8 @@
 #' [writeTableLocal()], [writeTableGlobal()]
 #'
 #' @export
-createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
+createStatisticalReport <- function(REPORT_PERIOD_START = "2025-01-01",
                                     REPORT_PERIOD_END = as.character(Sys.Date())) {
-
   if (!interactive()) {
     named_args <- parseNamedArgs()
     if ("REPORT_PERIOD_START" %in% names(named_args)) {
@@ -93,38 +95,55 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
     }
   }
 
-  print(paste0("Report period start: ", REPORT_PERIOD_START,
-               ", Report period end: ", REPORT_PERIOD_END))
+  print(paste0(
+    "Report period start: ", REPORT_PERIOD_START,
+    ", Report period end: ", REPORT_PERIOD_END
+  ))
 
-  patient_table <- getPatientData(lock_id = "statistical reports[1]",
-                                    table_name = "v_patient_last_version")
+  patient_table <- getPatientData(
+    lock_id = "statistical reports[1]",
+    table_name = "v_patient_last_version"
+  )
   # --> this table should only have one entry per patient (warning if not)
 
-  encounter_table <- getEncounterData(lock_id = "statistical reports[2]",
-                                        table_name = "v_encounter_last_version")
+  encounter_table <- getEncounterData(
+    lock_id = "statistical reports[2]",
+    table_name = "v_encounter_last_version"
+  )
   # this table can have multiple rows per encounter
   # e.g. if there are entries for enc_location_physicaltype_code wa, ro & bd
 
-  pids_per_ward_table <- getPidsPerWardData(lock_id = "statistical reports[3]",
-                                                table_name = "v_pids_per_ward")
+  pids_per_ward_table <- getPidsPerWardData(
+    lock_id = "statistical reports[3]",
+    table_name = "v_pids_per_ward"
+  )
   # this table can have multiple entries per main encounter due to transferral to another ward,
   # it should include the encounter level "Versorgungsstellenkontakt"
 
-  # TODO: check if the appropriate views are used -------
-  patient_fe_table <- getPatientFeData(lock_id = "statistical reports[4]",
-                                  table_name = "v_patient_fe")
+  # TODO: check if the appropriate views (last import vs last version) are used -------
+  patient_fe_table <- getPatientFeData(
+    lock_id = "statistical reports[4]",
+    table_name = "v_patient_fe"
+  )
   # --> this table should only have one entry per patient (error if not)
 
-  fall_fe_table <- getFallFeData(lock_id = "statistical reports[5]",
-                                  table_name = "v_fall_fe")
-  # --> this table shows the trajectory of each case in the front-end system (multiple rows per case possible)
+  fall_fe_table <- getFallFeData(
+    lock_id = "statistical reports[5]",
+    table_name = "v_fall_fe"
+  )
+  # --> this table shows the trajectory of each case in the front-end system
+  #     (multiple rows per case possible)
 
-  medikationsanalyse_fe_table <- getMedikationsanalyseFeData(lock_id = "statistical reports[6]",
-                                  table_name = "v_medikationsanalyse_fe_last_import")
+  medikationsanalyse_fe_table <- getMedikationsanalyseFeData(
+    lock_id = "statistical reports[6]",
+    table_name = "v_medikationsanalyse_fe_last_import"
+  )
   # --> this table shows only the last version of each medikationsanalyse_fe entry
 
-  mrp_dokumentation_validierung_fe_table <- getMRPDokumentationValidierungFeData(lock_id = "statistical reports[7]",
-                                  table_name = "v_mrpdokumentation_validierung_fe_last_import")
+  mrp_dokumentation_validierung_fe_table <- getMRPDokumentationValidierungFeData(
+    lock_id = "statistical reports[7]",
+    table_name = "v_mrpdokumentation_validierung_fe_last_import"
+  )
   # --> this table shows only the last version of each mrp_dokumentation_validierung_fe entry
 
   FHIR_table <- mergePatEnc(patient_table, encounter_table) |>
@@ -138,14 +157,20 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
 
   full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table)
 
-  frontend_table <-mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
+  frontend_table <- mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
     addMedaData(medikationsanalyse_fe_table) |>
     addEncIdToFeData(full_analysis_set_1) |>
     addMRPDokuData(mrp_dokumentation_validierung_fe_table)
 
-  frontend_summary_data <- prepareFeSummaryData(frontend_table, REPORT_PERIOD_START, REPORT_PERIOD_END)
+  frontend_summary_data <- prepareFeSummaryData(
+    frontend_table, REPORT_PERIOD_START,
+    REPORT_PERIOD_END
+  )
 
-  statistical_report_data <- prepareF1data(full_analysis_set_1, REPORT_PERIOD_START, REPORT_PERIOD_END) |>
+  statistical_report_data <- prepareF1data(
+    full_analysis_set_1, REPORT_PERIOD_START,
+    REPORT_PERIOD_END
+  ) |>
     addFeDataToF1data(frontend_summary_data)
 
   # FAS2_1 <- defineFAS2_1(full_analysis_set_1, REPORT_PERIOD_END)
@@ -167,27 +192,38 @@ createStatisticalReport <- function(REPORT_PERIOD_START ="2025-01-01",
 
   # print report to outputGlobal
   writeTableGlobal(statistical_report,
-             caption = paste0("report for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
-             footnote = c("F1: Cumulative number of hospitalized cases on INTERPOLAR wards (>18y, initial INTERPOLAR ward contact)",
-                          "Medication analysis and mrp counts: only for first medication analysis of initial INTERPOLAR ward contact for each case"),
-             colnames = c("ward", "calendar week", "F1 (patients)", "F1 (patients also in frontend)",
-                          "F1 (encounters)", "F1 (encounters also in frontend)",
-                          "processing excluded F1 encounters","medication analyses",
-                          "completed medication analyses", "MRP", "completed MRP documention",
-                          "resolved MRP", "MRP resolution not informative", "contraindications",
-                          "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
-                          "processing excluded frontend encounters")
+    caption = paste0("report for period: ", REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
+    footnote = c(
+      "F1: Cumulative number of hospitalized cases on INTERPOLAR wards
+      (>18y, initial INTERPOLAR ward contact)",
+      "Medication analysis and mrp counts: only for first medication analysis of initial INTERPOLAR
+      ward contact for each case"
+    ),
+    colnames = c(
+      "ward", "calendar week", "F1 (patients)", "F1 (patients also in frontend)",
+      "F1 (encounters)", "F1 (encounters also in frontend)",
+      "processing excluded F1 encounters", "medication analyses",
+      "completed medication analyses", "MRP", "completed MRP documention",
+      "resolved MRP", "MRP resolution not informative", "contraindications",
+      "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
+      "processing excluded frontend encounters"
+    )
   )
 
   writeTableGlobal(frontend_summary,
-             caption = paste0("Front-End Summary for period: ",REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
-             footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all INTERPOLAR ward contacts for each case"),
-             colnames = c("ward", "patients", "encounters", "medication analyses",
-                          "completed medication analyses", "MRP", "completed MRP documention",
-                          "resolved MRP", "MRP resolution not informative", "contraindications",
-                          "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
-                          "processing excluded frontend encounters")
-             )
+    caption = paste0(
+      "Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
+      REPORT_PERIOD_END
+    ),
+    footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
+                 INTERPOLAR ward contacts for each case"),
+    colnames = c(
+      "ward", "patients", "encounters", "medication analyses",
+      "completed medication analyses", "MRP", "completed MRP documention",
+      "resolved MRP", "MRP resolution not informative", "contraindications",
+      "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
+      "processing excluded frontend encounters"
+    )
+  )
 
-  #TODO: implement pdf / quarto option ----------
 }
