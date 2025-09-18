@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-09-04 15:37:52
+-- Create time: 2025-09-18 09:21:52
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  450_cre_table_frontend_in_trig.sql
 -- TEMPLATE:  template_cre_trigger_set_id.sql
@@ -39,10 +39,12 @@ BEGIN
 
 -- db2frontend_in.patient_fe
 ------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+-------------
 CREATE OR REPLACE FUNCTION db2frontend_in.patient_fe_ins_fkt()
 RETURNS TRIGGER
 SECURITY DEFINER
-AS $$
+AS $inner$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.patient_fe_id IS NULL THEN
@@ -50,20 +52,28 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$inner$ LANGUAGE plpgsql;
+-------------
+$f$;
 
+EXECUTE $f$
+-------------
 CREATE OR REPLACE TRIGGER patient_fe_tr_ins
   BEFORE INSERT
   ON  db2frontend_in.patient_fe
   FOR EACH ROW
   EXECUTE PROCEDURE db2frontend_in.patient_fe_ins_fkt();
+-------------
+$f$;
 
 -- db2frontend_in.fall_fe
 ------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+-------------
 CREATE OR REPLACE FUNCTION db2frontend_in.fall_fe_ins_fkt()
 RETURNS TRIGGER
 SECURITY DEFINER
-AS $$
+AS $inner$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.fall_fe_id IS NULL THEN
@@ -71,20 +81,28 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$inner$ LANGUAGE plpgsql;
+-------------
+$f$;
 
+EXECUTE $f$
+-------------
 CREATE OR REPLACE TRIGGER fall_fe_tr_ins
   BEFORE INSERT
   ON  db2frontend_in.fall_fe
   FOR EACH ROW
   EXECUTE PROCEDURE db2frontend_in.fall_fe_ins_fkt();
+-------------
+$f$;
 
 -- db2frontend_in.medikationsanalyse_fe
 ------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+-------------
 CREATE OR REPLACE FUNCTION db2frontend_in.medikationsanalyse_fe_ins_fkt()
 RETURNS TRIGGER
 SECURITY DEFINER
-AS $$
+AS $inner$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.medikationsanalyse_fe_id IS NULL THEN
@@ -92,20 +110,28 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$inner$ LANGUAGE plpgsql;
+-------------
+$f$;
 
+EXECUTE $f$
+-------------
 CREATE OR REPLACE TRIGGER medikationsanalyse_fe_tr_ins
   BEFORE INSERT
   ON  db2frontend_in.medikationsanalyse_fe
   FOR EACH ROW
   EXECUTE PROCEDURE db2frontend_in.medikationsanalyse_fe_ins_fkt();
+-------------
+$f$;
 
 -- db2frontend_in.mrpdokumentation_validierung_fe
 ------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+-------------
 CREATE OR REPLACE FUNCTION db2frontend_in.mrpdokumentation_validierung_fe_ins_fkt()
 RETURNS TRIGGER
 SECURITY DEFINER
-AS $$
+AS $inner$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.mrpdokumentation_validierung_fe_id IS NULL THEN
@@ -113,20 +139,28 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$inner$ LANGUAGE plpgsql;
+-------------
+$f$;
 
+EXECUTE $f$
+-------------
 CREATE OR REPLACE TRIGGER mrpdokumentation_validierung_fe_tr_ins
   BEFORE INSERT
   ON  db2frontend_in.mrpdokumentation_validierung_fe
   FOR EACH ROW
   EXECUTE PROCEDURE db2frontend_in.mrpdokumentation_validierung_fe_ins_fkt();
+-------------
+$f$;
 
 -- db2frontend_in.retrolektive_mrpbewertung_fe
 ------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+-------------
 CREATE OR REPLACE FUNCTION db2frontend_in.retrolektive_mrpbewertung_fe_ins_fkt()
 RETURNS TRIGGER
 SECURITY DEFINER
-AS $$
+AS $inner$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.retrolektive_mrpbewertung_fe_id IS NULL THEN
@@ -134,20 +168,28 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$inner$ LANGUAGE plpgsql;
+-------------
+$f$;
 
+EXECUTE $f$
+-------------
 CREATE OR REPLACE TRIGGER retrolektive_mrpbewertung_fe_tr_ins
   BEFORE INSERT
   ON  db2frontend_in.retrolektive_mrpbewertung_fe
   FOR EACH ROW
   EXECUTE PROCEDURE db2frontend_in.retrolektive_mrpbewertung_fe_ins_fkt();
+-------------
+$f$;
 
 -- db2frontend_in.risikofaktor_fe
 ------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+-------------
 CREATE OR REPLACE FUNCTION db2frontend_in.risikofaktor_fe_ins_fkt()
 RETURNS TRIGGER
 SECURITY DEFINER
-AS $$
+AS $inner$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.risikofaktor_fe_id IS NULL THEN
@@ -155,20 +197,28 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$inner$ LANGUAGE plpgsql;
+-------------
+$f$;
 
+EXECUTE $f$
+-------------
 CREATE OR REPLACE TRIGGER risikofaktor_fe_tr_ins
   BEFORE INSERT
   ON  db2frontend_in.risikofaktor_fe
   FOR EACH ROW
   EXECUTE PROCEDURE db2frontend_in.risikofaktor_fe_ins_fkt();
+-------------
+$f$;
 
 -- db2frontend_in.trigger_fe
 ------------------------------------------------------------------------------------------------------------------
+EXECUTE $f$
+-------------
 CREATE OR REPLACE FUNCTION db2frontend_in.trigger_fe_ins_fkt()
 RETURNS TRIGGER
 SECURITY DEFINER
-AS $$
+AS $inner$
 BEGIN
     -- Entering a data record ID if the data record was created for the first time in the FrontEnd and cannot yet have an ID in the database
     IF NEW.trigger_fe_id IS NULL THEN
@@ -176,13 +226,19 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$inner$ LANGUAGE plpgsql;
+-------------
+$f$;
 
+EXECUTE $f$
+-------------
 CREATE OR REPLACE TRIGGER trigger_fe_tr_ins
   BEFORE INSERT
   ON  db2frontend_in.trigger_fe
   FOR EACH ROW
   EXECUTE PROCEDURE db2frontend_in.trigger_fe_ins_fkt();
+-------------
+$f$;
 
 --------------------------------------------------------------------
     END IF; -- do migration
