@@ -401,7 +401,8 @@ $f$;
 ------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------
-SELECT db.log_table_view_structure(); -- initiales Ausführen
+-- First execution/update only when migration is executed
+PERFORM db.log_table_view_structure(); -- initiales Ausführen
 ----------------------------------------------------
 
     END IF; -- current migration
