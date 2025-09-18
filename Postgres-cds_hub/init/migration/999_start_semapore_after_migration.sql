@@ -5,7 +5,7 @@ BEGIN
    IF EXISTS (
       SELECT 1 
       FROM (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version') a
-          ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'last_valid_release_version') b
+          ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_last_migration_start') b
           ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag') c
       WHERE a.parameter_value!=b.parameter_value AND c.parameter_value='1'
    ) THEN
@@ -15,7 +15,10 @@ BEGIN
       UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_last_migration_start')
       WHERE parameter_name = 'last_valid_release_version';
 
-      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date')
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date_last_migration_start')
+      WHERE parameter_name = 'release_version_date';
+
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date_last_migration_start')
       WHERE parameter_name = 'last_valid_release_version_date';
 
       UPDATE db_config.db_parameter SET parameter_value = 
@@ -27,7 +30,6 @@ BEGIN
 
       UPDATE db_config.db_parameter SET parameter_value=-1 WHERE parameter_name='current_migration_flag';
    END IF;
-
 
 -- Set semapore if exit --------------------------------------------------------------------------
    IF EXISTS (

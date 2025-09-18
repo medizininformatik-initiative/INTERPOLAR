@@ -99,7 +99,16 @@ BEGIN
    ) THEN
       INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
       VALUES ('release_version_date',release_version_date,'GitHup release version date');
-   ENd IF;
+   END IF;
+
+   IF NOT EXISTS (
+      SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'release_version_date_last_migration_start'
+   ) THEN
+      INSERT INTO db_config.db_parameter (parameter_name, parameter_value, parameter_description)
+      VALUES ('release_version_date_last_migration_start',release_version_date,'GitHup release version date');
+   ELSE
+      UPDATE db_config.db_parameter SET parameter_value=release_version_date WHERE parameter_name='release_version_date_last_migration_start';
+   END IF;
 
    -- Detect whether the current database version is older than migration scripts and whether these need to be executed
    -- 1-do | 0-dont flag to prevent downward migration across scripts for non-additive changes
@@ -108,18 +117,13 @@ BEGIN
    ) THEN
       UPDATE db_config.db_parameter SET parameter_value='1' WHERE parameter_name='current_migration_flag'; -- do - skirpt is newer then in database
       SELECT '1' INTO current_migration_flag;
+      UPDATE db_config.db_parameter SET parameter_value=release_version_nr WHERE parameter_name='release_version_nr' AND parameter_value = '0'; -- set initial
    ELSE
       UPDATE db_config.db_parameter SET parameter_value='0' WHERE parameter_name='current_migration_flag'; -- dont - skript is older or same then in database
       SELECT '0' INTO current_migration_flag;
    END IF;
 
    IF current_migration_flag = '1' THEN
-      IF EXISTS (
-         SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'release_version_date'
-      ) THEN
-         UPDATE db_config.db_parameter SET parameter_value=release_version_date WHERE parameter_name='release_version_date';
-      END IF;
-
       -- Konfig Parameters
       IF NOT EXISTS (
          SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'pause_after_process_execution'
