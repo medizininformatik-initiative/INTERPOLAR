@@ -114,7 +114,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   encounter_table <- getEncounterData(
     lock_id = "statistical reports[2]",
-    table_name = "v_encounter_last_version"
+    table_name = "v_encounter_last_version",
+    report_period_start = REPORT_PERIOD_START
   )
   # this table can have multiple rows per encounter
   # e.g. if there are entries for enc_location_physicaltype_code wa, ro & bd

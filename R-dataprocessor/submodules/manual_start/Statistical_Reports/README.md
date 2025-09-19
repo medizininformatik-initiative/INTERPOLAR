@@ -78,6 +78,7 @@ gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataproce
 
 -   die aggregierten Kennzahlen umfassen nur solche Fälle, die die Kriterien für die INTERPOLAR-Kohorte (Full Analysis Set 1 / FAS1) erfüllen (stationäre Fälle \>18 Jahre, die auf einer INTERPOLAR-Station aufgenommen wurden)
 -   nur Medikationsanalysen deren Datum innerhalb eines INTERPOLAR-Stationsaufenthaltes liegt, werden gezählt (d.h. die Medikationsanalyse muss innerhalb des Zeitraumes des INTERPOLAR-Versorgungsstellenkontaktes liegen)
+-   
 
 ### Konfiguration
 
@@ -111,7 +112,7 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R Statistical_Reports REPORT_PERIOD_START=2025-09-01 REPORT_PERIOD_END=2025-09-08 WRITE_TABLE_LOCAL=TRUE
 ```
 
-### Annahmen
+### Annahmen/Erläuterungen
 
 (nach bestem Wissen und Gewissen gemäß MII KDS Implementation-Guide (mit Bitte um Korrektur falls nicht korrekt umgesetzt) sowie ggf. für die Analyse nötige Erweiterungen)
 
@@ -133,3 +134,5 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 -   stationäre INTERPOLAR-Kontakte tragen enc_class_code == "IMP" mindestens im Einrichtungskontakt
 -   Kontakte mit Kontaktart "begleitperson" werden in den Zählungen nicht berücksichtigt. Die Kontaktarten "vorstationaer", "nachstationaer", "ub", "konsil" und "operation" könnten als Sekundärkontakte für komplexere Analysen benötigt werden, werden aber aktuell nicht in die Berechnungen einbezogen. Die Kontaktarten "teilstationaer", "tagesklinik", "nachtklinik", "normalstationaer", "intensivstationaer" im Versorgungsstellenkontakt werden für INTERPOLAR Stationskontakte in den Zählungen berücksichtigt.
 -   später relevant: Wenn fall_studienphase in fall_fe leer ist, wird diese durch 'PhaseA' ersetzt (für Daten vor Einführung der Befüllung der Spalte Studienphase)
+-   Encounter-Altdaten (die ggf. in den lokalen Tabellen erscheinen) werden ressourcensparend aktuell gefiltert auf ein Startdatum(enc_period_start) von 1 Jahr vor REPORT_PERIOD_START
+-   Dateneinträge mit processing_exclusion_reason waren betroffen von einem der Datenqualitätschecks und werden nicht weiter verarbeitet (siehe warnings)

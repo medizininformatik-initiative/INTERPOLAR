@@ -108,6 +108,9 @@ getPatientData <- function(lock_id, table_name) {
 #'
 #' @param lock_id A character string specifying the lock ID for the database query.
 #'   This ensures safe and consistent access to the database during query execution.
+#'
+#' @param report_period_start A date object specifying the start date of the report period.
+#'
 #' @param table_name A character string specifying the name of the database table to query.
 #'   The table must contain the following columns (at a minimum):
 #'   - `enc_id`, `enc_identifier_value`, `enc_patient_ref`, `enc_partof_ref`
@@ -142,21 +145,22 @@ getPatientData <- function(lock_id, table_name) {
 #' 2. Filters out einrichtungskontakt encounters that do not match the expected FHIR identifier
 #'    system for encounters
 #'   (if defined as `COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM`).
-#' 3. Filters out encounters with class codes "PRENC", "VR", or "HH" to exclude non-relevant records.
-#' 4. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown"
+#' 3. Filters encounters to include only those with a start date within one year before the reporting_period_start
+#' 4. Filters out encounters with class codes "PRENC", "VR", or "HH" to exclude non-relevant records.
+#' 5. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown"
 #'    to focus on relevant records.
-#' 5. Removes any exact duplicates using `dplyr::distinct()`.
-#' 6. Sorts the data by patient reference, encounter ID, time-related fields, and status-related
+#' 6. Removes any exact duplicates using `dplyr::distinct()`.
+#' 7. Sorts the data by patient reference, encounter ID, time-related fields, and status-related
 #'    fields to ensure consistency and clarity in downstream processing.
-#' 7. Checks for empty results and unexpected status values, issuing errors if necessary.
+#' 8. Checks for empty results and unexpected status values, issuing errors if necessary.
 #'
 #'
-#' @importFrom dplyr distinct arrange filter
+#' @importFrom dplyr distinct arrange filter mutate
 #' @export
 
 # TODO: check all variables in table _description_relevant for manifestations and importance to include them ------------
 # (bottom variables not in use)
-getEncounterData <- function(lock_id, table_name) {
+getEncounterData <- function(lock_id, table_name, report_period_start) {
   query <- paste0(
     "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, ",
     "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
@@ -175,12 +179,13 @@ getEncounterData <- function(lock_id, table_name) {
   encounter_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
 
   if (etlutils::isDefinedAndNotEmpty("COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
-    encounter_table <- encounter_table_raw |>
+    encounter_table_raw <- encounter_table_raw |>
       dplyr::filter(!(enc_type_code == "einrichtungskontakt" &
         !enc_identifier_system %in% COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM))
-  } else {
-    encounter_table <- encounter_table_raw
   }
+
+  encounter_table <- encounter_table_raw |>
+    dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_start))
 
   encounter_table <- encounter_table |>
     dplyr::filter(!enc_class_code %in% c("PRENC", "VR", "HH")) |>
@@ -207,6 +212,16 @@ getEncounterData <- function(lock_id, table_name) {
 
   if (nrow(encounter_table) == 0) {
     stop("The encounter table is empty. Please check the data.")
+  }
+
+  if (any(is.na(encounter_table$enc_period_start))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = ifelse(is.na(enc_period_start) &
+        is.na(processing_exclusion_reason), "missing_start_date", processing_exclusion_reason))
+    print(encounter_table |>
+      dplyr::filter(is.na(enc_period_start)), width = Inf)
+    warning("The encounter table contains NA values in enc_period_start.
+            Relevant encounter data may be missed. Please check the data")
   }
 
   if (any(encounter_table$enc_class_code == "IMP" &
