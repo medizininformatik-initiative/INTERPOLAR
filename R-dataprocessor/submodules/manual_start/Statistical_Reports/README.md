@@ -1,6 +1,6 @@
 # "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienforschritts
 
-## Version 0.1 (17.09.2025)
+## Version 0.1 (19.09.2025)
 
 ### Funktion
 
@@ -85,20 +85,30 @@ abgefragter Zeitraum konfigurierbar
 
 -   alle Fälle werden gezählt, die innerhalb dieses Zeitraumes auf einer INTERPOLAR-Station (in statistical_reports.html über Versorgungsstellenkontakt) bzw. in der Einrichtung (in fe_summary.html über Einrichtungskontakt) aufgenommen wurden; dabei zählt der Start-Tag dazu, der End-Tag nicht
 
--   Default ist aktuell gesetzt auf [01.01.2025, aktuelles Datum)
+-   Default ist aktuell gesetzt auf [01.01.2024, aktuelles Datum)
+
+bei Bedarf Ausgabe der zu Grunde liegenden Datentabellen (outputLocal)
+
+-   zur besseren Nachvollziehbarkeit können bei Bedarf die den Berechnungen zu Grunde liegenden Datentabellen in outputLocal ausgegeben werden
+
+-   dies wird nur empfohlen für nach Zeitraum gefilterte Anfragen, da die Generierung der (dann ohnehin nicht überblickbaren) Tabellen sonst zu memory Problemen führen kann
 
 ### Ausführung
 
 nach Auschecken der Branches '553-initiale-statistik-reports-erstellen' und Neubau des Images ausführbar über Aufruf des dataprocessors mit folgenden Argumenten:
 
--   `Statistical_Reports`(=Name des Submoduls im Ordner manual_start) als Argument anhängen (unbenannt)
+-   `Statistical_Reports`(=Name des Submoduls im Ordner manual_start) als Argument anhängen
+
+``` console
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R Statistical_Reports
+```
 
 -   optional Anpassung des Zeitraumes über die Argumente `REPORT_PERIOD_START`und `REPORT_PERIOD_END`mit Name=Wert (ohne Leerzeichen zwischen Name und Wert) und Wert im Format YYYY-MM-DD oder YYYY/MM/DD
 
--   Beispiel:
+-   optional Ausgabe der zu Grunde liegenden Datentabellen in outputLocal über das Argument `WRITE_TABLE_LOCAL=TRUE`
 
 ``` console
-docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R Statistical_Reports REPORT_PERIOD_START=2025-07-01 REPORT_PERIOD_END=2025-07-31
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R Statistical_Reports REPORT_PERIOD_START=2025-09-01 REPORT_PERIOD_END=2025-09-08 WRITE_TABLE_LOCAL=TRUE
 ```
 
 ### Annahmen

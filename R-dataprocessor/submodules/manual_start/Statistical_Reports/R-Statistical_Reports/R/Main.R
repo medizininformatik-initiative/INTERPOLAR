@@ -11,6 +11,7 @@
 #'   Start date of the reporting period.
 #' @param REPORT_PERIOD_END Character string in `"YYYY-MM-DD"` format.
 #'   End date of the reporting period. Defaults to `Sys.Date()`.
+#' @param WRITE_TABLE_LOCAL Logical. If `TRUE`, intermediate tables are written to the outputLocal folder
 #'
 #' @return Invisibly returns `NULL`. This function is called for its side effects:
 #' writing local and global summary tables and producing a structured internal report.
@@ -83,8 +84,9 @@
 #' [writeTableLocal()], [writeTableGlobal()]
 #'
 #' @export
-createStatisticalReport <- function(REPORT_PERIOD_START = "2025-01-01",
-                                    REPORT_PERIOD_END = as.character(Sys.Date())) {
+createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
+                                    REPORT_PERIOD_END = as.character(Sys.Date()),
+                                    WRITE_TABLE_LOCAL = FALSE) {
   if (!interactive()) {
     named_args <- parseNamedArgs()
     if ("REPORT_PERIOD_START" %in% names(named_args)) {
@@ -93,11 +95,15 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2025-01-01",
     if ("REPORT_PERIOD_END" %in% names(named_args)) {
       REPORT_PERIOD_END <- named_args[["REPORT_PERIOD_END"]]
     }
+    if ("WRITE_TABLE_LOCAL" %in% names(named_args)) {
+      WRITE_TABLE_LOCAL <- as.logical(named_args[["WRITE_TABLE_LOCAL"]])
+    }
   }
 
   print(paste0(
     "Report period start: ", REPORT_PERIOD_START,
-    ", Report period end: ", REPORT_PERIOD_END
+    ", Report period end: ", REPORT_PERIOD_END,
+    ", Write local tables: ", WRITE_TABLE_LOCAL
   ))
 
   patient_table <- getPatientData(
@@ -176,12 +182,15 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2025-01-01",
   # FAS2_1 <- defineFAS2_1(full_analysis_set_1, REPORT_PERIOD_END)
   # F2_data <- prepareF2data(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
-  # Print datasets for verification to outputLocal
-  writeTableLocal(FHIR_table)
-  writeTableLocal(full_analysis_set_1)
-  writeTableLocal(statistical_report_data)
-  writeTableLocal(frontend_table)
-  writeTableLocal(frontend_summary_data)
+  # if needed: Print datasets for verification to outputLocal
+  if (WRITE_TABLE_LOCAL) {
+    writeTableLocal(FHIR_table)
+    writeTableLocal(full_analysis_set_1)
+    writeTableLocal(statistical_report_data)
+    writeTableLocal(frontend_table)
+    writeTableLocal(frontend_summary_data)
+  }
+
 
   frontend_summary <- calculateFeSummary(frontend_summary_data)
 
