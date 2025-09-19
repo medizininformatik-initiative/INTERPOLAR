@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 10:58:41
+-- Rights definition file last update : 2025-07-01 13:49:10
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-07-16 11:48:35
+-- Create time: 2025-09-04 15:33:19
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -44,8 +44,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'encounter'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'encounter') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'input_datetime'
@@ -557,7 +559,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'hash_index_col'
@@ -728,7 +732,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.encounter ADD
@@ -826,8 +832,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'patient'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'patient') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'input_datetime'
@@ -1003,7 +1011,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'hash_index_col'
@@ -1062,7 +1072,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.patient ADD
@@ -1104,8 +1116,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'condition'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'condition') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'input_datetime'
@@ -1893,7 +1907,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'hash_index_col'
@@ -2156,7 +2172,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.condition ADD
@@ -2300,8 +2318,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'medication'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'medication') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'input_datetime'
@@ -2717,7 +2737,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'hash_index_col'
@@ -2856,7 +2878,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.medication ADD
@@ -2938,8 +2962,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'medicationrequest'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'medicationrequest') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'input_datetime'
@@ -4417,7 +4443,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col'
@@ -4910,7 +4938,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.medicationrequest ADD
@@ -5169,8 +5199,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'medicationadministration'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'medicationadministration') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'input_datetime'
@@ -5922,7 +5954,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col'
@@ -6173,7 +6207,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.medicationadministration ADD
@@ -6311,8 +6347,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'medicationstatement'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'medicationstatement') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'input_datetime'
@@ -7694,7 +7732,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col'
@@ -8155,7 +8195,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.medicationstatement ADD
@@ -8398,8 +8440,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'observation'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'observation') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'input_datetime'
@@ -9295,7 +9339,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'hash_index_col'
@@ -9594,7 +9640,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.observation ADD
@@ -9756,8 +9804,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'input_datetime'
@@ -10095,7 +10145,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col'
@@ -10208,7 +10260,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.diagnosticreport ADD
@@ -10277,8 +10331,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'servicerequest'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'servicerequest') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'input_datetime'
@@ -10724,7 +10780,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'hash_index_col'
@@ -10873,7 +10931,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.servicerequest ADD
@@ -10960,8 +11020,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'procedure'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'procedure') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'input_datetime'
@@ -11467,7 +11529,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'hash_index_col'
@@ -11636,7 +11700,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.procedure ADD
@@ -11733,8 +11799,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'consent'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'consent') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'input_datetime'
@@ -12222,7 +12290,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'hash_index_col'
@@ -12385,7 +12455,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.consent ADD
@@ -12479,8 +12551,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'location'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'location') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'input_datetime'
@@ -12662,7 +12736,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'hash_index_col'
@@ -12723,7 +12799,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.location ADD
@@ -12766,8 +12844,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'input_datetime'
@@ -12829,7 +12909,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col'
@@ -12856,7 +12938,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.pids_per_ward ADD
@@ -13025,6 +13109,14 @@ GRANT SELECT ON TABLE db_log.pids_per_ward TO cds2db_user; -- Additional authori
 -- Output off
 \o /dev/null
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.encounter.encounter_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.encounter.encounter_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.encounter.enc_id IS 'id (varchar)';
@@ -13110,6 +13202,18 @@ COMMENT ON COLUMN db_log.encounter.last_check_datetime IS 'Time at which data re
 COMMENT ON COLUMN db_log.encounter.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.encounter.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.encounter.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.patient.patient_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.patient.patient_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.patient.pat_id IS 'id (varchar)';
@@ -13139,6 +13243,18 @@ COMMENT ON COLUMN db_log.patient.last_check_datetime IS 'Time at which data reco
 COMMENT ON COLUMN db_log.patient.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.patient.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.patient.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.condition.condition_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.condition.condition_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.condition.con_id IS 'id (varchar)';
@@ -13270,6 +13386,18 @@ COMMENT ON COLUMN db_log.condition.last_check_datetime IS 'Time at which data re
 COMMENT ON COLUMN db_log.condition.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.condition.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.condition.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.medication.medication_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medication.medication_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.medication.med_id IS 'id (varchar)';
@@ -13339,6 +13467,18 @@ COMMENT ON COLUMN db_log.medication.last_check_datetime IS 'Time at which data r
 COMMENT ON COLUMN db_log.medication.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.medication.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.medication.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.medicationrequest.medicationrequest_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medicationrequest.medicationrequest_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.medicationrequest.medreq_id IS 'id (varchar)';
@@ -13585,6 +13725,18 @@ COMMENT ON COLUMN db_log.medicationrequest.last_check_datetime IS 'Time at which
 COMMENT ON COLUMN db_log.medicationrequest.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.medicationrequest.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.medicationrequest.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.medicationadministration.medicationadministration_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medicationadministration.medicationadministration_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.medicationadministration.medadm_id IS 'id (varchar)';
@@ -13710,6 +13862,18 @@ COMMENT ON COLUMN db_log.medicationadministration.last_check_datetime IS 'Time a
 COMMENT ON COLUMN db_log.medicationadministration.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.medicationadministration.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.medicationadministration.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.medicationstatement.medicationstatement_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.medicationstatement.medicationstatement_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.medicationstatement.medstat_id IS 'id (varchar)';
@@ -13940,6 +14104,18 @@ COMMENT ON COLUMN db_log.medicationstatement.last_check_datetime IS 'Time at whi
 COMMENT ON COLUMN db_log.medicationstatement.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.medicationstatement.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.medicationstatement.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.observation.observation_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.observation.observation_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.observation.obs_id IS 'id (varchar)';
@@ -14089,6 +14265,18 @@ COMMENT ON COLUMN db_log.observation.last_check_datetime IS 'Time at which data 
 COMMENT ON COLUMN db_log.observation.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.observation.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.observation.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.diagnosticreport.diagnosticreport_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.diagnosticreport.diagnosticreport_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.diagnosticreport.diagrep_id IS 'id (varchar)';
@@ -14145,6 +14333,18 @@ COMMENT ON COLUMN db_log.diagnosticreport.last_check_datetime IS 'Time at which 
 COMMENT ON COLUMN db_log.diagnosticreport.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.diagnosticreport.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.diagnosticreport.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.servicerequest.servicerequest_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.servicerequest.servicerequest_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.servicerequest.servreq_id IS 'id (varchar)';
@@ -14219,6 +14419,18 @@ COMMENT ON COLUMN db_log.servicerequest.last_check_datetime IS 'Time at which da
 COMMENT ON COLUMN db_log.servicerequest.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.servicerequest.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.servicerequest.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.procedure.procedure_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.procedure.procedure_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.procedure.proc_id IS 'id (varchar)';
@@ -14303,6 +14515,18 @@ COMMENT ON COLUMN db_log.procedure.last_check_datetime IS 'Time at which data re
 COMMENT ON COLUMN db_log.procedure.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.procedure.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.procedure.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.consent.consent_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.consent.consent_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.consent.cons_id IS 'id (varchar)';
@@ -14384,6 +14608,18 @@ COMMENT ON COLUMN db_log.consent.last_check_datetime IS 'Time at which data reco
 COMMENT ON COLUMN db_log.consent.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.consent.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.consent.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.location.location_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.location.location_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.location.loc_id IS 'id (varchar)';
@@ -14414,6 +14650,18 @@ COMMENT ON COLUMN db_log.location.last_check_datetime IS 'Time at which data rec
 COMMENT ON COLUMN db_log.location.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.location.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.location.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.pids_per_ward.pids_per_ward_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.pids_per_ward.pids_per_ward_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN db_log.pids_per_ward.ward_name IS 'ward_name (varchar)';
@@ -14424,6 +14672,10 @@ COMMENT ON COLUMN db_log.pids_per_ward.last_check_datetime IS 'Time at which dat
 COMMENT ON COLUMN db_log.pids_per_ward.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.pids_per_ward.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.pids_per_ward.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 
 -- Output on
 \o
@@ -14434,6 +14686,9 @@ COMMENT ON COLUMN db_log.pids_per_ward.last_processing_nr IS 'Last processing nu
 DO
 $$
 BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
 ------------------------------------------------------------------------------------------------
 
 ------------------------- Index for db_log - encounter ---------------------------------
@@ -17515,6 +17770,7 @@ END IF; -- target column
 
 
 ------------------------------------------------------------------------------------------------
+    END IF; -- do migration
 END
 $$;
 
