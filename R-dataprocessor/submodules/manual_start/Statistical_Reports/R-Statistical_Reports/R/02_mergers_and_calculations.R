@@ -160,7 +160,8 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #' @importFrom dplyr mutate case_when relocate
 #' @export
 addMainEncId <- function(encounter_table) {
-  if (any(encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" &
+  if (any(!is.na(encounter_table$enc_type_code_Kontaktebene) &
+    encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" &
     is.na(encounter_table$enc_partof_ref) &
     is.na(encounter_table$enc_identifier_value))) {
     encounter_table <- encounter_table |>

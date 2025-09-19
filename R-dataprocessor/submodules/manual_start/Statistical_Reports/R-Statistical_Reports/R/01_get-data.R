@@ -224,13 +224,14 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
             Relevant encounter data may be missed. Please check the data")
   }
 
-  if (any(encounter_table$enc_class_code == "IMP" &
-    !encounter_table$enc_type_code_Kontaktebene %in% c(
-      "einrichtungskontakt", "abteilungskontakt",
-      "versorgungsstellenkontakt"
-    ))) {
+  if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
+    (is.na(encounter_table$enc_type_code_Kontaktebene) |
+      !encounter_table$enc_type_code_Kontaktebene %in% c(
+        "einrichtungskontakt", "abteilungskontakt",
+        "versorgungsstellenkontakt"
+      )))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = ifelse(enc_class_code == "IMP" &
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_class_code == "IMP" &
         !enc_type_code_Kontaktebene %in% c(
           "einrichtungskontakt", "abteilungskontakt",
           "versorgungsstellenkontakt"
@@ -263,8 +264,10 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
          Please check the data.")
   }
 
-  if (any(encounter_table$enc_class_code == "IMP" &
-    !encounter_table$enc_status %in% c("finished", "in-progress", "onleave"))) {
+  if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
+    (is.na(encounter_table$enc_status) | !encounter_table$enc_status %in% c(
+      "finished", "in-progress", "onleave"
+    )))) {
     encounter_table <- encounter_table |>
       dplyr::mutate(processing_exclusion_reason = ifelse(enc_class_code == "IMP" &
         !enc_status %in% c("finished", "in-progress", "onleave") &
@@ -283,8 +286,9 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
             Please check the data.")
   }
 
-  if (any(encounter_table$enc_class_code == "IMP" &
-    encounter_table$enc_status == "finished" & is.na(encounter_table$enc_period_end))) {
+  if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
+    (!is.na(encounter_table$enc_status) &
+      encounter_table$enc_status == "finished") & is.na(encounter_table$enc_period_end))) {
     encounter_table <- encounter_table |>
       dplyr::mutate(processing_exclusion_reason = ifelse(enc_class_code == "IMP" &
         enc_status == "finished" & is.na(enc_period_end) &
