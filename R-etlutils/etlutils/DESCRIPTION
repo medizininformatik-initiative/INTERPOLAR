@@ -31,7 +31,8 @@ Imports:
     rlang,
     RPostgres,
     stringr,
-    xml2
+    xml2,
+    kableExtra
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

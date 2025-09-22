@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 10:58:41
+-- Rights definition file last update : 2025-07-01 13:49:10
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-07-18 15:53:24
+-- Create time: 2025-09-04 15:37:54
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  331_cre_table_dataproc_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -42,8 +42,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'input_datetime'
@@ -146,7 +148,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'hash_index_col'
@@ -187,7 +191,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db_log.dp_mrp_calculations ADD
@@ -232,6 +238,14 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE db_log.dp_mrp_calculations TO db_u
 -- Output off
 \o /dev/null
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db_log.dp_mrp_calculations.dp_mrp_calculations_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.enc_id IS 'FHIR ID of the associated institution contact (varchar)';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.mrp_calculation_type IS 'Type of MRP (name of the submodule which has calculated the MRP e.g. “Drug_Disease”, “Drug_Drug”, “Drug_DrugGoup”, “Drug_Kidney”) (varchar)';
@@ -248,6 +262,10 @@ COMMENT ON COLUMN db_log.dp_mrp_calculations.last_check_datetime IS 'Time at whi
 COMMENT ON COLUMN db_log.dp_mrp_calculations.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db_log.dp_mrp_calculations.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 
 -- Output on
 \o
@@ -258,6 +276,9 @@ COMMENT ON COLUMN db_log.dp_mrp_calculations.last_processing_nr IS 'Last process
 DO
 $$
 BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
 ------------------------------------------------------------------------------------------------
 
 ------------------------- Index for db_log - dp_mrp_calculations ---------------------------------
@@ -422,6 +443,7 @@ END IF; -- target column
 
 
 ------------------------------------------------------------------------------------------------
+    END IF; -- do migration
 END
 $$;
 

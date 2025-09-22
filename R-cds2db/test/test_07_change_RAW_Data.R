@@ -1,15 +1,15 @@
-# Ein Patient
-# Tag 1: Versorgungsstellenkontakt auf Station 1 mit Größe + Gewicht
-# Tag 2: Versorgungsstellenkontakt wird entlassen
-# Tag 3: Versorgungsstellenkontakt auf Station 1
+# Zwei Patienten
+# Tag 1: Je einen Versorgungsstellenkontakt auf Station 1
+# Tag 2: Patient 1 bleibt unverändert auf Station 1. Patient 2 wird auf nicht-IP Station verlegt.
+# Tag 3: Beide Patienten werden entlassen
 if (exists("DEBUG_DAY")) {
 
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
     etlutils::dbReset()
-    pats <- c("UKB-0001") # present at day 1
+    pats <- c("UKB-0001", "UKB-0002") # present at day 1
   } else{
-    pats <- c("UKB-0001")
+    pats <- c("UKB-0001", "UKB-0002")
     # Load all encounters from the database which, according to the database,
     # have not yet ended on the 'current' date and determine the PIDs.
     # Background: We want to track all cases that have ever been on a relevant
@@ -22,7 +22,7 @@ if (exists("DEBUG_DAY")) {
 
   pats <- namedListByValue(pats)
 
-  #resource_tables <- retainRAWTables("Patient", "Encounter")
+  #resource_tables <- testRetainRAWTables("Patient", "Encounter")
   resource_tables <- getFilteredRAWResources(pats)
   # short reference to Encounter table
   dt_enc <- resource_tables[["Encounter"]]
@@ -40,7 +40,7 @@ if (exists("DEBUG_DAY")) {
 
   # set the enc_period_start of all encounters of a patient to the current date
   # minus an offset
-  for (i in c(1:5)) {
+  for (i in c(1:2)) {
     changeDataForPID(dt_enc, paste0("UKB-000", i), "enc_period_start", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = i))
   }
 
@@ -80,9 +80,7 @@ if (exists("DEBUG_DAY")) {
     dt_enc <- rbind(dt_enc, rows_to_duplicate)
   }
 
-  if (DEBUG_DAY %in% c(1:2)) {
-    # Day 1: #Versorgungsstellenkontakt to ward Station 1 Zimmer 1, Bett 1
-
+  if (DEBUG_DAY %in% c(1:3)) {
     # Set all encounter to "in-progress", delete end date and diagnoses and set
     # the encounter last updated date to the current date with a small offset
     # Set the patient last updated date to the current date with a small offset
@@ -100,55 +98,55 @@ if (exists("DEBUG_DAY")) {
 
     dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-1-A-1-V-1",
                      enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 1"]
+
+    dt_enc[enc_id == "[1]UKB-0002-E-1-A-1-V-1",
+           `:=`(
+             enc_location_identifier_value = "[1.1.1.1]Raum 2 ~ [2.1.1.1]Bett 2",
+             enc_partof_ref = "[1.1]Encounter/UKB-0002-E-1-A-1"
+           )]
+
     pids_per_wards <- resource_tables$pids_per_ward
 
-    #browser()
-
     if (DEBUG_DAY == 1) {
-      pids_per_wards[, encounter_id := "UKB-0001-E-1-A-1-V-1"]
-      pids_per_wards[, ward_name := "Station 1"]
+      pids_per_wards[, encounter_id := c("UKB-0001-E-1-A-1-V-1", "UKB-0002-E-1-A-1-V-1")]
+      pids_per_wards[, ward_name := c("Station 1", "Station 1")]
+
     } else if (DEBUG_DAY == 2) {
-      dt_pat <- dt_pat[-1]
-      pids_per_wards <- resource_tables$pids_per_ward
-      pids_per_wards <- pids_per_wards[-1]
+
+      dt_enc <- dt_enc[grepl("-V-1$", enc_id)]
+      dt_enc <- rbind(dt_enc, dt_enc[2])
+
+      dt_enc[2, enc_id := "[1]UKB-0002-E-1-A-1-V-1"]
+      dt_enc[2, enc_status := "finished"]
+      dt_enc[2, enc_location_identifier_value := "[1.1.1.1]Raum 2 ~ [2.1.1.1]Bett 2"]
+      dt_enc[2, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)]
+
+      dt_enc[3, enc_id := "[1]UKB-0002-E-1-A-1-V-2"]
+      dt_enc[3, enc_status := "in-progress"]
+      dt_enc[3, enc_location_identifier_value := "[1.1.1.1]Nicht-IP-Raum 3 ~ [2.1.1.1]Nicht-IP-Bett 3"]
+      dt_enc[3, enc_period_start := getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)]
+      dt_enc[3, enc_period_end := NA]
+      pids_per_wards <- pids_per_wards[-2]
+      pids_per_wards[, ward_name := "Station 1"]
+      pids_per_wards[, encounter_id := "UKB-0001-E-1-A-1-V-1"]
+
+    } else if (DEBUG_DAY == 3) {
+      dt_pat <- dt_pat[0]
+      pids_per_wards <- pids_per_wards[0]
       dt_enc[grepl("^\\[1\\]UKB-0001-E-1", enc_id), `:=`(
         enc_status = "finished",
         enc_period_end = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)
       )]
+      to_modify <- c(
+        "[1]UKB-0002-E-1",
+        "[1]UKB-0002-E-1-A-1",
+        "[1]UKB-0002-E-1-A-1-V-2"
+      )
+      dt_enc[enc_id %in% to_modify, `:=`(
+        enc_status = "finished",
+        enc_period_end = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)
+      )]
     }
-
-  } else if (DEBUG_DAY == 3) {
-    # Day 3: New Encounter on ward Station 1 Zimmer 666, Bett 666
-
-    # Set all encounter to "in-progress", delete end date, set start date to last debug day and diagnoses and set
-    # the encounter last updated date to the current date with a small offset
-    # Set new enc_location_identifier_value to "[1.1.1.1]Raum 666 ~ [2.1.1.1]Bett 666" and add part of references
-    # Update patient with new pat_meta_lastupdated
-    # Change pids_per_wards to the correct encounter id and ward name (Station 3)
-
-    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_status", "in-progress")
-    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_period_start", getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5))
-    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_period_end", NA)
-    changeDataForPID(dt_enc, pats$`UKB-0001`, "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.1))
-    # Patient
-    changeDataForPID(dt_pat, pats$`UKB-0001`, "pat_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.1))
-
-    dt_enc <- dt_enc[, enc_id := gsub("\\[1\\]UKB-0001-E-1", "[1]UKB-0001-E-2", enc_id)]
-
-    # Neuer Encounter auf neuer Station 1 Zimmer 666, Bett 666
-    dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-2-A-1-V-1",
-                     enc_location_identifier_value := "[1.1.1.1]Raum 666 ~ [2.1.1.1]Bett 666"]
-    dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-2",
-                     enc_identifier_value := "UKB-0001-E-2"]
-    dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-2-A-1",
-                     enc_partof_ref := "Encounter/UKB-0001-E-2"]
-    dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-2-A-1-V-1",
-                     enc_partof_ref := "Encounter/UKB-0001-E-2-A-1"]
-
-    pids_per_wards <- resource_tables$pids_per_ward
-    pids_per_wards[, encounter_id := "UKB-0001-E-2-A-1-V-1"]
-    pids_per_wards[, ward_name := "Station 1"]
-
   }
   # Update the Encounter table in the resource_tables list
   resource_tables[["Encounter"]] <- dt_enc

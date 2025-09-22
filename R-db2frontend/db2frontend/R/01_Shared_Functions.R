@@ -1,3 +1,12 @@
+getRedcapURL <- function() {
+  if (exists("DEBUG_VM_PORT_INDEX")) {
+    url <- paste0("http://127.0.0.1:", DEBUG_VM_PORT_INDEX, "8082/redcap/api/")
+  } else {
+    url <- REDCAP_URL
+  }
+  return(url)
+}
+
 #' Establish a Valid Connection to REDCap
 #'
 #' This function establishes a connection to a REDCap server using a specified API token
@@ -14,7 +23,7 @@
 getRedcapConnection <- function() {
   # Attempt to connect to REDCap
   frontend_connection <- tryCatch({
-    redcapAPI::redcapConnection(url = REDCAP_URL, token = REDCAP_TOKEN)
+    redcapAPI::redcapConnection(url = getRedcapURL(), token = REDCAP_TOKEN)
   }, error = function(e) {
     stop("Failed to establish a REDCap connection. Error: ", e$message)
   })
@@ -45,7 +54,7 @@ getRedcapConnection <- function() {
 getFrontendTableDescription <- function() {
   table_description_path <- system.file("extdata", "Frontend_Table_Description.xlsx", package = "db2frontend")
   table_description <- etlutils::loadTableDescriptionFile(table_description_path, "frontend_table_description")
-  table_description <- etlutils::splitTableToList(table_description, "TABLE_NAME")
+  table_description <- etlutils::splitTableToList(table_description, "TABLE_NAME", TRUE)
   return(table_description)
 }
 

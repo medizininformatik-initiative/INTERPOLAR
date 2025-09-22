@@ -623,9 +623,9 @@ loadDatabaseRightsAndConvertDefinition <- function() {
 
   rights_definition <- etlutils::dtRemoveCommentRows(rights_definition)
   rights_definition[, TABLE_DESCRIPTION := trimws(TABLE_DESCRIPTION)]
-  rights_definition <- etlutils::splitTableToList(rights_definition, rights_definition_columns$TABLE_DESCRIPTION)
+  rights_definition <- etlutils::splitTableToList(rights_definition, rights_definition_columns$TABLE_DESCRIPTION, TRUE)
   for (i in 1:length(rights_definition)) {
-    rights_definition[[i]] <- etlutils::splitTableToList(rights_definition[[i]], rights_definition_columns$SCRIPTNAME)
+    rights_definition[[i]] <- etlutils::splitTableToList(rights_definition[[i]], rights_definition_columns$SCRIPTNAME, TRUE)
   }
 
   ### convert definition ###
@@ -637,7 +637,7 @@ loadDatabaseRightsAndConvertDefinition <- function() {
     convert_definition <- etlutils::removeTableHeader(convert_definition, convert_definition_columns)
     if (etlutils::isValidTable(convert_definition)) {
       convert_definition <- etlutils::dtRemoveCommentRows(convert_definition)
-      convert_definition <- etlutils::splitTableToList(convert_definition, convert_definition_columns$TABLE_DESCRIPTION)
+      convert_definition <- etlutils::splitTableToList(convert_definition, convert_definition_columns$TABLE_DESCRIPTION, TRUE)
     } else {
       message("No valid convert definition found -> we use all Table Descriptions in the original style.")
       convert_definition <- list()

@@ -1,3 +1,4 @@
+-- Script is not automatically generated
 -- Extensions installieren -----------------------------------------------------------------------
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_background;

@@ -25,6 +25,14 @@ importDB2Redcap <- function() {
     })
   }
 
+  writeTablesAsRdata <- function(tables, suffix = "") {
+    table_names <- names(tables)
+    for (i in seq_along(table_names)) {
+      table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
+      etlutils::writeRData(data_from_db, paste0(table_filename_prefix, "db2frontend_", i, "_", table_name, suffix))
+    }
+  }
+
   etlutils::runLevel2Line("Update frontend data from DB", {
 
     # Connect to REDCap
@@ -38,10 +46,17 @@ importDB2Redcap <- function() {
     # Get REDCap metadata to retrieve valid field names
     valid_fields <- tryRedcap(function() getRedcapFieldNames(frontend_connection))
 
-    # Exclude medikationsanalyse and mrpdokumentation_validierung
-    excluded_tables <- c("medikationsanalyse", "mrpdokumentation_validierung", "risikofaktor", "trigger")
+    # Exclude "risikofaktor", "trigger" always and medikationsanalyse and mrpdokumentation_validierung
+    # in normal run (= not debug). In debg runs we must change the last state of medikationsanalyse
+    # and mrpdokumentation_validierung, so we need to import them.
+    excluded_tables <- c("risikofaktor", "trigger")
+    if (!exists("DEBUG_DAY")) {
+      # In debug mode, do not exclude medikationsanalyse and mrpdokumentation_validierung
+      excluded_tables <- c(excluded_tables, "medikationsanalyse", "mrpdokumentation_validierung")
+    }
     table_names <- setdiff(table_names, excluded_tables)
 
+    data_to_import <- list()
     # Iterate over tables and columns to fetch and send data
     for (i in seq_along(table_names)) {
 
@@ -55,11 +70,6 @@ importDB2Redcap <- function() {
 
       # Fetch data from the database
       data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
-
-      table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
-      etlutils::writeRData(data_from_db, paste0(table_filename_prefix, "db2frontend_", i, "_", table_name))
-
-      # Import data to REDCap
       # Keep only columns that exist in REDCap
       data_from_db <- data_from_db[, names(data_from_db) %in% valid_fields, with = FALSE]
 
@@ -78,12 +88,33 @@ importDB2Redcap <- function() {
           data_from_db[[colname]] <- etlutils::redcapEscape(data_from_db[[colname]])
         }
       }
-
-      tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_from_db))
+      data_to_import[[table_name]] <- data_from_db
 
       if (table_name %in% "fall") {
         record_ids_with_data_access_group <- unique(data_from_db[, c("record_id", "fall_station")])
       }
+    }
+
+    writeTablesAsRdata(data_to_import)
+  })
+
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+  if (exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME") && !is.na(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)) {
+    for (script_name in DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME) {
+      source(script_name, local = TRUE) # this should change the data_to_import list
+    }
+    writeTablesAsRdata(data_to_import, suffix = "_debugchanged")
+  }
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
+  etlutils::runLevel2Line("Import data into frontend", {
+    # Import data into REDCap
+    for (table_name in names(data_to_import)) {
+      tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]]))
     }
   })
 

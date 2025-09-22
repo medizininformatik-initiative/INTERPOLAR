@@ -96,7 +96,11 @@ services:
     volumes:
       - cds_hub_db-data:/var/lib/postgresql/data
       - ./Postgres-cds_hub/postgresql.conf:/etc/postgresql.conf
-      - ./Postgres-cds_hub/init/:/docker-entrypoint-initdb.d/
+      # Zur automatischen Initialisierung die nachfolgende Zeile einkommentieren, siehe Hinweise unter https://medizininformatik-initiative.github.io/INTERPOLAR/Install
+      # - ./Postgres-cds_hub/init/:/docker-entrypoint-initdb.d/
+      # Script zum Anlegen der für INTERPOLAR benötigten Rollen per docker-entrypoint, d.h. beim initialen Ausführen von "docker compose up"
+      - ./Postgres-cds_hub/init/001_main_user_schema_sequence.sql:/docker-entrypoint-initdb.d/001_main_user_schema_sequence.sql
+      - ./Postgres-cds_hub/init/:/cds_hub-initdb.d/
 
   # Web-administration of cds_hub__db (optional)
   pgadmin:
@@ -134,6 +138,12 @@ services:
     restart: "no"
     environment:
       TZ: Europe/Berlin
+      # There are some environment variables for curl regarding certificates. 
+      # Please set them as needed. See also section 'volumes' below and 
+      # the curl documentation https://curl.se/docs/sslcerts.html
+      #CURL_CA_BUNDLE: /etc/ssl/certs/<CHAIN.pem>
+      #SSL_CERT_FILE: /etc/ssl/certs/<self-signed_cert_FHIR-Server.pem>
+      #SSL_CERT_DIR: /etc/ssl/certs
     volumes:
       - ./.git:/src/.git:ro
       - ./outputLocal:/src/outputLocal
@@ -146,7 +156,7 @@ services:
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
       #- <Path_to_INTERPOLAR-WP7_folder>:/src/Input-Repo/INTERPOLAR-WP7
       # Include certificates, e.g. self-signed certificates of the FHIR-Server,
-      # incl. root-CA or CHAIN if needed.
+      # incl. root-CA or CHAIN if needed. See also section 'environment' above.
       #- <self-signed_cert_FHIR-Server.pem>:/etc/ssl/certs/<self-signed_cert_FHIR-Server.pem>
       #- <root-CA_cert.pem>:/etc/ssl/certs/<root-CA_cert.pem>
       #- <CHAIN.pem>:/etc/ssl/certs/<CHAIN.pem>
