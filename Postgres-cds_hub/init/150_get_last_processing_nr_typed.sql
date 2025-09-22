@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 22:42:12
--- Rights definition file size        : 14274 Byte
+-- Rights definition file last update : 2025-07-01 13:49:10
+-- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-06-17 22:52:51
+-- Create time: 2025-09-17 15:49:46
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -28,12 +28,20 @@
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
 ------------------------------
+EXECUTE $f$
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.get_last_processing_nr_typed()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     erg TEXT;
     temp VARCHAR;
@@ -76,5 +84,10 @@ EXCEPTION
 
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
-$$ LANGUAGE plpgsql;
+$inner$ LANGUAGE plpgsql;
+$f$;
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 

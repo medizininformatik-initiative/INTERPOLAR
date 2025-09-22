@@ -157,6 +157,17 @@ dbLog <- function(...) {
   return(log)
 }
 
+dbGetPort <- function() {
+  port <- .lib_db_env[["DB_PORT"]]
+  if (exists("DEBUG_VM_PORT_INDEX")) {
+    if (nchar(port == 5)) {
+      port <- substr(port, 2, 5)
+    }
+    port <- paste0(DEBUG_VM_PORT_INDEX, port)
+  }
+  return(port)
+}
+
 #' Get a PostgreSQL Database Connection
 #'
 #' This function retrieves a PostgreSQL database connection from the environment
@@ -187,7 +198,7 @@ dbGetConnection <- function(readonly) {
       "Attempting to connect with: \n",
       "dbname=", .lib_db_env[["DB_NAME"]], "\n",
       "host=", .lib_db_env[["DB_HOST"]], "\n",
-      "port=", .lib_db_env[["DB_PORT"]], "\n",
+      "port=", dbGetPort(), "\n",
       "user=", .lib_db_env[["DB_USER"]], "\n",
       "schema=", schema_name, "\n"
     )
@@ -197,7 +208,7 @@ dbGetConnection <- function(readonly) {
     RPostgres::Postgres(),
     dbname = .lib_db_env[["DB_NAME"]],
     host = .lib_db_env[["DB_HOST"]],
-    port = .lib_db_env[["DB_PORT"]],
+    port = dbGetPort(),
     user = .lib_db_env[["DB_USER"]],
     password = .lib_db_env[["DB_PASSWORD"]],
     options = paste0("-c search_path=", schema_name),
@@ -227,7 +238,7 @@ dbGetAdminConnection <- function() {
     RPostgres::Postgres(),
     dbname = .lib_db_env[["DB_NAME"]],
     host = .lib_db_env[["DB_HOST"]],
-    port = .lib_db_env[["DB_PORT"]],
+    port = dbGetPort(),
     user = .lib_db_env[["DB_ADMIN_USER"]],
     password = .lib_db_env[["DB_ADMIN_PASSWORD"]],
     #options = paste0("-c search_path=", .lib_db_env[["DB_ADMIN_SCHEMA"]]),
@@ -693,40 +704,41 @@ dbGetReadOnlyColumns <- function(table_name) {
 #'   operation if logging is enabled.
 #'
 dbAddContent <- function(table_name, table, lock_id = NULL) {
-
-  if (!length(table) || !nrow(table)) {
-    return()
-  }
+  if (!length(table) || !nrow(table)) return()
 
   # Convert table name to lower case for PostgreSQL
   table_name <- tolower(table_name)
 
   # TODO: siehe Kommentar an der Funktion dbGetReadOnlyColumns
+  # Remove read-only columns if present
   readonly_cols <- dbGetReadOnlyColumns(table_name)
   cols_to_remove <- intersect(readonly_cols, colnames(table))
   if (length(cols_to_remove) > 0) {
     table[, (cols_to_remove) := NULL]
   }
 
-  # Measure start time
   time0 <- Sys.time()
-  # Get row count for reporting
   row_count <- nrow(table)
+
+  # ensure all empty strings are set to NA because RedCap would change it too and this
+  # will produce different datasets
   if (row_count > 0) {
-
-    # ensure all empty strings are set to NA because RedCap would change it too and this
-    # will produce different datasets
+    # Normalize empty strings to NA for character columns
     char_cols <- names(table)[sapply(table, is.character)]
-    table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)), .SDcols = char_cols]
+    if (length(char_cols)) {
+      table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)), .SDcols = char_cols]
+    }
 
-    # Append table content
+    # Lock + connection with guaranteed cleanup
     dbLock(lock_id)
+    on.exit(dbUnlock(lock_id), add = TRUE)
+
     db_connection <- dbGetWriteConnection()
+    on.exit(dbDisconnect(db_connection), add = TRUE)
+
     RPostgres::dbAppendTable(db_connection, table_name, table)
-    dbDisconnect(db_connection)
-    dbUnlock(lock_id)
   }
-  # Calculate and print duration of operation
+
   duration <- difftime(Sys.time(), time0, units = 'secs')
   dbLog("Inserted in ", table_name, ", ", row_count, " rows (took ", duration, " seconds)")
 }
@@ -783,11 +795,11 @@ dbDeleteContent <- function(table_name, lock_id = NULL) {
 #'
 dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id, readonly), add = TRUE)
   dbLog("dbExecute:\n", statement)
   db_connection <- dbGetConnection(readonly)
+  on.exit(dbDisconnect(db_connection), add = TRUE)
   DBI::dbExecute(db_connection, statement)
-  dbDisconnect(db_connection)
-  dbUnlock(lock_id, readonly)
 }
 
 #' Execute a SQL Query on a PostgreSQL Database
@@ -815,16 +827,13 @@ dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
 #'
 #' @export
 dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
-  # Lock the database
   dbLock(lock_id)
-  # Log the query
-  dbLog("dbGetQuery:\n", query)
-  # Execute the query with parameters
+  on.exit(dbUnlock(lock_id, readonly), add = TRUE)
+  dbLog("dbGetQuery:\n", query,
+        if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")))
   db_connection <- dbGetConnection(readonly)
+  on.exit(dbDisconnect(db_connection), add = TRUE)
   table <- data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
-  dbDisconnect(db_connection)
-  # Unlock the database
-  dbUnlock(lock_id, readonly)
   return(table)
 }
 
@@ -873,11 +882,11 @@ dbReadTable <- function(table_name, lock_id = NULL) {
   # Postgres only accepts lower case names -> convert them hard here
   table_name <- tolower(table_name)
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id, readonly = TRUE), add = TRUE)
   dbLog("dbReadTable: ", table_name)
   db_connection <- dbGetReadConnection()
+  on.exit(dbDisconnect(db_connection), add = TRUE)
   table <- data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
-  dbDisconnect(db_connection)
-  dbUnlock(lock_id, readonly = TRUE)
   return(table)
 }
 
@@ -934,25 +943,47 @@ dbIsTableEmptyBeforeWrite <- function(table_name) {
 #' @seealso \code{\link[DBI]{dbWriteTable}} for writing tables to a database.
 #'
 #' @export
-dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALSE) {
+dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALSE, ignore_missing_db_columns = FALSE) {
   table_names <- names(tables)
+
   db_connection <- dbGetWriteConnection()
+  on.exit(dbDisconnect(db_connection), add = TRUE)
   db_table_names <- dbListTableNames(db_connection)
-  dbDisconnect(db_connection)
 
   # Stop with error if there are tables that do not exist in the database
   missing_db_table_names <- setdiff(table_names, db_table_names)
   if (length(missing_db_table_names) > 0) {
-    stop(paste("The following tables are not found in the database. Perhaps the database was not initialized correctly?\n  ",
-               paste(missing_db_table_names, collapse = "\n   ")))
+    stop(paste(
+      "The following tables are not found in the database. Perhaps the database was not initialized correctly?\n  ",
+      paste(missing_db_table_names, collapse = "\n   ")
+    ))
   }
 
   # Restrict `table_names` to only those found in both `tables` and the database
   table_names <- intersect(table_names, db_table_names)
 
-  # 1. Check if any tables are not empty when `stop_if_table_not_empty` is TRUE
-  # Check if tables are empty if required
-  if (stop_if_table_not_empty) {
+  # Optionally drop columns that do not exist in the DB schema
+  if (isTRUE(ignore_missing_db_columns) && length(table_names) > 0) {
+    for (table_name in table_names) {
+      con_cols <- dbGetWriteConnection()
+      on.exit(dbDisconnect(con_cols), add = TRUE)
+      db_cols <- DBI::dbListFields(con_cols, table_name)
+
+      incoming <- tables[[table_name]]
+      keep <- intersect(names(incoming), db_cols)
+
+      if (length(keep) && length(keep) < ncol(incoming)) {
+        # Keep only DB columns (preserve incoming order)
+        tables[[table_name]] <- incoming[, ..keep]
+      } else if (length(keep) == 0L) {
+        # No matching columns at all -> write nothing
+        tables[[table_name]] <- incoming[0, ]
+      }
+    }
+  }
+
+  # Check emptiness if required
+  if (isTRUE(stop_if_table_not_empty) && length(table_names) > 0) {
     non_empty_tables <- table_names[!sapply(table_names, function(table_name) {
       dbIsTableEmptyBeforeWrite(table_name)
     })]
@@ -962,15 +993,15 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
     }
   }
 
-  # 2. Write tables to DB (only if all tables are empty or if `stop_if_table_not_empty` is FALSE)
+  # Write tables (lock guaranteed to be released)
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id), add = TRUE)
+
   for (table_name in table_names) {
     table <- tables[[table_name]]
-    # Proceed with writing table data to the database
-    dbCheckColumsWidthBeforeWrite(table_name, table)  # Check column widths
-    dbAddContent(table_name, table)   # Add table content
+    dbCheckColumsWidthBeforeWrite(table_name, table)
+    dbAddContent(table_name, table)
   }
-  dbUnlock(lock_id)
 }
 
 #' Write a Single Table to a PostgreSQL Database
@@ -1008,7 +1039,9 @@ dbWriteTable <- function(table, table_name = NA, lock_id = NULL, stop_if_table_n
   tables <- list(table)
   names(tables) <- table_name
   # Call the dbWriteTables function to perform the writing operation
-  dbWriteTables(tables, stop_if_table_not_empty, lock_id)
+  dbWriteTables(tables,
+                lock_id = lock_id,
+                stop_if_table_not_empty = stop_if_table_not_empty)
 }
 
 #' Read Multiple Tables from a PostgreSQL Database
@@ -1032,11 +1065,12 @@ dbWriteTable <- function(table, table_name = NA, lock_id = NULL, stop_if_table_n
 #'
 #' @export
 dbReadTables <- function(table_names = NA, lock_id = NULL) {
-  # Establish a read-only database connection
+  # Establish a read-only database connection to list tables
   db_connection <- dbGetReadConnection()
+  on.exit(dbDisconnect(db_connection), add = TRUE)  # ensure connection is closed
+
   # Get the list of tables in the database
   db_table_names <- dbListTableNames(db_connection)
-  dbDisconnect(db_connection)
 
   # If no table names are provided, read all available tables
   if (isSimpleNA(table_names)) {
@@ -1045,8 +1079,11 @@ dbReadTables <- function(table_names = NA, lock_id = NULL) {
 
   # Initialize an empty list to store the results
   tables <- list()
-  # Lock the database before reading
+
+  # Lock the database before reading; guarantee unlock even on error
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id, readonly = TRUE), add = TRUE)
+
   # Loop through each requested table
   for (table_name in table_names) {
     # Handle views prefixed with "v_"
@@ -1054,17 +1091,15 @@ dbReadTables <- function(table_names = NA, lock_id = NULL) {
       table_name <- paste0("v_", table_name)
     }
     # Extract the corresponding resource table name
-    if (grepl("^v_", table_name)) {
-      resource_table_name <- sub("^v_", "", table_name)
+    resource_table_name <- if (grepl("^v_", table_name)) {
+      sub("^v_", "", table_name)
     } else {
-      resource_table_name <- table_name
+      table_name
     }
-    # Read the table and store it in the list
+    # Read the table via wrapper (does its own logging etc.)
     tables[[resource_table_name]] <- dbReadTable(table_name)
   }
-  # Unlock the database after reading
-  dbUnlock(lock_id, readonly = TRUE)
-  # Return the list of read tables
+
   return(tables)
 }
 
@@ -1323,14 +1358,15 @@ dbGetInfo <- function(readonly = TRUE) {
 #' @export
 dbReset <- function() {
   con <- dbGetAdminConnection()
+  on.exit(dbDisconnect(con), add = TRUE)
 
   # Convert schemas vector into SQL-friendly format
   schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
-
   query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")
 
   lock_id <- "Clear database"
   dbLock(lock_id)
+  on.exit(dbUnlock(lock_id), add = TRUE)
 
   # Get all tables to clear
   tables <- DBI::dbGetQuery(con, query)
@@ -1371,11 +1407,6 @@ dbReset <- function() {
   } else {
     print("All tables have been successfully truncated.")
   }
-
-  dbUnlock(lock_id)
-
-  # Close connection
-  dbDisconnect(con)
 }
 
 #' Remove Special Characters from a SQL comment.

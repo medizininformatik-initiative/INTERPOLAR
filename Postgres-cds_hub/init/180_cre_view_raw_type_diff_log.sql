@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 22:42:12
--- Rights definition file size        : 14274 Byte
+-- Rights definition file last update : 2025-07-01 13:49:10
+-- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-06-18 10:57:53
+-- Create time: 2025-09-04 15:35:45
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  180_cre_view_raw_type_diff_log.sql
 -- TEMPLATE:  template_cre_view_diff.sql
@@ -28,6 +28,13 @@
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
 --Create SQL View not Typed Datasets in Schema cds2db_out
 CREATE OR REPLACE VIEW cds2db_out.v_encounter_raw_diff AS (
    SELECT DISTINCT * FROM db_log.encounter_raw r WHERE NOT (EXISTS(SELECT 1 FROM db_log.encounter t WHERE r.encounter_raw_id = t.encounter_raw_id)) -- ORDER BY encounter_raw_id
@@ -144,4 +151,9 @@ GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward_raw_diff TO cds2db_user;
 GRANT SELECT ON TABLE cds2db_out.v_pids_per_ward_raw_diff TO db_user;
 GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 

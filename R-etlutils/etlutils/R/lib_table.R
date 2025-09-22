@@ -1061,7 +1061,7 @@ fillNAWithLastRowValue <- function(dt, columns = NA) {
 #' print(result)
 #' @export
 #'
-splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname = TRUE) {
+splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname = FALSE) {
   dt <- data.table::copy(dt) # prevent changing the original table
   dt[get(split_columnname) == "", (split_columnname) := NA]
   if (fill_na_in_split_columnname) {
