@@ -526,6 +526,10 @@ matchICDProxies <- function(
       single_proxy_sub_table <- proxy_tables[[proxy_code]]
       match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get(proxy_col_name)) & get(proxy_col_name) != ""]
 
+      # Copy column content into new column as comma-separated string
+      icd_full_list <- paste0(match_proxy_rows$ICD, collapse = ", ")
+      match_proxy_rows[, ICD_FULL_LIST := icd_full_list]
+      # Remove ICD column to prevent multiple identical rows with different ICD codes
       match_proxy_rows[, ICD := NA_character_]
       match_proxy_rows <- unique(match_proxy_rows)
 
