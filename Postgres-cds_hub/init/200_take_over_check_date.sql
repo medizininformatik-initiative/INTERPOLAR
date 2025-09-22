@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-20 11:15:33
+-- Rights definition file last update : 2025-07-01 13:49:10
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-06-27 17:47:48
+-- Create time: 2025-09-17 16:35:32
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
@@ -27,11 +27,19 @@
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+EXECUTE $f$
 ------------------------------
 CREATE OR REPLACE FUNCTION db.take_over_last_check_date()
 RETURNS TEXT
 SECURITY DEFINER
-AS $$
+AS $inner$
 DECLARE
     current_record record;
     new_last_pro_nr INT; -- New processing number for these sync - !!! must remain NULL until it is really needed in individual tables !!!
@@ -1627,7 +1635,12 @@ EXCEPTION
 
     RETURN 'Fehler db.take_over_last_check_date - '||SQLSTATE||' - new_last_pro_nr:'||new_last_pro_nr;
 END;
-$$ LANGUAGE plpgsql;
-
+$inner$ LANGUAGE plpgsql;
+$f$;
 -----------------------------
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 

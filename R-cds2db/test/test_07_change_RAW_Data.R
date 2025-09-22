@@ -22,7 +22,7 @@ if (exists("DEBUG_DAY")) {
 
   pats <- namedListByValue(pats)
 
-  #resource_tables <- retainRAWTables("Patient", "Encounter")
+  #resource_tables <- testRetainRAWTables("Patient", "Encounter")
   resource_tables <- getFilteredRAWResources(pats)
   # short reference to Encounter table
   dt_enc <- resource_tables[["Encounter"]]

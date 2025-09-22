@@ -1,24 +1,35 @@
 DO
 $$
 BEGIN
--- If the release version changes, documentation of the release version
+-- If the release version changes and migration have done, documentation of the release version
    IF EXISTS (
       SELECT 1 
       FROM (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version') a
-          ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'last_valid_release_version') b
-      WHERE a.parameter_value!=b.parameter_value
+          ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_last_migration_start') b
+          ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag') c
+      WHERE a.parameter_value!=b.parameter_value AND c.parameter_value='1'
    ) THEN
-      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version')
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_last_migration_start')
+      WHERE parameter_name = 'release_version';
+
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_last_migration_start')
       WHERE parameter_name = 'last_valid_release_version';
 
-      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date')
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date_last_migration_start')
+      WHERE parameter_name = 'release_version_date';
+
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date_last_migration_start')
       WHERE parameter_name = 'last_valid_release_version_date';
 
       UPDATE db_config.db_parameter SET parameter_value = 
       (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_date')||'-'||(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version')||' | '||parameter_value
       WHERE parameter_name = 'last_valid_release_version_log';
-   END IF;
 
+      UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_nr_last_migration_start')
+      WHERE parameter_name = 'release_version_nr';
+
+      UPDATE db_config.db_parameter SET parameter_value=-1 WHERE parameter_name='current_migration_flag';
+   END IF;
 
 -- Set semapore if exit --------------------------------------------------------------------------
    IF EXISTS (

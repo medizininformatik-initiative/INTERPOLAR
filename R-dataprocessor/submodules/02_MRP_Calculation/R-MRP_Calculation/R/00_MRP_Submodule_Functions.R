@@ -110,10 +110,19 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
     }
   }
 
+  # TODO: Diese Funktion an die "richtige" Stelle verschieben
+  getCurrentDate <- function() {
+    if (exists("DEBUG_DAY")) {
+      datetime <- DEBUG_DATES[DEBUG_DAY]
+      return(as.Date(datetime))
+    }
+    return(Sys.Date())
+  }
+
   #
-  # 3.) Remove all Encounters with Study Phase "Phase_B" and an end date within the last 14 days
+  # 3.) Remove all Encounters with Study Phase "PhaseB" and an end date within the last 14 days
   #
-  encounters <- encounters[!(study_phase %in% "Phase_B" & enc_period_end > (Sys.Date() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
+  encounters <- encounters[!(study_phase %in% "PhaseB" & enc_period_end > (getCurrentDate() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
   # Replace the sublists in encounters_per_mrp_type by the same encounters with study_phase from encounters
   for (mrp_type in names(encounters_per_mrp_type)) {
     encs <- encounters_per_mrp_type[[mrp_type]]

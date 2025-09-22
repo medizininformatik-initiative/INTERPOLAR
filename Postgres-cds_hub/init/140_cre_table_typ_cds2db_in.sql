@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 10:58:41
+-- Rights definition file last update : 2025-07-01 13:49:10
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-07-16 11:46:21
+-- Create time: 2025-09-04 15:30:59
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -42,8 +42,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'encounter'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'encounter') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'input_datetime'
@@ -555,7 +557,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'hash_index_col'
@@ -726,7 +730,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.encounter ADD
@@ -824,8 +830,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'patient'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'patient') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'input_datetime'
@@ -1001,7 +1009,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'hash_index_col'
@@ -1060,7 +1070,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.patient ADD
@@ -1102,8 +1114,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'condition'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'condition') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'input_datetime'
@@ -1891,7 +1905,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'hash_index_col'
@@ -2154,7 +2170,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.condition ADD
@@ -2298,8 +2316,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'medication'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'medication') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'input_datetime'
@@ -2715,7 +2735,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'hash_index_col'
@@ -2854,7 +2876,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.medication ADD
@@ -2936,8 +2960,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'input_datetime'
@@ -4415,7 +4441,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col'
@@ -4908,7 +4936,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.medicationrequest ADD
@@ -5167,8 +5197,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'input_datetime'
@@ -5920,7 +5952,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col'
@@ -6171,7 +6205,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.medicationadministration ADD
@@ -6309,8 +6345,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'input_datetime'
@@ -7692,7 +7730,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col'
@@ -8153,7 +8193,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.medicationstatement ADD
@@ -8396,8 +8438,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'observation'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'observation') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'input_datetime'
@@ -9293,7 +9337,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'hash_index_col'
@@ -9592,7 +9638,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.observation ADD
@@ -9754,8 +9802,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'input_datetime'
@@ -10093,7 +10143,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col'
@@ -10206,7 +10258,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.diagnosticreport ADD
@@ -10275,8 +10329,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'input_datetime'
@@ -10722,7 +10778,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'hash_index_col'
@@ -10871,7 +10929,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.servicerequest ADD
@@ -10958,8 +11018,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'procedure'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'procedure') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'input_datetime'
@@ -11465,7 +11527,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'hash_index_col'
@@ -11634,7 +11698,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.procedure ADD
@@ -11731,8 +11797,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'consent'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'consent') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'input_datetime'
@@ -12220,7 +12288,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'hash_index_col'
@@ -12383,7 +12453,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.consent ADD
@@ -12477,8 +12549,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'location'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'location') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'input_datetime'
@@ -12660,7 +12734,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'hash_index_col'
@@ -12721,7 +12797,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.location ADD
@@ -12764,8 +12842,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'input_datetime'
@@ -12827,7 +12907,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col'
@@ -12854,7 +12936,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE cds2db_in.pids_per_ward ADD
@@ -13009,6 +13093,14 @@ GRANT INSERT, DELETE, UPDATE, SELECT ON TABLE cds2db_in.pids_per_ward TO db_user
 -- Output off
 \o /dev/null
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.encounter.encounter_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.encounter.encounter_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.encounter.enc_id IS 'id (varchar)';
@@ -13094,6 +13186,18 @@ COMMENT ON COLUMN cds2db_in.encounter.last_check_datetime IS 'Time at which data
 COMMENT ON COLUMN cds2db_in.encounter.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.encounter.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.encounter.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.patient.patient_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.patient.patient_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.patient.pat_id IS 'id (varchar)';
@@ -13123,6 +13227,18 @@ COMMENT ON COLUMN cds2db_in.patient.last_check_datetime IS 'Time at which data r
 COMMENT ON COLUMN cds2db_in.patient.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.patient.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.patient.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.condition.condition_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.condition.condition_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.condition.con_id IS 'id (varchar)';
@@ -13254,6 +13370,18 @@ COMMENT ON COLUMN cds2db_in.condition.last_check_datetime IS 'Time at which data
 COMMENT ON COLUMN cds2db_in.condition.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.condition.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.condition.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.medication.medication_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medication.medication_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.medication.med_id IS 'id (varchar)';
@@ -13323,6 +13451,18 @@ COMMENT ON COLUMN cds2db_in.medication.last_check_datetime IS 'Time at which dat
 COMMENT ON COLUMN cds2db_in.medication.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.medication.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.medication.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.medicationrequest.medicationrequest_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medicationrequest.medicationrequest_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.medicationrequest.medreq_id IS 'id (varchar)';
@@ -13569,6 +13709,18 @@ COMMENT ON COLUMN cds2db_in.medicationrequest.last_check_datetime IS 'Time at wh
 COMMENT ON COLUMN cds2db_in.medicationrequest.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.medicationrequest.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.medicationrequest.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.medicationadministration.medicationadministration_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medicationadministration.medicationadministration_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.medicationadministration.medadm_id IS 'id (varchar)';
@@ -13694,6 +13846,18 @@ COMMENT ON COLUMN cds2db_in.medicationadministration.last_check_datetime IS 'Tim
 COMMENT ON COLUMN cds2db_in.medicationadministration.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.medicationadministration.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.medicationadministration.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.medicationstatement.medicationstatement_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.medicationstatement.medicationstatement_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.medicationstatement.medstat_id IS 'id (varchar)';
@@ -13924,6 +14088,18 @@ COMMENT ON COLUMN cds2db_in.medicationstatement.last_check_datetime IS 'Time at 
 COMMENT ON COLUMN cds2db_in.medicationstatement.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.medicationstatement.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.medicationstatement.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.observation.observation_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.observation.observation_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.observation.obs_id IS 'id (varchar)';
@@ -14073,6 +14249,18 @@ COMMENT ON COLUMN cds2db_in.observation.last_check_datetime IS 'Time at which da
 COMMENT ON COLUMN cds2db_in.observation.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.observation.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.observation.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.diagnosticreport.diagnosticreport_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.diagnosticreport.diagnosticreport_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.diagnosticreport.diagrep_id IS 'id (varchar)';
@@ -14129,6 +14317,18 @@ COMMENT ON COLUMN cds2db_in.diagnosticreport.last_check_datetime IS 'Time at whi
 COMMENT ON COLUMN cds2db_in.diagnosticreport.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.diagnosticreport.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.diagnosticreport.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.servicerequest.servicerequest_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.servicerequest.servicerequest_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.servicerequest.servreq_id IS 'id (varchar)';
@@ -14203,6 +14403,18 @@ COMMENT ON COLUMN cds2db_in.servicerequest.last_check_datetime IS 'Time at which
 COMMENT ON COLUMN cds2db_in.servicerequest.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.servicerequest.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.servicerequest.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.procedure.procedure_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.procedure.procedure_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.procedure.proc_id IS 'id (varchar)';
@@ -14287,6 +14499,18 @@ COMMENT ON COLUMN cds2db_in.procedure.last_check_datetime IS 'Time at which data
 COMMENT ON COLUMN cds2db_in.procedure.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.procedure.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.procedure.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.consent.consent_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.consent.consent_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.consent.cons_id IS 'id (varchar)';
@@ -14368,6 +14592,18 @@ COMMENT ON COLUMN cds2db_in.consent.last_check_datetime IS 'Time at which data r
 COMMENT ON COLUMN cds2db_in.consent.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.consent.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.consent.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.location.location_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.location.location_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.location.loc_id IS 'id (varchar)';
@@ -14398,6 +14634,18 @@ COMMENT ON COLUMN cds2db_in.location.last_check_datetime IS 'Time at which data 
 COMMENT ON COLUMN cds2db_in.location.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.location.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.location.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN cds2db_in.pids_per_ward.pids_per_ward_id IS 'Primary key of the entity';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.pids_per_ward_raw_id IS 'Primary key of the corresponding raw table';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.ward_name IS 'ward_name (varchar)';
@@ -14408,6 +14656,10 @@ COMMENT ON COLUMN cds2db_in.pids_per_ward.last_check_datetime IS 'Time at which 
 COMMENT ON COLUMN cds2db_in.pids_per_ward.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN cds2db_in.pids_per_ward.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 
 -- Output on
 \o
@@ -14418,6 +14670,9 @@ COMMENT ON COLUMN cds2db_in.pids_per_ward.last_processing_nr IS 'Last processing
 DO
 $$
 BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
 ------------------------------------------------------------------------------------------------
 
 ------------------------- Index for cds2db_in - encounter ---------------------------------
@@ -17499,6 +17754,7 @@ END IF; -- target column
 
 
 ------------------------------------------------------------------------------------------------
+    END IF; -- do migration
 END
 $$;
 

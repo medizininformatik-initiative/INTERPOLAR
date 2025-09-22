@@ -43,7 +43,7 @@ MAX_DIR_COUNT = 5
 # in the cds2db_config.toml.
 #################
 WARDS_PHASE_A = ["Station 1", "Station 3"] # Study phase A without retrolective MRP evaluations
-WARDS_PHASE_B_TEST = ["Station 2"] # Study phase A but with test calculation for retrolective MRP evaluations
+WARDS_PHASE_B_TEST = ["Station 1-1", "Station 1-2", "Station 2-1", "Station 2-2", "Station 2-3"] # Study phase A but with test calculation for retrolective MRP evaluations
                                    # immediately after the end of an encounter of this ward.
 WARDS_PHASE_B = "" # Study phase B with regular calculation for retrolective MRP evaluations 14 days
                    # after the end of an encounter of this ward.

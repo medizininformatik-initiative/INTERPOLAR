@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-06-17 22:42:12
--- Rights definition file size        : 14274 Byte
+-- Rights definition file last update : 2025-07-01 13:49:10
+-- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_out"
--- Create time: 2025-06-17 22:57:32
+-- Create time: 2025-09-04 15:37:52
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  520_cre_view_fe_out.sql
 -- TEMPLATE:  template_cre_view_last_import.sql
@@ -28,6 +28,13 @@
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
 --Create View for frontend tables for schema db2frontend_out
 
 CREATE OR REPLACE VIEW db2frontend_out.v_patient AS (
@@ -94,4 +101,9 @@ GRANT SELECT ON TABLE db2frontend_out.v_trigger TO db2frontend_user;
 GRANT SELECT ON TABLE db2frontend_out.v_trigger TO db_user;
 GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
 
+
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 

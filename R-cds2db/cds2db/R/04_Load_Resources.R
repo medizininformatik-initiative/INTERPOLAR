@@ -409,11 +409,9 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
   #########################
 
   # This variable should be set to change the downloaded RAW data for DEBUG
-  # purposes. It contains paths to scripts that is sourced at this point in the given order
-  if (exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES") && length(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES)) {
-    for (script_name in DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES) {
-      source(script_name, local = TRUE)
-    }
+  # purposes. It contains paths to scripts that is sourced at this point in the given order.
+  if (exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME") && length(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME)) {
+    source(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME, local = TRUE)
   }
 
   # Prefix of all global debug variables. One for each FHIR resources.

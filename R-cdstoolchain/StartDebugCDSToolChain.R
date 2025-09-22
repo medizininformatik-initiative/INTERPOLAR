@@ -1,6 +1,13 @@
-# chance the working directory to the main directory
+# Activate this only if you know what you are doing!
+I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = FALSE
+
+# change the working directory to the main directory
 if (grepl('/cdstoolchain', getwd())) setwd("../..")
 if (grepl('/R-cdstoolchain', getwd())) setwd("../")
+
+if (!I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED) {
+  stop("You must set I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE to run this script!")
+}
 
 # free memory
 rm(list = ls())
@@ -14,6 +21,64 @@ library(db2frontend)
 options(error = NULL)
 
 start_full <- Sys.time()
+
+
+############################
+### START TEST DEFINITON ###
+############################
+
+###
+# Set the index of the test that should be run. This is used to determine the
+# script names to load/change the RAW and REDCap data.
+###
+DEBUG_TEST_INDEX <- 2
+
+###
+# Set the index of the virtual machine that should be used for the debug run.
+###
+DEBUG_VM_PORT_INDEX <- 2
+
+##########################
+### END TEST DEFINITON ###
+##########################
+
+###
+# For test_index = 4 this returns file name "./R-cds2db/test/test_04_change_RAW_Data.R"
+# or "./R-cds2db/test/test_04_change_REDCap_Data.R".
+###
+getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCap")) {
+  change_data_type <- match.arg(change_data_type)
+
+  # do not overwite the debug script name if it is already defined
+  if (change_data_type == "RAW" && exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
+    return(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME)
+  }
+  if (change_data_type == "REDCap" && exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
+    return(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)
+  }
+
+  # calculate the variable test_index as string with length 2 (if DEBUG_TEST_INDEX < 10 then add a leading 0)
+  test_index <- if (DEBUG_TEST_INDEX < 10) paste0("0", DEBUG_TEST_INDEX) else as.character(DEBUG_TEST_INDEX)
+  change_data_file_name <- paste0("./R-cds2db/test/test_", test_index, "_change_", change_data_type, "_Data.R")
+  if (!file.exists(change_data_file_name)) {
+    change_data_file_name <- NA
+  }
+  return(change_data_file_name)
+}
+
+###
+# This variable should be set to change the downloaded RAW data for DEBUG
+# purposes. It contains a path to a script that is sourced after the downloaded
+# and cracking of the FHIR RAW data.
+###
+DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "RAW")
+
+###
+# If the data that should be exported to REDCap must be changed for test or debug
+# purposes, then this variable can be used to define a path to a script that
+# is sourced when the data is prepared for REDCap export.
+###
+DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "REDCap")
 
 # Create a vector of debug dates from now - count days in the past until now
 initDebugDates <- function(count) {
@@ -34,60 +99,12 @@ initDebugDates <- function(count) {
   return(dates)
 }
 
-############################
-### START TEST DEFINITON ###
-############################
-
-#################
-# DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
-# a config file. If the path is not set, then only the default config file
-# is used and no default values are overwritten by the debug config file.
-#################
-DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
-  cds2db = "./R-cds2db/test/test_cds2db_config.toml",
-  dataprocessor = "",
-  db2frontend = ""
-)
-
-#################
-# If this parameter is given, then no request is sent to the FHIR server, but
-# all data is loaded from this folder from RData files
-#################
-DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
-
-#################
-# This variable should be set to change the downloaded RAW data for DEBUG
-# purposes. It contains a path to a script that is sourced after the downloaded
-# and cracking of the FHIR RAW data.
-#################
-DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- "./R-cds2db/test/test3_change_RAW_Data.R"
-
-#################
-# This variable can be used to define the path where REDCap mock data are stored.
-# In the difference to the variable DEBUG_PATH_TO_RAW_RDATA_FILES nothing happens,
-# if this variable is defined or not defined. It must be used explicitly in the
-# code to load the REDCap mock data from this path.
-#################
-DEBUG_PATH_TO_REDCAP_RDATA_FILES <- "./R-cds2db/test/tables/"
-
-#################
-# If the data that should be exported to REDCap must be changed for test or debug
-# purposes, then this variable can be used to define a path to a script that
-# is sourced when the data is prepared for REDCap export.
-#################
-#DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- "./R-cds2db/test/test4_change_REDCap_Data.R"
-
-##########################
-### END TEST DEFINITON ###
-##########################
-
-
-# Source all change RAW data scripts. They must define DEBUG_DAYS_COUNT and run
+# Source the "change RAW data" script. It must define DEBUG_DAYS_COUNT and run
 # the real test code only if DEBUG_DATES is defnied!
-rm("DEBUG_DATES")
-for (script_name in DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME) {
-  source(script_name, local = TRUE)
+if (exists("DEBUG_DATES")) {
+  rm("DEBUG_DATES")
 }
+source(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME, local = TRUE) # defines DEBUG_DAYS_COUNT
 DEBUG_DATES <- initDebugDates(DEBUG_DAYS_COUNT)
 
 day_times <- c()
@@ -101,7 +118,7 @@ for (debug_day_index in seq_along(DEBUG_DATES)) {
   diff <- capture.output(print(end_day - start_day))
   day_times <- append(day_times, paste("Day", debug_day_index, "took", diff))
   print(day_times[debug_day_index])
-#  browser()
+  #browser()
 }
 end_full <- Sys.time()
 
