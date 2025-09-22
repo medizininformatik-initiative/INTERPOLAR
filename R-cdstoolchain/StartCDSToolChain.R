@@ -119,6 +119,6 @@ if (!etlutils::isErrorOccured()) {
   status <- 1
 }
 
-if (!interactive()) {
+if (!interactive() && !exists("DEBUG_DAY")) {
   quit(status = status, save = "no")
 }
