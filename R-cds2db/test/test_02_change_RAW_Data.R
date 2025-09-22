@@ -89,19 +89,20 @@ if (exists("DEBUG_DAY")) {
   duplicatePatients(6)
 
   runCodeForDebugDay(1, {
-    #UKB-0001_1 -> Drug_Disease_Interaction             -> MedicationRequest - N02AA01 + Diagnosis - R10.0
+    # UKB-0001_1 -> Drug_Disease_Interaction             -> MedicationRequest - N02AA01 + Diagnosis - R10.0
     addDrugs("UKB-0001_1", "N02AA01")
     addConditions("UKB-0001_1", "R10.0")
-    #UKB-0001_2 -> Drug_Drug_Interaction                -> MedicationRequests - N06AX22 + J01MA02
+    # UKB-0001_2 -> Drug_Drug_Interaction                -> MedicationRequests - N06AX22 + J01MA02
     addDrugs("UKB-0001_2", c("N06AX22", "J01MA02"))
-    #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> MedicationRequests - N06BA09 + C02KC01
+    # UKB-0001_3 -> Drug_DrugGroup_Interaction           -> MedicationRequests - N06BA09 + C02KC01
     addDrugs("UKB-0001_3", c("N06BA09", "C02KC01"))
-    #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> MedicationRequest - A10BA02 + N07BB03(ATC-Proxy)
+    # UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> MedicationRequest - A10BA02 + N07BB03(ATC-Proxy)
     addDrugs("UKB-0001_4", c("A10BA02", "N07BB03"))
-    #UKB-0001_5 -> Drug_Disease_Interaction (Pro.LOINC) -> MedicationRequest - C02KX01 + Observation - 14631-6
+    # UKB-0001_5 -> Drug_Disease_Interaction (Pro.LOINC) -> MedicationRequest - C02KX01 + Observation - 14631-6
+    # Loinc with cutoff absolute -> doesn't work yet
     addDrugs("UKB-0001_5", "C02KX01")
     addObservations("UKB-0001_5", "14631-6")
-    #UKB-0001_6 -> Drug_Disease_Interaction (LOINC Cut) -> MedicationRequest - C03DA02 + Observation - 2823-3
+    # UKB-0001_6 -> Drug_Disease_Interaction (LOINC Cut) -> MedicationRequest - C03DA02 + Observation - 2823-3
     addDrugs("UKB-0001_6", "C03DA02")
     addObservations("UKB-0001_6", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
   })

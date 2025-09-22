@@ -134,37 +134,27 @@ testPrepareRAWResources <- function(patient_ids) {
   enc_templates[grepl("-(A|V)-1$", enc_id),
                 enc_partof_ref := paste0("[1.1]Encounter/", sub("^\\[[^]]+\\]", "", sub("-(A|V)-1$", "", enc_id)))]
   enc_templates[, enc_status := "[1]in-progress"]
-  enc_templates[, enc_period_start := getDebugDatesRAWDateTime(-0.5)]
   enc_templates[, enc_period_end := NA]
-  enc_templates[, enc_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
   enc_templates <- enc_templates[order(enc_id)]
 
   # Add template for MedicationRequest table
   med_req_templates <- data.table::copy(resource_tables[["MedicationRequest"]])
   med_req_templates <- rbind(med_req_templates, as.list(rep(NA_character_, ncol(med_req_templates))))
   med_req_templates[, medreq_status := "[1]active"]
-  med_req_templates[, medreq_doseinstruc_timing_repeat_boundsperiod_start := getDebugDatesRAWDateTime(-0.5)]
-  med_req_templates[, medreq_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
 
   # Add template for Condition table
   med_templates <- data.table::copy(resource_tables[["Medication"]])
   med_templates <- med_templates[1]
   med_templates[, med_code_system := "[1.1.1]http://fhir.de/CodeSystem/bfarm/atc"]
-  med_templates[, med_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
 
 
   # Add template for Condition table
   con_templates <- data.table::copy(resource_tables[["Condition"]])
   con_templates <- con_templates[1]
-  con_templates[, con_recordeddate := getDebugDatesRAWDateTime(-0.5)]
-  con_templates[, con_onsetperiod_start := getDebugDatesRAWDateTime(-0.5)]
-  con_templates[, con_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
 
   # Add template for Observation table
   obs_templates <- data.table::copy(resource_tables[["Observation"]])
   obs_templates <- obs_templates[1]
-  obs_templates[, obs_effectivedatetime := getDebugDatesRAWDateTime(-0.5)]
-  obs_templates[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
 
   filtered_resources[["Encounter"]] <- filtered_resources[["Encounter"]][0]
   filtered_resources[["MedicationRequest"]] <- filtered_resources[["MedicationRequest"]][0]
@@ -668,7 +658,7 @@ testDischarge <- function(pid) {
   return(dt_enc)
 }
 
-duplicatePatients <- function(count) {
+duplicatePatients <- function(count, duplicated_start_index = 1) {
 
   addPatientIdIndex <- function(old_id, index, resource_table, resource_name) {
     new_id <- paste0(old_id, "_", index)
@@ -721,7 +711,7 @@ duplicatePatients <- function(count) {
   new_resource_tables <- lapply(resource_tables, data.table::copy)
 
   # iterate over all resource_tables
-  for (i in 1:count) {
+  for (i in duplicated_start_index:(count + duplicated_start_index - 1)) {
     for (resource_name in names(resource_tables)) {
       resource_table <- data.table::copy(resource_tables[[resource_name]])
       pat_ids <- dt_pat$pat_id
@@ -740,7 +730,7 @@ duplicatePatients <- function(count) {
   testSetResourceTables(new_resource_tables)
 }
 
-addDrugs <- function(pid, codes) {
+addDrugs <- function(pid, codes, day_offset = -0.3) {
   # Load template tables from environment
   med_req_templates <- get("med_req_templates", envir = .test_env)
   med_templates <- get("med_templates", envir = .test_env)
@@ -757,13 +747,16 @@ addDrugs <- function(pid, codes) {
   med_req_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
     dt <- data.table::copy(med_req_templates)
     # Generate unique ID for MedicationRequest
-    dt[, medreq_id := paste0("[1]", pid, "-E-", enc_index, "-MR-", med_req_index + (i - 1))]
-    dt[, medreq_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-MR-", med_req_index + (i - 1))]
+    medreq_base_id <- paste0(pid, "-E-", enc_index, "-MR-", med_req_index + (i - 1))
+    dt[, medreq_id := paste0("[1]", medreq_base_id)]
+    dt[, medreq_identifier_value := paste0("[1.1]", medreq_base_id)]
     # Reference patient and encounter
     dt[, medreq_patient_ref := paste0("[1.1]Patient/", pid)]
     dt[, medreq_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
     # Reference the corresponding Medication
     dt[, medreq_medicationreference_ref := paste0("[1]Medication/", pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))]
+    dt[, medreq_doseinstruc_timing_repeat_boundsperiod_start := getDebugDatesRAWDateTime(day_offset)]
+    dt[, medreq_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
     dt
   }))
 
@@ -775,6 +768,7 @@ addDrugs <- function(pid, codes) {
     dt[, med_identifier_value := paste0("[1.1]", pid, "-MR-", med_req_index - 1, "-M-", med_index + (i - 1))]
     # Assign the drug code
     dt[, med_code_code := paste0("[1.1.1]", codes[i])]
+    dt[, med_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
     dt
   }))
 
@@ -786,7 +780,7 @@ addDrugs <- function(pid, codes) {
   testSetResourceTables(resource_tables)
 }
 
-addConditions <- function(pid, codes) {
+addConditions <- function(pid, codes, day_offset = -0.5) {
   # Load template table for Condition
   con_templates <- get("con_templates", envir = .test_env)
 
@@ -808,6 +802,9 @@ addConditions <- function(pid, codes) {
     dt[, con_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
     # Assign the condition code
     dt[, con_code_code := paste0("[1.1.1]", codes[i])]
+    dt[, con_recordeddate := getDebugDatesRAWDateTime(day_offset)]
+    dt[, con_onsetperiod_start := getDebugDatesRAWDateTime(day_offset)]
+    dt[, con_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
     dt
   }))
 
@@ -818,7 +815,7 @@ addConditions <- function(pid, codes) {
   testSetResourceTables(resource_tables)
 }
 
-addObservations <- function(pid, codes, value = NULL, unit = NULL, referencerange_low = NULL, referencerange_high = NULL) {
+addObservations <- function(pid, codes, day_offset = -0.5, value = NULL, unit = NULL, referencerange_low = NULL, referencerange_high = NULL) {
   # Load template table for Observation
   obs_templates <- get("obs_templates", envir = .test_env)
 
@@ -840,6 +837,8 @@ addObservations <- function(pid, codes, value = NULL, unit = NULL, referencerang
     dt[, obs_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
     # Assign the observation code
     dt[, obs_code_code := paste0("[1.1.1]", codes[i])]
+    obs_templates[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset)]
+    obs_templates[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
     # Optional fields
     if (!is.null(value)) dt[, obs_valuequantity_value := paste0("[1.1]", value)]
     if (!is.null(unit)) dt[, obs_valuequantity_code := paste0("[1.1]", unit)]

@@ -3,9 +3,6 @@
 source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
 
 if (isDebugDay()) {
-  # Load the necessary libraries
-  template <- loadDebugREDCapDataTemplate("medikationsanalyse")
-
   dt_patient <- data_to_import$patient
   pat_ids <- filterPatientIdsByLevel(dt_patient$pat_id, 0, 1)
   data_to_import[["medikationsanalyse"]] <- addREDCapMedikationsanalyse(
