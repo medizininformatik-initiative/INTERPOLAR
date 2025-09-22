@@ -806,6 +806,13 @@ fhirsearchMultipleResourcesByPID <- function(pids_with_last_updated,
         additional_search_parameter <- NULL
       }
       if (!nchar(additional_search_parameter) == 0 || is.null(additional_search_parameter)) {
+
+        # We need to update the last_check_date of every pid on every run of the toolchain,
+        # so we download all patients independently of the last_updated date.
+        if (resource_name == "Patient") {
+          last_updated <- NA
+        }
+
         # Load and process FHIR resources for the current patient IDs and resource_name type
         resource_table <- fhirsearchResourcesByPID(date_to_pids[[i]], id_param_str, table_description, last_updated, additional_search_parameter)
         # If `resource_table` is valid (not NA), add it to `raw_fhir_resources`
