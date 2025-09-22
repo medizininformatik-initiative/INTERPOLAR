@@ -37,6 +37,15 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
 RUN /rocker_scripts/bin/install2.r -n $NCPUS base64enc
 RUN /rocker_scripts/bin/install2.r -n $NCPUS digest
 
+# Packages für kableExtra
+RUN apt-get update && apt-get install -y \
+  libfontconfig1-dev \
+  libharfbuzz-dev \
+  libfribidi-dev \
+  pandoc
+
+RUN /rocker_scripts/bin/install2.r -n $NCPUS kableExtra
+
 WORKDIR /src
 
 COPY R-etlutils R-etlutils

@@ -137,7 +137,12 @@ if (exists("DEBUG_DAY")) {
         enc_status = "finished",
         enc_period_end = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)
       )]
-      dt_enc[grepl("^\\[1\\]UKB-0002-E-1", enc_id), `:=`(
+      to_modify <- c(
+        "[1]UKB-0002-E-1",
+        "[1]UKB-0002-E-1-A-1",
+        "[1]UKB-0002-E-1-A-1-V-2"
+      )
+      dt_enc[enc_id %in% to_modify, `:=`(
         enc_status = "finished",
         enc_period_end = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)
       )]
