@@ -1,6 +1,13 @@
+# Activate this only if you know what you are doing!
+I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = FALSE
+
 # change the working directory to the main directory
 if (grepl('/cdstoolchain', getwd())) setwd("../..")
 if (grepl('/R-cdstoolchain', getwd())) setwd("../")
+
+if (!I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED) {
+  stop("You must set I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE to run this script!")
+}
 
 # free memory
 rm(list = ls())
