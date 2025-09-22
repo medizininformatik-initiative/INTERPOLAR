@@ -64,6 +64,21 @@ fhirdbGetIDColumn <- function(resource_name) {
   return(id_column)
 }
 
+#' Get Identifier Column for Resource
+#'
+#' This function retrieves the name of the ID column for a given resource.
+#'
+#' @param resource_name A character string representing the name of the resource.
+#'
+#' @return A character string containing the name of the ID column for the specified resource.
+#'
+#' @export
+fhirdbGetIdentifierColumn <- function(resource_name) {
+  resource_name <- tolower(resource_name)
+  id_column <- paste0(fhirdbGetResourceAbbreviation(resource_name), "_identifier_value")
+  return(id_column)
+}
+
 #' Get Encounter ID/Reference Column for Resource
 #'
 #' This function retrieves the name of the column with the reference to Encounters for a given

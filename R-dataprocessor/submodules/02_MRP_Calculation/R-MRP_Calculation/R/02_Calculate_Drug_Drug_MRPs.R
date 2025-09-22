@@ -5,7 +5,7 @@
 #' These columns define the structure of the MRP rule table.
 #'
 #' @return A named character vector of column names relevant to Drug-Drug MRP definitions.
-getPairListColumnNamesDrugDrug <- function() {
+getRelevantColumnNamesDrugDrug <- function() {
   etlutils::namedVectorByValue(
     "ATC_DISPLAY",
     #"SMPC_NAME",
@@ -47,10 +47,10 @@ getCategoryDisplayDrugDrug <- function() {"Drug-Drug"}
 #' @return A cleaned and expanded data.table containing the MRP definition table.
 #'
 #' @export
-cleanAndExpandDefinitionDrugDrug <- function(drug_drug_mrp_definition, mrp_type) {
+processExcelContentDrugDrug <- function(drug_drug_mrp_definition, mrp_type) {
 
   # Remove not nesessary columns
-  mrp_columnnames <- getPairListColumnNames(mrp_type)
+  mrp_columnnames <- getRelevantColumnNames(mrp_type)
   drug_drug_mrp_definition <- drug_drug_mrp_definition[,  ..mrp_columnnames]
 
   code_column_names <- c("ATC_PRIMARY", "ATC2_PRIMARY")
@@ -94,14 +94,18 @@ cleanAndExpandDefinitionDrugDrug <- function(drug_drug_mrp_definition, mrp_type)
     )
   }
 
-  # check column ATC and ATC_PROXY for correct ATC codes
-  atc_columns <- grep("ATC(?!.*(DISPLAY|INCLUSION|VALIDITY_DAYS))", names(drug_drug_mrp_definition), value = TRUE, perl = TRUE)
-  atc_errors <- validateATCCodes(drug_drug_mrp_definition, atc_columns)
-  error_messages <- formatCodeErrors(atc_errors, "ATC")
+  # check column ATC_PRIMARY and ATC2_PRIMARY for correct ATC codes
+  invalid_atcs <- etlutils::getInvalidCodes(drug_drug_mrp_definition, code_column_names, etlutils::isATC)
+  error_messages <- formatCodeErrors(invalid_atcs, "ATC")
 
   if (length(error_messages) > 0) {
     stop(paste(error_messages, collapse = "\n"))
   }
+
+  # Remove rows where ATC_PRIMARY and ATC2_PRIMARY are the same
+  drug_drug_mrp_definition <- drug_drug_mrp_definition[
+    get(code_column_names[1]) != get(code_column_names[2])
+  ]
 
   return(drug_drug_mrp_definition)
 }

@@ -1,122 +1,58 @@
-#' Validate ATC Codes in Multiple Columns
-#'
-#' This function checks whether the values in specified columns of a data table
-#' are valid ATC7 codes and issues warnings for any invalid values.
-#'
-#' @param data A data table containing the columns to validate.
-#' @param columns A character vector specifying the column names to check for ATC7 validity.
-#'
-#' @details The function filters out \code{NA} values and validates each value in the specified
-#' columns using \code{etlutils::isATC7}. If invalid ATC7 codes are found, a warning is issued
-#' for each column.
-#'
-#' @return This function does not return any value. It issues warnings for invalid codes.
-#'
-#' @examples
-#' library(data.table)
-#' drug_disease_mrp_definition <- data.table(
-#'   ATC = c("A01AB07", "INVALID", NA),
-#'   ATC_PROXY = c(NA, "WRONG", "B03AA02")
-#' )
-#' validateATCCodes(drug_disease_mrp_definition, c("ATC", "ATC_PROXY"))
-#'
-#' @export
-validateATCCodes <- function(data, columns) {
-  errors <- list()
-  for (column in columns) {
-    invalid_codes <- data[[column]][!etlutils::isATC7orSmaller(data[[column]]) & !is.na(data[[column]])]
-    if (length(invalid_codes) > 0) {
-      errors[[column]] <- invalid_codes
-    }
-  }
-  return(errors)
-}
-
-#' Validate LOINC Codes in a Column
-#'
-#' This function validates whether all non-NA values in a specified column of a data table
-#' conform to the standard LOINC format.
-#'
-#' @param data A data.table containing the column to validate.
-#' @param column_name The name of the column to check for valid LOINC codes.
-#'
-#' @details A valid LOINC code matches the pattern `^\d{1,5}-\d$`:
-#' - 1 to 5 digits
-#' - Followed by a hyphen (`-`)
-#' - Ending with exactly 1 digit.
-#'
-#' If invalid codes are found, the function will issue a warning with the invalid codes.
-#'
-#' @return The function does not return any value but will issue a warning
-#' if invalid LOINC codes are found in the column.
-#'
-#' @examples
-#' library(data.table)
-#' dt <- data.table(
-#'   LOINC = c("12345-6", "67890-1", "INVALID", NA, "12321", "21312123-1")
-#' )
-#' validateLOINCCodes(dt, "LOINC")
-#' # Warning: The following codes in column 'LOINC' are not valid LOINC codes: INVALID
-#'
-#' @export
-validateLOINCCodes <- function(data, column_name) {
-  column_values <- data[[column_name]]
-  invalid_codes <- column_values[!etlutils::isLOINC(column_values) & !is.na(column_values)]
-  if (length(invalid_codes) > 0) {
-    return(setNames(list(invalid_codes), column_name))
-  } else {
-    return(list())
-  }
-}
-
 #' Get Processed and Expanded MRP Definition Table
 #'
 #' This function loads a specific MRP (Medication-Related Problem) definition from an Excel file,
 #' computes its content hash, and either returns a cached, already-processed version or processes
 #' it using a dynamic cleaning/expansion function. The result is cached for future use.
 #'
-#' @param mrp_type A character string representing the base name of the MRP definition (e.g., `"Drug_Disease"`).
+#' @param table_name Character. The base name of the Excel file (without file extension).
+#' @param table_name_prefix Character. Prefix to use for identifying table variants. (Currently unused in function logic.)
 #'
 #' @return A data.table containing the processed and expanded MRP definition.
 #'
-getExpandedContent <- function(mrp_type) {
+getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
 
   #path to the directory containing the MRP Excel files.
-  path_to_mrp_tables <- file.path(MRP_PAIR_PATH, paste0("MRP_", mrp_type))
-
+  table_dir <- file.path(INPUT_REPO_PATH, paste0(table_name_prefix, table_name))
   # Load the MRP definition from the Excel file
-  mrp_columnnames <- getPairListColumnNames(mrp_type)
-  mrp_definition <- etlutils::readFirstExcelFileSheet(path_to_mrp_tables, mrp_type, mrp_columnnames)
-  if (is.null(mrp_definition)) {
-    stop(paste0("No or empty ", mrp_type, " MRP definition table found in the specified path: ", path_to_mrp_tables))
+  columnnames <- getRelevantColumnNames(table_name)
+  file_definition <- etlutils::readFirstExcelFileSheet(table_dir, table_name, columnnames)
+
+  if (is.null(file_definition)) {
+    stop(paste0("No or empty ", table_name, " excel file found in the specified path: ", table_dir))
   }
   # Compute the hash of the current MRP definition
-  content_hash <- digest::digest(mrp_definition$excel_file_content, algo = "sha256")
-  file_name <- mrp_definition$excel_file_name
-  content <- mrp_definition$excel_file_content
-  processed_content_hash <- getStoredProcessedContentHash(content_hash, path_to_mrp_tables)
+  content_hash <- digest::digest(file_definition$excel_file_content, algo = "sha256")
+  file_name <- file_definition$excel_file_name
+  content <- file_definition$excel_file_content
+  processed_content_hash <- getStoredProcessedContentHash(content_hash, table_dir)
 
   if (is.null(processed_content_hash)) {
     # If the hash is not found, process the MRP definition
-    processed_content <- getMRPTypeFunction("cleanAndExpandDefinition", mrp_type)(mrp_definition$excel_file_content, mrp_type)
+    process_content_function_name <- paste0("processExcelContent", gsub("_", "", table_name))
+    if (exists(process_content_function_name, mode = "function")) {
+      process_content_function <- get(process_content_function_name, mode = "function")
+      processed_content <- process_content_function(file_definition$excel_file_content, table_name)
+    } else {
+      processed_content <- file_definition$excel_file_content
+    }
     processed_content_hash <- digest::digest(processed_content, algo = "sha256")
 
-    output_dir <- file.path(path_to_mrp_tables, paste0(mrp_type, "_content"))
+    output_dir <- file.path(table_dir, paste0(table_name, "_content"))
     if (!dir.exists(output_dir)) {
       dir.create(output_dir, recursive = TRUE)
     }
 
-    file_path_part <- paste0(path_to_mrp_tables, "/", mrp_type, "_content")
+    file_path_part <- paste0(table_dir, "/", table_name, "_content")
 
     # Write content and processed content to Excel files
     openxlsx::write.xlsx(content, file = file.path(file_path_part,
-                                                   paste0(mrp_type, "_MRP_Table.xlsx")), overwrite = TRUE)
+                                                   paste0(table_name, "_", table_name_prefix, "Table.xlsx")), overwrite = TRUE)
     openxlsx::write.xlsx(processed_content, file = file.path(file_path_part,
-                                                             paste0(mrp_type, "_MRP_Table_processed.xlsx")), overwrite = TRUE)
+                                                             paste0(table_name, "_", table_name_prefix, "Table_processed.xlsx")), overwrite = TRUE)
 
     # Load or init storage tables locally
-    input_data_files_path <- paste0(path_to_mrp_tables, "/input_data_files.RData")
-    input_data_files_processed_path <- paste0(path_to_mrp_tables, "/input_data_files_processed_content.RData")
+    input_data_files_path <- paste0(table_dir, "/input_data_files.RData")
+    input_data_files_processed_path <- paste0(table_dir, "/input_data_files_processed_content.RData")
 
     if (file.exists(input_data_files_path)) {
       input_data_files <- readRDS(input_data_files_path)
@@ -169,7 +105,7 @@ getExpandedContent <- function(mrp_type) {
   } else {
     # Load processed content
     #TODO: Replace with database functionality
-    input_data_files_processed_content <- readRDS(paste0(path_to_mrp_tables, "/input_data_files_processed_content.RData"))
+    input_data_files_processed_content <- readRDS(paste0(table_dir, "/input_data_files_processed_content.RData"))
     matching_row <- input_data_files_processed_content[processed_content_hash == get("processed_content_hash")]
     processed_content <- unserialize(base64enc::base64decode(matching_row$processed_content))
   }
@@ -237,26 +173,4 @@ formatCodeErrors <- function(error_list, code_type_label) {
                   sprintf("  Column '%s': %s", col, paste(error_list[[col]], collapse = ", ")))
   }
   return(messages)
-}
-
-#' Filter active MedicationRequests for an encounter within a specific time window
-#'
-#' @param medication_requests A \code{data.table} of MedicationRequest resources. Must contain columns \code{medreq_encounter_ref} and \code{medreq_authoredon}.
-#' @param enc_period_start POSIXct. The start datetime of the encounter period.
-#' @param meda_datetime POSIXct. The datetime of the medication analysis (cutoff point).
-#'
-#' @return A \code{data.table} with filtered active medication requests for the given encounter and time range.
-#'
-#' @export
-getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
-
-  active_requests <- medication_requests[
-    !is.na(start_date) &
-      start_date >= enc_period_start &
-      start_date <= meda_datetime &
-      (is.na(end_date) |
-         end_date >= meda_datetime)
-  ]
-  atc_codes <- active_requests[, c("atc_code")]
-  return(atc_codes)
 }

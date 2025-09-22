@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-02 16:19:58
+-- Rights definition file last update : 2025-07-01 13:49:10
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-07-04 14:35:56
+-- Create time: 2025-09-04 15:35:55
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  400_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -44,8 +44,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe' AND column_name = 'input_datetime'
@@ -172,7 +174,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe' AND column_name = 'hash_index_col'
@@ -221,7 +225,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'patient_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.patient_fe ADD
@@ -258,8 +264,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe' AND column_name = 'input_datetime'
@@ -440,7 +448,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe' AND column_name = 'hash_index_col'
@@ -507,7 +517,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'fall_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.fall_fe ADD
@@ -553,8 +565,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe' AND column_name = 'input_datetime'
@@ -777,7 +791,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe' AND column_name = 'hash_index_col'
@@ -858,7 +874,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'medikationsanalyse_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe ADD
@@ -911,8 +929,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'input_datetime'
@@ -1435,7 +1455,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'hash_index_col'
@@ -1616,7 +1638,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ADD
@@ -1719,8 +1743,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'input_datetime'
@@ -2213,7 +2239,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'hash_index_col'
@@ -2384,7 +2412,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe ADD
@@ -2482,8 +2512,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe' AND column_name = 'input_datetime'
@@ -2640,7 +2672,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe' AND column_name = 'hash_index_col'
@@ -2699,7 +2733,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'risikofaktor_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.risikofaktor_fe ADD
@@ -2741,8 +2777,10 @@ DO
 $$
 BEGIN
     IF EXISTS ( -- Table exists
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe'
+        SELECT 1 FROM
+        (SELECT 1 s FROM information_schema.columns 
+        WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe') a
+        , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
     ) THEN
         IF NOT EXISTS ( -- column not exists
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe' AND column_name = 'input_datetime'
@@ -2947,7 +2985,9 @@ BEGIN
 
 -- Hash column for comparison on data-bearing columns -------------------------------------------
         IF EXISTS ( -- column exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             IF NOT EXISTS ( -- column exists
                 SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe' AND column_name = 'hash_index_col'
@@ -3022,7 +3062,9 @@ BEGIN
         END IF; -- column
 
         IF NOT EXISTS ( -- column not exists
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe' AND column_name = 'hash_index_col'
+            SELECT 1 FROM
+            (SELECT 1 s FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'trigger_fe' AND column_name = 'hash_index_col') a
+            , (SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1') b WHERE a.s=b.s
         ) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.trigger_fe ADD
@@ -3145,6 +3187,14 @@ GRANT SELECT ON TABLE db2dataprocessor_in.trigger_fe TO db_log_user; -- Addition
 -- Output off
 \o /dev/null
 
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db2dataprocessor_in.patient_fe.patient_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2dataprocessor_in.patient_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.patient_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
@@ -3165,6 +3215,18 @@ COMMENT ON COLUMN db2dataprocessor_in.patient_fe.last_check_datetime IS 'Time at
 COMMENT ON COLUMN db2dataprocessor_in.patient_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.patient_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.patient_fe.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db2dataprocessor_in.fall_fe.fall_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2dataprocessor_in.fall_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.fall_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
@@ -3194,6 +3256,18 @@ COMMENT ON COLUMN db2dataprocessor_in.fall_fe.last_check_datetime IS 'Time at wh
 COMMENT ON COLUMN db2dataprocessor_in.fall_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.fall_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.fall_fe.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.medikationsanalyse_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
@@ -3230,6 +3304,18 @@ COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.last_check_datetime 
 COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.medikationsanalyse_fe.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrpdokumentation_validierung_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
@@ -3316,6 +3402,18 @@ COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.last_check
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.retrolektive_mrpbewertung_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
@@ -3397,6 +3495,18 @@ COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.last_check_da
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.retrolektive_mrpbewertung_fe.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.risikofaktor_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
@@ -3422,6 +3532,18 @@ COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.last_check_datetime IS 'Ti
 COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.risikofaktor_fe.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.trigger_fe_id IS 'Primary key of the entity';
 COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.record_id IS 'Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.redcap_repeat_instrument IS 'Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)';
@@ -3455,6 +3577,10 @@ COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.last_check_datetime IS 'Time at
 COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
 
 -- Output on
 \o
@@ -3465,6 +3591,9 @@ COMMENT ON COLUMN db2dataprocessor_in.trigger_fe.last_processing_nr IS 'Last pro
 DO
 $$
 BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
 ------------------------------------------------------------------------------------------------
 
 ------------------------- Index for db2dataprocessor_in - patient_fe ---------------------------------
@@ -4302,6 +4431,7 @@ END IF; -- target column
 
 
 ------------------------------------------------------------------------------------------------
+    END IF; -- do migration
 END
 $$;
 

@@ -1,20 +1,4 @@
 #################
-# If this parameter is given, then no request is sent to the FHIR server, but
-# all data is loaded from this folder from RData files
-#################
-DEBUG_PATH_TO_RAW_RDATA_FILES = "./R-cds2db/test/tables/"
-
-#################
-# This variable should be set to change the downloaded RAW data for DEBUG
-# purposes. It contains a path to a script that is sourced after the downloaded
-# and cracking of the FHIR RAW data.
-#################
-DEBUG_CHANGE_RAW_DATA_SCRIPT_NAMES = [
-   "./R-cds2db/test/test_common_data_preparation.R",
-   "./R-cds2db/test/test1_change_RAW_Data.R"
-]
-
-#################
 # With this filter patterns the data in the tables directory were loaded
 # from the FHIR server
 #################
@@ -141,9 +125,9 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # Since the end date of Encounters cannot be queried without a FHIR Custom Search parameter, all
 # queries for the Encounter date always refer to its start date.
 #################
-#DEBUG_ENCOUNTER_DATETIME_START = "2020-06-30 21:25:00"
-#DEBUG_ENCOUNTER_DATETIME_END = "2020-08-30 21:25:00"
-DEBUG_ENCOUNTER_DATETIME_END = ""
+DEBUG_ENCOUNTER_DATETIME_START = "2020-06-30 21:25:00"
+DEBUG_ENCOUNTER_DATETIME_END = "2020-08-30 21:25:00"
+#DEBUG_ENCOUNTER_DATETIME_END = ""
 
 #################
 # If this parameter is activated, only those whose subject ID is in this list are found in the initial

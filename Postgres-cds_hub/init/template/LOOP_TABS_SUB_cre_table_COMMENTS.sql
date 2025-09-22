@@ -1,3 +1,11 @@
+DO
+$$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+--------------------------------------------------------------------
+
 COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.<%TABLE_NAME%>_id IS 'Primary key of the entity';
 <%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.<%SIMPLE_TABLE_NAME%>_raw_id IS 'Primary key of the corresponding raw table';"%>
 <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_COMMENTS%>
@@ -6,3 +14,7 @@ COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.last_check_datetime IS 'Time a
 COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.current_dataset_status IS 'Processing status of the data record';
 COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.input_processing_nr IS '(First) Processing number of the data record';
 COMMENT ON COLUMN <%OWNER_SCHEMA%>.<%TABLE_NAME%>.last_processing_nr IS 'Last processing number of the data record';
+--------------------------------------------------------------------
+    END IF; -- do migration
+END
+$$;
