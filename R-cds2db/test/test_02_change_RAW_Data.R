@@ -86,25 +86,88 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(6)
+  duplicatePatients(14)
 
   runCodeForDebugDay(1, {
-    # UKB-0001_1 -> Drug_Disease_Interaction             -> MedicationRequest - N02AA01 + Diagnosis - R10.0
+
+    ################
+    # Drug_Disease #
+    ################
+
+    # UKB-0001_1 -> Drug_Disease -> simple Drug + simple Disease
+    # Line 252524 -> MedicationRequest - N02AA01 + Diagnosis - R10.0
     addDrugs("UKB-0001_1", "N02AA01")
     addConditions("UKB-0001_1", "R10.0")
-    # UKB-0001_2 -> Drug_Drug_Interaction                -> MedicationRequests - N06AX22 + J01MA02
-    addDrugs("UKB-0001_2", c("N06AX22", "J01MA02"))
-    # UKB-0001_3 -> Drug_DrugGroup_Interaction           -> MedicationRequests - N06BA09 + C02KC01
-    addDrugs("UKB-0001_3", c("N06BA09", "C02KC01"))
-    # UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> MedicationRequest - A10BA02 + N07BB03(ATC-Proxy)
-    addDrugs("UKB-0001_4", c("A10BA02", "N07BB03"))
-    # UKB-0001_5 -> Drug_Disease_Interaction (Pro.LOINC) -> MedicationRequest - C02KX01 + Observation - 14631-6
-    # Loinc with cutoff absolute -> doesn't work yet
-    addDrugs("UKB-0001_5", "C02KX01")
-    addObservations("UKB-0001_5", "14631-6")
-    # UKB-0001_6 -> Drug_Disease_Interaction (LOINC Cut) -> MedicationRequest - C03DA02 + Observation - 2823-3
-    addDrugs("UKB-0001_6", "C03DA02")
-    addObservations("UKB-0001_6", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
+
+    # UKB-0001_2 -> Drug_Disease -> Drug SY + simple Disease
+    # Line 70064 -> MedicationRequest - H02BX09 + Diagnosis - O41.1
+    addDrugs("UKB-0001_2", "H02BX09")
+    addConditions("UKB-0001_2", "O41.1")
+
+    # UKB-0001_3 -> Drug_Disease -> Proxy ATC
+    # Line 107932 -> MedicationRequest - A10BA02 + N07BB03(ATC-Proxy)
+    addDrugs("UKB-0001_3", c("A10BA02", "N07BB03"))
+
+    # UKB-0001_4 -> Drug_Disease -> Proxy LOINC primary, > ULN
+    # Line 570 -> MedicationRequest - C03DA02 + Observation - 2823-3
+    addDrugs("UKB-0001_4", "C03DA02")
+    addObservations("UKB-0001_4", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
+
+    # UKB-0001_5 -> Drug_Disease -> Proxy LOINC primary, < LLN
+    # Line 571 -> MedicationRequest - C03DA02 + Observation - 2951-2
+    addDrugs("UKB-0001_5", "C03DA02")
+    addObservations("UKB-0001_5", "2951-2", value = 3, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
+
+    # UKB-0001_6 -> Drug_Disease -> Proxy LOINC primary, > 5 * ULN
+    # Line 56760 -> MedicationRequest - J01MA14 + Observation - 1742-6
+    addDrugs("UKB-0001_6", "J01MA14")
+    addObservations("UKB-0001_6", "1742-6", value = 60, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
+
+    # UKB-0001_7 -> Drug_Disease -> Proxy LOINC secondary, > 5 * ULN
+    # Line 56760 -> MedicationRequest - J01MA14 + Observation - 1743-4
+    addDrugs("UKB-0001_7", "J01MA14")
+    addObservations("UKB-0001_7", "1743-4", value = 60, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
+
+    # UKB-0001_8 -> Drug_Disease -> Proxy LOINC primary, cutoff absolute, no unit conversion
+    # Line 2 -> MedicationRequest - C02KX01 + Observation - 1751-7
+    addDrugs("UKB-0001_8", "C02KX01")
+    addObservations("UKB-0001_8", "1751-7", value = 15, unit = "g/L")
+
+    # UKB-0001_9 -> Drug_Disease -> Proxy LOINC primary, cutoff absolute, simple unit conversion
+    # Line 2 -> MedicationRequest - C02KX01 + Observation - 1751-7
+    addDrugs("UKB-0001_9", "C02KX01")
+    addObservations("UKB-0001_9", "1751-7", value = 15000, unit = "mg/L")
+
+    # UKB-0001_10 -> Drug_Disease -> Proxy LOINC secondary, cutoff absolute, no unit conversion
+    # Line 151967 -> MedicationRequest - C01DA14 + Observation - 14775-1
+    addDrugs("UKB-0001_10", "C01DA14")
+    addObservations("UKB-0001_10", "14775-1", value = 4.1, unit = "mmol/L")
+
+    # UKB-0001_11 -> Drug_Disease -> Proxy LOINC secondary, cutoff absolute, complex unit conversion
+    # Line 151967 -> MedicationRequest - C01DA14 + Observation - 14775-1
+    addDrugs("UKB-0001_11", "J01MA14")
+    addObservations("UKB-0001_11", "14775-1", value = 30, unit = "mg/dL")
+
+    # UKB-0001_12 -> Drug_Disease -> Proxy LOINC secondary, cutoff absolute, simple and complex unit conversion
+    # Line 151967 -> MedicationRequest - C01DA14 + Observation - 14775-1
+    addDrugs("UKB-0001_12", "J01MA14")
+    addObservations("UKB-0001_12", "14775-1", value = 300, unit = "mg/L")
+
+    ###############
+    # Drug - Drug #
+    ###############
+
+    # UKB-0001_13 -> Drug_Drug_Interaction                  -> MedicationRequests - N06AX22 + J01MA02
+    addDrugs("UKB-0001_13", c("N06AX22", "J01MA02"))
+
+    ####################
+    # Drug - DrugGroup #
+    ####################
+
+    # UKB-0001_14 -> Drug_DrugGroup_Interaction             -> MedicationRequests - N06BA09 + C02KC01
+    addDrugs("UKB-0001_14", c("N06BA09", "C02KC01"))
+
+
   })
 
   # Update the resource_tables list with the modified data tables
