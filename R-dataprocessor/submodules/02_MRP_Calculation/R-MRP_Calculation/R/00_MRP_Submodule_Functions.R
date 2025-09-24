@@ -766,8 +766,8 @@ calculateMRPs <- function() {
       etlutils::runLevel3(paste0("Calculate ", mrp_type, " MRPs"), {
 
         mrp_pair_list <- mrp_pair_lists[[mrp_type]]
-        input_file_processed_content_hash <- mrp_pair_list$processed_content_hash
-        splitted_mrp_tables <- getFunctionByName("getSplittedMRPTables", mrp_type)(mrp_pair_list)
+        mrp_pair_list_processed_content_hash <- mrp_pair_list$processed_content_hash
+        mrp_pair_list <- mrp_pair_list$processed_content
 
         # Initialize empty lists for results
         retrolektive_mrpbewertung_rows <- list()
@@ -799,7 +799,7 @@ calculateMRPs <- function() {
             fun <- getFunctionByName("calculateMRPs", mrp_type)
             args <- list(
               active_requests = active_requests,
-              splitted_mrp_tables = splitted_mrp_tables,
+              mrp_pair_list = mrp_pair_list,
               resources = resources,
               patient_id = patient_id,
               meda_datetime = meda_datetime
@@ -857,7 +857,7 @@ calculateMRPs <- function() {
                 ret_redcap_repeat_instance = ret_redcap_repeat_instance,
                 mrp_proxy_type = match$proxy_type,
                 mrp_proxy_code = match$proxy_code,
-                input_file_processed_content_hash = input_file_processed_content_hash
+                input_file_processed_content_hash = mrp_pair_list_processed_content_hash
               )
 
             }
@@ -873,7 +873,7 @@ calculateMRPs <- function() {
               ret_redcap_repeat_instance = NA_character_,
               mrp_proxy_type = NA_character_,
               mrp_proxy_code = NA_character_,
-              input_file_processed_content_hash = input_file_processed_content_hash
+              input_file_processed_content_hash = mrp_pair_list_processed_content_hash
             )
           }
         }
