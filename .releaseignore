@@ -1,0 +1,5 @@
+.git*
+.git/
+.github/
+.releaseignore
+renovate.json

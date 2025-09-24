@@ -127,6 +127,7 @@ services:
   # Handle the "deploy" section with care and configure it according to your setup and needs.
   #   The "deploy" section should only be commented out if necessary.
   r-env:
+    image: ghcr.io/medizininformatik-initiative/interpolar/r-env:latest
     build:
       context: ./
       dockerfile: Dockerfile_R

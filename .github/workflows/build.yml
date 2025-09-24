@@ -1,0 +1,357 @@
+name: Build
+
+on:
+  push:
+    tags: [ "v*.*.*" ]
+    branches: [ "main", "build-pipeline" ]
+  pull_request:
+    branches: [ "main" ]
+  merge_group:
+  schedule:
+  - cron: '45 1 * * *'
+
+# Declare default permissions as read-only.
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  BUILD_ID: build-${{ github.run_id }}
+  REGISTRY: ghcr.io/${{ github.repository_owner }}/interpolar
+
+jobs:
+  build-image:
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    strategy:
+      matrix:
+        image: [ r-env ]
+        include:
+        - image: r-env
+          context: .
+          file: Dockerfile_R
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      with:
+        egress-policy: audit
+
+    - name: Checkout
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Login to GHCR
+      uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Collect Info
+      id: info
+      run: |
+        date="$(git log -1 --date="iso-strict-local" --format="%cd")"
+        echo "commit_date=${date}" >>"${GITHUB_OUTPUT}"
+
+    - name: Generate Container Image Metadata
+      id: meta
+      uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+      with:
+        images: ${{ env.REGISTRY }}/${{ matrix.image }}
+        labels: |
+          org.opencontainers.image.created=${{ steps.info.outputs.commit_date }}
+        annotations: |
+          org.opencontainers.image.created=${{ steps.info.outputs.commit_date }}
+
+    - name: Build and Push Container Image
+      id: push
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      with:
+        context: ${{ matrix.context }}
+        file: ${{ matrix.file }}
+        platforms: linux/amd64
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ matrix.image }}:${{ env.BUILD_ID }}
+        labels: ${{ steps.meta.outputs.labels }}
+        annotations: ${{ steps.meta.outputs.annotations }}
+
+    - name: Output Image Digest
+      id: digest
+      run: echo "${{ matrix.image }}-digest=${{ steps.push.outputs.digest }}" >>"${GITHUB_OUTPUT}"
+    outputs:
+      r-env-digest: ${{ steps.digest.outputs.r-env-digest }}
+
+  scan-image:
+    needs: [ build-image ]
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        image: [ r-env ]
+    permissions:
+      security-events: write
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      with:
+        egress-policy: audit
+
+    - name: Run Trivy Vulnerability Scanner
+      uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # 0.31.0
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ matrix.image }}:${{ env.BUILD_ID }}
+        format: sarif
+        output: trivy-results.sarif
+        severity: 'CRITICAL,HIGH'
+        timeout: '15m0s'
+
+    - name: Upload Trivy Scan Results to GitHub Security Tab
+      uses: github/codeql-action/upload-sarif@192325c86100d080feab897ff886c34abd4c83a3 # v3.30.3
+      with:
+        sarif_file: trivy-results.sarif
+
+    - name: Generate SBOM
+      uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37 # 0.31.0
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ matrix.image }}:${{ env.BUILD_ID }}
+        format: cyclonedx
+        output: sbom-trivy.json
+        scan-type: image
+
+    - name: Upload Trivy SBOM
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: ${{ matrix.image }}-sbom-trivy
+        path: sbom-trivy.json
+        if-no-files-found: error
+        retention-days: 7
+
+  tag-image:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork
+    # `test` must succeed before finally tagging (i.e., publishing) the image
+    needs: [ build-image, scan-image ]
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    strategy:
+      matrix:
+        image: [ r-env ]
+    env:
+      DIGEST: ${{ needs.build-image.outputs[format('{0}-digest', matrix.image )]}}
+
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      with:
+        egress-policy: audit
+
+    - name: Install SLSA Verifier
+      uses: slsa-framework/slsa-verifier/actions/installer@ea584f4502babc6f60d9bc799dbbb13c1caa9ee6 # v2.7.1
+
+    - name: Install crane
+      uses: iarekylew00t/crane-installer@af22986e01a08365e8b29e45e5a336c7995c111b # v4.0.0
+
+    - name: Login to GHCR
+      uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Generate Container Image Metadata
+      id: meta
+      uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+      with:
+        images: ghcr.io/${{ github.repository_owner }}/interpolar/${{ matrix.image }}
+        tags: |
+          type=schedule
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Retag and Push Container Image
+      run: |
+        while read -r tag; do
+          echo "${tag}" | cut -d: -f2 | xargs crane tag "${REGISTRY}/${{ matrix.image }}@${DIGEST}"
+        done <<<"${{ steps.meta.outputs.tags }}"
+
+  sign-image:
+    needs: [ build-image, scan-image ]
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+      id-token: write
+    strategy:
+      matrix:
+        image: [ r-env ]
+    env:
+      DIGEST: ${{ needs.build-image.outputs[format('{0}-digest', matrix.image )]}}
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      with:
+        egress-policy: audit
+
+    - name: Install cosign
+      uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+
+    - name: Download SBOM
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      with:
+        name: ${{ matrix.image }}-sbom-trivy
+        path: .
+
+    - name: Login to GHCR
+      uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Sign Image
+      env:
+        IMAGE_REF: ${{ env.REGISTRY }}/${{ matrix.image }}@${{ env.DIGEST }}
+      run: cosign sign --yes "${IMAGE_REF}"
+
+    - name: Attest Image SBOM
+      env:
+        IMAGE_REF: ${{ env.REGISTRY }}/${{ matrix.image }}@${{ env.DIGEST }}
+      run: cosign attest --yes --predicate "sbom-trivy.json" --type cyclonedx "${IMAGE_REF}"
+
+  attest-image:
+    needs: [ build-image ]
+    permissions:
+      actions: read # for detecting the Github Actions environment.
+      id-token: write
+      packages: write # for uploading attestations.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.1.0
+    with:
+      image: ghcr.io/${{ github.repository_owner }}/interpolar/${{ matrix.image }}
+      digest: ${{ needs.build-image.outputs[format('{0}-digest', matrix.image)] }}
+      registry-username: ${{ github.repository_owner }}
+    secrets:
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        image: [ r-env ]
+
+  create-release:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      with:
+        egress-policy: audit
+
+    - name: Checkout
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Insert Version
+      env:
+        COMMIT_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        REF_NAME: ${{ github.event_name == 'pull_request' && format('pr-{}', github.event.number) || github.ref_name }}
+      run: |
+        raw_tag="${COMMIT_TAG#v}"
+        image_tag="${raw_tag:-${REF_NAME}}"
+        echo "INTERPOLAR_VERSION=${tag}" >VERSION.env
+        sed -i -E 's|(ghcr\.io/${{ github.repository_owner }}/interpolar/[[:alnum:]_.-]+):latest|\1:'"${image_tag}"'|g' docker-compose.yml
+
+    - name: Create Release Archives
+      id: create
+      run: |
+        zip -r ".github/release/interpolar-${GITHUB_REF_NAME}.zip" -x@.releaseignore .
+        tar -czf ".github/release/interpolar-${GITHUB_REF_NAME}.tar.gz" --exclude-from=.releaseignore .
+
+    - name: Collect Checksums
+      id: checksums
+      working-directory: .github/release
+      run: |
+        # shellcheck disable=SC2016
+        sha256sum "interpolar-${GITHUB_REF_NAME}.zip" >"interpolar-${GITHUB_REF_NAME}.zip.sha256"
+        sha256sum "interpolar-${GITHUB_REF_NAME}.tar.gz" >"interpolar-${GITHUB_REF_NAME}.tar.gz.sha256"
+        checksums=$(cat <<EOF
+        {
+          "zip": "$(cat "interpolar-${GITHUB_REF_NAME}.zip.sha256" | base64 -w0)",
+          "tar.gz": "$(cat "interpolar-${GITHUB_REF_NAME}.tar.gz.sha256" | base64 -w0)"
+        }
+        EOF
+        )
+        checksums="$(echo "${checksums}" | jq -c)"
+        echo "checksums-b64=${checksums}" >>"${GITHUB_OUTPUT}"
+        files="$(echo "${checksums}" | jq -c keys)"
+        echo "files=${files}" >>"${GITHUB_OUTPUT}"
+
+    - name: Upload Release Archives
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: release-archives
+        path: |
+          .github/release/*.zip
+          .github/release/*.tar.gz
+          .github/release/*.sha256
+        if-no-files-found: error
+        retention-days: 7
+
+    outputs:
+      checksums-b64: ${{ steps.checksums.outputs.checksums-b64 }}
+      files: ${{ steps.checksums.outputs.files }}
+
+  attest-release:
+    needs: [ create-release ]
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    strategy:
+      matrix:
+        file: ${{ fromJson(needs.create-release.outputs.files) }}
+    with:
+      base64-subjects: ${{ fromJson(needs.create-release.outputs.checksums-b64)[matrix.file] }}
+      upload-assets: false
+
+  publish-release:
+    needs: [ attest-release, tag-image ]
+    runs-on: ubuntu-24.04
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: write
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+      with:
+        egress-policy: audit
+
+    - name: Recognize Prerelease
+      id: prerelease
+      # In SemVer 2.0, a prerelease version is always indicated by the presence of a hyphen
+      run: |
+        if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
+          echo "is-prerelease=true" >>"${GITHUB_OUTPUT}"
+        fi
+
+    - name: Download Release Archives
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      with:
+        name: release-archives
+        path: .
+
+    - name: Download Provenance
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      with:
+        pattern: "interpolar-*.intoto.jsonl"
+        merge-multiple: true
+        path: .
+
+    - name: Release
+      uses: softprops/action-gh-release@6cbd405e2c4e67a21c47fa9e383d020e4e28b836 # v2.3.3
+      with:
+        files: |
+          interpolar-*.zip
+          interpolar-*.tar.gz
+          interpolar-*.sha256
+        draft: true
+        prerelease: ${{ steps.prerelease.outputs.is-prerelease }}
