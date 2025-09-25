@@ -1345,31 +1345,53 @@ dbGetInfo <- function(readonly = TRUE) {
   return(info)
 }
 
-#' Reset the database by truncating all tables in the specified schemas.
+#' Reset the database by truncating tables in specified schemas or by explicit table list.
 #'
-#' This function connects to the database using `dbGetAdminConnection()`, retrieves
-#' all tables in the via "DB_ADMIN_SCHEMAS" provided schemas, and truncates them using
+#' This function connects to the database using `dbGetAdminConnection()` and removes
+#' all data from the target tables via
 #' `TRUNCATE TABLE ... RESTART IDENTITY CASCADE;`. This operation deletes all rows
-#' while resetting identity sequences. After execution, the database connection is closed.
+#' and resets identity sequences.
 #'
-#' If any tables still contain data after truncation, their names and row counts
-#' are printed to help diagnose potential issues.
+#' The tables to truncate can be provided in two ways:
+#' \itemize{
+#'   \item If `tables_with_schema` is `NULL` (default), the function retrieves all tables
+#'         from the schemas listed in the environment variable `DB_ADMIN_SCHEMAS`.
+#'   \item If `tables_with_schema` is a character vector of the form `"schema.table"`,
+#'         only those tables are truncated.
+#' }
+#'
+#' After execution, the function verifies whether any tables still contain rows
+#' and prints their names and row counts to help diagnose potential issues.
+#'
+#' Database connections and locks are automatically cleaned up at the end.
+#'
+#' @param tables_with_schema `NULL` or a character vector of table identifiers
+#'   in the form `"schemaname.tablename"`. If `NULL`, all tables in the schemas
+#'   defined by `DB_ADMIN_SCHEMAS` are truncated.
+#'
+#' @return Invisibly returns `TRUE` when executed successfully. Prints diagnostic
+#'   information about tables that still contain rows.
 #'
 #' @export
-dbReset <- function() {
+dbReset <- function(tables_with_schema = NULL) {
   con <- dbGetAdminConnection()
   on.exit(dbDisconnect(con), add = TRUE)
-
-  # Convert schemas vector into SQL-friendly format
-  schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
-  query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")
 
   lock_id <- "Clear database"
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id), add = TRUE)
 
-  # Get all tables to clear
-  tables <- DBI::dbGetQuery(con, query)
+  if (is.null(tables_with_schema)){
+    # Convert schemas vector into SQL-friendly format
+    schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
+    query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")
+
+    # Get all tables to clear
+    tables <- DBI::dbGetQuery(con, query)
+  } else {
+    tables <- data.table::data.table(full = tables_with_schema)[
+      , c("schemaname", "tablename") := data.table::tstrsplit(full, ".", fixed = TRUE)][, !"full"]
+  }
 
   # Clear all tables in the provided schemas
   for (i in seq_len(nrow(tables))) {
