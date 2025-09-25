@@ -28,8 +28,12 @@ importDB2Redcap <- function() {
   writeTablesAsRdata <- function(tables, suffix = "") {
     table_names <- names(tables)
     for (i in seq_along(table_names)) {
+      table_name <- table_names[i]
       table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
-      etlutils::writeRData(data_from_db, paste0(table_filename_prefix, "db2frontend_", i, "_", table_name, suffix))
+      etlutils::writeRData(
+        tables[[table_name]],
+        paste0(table_filename_prefix, "db2frontend_", i, "_", table_name, suffix)
+      )
     }
   }
 
