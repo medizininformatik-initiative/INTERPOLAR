@@ -33,6 +33,17 @@ importDB2Redcap <- function() {
     }
   }
 
+  #small helper to avoid importing empty tables
+  safeImportRecords <- function(conn, dt) {
+    if (is.null(dt)) return(invisible(NULL))
+    if (!nrow(dt)) return(invisible(NULL))
+
+    # prepare data for future-proof import
+    dt_prepared <- redcapAPI::castForImport(rcon = conn, data = dt)
+
+    tryRedcap(function() redcapAPI::importRecords(rcon = conn, data = dt_prepared))
+  }
+
   etlutils::runLevel2Line("Update frontend data from DB", {
 
     # Connect to REDCap
@@ -70,6 +81,7 @@ importDB2Redcap <- function() {
 
       # Fetch data from the database
       data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")
+
       # Keep only columns that exist in REDCap
       data_from_db <- data_from_db[, names(data_from_db) %in% valid_fields, with = FALSE]
 
@@ -114,7 +126,7 @@ importDB2Redcap <- function() {
   etlutils::runLevel2Line("Import data into frontend", {
     # Import data into REDCap
     for (table_name in names(data_to_import)) {
-      tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]]))
+      safeImportRecords(conn = frontend_connection, dt = data_to_import[[table_name]])
     }
   })
 
@@ -158,7 +170,7 @@ importDB2Redcap <- function() {
 
     etlutils::runLevel2Line("Write data to Redcap", {
       # Set the data access groups in Redcap
-      redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group)
+      safeImportRecords(conn = frontend_connection, dt = record_ids_with_data_access_group)
     })
 
   })
