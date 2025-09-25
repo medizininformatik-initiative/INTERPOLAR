@@ -31,10 +31,12 @@ testSetResourceTable <- function(resource_name, resource_table) {
 
 runCodeForDebugDay <- function(debug_day, code_block) {
   current_debug_day <- get("DEBUG_DAY", envir = .GlobalEnv)
-  if (current_debug_day >= debug_day) {
-    assign("DEBUG_DAY", debug_day, envir = .GlobalEnv)
-    eval(substitute(code_block))
-    assign("DEBUG_DAY", current_debug_day, envir = .GlobalEnv)
+  if (!exists("RUN_DEBUG_DAY_ONLY") || isTRUE(RUN_DEBUG_DAY_ONLY == debug_day)) {
+    if (current_debug_day >= debug_day) {
+      assign("DEBUG_DAY", debug_day, envir = .GlobalEnv)
+      eval(substitute(code_block))
+      assign("DEBUG_DAY", current_debug_day, envir = .GlobalEnv)
+    }
   }
 }
 

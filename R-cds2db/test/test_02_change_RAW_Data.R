@@ -13,6 +13,9 @@
 # Define the days count for this test
 DEBUG_DAYS_COUNT <- 2
 
+# Activate if only a specific debug day should be run
+#RUN_DEBUG_DAY_ONLY <- 2
+
 ###
 # DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
 # a config file. If the path is not set, then only the default config file
@@ -51,6 +54,7 @@ if (exists("DEBUG_DAY")) {
     # clear database on Day 1
     etlutils::dbReset()
   } else {
+    if (exists("RUN_DEBUG_DAY_ONLY")) etlutils::dbReset(c("db_log.dp_mrp_calculations", "db_log.retrolektive_mrpbewertung_fe"))
     # Load all encounters from the database which, according to the database,
     # have not yet ended on the 'current' date and determine the PIDs.
     # Background: We want to track all cases that have ever been on a relevant
