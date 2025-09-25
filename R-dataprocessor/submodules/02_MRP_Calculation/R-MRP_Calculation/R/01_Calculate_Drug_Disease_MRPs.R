@@ -518,6 +518,7 @@ matchICDProxies <- function(
     loinc_mapping_table
 ) {
   matchProxy <- function(proxy_type, all_items, splitted_proxy_table, additional_matching_function = NULL, additional_table = NULL) {
+
     mrp_matches <- list()
     used_codes <- unique(all_items[!is.na(code), code])
     matching_proxies <- names(splitted_proxy_table)[
@@ -527,7 +528,7 @@ matchICDProxies <- function(
     ]
     for (proxy_code in matching_proxies) {
       single_proxy_sub_table <- splitted_proxy_table[[proxy_code]]
-      match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & etlutils::isSimpleNotEmptyString(get("ICD_PROXY")]
+      match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get("ICD_PROXY")) & get("ICD_PROXY") != ""]
 
       # Copy column content into new column as comma-separated string
       icd_full_list <- paste0(match_proxy_rows$ICD, collapse = ", ")
@@ -619,7 +620,6 @@ matchICDProxies <- function(
     splitted_proxy_table = drug_disease_mrp_tables_by_ops_proxy
   )
   # LOINC-Proxy-Matching
-  browser()
   loinc_matches <- matchProxy(
     proxy_type = "LOINC",
     all_items = all_observations,
@@ -655,11 +655,20 @@ getSplittedMRPTablesDrugDisease <- function(mrp_pair_list) {
     by_ops_proxy = etlutils::splitTableToList(mrp_pair_list, "ICD_PROXY_OPS", rm.na = TRUE),
     by_loinc_proxy = etlutils::splitTableToList(mrp_pair_list, "LOINC_PRIMARY_PROXY", rm.na = TRUE)
   )
-  # Rename the specific proxy and validity days columns in each splitted table to a common name "ICD_PROXY" and "ICD_PROXY_VALIDITY_DAYS"
-  data.table::setnames(splitted$by_atc_proxy,   c("ICD_PROXY_ATC",       "ICD_PROXY_ATC_VALIDITY_DAYS"), c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
-  data.table::setnames(splitted$by_ops_proxy,   c("ICD_PROXY_OPS",       "ICD_PROXY_OPS_VALIDITY_DAYS"), c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
-  data.table::setnames(splitted$by_loinc_proxy, c("LOINC_PRIMARY_PROXY", "LOINC_VALIDITY_DAYS"        ), c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
 
+  # Helper function to rename columns inside each list of data.tables
+  renameProxyCols <- function(tbl_list, old, new) {
+    lapply(tbl_list, function(tbl) {
+      data.table::setnames(tbl, old = old, new = new, skip_absent = TRUE)
+      tbl
+    })
+  }
+
+  splitted$by_atc_proxy   <- renameProxyCols(splitted$by_atc_proxy,   c("ICD_PROXY_ATC",       "ICD_PROXY_ATC_VALIDITY_DAYS"), c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
+  splitted$by_ops_proxy   <- renameProxyCols(splitted$by_ops_proxy,   c("ICD_PROXY_OPS",       "ICD_PROXY_OPS_VALIDITY_DAYS"), c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
+  splitted$by_loinc_proxy <- renameProxyCols(splitted$by_loinc_proxy, c("LOINC_PRIMARY_PROXY", "LOINC_VALIDITY_DAYS"),         c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
+
+  return(splitted)
 }
 
 #' Calculate Drug-Disease Medication-Related Problems (MRPs)
@@ -677,6 +686,7 @@ getSplittedMRPTablesDrugDisease <- function(mrp_pair_list) {
 #' @return A \code{data.table} containing matched Drug-Disease MRPs, including both direct and proxy-based findings.
 #'
 calculateMRPsDrugDisease <- function(active_requests, mrp_pair_list, resources, patient_id, meda_datetime) {
+
   loinc_mapping <- getLOINCMapping()
   match_atc_and_icd_codes <- data.table::data.table()
   splitted_mrp_tables <- getSplittedMRPTablesDrugDisease(mrp_pair_list)
