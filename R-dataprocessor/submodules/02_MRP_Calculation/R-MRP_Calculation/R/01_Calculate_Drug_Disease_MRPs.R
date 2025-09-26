@@ -516,16 +516,17 @@ matchICDProxies <- function(
     drug_disease_mrp_tables_by_loinc_proxy,
     meda_datetime,
     match_atc_codes,
-    loinc_matching_function,
+    loinc_matching_function_relative,
+    loinc_matching_function_absolute,
     loinc_mapping_table
 ) {
-  matchProxy <- function(proxy_type, all_items, splitted_proxy_table, additional_matching_function = NULL, additional_table = NULL) {
+  matchProxy <- function(proxy_type, all_items, splitted_proxy_table, matching_definition = NULL) {
 
     mrp_matches <- list()
     used_codes <- unique(all_items[!is.na(code), code])
-    if (proxy_type == "LOINC") {
+    if (!is.null(matching_definition)) {
       # Filter of all codes which are present in LOINC mapping table as secondary code
-      used_codes <- additional_table$processed_content[LOINC %in% used_codes, .(code = LOINC, primary_code = LOINC_PRIMARY)]
+      used_codes <- matching_definition$loinc_mapping_table$processed_content[LOINC %in% used_codes, .(code = LOINC, primary_code = LOINC_PRIMARY)]
     } else {
       used_codes <- data.table::data.table(
         code = used_codes,
@@ -584,11 +585,14 @@ matchICDProxies <- function(
 
             if (!is.null(additional_matching_function)) {
               # Call the external custom function
-              mrp_match_description <- additional_matching_function(
+              mrp_match_description <- matching_definition$loinc_matching_function_relative(
                 observation_resources = valid_proxy_rows,
                 match_proxy_row = match_proxy_row,
-                additional_table = additional_table
+                additional_table = matching_definition$loinc_mapping_table
               )
+
+              #TODO: An dieser Stelle die absoluten Cutoffs berechnen matching_definition$loinc_matching_function_absolute
+
               # If the matching function returns NA, skip this proxy match
               if (length(mrp_match_description) && any(!is.na(mrp_match_description))) {
                 kurzbeschr <- paste(kurzbeschr, paste(mrp_match_description, collapse = "\n"), sep = "\n")
@@ -639,8 +643,9 @@ matchICDProxies <- function(
     proxy_type = "LOINC",
     all_items = all_observations,
     splitted_proxy_table = drug_disease_mrp_tables_by_loinc_proxy,
-    additional_matching_function = loinc_matching_function,
-    additional_table = loinc_mapping_table
+    matching_definition = etlutils::namedListByParam(loinc_matching_function_relative,
+                                                     loinc_matching_function_absolute,
+                                                     loinc_mapping_table)
   )
 
   return(data.table::rbindlist(c(atc_matches, ops_matches, loinc_matches), fill = TRUE))
