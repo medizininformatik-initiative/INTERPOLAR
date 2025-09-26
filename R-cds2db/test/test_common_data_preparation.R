@@ -797,8 +797,8 @@ addConditions <- function(pid, codes, day_offset = -0.5) {
   con_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
     dt <- data.table::copy(con_templates)
     # Generate unique Condition ID
-    dt[, con_id := paste0("[1]", pid, "-E-", enc_index, "-D-", con_index + (i - 1))]
-    dt[, con_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-D-", con_index + (i - 1))]
+    dt[, con_id := paste0("[1]", pid, "-E-", enc_index, "-C-", con_index + (i - 1))]
+    dt[, con_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-C-", con_index + (i - 1))]
     # Reference the patient and encounter
     dt[, con_patient_ref := paste0("[1.1]Patient/", pid)]
     dt[, con_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
@@ -826,7 +826,7 @@ addObservations <- function(pid, codes, day_offset = -0.5, value = NULL, unit = 
 
   # Determine next available index for Observations and Encounter for this patient
   enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
-  obs_index <- nrow(resource_tables[["Observation"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-O-\\d+$"), obs_id)]) + 1
+  obs_index <- nrow(resource_tables[["Observation"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-OL-\\d+$"), obs_id)]) + 1
 
   # Create Observation entries for each code
   obs_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
