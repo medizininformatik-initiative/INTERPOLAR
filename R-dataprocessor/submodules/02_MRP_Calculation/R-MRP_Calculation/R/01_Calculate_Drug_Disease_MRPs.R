@@ -416,13 +416,15 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, additional_
               reference = cutoff$reference
             )
 
-            loinc_description <- additional_table$processed_content[LOINC == cutoff_description$matched_code, GERMAN_NAME_LOINC_PRIMARY]
+            loinc_description <- additional_table$processed_content[LOINC %in% cutoff_description$matched_code, unique(GERMAN_NAME_LOINC_PRIMARY)]
+            loinc_description <- paste(loinc_description, collapse = ", ")
+
             # Create a description of the match
             match_description <- paste0("Beim Laborparameter ", loinc_description, " (", cutoff_description$matched_code,
-                                        ") wurde gemessen: \n ", "Wert: ", cutoff_description$matched_values, " (",
+                                        ") wurde gemessen: \n", "Wert: ", cutoff_description$matched_values, " (",
                                         cutoff_description$matched_unit,") \n", "Referenbereich: ", cutoff_description$matched_referenceRangeLow,
-                                        " - ", cutoff_description$matched_referenceRangeHigh, " \n ",
-                                        "Zeitpunkt: ", cutoff_description$matched_start_date)
+                                        " - ", cutoff_description$matched_referenceRangeHigh, "\n",
+                                        "Zeitpunkt: ", cutoff_description$matched_start_date, "\n\n")
           }
         }
       }
@@ -521,9 +523,18 @@ matchICDProxies <- function(
 
     mrp_matches <- list()
     used_codes <- unique(all_items[!is.na(code), code])
+    if (proxy_type == "LOINC") {
+      # Filter of all codes which are present in LOINC mapping table as secondary code
+      used_codes <- additional_table$processed_content[LOINC %in% used_codes, .(code = LOINC, primary_code = LOINC_PRIMARY)]
+    } else {
+      used_codes <- data.table::data.table(
+        code = used_codes,
+        primary_code = used_codes
+      )
+    }
     matching_proxies <- names(splitted_proxy_table)[
       vapply(names(splitted_proxy_table), function(key) {
-        any(startsWith(used_codes, key))
+        any(startsWith(used_codes$primary_code, key))
       }, logical(1))
     ]
     for (proxy_code in matching_proxies) {
@@ -533,11 +544,15 @@ matchICDProxies <- function(
       # Copy column content into new column as comma-separated string
       icd_full_list <- paste0(match_proxy_rows$ICD, collapse = ", ")
       match_proxy_rows[, ICD_FULL_LIST := icd_full_list]
-      # Remove ICD column to prevent multiple identical rows with different ICD codes
+      # Remove ICD column data to prevent multiple identical rows with different ICD codes
       match_proxy_rows[, ICD := NA_character_]
       match_proxy_rows <- unique(match_proxy_rows)
+      #recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
 
-      recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
+      # Hole die zugehörigen sekundären Codes für diesen Primary Code
+      relevant_secondary_codes <- used_codes[primary_code == proxy_code, code]
+      # Suche in all_items mit den sekundären Codes
+      recources_with_proxy <- all_items[code %in% relevant_secondary_codes]
       if (nrow(recources_with_proxy)) {
 
         for (i in seq_len(nrow(match_proxy_rows))) {
@@ -575,8 +590,8 @@ matchICDProxies <- function(
                 additional_table = additional_table
               )
               # If the matching function returns NA, skip this proxy match
-              if (!is.na(mrp_match_description)) {
-                kurzbeschr <- paste(kurzbeschr, mrp_match_description, sep = "\n")
+              if (length(mrp_match_description) && any(!is.na(mrp_match_description))) {
+                kurzbeschr <- paste(kurzbeschr, paste(mrp_match_description, collapse = "\n"), sep = "\n")
               }
             }
 
