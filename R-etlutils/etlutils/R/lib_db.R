@@ -932,6 +932,9 @@ dbIsTableEmptyBeforeWrite <- function(table_name) {
 #'        operation. Default is `NULL`.
 #' @param stop_if_table_not_empty Logical. If `TRUE`, the function stops execution
 #'        if any target table is not empty. Default is `FALSE`.
+#' @param ignore_missing_db_columns Logical. If `TRUE`, any columns in the provided
+#'        tables that do not exist in the database schema will be dropped before
+#'        writing. If `FALSE`, such discrepancies may cause an error. Default is `FALSE`.
 #'
 #' @details
 #' - Validates the existence of all target tables in the database.
