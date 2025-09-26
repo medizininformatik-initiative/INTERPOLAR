@@ -90,7 +90,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(14)
+  duplicatePatients(15)
 
   runCodeForDebugDay(1, {
 
@@ -149,27 +149,39 @@ if (exists("DEBUG_DAY")) {
 
     # UKB-0001_11 -> Drug_Disease -> Proxy LOINC secondary, cutoff absolute, complex unit conversion
     # Line 151967 -> MedicationRequest - C01DA14 + Observation - 14775-1
-    addDrugs("UKB-0001_11", "J01MA14")
+    addDrugs("UKB-0001_11", "C01DA14")
     addObservations("UKB-0001_11", "14775-1", value = 30, unit = "mg/dL")
 
     # UKB-0001_12 -> Drug_Disease -> Proxy LOINC secondary, cutoff absolute, simple and complex unit conversion
     # Line 151967 -> MedicationRequest - C01DA14 + Observation - 14775-1
-    addDrugs("UKB-0001_12", "J01MA14")
+    addDrugs("UKB-0001_12", "C01DA14")
     addObservations("UKB-0001_12", "14775-1", value = 300, unit = "mg/L")
+
+    # UKB-0001_13 -> Drug_Disease -> Proxy LOINC primary, > ULN
+    # Line 570 -> MedicationRequest - C03DA02 + Observation - 2823-3
+    # UKB-0001_13 -> Drug_Disease -> Proxy LOINC primary, < LLN
+    # Line 571 -> MedicationRequest - C03DA02 + Observation - 2951-2
+    addDrugs("UKB-0001_13", "C03DA02")
+    addObservations("UKB-0001_13", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10) # MRP, weil > ULN
+    addObservations("UKB-0001_13", "2951-2", value = 3, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10) # MRP, weil < LLN
+    addObservations("UKB-0001_13", "1111-1", value = 3, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10) # kein MRP, weil ungültiger LOINC
+    addObservations("UKB-0001_13", "39789-3", value = 4, unit = "mg/dL", referencerange_low = 1, referencerange_high = 2) # MRP, weil > ULN
+    addObservations("UKB-0001_13", "39789-3", value = 3, unit = "mg/dL", referencerange_low = 1, referencerange_high = 2) # MRP, weil > ULN
+    addObservations("UKB-0001_13", "39789-3", value = 2, unit = "mg/dL", referencerange_low = 1, referencerange_high = 2) # kein MRP, weil = ULN
 
     ###############
     # Drug - Drug #
     ###############
 
-    # UKB-0001_13 -> Drug_Drug_Interaction                  -> MedicationRequests - N06AX22 + J01MA02
-    addDrugs("UKB-0001_13", c("N06AX22", "J01MA02"))
+    # UKB-0001_14 -> Drug_Drug_Interaction                  -> MedicationRequests - N06AX22 + J01MA02
+    addDrugs("UKB-0001_14", c("N06AX22", "J01MA02"))
 
     ####################
     # Drug - DrugGroup #
     ####################
 
-    # UKB-0001_14 -> Drug_DrugGroup_Interaction             -> MedicationRequests - N06BA09 + C02KC01
-    addDrugs("UKB-0001_14", c("N06BA09", "C02KC01"))
+    # UKB-0001_15 -> Drug_DrugGroup_Interaction             -> MedicationRequests - N06BA09 + C02KC01
+    addDrugs("UKB-0001_15", c("N06BA09", "C02KC01"))
 
 
   })
