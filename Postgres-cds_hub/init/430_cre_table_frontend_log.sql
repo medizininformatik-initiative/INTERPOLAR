@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-04 15:37:24
+-- Create time: 2025-09-28 13:09:34
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -82,6 +82,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.patient_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -302,6 +308,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'fall_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.fall_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'fall_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -603,6 +615,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medikationsanalyse_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.medikationsanalyse_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medikationsanalyse_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -967,6 +985,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.mrpdokumentation_validierung_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -1783,6 +1807,12 @@ BEGIN
             ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (record_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'record_id'
@@ -2552,6 +2582,12 @@ BEGIN
             ALTER TABLE db_log.risikofaktor_fe ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (record_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe' AND column_name = 'record_id'
@@ -2815,6 +2851,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'trigger_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.trigger_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'trigger_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -3604,7 +3646,7 @@ BEGIN
 		DROP INDEX IF EXISTS db_log.del_idx_patient_fe_id;
    	        CREATE INDEX idx_patient_fe_id ON db_log.patient_fe USING btree (patient_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_patient_fe_id ON db_log.patient_fe USING btree (patient_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -3743,7 +3785,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_fall_fe_id;
    	        CREATE INDEX idx_fall_fe_id ON db_log.fall_fe USING btree (fall_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_fall_fe_id ON db_log.fall_fe USING btree (fall_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -3882,7 +3924,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_medikationsanalyse_fe_id;
    	        CREATE INDEX idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe USING btree (medikationsanalyse_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe USING btree (medikationsanalyse_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -4021,7 +4063,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_mrpdokumentation_validierung_fe_id;
    	        CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe USING btree (mrpdokumentation_validierung_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe USING btree (mrpdokumentation_validierung_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -4160,7 +4202,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_retrolektive_mrpbewertung_fe_id;
    	        CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe USING btree (retrolektive_mrpbewertung_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe USING btree (retrolektive_mrpbewertung_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -4299,7 +4341,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_risikofaktor_fe_id;
    	        CREATE INDEX idx_risikofaktor_fe_id ON db_log.risikofaktor_fe USING btree (risikofaktor_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_risikofaktor_fe_id ON db_log.risikofaktor_fe USING btree (risikofaktor_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -4438,7 +4480,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_trigger_fe_id;
    	        CREATE INDEX idx_trigger_fe_id ON db_log.trigger_fe USING btree (trigger_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_trigger_fe_id ON db_log.trigger_fe USING btree (trigger_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column

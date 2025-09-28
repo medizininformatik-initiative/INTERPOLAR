@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-04 15:33:19
+-- Create time: 2025-09-28 13:05:25
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -85,6 +85,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.encounter ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'encounter' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -875,6 +881,12 @@ BEGIN
             ALTER TABLE db_log.patient ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (pat_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient' AND column_name = 'pat_id'
@@ -1157,6 +1169,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.condition ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'condition' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -2361,6 +2379,12 @@ BEGIN
             ALTER TABLE db_log.medication ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (med_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medication' AND column_name = 'med_id'
@@ -3003,6 +3027,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.medicationrequest ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationrequest' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -5242,6 +5272,12 @@ BEGIN
             ALTER TABLE db_log.medicationadministration ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (medadm_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationadministration' AND column_name = 'medadm_id'
@@ -6388,6 +6424,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.medicationstatement ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medicationstatement' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -8483,6 +8525,12 @@ BEGIN
             ALTER TABLE db_log.observation ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (obs_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'observation' AND column_name = 'obs_id'
@@ -9847,6 +9895,12 @@ BEGIN
             ALTER TABLE db_log.diagnosticreport ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (diagrep_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'diagnosticreport' AND column_name = 'diagrep_id'
@@ -10372,6 +10426,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.servicerequest ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'servicerequest' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -11061,6 +11121,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.procedure ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'procedure' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -11842,6 +11908,12 @@ BEGIN
             ALTER TABLE db_log.consent ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (cons_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'consent' AND column_name = 'cons_id'
@@ -12594,6 +12666,12 @@ BEGIN
             ALTER TABLE db_log.location ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (loc_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'location' AND column_name = 'loc_id'
@@ -12885,6 +12963,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.pids_per_ward ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'pids_per_ward' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -14708,7 +14792,7 @@ BEGIN
 		DROP INDEX IF EXISTS db_log.del_idx_encounter_id;
    	        CREATE INDEX idx_encounter_raw_id ON db_log.encounter USING btree (encounter_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_encounter_raw_id ON db_log.encounter USING btree (encounter_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -14934,7 +15018,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_patient_id;
    	        CREATE INDEX idx_patient_raw_id ON db_log.patient USING btree (patient_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_patient_raw_id ON db_log.patient USING btree (patient_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -15160,7 +15244,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_condition_id;
    	        CREATE INDEX idx_condition_raw_id ON db_log.condition USING btree (condition_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_condition_raw_id ON db_log.condition USING btree (condition_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -15386,7 +15470,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_medication_id;
    	        CREATE INDEX idx_medication_raw_id ON db_log.medication USING btree (medication_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_medication_raw_id ON db_log.medication USING btree (medication_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -15612,7 +15696,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_medicationrequest_id;
    	        CREATE INDEX idx_medicationrequest_raw_id ON db_log.medicationrequest USING btree (medicationrequest_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_medicationrequest_raw_id ON db_log.medicationrequest USING btree (medicationrequest_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -15838,7 +15922,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_medicationadministration_id;
    	        CREATE INDEX idx_medicationadministration_raw_id ON db_log.medicationadministration USING btree (medicationadministration_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_medicationadministration_raw_id ON db_log.medicationadministration USING btree (medicationadministration_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -16064,7 +16148,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_medicationstatement_id;
    	        CREATE INDEX idx_medicationstatement_raw_id ON db_log.medicationstatement USING btree (medicationstatement_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_medicationstatement_raw_id ON db_log.medicationstatement USING btree (medicationstatement_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -16290,7 +16374,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_observation_id;
    	        CREATE INDEX idx_observation_raw_id ON db_log.observation USING btree (observation_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_observation_raw_id ON db_log.observation USING btree (observation_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -16516,7 +16600,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_diagnosticreport_id;
    	        CREATE INDEX idx_diagnosticreport_raw_id ON db_log.diagnosticreport USING btree (diagnosticreport_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_diagnosticreport_raw_id ON db_log.diagnosticreport USING btree (diagnosticreport_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -16742,7 +16826,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_servicerequest_id;
    	        CREATE INDEX idx_servicerequest_raw_id ON db_log.servicerequest USING btree (servicerequest_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_servicerequest_raw_id ON db_log.servicerequest USING btree (servicerequest_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -16968,7 +17052,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_procedure_id;
    	        CREATE INDEX idx_procedure_raw_id ON db_log.procedure USING btree (procedure_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_procedure_raw_id ON db_log.procedure USING btree (procedure_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -17194,7 +17278,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_consent_id;
    	        CREATE INDEX idx_consent_raw_id ON db_log.consent USING btree (consent_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_consent_raw_id ON db_log.consent USING btree (consent_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -17420,7 +17504,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_location_id;
    	        CREATE INDEX idx_location_raw_id ON db_log.location USING btree (location_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_location_raw_id ON db_log.location USING btree (location_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -17646,7 +17730,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_pids_per_ward_id;
    	        CREATE INDEX idx_pids_per_ward_raw_id ON db_log.pids_per_ward USING btree (pids_per_ward_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	 ELSE -- (easy) Create new
 	    CREATE INDEX idx_pids_per_ward_raw_id ON db_log.pids_per_ward USING btree (pids_per_ward_id DESC);
         END IF; -- INDEX available
     END IF; -- target column

@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-09-04 15:25:52
+-- Create time: 2025-09-28 12:58:27
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  100_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -82,6 +82,13 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter_raw' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE cds2db_in.encounter_raw ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.encounter_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -871,6 +878,13 @@ BEGIN
             ALTER TABLE cds2db_in.patient_raw ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.patient_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (pat_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'pat_id'
@@ -1152,6 +1166,13 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition_raw' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE cds2db_in.condition_raw ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.condition_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -2355,6 +2376,13 @@ BEGIN
             ALTER TABLE cds2db_in.medication_raw ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.medication_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (med_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication_raw' AND column_name = 'med_id'
@@ -2996,6 +3024,13 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest_raw' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE cds2db_in.medicationrequest_raw ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.medicationrequest_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -5234,6 +5269,13 @@ BEGIN
             ALTER TABLE cds2db_in.medicationadministration_raw ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.medicationadministration_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (medadm_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration_raw' AND column_name = 'medadm_id'
@@ -6379,6 +6421,13 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement_raw' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE cds2db_in.medicationstatement_raw ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.medicationstatement_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -8473,6 +8522,13 @@ BEGIN
             ALTER TABLE cds2db_in.observation_raw ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.observation_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (obs_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation_raw' AND column_name = 'obs_id'
@@ -9836,6 +9892,13 @@ BEGIN
             ALTER TABLE cds2db_in.diagnosticreport_raw ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.diagnosticreport_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (diagrep_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport_raw' AND column_name = 'diagrep_id'
@@ -10360,6 +10423,13 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest_raw' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE cds2db_in.servicerequest_raw ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.servicerequest_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -11048,6 +11118,13 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure_raw' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE cds2db_in.procedure_raw ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.procedure_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -11828,6 +11905,13 @@ BEGIN
             ALTER TABLE cds2db_in.consent_raw ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.consent_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (cons_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent_raw' AND column_name = 'cons_id'
@@ -12579,6 +12663,13 @@ BEGIN
             ALTER TABLE cds2db_in.location_raw ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.location_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (loc_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw' AND column_name = 'loc_id'
@@ -12871,6 +12962,13 @@ BEGIN
             ALTER TABLE cds2db_in.pids_per_ward_raw ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward_raw' AND column_name = 'raw_already_processed'
+        ) THEN
+            ALTER TABLE cds2db_in.pids_per_ward_raw ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (ward_name)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward_raw' AND column_name = 'ward_name'
@@ -13088,6 +13186,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.encounter_raw.encounter_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.encounter_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -13184,6 +13283,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.patient_raw.patient_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.patient_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.patient_raw.pat_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -13224,6 +13324,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.condition_raw.condition_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.condition_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.condition_raw.con_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -13366,6 +13467,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.medication_raw.medication_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.medication_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.medication_raw.med_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -13446,6 +13548,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medicationrequest_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.medicationrequest_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationrequest_raw.medreq_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -13703,6 +13806,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medicationadministration_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -13839,6 +13943,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medicationstatement_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -14080,6 +14185,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.observation_raw.observation_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.observation_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.observation_raw.obs_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -14240,6 +14346,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagnosticreport_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.diagnosticreport_raw.diagrep_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -14307,6 +14414,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servicerequest_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.servicerequest_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.servicerequest_raw.servreq_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -14392,6 +14500,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.procedure_raw.procedure_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.procedure_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.procedure_raw.proc_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -14487,6 +14596,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.consent_raw.consent_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.consent_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.consent_raw.cons_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -14579,6 +14689,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.location_raw.location_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.location_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_id IS 'id (varchar)';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_meta_versionid IS 'meta/versionId (varchar)';
 COMMENT ON COLUMN cds2db_in.location_raw.loc_meta_lastupdated IS 'meta/lastUpdated (varchar)';
@@ -14620,6 +14731,7 @@ BEGIN
 --------------------------------------------------------------------
 
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.pids_per_ward_raw_id IS 'Primary key of the entity';
+COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.raw_already_processed IS 'Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.ward_name IS 'ward_name (varchar)';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.patient_id IS 'patient_id (varchar)';
 COMMENT ON COLUMN cds2db_in.pids_per_ward_raw.encounter_id IS 'encounter_id (varchar)';
@@ -14648,6 +14760,26 @@ BEGIN
 ------------------------------------------------------------------------------------------------
 
 ------------------------- Index for cds2db_in - encounter_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_encounter_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'encounter_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'encounter_raw' AND substr(indexname,1,63)=substr('idx_encounter_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_encounter_raw_raw_a_p ON cds2db_in.encounter_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_encounter_raw_raw_a_p RENAME TO del_idx_encounter_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_encounter_raw_raw_a_p;
+       	        CREATE INDEX idx_encounter_raw_raw_a_p ON cds2db_in.encounter_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_encounter_raw_raw_a_p ON cds2db_in.encounter_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_encounter_raw_input_dt for Table "encounter_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -14854,6 +14986,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - patient_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'patient_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'patient_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'patient_raw' AND substr(indexname,1,63)=substr('idx_patient_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_patient_raw_raw_a_p ON cds2db_in.patient_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_patient_raw_raw_a_p RENAME TO del_idx_patient_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_patient_raw_raw_a_p;
+       	        CREATE INDEX idx_patient_raw_raw_a_p ON cds2db_in.patient_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_patient_raw_raw_a_p ON cds2db_in.patient_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_patient_raw_input_dt for Table "patient_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -15060,6 +15212,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - condition_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'condition_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_condition_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'condition_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'condition_raw' AND substr(indexname,1,63)=substr('idx_condition_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_condition_raw_raw_a_p ON cds2db_in.condition_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_condition_raw_raw_a_p RENAME TO del_idx_condition_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_condition_raw_raw_a_p;
+       	        CREATE INDEX idx_condition_raw_raw_a_p ON cds2db_in.condition_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_condition_raw_raw_a_p ON cds2db_in.condition_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_condition_raw_input_dt for Table "condition_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -15266,6 +15438,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - medication_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medication_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medication_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medication_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'medication_raw' AND substr(indexname,1,63)=substr('idx_medication_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_medication_raw_raw_a_p ON cds2db_in.medication_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_medication_raw_raw_a_p RENAME TO del_idx_medication_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_medication_raw_raw_a_p;
+       	        CREATE INDEX idx_medication_raw_raw_a_p ON cds2db_in.medication_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_medication_raw_raw_a_p ON cds2db_in.medication_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_medication_raw_input_dt for Table "medication_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -15472,6 +15664,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - medicationrequest_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationrequest_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationrequest_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'medicationrequest_raw' AND substr(indexname,1,63)=substr('idx_medicationrequest_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_medicationrequest_raw_raw_a_p ON cds2db_in.medicationrequest_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_medicationrequest_raw_raw_a_p RENAME TO del_idx_medicationrequest_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_medicationrequest_raw_raw_a_p;
+       	        CREATE INDEX idx_medicationrequest_raw_raw_a_p ON cds2db_in.medicationrequest_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_medicationrequest_raw_raw_a_p ON cds2db_in.medicationrequest_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_medicationrequest_raw_input_dt for Table "medicationrequest_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -15678,6 +15890,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - medicationadministration_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationadministration_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'medicationadministration_raw' AND substr(indexname,1,63)=substr('idx_medicationadministration_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_medicationadministration_raw_raw_a_p ON cds2db_in.medicationadministration_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_medicationadministration_raw_raw_a_p RENAME TO del_idx_medicationadministration_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_medicationadministration_raw_raw_a_p;
+       	        CREATE INDEX idx_medicationadministration_raw_raw_a_p ON cds2db_in.medicationadministration_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_medicationadministration_raw_raw_a_p ON cds2db_in.medicationadministration_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_medicationadministration_raw_input_dt for Table "medicationadministration_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -15884,6 +16116,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - medicationstatement_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medicationstatement_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'medicationstatement_raw' AND substr(indexname,1,63)=substr('idx_medicationstatement_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_medicationstatement_raw_raw_a_p ON cds2db_in.medicationstatement_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_medicationstatement_raw_raw_a_p RENAME TO del_idx_medicationstatement_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_medicationstatement_raw_raw_a_p;
+       	        CREATE INDEX idx_medicationstatement_raw_raw_a_p ON cds2db_in.medicationstatement_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_medicationstatement_raw_raw_a_p ON cds2db_in.medicationstatement_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_medicationstatement_raw_input_dt for Table "medicationstatement_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -16090,6 +16342,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - observation_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'observation_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_observation_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'observation_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'observation_raw' AND substr(indexname,1,63)=substr('idx_observation_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_observation_raw_raw_a_p ON cds2db_in.observation_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_observation_raw_raw_a_p RENAME TO del_idx_observation_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_observation_raw_raw_a_p;
+       	        CREATE INDEX idx_observation_raw_raw_a_p ON cds2db_in.observation_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_observation_raw_raw_a_p ON cds2db_in.observation_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_observation_raw_input_dt for Table "observation_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -16296,6 +16568,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - diagnosticreport_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'diagnosticreport_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_diagnosticreport_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'diagnosticreport_raw' AND substr(indexname,1,63)=substr('idx_diagnosticreport_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_diagnosticreport_raw_raw_a_p ON cds2db_in.diagnosticreport_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_diagnosticreport_raw_raw_a_p RENAME TO del_idx_diagnosticreport_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_diagnosticreport_raw_raw_a_p;
+       	        CREATE INDEX idx_diagnosticreport_raw_raw_a_p ON cds2db_in.diagnosticreport_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_diagnosticreport_raw_raw_a_p ON cds2db_in.diagnosticreport_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_diagnosticreport_raw_input_dt for Table "diagnosticreport_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -16502,6 +16794,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - servicerequest_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'servicerequest_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_servicerequest_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'servicerequest_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'servicerequest_raw' AND substr(indexname,1,63)=substr('idx_servicerequest_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_servicerequest_raw_raw_a_p ON cds2db_in.servicerequest_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_servicerequest_raw_raw_a_p RENAME TO del_idx_servicerequest_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_servicerequest_raw_raw_a_p;
+       	        CREATE INDEX idx_servicerequest_raw_raw_a_p ON cds2db_in.servicerequest_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_servicerequest_raw_raw_a_p ON cds2db_in.servicerequest_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_servicerequest_raw_input_dt for Table "servicerequest_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -16708,6 +17020,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - procedure_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'procedure_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_procedure_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'procedure_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'procedure_raw' AND substr(indexname,1,63)=substr('idx_procedure_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_procedure_raw_raw_a_p ON cds2db_in.procedure_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_procedure_raw_raw_a_p RENAME TO del_idx_procedure_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_procedure_raw_raw_a_p;
+       	        CREATE INDEX idx_procedure_raw_raw_a_p ON cds2db_in.procedure_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_procedure_raw_raw_a_p ON cds2db_in.procedure_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_procedure_raw_input_dt for Table "procedure_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -16914,6 +17246,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - consent_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_consent_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'consent_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'consent_raw' AND substr(indexname,1,63)=substr('idx_consent_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_consent_raw_raw_a_p ON cds2db_in.consent_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_consent_raw_raw_a_p RENAME TO del_idx_consent_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_consent_raw_raw_a_p;
+       	        CREATE INDEX idx_consent_raw_raw_a_p ON cds2db_in.consent_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_consent_raw_raw_a_p ON cds2db_in.consent_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_consent_raw_input_dt for Table "consent_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -17120,6 +17472,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - location_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'location_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_location_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'location_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'location_raw' AND substr(indexname,1,63)=substr('idx_location_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_location_raw_raw_a_p ON cds2db_in.location_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_location_raw_raw_a_p RENAME TO del_idx_location_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_location_raw_raw_a_p;
+       	        CREATE INDEX idx_location_raw_raw_a_p ON cds2db_in.location_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_location_raw_raw_a_p ON cds2db_in.location_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_location_raw_input_dt for Table "location_raw" in schema "cds2db_in"
 ----------------------------------------------------
@@ -17326,6 +17698,26 @@ END IF; -- target column
 
 
 ------------------------- Index for cds2db_in - pids_per_ward_raw ---------------------------------
+      -- Primary key of the corresponding raw table
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'pids_per_ward_raw' AND column_name = 'raw_already_processed'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_pids_per_ward_raw_raw_a_p',1,63) AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward_raw'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'cds2db_in' AND tablename = 'pids_per_ward_raw' AND substr(indexname,1,63)=substr('idx_pids_per_ward_raw_raw_a_p',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_pids_per_ward_raw_raw_a_p ON cds2db_in.pids_per_ward_raw USING btree (raw_already_processed DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX cds2db_in.idx_pids_per_ward_raw_raw_a_p RENAME TO del_idx_pids_per_ward_raw_raw_a_p;
+	        	DROP INDEX IF EXISTS cds2db_in.del_idx_pids_per_ward_raw_raw_a_p;
+       	        CREATE INDEX idx_pids_per_ward_raw_raw_a_p ON cds2db_in.pids_per_ward_raw USING btree (raw_already_processed DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_pids_per_ward_raw_raw_a_p ON cds2db_in.pids_per_ward_raw USING btree (raw_already_processed DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_cds2db_in_pids_per_ward_raw_input_dt for Table "pids_per_ward_raw" in schema "cds2db_in"
 ----------------------------------------------------

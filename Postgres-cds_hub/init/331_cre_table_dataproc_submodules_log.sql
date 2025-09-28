@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-04 15:37:54
+-- Create time: 2025-09-28 13:10:07
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  331_cre_table_dataproc_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -82,6 +82,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.dp_mrp_calculations ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'dp_mrp_calculations' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -298,7 +304,7 @@ BEGIN
 		DROP INDEX IF EXISTS db_log.del_idx_dp_mrp_calculations_id;
    	        CREATE INDEX idx_dp_mrp_calculations_id ON db_log.dp_mrp_calculations USING btree (dp_mrp_calculations_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_dp_mrp_calculations_id ON db_log.dp_mrp_calculations USING btree (dp_mrp_calculations_id DESC);
         END IF; -- INDEX available
     END IF; -- target column

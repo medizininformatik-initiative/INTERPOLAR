@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-09-04 15:37:52
+-- Create time: 2025-09-28 11:28:31
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  330_cre_table_dataproc_submodules_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -84,6 +84,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'dp_mrp_calculations' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db2dataprocessor_in.dp_mrp_calculations ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'dp_mrp_calculations' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
