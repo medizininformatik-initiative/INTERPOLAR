@@ -44,19 +44,19 @@
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "          SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'raw_already_processed'"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "      ) THEN"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "          IF EXISTS ( -- INDEX available"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_raw_a_p',1,63) AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_already_processed',1,63) AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>'"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "          ) THEN -- check current status"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "              IF EXISTS ( -- INDEX nicht auf akuellen Stand"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "                  AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>' AND substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_raw_a_p',1,63)"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "	         	 AND indexdef != 'CREATE INDEX idx_<%TABLE_NAME%>_raw_a_p ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (raw_already_processed DESC)'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "                  AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>' AND substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_already_processed',1,63)"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "	         	 AND indexdef != 'CREATE INDEX idx_<%TABLE_NAME%>_already_processed ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (raw_already_processed DESC)'"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "	        	ALTER INDEX <%OWNER_SCHEMA%>.idx_<%TABLE_NAME%>_raw_a_p RENAME TO del_idx_<%TABLE_NAME%>_raw_a_p;"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "	        	DROP INDEX IF EXISTS <%OWNER_SCHEMA%>.del_idx_<%TABLE_NAME%>_raw_a_p;"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "       	        CREATE INDEX idx_<%TABLE_NAME%>_raw_a_p ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (raw_already_processed DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "	        	ALTER INDEX <%OWNER_SCHEMA%>.idx_<%TABLE_NAME%>_already_processed RENAME TO del_idx_<%TABLE_NAME%>_already_processed;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "	        	DROP INDEX IF EXISTS <%OWNER_SCHEMA%>.del_idx_<%TABLE_NAME%>_already_processed;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "       	        CREATE INDEX idx_<%TABLE_NAME%>_already_processed ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (raw_already_processed DESC);"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "              END IF; -- check current status"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "  	 ELSE -- (easy) Create new"%>
-<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "	             CREATE INDEX idx_<%TABLE_NAME%>_raw_a_p ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (raw_already_processed DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "	             CREATE INDEX idx_<%TABLE_NAME%>_already_processed ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (raw_already_processed DESC);"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "          END IF; -- INDEX available"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "      END IF; -- target column"%>
 
