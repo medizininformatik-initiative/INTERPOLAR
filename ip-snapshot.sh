@@ -5,6 +5,7 @@
 #               Argument übergeben wird.
 #
 #  Aufruf:
+#      ./ip-snapshot.sh list
 #      ./ip-snapshot.sh create  <Dateiname>
 #      ./ip-snapshot.sh delete  <Dateiname>
 #
@@ -70,15 +71,15 @@ case "$action" in
         ;;
 
     create)
-        if [[ -e "$file" ]]; then
-            echo "Hinweis: Datei \"$file\" existiert bereits – überschreibe sie."
+        if [[ -e "$file_path" ]]; then
+            echo "Hinweis: Snapshot \"$file_path\" existiert bereits – überschreibe."
         fi
         # Beispiel‑Inhalt: aktuelle Zeit + Hinweis
         {
-            echo "Datei \"$file\" erzeugt am $(date +"%Y-%m-%d %H:%M:%S")"
+            echo "Datei \"$file_path\" erzeugt am $(date +"%Y-%m-%d %H:%M:%S")"
             echo "Erstellt von $(whoami) auf $(hostname)"
-        } > "$file"
-        echo "Datei \"$file\" wurde angelegt."
+        } > "$file_path"
+        echo "Datei \"$file_path\" wurde angelegt."
         ;;
 
     delete)
