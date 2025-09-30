@@ -1,0 +1,1 @@
+In diesem Verzeichnis befinden sich Snapshots der cds_hub Datenbank.
