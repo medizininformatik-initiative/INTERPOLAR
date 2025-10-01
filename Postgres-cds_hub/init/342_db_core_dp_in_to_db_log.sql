@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 16:37:50
+-- Create time: 2025-10-01 21:05:22
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  341_cre_table_dataproc_core_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -190,6 +190,7 @@ BEGIN
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
 
+
                             err_section:='input_data_files-37';    err_schema:='db2dataprocessor_in';    err_table:='input_data_files';
                             
 
@@ -332,6 +333,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
 
                             err_section:='input_data_files_processed_content-37';    err_schema:='db2dataprocessor_in';    err_table:='input_data_files_processed_content';
                             

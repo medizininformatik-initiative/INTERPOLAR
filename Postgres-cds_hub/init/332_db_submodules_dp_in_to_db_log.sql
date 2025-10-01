@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 16:37:47
+-- Create time: 2025-10-01 21:05:19
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  331_cre_table_dataproc_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -200,6 +200,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
 
                             err_section:='dp_mrp_calculations-37';    err_schema:='db2dataprocessor_in';    err_table:='dp_mrp_calculations';
                             

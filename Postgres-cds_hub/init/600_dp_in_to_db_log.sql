@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 16:37:14
+-- Create time: 2025-10-01 21:04:43
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -215,6 +215,7 @@ BEGIN
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
 
+
                             err_section:='patient_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='patient_fe';
                             
 
@@ -399,6 +400,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
 
                             err_section:='fall_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='fall_fe';
                             
@@ -598,6 +600,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
 
                             err_section:='medikationsanalyse_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='medikationsanalyse_fe';
                             
@@ -898,6 +901,7 @@ BEGIN
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
 
+
                             err_section:='mrpdokumentation_validierung_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='mrpdokumentation_validierung_fe';
                             
 
@@ -1187,6 +1191,7 @@ BEGIN
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
 
+
                             err_section:='retrolektive_mrpbewertung_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='retrolektive_mrpbewertung_fe';
                             
 
@@ -1363,6 +1368,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
 
                             err_section:='risikofaktor_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='risikofaktor_fe';
                             
@@ -1556,6 +1562,7 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+
 
                             err_section:='trigger_fe-37';    err_schema:='db2dataprocessor_in';    err_table:='trigger_fe';
                             
