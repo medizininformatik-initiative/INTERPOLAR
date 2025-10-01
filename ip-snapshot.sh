@@ -6,8 +6,10 @@
 #
 #  Aufruf:
 #      ./ip-snapshot.sh list
-#      ./ip-snapshot.sh create  <Dateiname>
-#      ./ip-snapshot.sh delete  <Dateiname>
+#      ./ip-snapshot.sh create  <name>
+#      ./ip-snapshot.sh delete  <name_date>
+#      ./ip-snapshot.sh activate  <name_date>
+#      ./ip-snapshot.sh deactivate  <name_date>
 #
 #  Hinweis: Der Dateiname darf **keine** Pfadangaben (/, ..) enthalten,
 #           sonst wird das Skript mit einer Fehlermeldung beendet.
@@ -18,16 +20,20 @@ print_usage() {
     cat <<EOF
 Usage: ${0##*/} <action> <name>
 
-  <action>   \"list\"    – listet alle Snapshots auf
-             \"create\"  – legt einen Snapshot <name>.sql.gz an
-             \"delete\"  – löscht einen Snapshot <name>.sql.gz
+  <action>   \"list\"        – listet alle Snapshots auf
+             \"create\"      – legt einen Snapshot <name>.sql.gz an
+             \"delete\"      – löscht einen Snapshot <name_date>.sql.gz
+             \"activate\"    – aktiviert einen Snapshot <name_date>.sql.gz, d.h. es wird eine Datenbank für diesen Snapshot angelegt.
+             \"deactivate\"  – deaktiviert einen Snapshot <name_date>.sql.gz, d.h. die Datenbank für diesen Snapshot wird gelöscht.
 
-  <name>     beliebiger String (ohne Pfad‑Komponenten)
+  <name>     beliebiger String (ohne Pfad‑Komponenten), <name> | <name_date>
 
 Beispiele:
-  $0 list                        → listet alle .sql.gz-Dateien im Ordner Snapshots auf
-  $0 create  snapshot            → erzeugt  snapshot_<Datum>.sql.gz
-  $0 delete  snapshot_20250929   → löscht   snapshot_20250929.sql.gz
+  $0 list                            → listet alle .sql.gz-Dateien im Ordner Snapshots auf
+  $0 create  snapshot                → erzeugt  snapshot_<Datum>.sql.gz
+  $0 delete  snapshot_20250929       → löscht   snapshot_20250929.sql.gz
+  $0 activate  snapshot_20250929     → erstellt eine Datenbank 'snapshot_20250929'
+  $0 deactivate  snapshot_20250929   → löscht die Datenbank 'snapshot_20250929'
 EOF
 }
 
@@ -53,9 +59,11 @@ fi
 # Ziel‑Datei (immer mit .sql.gz‑Erweiterung)
 file="${name}.sql.gz"
 
-
 # Vollständiger Pfad zur Datei
 file_path="${DIR}/${file}"
+
+# Name der Snapshot Datenbank
+db_name="ip_${name}"
 
 
 # ---------- Aktionen ----------
@@ -71,30 +79,31 @@ case "$action" in
         ;;
 
     create)
-        # Ziel‑Datei (immer mit Datum und .sql.gz‑Erweiterung)
-        file="${name}_$(date +\%Y%m%d).sql.gz"
+        # Ziel‑Datei mit Datum
+        file_date="${name}_$(date +\%Y%m%d).sql.gz"
+        # Vollständiger Pfad zur Datei mit Datum
+        file_date_path="${DIR}/${file_date}"
 
-        # Vollständiger Pfad zur Datei
-        file_path="${DIR}/${file}"
-        if [[ -e "$file_path" ]]; then
-            echo "Hinweis: Snapshot \"$file_path\" existiert bereits!"
+
+        if [[ -e "$file_date_path" ]]; then
+            echo "Hinweis: Snapshot \"$file_date_path\" existiert bereits!"
             
             # ------------------------------------------------------------
             # 2. Rückfrage an den Benutzer
             # ------------------------------------------------------------
             while true; do
-                read -rp "Soll die Datei \"$file_path\" wirklich überschrieben werden? [y/N] " answer
+                read -rp "Soll die Datei \"$file_date_path\" wirklich überschrieben werden? [y/N] " answer
                 case "$answer" in
                     [Yy]* )
                         # ------------------------------------------------
                         # 3. JA, überschreiben -> weiter im Script
                         # ------------------------------------------------
-                        echo "Snapshot \"$file_path\" wird überschrieben..."
+                        echo "Snapshot \"$file_date_path\" wird überschrieben..."
                         break
                         ;;
                     [Nn]*|"" )
-                        echo "Erstellung von Snapshot \"$file_path\" abgebrochen."
-                        exit 0
+                        echo "Erstellung von Snapshot \"$file_date_path\" abgebrochen."
+                        exit 1
                         ;;
                     * )
                         echo "Bitte mit 'y' (ja) oder 'n' (nein) antworten."
@@ -110,10 +119,11 @@ case "$action" in
         #} > "$file_path"
 
         # Snapshot erstellen
-        if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --compress=gzip > $file_path; then
-            echo "Datei \"$file_path\" wurde angelegt."
+        if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --compress=gzip > $file_date_path; then
+            echo "Datei \"$file_date_path\" wurde angelegt."
         else
-            echo "Beim Erstellen des Snapshots in Datei \"$file_path\" ist ein Fehlerausgetreten."
+            echo "Fehler: Beim Erstellen des Snapshots in Datei \"$file_date_path\" ist ein Fehler aufgetreten."
+            exit 1
         fi
         ;;
 
@@ -122,10 +132,10 @@ case "$action" in
         # 1. Existenz‑ und Typ‑Prüfung
         # ------------------------------------------------------------
         if [[ ! -f "$file_path" ]]; then
-            echo "Warnung: Snapshot \"$file\" existiert nicht (oder ist keine reguläre Datei)."
+            echo "Fehler: Snapshot \"$file\" existiert nicht (oder ist keine reguläre Datei)."
             # kein exit – das Skript läuft weiter
             # break
-            exit 0
+            exit 1
         fi
 
         # ------------------------------------------------------------
@@ -157,6 +167,27 @@ case "$action" in
 
         ;;
 
+    activate)
+        if [[ -e "$file_path" ]]; then
+            echo "Hinweis: Snapshot \"$file_path\" existiert."
+
+            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep $db_name ; then
+                echo "Fehler: Snapshot Datenbank '$db_name' existiert bereits."
+                exit 1
+            fi
+
+            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE ${db_name} WITH OWNER=cds_hub_db_admin;" ; then
+                echo "Snapshot Datenbank '$db_name' angelegt."
+            else
+                echo "Fehler: Anlegen der Snapshot Datenbank '$db_name' fehlgeschlagen."
+                exit 1
+            fi
+
+        else
+            echo "Fehler: Snapshot \"$file_path\" existiert nicht."
+            exit 1
+        fi
+        ;;
     *)
         echo "Fehler: unbekannte Aktion \"$action\". Erlaubt sind \"create\" oder \"delete\"." >&2
         print_usage
