@@ -1,0 +1,45 @@
+-- Test um raw_already_processed zu Testen
+-- 1. Einfügen von getypten Daten 
+
+-- aktueller Stand Datenbank
+   select * from db_config.db_parameter;
+
+-- alles löschen - vorbereiten
+    delete from db_log.patient_raw where pat_id like 'Test%';
+    delete from db_log.patient where pat_id like 'Test%';
+
+
+------- Test 1 2/2 neu Patieten einfügen und Typen -----------------------------------------------------------------------------------
+    select db.data_transfer_status(); -- warten bis cron gerade durchgelaufen ist >:10
+
+-- einfügen schnittstelle
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_01','Anna', 'Müller', 'weiblich', '1990-04-15', '10115')    ,('Test_Pat_FHIR_Test_02','Lukas', 'Schneider', 'männlich', '1988-11-22', '80331');
+
+-- Melten simulieren indem alle raw nach typt übernommen werden
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from cds2db_in.patient_raw where pat_id like 'Test%');
+
+    select db.data_transfer_status(); -- abwarten bis einmal verarbeitet
+
+-- Ergebnis sollte sein - 2 Patient neu - in typed und raw solte lpn hist wiederspiegeln (1 unterschied)
+/*raw*/
+select  db.data_transfer_status() status, raw_already_processed, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient_raw where pat_id like 'Test%';
+select  db.data_transfer_status() status, patient_id, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient where pat_id like 'Test%';
+/*typ*/
+
+------- einen Patient nochmal einfügen mit neuer raw_id in log und dann auf selbe Daten stellen und raw dann ändernTest 2 1/2 Patieten einfügen und Typen -----------------------------------------------------------------------------------
+    select db.data_transfer_status(); -- warten bis cron gerade durchgelaufen ist >:10
+-- einfügen schnittstelle
+    INSERT INTO cds2db_in.patient_raw (pat_id, pat_name_text, pat_name_family, pat_gender, pat_birthdate, pat_address_postalcode) 
+    VALUES ('Test_Pat_FHIR_Test_01','Anna#', 'Müller', 'weiblich', '1990-04-15', '10115');
+
+    insert into cds2db_in.patient (pat_id,patient_raw_id) (select pat_id,patient_raw_id from db_log.patient_raw where pat_id like 'Test%' and pat_name_text='Anna#');
+
+-- test ob doppelter Datensatz mit flag in view gezeigt wird
+   SELECT DISTINCT * FROM db_log.patient_raw r
+   WHERE r.raw_already_processed IS NULL AND 
+   NOT (EXISTS(SELECT 1 FROM db_log.patient t WHERE r.patient_raw_id = t.patient_raw_id));
+--> neuer Datensatz sollte nicht nochmal zum typen angezeigt werden
+
+select  db.data_transfer_status() status, raw_already_processed, patient_raw_id, pat_id, input_processing_nr, last_processing_nr, current_dataset_status, input_datetime, last_check_datetime from db_log.patient_raw where pat_id like 'Test%';
+-- statt dessen sollte erste raw_id nun in raw_already_processed übertragen sein
