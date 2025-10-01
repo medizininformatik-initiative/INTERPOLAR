@@ -69,12 +69,17 @@ db_name="ip_${name}"
 # ---------- Aktionen ----------
 case "$action" in
     list)
-        echo "Liste alle Dateien im Verzeichnis 'Snapshots' auf:"
-        if find "$DIR" -maxdepth 1 -type f -name '*.sql.gz' -print -quit | grep -q . ; then
+        echo "Liste alle Snapshots im Verzeichnis '${DIR}' auf:"
+        if find "${DIR}" -maxdepth 1 -type f -name '*.sql.gz' -print -quit | grep -q . ; then
             #ls -lisa Snapshots/*.sql.gz;
-            find "$DIR" -type f -name '*.sql.gz' -printf '%f\n' | sed 's/\.sql\.gz$//'
+            find "${DIR}" -type f -name '*.sql.gz' -printf '%f\n' | sed 's/\.sql\.gz$//'
         else
-            echo "Keine Snapshots vorhanden."
+            echo "Keine Snapshots im Verzeichnis ${DIR} vorhanden."
+        fi
+        echo "---"
+        echo "Liste alle aktivierten Snapshots auf:"
+        if ! docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep "ip_" ; then
+            echo "Keine aktivierten Snapshot in der Datenbank."
         fi
         ;;
 
