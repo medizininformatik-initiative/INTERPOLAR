@@ -548,13 +548,12 @@ matchICDProxies <- function(
       # Remove ICD column data to prevent multiple identical rows with different ICD codes
       match_proxy_rows[, ICD := NA_character_]
       match_proxy_rows <- unique(match_proxy_rows)
-      #recources_with_proxy <- all_items[grepl(proxy_code, code, fixed = TRUE)]
 
-      # Hole die zugehörigen sekundären Codes für diesen Primary Code
+      # Get the relevant secondary codes for this primary code
       relevant_secondary_codes <- used_codes[primary_code == proxy_code, code]
-      # Suche in all_items mit den sekundären Codes
-      recources_with_proxy <- all_items[code %in% relevant_secondary_codes]
-      if (nrow(recources_with_proxy)) {
+      # Select all items where the code matches any of the relevant secondary codes
+      resources_with_proxy <- all_items[code %in% relevant_secondary_codes]
+      if (nrow(resources_with_proxy)) {
 
         for (i in seq_len(nrow(match_proxy_rows))) {
           match_proxy_row <- match_proxy_rows[i]
