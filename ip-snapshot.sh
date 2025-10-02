@@ -85,7 +85,7 @@ case "$action" in
 
     create)
         # Ziel‑Datei mit Datum
-        file_date="${name}_$(date +\%Y%m%d).sql.gz"
+        file_date="${name}_$(date +%Y%m%d).sql.gz"
         # Vollständiger Pfad zur Datei mit Datum
         file_date_path="${DIR}/${file_date}"
 
@@ -169,7 +169,6 @@ case "$action" in
                     ;;
             esac
         done
-
         ;;
 
     activate)
@@ -188,7 +187,7 @@ case "$action" in
                 exit 1
             fi
 
-            if zcat ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin > ${file_path}.log 2>&1 ; then
+            if zcat ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin > ${file_path}_$(date +%Y%m%d-%H%M%S).log 2>&1 ; then
                 echo "Snapshot Datenbank '${db_name}' eingespielt."
             else
                 echo "Fehler: Einspielen der Snapshot Datenbank '${db_name}' fehlgeschlagen."
@@ -199,6 +198,50 @@ case "$action" in
             echo "Fehler: Snapshot \"$file_path\" existiert nicht."
             exit 1
         fi
+        ;;
+
+    deactivate)
+        #if [[ -e "${file_path}" ]]; then
+        #    echo "Hinweis: Snapshot \"${file_path}\" existiert."
+
+            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep ${db_name} ; then
+                echo "Snapshot Datenbank '${db_name}' existiert."
+                
+                # ------------------------------------------------------------
+                # 2. Rückfrage an den Benutzer
+                # ------------------------------------------------------------
+                while true; do
+                    read -rp "Soll der Snapshot \"${db_name}\" wirklich gelöscht werden? [y/N] " answer
+                    case "$answer" in
+                        [Yy]* )
+                            # ------------------------------------------------
+                            # 3. Snapshot löschen und Ergebnis prüfen
+                            # ------------------------------------------------
+                            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "DROP DATABASE ${db_name} WITH (FORCE);" ; then
+                                echo "Snapshot \"${db_name}\" wurde gelöscht."
+                            else
+                                echo "Fehler: Konnte Snapshot \"${db_name}\" nicht löschen." >&2
+                            fi
+                            break
+                            ;;
+                        [Nn]*|"" )
+                            echo "Löschvorgang abgebrochen."
+                            break
+                            ;;
+                        * )
+                            echo "Bitte mit 'y' (ja) oder 'n' (nein) antworten."
+                            ;;
+                    esac
+                done
+            else
+                echo "Fehler: Snapshot Datenbank '${db_name}' existiert nicht."
+                exit 1
+            fi
+            
+        #else
+        #    echo "Fehler: Snapshot \"$file_path\" existiert nicht."
+        #    exit 1
+        #fi
         ;;
     *)
         echo "Fehler: unbekannte Aktion \"$action\". Erlaubt sind \"create\" oder \"delete\"." >&2
