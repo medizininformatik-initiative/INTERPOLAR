@@ -77,7 +77,7 @@ case "$action" in
             echo "Keine Snapshots im Verzeichnis ${DIR} vorhanden."
         fi
         echo "---"
-        echo "Liste alle aktivierten Snapshots auf:"
+        echo "Liste alle aktivierten Snapshots in der Datenbank auf:"
         if ! docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep "ip_" ; then
             echo "Keine aktivierten Snapshot in der Datenbank."
         fi
@@ -173,18 +173,25 @@ case "$action" in
         ;;
 
     activate)
-        if [[ -e "$file_path" ]]; then
-            echo "Hinweis: Snapshot \"$file_path\" existiert."
+        if [[ -e "${file_path}" ]]; then
+            echo "Hinweis: Snapshot \"${file_path}\" existiert."
 
-            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep $db_name ; then
-                echo "Fehler: Snapshot Datenbank '$db_name' existiert bereits."
+            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep ${db_name} ; then
+                echo "Fehler: Snapshot Datenbank '${db_name}' existiert bereits."
                 exit 1
             fi
 
             if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE ${db_name} WITH OWNER=cds_hub_db_admin;" ; then
-                echo "Snapshot Datenbank '$db_name' angelegt."
+                echo "Snapshot Datenbank '${db_name}' angelegt."
             else
-                echo "Fehler: Anlegen der Snapshot Datenbank '$db_name' fehlgeschlagen."
+                echo "Fehler: Anlegen der Snapshot Datenbank '${db_name}' fehlgeschlagen."
+                exit 1
+            fi
+
+            if zcat ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin > ${file_path}.log 2>&1 ; then
+                echo "Snapshot Datenbank '${db_name}' eingespielt."
+            else
+                echo "Fehler: Einspielen der Snapshot Datenbank '${db_name}' fehlgeschlagen."
                 exit 1
             fi
 
