@@ -124,7 +124,7 @@ case "$action" in
         #} > "$file_path"
 
         # Snapshot erstellen
-        if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --compress=gzip > $file_date_path; then
+        if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table='*.*_raw' --compress=gzip > $file_date_path; then
             echo "Datei \"$file_date_path\" wurde angelegt."
         else
             echo "Fehler: Beim Erstellen des Snapshots in Datei \"$file_date_path\" ist ein Fehler aufgetreten."
