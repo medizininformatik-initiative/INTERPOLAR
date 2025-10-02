@@ -124,10 +124,16 @@ case "$action" in
         #} > "$file_path"
 
         # Snapshot erstellen
-        if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table='*.*_raw' --compress=gzip > $file_date_path; then
-            echo "Datei \"$file_date_path\" wurde angelegt."
+        if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table='*.*_raw*' --compress=gzip > $file_date_path; then
+            echo "Datei \"${file_date_path}\" wurde angelegt."
+            ls -lisha ${file_date_path}
         else
-            echo "Fehler: Beim Erstellen des Snapshots in Datei \"$file_date_path\" ist ein Fehler aufgetreten."
+            echo "Fehler: Beim Erstellen des Snapshots in Datei \"${file_date_path}\" ist ein Fehler aufgetreten."
+            # cleanup
+            if [[ -e "${file_date_path}" && ! -s "$file_date_path" ]]; then 
+                echo "Datei ${file_date_path} existiert, ist jedoch leer -> cleanup.";
+                rm -rf ${file_date_path}
+            fi
             exit 1
         fi
         ;;
@@ -187,7 +193,7 @@ case "$action" in
                 exit 1
             fi
 
-            if zcat ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin > ${file_path}_$(date +%Y%m%d-%H%M%S).log 2>&1 ; then
+            if zcat ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin > ${file_path}_activate_$(date +%Y%m%d-%H%M%S).log 2>&1 ; then
                 echo "Snapshot Datenbank '${db_name}' eingespielt."
             else
                 echo "Fehler: Einspielen der Snapshot Datenbank '${db_name}' fehlgeschlagen."
