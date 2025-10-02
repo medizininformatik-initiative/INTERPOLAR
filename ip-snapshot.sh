@@ -29,7 +29,7 @@ Usage: ${0##*/} <action> <name>
   <name>     beliebiger String (ohne Pfad‑Komponenten), <name> | <name_date>
 
 Beispiele:
-  $0 list                            → listet alle .sql.gz-Dateien im Ordner Snapshots auf
+  $0 list                            → listet alle .sql.gz-Dateien (ohne Endung) im Ordner Snapshots auf
   $0 create  snapshot                → erzeugt  snapshot_<Datum>.sql.gz
   $0 delete  snapshot_20250929       → löscht   snapshot_20250929.sql.gz
   $0 activate  snapshot_20250929     → erstellt eine Datenbank 'snapshot_20250929'
@@ -250,7 +250,7 @@ case "$action" in
         #fi
         ;;
     *)
-        echo "Fehler: unbekannte Aktion \"$action\". Erlaubt sind \"create\" oder \"delete\"." >&2
+        echo "Fehler: unbekannte Aktion \"$action\". Erlaubt sind \"create\", \"list\", \"activate\", \"deactivate\" oder \"delete\"." >&2
         print_usage
         exit 3
         ;;
