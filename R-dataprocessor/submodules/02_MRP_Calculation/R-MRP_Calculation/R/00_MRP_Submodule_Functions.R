@@ -998,14 +998,14 @@ processExcelContentLOINCMapping <- function(processExcelContent, table_name) {
 #' mapping factor.
 #'
 #' @param measured_value Numeric. The raw measurement value.
-#' @param unit_measured_value Character. The unit of the input value
+#' @param measured_unit Character. The unit of the input value
 #'   (e.g., `"mg/dl"`, `"mmol/l"`).
 #' @param target_unit Character. The desired SI target unit
 #'   (e.g., `"mmol/l"`, `"umol/l"`).
-#' @param mapping_conversion_factor Numeric (optional).
-#'   The factor needed to convert from the mapping_conversion_unit to the
+#' @param conversion_factor Numeric (optional).
+#'   The factor needed to convert from the conversion_unit to the
 #'   target_unit (used only if direct conversion is not possible).
-#' @param mapping_conversion_unit Character (optional).
+#' @param conversion_unit Character (optional).
 #'   The intermediate unit used for conversion
 #'   (e.g., `"mg/dl"`, `"U/l"`).
 #'
@@ -1015,33 +1015,33 @@ processExcelContentLOINCMapping <- function(processExcelContent, table_name) {
 #' # Example: Convert 14 mg/dL to mmol/L using a mapping factor
 #' convertLabUnits(
 #'   measured_value = 14,
-#'   unit_measured_value = "mg/dl",
+#'   measured_unit = "mg/dl",
 #'   target_unit = "mmol/l",
-#'   mapping_conversion_unit = "mg/dl",
-#'   mapping_conversion_factor = 0.621
+#'   conversion_factor = 0.621,
+#'   conversion_unit = "mg/dl"
 #' )
 #'
 #' # Example: Direct unit conversion mmol/L to umol/L
 #' convertLabUnits(
 #'   measured_value = 1,
-#'   unit_measured_value = "mmol/l",
+#'   measured_unit = "mmol/l",
 #'   target_unit = "umol/l"
 #' )
 #'
 convertLabUnits <- function(measured_value,
-                            unit_measured_value,
+                            measured_unit,
                             target_unit,
-                            mapping_conversion_factor,
-                            mapping_conversion_unit) {
+                            conversion_factor,
+                            conversion_unit) {
 
   # Create unit object for measured value
-  u_measured <- units::set_units(measured_value, unit_measured_value, mode = "standard")
+  u_measured <- units::set_units(measured_value, measured_unit, mode = "standard")
 
   # Create unit object for target unit
   u_target <- units::set_units(1, target_unit, mode = "standard")
 
   # Create unit object for conversion unit
-  u_conversion <- units::set_units(1, mapping_conversion_unit, mode = "standard")
+  u_conversion <- units::set_units(1, conversion_unit, mode = "standard")
 
   # Case 1: Units are directly convertible
   if (units::ud_are_convertible(units(u_measured), units(u_target))) {
@@ -1054,7 +1054,7 @@ convertLabUnits <- function(measured_value,
 
     # Drop unit to apply mapping factor
     numeric_value <- units::drop_units(result_u_conversion)
-    converted_value <- numeric_value * mapping_conversion_factor
+    converted_value <- numeric_value * conversion_factor
 
     # Assign the target unit back
     result <- units::set_units(converted_value, u_target, mode = "standard")
