@@ -565,13 +565,13 @@ matchICDProxies <- function(
           validity_days <- suppressWarnings(as.integer(validity_days))
           # All non integer values are considered as unlimited validity duration
           if (is.na(validity_days)) {
-            validity_days <- .Machine$integer.max
+            # 36525 days are 100 years in the future
+            validity_days <- 36525
           }
 
-          valid_proxy_rows <- resources_with_proxy[
-            start_date <= meda_datetime &
-              (is.na(end_date) | end_date + validity_days >= meda_datetime)
-          ]
+          resources_with_proxy[is.na(end_datetime), end_datetime := start_datetime + lubridate::days(validity_days)]
+
+          valid_proxy_rows <- resources_with_proxy[start_datetime <= meda_datetime & end_datetime >= meda_datetime]
 
           if (nrow(valid_proxy_rows)) {
 
