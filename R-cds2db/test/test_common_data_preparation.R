@@ -839,8 +839,8 @@ addObservations <- function(pid, codes, day_offset = -0.5, value = NULL, unit = 
     dt[, obs_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
     # Assign the observation code
     dt[, obs_code_code := paste0("[1.1.1]", codes[i])]
-    obs_templates[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset)]
-    obs_templates[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+    dt[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset)]
+    dt[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
     # Optional fields
     if (!is.null(value)) dt[, obs_valuequantity_value := paste0("[1.1]", value)]
     if (!is.null(unit)) dt[, obs_valuequantity_code := paste0("[1.1]", unit)]
