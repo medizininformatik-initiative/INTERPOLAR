@@ -185,9 +185,9 @@ getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
 
   # Filter conditions by patient ID and ensure recorded date is before or on meda_datetime
   relevant_conditions <- conditions[
-    con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_date) & start_date <= meda_datetime]
+    con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime]
 
-  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "start_date")
+  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "start_datetime")
   relevant_conditions <- relevant_conditions[, ..relevant_cols]
 
   return(relevant_conditions)
@@ -273,12 +273,12 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 
       # Check if at least one matching condition is within the validity window
       if (tolower(validity_days) == "unbegrenzt") {
-        condition_match <- any(patient_conditions$start_date <= meda_datetime)
+        condition_match <- any(patient_conditions$start_datetime <= meda_datetime)
       } else {
         validity_days <- as.numeric(validity_days)
         condition_match <- any(
-          patient_conditions$start_date >= (meda_datetime - lubridate::days(validity_days)) &
-            patient_conditions$start_date <= meda_datetime
+          patient_conditions$start_datetime >= (meda_datetime - lubridate::days(validity_days)) &
+            patient_conditions$start_datetime <= meda_datetime
         )
       }
 
@@ -332,9 +332,9 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 #'     \item{code}{LOINC code of the observation}
 #'     \item{value}{The measured lab value}
 #'     \item{unit}{Unit of the measurement}
-#'     \item{referenceRangeLow}{Lower reference bound (LLN)}
-#'     \item{referenceRangeHigh}{Upper reference bound (ULN)}
-#'     \item{start_date}{Date/time of observation}
+#'     \item{reference_range_low}{Lower reference bound (LLN)}
+#'     \item{reference_range_high}{Upper reference bound (ULN)}
+#'     \item{start_datetime}{Date/time of observation}
 #'   }
 #' @param match_proxy_row A single-row `data.table` from the drug–disease proxy table
 #'   containing at least the column `LOINC_CUTOFF_REFERENCE`.
@@ -374,9 +374,9 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
     if (!is.null(cutoff)) {
       # Determine which column to use as the reference limit
       reference_col <- if (cutoff$reference == "ULN") {
-        "referenceRangeHigh"
+        "reference_range_high"
       } else if (cutoff$reference == "LLN") {
-        "referenceRangeLow"
+        "reference_range_low"
       } else {
         NA  # Invalid reference keyword
       }
@@ -407,9 +407,9 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
               matched_values = obs$value[match_found],
               matched_code = obs$code[match_found],
               matched_unit = obs$unit[match_found],
-              matched_start_date = obs$start_date[match_found],
-              matched_referenceRangeLow = obs$referenceRangeLow[match_found],
-              matched_referenceRangeHigh = obs$referenceRangeHigh[match_found],
+              matched_start_datetime = obs$start_datetime[match_found],
+              matched_reference_range_low = obs$reference_range_low[match_found],
+              matched_reference_range_high = obs$reference_range_high[match_found],
               operator = cutoff$operator,
               multiplier = cutoff$multiplier,
               reference = cutoff$reference
@@ -421,8 +421,8 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
             # Create a description of the match
             match_description <- paste0("Laborparameter: ", loinc_description, " (", cutoff_description$matched_code, ")\n",
                                         "                     Wert: ", cutoff_description$matched_values, " ", cutoff_description$matched_unit, "\n",
-                                        "Referenzbereich: ", cutoff_description$matched_referenceRangeLow," - ", cutoff_description$matched_referenceRangeHigh, " ", cutoff_description$matched_unit, "\n",
-                                        "            Zeitpunkt: ", cutoff_description$matched_start_date, "\n")
+                                        "Referenzbereich: ", cutoff_description$matched_reference_range_low," - ", cutoff_description$matched_reference_range_high, " ", cutoff_description$matched_unit, "\n",
+                                        "            Zeitpunkt: ", cutoff_description$matched_start_datetime, "\n")
           }
         }
       }
@@ -431,7 +431,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
     # try cutoff absolute value via columns LOINC_CUTOFF_ABSOLUTE and LOINC_UNIT with a lookup via LOINC_PRIMARY_PROXY
       # in Interpolar/Input-Repo/INTERPOLAR-WP7/LOINC_Mapping/LOINC_Mapping_content/LOINC_Mapping_Table_processed.xlsx
       # and conversion of the unit if necessary
-        }
+       # }
       }
   return(match_description)
 }
@@ -451,20 +451,20 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
 #'   - `medication_requests`
 #'   - `medication_statements`
 #'   - `medication_administrations`
-#'   Each must include columns `atc_code`, `start_date`, and optionally `end_date`.
+#'   Each must include columns `atc_code`, `start_datetime`, and optionally `end_datetime`.
 #'
 #' @param procedure_resources A `data.table` containing procedures with columns:
 #'   - `proc_code_code`: the OPS code
-#'   - `start_date`: date of the procedure
-#'   - `end_date`: optional end date of the procedure
+#'   - `start_datetime`: date of the procedure
+#'   - `end_datetime`: optional end date of the procedure
 #'
 #' @param observation_resources A `data.table` containing lab or observation data with columns:
 #'   - `obs_code_code`: the LOINC code
 #'   - `obs_valuequantity_value`: measured value
 #'   - `obs_valuequantity_unit`: measurement unit
 #'   - `obs_referencerange_low_value` / `obs_referencerange_high_value`: reference range
-#'   - `start_date`: date of measurement
-#'   - `end_date`: optional end date
+#'   - `start_datetime`: date of measurement
+#'   - `end_datetime`: optional end date
 #'
 #' @param drug_disease_mrp_tables_by_atc_proxy A named list of `data.table`s, one per ATC code,
 #'   containing MRP rules. Each table should include: `ICD`, `ICD_PROXY_ATC`,
@@ -627,21 +627,21 @@ matchICDProxies <- function(
 
   #  Combine all medication rows
   all_medications <- rbind(
-    medication_resources$medication_requests[, .(code = atc_code, start_date, end_date)],
-    medication_resources$medication_statements[, .(code = atc_code, start_date, end_date)],
-    medication_resources$medication_administrations[, .(code = atc_code, start_date, end_date)],
+    medication_resources$medication_requests[, .(code = atc_code, start_datetime, end_datetime)],
+    medication_resources$medication_statements[, .(code = atc_code, start_datetime, end_datetime)],
+    medication_resources$medication_administrations[, .(code = atc_code, start_datetime, end_datetime)],
     fill = TRUE
   )
   #  Combine all procedures rows
-  all_procedures <- procedure_resources[, .(code = proc_code_code, start_date, end_date)]
+  all_procedures <- procedure_resources[, .(code = proc_code_code, start_datetime, end_datetime)]
   #  Combine all observation rows
   all_observations <- observation_resources[, .(code = obs_code_code,
                                                 value = obs_valuequantity_value,
                                                 unit = obs_valuequantity_code,
-                                                referenceRangeLow = obs_referencerange_low_value,
-                                                referenceRangeHigh = obs_referencerange_high_value,
-                                                start_date = start_date,
-                                                end_date = as.Date(NA))]
+                                                reference_range_low = obs_referencerange_low_value,
+                                                reference_range_high = obs_referencerange_high_value,
+                                                start_datetime = start_datetime,
+                                                end_datetime = as.POSIXct(NA))] # Observations don't have an end datetime
   # ATC-Proxy-Matching
   atc_matches <- matchProxy(
     proxy_type = "ATC",

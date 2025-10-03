@@ -210,13 +210,13 @@ getMedicationRequestsFromDB <- function(patient_references) {
   )
   medication_requests <- addMedicationIdColumn(medication_requests)
 
-  medication_requests[, start_date := data.table::fifelse(
+  medication_requests[, start_datetime := data.table::fifelse(
     !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_start),
     medreq_doseinstruc_timing_repeat_boundsperiod_start,
     medreq_authoredon
   )]
-  medication_requests <- medication_requests[!is.na(start_date)]
-  medication_requests[, end_date := data.table::fifelse(
+  medication_requests <- medication_requests[!is.na(start_datetime)]
+  medication_requests[, end_datetime := data.table::fifelse(
     !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_end),
     medreq_doseinstruc_timing_repeat_boundsperiod_end,
     NA
@@ -240,9 +240,9 @@ getMedicationAdministrationsFromDB <- function(patient_references) {
                                                    status_exclusion = c("not-done", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831577
   )
   medication_administrations <- addMedicationIdColumn(medication_administrations)
-  medication_administrations[, start_date := pmin(medadm_effectivedatetime, medadm_effectiveperiod_start, na.rm = TRUE)]
-  medication_administrations <- medication_administrations[!is.na(start_date)]
-  medication_administrations[, end_date := data.table::fifelse(
+  medication_administrations[, start_datetime := pmin(medadm_effectivedatetime, medadm_effectiveperiod_start, na.rm = TRUE)]
+  medication_administrations <- medication_administrations[!is.na(start_datetime)]
+  medication_administrations[, end_datetime := data.table::fifelse(
     !is.na(medadm_effectiveperiod_end),
     medadm_effectiveperiod_end,
     NA
@@ -266,9 +266,9 @@ getMedicationStatementsFromDB <- function(patient_references) {
                                               status_exclusion = c("entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834331
   )
   medication_statements <- addMedicationIdColumn(medication_statements)
-  medication_statements[, start_date := pmin(medstat_effectivedatetime, medstat_effectiveperiod_start, na.rm = TRUE)]
-  medication_statements <- medication_statements[!is.na(start_date)]
-  medication_statements[, end_date := data.table::fifelse(
+  medication_statements[, start_datetime := pmin(medstat_effectivedatetime, medstat_effectiveperiod_start, na.rm = TRUE)]
+  medication_statements <- medication_statements[!is.na(start_datetime)]
+  medication_statements[, end_datetime := data.table::fifelse(
     !is.na(medstat_effectiveperiod_end),
     medstat_effectiveperiod_end,
     NA
@@ -315,7 +315,7 @@ getObservationsFromDB <- function(patient_references) {
                                      additional_conditions = c("obs_category_code = 'laboratory'",
                                                                "obs_code_system = 'http://loinc.org'")
   )
-  observations[, start_date := obs_effectivedatetime]
+  observations[, start_datetime := obs_effectivedatetime]
   return(observations)
 }
 
@@ -335,9 +335,9 @@ getProceduresFromDB <- function(patient_references) {
                                    status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
                                    additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
   )
-  procedures[, start_date := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
-  procedures <- procedures[!is.na(start_date)]
-  procedures[, end_date := data.table::fifelse(
+  procedures[, start_datetime := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
+  procedures <- procedures[!is.na(start_datetime)]
+  procedures[, end_datetime := data.table::fifelse(
     !is.na(proc_performedperiod_end),
     proc_performedperiod_end,
     NA
@@ -365,7 +365,7 @@ getConditionsFromDB <- function(patient_references) {
                                                              #"(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
                                                              "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))")
   )
-  conditions[, start_date := pmin(con_onsetperiod_start, con_recordeddate, na.rm = TRUE)]
+  conditions[, start_datetime := pmin(con_onsetperiod_start, con_recordeddate, na.rm = TRUE)]
   return(conditions)
 }
 
@@ -707,11 +707,11 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
 getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
 
   active_requests <- medication_requests[
-    !is.na(start_date) &
-      start_date >= enc_period_start &
-      start_date <= meda_datetime &
-      (is.na(end_date) |
-         end_date >= meda_datetime)
+    !is.na(start_datetime) &
+      start_datetime >= enc_period_start &
+      start_datetime <= meda_datetime &
+      (is.na(end_datetime) |
+         end_datetime >= meda_datetime)
   ]
   atc_codes <- active_requests[, c("atc_code")]
   return(atc_codes)
