@@ -679,7 +679,7 @@ dbGetReadOnlyColumns <- function(table_name) {
   # Wenn man sich die Tabelle aber vorher mit select * geholt hat, dann sind diese Spalten mit dabei.
   # Das hier soll in der Version 0.3.0 nochmal überarbeitet/durchdacht werden!
   # Am besten wäre es, wenn die Views bei einem select * diese Spalten gar nicht erst mit ausliefern!
-  return(c("hash_index_col"))
+  return(c("hash_index_col", "raw_already_processed"))
 }
 
 #' Insert Rows into a PostgreSQL Table
