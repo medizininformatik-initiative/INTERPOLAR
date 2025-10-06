@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-04 15:37:56
+-- Create time: 2025-10-06 22:48:51
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  341_cre_table_dataproc_core_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -82,6 +82,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.input_data_files ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -212,6 +218,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db_log.input_data_files_processed_content ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'input_data_files_processed_content' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -379,7 +391,7 @@ BEGIN
 		DROP INDEX IF EXISTS db_log.del_idx_input_data_files_id;
    	        CREATE INDEX idx_input_data_files_id ON db_log.input_data_files USING btree (input_data_files_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_input_data_files_id ON db_log.input_data_files USING btree (input_data_files_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -518,7 +530,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db_log.del_idx_input_data_files_processed_content_id;
    	        CREATE INDEX idx_input_data_files_processed_content_id ON db_log.input_data_files_processed_content USING btree (input_data_files_processed_content_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_input_data_files_processed_content_id ON db_log.input_data_files_processed_content USING btree (input_data_files_processed_content_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
