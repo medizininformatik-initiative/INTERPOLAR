@@ -349,6 +349,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 #'
 matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mapping_table) {
 
+  #if (DEBUG_DAY == 2) browser()
   data.table::setorder(observation_resources, "start_datetime")
   match_description <- NA_character_
   cutoff_reference <- trimws(match_proxy_row$LOINC_CUTOFF_REFERENCE)
@@ -364,7 +365,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
       # 1= full string, 2= operator, 3= multiplier, 4= ULN/LLN
       if (length(parts) == 4) {
         operator <- parts[2]
-        multiplier <- as.numeric(ifelse(parts[3] == "", 1, parts[3]))
+        multiplier <- ifelse(parts[3] == "", 1, as.numeric(parts[3]))
         reference <- parts[4]
         list(operator = operator, multiplier = multiplier, reference = reference)
       }
@@ -456,10 +457,148 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
     }
   } else {
     # try cutoff absolute value via columns LOINC_CUTOFF_ABSOLUTE and LOINC_UNIT with a lookup via LOINC_PRIMARY_PROXY
-      # in Interpolar/Input-Repo/INTERPOLAR-WP7/LOINC_Mapping/LOINC_Mapping_content/LOINC_Mapping_Table_processed.xlsx
-      # and conversion of the unit if necessary
-       # }
+    # in loinc_mapping_table and conversion of the unit if necessary
+
+    catInvalidObservationsWarning <- function(invalid_obs) {
+      if (nrow(invalid_obs)) {
+        details <- character()
+        for (i in seq_len(nrow(invalid_obs))) {
+          details[i] <- paste0(
+            "  code=", invalid_obs$code[i],
+            ", value=", invalid_obs$value[i],
+            ", unit=", invalid_obs$unit[i]
+          )
+        }
+        etlutils::catWarningMessage(
+          paste0(
+            "The following observations have an invalid or not convertible unit and will be ignored:\n",
+            paste(details, collapse = "\n")
+          )
+        )
       }
+    }
+
+    cutoff_absolute <- trimws(match_proxy_row$LOINC_CUTOFF_ABSOLUTE)
+    if (!is.na(cutoff_absolute) && cutoff_absolute != "") {
+      # Parse the cutoff string into its components: operator and number
+      # Possible cutoff formats: "> 3", "< 3", ">= 3,5", "< 2,8"
+      parseCutoffAbsolute <- function(cutoff) {
+        # Pattern allows comma or dot in the number
+        pattern <- "^([<>]=?)\\s*(\\d+(?:[.,]\\d+)?)"
+        matches <- regexec(pattern, cutoff)
+        parts <- regmatches(cutoff, matches)[[1]]
+
+        # 1 = full string, 2 = operator, 3 = threshold
+        if (length(parts) == 3) {
+          operator <- parts[2]
+          # Replace comma with dot before conversion
+          threshold <- as.numeric(sub(",", ".", parts[3], fixed = TRUE))
+          list(operator = operator, threshold = threshold)
+        }
+      }
+
+      # if (!exists("DEBUG_DAY") || DEBUG_DAY == 2)
+      #   browser()
+
+      # Get parsed cutoff components
+      cutoff <- parseCutoffAbsolute(cutoff_absolute)
+      if (!is.null(cutoff) && !any(is.na(cutoff))) {
+
+        # Split observation_resources in valid and invalid ones
+        invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)]
+        obs <- data.table::fsetdiff(observation_resources, invalid_obs)
+
+        if (nrow(obs)) {
+
+          mapping_rows <- loinc_mapping_table[LOINC %in% obs$code]
+          mapping_row  <- unique(mapping_rows[, c("UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
+          if (nrow(mapping_row) == 1) { # no row would be an error and more than one row would be ambiguous
+
+            # conversion_factor must be NA if it is not a number or 1
+            conversion_factor <- suppressWarnings(as.numeric(mapping_row$CONVERSION_FACTOR))
+            if (conversion_factor %in% 1) conversion_factor <- NA_real_
+            # there must be a valid unit if the conversion_factor is a valid number != 1
+            conversion_unit <- if (is.na(conversion_factor)) NA else mapping_row$CONVERSION_UNIT
+
+            obs_value_converted_to_threshold_unit <- c()
+            for (i in seq_len(nrow(obs))) {
+              obs_row <- obs[i]
+              obs_value_converted_to_threshold_unit[i] <- convertLabUnits(
+                measured_value = obs_row$value,
+                measured_unit = obs_row$unit,
+                target_unit = mapping_row$UNIT,
+                conversion_factor = conversion_factor,
+                conversion_unit = conversion_unit
+              )
+              if (is.na(obs_value_converted_to_threshold_unit[i])) {
+                # store this observation as invalid
+                invalid_obs <- rbind(invalid_obs, obs_row)
+              }
+            }
+
+            obs_value_converted_to_threshold_unit <- obs_value_converted_to_threshold_unit[!is.na(obs_value_converted_to_threshold_unit)]
+            obs <- data.table::fsetdiff(obs, invalid_obs)
+            catInvalidObservationsWarning(invalid_obs)
+
+            if (nrow(obs)) {
+              # get the threshold
+              threshold <- cutoff$threshold
+
+              # Vectorized comparison of lab values to threshold using specified operator
+              match_found <- switch(
+                cutoff$operator,
+                ">"  = obs_value_converted_to_threshold_unit >  threshold,
+                ">=" = obs_value_converted_to_threshold_unit >= threshold,
+                "<"  = obs_value_converted_to_threshold_unit <  threshold,
+                "<=" = obs_value_converted_to_threshold_unit <= threshold,
+                rep(FALSE, nrow(obs))  # fallback for unknown operator
+              )
+
+              match_found <- ifelse(is.na(match_found), FALSE, match_found)
+
+              if (any(match_found)) {
+
+                obs <- obs[match_found]
+
+
+                obscutoff_description <- list(
+                  matched_values = obs$value[match_found],
+                  matched_code = obs$code[match_found],
+                  matched_unit = obs$unit[match_found],
+                  matched_start_date = obs$start_date[match_found],
+                  matched_referenceRangeLow = obs$referenceRangeLow[match_found],
+                  matched_referenceRangeHigh = obs$referenceRangeHigh[match_found],
+                  operator = cutoff$operator,
+                  multiplier = cutoff$multiplier,
+                  reference = cutoff$reference
+                )
+
+                #TODO: match_description generieren
+                # Primärer LOINC 1751-7 (GERMAN_NAME) < 20 g/L
+                #
+                # LOINC: 1751-7 (GERMAN_NAME)
+                # Wert: 10000 mg/L (2025-10-06 03:31:09)
+                # 11 g/L (2025-10-06 03:45:33)
+                #
+                # LOINC: 2862-1 (GERMAN_NAME)
+                # Wert: 1.2 g/dL (2025-10-06 0:57:33)
+
+
+                loinc_description <- loinc_mapping_table[LOINC %in% cutoff_description$matched_code, unique(GERMAN_NAME_LOINC_PRIMARY)]
+                loinc_description <- paste(loinc_description, collapse = ", ")
+
+                # Create a description of the match
+                match_description <- paste0("Laborparameter: ", loinc_description, " (", cutoff_description$matched_code, ")\n",
+                                            "                     Wert: ", cutoff_description$matched_values, " ", cutoff_description$matched_unit, "\n",
+                                            "Referenzbereich: ", cutoff_description$matched_referenceRangeLow," - ", cutoff_description$matched_referenceRangeHigh, " ", cutoff_description$matched_unit, "\n",
+                                            "            Zeitpunkt: ", cutoff_description$matched_start_date, "\n")
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   return(match_description)
 }
 
@@ -547,7 +686,6 @@ matchICDProxies <- function(
 ) {
 
   matchProxy <- function(proxy_type, all_items, splitted_proxy_table) {
-
     mrp_matches <- list()
     used_codes <- unique(all_items[!is.na(code), code])
     if (proxy_type == "LOINC") {
@@ -570,9 +708,16 @@ matchICDProxies <- function(
       single_proxy_sub_table <- splitted_proxy_table[[proxy_code]]
       match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get("ICD_PROXY")) & get("ICD_PROXY") != ""]
 
-      # Copy column content into new column as comma-separated string
-      icd_full_list <- paste0(unique(match_proxy_rows$ICD), collapse = ", ")
-      match_proxy_rows[, ICD_FULL_LIST := icd_full_list]
+      # Create ICD_FULL_LIST per ATC_PRIMARY group
+      match_proxy_rows[
+        ,
+        ICD_FULL_LIST := {
+          vals <- ICD
+          vals <- vals[!is.na(vals) & nzchar(vals)]  # drop NA and empty strings
+          if (length(vals)) paste(unique(vals), collapse = ", ") else NA_character_
+        },
+        by = ATC_FOR_CALCULATION
+      ]
 
       # Remove ICD column data to prevent multiple identical rows with different ICD codes
       match_proxy_rows[, ICD := NA_character_]
@@ -604,7 +749,7 @@ matchICDProxies <- function(
 
             kurzbeschr <- sprintf(
               paste0(
-                "%s (%s) ist bei %s kontrainduziert.\n",        # 1,2,3
+                "%s (%s) ist bei %s kontraindiziert.\n",        # 1,2,3
                 "%s ist als %s%s-Proxy für %s verwendet worden.\n", # 4,5,6,7
                 "\n",
                 "Der %s-Proxy steht für folgende ICD Codes:\n", # 8
@@ -614,7 +759,7 @@ matchICDProxies <- function(
               match_proxy_row$ATC_FOR_CALCULATION,       # 2
               match_proxy_row$CONDITION_DISPLAY_CLUSTER, # 3
               proxy_code,                                # 4
-              ifelse(proxy_type == "LOINC", "primärer", ""), # 5
+              ifelse(proxy_type == "LOINC", "primärer ", ""), # 5
               proxy_type,                                # 6
               match_proxy_row$CONDITION_DISPLAY_CLUSTER, # 7
               proxy_type,                                # 8
