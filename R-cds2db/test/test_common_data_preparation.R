@@ -842,10 +842,11 @@ addObservations <- function(pid, codes, day_offset = -0.5, value = NULL, unit = 
     dt[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset)]
     dt[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
     # Optional fields
-    if (!is.null(value)) dt[, obs_valuequantity_value := paste0("[1.1]", value)]
-    if (!is.null(unit)) dt[, obs_valuequantity_code := paste0("[1.1]", unit)]
-    if (!is.null(referencerange_low)) dt[, obs_referencerange_low_value := paste0("[1.1]", referencerange_low)]
-    if (!is.null(referencerange_high)) dt[, obs_referencerange_high_value := paste0("[1.1]", referencerange_high)]
+    dt[, obs_valuequantity_value := if (!etlutils::isSimpleNAorNULL(value)) paste0("[1.1]", value) else NA_character_]
+    dt[, obs_valuequantity_code := if (etlutils::isSimpleNotEmptyString(unit)) paste0("[1.1]", unit) else NA_character_]
+    dt[, obs_valuequantity_unit := if (etlutils::isSimpleNotEmptyString(unit)) paste0("[1.1]Display of unit ", unit) else NA_character_]
+    dt[, obs_referencerange_low_value := if (!etlutils::isSimpleNAorNULL(referencerange_low)) paste0("[1.1]", referencerange_low) else NA_character_]
+    dt[, obs_referencerange_high_value := if (!etlutils::isSimpleNAorNULL(referencerange_high)) paste0("[1.1]", referencerange_high) else NA_character_]
     dt
   }))
 
