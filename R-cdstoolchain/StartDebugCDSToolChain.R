@@ -110,7 +110,7 @@ DEBUG_DATES <- initDebugDates(DEBUG_DAYS_COUNT)
 day_times <- c()
 
 for (debug_day_index in seq_along(DEBUG_DATES)) {
-  if (exists("RUN_DEBUG_DAY_ONLY") && debug_day_index != RUN_DEBUG_DAY_ONLY) next
+  if (exists("DEBUG_RUN_SINGLE_DAY_ONLY") && debug_day_index != DEBUG_RUN_SINGLE_DAY_ONLY) next
   DEBUG_DAY <- debug_day_index
 
   start_day <- Sys.time()

@@ -14,7 +14,7 @@
 DEBUG_DAYS_COUNT <- 2
 
 # Activate if only a specific debug day should be run
-#RUN_DEBUG_DAY_ONLY <- 2
+#DEBUG_RUN_SINGLE_DAY_ONLY <- 2
 
 ###
 # DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
@@ -54,7 +54,7 @@ if (exists("DEBUG_DAY")) {
     # clear database on Day 1
     etlutils::dbReset()
   } else {
-    if (exists("RUN_DEBUG_DAY_ONLY")) {
+    if (exists("DEBUG_RUN_SINGLE_DAY_ONLY")) {
       etlutils::dbReset(c("db_log.dp_mrp_calculations", "db_log.retrolektive_mrpbewertung_fe"))
     }
     # Load all encounters from the database which, according to the database,
