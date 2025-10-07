@@ -179,22 +179,29 @@ case "$action" in
 
     activate)
         if [[ -e "${file_path}" ]]; then
-            echo "Hinweis: Snapshot \"${file_path}\" existiert."
+            echo "Hinweis: Snapshot Datei \"${file_path}\" existiert."
 
             if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep ${db_name} ; then
                 echo "Fehler: Snapshot Datenbank '${db_name}' existiert bereits."
                 exit 1
             fi
 
-            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE ${db_name} WITH OWNER=cds_hub_db_admin;" ; then
+            logfile="${file_path}_activate_$(date +%Y%m%d-%H%M%S).log"
+            
+            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE ${db_name} WITH OWNER=cds_hub_db_admin;" > ${logfile} 2>&1 ; then
                 echo "Snapshot Datenbank '${db_name}' angelegt."
             else
                 echo "Fehler: Anlegen der Snapshot Datenbank '${db_name}' fehlgeschlagen."
                 exit 1
             fi
-
-            if zcat ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin > ${file_path}_activate_$(date +%Y%m%d-%H%M%S).log 2>&1 ; then
+                       
+            if zcat ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin >> ${logfile} 2>&1 ; then
                 echo "Snapshot Datenbank '${db_name}' eingespielt."
+                if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "ALTER DATABASE ${db_name} SET default_transaction_read_only=on ;" >> ${logfile} 2>&1 ; then
+                    echo "Snapshot Datenbank '${db_name}' in 'read-only' Modus gesetzt."
+                else
+                    echo "Fehler: Setzen des 'read-only' Modus in der Snapshot Datenbank '${db_name}' fehlgeschlagen."
+                fi
             else
                 echo "Fehler: Einspielen der Snapshot Datenbank '${db_name}' fehlgeschlagen."
                 exit 1
