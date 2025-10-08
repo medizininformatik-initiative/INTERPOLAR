@@ -270,19 +270,19 @@ writeExcelFile <- function(tables, file_name, with_column_names) {
 #'         or NA if no matching file is found.
 #'
 #' @export
-readFirstExcelFileAsTableList <- function(path, namePattern) {
+readFirstExcelFileAsTableList <- function(path, namePattern, error_if_ambigious = FALSE) {
   pattern <- paste0(".*", namePattern, ".*\\.xlsx$")
   excel_file_names <- list.files(path)
   excel_file_names <- excel_file_names[grepl(pattern, excel_file_names, perl = TRUE)]
+  excel_file_names <- excel_file_names[!grepl("~", excel_file_names)]
 
   if (length(excel_file_names)) {
-    for (i in 1:length(excel_file_names)) {
-      if (!startsWith(excel_file_names[i], "~")) {
-        excel_file_name <- file.path(path, excel_file_names[i])
-        excel_file_content <- readExcelFileAsTableList(excel_file_name)
-        return(list(excel_file_name = excel_file_name, excel_file_content = excel_file_content))
-      }
+    if (length(excel_file_names) > 1 && error_if_ambigious) {
+      stop(paste0("More than one excel file found. Only one is allowed in this path:\n", paste0("  ", path, "/", excel_file_names, collapse = "\n")))
     }
+    excel_file_name <- file.path(path, excel_file_names[1])
+    excel_file_content <- readExcelFileAsTableList(excel_file_name)
+    return(list(excel_file_name = excel_file_name, excel_file_content = excel_file_content))
   }
   return(NULL)
 }
@@ -301,7 +301,7 @@ readFirstExcelFileAsTableList <- function(path, namePattern) {
 #'
 #' @export
 readFirstExcelFileSheet <- function(path, namePattern, columnNames) {
-  excel_sheets <- readFirstExcelFileAsTableList(path, namePattern)
+  excel_sheets <- readFirstExcelFileAsTableList(path, namePattern, error_if_ambigious = TRUE)
   if (is.null(excel_sheets)) {
     return(NULL)
   }
