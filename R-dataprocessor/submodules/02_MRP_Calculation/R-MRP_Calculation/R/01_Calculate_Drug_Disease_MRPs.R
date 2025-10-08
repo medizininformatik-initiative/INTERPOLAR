@@ -309,6 +309,129 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
   return(data.table::rbindlist(matched_rows, fill = TRUE))
 }
 
+#' Generate a formatted description of matched laboratory observations
+#'
+#' This function takes a data.table of observations and a logical match vector,
+#' filters the matching rows, and generates a grouped description by reference
+#' range and unit. Each group is formatted with its reference range and all
+#' corresponding observation values, including timestamps.
+#'
+#' @param obs A data.table containing observation data with columns:
+#'   \code{code}, \code{value}, \code{unit}, \code{start_datetime},
+#'   \code{reference_range_low}, and \code{reference_range_high}.
+#' @param match_found A logical vector indicating which rows of \code{obs}
+#'   matched a certain condition (e.g., a threshold).
+#' @param loinc_mapping_table A data.table mapping LOINC codes to descriptive names.
+#'   Must include columns \code{LOINC} and \code{GERMAN_NAME_LOINC_PRIMARY}.
+#'
+#' @return A character string containing a formatted summary of matched observations,
+#'   grouped by reference range and unit.
+generateMatchDescriptionReferenceCutoff <- function(obs, match_found, loinc_mapping_table) {
+
+  # Filter matched observations and extract relevant columns
+  matched_obs <- data.table::data.table(
+    matched_values = obs$value[match_found],
+    matched_code = obs$code[match_found],
+    matched_unit = obs$unit[match_found],
+    matched_start_datetime = obs$start_datetime[match_found],
+    matched_reference_range_low = obs$reference_range_low[match_found],
+    matched_reference_range_high = obs$reference_range_high[match_found]
+  )
+
+  if (nrow(matched_obs) == 0) {
+    return("No matching observations found.\n")
+  }
+
+  # Group by reference range and unit, and build formatted text per group
+  obs_values_by_reference_range <- matched_obs[
+    ,
+    {
+      # Extract unique reference range values and unit for this group
+      ref_low  <- unique(matched_reference_range_low)
+      ref_high <- unique(matched_reference_range_high)
+      unit     <- unique(matched_unit)
+      # Create one formatted line per observation
+      value_lines <- sprintf(
+        "\t\t%s %s (%s)",
+        matched_values,
+        matched_unit,
+        format(matched_start_datetime, "%Y-%m-%d %H:%M:%S")
+      )
+      # Combine all lines for the group
+      group_text <- paste0(
+        sprintf(
+          "\nReferenzbereich: %s - %s %s\nWert:\t",
+          ref_low, ref_high, unit
+        ),
+        paste(trimws(value_lines), collapse = "\n")
+      )
+      .(text = group_text)
+    },
+    by = .(matched_reference_range_low, matched_reference_range_high, matched_unit)
+  ][, paste(text, collapse = "\n")]
+
+  # Add LOINC description (names and codes)
+  loinc_description <- loinc_mapping_table[
+    LOINC %in% matched_obs$matched_code,
+    unique(GERMAN_NAME_LOINC_PRIMARY)
+  ]
+
+  loinc_description <- paste(loinc_description, collapse = ", ")
+
+  # Combine everything into a final description text
+  match_description <- paste0(
+    "Laborparameter: ", loinc_description, " (",
+    paste0(unique(matched_obs$matched_code), collapse = ", "),
+    ")\n",
+    obs_values_by_reference_range,
+    "\n"
+  )
+
+  return(match_description)
+}
+
+#' Generate a textual description of LOINC observations and matching threshold values
+#'
+#' This function builds a formatted description string summarizing all observation
+#' values from a given data.table (`obs`), grouped by LOINC code. It includes
+#' each observation’s original and converted values, associated units, timestamps,
+#' and links them to a primary LOINC threshold.
+#'
+#' @param obs A data.table containing observation data. Must include columns:
+#'   \code{code}, \code{value}, \code{unit}, \code{converted_value}, \code{start_datetime}.
+#' @param loinc_mapping_table A data.table mapping LOINC codes to their German names.
+#'   Must include columns \code{LOINC} and \code{GERMAN_NAME_LOINC_PRIMARY}.
+#' @param primary_loinc The primary LOINC code (character) used as the reference.
+#' @param cutoff_absolute Numeric value indicating the threshold or cutoff value.
+#' @param cutoff_unit Character string specifying the unit of the cutoff value.
+#'
+#' @return A formatted character string describing all LOINC observations and their
+#'   corresponding values relative to the specified cutoff.
+generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, primary_loinc, cutoff_absolute, cutoff_unit) {
+
+  # Create header text summarizing the main LOINC and cutoff information
+  header <- sprintf(
+    "Primärer LOINC %s Grenzwert %s %s \n",
+    primary_loinc, cutoff_absolute, cutoff_unit
+  )
+
+  # Build description entries for each LOINC code
+  desc_list <- obs[, {
+    loinc_name <- loinc_mapping_table[LOINC %in% code, GERMAN_NAME_LOINC_PRIMARY]
+
+    entry <- paste0(
+      "\n   LOINC: ", code, " (", loinc_name, ")\n",
+      paste(sprintf("     Wert: %s %s (%s %s) (Zeitpunkt: %s)", value, unit, as.character(converted_value), cutoff_unit, format(start_datetime, "%Y-%m-%d %H:%M:%S")),
+            collapse = "\n")
+    )
+    list(text = entry)
+  }, by = code]
+
+  # Combine all entries into one final formatted text block
+  full_text <- paste0(header, paste(desc_list$text, collapse = "\n"), "\n")
+  return(full_text)
+}
+
 #' Match LOINC Cutoff Reference Against Observation Values
 #'
 #' This function checks whether any laboratory observation exceeds or falls below
@@ -404,53 +527,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
           match_found <- ifelse(is.na(match_found), FALSE, match_found)
 
           if (any(match_found)) {
-            matched_obs <- data.table::data.table(
-              matched_values = obs$value[match_found],
-              matched_code = obs$code[match_found],
-              matched_unit = obs$unit[match_found],
-              matched_start_datetime = obs$start_datetime[match_found],
-              matched_reference_range_low = obs$reference_range_low[match_found],
-              matched_reference_range_high = obs$reference_range_high[match_found]
-            )
-
-            # Group by reference range and unit
-            obs_values_by_reference_range <- matched_obs[
-              ,
-              {
-                # Extract reference range values and unit
-                ref_low  <- unique(matched_reference_range_low)
-                ref_high <- unique(matched_reference_range_high)
-                unit     <- unique(matched_unit)
-
-                # Build formatted value lines for this group
-                value_lines <- sprintf(
-                  "\t\t%s %s (%s)",
-                  matched_values,
-                  matched_unit,
-                  format(matched_start_datetime, "%Y-%m-%d %H:%M:%S")
-                )
-                value_lines <- trimws(paste(value_lines, collapse = "\n"))
-
-                # Combine all lines into one formatted text block
-                group_text <- paste0(
-                  sprintf(
-                    "\nReferenzbereich: %s - %s %s\nWert:\t",
-                    ref_low, ref_high, unit
-                  ),
-                  paste(value_lines)
-                )
-
-                .(text = group_text)
-              },
-              by = .(matched_reference_range_low, matched_reference_range_high, matched_unit)
-            ][
-              , paste(text, collapse = "\n")
-            ]
-
-            loinc_description <- loinc_mapping_table[LOINC %in% matched_obs$matched_code, unique(GERMAN_NAME_LOINC_PRIMARY)]
-            loinc_description <- paste(loinc_description, collapse = ", ")
-            match_description <- paste0("Laborparameter: ", loinc_description, " (", paste0(unique(matched_obs$matched_code), collapse = ", "), ")\n",
-                                        obs_values_by_reference_range, "\n")
+            match_description <- generateMatchDescriptionReferenceCutoff(obs, match_found, loinc_mapping_table)
           }
         }
       }
@@ -511,7 +588,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
         if (nrow(obs)) {
 
           mapping_rows <- loinc_mapping_table[LOINC %in% obs$code]
-          mapping_row  <- unique(mapping_rows[, c("UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
+          mapping_row  <- unique(mapping_rows[, c("LOINC_PRIMARY", "UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
           if (nrow(mapping_row) == 1) { # no row would be an error and more than one row would be ambiguous
 
             # conversion_factor must be NA if it is not a number or 1
@@ -558,40 +635,15 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
 
               if (any(match_found)) {
 
-                obs <- obs[match_found]
+                obs <- obs[match_found][, converted_value := obs_value_converted_to_threshold_unit[match_found]]
 
-
-                obscutoff_description <- list(
-                  matched_values = obs$value[match_found],
-                  matched_code = obs$code[match_found],
-                  matched_unit = obs$unit[match_found],
-                  matched_start_date = obs$start_date[match_found],
-                  matched_referenceRangeLow = obs$referenceRangeLow[match_found],
-                  matched_referenceRangeHigh = obs$referenceRangeHigh[match_found],
-                  operator = cutoff$operator,
-                  multiplier = cutoff$multiplier,
-                  reference = cutoff$reference
+                match_description <- generateMatchDescriptionAbsoluteCutoff(
+                  obs = obs,
+                  loinc_mapping_table = loinc_mapping_table,
+                  primary_loinc = mapping_row$LOINC_PRIMARY,
+                  cutoff_absolute = cutoff_absolute,
+                  cutoff_unit = mapping_row$UNIT
                 )
-
-                #TODO: match_description generieren
-                # Primärer LOINC 1751-7 (GERMAN_NAME) < 20 g/L
-                #
-                # LOINC: 1751-7 (GERMAN_NAME)
-                # Wert: 10000 mg/L (2025-10-06 03:31:09)
-                # 11 g/L (2025-10-06 03:45:33)
-                #
-                # LOINC: 2862-1 (GERMAN_NAME)
-                # Wert: 1.2 g/dL (2025-10-06 0:57:33)
-
-
-                loinc_description <- loinc_mapping_table[LOINC %in% cutoff_description$matched_code, unique(GERMAN_NAME_LOINC_PRIMARY)]
-                loinc_description <- paste(loinc_description, collapse = ", ")
-
-                # Create a description of the match
-                match_description <- paste0("Laborparameter: ", loinc_description, " (", cutoff_description$matched_code, ")\n",
-                                            "                     Wert: ", cutoff_description$matched_values, " ", cutoff_description$matched_unit, "\n",
-                                            "Referenzbereich: ", cutoff_description$matched_referenceRangeLow," - ", cutoff_description$matched_referenceRangeHigh, " ", cutoff_description$matched_unit, "\n",
-                                            "            Zeitpunkt: ", cutoff_description$matched_start_date, "\n")
               }
             }
           }
