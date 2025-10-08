@@ -5,9 +5,9 @@ $$
 DECLARE
 ---------------------------------------------------------------------------------------
    -- >>>> WICHTIG Standort / Zeitabhängig <<<< -- Hier bitte Variablen setzen
-   release_version VARCHAR := '1.2.0';              -- GitHup release version
-   release_version_nr INT := 120;                   -- version number - first 3 digits as integer for comparison
-   release_version_date VARCHAR := '2025-09-22';    -- GitHup (likely) release version date
+   release_version VARCHAR := '1.2.1';              -- GitHup release version
+   release_version_nr INT := 121;                   -- version number - first 3 digits as integer for comparison
+   release_version_date VARCHAR := '2025-10-08';    -- GitHup (likely) release version date
    pause_after_process_execution VARCHAR := '10';   -- Pause after copy process execution in second [5-30 sec] - ready to connect
    data_import_hist_every_dataset VARCHAR := 'no';  -- Documentation of each individual data record (db_log.data_import_hist) in all the transfer functions [yes|no] - large resource requirements only for debugging
    max_process_time_set_ready VARCHAR := '120';     -- Maximum time that the semaphore may remain in use before it is released again in minutes [5-120]

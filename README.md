@@ -110,7 +110,34 @@ Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der h
     docker compose run --rm --no-deps r-env Rscript R-db2frontend/Start2_DB2Frontend.R
     ```
 
- 
+## Datenbank Snapshot
+
+Zur Erstellung, Löschung, Aktivierung, De-Aktivierung und Auflistung von Snapshots kann das Bash-Script ```ip_snapshot.sh``` verwenden. 
+Das Script muss direkt im Hauptverzeichnis ausgeführt werden.
+
+Beim Erstellen (_create_) wird ein Dump der _cds_hb_db_ Datenbank gemacht und im Verzeichnis _Snapshots_ gespeichert. 
+```cmd
+./ip-snapshot.sh create snap01
+```
+
+Erstellte Snapshots können aktiviert (_activate_), d.h. in eine Snapshot Datenbank geladen werden.
+```cmd
+./ip-snapshot.sh activate snap01_20251002
+```
+
+Beim De-Aktivieren (_deactivate_) wird diese Datenbank wieder gelöscht.
+```cmd
+./ip-snapshot.sh deactivate snap01_20251002
+```
+
+Erstellte sowie aktivierte Snapshots können mit _list_ angezeit werden.
+
+```cmd
+./ip-snapshot.sh list
+```
+
+Eine ausführliche Beschreibung liefert der Aufruf von ```./ip-snapshot.sh``` ohne Paramter.
+
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)
 - Haben Sie einen Fehler gefunden, legen Sie bitte ein Ticket ([Issues->New issue](https://github.com/medizininformatik-initiative/INTERPOLAR/issues/new/choose)) an.

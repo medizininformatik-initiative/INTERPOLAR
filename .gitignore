@@ -20,3 +20,5 @@ Input-Repo/*.xlsx
 Input-Repo/**/*.xlsx
 *.~lock.*.xlsx\#
 *- Kopie*
+Snapshots/*.sql.gz
+Snapshots/*.log
