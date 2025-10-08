@@ -72,7 +72,7 @@ case "$action" in
         echo "Liste alle Snapshots im Verzeichnis '${DIR}' auf:"
         if find "${DIR}" -maxdepth 1 -type f -name '*.sql.gz' -print -quit | grep -q . ; then
             #ls -lisa Snapshots/*.sql.gz;
-            find "${DIR}" -type f -name '*.sql.gz' -printf '%f\n' | sed 's/\.sql\.gz$//'
+            find "${DIR}" -type f -name '*.sql.gz' -printf '%f\t%kKB\n' | sed 's/\.sql\.gz$//'
         else
             echo "Keine Snapshots im Verzeichnis ${DIR} vorhanden."
         fi
@@ -126,7 +126,7 @@ case "$action" in
         # Snapshot erstellen
         if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table='*.*_raw*' --compress=gzip > $file_date_path; then
             echo "Datei \"${file_date_path}\" wurde angelegt."
-            ls -lisha ${file_date_path}
+            ls -ho ${file_date_path}
         else
             echo "Fehler: Beim Erstellen des Snapshots in Datei \"${file_date_path}\" ist ein Fehler aufgetreten."
             # cleanup
