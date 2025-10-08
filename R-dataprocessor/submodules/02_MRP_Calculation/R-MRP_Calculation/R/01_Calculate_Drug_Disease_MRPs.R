@@ -472,7 +472,6 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
 #'
 matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mapping_table) {
 
-  #if (DEBUG_DAY == 2) browser()
   data.table::setorder(observation_resources, "start_datetime")
   match_description <- NA_character_
   cutoff_reference <- trimws(match_proxy_row$LOINC_CUTOFF_REFERENCE)
@@ -573,9 +572,6 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
           list(operator = operator, threshold = threshold)
         }
       }
-
-      # if (!exists("DEBUG_DAY") || DEBUG_DAY == 2)
-      #   browser()
 
       # Get parsed cutoff components
       cutoff <- parseCutoffAbsolute(cutoff_absolute)
