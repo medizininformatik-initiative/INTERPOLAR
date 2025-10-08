@@ -87,7 +87,7 @@ NEXT_LINK_ENCODE                   = false # encode special chars in next_link (
 #
 # Multiple status can be written as comma separated list.
 #################
-FHIR_SEARCH_ENCOUNTER_STATUS = "finished,in-progress"
+FHIR_SEARCH_ENCOUNTER_STATUS = "in-progress"
 
 #################
 # Attention: This filter is relevant for two queries:
