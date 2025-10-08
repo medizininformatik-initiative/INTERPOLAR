@@ -72,13 +72,18 @@ case "$action" in
         echo "Liste alle Snapshots im Verzeichnis '${DIR}' auf:"
         if find "${DIR}" -maxdepth 1 -type f -name '*.sql.gz' -print -quit | grep -q . ; then
             #ls -lisa Snapshots/*.sql.gz;
-            find "${DIR}" -type f -name '*.sql.gz' -printf '%f\t%kKB\n' | sed 's/\.sql\.gz$//'
+            find "${DIR}" -type f -name '*.sql.gz' -printf '%f\t%kKB\n' | sed 's/\.sql\.gz\t/\t/'
         else
             echo "Keine Snapshots im Verzeichnis ${DIR} vorhanden."
         fi
         echo "---"
         echo "Liste alle aktivierten Snapshots in der Datenbank auf:"
-        if ! docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep "ip_" ; then
+        if ! docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "
+            SELECT   d.datname                                    AS database,
+                     pg_size_pretty(pg_database_size(d.datname))  AS size
+            FROM pg_database d
+            WHERE d.datname LIKE 'ip\_%'   -- Escape-Unterstrich, weil _ ein Wildcard-Zeichen ist
+            ORDER BY pg_database_size(d.datname) DESC;" ; then
             echo "Keine aktivierten Snapshot in der Datenbank."
         fi
         ;;
@@ -124,6 +129,7 @@ case "$action" in
         #} > "$file_path"
 
         # Snapshot erstellen
+        SECONDS=0;
         if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table='*.*_raw*' --compress=gzip > $file_date_path; then
             echo "Datei \"${file_date_path}\" wurde angelegt."
             ls -ho ${file_date_path}
@@ -136,6 +142,7 @@ case "$action" in
             fi
             exit 1
         fi
+        printf "Dauer: %s s\n" "$SECONDS";
         ;;
 
     delete)
@@ -187,14 +194,17 @@ case "$action" in
             fi
 
             logfile="${file_path}_activate_$(date +%Y%m%d-%H%M%S).log"
-            
+            SECONDS=0;
+
+            # Snapshot-Datenbank anlegen
             if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE ${db_name} WITH OWNER=cds_hub_db_admin;" > ${logfile} 2>&1 ; then
                 echo "Snapshot Datenbank '${db_name}' angelegt."
             else
                 echo "Fehler: Anlegen der Snapshot Datenbank '${db_name}' fehlgeschlagen."
                 exit 1
             fi
-                       
+
+            # Snapshot-Datei in zuvor angelegte Snapshot-Datenbank einspielen
             if zcat ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin >> ${logfile} 2>&1 ; then
                 echo "Snapshot Datenbank '${db_name}' eingespielt."
                 if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "ALTER DATABASE ${db_name} SET default_transaction_read_only=on ;" >> ${logfile} 2>&1 ; then
@@ -211,6 +221,7 @@ case "$action" in
             echo "Fehler: Snapshot \"$file_path\" existiert nicht."
             exit 1
         fi
+        printf "Dauer: %s s\n" "$SECONDS"
         ;;
 
     deactivate)
