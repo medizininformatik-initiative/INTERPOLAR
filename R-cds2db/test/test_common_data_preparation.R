@@ -817,37 +817,90 @@ addConditions <- function(pid, codes, day_offset = -0.5) {
   testSetResourceTables(resource_tables)
 }
 
-addObservations <- function(pid, codes, day_offset = -0.5, value = NULL, unit = NULL, referencerange_low = NULL, referencerange_high = NULL) {
+createReferenceRange <- function(referencerange_low_value = NULL,
+                                 referencerange_high_value = NULL, referencerange_low_code = NULL, referencerange_high_code = NULL,
+                                 referencerange_system = "http://unitsofmeasure.org", referencerange_type_code = "normal") {
+
+  if(!etlutils::isSimpleNAorNULL(referencerange_low_value) || !etlutils::isSimpleNAorNULL(referencerange_high_value)) {
+    reference_range <- etlutils::namedListByParam(
+      referencerange_low_value,
+      referencerange_high_value,
+      referencerange_low_code,
+      referencerange_high_code,
+      referencerange_system,
+      referencerange_type_code
+    )
+  } else {
+    reference_range <- NULL
+  }
+  return(reference_range)
+}
+
+addObservations <- function(pid, codes, day_offset = -0.5, value = NULL, unit = NULL, referencerange_low_value = NULL,
+                            referencerange_high_value = NULL, referencerange_low_code = NULL, referencerange_high_code = NULL,
+                            referencerange_system = "http://unitsofmeasure.org", referencerange_type_code = "normal") {
+
+  addObservationsWithRange(pid, codes, day_offset, value, unit, reference_ranges = createReferenceRange(referencerange_low_value,
+                                                                                                        referencerange_high_value,
+                                                                                                        referencerange_low_code,
+                                                                                                        referencerange_high_code,
+                                                                                                        referencerange_system,
+                                                                                                        referencerange_type_code))
+}
+
+addObservationsWithRange <- function(pid, codes, day_offset = -0.5, value = NULL, unit = NULL, reference_ranges = NULL) {
   # Load template table for Observation
   obs_templates <- get("obs_templates", envir = .test_env)
-
-  # Get current resource tables
   resource_tables <- testGetResourceTables()
 
-  # Determine next available index for Observations and Encounter for this patient
+  # Determine encounter/observation indices
   enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
   obs_index <- nrow(resource_tables[["Observation"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-OL-\\d+$"), obs_id)]) + 1
 
-  # Create Observation entries for each code
+  # Normalize single list input
+  if (!is.list(reference_ranges[[1]]) && !is.null(reference_ranges)) {
+    reference_ranges <- list(reference_ranges)
+  }
+
   obs_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
-    dt <- data.table::copy(obs_templates)
-    # Generate unique Observation ID
-    dt[, obs_id := paste0("[1]", pid, "-E-", enc_index, "-OL-", obs_index + (i - 1))]
-    dt[, obs_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-OL-", obs_index + (i - 1))]
-    # Reference the patient and encounter
-    dt[, obs_patient_ref := paste0("[1.1]Patient/", pid)]
-    dt[, obs_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
-    # Assign the observation code
-    dt[, obs_code_code := paste0("[1.1.1]", codes[i])]
-    dt[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset)]
-    dt[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
-    # Optional fields
-    dt[, obs_valuequantity_value := if (!etlutils::isSimpleNAorNULL(value)) paste0("[1.1]", value) else NA_character_]
-    dt[, obs_valuequantity_code := if (etlutils::isSimpleNotEmptyString(unit)) paste0("[1.1]", unit) else NA_character_]
-    dt[, obs_valuequantity_unit := if (etlutils::isSimpleNotEmptyString(unit)) paste0("[1.1]Display of unit ", unit) else NA_character_]
-    dt[, obs_referencerange_low_value := if (!etlutils::isSimpleNAorNULL(referencerange_low)) paste0("[1.1]", referencerange_low) else NA_character_]
-    dt[, obs_referencerange_high_value := if (!etlutils::isSimpleNAorNULL(referencerange_high)) paste0("[1.1]", referencerange_high) else NA_character_]
-    dt
+    base_dt <- data.table::copy(obs_templates)
+
+    base_dt[, obs_patient_ref := paste0("[1.1]Patient/", pid)]
+    base_dt[, obs_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
+    base_dt[, obs_code_code := paste0("[1.1.1]", codes[i])]
+    base_dt[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset)]
+    base_dt[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+    base_dt[, obs_valuequantity_value := if (!etlutils::isSimpleNAorNULL(value)) paste0("[1.1]", value) else NA_character_]
+    base_dt[, obs_valuequantity_code := if (etlutils::isSimpleNotEmptyString(unit)) paste0("[1.1]", unit) else NA_character_]
+    base_dt[, obs_valuequantity_unit := if (etlutils::isSimpleNotEmptyString(unit)) paste0("[1.1]Display of unit ", unit) else NA_character_]
+
+    if (!is.null(reference_ranges)) {
+      ref_rows <- lapply(seq_along(reference_ranges), function(j) {
+        rr <- reference_ranges[[j]]
+        dt <- data.table::copy(base_dt)
+
+        current_index <- obs_index + (i - 1) * length(reference_ranges) + (j - 1)
+        dt[, obs_id := paste0("[1]", pid, "-E-", enc_index, "-OL-", current_index)]
+        dt[, obs_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-OL-", current_index)]
+
+        prefix <- paste0("[1.1.1]")
+        prefix2 <- paste0("[1.1.1.1]")
+        base_dt[, obs_id := paste0("[1]", pid, "-E-", enc_index, "-OL-", obs_index + (i - 2 + j))]
+        dt[, obs_referencerange_low_value  := if (!is.null(rr$referencerange_low_value))  paste0(prefix, rr$referencerange_low_value) else NA_character_]
+        dt[, obs_referencerange_high_value := if (!is.null(rr$referencerange_high_value)) paste0(prefix, rr$referencerange_high_value) else NA_character_]
+        dt[, obs_referencerange_low_code   := if (!is.null(rr$referencerange_low_code))   paste0(prefix2, rr$referencerange_low_code) else NA_character_]
+        dt[, obs_referencerange_high_code  := if (!is.null(rr$referencerange_high_code))  paste0(prefix2, rr$referencerange_high_code) else NA_character_]
+        dt[, obs_referencerange_low_system := if (!is.null(rr$referencerange_system))     paste0(prefix2, rr$referencerange_system) else NA_character_]
+        dt[, obs_referencerange_high_system:= if (!is.null(rr$referencerange_system))     paste0(prefix2, rr$referencerange_system) else NA_character_]
+        dt[, obs_referencerange_type_code  := if (!is.null(rr$referencerange_type_code))  paste0(prefix2, rr$referencerange_type_code) else NA_character_]
+        dt
+      })
+      data.table::rbindlist(ref_rows)
+    } else {
+      base_dt[, obs_id := paste0("[1]", pid, "-E-", enc_index, "-OL-", obs_index + (i - 1))]
+      base_dt[, obs_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-OL-", obs_index + (i - 1))]
+      base_dt
+    }
   }))
 
   # Append the new entries to the Observation table
