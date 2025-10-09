@@ -309,6 +309,46 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
   return(data.table::rbindlist(matched_rows, fill = TRUE))
 }
 
+#' Print a warning for observations with invalid or non-convertible units
+#'
+#' This helper function prints a formatted warning message when entries
+#' in an observation table (`invalid_obs`) contain invalid or non-convertible
+#' measurement units.
+#' For each affected observation, the `code`, `value`, and `unit` are displayed.
+#'
+#' @param invalid_obs `data.table` or `data.frame`
+#'   A table containing the columns `code`, `value`, and `unit`, representing
+#'   observations with invalid or non-convertible units.
+#'
+#' @details
+#' If `invalid_obs` is empty (i.e., `nrow(invalid_obs) == 0`), no warning
+#' message is printed.
+#' Otherwise, a multi-line warning is issued using
+#' [`etlutils::catWarningMessage()`], listing all affected observations.
+#'
+#' @return
+#' Invisibly returns `NULL`.
+#' The function is called for its side effect — printing a warning message
+#' to the console.
+catInvalidObservationsWarning <- function(invalid_obs) {
+  if (nrow(invalid_obs)) {
+    details <- character()
+    for (i in seq_len(nrow(invalid_obs))) {
+      details[i] <- paste0(
+        "  code=", invalid_obs$code[i],
+        ", value=", invalid_obs$value[i],
+        ", unit=", invalid_obs$unit[i]
+      )
+    }
+    etlutils::catWarningMessage(
+      paste0(
+        "The following observations have an invalid or not convertible unit and will be ignored:\n",
+        paste(details, collapse = "\n")
+      )
+    )
+  }
+}
+
 #' Generate a formatted description of matched laboratory observations
 #'
 #' This function takes a data.table of observations and a logical match vector,
@@ -318,7 +358,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 #'
 #' @param obs A data.table containing observation data with columns:
 #'   \code{code}, \code{value}, \code{unit}, \code{start_datetime},
-#'   \code{reference_range_low}, and \code{reference_range_high}.
+#'   \code{reference_range_low_value}, and \code{reference_range_high_value}.
 #' @param match_found A logical vector indicating which rows of \code{obs}
 #'   matched a certain condition (e.g., a threshold).
 #' @param loinc_mapping_table A data.table mapping LOINC codes to descriptive names.
@@ -330,12 +370,12 @@ generateMatchDescriptionReferenceCutoff <- function(obs, match_found, loinc_mapp
 
   # Filter matched observations and extract relevant columns
   matched_obs <- data.table::data.table(
-    matched_values = obs$value[match_found],
+    matched_values = obs$converted_value[match_found],
     matched_code = obs$code[match_found],
-    matched_unit = obs$unit[match_found],
+    matched_unit = obs$converted_unit[match_found],
     matched_start_datetime = obs$start_datetime[match_found],
-    matched_reference_range_low = obs$reference_range_low[match_found],
-    matched_reference_range_high = obs$reference_range_high[match_found]
+    matched_reference_range_low = obs$reference_range_low_value[match_found],
+    matched_reference_range_high = obs$reference_range_high_value[match_found]
   )
 
   if (nrow(matched_obs) == 0) {
@@ -432,6 +472,144 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
   return(full_text)
 }
 
+#' Filter and Convert Laboratory Observations to Reference Units
+#'
+#' This function processes a laboratory observation table (`obs`) by:
+#' \itemize{
+#'   \item Resolving conflicts in `reference_range_type`, keeping only "normal" if multiple types exist.
+#'   \item Selecting one row per group defined by `non_ref_cols` while prioritizing:
+#'     \itemize{
+#'       \item `reference_range_type == "normal"`
+#'       \item Rows with standard system `"http://unitsofmeasure.org"`
+#'       \item Rows where the reference unit matches the observation unit
+#'       \item If multiple candidates remain, the first is kept.
+#'     }
+#'   \item Splitting observations into those that can be converted and those that cannot.
+#'   \item Converting observation values to the reference unit using `convertLabUnits()`.
+#'   \item Collecting invalid or non-convertible observations into `invalid_obs` and issuing a warning.
+#'   \item Printing a warning for observations whose unit was successfully converted.
+#' }
+#'
+#' @param obs A `data.table` containing laboratory observations.
+#' @param reference_value_col The name of the reference value column (e.g., `"reference_range_high_value"`).
+#' @param invalid_obs A `data.table` of invalid observations (can be empty initially).
+#'
+#' @return A `data.table` containing filtered and unit-normalized observations,
+#' with a new column `converted_value` representing the value in reference units.
+#'
+#' @examples
+#' # Example usage:
+#' # obs <- data.table(code = "1742-6", value = 61, unit = "mg/dL", reference_range_high_value = 10, ...)
+#' # invalid_obs <- data.table()
+#' # obs_filtered <- filterObservations(obs, "reference_range_high_value", invalid_obs)
+filterObservations <- function(obs, reference_value_col, invalid_obs) {
+
+  # Derive the corresponding unit and system columns from the reference value column
+  reference_unit_col   <- sub("_value$", "_code", reference_value_col)
+  reference_system_col <- sub("_value$", "_system", reference_value_col)
+
+  # Identify columns that define unique observations, excluding reference columns
+  non_ref_cols <- setdiff(names(obs), grep("^reference_", names(obs), value = TRUE))
+
+  # Step 1: Filter multiple reference_range_type entries per observation
+  obs <- obs[
+    ,
+    {
+      # Prioritize "normal"
+      preferred <- .SD[reference_range_type == "normal"]
+      if (nrow(preferred) == 0) {
+        # If no "normal", take rows without reference_range_type
+        preferred <- .SD[is.na(reference_range_type)]
+      }
+      if (nrow(preferred) == 0) {
+        # No eligible rows → drop group
+        NULL
+      } else if (nrow(preferred) > 1) {
+        # Multiple candidates → prefer standard system
+        standard <- preferred[get(reference_system_col) == "http://unitsofmeasure.org"]
+
+        if (nrow(standard) == 0) {
+          preferred <- preferred[1]  # No standard → keep first
+        } else if (nrow(standard) > 1) {
+          # Multiple standard system rows → prefer matching unit
+          match_unit <- standard[get(reference_unit_col) == unit]
+          preferred <- if (nrow(match_unit) > 0) match_unit[1] else standard[1]
+        } else {
+          preferred <- standard[1]  # Exactly one standard system row
+        }
+      } else {
+        # Only one candidate → keep it
+        preferred <- preferred[1]
+      }
+      preferred
+    },
+    by = non_ref_cols
+  ]
+
+  # Step 2: Split observations into convertible and non-convertible
+  obs_to_convert_unit <- obs[!is.na(get(reference_unit_col)) & !is.na(unit)]
+  obs_no_convert_unit <- obs[is.na(get(reference_unit_col)) | is.na(unit)]
+  obs_no_convert_unit[, converted_value := value]  # Non-convertible → value unchanged
+  obs_to_convert_unit[, converted_value := NA_real_]  # Initialize converted values
+  obs_no_convert_unit[, converted_unit := unit]  # Non-convertible → value unchanged
+  obs_to_convert_unit[, converted_unit := NA_real_]  # Initialize converted values
+
+  # Step 3: Perform unit conversion row by row
+  obs_value_converted_to_threshold_unit <- c()
+  for (i in seq_len(nrow(obs_to_convert_unit))) {
+    unit_from <- obs_to_convert_unit$unit[i]
+    unit_target <- obs_to_convert_unit[[reference_unit_col]][i]
+    obs_row <- obs_to_convert_unit[i]
+
+    # Attempt conversion
+    obs_value_converted_to_threshold_unit[i] <- convertLabUnits(
+      measured_value = obs_row$value,
+      measured_unit = unit_from,
+      target_unit = unit_target
+    )
+
+    # Handle invalid conversions
+    if (is.na(obs_value_converted_to_threshold_unit[i])) {
+      invalid_obs <- if (nrow(invalid_obs) > 0) rbind(invalid_obs, obs_row) else obs_row
+    } else {
+      obs_to_convert_unit$converted_value[i] <- obs_value_converted_to_threshold_unit[i]
+      obs_to_convert_unit$converted_unit[i] <- unit_target
+    }
+
+    # Remove invalid observations from dataset and issue a warning
+    if (nrow(invalid_obs) > 0) {
+      obs_to_convert_unit <- data.table::fsetdiff(obs_to_convert_unit, invalid_obs)
+      catInvalidObservationsWarning(invalid_obs)
+    }
+  }
+
+  # Step 4: Warn for observations whose units were converted
+  changed_rows <- obs_to_convert_unit[
+    !is.na(converted_value) & !is.na(value) & converted_value != value
+  ]
+  if (nrow(changed_rows)) {
+    details <- character(nrow(changed_rows))
+    for (i in seq_len(nrow(changed_rows))) {
+      details[i] <- paste0(
+        "  code=", changed_rows$code[i],
+        ", value=", changed_rows$value[i], " ", changed_rows$unit[i],
+        " changed to ", changed_rows$converted_value[i], " ", changed_rows[[reference_unit_col]][i]
+      )
+    }
+    etlutils::catWarningMessage(
+      paste0(
+        "For the following observations, the unit had to be converted to match the reference range:\n",
+        paste(details, collapse = "\n")
+      )
+    )
+  }
+
+  # Step 5: Combine converted and non-converted observations
+  obs <- rbind(obs_to_convert_unit, obs_no_convert_unit)
+
+  return(obs)
+}
+
 #' Match LOINC Cutoff Reference Against Observation Values
 #'
 #' This function checks whether any laboratory observation exceeds or falls below
@@ -455,8 +633,8 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
 #'     \item{code}{LOINC code of the observation}
 #'     \item{value}{The measured lab value}
 #'     \item{unit}{Unit of the measurement}
-#'     \item{reference_range_low}{Lower reference bound (LLN)}
-#'     \item{reference_range_high}{Upper reference bound (ULN)}
+#'     \item{reference_range_low_value}{Lower reference bound (LLN)}
+#'     \item{reference_range_high_value}{Upper reference bound (ULN)}
 #'     \item{start_datetime}{Date/time of observation}
 #'   }
 #' @param match_proxy_row A single-row `data.table` from the drug–disease proxy table
@@ -497,36 +675,48 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
     cutoff <- parseCutoffReference(cutoff_reference)
     if (!is.null(cutoff)) {
       # Determine which column to use as the reference limit
-      reference_col <- if (cutoff$reference == "ULN") {
-        "reference_range_high"
+      reference_value_col <- if (cutoff$reference == "ULN") {
+        "reference_range_high_value"
       } else if (cutoff$reference == "LLN") {
-        "reference_range_low"
+        "reference_range_low_value"
       } else {
         NA  # Invalid reference keyword
       }
 
-      if (!is.na(reference_col)) {
-        # Filter only valid observation rows (non-NA values)
-        obs <- observation_resources[!is.na(value) & !is.na(get(reference_col))]
+      if (!is.na(reference_value_col)) {
+        # Split observation_resources in valid and invalid ones
+        invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)]
+        obs <- data.table::fsetdiff(observation_resources, invalid_obs)
+
+        obs <- observation_resources[!is.na(value) & !is.na(get(reference_value_col))]
 
         if (nrow(obs)) {
-          # Calculate the threshold based on the multiplier
-          threshold <- obs[[reference_col]] * cutoff$multiplier
 
-          # Vectorized comparison of lab values to threshold using specified operator
-          match_found <- switch(
-            cutoff$operator,
-            ">"  = obs$value >  threshold,
-            ">=" = obs$value >= threshold,
-            "<"  = obs$value <  threshold,
-            "<=" = obs$value <= threshold,
-            rep(FALSE, nrow(obs))  # fallback for unknown operator
+          obs <- filterObservations(
+            obs = obs,
+            reference_value_col = reference_value_col,
+            invalid_obs = invalid_obs
           )
 
-          match_found <- ifelse(is.na(match_found), FALSE, match_found)
+          if (nrow(obs)) {
+            # Calculate the threshold based on the multiplier
+            threshold <- obs[[reference_value_col]] * cutoff$multiplier
 
-          if (any(match_found)) {
-            match_description <- generateMatchDescriptionReferenceCutoff(obs, match_found, loinc_mapping_table)
+            # Vectorized comparison of lab values to threshold using specified operator
+            match_found <- switch(
+              cutoff$operator,
+              ">"  = obs$converted_value >  threshold,
+              ">=" = obs$converted_value >= threshold,
+              "<"  = obs$converted_value <  threshold,
+              "<=" = obs$converted_value <= threshold,
+              rep(FALSE, nrow(obs))  # fallback for unknown operator
+            )
+
+            match_found <- ifelse(is.na(match_found), FALSE, match_found)
+
+            if (any(match_found)) {
+              match_description <- generateMatchDescriptionReferenceCutoff(obs, match_found, loinc_mapping_table)
+            }
           }
         }
       }
@@ -534,25 +724,6 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
   } else {
     # try cutoff absolute value via columns LOINC_CUTOFF_ABSOLUTE and LOINC_UNIT with a lookup via LOINC_PRIMARY_PROXY
     # in loinc_mapping_table and conversion of the unit if necessary
-
-    catInvalidObservationsWarning <- function(invalid_obs) {
-      if (nrow(invalid_obs)) {
-        details <- character()
-        for (i in seq_len(nrow(invalid_obs))) {
-          details[i] <- paste0(
-            "  code=", invalid_obs$code[i],
-            ", value=", invalid_obs$value[i],
-            ", unit=", invalid_obs$unit[i]
-          )
-        }
-        etlutils::catWarningMessage(
-          paste0(
-            "The following observations have an invalid or not convertible unit and will be ignored:\n",
-            paste(details, collapse = "\n")
-          )
-        )
-      }
-    }
 
     cutoff_absolute <- trimws(match_proxy_row$LOINC_CUTOFF_ABSOLUTE)
     if (!is.na(cutoff_absolute) && cutoff_absolute != "") {
@@ -605,7 +776,11 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
               )
               if (is.na(obs_value_converted_to_threshold_unit[i])) {
                 # store this observation as invalid
-                invalid_obs <- rbind(invalid_obs, obs_row)
+                if (nrow(invalid_obs)) {
+                  invalid_obs <- rbind(invalid_obs, obs_row)
+                } else {
+                  invalid_obs <- obs_row
+                }
               }
             }
 
@@ -858,8 +1033,13 @@ matchICDProxies <- function(
   all_observations <- observation_resources[, .(code = obs_code_code,
                                                 value = obs_valuequantity_value,
                                                 unit = obs_valuequantity_code,
-                                                reference_range_low = obs_referencerange_low_value,
-                                                reference_range_high = obs_referencerange_high_value,
+                                                reference_range_low_value = obs_referencerange_low_value,
+                                                reference_range_high_value = obs_referencerange_high_value,
+                                                reference_range_low_system = obs_referencerange_low_system,
+                                                reference_range_high_system = obs_referencerange_high_system,
+                                                reference_range_low_code = obs_referencerange_low_code,
+                                                reference_range_high_code = obs_referencerange_high_code,
+                                                reference_range_type = obs_referencerange_type_code,
                                                 start_datetime = start_datetime,
                                                 end_datetime = as.POSIXct(NA))] # Observations don't have an end datetime
   # ATC-Proxy-Matching
