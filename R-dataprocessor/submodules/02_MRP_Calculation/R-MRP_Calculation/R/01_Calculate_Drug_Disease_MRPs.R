@@ -403,7 +403,7 @@ generateMatchDescriptionReferenceCutoff <- function(obs, match_found, loinc_mapp
           "\nReferenzbereich: %s - %s %s\nWert:\t",
           ref_low, ref_high, unit
         ),
-        paste(trimws(value_lines), collapse = "\n")
+        trimws(paste(value_lines, collapse = "\n"))
       )
       .(text = group_text)
     },
