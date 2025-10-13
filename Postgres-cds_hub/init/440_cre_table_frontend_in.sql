@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2025-09-04 15:36:25
+-- Create time: 2025-10-06 22:47:20
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  440_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -84,6 +84,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'patient_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db2frontend_in.patient_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'patient_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -304,6 +310,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'fall_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db2frontend_in.fall_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'fall_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -605,6 +617,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'medikationsanalyse_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db2frontend_in.medikationsanalyse_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'medikationsanalyse_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -969,6 +987,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db2frontend_in.mrpdokumentation_validierung_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -1785,6 +1809,12 @@ BEGIN
             ALTER TABLE db2frontend_in.retrolektive_mrpbewertung_fe ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (record_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'record_id'
@@ -2554,6 +2584,12 @@ BEGIN
             ALTER TABLE db2frontend_in.risikofaktor_fe ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'risikofaktor_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
         IF NOT EXISTS ( -- column not exists (record_id)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'risikofaktor_fe' AND column_name = 'record_id'
@@ -2817,6 +2853,12 @@ BEGIN
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'trigger_fe' AND column_name = 'last_processing_nr'
         ) THEN
             ALTER TABLE db2frontend_in.trigger_fe ADD last_processing_nr INT; -- Last processing number of the data record
+        END IF; -- column
+
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2frontend_in' AND table_name = 'trigger_fe' AND column_name = 'raw_already_processed'
+        ) THEN
+            NULL;
         END IF; -- column
 
 -- Data-leading columns -------------------------------------------------------------------------
@@ -3613,7 +3655,7 @@ BEGIN
 		DROP INDEX IF EXISTS db2frontend_in.del_idx_patient_fe_id;
    	        CREATE INDEX idx_patient_fe_id ON db2frontend_in.patient_fe USING btree (patient_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_patient_fe_id ON db2frontend_in.patient_fe USING btree (patient_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -3752,7 +3794,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db2frontend_in.del_idx_fall_fe_id;
    	        CREATE INDEX idx_fall_fe_id ON db2frontend_in.fall_fe USING btree (fall_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_fall_fe_id ON db2frontend_in.fall_fe USING btree (fall_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -3891,7 +3933,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db2frontend_in.del_idx_medikationsanalyse_fe_id;
    	        CREATE INDEX idx_medikationsanalyse_fe_id ON db2frontend_in.medikationsanalyse_fe USING btree (medikationsanalyse_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_medikationsanalyse_fe_id ON db2frontend_in.medikationsanalyse_fe USING btree (medikationsanalyse_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -4030,7 +4072,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db2frontend_in.del_idx_mrpdokumentation_validierung_fe_id;
    	        CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db2frontend_in.mrpdokumentation_validierung_fe USING btree (mrpdokumentation_validierung_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db2frontend_in.mrpdokumentation_validierung_fe USING btree (mrpdokumentation_validierung_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -4169,7 +4211,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db2frontend_in.del_idx_retrolektive_mrpbewertung_fe_id;
    	        CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db2frontend_in.retrolektive_mrpbewertung_fe USING btree (retrolektive_mrpbewertung_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db2frontend_in.retrolektive_mrpbewertung_fe USING btree (retrolektive_mrpbewertung_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -4308,7 +4350,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db2frontend_in.del_idx_risikofaktor_fe_id;
    	        CREATE INDEX idx_risikofaktor_fe_id ON db2frontend_in.risikofaktor_fe USING btree (risikofaktor_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_risikofaktor_fe_id ON db2frontend_in.risikofaktor_fe USING btree (risikofaktor_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
@@ -4447,7 +4489,7 @@ END IF; -- target column
 		DROP INDEX IF EXISTS db2frontend_in.del_idx_trigger_fe_id;
    	        CREATE INDEX idx_trigger_fe_id ON db2frontend_in.trigger_fe USING btree (trigger_fe_id DESC);
             END IF; -- check current status
-	ELSE -- (easy) Create new
+	  ELSE -- (easy) Create new
 	    CREATE INDEX idx_trigger_fe_id ON db2frontend_in.trigger_fe USING btree (trigger_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
