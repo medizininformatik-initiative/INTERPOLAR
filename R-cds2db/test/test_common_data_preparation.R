@@ -789,6 +789,8 @@ addDrugs <- function(pid, codes, day_offset = -0.3) {
 
   # Save the updated resource tables
   testSetResourceTables(resource_tables)
+
+  return(pid) # convenience to write compact tests
 }
 
 addConditions <- function(pid, codes, day_offset = -0.5) {
@@ -826,9 +828,10 @@ addConditions <- function(pid, codes, day_offset = -0.5) {
   testSetResourceTables(resource_tables)
 }
 
-createReferenceRange <- function(referencerange_low_value = NULL,
-                                 referencerange_high_value = NULL, referencerange_low_code = NULL, referencerange_high_code = NULL,
-                                 referencerange_low_system = NULL, referencerange_high_system = NULL, referencerange_type_code = NULL) {
+createReferenceRange <- function(referencerange_low_value = NULL, referencerange_low_code = NULL,
+                                 referencerange_high_value = NULL, referencerange_high_code = NULL,
+                                 referencerange_type_code = NULL,
+                                 referencerange_low_system = NULL, referencerange_high_system = NULL) {
 
   if(!etlutils::isSimpleNAorNULL(referencerange_low_value) || !etlutils::isSimpleNAorNULL(referencerange_high_value)) {
     reference_range <- etlutils::namedListByParam(
