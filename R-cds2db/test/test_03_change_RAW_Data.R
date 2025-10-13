@@ -175,9 +175,9 @@ if (exists("DEBUG_DAY")) {
     addDrugs("UKB-0001_3", "C02KC01")
     #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> NULL
     #UKB-0002_1 -> Drug_Disease_Interaction (Pro.LOINC) -> Observation - 14631-6
-    addObservations("UKB-0002_1", "14631-6")
+    addObservation("UKB-0002_1", "14631-6")
     #UKB-0002_2 -> Drug_Disease_Interaction (LOINC Cut) -> Observation - 2823-3
-    addObservations("UKB-0002_2", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
+    addObservation("UKB-0002_2", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
   })
   runCodeForDebugDay(3, {
     #UKB-0001_1 -> Drug_Disease_Interaction             -> Diagnosis - R10.0
