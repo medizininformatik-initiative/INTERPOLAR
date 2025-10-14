@@ -923,18 +923,22 @@ addObservationWithRanges <- function(pid, code, day_offset = -0.5, value = NULL,
     for (r in seq_along(reference_ranges)) {
       range <- reference_ranges[[r]]
 
-      prefix  <- paste0("[1.", r, ".1]")
-      prefix2 <- paste0("[1.", r, ".1.1]")
+      prefix  <- paste0("[", r, ".1.1]")
+      prefix2 <- paste0("[", r, ".1.1.1]")
       low_values   <- addValue(low_values, prefix, range$referencerange_low_value)
       high_values  <- addValue(high_values, prefix, range$referencerange_high_value)
-      low_codes    <- addValue(low_codes, prefix2, range$referencerange_low_code)
-      high_codes   <- addValue(high_codes, prefix2, range$referencerange_high_code)
-      low_systems  <- addValue(low_systems, prefix2, range$referencerange_low_system)
-      high_systems <- addValue(high_systems, prefix2, range$referencerange_high_system)
+      low_codes    <- addValue(low_codes, prefix, range$referencerange_low_code)
+      high_codes   <- addValue(high_codes, prefix, range$referencerange_high_code)
+      low_systems  <- addValue(low_systems, prefix, range$referencerange_low_system)
+      high_systems <- addValue(high_systems, prefix, range$referencerange_high_system)
       type_codes   <- addValue(type_codes, prefix2, range$referencerange_type_code)
 
     }
-    pasteRAW <- function(vec) paste0(vec, collapse = " ~ ")
+    pasteRAW <- function(vec) {
+      raw <- paste0(vec, collapse = " ~ ")
+      if(!nchar(raw)) raw <- NA_character_ # vec = NULL return empty string
+      return(raw)
+    }
     obs_dt[, obs_referencerange_low_value   := pasteRAW(low_values)]
     obs_dt[, obs_referencerange_high_value  := pasteRAW(high_values)]
     obs_dt[, obs_referencerange_low_code    := pasteRAW(low_codes)]
