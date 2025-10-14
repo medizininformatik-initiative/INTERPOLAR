@@ -332,14 +332,22 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 #' to the console.
 catInvalidObservationsWarning <- function(invalid_obs) {
   if (nrow(invalid_obs)) {
-    details <- character()
-    for (i in seq_len(nrow(invalid_obs))) {
+    # --- Create unique identifier for each (code, value, unit) combination ---
+    invalid_obs_unique <- unique(
+      invalid_obs[, .(code, value, unit)]
+    )
+
+    # --- Build message details ---
+    details <- character(nrow(invalid_obs_unique))
+    for (i in seq_len(nrow(invalid_obs_unique))) {
       details[i] <- paste0(
-        "  code=", invalid_obs$code[i],
-        ", value=", invalid_obs$value[i],
-        ", unit=", invalid_obs$unit[i]
+        "  code=", invalid_obs_unique$code[i],
+        ", value=", invalid_obs_unique$value[i],
+        ", unit=", invalid_obs_unique$unit[i]
       )
     }
+
+    # --- Emit a single combined warning message ---
     etlutils::catWarningMessage(
       paste0(
         "The following observations have an invalid or not convertible unit and will be ignored:\n",
