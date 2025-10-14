@@ -138,16 +138,16 @@ if (exists("DEBUG_DAY")) {
     ########################################################
 
     ref_range_no <- createReferenceRange(0.005, "g/dl", 0.01, "g/dl", "normal")
-    ref_range_no2 <- createReferenceRange(0.0051, "g/dl", 0.0101, "g/dl", "normal")
-    ref_range_NA <- createReferenceRange(0.0052, "g/dl", 0.0102, "g/dl")
-    ref_range_NA2 <- createReferenceRange(0.0053, "g/dl", 0.0103, "g/dl")
-    ref_range_so <- createReferenceRange(0.0054, "g/dl", 0.0104, "g/dl", "something")
-    ref_range_so2 <- createReferenceRange(0.0055, "g/dl", 0.0105, "g/dl", "something")
+    ref_range_no2 <- createReferenceRange(0.0051, "g/dl", 0.011, "g/dl", "normal")
+    ref_range_NA <- createReferenceRange(0.0052, "g/dl", 0.012, "g/dl")
+    ref_range_NA2 <- createReferenceRange(0.0053, "g/dl", 0.013, "g/dl")
+    ref_range_so <- createReferenceRange(0.0054, "g/dl", 0.014, "g/dl", "something")
+    ref_range_so2 <- createReferenceRange(0.0055, "g/dl", 0.015, "g/dl", "something")
 
-    addObs <- function(pid, reference_ranges = NULL, code = "21198-7", day_offset = -0.5, value = 12, unit = "mg/dL") {
+    addObs <- function(pid, reference_ranges = NULL, code = "21198-7", day_offset = -0.5, value = 16, unit = "mg/dL") {
       day_offset_plus <- sub(".*_(\\d+)$", "\\1", pid) # get the number after the last underscore (UKB-0001_3 -> 3)
       day_offset_plus <- as.numeric(day_offset_plus) / 100
-      addObservationWithRanges(pid, code = "21198-7", day_offset = -0.5 + day_offset_plus, value = 12, unit = "mg/dL", reference_ranges = reference_ranges)
+      addObservationWithRanges(pid, code = "21198-7", day_offset = -0.5 + day_offset_plus, value = 16, unit = "mg/dL", reference_ranges = reference_ranges)
     }
 
     # NO: so | NA | no | result
