@@ -92,7 +92,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(14)
+  duplicatePatients(15)
   #duplicatePatients(1, 1)
 
   runCodeForDebugDay(1, {
@@ -143,6 +143,7 @@ if (exists("DEBUG_DAY")) {
     ref_range_NA2 <- createReferenceRange(0.0053, "g/dl", 0.013, "g/dl")
     ref_range_so <- createReferenceRange(0.0054, "g/dl", 0.014, "g/dl", "something")
     ref_range_so2 <- createReferenceRange(0.0055, "g/dl", 0.015, "g/dl", "something")
+    ref_range_inv <- createReferenceRange(0.0056, "g/mol", 0.016, "g/mol", "normal")
 
     addObs <- function(pid, reference_ranges = NULL, code = "21198-7", day_offset = -0.5, value = 16, unit = "mg/dL") {
       day_offset_plus <- sub(".*_(\\d+)$", "\\1", pid) # get the number after the last underscore (UKB-0001_3 -> 3)
@@ -212,6 +213,10 @@ if (exists("DEBUG_DAY")) {
     # 14:  2 |  0 |  0 | invalid Obs
     pid <- addDrugs("UKB-0001_14", "C03DA02")
     addObs(pid, list(ref_range_so, ref_range_so2))
+
+    # 15:  0 |  0 |  1 | invalid Obs - non convertible unit
+    pid <- addDrugs("UKB-0001_15", "C03DA02")
+    addObs(pid, list(ref_range_inv))
 
   })
 
