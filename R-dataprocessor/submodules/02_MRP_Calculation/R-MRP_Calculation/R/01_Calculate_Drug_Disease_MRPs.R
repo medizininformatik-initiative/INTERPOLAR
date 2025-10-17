@@ -187,7 +187,7 @@ getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
   relevant_conditions <- conditions[
     con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime]
 
-  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "start_datetime")
+  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "con_code_display", "start_datetime")
   relevant_conditions <- relevant_conditions[, ..relevant_cols]
 
   return(relevant_conditions)
@@ -247,7 +247,15 @@ matchATCCodes <- function(active_requests, mrp_table_list_by_atc) {
 #'         of the contraindication).
 #'
 matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, match_atc_codes, meda_datetime, patient_id) {
-  matched_rows <- list()
+  # Initialize empty result data.table
+  matched_rows <- data.table::data.table(
+    icd_code = character(),
+    atc_code = character(),
+    proxy_code = character(),
+    proxy_type = character(),
+    diagnosis_cluster = character(),
+    kurzbeschr = character()
+  )
 
   # Filter all conditions for the current patient
   all_patient_conditions <- relevant_conditions[con_patient_ref == paste0("Patient/", patient_id)]
@@ -258,6 +266,19 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
     # Extract all MRP rules for this ICD
     mrp_table_list_rows <- drug_disease_mrp_tables_by_icd[[mrp_icd]]
     mrp_table_list_rows <- mrp_table_list_rows[ATC_FOR_CALCULATION %in% match_atc_codes$atc_code]
+
+    if (nrow(matched_rows)) {
+      # Extract all diagnosis_cluster from matched_rows
+      matched_clusters <- unique(na.omit(matched_rows$diagnosis_cluster))
+      # Sort mrp_table_list_rows by matches
+      mrp_table_list_rows <- mrp_table_list_rows[
+        order(
+          sapply(CONDITION_DISPLAY_CLUSTER, function(x)
+            any(grepl(x, matched_clusters, fixed = TRUE))),
+          decreasing = TRUE
+        )
+      ]
+    }
 
     # Find matching ICD conditions for this specific ICD
     patient_conditions <- all_patient_conditions[
@@ -290,23 +311,71 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
         atc_code
       ]
 
-      # Add one row per matching ATC
-      for (atc_code in relevant_atcs) {
-        matched_rows[[length(matched_rows) + 1]] <- data.table::data.table(
+      # Add directly to matched_rows
+      if (length(relevant_atcs) > 0) {
+        new_row <- data.table::data.table(
           icd_code = mrp_icd,
-          atc_code = atc_code,
+          atc_code = relevant_atcs,
           proxy_code = NA_character_,
           proxy_type = NA_character_,
-          # TODO: Use a more descriptive text from the MRP definition
-          kurzbeschr = paste0(
-            mrp_table_list_row$ATC_DISPLAY, " (", atc_code, ") ist bei ",
-            mrp_table_list_row$CONDITION_DISPLAY_CLUSTER, " (", mrp_icd, ") kontrainduziert.")
+          diagnosis_cluster = mrp_table_list_row$CONDITION_DISPLAY_CLUSTER
         )
+
+        # Check if same ATC + same diagnosis_cluster exists
+        existing_idx_cluster <- which(
+          matched_rows$atc_code == new_row$atc_code &
+            grepl(new_row$diagnosis_cluster, matched_rows$diagnosis_cluster, fixed = TRUE)
+        )
+
+        # Check if same ATC + same ICD exists
+        existing_idx_icd <- which(
+          matched_rows$atc_code == new_row$atc_code &
+            grepl(new_row$icd_code, matched_rows$icd_code, fixed = TRUE)
+        )
+
+        # ---- CASE A: same ATC + same diagnosis_cluster → append ICD to existing row ----
+        if (length(existing_idx_cluster)) {
+          existing_icd <- matched_rows$icd_code[existing_idx_cluster]
+          matched_rows$icd_code[existing_idx_cluster] <- paste(existing_icd, new_row$icd_code)
+
+          # ---- CASE B: same ATC + same ICD → append diagnosis_cluster ----
+        } else if (length(existing_idx_icd)) {
+          existing_diag <- matched_rows$diagnosis_cluster[existing_idx_icd]
+          matched_rows$diagnosis_cluster[existing_idx_icd] <-
+            paste(existing_diag, new_row$diagnosis_cluster, sep = " und ")
+
+          # ---- CASE C: no match → append new row ----
+        } else {
+          matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
+        }
+
+        # Determine con_display for all ICD codes in matched_rows
+        matched_rows[, con_display := {
+          v <- vector("character", .N)
+          for (i in seq_len(.N)) {
+            icd_list <- unlist(strsplit(icd_code[i], "\\s+"))
+            display_values <- relevant_conditions[
+              con_code_code %in% icd_list & !is.na(con_code_display),
+              con_code_display
+            ]
+            display_values <- unique(display_values[!is.na(display_values)])
+            v[i] <- if (length(display_values)) paste(display_values, collapse = " ") else NA_character_
+          }
+          v
+        }]
+
+        # Generate final description text for each row
+        matched_rows[, kurzbeschr := paste0(
+          "[", mrp_table_list_row$ATC_DISPLAY, " - ", atc_code, "] ist bei [",
+          con_display, " - ", icd_code, "] laut der entsprechenden Fachinformation [",
+          diagnosis_cluster, "] kontrainduziert."
+        )]
       }
     }
   }
-
-  return(data.table::rbindlist(matched_rows, fill = TRUE))
+  # Remove helper columns at the end
+  matched_rows[, c("con_display", "diagnosis_cluster") := NULL]
+  return(matched_rows)
 }
 
 #' Print a warning for observations with invalid or non-convertible units

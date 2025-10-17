@@ -360,6 +360,7 @@ getConditionsFromDB <- function(patient_references) {
                                                     "con_patient_ref",
                                                     "con_code_code",
                                                     "con_code_system",
+                                                    "con_code_display",
                                                     "con_onsetperiod_start",
                                                     "con_recordeddate"),
                                    patient_references = patient_references,
