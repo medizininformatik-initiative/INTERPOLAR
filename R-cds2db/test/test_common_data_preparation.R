@@ -850,15 +850,15 @@ createReferenceRange <- function(referencerange_low_value = NULL, referencerange
 }
 
 addObservation <- function(pid, code, day_offset = -0.5, value = NULL, unit = NULL, referencerange_low_value = NULL,
-                            referencerange_high_value = NULL, referencerange_low_code = NULL, referencerange_high_code = NULL,
-                            referencerange_low_system = NULL, referencerange_high_system = NULL, referencerange_type_code = NULL) {
+                           referencerange_high_value = NULL, referencerange_low_code = NULL, referencerange_high_code = NULL,
+                           referencerange_low_system = NULL, referencerange_high_system = NULL, referencerange_type_code = NULL) {
   addObservationWithRanges(pid, code, day_offset, value, unit, reference_ranges = createReferenceRange(referencerange_low_value,
-                                                                                                        referencerange_high_value,
-                                                                                                        referencerange_low_code,
-                                                                                                        referencerange_high_code,
-                                                                                                        referencerange_low_system,
-                                                                                                        referencerange_high_system,
-                                                                                                        referencerange_type_code))
+                                                                                                       referencerange_low_code,
+                                                                                                       referencerange_high_value,
+                                                                                                       referencerange_high_code,
+                                                                                                       referencerange_low_system,
+                                                                                                       referencerange_high_system,
+                                                                                                       referencerange_type_code))
 }
 
 addObservationWithRanges <- function(pid, code, day_offset = -0.5, value = NULL, unit = NULL, reference_ranges = NULL) {
