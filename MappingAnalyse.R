@@ -70,11 +70,105 @@ matching_rows <- drug_disease_org[matching_idx]
 etlutils::writeExcelFile(matching_rows, "~/Projekte/Interpolar/Input-Repo/INTERPOLAR-WP7/MRP_Drug_Disease/Drug_Disease_primary_ATC_in_secondary_ATC_2.xlsx", TRUE)
 
 
+##########################################################################################
+# Überprüfung nach doppelten Zeilen über den Spalten ATC_PRIMARY und LOINC_PRIMARY_PROXY #
+##########################################################################################
+drug_disease_LOINC <- drug_disease_org[
+  !is.na(ATC_PRIMARY) & !is.na(LOINC_PRIMARY_PROXY)
+]
 
+drug_disease_LOINC_dup <- drug_disease_LOINC[
+  , .N, by = .(ATC_PRIMARY, LOINC_PRIMARY_PROXY)
+][N > 1][drug_disease_LOINC, on = .(ATC_PRIMARY, LOINC_PRIMARY_PROXY)]
 
+drug_disease_LOINC_dup <- drug_disease_LOINC_dup[
+  !is.na(N)
+]
 
+drug_disease_ATC_and_LOINC_duplicates <- drug_disease_LOINC_dup[
+  !is.na(ATC_PRIMARY) & !is.na(LOINC_PRIMARY_PROXY)
+]
 
+setorder(drug_disease_ATC_and_LOINC_duplicates, ATC_PRIMARY, LOINC_PRIMARY_PROXY)
 
+etlutils::writeExcelFile(drug_disease_ATC_and_LOINC_duplicates, "~/Projekte/INTERPOLAR/Input-Repo/INTERPOLAR-WP7/MRP_Drug_Disease/Drug_Disease_content/Drug_Disease_by_ATC_PRIMARY_and_LOINC_PRIMARY_PROXY.xlsx", TRUE)
+
+##########################################################################################
+# Überprüfung nach doppelten Zeilen über den Spalten ATC_PRIMARY und ICD_PROXY_ATC #
+##########################################################################################
+drug_disease_ATC <- drug_disease_org[
+  !is.na(ATC_PRIMARY) & !is.na(ICD_PROXY_ATC)
+]
+
+drug_disease_ATC_dup <- drug_disease_ATC[
+  , .N, by = .(ATC_PRIMARY, ICD_PROXY_ATC)
+][N > 1][drug_disease_ATC, on = .(ATC_PRIMARY, ICD_PROXY_ATC)]
+
+drug_disease_ATC_dup <- drug_disease_ATC_dup[
+  !is.na(N)
+]
+
+drug_disease_ATC_and_ATC_duplicates <- drug_disease_ATC_dup[
+  !is.na(ATC_PRIMARY) & !is.na(ICD_PROXY_ATC)
+]
+
+setorder(drug_disease_ATC_and_ATC_duplicates, ATC_PRIMARY, ICD_PROXY_ATC)
+
+etlutils::writeExcelFile(drug_disease_ATC_and_ATC_duplicates, "~/Projekte/INTERPOLAR/Input-Repo/INTERPOLAR-WP7/MRP_Drug_Disease/Drug_Disease_content/Drug_Disease_by_ATC_PRIMARY_and_ICD_PROXY_ATC.xlsx", TRUE)
+
+##########################################################################################
+# Überprüfung nach doppelten Zeilen über den Spalten ATC_PRIMARY und ICD_PROXY_OPS #
+##########################################################################################
+drug_disease_OPS <- drug_disease_org[
+  !is.na(ATC_PRIMARY) & !is.na(ICD_PROXY_OPS)
+]
+
+drug_disease_OPS_dup <- drug_disease_OPS[
+  , .N, by = .(ATC_PRIMARY, ICD_PROXY_OPS)
+][N > 1][drug_disease_OPS, on = .(ATC_PRIMARY, ICD_PROXY_OPS)]
+
+drug_disease_OPS_dup <- drug_disease_OPS_dup[
+  !is.na(N)
+]
+
+drug_disease_ATC_and_OPS_duplicates <- drug_disease_OPS_dup[
+  !is.na(ATC_PRIMARY) & !is.na(ICD_PROXY_OPS)
+]
+
+setorder(drug_disease_ATC_and_OPS_duplicates, ATC_PRIMARY, ICD_PROXY_OPS)
+
+etlutils::writeExcelFile(drug_disease_ATC_and_OPS_duplicates, "~/Projekte/INTERPOLAR/Input-Repo/INTERPOLAR-WP7/MRP_Drug_Disease/Drug_Disease_content/Drug_Disease_by_ATC_PRIMARY_and_ICD_PROXY_OPS.xlsx", TRUE)
+
+##################################################################################################################################
+# Überprüfung nach doppelten Zeilen über den Spalten ATC_PRIMARY und ICD_FULL_LIST, die unterschiedliche ICD_VALIDITY_DAYS haben #
+##################################################################################################################################
+
+drug_disease_ICD <- drug_disease_org[
+  !is.na(ATC_PRIMARY) & !is.na(ICD)
+]
+
+drug_disease_ICD <- unique(drug_disease_ICD)
+
+drug_disease_ICD_dup <- drug_disease_ICD[
+  , .N, by = .(ATC_PRIMARY, ICD)
+][N > 1][drug_disease_ICD, on = .(ATC_PRIMARY, ICD)]
+
+drug_disease_ICD_dup <- drug_disease_ICD_dup[
+  !is.na(N)
+]
+
+drug_disease_ICD_dup <- drug_disease_ICD_dup[
+  !is.na(ATC_PRIMARY) & !is.na(ICD)
+]
+
+drug_disease_ATC_and_ICD_duplicates <- drug_disease_ICD_dup[
+  , if (length(unique(ICD_VALIDITY_DAYS[!is.na(ICD_VALIDITY_DAYS)])) > 1) .SD,
+  by = .(ATC_PRIMARY, ICD)
+]
+
+setorder(drug_disease_ATC_and_ICD_duplicates, ATC_PRIMARY, ICD)
+
+etlutils::writeExcelFile(drug_disease_ATC_and_ICD_duplicates, "~/Projekte/INTERPOLAR/Input-Repo/INTERPOLAR-WP7/MRP_Drug_Disease/Drug_Disease_content/Drug_Disease_with_different_ICD_VALIDITY_DAYS_by_ATC_PRIMARY_and_ICD.xlsx", TRUE)
 
 ##############################################################################################
 # LOINC Mapping
