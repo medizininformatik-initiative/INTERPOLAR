@@ -10,10 +10,6 @@ primary_loincs_from_mapping <- unique(loinc_mapping$LOINC_PRIMARY)
 # behalte alle Zeilen aus drug_disease_org, deren LOINC_PRIMARY_PROXY dem primary_loincs_from_mapping mit dem Index 1 entspricht
 mapping_loinc_rows_from_drug_disease <- unique(drug_disease_org[LOINC_PRIMARY_PROXY == primary_loincs_from_mapping[4], ]$LOINC_CUTOFF_REFERENCE)
 
-# behalte aus drug_disease_org nur die beiden Spalten LOINC_PRIMARY_PROXY und LOINC_CUTOFF_REFERENCE
-drug_disease_org_sub <- unique(drug_disease_org[grepl("^(<|>)", LOINC_CUTOFF_REFERENCE), c("ATC_PRIMARY", "LOINC_PRIMARY_PROXY", "LOINC_CUTOFF_REFERENCE")])
-
-
 cutoffs <- unique(drug_disease_org$LOINC_CUTOFF_ABSOLUTE)
 
 
@@ -170,6 +166,31 @@ setorder(drug_disease_ATC_and_ICD_duplicates, ATC_PRIMARY, ICD)
 
 etlutils::writeExcelFile(drug_disease_ATC_and_ICD_duplicates, "~/Projekte/INTERPOLAR/Input-Repo/INTERPOLAR-WP7/MRP_Drug_Disease/Drug_Disease_content/Drug_Disease_with_different_ICD_VALIDITY_DAYS_by_ATC_PRIMARY_and_ICD.xlsx", TRUE)
 
+
+##############################################################################################
+# Drug-Drug & Drug-DrugGroup
+##############################################################################################
+
+drug_drug_processed <- etlutils::readExcelFileAsTableList("~/Projekte/Interpolar/Input-Repo/INTERPOLAR-WP7/MRP_Drug_Drug/Drug_Drug_content/Drug_Drug_MRP_Table_processed.xlsx")$`Sheet 1`
+
+# Create a copy of the table to avoid modifying the original
+drug_drug_pairs <- data.table::copy(drug_drug_processed)
+
+# Ensure consistent order of pairs by sorting the two columns row-wise
+drug_drug_pairs[, `:=`(
+  atc_min = pmin(ATC_FOR_CALCULATION, ATC2_FOR_CALCULATION),
+  atc_max = pmax(ATC_FOR_CALCULATION, ATC2_FOR_CALCULATION)
+)]
+
+
+# Sort table by two columns in ascending order
+drug_drug_pairs <- drug_drug_pairs[order(ATC_FOR_CALCULATION, ATC2_FOR_CALCULATION)]
+
+# Count occurrences of each unique ordered pair
+pair_counts <- drug_drug_pairs[, .N, by = .(atc_min, atc_max)][N > 1]
+
+etlutils::writeExcelFile(pair_counts, "~/Projekte/Interpolar/drug_drug_multiple_pairs.xlsx", TRUE)
+
 ##############################################################################################
 # LOINC Mapping
 ##############################################################################################
@@ -180,17 +201,10 @@ mapping <- etlutils::readExcelFileAsTableList("~/Projekte/Interpolar/Input-Repo/
 
 # mapping names = "LOINC", "LOINC_PRIMARY", "COMPARABILITY_TO_LOINC_PRIMARY", "GERMAN_NAME_LOINC_PRIMARY", "UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT"
 
-mapping_conversion_cols <- unique(mapping[, c("LOINC_PRIMARY", "UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
-# Keep only rows where CONVERSION_FACTOR can be converted to a number
-mapping_non_conversion_cols <- mapping_conversion_cols[
-  is.na(suppressWarnings(as.numeric(CONVERSION_FACTOR)))
+mapping_conversion_cols <- unique(mapping[, c("UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
+mapping_conversion_cols <- mapping_conversion_cols[
+  grepl("^-?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$", CONVERSION_FACTOR)
 ]
-drug_disease_without_conversion <- drug_disease[LOINC_PRIMARY_PROXY %in% mapping_non_conversion_cols$LOINC_PRIMARY]
-drug_disease_without_conversion[, ATC_FOR_CALCULATION := NULL]
-drug_disease_without_conversion <- unique(drug_disease_without_conversion)
-drug_disease_without_conversion <- drug_disease_without_conversion[!is.na(LOINC_CUTOFF_ABSOLUTE)]
-unique(drug_disease_without_conversion$LOINC_PRIMARY_PROXY)
-
 
 mapping_loinc <- mapping$LOINC
 mapping_loinc_primary <- mapping$LOINC_PRIMARY
