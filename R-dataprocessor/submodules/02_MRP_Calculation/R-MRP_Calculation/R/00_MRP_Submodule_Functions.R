@@ -189,6 +189,7 @@ addMedicationIdColumn <- function(medication_resources) {
     function(x) if (is.na(x) || trimws(x) == "") NA_character_ else etlutils::fhirdataExtractIDs(x, unique = FALSE),
     character(1) # return value is always single string
   )]
+  medication_resources <- medication_resources[!is.na(med_id) & nzchar(trimws(med_id))]
   return(medication_resources)
 }
 
@@ -378,26 +379,23 @@ getConditionsFromDB <- function(patient_references) {
 #
 # Extract ATC code of referenced Medication. If not exists then remove the resource.
 #
-appendATCColumn <- function(medications, medication_resources) {
-  result <- medication_resources[0]
-  result[, atc_code := character()]
+appendATCColumns <- function(medication_resources, medications) {
+  # Perform join: match each medication_resource to its medication by med_id
+  result <- medication_resources[
+    medications,
+    on = .(med_id),
+    allow.cartesian = TRUE
+  ]
 
-  for (i in seq_len(nrow(medication_resources))) {
-    medication_resource <- medication_resources[i]
-    current_med_id <- medication_resource[["med_id"]]
+  # Rename joined columns
+  data.table::setnames(result, c("med_code_code", "med_code_display"), c("atc_code", "atc_display"))
 
-    # return resources only if they have a reference to an ATC medication
-    # (means: ignore all others)
-    if (!is.na(current_med_id) && nzchar(current_med_id)) {
-      matched_meds <- medications[med_id %in% current_med_id]
+  # Keep only resource columns and the renamed ATC columns
+  keep_cols <- c(names(medication_resources), "atc_code", "atc_display")
+  result <- result[, ..keep_cols]
 
-      if (nrow(matched_meds) > 0) {
-        expanded <- medication_resource[rep(1L, nrow(matched_meds))]
-        expanded[, atc_code := matched_meds$med_code_code]
-        result <- rbind(result, expanded, use.names = TRUE, fill = TRUE)
-      }
-    }
-  }
+  # Drop rows without ATC code
+  result <- result[!is.na(atc_code)]
 
   return(result)
 }
@@ -491,9 +489,9 @@ getResourcesForMRPCalculation <- function(main_encounters) {
   medications <- getATCMedicationsFromDB(medication_requests, medication_administrations, medication_statements)
 
   # Add ATC codes as separate column and remove all medication resources without ATC
-  medication_requests <- appendATCColumn(medications, medication_requests)
-  medication_administrations <- appendATCColumn(medications, medication_administrations)
-  medication_statements <- appendATCColumn(medications, medication_statements)
+  medication_requests <- appendATCColumns(medication_requests, medications)
+  medication_administrations <- appendATCColumns(medication_administrations, medications)
+  medication_statements <- appendATCColumns(medication_statements, medications)
 
   return(list(
     main_encounters = main_encounters,
