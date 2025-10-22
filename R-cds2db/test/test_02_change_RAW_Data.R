@@ -92,8 +92,8 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(20)
-  #duplicatePatients(1, 17)
+  duplicatePatients(21)
+  #duplicatePatients(1, 3)
 
   runCodeForDebugDay(1, {
 
@@ -140,7 +140,7 @@ if (exists("DEBUG_DAY")) {
     # Drug_Disease -> Proxy LOINC primary, cutoff absolute, no unit conversion
     # Line 133 -> MedicationRequest - C02KX01 + Observation - 1751-7 < 20 g/L
     pid <- addDrugs("UKB-0001_8", "C02KX01")
-    addObservation(pid, "1751-7", value = 15, unit = "g/L")
+    addObservation(pid, "1751-7", value = 15, unit = "g/L") # zwei MRP, weil bei Proxy nicht geclustert wird - 2 verschiedene Diagnose-Cluster
 
     # Drug_Disease -> Proxy LOINC primary, cutoff absolute, simple unit conversion
     # Line 133 -> MedicationRequest - C02KX01 + Observation - 1751-7 < 20 g/L
@@ -193,12 +193,12 @@ if (exists("DEBUG_DAY")) {
     # Drug_Disease -> Proxy LOINC primary, cutoff absolute, no unit conversion
     # Line 151967 -> MedicationRequest - C01DA14 + Observation - 14775-1
     pid <- addDrugs("UKB-0001_16", "C07BB27")
-    addObservation(pid, "33762-6", value = 1801, unit = "pg/mL")
+    addObservation(pid, "33762-6", value = 1801, unit = "pg/mL") # zwei MRPs, da ATC_DISPLAY unterschiedlich in zwei Zeilen
 
     # Drug_Disease -> Proxy LOINC secondary, cutoff absolute, decimal unit conversion
     # Line 103536 -> MedicationRequest - N05AB10 + Observation - 26464-8 (Proxy for 6690-2, 10*9/L Leukozyten < 2,0)
     pid <- addDrugs("UKB-0001_17", "N05AB10")
-    addObservation(pid, "26464-8", value = 999, unit = "10*6/L") # kein MRP?
+    addObservation(pid, "26464-8", value = 999, unit = "10*6/L") # kein MRP, nicht in WP 7 Liste
 
     # Drug_Disease -> Proxy LOINC primary, < LLN
     # Line 571 -> MedicationRequest - C03DA02 + Observation - 2951-2
@@ -213,14 +213,17 @@ if (exists("DEBUG_DAY")) {
     ###############
 
     # Drug_Drug_Interaction                  -> MedicationRequests - N06AX22 + J01MA02
-    addDrugs("UKB-0001_19", c("N06AX22", "J01MA02"))
+    addDrugs("UKB-0001_19", c("N06AX22", "J01MA02")) # zwei MRPS, weil in Drug Drug und in Drug Drug Group (Wird noch bereinigt)
+
+    # Drug_Drug_Interaction                  -> MedicationRequests - J04AB02 + J05AP52
+    addDrugs("UKB-0001_20", c("J04AB02", "J05AP52"))
 
     ####################
     # Drug - DrugGroup #
     ####################
 
     # Drug_DrugGroup_Interaction             -> MedicationRequests - N06BA09 + C02KC01
-    addDrugs("UKB-0001_20", c("N06BA09", "C02KC01"))
+    addDrugs("UKB-0001_21", c("N06BA09", "C02KC01"))
 
   })
 
