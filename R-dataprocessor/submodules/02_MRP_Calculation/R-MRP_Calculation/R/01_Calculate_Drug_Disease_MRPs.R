@@ -1034,87 +1034,97 @@ matchICDProxies <- function(
       single_proxy_sub_table <- splitted_proxy_table[[proxy_code]]
       match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get("ICD_PROXY")) & get("ICD_PROXY") != ""]
 
-      # Create ICD_FULL_LIST per ATC_PRIMARY group
-      match_proxy_rows[
-        ,
-        ICD_FULL_LIST := {
-          vals <- ICD
-          vals <- vals[!is.na(vals) & nzchar(vals)]  # drop NA and empty strings
-          if (length(vals)) paste(unique(vals), collapse = ", ") else NA_character_
-        },
-        by = ATC_FOR_CALCULATION
-      ]
+      if (nrow(match_proxy_rows)) {
+        # Create ICD_FULL_LIST per ATC group
+        match_proxy_rows[
+          ,
+          ICD_FULL_LIST := {
+            vals <- ICD
+            vals <- vals[!is.na(vals) & nzchar(vals)]  # drop NA and empty strings
+            if (length(vals)) paste(unique(vals), collapse = ", ") else NA_character_
+          },
+          by = ATC_FOR_CALCULATION
+        ]
+        # Remove other proxy rows
+        cols_to_remove <- unique(c(
+          grep("^ICD_PROXY_", names(match_proxy_rows), value = TRUE),
+          if (proxy_type != "LOINC") grep("^LOINC_", names(match_proxy_rows), value = TRUE)
+        ))
+        cols_to_remove <- setdiff(cols_to_remove, "ICD_PROXY_VALIDITY_DAYS")
+        if (length(cols_to_remove)) {
+          match_proxy_rows[, (cols_to_remove) := NULL]
+          # Remove ICD column data to prevent multiple identical rows with different ICD codes
+          match_proxy_rows[, ICD := NA_character_]
+        }
+        match_proxy_rows <- unique(match_proxy_rows)
 
-      # Remove ICD column data to prevent multiple identical rows with different ICD codes
-      match_proxy_rows[, ICD := NA_character_]
-      match_proxy_rows <- unique(match_proxy_rows)
+        if (nrow(match_proxy_rows)) {
+          # Get the relevant secondary codes for this primary code
+          relevant_secondary_codes <- used_codes[primary_code == proxy_code, code]
+          # Select all items where the code matches any of the relevant secondary codes
+          resources_with_proxy <- all_items[code %in% relevant_secondary_codes]
+          if (nrow(resources_with_proxy)) {
 
-      # Get the relevant secondary codes for this primary code
-      relevant_secondary_codes <- used_codes[primary_code == proxy_code, code]
-      # Select all items where the code matches any of the relevant secondary codes
-      resources_with_proxy <- all_items[code %in% relevant_secondary_codes]
-      if (nrow(resources_with_proxy)) {
-
-        for (i in seq_len(nrow(match_proxy_rows))) {
-          match_proxy_row <- match_proxy_rows[i]
-          proxy_validity_days <- match_proxy_row[["ICD_PROXY_VALIDITY_DAYS"]]
-          fallback_validity_days <- match_proxy_row$ICD_VALIDITY_DAYS
-          validity_days <- if (!is.na(proxy_validity_days) && trimws(proxy_validity_days) != "") proxy_validity_days else fallback_validity_days
-          validity_days <- suppressWarnings(as.integer(validity_days))
-          # All non integer values are considered as unlimited validity duration
-          if (is.na(validity_days)) {
-            # 36525 days are 100 years in the future
-            validity_days <- 36525
-          }
-
-          resources_with_proxy[is.na(end_datetime), end_datetime := start_datetime + lubridate::days(validity_days)]
-
-          valid_proxy_rows <- resources_with_proxy[start_datetime <= meda_datetime & end_datetime >= meda_datetime]
-
-          if (nrow(valid_proxy_rows)) {
-
-            kurzbeschr <- sprintf(
-              paste0(
-                "%s (%s) ist bei %s kontraindiziert.\n",        # 1,2,3
-                "%s ist als %s%s-Proxy für %s verwendet worden.\n", # 4,5,6,7
-                "\n",
-                "Der %s-Proxy steht für folgende ICD Codes:\n", # 8
-                "%s\n"                                          # 9
-              ),
-              match_proxy_row$ATC_DISPLAY,               # 1
-              match_proxy_row$ATC_FOR_CALCULATION,       # 2
-              match_proxy_row$CONDITION_DISPLAY_CLUSTER, # 3
-              proxy_code,                                # 4
-              ifelse(proxy_type == "LOINC", "primärer ", ""), # 5
-              proxy_type,                                # 6
-              match_proxy_row$CONDITION_DISPLAY_CLUSTER, # 7
-              proxy_type,                                # 8
-              match_proxy_row$ICD_FULL_LIST              # 9
-            )
-
-            if (proxy_type == "LOINC") {
-              # Call the external custom function
-              mrp_match_description <- loinc_matching_function(
-                observation_resources = valid_proxy_rows,
-                match_proxy_row = match_proxy_row,
-                loinc_mapping_table = loinc_mapping_table
-              )
-              # If both matching functions returns NA, skip this proxy match
-              if (length(mrp_match_description) && any(!is.na(mrp_match_description))) {
-                kurzbeschr <- paste(kurzbeschr, paste(mrp_match_description, collapse = "\n"), sep = "\n")
-              } else {
-                kurzbeschr <- NA_character_
+            for (i in seq_len(nrow(match_proxy_rows))) {
+              match_proxy_row <- match_proxy_rows[i]
+              proxy_validity_days <- match_proxy_row[["ICD_PROXY_VALIDITY_DAYS"]]
+              fallback_validity_days <- match_proxy_row$ICD_VALIDITY_DAYS
+              validity_days <- if (!is.na(proxy_validity_days) && trimws(proxy_validity_days) != "") proxy_validity_days else fallback_validity_days
+              validity_days <- suppressWarnings(as.integer(validity_days))
+              # All non integer values are considered as unlimited validity duration
+              if (is.na(validity_days)) {
+                # 36525 days are 100 years in the future
+                validity_days <- 36525
               }
-            }
 
-            if (!is.na(kurzbeschr)) {
-              mrp_matches[[length(mrp_matches) + 1]] <- data.table::data.table(
-                icd_code = match_proxy_row$ICD,
-                atc_code = match_proxy_row$ATC_FOR_CALCULATION,
-                proxy_code = proxy_code,
-                proxy_type = proxy_type,
-                kurzbeschr = kurzbeschr
-              )
+              resources_with_proxy[is.na(end_datetime), end_datetime := start_datetime + lubridate::days(validity_days)]
+
+              valid_proxy_rows <- resources_with_proxy[start_datetime <= meda_datetime & end_datetime >= meda_datetime]
+              first_valid_display <- valid_proxy_rows[!is.na(display), display][1]
+
+              if (nrow(valid_proxy_rows)) {
+
+                kurzbeschr <- sprintf(
+                  paste0(
+                    "[%s - %s] ist bei [%s - %s]",                                      # 1,2,3,4
+                    " laut der entsprechenden Fachinformation [%s] kontraindiziert.\n",    # 5
+                    "%s ist als %s%s-Proxy verwendet worden.\n"                           # 6,7,8
+                  ),
+                  match_proxy_row$ATC_DISPLAY,               # 1
+                  match_proxy_row$ATC_FOR_CALCULATION,       # 2
+                  first_valid_display,                       # 3
+                  proxy_code,                                # 4
+                  match_proxy_row$CONDITION_DISPLAY_CLUSTER, # 5
+                  proxy_code,                                # 6
+                  ifelse(proxy_type == "LOINC", "primärer ", ""), # 7
+                  proxy_type                                 # 8
+                )
+
+                if (proxy_type == "LOINC") {
+                  # Call the external custom function
+                  mrp_match_description <- loinc_matching_function(
+                    observation_resources = valid_proxy_rows,
+                    match_proxy_row = match_proxy_row,
+                    loinc_mapping_table = loinc_mapping_table
+                  )
+                  # If both matching functions returns NA, skip this proxy match
+                  if (length(mrp_match_description) && any(!is.na(mrp_match_description))) {
+                    kurzbeschr <- paste(kurzbeschr, paste(mrp_match_description, collapse = "\n"), sep = "\n")
+                  } else {
+                    kurzbeschr <- NA_character_
+                  }
+                }
+
+                if (!is.na(kurzbeschr)) {
+                  mrp_matches[[length(mrp_matches) + 1]] <- data.table::data.table(
+                    icd_code = match_proxy_row$ICD,
+                    atc_code = match_proxy_row$ATC_FOR_CALCULATION,
+                    proxy_code = proxy_code,
+                    proxy_type = proxy_type,
+                    kurzbeschr = kurzbeschr
+                  )
+                }
+              }
             }
           }
         }
