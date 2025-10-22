@@ -1156,6 +1156,10 @@ convertLabUnits <- function(measured_value,
   measured_unit <- asUnit(measured_unit)
   target_unit <- asUnit(target_unit)
 
+  if (is.na(measured_unit) || is.na(target_unit)) {
+    return(NA)
+  }
+
   measured_unit_factor <- units::drop_units(measured_unit)
   target_unit_factor <- units::drop_units(target_unit)
 
