@@ -674,31 +674,57 @@ computeATCForCalculation <- function(data_table, primary_col, inclusion_col, out
 #'     \item{\code{kurzbeschr}}{A short textual description of the interaction.}
 #'   }
 matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
-  matched_rows <- list()
+  # Initialize empty result data.table
+  result_mrps <- data.table::data.table(
+    atc_code = character(),
+    atc2_code = character(),
+    proxy_code = character(),
+    proxy_type = character(),
+    kurzbeschr_part1 = character(),
+    kurzbeschr_part2 = character(),
+    kurzbeschr_part3 = character()
+  )
+
   active_atcs <- unique(active_requests$atc_code)
   used_keys <- intersect(names(mrp_table_list_by_atc), active_atcs)
 
-  for (atc_code in used_keys) {
-    mrp_rows <- mrp_table_list_by_atc[[atc_code]]
-    mrp_rows <- mrp_rows[ATC2_FOR_CALCULATION %in% active_atcs]
+  for (atc in used_keys) {
+    mrp_rows <- mrp_table_list_by_atc[[atc]]
+    mrp_filtered <- mrp_rows[ATC2_FOR_CALCULATION %in% active_atcs]
 
-    for (j in seq_len(nrow(mrp_rows))) {
-      rule <- mrp_rows[j]
-      atc2_code <- rule$ATC2_FOR_CALCULATION
+    for (j in seq_len(nrow(mrp_filtered))) {
+      matched_row <- mrp_filtered[j]
+      atc2 <- matched_row$ATC2_FOR_CALCULATION
 
-      matched_rows[[length(matched_rows) + 1]] <- data.table::data.table(
-        atc_code = atc_code,
-        atc2_code = atc2_code,
-        proxy_code = NA_character_,
-        proxy_type = NA_character_,
-        kurzbeschr = paste0(
-          rule$ATC_DISPLAY, " (", atc_code, ") ist bei ",
-          rule$ATC2_DISPLAY, " (", atc2_code, ") kontrainduziert."
+      # Check, if the pair (A,B) and (B,A) exists
+      duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+
+      # There is no existing mrp in the result table with the same atc codes
+      if (!length(duplicate_idx)) {
+        mrp_row <- data.table::data.table(
+          atc_code = atc,
+          atc2_code = atc2,
+          proxy_code = NA_character_,
+          proxy_type = NA_character_,
+          kurzbeschr_part1 = paste0("[", matched_row$ATC_DISPLAY, " - ", atc, "] ist mit ["),
+          kurzbeschr_part2 = matched_row$ATC2_DISPLAY,
+          kurzbeschr_part3 = paste0(" - ", atc2, "] laut der Fachinformation kontrainduziert.")
         )
-      )
+        result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
+      } else {
+        existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_part1], result_mrps[duplicate_idx, kurzbeschr_part2], result_mrps[duplicate_idx, kurzbeschr_part3])
+        # If duplicate exists, append the new information to kurzbeschr
+        if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+          result_mrps[duplicate_idx, kurzbeschr_part2 := paste0(kurzbeschr_part2, " und ", matched_row$ATC2_DISPLAY)]
+        } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+          result_mrps[duplicate_idx, kurzbeschr_part2 := paste0(kurzbeschr_part2, " und ", matched_row$ATC_DISPLAY)]
+        }
+      }
     }
   }
-  return(data.table::rbindlist(matched_rows, fill = TRUE))
+  result_mrps[, kurzbeschr := paste0(kurzbeschr_part1, kurzbeschr_part2, kurzbeschr_part3)]
+  result_mrps[, c("kurzbeschr_part1", "kurzbeschr_part2", "kurzbeschr_part3") := NULL]
+  return(result_mrps)
 }
 
 #' Filter active MedicationRequests for an encounter within a specific time window

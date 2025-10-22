@@ -888,7 +888,7 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
   }
 
   # Apply the new order
-  setcolorder(dt, new_order)
+  data.table::setcolorder(dt, new_order)
 }
 
 #' Print a summary for a table

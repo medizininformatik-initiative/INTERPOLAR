@@ -628,8 +628,8 @@ filterObservations <- function(obs, reference_value_col, invalid_obs) {
 
   if (nrow(valid_obs)) {
     # Sort column order before fsetdiff
-    setcolorder(obs, sort(names(obs)))
-    setcolorder(valid_obs, sort(names(valid_obs)))
+    data.table::setcolorder(obs, sort(names(obs)))
+    data.table::setcolorder(valid_obs, sort(names(valid_obs)))
     # Invalid observations are those that were dropped
     invalid_obs <- data.table::fsetdiff(obs, valid_obs)
     obs <- valid_obs
