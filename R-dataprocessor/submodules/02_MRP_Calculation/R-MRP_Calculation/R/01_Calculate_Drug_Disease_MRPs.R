@@ -775,11 +775,23 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
       }
 
       if (!is.na(reference_value_col)) {
-        # Split observation_resources in valid and invalid ones
-        invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)]
-        obs <- data.table::fsetdiff(observation_resources, invalid_obs)
+        # --- 1. Invalid observations based on numeric value or unit ---
+        invalid_obs <- observation_resources[
+          is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)
+        ]
 
-        obs <- observation_resources[!is.na(value) & !is.na(get(reference_value_col))]
+        # --- 2. Temporarily remove those invalid ones from main table ---
+        valid_obs <- data.table::fsetdiff(observation_resources, invalid_obs)
+
+        # --- 3. Now apply the next filter (reference values) ---
+        obs <- valid_obs[!is.na(value) & !is.na(get(reference_value_col))]
+
+        # --- 4. Add rows removed here also to invalid_obs ---
+        invalid_obs <- rbind(
+          invalid_obs,
+          data.table::fsetdiff(valid_obs, obs),
+          fill = TRUE
+        )
 
         if (nrow(obs)) {
 
