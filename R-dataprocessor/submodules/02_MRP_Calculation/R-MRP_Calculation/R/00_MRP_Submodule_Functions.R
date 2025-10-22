@@ -591,13 +591,11 @@ getMRPPairLists <- function() {
 #' @return A \code{data.frame} (or compatible object) containing the expanded LOINC mapping definition.
 #'
 getLOINCMapping <- function() {
-  etlutils::runLevel3Line(paste0("Load LOINC_Mapping Definition"), {
-    loinc_mapping <- .submodule_env[["LOINC_MAPPING"]]
-    if (is.null(loinc_mapping)) {
-      loinc_mapping <- getExpandedExcelContent("LOINC_Mapping")
-      .submodule_env[["LOINC_MAPPING"]] <- loinc_mapping
-    }
-  })
+  loinc_mapping <- .submodule_env[["LOINC_MAPPING"]]
+  if (is.null(loinc_mapping)) {
+    loinc_mapping <- getExpandedExcelContent("LOINC_Mapping")
+    .submodule_env[["LOINC_MAPPING"]] <- loinc_mapping
+  }
   return(loinc_mapping)
 }
 
