@@ -291,7 +291,8 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
                          "AND med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n")
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name = "Medication",
                                                     column_names = c("med_id",
-                                                                     "med_code_code"),
+                                                                     "med_code_code",
+                                                                     "med_code_display"),
                                                     filter = where_clause)
   medications <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getATCMedicationsFromDB()")
 }
@@ -306,6 +307,7 @@ getObservationsFromDB <- function(patient_references) {
                                                       "obs_patient_ref",
                                                       "obs_code_system",
                                                       "obs_code_code",
+                                                      "obs_code_display",
                                                       "obs_effectivedatetime",
                                                       "obs_valuequantity_value",
                                                       "obs_valuequantity_code",
@@ -334,6 +336,8 @@ getProceduresFromDB <- function(patient_references) {
                                                     "proc_encounter_ref",
                                                     "proc_patient_ref",
                                                     "proc_code_code",
+                                                    "proc_code_display",
+                                                    "proc_code_system",
                                                     "proc_performeddatetime",
                                                     "proc_performedperiod_start",
                                                     "proc_performedperiod_end"),
@@ -1156,7 +1160,6 @@ convertLabUnits <- function(measured_value,
 
   measured_unit_factor <- units::drop_units(measured_unit)
   target_unit_factor <- units::drop_units(target_unit)
-
 
   # Create unit object for measured value
   u_measured <- suppressWarnings(units::set_units(measured_value, measured_unit))

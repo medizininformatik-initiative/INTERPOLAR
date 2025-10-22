@@ -250,6 +250,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
   # Initialize empty result data.table
   matched_rows <- data.table::data.table(
     icd_code = character(),
+    icd_display = character(),
     atc_code = character(),
     proxy_code = character(),
     proxy_type = character(),
@@ -349,9 +350,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
           matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
         }
 
-        # Determine con_display for all ICD codes in matched_rows
-        matched_rows[, con_display := {
-          v <- vector("character", .N)
+        matched_rows[, icd_display := {
           for (i in seq_len(.N)) {
             icd_list <- unlist(strsplit(icd_code[i], "\\s+"))
             display_values <- relevant_conditions[
@@ -359,22 +358,22 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
               con_code_display
             ]
             display_values <- unique(display_values[!is.na(display_values)])
-            v[i] <- if (length(display_values)) paste(display_values, collapse = " ") else NA_character_
+            icd_display[i] <- if (length(display_values)) paste(display_values, collapse = " ") else NA_character_
           }
-          v
+          icd_display
         }]
 
         # Generate final description text for each row
         matched_rows[, kurzbeschr := paste0(
           "[", mrp_table_list_row$ATC_DISPLAY, " - ", atc_code, "] ist bei [",
-          con_display, " - ", icd_code, "] laut der entsprechenden Fachinformation [",
+          icd_display, " - ", icd_code, "] laut der entsprechenden Fachinformation [",
           diagnosis_cluster, "] kontrainduziert."
         )]
       }
     }
   }
   # Remove helper columns at the end
-  matched_rows[, c("con_display", "diagnosis_cluster") := NULL]
+  matched_rows[, c("icd_display", "diagnosis_cluster") := NULL]
   return(matched_rows)
 }
 
@@ -1114,15 +1113,16 @@ matchICDProxies <- function(
 
   #  Combine all medication rows
   all_medications <- rbind(
-    medication_resources$medication_requests[, .(code = atc_code, start_datetime, end_datetime)],
-    medication_resources$medication_statements[, .(code = atc_code, start_datetime, end_datetime)],
-    medication_resources$medication_administrations[, .(code = atc_code, start_datetime, end_datetime)],
+    medication_resources$medication_requests[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
+    medication_resources$medication_statements[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
+    medication_resources$medication_administrations[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
     fill = TRUE
   )
   #  Combine all procedures rows
-  all_procedures <- procedure_resources[, .(code = proc_code_code, start_datetime, end_datetime)]
+  all_procedures <- procedure_resources[, .(code = proc_code_code, display = proc_code_display, start_datetime, end_datetime)]
   #  Combine all observation rows
   all_observations <- observation_resources[, .(code = obs_code_code,
+                                                display = obs_code_display,
                                                 value = obs_valuequantity_value,
                                                 unit = obs_valuequantity_code,
                                                 reference_range_low_value = obs_referencerange_low_value,
