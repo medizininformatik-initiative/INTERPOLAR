@@ -67,6 +67,23 @@
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                            err_section:='<%TABLE_NAME%>-30';    err_schema:='<%OWNER_SCHEMA%>';    err_table:='<%TABLE_NAME%>';"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                            SELECT count(1) INTO data_count FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.<%SIMPLE_TABLE_NAME%>_raw_id = current_record.<%SIMPLE_TABLE_NAME%>_raw_id;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                err_section:='<%TABLE_NAME%>-33';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                SELECT count(1) INTO data_count FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.<%SIMPLE_TABLE_NAME%>_raw_id < current_record.<%SIMPLE_TABLE_NAME%>_raw_id;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                    data_count = -1;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                ELSE -- find last raw_id to hash and set as processed flag"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                    SELECT max(<%SIMPLE_TABLE_NAME%>_raw_id) INTO data_count FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%> target_record"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.<%SIMPLE_TABLE_NAME%>_raw_id < current_record.<%SIMPLE_TABLE_NAME%>_raw_id;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                END IF;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                err_section:='<%TABLE_NAME%>-35';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                                UPDATE <%OWNER_SCHEMA%>.<%TABLE_NAME%>_raw SET raw_already_processed = data_count WHERE <%SIMPLE_TABLE_NAME%>_raw_id = current_record.<%SIMPLE_TABLE_NAME%>_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "                            END IF;"%>
 
                             err_section:='<%TABLE_NAME%>-37';    err_schema:='<%SCHEMA_2%>';    err_table:='<%TABLE_NAME_2%>';
                             <%LOOP_COLS_SUB_LOOP_TABS_SUB_copy_function_META%>

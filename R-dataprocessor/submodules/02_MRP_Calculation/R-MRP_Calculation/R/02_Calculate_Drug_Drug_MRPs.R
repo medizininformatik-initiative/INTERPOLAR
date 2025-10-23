@@ -116,19 +116,17 @@ processExcelContentDrugDrug <- function(drug_drug_mrp_definition, mrp_type) {
 #' for more efficient evaluation during MRP calculation. Currently, the table is split
 #' by the column \code{ATC_FOR_CALCULATION}, enabling fast matching during runtime.
 #'
-#' @param drug_drug_mrp_tables A named list containing the key \code{processed_content}, which holds
-#'   the full MRP definition table for Drug-Drug interactions as a \code{data.table}.
+#' @param mrp_pair_list The complete MRP definition table for Drug-Drug interactions as a \code{data.table}.
 #'
 #' @return A list with named elements containing split tables. Specifically:
 #' \describe{
 #'   \item{by_atc}{A list of data.tables indexed by \code{ATC_FOR_CALCULATION}.}
 #' }
 #'
-getSplittedMRPTablesDrugDrug <- function(drug_drug_mrp_tables) {
-  drug_drug_mrp_table_content <- drug_drug_mrp_tables$processed_content
+getSplittedMRPTablesDrugDrug <- function(mrp_pair_list) {
   list(
     # Split drug_drug_mrp_tables by ATC
-    by_atc = etlutils::splitTableToList(drug_drug_mrp_table_content, "ATC_FOR_CALCULATION")
+    by_atc = etlutils::splitTableToList(mrp_pair_list, "ATC_FOR_CALCULATION", rm.na = TRUE)
   )
 }
 
@@ -140,14 +138,14 @@ getSplittedMRPTablesDrugDrug <- function(drug_drug_mrp_tables) {
 #'
 #' @param active_requests A \code{data.table} of active medications for the encounter,
 #'   expected to contain ATC codes.
-#' @param splitted_mrp_tables A list of split MRP tables as returned by \code{getSplittedMRPTablesDrugDrug()}.
-#' @param resources A list of all patient-related FHIR resources (not used here, but required by interface).
+#' @param mrp_pair_list MRP-Pair list to create a list of lookup tables created by \code{getSplittedMRPTablesDrugDrug
 #' @param patient_id The internal patient ID (not used here, but required by interface).
 #' @param meda_datetime The datetime of medication analysis (not used here, but required by interface).
 #'
 #' @return A \code{data.table} with matched Drug-Drug MRP results. The format is
 #'   compatible with downstream processing for MRP reporting and audit.
 #'
-calculateMRPsDrugDrug <- function(active_requests, splitted_mrp_tables, resources, patient_id, meda_datetime) { # don't remove the unused parameters!
+calculateMRPsDrugDrug <- function(active_requests, mrp_pair_list, resources, patient_id, meda_datetime) { # don't remove the unused parameters!
+  splitted_mrp_tables <- getSplittedMRPTablesDrugDrug(mrp_pair_list)
   matchATCCodePairs(active_requests, splitted_mrp_tables$by_atc)
 }

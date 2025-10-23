@@ -189,6 +189,7 @@ addMedicationIdColumn <- function(medication_resources) {
     function(x) if (is.na(x) || trimws(x) == "") NA_character_ else etlutils::fhirdataExtractIDs(x, unique = FALSE),
     character(1) # return value is always single string
   )]
+  medication_resources <- medication_resources[!is.na(med_id) & nzchar(trimws(med_id))]
   return(medication_resources)
 }
 
@@ -210,13 +211,13 @@ getMedicationRequestsFromDB <- function(patient_references) {
   )
   medication_requests <- addMedicationIdColumn(medication_requests)
 
-  medication_requests[, start_date := data.table::fifelse(
+  medication_requests[, start_datetime := data.table::fifelse(
     !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_start),
     medreq_doseinstruc_timing_repeat_boundsperiod_start,
     medreq_authoredon
   )]
-  medication_requests <- medication_requests[!is.na(start_date)]
-  medication_requests[, end_date := data.table::fifelse(
+  medication_requests <- medication_requests[!is.na(start_datetime)]
+  medication_requests[, end_datetime := data.table::fifelse(
     !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_end),
     medreq_doseinstruc_timing_repeat_boundsperiod_end,
     NA
@@ -240,9 +241,9 @@ getMedicationAdministrationsFromDB <- function(patient_references) {
                                                    status_exclusion = c("not-done", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831577
   )
   medication_administrations <- addMedicationIdColumn(medication_administrations)
-  medication_administrations[, start_date := pmin(medadm_effectivedatetime, medadm_effectiveperiod_start, na.rm = TRUE)]
-  medication_administrations <- medication_administrations[!is.na(start_date)]
-  medication_administrations[, end_date := data.table::fifelse(
+  medication_administrations[, start_datetime := pmin(medadm_effectivedatetime, medadm_effectiveperiod_start, na.rm = TRUE)]
+  medication_administrations <- medication_administrations[!is.na(start_datetime)]
+  medication_administrations[, end_datetime := data.table::fifelse(
     !is.na(medadm_effectiveperiod_end),
     medadm_effectiveperiod_end,
     NA
@@ -266,9 +267,9 @@ getMedicationStatementsFromDB <- function(patient_references) {
                                               status_exclusion = c("entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834331
   )
   medication_statements <- addMedicationIdColumn(medication_statements)
-  medication_statements[, start_date := pmin(medstat_effectivedatetime, medstat_effectiveperiod_start, na.rm = TRUE)]
-  medication_statements <- medication_statements[!is.na(start_date)]
-  medication_statements[, end_date := data.table::fifelse(
+  medication_statements[, start_datetime := pmin(medstat_effectivedatetime, medstat_effectiveperiod_start, na.rm = TRUE)]
+  medication_statements <- medication_statements[!is.na(start_datetime)]
+  medication_statements[, end_datetime := data.table::fifelse(
     !is.na(medstat_effectiveperiod_end),
     medstat_effectiveperiod_end,
     NA
@@ -290,7 +291,8 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
                          "AND med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n")
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name = "Medication",
                                                     column_names = c("med_id",
-                                                                     "med_code_code"),
+                                                                     "med_code_code",
+                                                                     "med_code_display"),
                                                     filter = where_clause)
   medications <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getATCMedicationsFromDB()")
 }
@@ -305,17 +307,23 @@ getObservationsFromDB <- function(patient_references) {
                                                       "obs_patient_ref",
                                                       "obs_code_system",
                                                       "obs_code_code",
+                                                      "obs_code_display",
                                                       "obs_effectivedatetime",
                                                       "obs_valuequantity_value",
-                                                      "obs_valuequantity_unit",
+                                                      "obs_valuequantity_code",
                                                       "obs_referencerange_low_value",
-                                                      "obs_referencerange_high_value"),
+                                                      "obs_referencerange_high_value",
+                                                      "obs_referencerange_low_code",
+                                                      "obs_referencerange_high_code",
+                                                      "obs_referencerange_low_system",
+                                                      "obs_referencerange_high_system",
+                                                      "obs_referencerange_type_code"),
                                      patient_references = patient_references,
                                      status_exclusion = c("registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834407
                                      additional_conditions = c("obs_category_code = 'laboratory'",
                                                                "obs_code_system = 'http://loinc.org'")
   )
-  observations[, start_date := obs_effectivedatetime]
+  observations[, start_datetime := obs_effectivedatetime]
   return(observations)
 }
 
@@ -328,6 +336,8 @@ getProceduresFromDB <- function(patient_references) {
                                                     "proc_encounter_ref",
                                                     "proc_patient_ref",
                                                     "proc_code_code",
+                                                    "proc_code_display",
+                                                    "proc_code_system",
                                                     "proc_performeddatetime",
                                                     "proc_performedperiod_start",
                                                     "proc_performedperiod_end"),
@@ -335,9 +345,9 @@ getProceduresFromDB <- function(patient_references) {
                                    status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
                                    additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
   )
-  procedures[, start_date := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
-  procedures <- procedures[!is.na(start_date)]
-  procedures[, end_date := data.table::fifelse(
+  procedures[, start_datetime := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
+  procedures <- procedures[!is.na(start_datetime)]
+  procedures[, end_datetime := data.table::fifelse(
     !is.na(proc_performedperiod_end),
     proc_performedperiod_end,
     NA
@@ -355,6 +365,7 @@ getConditionsFromDB <- function(patient_references) {
                                                     "con_patient_ref",
                                                     "con_code_code",
                                                     "con_code_system",
+                                                    "con_code_display",
                                                     "con_onsetperiod_start",
                                                     "con_recordeddate"),
                                    patient_references = patient_references,
@@ -365,33 +376,30 @@ getConditionsFromDB <- function(patient_references) {
                                                              #"(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
                                                              "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))")
   )
-  conditions[, start_date := pmin(con_onsetperiod_start, con_recordeddate, na.rm = TRUE)]
+  conditions[, start_datetime := pmin(con_onsetperiod_start, con_recordeddate, na.rm = TRUE)]
   return(conditions)
 }
 
 #
 # Extract ATC code of referenced Medication. If not exists then remove the resource.
 #
-appendATCColumn <- function(medications, medication_resources) {
-  result <- medication_resources[0]
-  result[, atc_code := character()]
+appendATCColumns <- function(medication_resources, medications) {
+  # Perform join: match each medication_resource to its medication by med_id
+  result <- medication_resources[
+    medications,
+    on = .(med_id),
+    allow.cartesian = TRUE
+  ]
 
-  for (i in seq_len(nrow(medication_resources))) {
-    medication_resource <- medication_resources[i]
-    current_med_id <- medication_resource[["med_id"]]
+  # Rename joined columns
+  data.table::setnames(result, c("med_code_code", "med_code_display"), c("atc_code", "atc_display"))
 
-    # return resources only if they have a reference to an ATC medication
-    # (means: ignore all others)
-    if (!is.na(current_med_id) && nzchar(current_med_id)) {
-      matched_meds <- medications[med_id %in% current_med_id]
+  # Keep only resource columns and the renamed ATC columns
+  keep_cols <- c(names(medication_resources), "atc_code", "atc_display")
+  result <- result[, ..keep_cols]
 
-      if (nrow(matched_meds) > 0) {
-        expanded <- medication_resource[rep(1L, nrow(matched_meds))]
-        expanded[, atc_code := matched_meds$med_code_code]
-        result <- rbind(result, expanded, use.names = TRUE, fill = TRUE)
-      }
-    }
-  }
+  # Drop rows without ATC code
+  result <- result[!is.na(atc_code)]
 
   return(result)
 }
@@ -485,9 +493,9 @@ getResourcesForMRPCalculation <- function(main_encounters) {
   medications <- getATCMedicationsFromDB(medication_requests, medication_administrations, medication_statements)
 
   # Add ATC codes as separate column and remove all medication resources without ATC
-  medication_requests <- appendATCColumn(medications, medication_requests)
-  medication_administrations <- appendATCColumn(medications, medication_administrations)
-  medication_statements <- appendATCColumn(medications, medication_statements)
+  medication_requests <- appendATCColumns(medication_requests, medications)
+  medication_administrations <- appendATCColumns(medication_administrations, medications)
+  medication_statements <- appendATCColumns(medication_statements, medications)
 
   return(list(
     main_encounters = main_encounters,
@@ -583,13 +591,11 @@ getMRPPairLists <- function() {
 #' @return A \code{data.frame} (or compatible object) containing the expanded LOINC mapping definition.
 #'
 getLOINCMapping <- function() {
-  etlutils::runLevel3Line(paste0("Load LOINC_Mapping Definition"), {
-    loinc_mapping <- .submodule_env[["LOINC_MAPPING"]]
-    if (is.null(loinc_mapping)) {
-      loinc_mapping <- getExpandedExcelContent("LOINC_Mapping")
-      .submodule_env[["LOINC_MAPPING"]] <- loinc_mapping
-    }
-  })
+  loinc_mapping <- .submodule_env[["LOINC_MAPPING"]]
+  if (is.null(loinc_mapping)) {
+    loinc_mapping <- getExpandedExcelContent("LOINC_Mapping")
+    .submodule_env[["LOINC_MAPPING"]] <- loinc_mapping
+  }
   return(loinc_mapping)
 }
 
@@ -668,31 +674,57 @@ computeATCForCalculation <- function(data_table, primary_col, inclusion_col, out
 #'     \item{\code{kurzbeschr}}{A short textual description of the interaction.}
 #'   }
 matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
-  matched_rows <- list()
+  # Initialize empty result data.table
+  result_mrps <- data.table::data.table(
+    atc_code = character(),
+    atc2_code = character(),
+    proxy_code = character(),
+    proxy_type = character(),
+    kurzbeschr_part1 = character(),
+    kurzbeschr_part2 = character(),
+    kurzbeschr_part3 = character()
+  )
+
   active_atcs <- unique(active_requests$atc_code)
   used_keys <- intersect(names(mrp_table_list_by_atc), active_atcs)
 
-  for (atc_code in used_keys) {
-    mrp_rows <- mrp_table_list_by_atc[[atc_code]]
-    mrp_rows <- mrp_rows[ATC2_FOR_CALCULATION %in% active_atcs]
+  for (atc in used_keys) {
+    mrp_rows <- mrp_table_list_by_atc[[atc]]
+    mrp_filtered <- mrp_rows[ATC2_FOR_CALCULATION %in% active_atcs]
 
-    for (j in seq_len(nrow(mrp_rows))) {
-      rule <- mrp_rows[j]
-      atc2_code <- rule$ATC2_FOR_CALCULATION
+    for (j in seq_len(nrow(mrp_filtered))) {
+      matched_row <- mrp_filtered[j]
+      atc2 <- matched_row$ATC2_FOR_CALCULATION
 
-      matched_rows[[length(matched_rows) + 1]] <- data.table::data.table(
-        atc_code = atc_code,
-        atc2_code = atc2_code,
-        proxy_code = NA_character_,
-        proxy_type = NA_character_,
-        kurzbeschr = paste0(
-          rule$ATC_DISPLAY, " (", atc_code, ") ist bei ",
-          rule$ATC2_DISPLAY, " (", atc2_code, ") kontrainduziert."
+      # Check, if the pair (A,B) and (B,A) exists
+      duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+
+      # There is no existing mrp in the result table with the same atc codes
+      if (!length(duplicate_idx)) {
+        mrp_row <- data.table::data.table(
+          atc_code = atc,
+          atc2_code = atc2,
+          proxy_code = NA_character_,
+          proxy_type = NA_character_,
+          kurzbeschr_part1 = paste0("[", matched_row$ATC_DISPLAY, " - ", atc, "] ist mit ["),
+          kurzbeschr_part2 = matched_row$ATC2_DISPLAY,
+          kurzbeschr_part3 = paste0(" - ", atc2, "] laut der Fachinformation kontrainduziert.")
         )
-      )
+        result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
+      } else {
+        existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_part1], result_mrps[duplicate_idx, kurzbeschr_part2], result_mrps[duplicate_idx, kurzbeschr_part3])
+        # If duplicate exists, append the new information to kurzbeschr
+        if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+          result_mrps[duplicate_idx, kurzbeschr_part2 := paste0(kurzbeschr_part2, " und ", matched_row$ATC2_DISPLAY)]
+        } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+          result_mrps[duplicate_idx, kurzbeschr_part2 := paste0(kurzbeschr_part2, " und ", matched_row$ATC_DISPLAY)]
+        }
+      }
     }
   }
-  return(data.table::rbindlist(matched_rows, fill = TRUE))
+  result_mrps[, kurzbeschr := paste0(kurzbeschr_part1, kurzbeschr_part2, kurzbeschr_part3)]
+  result_mrps[, c("kurzbeschr_part1", "kurzbeschr_part2", "kurzbeschr_part3") := NULL]
+  return(result_mrps)
 }
 
 #' Filter active MedicationRequests for an encounter within a specific time window
@@ -707,11 +739,11 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
 getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
 
   active_requests <- medication_requests[
-    !is.na(start_date) &
-      start_date >= enc_period_start &
-      start_date <= meda_datetime &
-      (is.na(end_date) |
-         end_date >= meda_datetime)
+    !is.na(start_datetime) &
+      start_datetime >= enc_period_start &
+      start_datetime <= meda_datetime &
+      (is.na(end_datetime) |
+         end_datetime >= meda_datetime)
   ]
   atc_codes <- active_requests[, c("atc_code")]
   return(atc_codes)
@@ -766,8 +798,8 @@ calculateMRPs <- function() {
       etlutils::runLevel3(paste0("Calculate ", mrp_type, " MRPs"), {
 
         mrp_pair_list <- mrp_pair_lists[[mrp_type]]
-        input_file_processed_content_hash <- mrp_pair_list$processed_content_hash
-        splitted_mrp_tables <- getFunctionByName("getSplittedMRPTables", mrp_type)(mrp_pair_list)
+        mrp_pair_list_processed_content_hash <- mrp_pair_list$processed_content_hash
+        mrp_pair_list <- mrp_pair_list$processed_content
 
         # Initialize empty lists for results
         retrolektive_mrpbewertung_rows <- list()
@@ -799,7 +831,7 @@ calculateMRPs <- function() {
             fun <- getFunctionByName("calculateMRPs", mrp_type)
             args <- list(
               active_requests = active_requests,
-              splitted_mrp_tables = splitted_mrp_tables,
+              mrp_pair_list = mrp_pair_list,
               resources = resources,
               patient_id = patient_id,
               meda_datetime = meda_datetime
@@ -857,7 +889,7 @@ calculateMRPs <- function() {
                 ret_redcap_repeat_instance = ret_redcap_repeat_instance,
                 mrp_proxy_type = match$proxy_type,
                 mrp_proxy_code = match$proxy_code,
-                input_file_processed_content_hash = input_file_processed_content_hash
+                input_file_processed_content_hash = mrp_pair_list_processed_content_hash
               )
 
             }
@@ -873,7 +905,7 @@ calculateMRPs <- function() {
               ret_redcap_repeat_instance = NA_character_,
               mrp_proxy_type = NA_character_,
               mrp_proxy_code = NA_character_,
-              input_file_processed_content_hash = input_file_processed_content_hash
+              input_file_processed_content_hash = mrp_pair_list_processed_content_hash
             )
           }
         }
@@ -988,3 +1020,223 @@ processExcelContentLOINCMapping <- function(processExcelContent, table_name) {
 
   return(processExcelContent)
 }
+
+###################
+# Unit Convertion #
+###################
+
+# Default is "symbols" but we need "standard", because "symbols" does'nt work in our cases
+units::units_options(set_units_mode = "standard")
+
+#' Clean and normalize unit strings for downstream parsing
+#'
+#' This helper function preprocesses a unit string for consistent handling. It
+#' removes a trailing segment of the form `"/{...}"` at the end of the string
+#' (e.g., `"mg/{dL}" -> "mg"`), replaces caret symbols (`^`) with asterisks (`*`)
+#' (e.g., `"10^9 / L" -> "10*9/L"`), and removes all whitespace.
+#' Note: The replacement of `^` with `*` reflects a textual normalization and
+#' does not implement a full UCUM/UDUNITS conversion.
+#'
+#' @param unit Character. A unit string to be cleaned and normalized.
+#'
+#' @return A cleaned and normalized character string.
+#'
+#' @examples
+#' cleanUnit("mg/{dL}")      # "mg"
+#' cleanUnit("10^9 / L")     # "10^9/L"
+#' cleanUnit(" mol / L ")    # "mol/L"
+#' cleanUnit("kg / m * 2")   # "kg/m^2"
+#' cleanUnit("m2/{1.73_m2}") # "m2"
+#'
+#' @export
+cleanUnit <- function(unit) {
+  # Remove any curly braces from the unit (e.g., "{1.73_m2}" -> "1.73_m2")
+  unit <- sub("/\\{[^/]+\\}$", "", unit)
+  # Convert caret to multiplication for units package compatibility
+  unit <- gsub("\\*", "^", unit)
+  # Remove whitespaces
+  unit <- gsub("\\s+", "", unit)
+  return(unit)
+}
+
+#' Convert a Character Unit String to a `units` Object
+#'
+#' This helper function attempts to convert a given unit string into a
+#' `units` object using the `units::as_units()` function. If the conversion
+#' fails (for example, if the unit string is invalid or not supported), the
+#' function returns `NA` instead of throwing an error.
+#'
+#' @param unit Character. A unit string to convert (e.g., `"mmol/L"`, `"kg/m^2"`).
+#'
+#' @return A `units` object if the conversion succeeds, otherwise `NA`.
+#'
+#' @examples
+#' asUnit("mmol/L")    # valid unit, returns a units object
+#' asUnit("10^9/L")    # valid for UDUNITS syntax
+#' asUnit("10*9/L")    # valid for UDUNITS, returns NA
+#' asUnit("foobar")    # invalid unit, returns NA
+#'
+#' @export
+asUnit <- function(unit) {
+  unit <- cleanUnit(unit)
+  ok <- try(units::as_units(unit), silent = TRUE)
+  return(if (inherits(ok, "try-error")) NA else ok)
+}
+
+#' Check if unit strings are valid for the `units` package (vectorized)
+#'
+#' This helper function tests whether each element of a given character vector
+#' can be parsed by the `units` package. It returns a logical vector of the same
+#' length: `TRUE` for valid unit strings, `FALSE` otherwise.
+#'
+#' @param u Character vector. Unit strings (e.g., `"mmol/L"`, `"mg/dL"`).
+#'
+#' @return Logical vector of the same length as `u`.
+#'
+#' @examples
+#' isValidUnit("mmol/L")                 # TRUE
+#' isValidUnit(c("mmol/L", "foobar"))    # TRUE FALSE
+#' isValidUnit(c("10^9/L", "10*9/L"))    # TRUE FALSE
+#'
+#' @export
+isValidUnit <- function(u) {
+  u <- as.character(u)
+  u <- cleanUnit(u)
+  vapply(u, function(x) {
+    ok <- suppressWarnings(try(units::as_units(x), silent = TRUE))
+    !inherits(ok, "try-error")
+  }, logical(1))
+}
+
+
+
+#' Convert laboratory values into SI units
+#'
+#' This function converts laboratory measurements from a given input unit
+#' into a specified target SI unit. If the input unit and target unit are
+#' directly convertible via the `units` package, the function will use that.
+#' Otherwise, it uses an intermediate conversion unit and a user-provided
+#' mapping factor.
+#'
+#' @param measured_value Numeric. The raw measurement value.
+#' @param measured_unit Character. The unit of the input value
+#'   (e.g., `"mg/dl"`, `"mmol/l"`).
+#' @param target_unit Character. The desired SI target unit
+#'   (e.g., `"mmol/l"`, `"umol/l"`).
+#' @param conversion_factor Numeric (optional).
+#'   The factor needed to convert from the conversion_unit to the
+#'   target_unit (used only if direct conversion is not possible).
+#' @param conversion_unit Character (optional).
+#'   The intermediate unit used for conversion
+#'   (e.g., `"mg/dl"`, `"U/l"`).
+#'
+#' @return Numeric. The value converted into the target unit (without unit object).
+#'
+#' @examples
+#' # Example: Convert 14 mg/dL to mmol/L using a mapping factor
+#' convertLabUnits(
+#'   measured_value = 14,
+#'   measured_unit = "mg/dl",
+#'   target_unit = "mmol/l",
+#'   conversion_factor = 0.621,
+#'   conversion_unit = "mg/dl"
+#' )
+#'
+#' convertLabUnits(
+#'   measured_value = 14,
+#'   measured_unit = "ukat/mm^3",
+#'   target_unit = "ukat/L",
+#'   conversion_factor = 0.621,
+#'   conversion_unit = "mg/dl"
+#' )
+#'
+#' convertLabUnits(
+#'   measured_value = 14,
+#'   measured_unit = "invlaid_unit",
+#'   target_unit = "ukat/L",
+#'   conversion_factor = 0.621,
+#'   conversion_unit = "mg/dl"
+#' )
+#'
+#' convertLabUnits(
+#'   measured_value = 14,
+#'   measured_unit = "L/h/{1.73_m2}",
+#'   target_unit = "mL/min",
+#'   conversion_factor = 1,
+#'   conversion_unit = "mL/min"
+#' )
+#'
+#' # Example: Direct unit conversion mmol/L to umol/L
+#' convertLabUnits(
+#'   measured_value = 1,
+#'   measured_unit = "mmol/l",
+#'   target_unit = "umol/l"
+#' )
+#'
+convertLabUnits <- function(measured_value,
+                            measured_unit,
+                            target_unit,
+                            conversion_factor = NA_real_,
+                            conversion_unit = NA) {
+
+  measured_unit <- asUnit(measured_unit)
+  target_unit <- asUnit(target_unit)
+
+  if (is.na(measured_unit) || is.na(target_unit)) {
+    return(NA)
+  }
+
+  measured_unit_factor <- units::drop_units(measured_unit)
+  target_unit_factor <- units::drop_units(target_unit)
+
+  # Create unit object for measured value
+  u_measured <- suppressWarnings(units::set_units(measured_value, measured_unit))
+
+  # Create unit object for target unit
+  u_target <- suppressWarnings(units::set_units(1, target_unit))
+
+  # Case 1: Units are directly convertible
+  if (units::ud_are_convertible(units(u_measured), units(u_target))) {
+    result <- suppressWarnings(units::set_units(u_measured, u_target))
+    result <- units::drop_units(result)
+    result <- result * measured_unit_factor / target_unit_factor
+  } else if (!etlutils::isSimpleNAorNULL(conversion_factor) && !etlutils::isSimpleNAorNULL(conversion_factor)) {
+    # Create unit object for conversion unit
+    u_conversion <- suppressWarnings(units::set_units(1, conversion_unit))
+
+    # Case 2: Indirect conversion via mapping unit and factor
+    result_u_conversion <- suppressWarnings(units::set_units(u_measured, u_conversion))
+
+    # Drop unit to apply mapping factor
+    numeric_value <- units::drop_units(result_u_conversion)
+    converted_value <- numeric_value * conversion_factor
+
+    # Assign the target unit back
+    result <- suppressWarnings(units::set_units(converted_value, u_target))
+    result <- units::drop_units(result)
+  } else {
+    result <- NA
+  }
+  return(result)
+}
+
+# #10*9/L	nur dezimal notwendig	10*6/L
+# aaa <- convertLabUnits(
+#   measured_value = 14,
+#   measured_unit = "10 * 6/mL",
+#   target_unit = "10^9/L",
+# )
+
+# #10*9/L	nur dezimal notwendig	10*6/L
+# aaa <- convertLabUnits(
+#   measured_value = 14,
+#   measured_unit = "mol/L",
+#   target_unit = "mmol/L",
+# )
+
+# #10*9/L	nur dezimal notwendig	10*6/L
+# bbb <- convertLabUnits(
+#   measured_value = 14,
+#   measured_unit = "10^3/L",
+#   target_unit = "10^6/mL"
+# )

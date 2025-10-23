@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 16:35:24
+-- Create time: 2025-10-06 23:11:19
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -353,6 +353,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='encounter-30';    err_schema:='db_log';    err_table:='encounter';
+                            SELECT count(1) INTO data_count FROM db_log.encounter target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.encounter_raw_id = current_record.encounter_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='encounter-33';    err_schema:='cds2db_in';    err_table:='encounter';
+                                SELECT count(1) INTO data_count FROM db_log.encounter target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.encounter_raw_id < current_record.encounter_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(encounter_raw_id) INTO data_count FROM db_log.encounter target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.encounter_raw_id < current_record.encounter_raw_id;
+                                END IF;
+                                err_section:='encounter-35';    err_schema:='cds2db_in';    err_table:='encounter';
+                                UPDATE db_log.encounter_raw SET raw_already_processed = data_count WHERE encounter_raw_id = current_record.encounter_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='encounter-37';    err_schema:='cds2db_in';    err_table:='encounter';
                                                         UPDATE db_log.encounter target_record SET enc_meta_versionid = current_record.enc_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(enc_meta_versionid) != db.to_char_immutable(current_record.enc_meta_versionid);
@@ -540,6 +557,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='patient-30';    err_schema:='db_log';    err_table:='patient';
+                            SELECT count(1) INTO data_count FROM db_log.patient target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.patient_raw_id = current_record.patient_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='patient-33';    err_schema:='cds2db_in';    err_table:='patient';
+                                SELECT count(1) INTO data_count FROM db_log.patient target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.patient_raw_id < current_record.patient_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(patient_raw_id) INTO data_count FROM db_log.patient target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.patient_raw_id < current_record.patient_raw_id;
+                                END IF;
+                                err_section:='patient-35';    err_schema:='cds2db_in';    err_table:='patient';
+                                UPDATE db_log.patient_raw SET raw_already_processed = data_count WHERE patient_raw_id = current_record.patient_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='patient-37';    err_schema:='cds2db_in';    err_table:='patient';
                                                         UPDATE db_log.patient target_record SET pat_meta_versionid = current_record.pat_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(pat_meta_versionid) != db.to_char_immutable(current_record.pat_meta_versionid);
@@ -931,6 +965,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='condition-30';    err_schema:='db_log';    err_table:='condition';
+                            SELECT count(1) INTO data_count FROM db_log.condition target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.condition_raw_id = current_record.condition_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='condition-33';    err_schema:='cds2db_in';    err_table:='condition';
+                                SELECT count(1) INTO data_count FROM db_log.condition target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.condition_raw_id < current_record.condition_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(condition_raw_id) INTO data_count FROM db_log.condition target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.condition_raw_id < current_record.condition_raw_id;
+                                END IF;
+                                err_section:='condition-35';    err_schema:='cds2db_in';    err_table:='condition';
+                                UPDATE db_log.condition_raw SET raw_already_processed = data_count WHERE condition_raw_id = current_record.condition_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='condition-37';    err_schema:='cds2db_in';    err_table:='condition';
                                                         UPDATE db_log.condition target_record SET con_meta_versionid = current_record.con_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(con_meta_versionid) != db.to_char_immutable(current_record.con_meta_versionid);
@@ -1198,6 +1249,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='medication-30';    err_schema:='db_log';    err_table:='medication';
+                            SELECT count(1) INTO data_count FROM db_log.medication target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medication_raw_id = current_record.medication_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='medication-33';    err_schema:='cds2db_in';    err_table:='medication';
+                                SELECT count(1) INTO data_count FROM db_log.medication target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medication_raw_id < current_record.medication_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(medication_raw_id) INTO data_count FROM db_log.medication target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medication_raw_id < current_record.medication_raw_id;
+                                END IF;
+                                err_section:='medication-35';    err_schema:='cds2db_in';    err_table:='medication';
+                                UPDATE db_log.medication_raw SET raw_already_processed = data_count WHERE medication_raw_id = current_record.medication_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='medication-37';    err_schema:='cds2db_in';    err_table:='medication';
                                                         UPDATE db_log.medication target_record SET med_meta_versionid = current_record.med_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(med_meta_versionid) != db.to_char_immutable(current_record.med_meta_versionid);
@@ -1819,6 +1887,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='medicationrequest-30';    err_schema:='db_log';    err_table:='medicationrequest';
+                            SELECT count(1) INTO data_count FROM db_log.medicationrequest target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medicationrequest_raw_id = current_record.medicationrequest_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='medicationrequest-33';    err_schema:='cds2db_in';    err_table:='medicationrequest';
+                                SELECT count(1) INTO data_count FROM db_log.medicationrequest target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medicationrequest_raw_id < current_record.medicationrequest_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(medicationrequest_raw_id) INTO data_count FROM db_log.medicationrequest target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medicationrequest_raw_id < current_record.medicationrequest_raw_id;
+                                END IF;
+                                err_section:='medicationrequest-35';    err_schema:='cds2db_in';    err_table:='medicationrequest';
+                                UPDATE db_log.medicationrequest_raw SET raw_already_processed = data_count WHERE medicationrequest_raw_id = current_record.medicationrequest_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='medicationrequest-37';    err_schema:='cds2db_in';    err_table:='medicationrequest';
                                                         UPDATE db_log.medicationrequest target_record SET medreq_meta_versionid = current_record.medreq_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medreq_meta_versionid) != db.to_char_immutable(current_record.medreq_meta_versionid);
@@ -2198,6 +2283,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='medicationadministration-30';    err_schema:='db_log';    err_table:='medicationadministration';
+                            SELECT count(1) INTO data_count FROM db_log.medicationadministration target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medicationadministration_raw_id = current_record.medicationadministration_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='medicationadministration-33';    err_schema:='cds2db_in';    err_table:='medicationadministration';
+                                SELECT count(1) INTO data_count FROM db_log.medicationadministration target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medicationadministration_raw_id < current_record.medicationadministration_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(medicationadministration_raw_id) INTO data_count FROM db_log.medicationadministration target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medicationadministration_raw_id < current_record.medicationadministration_raw_id;
+                                END IF;
+                                err_section:='medicationadministration-35';    err_schema:='cds2db_in';    err_table:='medicationadministration';
+                                UPDATE db_log.medicationadministration_raw SET raw_already_processed = data_count WHERE medicationadministration_raw_id = current_record.medicationadministration_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='medicationadministration-37';    err_schema:='cds2db_in';    err_table:='medicationadministration';
                                                         UPDATE db_log.medicationadministration target_record SET medadm_meta_versionid = current_record.medadm_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medadm_meta_versionid) != db.to_char_immutable(current_record.medadm_meta_versionid);
@@ -2787,6 +2889,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='medicationstatement-30';    err_schema:='db_log';    err_table:='medicationstatement';
+                            SELECT count(1) INTO data_count FROM db_log.medicationstatement target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medicationstatement_raw_id = current_record.medicationstatement_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='medicationstatement-33';    err_schema:='cds2db_in';    err_table:='medicationstatement';
+                                SELECT count(1) INTO data_count FROM db_log.medicationstatement target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medicationstatement_raw_id < current_record.medicationstatement_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(medicationstatement_raw_id) INTO data_count FROM db_log.medicationstatement target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.medicationstatement_raw_id < current_record.medicationstatement_raw_id;
+                                END IF;
+                                err_section:='medicationstatement-35';    err_schema:='cds2db_in';    err_table:='medicationstatement';
+                                UPDATE db_log.medicationstatement_raw SET raw_already_processed = data_count WHERE medicationstatement_raw_id = current_record.medicationstatement_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='medicationstatement-37';    err_schema:='cds2db_in';    err_table:='medicationstatement';
                                                         UPDATE db_log.medicationstatement target_record SET medstat_meta_versionid = current_record.medstat_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(medstat_meta_versionid) != db.to_char_immutable(current_record.medstat_meta_versionid);
@@ -3214,6 +3333,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='observation-30';    err_schema:='db_log';    err_table:='observation';
+                            SELECT count(1) INTO data_count FROM db_log.observation target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.observation_raw_id = current_record.observation_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='observation-33';    err_schema:='cds2db_in';    err_table:='observation';
+                                SELECT count(1) INTO data_count FROM db_log.observation target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.observation_raw_id < current_record.observation_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(observation_raw_id) INTO data_count FROM db_log.observation target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.observation_raw_id < current_record.observation_raw_id;
+                                END IF;
+                                err_section:='observation-35';    err_schema:='cds2db_in';    err_table:='observation';
+                                UPDATE db_log.observation_raw SET raw_already_processed = data_count WHERE observation_raw_id = current_record.observation_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='observation-37';    err_schema:='cds2db_in';    err_table:='observation';
                                                         UPDATE db_log.observation target_record SET obs_meta_versionid = current_record.obs_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(obs_meta_versionid) != db.to_char_immutable(current_record.obs_meta_versionid);
@@ -3455,6 +3591,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='diagnosticreport-30';    err_schema:='db_log';    err_table:='diagnosticreport';
+                            SELECT count(1) INTO data_count FROM db_log.diagnosticreport target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.diagnosticreport_raw_id = current_record.diagnosticreport_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='diagnosticreport-33';    err_schema:='cds2db_in';    err_table:='diagnosticreport';
+                                SELECT count(1) INTO data_count FROM db_log.diagnosticreport target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.diagnosticreport_raw_id < current_record.diagnosticreport_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(diagnosticreport_raw_id) INTO data_count FROM db_log.diagnosticreport target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.diagnosticreport_raw_id < current_record.diagnosticreport_raw_id;
+                                END IF;
+                                err_section:='diagnosticreport-35';    err_schema:='cds2db_in';    err_table:='diagnosticreport';
+                                UPDATE db_log.diagnosticreport_raw SET raw_already_processed = data_count WHERE diagnosticreport_raw_id = current_record.diagnosticreport_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='diagnosticreport-37';    err_schema:='cds2db_in';    err_table:='diagnosticreport';
                                                         UPDATE db_log.diagnosticreport target_record SET diagrep_meta_versionid = current_record.diagrep_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(diagrep_meta_versionid) != db.to_char_immutable(current_record.diagrep_meta_versionid);
@@ -3732,6 +3885,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='servicerequest-30';    err_schema:='db_log';    err_table:='servicerequest';
+                            SELECT count(1) INTO data_count FROM db_log.servicerequest target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.servicerequest_raw_id = current_record.servicerequest_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='servicerequest-33';    err_schema:='cds2db_in';    err_table:='servicerequest';
+                                SELECT count(1) INTO data_count FROM db_log.servicerequest target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.servicerequest_raw_id < current_record.servicerequest_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(servicerequest_raw_id) INTO data_count FROM db_log.servicerequest target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.servicerequest_raw_id < current_record.servicerequest_raw_id;
+                                END IF;
+                                err_section:='servicerequest-35';    err_schema:='cds2db_in';    err_table:='servicerequest';
+                                UPDATE db_log.servicerequest_raw SET raw_already_processed = data_count WHERE servicerequest_raw_id = current_record.servicerequest_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='servicerequest-37';    err_schema:='cds2db_in';    err_table:='servicerequest';
                                                         UPDATE db_log.servicerequest target_record SET servreq_meta_versionid = current_record.servreq_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(servreq_meta_versionid) != db.to_char_immutable(current_record.servreq_meta_versionid);
@@ -4029,6 +4199,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='procedure-30';    err_schema:='db_log';    err_table:='procedure';
+                            SELECT count(1) INTO data_count FROM db_log.procedure target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.procedure_raw_id = current_record.procedure_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='procedure-33';    err_schema:='cds2db_in';    err_table:='procedure';
+                                SELECT count(1) INTO data_count FROM db_log.procedure target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.procedure_raw_id < current_record.procedure_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(procedure_raw_id) INTO data_count FROM db_log.procedure target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.procedure_raw_id < current_record.procedure_raw_id;
+                                END IF;
+                                err_section:='procedure-35';    err_schema:='cds2db_in';    err_table:='procedure';
+                                UPDATE db_log.procedure_raw SET raw_already_processed = data_count WHERE procedure_raw_id = current_record.procedure_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='procedure-37';    err_schema:='cds2db_in';    err_table:='procedure';
                                                         UPDATE db_log.procedure target_record SET proc_meta_versionid = current_record.proc_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(proc_meta_versionid) != db.to_char_immutable(current_record.proc_meta_versionid);
@@ -4320,6 +4507,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='consent-30';    err_schema:='db_log';    err_table:='consent';
+                            SELECT count(1) INTO data_count FROM db_log.consent target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.consent_raw_id = current_record.consent_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='consent-33';    err_schema:='cds2db_in';    err_table:='consent';
+                                SELECT count(1) INTO data_count FROM db_log.consent target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.consent_raw_id < current_record.consent_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(consent_raw_id) INTO data_count FROM db_log.consent target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.consent_raw_id < current_record.consent_raw_id;
+                                END IF;
+                                err_section:='consent-35';    err_schema:='cds2db_in';    err_table:='consent';
+                                UPDATE db_log.consent_raw SET raw_already_processed = data_count WHERE consent_raw_id = current_record.consent_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='consent-37';    err_schema:='cds2db_in';    err_table:='consent';
                                                         UPDATE db_log.consent target_record SET cons_meta_versionid = current_record.cons_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(cons_meta_versionid) != db.to_char_immutable(current_record.cons_meta_versionid);
@@ -4509,6 +4713,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='location-30';    err_schema:='db_log';    err_table:='location';
+                            SELECT count(1) INTO data_count FROM db_log.location target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.location_raw_id = current_record.location_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='location-33';    err_schema:='cds2db_in';    err_table:='location';
+                                SELECT count(1) INTO data_count FROM db_log.location target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.location_raw_id < current_record.location_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(location_raw_id) INTO data_count FROM db_log.location target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.location_raw_id < current_record.location_raw_id;
+                                END IF;
+                                err_section:='location-35';    err_schema:='cds2db_in';    err_table:='location';
+                                UPDATE db_log.location_raw SET raw_already_processed = data_count WHERE location_raw_id = current_record.location_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='location-37';    err_schema:='cds2db_in';    err_table:='location';
                                                         UPDATE db_log.location target_record SET loc_meta_versionid = current_record.loc_meta_versionid WHERE target_record.hash_index_col = current_record.hash_index_col AND db.to_char_immutable(loc_meta_versionid) != db.to_char_immutable(current_record.loc_meta_versionid);
@@ -4658,6 +4879,23 @@ BEGIN
                             , last_processing_nr = last_pro_nr
                             WHERE target_record.hash_index_col = current_record.hash_index_col
                             ;
+                            -- Store earlier raw_id in raw if dataset comes from other raw_dataset (raw_already_processed)
+                            err_section:='pids_per_ward-30';    err_schema:='db_log';    err_table:='pids_per_ward';
+                            SELECT count(1) INTO data_count FROM db_log.pids_per_ward target_record
+                            WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.pids_per_ward_raw_id = current_record.pids_per_ward_raw_id;
+                            IF data_count = 0 THEN -- Retrieve the last raw_id that generated the same hash and is not the current raw_id
+                                err_section:='pids_per_ward-33';    err_schema:='cds2db_in';    err_table:='pids_per_ward';
+                                SELECT count(1) INTO data_count FROM db_log.pids_per_ward target_record
+                                WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.pids_per_ward_raw_id < current_record.pids_per_ward_raw_id;
+                                IF data_count = 0 THEN -- No predecessor raw_id found for hash - still set to processed with unknown predecessor record (-1)
+                                    data_count = -1;
+                                ELSE -- find last raw_id to hash and set as processed flag
+                                    SELECT max(pids_per_ward_raw_id) INTO data_count FROM db_log.pids_per_ward target_record
+                                    WHERE target_record.hash_index_col = current_record.hash_index_col AND target_record.pids_per_ward_raw_id < current_record.pids_per_ward_raw_id;
+                                END IF;
+                                err_section:='pids_per_ward-35';    err_schema:='cds2db_in';    err_table:='pids_per_ward';
+                                UPDATE db_log.pids_per_ward_raw SET raw_already_processed = data_count WHERE pids_per_ward_raw_id = current_record.pids_per_ward_raw_id AND (raw_already_processed < data_count OR raw_already_processed IS NULL);
+                            END IF;
 
                             err_section:='pids_per_ward-37';    err_schema:='cds2db_in';    err_table:='pids_per_ward';
                             

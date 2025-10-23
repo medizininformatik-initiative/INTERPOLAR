@@ -13,6 +13,9 @@
 # Define the days count for this test
 DEBUG_DAYS_COUNT <- 2
 
+# Activate if only a specific debug day should be run
+#DEBUG_RUN_SINGLE_DAY_ONLY <- 2
+
 ###
 # DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
 # a config file. If the path is not set, then only the default config file
@@ -51,6 +54,9 @@ if (exists("DEBUG_DAY")) {
     # clear database on Day 1
     etlutils::dbReset()
   } else {
+    if (exists("DEBUG_RUN_SINGLE_DAY_ONLY")) {
+      etlutils::dbReset(c("db_log.dp_mrp_calculations", "db_log.retrolektive_mrpbewertung_fe"))
+    }
     # Load all encounters from the database which, according to the database,
     # have not yet ended on the 'current' date and determine the PIDs.
     # Background: We want to track all cases that have ever been on a relevant
@@ -82,29 +88,146 @@ if (exists("DEBUG_DAY")) {
     testAdmission(pid1, "Raum 1-1", "Bett 1-1", "Station 1-1")
   })
   runCodeForDebugDay(2, {
-    # Patient 1 Tag 4: Encounter wird entlassen
+    # Patient 1 Tag 2: Encounter wird entlassen
     testDischarge(pid1)
   })
 
-  duplicatePatients(6)
+  duplicatePatients(22)
 
   runCodeForDebugDay(1, {
-    # UKB-0001_1 -> Drug_Disease_Interaction             -> MedicationRequest - N02AA01 + Diagnosis - R10.0
-    addDrugs("UKB-0001_1", "N02AA01")
-    addConditions("UKB-0001_1", "R10.0")
-    # UKB-0001_2 -> Drug_Drug_Interaction                -> MedicationRequests - N06AX22 + J01MA02
-    addDrugs("UKB-0001_2", c("N06AX22", "J01MA02"))
-    # UKB-0001_3 -> Drug_DrugGroup_Interaction           -> MedicationRequests - N06BA09 + C02KC01
-    addDrugs("UKB-0001_3", c("N06BA09", "C02KC01"))
-    # UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> MedicationRequest - A10BA02 + N07BB03(ATC-Proxy)
-    addDrugs("UKB-0001_4", c("A10BA02", "N07BB03"))
-    # UKB-0001_5 -> Drug_Disease_Interaction (Pro.LOINC) -> MedicationRequest - C02KX01 + Observation - 14631-6
-    # Loinc with cutoff absolute -> doesn't work yet
-    addDrugs("UKB-0001_5", "C02KX01")
-    addObservations("UKB-0001_5", "14631-6")
-    # UKB-0001_6 -> Drug_Disease_Interaction (LOINC Cut) -> MedicationRequest - C03DA02 + Observation - 2823-3
-    addDrugs("UKB-0001_6", "C03DA02")
-    addObservations("UKB-0001_6", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
+
+    ################
+    # Drug_Disease #
+    ################
+
+    # TODO: Test mit mehreren Conditions gleichzeitig und mehrere davon mit identischem Code
+
+    # Drug_Disease -> simple Drug + simple Disease
+    # Line 114850 -> MedicationRequest - N02AA01 + Diagnosis - R10.0
+    pid <- addDrugs("UKB-0001_1", "N02AA01")
+    addConditions(pid, "R10.0")
+
+    # Drug_Disease -> Drug SY + simple Disease
+    # Line 115318 -> MedicationRequest - H02BX09 + Diagnosis - O41.1
+    pid <- addDrugs("UKB-0001_2", "H02BX09")
+    addConditions(pid, "O41.1")
+
+    # UKB-0001_3 -> Drug_Disease -> Proxy ATC
+    # Line 71835 -> MedicationRequest - C09DA06 + M04AA01 (ATC-Proxy)
+    addDrugs("UKB-0001_3", c("C09DA06", "M04AA01"))
+
+    # Drug_Disease -> Proxy LOINC primary, > ULN
+    # Line 76539 -> MedicationRequest - C03DA02 + Observation - 2823-3
+    pid <- addDrugs("UKB-0001_4", "C03DA02")
+    addObservation(pid, "2823-3", value = 12, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
+
+    # Drug_Disease -> Proxy LOINC primary, < LLN
+    # Line 104451 -> MedicationRequest - C03DA02 + Observation - 2951-2
+    pid <- addDrugs("UKB-0001_5", "C03DA02")
+    addObservation(pid, "2951-2", value = 3, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
+
+    # Drug_Disease -> Proxy LOINC primary, > 5 * ULN
+    # Line 8096 -> MedicationRequest - J01MA14 + Observation - 1742-6
+    pid <- addDrugs("UKB-0001_6", "J01MA14")
+    addObservation(pid, "1742-6", day_offset = -0.5, value = 60.01, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
+
+    # Drug_Disease -> Proxy LOINC secondary, > 5 * ULN
+    # Line 8096 -> MedicationRequest - J01MA14 + Observation - 1743-4
+    pid <- addDrugs("UKB-0001_7", "J01MA14")
+    addObservation(pid, "1743-4", value = 60, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
+
+    # Drug_Disease -> Proxy LOINC primary, cutoff absolute, no unit conversion
+    # Line 133 -> MedicationRequest - C02KX01 + Observation - 1751-7 < 20 g/L
+    pid <- addDrugs("UKB-0001_8", "C02KX01")
+    addObservation(pid, "1751-7", value = 15, unit = "g/L") # zwei MRP, weil bei Proxy nicht geclustert wird - 2 verschiedene Diagnose-Cluster
+
+    # Drug_Disease -> Proxy LOINC primary, cutoff absolute, simple unit conversion
+    # Line 133 -> MedicationRequest - C02KX01 + Observation - 1751-7 < 20 g/L
+    pid <- addDrugs("UKB-0001_9", "C02KX01")
+    addObservation(pid, "1751-7", day_offset = -0.5 + 0.01, value = 10000, unit = "mg/L")
+    addObservation(pid, "1751-7", day_offset = -0.5 + 0.02, value = 11, unit = "g/L")
+    addObservation(pid, "1751-7", day_offset = -0.5 + 0.03, value = 15000, unit = "mol/L") # kein MRP, ivalide Einheit
+    addObservation(pid, "1751-7", day_offset = -0.5 + 0.04, value = 30000, unit = "mg/L") # kein MRP, liegt über Cutoff
+    addObservation(pid, "1751-7", day_offset = -0.5 + 0.05, value = 17000, unit = "blabla") # kein MRP, keine gültige Unit
+    addObservation(pid, "1751-7", day_offset = -0.5 + 0.06, value = 19000, unit = NA) # kein MRP, keine gültige Unit
+    addObservation(pid, "2862-1", day_offset = -0.5 + 0.07, value = 1.2, unit = "g/dL")
+    addObservation(pid, "54347-0", day_offset = -0.5 + 0.08, value = 1.3, unit = "g/dL")
+    addObservation(pid, "54347-0", day_offset = -0.5 + 0.09, value = "blub", unit = "g/dL") # kein MRP, keine gültiger Value
+
+    # Drug_Disease -> Proxy LOINC secondary, cutoff absolute, no unit conversion
+    # Line 71660 -> MedicationRequest - C01DA14 + Observation - 14775-1 < 4,9 mmol/L
+    pid <- addDrugs("UKB-0001_10", "C01DA14")
+    addObservation(pid, "14775-1", value = 4.1, unit = "mmol/L")
+
+    # Drug_Disease -> Proxy LOINC secondary, cutoff absolute, simple SI unit conversion
+    # Line 71660 -> MedicationRequest - C01DA14 + Observation - 14775-1 < 4,9 mmol/L
+    pid <- addDrugs("UKB-0001_11", "C01DA14")
+    addObservation(pid, "14775-1", value = 0.41, unit = "mmol/dL")
+
+    # Drug_Disease -> Proxy LOINC secondary, cutoff absolute, complex unit conversion
+    # Line 71660 -> MedicationRequest - C01DA14 + Observation - 14775-1 < 4,9 mmol/L with mmol/L = 621 * mg/dL
+    pid <- addDrugs("UKB-0001_12", "C01DA14")
+    addObservation(pid, "14775-1", value = 3000, unit = "mg/dL")
+
+    # Drug_Disease -> Proxy LOINC secondary, cutoff absolute, simple non-SI and complex unit conversion
+    # Line 71660 -> MedicationRequest - C01DA14 + Observation - 14775-1 < 4,9 mmol/L with mmol/L = 621 * mg/dL
+    pid <- addDrugs("UKB-0001_13", "C01DA14")
+    addObservation(pid, "14775-1", value = 30, unit = "g/L")
+
+    # Drug_Disease -> Proxy LOINC primary, < LLN
+    # Line 571 -> MedicationRequest - C03DA02 + Observation - 2951-2
+    pid <- addDrugs("UKB-0001_14", "C03DA02")
+    addObservation(pid, "2823-3", value = 12, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # MRP, weil > ULN
+    addObservation(pid, "2951-2", value = 3, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # MRP, weil < LLN
+    addObservation(pid, "1111-1", value = 3, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # kein MRP, weil ungültiger LOINC
+    addObservation(pid, "39789-3", value = 4, unit = "mg/dL", referencerange_low_value = 1, referencerange_high_value = 2) # MRP, weil > ULN
+    addObservation(pid, "39789-3", value = 3, unit = "mg/dL", referencerange_low_value = 1, referencerange_high_value = 2) # MRP, weil > ULN
+    addObservation(pid, "39789-3", value = 2, unit = "mg/dL", referencerange_low_value = 1, referencerange_high_value = 2) # kein MRP, weil = ULN
+
+    # Drug_Disease -> Proxy LOINC secondary, cutoff absolute, simple non-SI and complex unit conversion
+    # Line 71660 -> MedicationRequest - C01DA14 + Observation - 14775-1 < 4,9 mmol/L with mmol/L = 621 * mg/dL
+    pid <- addDrugs("UKB-0001_15", "C01DA14")
+    addObservation(pid, "14775-1", value = 30, unit = "g/L")
+
+    # Drug_Disease -> Proxy LOINC primary, cutoff absolute, no unit conversion
+    # Line 151967 -> MedicationRequest - C01DA14 + Observation - 14775-1
+    pid <- addDrugs("UKB-0001_16", "C07BB27")
+    addObservation(pid, "33762-6", value = 1801, unit = "pg/mL") # zwei MRPs, da ATC_DISPLAY unterschiedlich in zwei Zeilen
+
+    # Drug_Disease -> Proxy LOINC secondary, cutoff absolute, decimal unit conversion
+    # Line 103536 -> MedicationRequest - N05AB10 + Observation - 26464-8 (Proxy for 6690-2, 10*9/L Leukozyten < 2,0)
+    pid <- addDrugs("UKB-0001_17", "N05AB10")
+    addObservation(pid, "26464-8", value = 999, unit = "10*6/L") # kein MRP, nicht in WP 7 Liste
+
+    # Drug_Disease -> Proxy LOINC primary, < LLN
+    # Line 571 -> MedicationRequest - C03DA02 + Observation - 2951-2
+    pid <- addDrugs("UKB-0001_18", "C03DA02")
+    addObservation(pid, "2951-2", value = 12, unit = "mg/dL", referencerange_low_value = 5, referencerange_low_code = 10) # kein MRP, invalid code
+    addObservation(pid, "2951-2", value = 12, unit = "mg/dL", referencerange_low_value = 5, referencerange_low_code = "value") # kein MRP, invalid code
+    addObservation(pid, "2951-2", value = 12, unit = "mg/dL", referencerange_low_value = "value", referencerange_low_code = "value") # kein MRP, invalid value and code
+    addObservation(pid, "2951-2", value = 12, unit = "mg/dL", referencerange_low_value = "g/L", referencerange_low_code = "g/L") # kein MRP, invalid value
+
+    ###############
+    # Drug - Drug #
+    ###############
+
+    # Drug_Drug_Interaction                  -> MedicationRequests - N06AX22 + J01MA02
+    addDrugs("UKB-0001_19", c("N06AX22", "J01MA02")) # zwei MRPS, weil in Drug Drug und in Drug Drug Group (Wird noch bereinigt)
+
+    # Drug_Drug_Interaction                  -> MedicationRequests - J04AB02 + J05AP52
+    addDrugs("UKB-0001_20", c("J04AB02", "J05AP52"))
+
+    # Drug_Drug_Interaction                  -> MedicationRequests - A02BD04 + A03FA03 ATC kommen jeweils gespiegelt vor in ATC und ATC2
+    addDrugs("UKB-0001_21", c("A02BD04", "A03FA03")) #  2 MRPS, weil diese Kombination in Drug Drug und Drug DrugGroup vorkommt
+
+
+    ####################
+    # Drug - DrugGroup #
+    ####################
+
+    # Drug_DrugGroup_Interaction             -> MedicationRequests - N06BA09 + C02KC01
+    addDrugs("UKB-0001_22", c("N06BA09", "C02KC01"))
+
   })
 
   # Update the resource_tables list with the modified data tables

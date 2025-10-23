@@ -30,6 +30,16 @@ runSubmodules <- function() {
     submodule_dirs <- called_manual_start_submodule_dirs
   }
 
+  # if (dir.exists("./R-dataprocessor/submodules/01_Study_1a")) {
+  #   submodule_dirs <- "./R-dataprocessor/submodules/01_Study_1a"
+  # }
+  # if (dir.exists("./R-dataprocessor/submodules/02_MRP_Calculation")) {
+  #   submodule_dirs <- "./R-dataprocessor/submodules/02_MRP_Calculation"
+  # }
+
+  if (exists("DEBUG_SUBMODULE_DIR")) submodule_dirs <- DEBUG_SUBMODULE_DIR
+
+
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
 
