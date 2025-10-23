@@ -19,8 +19,8 @@ if (!exists("DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS")) {
 MRP_TYPE <- etlutils::namedVectorByParam(
   "Drug_Disease",
   "Drug_Drug",
-  "Drug_DrugGroup"#,
-  #"Drug_Niereninsuffizienz""
+  "Drug_DrugGroup",
+  "Drug_Niereninsuffizienz"
 )
 
 #
@@ -635,9 +635,9 @@ computeATCForCalculation <- function(data_table, primary_col, inclusion_col, out
     all_secondary <- character(0)
 
     for (inclusion in inclusions) {
-      if (inclusion == "alle") {
+      if (inclusion %in% "alle") {
         raw_values <- row[secondary_cols]
-      } else if (inclusion == "keine weiteren") {
+      } else if (is.na(inclusion) || !nchar(trimws(inclusion)) ||inclusion %in% "keine weiteren") {
         raw_values <- character(0)
       } else {
         suffixes <- trimws(unlist(strsplit(inclusion, ",")))
@@ -1240,3 +1240,30 @@ convertLabUnits <- function(measured_value,
 #   measured_unit = "10^3/L",
 #   target_unit = "10^6/mL"
 # )
+
+# Expand and concatenate ICD codes in a vectorized manner.
+# If there are multiple ICD codes separated by "+", each code is expanded separately, and
+# combinations of expanded codes are concatenated. ICD Codes must be have at least 3 digits.
+expandAndConcatenateICDs <- function(icd_column) {
+  # Function to process a single ICD code
+  processICD <- function(icd) {
+    if (is.na(icd) || icd == "") {
+      return(NA_character_)
+    }
+    if (!grepl("+", icd, fixed = TRUE)) {
+      # Handle single ICD code case
+      return(paste(etlutils::expandICDs(icd), collapse = ' '))
+
+    }
+    # Handle multiple ICD codes separated by '+'
+    input_icds <- unlist(strsplit(icd, '\\+'))
+    icd_1 <- etlutils::expandICDs(input_icds[[1]])
+    icd_2 <- etlutils::expandICDs(input_icds[[2]])
+    # Create combinations and concatenate
+    combinations <- outer(icd_1, icd_2, paste, sep = '+')
+    return(trimws(paste(c(combinations), collapse = ' ')))
+
+  }
+  # Apply the function to the entire column
+  sapply(icd_column, processICD)
+}
