@@ -92,8 +92,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(21)
-  #duplicatePatients(1, 3)
+  duplicatePatients(22)
 
   runCodeForDebugDay(1, {
 
@@ -218,12 +217,16 @@ if (exists("DEBUG_DAY")) {
     # Drug_Drug_Interaction                  -> MedicationRequests - J04AB02 + J05AP52
     addDrugs("UKB-0001_20", c("J04AB02", "J05AP52"))
 
+    # Drug_Drug_Interaction                  -> MedicationRequests - A02BD04 + A03FA03 ATC kommen jeweils gespiegelt vor in ATC und ATC2
+    addDrugs("UKB-0001_21", c("A02BD04", "A03FA03")) #  2 MRPS, weil diese Kombination in Drug Drug und Drug DrugGroup vorkommt
+
+
     ####################
     # Drug - DrugGroup #
     ####################
 
     # Drug_DrugGroup_Interaction             -> MedicationRequests - N06BA09 + C02KC01
-    addDrugs("UKB-0001_21", c("N06BA09", "C02KC01"))
+    addDrugs("UKB-0001_22", c("N06BA09", "C02KC01"))
 
   })
 
