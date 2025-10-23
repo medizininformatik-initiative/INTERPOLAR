@@ -205,6 +205,11 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
 #' @param project_sub_dir A character string defining a sub-directory within the project's global directory
 #' where the file will be saved, or `NA` to use a default directory path. The path is constructed using `fhircrackr::pastep`.
 #' @param format A character string indicating the format of the output table file (only html); Default is "html".
+#' @param caption An optional caption to be displayed above the table.
+#' @param footnote An optional footnote to be displayed below the table.
+#'        Default is an empty string.
+#' @param colnames An optional character vector of column names to override
+#'        the default column names from `table`. Default is `NA`.
 #'
 #' @return This function does not return a value. It creates a side effect of writing a file in the specified format.
 #'
@@ -221,7 +226,7 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
 #' \code{\link[kableExtra]{kable}}, \code{\link[kableExtra]{kable_styling}}, \code{\link[kableExtra]{save_kable}}
 #'
 writeTableGlobal <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html",
-                             caption=NA, footnote = "", colnames = NA) {
+                             caption = NA, footnote = "", colnames = NA) {
   if (!is.null(table)) {
     if (is.na(filename_without_extension)) {
       filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
@@ -253,6 +258,11 @@ writeTableGlobal <- function(table, filename_without_extension = NA, project_sub
 #' @param project_sub_dir A character string defining a sub-directory within the project's local directory
 #' where the file will be saved, or `NA` to use a default directory path. The path is constructed using `fhircrackr::pastep`.
 #' @param format A character string indicating the format of the output table file (only html); Default is "html".
+#' @param caption An optional caption to be displayed above the table.
+#' @param footnote An optional footnote to be displayed below the table.
+#'        Default is an empty string.
+#' @param colnames An optional character vector of column names to override
+#'        the default column names from `table`. Default is `NA`.
 #'
 #' @return This function does not return a value. It creates a side effect of writing a file in the specified format.
 #'

@@ -24,9 +24,9 @@ getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
   content_hash <- digest::digest(file_definition$excel_file_content, algo = "sha256")
   file_name <- file_definition$excel_file_name
   content <- file_definition$excel_file_content
-  processed_content_hash <- getStoredProcessedContentHash(content_hash, table_dir)
+  content_hash_processed <- getStoredProcessedContentHash(content_hash, table_dir)
 
-  if (is.null(processed_content_hash)) {
+  if (is.null(content_hash_processed)) {
     # If the hash is not found, process the MRP definition
     process_content_function_name <- paste0("processExcelContent", gsub("_", "", table_name))
     if (exists(process_content_function_name, mode = "function")) {
@@ -35,7 +35,7 @@ getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
     } else {
       processed_content <- file_definition$excel_file_content
     }
-    processed_content_hash <- digest::digest(processed_content, algo = "sha256")
+    content_hash_processed <- digest::digest(processed_content, algo = "sha256")
 
     output_dir <- file.path(table_dir, paste0(table_name, "_content"))
     if (!dir.exists(output_dir)) {
@@ -74,7 +74,7 @@ getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
       file_name = file_name,
       content_hash = content_hash,
       content = content,
-      processed_content_hash = processed_content_hash
+      processed_content_hash = content_hash_processed
     )
     input_data_files <- rbind(
       input_data_files,
@@ -83,7 +83,7 @@ getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
       fill = TRUE
     )
     new_input_data_file_processed_content_row <- data.table::data.table(
-      processed_content_hash = processed_content_hash,
+      processed_content_hash = content_hash_processed,
       processed_content = processed_content_serialized
     )
     input_data_files_processed_content <- rbind(
@@ -106,14 +106,14 @@ getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
     # Load processed content
     #TODO: Replace with database functionality
     input_data_files_processed_content <- readRDS(paste0(table_dir, "/input_data_files_processed_content.RData"))
-    matching_row <- input_data_files_processed_content[processed_content_hash == get("processed_content_hash")]
+    matching_row <- input_data_files_processed_content[processed_content_hash == content_hash_processed]
     processed_content <- unserialize(base64enc::base64decode(matching_row$processed_content))
   }
 
   # Return both processed content and hash
   return(list(
     processed_content = processed_content,
-    processed_content_hash = processed_content_hash
+    processed_content_hash = content_hash_processed
   ))
 }
 

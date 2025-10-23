@@ -31,10 +31,12 @@ testSetResourceTable <- function(resource_name, resource_table) {
 
 runCodeForDebugDay <- function(debug_day, code_block) {
   current_debug_day <- get("DEBUG_DAY", envir = .GlobalEnv)
-  if (current_debug_day >= debug_day) {
-    assign("DEBUG_DAY", debug_day, envir = .GlobalEnv)
-    eval(substitute(code_block))
-    assign("DEBUG_DAY", current_debug_day, envir = .GlobalEnv)
+  if (!exists("DEBUG_RUN_SINGLE_DAY_ONLY") || isTRUE(DEBUG_RUN_SINGLE_DAY_ONLY == debug_day)) {
+    if (current_debug_day >= debug_day) {
+      assign("DEBUG_DAY", debug_day, envir = .GlobalEnv)
+      eval(substitute(code_block))
+      assign("DEBUG_DAY", current_debug_day, envir = .GlobalEnv)
+    }
   }
 }
 
@@ -202,17 +204,25 @@ testRetainRAWTables <- function(...) {
 #' @param datetime A `POSIXct` object representing the datetime to be formatted.
 #'                 Defaults to the current system time (`Sys.time()`).
 #' @param offset_days_minus An integer specifying how many days should be subtracted from `datetime`.
-#'                    Defaults to `2`.
+#'                          Defaults to `1`.
+#' @param raw_index A character string to prefix the formatted datetime. Typically indicates a RAW index
+#'                  such as `"[1.1]"`.
 #'
 #' @return A character string with the formatted datetime.
 #'
-getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_days_minus = 1) {
+#' @examples
+#' getFormattedRAWDateTime(as.POSIXct("2023-10-07 12:00:00", tz = "Europe/Berlin"), offset_days_minus = 2)
+#' # Example with default values (won't run due to missing DEBUG_DATES and DEBUG_DAY):
+#' # getFormattedRAWDateTime()
+#'
+#' @export
+getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_days_minus = 1, raw_index = "[1.1]") {
   datetime <- as.POSIXct(datetime)
   # Subtract the specified number of days from the given datetime
   datetime <- datetime - offset_days_minus * 86400
 
   # Format as "[1.1]YYYY-MM-DDTHH:MM:SS+02:00"
-  format(datetime, "[1.1]%Y-%m-%dT%H:%M:%S%z")
+  paste0(raw_index, format(datetime, "%Y-%m-%dT%H:%M:%S%z"))
 }
 
 #' Get a RAW-formatted datetime from DEBUG_DATES with additive offset
@@ -223,6 +233,8 @@ getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_da
 #'
 #' @param offset_days Integer number of days to add to the selected debug date. Defaults to \code{0}.
 #' @param debug_date_index Integer index into \code{DEBUG_DATES} selecting the base datetime.
+#' @param raw_index A character string to prefix the formatted datetime. Typically indicates a RAW index
+#'                  such as `"[1.1]"`.
 #'
 #' @return Character string in the RAW datetime format produced by
 #'   \code{getFormattedRAWDateTime()}.
@@ -237,14 +249,13 @@ getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_da
 #' }
 #'
 #' @export
-getDebugDatesRAWDateTime <- function(offset_days = 0, debug_date_index = DEBUG_DAY) {
+getDebugDatesRAWDateTime <- function(offset_days = 0, debug_date_index = DEBUG_DAY, raw_index = "[1.1]") {
   datetime <- DEBUG_DATES[debug_date_index]
   # Get the formatted RAW datetime
-  raw_datetime <- getFormattedRAWDateTime(datetime, -as.numeric(offset_days))
+  raw_datetime <- getFormattedRAWDateTime(datetime, -as.numeric(offset_days), raw_index)
   # Return the formatted datetime
   return(raw_datetime)
 }
-
 
 #' Update values in a data.table based on patient ID and column name pattern
 #'
@@ -778,6 +789,8 @@ addDrugs <- function(pid, codes, day_offset = -0.3) {
 
   # Save the updated resource tables
   testSetResourceTables(resource_tables)
+
+  return(pid) # convenience to write compact tests
 }
 
 addConditions <- function(pid, codes, day_offset = -0.5) {
@@ -795,8 +808,8 @@ addConditions <- function(pid, codes, day_offset = -0.5) {
   con_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
     dt <- data.table::copy(con_templates)
     # Generate unique Condition ID
-    dt[, con_id := paste0("[1]", pid, "-E-", enc_index, "-D-", con_index + (i - 1))]
-    dt[, con_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-D-", con_index + (i - 1))]
+    dt[, con_id := paste0("[1]", pid, "-E-", enc_index, "-C-", con_index + (i - 1))]
+    dt[, con_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-C-", con_index + (i - 1))]
     # Reference the patient and encounter
     dt[, con_patient_ref := paste0("[1.1]Patient/", pid)]
     dt[, con_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
@@ -815,7 +828,40 @@ addConditions <- function(pid, codes, day_offset = -0.5) {
   testSetResourceTables(resource_tables)
 }
 
-addObservations <- function(pid, codes, day_offset = -0.5, value = NULL, unit = NULL, referencerange_low = NULL, referencerange_high = NULL) {
+createReferenceRange <- function(referencerange_low_value = NULL, referencerange_low_code = NULL,
+                                 referencerange_high_value = NULL, referencerange_high_code = NULL,
+                                 referencerange_type_code = NULL,
+                                 referencerange_low_system = NULL, referencerange_high_system = NULL) {
+
+  if(!etlutils::isSimpleNAorNULL(referencerange_low_value) || !etlutils::isSimpleNAorNULL(referencerange_high_value)) {
+    reference_range <- etlutils::namedListByParam(
+      referencerange_low_value,
+      referencerange_high_value,
+      referencerange_low_code,
+      referencerange_high_code,
+      referencerange_low_system,
+      referencerange_high_system,
+      referencerange_type_code
+    )
+  } else {
+    reference_range <- NULL
+  }
+  return(reference_range)
+}
+
+addObservation <- function(pid, code, day_offset = -0.5, value = NULL, unit = NULL, referencerange_low_value = NULL,
+                           referencerange_high_value = NULL, referencerange_low_code = NULL, referencerange_high_code = NULL,
+                           referencerange_low_system = NULL, referencerange_high_system = NULL, referencerange_type_code = NULL) {
+  addObservationWithRanges(pid, code, day_offset, value, unit, reference_ranges = createReferenceRange(referencerange_low_value,
+                                                                                                       referencerange_low_code,
+                                                                                                       referencerange_high_value,
+                                                                                                       referencerange_high_code,
+                                                                                                       referencerange_low_system,
+                                                                                                       referencerange_high_system,
+                                                                                                       referencerange_type_code))
+}
+
+addObservationWithRanges <- function(pid, code, day_offset = -0.5, value = NULL, unit = NULL, reference_ranges = NULL) {
   # Load template table for Observation
   obs_templates <- get("obs_templates", envir = .test_env)
 
@@ -824,28 +870,83 @@ addObservations <- function(pid, codes, day_offset = -0.5, value = NULL, unit = 
 
   # Determine next available index for Observations and Encounter for this patient
   enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
-  obs_index <- nrow(resource_tables[["Observation"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-O-\\d+$"), obs_id)]) + 1
+  obs_index <- nrow(resource_tables[["Observation"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-OL-\\d+$"), obs_id)]) + 1
+
+  # Normalize single list input
+  if (!is.null(reference_ranges) && !is.list(reference_ranges[[1]])) {
+    reference_ranges <- list(reference_ranges)
+  }
+
+  # convenience function to get a value or NA
+  getValue <- function(prefix, value) {
+    if ((is.character(value) && etlutils::isSimpleNotEmptyString(value)) || !etlutils::isSimpleNAorNULL(value)) {
+      return(paste0(prefix, value))
+    }
+    return(NA_character_)
+  }
+
+  # convenience function to add a value to a vector
+  addValue <- function(vector, prefix, value) {
+    value <- getValue(prefix, value)
+    if (is.na(value)) {
+      return(vector)
+    }
+    return(c(vector, value))
+  }
 
   # Create Observation entries for each code
-  obs_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
-    dt <- data.table::copy(obs_templates)
-    # Generate unique Observation ID
-    dt[, obs_id := paste0("[1]", pid, "-E-", enc_index, "-OL-", obs_index + (i - 1))]
-    dt[, obs_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-OL-", obs_index + (i - 1))]
-    # Reference the patient and encounter
-    dt[, obs_patient_ref := paste0("[1.1]Patient/", pid)]
-    dt[, obs_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
-    # Assign the observation code
-    dt[, obs_code_code := paste0("[1.1.1]", codes[i])]
-    obs_templates[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset)]
-    obs_templates[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
-    # Optional fields
-    if (!is.null(value)) dt[, obs_valuequantity_value := paste0("[1.1]", value)]
-    if (!is.null(unit)) dt[, obs_valuequantity_code := paste0("[1.1]", unit)]
-    if (!is.null(referencerange_low)) dt[, obs_referencerange_low_value := paste0("[1.1]", referencerange_low)]
-    if (!is.null(referencerange_high)) dt[, obs_referencerange_high_value := paste0("[1.1]", referencerange_high)]
-    dt
-  }))
+  obs_dt <- data.table::copy(obs_templates)
+  # Generate unique Observation ID
+  obs_dt[, obs_id := paste0("[1]", pid, "-E-", enc_index, "-OL-", obs_index)]
+  obs_dt[, obs_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-OL-", obs_index)]
+  # Reference the patient and encounter
+  obs_dt[, obs_patient_ref := paste0("[1.1]Patient/", pid)]
+  obs_dt[, obs_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
+  # Assign the observation code
+  obs_dt[, obs_code_code := paste0("[1.1.1]", code)]
+  obs_dt[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset)]
+  obs_dt[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+  # Optional fields
+  obs_dt[, obs_valuequantity_value := getValue("[1.1]", value)]
+  obs_dt[, obs_valuequantity_code := getValue("[1.1]", unit)]
+  obs_dt[, obs_valuequantity_unit := getValue("[1.1]Display of unit ", unit)]
+
+  if (!is.null(reference_ranges)) {
+    low_values <- c()
+    high_values <- c()
+    low_codes <- c()
+    high_codes <- c()
+    low_systems <- c()
+    high_systems <- c()
+    type_codes <- c()
+
+    for (r in seq_along(reference_ranges)) {
+      range <- reference_ranges[[r]]
+
+      prefix  <- paste0("[", r, ".1.1]")
+      prefix2 <- paste0("[", r, ".1.1.1]")
+      low_values   <- addValue(low_values, prefix, range$referencerange_low_value)
+      high_values  <- addValue(high_values, prefix, range$referencerange_high_value)
+      low_codes    <- addValue(low_codes, prefix, range$referencerange_low_code)
+      high_codes   <- addValue(high_codes, prefix, range$referencerange_high_code)
+      low_systems  <- addValue(low_systems, prefix, range$referencerange_low_system)
+      high_systems <- addValue(high_systems, prefix, range$referencerange_high_system)
+      type_codes   <- addValue(type_codes, prefix2, range$referencerange_type_code)
+
+    }
+    pasteRAW <- function(vec) {
+      raw <- paste0(vec, collapse = " ~ ")
+      if(!nchar(raw)) raw <- NA_character_ # vec = NULL return empty string
+      return(raw)
+    }
+    obs_dt[, obs_referencerange_low_value   := pasteRAW(low_values)]
+    obs_dt[, obs_referencerange_high_value  := pasteRAW(high_values)]
+    obs_dt[, obs_referencerange_low_code    := pasteRAW(low_codes)]
+    obs_dt[, obs_referencerange_high_code   := pasteRAW(high_codes)]
+    obs_dt[, obs_referencerange_low_system  := pasteRAW(low_systems)]
+    obs_dt[, obs_referencerange_high_system := pasteRAW(high_systems)]
+    obs_dt[, obs_referencerange_type_code   := pasteRAW(type_codes)]
+  }
 
   # Append the new entries to the Observation table
   resource_tables[["Observation"]] <- rbind(resource_tables[["Observation"]], obs_dt, fill = TRUE)
