@@ -72,8 +72,8 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
   if (checkMultipleRows(F1_prep_raw, c("main_enc_id", "enc_period_start"))) {
     F1_prep_raw <- F1_prep_raw |>
       addMultipleRowsProcessingExclusionReason(
-        grouping_variables = c("main_enc_id", "enc_period_start"),
-        reason = "Multiple_rows_same_start_date_ward_contact"
+        c("main_enc_id", "enc_period_start"),
+        "Multiple_rows_same_start_date_ward_contact"
       )
 
     warning("First INTERPOLAR-ward contact undefinded for a main encounter (multiple rows with same
