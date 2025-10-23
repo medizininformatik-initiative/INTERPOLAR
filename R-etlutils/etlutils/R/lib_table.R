@@ -270,19 +270,19 @@ writeExcelFile <- function(tables, file_name, with_column_names) {
 #'         or NA if no matching file is found.
 #'
 #' @export
-readFirstExcelFileAsTableList <- function(path, namePattern) {
+readFirstExcelFileAsTableList <- function(path, namePattern, error_if_ambigious = FALSE) {
   pattern <- paste0(".*", namePattern, ".*\\.xlsx$")
   excel_file_names <- list.files(path)
   excel_file_names <- excel_file_names[grepl(pattern, excel_file_names, perl = TRUE)]
+  excel_file_names <- excel_file_names[!grepl("~", excel_file_names)]
 
   if (length(excel_file_names)) {
-    for (i in 1:length(excel_file_names)) {
-      if (!startsWith(excel_file_names[i], "~")) {
-        excel_file_name <- file.path(path, excel_file_names[i])
-        excel_file_content <- readExcelFileAsTableList(excel_file_name)
-        return(list(excel_file_name = excel_file_name, excel_file_content = excel_file_content))
-      }
+    if (length(excel_file_names) > 1 && error_if_ambigious) {
+      stop(paste0("More than one excel file found. Only one is allowed in this path:\n", paste0("  ", path, "/", excel_file_names, collapse = "\n")))
     }
+    excel_file_name <- file.path(path, excel_file_names[1])
+    excel_file_content <- readExcelFileAsTableList(excel_file_name)
+    return(list(excel_file_name = excel_file_name, excel_file_content = excel_file_content))
   }
   return(NULL)
 }
@@ -301,7 +301,7 @@ readFirstExcelFileAsTableList <- function(path, namePattern) {
 #'
 #' @export
 readFirstExcelFileSheet <- function(path, namePattern, columnNames) {
-  excel_sheets <- readFirstExcelFileAsTableList(path, namePattern)
+  excel_sheets <- readFirstExcelFileAsTableList(path, namePattern, error_if_ambigious = TRUE)
   if (is.null(excel_sheets)) {
     return(NULL)
   }
@@ -888,7 +888,7 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
   }
 
   # Apply the new order
-  setcolorder(dt, new_order)
+  data.table::setcolorder(dt, new_order)
 }
 
 #' Print a summary for a table
@@ -1047,27 +1047,50 @@ fillNAWithLastRowValue <- function(dt, columns = NA) {
 #' @param split_columnname A character string specifying the column name by which to split the
 #' data.table.
 #' @param fill_na_in_split_columnname A logical value indicating whether to fill NA values in the
-#' specified column with the last non-NA value. Default is TRUE.
+#' specified column with the last non-NA value. Default is FALSE.
+#' @param rm.na A logical value indicating whether to remove list elements where the split column
+#' value is NA. Default is FALSE.
+#'
 #' @return A list of data.tables, with each element containing the rows with the same value in the
 #' specified column. The names of the list elements are set to the unique values of the specified
 #' column.
+#'
 #' @examples
 #' library(data.table)
 #' dt <- data.table(
-#'   SCRIPTNAME = c("A", "A", "B", "B", "C"),
-#'   VALUE = 1:5
+#'   SCRIPTNAME = c("A", "A", "B", "B", NA, "", "C"),
+#'   VALUE = 1:7
 #' )
 #' result <- splitTableToList(dt, "SCRIPTNAME")
 #' print(result)
-#' @export
 #'
-splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname = FALSE) {
+#' # Remove NA elements
+#' result_no_na <- splitTableToList(dt, "SCRIPTNAME", rm.na = TRUE)
+#' print(result_no_na)
+#'
+#' @export
+splitTableToList <- function(dt, split_columnname, fill_na_in_split_columnname = FALSE, rm.na = FALSE) {
   dt <- data.table::copy(dt) # prevent changing the original table
-  dt[get(split_columnname) == "", (split_columnname) := NA]
+
+  # Convert empty strings to NA only if the split column is character
+  if (is.character(dt[[split_columnname]])) {
+    dt[get(split_columnname) == "", (split_columnname) := NA_character_]
+  }
+
+  # Optionally fill NA in the split column using last non-NA value
   if (fill_na_in_split_columnname) {
     fillNAWithLastRowValue(dt, split_columnname)
   }
-  split(dt, by = split_columnname, keep.by = TRUE)
+
+  # Split into list by the split column
+  splitted <- split(dt, by = split_columnname, keep.by = TRUE)
+
+  # Optionally remove the NA group robustly (do not rely on list names)
+  if (rm.na) {
+    splitted <- Filter(function(x) !isTRUE(all(is.na(x[[split_columnname]]))), splitted)
+  }
+
+  return(splitted)
 }
 
 #' Collapse Rows of a data.table by Groups

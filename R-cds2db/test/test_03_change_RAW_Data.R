@@ -154,71 +154,62 @@ if (exists("DEBUG_DAY")) {
   # Add Medication, Conditions and Observations for all MRP types to the duplicated patients
   ##########
 
-  runCodeForDebugDay(1, {
-    #UKB-0001_1 -> Drug_Disease_Interaction             -> MedicationRequest - N02AA01
-    addDrugs("UKB-0001_1", "N02AA01")
-    #UKB-0001_2 -> Drug_Drug_Interaction                -> NULL
-    #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> MedicationRequest - N06BA09
-    addDrugs("UKB-0001_3", "N06BA09")
-    #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> NULL
+  #UKB-0001_1 -> Drug-Disease: Drug Tag 1, Disease Tag 3
+  #UKB-0001_2 -> Drug-Drug: beide Drugs an Tag 2
+  #UKB-0001_3 -> Drug-DrugGroup: Drug Tag 1, DrugGroup Tag 2
+  #UKB-0001_4 -> Drug-Disease: Drug Tag 5, Proxy ATC Tag 3
 
-    #UKB-0002_1 -> Drug_Disease_Interaction (Pro.LOINC) -> MedicationRequest - C02KX01
+  #UKB-0002_1 -> Drug-Disease: Drug Tag 1, Proxy LOINC with hard cutoff Tag 2
+  #UKB-0002_2 -> Drug-Disease: Drug Tag 1, Proxy LOINC with reference range Tag 2
+  #UKB-0002_3 -> Drug-Disease: Drug Tag 6, Disease Tag 7
+  #UKB-0002_4 -> -
+
+  if (isDebugDay(1)) {
+    # Drug-Disease -> ATC
+    addDrugs("UKB-0001_1", "N02AA01")
+    # Drug-DrugGroup -> ATC
+    addDrugs("UKB-0001_3", "N06BA09")
+
+    # Drug-Disease (Pro.LOINC) -> ATC
     addDrugs("UKB-0002_1", "C02KX01")
-    #UKB-0002_2 -> Drug_Disease_Interaction (LOINC Cut) -> MedicationRequest - C03DA02
+    # Drug-Disease -> LOINC with Cutoff
     addDrugs("UKB-0002_2", "C03DA02")
-  })
-  runCodeForDebugDay(2, {
-    #UKB-0001_1 -> Drug_Disease_Interaction             -> NULL
-    #UKB-0001_2 -> Drug_Drug_Interaction                -> MedicationRequests - N06AX22 + J01MA02
+  }
+  if (isDebugDay(2)) {
+    # Drug-Drug -> ATCs
     addDrugs("UKB-0001_2", c("N06AX22", "J01MA02"))
-    #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> MedicationRequest C02KC01
+    # Drug-DrugGroup -> ATC
     addDrugs("UKB-0001_3", "C02KC01")
-    #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> NULL
-    #UKB-0002_1 -> Drug_Disease_Interaction (Pro.LOINC) -> Observation - 14631-6
-    addObservations("UKB-0002_1", "14631-6")
-    #UKB-0002_2 -> Drug_Disease_Interaction (LOINC Cut) -> Observation - 2823-3
-    addObservations("UKB-0002_2", "2823-3", value = 12, unit = "mg/dL", referencerange_low = 5, referencerange_high = 10)
-  })
-  runCodeForDebugDay(3, {
-    #UKB-0001_1 -> Drug_Disease_Interaction             -> Diagnosis - R10.0
+    # Drug-Disease -> Proxy LOINC with hard cutoff
+    addObservation("UKB-0002_1", "14631-6")
+    # Drug-Disease -> Proxy LOINC with reference range
+    addObservation("UKB-0002_2", "2823-3", value = 12, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
+  }
+  if (isDebugDay(3)) {
+    # Drug-Disease -> ICD
     addConditions("UKB-0001_1", "R10.0")
-    #UKB-0001_2 -> Drug_Drug_Interaction                -> Medikationsanalyse
-    #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> Medikationsanalyse
-    #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> MedicationRequest - A10BA02
+    # Drug-Disease -> ATC
     addDrugs("UKB-0001_4", "A10BA02")
-  })
-  runCodeForDebugDay(4, {
-    #UKB-0001_1 -> Drug_Disease_Interaction             -> NULL
-    #UKB-0001_2 -> Drug_Drug_Interaction                -> NULL
-    #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> NULL
-    #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> NULL
-  })
-  runCodeForDebugDay(5, {
-    #UKB-0001_1 -> Drug_Disease_Interaction             -> Medikationsanalyse
-    #UKB-0001_2 -> Drug_Drug_Interaction                -> NULL
-    #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> NULL
-    #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> MedicationRequest - N07BB03
+  }
+  if (isDebugDay(4)) {
+  }
+  if (isDebugDay(5)) {
+    # Drug-Disease -> Proxy ATC
     addDrugs("UKB-0001_4", "N07BB03")
-  })
-  runCodeForDebugDay(6, {
-    #UKB-0001_1 -> Drug_Disease_Interaction             -> NULL
-    #UKB-0001_2 -> Drug_Drug_Interaction                -> NULL
-    #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> NULL
-    #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> Medikationsanalyse
-  })
-  runCodeForDebugDay(7, {
-    #UKB-0001_1 -> Drug_Disease_Interaction             -> NULL
-    #UKB-0001_2 -> Drug_Drug_Interaction                -> NULL
-    #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> NULL
-    #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> NULL
-  })
-  runCodeForDebugDay(8, {
-    #UKB-0001_1 -> Drug_Disease_Interaction             -> NULL
-    #UKB-0001_2 -> Drug_Drug_Interaction                -> NULL
-    #UKB-0001_3 -> Drug_DrugGroup_Interaction           -> NULL
-    #UKB-0001_4 -> Drug_Disease_Interaction (Proxy ATC) -> NULL
-  })
+  }
+  if (isDebugDay(6)) {
+    # Drug-Disease -> ATC
+    addDrugs("UKB-0002_3", "N02AA01")
+  }
+  if (isDebugDay(7)) {
+    # Drug-Disease -> ICD
+    addConditions("UKB-0001_1", "R10.0")
+  }
+  if (isDebugDay(8)) {
+  }
+
   duplicatePatients(10)
+
   # Update the resource_tables list with the modified data tables
   resource_tables <- testGetResourceTables()
 }

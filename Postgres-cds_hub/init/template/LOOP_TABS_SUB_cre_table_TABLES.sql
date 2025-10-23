@@ -52,6 +52,13 @@ BEGIN
             ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD last_processing_nr INT; -- Last processing number of the data record
         END IF; -- column
 
+        IF NOT EXISTS ( -- column not exists
+            SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'raw_already_processed'
+        ) THEN
+            <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "ALTER TABLE <%OWNER_SCHEMA%>.<%TABLE_NAME%> ADD raw_already_processed INT; -- Note the last RAW ID if all RAW data of this data set has already been typed previously - this data set does not need to be taken into account during the next processing"%>
+            NULL;
+        END IF; -- column
+
 -- Data-leading columns -------------------------------------------------------------------------
 <%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES%>
 

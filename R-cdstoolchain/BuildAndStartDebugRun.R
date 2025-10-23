@@ -81,3 +81,6 @@ local({
 
 # ---- Run main script of last package in GLOBAL env ---------------------------
 source("R-cdstoolchain/StartDebugCDSToolChain.R", local = FALSE)
+# DEBUG_SUBMODULE_DIR <- "./R-dataprocessor/submodules/02_MRP_Calculation"
+# DEBUG_RUN_SINGLE_DAY_ONLY <- 2
+# source("R-dataprocessor/StartDataProcessor.R", local = FALSE)
