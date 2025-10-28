@@ -241,6 +241,10 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
     mrp_table_list_rows <- drug_disease_mrp_tables_by_icd[[mrp_icd]]
     mrp_table_list_rows <- mrp_table_list_rows[ATC_FOR_CALCULATION %in% match_atc_codes$atc_code]
 
+    # Keep only relevant columns
+    keep_cols <- c("ATC_DISPLAY", "ATC_FOR_CALCULATION", "ICD_VALIDITY_DAYS", "CONDITION_DISPLAY_CLUSTER")
+    mrp_table_list_rows <- unique(mrp_table_list_rows[, ..keep_cols])
+
     if (nrow(matched_rows)) {
       # Extract all diagnosis_cluster from matched_rows
       matched_clusters <- unique(na.omit(matched_rows$diagnosis_cluster))
