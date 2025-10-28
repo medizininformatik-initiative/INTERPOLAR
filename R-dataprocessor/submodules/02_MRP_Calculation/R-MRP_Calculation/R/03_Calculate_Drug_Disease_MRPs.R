@@ -130,33 +130,6 @@ processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type
     stop(paste(error_messages, collapse = "\n"))
   }
 
-  # Expand and concatenate ICD codes in a vectorized manner.
-  # If there are multiple ICD codes separated by "+", each code is expanded separately, and
-  # combinations of expanded codes are concatenated. ICD Codes must be have at least 3 digits.
-  expandAndConcatenateICDs <- function(icd_column) {
-    # Function to process a single ICD code
-    processICD <- function(icd) {
-      if (is.na(icd) || icd == "") {
-        return(NA_character_)
-      }
-      if (!grepl("+", icd, fixed = TRUE)) {
-        # Handle single ICD code case
-        return(paste(etlutils::expandICDs(icd), collapse = ' '))
-
-      }
-      # Handle multiple ICD codes separated by '+'
-      input_icds <- unlist(strsplit(icd, '\\+'))
-      icd_1 <- etlutils::expandICDs(input_icds[[1]])
-      icd_2 <- etlutils::expandICDs(input_icds[[2]])
-      # Create combinations and concatenate
-      combinations <- outer(icd_1, icd_2, paste, sep = '+')
-      return(trimws(paste(c(combinations), collapse = ' ')))
-
-    }
-    # Apply the function to the entire column
-    sapply(icd_column, processICD)
-  }
-
   # Apply the function to the 'ICD' column
   drug_disease_mrp_definition$ICD <- expandAndConcatenateICDs(drug_disease_mrp_definition$ICD)
   # Split concatenated ICD codes into separate rows
