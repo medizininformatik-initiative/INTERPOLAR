@@ -1226,31 +1226,26 @@ calculateMRPsDrugDisease <- function(active_requests, mrp_pair_list, resources, 
       meda_datetime = meda_datetime,
       patient_id = patient_id
     )
-    matched_atcs <- unique(match_atc_and_icd_codes$atc)
-    unmatched_atcs <- match_atc_codes[!(atc_code %in% matched_atcs)]
-
-    if (nrow(unmatched_atcs)) {
-      # No ICD matches found, check ATC and OPS Proxys for ICDs
-      patient_ref <- paste0("Patient/", patient_id)
-      match_icd_proxies <- matchICDProxies(
-        medication_resources = list(
-          medication_requests = resources$medication_requests[medreq_patient_ref %in% patient_ref],
-          medication_statements = resources$medication_statements[medstat_patient_ref %in% patient_ref],
-          medication_administrations = resources$medication_administrations[medadm_patient_ref %in% patient_ref]
-        ),
-        procedure_resources = resources$procedures[proc_patient_ref %in% patient_ref],
-        observation_resources = resources$observations[obs_patient_ref %in% patient_ref],
-        drug_disease_mrp_tables_by_atc_proxy = splitted_mrp_tables$by_atc_proxy,
-        drug_disease_mrp_tables_by_ops_proxy = splitted_mrp_tables$by_ops_proxy,
-        drug_disease_mrp_tables_by_loinc_proxy = splitted_mrp_tables$by_loinc_proxy,
-        meda_datetime = meda_datetime,
-        match_atc_codes = unmatched_atcs$atc_code,
-        loinc_mapping_table = loinc_mapping_table,
-        loinc_matching_function = matchLOINCCutoff
-      )
-      if (nrow(match_icd_proxies)) {
-        match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
-      }
+    # check ATC and OPS Proxys for ICDs
+    patient_ref <- paste0("Patient/", patient_id)
+    match_icd_proxies <- matchICDProxies(
+      medication_resources = list(
+        medication_requests = resources$medication_requests[medreq_patient_ref %in% patient_ref],
+        medication_statements = resources$medication_statements[medstat_patient_ref %in% patient_ref],
+        medication_administrations = resources$medication_administrations[medadm_patient_ref %in% patient_ref]
+      ),
+      procedure_resources = resources$procedures[proc_patient_ref %in% patient_ref],
+      observation_resources = resources$observations[obs_patient_ref %in% patient_ref],
+      drug_disease_mrp_tables_by_atc_proxy = splitted_mrp_tables$by_atc_proxy,
+      drug_disease_mrp_tables_by_ops_proxy = splitted_mrp_tables$by_ops_proxy,
+      drug_disease_mrp_tables_by_loinc_proxy = splitted_mrp_tables$by_loinc_proxy,
+      meda_datetime = meda_datetime,
+      match_atc_codes = match_atc_codes,
+      loinc_mapping_table = loinc_mapping_table,
+      loinc_matching_function = matchLOINCCutoff
+    )
+    if (nrow(match_icd_proxies)) {
+      match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
     }
   }
   return(match_atc_and_icd_codes)
