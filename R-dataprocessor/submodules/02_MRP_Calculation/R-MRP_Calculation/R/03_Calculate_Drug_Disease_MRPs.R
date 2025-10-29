@@ -294,8 +294,8 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
         new_row <- data.table::data.table(
           icd_code = mrp_icd,
           atc_code = relevant_atcs,
-          proxy_code = NA_character_,
-          proxy_type = NA_character_,
+          proxy_code = mrp_icd, # for ICD MRP without a real proxy we set the ICD code as "proxy" code to get this value in the dp_mrp_calculations table in the proxy_code column
+          proxy_type = "ICD", # same like with proxy code (even if this is not a proxy)
           diagnosis_cluster = mrp_table_list_row$CONDITION_DISPLAY_CLUSTER
         )
 

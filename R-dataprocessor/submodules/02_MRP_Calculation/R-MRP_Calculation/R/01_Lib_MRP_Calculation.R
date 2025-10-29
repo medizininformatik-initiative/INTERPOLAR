@@ -202,8 +202,8 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
         mrp_row <- data.table::data.table(
           atc_code = atc,
           atc2_code = atc2,
-          proxy_code = NA_character_,
-          proxy_type = NA_character_,
+          proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
+          proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
           kurzbeschr_part1 = paste0("[", matched_row$ATC_DISPLAY, " - ", atc, "] ist mit ["),
           kurzbeschr_part2 = matched_row$ATC2_DISPLAY,
           kurzbeschr_part3 = paste0(" - ", atc2, "] laut der Fachinformation kontrainduziert.")
