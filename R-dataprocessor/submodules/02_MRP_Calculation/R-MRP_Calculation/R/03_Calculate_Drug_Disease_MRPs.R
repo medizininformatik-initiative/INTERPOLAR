@@ -1049,8 +1049,8 @@ matchICDProxies <- function(
               validity_days <- suppressWarnings(as.integer(validity_days))
               # All non integer values are considered as unlimited validity duration
               if (is.na(validity_days)) {
-                # 36525 days are 100 years in the future
-                validity_days <- 36525
+                # LOINC values are valid for 7 days, all other types are valid for 36525 days, which are 100 years in the future
+                validity_days <- ifelse (proxy_type == "LOINC", 7, 36525)
               }
 
               resources_with_proxy[is.na(end_datetime), end_datetime := start_datetime + lubridate::days(validity_days)]
