@@ -1171,6 +1171,12 @@ matchICDProxies <- function(
 #' }
 #'
 getSplittedMRPTablesDrugDisease <- function(mrp_pair_list) {
+
+  # ensure the optional columns for the proxy validity days are present in the pair list table
+  mrp_pair_list[, ICD_PROXY_ATC_VALIDITY_DAYS := if (!"ICD_PROXY_ATC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else ICD_PROXY_ATC_VALIDITY_DAYS]
+  mrp_pair_list[, ICD_PROXY_OPS_VALIDITY_DAYS := if (!"ICD_PROXY_OPS_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else ICD_PROXY_OPS_VALIDITY_DAYS]
+  mrp_pair_list[, LOINC_VALIDITY_DAYS := if (!"LOINC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else LOINC_VALIDITY_DAYS]
+
   splitted <- list(
     by_atc = etlutils::splitTableToList(mrp_pair_list, "ATC_FOR_CALCULATION", rm.na = TRUE),
     by_icd = etlutils::splitTableToList(mrp_pair_list, "ICD", rm.na = TRUE),
