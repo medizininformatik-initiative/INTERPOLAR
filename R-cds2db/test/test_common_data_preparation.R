@@ -758,7 +758,7 @@ addDrugs <- function(pid, codes, day_offset = -0.3) {
   # Determine the next available index for encounters, MedicationRequests, and Medications
   enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
   med_req_index <- nrow(resource_tables[["MedicationRequest"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-MR-\\d+$"), medreq_id)]) + 1
-  med_index <- nrow(resource_tables[["Medication"]][grepl(paste0("^\\[1\\]", pid, "-MR-", med_req_index - 1, "-M-\\d+$"), med_id)]) + 1
+  med_index <- nrow(resource_tables[["Medication"]][grepl(paste0("^\\[1\\]", pid, "-MR-", med_req_index, "-M-\\d+$"), med_id)]) + 1
 
   # Create MedicationRequest entries for each code
   med_req_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
