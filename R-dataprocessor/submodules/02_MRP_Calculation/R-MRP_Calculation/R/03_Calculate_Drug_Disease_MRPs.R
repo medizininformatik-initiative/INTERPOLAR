@@ -1008,8 +1008,7 @@ matchICDProxies <- function(
     ]
     for (proxy_code in matching_proxies) {
       single_proxy_sub_table <- splitted_proxy_table[[proxy_code]]
-      match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get("ICD_PROXY")) & get("ICD_PROXY") != ""]
-
+      match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes$atc_code & !is.na(get("ICD_PROXY")) & get("ICD_PROXY") != ""]
       if (nrow(match_proxy_rows)) {
         # Create ICD_FULL_LIST per ATC group
         match_proxy_rows[
