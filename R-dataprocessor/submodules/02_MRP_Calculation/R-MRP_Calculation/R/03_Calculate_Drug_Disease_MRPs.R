@@ -506,10 +506,21 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
   desc_list <- obs[, {
     loinc_name <- loinc_mapping_table[LOINC %in% code, GERMAN_NAME_LOINC_PRIMARY]
 
+    converted_text <- ifelse(
+      as.character(converted_value) != as.character(value),
+      paste0(" (", converted_value, " ", cutoff_unit, ")"),
+      ""
+    )
+    lines <- sprintf(
+      "%s %s %s%s (Zeitpunkt: %s)",
+      ifelse(seq_len(.N) == 1, "  Wert:", "       "),  # Label nur beim ersten
+      value, unit,
+      converted_text,
+      format(start_datetime, "%Y-%m-%d %H:%M:%S")
+    )
     entry <- paste0(
       "\n   LOINC: ", code, " (", loinc_name, ")\n",
-      paste(sprintf("     Wert: %s %s (%s %s) (Zeitpunkt: %s)", value, unit, as.character(converted_value), cutoff_unit, format(start_datetime, "%Y-%m-%d %H:%M:%S")),
-            collapse = "\n")
+      paste(lines, collapse = "\n")
     )
     list(text = entry)
   }, by = code]
