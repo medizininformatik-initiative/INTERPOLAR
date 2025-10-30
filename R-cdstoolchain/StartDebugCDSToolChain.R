@@ -9,9 +9,6 @@ if (!I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED) {
   stop("You must set I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE to run this script!")
 }
 
-# free memory
-rm(list = ls())
-
 library(etlutils)
 library(cds2db)
 library(dataprocessor)
