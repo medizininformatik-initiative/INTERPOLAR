@@ -275,16 +275,18 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 
       # Check if at least one matching condition is within the validity window
       if (tolower(validity_days) == "unbegrenzt") {
-        condition_match <- any(patient_conditions$start_datetime <= meda_datetime)
+        matching_conditions <- patient_conditions[start_datetime <= meda_datetime]
       } else {
         validity_days <- as.numeric(validity_days)
-        condition_match <- any(
-          patient_conditions$start_datetime >= (meda_datetime - lubridate::days(validity_days)) &
-            patient_conditions$start_datetime <= meda_datetime
-        )
+        matching_conditions <- patient_conditions[
+          start_datetime >= (meda_datetime - lubridate::days(validity_days)) &
+            start_datetime <= meda_datetime
+        ]
       }
 
-      if (!condition_match) next
+      if (!nrow(matching_conditions)) next
+
+      condition_start_datetime <- matching_conditions$start_datetime[1]
 
       # Check if any of the matched ATC codes appear in the current ATC field of the MRP definition
       relevant_atcs <- match_atc_codes[
