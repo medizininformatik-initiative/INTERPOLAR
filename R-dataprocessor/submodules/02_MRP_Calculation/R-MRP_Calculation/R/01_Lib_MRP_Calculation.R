@@ -174,13 +174,14 @@ computeATCForCalculation <- function(data_table, primary_col, inclusion_col, out
 matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
   # Initialize empty result data.table
   result_mrps <- data.table::data.table(
+    mrp_index = integer(),
     atc_code = character(),
     atc2_code = character(),
     proxy_code = character(),
     proxy_type = character(),
-    kurzbeschr_part1 = character(),
-    kurzbeschr_part2 = character(),
-    kurzbeschr_part3 = character()
+    kurzbeschr_drug = character(),
+    kurzbeschr_item2 = character(),
+    kurzbeschr_suffix = character()
   )
 
   active_atcs <- unique(active_requests$atc_code)
@@ -199,29 +200,35 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
 
       # There is no existing mrp in the result table with the same atc codes
       if (!length(duplicate_idx)) {
+
+        mrp_index <- if (nrow(result_mrps) == 0) {
+          1
+        } else {
+          max(result_mrps$mrp_index, na.rm = TRUE) + 1
+        }
+
         mrp_row <- data.table::data.table(
+          mrp_index = mrp_index, # All rows for the same mrp have the same index. Its only used for grouping.
           atc_code = atc,
           atc2_code = atc2,
           proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
           proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
-          kurzbeschr_part1 = paste0("[", matched_row$ATC_DISPLAY, " - ", atc, "] ist mit ["),
-          kurzbeschr_part2 = matched_row$ATC2_DISPLAY,
-          kurzbeschr_part3 = paste0(" - ", atc2, "] laut der Fachinformation kontrainduziert.")
+          kurzbeschr_drug = paste0("[", matched_row$ATC_DISPLAY, " - ", atc, "] ist mit ["),
+          kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2),
+          kurzbeschr_suffix = paste0("] laut der entsprechenden Fachinformation kontrainduziert.")
         )
         result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
       } else {
-        existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_part1], result_mrps[duplicate_idx, kurzbeschr_part2], result_mrps[duplicate_idx, kurzbeschr_part3])
+        existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_drug], result_mrps[duplicate_idx, kurzbeschr_item2], result_mrps[duplicate_idx, kurzbeschr_suffix])
         # If duplicate exists, append the new information to kurzbeschr
         if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
-          result_mrps[duplicate_idx, kurzbeschr_part2 := paste0(kurzbeschr_part2, " und ", matched_row$ATC2_DISPLAY)]
+          result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC2_DISPLAY, " und ", kurzbeschr_item2)]
         } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
-          result_mrps[duplicate_idx, kurzbeschr_part2 := paste0(kurzbeschr_part2, " und ", matched_row$ATC_DISPLAY)]
+          result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC_DISPLAY, " und ", kurzbeschr_item2)]
         }
       }
     }
   }
-  result_mrps[, kurzbeschr := paste0(kurzbeschr_part1, kurzbeschr_part2, kurzbeschr_part3)]
-  result_mrps[, c("kurzbeschr_part1", "kurzbeschr_part2", "kurzbeschr_part3") := NULL]
   return(result_mrps)
 }
 
@@ -337,6 +344,9 @@ calculateMRPs <- function() {
               ret_redcap_repeat_instance <- if (length(existing_redcap_repeat_instances) == 0) 1 else max(as.integer(existing_redcap_repeat_instances), na.rm = TRUE) + 1
               # always updating the references to the existing ret_ids
               resources$existing_retrolective_mrp_evaluation_ids <- etlutils::addTableRow(resources$existing_retrolective_mrp_evaluation_ids, meda_id, ret_id, ret_redcap_repeat_instance)
+
+              #TODO: Hier müssen jetzt die MRP zusammen gefasst werden, die dasselbe MRP beschreiben
+              # Dazu ret_id und ret_redcap_repeat_instance zusammen fassen und die kurzbeschr entsprechend anpassen
 
               # Create new row for table retrolektive_mrpbewertung
               retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
