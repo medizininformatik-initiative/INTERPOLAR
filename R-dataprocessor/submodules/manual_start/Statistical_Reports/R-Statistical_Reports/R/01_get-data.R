@@ -121,31 +121,31 @@ getPatientData <- function(lock_id, table_name) {
 #'
 #' @return A data frame with distinct encounter records, including:
 #'   - IDs and references (`enc_id`, `enc_patient_ref`, `enc_partof_ref`, `enc_identifier_value`,
-#'   `enc_identifier_type_code`, `enc_identifier_system`)
-#'   - Classification and type (`enc_class_*`, `enc_type_*`)
-#'   - Service and hospitalization info (`enc_servicetype_*`, `enc_status`, `enc_hospitalization_*`)
+#'   `enc_identifier_system`)
+#'   - Classification and type (`enc_class_code`, `enc_type_code_Kontaktebene`, `enc_type_code_Kontaktart`)
+#'   - Service and hospitalization info (`enc_status`)
 #'   - Encounter period (`enc_period_start`, `enc_period_end`)
-#'   - Location and physical type (`enc_location_*`, `enc_location_physicaltype_*`)
-#'   - Service provider identifiers (`enc_serviceprovider_*`)
-#'   - Metadata (`enc_meta_lastupdated`, `input_datetime`)
+#'   - `processing_exclusion_reason`: A column initialized with `NA` to log any processing exclusions
 #'
 #' @details
 #' This function performs the following:
 #' 1. Builds and runs a SQL query selecting the full encounter dataset from the specified table.
 #' 2. Filters out einrichtungskontakt encounters that do not match the expected FHIR identifier
-#'    system for encounters
-#'   (if defined as `COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM`).
+#'    system for encounters (if defined as `COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM`).
 #' 3. Filters encounters to include only those with a start date within one year before the reporting_period_start
 #' 4. Filters out encounters with class codes "PRENC", "VR", or "HH" to exclude non-relevant records.
 #' 5. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown"
 #'    to focus on relevant records.
-#' 6. Removes any exact duplicates using `dplyr::distinct()`.
+#' 6. Uses the `PivotWiderTwoSystems` function to expand encounter type codes into two separate
+#'    columns based on specified systems and codes for Kontaktebene and Kontaktart.
+#'    Then further filters out encounters of type "begleitperson".
 #' 7. Sorts the data by patient reference, encounter ID, time-related fields, and status-related
-#'    fields to ensure consistency and clarity in downstream processing.
-#' 8. Checks for empty results and unexpected status values, issuing errors if necessary.
+#'    fields.
+#' 8. Adds a `processing_exclusion_reason` column initialized with `NA` to log any processing exclusions.
+#' 9. Checks for empty results and unexpected status values, issuing errors or warnings if necessary.
 #'
 #'
-#' @importFrom dplyr distinct arrange filter mutate
+#' @importFrom dplyr distinct arrange filter mutate if_else
 #' @export
 
 # TODO: check all variables in table _description_relevant for manifestations and importance to include them ------------
@@ -161,14 +161,29 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
 
   encounter_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
 
+  if (nrow(encounter_table_raw) == 0) {
+    stop("No encounter data downloaded from database. Please check the database.")
+  }
+
   if (etlutils::isDefinedAndNotEmpty("COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
     encounter_table_raw <- encounter_table_raw |>
       dplyr::filter(!(enc_type_code == "einrichtungskontakt" &
         !enc_identifier_system %in% COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM))
   }
 
+  if (nrow(encounter_table_raw) == 0) {
+    stop("The downloaded and identifier-filtered encounter table is empty. Please check (if defined)
+    for the correct definition of COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM (especially for 'einrichtungskontakte').")
+  }
+
   encounter_table <- encounter_table_raw |>
     dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_start))
+
+  if (nrow(encounter_table) == 0) {
+    stop("The downloaded and date-filtered encounter table (only encounter data from one year before
+    reporting period starts) is empty. Please check for enc_period_start dates being within the
+         defined reporting period")
+  }
 
   encounter_table <- encounter_table |>
     dplyr::filter(!enc_class_code %in% c("PRENC", "VR", "HH")) |>
@@ -176,7 +191,11 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     dplyr::distinct() |>
     PivotWiderTwoSystems(
       system1 = "http://fhir.de/CodeSystem/Kontaktebene",
-      codes1 = c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt"),
+      codes1 = c(
+        "einrichtungskontakt",
+        "abteilungskontakt",
+        "versorgungsstellenkontakt"
+      ),
       system2 = "http://fhir.de/CodeSystem/kontaktart-de",
       codes2 = c(
         "begleitperson", "vorstationaer", "nachstationaer", "teilstationaer",
@@ -186,15 +205,17 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
       var_code = "enc_type_code",
       var_system = "enc_type_system",
       var_new_system_1 = "enc_type_code_Kontaktebene",
-      var_new_system_2 = "enc_type_code_Kontaktart"
+      var_new_system_2 = "enc_type_code_Kontaktart",
+      exclusion_reason = "undefined_kontaktebene_or_kontaktart",
+      id_column = "enc_id"
     ) |>
     dplyr::filter(!enc_type_code_Kontaktart %in% c("begleitperson")) |>
     dplyr::distinct() |>
-    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status) |>
-    dplyr::mutate(processing_exclusion_reason = NA_character_)
+    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status)
 
   if (nrow(encounter_table) == 0) {
-    stop("The encounter table is empty. Please check the data.")
+    stop("The encounter table with extended filtering is empty. Please check the data for expected
+    implementation of enc_class_code, enc_status, enc_type_code and enc_type_system.")
   }
 
   if (any(is.na(encounter_table$enc_period_start))) {
@@ -208,43 +229,33 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   }
 
   if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
-    (is.na(encounter_table$enc_type_code_Kontaktebene) |
-      !encounter_table$enc_type_code_Kontaktebene %in% c(
-        "einrichtungskontakt", "abteilungskontakt",
-        "versorgungsstellenkontakt"
-      )))) {
+    (is.na(encounter_table$enc_type_code_Kontaktebene)))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_class_code == "IMP" &
-        !enc_type_code_Kontaktebene %in% c(
-          "einrichtungskontakt", "abteilungskontakt",
-          "versorgungsstellenkontakt"
-        ) &
-        is.na(processing_exclusion_reason),
-      "unexpected_imp_kontaktebene", processing_exclusion_reason
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(processing_exclusion_reason) &
+          !is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
+          is.na(encounter_table$enc_type_code_Kontaktebene),
+        "missing_kontaktebene_for_imp_encounter", processing_exclusion_reason
       ))
-
     print(encounter_table |>
-      dplyr::filter(enc_class_code == "IMP" & !enc_type_code_Kontaktebene %in%
-        c(
-          "einrichtungskontakt", "abteilungskontakt",
-          "versorgungsstellenkontakt"
-        )), width = Inf)
-    warning("The encounter table contains IMP type codes for Kontaktebene with unexpected values or
-            NA. Please check the data.")
+      dplyr::filter(enc_class_code == "IMP" & is.na(enc_type_code_Kontaktebene)), width = Inf)
+    warning("The encounter table with extended filtering contains inpatient encounters with missing
+    type codes for Kontaktebene. Please check the data for expected implementation of enc_type_code
+            and enc_type_system.")
   }
 
   if (nrow(encounter_table |>
     dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt")) == 0) {
     print(encounter_table, width = Inf)
-    stop("The encounter table does not contain any encounters of type 'einrichtungskontakt'.
-         Please check the data or the definition of COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
+    stop("The encounter table with extended filtering does not contain any encounters of type 'einrichtungskontakt'.
+         Please check the data for expected implementation of enc_type_code and enc_type_system.")
   }
 
   if (nrow(encounter_table |>
     dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt")) == 0) {
     print(encounter_table, width = Inf)
     stop("The encounter table does not contain any encounters of type 'versorgungsstellenkontakt'.
-         Please check the data.")
+         Please check the data for expected implementation of enc_type_code and enc_type_system.")
   }
 
   if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
@@ -253,19 +264,19 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     )))) {
     encounter_table <- encounter_table |>
       dplyr::mutate(processing_exclusion_reason = ifelse(enc_class_code == "IMP" &
-        !enc_status %in% c("finished", "in-progress", "onleave") &
+        (is.na(encounter_table$enc_status) | !enc_status %in% c("finished", "in-progress", "onleave")) &
         is.na(processing_exclusion_reason),
       "unexpected_imp_status", processing_exclusion_reason
       ))
     print(
       encounter_table |>
-        dplyr::filter(enc_class_code == "IMP" & !enc_status %in% c(
+        dplyr::filter(enc_class_code == "IMP" & (is.na(enc_status) | !enc_status %in% c(
           "finished", "in-progress",
           "onleave"
-        )),
+        ))),
       width = Inf
     )
-    warning("The encounter table contains IMP status with unexpected status values or NA.
+    warning("The encounter table contains inpatient encounters with unexpected or NA status values.
             Please check the data.")
   }
 

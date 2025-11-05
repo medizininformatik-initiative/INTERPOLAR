@@ -184,6 +184,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   # if needed: Print datasets for verification to outputLocal
   if (WRITE_TABLE_LOCAL) {
+    writeTableLocal(patient_table)
+    writeTableLocal(encounter_table)
     writeTableLocal(FHIR_table)
     writeTableLocal(full_analysis_set_1)
     writeTableLocal(statistical_report_data)
