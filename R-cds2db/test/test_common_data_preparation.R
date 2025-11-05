@@ -130,6 +130,9 @@ testPrepareRAWResources <- function(patient_ids) {
   enc_templates <- enc_templates[grepl("-E-1", enc_id)]
   # Filter for the first encounters for the first entry
   enc_templates <- enc_templates[grepl("-1$", enc_id)]
+  # Give all encounter the same identifier system and identifier of the same medical record as value
+  enc_templates[, enc_identifier_system := "[1.1]http://www.commonidentifiersystem.de"]
+  enc_templates[, enc_identifier_value := sub("[1]", "[1.1]", sub("-A-1$", "", enc_id), fixed = TRUE)]
   # Add encounters with type "Versorgungstellenkontakt"
   enc_templates <- testAddEncounterLevel3(enc_templates)
   # Change encounter data
@@ -553,7 +556,6 @@ testAdmission <- function(pid, room, bed, ward_name = NULL) {
   # Set encounter partof references in all 3 encounter ids
   part_of_ref_pattern <- paste0("\\[1.1\\]Encounter/", pid, "-E-")
   enc_templates[, enc_partof_ref := gsub(paste0(part_of_ref_pattern, "1"), paste0(part_of_ref_pattern, enc_level_1_index), enc_partof_ref)]
-  enc_templates[, enc_identifier_value := enc_id]
   # Set encounter start date to current debug day -0.5
   enc_templates[, enc_period_start := getDebugDatesRAWDateTime(-0.5)]
   enc_templates[, enc_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]

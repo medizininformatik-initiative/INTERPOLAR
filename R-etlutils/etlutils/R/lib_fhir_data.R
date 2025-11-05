@@ -232,3 +232,75 @@ fhirdataGetAllEncounters <- function(encounter_ids, common_encounter_fhir_identi
 
   return(unique(encounters))
 }
+
+#' Filter a main encounter and its directly related sub-encounters
+#'
+#' This function extracts a main encounter and all directly related encounters from a given
+#' data.table of encounters. It includes:
+#' - the main encounter identified by its enc_id,
+#' - any encounters referencing the main encounter via enc_partof_ref,
+#' - any encounters referencing those encounters (i.e., one level deeper),
+#' - and, optionally, encounters sharing a common identifier value if a
+#' common_encounter_fhir_identifier_system is provided.
+#'
+#' It is assumed that all_encounters is not empty and contains at least one row with the
+#' given main_encounter_id.
+#'
+#' @param main_encounter_id A character string representing the enc_id of the main encounter
+#' to extract.
+#' @param all_encounters A data.table containing all available encounters, including columns
+#' enc_id, enc_partof_ref, enc_identifier_system, and
+#' enc_identifier_value.
+#' @param common_encounter_fhir_identifier_system Optional character string indicating the
+#' identifier system to be used for identifying encounters with a shared identifier value.
+#'
+#' @return A data.table containing the main encounter, directly and indirectly related
+#' sub-encounters, and optionally all encounters with the same common identifier value.
+#'
+#' @examples
+#' # Not runnable without specific data structure
+#' # fhirdataFilterMainAndSubEncounters("enc-123", all_encounters_dt, "http://example.org/system")
+#'
+#' @export
+fhirdataFilterMainAndSubEncounters <- function(main_encounter_id, all_encounters, common_encounter_fhir_identifier_system = NULL) {
+  # 1. Find the main encounter with the given id
+  encounters <- list(main_encounter = all_encounters[enc_id == main_encounter_id])
+  # 2. Find all encounter with partof reference to this encounter
+  part_of_encounters <- all_encounters[enc_partof_ref %in% fhirdataGetEncounterReference(main_encounter_id)]
+  # 3. Find all encounters with partof reference to the encounters of step 2
+  if (nrow(part_of_encounters)  > 0) {
+    encounters[["part_of_encounters"]] <- part_of_encounters
+    part_of_encounters_references <- fhirdataGetEncounterReference(encounters$part_of_encounters$enc_id)
+    encounters[["sub_part_of_encounters"]] <- all_encounters[enc_partof_ref %in% part_of_encounters_references]
+  }
+  # 4. Find all encounters which the same common identifier if the common_encounter_fhir_identifier_system is given
+  if (!is.null(common_encounter_fhir_identifier_system)) {
+    # This should be only one, but just in case we handle multiple values
+    common_identifier_value <- encounters$main_encounter[
+      enc_identifier_system == common_encounter_fhir_identifier_system
+    ]$enc_identifier_value
+    common_identifier_value <- unique(common_identifier_value)
+    if (length(common_identifier_value) > 1) {
+      stop(
+        "Multiple common identifier values found for encounter ",
+        main_encounter_id,
+        " and identifier system ",
+        common_encounter_fhir_identifier_system,
+        ". All encounters must have the following unique identifier value ",
+        common_identifier_value, ". "
+      )
+    }
+    if (length(common_identifier_value) == 1 && !is.na(common_identifier_value)) {
+       common_identifier_encounters <- all_encounters[
+        enc_identifier_system == common_encounter_fhir_identifier_system &
+          enc_identifier_value %in% common_identifier_value
+      ]
+       if(nrow(common_identifier_encounters) > 0) {
+         encounters[["common_identifier_encounters"]] <- common_identifier_encounters
+       }
+    }
+  }
+  # 5. Rbind all encounter and return them
+  encounters <- data.table::rbindlist(Filter(Negate(is.null), encounters))
+  return(unique(encounters))
+}
