@@ -78,7 +78,6 @@ gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataproce
 
 -   die aggregierten Kennzahlen umfassen nur solche Fälle, die die Kriterien für die INTERPOLAR-Kohorte (Full Analysis Set 1 / FAS1) erfüllen (stationäre Fälle \>18 Jahre, die auf einer INTERPOLAR-Station aufgenommen wurden)
 -   nur Medikationsanalysen deren Datum innerhalb eines INTERPOLAR-Stationsaufenthaltes liegt, werden gezählt (d.h. die Medikationsanalyse muss innerhalb des Zeitraumes des INTERPOLAR-Versorgungsstellenkontaktes liegen)
-  
 
 ### Konfiguration
 
