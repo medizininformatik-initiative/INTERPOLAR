@@ -9,17 +9,17 @@
 #'   processing.
 #' @param table_name A character string specifying the name of the database table to query.
 #'   The table must contain at least the following columns: `pat_id`, `pat_identifier_type_code`,
-#'   `pat_identifier_value`,
-#'   `pat_birthdate`, `pat_gender` ,`pat_deceaseddatetime`, and `input_datetime`.
+#'   `pat_identifier_value` and `pat_birthdate`.
 #'
 #' @return A data frame containing:
 #'   - `pat_id`: Patient FHIR identifier
 #'   - `pat_identifier_type_code`: Type of identifier (should be MR for medical record number)
 #'   - `pat_identifier_value`: cis (hospital system) patient identifier
 #'   - `pat_birthdate`: Patient's birthdate (expected in `Date` format)
-#'   - `pat_gender`: patient's gender
-#'   - `pat_deceaseddatetime`: Date and time of death, if available
-#'   - `input_datetime`: Timestamp of data input
+#'   - `pat_identifier_system`: System of the patient identifier
+#'   - `pat_identifier_type_system`: System of the patient identifier type
+#'   - `processing_exclusion_reason`: A column initialized with `NA` to log any processing exclusions
+#'
 #'   The result is sorted by `pat_id` and includes only distinct rows.
 #'
 #' @details
@@ -47,8 +47,8 @@
 getPatientData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT pat_id, pat_identifier_system, pat_identifier_type_system, ",
-    "pat_identifier_type_code, pat_identifier_value, pat_birthdate, pat_gender, ",
-    "pat_deceaseddatetime FROM ", table_name, "\n"
+    "pat_identifier_type_code, pat_identifier_value, pat_birthdate ",
+    "FROM ", table_name, "\n"
   )
 
   patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
