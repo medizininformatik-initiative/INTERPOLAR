@@ -48,7 +48,6 @@ mergePatEnc <- function(patient_table, encounter_table) {
       enc_identifier_value,
       pat_id,
       pat_identifier_value,
-      enc_identifier_type_code,
       enc_partof_ref,
       enc_class_code,
       enc_type_code_Kontaktebene,

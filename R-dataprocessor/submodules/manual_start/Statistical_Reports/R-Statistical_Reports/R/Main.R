@@ -118,7 +118,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     report_period_start = REPORT_PERIOD_START
   )
   # this table can have multiple rows per encounter
-  # e.g. if there are entries for enc_location_physicaltype_code wa, ro & bd
 
   pids_per_ward_table <- getPidsPerWardData(
     lock_id = "statistical reports[3]",

@@ -112,21 +112,11 @@ getPatientData <- function(lock_id, table_name) {
 #' @param report_period_start A date object specifying the start date of the report period.
 #'
 #' @param table_name A character string specifying the name of the database table to query.
-#'   The table must contain the following columns (at a minimum):
+#'   The table must contain the following columns:
 #'   - `enc_id`, `enc_identifier_value`, `enc_patient_ref`, `enc_partof_ref`
-#'   - `enc_class_system`, `enc_class_code`
+#'   - `enc_class_code`
 #'   - `enc_type_system`, `enc_type_code`
-#'   - `enc_servicetype_system`, `enc_servicetype_code`
 #'   - `enc_period_start`, `enc_period_end`, `enc_status`
-#'   - `enc_hospitalization_admitsource_system`, `enc_hospitalization_admitsource_code`
-#'   - `enc_hospitalization_dischargedisposition_system`,
-#'     `enc_hospitalization_dischargedisposition_code`
-#'   - `enc_location_ref`, `enc_location_identifier_value`, `enc_location_status`
-#'   - `enc_location_physicaltype_system`, `enc_location_physicaltype_code`
-#'   - `enc_serviceprovider_identifier_type_system`, `enc_serviceprovider_identifier_type_code`
-#'   - `enc_serviceprovider_identifier_system`, `enc_serviceprovider_identifier_value`
-#'   - `enc_meta_lastupdated`, `input_datetime`
-#'   - `enc_identifier_type_code`
 #'   - `enc_identifier_system`
 #'
 #' @return A data frame with distinct encounter records, including:
@@ -160,19 +150,12 @@ getPatientData <- function(lock_id, table_name) {
 
 # TODO: check all variables in table _description_relevant for manifestations and importance to include them ------------
 # (bottom variables not in use)
+
 getEncounterData <- function(lock_id, table_name, report_period_start) {
   query <- paste0(
     "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, ",
     "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-    "enc_identifier_type_code, enc_identifier_system, enc_type_system, ",
-    "enc_class_system, enc_servicetype_system, enc_servicetype_code, ",
-    "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
-    "enc_hospitalization_dischargedisposition_system, enc_hospitalization_dischargedisposition_code, ",
-    "enc_location_ref, enc_location_identifier_value, enc_location_status, ",
-    "enc_location_physicaltype_system, enc_location_physicaltype_code, ",
-    "enc_serviceprovider_identifier_type_system, enc_serviceprovider_identifier_type_code, ",
-    "enc_serviceprovider_identifier_system, enc_serviceprovider_identifier_value, ",
-    "enc_meta_lastupdated ",
+    "enc_identifier_system, enc_type_system ",
     "FROM ", table_name, "\n"
   )
 
@@ -372,15 +355,13 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
 #'   - `ward_name`: The name of the ward.
 #'   - `patient_id`: The unique identifier of the patient (FHIR)
 #'   - `encounter_id`: The unique identifier of the encounter (FHIR)
-#'   - `input_datetime`: The timestamp of when the record was entered.
 #'
 #' @details
 #' This function performs the following steps:
-#' 1. Constructs an SQL query to retrieve `ward_name`, `patient_id`, `encounter_id`,
-#'    and `input_datetime` from the specified table.
+#' 1. Constructs an SQL query to retrieve `ward_name`, `patient_id`, `encounter_id` from the specified table.
 #' 2. Executes the query using `etlutils::dbGetReadOnlyQuery` with the provided `lock_id`.
 #' 3. Ensures distinct records using `dplyr::distinct()`.
-#' 4. Sorts the results by `patient_id`, `encounter_id`, and `input_datetime`.
+#' 4. Sorts the results by `patient_id`, `encounter_id`.
 #'
 #'
 #' @importFrom dplyr distinct arrange
@@ -414,7 +395,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' This is important for managing concurrent data access in environments where multiple processes
 #' might access the data simultaneously.
 #' @param table_name A character string specifying the name of the database table to query.
-#' This table should include columns `pat_id`, `pat_cis_pid`, `record_id`, and `input_datetime`.
+#' This table should include columns `pat_id`, `pat_cis_pid`, `record_id`.
 #'
 #' @return A dataframe (`patient_fe_table`) that includes patient data, cleaned to ensure distinct
 #' entries per `pat_id`, arranged in order.
@@ -466,7 +447,7 @@ getPatientFeData <- function(lock_id, table_name) {
 #' This function queries a specified database table to retrieve front-end data related to patient
 #' encounters ("Fälle"). It fetches relevant fields such as encounter ID, patient ID, station,
 #' dates, and metadata, and returns a cleaned version of the table with duplicates removed and
-#' sorted by `record_id` and `input_datetime`.
+#' sorted by `record_id`.
 #'
 #' @param lock_id A database connection identifier (used by `etlutils::dbGetReadOnlyQuery`) to
 #'                ensure read-only access.
@@ -488,8 +469,7 @@ getPatientFeData <- function(lock_id, table_name) {
 #' expected columns. It then:
 #' \enumerate{
 #'   \item Removes exact duplicates.
-#'   \item Sorts rows by `record_id` and `input_datetime` to ensure consistent ordering.
-#'   \item Removes the `input_datetime` column before final output.
+#'   \item Sorts rows by `record_id` to ensure consistent ordering.
 #' }
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
