@@ -93,7 +93,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(2, 5)
+  duplicatePatients(1, 1)
 
   runCodeForDebugDay(1, {
 
@@ -105,11 +105,20 @@ if (exists("DEBUG_DAY")) {
     pid <- addDrugs("UKB-0001_1", "C09DA06")
     addConditions(pid, c("M10.00", "M10.00", "M10.01", "M14.00"))
     addDrugs(pid, c("M04AA01", "M04AA01", "M04AA51"))
+    addDrugs(pid, c("M04AA01"))
     addDrugs(pid, c("M04AA03"))
+    addDrugs(pid, c("C09DA06", "C09DA06"))
     addObservation(pid, "14933-6", value = 1000, unit = "umol/L")
     addObservation(pid, "14933-6", day_offset = -0.5, value = 1000, unit = "umol/L")
     addObservation(pid, "14933-6", value = 2000, unit = "umol/L")
     addObservation(pid, "12980-9", value = 1000, unit = "umol/L") # secondary loinc code
+
+    # Drug_Drug                  -> MedicationRequests - N06AX22 + J01MA02
+    addDrugs(pid, c("N06AX22", "J01MA02")) # zwei MRPS, weil in Drug Drug und in Drug Drug Group (Wird noch bereinigt)
+    # Drug_DrugGroup             -> MedicationRequests - N06BA09 + C02KC01
+    addDrugs(pid, c("N06BA09", "C02KC01"))
+
+
 
     pid <- addDrugs("UKB-0001_2", "C09DA06")
     addConditions(pid, c("M10.00", "M10.00", "M10.01", "M14.00"))
@@ -120,36 +129,39 @@ if (exists("DEBUG_DAY")) {
     pid <- addDrugs("UKB-0001_4", "C09DA06")
     addDrugs(pid, c("M04AA03"))
 
-    pid <- addDrugs("UKB-0001_5", "C09DA06")
-    addObservation(pid, "14933-6", value = 1000, unit = "umol/L")
-
-    pid <- addDrugs("UKB-0001_6", "C09DA06")
+    pid <- addDrugs("UKB-0001_5", "C09DA06") # this Observation should be create a MRP because it's not older than 7 days
     addObservation(pid, "14933-6", day_offset = -0.6, value = 1000, unit = "umol/L")
 
+    pid <- addDrugs("UKB-0001_6", "C09DA06") # this Observation should be create a MRP because it's not older than 7 days
+    addObservation(pid, "14933-6", day_offset = -5.6, value = 1000, unit = "umol/L")
+
+    pid <- addDrugs("UKB-0001_7", "C09DA06") # this Observation should be ignored because it's older than 7 days
+    addObservation(pid, "14933-6", day_offset = -7.6, value = 1000, unit = "umol/L")
+
     # Zeile 1004 aus Drug Disease Originalliste - mehrere ATC1 (in selber/unterschiedlichen Request) + mehrer OPS-Codes + Diagnose
-    pid <- addDrugs("UKB-0001_7", c("B01AB01",	"B01AB01", "B01AB51"))
+    pid <- addDrugs("UKB-0001_8", c("B01AB01",	"B01AB01", "B01AB51"))
     addDrugs(pid, c("B05CX05",	"B01AB51"))
     addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
     addProcedures(pid, c("8-151.4"))
     addConditions(pid, "G97.0")
 
-    pid <- addDrugs("UKB-0001_8", "B01AB51")
+    pid <- addDrugs("UKB-0001_9", "B01AB51")
     addDrugs(pid, "B01AB51")
     addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
     addProcedures(pid, c("8-151.4"))
     addConditions(pid, "G97.0")
 
-    pid <- addDrugs("UKB-0001_9", "B01AB51")
+    pid <- addDrugs("UKB-0001_10", "B01AB51")
     addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
 
     # ATC und Diagnose mit mehreren Zeilen in der nach ICD gesplitteten Drug Disease Liste
-    pid <- addDrugs("UKB-0001_10", "L04AX03")
+    pid <- addDrugs("UKB-0001_11", "L04AX03")
     addDrugs(pid, "L04AX03")
     addDrugs(pid, "L04AX03")
     addConditions(pid, "J32.0")
 
     # ATC und mehrere Diagnosen mit mehreren Zeilen in der nach ICD gesplitteten Drug Disease Liste
-    pid <- addDrugs("UKB-0001_11", "L01XX05")
+    pid <- addDrugs("UKB-0001_12", "L01XX05")
     addConditions(pid, c("D69.58", "D69.61"))
 
   })

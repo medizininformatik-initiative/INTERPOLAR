@@ -130,6 +130,9 @@ testPrepareRAWResources <- function(patient_ids) {
   enc_templates <- enc_templates[grepl("-E-1", enc_id)]
   # Filter for the first encounters for the first entry
   enc_templates <- enc_templates[grepl("-1$", enc_id)]
+  # Give all encounter the same identifier system and identifier of the same medical record as value
+  enc_templates[, enc_identifier_system := "[1.1]http://www.commonidentifiersystem.de"]
+  enc_templates[, enc_identifier_value := sub("[1]", "[1.1]", sub("-A-1$", "", enc_id), fixed = TRUE)]
   # Add encounters with type "Versorgungstellenkontakt"
   enc_templates <- testAddEncounterLevel3(enc_templates)
   # Change encounter data
@@ -158,10 +161,15 @@ testPrepareRAWResources <- function(patient_ids) {
   obs_templates <- data.table::copy(resource_tables[["Observation"]])
   obs_templates <- obs_templates[1]
 
+  # Add template for Procedure table
+  proc_templates <- data.table::copy(resource_tables[["Procedure"]])
+  proc_templates <- proc_templates[1]
+
   filtered_resources[["Encounter"]] <- filtered_resources[["Encounter"]][0]
   filtered_resources[["MedicationRequest"]] <- filtered_resources[["MedicationRequest"]][0]
   filtered_resources[["Condition"]] <- filtered_resources[["Condition"]][0]
   filtered_resources[["Observation"]] <- filtered_resources[["Observation"]][0]
+  filtered_resources[["Procedure"]] <- filtered_resources[["Procedure"]][0]
   filtered_resources[["pids_per_ward"]] <- filtered_resources[["pids_per_ward"]][0]
 
   assign("enc_templates", enc_templates, envir = .test_env)
@@ -169,6 +177,7 @@ testPrepareRAWResources <- function(patient_ids) {
   assign("med_templates", med_templates, envir = .test_env)
   assign("con_templates", con_templates, envir = .test_env)
   assign("obs_templates", obs_templates, envir = .test_env)
+  assign("proc_templates", proc_templates, envir = .test_env)
 
   testSetResourceTables(filtered_resources)
 }
@@ -547,7 +556,6 @@ testAdmission <- function(pid, room, bed, ward_name = NULL) {
   # Set encounter partof references in all 3 encounter ids
   part_of_ref_pattern <- paste0("\\[1.1\\]Encounter/", pid, "-E-")
   enc_templates[, enc_partof_ref := gsub(paste0(part_of_ref_pattern, "1"), paste0(part_of_ref_pattern, enc_level_1_index), enc_partof_ref)]
-  enc_templates[, enc_identifier_value := enc_id]
   # Set encounter start date to current debug day -0.5
   enc_templates[, enc_period_start := getDebugDatesRAWDateTime(-0.5)]
   enc_templates[, enc_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
@@ -752,7 +760,7 @@ addDrugs <- function(pid, codes, day_offset = -0.3) {
   # Determine the next available index for encounters, MedicationRequests, and Medications
   enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
   med_req_index <- nrow(resource_tables[["MedicationRequest"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-MR-\\d+$"), medreq_id)]) + 1
-  med_index <- nrow(resource_tables[["Medication"]][grepl(paste0("^\\[1\\]", pid, "-MR-", med_req_index - 1, "-M-\\d+$"), med_id)]) + 1
+  med_index <- nrow(resource_tables[["Medication"]][grepl(paste0("^\\[1\\]", pid, "-MR-", med_req_index, "-M-\\d+$"), med_id)]) + 1
 
   # Create MedicationRequest entries for each code
   med_req_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
@@ -950,6 +958,41 @@ addObservationWithRanges <- function(pid, code, day_offset = -0.5, value = NULL,
 
   # Append the new entries to the Observation table
   resource_tables[["Observation"]] <- rbind(resource_tables[["Observation"]], obs_dt, fill = TRUE)
+
+  # Save updated resource tables
+  testSetResourceTables(resource_tables)
+}
+
+addProcedures <- function(pid, codes, day_offset = -0.5) {
+  # Load template table for Procedure
+  proc_templates <- get("proc_templates", envir = .test_env)
+
+  # Get current resource tables
+  resource_tables <- testGetResourceTables()
+
+  # Determine next available index for Procedure and Encounter for this patient
+  enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
+  proc_index <- nrow(resource_tables[["Procedure"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-P-\\d+$"), proc_id)]) + 1
+
+  # Create Procedure entries for each code
+  proc_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
+    dt <- data.table::copy(proc_templates)
+    # Generate unique Procedure ID
+    dt[, proc_id := paste0("[1]", pid, "-E-", enc_index, "-P-", proc_index + (i - 1))]
+    dt[, proc_identifier_value := paste0("[1.1]", pid, "-E-", enc_index, "-P-", proc_index + (i - 1))]
+    # Reference the patient and encounter
+    dt[, proc_patient_ref := paste0("[1.1]Patient/", pid)]
+    dt[, proc_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
+    # Assign the condition code
+    dt[, proc_code_code := paste0("[1.1.1]", codes[i])]
+    dt[, proc_performeddatetime := getDebugDatesRAWDateTime(day_offset)]
+    dt[, proc_performedperiod_start := getDebugDatesRAWDateTime(day_offset)]
+    dt[, proc_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+    dt
+  }))
+
+  # Append the new entries to the Procedure table
+  resource_tables[["Procedure"]] <- rbind(resource_tables[["Procedure"]], proc_dt, fill = TRUE)
 
   # Save updated resource tables
   testSetResourceTables(resource_tables)
