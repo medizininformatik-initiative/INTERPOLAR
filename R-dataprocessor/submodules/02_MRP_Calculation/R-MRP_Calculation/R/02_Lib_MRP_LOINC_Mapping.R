@@ -259,8 +259,13 @@ convertLabUnits <- function(measured_value,
   measured_unit <- asUnit(measured_unit)
   target_unit <- asUnit(target_unit)
 
-  if (is.na(measured_unit) || is.na(target_unit)) {
+  # the provided FHIR unit is invalid -> the full Observations is invald
+  if (is.na(measured_unit)) {
     return(NA)
+  }
+  # there is no conversion unit (and factor) -> no conversion needed -> return the original value
+  if (is.na(target_unit)) {
+    return(measured_value)
   }
 
   measured_unit_factor <- units::drop_units(measured_unit)

@@ -45,6 +45,7 @@ resetMemory <- function() {
 
     "DEBUG_SUBMODULE_DIR",
     "DEBUG_RUN_SINGLE_DAY_ONLY",
+    "DEBUG_START_SINGLE_MODULE",
 
     "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS"
   )))
@@ -59,25 +60,34 @@ setDebugPathToConfigToml <- function(module_name) {
   }
 }
 
-tryCatch({
+shouldStart <- function(module_name) {
   if (!etlutils::isErrorOccured()) {
-    resetMemory()
-    setDebugPathToConfigToml("cds2db")
+    if (exists("DEBUG_START_SINGLE_MODULE") && DEBUG_START_SINGLE_MODULE == module_name) {
+      resetMemory()
+      setDebugPathToConfigToml(module_name)
+      return(TRUE)
+    } else if (!exists("DEBUG_START_SINGLE_MODULE")) {
+      resetMemory()
+      setDebugPathToConfigToml(module_name)
+      return(TRUE)
+    } else {
+      return(FALSE)
+    }
+  }
+  return(FALSE)
+}
+
+tryCatch({
+  if (shouldStart("cds2db")) {
     cds2db::retrieve()
   }
-  if (!etlutils::isErrorOccured()) {
-    resetMemory()
-    setDebugPathToConfigToml("db2frontend")
+  if (shouldStart("db2frontend")) {
     db2frontend::startFrontend2DB()
   }
-  if (!etlutils::isErrorOccured()) {
-    resetMemory()
-    setDebugPathToConfigToml("dataprocessor")
+  if (shouldStart("dataprocessor")) {
     dataprocessor::processData()
   }
-  if (!etlutils::isErrorOccured()) {
-    resetMemory()
-    setDebugPathToConfigToml("db2frontend")
+  if (shouldStart("db2frontend")) {
     db2frontend::startDB2Frontend()
   }
   if (etlutils::isErrorOccured()) {
