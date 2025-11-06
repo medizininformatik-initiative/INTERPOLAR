@@ -527,6 +527,6 @@ getActiveMedicationRequests <- function(medication_requests, enc_period_start, m
       (is.na(end_datetime) |
          end_datetime >= meda_datetime)
   ]
-  atc_codes <- active_requests[, c("atc_code")]
+  atc_codes <- active_requests[, c("atc_code", "start_datetime")]
   return(atc_codes)
 }
