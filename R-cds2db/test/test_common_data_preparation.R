@@ -749,7 +749,18 @@ duplicatePatients <- function(count, duplicated_start_index = 1) {
   testSetResourceTables(new_resource_tables)
 }
 
-addDrugs <- function(pid, codes, day_offset = -0.3) {
+addDrugs <- function(pid, codes, day_offset = -0.3, period_type = c(
+  "start",
+  "start_and_end",
+  "start_and_end_and_timing_event",
+  "timing_event",
+  "timing_events",
+  "authoredon",
+  "all_timestamps_NA"
+  )) {
+
+  period_type <- match.arg(period_type)
+
   # Load template tables from environment
   med_req_templates <- get("med_req_templates", envir = .test_env)
   med_templates <- get("med_templates", envir = .test_env)
@@ -773,9 +784,33 @@ addDrugs <- function(pid, codes, day_offset = -0.3) {
     dt[, medreq_patient_ref := paste0("[1.1]Patient/", pid)]
     dt[, medreq_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
     # Reference the corresponding Medication
-    dt[, medreq_medicationreference_ref := paste0("[1]Medication/", pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))]
-    dt[, medreq_doseinstruc_timing_repeat_boundsperiod_start := getDebugDatesRAWDateTime(day_offset)]
+    dt[, medreq_medicationreference_ref := paste0("[1.1]Medication/", pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))]
     dt[, medreq_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+
+    # calculate boundsperiod start and end and and timing event(s) and authoredon based on period_type
+    if (period_type %in% c("start",
+                           "start_and_end",
+                           "start_and_end_and_timing_event")) {
+      dt[, medreq_doseinstruc_timing_repeat_boundsperiod_start := getDebugDatesRAWDateTime(day_offset, raw_index = "[1.1.1.1.1]")]
+    }
+    if (period_type %in% c("start_and_end",
+                           "start_and_end_and_timing_event")) {
+      dt[, medreq_doseinstruc_timing_repeat_boundsperiod_end := getDebugDatesRAWDateTime(day_offset + 5, raw_index = "[1.1.1.1.1]")]
+    }
+    if (period_type %in% c("start_and_end_and_timing_event",
+                           "timing_event")) {
+      dt[, medreq_doseinstruc_timing_event := getDebugDatesRAWDateTime(day_offset + 0.05, raw_index = "[1.1.1]")]
+    }
+    if (period_type %in% c("timing_events")) {
+      events <- c()
+      for (j in 1:3) {
+        events <- c(events, getDebugDatesRAWDateTime(day_offset + 0.05 + j * 2, raw_index = paste0("[1.1.", j, "]")))
+      }
+      dt[, medreq_doseinstruc_timing_event := paste0(events, collapse = " ~ ")]
+    }
+    if (period_type %in% c("authoredon")) {
+      dt[, medreq_authoredon := getDebugDatesRAWDateTime(day_offset - 0.01, raw_index = "[1]")]
+    }
     dt
   }))
 
@@ -823,7 +858,7 @@ addConditions <- function(pid, codes, day_offset = -0.5) {
     dt[, con_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
     # Assign the condition code
     dt[, con_code_code := paste0("[1.1.1]", codes[i])]
-    dt[, con_recordeddate := getDebugDatesRAWDateTime(day_offset)]
+    dt[, con_recordeddate := getDebugDatesRAWDateTime(day_offset, raw_index = "[1]")]
     dt[, con_onsetperiod_start := getDebugDatesRAWDateTime(day_offset)]
     dt[, con_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
     dt
@@ -912,7 +947,7 @@ addObservationWithRanges <- function(pid, code, day_offset = -0.5, value = NULL,
   obs_dt[, obs_encounter_ref := paste0("[1.1]Encounter/", pid, "-E-", enc_index)]
   # Assign the observation code
   obs_dt[, obs_code_code := paste0("[1.1.1]", code)]
-  obs_dt[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset)]
+  obs_dt[, obs_effectivedatetime := getDebugDatesRAWDateTime(day_offset, raw_index = "[1]")]
   obs_dt[, obs_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
   # Optional fields
   obs_dt[, obs_valuequantity_value := getValue("[1.1]", value)]
@@ -1045,9 +1080,8 @@ addREDCapMedikationsanalyse <- function(dt_med_ana, patient_ids, day_offset) {
   template <- loadDebugREDCapDataTemplate("medikationsanalyse")
   for (pid in patient_ids) {
     # Clean and add correct medication analysis datetime
-    meda_datetime <- getDebugDatesRAWDateTime(day_offset)
-    meda_datetime_cleaned <- sub("^\\[.*?\\]", "", meda_datetime)
-    template$meda_dat <- lubridate::ymd_hms(meda_datetime_cleaned)
+    meda_datetime <- getDebugDatesRAWDateTime(day_offset, raw_index = "")
+    template$meda_dat <- lubridate::ymd_hms(meda_datetime)
     # set the record_id in the template based on the current patient id
     template$record_id <- getRecordID(dt_patient, pid)
     # join with the encounter table to populate fall_meda_id in the template
