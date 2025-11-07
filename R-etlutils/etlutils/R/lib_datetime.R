@@ -192,3 +192,30 @@ convertDateTimeFormat <- function(dt, columns) {
     dt[, (column) := lubridate::ymd_hms(get(column), truncated = 5, tz = GLOBAL_TIMEZONE)]
   }
 }
+
+#' Get the beginning of the next day (local time)
+#'
+#' This function takes a POSIXct timestamp and returns the beginning (00:00:00) of the following day,
+#' preserving the original timezone. It uses `as.POSIXctWithTimezone()` to ensure timezone correctness
+#' and avoids unintended UTC conversion.
+#'
+#' @param datetime A `POSIXct` object from which the next day's start should be calculated.
+#'
+#' @return A `POSIXct` object representing the start of the next day in the same timezone as the input.
+#'
+#' @examples
+#' GLOBAL_TIMEZONE <- "Europe/Berlin"
+#' dt <- as.POSIXctWithTimezone("2025-11-10 10:21:59", tz = GLOBAL_TIMEZONE)
+#' getStartOfNextDay(dt)
+#'
+#' @export
+getStartOfNextDay <- function(datetime) {
+  tz <- attr(datetime, "tzone")
+  # Ensure we keep the local time context
+  next_day <- as.POSIXlt(datetime, tz = tz)
+  next_day$mday <- next_day$mday + 1
+  next_day$hour <- 0
+  next_day$min <- 0
+  next_day$sec <- 0
+  as.POSIXct(next_day, tz = tz)
+}
