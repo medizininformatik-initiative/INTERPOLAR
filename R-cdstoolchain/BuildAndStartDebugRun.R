@@ -5,6 +5,8 @@ if (grepl('/R-cdstoolchain', getwd())) setwd("../")
 # Orchestrate building, installing, and running a multi-package R project
 # Assumes working directory is the project root where relative paths work.
 
+rm(list = ls())
+
 # ---- Config ------------------------------------------------------------------
 
 package_dirs <- c(
