@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 13:49:10
+-- Rights definition file last update : 2025-07-02 16:19:58
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-09-17 16:35:41
+-- Create time: 2025-11-07 14:47:08
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
@@ -70,6 +70,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     enc_identifier_end,
     enc_patient_ref,
     enc_partof_ref,
+    enc_partof_calculated_ref,
     enc_status,
     enc_class_system,
     enc_class_version,
@@ -88,6 +89,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     enc_period_start,
     enc_period_end,
     enc_diagnosis_condition_ref,
+    enc_diagnosis_condition_calculated_ref,
     enc_diagnosis_use_system,
     enc_diagnosis_use_version,
     enc_diagnosis_use_code,
@@ -153,6 +155,7 @@ SELECT
     enc_identifier_end,
     enc_patient_ref,
     enc_partof_ref,
+    enc_partof_calculated_ref,
     enc_status,
     enc_class_system,
     enc_class_version,
@@ -171,6 +174,7 @@ SELECT
     enc_period_start,
     enc_period_end,
     enc_diagnosis_condition_ref,
+    enc_diagnosis_condition_calculated_ref,
     enc_diagnosis_use_system,
     enc_diagnosis_use_version,
     enc_diagnosis_use_code,
@@ -241,6 +245,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     con_identifier_start,
     con_identifier_end,
     con_encounter_ref,
+    con_encounter_calculated_ref,
     con_patient_ref,
     con_clinicalstatus_system,
     con_clinicalstatus_version,
@@ -370,6 +375,7 @@ SELECT
     con_identifier_start,
     con_identifier_end,
     con_encounter_ref,
+    con_encounter_calculated_ref,
     con_patient_ref,
     con_clinicalstatus_system,
     con_clinicalstatus_version,
@@ -505,6 +511,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     medreq_identifier_start,
     medreq_identifier_end,
     medreq_encounter_ref,
+    medreq_encounter_calculated_ref,
     medreq_patient_ref,
     medreq_medicationreference_ref,
     medreq_status,
@@ -749,6 +756,7 @@ SELECT
     medreq_identifier_start,
     medreq_identifier_end,
     medreq_encounter_ref,
+    medreq_encounter_calculated_ref,
     medreq_patient_ref,
     medreq_medicationreference_ref,
     medreq_status,
@@ -999,6 +1007,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     medadm_identifier_start,
     medadm_identifier_end,
     medadm_encounter_ref,
+    medadm_context_calculated_ref,
     medadm_patient_ref,
     medadm_partof_ref,
     medadm_status,
@@ -1122,6 +1131,7 @@ SELECT
     medadm_identifier_start,
     medadm_identifier_end,
     medadm_encounter_ref,
+    medadm_context_calculated_ref,
     medadm_patient_ref,
     medadm_partof_ref,
     medadm_status,
@@ -1251,6 +1261,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     medstat_identifier_start,
     medstat_identifier_end,
     medstat_encounter_ref,
+    medstat_context_calculated_ref,
     medstat_patient_ref,
     medstat_partof_ref,
     medstat_basedon_ref,
@@ -1479,6 +1490,7 @@ SELECT
     medstat_identifier_start,
     medstat_identifier_end,
     medstat_encounter_ref,
+    medstat_context_calculated_ref,
     medstat_patient_ref,
     medstat_partof_ref,
     medstat_basedon_ref,
@@ -1713,6 +1725,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     obs_identifier_start,
     obs_identifier_end,
     obs_encounter_ref,
+    obs_encounter_calculated_ref,
     obs_patient_ref,
     obs_partof_ref,
     obs_basedon_ref,
@@ -1860,6 +1873,7 @@ SELECT
     obs_identifier_start,
     obs_identifier_end,
     obs_encounter_ref,
+    obs_encounter_calculated_ref,
     obs_patient_ref,
     obs_partof_ref,
     obs_basedon_ref,
@@ -2013,6 +2027,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     diagrep_identifier_start,
     diagrep_identifier_end,
     diagrep_encounter_ref,
+    diagrep_encounter_calculated_ref,
     diagrep_patient_ref,
     diagrep_partof_ref,
     diagrep_result_ref,
@@ -2067,6 +2082,7 @@ SELECT
     diagrep_identifier_start,
     diagrep_identifier_end,
     diagrep_encounter_ref,
+    diagrep_encounter_calculated_ref,
     diagrep_patient_ref,
     diagrep_partof_ref,
     diagrep_result_ref,
@@ -2127,6 +2143,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     servreq_identifier_start,
     servreq_identifier_end,
     servreq_encounter_ref,
+    servreq_encounter_calculated_ref,
     servreq_patient_ref,
     servreq_basedon_ref,
     servreq_basedon_type,
@@ -2199,6 +2216,7 @@ SELECT
     servreq_identifier_start,
     servreq_identifier_end,
     servreq_encounter_ref,
+    servreq_encounter_calculated_ref,
     servreq_patient_ref,
     servreq_basedon_ref,
     servreq_basedon_type,
@@ -2277,6 +2295,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     proc_identifier_start,
     proc_identifier_end,
     proc_encounter_ref,
+    proc_encounter_calculated_ref,
     proc_patient_ref,
     proc_partof_ref,
     proc_basedon_ref,
@@ -2359,6 +2378,7 @@ SELECT
     proc_identifier_start,
     proc_identifier_end,
     proc_encounter_ref,
+    proc_encounter_calculated_ref,
     proc_patient_ref,
     proc_partof_ref,
     proc_basedon_ref,
