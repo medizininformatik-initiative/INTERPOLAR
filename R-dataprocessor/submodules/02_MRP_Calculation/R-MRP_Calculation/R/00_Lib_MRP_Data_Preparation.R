@@ -344,7 +344,7 @@ getObservationsFromDB <- function(patient_references) {
                                                       "obs_referencerange_high_system",
                                                       "obs_referencerange_type_code"),
                                      patient_references = patient_references,
-                                     status_exclusion = c("registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834407
+                                     status_exclusion = c("on-hold", "registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2999037
                                      additional_conditions = c("obs_category_code = 'laboratory'",
                                                                "obs_code_system = 'http://loinc.org'")
   )
