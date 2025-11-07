@@ -198,9 +198,9 @@ getMedicationRequestsFromDB <- function(patient_references) {
                                             column_names = c("medreq_id",
                                                              "medreq_encounter_ref",
                                                              "medreq_patient_ref",
-                                                             "medreq_encounter_ref",
                                                              "medreq_medicationreference_ref",
                                                              "medreq_authoredon",
+                                                             "medreq_doseinstruc_timing_event",
                                                              "medreq_doseinstruc_timing_repeat_boundsperiod_start",
                                                              "medreq_doseinstruc_timing_repeat_boundsperiod_end"),
                                             patient_references = patient_references,
@@ -208,17 +208,45 @@ getMedicationRequestsFromDB <- function(patient_references) {
   )
   medication_requests <- addMedicationIdColumn(medication_requests)
 
+  # calculate the start_datetime
   medication_requests[, start_datetime := data.table::fifelse(
     !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_start),
     medreq_doseinstruc_timing_repeat_boundsperiod_start,
-    medreq_authoredon
+    data.table::fifelse(
+      !is.na(medreq_doseinstruc_timing_event),
+      medreq_doseinstruc_timing_event,
+      medreq_authoredon)
   )]
+
+  # for all medication analyses with a valid start_datetime calculate end_datetime
   medication_requests <- medication_requests[!is.na(start_datetime)]
-  medication_requests[, end_datetime := data.table::fifelse(
-    !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_end),
-    medreq_doseinstruc_timing_repeat_boundsperiod_end,
-    NA
-  )]
+  if (nrow(medication_requests)) { # we must check nrow here, otherwise data.table::fifelse fails with 0 rows -> Error
+    medication_requests[, end_datetime := data.table::fifelse(
+      !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_end),
+      etlutils::getStartOfNextDay(medreq_doseinstruc_timing_repeat_boundsperiod_end),
+      data.table::fifelse(
+        !is.na(medreq_doseinstruc_timing_event),
+        etlutils::getStartOfNextDay(medreq_doseinstruc_timing_event),
+        medreq_authoredon)
+    )]
+  }
+  # remove all now irrelevant timing and DB ID columns ()
+  medication_requests[, c(
+    "medicationrequest_id", "medreq_authoredon","medreq_doseinstruc_timing_event",
+    "medreq_doseinstruc_timing_repeat_boundsperiod_start",
+    "medreq_doseinstruc_timing_repeat_boundsperiod_end") := NULL]
+  # for each medreq_id keep only the earliest start_datetime and the latest
+  # end_datetime (if the timestamps are definied via multiple timing_events)
+  medication_requests[
+    ,
+    `:=`(
+      start_datetime = min(start_datetime),
+      end_datetime = if (anyNA(end_datetime)) NA else max(end_datetime)
+    ),
+    by = medreq_id
+  ]
+  # keep only the relevant information once per medreq_id
+  medication_requests <- unique(medication_requests)
   return(medication_requests)
 }
 
