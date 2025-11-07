@@ -183,12 +183,19 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
     kurzbeschr_item2 = character(),
     kurzbeschr_suffix = character()
   )
+  active_requests_unique <- unique(active_requests, by = c("atc_code", "start_datetime"))
+  active_atcs <- unique(active_requests_unique$atc_code)
 
-  active_atcs <- unique(active_requests$atc_code)
+  # Only use ATCs that are in the MRP table list
   used_keys <- intersect(names(mrp_table_list_by_atc), active_atcs)
+  active_requests_unique <- active_requests_unique[atc_code %in% used_keys]
 
-  for (atc in used_keys) {
+  for (i in seq_len(nrow(active_requests_unique))) {
+    atc <- active_requests_unique$atc_code[i]
+    start_datetime <- active_requests_unique$start_datetime[i]
+
     mrp_rows <- mrp_table_list_by_atc[[atc]]
+    # Filter rows where the secondary ATC is also active
     mrp_filtered <- mrp_rows[ATC2_FOR_CALCULATION %in% active_atcs]
 
     for (j in seq_len(nrow(mrp_filtered))) {
@@ -213,9 +220,10 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
           atc2_code = atc2,
           proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
           proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
-          kurzbeschr_drug = paste0("[", matched_row$ATC_DISPLAY, " - ", atc, "] ist mit ["),
-          kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2),
-          kurzbeschr_suffix = paste0("] laut der entsprechenden Fachinformation kontrainduziert.")
+          kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc),
+          kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (",
+                                    format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+          kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontrainduziert.")
         )
         result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
       } else {
@@ -295,7 +303,7 @@ calculateMRPs <- function() {
         for (encounter_id in resources$main_encounters$enc_id) {
           # Get all other sub encounters for a main encounter
           encounters_with_subencounters <- etlutils::fhirdataFilterMainAndSubEncounters(encounter_id, all_encounters,
-                                                                                 common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+                                                                                        common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
           # Get encounter data and patient ID
           encounter <- resources$main_encounters[enc_id == encounter_id]
           patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
@@ -330,8 +338,61 @@ calculateMRPs <- function() {
 
           if (nrow(match_atc_and_item2_codes)) {
             # Iterate over matched results and create new rows for retrolektive_mrpbewertung and dp_mrp_calculations
-            for (match in seq_len(nrow(match_atc_and_item2_codes))) {
-              match <- match_atc_and_item2_codes[match]
+            for (current_mrp_index in unique(match_atc_and_item2_codes$mrp_index)) {
+              # Subset all rows belonging to the same MRP index
+              match <- match_atc_and_item2_codes[mrp_index == current_mrp_index]
+              if ("kurzbeschr_additional" %in% names(match) && all(is.na(match$kurzbeschr_additional))) {
+                match[, kurzbeschr_additional := NULL]
+              }
+
+              collapsed_match <- match[
+                ,
+                {
+                  # Standard collapsing for all columns
+                  result <- lapply(.SD, function(x) {
+                    vals <- unique(na.omit(trimws(x)))
+                    if (length(vals) == 0) return(NA_character_)
+                    paste(vals, collapse = " \n")
+                  })
+
+                  # Special handling for kurzbeschr_drug
+                  if ("kurzbeschr_drug" %in% names(.SD)) {
+                    vals <- unique(na.omit(trimws(.SD$kurzbeschr_drug)))
+                    if (length(vals) == 0) {
+                      result$kurzbeschr_drug <- NA_character_
+                    } else {
+                      # Robust split on last " - " in each value
+                      parts <- t(sapply(vals, function(s) {
+                        split_pos <- max(gregexpr(" - ", s, fixed = TRUE)[[1]])
+                        if (split_pos == -1) {
+                          name <- s
+                          code <- NA_character_
+                        } else {
+                          name <- substr(s, 1, split_pos - 1)
+                          code <- substr(s, split_pos + 3, nchar(s))
+                        }
+                        c(name = name, code = code)
+                      }))
+                      # Extract unique names and codes
+                      drug_name <- unique(parts[, "name"])
+                      codes <- unique(na.omit(parts[, "code"]))
+                      # If all rows refer to same drug name, join codes
+                      if (length(drug_name) == 1) {
+                        result$kurzbeschr_drug <- paste0("[", drug_name, " - ", paste(codes, collapse = ", "), "] ist mit:")
+                      } else {
+                        # fallback if multiple different names exist
+                        result$kurzbeschr_drug <- paste(vals, collapse = "; ")
+                      }
+                    }
+                  }
+                  result
+                },
+                by = mrp_index
+              ]
+
+              kurzbeschr_cols <- grep("^kurzbeschr_", names(collapsed_match), value = TRUE)
+              collapsed_match[, kurzbeschr := do.call(paste, c(.SD, sep = " \n")), .SDcols = kurzbeschr_cols]
+
               meda_id_value <- meda_id # we need this renaming for the following comparison
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
               existing_redcap_repeat_instances <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_redcap_repeat_instance]
@@ -348,11 +409,8 @@ calculateMRPs <- function() {
 
               ret_id <- paste0(ret_id_prefix, next_index)
               ret_redcap_repeat_instance <- if (length(existing_redcap_repeat_instances) == 0) 1 else max(as.integer(existing_redcap_repeat_instances), na.rm = TRUE) + 1
-              # always updating the references to the existing ret_ids
+              # Always updating the references to the existing ret_ids
               resources$existing_retrolective_mrp_evaluation_ids <- etlutils::addTableRow(resources$existing_retrolective_mrp_evaluation_ids, meda_id, ret_id, ret_redcap_repeat_instance)
-
-              #TODO: Hier müssen jetzt die MRP zusammen gefasst werden, die dasselbe MRP beschreiben
-              # Dazu ret_id und ret_redcap_repeat_instance zusammen fassen und die kurzbeschr entsprechend anpassen
 
               # Create new row for table retrolektive_mrpbewertung
               retrolektive_mrpbewertung_rows[[length(retrolektive_mrpbewertung_rows) + 1]] <- list(
@@ -360,30 +418,34 @@ calculateMRPs <- function() {
                 ret_id = ret_id,
                 ret_meda_id = meda_id,
                 ret_meda_dat1 = meda_datetime,
-                ret_kurzbeschr = paste0(kurzbeschr_prefix, match$kurzbeschr),
-                ret_atc1 = match$atc_code,
+                ret_kurzbeschr = paste0(kurzbeschr_prefix, collapsed_match$kurzbeschr),
+                ret_atc1 = match$atc_code[1], # take the first ATC code from the match
                 ret_ip_klasse_01 = getCategoryDisplay(mrp_type),
-                ret_ip_klasse_disease = if (is.null(match$icd)) NA else match$icd,
-                ret_atc2 = if (is.null(match$atc2_code)) NA else match$atc2_code,
+                ret_ip_klasse_disease = ifelse(all(is.na(match$icd_code)), NA_character_, na.omit(match$icd_code)[1]), # take the first non-NA ICD code if available
+                ret_atc2 = if (is.null(match$atc2_code)) NA_character_ else match$atc2_code,
                 retrolektive_mrpbewertung_complete = ret_status,
                 redcap_repeat_instrument = "retrolektive_mrpbewertung",
                 redcap_repeat_instance = ret_redcap_repeat_instance
               )
 
-              # Create new row for table dp_mrp_calculations
-              dp_mrp_calculations_rows[[length(dp_mrp_calculations_rows) + 1]] <- list(
-                enc_id = encounter_id,
-                mrp_calculation_type = mrp_type,
-                meda_id = meda_id,
-                study_phase = meda_study_phase,
-                ward_name = NA_character_, # deprecated -> this value will remain NA all the time
-                ret_id = ret_id,
-                ret_redcap_repeat_instance = ret_redcap_repeat_instance,
-                mrp_proxy_type = match$proxy_type,
-                mrp_proxy_code = match$proxy_code,
-                input_file_processed_content_hash = mrp_pair_list_processed_content_hash
-              )
-
+              # Iterate over all rows in 'match' and add one entry per row to dp_mrp_calculations_rows
+              for (i in seq_len(nrow(match))) {
+                # Current match row
+                match_row <- match[i]
+                # Create new row for table dp_mrp_calculations
+                dp_mrp_calculations_rows[[length(dp_mrp_calculations_rows) + 1]] <- list(
+                  enc_id = encounter_id,
+                  mrp_calculation_type = mrp_type,
+                  meda_id = meda_id,
+                  study_phase = meda_study_phase,
+                  ward_name = NA_character_, # deprecated -> this value will remain NA all the time
+                  ret_id = ret_id,
+                  ret_redcap_repeat_instance = ret_redcap_repeat_instance,
+                  mrp_proxy_type = match_row$proxy_type,
+                  mrp_proxy_code = match_row$proxy_code,
+                  input_file_processed_content_hash = mrp_pair_list_processed_content_hash
+                )
+              }
             }
           } else {
             # No matches found for this encounter
