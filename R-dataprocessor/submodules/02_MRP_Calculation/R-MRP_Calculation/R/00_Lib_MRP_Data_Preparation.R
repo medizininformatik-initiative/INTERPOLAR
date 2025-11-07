@@ -16,8 +16,8 @@ if (!exists("DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS")) {
 MRP_TYPE <- etlutils::namedVectorByParam(
   "Drug_Disease",
   "Drug_Drug",
-  "Drug_DrugGroup",
-  "Drug_Niereninsuffizienz"
+  "Drug_DrugGroup"#,
+  #"Drug_Niereninsuffizienz"
 )
 
 #
