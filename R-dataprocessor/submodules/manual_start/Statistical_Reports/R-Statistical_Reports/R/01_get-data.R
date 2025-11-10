@@ -356,7 +356,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
 #' Retrieve Patient IDs Per Ward Data
 #'
 #' This function retrieves patient data associated with wards, including the ward name,
-#' patient ID, encounter ID, and the input timestamp.
+#' patient ID, encounter ID.
 #'
 #' @param lock_id A character string specifying the lock ID for database access control.
 #' @param table_name A character string specifying the name of the database table from which
@@ -373,6 +373,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
 #' 2. Executes the query using `etlutils::dbGetReadOnlyQuery` with the provided `lock_id`.
 #' 3. Ensures distinct records using `dplyr::distinct()`.
 #' 4. Sorts the results by `patient_id`, `encounter_id`.
+#' 5. Checks if the resulting data frame is empty and raises an error if so.
 #'
 #'
 #' @importFrom dplyr distinct arrange

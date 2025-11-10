@@ -87,3 +87,20 @@ mögliche Optimierungen:
 -   sind die definierten Codes, status & systeme so umgesetzt?
 -   werden die richtigen Codes herausgefiltert? Finden sie sich auf alle Encounter-Ebenen wider oder nur auf bestimmten?
 -   sind die Stopps und Warnungen so plausibel?
+
+#### `getPidsPerWardData` (`v_pids_per_ward`)
+
+Ziel: Erkennen, auf welcher INTERPOLAR-Station ein Fall aufgenommen wurde (Erkennen eines Falls auf einer INTERPOLAR-Station über die CDS-Toolchain konfigurierbar)
+
+-   lädt die Tabelle pids_per_ward, die bei jedem Durchlauf der CDS-Toolchain erfasst, welche Patienten sich aktuell auf einer INTERPOLAR-Station befinden
+-   Variablen:
+    -   `ward_name` (Name der Station)
+    -   `patient_id` (FHIR Patienten ID)
+    -   `encounter_id` (FHIR Encounter ID)
+-   stoppt das Skript wenn kein Datensatz gefunden wurde
+
+mögliche Optimierungen:
+
+-   richtige Annahme?
+    -   über die pids_per_ward Tabelle (INTERPOLAR-DB) sind die Fälle auf Versorgungsstellenkontakt-Ebene einer Station zugeordnet
+    -   encounter_id in pids_per_ward zeigt (unter Anderem) alle INTERPOLAR-Versorgungsstellenkontakte eines Falls
