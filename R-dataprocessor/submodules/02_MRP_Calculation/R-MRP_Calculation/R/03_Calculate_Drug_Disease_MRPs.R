@@ -1,3 +1,70 @@
+.drug_disease_env <- new.env()
+
+SetDrugDiseaseListRows <- function(drug_disease_list_rows) {
+  # Set the resources in the environment
+  assign("drug_disease_list_rows", drug_disease_list_rows, envir = .drug_disease_env)
+}
+
+GetDrugDiseaseListRows <- function() {
+  if (exists("drug_disease_list_rows", envir = .drug_disease_env)) {
+    get("drug_disease_list_rows", envir = .drug_disease_env)
+  } else {
+    data.table::data.table(
+      ATC_FULL_LIST = character(),
+      ICD_FULL_LIST = character(),
+      CONDITION_DISPLAY_CLUSTER = character(),
+      mrp_index = integer()
+    )
+  }
+}
+
+GetNextMrpIndex <- function() {
+  if (exists("drug_disease_list_rows", envir = .drug_disease_env)) {
+    tbl <- get("drug_disease_list_rows", envir = .drug_disease_env)
+    if (nrow(tbl) > 0 && "mrp_index" %in% names(tbl)) {
+      return(max(tbl$mrp_index, na.rm = TRUE) + 1)
+    }
+  }
+  return(1L)
+}
+
+GetOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
+  # Arguments:
+  #   match_proxy_row: data.table with columns ATC_FULL_LIST, ICD_FULL_LIST, CONDITION_DISPLAY_CLUSTER
+  #   drug_disease_list_rows: existing mapping table with same columns + mrp_index
+
+  current_key <- match_proxy_row[, .(
+    ATC_FULL_LIST,
+    ICD_FULL_LIST,
+    CONDITION_DISPLAY_CLUSTER
+  )]
+  existing_entry <- drug_disease_list_rows[
+    ATC_FULL_LIST %in% current_key$ATC_FULL_LIST &
+      CONDITION_DISPLAY_CLUSTER %in% current_key$CONDITION_DISPLAY_CLUSTER &
+      ICD_FULL_LIST %in% current_key$ICD_FULL_LIST
+  ]
+
+  if (nrow(existing_entry)) {
+    mrp_index <- existing_entry$mrp_index
+  } else {
+    mrp_index <- GetNextMrpIndex()
+
+    drug_disease_list_rows <- rbind(
+      drug_disease_list_rows,
+      data.table::data.table(
+        ATC_FULL_LIST = current_key$ATC_FULL_LIST,
+        ICD_FULL_LIST = current_key$ICD_FULL_LIST,
+        CONDITION_DISPLAY_CLUSTER = current_key$CONDITION_DISPLAY_CLUSTER,
+        mrp_index = mrp_index
+      ),
+      fill = TRUE
+    )
+
+    SetDrugDiseaseListRows(drug_disease_list_rows)
+  }
+  return(mrp_index)
+}
+
 #' Get Column Names for Drug-Disease MRP Pair List
 #'
 #' Returns a named character vector of relevant column names used in the
@@ -87,6 +154,8 @@ processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type
   # because LOINC says that the patient has all these diseases.
 
   code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
+  # Create a new column for the full ATC list
+  drug_disease_mrp_definition[, ATC_FULL_LIST := ATC_FOR_CALCULATION]
   # Create a new column for the full ICD list
   drug_disease_mrp_definition[, ICD_FULL_LIST := ICD]
   # SPLIT and TRIM: ICD and proxy column:
@@ -220,6 +289,9 @@ matchATCCodes <- function(active_requests, mrp_table_list_by_atc) {
 #'         of the contraindication).
 #'
 matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, match_atc_codes, meda_datetime, patient_id) {
+
+  drug_disease_list_rows <- GetDrugDiseaseListRows()
+
   # Initialize empty result data.table
   matched_rows <- data.table::data.table(
     mrp_index = integer(),
@@ -245,7 +317,8 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
     mrp_table_list_rows <- mrp_table_list_rows[ATC_FOR_CALCULATION %in% match_atc_codes$atc_code]
 
     # Keep only relevant columns
-    keep_cols <- c("ATC_DISPLAY", "ATC_FOR_CALCULATION", "ICD_VALIDITY_DAYS", "CONDITION_DISPLAY_CLUSTER")
+    keep_cols <- c("ATC_DISPLAY", "ATC_FOR_CALCULATION", "ICD_VALIDITY_DAYS", "CONDITION_DISPLAY_CLUSTER",
+                   "ATC_FULL_LIST", "ICD_FULL_LIST")
     mrp_table_list_rows <- unique(mrp_table_list_rows[, ..keep_cols])
 
     if (nrow(matched_rows)) {
@@ -294,10 +367,13 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
         atc_code
       ]
 
+      # Get or create mrp_index
+      mrp_index <- GetOrCreateMrpIndex(mrp_table_list_row, GetDrugDiseaseListRows())
+
       # Add directly to matched_rows
       if (length(relevant_atcs) > 0) {
         new_row <- data.table::data.table(
-          mrp_index = NA_integer_,
+          mrp_index = mrp_index,
           icd_code = mrp_icd,
           atc_code = relevant_atcs,
           proxy_code = mrp_icd, # for ICD MRP without a real proxy we set the ICD code as "proxy" code to get this value in the dp_mrp_calculations table in the proxy_code column
@@ -305,38 +381,17 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
           diagnosis_cluster = mrp_table_list_row$CONDITION_DISPLAY_CLUSTER
         )
 
-        # Check if same ATC + same diagnosis_cluster exists
-        existing_idx_cluster <- which(
-          matched_rows$atc_code == new_row$atc_code &
-            grepl(new_row$diagnosis_cluster, matched_rows$diagnosis_cluster, fixed = TRUE)
-        )
-
-        # Check if same ATC + same ICD exists
-        existing_idx_icd <- which(
-          matched_rows$atc_code == new_row$atc_code &
-            grepl(new_row$icd_code, matched_rows$icd_code, fixed = TRUE)
-        )
-
-        # ---- CASE A: same ATC + same diagnosis_cluster → append ICD to existing row ----
-        if (length(existing_idx_cluster)) {
-          new_row$mrp_index <- matched_rows$mrp_index[existing_idx_cluster[1]]
-          # ---- CASE B: same ATC + same ICD → append diagnosis_cluster ----
-        } else if (length(existing_idx_icd)) {
-          new_row$mrp_index <- matched_rows$mrp_index[existing_idx_icd[1]]
-          # ---- CASE C: no match → append new row ----
-        } else {
-          new_row$mrp_index <- ifelse(nrow(matched_rows), max(matched_rows$mrp_index, na.rm = TRUE) + 1, 1)
-        }
-
         new_row[, icd_display := {
           displays <- relevant_conditions[con_code_code %in% icd_code, con_code_display]
-          paste(unique(displays[!is.na(displays)]), collapse = "; ")
+          displays <- unique(displays[!is.na(displays)])
+          if (length(displays) == 0) NA_character_ else paste(displays, collapse = "; ")
         }]
 
-        new_row[, kurzbeschr_drug := paste0("[", mrp_table_list_row$ATC_DISPLAY, " - ", atc_code, "] ist mit [")]
-        new_row[, kurzbeschr_item2 := paste0(icd_display, " - ", icd_code, " (Zeitpunkt: ",
+
+        new_row[, kurzbeschr_drug := paste0(mrp_table_list_row$ATC_DISPLAY, " - ", atc_code)]
+        new_row[, kurzbeschr_item2 := paste0(icd_display, " - ", icd_code, "   (",
                                              format(condition_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
-        new_row[, kurzbeschr_suffix := paste0("] laut der entsprechenden Fachinformation [",
+        new_row[, kurzbeschr_suffix := paste0("laut der entsprechenden Fachinformation [",
                                               diagnosis_cluster, "] kontrainduziert.")]
 
         matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
@@ -512,14 +567,14 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
       ""
     )
     lines <- sprintf(
-      "%s %s %s%s (Zeitpunkt: %s)",
-      ifelse(seq_len(.N) == 1, "  Wert:", "       "),  # Label nur beim ersten
+      "%s %s %s%s   (%s)",
+      ifelse(seq_len(.N) == 1, "   Wert:", "             "),
       value, unit,
       converted_text,
       format(start_datetime, "%Y-%m-%d %H:%M:%S")
     )
     entry <- paste0(
-      "\n   LOINC: ", code, " (", loinc_name, ")\n",
+      "\nLOINC: ", code, " (", loinc_name, ")\n",
       paste(lines, collapse = "\n")
     )
     list(text = entry)
@@ -1028,16 +1083,6 @@ matchICDProxies <- function(
       single_proxy_sub_table <- splitted_proxy_table[[proxy_code]]
       match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes$atc_code & !is.na(get("ICD_PROXY")) & get("ICD_PROXY") != ""]
       if (nrow(match_proxy_rows)) {
-        # Create ICD_FULL_LIST per ATC group
-        match_proxy_rows[
-          ,
-          ICD_FULL_LIST := {
-            vals <- ICD
-            vals <- vals[!is.na(vals) & nzchar(vals)]  # drop NA and empty strings
-            if (length(vals)) paste(unique(vals), collapse = ", ") else NA_character_
-          },
-          by = ATC_FOR_CALCULATION
-        ]
         # Remove other proxy rows
         cols_to_remove <- unique(c(
           grep("^ICD_PROXY_", names(match_proxy_rows), value = TRUE),
@@ -1082,26 +1127,30 @@ matchICDProxies <- function(
               proxy_display <- first_valid_row$display
               proxy_start_datetime <- first_valid_row$start_datetime
 
+              # Get or create mrp_index
+              mrp_index <- GetOrCreateMrpIndex(match_proxy_row, GetDrugDiseaseListRows())
+
               if (nrow(valid_proxy_rows)) {
                 new_row <- data.table::data.table(
-                  mrp_index = ifelse(nrow(matched_rows), max(matched_rows$mrp_index, na.rm = TRUE) + 1, 1),
+                  mrp_index = mrp_index,
                   icd_code = match_proxy_row$ICD,
                   atc_code = match_proxy_row$ATC_FOR_CALCULATION,
                   proxy_code = proxy_code,
                   proxy_type = proxy_type,
-                  kurzbeschr_drug = paste0("[", match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION, "] ist mit ["),
+                  kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION),
                   kurzbeschr_item2 = paste0(proxy_display, " - ", proxy_code),
-                  kurzbeschr_suffix = paste0("] laut der entsprechenden Fachinformation [",
+                  kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation [",
                                              match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontrainduziert."),
                   kurzbeschr_additional = NA_character_
                 )
 
-                if (proxy_type == "ATC") {
+                if (proxy_type != "LOINC") {
                   new_row[, kurzbeschr_item2 := paste0(
                     kurzbeschr_item2,
-                    " (Zeitpunkt: ",
+                    "   (",
                     format(proxy_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
-                } else if (proxy_type == "LOINC") {
+                  matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
+                } else {
                   # Call the external custom function
                   mrp_match_description <- loinc_matching_function(
                     observation_resources = valid_proxy_rows,
@@ -1114,14 +1163,13 @@ matchICDProxies <- function(
                     matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
                   }
                 }
-                matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
               }
             }
           }
         }
       }
     }
-    return(mrp_matches)
+    return(matched_rows)
   }
 
   #  Combine all medication rows
@@ -1166,7 +1214,7 @@ matchICDProxies <- function(
     splitted_proxy_table = drug_disease_mrp_tables_by_loinc_proxy
   )
 
-  return(data.table::rbindlist(c(atc_matches, ops_matches, loinc_matches), fill = TRUE))
+  return(data.table::rbindlist(list(atc_matches, ops_matches, loinc_matches), fill = TRUE))
 }
 
 #' Split Drug-Disease MRP Table into Lookup Structures
