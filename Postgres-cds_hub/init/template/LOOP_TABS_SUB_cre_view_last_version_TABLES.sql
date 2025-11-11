@@ -1,4 +1,6 @@
 -------- VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> ------------ <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "raw"%><%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "typed"%>
+DROP VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%>; -- first drop the view
+
 CREATE OR REPLACE VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> AS (
   SELECT *
   FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> q
