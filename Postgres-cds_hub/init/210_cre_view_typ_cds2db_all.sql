@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-09-04 15:35:52
+-- Create time: 2025-11-11 12:30:34
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  210_cre_view_typ_cds2db_all.sql
 -- TEMPLATE:  template_cre_view_all.sql
@@ -37,6 +37,7 @@ BEGIN
 --Create View for typed tables for schema db2dataprocessor_out
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_encounter; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_encounter AS (SELECT * from db_log.encounter);
 
 GRANT SELECT ON cds2db_out.v_encounter TO cds2db_user;
@@ -44,6 +45,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_patient; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_patient AS (SELECT * from db_log.patient);
 
 GRANT SELECT ON cds2db_out.v_patient TO cds2db_user;
@@ -51,6 +53,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_condition; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_condition AS (SELECT * from db_log.condition);
 
 GRANT SELECT ON cds2db_out.v_condition TO cds2db_user;
@@ -58,6 +61,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_medication; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_medication AS (SELECT * from db_log.medication);
 
 GRANT SELECT ON cds2db_out.v_medication TO cds2db_user;
@@ -65,6 +69,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_medicationrequest; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_medicationrequest AS (SELECT * from db_log.medicationrequest);
 
 GRANT SELECT ON cds2db_out.v_medicationrequest TO cds2db_user;
@@ -72,6 +77,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_medicationadministration; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_medicationadministration AS (SELECT * from db_log.medicationadministration);
 
 GRANT SELECT ON cds2db_out.v_medicationadministration TO cds2db_user;
@@ -79,6 +85,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_medicationstatement; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_medicationstatement AS (SELECT * from db_log.medicationstatement);
 
 GRANT SELECT ON cds2db_out.v_medicationstatement TO cds2db_user;
@@ -86,6 +93,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_observation; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_observation AS (SELECT * from db_log.observation);
 
 GRANT SELECT ON cds2db_out.v_observation TO cds2db_user;
@@ -93,6 +101,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_diagnosticreport; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_diagnosticreport AS (SELECT * from db_log.diagnosticreport);
 
 GRANT SELECT ON cds2db_out.v_diagnosticreport TO cds2db_user;
@@ -100,6 +109,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_servicerequest; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_servicerequest AS (SELECT * from db_log.servicerequest);
 
 GRANT SELECT ON cds2db_out.v_servicerequest TO cds2db_user;
@@ -107,6 +117,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_procedure; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_procedure AS (SELECT * from db_log.procedure);
 
 GRANT SELECT ON cds2db_out.v_procedure TO cds2db_user;
@@ -114,6 +125,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_consent; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_consent AS (SELECT * from db_log.consent);
 
 GRANT SELECT ON cds2db_out.v_consent TO cds2db_user;
@@ -121,6 +133,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_location; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_location AS (SELECT * from db_log.location);
 
 GRANT SELECT ON cds2db_out.v_location TO cds2db_user;
@@ -128,6 +141,7 @@ GRANT USAGE ON SCHEMA cds2db_out TO cds2db_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DROP VIEW cds2db_out.v_pids_per_ward; -- first drop the view
 CREATE OR REPLACE VIEW cds2db_out.v_pids_per_ward AS (SELECT * from db_log.pids_per_ward);
 
 GRANT SELECT ON cds2db_out.v_pids_per_ward TO cds2db_user;

@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2025-09-04 15:35:45
+-- Create time: 2025-11-11 12:30:26
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  190_cre_view_typ_dataproc_last_import.sql
 -- TEMPLATE:  template_cre_view_last_import.sql
@@ -35,71 +35,85 @@ BEGIN
     ) THEN
 --------------------------------------------------------------------
 --Create View for frontend tables for schema db2dataprocessor_out
+DROP VIEW db2dataprocessor_out.v_encounter_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_encounter_last_import AS (
 SELECT * FROM db_log.encounter
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.encounter)
 );
+DROP VIEW db2dataprocessor_out.v_patient_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_patient_last_import AS (
 SELECT * FROM db_log.patient
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.patient)
 );
+DROP VIEW db2dataprocessor_out.v_condition_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_condition_last_import AS (
 SELECT * FROM db_log.condition
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.condition)
 );
+DROP VIEW db2dataprocessor_out.v_medication_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_medication_last_import AS (
 SELECT * FROM db_log.medication
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.medication)
 );
+DROP VIEW db2dataprocessor_out.v_medicationrequest_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_medicationrequest_last_import AS (
 SELECT * FROM db_log.medicationrequest
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.medicationrequest)
 );
+DROP VIEW db2dataprocessor_out.v_medicationadministration_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_medicationadministration_last_import AS (
 SELECT * FROM db_log.medicationadministration
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.medicationadministration)
 );
+DROP VIEW db2dataprocessor_out.v_medicationstatement_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_medicationstatement_last_import AS (
 SELECT * FROM db_log.medicationstatement
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.medicationstatement)
 );
+DROP VIEW db2dataprocessor_out.v_observation_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_observation_last_import AS (
 SELECT * FROM db_log.observation
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.observation)
 );
+DROP VIEW db2dataprocessor_out.v_diagnosticreport_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_diagnosticreport_last_import AS (
 SELECT * FROM db_log.diagnosticreport
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.diagnosticreport)
 );
+DROP VIEW db2dataprocessor_out.v_servicerequest_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_servicerequest_last_import AS (
 SELECT * FROM db_log.servicerequest
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.servicerequest)
 );
+DROP VIEW db2dataprocessor_out.v_procedure_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_procedure_last_import AS (
 SELECT * FROM db_log.procedure
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.procedure)
 );
+DROP VIEW db2dataprocessor_out.v_consent_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_consent_last_import AS (
 SELECT * FROM db_log.consent
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.consent)
 );
+DROP VIEW db2dataprocessor_out.v_location_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_location_last_import AS (
 SELECT * FROM db_log.location
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.location)
 );
+DROP VIEW db2dataprocessor_out.v_pids_per_ward_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_pids_per_ward_last_import AS (
 SELECT * FROM db_log.pids_per_ward

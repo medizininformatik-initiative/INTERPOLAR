@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2025-09-04 15:37:55
+-- Create time: 2025-11-11 12:32:55
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  334_cre_view_dataproc_submodules_last_import.sql
 -- TEMPLATE:  template_cre_view_last_import.sql
@@ -35,6 +35,7 @@ BEGIN
     ) THEN
 --------------------------------------------------------------------
 --Create View for frontend tables for schema db2dataprocessor_out
+DROP VIEW db2dataprocessor_out.v_dp_mrp_calculations_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_dp_mrp_calculations_last_import AS (
 SELECT * FROM db_log.dp_mrp_calculations

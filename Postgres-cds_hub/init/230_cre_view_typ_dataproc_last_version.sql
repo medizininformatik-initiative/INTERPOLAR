@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2025-09-04 15:35:53
+-- Create time: 2025-11-11 12:30:34
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  230_cre_view_typ_dataproc_last_version.sql
 -- TEMPLATE:  template_cre_view_last_version.sql
@@ -36,6 +36,8 @@ BEGIN
 --------------------------------------------------------------------
 --Create SQL View for latest Version of the FHIR-Data for schema db2dataprocessor_out
 -------- VIEW db2dataprocessor_out.v_encounter_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_encounter_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_encounter_last_version AS (
   SELECT *
   FROM db_log.encounter q
@@ -45,6 +47,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_encounter_last_version AS (
 );
 
 -------- VIEW db2dataprocessor_out.v_patient_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_patient_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_patient_last_version AS (
   SELECT *
   FROM db_log.patient q
@@ -54,6 +58,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_patient_last_version AS (
 );
 
 -------- VIEW db2dataprocessor_out.v_condition_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_condition_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_condition_last_version AS (
   SELECT *
   FROM db_log.condition q
@@ -63,6 +69,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_condition_last_version AS (
 );
 
 -------- VIEW db2dataprocessor_out.v_medication_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_medication_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_medication_last_version AS (
   SELECT *
   FROM db_log.medication q
@@ -72,6 +80,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_medication_last_version AS (
 );
 
 -------- VIEW db2dataprocessor_out.v_medicationrequest_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_medicationrequest_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_medicationrequest_last_version AS (
   SELECT *
   FROM db_log.medicationrequest q
@@ -81,6 +91,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_medicationrequest_last_version AS 
 );
 
 -------- VIEW db2dataprocessor_out.v_medicationadministration_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_medicationadministration_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_medicationadministration_last_version AS (
   SELECT *
   FROM db_log.medicationadministration q
@@ -90,6 +102,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_medicationadministration_last_vers
 );
 
 -------- VIEW db2dataprocessor_out.v_medicationstatement_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_medicationstatement_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_medicationstatement_last_version AS (
   SELECT *
   FROM db_log.medicationstatement q
@@ -99,6 +113,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_medicationstatement_last_version A
 );
 
 -------- VIEW db2dataprocessor_out.v_observation_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_observation_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_observation_last_version AS (
   SELECT *
   FROM db_log.observation q
@@ -108,6 +124,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_observation_last_version AS (
 );
 
 -------- VIEW db2dataprocessor_out.v_diagnosticreport_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_diagnosticreport_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_diagnosticreport_last_version AS (
   SELECT *
   FROM db_log.diagnosticreport q
@@ -117,6 +135,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_diagnosticreport_last_version AS (
 );
 
 -------- VIEW db2dataprocessor_out.v_servicerequest_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_servicerequest_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_servicerequest_last_version AS (
   SELECT *
   FROM db_log.servicerequest q
@@ -126,6 +146,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_servicerequest_last_version AS (
 );
 
 -------- VIEW db2dataprocessor_out.v_procedure_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_procedure_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_procedure_last_version AS (
   SELECT *
   FROM db_log.procedure q
@@ -135,6 +157,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_procedure_last_version AS (
 );
 
 -------- VIEW db2dataprocessor_out.v_consent_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_consent_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_consent_last_version AS (
   SELECT *
   FROM db_log.consent q
@@ -144,6 +168,8 @@ CREATE OR REPLACE VIEW db2dataprocessor_out.v_consent_last_version AS (
 );
 
 -------- VIEW db2dataprocessor_out.v_location_last_version ------------typed
+DROP VIEW db2dataprocessor_out.v_location_last_version; -- first drop the view
+
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_location_last_version AS (
   SELECT *
   FROM db_log.location q

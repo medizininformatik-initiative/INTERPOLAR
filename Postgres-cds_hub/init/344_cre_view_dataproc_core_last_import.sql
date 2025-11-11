@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2025-09-04 15:37:57
+-- Create time: 2025-11-11 12:32:58
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  344_cre_view_dataproc_core_last_import.sql
 -- TEMPLATE:  template_cre_view_last_import.sql
@@ -35,11 +35,13 @@ BEGIN
     ) THEN
 --------------------------------------------------------------------
 --Create View for frontend tables for schema db2dataprocessor_out
+DROP VIEW db2dataprocessor_out.v_input_data_files_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_input_data_files_last_import AS (
 SELECT * FROM db_log.input_data_files
 WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.input_data_files)
 );
+DROP VIEW db2dataprocessor_out.v_input_data_files_processed_content_last_import; -- first drop the view
 
 CREATE OR REPLACE VIEW db2dataprocessor_out.v_input_data_files_processed_content_last_import AS (
 SELECT * FROM db_log.input_data_files_processed_content
