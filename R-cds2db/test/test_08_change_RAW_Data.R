@@ -93,7 +93,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(1, 1)
+  duplicatePatients(12)
 
   runCodeForDebugDay(1, {
 
@@ -113,12 +113,18 @@ if (exists("DEBUG_DAY")) {
     addObservation(pid, "14933-6", value = 2000, unit = "umol/L")
     addObservation(pid, "12980-9", value = 1000, unit = "umol/L") # secondary loinc code
 
+    # Zeile 1429 aus Drug Disease Originalliste -  Weiteres Drug-Disease MRP mit Diagnose/Procedure
+    addDrugs(pid, c("B01AB01",	"B01AB01", "B01AB51"))
+    addDrugs(pid, c("B05CX05",	"B01AB51"))
+    addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
+    addProcedures(pid, c("8-151.4"))
+    addConditions(pid, "G97.0")
+    addConditions(pid, "G97.0")
+
     # Drug_Drug                  -> MedicationRequests - N06AX22 + J01MA02
     addDrugs(pid, c("N06AX22", "J01MA02")) # zwei MRPS, weil in Drug Drug und in Drug Drug Group (Wird noch bereinigt)
     # Drug_DrugGroup             -> MedicationRequests - N06BA09 + C02KC01
     addDrugs(pid, c("N06BA09", "C02KC01"))
-
-
 
     pid <- addDrugs("UKB-0001_2", "C09DA06")
     addConditions(pid, c("M10.00", "M10.00", "M10.01", "M14.00"))
