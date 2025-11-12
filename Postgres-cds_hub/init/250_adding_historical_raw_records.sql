@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-02 16:19:58
+-- Rights definition file last update : 2025-07-01 10:58:41
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-11-07 14:47:08
+-- Create time: 2025-11-12 15:19:31
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
@@ -1007,7 +1007,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     medadm_identifier_start,
     medadm_identifier_end,
     medadm_encounter_ref,
-    medadm_context_calculated_ref,
+    medadm_encounter_calculated_ref,
     medadm_patient_ref,
     medadm_partof_ref,
     medadm_status,
@@ -1131,7 +1131,7 @@ SELECT
     medadm_identifier_start,
     medadm_identifier_end,
     medadm_encounter_ref,
-    medadm_context_calculated_ref,
+    medadm_encounter_calculated_ref,
     medadm_patient_ref,
     medadm_partof_ref,
     medadm_status,
@@ -1261,7 +1261,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     medstat_identifier_start,
     medstat_identifier_end,
     medstat_encounter_ref,
-    medstat_context_calculated_ref,
+    medstat_encounter_calculated_ref,
     medstat_patient_ref,
     medstat_partof_ref,
     medstat_basedon_ref,
@@ -1490,7 +1490,7 @@ SELECT
     medstat_identifier_start,
     medstat_identifier_end,
     medstat_encounter_ref,
-    medstat_context_calculated_ref,
+    medstat_encounter_calculated_ref,
     medstat_patient_ref,
     medstat_partof_ref,
     medstat_basedon_ref,
