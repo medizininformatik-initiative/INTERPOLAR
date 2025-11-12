@@ -1,14 +1,14 @@
 createReferences <- function(resource_tables) {
 
   start_time_column_names <- list(
-    Observation = "obs_effectivedatetime",
-    Procedure = c("proc_performedperiod_start", "proc_performeddatetime"),
-    MedicationAdministration = c("medadm_effectiveperiod_start", "medadm_effectivedatetime"),
-    MedicationStatement = c("medstat_effectiveperiod_start", "medstat_effectivedatetime"),
-    MedicationRequest = "medreq_authoredon",
-    Condition = "con_recordeddate",
-    DiagnosticReport = c("diagrep_effectivedatetime", "diagrep_issued"),
-    ServiceRequest = "servreq_authoredon"
+    observation = "obs_effectivedatetime",
+    procedure = c("proc_performedperiod_start", "proc_performeddatetime"),
+    medicationadministration = c("medadm_effectiveperiod_start", "medadm_effectivedatetime"),
+    medicationstatement = c("medstat_effectiveperiod_start", "medstat_effectivedatetime"),
+    medicationrequest = "medreq_authoredon",
+    condition = "con_recordeddate",
+    diagnosticreport = c("diagrep_effectivedatetime", "diagrep_issued"),
+    servicerequest = "servreq_authoredon"
   )
 
   getResourcePrefix <- function(column_name) {
@@ -26,7 +26,7 @@ createReferences <- function(resource_tables) {
   }
 
   encounter_type <- c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt")
-  encounters <- resource_tables$Encounter
+  encounters <- resource_tables$encounter
 
   # add the both calculated columns
   encounters[, enc_partof_calculated_ref := NA_character_]
@@ -80,7 +80,7 @@ createReferences <- function(resource_tables) {
                 units = "secs"
               )))
               best_fit_parent <- candidate_parent_encounters[order(time_diff)][1]
-              encounters_of_lvl[enc_index, enc_partof_calculated_ref := best_fit_parent$enc_id]
+              encounters_of_lvl[enc_index, enc_partof_calculated_ref := paste0("Encounter/", best_fit_parent$enc_id)]
             }
           }
         }
@@ -94,7 +94,7 @@ createReferences <- function(resource_tables) {
   encounters[is.na(enc_partof_calculated_ref) & (enc_type_code %in% encounter_type[2:3]),
              enc_partof_calculated_ref := "invalid"]
 
-  resource_tables$Encounter <- encounters
+  resource_tables$encounter <- encounters
 
   # 2.) Fill the ..._encounter_calculated_ref using
   #     the enc_partof_calculated_ref or timestamps
@@ -134,7 +134,7 @@ createReferences <- function(resource_tables) {
         if (is.na(resource_table[[calculated_ref_col_name]][row_index])) {
           patient_ref_col_name <- paste0(getResourcePrefix(start_column_names[1]), "_patient_ref")
           patient_ref <- resource_table[[patient_ref_col_name]][row_index]
-          candidate_encounters <- encounters[enc_patient_ref == patient_ref]
+          candidate_encounters <- encounters[enc_patient_ref == patient_ref & enc_type_code == encounter_type[[1]]]
           if (nrow(candidate_encounters)) {
             # find the best fitting encounter by timestamp
             for (start_column_name in start_column_names) {
@@ -153,7 +153,7 @@ createReferences <- function(resource_tables) {
                   )))
                   best_fit_encounter <- candidate_encounters_filtered[order(time_diff)][1]
                   # Assign by reference with dynamic column name
-                  resource_table[row_index, (calculated_ref_col_name) := best_fit_encounter$enc_id]
+                  resource_table[row_index, (calculated_ref_col_name) := paste0("Encounter/", best_fit_encounter$enc_id)]
                   break  # Exit the for loop over start_column_names
                 }
               }
