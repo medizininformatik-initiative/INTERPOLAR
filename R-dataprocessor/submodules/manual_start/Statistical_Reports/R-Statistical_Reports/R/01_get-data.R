@@ -52,6 +52,7 @@ getPatientData <- function(lock_id, table_name) {
   )
 
   patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
     dplyr::filter(
       (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
         !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "") &
@@ -159,7 +160,8 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     "FROM ", table_name, "\n"
   )
 
-  encounter_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
+  encounter_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct()
 
   if (nrow(encounter_table_raw) == 0) {
     stop("No encounter data downloaded from database. Please check the database.")
