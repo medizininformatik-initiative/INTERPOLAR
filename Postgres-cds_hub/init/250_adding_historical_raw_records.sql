@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 10:58:41
--- Rights definition file size        : 16391 Byte
+-- Rights definition file last update : 2025-11-13 15:50:53
+-- Rights definition file size        : 14124 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2025-11-12 15:19:31
+-- Create time: 2025-11-13 16:02:27
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
@@ -71,6 +71,7 @@ SELECT res FROM pg_background_result(pg_background_launch(
     enc_patient_ref,
     enc_partof_ref,
     enc_partof_calculated_ref,
+    enc_main_encounter_calculated_ref,
     enc_status,
     enc_class_system,
     enc_class_version,
@@ -156,6 +157,7 @@ SELECT
     enc_patient_ref,
     enc_partof_ref,
     enc_partof_calculated_ref,
+    enc_main_encounter_calculated_ref,
     enc_status,
     enc_class_system,
     enc_class_version,

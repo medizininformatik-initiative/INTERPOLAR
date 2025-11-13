@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 10:58:41
--- Rights definition file size        : 16391 Byte
+-- Rights definition file last update : 2025-11-13 15:50:53
+-- Rights definition file size        : 14124 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-11-12 15:14:54
+-- Create time: 2025-11-13 15:57:32
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -193,6 +193,12 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.encounter ADD enc_partof_calculated_ref varchar;   -- partOf/calculated_ref (varchar)
         END IF; -- column (enc_partof_calculated_ref)
+
+        IF NOT EXISTS ( -- column not exists (enc_main_encounter_calculated_ref)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_main_encounter_calculated_ref'
+        ) THEN
+            ALTER TABLE cds2db_in.encounter ADD enc_main_encounter_calculated_ref varchar;   -- main/encounter/calculated/ref (varchar)
+        END IF; -- column (enc_main_encounter_calculated_ref)
 
         IF NOT EXISTS ( -- column not exists (enc_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter' AND column_name = 'enc_status'
@@ -596,6 +602,7 @@ BEGIN
           COALESCE(db.to_char_immutable(enc_patient_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(enc_partof_ref), ''#NULL#'') || ''|||'' ||
           -- no hash - COALESCE(db.to_char_immutable(enc_partof_calculated_ref), ''#NULL#'') || ''|||'' ||
+          -- no hash - COALESCE(db.to_char_immutable(enc_main_encounter_calculated_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(enc_status), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(enc_class_system), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(enc_class_version), ''#NULL#'') || ''|||'' ||
@@ -682,6 +689,7 @@ BEGIN
           COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
           COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
           -- no hash - COALESCE(db.to_char_immutable(enc_partof_calculated_ref), '#NULL#') || '|||' || -- hash from: partOf/calculated_ref (enc_partof_calculated_ref)
+          -- no hash - COALESCE(db.to_char_immutable(enc_main_encounter_calculated_ref), '#NULL#') || '|||' || -- hash from: main/encounter/calculated/ref (enc_main_encounter_calculated_ref)
           COALESCE(db.to_char_immutable(enc_status), '#NULL#') || '|||' || -- hash from: status (enc_status)
           COALESCE(db.to_char_immutable(enc_class_system), '#NULL#') || '|||' || -- hash from: class/system (enc_class_system)
           COALESCE(db.to_char_immutable(enc_class_version), '#NULL#') || '|||' || -- hash from: class/version (enc_class_version)
@@ -774,6 +782,7 @@ BEGIN
           COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
           COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
           -- no hash - COALESCE(db.to_char_immutable(enc_partof_calculated_ref), '#NULL#') || '|||' || -- hash from: partOf/calculated_ref (enc_partof_calculated_ref)
+          -- no hash - COALESCE(db.to_char_immutable(enc_main_encounter_calculated_ref), '#NULL#') || '|||' || -- hash from: main/encounter/calculated/ref (enc_main_encounter_calculated_ref)
           COALESCE(db.to_char_immutable(enc_status), '#NULL#') || '|||' || -- hash from: status (enc_status)
           COALESCE(db.to_char_immutable(enc_class_system), '#NULL#') || '|||' || -- hash from: class/system (enc_class_system)
           COALESCE(db.to_char_immutable(enc_class_version), '#NULL#') || '|||' || -- hash from: class/version (enc_class_version)
@@ -13294,6 +13303,7 @@ COMMENT ON COLUMN cds2db_in.encounter.enc_identifier_end IS 'identifier/end (tim
 COMMENT ON COLUMN cds2db_in.encounter.enc_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter.enc_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter.enc_partof_calculated_ref IS 'partOf/calculated_ref (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter.enc_main_encounter_calculated_ref IS 'main/encounter/calculated/ref (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter.enc_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter.enc_class_system IS 'class/system (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter.enc_class_version IS 'class/version (varchar)';

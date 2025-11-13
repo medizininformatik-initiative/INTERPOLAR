@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 10:58:41
--- Rights definition file size        : 16391 Byte
+-- Rights definition file last update : 2025-11-13 15:50:53
+-- Rights definition file size        : 14124 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-11-12 15:19:16
+-- Create time: 2025-11-13 16:02:07
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  160_cre_table_typ_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -188,6 +188,7 @@ BEGIN
                                 enc_patient_ref,
                                 enc_partof_ref,
                                 enc_partof_calculated_ref,
+                                enc_main_encounter_calculated_ref,
                                 enc_status,
                                 enc_class_system,
                                 enc_class_version,
@@ -276,6 +277,7 @@ BEGIN
                                 current_record.enc_patient_ref,
                                 current_record.enc_partof_ref,
                                 current_record.enc_partof_calculated_ref,
+                                current_record.enc_main_encounter_calculated_ref,
                                 current_record.enc_status,
                                 current_record.enc_class_system,
                                 current_record.enc_class_version,
