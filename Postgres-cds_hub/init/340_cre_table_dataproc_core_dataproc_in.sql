@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2025-10-06 22:48:50
+-- Create time: 2025-11-10 22:16:17
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  340_cre_table_dataproc_core_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
