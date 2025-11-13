@@ -1,7 +1,8 @@
+
 DO
 $innerview$
 BEGIN
-    IF EXISTS ( -- migration on
+    IF EXISTS ( -- do migration
         SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
         IF EXISTS ( -- VIEW exists
@@ -16,6 +17,6 @@ BEGIN
             WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM <%SCHEMA_2%>.<%TABLE_NAME_2%>)
         );
 ----------------------------
-    END IF; -- migration on
+    END IF; -- do migration
 END
 $innerview$;

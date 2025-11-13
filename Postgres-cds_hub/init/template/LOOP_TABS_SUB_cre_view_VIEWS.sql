@@ -1,7 +1,8 @@
+
 DO
 $innerview$
 BEGIN
-    IF EXISTS ( -- migration on
+    IF EXISTS ( -- do migration
         SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
         IF EXISTS ( -- VIEW exists
@@ -15,6 +16,6 @@ BEGIN
         SELECT DISTINCT * FROM <%SCHEMA_2%>.<%TABLE_NAME_2%> r WHERE r.raw_already_processed IS NULL AND NOT (EXISTS(SELECT 1 FROM <%SCHEMA_2%>.<%SIMPLE_TABLE_NAME%> t WHERE r.<%TABLE_NAME_2%>_id = t.<%TABLE_NAME_2%>_id)) -- ORDER BY <%TABLE_NAME_2%>_id
         );
 ----------------------------
-    END IF; -- migration on
+    END IF; -- do migration
 END
 $innerview$;

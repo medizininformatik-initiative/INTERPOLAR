@@ -1,8 +1,9 @@
+
 -------- VIEW <%OWNER_SCHEMA%>.<%TABLE_NAME%> ------------ <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "raw"%><%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "typed"%>
 DO
 $innerview$
 BEGIN
-    IF EXISTS ( -- migration on
+    IF EXISTS ( -- do migration
         SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
         IF EXISTS ( -- VIEW exists
@@ -19,7 +20,7 @@ BEGIN
             WHERE COALESCE(q.<%COLUMN_PREFIX%>_meta_lastupdated, <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "TO_CHAR(q.last_check_datetime, 'YYYY-MM-DD HH24:MI:SS')"%><%IF RIGHTS_DEFINITION:TAGS "\bTYPED\b" "q.last_check_datetime"%>) =             w.LAST_VERSION_DATE AND q.<%COLUMN_PREFIX%>_id = w.ID
         );
 ----------------------------
-    END IF; -- migration on
+    END IF; -- do migration
 END
 $innerview$;
 

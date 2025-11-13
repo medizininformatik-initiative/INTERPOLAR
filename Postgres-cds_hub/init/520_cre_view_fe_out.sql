@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_out"
--- Create time: 2025-11-11 12:32:52
+-- Create time: 2025-11-13 09:12:48
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  520_cre_view_fe_out.sql
 -- TEMPLATE:  template_cre_view_last_import.sql
@@ -36,48 +36,160 @@ BEGIN
     ) THEN
 --------------------------------------------------------------------
 --Create View for frontend tables for schema db2frontend_out
-DROP VIEW db2frontend_out.v_patient; -- first drop the view
 
-CREATE OR REPLACE VIEW db2frontend_out.v_patient AS (
-SELECT * FROM db_log.patient_fe
-WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.patient_fe)
-);
-DROP VIEW db2frontend_out.v_fall; -- first drop the view
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2frontend_out' AND table_name = 'v_patient'
+        ) THEN
+            DROP VIEW db2frontend_out.v_patient; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2frontend_out.v_patient AS (
+            SELECT * FROM db_log.patient_fe
+            WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.patient_fe)
+        );
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
-CREATE OR REPLACE VIEW db2frontend_out.v_fall AS (
-SELECT * FROM db_log.fall_fe
-WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.fall_fe)
-);
-DROP VIEW db2frontend_out.v_medikationsanalyse; -- first drop the view
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2frontend_out' AND table_name = 'v_fall'
+        ) THEN
+            DROP VIEW db2frontend_out.v_fall; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2frontend_out.v_fall AS (
+            SELECT * FROM db_log.fall_fe
+            WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.fall_fe)
+        );
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
-CREATE OR REPLACE VIEW db2frontend_out.v_medikationsanalyse AS (
-SELECT * FROM db_log.medikationsanalyse_fe
-WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.medikationsanalyse_fe)
-);
-DROP VIEW db2frontend_out.v_mrpdokumentation_validierung; -- first drop the view
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2frontend_out' AND table_name = 'v_medikationsanalyse'
+        ) THEN
+            DROP VIEW db2frontend_out.v_medikationsanalyse; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2frontend_out.v_medikationsanalyse AS (
+            SELECT * FROM db_log.medikationsanalyse_fe
+            WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.medikationsanalyse_fe)
+        );
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
-CREATE OR REPLACE VIEW db2frontend_out.v_mrpdokumentation_validierung AS (
-SELECT * FROM db_log.mrpdokumentation_validierung_fe
-WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.mrpdokumentation_validierung_fe)
-);
-DROP VIEW db2frontend_out.v_retrolektive_mrpbewertung; -- first drop the view
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2frontend_out' AND table_name = 'v_mrpdokumentation_validierung'
+        ) THEN
+            DROP VIEW db2frontend_out.v_mrpdokumentation_validierung; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2frontend_out.v_mrpdokumentation_validierung AS (
+            SELECT * FROM db_log.mrpdokumentation_validierung_fe
+            WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.mrpdokumentation_validierung_fe)
+        );
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
-CREATE OR REPLACE VIEW db2frontend_out.v_retrolektive_mrpbewertung AS (
-SELECT * FROM db_log.retrolektive_mrpbewertung_fe
-WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.retrolektive_mrpbewertung_fe)
-);
-DROP VIEW db2frontend_out.v_risikofaktor; -- first drop the view
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2frontend_out' AND table_name = 'v_retrolektive_mrpbewertung'
+        ) THEN
+            DROP VIEW db2frontend_out.v_retrolektive_mrpbewertung; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2frontend_out.v_retrolektive_mrpbewertung AS (
+            SELECT * FROM db_log.retrolektive_mrpbewertung_fe
+            WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.retrolektive_mrpbewertung_fe)
+        );
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
-CREATE OR REPLACE VIEW db2frontend_out.v_risikofaktor AS (
-SELECT * FROM db_log.risikofaktor_fe
-WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.risikofaktor_fe)
-);
-DROP VIEW db2frontend_out.v_trigger; -- first drop the view
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2frontend_out' AND table_name = 'v_risikofaktor'
+        ) THEN
+            DROP VIEW db2frontend_out.v_risikofaktor; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2frontend_out.v_risikofaktor AS (
+            SELECT * FROM db_log.risikofaktor_fe
+            WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.risikofaktor_fe)
+        );
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
-CREATE OR REPLACE VIEW db2frontend_out.v_trigger AS (
-SELECT * FROM db_log.trigger_fe
-WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.trigger_fe)
-);
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2frontend_out' AND table_name = 'v_trigger'
+        ) THEN
+            DROP VIEW db2frontend_out.v_trigger; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2frontend_out.v_trigger AS (
+            SELECT * FROM db_log.trigger_fe
+            WHERE TO_CHAR(COALESCE(last_check_datetime, input_datetime),'YYYY-MM-DD HH24:MI:SS') IN (SELECT TO_CHAR(MAX(COALESCE(last_check_datetime, input_datetime)),'YYYY-MM-DD HH24:MI:SS') FROM db_log.trigger_fe)
+        );
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
 --SQL Role for Views in Schema db2frontend_out
 GRANT SELECT ON TABLE db2frontend_out.v_patient TO db2frontend_user;

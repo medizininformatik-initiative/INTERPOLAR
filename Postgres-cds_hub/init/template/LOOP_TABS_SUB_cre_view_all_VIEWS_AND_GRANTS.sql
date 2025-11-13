@@ -1,9 +1,10 @@
+
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
 DO
 $innerview$
 BEGIN
-    IF EXISTS ( -- migration on
+    IF EXISTS ( -- do migration
         SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
         IF EXISTS ( -- VIEW exists
@@ -18,7 +19,7 @@ BEGIN
         GRANT SELECT ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> TO <%OWNER_USER%>;
         GRANT USAGE ON SCHEMA <%OWNER_SCHEMA%> TO <%OWNER_USER%>;
 ----------------------------
-    END IF; -- migration on
+    END IF; -- do migration
 END
 $innerview$;
 

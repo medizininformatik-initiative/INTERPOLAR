@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2025-11-11 12:32:52
+-- Create time: 2025-11-13 09:12:49
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  470_cre_view_fe_dataproc_all.sql
 -- TEMPLATE:  template_cre_view_all.sql
@@ -35,61 +35,180 @@ BEGIN
     ) THEN
 --------------------------------------------------------------------
 --Create View for typed tables for schema db2dataprocessor_out
-------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
-DROP VIEW db2dataprocessor_out.v_patient_fe; -- first drop the view
-CREATE OR REPLACE VIEW db2dataprocessor_out.v_patient_fe AS (SELECT * from db_log.patient_fe);
-
-GRANT SELECT ON db2dataprocessor_out.v_patient_fe TO db2dataprocessor_user;
-GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
-DROP VIEW db2dataprocessor_out.v_fall_fe; -- first drop the view
-CREATE OR REPLACE VIEW db2dataprocessor_out.v_fall_fe AS (SELECT * from db_log.fall_fe);
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_out' AND table_name = 'v_patient_fe'
+        ) THEN
+            DROP VIEW db2dataprocessor_out.v_patient_fe; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2dataprocessor_out.v_patient_fe AS (SELECT * from db_log.patient_fe);
 
-GRANT SELECT ON db2dataprocessor_out.v_fall_fe TO db2dataprocessor_user;
-GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+        GRANT SELECT ON db2dataprocessor_out.v_patient_fe TO db2dataprocessor_user;
+        GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
-------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
-DROP VIEW db2dataprocessor_out.v_medikationsanalyse_fe; -- first drop the view
-CREATE OR REPLACE VIEW db2dataprocessor_out.v_medikationsanalyse_fe AS (SELECT * from db_log.medikationsanalyse_fe);
-
-GRANT SELECT ON db2dataprocessor_out.v_medikationsanalyse_fe TO db2dataprocessor_user;
-GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
-
-------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
-DROP VIEW db2dataprocessor_out.v_mrpdokumentation_validierung_fe; -- first drop the view
-CREATE OR REPLACE VIEW db2dataprocessor_out.v_mrpdokumentation_validierung_fe AS (SELECT * from db_log.mrpdokumentation_validierung_fe);
-
-GRANT SELECT ON db2dataprocessor_out.v_mrpdokumentation_validierung_fe TO db2dataprocessor_user;
-GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
-
-------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
-DROP VIEW db2dataprocessor_out.v_retrolektive_mrpbewertung_fe; -- first drop the view
-CREATE OR REPLACE VIEW db2dataprocessor_out.v_retrolektive_mrpbewertung_fe AS (SELECT * from db_log.retrolektive_mrpbewertung_fe);
-
-GRANT SELECT ON db2dataprocessor_out.v_retrolektive_mrpbewertung_fe TO db2dataprocessor_user;
-GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
-DROP VIEW db2dataprocessor_out.v_risikofaktor_fe; -- first drop the view
-CREATE OR REPLACE VIEW db2dataprocessor_out.v_risikofaktor_fe AS (SELECT * from db_log.risikofaktor_fe);
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_out' AND table_name = 'v_fall_fe'
+        ) THEN
+            DROP VIEW db2dataprocessor_out.v_fall_fe; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2dataprocessor_out.v_fall_fe AS (SELECT * from db_log.fall_fe);
 
-GRANT SELECT ON db2dataprocessor_out.v_risikofaktor_fe TO db2dataprocessor_user;
-GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+        GRANT SELECT ON db2dataprocessor_out.v_fall_fe TO db2dataprocessor_user;
+        GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
+
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
-DROP VIEW db2dataprocessor_out.v_trigger_fe; -- first drop the view
-CREATE OR REPLACE VIEW db2dataprocessor_out.v_trigger_fe AS (SELECT * from db_log.trigger_fe);
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_out' AND table_name = 'v_medikationsanalyse_fe'
+        ) THEN
+            DROP VIEW db2dataprocessor_out.v_medikationsanalyse_fe; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2dataprocessor_out.v_medikationsanalyse_fe AS (SELECT * from db_log.medikationsanalyse_fe);
 
-GRANT SELECT ON db2dataprocessor_out.v_trigger_fe TO db2dataprocessor_user;
-GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+        GRANT SELECT ON db2dataprocessor_out.v_medikationsanalyse_fe TO db2dataprocessor_user;
+        GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
+
+
+------------------------------------------------------------------------------------------------------------------
+-- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_out' AND table_name = 'v_mrpdokumentation_validierung_fe'
+        ) THEN
+            DROP VIEW db2dataprocessor_out.v_mrpdokumentation_validierung_fe; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2dataprocessor_out.v_mrpdokumentation_validierung_fe AS (SELECT * from db_log.mrpdokumentation_validierung_fe);
+
+        GRANT SELECT ON db2dataprocessor_out.v_mrpdokumentation_validierung_fe TO db2dataprocessor_user;
+        GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
+
+
+------------------------------------------------------------------------------------------------------------------
+-- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_out' AND table_name = 'v_retrolektive_mrpbewertung_fe'
+        ) THEN
+            DROP VIEW db2dataprocessor_out.v_retrolektive_mrpbewertung_fe; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2dataprocessor_out.v_retrolektive_mrpbewertung_fe AS (SELECT * from db_log.retrolektive_mrpbewertung_fe);
+
+        GRANT SELECT ON db2dataprocessor_out.v_retrolektive_mrpbewertung_fe TO db2dataprocessor_user;
+        GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
+
+
+------------------------------------------------------------------------------------------------------------------
+-- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_out' AND table_name = 'v_risikofaktor_fe'
+        ) THEN
+            DROP VIEW db2dataprocessor_out.v_risikofaktor_fe; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2dataprocessor_out.v_risikofaktor_fe AS (SELECT * from db_log.risikofaktor_fe);
+
+        GRANT SELECT ON db2dataprocessor_out.v_risikofaktor_fe TO db2dataprocessor_user;
+        GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
+
+
+------------------------------------------------------------------------------------------------------------------
+-- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_out' AND table_name = 'v_trigger_fe'
+        ) THEN
+            DROP VIEW db2dataprocessor_out.v_trigger_fe; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2dataprocessor_out.v_trigger_fe AS (SELECT * from db_log.trigger_fe);
+
+        GRANT SELECT ON db2dataprocessor_out.v_trigger_fe TO db2dataprocessor_user;
+        GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
 
 --------------------------------------------------------------------

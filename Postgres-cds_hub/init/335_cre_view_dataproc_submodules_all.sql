@@ -7,7 +7,7 @@
 -- Rights definition file size        : 16391 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2025-11-11 12:32:55
+-- Create time: 2025-11-13 09:12:52
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  335_cre_view_dataproc_submodules_all.sql
 -- TEMPLATE:  template_cre_view_all.sql
@@ -35,13 +35,30 @@ BEGIN
     ) THEN
 --------------------------------------------------------------------
 --Create View for typed tables for schema db2dataprocessor_out
+
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
-DROP VIEW db2dataprocessor_out.v_dp_mrp_calculations; -- first drop the view
-CREATE OR REPLACE VIEW db2dataprocessor_out.v_dp_mrp_calculations AS (SELECT * from db_log.dp_mrp_calculations);
+DO
+$innerview$
+BEGIN
+    IF EXISTS ( -- do migration
+        SELECT 1 s FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
+    ) THEN
+        IF EXISTS ( -- VIEW exists
+            SELECT 1 s FROM information_schema.columns 
+            WHERE table_schema = 'db2dataprocessor_out' AND table_name = 'v_dp_mrp_calculations'
+        ) THEN
+            DROP VIEW db2dataprocessor_out.v_dp_mrp_calculations; -- first drop the view
+        END IF; -- DROP VIEW
+----------------------------
+        CREATE OR REPLACE VIEW db2dataprocessor_out.v_dp_mrp_calculations AS (SELECT * from db_log.dp_mrp_calculations);
 
-GRANT SELECT ON db2dataprocessor_out.v_dp_mrp_calculations TO db2dataprocessor_user;
-GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+        GRANT SELECT ON db2dataprocessor_out.v_dp_mrp_calculations TO db2dataprocessor_user;
+        GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
+----------------------------
+    END IF; -- do migration
+END
+$innerview$;
 
 
 --------------------------------------------------------------------
