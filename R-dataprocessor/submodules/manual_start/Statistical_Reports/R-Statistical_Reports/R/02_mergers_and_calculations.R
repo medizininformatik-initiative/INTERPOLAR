@@ -182,8 +182,9 @@ addMainEncId <- function(encounter_table) {
       dplyr::distinct(enc_id, enc_identifier_value)),
     c("enc_identifier_value")
   )) {
-    stop("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value.
-         Main_enc_id not defined. Please check the data.")
+    warning("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value.
+            Main_enc_id not defined. Please check the data.
+            (CAUTION!: processing_exclusion_reason not yet implemented in this case. Further processing is tried.)")
   }
 
   if (checkMultipleRows(
@@ -192,9 +193,10 @@ addMainEncId <- function(encounter_table) {
       dplyr::distinct(enc_id, enc_identifier_value)),
     c("enc_id")
   )) {
-    stop("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id.
-         Main_enc_id not defined. Please check the data and eventually define
-         COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
+    warning("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id.
+            Main_enc_id not defined. Please check the data and eventually define
+            COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.
+            (CAUTION!: processing_exclusion_reason not yet implemented in this case. Further processing is tried.)")
   }
 
   encounter_table_with_main_enc <- encounter_table |>
