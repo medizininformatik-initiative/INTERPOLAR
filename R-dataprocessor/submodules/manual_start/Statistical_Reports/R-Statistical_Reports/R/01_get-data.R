@@ -220,7 +220,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
 
   if (any(is.na(encounter_table$enc_period_start))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = ifelse(is.na(enc_period_start) &
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(enc_period_start) &
         is.na(processing_exclusion_reason), "missing_start_date", processing_exclusion_reason))
     print(encounter_table |>
       dplyr::filter(is.na(enc_period_start)), width = Inf)
@@ -263,7 +263,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
       "finished", "in-progress", "onleave"
     )))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = ifelse(enc_class_code == "IMP" &
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_class_code == "IMP" &
         (is.na(encounter_table$enc_status) | !enc_status %in% c("finished", "in-progress", "onleave")) &
         is.na(processing_exclusion_reason),
       "unexpected_imp_status", processing_exclusion_reason
@@ -284,7 +284,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     (!is.na(encounter_table$enc_status) &
       encounter_table$enc_status == "finished") & is.na(encounter_table$enc_period_end))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = ifelse(enc_class_code == "IMP" &
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_class_code == "IMP" &
         enc_status == "finished" & is.na(enc_period_end) &
         is.na(processing_exclusion_reason),
       "imp_finished_without_end_date", processing_exclusion_reason
@@ -302,7 +302,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   if (any((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
     !is.na(encounter_table$enc_class_code))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = ifelse((!enc_class_code %in%
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else((!enc_class_code %in%
         c("AMB", "SS", "IMP")) &
         !is.na(enc_class_code) &
         is.na(processing_exclusion_reason),
@@ -324,7 +324,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   )) &
     !is.na(encounter_table$enc_type_code_Kontaktart))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = ifelse((!enc_type_code_Kontaktart %in% c(
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else((!enc_type_code_Kontaktart %in% c(
         "vorstationaer", "nachstationaer",
         "teilstationaer", "tagesklinik",
         "nachtklinik", "normalstationaer",

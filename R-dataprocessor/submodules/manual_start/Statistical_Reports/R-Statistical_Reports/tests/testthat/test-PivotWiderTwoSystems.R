@@ -1,7 +1,3 @@
-# Load required package (within your package namespace or Suggests)
-library(testthat)
-library(dplyr)
-
 test_that("PivotWiderTwoSystems correctly maps system1 and system2", {
   df <- data.frame(
     id = c(1, 2),
