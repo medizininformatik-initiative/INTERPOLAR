@@ -220,6 +220,9 @@ getMedicationRequestsFromDB <- function(patient_references) {
 
   # for all medication analyses with a valid start_datetime calculate end_datetime
   medication_requests <- medication_requests[!is.na(start_datetime)]
+  # because of the function getStartOfNextDay we need to create end_datetime column before, otherwise
+  # in case of 0 rows the column end_datetime will not created
+  medication_requests[, end_datetime := NA]
   if (nrow(medication_requests)) { # we must check nrow here, otherwise data.table::fifelse fails with 0 rows -> Error
     medication_requests[, end_datetime := data.table::fifelse(
       !is.na(medreq_doseinstruc_timing_repeat_boundsperiod_end),
