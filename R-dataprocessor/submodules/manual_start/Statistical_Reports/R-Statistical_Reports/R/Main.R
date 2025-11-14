@@ -118,7 +118,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     report_period_start = REPORT_PERIOD_START
   )
   # this table can have multiple rows per encounter
-  # e.g. if there are entries for enc_location_physicaltype_code wa, ro & bd
 
   pids_per_ward_table <- getPidsPerWardData(
     lock_id = "statistical reports[3]",
@@ -185,6 +184,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   # if needed: Print datasets for verification to outputLocal
   if (WRITE_TABLE_LOCAL) {
+    writeTableLocal(patient_table)
+    writeTableLocal(encounter_table)
     writeTableLocal(FHIR_table)
     writeTableLocal(full_analysis_set_1)
     writeTableLocal(statistical_report_data)
