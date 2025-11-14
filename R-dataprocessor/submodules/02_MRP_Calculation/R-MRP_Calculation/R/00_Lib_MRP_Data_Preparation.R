@@ -204,7 +204,7 @@ getMedicationRequestsFromDB <- function(patient_references) {
                                                              "medreq_doseinstruc_timing_repeat_boundsperiod_start",
                                                              "medreq_doseinstruc_timing_repeat_boundsperiod_end"),
                                             patient_references = patient_references,
-                                            status_exclusion = c("cancelled", "entered-in-error", "stopped") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
+                                            status_exclusion = c("on-hold", "cancelled", "entered-in-error", "stopped") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
   )
   medication_requests <- addMedicationIdColumn(medication_requests)
 
