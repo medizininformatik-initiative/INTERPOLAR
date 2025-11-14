@@ -196,7 +196,7 @@ addMedicationIdColumn <- function(medication_resources) {
 getMedicationRequestsFromDB <- function(patient_references) {
   medication_requests <- getResourcesFromDB(resource_name = "MedicationRequest",
                                             column_names = c("medreq_id",
-                                                             "medreq_encounter_ref",
+                                                             "medreq_encounter_calculated_ref",
                                                              "medreq_patient_ref",
                                                              "medreq_medicationreference_ref",
                                                              "medreq_authoredon",
@@ -256,7 +256,7 @@ getMedicationRequestsFromDB <- function(patient_references) {
 getMedicationAdministrationsFromDB <- function(patient_references) {
   medication_administrations <- getResourcesFromDB(resource_name = "MedicationAdministration",
                                                    column_names = c("medadm_id",
-                                                                    "medadm_encounter_ref",
+                                                                    "medadm_encounter_calculated_ref",
                                                                     "medadm_patient_ref",
                                                                     "medadm_medicationreference_ref",
                                                                     "medadm_effectivedatetime",
@@ -282,7 +282,7 @@ getMedicationAdministrationsFromDB <- function(patient_references) {
 getMedicationStatementsFromDB <- function(patient_references) {
   medication_statements <- getResourcesFromDB(resource_name = "MedicationStatement",
                                               column_names = c("medstat_id",
-                                                               "medstat_encounter_ref",
+                                                               "medstat_encounter_calculated_ref",
                                                                "medstat_patient_ref",
                                                                "medstat_medicationreference_ref",
                                                                "medstat_effectivedatetime",
@@ -328,7 +328,7 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 getObservationsFromDB <- function(patient_references) {
   observations <- getResourcesFromDB(resource_name = "Observation",
                                      column_names = c("obs_id",
-                                                      "obs_encounter_ref",
+                                                      "obs_encounter_calculated_ref",
                                                       "obs_patient_ref",
                                                       "obs_code_system",
                                                       "obs_code_code",
@@ -358,7 +358,7 @@ getObservationsFromDB <- function(patient_references) {
 getProceduresFromDB <- function(patient_references) {
   procedures <- getResourcesFromDB(resource_name = "Procedure",
                                    column_names = c("proc_id",
-                                                    "proc_encounter_ref",
+                                                    "proc_encounter_calculated_ref",
                                                     "proc_patient_ref",
                                                     "proc_code_code",
                                                     "proc_code_display",
@@ -386,7 +386,7 @@ getProceduresFromDB <- function(patient_references) {
 getConditionsFromDB <- function(patient_references) {
   conditions <- getResourcesFromDB(resource_name = "Condition",
                                    column_names = c("con_id",
-                                                    "con_encounter_ref",
+                                                    "con_encounter_calculated_ref",
                                                     "con_patient_ref",
                                                     "con_code_code",
                                                     "con_code_system",
