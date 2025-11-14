@@ -71,34 +71,34 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
 
   # fill the enc_partof_calculated_ref column level by level
   # from common_encounter_fhir_identifier_system
-  if (!etlutils::isSimpleNAorNULL(common_encounter_fhir_identifier_system)) {
-    for (i in 2:3) { # for each level except the first (einrichtungskontakt)
-      encounters_of_lvl <- encounters_by_type[[i]]
+  if (etlutils::isSimpleNotEmptyString(common_encounter_fhir_identifier_system)) {
+    for (enc_lvl in 2:3) { # for each level except the first (einrichtungskontakt)
+      encounters_of_lvl <- encounters_by_type[[enc_lvl]]
       data.table::setorder(encounters_of_lvl, enc_id)
-      parent_encounters_of_lvl <- encounters_by_type[[i - 1]]
+      parent_encounters_of_lvl <- encounters_by_type[[enc_lvl - 1]]
       if (nrow(parent_encounters_of_lvl)) {
         for (enc_index in seq_len(nrow(encounters_of_lvl))) {
           if (is.na(encounters_of_lvl$enc_partof_calculated_ref[enc_index])) {
             identifier_system <- encounters_of_lvl$enc_identifier_system[enc_index]
             if (identifier_system %in% common_encounter_fhir_identifier_system) {
-              main_encounters <- encounters_by_type[[1]]
               patient_ref <- encounters_of_lvl$enc_patient_ref[enc_index]
-              identifier_code <- encounters_of_lvl$enc_identifier_code[enc_index]
-              parent_candidate <- main_encounters[enc_patient_ref %in% patient_ref & enc_identifier_code %in% identifier_code]
-              if (nrow(parent_candidate) == 1) {
-                main_encounter_ref <- etlutils::fhirdataGetEncounterReference(parent_candidate$enc_id)
-                encounters_of_lvl[enc_index, enc_partof_calculated_ref := main_encounter_ref]
+              identifier_value <- encounters_of_lvl$enc_identifier_value[enc_index]
+              parent_candidate_ids <- parent_encounters_of_lvl[enc_patient_ref %in% patient_ref & enc_identifier_value %in% identifier_value, enc_id]
+              parent_candidate_id <- unique(parent_candidate_ids)
+              if (length(parent_candidate_id) == 1) {
+                parent_encounter_ref <- etlutils::fhirdataGetEncounterReference(parent_candidate_id)
+                encounters_of_lvl[enc_index, enc_partof_calculated_ref := parent_encounter_ref]
                 if (enc_index > 1) {
                   for (pre_enc_index in (enc_index - 1):1) {
                     if (encounters_of_lvl[pre_enc_index, enc_id] == encounters_of_lvl[enc_index, enc_id]) {
-                      encounters_of_lvl[pre_enc_index, enc_partof_calculated_ref := main_encounter_ref]
+                      encounters_of_lvl[pre_enc_index, enc_partof_calculated_ref := parent_encounter_ref]
                     }
                   }
                 }
                 if (enc_index < nrow(encounters_of_lvl)) {
                   for (post_enc_index in (enc_index + 1):nrow(encounters_of_lvl)) {
                     if (encounters_of_lvl[post_enc_index, enc_id] == encounters_of_lvl[enc_index, enc_id]) {
-                      encounters_of_lvl[post_enc_index, enc_partof_calculated_ref := main_encounter_ref]
+                      encounters_of_lvl[post_enc_index, enc_partof_calculated_ref := parent_encounter_ref]
                     }
                   }
                 }
@@ -107,7 +107,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
           }
         }
       }
-      encounters_by_type[[i]] <- encounters_of_lvl
+      encounters_by_type[[enc_lvl]] <- encounters_of_lvl
     }
   }
 
