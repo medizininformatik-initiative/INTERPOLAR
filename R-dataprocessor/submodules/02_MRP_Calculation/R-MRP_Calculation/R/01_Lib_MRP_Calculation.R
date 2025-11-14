@@ -285,7 +285,6 @@ calculateMRPs <- function() {
     mrp_pair_lists <- getMRPPairLists()
 
     all_encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = unique(main_encounters$enc_id),
-                                                         common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
                                                          lock_id_extension = "CalculateMRPs()_")
 
     for (mrp_type in names(mrp_pair_lists)) {
@@ -301,14 +300,12 @@ calculateMRPs <- function() {
         dp_mrp_calculations_rows <- list()
 
         for (encounter_id in resources$main_encounters$enc_id) {
-          # Get all other sub encounters for a main encounter
-          encounters_with_subencounters <- etlutils::fhirdataFilterMainAndSubEncounters(encounter_id, all_encounters,
-                                                                                        common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
           # Get encounter data and patient ID
           encounter <- resources$main_encounters[enc_id == encounter_id]
           patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
-          encounter_refs <- unique(etlutils::fhirdataGetEncounterReference(encounters_with_subencounters$enc_id))
-          medication_requests <- resources$medication_requests[medreq_encounter_ref %in% encounter_refs]
+          encounter_ref <- unique(etlutils::fhirdataGetEncounterReference(encounter$enc_id))
+          # The calculated_ref column always reference to the main encounter
+          medication_requests <- resources$medication_requests[medreq_encounter_calculated_ref %in% encounter_ref]
 
           meda <- resources$encounters_first_medication_analysis[[encounter_id]]
           meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_

@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 13:49:10
--- Rights definition file size        : 16391 Byte
+-- Rights definition file last update : 2025-11-13 15:50:53
+-- Rights definition file size        : 14124 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-11-10 23:01:47
+-- Create time: 2025-11-13 15:51:53
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  100_cre_table_raw_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -193,6 +193,12 @@ BEGIN
         ) THEN
             ALTER TABLE cds2db_in.encounter_raw ADD enc_partof_calculated_ref VARCHAR;   -- partOf/calculated_ref (VARCHAR)
         END IF; -- column (enc_partof_calculated_ref)
+
+        IF NOT EXISTS ( -- column not exists (enc_main_encounter_calculated_ref)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter_raw' AND column_name = 'enc_main_encounter_calculated_ref'
+        ) THEN
+            ALTER TABLE cds2db_in.encounter_raw ADD enc_main_encounter_calculated_ref VARCHAR;   -- main/encounter/calculated/ref (VARCHAR)
+        END IF; -- column (enc_main_encounter_calculated_ref)
 
         IF NOT EXISTS ( -- column not exists (enc_status)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'encounter_raw' AND column_name = 'enc_status'
@@ -596,6 +602,7 @@ BEGIN
           COALESCE(db.to_char_immutable(enc_patient_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(enc_partof_ref), ''#NULL#'') || ''|||'' ||
           -- no hash - COALESCE(db.to_char_immutable(enc_partof_calculated_ref), ''#NULL#'') || ''|||'' ||
+          -- no hash - COALESCE(db.to_char_immutable(enc_main_encounter_calculated_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(enc_status), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(enc_class_system), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(enc_class_version), ''#NULL#'') || ''|||'' ||
@@ -682,6 +689,7 @@ BEGIN
           COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
           COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
           -- no hash - COALESCE(db.to_char_immutable(enc_partof_calculated_ref), '#NULL#') || '|||' || -- hash from: partOf/calculated_ref (enc_partof_calculated_ref)
+          -- no hash - COALESCE(db.to_char_immutable(enc_main_encounter_calculated_ref), '#NULL#') || '|||' || -- hash from: main/encounter/calculated/ref (enc_main_encounter_calculated_ref)
           COALESCE(db.to_char_immutable(enc_status), '#NULL#') || '|||' || -- hash from: status (enc_status)
           COALESCE(db.to_char_immutable(enc_class_system), '#NULL#') || '|||' || -- hash from: class/system (enc_class_system)
           COALESCE(db.to_char_immutable(enc_class_version), '#NULL#') || '|||' || -- hash from: class/version (enc_class_version)
@@ -774,6 +782,7 @@ BEGIN
           COALESCE(db.to_char_immutable(enc_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (enc_patient_ref)
           COALESCE(db.to_char_immutable(enc_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (enc_partof_ref)
           -- no hash - COALESCE(db.to_char_immutable(enc_partof_calculated_ref), '#NULL#') || '|||' || -- hash from: partOf/calculated_ref (enc_partof_calculated_ref)
+          -- no hash - COALESCE(db.to_char_immutable(enc_main_encounter_calculated_ref), '#NULL#') || '|||' || -- hash from: main/encounter/calculated/ref (enc_main_encounter_calculated_ref)
           COALESCE(db.to_char_immutable(enc_status), '#NULL#') || '|||' || -- hash from: status (enc_status)
           COALESCE(db.to_char_immutable(enc_class_system), '#NULL#') || '|||' || -- hash from: class/system (enc_class_system)
           COALESCE(db.to_char_immutable(enc_class_version), '#NULL#') || '|||' || -- hash from: class/version (enc_class_version)
@@ -5403,11 +5412,11 @@ BEGIN
             ALTER TABLE cds2db_in.medicationadministration_raw ADD medadm_encounter_ref VARCHAR;   -- context/reference (VARCHAR)
         END IF; -- column (medadm_encounter_ref)
 
-        IF NOT EXISTS ( -- column not exists (medadm_context_calculated_ref)
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration_raw' AND column_name = 'medadm_context_calculated_ref'
+        IF NOT EXISTS ( -- column not exists (medadm_encounter_calculated_ref)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration_raw' AND column_name = 'medadm_encounter_calculated_ref'
         ) THEN
-            ALTER TABLE cds2db_in.medicationadministration_raw ADD medadm_context_calculated_ref VARCHAR;   -- context/calculated_ref (VARCHAR)
-        END IF; -- column (medadm_context_calculated_ref)
+            ALTER TABLE cds2db_in.medicationadministration_raw ADD medadm_encounter_calculated_ref VARCHAR;   -- context/calculated_ref (VARCHAR)
+        END IF; -- column (medadm_encounter_calculated_ref)
 
         IF NOT EXISTS ( -- column not exists (medadm_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationadministration_raw' AND column_name = 'medadm_patient_ref'
@@ -6049,7 +6058,7 @@ BEGIN
           COALESCE(db.to_char_immutable(medadm_identifier_start), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medadm_identifier_end), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medadm_encounter_ref), ''#NULL#'') || ''|||'' ||
-          -- no hash - COALESCE(db.to_char_immutable(medadm_context_calculated_ref), ''#NULL#'') || ''|||'' ||
+          -- no hash - COALESCE(db.to_char_immutable(medadm_encounter_calculated_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medadm_patient_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medadm_partof_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medadm_status), ''#NULL#'') || ''|||'' ||
@@ -6174,7 +6183,7 @@ BEGIN
           COALESCE(db.to_char_immutable(medadm_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medadm_identifier_start)
           COALESCE(db.to_char_immutable(medadm_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medadm_identifier_end)
           COALESCE(db.to_char_immutable(medadm_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medadm_encounter_ref)
-          -- no hash - COALESCE(db.to_char_immutable(medadm_context_calculated_ref), '#NULL#') || '|||' || -- hash from: context/calculated_ref (medadm_context_calculated_ref)
+          -- no hash - COALESCE(db.to_char_immutable(medadm_encounter_calculated_ref), '#NULL#') || '|||' || -- hash from: context/calculated_ref (medadm_encounter_calculated_ref)
           COALESCE(db.to_char_immutable(medadm_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medadm_patient_ref)
           COALESCE(db.to_char_immutable(medadm_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medadm_partof_ref)
           COALESCE(db.to_char_immutable(medadm_status), '#NULL#') || '|||' || -- hash from: status (medadm_status)
@@ -6305,7 +6314,7 @@ BEGIN
           COALESCE(db.to_char_immutable(medadm_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medadm_identifier_start)
           COALESCE(db.to_char_immutable(medadm_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medadm_identifier_end)
           COALESCE(db.to_char_immutable(medadm_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medadm_encounter_ref)
-          -- no hash - COALESCE(db.to_char_immutable(medadm_context_calculated_ref), '#NULL#') || '|||' || -- hash from: context/calculated_ref (medadm_context_calculated_ref)
+          -- no hash - COALESCE(db.to_char_immutable(medadm_encounter_calculated_ref), '#NULL#') || '|||' || -- hash from: context/calculated_ref (medadm_encounter_calculated_ref)
           COALESCE(db.to_char_immutable(medadm_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medadm_patient_ref)
           COALESCE(db.to_char_immutable(medadm_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medadm_partof_ref)
           COALESCE(db.to_char_immutable(medadm_status), '#NULL#') || '|||' || -- hash from: status (medadm_status)
@@ -6566,11 +6575,11 @@ BEGIN
             ALTER TABLE cds2db_in.medicationstatement_raw ADD medstat_encounter_ref VARCHAR;   -- context/reference (VARCHAR)
         END IF; -- column (medstat_encounter_ref)
 
-        IF NOT EXISTS ( -- column not exists (medstat_context_calculated_ref)
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement_raw' AND column_name = 'medstat_context_calculated_ref'
+        IF NOT EXISTS ( -- column not exists (medstat_encounter_calculated_ref)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement_raw' AND column_name = 'medstat_encounter_calculated_ref'
         ) THEN
-            ALTER TABLE cds2db_in.medicationstatement_raw ADD medstat_context_calculated_ref VARCHAR;   -- context/calculated_ref (VARCHAR)
-        END IF; -- column (medstat_context_calculated_ref)
+            ALTER TABLE cds2db_in.medicationstatement_raw ADD medstat_encounter_calculated_ref VARCHAR;   -- context/calculated_ref (VARCHAR)
+        END IF; -- column (medstat_encounter_calculated_ref)
 
         IF NOT EXISTS ( -- column not exists (medstat_patient_ref)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'medicationstatement_raw' AND column_name = 'medstat_patient_ref'
@@ -7842,7 +7851,7 @@ BEGIN
           COALESCE(db.to_char_immutable(medstat_identifier_start), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medstat_identifier_end), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medstat_encounter_ref), ''#NULL#'') || ''|||'' ||
-          -- no hash - COALESCE(db.to_char_immutable(medstat_context_calculated_ref), ''#NULL#'') || ''|||'' ||
+          -- no hash - COALESCE(db.to_char_immutable(medstat_encounter_calculated_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medstat_patient_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medstat_partof_ref), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(medstat_basedon_ref), ''#NULL#'') || ''|||'' ||
@@ -8072,7 +8081,7 @@ BEGIN
           COALESCE(db.to_char_immutable(medstat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medstat_identifier_start)
           COALESCE(db.to_char_immutable(medstat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medstat_identifier_end)
           COALESCE(db.to_char_immutable(medstat_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medstat_encounter_ref)
-          -- no hash - COALESCE(db.to_char_immutable(medstat_context_calculated_ref), '#NULL#') || '|||' || -- hash from: context/calculated_ref (medstat_context_calculated_ref)
+          -- no hash - COALESCE(db.to_char_immutable(medstat_encounter_calculated_ref), '#NULL#') || '|||' || -- hash from: context/calculated_ref (medstat_encounter_calculated_ref)
           COALESCE(db.to_char_immutable(medstat_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medstat_patient_ref)
           COALESCE(db.to_char_immutable(medstat_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medstat_partof_ref)
           COALESCE(db.to_char_immutable(medstat_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (medstat_basedon_ref)
@@ -8308,7 +8317,7 @@ BEGIN
           COALESCE(db.to_char_immutable(medstat_identifier_start), '#NULL#') || '|||' || -- hash from: identifier/start (medstat_identifier_start)
           COALESCE(db.to_char_immutable(medstat_identifier_end), '#NULL#') || '|||' || -- hash from: identifier/end (medstat_identifier_end)
           COALESCE(db.to_char_immutable(medstat_encounter_ref), '#NULL#') || '|||' || -- hash from: context/reference (medstat_encounter_ref)
-          -- no hash - COALESCE(db.to_char_immutable(medstat_context_calculated_ref), '#NULL#') || '|||' || -- hash from: context/calculated_ref (medstat_context_calculated_ref)
+          -- no hash - COALESCE(db.to_char_immutable(medstat_encounter_calculated_ref), '#NULL#') || '|||' || -- hash from: context/calculated_ref (medstat_encounter_calculated_ref)
           COALESCE(db.to_char_immutable(medstat_patient_ref), '#NULL#') || '|||' || -- hash from: subject/reference (medstat_patient_ref)
           COALESCE(db.to_char_immutable(medstat_partof_ref), '#NULL#') || '|||' || -- hash from: partOf/reference (medstat_partof_ref)
           COALESCE(db.to_char_immutable(medstat_basedon_ref), '#NULL#') || '|||' || -- hash from: basedOn/reference (medstat_basedon_ref)
@@ -13294,6 +13303,7 @@ COMMENT ON COLUMN cds2db_in.encounter_raw.enc_identifier_end IS 'identifier/end 
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_partof_calculated_ref IS 'partOf/calculated_ref (varchar)';
+COMMENT ON COLUMN cds2db_in.encounter_raw.enc_main_encounter_calculated_ref IS 'main/encounter/calculated/ref (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_status IS 'status (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_class_system IS 'class/system (varchar)';
 COMMENT ON COLUMN cds2db_in.encounter_raw.enc_class_version IS 'class/version (varchar)';
@@ -13916,7 +13926,7 @@ COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_value
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_identifier_end IS 'identifier/end (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_encounter_ref IS 'context/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_context_calculated_ref IS 'context/calculated_ref (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_encounter_calculated_ref IS 'context/calculated_ref (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationadministration_raw.medadm_status IS 'status (varchar)';
@@ -14054,7 +14064,7 @@ COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_identifier_value IS 
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_identifier_start IS 'identifier/start (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_identifier_end IS 'identifier/end (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_encounter_ref IS 'context/reference (varchar)';
-COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_context_calculated_ref IS 'context/calculated_ref (varchar)';
+COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_encounter_calculated_ref IS 'context/calculated_ref (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_patient_ref IS 'subject/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_partof_ref IS 'partOf/reference (varchar)';
 COMMENT ON COLUMN cds2db_in.medicationstatement_raw.medstat_basedon_ref IS 'basedOn/reference (varchar)';

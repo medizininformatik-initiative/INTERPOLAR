@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 13:49:10
--- Rights definition file size        : 16391 Byte
+-- Rights definition file last update : 2025-11-13 15:50:53
+-- Rights definition file size        : 14124 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-11-10 20:36:45
+-- Create time: 2025-11-13 15:57:24
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  120_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -185,6 +185,7 @@ BEGIN
                                 enc_patient_ref,
                                 enc_partof_ref,
                                 enc_partof_calculated_ref,
+                                enc_main_encounter_calculated_ref,
                                 enc_status,
                                 enc_class_system,
                                 enc_class_version,
@@ -272,6 +273,7 @@ BEGIN
                                 current_record.enc_patient_ref,
                                 current_record.enc_partof_ref,
                                 current_record.enc_partof_calculated_ref,
+                                current_record.enc_main_encounter_calculated_ref,
                                 current_record.enc_status,
                                 current_record.enc_class_system,
                                 current_record.enc_class_version,
@@ -1946,7 +1948,7 @@ BEGIN
                                 medadm_identifier_start,
                                 medadm_identifier_end,
                                 medadm_encounter_ref,
-                                medadm_context_calculated_ref,
+                                medadm_encounter_calculated_ref,
                                 medadm_patient_ref,
                                 medadm_partof_ref,
                                 medadm_status,
@@ -2072,7 +2074,7 @@ BEGIN
                                 current_record.medadm_identifier_start,
                                 current_record.medadm_identifier_end,
                                 current_record.medadm_encounter_ref,
-                                current_record.medadm_context_calculated_ref,
+                                current_record.medadm_encounter_calculated_ref,
                                 current_record.medadm_patient_ref,
                                 current_record.medadm_partof_ref,
                                 current_record.medadm_status,
@@ -2325,7 +2327,7 @@ BEGIN
                                 medstat_identifier_start,
                                 medstat_identifier_end,
                                 medstat_encounter_ref,
-                                medstat_context_calculated_ref,
+                                medstat_encounter_calculated_ref,
                                 medstat_patient_ref,
                                 medstat_partof_ref,
                                 medstat_basedon_ref,
@@ -2556,7 +2558,7 @@ BEGIN
                                 current_record.medstat_identifier_start,
                                 current_record.medstat_identifier_end,
                                 current_record.medstat_encounter_ref,
-                                current_record.medstat_context_calculated_ref,
+                                current_record.medstat_encounter_calculated_ref,
                                 current_record.medstat_patient_ref,
                                 current_record.medstat_partof_ref,
                                 current_record.medstat_basedon_ref,

@@ -107,6 +107,10 @@ retrieve <- function(reset_lock_only = FALSE) {
           resource_tables <- convertTypes(resource_tables_raw_diff, fhir_table_descriptions)
         })
 
+        etlutils::runLevel2("Create references (partOf, encounter, context)", {
+          resource_tables <- createReferences(resource_tables, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+        })
+
         etlutils::runLevel2("Write typed tables to database", {
           etlutils::dbWriteTables(
             tables = resource_tables,
