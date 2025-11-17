@@ -28,6 +28,13 @@ retrieve <- function(reset_lock_only = FALSE) {
       etlutils::dbResetLock()
     })
 
+    # Check if we must create references for old data (should be executed exactly once and then never again)
+    etlutils::runLevel2("Create references for old data", {
+      if (mustCreateReferencesForOldData()) {
+        createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+      }
+    })
+
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
       pids_splitted_by_ward <- getPIDsSplittedByWard()
