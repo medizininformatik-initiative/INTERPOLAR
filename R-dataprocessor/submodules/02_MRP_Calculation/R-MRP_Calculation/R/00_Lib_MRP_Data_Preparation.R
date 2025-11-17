@@ -139,7 +139,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
 getMedicationAnalysesFromDB <- function(record_ids) {
   query_ids <- etlutils::fhirdbGetQueryList(record_ids$record_id)
   query <- paste0("SELECT * FROM v_medikationsanalyse_fe WHERE record_id in ", query_ids, "\n")
-  medication_analyses <- etlutils::dbGetReadOnlyQuery(query)
+  medication_analyses <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getMedicationAnalysesFromDB()")
   data.table::setorder(medication_analyses, meda_dat)
   return(medication_analyses)
 }
@@ -170,7 +170,7 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
   }
 
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, column_names, where_clause)
-  etlutils::dbGetReadOnlyQuery(query)
+  return(etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getResourcesFromDB(", resource_name, ")"))
 }
 
 #
@@ -504,7 +504,7 @@ getResourcesForMRPCalculation <- function(main_encounters) {
       "SELECT meda_id, ret_id, ret_redcap_repeat_instance\n",
       "FROM v_dp_mrp_calculations\n",
       "WHERE meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids))
-    return(etlutils::dbGetReadOnlyQuery(query))
+    return(etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingRetrolectiveMRPEvaluationIDs()"))
   }
   medication_analyses_ids <- unlist(lapply(encounters_first_medication_analysis, function(dt) if (!is.null(dt)) dt$meda_id else NULL), use.names = FALSE)
   existing_retrolective_mrp_evaluation_ids <- getExistingRetrolectiveMRPEvaluationIDs(medication_analyses_ids)
@@ -550,7 +550,6 @@ getResourcesForMRPCalculation <- function(main_encounters) {
 #'
 #' @export
 getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
-
   active_requests <- medication_requests[
     !is.na(start_datetime) &
       start_datetime >= enc_period_start &
