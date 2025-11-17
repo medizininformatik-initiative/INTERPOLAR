@@ -44,7 +44,7 @@
 \i ./600_dp_in_to_db_log.sql
 \i ./620_fe_in_to_db_log.sql
 \i ./950_cro_job.sql
-\i ./recalculations/700_calculated_ref_create.sql -- in these release funtion for old date calculated_items 
+\i ./recalculations/700_calculated_ref_create.sql
 ------------------------------------------------------
 \i migration/999_start_semapore_after_migration.sql
 ----------------------------------------------------------------------------
