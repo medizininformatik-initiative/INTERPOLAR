@@ -1,21 +1,21 @@
 # Patient UKB-0001
-# Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
+# Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
 # Tag 2: Versorgungsstellenkontakt auf Nicht IP-Station Zimmer Nicht-IP-Raum 1-1, Bett Nicht-IP-Bett 1-1
-# Tag 3: Versorgungsstellenkontakt auf Station 1-2 Zimmer 1-2, Bett 1-2
+# Tag 3: Versorgungsstellenkontakt auf Station 2 Zimmer 1-2, Bett 1-2
 # Tag 4: Encounter wird entlassen
-# Tag 5: Neuer Encounter und neuer Versorgungsstellenkontakt auf gleicher IP-Station 1-1 Zimmer 1-3, Bett 1-3
+# Tag 5: Neuer Encounter und neuer Versorgungsstellenkontakt auf gleicher IP-Station 1 Zimmer 1-3, Bett 1-3
 # Tag 6: keine Verlegung
 # Tag 7: Versorgungsstellenkontakt auf Nicht IP-Station Zimmer Nicht-IP-Raum 1-2, Bett Nicht-IP-Bett 1-2
 # Tag 8: Entlassung von Nicht IP-Station
 
 # Patient UKB-0002
 # Tag 1: Versorgungsstellenkontakt auf nicht-IP-Station
-# Tag 2: Versorgungsstellenkontakt auf Station 2-1 Zimmer 2-1, Bett 2-1
-# Tag 3: Abteilungswechsel auf Station 2-3 Zimmer 2-3, Bett 2-3
+# Tag 2: Versorgungsstellenkontakt auf Station 2 Zimmer 2-1, Bett 2-1
+# Tag 3: Abteilungswechsel auf Station 3 Zimmer 2-3, Bett 2-3
 # Tag 4: Versorgungsstellenkontakt auf nicht-IP-Station
 # Tag 5: Encounter wird entlassen
 # Tag 6: Neuer Encounter und neuer Versorgungsstellenkontakt auf nicht-IP-Station
-# Tag 7: Versorgungsstellenkontakt auf Station 2-2 Zimmer 2-3, Bett 2-3
+# Tag 7: Versorgungsstellenkontakt auf Station 3 Zimmer 2-3, Bett 2-3
 # Tag 8: Entlassung von IP-Station
 
 #################################
@@ -41,8 +41,6 @@ DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
 # all data is loaded from this folder from RData files
 ###
 DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
-
-WARDS_PHASE_B_TEST <- c("Station 1-1", "Station 1-2", "Station 2-1", "Station 2-2", "Station 2-3")
 
 ###############################
 # End Define global variables #
@@ -95,22 +93,22 @@ if (exists("DEBUG_DAY")) {
   ##########
 
   runCodeForDebugDay(1, {
-    # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
-    testAdmission(pid1, "Raum 1-1", "Bett 1-1", "Station 1-1")
+    # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
+    testAdmission(pid1, "Raum 1-1", "Bett 1-1", "Station 1")
     # Patient 2 Tag 1: Versorgungsstellenkontakt auf nicht-IP-Station
     testAdmission(pid2, "Nicht-IP-Raum 2-1", "Nicht-IP-Bett 2-1")
   })
   runCodeForDebugDay(2, {
     # Patient 1 Tag 2: Versorgungsstellenkontakt auf nicht-IP-Station Zimmer Nicht-IP-Raum 1-1, Bett Nicht-IP-Bett 1-1
     testTransferWardInternal(pid1, "Nicht-IP-Raum 1-1", "Nicht-IP-Bett 1-1")
-    # Patient 2 Tag 2: Versorgungsstellenkontakt auf Station 2-1 Zimmer 2-1, Bett 2-1
-    testTransferWardInternal(pid2, "Raum 2-1", "Bett 2-1", "Station 2-1")
+    # Patient 2 Tag 2: Versorgungsstellenkontakt auf Station 2 Zimmer 2-1, Bett 2-1
+    testTransferWardInternal(pid2, "Raum 2-1", "Bett 2-1", "Station 2")
   })
   runCodeForDebugDay(3, {
-    # Patient 1 Tag 3: Versorgungsstellenkontakt auf Station 1-2 Zimmer 1-2, Bett 1-2
-    testTransferWardInternal(pid1, "Raum 1-2", "Bett 1-2", "Station 1-2")
-    # Patient 2 Tag 3: Abteilungswechsel auf Station 2-3 Zimmer 2-3, Bett 2-3
-    testTransferWardDepartment(pid2, "Raum 2-3", "Bett 2-3", "Station 2-3")
+    # Patient 1 Tag 3: Versorgungsstellenkontakt auf Station 2 Zimmer 1-2, Bett 1-2
+    testTransferWardInternal(pid1, "Raum 1-2", "Bett 1-2", "Station 2")
+    # Patient 2 Tag 3: Abteilungswechsel auf Station 3 Zimmer 2-3, Bett 2-3
+    testTransferWardDepartment(pid2, "Raum 2-3", "Bett 2-3", "Station 3")
   })
   runCodeForDebugDay(4, {
     # Patient 1 Tag 4: Encounter wird entlassen
@@ -119,8 +117,8 @@ if (exists("DEBUG_DAY")) {
     testTransferWardInternal(pid2, "Nicht-IP-Raum 2-2", "Nicht-IP-Bett 2-2")
   })
   runCodeForDebugDay(5, {
-    # Patient 1 Tag 5: Neuer Encounter und neuer Versorgungsstellenkontakt auf gleicher IP-Station 1-1 Zimmer 1-3, Bett 1-3
-    testAdmission(pid1, "Raum 1-3", "Bett 1-3", "Station 1-1")
+    # Patient 1 Tag 5: Neuer Encounter und neuer Versorgungsstellenkontakt auf gleicher IP-Station 1 Zimmer 1-3, Bett 1-3
+    testAdmission(pid1, "Raum 1-3", "Bett 1-3", "Station 1")
     # Patient 2 Tag 5: Encounter wird entlassen
     testDischarge(pid2)
   })
@@ -133,8 +131,8 @@ if (exists("DEBUG_DAY")) {
   runCodeForDebugDay(7, {
     # Patient 1 Tag 7: Versorgungsstellenkontakt auf Nicht IP-Station Zimmer Nicht-IP-Raum 1-2, Bett Nicht-IP-Bett 1-2
     testTransferWardInternal(pid1, "Nicht-IP-Raum 1-2", "Nicht-IP-Bett 1-2")
-    # Patient 2 Tag 7: Versorgungsstellenkontakt auf Station 2-2 Zimmer 2-3, Bett 2-3
-    testTransferWardInternal(pid2, "Raum 2-1", "Bett 2-3", "Station 2-3")
+    # Patient 2 Tag 7: Versorgungsstellenkontakt auf Station 3 Zimmer 2-3, Bett 2-3
+    testTransferWardInternal(pid2, "Raum 2-1", "Bett 2-3", "Station 3")
   })
   runCodeForDebugDay(8, {
     # Patient 1 Tag 8: Entlassung von Nicht IP-Station

@@ -1,155 +1,182 @@
-# Zwei Patienten
-# Tag 1: Je einen Versorgungsstellenkontakt auf Station 1
-# Tag 2: Patient 1 bleibt unverändert auf Station 1. Patient 2 wird auf nicht-IP Station verlegt.
-# Tag 3: Beide Patienten werden entlassen
+# Patient UKB-0001 dupliziert
+# Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
+#        Erster Patient hat nichts, alle anderen haben jeweils ein MRP und eine
+#        Medikationsanalyse (diese kommt aus der zugehörigen change_REDCap_Data.R)
+# Tag 2: Encounter wird entlassen
+
+# Prüfung wie sich der Code verhält, wenn bestimmte Diagnosen/Medikamente etc. mehrfach/doppelt vorkommen,
+# die ein einzelnes MRP erzeugen.
+
+#################################
+# Start Define global variables #
+#################################
+
+# Define the days count for this test
+DEBUG_DAYS_COUNT <- 2
+
+# Activate if only a specific debug day should be run
+#DEBUG_RUN_SINGLE_DAY_ONLY <- 2
+
+###
+# DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
+# a config file. If the path is not set, then only the default config file
+# is used and no default values are overwritten by the debug config file.
+###
+DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
+  cds2db = "./R-cds2db/test/test_cds2db_config.toml",
+  dataprocessor = "",
+  db2frontend = ""
+)
+
+###
+# If this parameter is given, then no request is sent to the FHIR server, but
+# all data is loaded from this folder from RData files
+###
+DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
+
+###############################
+# End Define global variables #
+###############################
+
 if (exists("DEBUG_DAY")) {
+
+  # Load the necessary libraries
+  source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
+  # resources are a list of data tables from outside we want to change for the test
+  testSetResourceTables(resource_tables)
+
+  pid1 <- "UKB-0001"
+  pats <- pid1 # present at day 1
 
   if (DEBUG_DAY == 1) {
     # clear database on Day 1
     etlutils::dbReset()
-    pats <- c("UKB-0001", "UKB-0002") # present at day 1
-  } else{
-    pats <- c("UKB-0001", "UKB-0002")
+  } else {
+    if (exists("DEBUG_RUN_SINGLE_DAY_ONLY")) {
+      etlutils::dbReset(c("db_log.dp_mrp_calculations", "db_log.retrolektive_mrpbewertung_fe"))
+    }
     # Load all encounters from the database which, according to the database,
     # have not yet ended on the 'current' date and determine the PIDs.
     # Background: We want to track all cases that have ever been on a relevant
     # station until they are completed. So if a patient is discharged, we still
     # want to track the case until it is completed.
     patient_ids_db <- etlutils::getAfterLastSlash(getActiveEncounterPIDsFromDB())
-
     pats <- unique(c(pats, patient_ids_db))
   }
 
+  # Convenience list of patient IDs
   pats <- namedListByValue(pats)
 
-  #resource_tables <- testRetainRAWTables("Patient", "Encounter")
-  resource_tables <- getFilteredRAWResources(pats)
-  # short reference to Encounter table
-  dt_enc <- resource_tables[["Encounter"]]
-  dt_pat <- resource_tables[["Patient"]]
-
-  # Identify columns starting with "enc_diagnosis_" and "enc_servicetype_" as
-  # vector of column names
-  colnames_pattern_diagnosis <- "^enc_diagnosis_"
-  colnames_pattern_servicetype <- "^enc_servicetype_"
-  enc_diagnosis_cols <- grep(colnames_pattern_diagnosis, names(dt_enc), value = TRUE)
-  enc_servicetype_cols <- grep(colnames_pattern_servicetype, names(dt_enc), value = TRUE)
-
-  # Remove diagnoses
-  dt_enc[, (enc_diagnosis_cols) := NA]
+  testPrepareRAWResources(pats)
+  testRemoveMultipleDiagnoses()
 
   # set the enc_period_start of all encounters of a patient to the current date
   # minus an offset
-  for (i in c(1:2)) {
-    changeDataForPID(dt_enc, paste0("UKB-000", i), "enc_period_start", getFormattedRAWDateTime(DEBUG_DATES[1], offset_days = i))
+  for (i in seq_along(pats)) {
+    testChangeDataForPIDEncounter(paste0("UKB-000", i), "enc_period_start", getDebugDatesRAWDateTime(-i, 1))
   }
 
-  ### Add encounters with type "Versorgungstellenkontakt" ###
+  # Show the current state of the resources
+  # dt_enc <- testGetResourceTable("Encounter")
+  # pids_per_wards <- testGetResourceTable("pids_per_ward")
+  current_debug_day <- DEBUG_DAY
 
-  # Find rows where enc_id ends with -A-<NUMBER> (= Abteilungskontakt)
-  pattern <- "-A-(\\d+)$"
-  rows_to_duplicate <- dt_enc[grepl(pattern, enc_id)] # extract all Abteilungskontakt rows
+  runCodeForDebugDay(1, {
+    # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
+    testAdmission(pid1, "Raum 1-1", "Bett 1-1", "Station 1")
+  })
+  runCodeForDebugDay(2, {
+    # Patient 1 Tag 2: Encounter wird entlassen
+    testDischarge(pid1)
+  })
 
-  # Duplicate and modify enc_id
-  if (nrow(rows_to_duplicate) > 0) {
+  duplicatePatients(12)
 
-    # Set correct partof reference to the Abteilungskontakt for every new created
-    # Versorgungsstellenkontakt (same value as the still existing Abteilungskontakt
-    # enc_id of the row)
-    rows_to_duplicate <- rows_to_duplicate[, enc_partof_ref := sub("(Encounter/).*", paste0("\\1", sub(".*]", "", enc_id)), enc_partof_ref)]
+  runCodeForDebugDay(1, {
 
-    # Extract the number at the end of the enc_id and append "-V-<number>" to
-    # create a new unique enc_id for every Versorgungsstellenkontakt
-    rows_to_duplicate[, enc_id := sub(pattern, "-A-\\1-V-\\1", enc_id)]
+    ################
+    # Drug_Disease #
+    ################
 
-    # Replace enc_type_code abteilungskontakt with versorgungsstellenkontakt but
-    # keep the leading index in the brackets
-    rows_to_duplicate[, enc_type_code := sub("\\](.*)", "]versorgungsstellenkontakt", enc_type_code)]
+    # Zeile 445 aus Drug Disease Originalliste - mehrere Diagnosen (auch doppelt) + mehrere Proxy-Medikationen (auch doppelt) + mehrer LOINC (auch mehrfach) an verschiedene Zeitpunkte
+    pid <- addDrugs("UKB-0001_1", "C09DA06")
+    addConditions(pid, c("M10.00", "M10.00", "M10.01", "M14.00"))
+    addDrugs(pid, c("M04AA01", "M04AA01", "M04AA51"))
+    addDrugs(pid, c("M04AA01"))
+    addDrugs(pid, c("M04AA03"))
+    addDrugs(pid, c("C09DA06", "C09DA06"))
+    addObservation(pid, "14933-6", value = 1000, unit = "umol/L")
+    addObservation(pid, "14933-6", day_offset = -0.5, value = 1000, unit = "umol/L")
+    addObservation(pid, "14933-6", value = 2000, unit = "umol/L")
+    addObservation(pid, "12980-9", value = 1000, unit = "umol/L") # secondary loinc code
 
-    # Replace enc_type_display Abteilungskontakt with Versorgungsstellenkontakt
-    # but keep the leading index in the brackets
-    rows_to_duplicate[, enc_type_display := sub("\\](.*)", "]Versorgungsstellenkontakt", enc_type_display)]
+    # Drug_Drug                  -> MedicationRequests - N06AX22 + J01MA02
+    addDrugs(pid, c("N06AX22", "J01MA02")) # zwei MRPS, weil in Drug Drug und in Drug Drug Group (Wird noch bereinigt)
+    # Drug_DrugGroup             -> MedicationRequests - N06BA09 + C02KC01
+    addDrugs(pid, c("N06BA09", "C02KC01"))
 
-    # Delete Fachabteilungsschlüssel
-    rows_to_duplicate[, (enc_servicetype_cols) := NA]
+    pid <- addDrugs("UKB-0001_2", "C09DA06")
+    addConditions(pid, c("M10.00", "M10.00", "M10.01", "M14.00"))
 
-    # Add room and bed as two new locations
-    rows_to_duplicate[, enc_location_physicaltype_code := "[1.1.1.1]ro ~ [2.1.1.1]bd"]
+    pid <- addDrugs("UKB-0001_3", "C09DA06")
+    addDrugs(pid, c("M04AA01", "M04AA01", "M04AA51"))
 
-    # Append the new Versorgungsstellenkontakt rows to the Encounter table
-    dt_enc <- rbind(dt_enc, rows_to_duplicate)
-  }
+    pid <- addDrugs("UKB-0001_4", "C09DA06")
+    addDrugs(pid, c("M04AA03"))
 
-  if (DEBUG_DAY %in% c(1:3)) {
-    # Set all encounter to "in-progress", delete end date and diagnoses and set
-    # the encounter last updated date to the current date with a small offset
-    # Set the patient last updated date to the current date with a small offset
-    # Set enc_location_identifier_value for the Versorgungsstellenkontakt (Raum 1, Bett 1)
-    # Change pids_per_wards to the correct encounter id and ward name (Station 1)
-    for (i in seq_along(pats)) {
-      # Encounter
-      changeDataForPID(dt_enc, pats[[i]], "enc_status", "in-progress")
-      changeDataForPID(dt_enc, pats[[i]], "enc_period_end", NA)
-      changeDataForPID(dt_enc, pats[[i]], colnames_pattern_diagnosis, NA)
-      changeDataForPID(dt_enc, pats[[i]], "enc_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.1))
-      # Patient
-      changeDataForPID(dt_pat, pats[[i]], "pat_meta_lastupdated", getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.1))
-    }
+    pid <- addDrugs("UKB-0001_5", "C09DA06") # this Observation should be create a MRP because it's not older than 7 days
+    addObservation(pid, "14933-6", day_offset = -0.6, value = 1000, unit = "umol/L")
 
-    dt_enc <- dt_enc[enc_id == "[1]UKB-0001-E-1-A-1-V-1",
-                     enc_location_identifier_value := "[1.1.1.1]Raum 1 ~ [2.1.1.1]Bett 1"]
+    pid <- addDrugs("UKB-0001_6", "C09DA06") # this Observation should be create a MRP because it's not older than 7 days
+    addObservation(pid, "14933-6", day_offset = -5.6, value = 1000, unit = "umol/L")
 
-    dt_enc[enc_id == "[1]UKB-0002-E-1-A-1-V-1",
-           `:=`(
-             enc_location_identifier_value = "[1.1.1.1]Raum 2 ~ [2.1.1.1]Bett 2",
-             enc_partof_ref = "[1.1]Encounter/UKB-0002-E-1-A-1"
-           )]
+    pid <- addDrugs("UKB-0001_7", "C09DA06") # this Observation should be ignored because it's older than 7 days
+    addObservation(pid, "14933-6", day_offset = -7.6, value = 1000, unit = "umol/L")
 
-    pids_per_wards <- resource_tables$pids_per_ward
+    # Zeile 1004 aus Drug Disease Originalliste - mehrere ATC1 (in selber/unterschiedlichen Request) + mehrer OPS-Codes + Diagnose
+    pid <- addDrugs("UKB-0001_8", c("B01AB01",	"B01AB01", "B01AB51"))
+    addDrugs(pid, c("B05CX05",	"B01AB51"))
+    addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
+    addProcedures(pid, c("8-151.4"))
+    addConditions(pid, "G97.0")
 
-    if (DEBUG_DAY == 1) {
-      pids_per_wards[, encounter_id := c("UKB-0001-E-1-A-1-V-1", "UKB-0002-E-1-A-1-V-1")]
-      pids_per_wards[, ward_name := c("Station 1", "Station 1")]
+    pid <- addDrugs("UKB-0001_9", "B01AB51")
+    addDrugs(pid, "B01AB51")
+    addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
+    addProcedures(pid, c("8-151.4"))
+    addConditions(pid, "G97.0")
 
-    } else if (DEBUG_DAY == 2) {
+    pid <- addDrugs("UKB-0001_10", "B01AB51")
+    addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
 
-      dt_enc <- dt_enc[grepl("-V-1$", enc_id)]
-      dt_enc <- rbind(dt_enc, dt_enc[2])
+    # ATC und Diagnose mit mehreren Zeilen in der nach ICD gesplitteten Drug Disease Liste
+    pid <- addDrugs("UKB-0001_11", "L04AX03")
+    addDrugs(pid, "L04AX03")
+    addDrugs(pid, "L04AX03")
+    addConditions(pid, "J32.0")
 
-      dt_enc[2, enc_id := "[1]UKB-0002-E-1-A-1-V-1"]
-      dt_enc[2, enc_status := "finished"]
-      dt_enc[2, enc_location_identifier_value := "[1.1.1.1]Raum 2 ~ [2.1.1.1]Bett 2"]
-      dt_enc[2, enc_period_end := getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)]
+    # ATC und mehrere Diagnosen mit mehreren Zeilen in der nach ICD gesplitteten Drug Disease Liste
+    pid <- addDrugs("UKB-0001_12", "L01XX05")
+    addConditions(pid, c("D69.58", "D69.61"))
 
-      dt_enc[3, enc_id := "[1]UKB-0002-E-1-A-1-V-2"]
-      dt_enc[3, enc_status := "in-progress"]
-      dt_enc[3, enc_location_identifier_value := "[1.1.1.1]Nicht-IP-Raum 3 ~ [2.1.1.1]Nicht-IP-Bett 3"]
-      dt_enc[3, enc_period_start := getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)]
-      dt_enc[3, enc_period_end := NA]
-      pids_per_wards <- pids_per_wards[-2]
-      pids_per_wards[, ward_name := "Station 1"]
-      pids_per_wards[, encounter_id := "UKB-0001-E-1-A-1-V-1"]
+    # Drug-Disease Zeile 1, ATC systemisch
+    pid <- addDrugs("UKB-0001_13", "L01XK52", period_type = "timing_events")
+    addConditions(pid, c("O09"))
+    addObservation(pid, "21198-7", day_offset = -5.0, value = 12, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
+    addObservation(pid, "21198-7", day_offset = -4.9, value = 13, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
+    addObservation(pid, "21198-7", day_offset = -4.8, value = 14, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
+    addObservation(pid, "21198-7", day_offset = -4.7, value = 15, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
+    addObservation(pid, "21198-7", day_offset = -4.6, value = 16, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
 
-    } else if (DEBUG_DAY == 3) {
-      dt_pat <- dt_pat[0]
-      pids_per_wards <- pids_per_wards[0]
-      dt_enc[grepl("^\\[1\\]UKB-0001-E-1", enc_id), `:=`(
-        enc_status = "finished",
-        enc_period_end = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)
-      )]
-      to_modify <- c(
-        "[1]UKB-0002-E-1",
-        "[1]UKB-0002-E-1-A-1",
-        "[1]UKB-0002-E-1-A-1-V-2"
-      )
-      dt_enc[enc_id %in% to_modify, `:=`(
-        enc_status = "finished",
-        enc_period_end = getFormattedRAWDateTime(DEBUG_DATES[DEBUG_DAY], offset_days = 0.5)
-      )]
-    }
-  }
-  # Update the Encounter table in the resource_tables list
-  resource_tables[["Encounter"]] <- dt_enc
-  resource_tables[["Patient"]] <- dt_pat
-  resource_tables[["pids_per_ward"]] <- pids_per_wards
+    addObservation(pid, "2111-3", day_offset = -5.0, value = 1.2, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
+    addObservation(pid, "2111-3", day_offset = -4.9, value = 1.3, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
+    addObservation(pid, "2111-3", day_offset = -4.8, value = 1.4, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
+    addObservation(pid, "2111-3", day_offset = -4.7, value = 1.5, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
+    addObservation(pid, "2111-3", day_offset = -4.6, value = 1.6, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
+
+
+  })
+
+  # Update the resource_tables list with the modified data tables
+  resource_tables <- testGetResourceTables()
 }

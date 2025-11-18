@@ -3,10 +3,8 @@ DEBUG_DAYS_COUNT <- 5
 
 DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS <- 14
 
-WARDS_PHASE_B <- c("Station 1-1")
-
 # Patient UKB-0001
-# Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
+# Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
 #        Patient hat ein MRP und eine Medikationsanalyse
 # Tag 2: Encounter wird entlassen
 # Tag X: Keine Änderungen
@@ -55,8 +53,8 @@ if (exists("DEBUG_DAY")) {
   current_debug_day <- DEBUG_DAY
 
   runCodeForDebugDay(1, {
-    # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
-    testAdmission(pid1, "Raum 1-1", "Bett 1-1", "Station 1-1")
+    # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
+    testAdmission(pid1, "Raum 1-1", "Bett 1-1", "Station 1")
   })
   runCodeForDebugDay(2, {
     # Patient 1 Tag 4: Encounter wird entlassen
