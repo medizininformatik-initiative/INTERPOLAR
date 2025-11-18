@@ -1,11 +1,10 @@
 mustCreateReferencesForOldData <- function() {
   # Check via SQL if there is at least one non-NULL/non-empty value in enc_partof_calculated_ref
   query <- paste0(
-    "SELECT 1 AS has_ref ",
-    "FROM v_encounter_last_version ",
-    "WHERE enc_partof_calculated_ref IS NOT NULL ",
-    "  AND enc_partof_calculated_ref <> '' ",
-    "LIMIT 1;"
+    "SELECT 1 AS has_ref\n",
+    "FROM v_encounter_last_version\n",
+    "WHERE enc_main_encounter_calculated_ref IS NOT NULL\n",
+    "LIMIT 1;\n"
   )
   res <- etlutils::dbGetReadOnlyQuery(query, lock_id = "mustCreateReferencesForOldData()")
   # If no rows returned, references must be created
@@ -33,7 +32,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       resource_name <- tolower(resource_name)
       column_names <- paste0(column_names, collapse = ", ")
       query <- paste0(
-        "SELECT DISTINCT ", column_names, " FROM v_", resource_name, "_last_version;\n",
+        "SELECT DISTINCT ", column_names, " FROM v_", resource_name, "_last_version;\n"
       )
       etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getAllLastViewResources(", resource_name, ")"))
     }
@@ -54,6 +53,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       column_names <- c(
         etlutils::fhirdbGetIDColumn(enc_resource_name),
         etlutils::fhirdbGetColumns(enc_resource_name, c(
+          "_type_code",
           "_period_start",
           "_period_end",
           "_partof_ref",
@@ -65,18 +65,15 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       return(getAllLastViewResources(enc_resource_name, column_names))
     }
 
-    writeTableWithReferencesToDB <- function(resource_name, resource_table, calculated_col_names = NULL, lock_id) {
+    writeTableWithReferencesToDB <- function(resource_name, resource_table, calculated_col_names, lock_id) {
       id_col_name <- etlutils::fhirdbGetIDColumn(resource_name)
 
-      if (is.null(calculated_col_names)) {
-        calculated_col_names <- start_time_column_names[[resource_name]]
-      }
       # Initialize empty data.table
       temp_calculated_items <- data.table::data.table()
 
       # Preallocate the total number of rows
       total_rows <- nrow(resource_table) * length(calculated_col_names)
-      data.table::set(temp_calculated_items, j = id_col_name, value = rep(NA_character_, total_rows))
+      data.table::set(temp_calculated_items, j = "cal_fhir_column", value = rep(NA_character_, total_rows))
 
       # Populate the remaining columns
       for (calculated_col_index in seq_along(calculated_col_names)) {
@@ -104,7 +101,12 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       resource_table <- getAllLastViewNonEncounterResources(resource_name)
       resource_table <- createReferencesForResource(all_encounters, resource_name, resource_table, start_column_names)
       # write resource with the new references table back to DB
-      writeTableWithReferencesToDB(resource_name, resource_table, lock_id = paste("Write recalculated references for old", resource_name, "data"))
+      writeTableWithReferencesToDB(
+        resource_name,
+        resource_table,
+        calculated_col_names = etlutils::fhirdbGetColumns(resource_name, "_encounter_calculated_ref"),
+        lock_id = paste("Write recalculated references for old", resource_name, "data")
+      )
     }
     # write encounters with the new reference columns to database as last (because
     # the whole process will be repeated, if the encounters are not written correctly)
