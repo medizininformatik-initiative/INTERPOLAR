@@ -101,6 +101,11 @@ BEGIN
         'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
 
+        -- Nicht berechnete Zeilen entfernen - nicht notwendig
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'DELETE FROM cds2db_in.temp_calculated_items WHERE cal_calculated_value IS NULL'
+        ) ) AS t(res TEXT) INTO erg;
+
         -- Updates in die Resourcen übernehmen
         FOR current_record IN (SELECT DISTINCT cal_schema, cal_resource, cal_fhir_column, cal_fhir_id, cal_calculated_column_name, cal_calculated_value FROM cds2db_in.temp_calculated_items) LOOP
 
@@ -113,7 +118,8 @@ BEGIN
             err_section:='temp_700_calculated_olddata_items_break-35';    err_schema:='cds2db_in';    err_table:='temp_calculated_items';
 
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
-            'DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='''||current_record.cal_schema||''' AND cal_resource='''||current_record.cal_resource||''' AND cal_fhir_column='''||current_record.cal_fhir_column||''' AND cal_fhir_id='''||current_record.cal_fhir_id||''' AND cal_calculated_column_name='''||current_record.cal_calculated_column_name||''' AND cal_calculated_value='''||current_record.cal_calculated_value||''''
+            'DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='''||current_record.cal_schema||''' AND cal_resource='''||current_record.cal_resource||''' AND cal_fhir_column='''||current_record.cal_fhir_column||''' AND cal_fhir_id='''||current_record.cal_fhir_id||''' AND cal_calculated_column_name='''||current_record.cal_calculated_column_name
+            ||''' AND cal_calculated_value='''||current_record.cal_calculated_value||''''
             ) ) AS t(res TEXT) INTO erg;
         END LOOP;
 
