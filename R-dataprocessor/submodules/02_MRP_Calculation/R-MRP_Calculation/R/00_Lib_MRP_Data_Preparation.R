@@ -160,8 +160,8 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
   where_clause <- paste0("WHERE ", patient_ref_column_name, " IN ", patient_references, "\n")
 
   if (!is.null(status_exclusion) && !is.na(status_exclusion) && !etlutils::isSimpleNA(status_exclusion) && length(status_exclusion)) {
-    resource_column_prefix <- etlutils::fhirdbGetResourceAbbreviation(resource_name)
-    where_clause <- paste0(where_clause, "  AND (", resource_column_prefix, "_status IS NULL OR ", resource_column_prefix, "_status NOT IN ", status_exclusion, ")\n")
+    status_column_name <- etlutils::fhirdbGetColumns(resource_name, "_status")
+    where_clause <- paste0(where_clause, "  AND (", status_column_name, " IS NULL OR ", status_column_name, " NOT IN ", status_exclusion, ")\n")
   }
 
   if (!is.null(additional_conditions) && !etlutils::isSimpleNA(additional_conditions) && length(additional_conditions)) {
