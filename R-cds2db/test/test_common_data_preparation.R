@@ -814,7 +814,7 @@ addDrugs <- function(pid, codes, day_offset = -0.3, period_type = c(
     if (period_type %in% c("timing_events")) {
       events <- c()
       for (j in 1:3) {
-        events <- c(events, getDebugDatesRAWDateTime(day_offset + 0.05 + j * 2, raw_index = paste0("[1.1.", j, "]")))
+        events <- c(events, getDebugDatesRAWDateTime(day_offset + 0.05 + (j - 1) * 2, raw_index = paste0("[1.1.", j, "]")))
       }
       dt[, medreq_doseinstruc_timing_event := paste0(events, collapse = " ~ ")]
     }

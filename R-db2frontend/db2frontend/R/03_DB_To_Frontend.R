@@ -62,8 +62,8 @@ importDB2Redcap <- function() {
 
       table_name <- table_names[i]
 
-      db_generated_id_column_name <- paste0(table_name, "_fe_id")
-      columns <- c(db_generated_id_column_name, table_description[[table_name]]$COLUMN_NAME)
+      db_generated_id_col_name <- paste0(table_name, "_fe_id")
+      columns <- c(db_generated_id_col_name, table_description[[table_name]]$COLUMN_NAME)
 
       # Create SQL query dynamically based on columns
       query <- sprintf("SELECT %s FROM v_%s", paste(columns, collapse = ", "), table_name)
@@ -77,15 +77,15 @@ importDB2Redcap <- function() {
       char_cols <- names(data_from_db)[sapply(data_from_db, is.character)]
       toml_cols <- char_cols[grepl("_additional_values$", char_cols)]
 
-      for (colname in char_cols) {
+      for (col_name in char_cols) {
         # redcap can sometimes misinterpret double quotation marks, even if they are CSV-compliant
         # escaped. Therefore, we replace them with single quotation marks in all text fields.
-        if (!(colname %in% toml_cols)) {
-          data_from_db[[colname]] <- gsub('"', '\'', data_from_db[[colname]], fixed = TRUE)
+        if (!(col_name %in% toml_cols)) {
+          data_from_db[[col_name]] <- gsub('"', '\'', data_from_db[[col_name]], fixed = TRUE)
         } else {
           # Additional_value fields are toml files that require double quotation marks, so it is
           # important to ensure that these are retained.
-          data_from_db[[colname]] <- etlutils::redcapEscape(data_from_db[[colname]])
+          data_from_db[[col_name]] <- etlutils::redcapEscape(data_from_db[[col_name]])
         }
       }
       data_to_import[[table_name]] <- data_from_db

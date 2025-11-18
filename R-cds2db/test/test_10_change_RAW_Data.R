@@ -1,5 +1,5 @@
 # Patient UKB-0001 dupliziert
-# Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
+# Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
 #        Erster Patient mit Observation, Medication, Condition
 #        Weiterer Versorgungsstellenkontakt mit zeitlichen Überschneidungen
 
@@ -40,8 +40,6 @@ DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
 # all data is loaded from this folder from RData files
 ###
 DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
-
-WARDS_PHASE_B_TEST <- c("Station 1-1")
 
 ###############################
 # End Define global variables #
@@ -90,7 +88,7 @@ if (exists("DEBUG_DAY")) {
   current_debug_day <- DEBUG_DAY
 
   runCodeForDebugDay(1, {
-    # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
+    # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
     enc_ids <- testAdmission(pid1, "Raum 1", "Bett 1", "Station 1", -10)
     addDrugs(pid1, c("M04AA01"), day_offset = -9.59, period_type = "authoredon", encounter_id = enc_ids[[3]]) # Referenz auf Versorgungsstellenkontakt -> medreq_encounter_ref = Einrichtungskontakt
     addDrugs(pid1, c("M04AA02"), day_offset = -9.58, period_type = "authoredon", encounter_id = enc_ids[[2]]) # Referenz auf Abteilungskontakt -> medreq_encounter_ref = Einrichtungskontakt
