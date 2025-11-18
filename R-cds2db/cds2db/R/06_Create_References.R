@@ -90,7 +90,6 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
         }
       }
       etlutils::dbWriteTable(temp_calculated_items, lock_id = lock_id)
-      etlutils::dbGetQuery("SELECT db.temp_700_calculated_olddata_items();", lock_id = paste0("Take over calculated references in Database core for ", resource_name))
     }
 
     all_encounters <- getAllLastViewEncounterResources()
