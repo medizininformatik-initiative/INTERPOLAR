@@ -323,6 +323,7 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
                                                                      "med_code_display"),
                                                     filter = where_clause)
   medications <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getATCMedicationsFromDB()")
+  return(medications)
 }
 
 #
