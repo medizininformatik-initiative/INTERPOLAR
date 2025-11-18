@@ -170,7 +170,7 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
   }
 
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, column_names, where_clause)
-  return(etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getResourcesFromDB(", resource_name, ")"))
+  return(etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getResourcesFromDB(", resource_name, ")")))
 }
 
 #
