@@ -25,8 +25,6 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     servicerequest = "servreq_authoredon"
   )
 
-  encounter_type <- c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt")
-
   # if the resources are null that indicates that we must create all references for old data
   if (is.null(resource_tables)) {
 
@@ -51,7 +49,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     }
 
     getAllLastViewEncounterResources <- function() {
-      # get all Encounters from DB via the v_encounter_last view
+      # get all Encounters from DB via the v_encounter_last_version view
       enc_resource_name <- "encounter"
       column_names <- c(
         etlutils::fhirdbGetIDColumn(enc_resource_name),
@@ -62,55 +60,51 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
           "_partof_calculated_ref",
           "_main_encounter_calculated_ref"#,
           #"_diagnosis_condition_calculated_ref"
-        )
+        ))
       )
       return(getAllLastViewResources(enc_resource_name, column_names))
     }
 
-    writeTableWithReferencesToDB <- function(resource_name, resource_table, calculated_col_names = NULL) {
+    writeTableWithReferencesToDB <- function(resource_name, resource_table, calculated_col_names = NULL, lock_id) {
       id_col_name <- etlutils::fhirdbGetIDColumn(resource_name)
 
       if (is.null(calculated_col_names)) {
-        calculated_col_names <- start_time_col_names[[resource_name]]
+        calculated_col_names <- start_time_column_names[[resource_name]]
       }
       # Initialize empty data.table
-      db_table <- data.table::data.table()
+      temp_calculated_items <- data.table::data.table()
 
       # Preallocate the total number of rows
       total_rows <- nrow(resource_table) * length(calculated_col_names)
-      data.table::set(db_table, j = id_column_name, value = rep(NA_character_, total_rows))
+      data.table::set(temp_calculated_items, j = id_col_name, value = rep(NA_character_, total_rows))
 
       # Populate the remaining columns
       for (calculated_col_index in seq_along(calculated_col_names)) {
         calculated_col_name <- calculated_col_names[calculated_col_index]
-
         for (row_index in seq_len(nrow(resource_table))) {
           full_row_index <- row_index + ((calculated_col_index - 1) * nrow(resource_table))
-
           # Fill values for this row
-          data.table::set(db_table, i = full_row_index, j = "cal_schema", value = "db_log")
-          data.table::set(db_table, i = full_row_index, j = "cal_resource", value = resource_name)
-          data.table::set(db_table, i = full_row_index, j = "cal_fhir_column", value = id_col_name)
-          data.table::set(db_table, i = full_row_index, j = "cal_fhir_id", value = resource_table[[row_index, id_col_name]])
-          data.table::set(db_table, i = full_row_index, j = "cal_calculated_column_name", value = calculated_col_name)
-          data.table::set(db_table, i = full_row_index, j = "cal_calculated_value", value = resource_table[[row_index, calculated_col_name]])
+          data.table::set(temp_calculated_items, i = full_row_index, j = "cal_schema", value = "db_log")
+          data.table::set(temp_calculated_items, i = full_row_index, j = "cal_resource", value = resource_name)
+          data.table::set(temp_calculated_items, i = full_row_index, j = "cal_fhir_column", value = id_col_name)
+          data.table::set(temp_calculated_items, i = full_row_index, j = "cal_fhir_id", value = resource_table[row_index, get(id_col_name)])
+          data.table::set(temp_calculated_items, i = full_row_index, j = "cal_calculated_column_name", value = calculated_col_name)
+          data.table::set(temp_calculated_items, i = full_row_index, j = "cal_calculated_value", value = resource_table[row_index, get(calculated_col_name)])
         }
       }
-
-      etlutils::dbWriteTable()
-
+      etlutils::dbWriteTable(temp_calculated_items, lock_id = lock_id)
     }
 
     all_encounters <- getAllLastViewEncounterResources()
-    all_encounters <- createReferencesForEncounters(all_encounters)
+    all_encounters <- createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)
 
     # iterate over all other resource tables and get them with their last view and create their calculated_ref columns
     for (resource_name in names(start_time_column_names)) {
       start_column_names <- start_time_column_names[[resource_name]]
-      resource_table <- getAllLastViewResources(resource_name)
+      resource_table <- getAllLastViewNonEncounterResources(resource_name)
       resource_table <- createReferencesForResource(all_encounters, resource_name, resource_table, start_column_names)
       # write resource with the new references table back to DB
-      writeTableWithReferencesToDB(resource_name, resource_table)
+      writeTableWithReferencesToDB(resource_name, resource_table, lock_id = paste("Write recalculated references for old", resource_name, "data"))
     }
     # write encounters with the new reference columns to database as last (because
     # the whole process will be repeated, if the encounters are not written correctly)
@@ -120,13 +114,14 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       calculated_col_names = etlutils::fhirdbGetColumns("encounter", c(
         "_partof_calculated_ref",
         "_main_encounter_calculated_ref"
-      ))
+      )),
+      lock_id = "Write recalculated references for old encounter data"
     )
 
-  # we must create the references only for new download resources
+    # we must create the references only for new download resources
   } else {
     # 1.) Fill the calculated reference columns for Encounters
-    resource_tables$encounter <- createReferencesForEncounters(resource_tables$encounter)
+    resource_tables$encounter <- createReferencesForEncounters(resource_tables$encounter, common_encounter_fhir_identifier_system)
     # 2.) Fill the ..._encounter_calculated_ref of all Encounter referencing resources using
     #     the enc_partof_calculated_ref or timestamps
     for (resource_name in names(start_time_column_names)) {
@@ -135,7 +130,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       resource_tables[[resource_name]] <- createReferencesForResource(resource_tables$encounter, resource_name, resource_tables[[resource_name]], start_column_names)
     }
   }
-}
+
 
   # 3.) Fill the diagnosis ref in Encounters from Conditions (enc_diagnosis_condition_calculated_ref)
   # TODO

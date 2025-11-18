@@ -1,23 +1,24 @@
+ENCOUNTER_TYPES <- c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt")
+
 getEncounterReferenceColumnName <- function(resource_name) {
-  resource_prefix <- etlutils::fhirdbGetResourceAbbreviation(resource_name)
-  return(paste0(resource_prefix, "_encounter_ref"))
+  return(etlutils::fhirdbGetColumns(resource_name, "_encounter_ref"))
 }
 
 getEncounterCalculatedReferenceColumnName <- function(resource_name) {
-  resource_prefix <- etlutils::fhirdbGetResourceAbbreviation(resource_name)
-  return(paste0(resource_prefix, "_encounter_calculated_ref"))
+  return(etlutils::fhirdbGetColumns(resource_name, "_encounter_calculated_ref"))
 }
 
-createReferencesForEncounters <- function(encounters) {
+createReferencesForEncounters <- function(encounters, common_encounter_fhir_identifier_system) {
+
   # add the both calculated columns
   encounters[, enc_partof_calculated_ref := NA_character_]
   encounters[, enc_diagnosis_condition_calculated_ref := NA_character_]
 
   # split Encounters by type code
-  encounters_by_type <- list(einrichtungskontakt = encounters[enc_type_code == encounter_type[[1]]],
-                             abteilungskontakt = encounters[enc_type_code == encounter_type[[2]]],
-                             versorgungsstellenkontakt = encounters[enc_type_code == encounter_type[[3]]],
-                             invalid = encounters[!(enc_type_code %in% encounter_type)])
+  encounters_by_type <- list(einrichtungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[1]]],
+                             abteilungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[2]]],
+                             versorgungsstellenkontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[3]]],
+                             invalid = encounters[!(enc_type_code %in% ENCOUNTER_TYPES)])
 
   # cat a warning for every invalid Encounter
   if (nrow(encounters_by_type$invalid)) {
@@ -29,7 +30,7 @@ createReferencesForEncounters <- function(encounters) {
   # cat warning message if there are no encounters of at least one type
   for (type_index in 1:3) {
     if (!nrow(encounters_by_type[[type_index]])) {
-      msg <- paste0("No '", encounter_type[[type_index]], "' Encounters found!")
+      msg <- paste0("No '", ENCOUNTER_TYPES[[type_index]], "' Encounters found!")
       etlutils::catWarningMessage(msg)
     }
   }
@@ -132,7 +133,7 @@ createReferencesForEncounters <- function(encounters) {
   # update the encounters table in the list
   encounters <- data.table::rbindlist(encounters_by_type)
   # fill all abteilungskontakt and versorgungstellenkontakt Encounters NA partof refs with "invalid"
-  encounters[is.na(enc_partof_calculated_ref) & (enc_type_code %in% encounter_type[2:3]),
+  encounters[is.na(enc_partof_calculated_ref) & (enc_type_code %in% ENCOUNTER_TYPES[2:3]),
              enc_partof_calculated_ref := "invalid"]
 
   # Start: create enc_main_encounter_calculated_ref
@@ -189,7 +190,7 @@ createReferencesForEncounters <- function(encounters) {
   ]
   # End: create enc_main_encounter_calculated_ref
 
-  return(encouters)
+  return(encounters)
 }
 
 createReferencesForResource <- function(encounters, resource_name, resource_table, start_column_names) {
@@ -199,7 +200,7 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
     # add the calculated reference column
     resource_table[, (calculated_ref_col_name) := NA_character_]
     for (row_index in seq_len(nrow(resource_table))) {
-      resource_encounter_ref <- resource_table[[ref_col_name]][row_index]
+      resource_encounter_ref <- resource_table[row_index, get(ref_col_name)]
       if (!is.na(resource_encounter_ref)) {
         resource_encounter_id <- etlutils::fhirdataExtractIDs(resource_encounter_ref)
         # the encounter of the calculated reference must be an einrichtungskontakt -> trace back via partOf
@@ -226,14 +227,14 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
         }
       }
       # get the reference from the timestamps
-      if (is.na(resource_table[[calculated_ref_col_name]][row_index])) {
-        patient_ref_col_name <- paste0(getResourcePrefix(start_column_names[1]), "_patient_ref")
-        patient_ref <- resource_table[[patient_ref_col_name]][row_index]
-        candidate_encounters <- encounters[enc_patient_ref == patient_ref & enc_type_code == encounter_type[[1]]]
+      if (is.na(resource_table[row_index, get(calculated_ref_col_name)])) {
+        patient_ref_col_name <- etlutils::fhirdbGetColumns(resource_name, "_patient_ref")
+        patient_ref <- resource_table[row_index, get(patient_ref_col_name)]
+        candidate_encounters <- encounters[enc_patient_ref == patient_ref & enc_type_code == ENCOUNTER_TYPES[[1]]]
         if (nrow(candidate_encounters)) {
           # find the best fitting encounter by timestamp
           for (start_column_name in start_column_names) {
-            resource_start_time <- resource_table[[start_column_name]][row_index]
+            resource_start_time <- resource_table[row_index, get(start_column_name)]
             if (!is.na(resource_start_time)) {
               # filter candidates that enclose the resource timestamp
               candidate_encounters_filtered <- candidate_encounters[
@@ -256,11 +257,13 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
         }
       }
       # if the reference is still NA -> mark it as invalid
-      if (is.na(resource_table[[calculated_ref_col_name]][row_index])) {
+      if (is.na(resource_table[row_index, get(calculated_ref_col_name)])) {
         resource_table[row_index, (calculated_ref_col_name) := "invalid"]
       }
     }
   }
   return(resource_table)
 }
+
+
 
