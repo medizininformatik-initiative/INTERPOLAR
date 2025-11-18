@@ -126,7 +126,7 @@ BEGIN
             err_section:='temp_700_calculated_olddata_items_break-35';    err_schema:='cds2db_in';    err_table:='temp_calculated_items';
 
             SELECT res FROM public.pg_background_result(public.pg_background_launch(
-            'DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='''||current_record.cal_schema||''' and cal_resource='''||current_record.cal_resource||''' and cal_fhir_column='''||current_record.cal_fhir_column||''' and cal_fhir_id='''||current_record.cal_fhir_id||''' and cal_calculated_column_name='''||current_record.cal_calculated_column_name||''' and cal_calculated_value='''||current_record.cal_calculated_value||''' and  cal_theme='''||current_record.cal_theme||''''
+            'DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='''||current_record.cal_schema||''' AND cal_resource='''||current_record.cal_resource||''' AND cal_fhir_column='''||current_record.cal_fhir_column||''' AND cal_fhir_id='''||current_record.cal_fhir_id||''' AND cal_calculated_column_name='''||current_record.cal_calculated_column_name||''' AND cal_calculated_value='''||current_record.cal_calculated_value||''' AND  (cal_theme='''||current_record.cal_theme||''' OR cal_theme IS NULL)'
             ) ) AS t(res TEXT) INTO erg;
         END LOOP;
 
