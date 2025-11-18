@@ -1,5 +1,15 @@
 mustCreateReferencesForOldData <- function() {
-  # checke über SQl, ob in der Encounter-Tabelle mindestens ein nicht-NA-Eintrag in der enc_partof_calculated_ref Spalte existiert
+  # Check via SQL if there is at least one non-NULL/non-empty value in enc_partof_calculated_ref
+  query <- paste0(
+    "SELECT 1 AS has_ref ",
+    "FROM v_encounter_last_version ",
+    "WHERE enc_partof_calculated_ref IS NOT NULL ",
+    "  AND enc_partof_calculated_ref <> '' ",
+    "LIMIT 1;"
+  )
+  res <- etlutils::dbGetReadOnlyQuery(query, lock_id = "mustCreateReferencesForOldData()")
+  # If no rows returned, references must be created
+  return(nrow(res) == 0L)
 }
 
 createReferences <- function(resource_tables, common_encounter_fhir_identifier_system = NULL) {
