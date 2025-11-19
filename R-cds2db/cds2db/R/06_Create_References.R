@@ -105,45 +105,60 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       etlutils::dbWriteTable(temp_calculated_items, lock_id = lock_id)
     }
 
-    all_encounters <- getAllLastViewEncounterResources()
-    all_encounters <- createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)
+    # Check if we must create references for old data (should be executed exactly once and then never again)
+    etlutils::runLevel2("Run getAllLastViewEncounterResources()", {
+      all_encounters <- getAllLastViewEncounterResources()
+    })
 
-    # iterate over all other resource tables and get them with their last view and create their calculated_ref columns
-    for (resource_name in names(start_time_column_names)) {
-      start_column_names <- start_time_column_names[[resource_name]]
-      resource_table <- getAllLastViewNonEncounterResources(resource_name)
-      resource_table <- createReferencesForResource(all_encounters, resource_name, resource_table, start_column_names)
-      # write resource with the new references table back to DB
+    etlutils::runLevel2("Run createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)", {
+      all_encounters <- createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)
+    })
+
+    # Check if we must create references for old data (should be executed exactly once and then never again)
+    etlutils::runLevel2("Iterate over resources to create references", {
+      # iterate over all other resource tables and get them with their last view and create their calculated_ref columns
+      for (resource_name in names(start_time_column_names)) {
+        start_column_names <- start_time_column_names[[resource_name]]
+        resource_table <- getAllLastViewNonEncounterResources(resource_name)
+        resource_table <- createReferencesForResource(all_encounters, resource_name, resource_table, start_column_names)
+        # write resource with the new references table back to DB
+        writeTableWithReferencesToDB(
+          resource_name,
+          resource_table,
+          calculated_col_names = etlutils::fhirdbGetColumns(resource_name, "_encounter_calculated_ref"),
+          lock_id = paste("Write recalculated references for old", resource_name, "data")
+        )
+      }
+    })
+    etlutils::runLevel2("Write Encounters with references to database", {
+      # write encounters with the new reference columns to database as last (because
+      # the whole process will be repeated, if the encounters are not written correctly)
       writeTableWithReferencesToDB(
-        resource_name,
-        resource_table,
-        calculated_col_names = etlutils::fhirdbGetColumns(resource_name, "_encounter_calculated_ref"),
-        lock_id = paste("Write recalculated references for old", resource_name, "data")
+        resource_name = "encounter",
+        resource_table = all_encounters,
+        calculated_col_names = etlutils::fhirdbGetColumns("encounter", c(
+          "_partof_calculated_ref",
+          "_main_encounter_calculated_ref"
+        )),
+        lock_id = "Write recalculated references for old encounter data"
       )
-    }
-    # write encounters with the new reference columns to database as last (because
-    # the whole process will be repeated, if the encounters are not written correctly)
-    writeTableWithReferencesToDB(
-      resource_name = "encounter",
-      resource_table = all_encounters,
-      calculated_col_names = etlutils::fhirdbGetColumns("encounter", c(
-        "_partof_calculated_ref",
-        "_main_encounter_calculated_ref"
-      )),
-      lock_id = "Write recalculated references for old encounter data"
-    )
+    })
 
     # we must create the references only for new download resources
   } else {
-    # 1.) Fill the calculated reference columns for Encounters
-    resource_tables$encounter <- createReferencesForEncounters(resource_tables$encounter, common_encounter_fhir_identifier_system)
-    # 2.) Fill the ..._encounter_calculated_ref of all Encounter referencing resources using
-    #     the enc_partof_calculated_ref or timestamps
-    for (resource_name in names(start_time_column_names)) {
-      start_column_names <- start_time_column_names[[resource_name]]
-      # update the resource table in the list
-      resource_tables[[resource_name]] <- createReferencesForResource(resource_tables$encounter, resource_name, resource_tables[[resource_name]], start_column_names)
-    }
+    etlutils::runLevel2("Create references for Encounters", {
+      # 1.) Fill the calculated reference columns for Encounters
+      resource_tables$encounter <- createReferencesForEncounters(resource_tables$encounter, common_encounter_fhir_identifier_system)
+    })
+    etlutils::runLevel2("Create references for Encounter depending resources", {
+      # 2.) Fill the ..._encounter_calculated_ref of all Encounter referencing resources using
+      #     the enc_partof_calculated_ref or timestamps
+      for (resource_name in names(start_time_column_names)) {
+        start_column_names <- start_time_column_names[[resource_name]]
+        # update the resource table in the list
+        resource_tables[[resource_name]] <- createReferencesForResource(resource_tables$encounter, resource_name, resource_tables[[resource_name]], start_column_names)
+      }
+    })
   }
 
 
