@@ -35,7 +35,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
         "SELECT DISTINCT ", column_names, " FROM v_", resource_name, "_last_version"
       )
       if (!is.null(where_clause)) {
-        query <- paste0(query, where_clause)
+        query <- paste0(query, "\n", where_clause)
       }
       query <- paste0(query, ";\n")
       resources <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getAllLastViewResources(", resource_name, ")"))
@@ -61,8 +61,11 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
         etlutils::fhirdbGetIDColumn(enc_resource_name),
         type_code_col_name,
         etlutils::fhirdbGetColumns(enc_resource_name, c(
+          "_patient_ref",
           "_period_start",
           "_period_end",
+          "_identifier_system",
+          "_identifier_value",
           "_partof_ref",
           "_partof_calculated_ref",
           "_main_encounter_calculated_ref"#,
@@ -70,7 +73,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
           #"_diagnosis_condition_calculated_ref"
         ))
       )
-      where_clause <- paste("WHERE", type_code_col_name, "IN", etlutils::fhirdbGetQueryList(ENCOUNTER_TYPES))
+      where_clause <- paste0("WHERE ", type_code_col_name, " IN ", etlutils::fhirdbGetQueryList(ENCOUNTER_TYPES))
       resources <- getAllLastViewResources(enc_resource_name, column_names, where_clause)
       return(resources)
     }

@@ -256,6 +256,3 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
   }
   return(resource_table)
 }
-
-
-
