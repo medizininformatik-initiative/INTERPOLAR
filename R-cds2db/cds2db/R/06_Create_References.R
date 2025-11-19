@@ -27,14 +27,19 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
   # if the resources are null that indicates that we must create all references for old data
   if (is.null(resource_tables)) {
 
-    getAllLastViewResources <- function(resource_name, column_names) {
+    getAllLastViewResources <- function(resource_name, column_names, where_clause = NULL) {
       # get all resources from DB via the v_encounter_last_version view
       resource_name <- tolower(resource_name)
       column_names <- paste0(column_names, collapse = ", ")
       query <- paste0(
-        "SELECT DISTINCT ", column_names, " FROM v_", resource_name, "_last_version;\n"
+        "SELECT DISTINCT ", column_names, " FROM v_", resource_name, "_last_version"
       )
-      etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getAllLastViewResources(", resource_name, ")"))
+      if (!is.null(where_clause)) {
+        query <- paste0(query, where_clause)
+      }
+      query <- paste0(query, ";\n")
+      resources <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getAllLastViewResources(", resource_name, ")"))
+      return(resources)
     }
 
     getAllLastViewNonEncounterResources <- function(resource_name) {
@@ -44,25 +49,30 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
         getEncounterCalculatedReferenceColumnName(resource_name),
         start_time_column_names[[resource_name]]
       )
-      return(getAllLastViewResources(resource_name, column_names))
+      resources <- getAllLastViewResources(resource_name, column_names)
+      return(resources)
     }
 
     getAllLastViewEncounterResources <- function() {
       # get all Encounters from DB via the v_encounter_last_version view
       enc_resource_name <- "encounter"
+      type_code_col_name <- etlutils::fhirdbGetColumns(enc_resource_name, "_type_code")
       column_names <- c(
         etlutils::fhirdbGetIDColumn(enc_resource_name),
+        type_code_col_name,
         etlutils::fhirdbGetColumns(enc_resource_name, c(
-          "_type_code",
           "_period_start",
           "_period_end",
           "_partof_ref",
           "_partof_calculated_ref",
           "_main_encounter_calculated_ref"#,
+          #"_diagnosis_condition_ref",
           #"_diagnosis_condition_calculated_ref"
         ))
       )
-      return(getAllLastViewResources(enc_resource_name, column_names))
+      where_clause <- paste("WHERE", type_code_col_name, "IN", etlutils::fhirdbGetQueryList(ENCOUNTER_TYPES))
+      resources <- getAllLastViewResources(enc_resource_name, column_names, where_clause)
+      return(resources)
     }
 
     writeTableWithReferencesToDB <- function(resource_name, resource_table, calculated_col_names, lock_id) {

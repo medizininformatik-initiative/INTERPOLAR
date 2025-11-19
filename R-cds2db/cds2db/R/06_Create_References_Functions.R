@@ -12,20 +12,12 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
 
   # add the both calculated columns
   encounters[, enc_partof_calculated_ref := NA_character_]
-  encounters[, enc_diagnosis_condition_calculated_ref := NA_character_]
+  #encounters[, enc_diagnosis_condition_calculated_ref := NA_character_] # currently not used
 
   # split Encounters by type code
   encounters_by_type <- list(einrichtungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[1]]],
                              abteilungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[2]]],
-                             versorgungsstellenkontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[3]]],
-                             invalid = encounters[!(enc_type_code %in% ENCOUNTER_TYPES)])
-
-  # cat a warning for every invalid Encounter
-  if (nrow(encounters_by_type$invalid)) {
-    msg <- "The Encounters with the following FHIR ID have no or an invalid type/code attribute and will be ignored:\n"
-    msg <- paste0(msg, paste0("  ", encounters_by_type$invalid$enc_id, collapse = "\n"))
-    etlutils::catWarningMessage(msg)
-  }
+                             versorgungsstellenkontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[3]]])
 
   # cat warning message if there are no encounters of at least one type
   for (type_index in 1:3) {
