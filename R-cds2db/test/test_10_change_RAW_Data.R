@@ -130,9 +130,13 @@ if (exists("DEBUG_DAY")) {
     enc_level_3_id <- testTransferWardInternal(pid1, "Raum 5", "Bett 5", "Station 2", -4.0)
     dt_enc <- testGetResourceTable("Encounter")
     dt_enc[enc_id %in% enc_level_3_id, enc_partof_ref := NA_character_]
+    dt_enc[enc_id %in% enc_level_3_id, enc_identifier_system := NA_character_]
     testSetResourceTable("Encounter", dt_enc)
 
     testTransferWardInternal(pid1, "Raum 6", "Bett 6", "Station 2", -2.5)
+    dt_enc <- testGetResourceTable("Encounter")
+    dt_enc[enc_id %in% enc_level_3_id, enc_partof_ref := NA_character_]
+    testSetResourceTable("Encounter", dt_enc)
     testDischarge(pid1)
   })
 
