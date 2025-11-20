@@ -6,7 +6,7 @@ output: html_document
 
 ## Logik hinter den Kennzahlen detailliert erklärt
 
-## Version 0.1 (05.11.2025)
+## (work in progress)
 
 ### 1. Laden und Filtern der Daten sowie Warnungen bei unerwarteten Datenkonstellationen
 

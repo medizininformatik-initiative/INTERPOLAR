@@ -38,14 +38,8 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS base64enc
 RUN /rocker_scripts/bin/install2.r -n $NCPUS digest
 RUN /rocker_scripts/bin/install2.r -n $NCPUS units
 
-# Packages für kableExtra
-RUN apt-get update && apt-get install -y \
-  libfontconfig1-dev \
-  libharfbuzz-dev \
-  libfribidi-dev \
-  pandoc
-
-RUN /rocker_scripts/bin/install2.r -n $NCPUS kableExtra
+# Install R packages for interactive HTML tables
+RUN /rocker_scripts/bin/install2.r -n $NCPUS htmlwidgets htmltools DT jsonlite
 
 WORKDIR /src
 
