@@ -49,91 +49,125 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
       }
     })
 
+    # --- Fill enc_partof_calculated_ref from common_encounter_fhir_identifier_system ---
     etlutils::runLevel2("... from common_encounter_fhir_identifier_system", {
       if (etlutils::isSimpleNotEmptyString(common_encounter_fhir_identifier_system)) {
-        for (enc_lvl in 2:3) { # for each level except the first (einrichtungskontakt)
+        for (enc_lvl in 2:3) {  # process levels 2 and 3 (children), map to level 1 (parents)
           encounters_of_lvl <- encounters_by_type[[enc_lvl]]
-          data.table::setorder(encounters_of_lvl, enc_id)
           parent_encounters_of_lvl <- encounters_by_type[[enc_lvl - 1]]
+
           if (nrow(parent_encounters_of_lvl)) {
-            for (enc_index in seq_len(nrow(encounters_of_lvl))) {
-              if (is.na(encounters_of_lvl$enc_partof_calculated_ref[enc_index])) {
-                identifier_system <- encounters_of_lvl$enc_identifier_system[enc_index]
-                if (identifier_system %in% common_encounter_fhir_identifier_system) {
-                  patient_ref <- encounters_of_lvl$enc_patient_ref[enc_index]
-                  identifier_value <- encounters_of_lvl$enc_identifier_value[enc_index]
-                  parent_candidate_ids <- parent_encounters_of_lvl[enc_patient_ref %in% patient_ref & enc_identifier_value %in% identifier_value, enc_id]
-                  parent_candidate_id <- unique(parent_candidate_ids)
-                  if (length(parent_candidate_id) == 1) {
-                    parent_encounter_ref <- etlutils::fhirdataGetEncounterReference(parent_candidate_id)
-                    encounters_of_lvl[enc_index, enc_partof_calculated_ref := parent_encounter_ref]
-                    if (enc_index > 1) {
-                      for (pre_enc_index in (enc_index - 1):1) {
-                        if (encounters_of_lvl[pre_enc_index, enc_id] == encounters_of_lvl[enc_index, enc_id]) {
-                          encounters_of_lvl[pre_enc_index, enc_partof_calculated_ref := parent_encounter_ref]
-                        }
-                      }
-                    }
-                    if (enc_index < nrow(encounters_of_lvl)) {
-                      for (post_enc_index in (enc_index + 1):nrow(encounters_of_lvl)) {
-                        if (encounters_of_lvl[post_enc_index, enc_id] == encounters_of_lvl[enc_index, enc_id]) {
-                          encounters_of_lvl[post_enc_index, enc_partof_calculated_ref := parent_encounter_ref]
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-              # print all 10000 rows progress
-              if (enc_index %% 10000 == 0) {
-                cat(paste0("Processed ", enc_index, " of ", nrow(encounters_of_lvl), " encounters of type '", ENCOUNTER_TYPES[[enc_lvl]], "'\n"))
-              }
-            }
+
+            # --- Prepare parent candidates restricted to the allowed identifier system ---
+            # Keep only rows with non-missing patient and identifier value to enable joins.
+            parent_dt <- parent_encounters_of_lvl[
+              enc_identifier_system %in% common_encounter_fhir_identifier_system &
+                !is.na(enc_identifier_value) & !is.na(enc_patient_ref),
+              .(enc_id, enc_patient_ref, enc_identifier_system, enc_identifier_value)
+            ]
+
+            # --- Reduce to unique parent per (patient, system, value); drop ambiguous groups ---
+            parent_unique <- parent_dt[
+              ,
+              .(
+                n_parents = data.table::uniqueN(enc_id),
+                parent_id = unique(enc_id)[1L]
+              ),
+              by = .(enc_patient_ref, enc_identifier_system, enc_identifier_value)
+            ][n_parents == 1L][, n_parents := NULL][]
+
+            # --- Prepare child rows that still need a calculated partOf and have matching identifiers ---
+            child_dt <- encounters_of_lvl[
+              is.na(enc_partof_calculated_ref) &
+                enc_identifier_system %in% common_encounter_fhir_identifier_system &
+                !is.na(enc_identifier_value) & !is.na(enc_patient_ref),
+              .(enc_id, enc_patient_ref, enc_identifier_system, enc_identifier_value)
+            ]
+
+            # --- Build secondary indices (no reordering) for fast equi-join ---
+            data.table::setindexv(parent_unique, c("enc_patient_ref", "enc_identifier_system", "enc_identifier_value"))
+            data.table::setindexv(child_dt,      c("enc_patient_ref", "enc_identifier_system", "enc_identifier_value"))
+
+            # --- Join children to unique parents on (patient, system, value) ---
+            matched <- parent_unique[
+              child_dt,
+              on = .(enc_patient_ref, enc_identifier_system, enc_identifier_value),
+              nomatch = 0L
+            ]
+
+            # --- Create assignment table: one target value per child enc_id ---
+            assign_dt <- matched[
+              ,
+              .(enc_id, enc_partof_calculated_ref = paste0("Encounter/", parent_id))
+            ][
+              , .SD[1L], by = enc_id
+            ]
+
+            # --- Index by enc_id and update-by-join (updates all rows of that enc_id) ---
+            data.table::setindex(encounters_of_lvl, "enc_id")
+            data.table::setindex(assign_dt,        "enc_id")
+
+            encounters_of_lvl[
+              assign_dt,
+              on = .(enc_id),
+              enc_partof_calculated_ref := i.enc_partof_calculated_ref
+            ]
+
+            # --- Write back this level ---
+            encounters_by_type[[enc_lvl]] <- encounters_of_lvl
           }
-          encounters_by_type[[enc_lvl]] <- encounters_of_lvl
         }
       }
     })
 
+    # --- Fill enc_partof_calculated_ref from timestamps (per child row, O(K * log P) with indexes) ---
     etlutils::runLevel2("... from timestamps", {
-      for (i in 2:3) { # for each level except the first (einrichtungskontakt)
-        encounters_of_lvl <- encounters_by_type[[i]]
-        parent_encounters_of_lvl <- encounters_by_type[[i - 1]]
+      for (enc_lvl in 2:3) {  # process levels 2 and 3 only
+        encounters_of_lvl <- encounters_by_type[[enc_lvl]]
+        parent_encounters_of_lvl <- encounters_by_type[[enc_lvl - 1]]
+
         if (nrow(parent_encounters_of_lvl)) {
+          # Index parents on patient for faster filtering
+          data.table::setindexv(parent_encounters_of_lvl, "enc_patient_ref")
+
           for (enc_index in seq_len(nrow(encounters_of_lvl))) {
-            if (is.na(encounters_of_lvl$enc_partof_calculated_ref[enc_index])) {
-              patient_ref <- encounters_of_lvl$enc_patient_ref[enc_index]
-              candidate_parent_encounters <- parent_encounters_of_lvl[enc_patient_ref == patient_ref]
-              if (nrow(candidate_parent_encounters)) {
-                # find the best fitting parent encounter by timestamp
-                child_start <- encounters_of_lvl$enc_period_start[enc_index]
-                child_end <- encounters_of_lvl$enc_period_end[enc_index]
-                # filter candidates that enclose the child encounter
-                # Keep candidates that start no later than the child start.
-                # Compare end times only if BOTH ends are present; otherwise ignore end.
-                candidate_parent_encounters <- candidate_parent_encounters[
-                  enc_period_start <= child_start &
-                    (is.na(child_end) | is.na(enc_period_end) | enc_period_end >= child_end)
-                ]
-                if (nrow(candidate_parent_encounters)) {
-                  time_diff <- abs(as.numeric(difftime(
-                    candidate_parent_encounters$enc_period_start,
-                    child_start,
-                    units = "secs"
-                  )))
-                  idx <- which.min(time_diff)
-                  best_fit_parent <- candidate_parent_encounters[idx]
-                  encounters_of_lvl[enc_index, enc_partof_calculated_ref := paste0("Encounter/", best_fit_parent$enc_id)]
-                }
-              }
-            }
-            # print all 10000 rows progress
-            if (enc_index %% 10000 == 0) {
-              cat(paste0("Processed ", enc_index, " of ", nrow(encounters_of_lvl), " encounters of type '", ENCOUNTER_TYPES[[i]], "'\n"))
-            }
+            # Skip if already resolved
+            if (!is.na(encounters_of_lvl$enc_partof_calculated_ref[enc_index])) next
+
+            patient_ref <- encounters_of_lvl$enc_patient_ref[enc_index]
+            if (is.na(patient_ref)) next
+
+            # Candidate parents: same patient
+            candidate_parent_encounters <- parent_encounters_of_lvl[enc_patient_ref == patient_ref]
+            if (!nrow(candidate_parent_encounters)) next
+
+            # Child time window
+            child_start <- encounters_of_lvl$enc_period_start[enc_index]
+            child_end   <- encounters_of_lvl$enc_period_end[enc_index]
+
+            # Keep parents that start no later than child_start AND
+            # compare ends only if BOTH ends are present; otherwise ignore end.
+            candidate_parent_encounters <- candidate_parent_encounters[
+              enc_period_start <= child_start &
+                (is.na(child_end) | is.na(enc_period_end) | enc_period_end >= child_end)
+            ]
+            if (!nrow(candidate_parent_encounters)) next
+
+            # Choose parent with the closest start time to child_start
+            time_diff <- abs(as.numeric(difftime(
+              candidate_parent_encounters$enc_period_start,
+              child_start,
+              units = "secs"
+            )))
+            best_idx <- which.min(time_diff)
+            best_fit_parent <- candidate_parent_encounters[best_idx]
+
+            # Assign calculated partOf reference
+            encounters_of_lvl[enc_index, enc_partof_calculated_ref := paste0("Encounter/", best_fit_parent$enc_id)]
           }
         }
-        encounters_by_type[[i]] <- encounters_of_lvl
+
+        encounters_by_type[[enc_lvl]] <- encounters_of_lvl
       }
     })
 
