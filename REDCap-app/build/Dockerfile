@@ -1,5 +1,6 @@
 # "php:apache" siehe https://hub.docker.com/r/library/php/
-FROM php:8-apache-bookworm
+#FROM php:8-apache-bookworm
+FROM php:8.3-apache-trixie
 
 LABEL maintainer "Sebastian Stäubert <sebastian.staeubert@imise.uni-leipzig.de>"
 
@@ -20,7 +21,7 @@ RUN apt-get install -y \
 		libjpeg62-turbo-dev \
 		libpng-dev \
 		libzip-dev \
-		libmagickwand-dev
+		libmagickwand-dev 
 
 # Erweiterung für PHP: iconv
 RUN docker-php-ext-configure iconv \
