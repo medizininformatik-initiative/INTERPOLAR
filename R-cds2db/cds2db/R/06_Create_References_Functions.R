@@ -159,6 +159,7 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   ids <- unique(encounters$enc_id)
   # Memoization to avoid repeated walks
   resolve_cache <- new.env(parent = emptyenv())
+
   # Resolve top-most encounter (max depth = 3), return "Encounter/<id>" or "invalid"
   resolveMainRef <- function(id) {
     # Return cached if present
@@ -191,8 +192,9 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
     }
     main_ref <- if (is.na(main_id)) "invalid" else etlutils::fhirdataGetEncounterReference(main_id)
     assign(id, main_ref, envir = resolve_cache)
-    main_ref
+    return(main_ref)
   }
+
   # Build mapping enc_id -> main_ref and join back
   main_map <- data.table::data.table(
     enc_id = ids,
