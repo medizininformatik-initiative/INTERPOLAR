@@ -379,7 +379,7 @@ createFrontendTables <- function() {
     part_of_encounters <- encounters[!is.na(enc_partof_calculated_ref)]
 
     # Remove the rows that exist in part_of_encounters from encounters
-    main_encounters <- encounters[!enc_id %in% part_of_encounters$enc_id]
+    main_encounters <- encounters[!enc_id %in% part_of_encounters$enc_id & enc_type_code %in% "einrichtungskontakt"]
 
     # load Conditions referenced by Encounters
     query_ids <- etlutils::fhirdbGetQueryList(encounters$enc_diagnosis_condition_ref,
