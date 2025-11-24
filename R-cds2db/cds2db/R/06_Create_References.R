@@ -3,13 +3,13 @@ mustCreateReferencesForOldData <- function() {
   query <- paste0(
     "SELECT 1 AS has_ref\n",
     "FROM v_encounter_last_version\n",
-    "WHERE enc_main_encounter_calculated_ref IS NOT NULL\n",
+    "WHERE enc_main_encounter_calculated_ref IS NULL\n",
     "AND enc_type_code IN ", etlutils::fhirdbGetQueryList(ENCOUNTER_TYPES), "\n", # ignore complete invalid encounters with other type codes!
     "LIMIT 1;\n"
   )
   res <- etlutils::dbGetReadOnlyQuery(query, lock_id = "mustCreateReferencesForOldData()")
   # If no rows returned, references must be created
-  return(nrow(res) == 0L)
+  return(nrow(res) == 1)
 }
 
 createReferences <- function(resource_tables, common_encounter_fhir_identifier_system = NULL) {
