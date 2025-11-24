@@ -105,23 +105,131 @@ BEGIN
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'DELETE FROM cds2db_in.temp_calculated_items WHERE cal_calculated_value IS NULL'
         ) ) AS t(res TEXT) INTO erg;
-
-        -- Updates in die Resourcen übernehmen
-        FOR current_record IN (SELECT DISTINCT cal_schema, cal_resource, cal_fhir_column, cal_fhir_id, cal_calculated_column_name, cal_calculated_value FROM cds2db_in.temp_calculated_items) LOOP
-
-            err_section:='temp_700_calculated_olddata_items_break-30';    err_schema:='(DynSQL) '||current_record.cal_schema;    err_table:='(Dyn) '||current_record.cal_resource;
-
-            SELECT res FROM public.pg_background_result(public.pg_background_launch(
-            'UPDATE '||current_record.cal_schema||'.'||current_record.cal_resource||' SET '||current_record.cal_calculated_column_name||'='''||current_record.cal_calculated_value||''' WHERE '||current_record.cal_fhir_column||'='''||current_record.cal_fhir_id||''''
-            ) ) AS t(res TEXT) INTO erg;
-
-            err_section:='temp_700_calculated_olddata_items_break-35';    err_schema:='cds2db_in';    err_table:='temp_calculated_items';
-
-            SELECT res FROM public.pg_background_result(public.pg_background_launch(
-            'DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='''||current_record.cal_schema||''' AND cal_resource='''||current_record.cal_resource||''' AND cal_fhir_column='''||current_record.cal_fhir_column||''' AND cal_fhir_id='''||current_record.cal_fhir_id||''' AND cal_calculated_column_name='''||current_record.cal_calculated_column_name
-            ||''' AND cal_calculated_value='''||current_record.cal_calculated_value||''''
-            ) ) AS t(res TEXT) INTO erg;
+        
+        -- Updates in die Resourcen übernehmen ----------------------------------------------------------------------
+num:= 10000; -- Anzahl der in einem Batch zu übertragenden berechneten Datensätze
+-- Wenn num:=0 THEN keine Übertragung der berechneten Werte
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='condition' AND cal_calculated_column_name='con_encounter_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='condition' AND cal_calculated_column_name='con_encounter_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.condition SET con_encounter_calculated_ref=current_record.cal_calculated_value WHERE con_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='condition' AND cal_calculated_column_name='con_encounter_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
         END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='medicationrequest' AND cal_calculated_column_name='medreq_encounter_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='medicationrequest' AND cal_calculated_column_name='medreq_encounter_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.medicationrequest SET medreq_encounter_calculated_ref=current_record.cal_calculated_value WHERE medreq_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='medicationrequest' AND cal_calculated_column_name='medreq_encounter_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='medicationadministration' AND cal_calculated_column_name='medadm_encounter_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='medicationadministration' AND cal_calculated_column_name='medadm_encounter_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.medicationadministration SET medadm_encounter_calculated_ref=current_record.cal_calculated_value WHERE medadm_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='medicationadministration' AND cal_calculated_column_name='medadm_encounter_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='medicationstatement' AND cal_calculated_column_name='medstat_encounter_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='medicationstatement' AND cal_calculated_column_name='medstat_encounter_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.medicationstatement SET medstat_encounter_calculated_ref=current_record.cal_calculated_value WHERE medstat_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='medicationstatement' AND cal_calculated_column_name='medstat_encounter_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='observation' AND cal_calculated_column_name='obs_encounter_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='observation' AND cal_calculated_column_name='obs_encounter_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.observation SET obs_encounter_calculated_ref=current_record.cal_calculated_value WHERE obs_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='observation' AND cal_calculated_column_name='obs_encounter_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='diagnosticreport' AND cal_calculated_column_name='diagrep_encounter_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='diagnosticreport' AND cal_calculated_column_name='diagrep_encounter_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.diagnosticreport SET diagrep_encounter_calculated_ref=current_record.cal_calculated_value WHERE diagrep_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='diagnosticreport' AND cal_calculated_column_name='diagrep_encounter_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='servicerequest' AND cal_calculated_column_name='servreq_encounter_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='servicerequest' AND cal_calculated_column_name='servreq_encounter_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.servicerequest SET servreq_encounter_calculated_ref=current_record.cal_calculated_value WHERE servreq_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='servicerequest' AND cal_calculated_column_name='servreq_encounter_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='procedure' AND cal_calculated_column_name='proc_encounter_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='procedure' AND cal_calculated_column_name='proc_encounter_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.procedure SET proc_encounter_calculated_ref=current_record.cal_calculated_value WHERE proc_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='procedure' AND cal_calculated_column_name='proc_encounter_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='encounter' AND cal_calculated_column_name='enc_partof_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='encounter' AND cal_calculated_column_name='enc_partof_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.encounter SET enc_partof_calculated_ref=current_record.cal_calculated_value WHERE enc_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='encounter' AND cal_calculated_column_name='enc_partof_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='encounter' AND cal_calculated_column_name='enc_main_encounter_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='encounter' AND cal_calculated_column_name='enc_main_encounter_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.encounter SET enc_main_encounter_calculated_ref=current_record.cal_calculated_value WHERE enc_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='encounter' AND cal_calculated_column_name='enc_main_encounter_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+
+IF num>0 THEN
+    SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='encounter' AND cal_calculated_column_name='enc_diagnosis_condition_calculated_ref';
+    IF num2>0 THEN
+        FOR current_record IN (SELECT cal_fhir_column, cal_fhir_id, cal_calculated_value FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='encounter' AND cal_calculated_column_name='enc_diagnosis_condition_calculated_ref' LIMIT num) LOOP
+            UPDATE db_log.encounter SET enc_diagnosis_condition_calculated_ref=current_record.cal_calculated_value WHERE enc_id=current_record.cal_fhir_id;
+            DELETE FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='encounter' AND cal_calculated_column_name='enc_diagnosis_condition_calculated_ref' AND cal_fhir_id=current_record.cal_fhir_id;
+        END LOOP;
+        num:=0;
+    END IF;
+END IF;
+        -- Updates in die Resourcen übernehmen ----------------------------------------------------------------------
 
         -- Semaphore setzen -----------------------------------------
         status:='1/8 db.add_hist_raw_records()';
