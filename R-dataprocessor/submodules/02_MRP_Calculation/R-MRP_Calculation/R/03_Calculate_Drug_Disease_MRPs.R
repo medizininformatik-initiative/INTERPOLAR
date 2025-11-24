@@ -1,11 +1,11 @@
 .drug_disease_env <- new.env()
 
-SetDrugDiseaseListRows <- function(drug_disease_list_rows) {
+setDrugDiseaseListRows <- function(drug_disease_list_rows) {
   # Set the resources in the environment
   assign("drug_disease_list_rows", drug_disease_list_rows, envir = .drug_disease_env)
 }
 
-GetDrugDiseaseListRows <- function() {
+getDrugDiseaseListRows <- function() {
   if (exists("drug_disease_list_rows", envir = .drug_disease_env)) {
     get("drug_disease_list_rows", envir = .drug_disease_env)
   } else {
@@ -18,7 +18,7 @@ GetDrugDiseaseListRows <- function() {
   }
 }
 
-GetNextMrpIndex <- function() {
+getNextMrpIndex <- function() {
   if (exists("drug_disease_list_rows", envir = .drug_disease_env)) {
     tbl <- get("drug_disease_list_rows", envir = .drug_disease_env)
     if (nrow(tbl) > 0 && "mrp_index" %in% names(tbl)) {
@@ -28,7 +28,7 @@ GetNextMrpIndex <- function() {
   return(1L)
 }
 
-GetOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
+getOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
   # Arguments:
   #   match_proxy_row: data.table with columns ATC_FULL_LIST, ICD_FULL_LIST, CONDITION_DISPLAY_CLUSTER
   #   drug_disease_list_rows: existing mapping table with same columns + mrp_index
@@ -47,8 +47,7 @@ GetOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
   if (nrow(existing_entry)) {
     mrp_index <- existing_entry$mrp_index
   } else {
-    mrp_index <- GetNextMrpIndex()
-
+    mrp_index <- getNextMrpIndex()
     drug_disease_list_rows <- rbind(
       drug_disease_list_rows,
       data.table::data.table(
@@ -60,7 +59,7 @@ GetOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
       fill = TRUE
     )
 
-    SetDrugDiseaseListRows(drug_disease_list_rows)
+    setDrugDiseaseListRows(drug_disease_list_rows)
   }
   return(mrp_index)
 }
@@ -290,7 +289,7 @@ matchATCCodes <- function(active_requests, mrp_table_list_by_atc) {
 #'
 matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, match_atc_codes, meda_datetime, patient_id) {
 
-  drug_disease_list_rows <- GetDrugDiseaseListRows()
+  drug_disease_list_rows <- getDrugDiseaseListRows()
 
   # Initialize empty result data.table
   matched_rows <- data.table::data.table(
@@ -368,7 +367,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
       ]
 
       # Get or create mrp_index
-      mrp_index <- GetOrCreateMrpIndex(mrp_table_list_row, GetDrugDiseaseListRows())
+      mrp_index <- getOrCreateMrpIndex(mrp_table_list_row, getDrugDiseaseListRows())
 
       # Add directly to matched_rows
       if (length(relevant_atcs) > 0) {
@@ -392,7 +391,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
         new_row[, kurzbeschr_item2 := paste0(icd_display, " - ", icd_code, "   (",
                                              format(condition_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
         new_row[, kurzbeschr_suffix := paste0("laut der entsprechenden Fachinformation [",
-                                              diagnosis_cluster, "] kontrainduziert.")]
+                                              diagnosis_cluster, "] kontraindiziert.")]
 
         matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
       }
@@ -1128,7 +1127,7 @@ matchICDProxies <- function(
               proxy_start_datetime <- first_valid_row$start_datetime
 
               # Get or create mrp_index
-              mrp_index <- GetOrCreateMrpIndex(match_proxy_row, GetDrugDiseaseListRows())
+              mrp_index <- getOrCreateMrpIndex(match_proxy_row, getDrugDiseaseListRows())
 
               if (nrow(valid_proxy_rows)) {
                 new_row <- data.table::data.table(
@@ -1140,7 +1139,7 @@ matchICDProxies <- function(
                   kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION),
                   kurzbeschr_item2 = paste0(proxy_display, " - ", proxy_code),
                   kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation [",
-                                             match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontrainduziert."),
+                                             match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontraindiziert."),
                   kurzbeschr_additional = NA_character_
                 )
 
@@ -1282,6 +1281,7 @@ calculateMRPsDrugDisease <- function(active_requests, mrp_pair_list, resources, 
   match_atc_and_icd_codes <- data.table::data.table()
   splitted_mrp_tables <- getSplittedMRPTablesDrugDisease(mrp_pair_list)
   # Match ATC-codes between encounter data and MRP definitions
+  #browser()
   match_atc_codes <- matchATCCodes(active_requests, splitted_mrp_tables$by_atc)
   # Get and match ICD-codes of the patient
   if (nrow(match_atc_codes)) {
@@ -1313,6 +1313,7 @@ calculateMRPsDrugDisease <- function(active_requests, mrp_pair_list, resources, 
       loinc_mapping_table = loinc_mapping_table,
       loinc_matching_function = matchLOINCCutoff
     )
+    #browser()
     if (nrow(match_icd_proxies)) {
       match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
     }
