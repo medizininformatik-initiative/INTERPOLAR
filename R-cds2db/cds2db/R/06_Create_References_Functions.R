@@ -232,13 +232,13 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
         return(resource_table)
       }
 
-      # # Check if the current resource type is present in the temp_calculated_items table. If so, we
-      # # can skip the calculation, because it was already done before for this resource.
-      # query <- paste0("SELECT 1 FROM v_temp_calculated_items WHERE resource_type = '", resource_name, "' LIMIT 1;")
-      # resource_in_temp <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createReferencesForResource()")
-      # if (nrow(resource_in_temp)) {
-      #   return(resource_table)
-      # }
+      # Check if the current resource type is present in the temp_calculated_items table. If so, we
+      # can skip the calculation, because it was already done before for this resource.
+      query <- paste0("SELECT 1 FROM v_temp_calculated_items WHERE cal_resource = '", resource_name, "' LIMIT 1;")
+      resource_in_temp <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createReferencesForResource()")
+      if (nrow(resource_in_temp)) {
+        return(resource_table)
+      }
 
       for (row_index in seq_len(nrow(resource_table))) {
         resource_encounter_ref <- resource_table[row_index, get(ref_col_name)]
