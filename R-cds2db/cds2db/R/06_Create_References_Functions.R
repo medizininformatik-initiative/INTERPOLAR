@@ -287,11 +287,12 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
 joinCalculatedRefColumsToEncounter <- function(fullEncTable, encTableWithCalculatedRefs) {
   # get calculated ref columns by grep("_calculated_ref", ...)
   calculated_col_names <- grep("_calculated_ref$", names(encTableWithCalculatedRefs), value = TRUE)
+  enc_id_col_name <- etlutils::fhirdbGetIDColumn("encounter")
 
   fullEncTable[
     encTableWithCalculatedRefs,
-    on = .(enc_id),
-    (calculated_col_names) := mget(calculated_col_names)
+    on = enc_id_col_name,
+    (calculated_col_names) := mget(paste0("i.", calculated_col_names))
   ]
 
   return(fullEncTable)
