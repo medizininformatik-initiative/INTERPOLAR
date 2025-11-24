@@ -67,8 +67,15 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       # get all Encounters from DB via the v_encounter_last_version view
       where_clause <- paste0("WHERE ", pid_col_name, " IN ", etlutils::fhirdbGetQueryList(pids))
       resources <- getAllLastViewResources("encounter", "*", where_clause)
+      if (nrow(resources)) {
+        common_cols <- intersect(names(encounters), names(resources))
+        #encounters_trimmed <- encounters[, ..common_cols] # Should never be necessary; in encounters, only the columns from the table description are used.
+        resources <- resources[, ..common_cols]
+        encounters <- rbind(encounters, resources, use.names = TRUE)
+        encounters <- unique(encounters)
+      }
     }
-    return(resources)
+    return(encounters)
   }
 
   # if the resources are null that indicates that we must create all references for old data
