@@ -32,8 +32,11 @@ getEncounterColNamesForReferenceCalculation <- function() {
 createReferencesForEncounters <- function(encounters, common_encounter_fhir_identifier_system) {
 
   # add the both calculated columns
-  encounters[, enc_partof_calculated_ref := NA_character_]
-  #encounters[, enc_diagnosis_condition_calculated_ref := NA_character_] # currently not used
+  if (!("enc_partof_calculated_ref" %in% names(encounters))) {
+    encounters[, enc_partof_calculated_ref := NA_character_]
+    encounters[, enc_main_encounter_calculated_ref := NA_character_]
+    #encounters[, enc_diagnosis_condition_calculated_ref := NA_character_] # currently not used
+  }
 
   # split Encounters by type code
   encounters_by_type <- list(einrichtungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[1]]],
@@ -46,6 +49,10 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
       msg <- paste0("No '", ENCOUNTER_TYPES[[type_index]], "' Encounters found!")
       etlutils::catWarningMessage(msg)
     }
+  }
+
+  if (!any(encounters[, is.na(enc_main_encounter_calculated_ref)])) {
+    return(encounters)
   }
 
   etlutils::runLevel2("Fill the enc_partof_calculated_ref column level by level (direct copy)", {
@@ -153,8 +160,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
 
   # Start: create enc_main_encounter_calculated_ref
 
-  # Compute main-encounter reference per enc_id (handles duplicated enc_id rows)
-  encounters[, enc_main_encounter_calculated_ref := NA_character_]
   # Unique enc_ids (FHIR-cracked table can have duplicates per enc_id)
   ids <- unique(encounters$enc_id)
   # Memoization to avoid repeated walks
@@ -211,12 +216,30 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
 }
 
 createReferencesForResource <- function(encounters, resource_name, resource_table, start_column_names) {
-  etlutils::runLevel2("create Encounter References", {
+  etlutils::runLevel2Line(paste0("Create Encounter References for ", resource_name), {
     if (!is.null(resource_table) && nrow(resource_table) > 0) {
       ref_col_name <- getEncounterReferenceColumnName(resource_name)
       calculated_ref_col_name <- getEncounterCalculatedReferenceColumnName(resource_name)
-      # add the calculated reference column
-      resource_table[, (calculated_ref_col_name) := NA_character_]
+      # add the calculated reference column if not exists
+      # If the data comes from the DB, then this column already exists and may contain values that
+      # must not be overwritten. If the data comes from the FHIR server, then the column does not
+      # yet exist and must be initialized.
+      if (!(calculated_ref_col_name %in% names(resource_table))) {
+        resource_table[, (calculated_ref_col_name) := NA_character_]
+      }
+      # If there are no NAs in the calculated reference column, we are done
+      if (!any(resource_table[, is.na(get(calculated_ref_col_name))])) {
+        return(resource_table)
+      }
+
+      # # Check if the current resource type is present in the temp_calculated_items table. If so, we
+      # # can skip the calculation, because it was already done before for this resource.
+      # query <- paste0("SELECT 1 FROM v_temp_calculated_items WHERE resource_type = '", resource_name, "' LIMIT 1;")
+      # resource_in_temp <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createReferencesForResource()")
+      # if (nrow(resource_in_temp)) {
+      #   return(resource_table)
+      # }
+
       for (row_index in seq_len(nrow(resource_table))) {
         resource_encounter_ref <- resource_table[row_index, get(ref_col_name)]
         if (!is.na(resource_encounter_ref)) {

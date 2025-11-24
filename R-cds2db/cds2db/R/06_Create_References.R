@@ -25,43 +25,54 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     servicerequest = "servreq_authoredon"
   )
 
+  getAllLastViewResources <- function(resource_name, column_names, where_clause = NULL) {
+    # get all resources from DB via the v_encounter_last_version view
+    resource_name <- tolower(resource_name)
+    column_names <- paste0(column_names, collapse = ", ")
+    query <- paste0(
+      "SELECT DISTINCT ", column_names, " FROM v_", resource_name, "_last_version"
+    )
+    if (!is.null(where_clause)) {
+      query <- paste0(query, "\n", where_clause)
+    }
+    query <- paste0(query, ";\n")
+    resources <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getAllLastViewResources(", resource_name, ")"))
+    return(resources)
+  }
+
+  getAllLastViewNonEncounterResources <- function(resource_name) {
+    column_names <- c(
+      etlutils::fhirdbGetIDColumn(resource_name),
+      getEncounterReferenceColumnName(resource_name),
+      getEncounterCalculatedReferenceColumnName(resource_name),
+      etlutils::fhirdbGetColumns(resource_name, "_patient_ref"),
+      start_time_column_names[[resource_name]]
+    )
+    resources <- getAllLastViewResources(resource_name, column_names)
+    return(resources)
+  }
+
+  getAllLastViewEncounterResources <- function() {
+    # get all Encounters from DB via the v_encounter_last_version view
+    col_names <- getEncounterColNamesForReferenceCalculation()
+    where_clause <- paste0("WHERE ", col_names["type_code_col_name"], " IN ", etlutils::fhirdbGetQueryList(ENCOUNTER_TYPES))
+    resources <- getAllLastViewResources("encounter", col_names, where_clause)
+    return(resources)
+  }
+
+  getAllLastViewEncounterResourcesForPIDs <- function(encounters) {
+    if (nrow(encounters)) {
+      pid_col_name <- etlutils::fhirdbGetPIDColumn("encounter")
+      pids <- unique(encounters[[pid_col_name]])
+      # get all Encounters from DB via the v_encounter_last_version view
+      where_clause <- paste0("WHERE ", pid_col_name, " IN ", etlutils::fhirdbGetQueryList(pids))
+      resources <- getAllLastViewResources("encounter", "*", where_clause)
+    }
+    return(resources)
+  }
+
   # if the resources are null that indicates that we must create all references for old data
   if (is.null(resource_tables)) {
-
-    getAllLastViewResources <- function(resource_name, column_names, where_clause = NULL) {
-      # get all resources from DB via the v_encounter_last_version view
-      resource_name <- tolower(resource_name)
-      column_names <- paste0(column_names, collapse = ", ")
-      query <- paste0(
-        "SELECT DISTINCT ", column_names, " FROM v_", resource_name, "_last_version"
-      )
-      if (!is.null(where_clause)) {
-        query <- paste0(query, "\n", where_clause)
-      }
-      query <- paste0(query, ";\n")
-      resources <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getAllLastViewResources(", resource_name, ")"))
-      return(resources)
-    }
-
-    getAllLastViewNonEncounterResources <- function(resource_name) {
-      column_names <- c(
-        etlutils::fhirdbGetIDColumn(resource_name),
-        getEncounterReferenceColumnName(resource_name),
-        getEncounterCalculatedReferenceColumnName(resource_name),
-        etlutils::fhirdbGetColumns(resource_name, "_patient_ref"),
-        start_time_column_names[[resource_name]]
-      )
-      resources <- getAllLastViewResources(resource_name, column_names)
-      return(resources)
-    }
-
-    getAllLastViewEncounterResources <- function() {
-      # get all Encounters from DB via the v_encounter_last_version view
-      col_names <- getEncounterColNamesForReferenceCalculation()
-      where_clause <- paste0("WHERE ", col_names["type_code_col_name"], " IN ", etlutils::fhirdbGetQueryList(ENCOUNTER_TYPES))
-      resources <- getAllLastViewResources("encounter", col_names, where_clause)
-      return(resources)
-    }
 
     writeTableWithReferencesToDB <- function(resource_name, resource_table, calculated_col_names, lock_id) {
       id_col_name <- etlutils::fhirdbGetIDColumn(resource_name)
@@ -97,6 +108,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
 
     etlutils::runLevel2("Run createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)", {
       all_encounters <- createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)
+      resource_tables[["encounter"]] <- all_encounters
     })
 
     # Check if we must create references for old data (should be executed exactly once and then never again)
@@ -113,6 +125,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
           calculated_col_names = etlutils::fhirdbGetColumns(resource_name, "_encounter_calculated_ref"),
           lock_id = paste("Write recalculated references for old", resource_name, "data")
         )
+        resource_tables[[resource_name]] <- resource_table
       }
     })
     etlutils::runLevel2("Write Encounters with references to database", {
@@ -135,7 +148,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       # 1.) Fill the calculated reference columns for Encounters
       # filter the resource_tables$encounter to the columns we need for reference creation
       encounters <- resource_tables$encounter[, c(getEncounterColNamesForReferenceCalculation()), with = FALSE]
-      encounters <- unique(encounters)
+      encounters <- getAllLastViewEncounterResourcesForPIDs(encounters)
       encounters <- createReferencesForEncounters(encounters, common_encounter_fhir_identifier_system)
       # fill encounter table with the calculated ref columns
       resource_tables$encounter <- joinCalculatedRefColumsToEncounter(resource_tables$encounter, encounters)
