@@ -32,7 +32,10 @@ Imports:
     RPostgres,
     stringr,
     xml2,
-    kableExtra
+    htmlwidgets,
+    htmltools,
+    DT,
+    jsonlite
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

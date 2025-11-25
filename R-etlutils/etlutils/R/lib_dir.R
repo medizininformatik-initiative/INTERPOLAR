@@ -194,109 +194,120 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
   saveRDS(object = object, file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData'))
 }
 
-#' Write a Formatted Table to a File
+#' Write an HTML Table with Download Buttons
 #'
-#' This function converts a data frame or matrix into a table formatted in the specified format
-#' and writes it to a file. It leverages the `kableExtra` package for styling and file output.
+#' Generates an interactive HTML table from a data frame, including optional caption and footnote,
+#' with CSV and Excel download buttons. Saves the table to a local or global project directory.
 #'
-#' @param table A data frame or matrix to convert into a formatted table.
-#' @param filename_without_extension A character string specifying the base name of the output file.
-#' If `NA`, the name of the `table` variable is used as the filename.
-#' @param project_sub_dir A character string defining a sub-directory within the project's global directory
-#' where the file will be saved, or `NA` to use a default directory path. The path is constructed using `fhircrackr::pastep`.
-#' @param format A character string indicating the format of the output table file (only html); Default is "html".
-#' @param caption An optional caption to be displayed above the table.
-#' @param footnote An optional footnote to be displayed below the table.
-#'        Default is an empty string.
-#' @param colnames An optional character vector of column names to override
-#'        the default column names from `table`. Default is `NA`.
+#' @param table A data frame or matrix to be converted into an HTML table.
+#' @param output_location Character; either "local" or "global" to determine where the table should be saved.
+#' @param filename_without_extension Character; optional filename prefix. If NA, the variable name of `table` is used.
+#' @param project_sub_dir Character; optional sub-directory within the project to store the table. Defaults to "reports" inside the chosen output location.
+#' @param caption Character; optional caption displayed above the table.
+#' @param footnote Character; optional footnote displayed below the table. Defaults to an empty string.
+#' @param colnames Character vector; optional column names for the table. Defaults to `colnames(table)`.
 #'
-#' @return This function does not return a value. It creates a side effect of writing a file in the specified format.
+#' @return Invisibly returns NULL. The function primarily writes a self-contained HTML file with the interactive table.
 #'
 #' @details
-#' The function determines the filename by examining the call stack if `filename_without_extension` is `NA`.
-#' It calculates the save path using `fhircrackr::pastep` and applies styling to the table using `kableExtra`.
-#' The table format is flexible, supporting "html" outputs.
+#' This function wraps `DT::datatable()` to create interactive HTML tables with scrollable views,
+#' top filters, and download buttons for CSV and Excel formats. The HTML file is self-contained,
+#' meaning no accompanying `_files` folder is required. If the `_files` folder exists, it is removed.
 #'
-#' @importFrom kableExtra kable kable_styling save_kable kable_paper
+#' @importFrom htmlwidgets createWidget prependContent saveWidget JS
+#' @importFrom htmltools tags HTML tagList
+#' @importFrom DT datatable
 #' @importFrom fhircrackr pastep
+#' @importFrom jsonlite toJSON
+#'
 #' @export
-#'
-#' @seealso
-#' \code{\link[kableExtra]{kable}}, \code{\link[kableExtra]{kable_styling}}, \code{\link[kableExtra]{save_kable}}
-#'
-writeTableGlobal <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html",
-                             caption = NA, footnote = "", colnames = NA) {
-  if (!is.null(table)) {
+writeHtmlTable <- function(table, output_location = "local", filename_without_extension = NA,
+                           project_sub_dir = NA, caption = NA, footnote = "", colnames = NULL) {
+  if (!is.null(table) & output_location %in% c("local", "global")) {
     if (is.na(filename_without_extension)) {
       filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
     }
     if (is.na(project_sub_dir)) {
-      project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$global_dir, "reports")
+      if (output_location == "local") {
+        project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
+      } else if (output_location == "global") {
+        project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$global_dir, "reports")
+      }
     } else {
-      project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
+      project_sub_dir <- fhircrackr::pastep(".", project_sub_dir)
     }
-    kableExtra::kable(table, format = "html", caption = caption, escape = FALSE, col.names = colnames) |>
-      # kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
-      kableExtra::kable_paper("hover", full_width = F) |>
-      kableExtra::footnote(footnote, footnote_as_chunk = F, general_title = "") |>
-      kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
-  }
-  else {
-    warning(paste0("The table '", deparse(substitute(table)), "' is NULL. No file was written."))
-  }
-}
-
-#' Write a Formatted Table to a File
-#'
-#' This function converts a data frame or matrix into a table formatted in the specified format
-#' and writes it to a file. It leverages the `kableExtra` package for styling and file output.
-#'
-#' @param table A data frame or matrix to convert into a formatted table.
-#' @param filename_without_extension A character string specifying the base name of the output file.
-#' If `NA`, the name of the `table` variable is used as the filename.
-#' @param project_sub_dir A character string defining a sub-directory within the project's local directory
-#' where the file will be saved, or `NA` to use a default directory path. The path is constructed using `fhircrackr::pastep`.
-#' @param format A character string indicating the format of the output table file (only html); Default is "html".
-#' @param caption An optional caption to be displayed above the table.
-#' @param footnote An optional footnote to be displayed below the table.
-#'        Default is an empty string.
-#' @param colnames An optional character vector of column names to override
-#'        the default column names from `table`. Default is `NA`.
-#'
-#' @return This function does not return a value. It creates a side effect of writing a file in the specified format.
-#'
-#' @details
-#' The function determines the filename by examining the call stack if `filename_without_extension` is `NA`.
-#' It calculates the save path using `fhircrackr::pastep` and applies styling to the table using `kableExtra`.
-#' The table format is flexible, supporting "html" outputs.
-#'
-#' @importFrom kableExtra kable kable_styling save_kable kable_paper
-#' @importFrom fhircrackr pastep
-#' @export
-#'
-#' @seealso
-#' \code{\link[kableExtra]{kable}}, \code{\link[kableExtra]{kable_styling}}, \code{\link[kableExtra]{save_kable}}
-#'
-writeTableLocal <- function(table, filename_without_extension = NA, project_sub_dir = NA, format = "html",
-                            caption=NA, footnote = "", colnames = NA) {
-  if (!is.null(table)) {
-    if (is.na(filename_without_extension)) {
-      filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
+    if (!dir.exists(project_sub_dir)) {
+      dir.create(project_sub_dir, recursive = TRUE)
     }
-    if (is.na(project_sub_dir)) {
-      project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
-    } else {
-      project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
+    download_name <- paste0(filename_without_extension, "_", format(Sys.Date(), "%Y%m%d"))
+    if (is.null(colnames)) {
+      colnames <- colnames(table)
     }
-    kableExtra::kable(table, format = "html", caption = caption, escape = FALSE, col.names = colnames) |>
-      # kableExtra::kable_styling("striped", full_width = FALSE, position = "center") |>
-      kableExtra::kable_paper("hover", full_width = F) |>
-      kableExtra::footnote(footnote, footnote_as_chunk = F, general_title = "") |>
-      kableExtra::save_kable(file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".",format)))
-  }
-  else {
-    warning(paste0("The table '", deparse(substitute(table)), "' is NULL. No file was written."))
+    tbl <- DT::datatable(table,
+      caption = caption,
+      escape = FALSE,
+      colnames = colnames,
+      filter = "top",
+      extensions = c("Buttons", "Scroller"),
+      options = list(
+        dom = "Bfrtip",
+        buttons = list(list(
+          extend = "collection",
+          buttons = list(
+            list(
+              extend = "csv", filename = download_name,
+              exportOptions = list(
+                format = list(
+                  header = htmlwidgets::JS(
+                    sprintf(
+                      "function (data, columnIdx) { return %s[columnIdx]; }",
+                      jsonlite::toJSON(c("row_id", colnames(table)))
+                    )
+                  )
+                )
+              )
+            ),
+            list(extend = "excel", filename = download_name)
+          ),
+          text = "Download"
+        )),
+        autoWidth = TRUE,
+        deferRender = TRUE,
+        scroller = TRUE,
+        scrollY = 400,
+        scrollX = TRUE
+      )
+    )
+    note <- htmltools::tags$p(
+      style = "font-size: 1em; color: #000;",
+      htmltools::HTML(paste(footnote, collapse = "<br>"))
+    )
+    page <- htmltools::tagList(
+      tbl,
+      note
+    )
+    widget <- htmlwidgets::createWidget(
+      name = "INTERPOLAR-Reporting",
+      x = list(),
+      package = "htmlwidgets"
+    )
+    widget <- htmlwidgets::prependContent(widget, page)
+    output_html <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".html"))
+    htmlwidgets::saveWidget(
+      widget = widget,
+      file = output_html,
+      selfcontained = TRUE
+    )
+    # remove the accompanying _files directory if it exists (because everything is self-contained in the html)
+    files_dir <- sub("\\.html$", "_files", output_html)
+    if (dir.exists(files_dir)) {
+      unlink(files_dir, recursive = TRUE, force = TRUE)
+    }
+  } else {
+    warning(paste0(
+      "The table '", deparse(substitute(table)), "' is NULL or the output_location '",
+      output_location, "' is invalid. No file was written."
+    ))
   }
 }
 

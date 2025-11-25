@@ -1,0 +1,21 @@
+-- Testfall
+    INSERT INTO cds2db_in.encounter (enc_id, encounter_raw_id, enc_identifier_type_code, enc_diagnosis_condition_calculated_ref) 
+    VALUES ('Test_Pat_FHIR_Test_02', '1', 'Code_Bla_System', 'TestRef');
+
+-- schauen ob verarbeitet
+    select * from cds2db_in.encounter;
+
+-- hash ansehen und merken - enc_diagnosis_condition_calculated_ref noch leer
+    SELECT e.enc_diagnosis_condition_calculated_ref, e.hash_index_col, e.* FROM db_log.encounter e;
+    --> current_dataset_status input : hash: 407350e9f882d323614f81b0a8ebf838
+
+-- berechnete Spalte ändern - diese Änderung sollte nicht durchschlagen
+    INSERT INTO cds2db_in.encounter (enc_id, encounter_raw_id, enc_identifier_type_code, enc_diagnosis_condition_calculated_ref) 
+    VALUES ('Test_Pat_FHIR_Test_02', '2', 'Code_Bla_System', 'SollteNichtInLogStehen');
+
+-- schauen ob verarbeitet
+    select * from cds2db_in.encounter;
+
+-- hash ansehen und merken - enc_diagnosis_condition_calculated_ref noch leer
+    SELECT e.enc_diagnosis_condition_calculated_ref, e.hash_index_col, e.* FROM db_log.encounter e;
+    --> current_dataset_status input : hash: 407350e9f882d323614f81b0a8ebf838

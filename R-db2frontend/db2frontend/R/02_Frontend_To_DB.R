@@ -30,7 +30,7 @@ importRedcap2DB <- function() {
     #TODO: Die Instanzen Risikofaktoren und Trigger werden nicht korrekt aus dem REDCap exportiert.
     # Aktuelle Lösung: Die Tabellen Risikofaktoren und Trigger werden nicht in das Frontend importiert.
     # Ob diese Instanzen überhaupt eine Relevanz haben, muss noch geklärt werden.
-    if(!(form_name %in% c("risikofaktor", "trigger"))) {
+    if (!(form_name %in% c("risikofaktor", "trigger"))) {
       data_from_redcap <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
 
       # Remove the redcap_data_access_group values, as they are not needed in the database

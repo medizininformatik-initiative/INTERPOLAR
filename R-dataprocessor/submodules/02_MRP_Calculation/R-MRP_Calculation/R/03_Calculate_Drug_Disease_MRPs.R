@@ -1,3 +1,69 @@
+.drug_disease_env <- new.env()
+
+setDrugDiseaseListRows <- function(drug_disease_list_rows) {
+  # Set the resources in the environment
+  assign("drug_disease_list_rows", drug_disease_list_rows, envir = .drug_disease_env)
+}
+
+getDrugDiseaseListRows <- function() {
+  if (exists("drug_disease_list_rows", envir = .drug_disease_env)) {
+    get("drug_disease_list_rows", envir = .drug_disease_env)
+  } else {
+    data.table::data.table(
+      ATC_FULL_LIST = character(),
+      ICD_FULL_LIST = character(),
+      CONDITION_DISPLAY_CLUSTER = character(),
+      mrp_index = integer()
+    )
+  }
+}
+
+getNextMrpIndex <- function() {
+  if (exists("drug_disease_list_rows", envir = .drug_disease_env)) {
+    tbl <- get("drug_disease_list_rows", envir = .drug_disease_env)
+    if (nrow(tbl) > 0 && "mrp_index" %in% names(tbl)) {
+      return(max(tbl$mrp_index, na.rm = TRUE) + 1)
+    }
+  }
+  return(1L)
+}
+
+getOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
+  # Arguments:
+  #   match_proxy_row: data.table with columns ATC_FULL_LIST, ICD_FULL_LIST, CONDITION_DISPLAY_CLUSTER
+  #   drug_disease_list_rows: existing mapping table with same columns + mrp_index
+
+  current_key <- match_proxy_row[, .(
+    ATC_FULL_LIST,
+    ICD_FULL_LIST,
+    CONDITION_DISPLAY_CLUSTER
+  )]
+  existing_entry <- drug_disease_list_rows[
+    ATC_FULL_LIST %in% current_key$ATC_FULL_LIST &
+      CONDITION_DISPLAY_CLUSTER %in% current_key$CONDITION_DISPLAY_CLUSTER &
+      ICD_FULL_LIST %in% current_key$ICD_FULL_LIST
+  ]
+
+  if (nrow(existing_entry)) {
+    mrp_index <- existing_entry$mrp_index
+  } else {
+    mrp_index <- getNextMrpIndex()
+    drug_disease_list_rows <- rbind(
+      drug_disease_list_rows,
+      data.table::data.table(
+        ATC_FULL_LIST = current_key$ATC_FULL_LIST,
+        ICD_FULL_LIST = current_key$ICD_FULL_LIST,
+        CONDITION_DISPLAY_CLUSTER = current_key$CONDITION_DISPLAY_CLUSTER,
+        mrp_index = mrp_index
+      ),
+      fill = TRUE
+    )
+
+    setDrugDiseaseListRows(drug_disease_list_rows)
+  }
+  return(mrp_index)
+}
+
 #' Get Column Names for Drug-Disease MRP Pair List
 #'
 #' Returns a named character vector of relevant column names used in the
@@ -87,6 +153,8 @@ processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type
   # because LOINC says that the patient has all these diseases.
 
   code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
+  # Create a new column for the full ATC list
+  drug_disease_mrp_definition[, ATC_FULL_LIST := ATC_FOR_CALCULATION]
   # Create a new column for the full ICD list
   drug_disease_mrp_definition[, ICD_FULL_LIST := ICD]
   # SPLIT and TRIM: ICD and proxy column:
@@ -128,33 +196,6 @@ processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type
 
   if (length(error_messages) > 0) {
     stop(paste(error_messages, collapse = "\n"))
-  }
-
-  # Expand and concatenate ICD codes in a vectorized manner.
-  # If there are multiple ICD codes separated by "+", each code is expanded separately, and
-  # combinations of expanded codes are concatenated. ICD Codes must be have at least 3 digits.
-  expandAndConcatenateICDs <- function(icd_column) {
-    # Function to process a single ICD code
-    processICD <- function(icd) {
-      if (is.na(icd) || icd == "") {
-        return(NA_character_)
-      }
-      if (!grepl("+", icd, fixed = TRUE)) {
-        # Handle single ICD code case
-        return(paste(etlutils::expandICDs(icd), collapse = ' '))
-
-      }
-      # Handle multiple ICD codes separated by '+'
-      input_icds <- unlist(strsplit(icd, '\\+'))
-      icd_1 <- etlutils::expandICDs(input_icds[[1]])
-      icd_2 <- etlutils::expandICDs(input_icds[[2]])
-      # Create combinations and concatenate
-      combinations <- outer(icd_1, icd_2, paste, sep = '+')
-      return(trimws(paste(c(combinations), collapse = ' ')))
-
-    }
-    # Apply the function to the entire column
-    sapply(icd_column, processICD)
   }
 
   # Apply the function to the 'ICD' column
@@ -247,15 +288,21 @@ matchATCCodes <- function(active_requests, mrp_table_list_by_atc) {
 #'         of the contraindication).
 #'
 matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, match_atc_codes, meda_datetime, patient_id) {
+
+  drug_disease_list_rows <- getDrugDiseaseListRows()
+
   # Initialize empty result data.table
   matched_rows <- data.table::data.table(
+    mrp_index = integer(),
     icd_code = character(),
     icd_display = character(),
     atc_code = character(),
     proxy_code = character(),
     proxy_type = character(),
     diagnosis_cluster = character(),
-    kurzbeschr = character()
+    kurzbeschr_drug = character(),
+    kurzbeschr_item2 = character(),
+    kurzbeschr_suffix = character()
   )
 
   # Filter all conditions for the current patient
@@ -267,6 +314,11 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
     # Extract all MRP rules for this ICD
     mrp_table_list_rows <- drug_disease_mrp_tables_by_icd[[mrp_icd]]
     mrp_table_list_rows <- mrp_table_list_rows[ATC_FOR_CALCULATION %in% match_atc_codes$atc_code]
+
+    # Keep only relevant columns
+    keep_cols <- c("ATC_DISPLAY", "ATC_FOR_CALCULATION", "ICD_VALIDITY_DAYS", "CONDITION_DISPLAY_CLUSTER",
+                   "ATC_FULL_LIST", "ICD_FULL_LIST")
+    mrp_table_list_rows <- unique(mrp_table_list_rows[, ..keep_cols])
 
     if (nrow(matched_rows)) {
       # Extract all diagnosis_cluster from matched_rows
@@ -295,16 +347,18 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 
       # Check if at least one matching condition is within the validity window
       if (tolower(validity_days) == "unbegrenzt") {
-        condition_match <- any(patient_conditions$start_datetime <= meda_datetime)
+        matching_conditions <- patient_conditions[start_datetime <= meda_datetime]
       } else {
         validity_days <- as.numeric(validity_days)
-        condition_match <- any(
-          patient_conditions$start_datetime >= (meda_datetime - lubridate::days(validity_days)) &
-            patient_conditions$start_datetime <= meda_datetime
-        )
+        matching_conditions <- patient_conditions[
+          start_datetime >= (meda_datetime - lubridate::days(validity_days)) &
+            start_datetime <= meda_datetime
+        ]
       }
 
-      if (!condition_match) next
+      if (!nrow(matching_conditions)) next
+
+      condition_start_datetime <- matching_conditions$start_datetime[1]
 
       # Check if any of the matched ATC codes appear in the current ATC field of the MRP definition
       relevant_atcs <- match_atc_codes[
@@ -312,63 +366,34 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
         atc_code
       ]
 
+      # Get or create mrp_index
+      mrp_index <- getOrCreateMrpIndex(mrp_table_list_row, getDrugDiseaseListRows())
+
       # Add directly to matched_rows
       if (length(relevant_atcs) > 0) {
         new_row <- data.table::data.table(
+          mrp_index = mrp_index,
           icd_code = mrp_icd,
           atc_code = relevant_atcs,
-          proxy_code = NA_character_,
-          proxy_type = NA_character_,
+          proxy_code = mrp_icd, # for ICD MRP without a real proxy we set the ICD code as "proxy" code to get this value in the dp_mrp_calculations table in the proxy_code column
+          proxy_type = "ICD", # same like with proxy code (even if this is not a proxy)
           diagnosis_cluster = mrp_table_list_row$CONDITION_DISPLAY_CLUSTER
         )
 
-        # Check if same ATC + same diagnosis_cluster exists
-        existing_idx_cluster <- which(
-          matched_rows$atc_code == new_row$atc_code &
-            grepl(new_row$diagnosis_cluster, matched_rows$diagnosis_cluster, fixed = TRUE)
-        )
-
-        # Check if same ATC + same ICD exists
-        existing_idx_icd <- which(
-          matched_rows$atc_code == new_row$atc_code &
-            grepl(new_row$icd_code, matched_rows$icd_code, fixed = TRUE)
-        )
-
-        # ---- CASE A: same ATC + same diagnosis_cluster → append ICD to existing row ----
-        if (length(existing_idx_cluster)) {
-          existing_icd <- matched_rows$icd_code[existing_idx_cluster]
-          matched_rows$icd_code[existing_idx_cluster] <- paste(existing_icd, new_row$icd_code)
-
-          # ---- CASE B: same ATC + same ICD → append diagnosis_cluster ----
-        } else if (length(existing_idx_icd)) {
-          existing_diag <- matched_rows$diagnosis_cluster[existing_idx_icd]
-          matched_rows$diagnosis_cluster[existing_idx_icd] <-
-            paste(existing_diag, new_row$diagnosis_cluster, sep = " und ")
-
-          # ---- CASE C: no match → append new row ----
-        } else {
-          matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
-        }
-
-        matched_rows[, icd_display := {
-          for (i in seq_len(.N)) {
-            icd_list <- unlist(strsplit(icd_code[i], "\\s+"))
-            display_values <- relevant_conditions[
-              con_code_code %in% icd_list & !is.na(con_code_display),
-              con_code_display
-            ]
-            display_values <- unique(display_values[!is.na(display_values)])
-            icd_display[i] <- if (length(display_values)) paste(display_values, collapse = " ") else NA_character_
-          }
-          icd_display
+        new_row[, icd_display := {
+          displays <- relevant_conditions[con_code_code %in% icd_code, con_code_display]
+          displays <- unique(displays[!is.na(displays)])
+          if (length(displays) == 0) NA_character_ else paste(displays, collapse = "; ")
         }]
 
-        # Generate final description text for each row
-        matched_rows[, kurzbeschr := paste0(
-          "[", mrp_table_list_row$ATC_DISPLAY, " - ", atc_code, "] ist bei [",
-          icd_display, " - ", icd_code, "] laut der entsprechenden Fachinformation [",
-          diagnosis_cluster, "] kontrainduziert."
-        )]
+
+        new_row[, kurzbeschr_drug := paste0(mrp_table_list_row$ATC_DISPLAY, " - ", atc_code)]
+        new_row[, kurzbeschr_item2 := paste0(icd_display, " - ", icd_code, "   (",
+                                             format(condition_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
+        new_row[, kurzbeschr_suffix := paste0("laut der entsprechenden Fachinformation [",
+                                              diagnosis_cluster, "] kontraindiziert.")]
+
+        matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
       }
     }
   }
@@ -535,10 +560,21 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
   desc_list <- obs[, {
     loinc_name <- loinc_mapping_table[LOINC %in% code, GERMAN_NAME_LOINC_PRIMARY]
 
+    converted_text <- ifelse(
+      as.character(converted_value) != as.character(value),
+      paste0(" (", converted_value, " ", cutoff_unit, ")"),
+      ""
+    )
+    lines <- sprintf(
+      "%s %s %s%s   (%s)",
+      ifelse(seq_len(.N) == 1, "   Wert:", "             "),
+      value, unit,
+      converted_text,
+      format(start_datetime, "%Y-%m-%d %H:%M:%S")
+    )
     entry <- paste0(
-      "\n   LOINC: ", code, " (", loinc_name, ")\n",
-      paste(sprintf("     Wert: %s %s (%s %s) (Zeitpunkt: %s)", value, unit, as.character(converted_value), cutoff_unit, format(start_datetime, "%Y-%m-%d %H:%M:%S")),
-            collapse = "\n")
+      "\nLOINC: ", code, " (", loinc_name, ")\n",
+      paste(lines, collapse = "\n")
     )
     list(text = entry)
   }, by = code]
@@ -823,101 +859,100 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
           }
         }
       }
-    }
-  } else {
-    # try cutoff absolute value via columns LOINC_CUTOFF_ABSOLUTE and LOINC_UNIT with a lookup via LOINC_PRIMARY_PROXY
-    # in loinc_mapping_table and conversion of the unit if necessary
+    } else {
+      # try cutoff absolute value via columns LOINC_CUTOFF_ABSOLUTE and LOINC_UNIT with a lookup via LOINC_PRIMARY_PROXY
+      # in loinc_mapping_table and conversion of the unit if necessary
+      cutoff_absolute <- trimws(match_proxy_row$LOINC_CUTOFF_ABSOLUTE)
+      if (!is.na(cutoff_absolute) && cutoff_absolute != "") {
+        # Parse the cutoff string into its components: operator and number
+        # Possible cutoff formats: "> 3", "< 3", ">= 3,5", "< 2,8"
+        parseCutoffAbsolute <- function(cutoff) {
+          # Pattern allows comma or dot in the number
+          pattern <- "^([<>]=?)\\s*(\\d+(?:[.,]\\d+)?)"
+          matches <- regexec(pattern, cutoff)
+          parts <- regmatches(cutoff, matches)[[1]]
 
-    cutoff_absolute <- trimws(match_proxy_row$LOINC_CUTOFF_ABSOLUTE)
-    if (!is.na(cutoff_absolute) && cutoff_absolute != "") {
-      # Parse the cutoff string into its components: operator and number
-      # Possible cutoff formats: "> 3", "< 3", ">= 3,5", "< 2,8"
-      parseCutoffAbsolute <- function(cutoff) {
-        # Pattern allows comma or dot in the number
-        pattern <- "^([<>]=?)\\s*(\\d+(?:[.,]\\d+)?)"
-        matches <- regexec(pattern, cutoff)
-        parts <- regmatches(cutoff, matches)[[1]]
-
-        # 1 = full string, 2 = operator, 3 = threshold
-        if (length(parts) == 3) {
-          operator <- parts[2]
-          # Replace comma with dot before conversion
-          threshold <- as.numeric(sub(",", ".", parts[3], fixed = TRUE))
-          list(operator = operator, threshold = threshold)
+          # 1 = full string, 2 = operator, 3 = threshold
+          if (length(parts) == 3) {
+            operator <- parts[2]
+            # Replace comma with dot before conversion
+            threshold <- as.numeric(sub(",", ".", parts[3], fixed = TRUE))
+            list(operator = operator, threshold = threshold)
+          }
         }
-      }
 
-      # Get parsed cutoff components
-      cutoff <- parseCutoffAbsolute(cutoff_absolute)
-      if (!is.null(cutoff) && !any(is.na(cutoff))) {
+        # Get parsed cutoff components
+        cutoff <- parseCutoffAbsolute(cutoff_absolute)
+        if (!is.null(cutoff) && !any(is.na(cutoff))) {
 
-        # Split observation_resources in valid and invalid ones
-        invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)]
-        obs <- data.table::fsetdiff(observation_resources, invalid_obs)
+          # Split observation_resources in valid and invalid ones
+          invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)]
+          obs <- data.table::fsetdiff(observation_resources, invalid_obs)
 
-        if (nrow(obs)) {
+          if (nrow(obs)) {
 
-          mapping_rows <- loinc_mapping_table[LOINC %in% obs$code]
-          mapping_row  <- unique(mapping_rows[, c("LOINC_PRIMARY", "UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
-          if (nrow(mapping_row) == 1) { # no row would be an error and more than one row would be ambiguous
+            mapping_rows <- loinc_mapping_table[LOINC %in% obs$code]
+            mapping_row  <- unique(mapping_rows[, c("LOINC_PRIMARY", "UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
+            if (nrow(mapping_row) == 1) { # no row would be an error and more than one row would be ambiguous
 
-            # conversion_factor must be NA if it is not a number or 1
-            conversion_factor <- suppressWarnings(as.numeric(mapping_row$CONVERSION_FACTOR))
-            if (conversion_factor %in% 1) conversion_factor <- NA_real_
-            # there must be a valid unit if the conversion_factor is a valid number != 1
-            conversion_unit <- if (is.na(conversion_factor)) NA else mapping_row$CONVERSION_UNIT
+              # conversion_factor must be NA if it is not a number or 1
+              conversion_factor <- suppressWarnings(as.numeric(mapping_row$CONVERSION_FACTOR))
+              if (conversion_factor %in% 1) conversion_factor <- NA_real_
+              # there must be a valid unit if the conversion_factor is a valid number != 1
+              conversion_unit <- if (is.na(conversion_factor)) NA else mapping_row$CONVERSION_UNIT
 
-            obs_value_converted_to_threshold_unit <- c()
-            for (i in seq_len(nrow(obs))) {
-              obs_row <- obs[i]
-              obs_value_converted_to_threshold_unit[i] <- convertLabUnits(
-                measured_value = obs_row$value,
-                measured_unit = obs_row$unit,
-                target_unit = mapping_row$UNIT,
-                conversion_factor = conversion_factor,
-                conversion_unit = conversion_unit
-              )
-              if (is.na(obs_value_converted_to_threshold_unit[i])) {
-                # store this observation as invalid
-                if (nrow(invalid_obs)) {
-                  invalid_obs <- rbind(invalid_obs, obs_row)
-                } else {
-                  invalid_obs <- obs_row
+              obs_value_converted_to_threshold_unit <- c()
+              for (i in seq_len(nrow(obs))) {
+                obs_row <- obs[i]
+                obs_value_converted_to_threshold_unit[i] <- convertLabUnits(
+                  measured_value = obs_row$value,
+                  measured_unit = obs_row$unit,
+                  target_unit = mapping_row$UNIT,
+                  conversion_factor = conversion_factor,
+                  conversion_unit = conversion_unit
+                )
+                if (is.na(obs_value_converted_to_threshold_unit[i])) {
+                  # store this observation as invalid
+                  if (nrow(invalid_obs)) {
+                    invalid_obs <- rbind(invalid_obs, obs_row)
+                  } else {
+                    invalid_obs <- obs_row
+                  }
                 }
               }
-            }
 
-            obs_value_converted_to_threshold_unit <- obs_value_converted_to_threshold_unit[!is.na(obs_value_converted_to_threshold_unit)]
-            obs <- data.table::fsetdiff(obs, invalid_obs)
-            catInvalidObservationsWarning(invalid_obs)
+              obs_value_converted_to_threshold_unit <- obs_value_converted_to_threshold_unit[!is.na(obs_value_converted_to_threshold_unit)]
+              obs <- data.table::fsetdiff(obs, invalid_obs)
+              catInvalidObservationsWarning(invalid_obs)
 
-            if (nrow(obs)) {
-              # get the threshold
-              threshold <- cutoff$threshold
+              if (nrow(obs)) {
+                # get the threshold
+                threshold <- cutoff$threshold
 
-              # Vectorized comparison of lab values to threshold using specified operator
-              match_found <- switch(
-                cutoff$operator,
-                ">"  = obs_value_converted_to_threshold_unit >  threshold,
-                ">=" = obs_value_converted_to_threshold_unit >= threshold,
-                "<"  = obs_value_converted_to_threshold_unit <  threshold,
-                "<=" = obs_value_converted_to_threshold_unit <= threshold,
-                rep(FALSE, nrow(obs))  # fallback for unknown operator
-              )
-
-              match_found <- ifelse(is.na(match_found), FALSE, match_found)
-
-              if (any(match_found)) {
-
-                obs <- obs[match_found][, converted_value := obs_value_converted_to_threshold_unit[match_found]]
-
-                match_description <- generateMatchDescriptionAbsoluteCutoff(
-                  obs = obs,
-                  loinc_mapping_table = loinc_mapping_table,
-                  primary_loinc = mapping_row$LOINC_PRIMARY,
-                  cutoff_absolute = cutoff_absolute,
-                  cutoff_unit = mapping_row$UNIT
+                # Vectorized comparison of lab values to threshold using specified operator
+                match_found <- switch(
+                  cutoff$operator,
+                  ">"  = obs_value_converted_to_threshold_unit >  threshold,
+                  ">=" = obs_value_converted_to_threshold_unit >= threshold,
+                  "<"  = obs_value_converted_to_threshold_unit <  threshold,
+                  "<=" = obs_value_converted_to_threshold_unit <= threshold,
+                  rep(FALSE, nrow(obs))  # fallback for unknown operator
                 )
+
+                match_found <- ifelse(is.na(match_found), FALSE, match_found)
+
+                if (any(match_found)) {
+
+                  obs <- obs[match_found][, converted_value := obs_value_converted_to_threshold_unit[match_found]]
+
+                  match_description <- generateMatchDescriptionAbsoluteCutoff(
+                    obs = obs,
+                    loinc_mapping_table = loinc_mapping_table,
+                    primary_loinc = mapping_row$LOINC_PRIMARY,
+                    cutoff_absolute = cutoff_absolute,
+                    cutoff_unit = mapping_row$UNIT
+                  )
+                }
               }
             }
           }
@@ -1012,6 +1047,19 @@ matchICDProxies <- function(
 ) {
 
   matchProxy <- function(proxy_type, all_items, splitted_proxy_table) {
+    # Initialize empty result data.table
+    matched_rows <- data.table::data.table(
+      mrp_index = integer(),
+      icd_code = character(),
+      atc_code = character(),
+      proxy_code = character(),
+      proxy_type = character(),
+      kurzbeschr_drug = character(),
+      kurzbeschr_item2 = character(),
+      kurzbeschr_suffix = character(),
+      kurzbeschr_additional = character()
+    )
+
     mrp_matches <- list()
     used_codes <- unique(all_items[!is.na(code), code])
     if (proxy_type == "LOINC") {
@@ -1032,19 +1080,8 @@ matchICDProxies <- function(
     ]
     for (proxy_code in matching_proxies) {
       single_proxy_sub_table <- splitted_proxy_table[[proxy_code]]
-      match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes & !is.na(get("ICD_PROXY")) & get("ICD_PROXY") != ""]
-
+      match_proxy_rows <- single_proxy_sub_table[get("ATC_FOR_CALCULATION") %in% match_atc_codes$atc_code & !is.na(get("ICD_PROXY")) & get("ICD_PROXY") != ""]
       if (nrow(match_proxy_rows)) {
-        # Create ICD_FULL_LIST per ATC group
-        match_proxy_rows[
-          ,
-          ICD_FULL_LIST := {
-            vals <- ICD
-            vals <- vals[!is.na(vals) & nzchar(vals)]  # drop NA and empty strings
-            if (length(vals)) paste(unique(vals), collapse = ", ") else NA_character_
-          },
-          by = ATC_FOR_CALCULATION
-        ]
         # Remove other proxy rows
         cols_to_remove <- unique(c(
           grep("^ICD_PROXY_", names(match_proxy_rows), value = TRUE),
@@ -1073,34 +1110,46 @@ matchICDProxies <- function(
               validity_days <- suppressWarnings(as.integer(validity_days))
               # All non integer values are considered as unlimited validity duration
               if (is.na(validity_days)) {
-                # 36525 days are 100 years in the future
-                validity_days <- 36525
+                # LOINC values are valid for 7 days, all other types are valid for 36525 days, which are 100 years in the future
+                validity_days <- ifelse (proxy_type == "LOINC", 7, 36525)
               }
 
               resources_with_proxy[is.na(end_datetime), end_datetime := start_datetime + lubridate::days(validity_days)]
 
-              valid_proxy_rows <- resources_with_proxy[start_datetime <= meda_datetime & end_datetime >= meda_datetime]
-              first_valid_display <- valid_proxy_rows[!is.na(display), display][1]
+              valid_proxy_rows <- unique(resources_with_proxy[start_datetime <= meda_datetime & end_datetime >= meda_datetime])
+
+              if (nrow(valid_proxy_rows[!is.na(display)])) {
+                first_valid_row <- valid_proxy_rows[!is.na(display)][1]
+              } else {
+                first_valid_row <- valid_proxy_rows[1]
+              }
+              proxy_display <- first_valid_row$display
+              proxy_start_datetime <- first_valid_row$start_datetime
+
+              # Get or create mrp_index
+              mrp_index <- getOrCreateMrpIndex(match_proxy_row, getDrugDiseaseListRows())
 
               if (nrow(valid_proxy_rows)) {
-
-                kurzbeschr <- sprintf(
-                  paste0(
-                    "[%s - %s] ist bei [%s - %s]",                                      # 1,2,3,4
-                    " laut der entsprechenden Fachinformation [%s] kontraindiziert.\n",    # 5
-                    "%s ist als %s%s-Proxy verwendet worden.\n"                           # 6,7,8
-                  ),
-                  match_proxy_row$ATC_DISPLAY,               # 1
-                  match_proxy_row$ATC_FOR_CALCULATION,       # 2
-                  first_valid_display,                       # 3
-                  proxy_code,                                # 4
-                  match_proxy_row$CONDITION_DISPLAY_CLUSTER, # 5
-                  proxy_code,                                # 6
-                  ifelse(proxy_type == "LOINC", "primärer ", ""), # 7
-                  proxy_type                                 # 8
+                new_row <- data.table::data.table(
+                  mrp_index = mrp_index,
+                  icd_code = match_proxy_row$ICD,
+                  atc_code = match_proxy_row$ATC_FOR_CALCULATION,
+                  proxy_code = proxy_code,
+                  proxy_type = proxy_type,
+                  kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION),
+                  kurzbeschr_item2 = paste0(proxy_display, " - ", proxy_code),
+                  kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation [",
+                                             match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontraindiziert."),
+                  kurzbeschr_additional = NA_character_
                 )
 
-                if (proxy_type == "LOINC") {
+                if (proxy_type != "LOINC") {
+                  new_row[, kurzbeschr_item2 := paste0(
+                    kurzbeschr_item2,
+                    "   (",
+                    format(proxy_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
+                  matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
+                } else {
                   # Call the external custom function
                   mrp_match_description <- loinc_matching_function(
                     observation_resources = valid_proxy_rows,
@@ -1109,20 +1158,9 @@ matchICDProxies <- function(
                   )
                   # If both matching functions returns NA, skip this proxy match
                   if (length(mrp_match_description) && any(!is.na(mrp_match_description))) {
-                    kurzbeschr <- paste(kurzbeschr, paste(mrp_match_description, collapse = "\n"), sep = "\n")
-                  } else {
-                    kurzbeschr <- NA_character_
+                    new_row[, kurzbeschr_additional :=  paste(mrp_match_description, collapse = "\n")]
+                    matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
                   }
-                }
-
-                if (!is.na(kurzbeschr)) {
-                  mrp_matches[[length(mrp_matches) + 1]] <- data.table::data.table(
-                    icd_code = match_proxy_row$ICD,
-                    atc_code = match_proxy_row$ATC_FOR_CALCULATION,
-                    proxy_code = proxy_code,
-                    proxy_type = proxy_type,
-                    kurzbeschr = kurzbeschr
-                  )
                 }
               }
             }
@@ -1130,7 +1168,7 @@ matchICDProxies <- function(
         }
       }
     }
-    return(mrp_matches)
+    return(matched_rows)
   }
 
   #  Combine all medication rows
@@ -1175,7 +1213,7 @@ matchICDProxies <- function(
     splitted_proxy_table = drug_disease_mrp_tables_by_loinc_proxy
   )
 
-  return(data.table::rbindlist(c(atc_matches, ops_matches, loinc_matches), fill = TRUE))
+  return(data.table::rbindlist(list(atc_matches, ops_matches, loinc_matches), fill = TRUE))
 }
 
 #' Split Drug-Disease MRP Table into Lookup Structures
@@ -1195,6 +1233,12 @@ matchICDProxies <- function(
 #' }
 #'
 getSplittedMRPTablesDrugDisease <- function(mrp_pair_list) {
+
+  # ensure the optional columns for the proxy validity days are present in the pair list table
+  mrp_pair_list[, ICD_PROXY_ATC_VALIDITY_DAYS := if (!"ICD_PROXY_ATC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else ICD_PROXY_ATC_VALIDITY_DAYS]
+  mrp_pair_list[, ICD_PROXY_OPS_VALIDITY_DAYS := if (!"ICD_PROXY_OPS_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else ICD_PROXY_OPS_VALIDITY_DAYS]
+  mrp_pair_list[, LOINC_VALIDITY_DAYS := if (!"LOINC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else LOINC_VALIDITY_DAYS]
+
   splitted <- list(
     by_atc = etlutils::splitTableToList(mrp_pair_list, "ATC_FOR_CALCULATION", rm.na = TRUE),
     by_icd = etlutils::splitTableToList(mrp_pair_list, "ICD", rm.na = TRUE),
@@ -1250,31 +1294,26 @@ calculateMRPsDrugDisease <- function(active_requests, mrp_pair_list, resources, 
       meda_datetime = meda_datetime,
       patient_id = patient_id
     )
-    matched_atcs <- unique(match_atc_and_icd_codes$atc)
-    unmatched_atcs <- match_atc_codes[!(atc_code %in% matched_atcs)]
-
-    if (nrow(unmatched_atcs)) {
-      # No ICD matches found, check ATC and OPS Proxys for ICDs
-      patient_ref <- paste0("Patient/", patient_id)
-      match_icd_proxies <- matchICDProxies(
-        medication_resources = list(
-          medication_requests = resources$medication_requests[medreq_patient_ref %in% patient_ref],
-          medication_statements = resources$medication_statements[medstat_patient_ref %in% patient_ref],
-          medication_administrations = resources$medication_administrations[medadm_patient_ref %in% patient_ref]
-        ),
-        procedure_resources = resources$procedures[proc_patient_ref %in% patient_ref],
-        observation_resources = resources$observations[obs_patient_ref %in% patient_ref],
-        drug_disease_mrp_tables_by_atc_proxy = splitted_mrp_tables$by_atc_proxy,
-        drug_disease_mrp_tables_by_ops_proxy = splitted_mrp_tables$by_ops_proxy,
-        drug_disease_mrp_tables_by_loinc_proxy = splitted_mrp_tables$by_loinc_proxy,
-        meda_datetime = meda_datetime,
-        match_atc_codes = unmatched_atcs$atc_code,
-        loinc_mapping_table = loinc_mapping_table,
-        loinc_matching_function = matchLOINCCutoff
-      )
-      if (nrow(match_icd_proxies)) {
-        match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
-      }
+    # check ATC and OPS Proxys for ICDs
+    patient_ref <- paste0("Patient/", patient_id)
+    match_icd_proxies <- matchICDProxies(
+      medication_resources = list(
+        medication_requests = resources$medication_requests[medreq_patient_ref %in% patient_ref],
+        medication_statements = resources$medication_statements[medstat_patient_ref %in% patient_ref],
+        medication_administrations = resources$medication_administrations[medadm_patient_ref %in% patient_ref]
+      ),
+      procedure_resources = resources$procedures[proc_patient_ref %in% patient_ref],
+      observation_resources = resources$observations[obs_patient_ref %in% patient_ref],
+      drug_disease_mrp_tables_by_atc_proxy = splitted_mrp_tables$by_atc_proxy,
+      drug_disease_mrp_tables_by_ops_proxy = splitted_mrp_tables$by_ops_proxy,
+      drug_disease_mrp_tables_by_loinc_proxy = splitted_mrp_tables$by_loinc_proxy,
+      meda_datetime = meda_datetime,
+      match_atc_codes = match_atc_codes,
+      loinc_mapping_table = loinc_mapping_table,
+      loinc_matching_function = matchLOINCCutoff
+    )
+    if (nrow(match_icd_proxies)) {
+      match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
     }
   }
   return(match_atc_and_icd_codes)

@@ -189,7 +189,10 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       replace_prefix_fhir_expression <- etlutils::getBeforeLastSlash(table$FHIR_EXPRESSION[row])
 
       expansion_table <- data.table::copy(expansion_tables[[expand_table_names[replace_table_index]]])
-      expansion_table[, COUNT := ifelse(is.na(COUNT), 1, COUNT) * table$COUNT[row]]
+
+      if ("COUNT" %in% names(expansion_table)) {
+        expansion_table[, COUNT := ifelse(is.na(COUNT), 1, COUNT) * table$COUNT[row]]
+      }
 
       # replace line with the content of the expansion table
       if (row == 1) {
@@ -405,15 +408,17 @@ checkResult <- function(expanded_table_description) {
   }
 
   # check that all entries have value in column 'SINGLE_LENGTH'
-  invalid_rows <- which(!is.na(expanded_table_description$FHIR_EXPRESSION) & is.na(expanded_table_description$SINGLE_LENGTH))
-  if (length(invalid_rows)) {
-    message("ERROR: The following rows have no entry in column 'SINGLE_LENGTH'.")
-    # Erfasse die Ausgabe von print() in einem Vektor
-    message_data <- capture.output(print(expanded_table_description[invalid_rows]))
-    # Verwende message(), um den Vektor Zeile für Zeile auszugeben
-    message(paste(message_data, collapse = "\n"))
-    message("SOLUTION: This may have the reason, that you forgot to set a single length in the description or a typo in the column 'FHIR_EXPRESSION' for a row that should be expanded.")
-    isValid <- FALSE
+  if ("SINGLE_LENGTH" %in% names(expanded_table_description)) {
+    invalid_rows <- which(!is.na(expanded_table_description$FHIR_EXPRESSION) & is.na(expanded_table_description$SINGLE_LENGTH))
+    if (length(invalid_rows)) {
+      message("ERROR: The following rows have no entry in column 'SINGLE_LENGTH'.")
+      # Erfasse die Ausgabe von print() in einem Vektor
+      message_data <- capture.output(print(expanded_table_description[invalid_rows]))
+      # Verwende message(), um den Vektor Zeile für Zeile auszugeben
+      message(paste(message_data, collapse = "\n"))
+      message("SOLUTION: This may have the reason, that you forgot to set a single length in the description or a typo in the column 'FHIR_EXPRESSION' for a row that should be expanded.")
+      isValid <- FALSE
+    }
   }
   return(isValid)
 }

@@ -75,28 +75,26 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
         c("main_enc_id", "enc_period_start"),
         "Multiple_rows_same_start_date_ward_contact"
       )
-
     warning("First INTERPOLAR-ward contact undefinded for a main encounter (multiple rows with same
              start date).Please check the data.")
-  } else {
-    F1_prep <- F1_prep_raw |>
-      selectMin(
-        grouping_variables = c("main_enc_id"),
-        selection_variable = enc_period_start
-      ) |>
-      dplyr::filter(enc_period_start >= as.POSIXct(report_period_start)) |> # only admission to INTEROPLAR ward in reporting period
-      dplyr::filter(enc_period_start < as.POSIXct(report_period_end)) |>
-      dplyr::group_by(main_enc_id) |>
-      dplyr::mutate(main_enc_any_processing_exclusion = any(!is.na(processing_exclusion_reason))) |>
-      dplyr::ungroup() |>
-      dplyr::distinct(
-        pat_id, main_enc_id, enc_id, record_id, fall_id_cis, calendar_week, ward_name,
-        main_enc_any_processing_exclusion
-      ) |>
-      dplyr::mutate(dplyr::across(c(ward_name, calendar_week), as.character))
-
-    return(F1_prep)
   }
+  F1_prep <- F1_prep_raw |>
+    selectMin(
+      grouping_variables = c("main_enc_id"),
+      selection_variable = enc_period_start
+    ) |>
+    dplyr::filter(enc_period_start >= as.POSIXct(report_period_start)) |> # only admission to INTEROPLAR ward in reporting period
+    dplyr::filter(enc_period_start < as.POSIXct(report_period_end)) |>
+    dplyr::group_by(main_enc_id) |>
+    dplyr::mutate(main_enc_any_processing_exclusion = any(!is.na(processing_exclusion_reason))) |>
+    dplyr::ungroup() |>
+    dplyr::distinct(
+      pat_id, main_enc_id, enc_id, record_id, fall_id_cis, calendar_week, ward_name,
+      main_enc_any_processing_exclusion
+    ) |>
+    dplyr::mutate(dplyr::across(c(ward_name, calendar_week), as.character))
+
+  return(F1_prep)
 }
 #------------------------------------------------------------------------------#
 
