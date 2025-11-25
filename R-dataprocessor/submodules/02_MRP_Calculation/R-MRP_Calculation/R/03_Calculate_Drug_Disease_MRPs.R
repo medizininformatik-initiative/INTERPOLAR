@@ -1281,7 +1281,6 @@ calculateMRPsDrugDisease <- function(active_requests, mrp_pair_list, resources, 
   match_atc_and_icd_codes <- data.table::data.table()
   splitted_mrp_tables <- getSplittedMRPTablesDrugDisease(mrp_pair_list)
   # Match ATC-codes between encounter data and MRP definitions
-  #browser()
   match_atc_codes <- matchATCCodes(active_requests, splitted_mrp_tables$by_atc)
   # Get and match ICD-codes of the patient
   if (nrow(match_atc_codes)) {
@@ -1313,7 +1312,6 @@ calculateMRPsDrugDisease <- function(active_requests, mrp_pair_list, resources, 
       loinc_mapping_table = loinc_mapping_table,
       loinc_matching_function = matchLOINCCutoff
     )
-    #browser()
     if (nrow(match_icd_proxies)) {
       match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
     }
