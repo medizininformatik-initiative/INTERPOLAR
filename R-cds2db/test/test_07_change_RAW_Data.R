@@ -90,7 +90,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(12)
+  duplicatePatients(13)
 
   runCodeForDebugDay(1, {
 
@@ -173,7 +173,6 @@ if (exists("DEBUG_DAY")) {
     addObservation(pid, "2111-3", day_offset = -4.8, value = 1.4, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
     addObservation(pid, "2111-3", day_offset = -4.7, value = 1.5, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
     addObservation(pid, "2111-3", day_offset = -4.6, value = 1.6, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
-
 
   })
 

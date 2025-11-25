@@ -223,7 +223,7 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
           kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc),
           kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (",
                                     format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
-          kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontrainduziert.")
+          kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontraindiziert.")
         )
         result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
       } else {

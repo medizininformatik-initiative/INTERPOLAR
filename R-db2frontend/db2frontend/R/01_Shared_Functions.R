@@ -97,7 +97,7 @@ getRedcapFieldNames <- function(rcon) {
 
   # Export data to retrieve full field structure, if no data found empty data frame is returned
   # Is this case warning messages are suppressed
-  data_sample <-  suppressWarnings(redcapAPI::exportRecords(
+  data_sample <- suppressWarnings(redcapAPI::exportRecords(
     rcon = rcon,
     rawOrLabel = "raw",
     exportSurveyFields = TRUE,
