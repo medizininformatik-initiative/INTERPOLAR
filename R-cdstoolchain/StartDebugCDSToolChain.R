@@ -9,9 +9,6 @@ if (!I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED) {
   stop("You must set I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE to run this script!")
 }
 
-# free memory
-rm(list = ls())
-
 library(etlutils)
 library(cds2db)
 library(dataprocessor)
@@ -81,14 +78,14 @@ DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "RA
 DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "REDCap")
 
 # Create a vector of debug dates from now - count days in the past until now
-initDebugDates <- function(count) {
+initDebugDates <- function(count, offset = 1) {
   now <- Sys.time()
   count <- as.integer(count)
   count <- max(1, count)  # Ensure count is at least 1
   dates <- c()
   for (i in 1:count - 1) {
     # Create a date that is i days before now
-    date <- now - as.difftime(i, units = "days")
+    date <- now - as.difftime(i * offset, units = "days")
     dates <- c(date, dates)
   }
   day_names <- c()
@@ -105,7 +102,7 @@ if (exists("DEBUG_DATES")) {
   rm("DEBUG_DATES")
 }
 source(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME, local = TRUE) # defines DEBUG_DAYS_COUNT
-DEBUG_DATES <- initDebugDates(DEBUG_DAYS_COUNT)
+DEBUG_DATES <- initDebugDates(DEBUG_DAYS_COUNT, if (exists("DEBUG_DAYS_OFFSET")) DEBUG_DAYS_OFFSET else 1)
 
 day_times <- c()
 

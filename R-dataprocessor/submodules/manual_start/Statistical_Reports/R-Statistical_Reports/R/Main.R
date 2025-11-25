@@ -57,8 +57,7 @@
 #'
 #'   \item Writes outputs:
 #'     \itemize{
-#'       \item `writeTableLocal()` – intermediate data for verification
-#'       \item `writeTableGlobal()` – final reports with captions and footnotes
+#'       \item `writeHtmlTable()` – html table in output local (default) or global (if definded)
 #'     }
 #' }
 #'
@@ -81,7 +80,7 @@
 #' [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
 #' [mergePatEnc()], [defineFullAnalysisSet1()], [prepareF1data()], [calculateF1()],
 #' [prepareFeSummaryData()], [calculateFeSummary()],
-#' [writeTableLocal()], [writeTableGlobal()]
+#' [writeHtmlTable()]
 #'
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
@@ -118,7 +117,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     report_period_start = REPORT_PERIOD_START
   )
   # this table can have multiple rows per encounter
-  # e.g. if there are entries for enc_location_physicaltype_code wa, ro & bd
 
   pids_per_ward_table <- getPidsPerWardData(
     lock_id = "statistical reports[3]",
@@ -132,7 +130,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     lock_id = "statistical reports[4]",
     table_name = "v_patient_fe"
   )
-  # --> this table should only have one entry per patient (error if not)
+  # --> this table should only have one entry per patient (warning if not)
 
   fall_fe_table <- getFallFeData(
     lock_id = "statistical reports[5]",
@@ -185,11 +183,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   # if needed: Print datasets for verification to outputLocal
   if (WRITE_TABLE_LOCAL) {
-    writeTableLocal(FHIR_table)
-    writeTableLocal(full_analysis_set_1)
-    writeTableLocal(statistical_report_data)
-    writeTableLocal(frontend_table)
-    writeTableLocal(frontend_summary_data)
+    writeHtmlTable(patient_table)
+    writeHtmlTable(encounter_table)
+    writeHtmlTable(FHIR_table)
+    writeHtmlTable(full_analysis_set_1)
+    writeHtmlTable(statistical_report_data)
+    writeHtmlTable(frontend_table)
+    writeHtmlTable(frontend_summary_data)
   }
 
 
@@ -199,28 +199,29 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     calculateFeAddOnToF1(statistical_report_data)
   # calculateF2(F2_data)
 
-
   # print report to outputGlobal
-  writeTableGlobal(statistical_report,
+  writeHtmlTable(statistical_report,
+    output_location = "global",
     caption = paste0("report for period: ", REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
     footnote = c(
       "F1: Cumulative number of hospitalized cases on INTERPOLAR wards
       (>18y, initial INTERPOLAR ward contact)",
-      "Medication analysis and mrp counts: only for first medication analysis of initial INTERPOLAR
-      ward contact for each case"
+      "Medication analysis and mrp counts:
+      only for first medication analysis of initial INTERPOLAR ward contact for each case"
     ),
     colnames = c(
       "ward", "calendar week", "F1 (patients)", "F1 (patients also in frontend)",
       "F1 (encounters)", "F1 (encounters also in frontend)",
       "processing excluded F1 encounters", "medication analyses",
       "completed medication analyses", "MRP", "completed MRP documention",
-      "resolved MRP", "MRP resolution not informative", "contraindications",
+      "resolved MRP", "MRP resolution not informative", "contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
       "processing excluded frontend encounters"
     )
   )
 
-  writeTableGlobal(frontend_summary,
+  writeHtmlTable(frontend_summary,
+    output_location = "global",
     caption = paste0(
       "Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
       REPORT_PERIOD_END
@@ -230,7 +231,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     colnames = c(
       "ward", "patients", "encounters", "medication analyses",
       "completed medication analyses", "MRP", "completed MRP documention",
-      "resolved MRP", "MRP resolution not informative", "contraindications",
+      "resolved MRP", "MRP resolution not informative", "contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
       "processing excluded frontend encounters"
     )

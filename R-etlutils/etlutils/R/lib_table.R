@@ -265,6 +265,8 @@ writeExcelFile <- function(tables, file_name, with_column_names) {
 #'
 #' @param path The directory path where Excel files are located.
 #' @param namePattern The name pattern to match Excel file names.
+#' @param error_if_ambigious If more than one file is matching the name pattern and this parameter is TRUE,
+#'        then an error will occur.
 #'
 #' @return A list of imported sheets as data.tables from the first matching Excel file,
 #'         or NA if no matching file is found.

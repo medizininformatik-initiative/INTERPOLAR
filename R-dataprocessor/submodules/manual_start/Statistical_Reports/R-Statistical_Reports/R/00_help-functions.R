@@ -194,71 +194,157 @@ parseNamedArgs <- function() {
 
 #------------------------------------------------------------------------------#
 
-#' Split Multi-System Variable into Separate Columns
+#' Pivot Encounter Types from Two Coding Systems into Separate Columns
 #'
-#' Transforms a long-format dataset containing codes and system identifiers into
-#' a wider format by creating two new columns corresponding to two distinct systems.
-#' Each row will have at most one code per system; groups with multiple codes per
-#' system will trigger an error.
+#' This function restructures encounter type information from two different
+#' coding systems (e.g. FHIR Kontaktebene and Kontaktart) into two separate
+#' columns. It checks for unknown systems/codes, assigns exclusion reasons,
+#' and ensures that only one unique code per encounter and system exists.
+#' If multiple distinct codes are present in a group, a warning is issued,
+#' the corresponding value is set to `"MULTIPLE_VALUES"`, and an exclusion
+#' reason is recorded.
 #'
-#' @param data A data frame or tibble containing the original dataset.
-#' @param system1 Character vector specifying the first system(s) of interest.
-#' @param codes1 Character vector specifying codes to include in the first system.
-#' @param system2 Character vector specifying the second system(s) of interest.
-#' @param codes2 Character vector specifying codes to include in the second system.
-#' @param var_code String; the name of the column in `data` containing the code values.
-#' @param var_system String; the name of the column in `data` containing the system identifiers.
-#' @param var_new_system_1 String; the name of the new column to create for system 1 codes.
-#' @param var_new_system_2 String; the name of the new column to create for system 2 codes.
+#' @param data A data frame containing encounter type information.
+#' @param system1 Character vector of accepted system identifiers for the first
+#'   coding system.
+#' @param codes1 Character vector of accepted codes for the first coding system.
+#' @param system2 Character vector of accepted system identifiers for the second
+#'   coding system.
+#' @param codes2 Character vector of accepted codes for the second coding system.
+#' @param var_code Character string giving the column name in `data` that holds
+#'   the encounter type code.
+#' @param var_system Character string giving the column name in `data` that holds
+#'   the code system (e.g. FHIR system URL).
+#' @param var_new_system_1 Name of the new column (as character) to store codes
+#'   from the first system.
+#' @param var_new_system_2 Name of the new column (as character) to store codes
+#'   from the second system.
+#' @param exclusion_reason Character string that will be written into
+#'   `processing_exclusion_reason` when unknown or multiple values are detected.
+#' @param id_column Character string specifying an identifier column (e.g. encounter ID),
+#'   used only for warning messages to help trace problematic rows.
 #'
-#' @return A data frame in which:
-#' \itemize{
-#'   \item The original `var_code` and `var_system` columns are removed.
-#'   \item Two new columns (`var_new_system_1` and `var_new_system_2`) contain
-#'         the corresponding code for each system or `NA` if none exists.
-#'   \item If a group has multiple codes for the same system, an error is thrown.
-#' }
+#' @return A data frame where:
+#'   \itemize{
+#'     \item Codes belonging to `system1` or `codes1` appear in `var_new_system_1`.
+#'     \item Codes belonging to `system2` or `codes2` appear in `var_new_system_2`.
+#'     \item Rows with unknown or inconsistent coding receive
+#'       `processing_exclusion_reason = exclusion_reason`.
+#'   }
 #'
 #' @details
-#' The function first assigns codes to their respective new system columns using
-#' the provided `system` and `codes` vectors. It then groups by all other columns
-#' and ensures that each group has at most one code per system. If multiple codes
-#' exist in a group, the function stops with an informative error.
+#' The function:
+#' \enumerate{
+#'   \item Checks if `var_code` or `var_system` contains unexpected values and warns.
+#'   \item Maps codes to system-specific columns.
+#'   \item Groups by all other variables and collapses codes to one per group.
+#'   \item If more than one unique code is found per group and system,
+#'         `"MULTIPLE_VALUES"` is inserted and `exclusion_reason` is set.
+#' }
 #'
-#' @importFrom dplyr mutate if_else select all_of across group_by summarise
+#' @importFrom dplyr mutate if_else select group_by summarise across all_of distinct
+#'
+#' @examples
+#' df <- data.frame(
+#'   id = c(1, 2, 3, 4),
+#'   enc_type_code = c(
+#'     "einrichtungskontakt", "normalstationaer",
+#'     "abteilungskontakt", "unknown_code"
+#'   ),
+#'   enc_type_system = c(
+#'     "http://fhir.de/CodeSystem/Kontaktebene",
+#'     "http://fhir.de/CodeSystem/kontaktart-de",
+#'     "http://fhir.de/CodeSystem/Kontaktebene",
+#'     "http://fhir.de/CodeSystem/Kontaktebene"
+#'   )
+#' )
+#'
+#' PivotWiderTwoSystems(
+#'   data = df,
+#'   system1 = "http://fhir.de/CodeSystem/Kontaktebene",
+#'   codes1 = c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt"),
+#'   system2 = "http://fhir.de/CodeSystem/kontaktart-de",
+#'   codes2 = c("normalstationaer"),
+#'   var_code = "enc_type_code",
+#'   var_system = "enc_type_system",
+#'   var_new_system_1 = "enc_type_code_Kontaktebene",
+#'   var_new_system_2 = "enc_type_code_Kontaktart",
+#'   exclusion_reason = "mapping_failed",
+#'   id_column = "id"
+#' )
 #'
 #' @export
 PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_code, var_system,
-                                 var_new_system_1, var_new_system_2) {
+                                 var_new_system_1, var_new_system_2, exclusion_reason, id_column) {
+  # Check for unexpected codes/systems
+  unexpected_code_rows <- !is.na(data[[var_code]]) & !data[[var_code]] %in% c(codes1, codes2)
+  if (any(unexpected_code_rows)) {
+    affected_ids <- unique(data[[id_column]][unexpected_code_rows])
+    warning(paste0(
+      "Some codes in ", var_code, " are not expected. Affected IDs: ",
+      paste(affected_ids, collapse = ", ")
+    ))
+  }
+  unexpected_system_rows <- !is.na(data[[var_system]]) & !data[[var_system]] %in% c(system1, system2)
+  if (any(unexpected_system_rows)) {
+    affected_ids <- unique(data[[id_column]][unexpected_system_rows])
+    warning(paste0(
+      "Some systems in ", var_system, " are not expected. Affected IDs: ",
+      paste(affected_ids, collapse = ", ")
+    ))
+  }
   data <- data |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+      !get(var_code) %in% c(codes1, codes2), exclusion_reason, NA_character_
+    )) |>
+    # System 1-Mapping
     dplyr::mutate(!!var_new_system_1 := dplyr::if_else(get(var_system) %in% system1 |
       get(var_code) %in% codes1,
     get(var_code), NA_character_
     )) |>
+    # System 2-Mapping
     dplyr::mutate(!!var_new_system_2 := dplyr::if_else(get(var_system) %in% system2 |
       get(var_code) %in% codes2,
     get(var_code), NA_character_
     )) |>
+    # Pivot wider
     dplyr::select(-dplyr::all_of(c(var_code, var_system))) |>
     dplyr::group_by(dplyr::across(-dplyr::all_of(c(var_new_system_1, var_new_system_2)))) |>
     dplyr::summarise(
       !!var_new_system_1 := {
         vals <- na.omit(.data[[var_new_system_1]])
         if (length(unique(vals)) > 1) {
-          print(unique(vals), width = Inf)
-          stop(paste0("Unexpected ", var_new_system_1, " values"))
-        }
-        if (length(vals) == 0) NA_character_ else vals[1]
+          warning(paste0(
+            "Multiple ", var_new_system_1,
+            " values for ID(s): ", paste(unique(.data[[id_column]]), collapse = ", "),
+            ". No unique mapping possible."
+          ))
+          "MULTIPLE_VALUES"
+        } else if (length(vals) == 0) NA_character_ else vals[1]
       },
       !!var_new_system_2 := {
         vals <- na.omit(.data[[var_new_system_2]])
         if (length(unique(vals)) > 1) {
-          print(unique(vals), width = Inf)
-          stop(paste0("Unexpected ", var_new_system_2, " values"))
-        }
-        if (length(vals) == 0) NA_character_ else vals[1]
+          warning(paste0(
+            "Multiple ", var_new_system_2,
+            " values for ID(s): ", paste(unique(.data[[id_column]]), collapse = ", "),
+            ". No unique mapping possible."
+          ))
+          "MULTIPLE_VALUES"
+        } else if (length(vals) == 0) NA_character_ else vals[1]
       },
       .groups = "drop"
-    )
+    ) |>
+    # Add processing exclusion reason for multiple/unknown values
+    dplyr::mutate(
+      processing_exclusion_reason = dplyr::if_else(
+        is.na(processing_exclusion_reason) &
+          (.data[[var_new_system_1]] %in% c("MULTIPLE_VALUES") |
+            .data[[var_new_system_2]] %in% c("MULTIPLE_VALUES")),
+        exclusion_reason,
+        processing_exclusion_reason
+      )
+    ) |>
+    dplyr::distinct()
   return(data)
 }

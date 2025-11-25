@@ -46,13 +46,7 @@ defineFullAnalysisSet1 <- function(complete_table) {
 
   full_analysis_set_1 <- full_analysis_set_1_raw |>
     dplyr::select(-c(
-      enc_partof_ref, enc_class_code, enc_class_system,
-      enc_servicetype_system, enc_servicetype_code, enc_hospitalization_admitsource_system,
-      enc_hospitalization_admitsource_code, enc_hospitalization_dischargedisposition_system,
-      enc_hospitalization_dischargedisposition_code, enc_location_physicaltype_system,
-      enc_location_physicaltype_code, enc_serviceprovider_identifier_type_system,
-      enc_serviceprovider_identifier_type_code, enc_serviceprovider_identifier_system,
-      enc_serviceprovider_identifier_value
+      enc_partof_ref, enc_class_code
     ))
 
   return(full_analysis_set_1)
