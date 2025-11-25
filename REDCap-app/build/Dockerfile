@@ -1,6 +1,6 @@
 # "php:apache" siehe https://hub.docker.com/r/library/php/
 #FROM php:8-apache-bookworm
-FROM php:8.3-apache-trixie
+FROM php:8.5-apache-trixie
 
 LABEL maintainer "Sebastian Stäubert <sebastian.staeubert@imise.uni-leipzig.de>"
 
