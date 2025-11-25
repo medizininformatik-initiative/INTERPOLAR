@@ -751,7 +751,7 @@ duplicatePatients <- function(count, duplicated_start_index = 1) {
   testSetResourceTables(new_resource_tables)
 }
 
-addDrugs <- function(pid, codes, day_offset = -0.3, period_type = c(
+addDrugs <- function(pid, codes, day_offset = -0.4, period_type = c(
   "start",
   "start_and_end",
   "start_and_end_and_timing_event",
