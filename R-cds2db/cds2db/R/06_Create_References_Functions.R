@@ -217,9 +217,15 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
 
 createReferencesForResource <- function(encounters, resource_name, resource_table, start_column_names) {
   etlutils::runLevel2Line(paste0("Create Encounter References for ", resource_name), {
+
+    calculated_ref_col_name <- getEncounterCalculatedReferenceColumnName(resource_name)
+    # Once the data has been retrieved from the database, we only need to calculate the cal_ref
+    # columns for the resources that have never contained a value, so all others can be removed.
+    if (calculated_ref_col_name %in% names(resource_table)) {
+      resource_table <- resource_table[is.na(get(calculated_ref_col_name))]
+    }
     if (!is.null(resource_table) && nrow(resource_table) > 0) {
       ref_col_name <- getEncounterReferenceColumnName(resource_name)
-      calculated_ref_col_name <- getEncounterCalculatedReferenceColumnName(resource_name)
       # add the calculated reference column if not exists
       # If the data comes from the DB, then this column already exists and may contain values that
       # must not be overwritten. If the data comes from the FHIR server, then the column does not
