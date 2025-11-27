@@ -183,7 +183,7 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
     kurzbeschr_item2 = character(),
     kurzbeschr_suffix = character()
   )
-  active_requests_unique <- unique(active_requests, by = c("atc_code", "start_datetime"))
+  active_requests_unique <- unique(active_requests)
   active_atcs <- unique(active_requests_unique$atc_code)
 
   # Only use ATCs that are in the MRP table list
