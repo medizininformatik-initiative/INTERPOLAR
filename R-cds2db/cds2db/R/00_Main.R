@@ -28,6 +28,13 @@ retrieve <- function(reset_lock_only = FALSE) {
       etlutils::dbResetLock()
     })
 
+    # Check if we must create references for old data (should be executed exactly once and then never again)
+    etlutils::runLevel2("Create references for old data", {
+      if (mustCreateReferencesForOldData()) {
+        createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+      }
+    })
+
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
       pids_splitted_by_ward <- getPIDsSplittedByWard()
@@ -105,6 +112,10 @@ retrieve <- function(reset_lock_only = FALSE) {
         etlutils::runLevel2("Convert RAW tables to typed tables", {
           fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
           resource_tables <- convertTypes(resource_tables_raw_diff, fhir_table_descriptions)
+        })
+
+        etlutils::runLevel2("Create references (partOf, encounter, context)", {
+          resource_tables <- createReferences(resource_tables, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
         })
 
         etlutils::runLevel2("Write typed tables to database", {

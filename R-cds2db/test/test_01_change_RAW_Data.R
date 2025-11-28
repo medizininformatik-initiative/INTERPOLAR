@@ -1,7 +1,7 @@
 # Patient UKB-0001
-# Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
+# Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
 # Tag 2: Entlassung
-# Tag 3: Wiederaufnahme Versorgungsstellenkontakt auf Station 1-2 Zimmer 1-2, Bett 1-2
+# Tag 3: Wiederaufnahme Versorgungsstellenkontakt auf Station 2 Zimmer 1-2, Bett 1-2
 
 #################################
 # Start Define global variables #
@@ -26,8 +26,6 @@ DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
 # all data is loaded from this folder from RData files
 ###
 DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
-
-#WARDS_PHASE_B_TEST <- c("Station 1-1", "Station 1-2")
 
 ###############################
 # End Define global variables #
@@ -75,16 +73,16 @@ if (exists("DEBUG_DAY")) {
   current_debug_day <- DEBUG_DAY
 
   runCodeForDebugDay(1, {
-    # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1-1 Zimmer 1-1, Bett 1-1
-    testAdmission(pid1, "Raum 1-1", "Bett 1-1", "Station 1-1")
+    # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
+    testAdmission(pid1, "Raum 1-1", "Bett 1-1", "Station 1")
   })
   runCodeForDebugDay(2, {
     # Patient 1 Tag 4: Encounter wird entlassen
     testDischarge(pid1)
   })
   runCodeForDebugDay(3, {
-    # Patient 1 Tag 5: Neuer Encounter und neuer Versorgungsstellenkontakt auf gleicher IP-Station 1-1 Zimmer 1-3, Bett 1-3
-    testAdmission(pid1, "Raum 1-2", "Bett 1-2", "Station 1-2")
+    # Patient 1 Tag 5: Neuer Encounter und neuer Versorgungsstellenkontakt auf gleicher IP-Station 1 Zimmer 1-3, Bett 1-3
+    testAdmission(pid1, "Raum 1-2", "Bett 1-2", "Station 2")
   })
 
   # Update the resource_tables list with the modified data tables

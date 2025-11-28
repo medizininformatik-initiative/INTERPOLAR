@@ -148,39 +148,9 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
     enc_refs <- fhirdataGetReference("Encounter", (unique(encounters$enc_id)))
     enc_query_refs <- etlutils::fhirdbGetQueryList(enc_refs)
     # Extract the Observations by direct encounter references
-    additional_query_condition <- paste0("        obs_encounter_ref IN ", enc_query_refs, "\n")
+    additional_query_condition <- paste0("        obs_encounter_calculated_ref IN ", enc_query_refs, "\n")
     query <- paste0(query_template, additional_query_condition)
     observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[1]")
-
-    obs_patient_refs <- unique(observations$obs_patient_ref)
-
-    # Check if the patient references in the Observations match the patient references in the Encounters
-    pat_refs_without_obs <- setdiff(enc_patient_refs, obs_patient_refs)
-
-    # If there are patients with no Observations found with the direct encounter
-    # link, so identify potential Observations by time overlap with the encounter
-    # period start and current date
-    if (length(pat_refs_without_obs)) {
-      pat_query_refs <- etlutils::fhirdbGetQueryList(pat_refs_without_obs)
-      enc_without_obs <- encounters[enc_patient_ref %in% pat_refs_without_obs]
-      # If the FHIR data is correct, there should be no enc_period_start = NA. However, it has occurred in practice.
-      valid_dates <- na.omit(enc_without_obs$enc_period_start)
-
-      if (length(valid_dates)) {
-        min_enc_period_start <- min(valid_dates)
-        additional_query_condition <- paste0("        obs_patient_ref IN ", pat_query_refs, " AND\n",
-                                             "        obs_effectivedatetime > '", min_enc_period_start, "'\n")
-        query <- paste0(query_template, additional_query_condition)
-        more_observations <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getObservation()[2]")
-
-        # Check if the new observations are already in the first set
-        # and remove them
-        more_observations <- more_observations[!obs_id %in% observations$obs_id]
-        # Combine the two sets of observations
-        observations <- rbind(observations, more_observations, use.names = TRUE, fill = TRUE)
-      }
-    }
-
   } else {
     pat_query_refs <- etlutils::fhirdbGetQueryList(enc_patient_refs)
     # Extract Observations by patient ID, but without any references to the encounter
@@ -197,7 +167,7 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
     result <- data.table::data.table(
       obs_id = character(),
       obs_patient_ref = character(),
-      obs_encounter_ref = character(),
+      obs_encounter_calculated_ref = character(),
       obs_code_code = character(),
       obs_code_system = character(),
       obs_effectivedatetime = as.POSIXct(character()),
@@ -391,7 +361,6 @@ createFrontendTables <- function() {
     existing_repeat_instances <- getExistingFallFeRedcapRepeatInstance(existing_record_ids)
 
     encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = unique(pids_per_ward$encounter_id),
-                                                     common_encounter_fhir_identifier_system = COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM,
                                                      lock_id_extension = "CreateEncounterFrontendTable()_")
 
     # If the CDS-conform 3-level encounter system has been implemented, then enc_type_system must
@@ -407,17 +376,10 @@ createFrontendTables <- function() {
     query_datetime_obs <- getObservationQueryDatetime(encounters)
 
     # Create a new table with rows where enc_partof_ref is NOT NA
-    part_of_encounters <- encounters[!is.na(enc_partof_ref)]
-
-    # Second way to find all partof encounters
-    part_of_encounters_2 <- encounters[enc_type_code != "einrichtungskontakt"]
-    part_of_encounters_2 <- data.table::fsetdiff(part_of_encounters_2, part_of_encounters)
-    if (nrow(part_of_encounters_2)) {
-      part_of_encounters <- rbind(part_of_encounters, part_of_encounters_2)
-    }
+    part_of_encounters <- encounters[!is.na(enc_partof_calculated_ref)]
 
     # Remove the rows that exist in part_of_encounters from encounters
-    main_encounters <- encounters[!enc_id %in% part_of_encounters$enc_id]
+    main_encounters <- encounters[!enc_id %in% part_of_encounters$enc_id & enc_type_code %in% "einrichtungskontakt"]
 
     # load Conditions referenced by Encounters
     query_ids <- etlutils::fhirdbGetQueryList(encounters$enc_diagnosis_condition_ref,

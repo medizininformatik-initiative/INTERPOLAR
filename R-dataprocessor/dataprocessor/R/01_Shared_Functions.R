@@ -89,7 +89,7 @@ getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, column_names
   distinct <- if (select_all) "" else "DISTINCT "
   # this should be view tables named in a style like 'v_patient' for resource_name Patient
   column_names <- paste0(column_names, collapse = ", ")
-  query <-paste0(
+  query <- paste0(
     "SELECT ", distinct, column_names, " FROM v_", resource_name, "_last_version\n",
     filter,
     paste0("ORDER BY ", db_id_column, "\n"),

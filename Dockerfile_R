@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y -q \
 # etlutils
 
 RUN apt-get install -y \
-	libssl-dev libcurl4-openssl-dev libpq-dev libxml2-dev
+	libssl-dev libcurl4-openssl-dev libpq-dev libxml2-dev libudunits2-dev
 
 RUN /rocker_scripts/bin/install2.r -n $NCPUS memuse
 RUN /rocker_scripts/bin/install2.r -n $NCPUS openxlsx
@@ -38,14 +38,9 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS base64enc
 RUN /rocker_scripts/bin/install2.r -n $NCPUS digest
 RUN /rocker_scripts/bin/install2.r -n $NCPUS units
 
-# Packages für kableExtra
-RUN apt-get update && apt-get install -y \
-  libfontconfig1-dev \
-  libharfbuzz-dev \
-  libfribidi-dev \
-  pandoc
-
-RUN /rocker_scripts/bin/install2.r -n $NCPUS kableExtra
+# Install R packages for interactive HTML tables
+RUN apt-get update && apt-get install -y pandoc
+RUN /rocker_scripts/bin/install2.r -n $NCPUS htmlwidgets htmltools DT jsonlite
 
 WORKDIR /src
 

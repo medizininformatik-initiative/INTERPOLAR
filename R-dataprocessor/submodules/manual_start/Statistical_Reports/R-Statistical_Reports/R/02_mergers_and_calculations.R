@@ -32,8 +32,8 @@ mergePatEnc <- function(patient_table, encounter_table) {
     dplyr::left_join(
       patient_table |>
         dplyr::select(c(
-          pat_id, pat_identifier_value, pat_birthdate, pat_gender,
-          pat_deceaseddatetime, processing_exclusion_reason
+          pat_id, pat_identifier_value, pat_birthdate,
+          processing_exclusion_reason
         )),
       by = "pat_id", suffix = c("_enc", "_pat")
     ) |>
@@ -48,16 +48,13 @@ mergePatEnc <- function(patient_table, encounter_table) {
       enc_identifier_value,
       pat_id,
       pat_identifier_value,
-      enc_identifier_type_code,
       enc_partof_ref,
       enc_class_code,
       enc_type_code_Kontaktebene,
       enc_type_code_Kontaktart,
       pat_birthdate,
-      pat_gender,
       enc_period_start,
       enc_period_end,
-      pat_deceaseddatetime,
       enc_status,
       .after = enc_id
     )
@@ -185,8 +182,9 @@ addMainEncId <- function(encounter_table) {
       dplyr::distinct(enc_id, enc_identifier_value)),
     c("enc_identifier_value")
   )) {
-    stop("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value.
-         Main_enc_id not defined. Please check the data.")
+    warning("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value.
+            Main_enc_id not defined. Please check the data.
+            (CAUTION!: processing_exclusion_reason not yet implemented in this case. Further processing is tried.)")
   }
 
   if (checkMultipleRows(
@@ -195,9 +193,10 @@ addMainEncId <- function(encounter_table) {
       dplyr::distinct(enc_id, enc_identifier_value)),
     c("enc_id")
   )) {
-    stop("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id.
-         Main_enc_id not defined. Please check the data and eventually define
-         COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
+    warning("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id.
+            Main_enc_id not defined. Please check the data and eventually define
+            COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.
+            (CAUTION!: processing_exclusion_reason not yet implemented in this case. Further processing is tried.)")
   }
 
   encounter_table_with_main_enc <- encounter_table |>
@@ -465,14 +464,13 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
 #' The goal is to enrich the patient-level data with associated case-level details.
 #'
 #' @param patient_fe_table A data frame containing front-end patient data, including
-#'   at least `record_id`, `pat_id`, and `input_datetime`.
+#'   at least `record_id`, `pat_id`.
 #'
 #' @param fall_fe_table A data frame containing front-end fall/case data, including
 #'   at least `record_id`, `fall_pat_id`, `fall_fhir_enc_id`, `fall_id`, `fall_studienphase`,
 #'   `fall_station`, and `fall_aufn_dat`.
 #'
 #' @return A merged data frame with the selected columns from both input tables.
-#'   The `input_datetime` column from the patient table is dropped prior to the join.
 #'
 #' @details
 #' The merge operation:
