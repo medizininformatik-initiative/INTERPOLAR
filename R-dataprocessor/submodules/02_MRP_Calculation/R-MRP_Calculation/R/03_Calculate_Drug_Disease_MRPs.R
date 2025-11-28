@@ -689,7 +689,8 @@ filterObservations <- function(obs, reference_value_col, invalid_obs) {
       converted_val <- convertLabUnits(
         measured_value = obs_row$value,
         measured_unit = unit_from,
-        target_unit = unit_target
+        target_unit = unit_target,
+        additional_error_message = paste0(" for LOINC code ", obs_row$code)
       )
       if (is.na(converted_val)) {
         invalid_obs <- if (nrow(invalid_obs) > 0) rbind(invalid_obs, obs_row, fill = TRUE) else obs_row
@@ -909,7 +910,8 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
                   measured_unit = obs_row$unit,
                   target_unit = mapping_row$UNIT,
                   conversion_factor = conversion_factor,
-                  conversion_unit = conversion_unit
+                  conversion_unit = conversion_unit,
+                  additional_error_message = paste0(" for LOINC code ", obs_row$code)
                 )
                 if (is.na(obs_value_converted_to_threshold_unit[i])) {
                   # store this observation as invalid
