@@ -202,11 +202,17 @@ addFeDataToF1data <- function(F1_data, frontend_summary_data) {
     dplyr::left_join(
       frontend_summary_data |>
         dplyr::distinct(
+          main_enc_id, main_enc_any_processing_exclusion_fe
+        ),
+      by = c("main_enc_id")
+    ) |>
+    dplyr::left_join(
+      frontend_summary_data |>
+        dplyr::distinct(
           pat_id, main_enc_id, enc_id, record_id, fall_id_cis,
           ward_name, meda_id, meda_dat, medikationsanalyse_complete,
           mrp_id, Kontraindikation, mrp_ip_klasse_01,
-          mrp_dokup_hand_emp_akz, mrpdokumentation_validierung_complete,
-          main_enc_any_processing_exclusion_fe
+          mrp_dokup_hand_emp_akz, mrpdokumentation_validierung_complete
         ),
       by = c(
         "pat_id", "main_enc_id", "enc_id", "record_id",
