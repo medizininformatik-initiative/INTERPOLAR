@@ -250,55 +250,82 @@ isValidUnit <- function(u) {
 #'   target_unit = "umol/l"
 #' )
 #'
+#' # Example: Direct unit conversion mmol/L to umol/L
+#' convertLabUnits(
+#'   measured_value = 1,
+#'   measured_unit = "%",
+#'   target_unit = "mmol/L",
+#'   conversion_factor = 50,
+#'   conversion_unit = "mmHg",
+#'   additional_error_message = "Custom error message for debugging."
+#' )
 convertLabUnits <- function(measured_value,
                             measured_unit,
                             target_unit,
                             conversion_factor = NA_real_,
-                            conversion_unit = NA) {
+                            conversion_unit = NA,
+                            ignore_errors = TRUE,
+                            additional_error_message = NA) {
 
-  measured_unit <- asUnit(measured_unit)
-  target_unit <- asUnit(target_unit)
+  result <- NA
+  tryCatch({
+    measured_unit <- asUnit(measured_unit)
+    target_unit <- asUnit(target_unit)
 
-  # the provided FHIR unit is invalid -> the full Observations is invald
-  if (is.na(measured_unit)) {
-    return(NA)
-  }
-  # there is no conversion unit (and factor) -> no conversion needed -> return the original value
-  if (is.na(target_unit)) {
-    return(measured_value)
-  }
+    # the provided FHIR unit is invalid -> the full Observations is invald
+    if (is.na(measured_unit)) {
+      return(NA)
+    }
+    # there is no conversion unit (and factor) -> no conversion needed -> return the original value
+    if (is.na(target_unit)) {
+      return(measured_value)
+    }
 
-  measured_unit_factor <- units::drop_units(measured_unit)
-  target_unit_factor <- units::drop_units(target_unit)
+    measured_unit_factor <- units::drop_units(measured_unit)
+    target_unit_factor <- units::drop_units(target_unit)
 
-  # Create unit object for measured value
-  u_measured <- suppressWarnings(units::set_units(measured_value, measured_unit))
+    # Create unit object for measured value
+    u_measured <- suppressWarnings(units::set_units(measured_value, measured_unit))
 
-  # Create unit object for target unit
-  u_target <- suppressWarnings(units::set_units(1, target_unit))
+    # Create unit object for target unit
+    u_target <- suppressWarnings(units::set_units(1, target_unit))
 
-  # Case 1: Units are directly convertible
-  if (units::ud_are_convertible(units(u_measured), units(u_target))) {
-    result <- suppressWarnings(units::set_units(u_measured, u_target))
-    result <- units::drop_units(result)
-    result <- result * measured_unit_factor / target_unit_factor
-  } else if (!etlutils::isSimpleNAorNULL(conversion_factor) && !etlutils::isSimpleNAorNULL(conversion_factor)) {
-    # Create unit object for conversion unit
-    u_conversion <- suppressWarnings(units::set_units(1, conversion_unit))
+    # Case 1: Units are directly convertible
+    if (units::ud_are_convertible(units(u_measured), units(u_target))) {
+      result <- suppressWarnings(units::set_units(u_measured, u_target))
+      result <- units::drop_units(result)
+      result <- result * measured_unit_factor / target_unit_factor
+    } else if (!etlutils::isSimpleNAorNULL(conversion_factor) && !etlutils::isSimpleNAorNULL(conversion_unit)) {
+      # Create unit object for conversion unit
+      u_conversion <- suppressWarnings(units::set_units(1, conversion_unit))
 
-    # Case 2: Indirect conversion via mapping unit and factor
-    result_u_conversion <- suppressWarnings(units::set_units(u_measured, u_conversion))
+      # Case 2: Indirect conversion via mapping unit and factor
+      result_u_conversion <- suppressWarnings(units::set_units(u_measured, u_conversion))
 
-    # Drop unit to apply mapping factor
-    numeric_value <- units::drop_units(result_u_conversion)
-    converted_value <- numeric_value * conversion_factor
+      if (!is.na(result_u_conversion)) {
+        # Drop unit to apply mapping factor
+        numeric_value <- units::drop_units(result_u_conversion)
+        converted_value <- numeric_value * conversion_factor
 
-    # Assign the target unit back
-    result <- suppressWarnings(units::set_units(converted_value, u_target))
-    result <- units::drop_units(result)
-  } else {
+        # Assign the target unit back
+        result <- suppressWarnings(units::set_units(converted_value, u_target))
+        result <- units::drop_units(result)
+      }
+    }
+  }, error = function(e) {
+    warning_message <- paste0("Error converting lab units from '",
+                            as.character(units(u_measured)$numerator),
+                            "' to '",
+                            as.character(units(u_target)$numerator),
+                            "': ",
+                            additional_error_message)
+    if(!ignore_errors) {
+      etlutils::catErrorMessage(warning_message)
+      stop(e)
+    }
+    etlutils::catWarningMessage(warning_message)
     result <- NA
-  }
+  })
   return(result)
 }
 
