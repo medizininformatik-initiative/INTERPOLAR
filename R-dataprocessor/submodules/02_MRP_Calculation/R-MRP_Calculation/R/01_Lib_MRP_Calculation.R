@@ -230,9 +230,10 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
               atc2_code = atc2,
               proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
               proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
-              kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc),
+              kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc, "   (",
+                                       format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
               kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (",
-                                        format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+                                        format(atc2_start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
               kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontraindiziert.")
             )
             result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
@@ -401,7 +402,7 @@ calculateMRPs <- function() {
               ]
 
               kurzbeschr_cols <- grep("^kurzbeschr_", names(collapsed_match), value = TRUE)
-              collapsed_match[, kurzbeschr := do.call(paste, c(.SD, sep = " \n")), .SDcols = kurzbeschr_cols]
+              collapsed_match[, kurzbeschr := do.call(paste0, c(.SD, sep = " \n")), .SDcols = kurzbeschr_cols]
 
               meda_id_value <- meda_id # we need this renaming for the following comparison
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
