@@ -206,7 +206,7 @@ if (exists("DEBUG_DAY")) {
 
     # Drug Drug ohne Überschneidung innerhalb eines Tages
     pid <- addDrugs("UKB-0001_19", "A02BD04", day_offset = -0.4, period_type = "timing_events", timing_events_count = 2, timing_events_day_offset = 0.05)
-    addDrugs(pid, "A03FA03", day_offset = 0.4, period_type = "timing_events", timing_events_count = 2, timing_events_day_offset = 1.15)
+    addDrugs(pid, "A03FA03", day_offset = 0.6, period_type = "timing_events", timing_events_count = 2, timing_events_day_offset = 1.15)
   })
 
   # Update the resource_tables list with the modified data tables
