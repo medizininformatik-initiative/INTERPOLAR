@@ -1124,6 +1124,40 @@ addREDCapMedikationsanalyse <- function(dt_med_ana, patient_ids, day_offset) {
   return(dt_med_ana)
 }
 
+addREDCapMRPDokumentation <- function(dt_mrp_doku, patient_ids) {
+  # Load the necessary libraries
+  template <- as.data.table(loadDebugREDCapDataTemplate("mrpdokumentation_validierung"))
+  for (pid in patient_ids) {
+    # set the record_id in the template based on the current patient id
+    template$record_id <- getRecordID(dt_patient, pid)
+    # join with the medication analysis table to populate mrp_meda_id in the template
+    template[data_to_import$medikationsanalyse, on = "record_id", mrp_meda_id := i.meda_id]
+    # count how many entries already exist in "mrpdokumentation_validierung" for this mrp_meda_id
+    count <- data_to_import$mrpdokumentation_validierung[mrp_meda_id == template$mrp_meda_id, .N]
+    # create a new mrp_id by appending "-(count + 1)" to the mrp_meda_id
+    template[, mrp_id := paste0(mrp_meda_id, "-m", count + 1)]
+    # set the redcap_repeat_instrument to "mrpdokumentation_validierung"
+    template[, redcap_repeat_instrument := "mrpdokumentation_validierung"]
+    # set the redcap_repeat_instance to count + 1
+    template[, redcap_repeat_instance := count + 1]
+    # set the mrp_pigrund___21 to "Checked" (Kontraindikation (MF))
+    template[, mrp_pigrund___21 := "Checked"]
+    # set the mrp_ip_klasse to a random value from the given options
+    template[, mrp_ip_klasse_01 := sample(c("Drug-Drug",
+                                            "Drug-Disease",
+                                            "Drug-Niereninsuffizienz"))[1]]
+    # set the mrp_dokup_hand_emp_akz to a random value from the given options
+    template[, mrp_dokup_hand_emp_akz := sample(c("Arzt / Pflege informiert",
+                                                  "Intervention vorgeschlagen und umgesetzt",
+                                                  "Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation)",
+                                                  "Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung)",
+                                                  "Intervention vorgeschlagen, Umsetzung unbekannt",
+                                                  "Problem nicht gelöst"))[1]]
+    # append the updated template row into the "mrpdokumentation_validierung" table
+    dt_mrp_doku <- rbind(dt_mrp_doku, template, fill = TRUE)
+  }
+  return(dt_mrp_doku)
+}
 
 # getNextPatientId <- function(pat_id, dt_pat) {
 #   # Extract numeric suffix
