@@ -23,10 +23,9 @@ runSubmodules <- function() {
       basename(manual_start_submodule_dirs) %in% commandArgs(trailingOnly = TRUE)]
   } else {
     called_manual_start_submodule_dirs <- as.character(c())
-
-
   }
-  if(length(called_manual_start_submodule_dirs) > 0) {
+
+  if (length(called_manual_start_submodule_dirs) > 0) {
     submodule_dirs <- called_manual_start_submodule_dirs
   }
 
@@ -38,7 +37,6 @@ runSubmodules <- function() {
   # }
 
   if (exists("DEBUG_SUBMODULE_DIR")) submodule_dirs <- DEBUG_SUBMODULE_DIR
-
 
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
