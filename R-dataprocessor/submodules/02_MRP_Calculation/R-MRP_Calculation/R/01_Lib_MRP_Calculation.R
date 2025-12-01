@@ -193,6 +193,7 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
   for (i in seq_len(nrow(active_atcs_unique))) {
     atc <- active_atcs_unique$atc_code[i]
     start_datetime <- active_atcs_unique$start_datetime[i]
+    end_datetime <- active_atcs_unique$end_datetime[i]
 
     mrp_rows <- mrp_table_list_by_atc[[atc]]
     # Filter rows where the secondary ATC is also active
@@ -202,38 +203,50 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
       matched_row <- mrp_filtered[j]
       atc2 <- matched_row$ATC2_FOR_CALCULATION
 
-      # Check, if the pair (A,B) and (B,A) exists
-      duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+      active_atc2_rows <- active_atcs_unique[atc_code == atc2]
+      data.table::setorder(active_atc2_rows, start_datetime)
 
-      # There is no existing mrp in the result table with the same atc codes
-      if (!length(duplicate_idx)) {
+      for (k in seq_len(nrow(active_atc2_rows))) {
+        atc2_start_datetime <- active_atc2_rows$start_datetime[k]
+        atc2_end_datetime <- active_atc2_rows$end_datetime[k]
 
-        mrp_index <- if (nrow(result_mrps) == 0) {
-          1
-        } else {
-          max(result_mrps$mrp_index, na.rm = TRUE) + 1
+        # Check for overlapping time periods
+        if (start_datetime <= atc2_end_datetime && atc2_start_datetime <= end_datetime) {
+          # Check, if the pair (A,B) and (B,A) exists
+          duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+
+          # There is no existing mrp in the result table with the same atc codes
+          if (!length(duplicate_idx)) {
+
+            mrp_index <- if (nrow(result_mrps) == 0) {
+              1
+            } else {
+              max(result_mrps$mrp_index, na.rm = TRUE) + 1
+            }
+
+            mrp_row <- data.table::data.table(
+              mrp_index = mrp_index, # All rows for the same mrp have the same index. Its only used for grouping.
+              atc_code = atc,
+              atc2_code = atc2,
+              proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
+              proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
+              kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc),
+              kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (",
+                                        format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+              kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontraindiziert.")
+            )
+            result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
+          } else {
+            existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_drug], result_mrps[duplicate_idx, kurzbeschr_item2], result_mrps[duplicate_idx, kurzbeschr_suffix])
+            # If duplicate exists, append the new information to kurzbeschr
+            if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+              result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC2_DISPLAY, " und ", kurzbeschr_item2)]
+            } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+              result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC_DISPLAY, " und ", kurzbeschr_item2)]
+            }
+          }
         }
-
-        mrp_row <- data.table::data.table(
-          mrp_index = mrp_index, # All rows for the same mrp have the same index. Its only used for grouping.
-          atc_code = atc,
-          atc2_code = atc2,
-          proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
-          proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
-          kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc),
-          kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (",
-                                    format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
-          kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontraindiziert.")
-        )
-        result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
-      } else {
-        existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_drug], result_mrps[duplicate_idx, kurzbeschr_item2], result_mrps[duplicate_idx, kurzbeschr_suffix])
-        # If duplicate exists, append the new information to kurzbeschr
-        if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
-          result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC2_DISPLAY, " und ", kurzbeschr_item2)]
-        } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
-          result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC_DISPLAY, " und ", kurzbeschr_item2)]
-        }
+        break
       }
     }
   }

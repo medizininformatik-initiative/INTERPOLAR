@@ -559,7 +559,7 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
   # ensure medreq_authoredon is not after start_datetime (can be if MedicationRequest is changed after first application)
   medication_requests[medreq_authoredon > start_datetime, medreq_authoredon := start_datetime]
 
-  # ensure MedicationRequest end datetime is filled
+  # ensure MedicationRequest end datetime is filled, if encounter end is NA
   if (is.na(enc_period_end)) {
     enc_period_end <- meda_datetime + lubridate::days(30)
   }
