@@ -1,0 +1,15 @@
+Package: MrpCheck
+Title: Calculate and Export MRPs
+Version: 0.0.0.9000
+Authors@R: 
+    person("Alexander", "Strübing", , "alexander.struebing@imise.uni-leipzig.de", role = c("aut", "cre"))
+    person("Florian", "Schmidt", , "florian.schmidt@imise.uni-leipzig.de", role = c("aut", "cre"))
+Description: Calculates all MRPs via the same functions used to support the regular Phase B 
+             Interpolar workflow.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
