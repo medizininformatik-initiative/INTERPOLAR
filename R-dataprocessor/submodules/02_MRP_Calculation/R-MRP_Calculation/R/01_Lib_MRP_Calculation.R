@@ -402,7 +402,7 @@ calculateMRPs <- function() {
               ]
 
               kurzbeschr_cols <- grep("^kurzbeschr_", names(collapsed_match), value = TRUE)
-              collapsed_match[, kurzbeschr := do.call(paste0, c(.SD, sep = " \n")), .SDcols = kurzbeschr_cols]
+              collapsed_match[, kurzbeschr := do.call(paste, c(.SD, sep = "\n")), .SDcols = kurzbeschr_cols]
 
               meda_id_value <- meda_id # we need this renaming for the following comparison
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]

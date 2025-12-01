@@ -250,19 +250,20 @@ getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
 matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
   # Extract all ATC codes from the splitted MRP definitions (used as keys)
   mrp_atc_keys <- names(mrp_table_list_by_atc)
-  # Extract unique ATC codes from the active medication requests
-  active_atcs <- unique(active_atcs$atc_code)
-  # Identify the intersection (matching ATC codes) between the two sets
-  matching_atcs <- intersect(active_atcs, mrp_atc_keys)
-  # Collect matched ATC codes into a data.table
-  matched_rows <- list()
-  for (atc in matching_atcs) {
-    row <- data.table::data.table(
-      atc_code = atc
-    )
-    matched_rows[[length(matched_rows) + 1]] <- row
-  }
-  return(data.table::rbindlist(matched_rows))
+  # Reduce active_atcs to the relevant ATC codes (and keep their dates!)
+  active_atcs_unique <- active_atcs[
+    , .(start_datetime = min(start_datetime, na.rm = TRUE)),
+    by = atc_code
+  ]
+  # Only keep those that also appear in MRP definitions
+  matching_atcs <- active_atcs_unique[atc_code %in% mrp_atc_keys]
+
+  # Build the output properly
+  result <- matching_atcs[
+    , .(atc_code, start_datetime)
+  ]
+
+  return(result)
 }
 
 #' Match ICD codes against MRP rules and ATC codes
@@ -380,14 +381,18 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
           diagnosis_cluster = mrp_table_list_row$CONDITION_DISPLAY_CLUSTER
         )
 
+        # Add start_datetime of the matched ATC code
+        new_row <- merge(new_row, match_atc_codes[, .(atc_code, start_datetime)],
+                         by = "atc_code", all.x = TRUE)
+
         new_row[, icd_display := {
           displays <- relevant_conditions[con_code_code %in% icd_code, con_code_display]
           displays <- unique(displays[!is.na(displays)])
           if (length(displays) == 0) NA_character_ else paste(displays, collapse = "; ")
         }]
 
-
-        new_row[, kurzbeschr_drug := paste0(mrp_table_list_row$ATC_DISPLAY, " - ", atc_code)]
+        new_row[, kurzbeschr_drug := paste0(mrp_table_list_row$ATC_DISPLAY, " - ", atc_code,
+                                            "  (", format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
         new_row[, kurzbeschr_item2 := paste0(icd_display, " - ", icd_code, "   (",
                                              format(condition_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
         new_row[, kurzbeschr_suffix := paste0("laut der entsprechenden Fachinformation [",
@@ -1132,13 +1137,17 @@ matchICDProxies <- function(
               mrp_index <- getOrCreateMrpIndex(match_proxy_row, getDrugDiseaseListRows())
 
               if (nrow(valid_proxy_rows)) {
+                # Get the start datetime of the matched ATC code
+                atc_start <- match_atc_codes[atc_code == match_proxy_row$ATC_FOR_CALCULATION, start_datetime][1]
+
                 new_row <- data.table::data.table(
                   mrp_index = mrp_index,
                   icd_code = match_proxy_row$ICD,
                   atc_code = match_proxy_row$ATC_FOR_CALCULATION,
                   proxy_code = proxy_code,
                   proxy_type = proxy_type,
-                  kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION),
+                  kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION,
+                                           "  (", format(atc_start, "%Y-%m-%d %H:%M:%S"), ")"),
                   kurzbeschr_item2 = paste0(proxy_display, " - ", proxy_code),
                   kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation [",
                                              match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontraindiziert."),
