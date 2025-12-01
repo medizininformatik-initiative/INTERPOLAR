@@ -751,15 +751,14 @@ duplicatePatients <- function(count, duplicated_start_index = 1) {
   testSetResourceTables(new_resource_tables)
 }
 
-addDrugs <- function(pid, codes, day_offset = -0.4, period_type = c(
+addDrugs <- function(pid, codes, day_offset = -0.4, authoredon = NA, period_type = c(
   "start",
   "start_and_end",
   "start_and_end_and_timing_event",
   "timing_event",
   "timing_events",
-  "authoredon",
   "all_timestamps_NA"
-), encounter_id = NULL) {
+), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2) {
 
   period_type <- match.arg(period_type)
 
@@ -813,14 +812,13 @@ addDrugs <- function(pid, codes, day_offset = -0.4, period_type = c(
     }
     if (period_type %in% c("timing_events")) {
       events <- c()
-      for (j in 1:3) {
-        events <- c(events, getDebugDatesRAWDateTime(day_offset + 0.05 + (j - 1) * 2, raw_index = paste0("[1.1.", j, "]")))
+      for (j in 1:timing_events_count) {
+        events <- c(events, getDebugDatesRAWDateTime(day_offset + 0.05 + (j - 1) * timing_events_day_offset, raw_index = paste0("[1.1.", j, "]")))
       }
       dt[, medreq_doseinstruc_timing_event := paste0(events, collapse = " ~ ")]
     }
-    if (period_type %in% c("authoredon")) {
-      dt[, medreq_authoredon := getDebugDatesRAWDateTime(day_offset - 0.01, raw_index = "[1]")]
-    }
+    if (!is.na(authoredon)) authoredon <- getDebugDatesRAWDateTime(authoredon, raw_index = "[1]")
+    dt[, medreq_authoredon := authoredon]
     dt
   }))
 
