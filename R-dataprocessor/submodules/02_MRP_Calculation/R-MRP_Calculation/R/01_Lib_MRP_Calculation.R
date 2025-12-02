@@ -313,7 +313,9 @@ calculateMRPs <- function() {
         retrolektive_mrpbewertung_rows <- list()
         dp_mrp_calculations_rows <- list()
 
-        for (encounter_id in resources$main_encounters$enc_id) {
+        mrp_type_main_encounters <- main_encounters_by_mrp_type[[mrp_type]]
+
+        for (encounter_id in mrp_type_main_encounters$enc_id) {
           # Get encounter data and patient ID
           encounter <- resources$main_encounters[enc_id == encounter_id]
           patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
