@@ -21,6 +21,27 @@ MRP_TYPE <- etlutils::namedVectorByParam(
 )
 
 #
+# Load all encounters for a time range
+#
+getEncountersWithTimeRangeFromDB <- function(start_time, end_time) {
+  query <- paste0(
+    "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
+    "FROM v_encounter_last_version\n",
+    "WHERE enc_period_start >= '", format(start_time, "%Y-%m-%d %H:%M:%S"), "'\n",
+    "AND enc_period_end <= '", format(end_time, "%Y-%m-%d %H:%M:%S"), "'\n",
+    "AND enc_type_code = 'einrichtungskontakt'\n"
+  )
+  mrp_encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getEncountersWithTimeRangeFromDB()"))
+  mrp_encounters[, study_phase := "PhaseB"]
+  encounters_per_mrp_type <- list()
+  for (mrp_type in MRP_TYPE) {
+    encounters_per_mrp_type[[mrp_type]] <- mrp_encounters
+  }
+  encounters_per_mrp_type[["ALL_MRP_TYPES"]] <- mrp_encounters
+  return(encounters_per_mrp_type)
+}
+
+#
 # Load Einrichtungskontakt Encounters without retrolective MRP evaluation
 #
 getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {

@@ -270,10 +270,19 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
 #'   \item Compiles results into descriptive and audit tables.
 #' }
 #'
+#' @param start_date Optional. Start of the date range as character or Date (e.g., "2025-10-01").
+#'   Only encounters starting on or after this date are included. Time is set to 00:00:00.
+#' @param end_date Optional. End of the date range as character or Date (e.g., "2025-10-31").
+#'   Only encounters ending on or before this date are included. Time is set to 23:59:59 if
+#'   provided, or to current system time if omitted.
+#'
 #' @return A named list with two `data.table` objects:
+#'
 #' \describe{
-#'   \item{retrolektive_mrpbewertung_fe}{Combined MRP evaluations across all types, ready for reporting or REDCap import.}
-#'   \item{dp_mrp_calculations}{Combined audit log of all MRP evaluation steps, including proxy type and code used.}
+#'   \item{retrolektive_mrpbewertung_fe}{Combined MRP evaluations across all types, ready for
+#'   reporting or REDCap import.}
+#'   \item{dp_mrp_calculations}{Combined audit log of all MRP evaluation steps, including proxy
+#'   type and code used.}
 #' }
 #'
 #' @details
@@ -281,14 +290,41 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
 #' - ATC codes are matched using `matchATCCodes()`, ICDs using `matchICDCodes()`.
 #' - If no ICD match is found, `matchICDProxies()` evaluates proxy rules (ATC/OPS).
 #' - Each match results in one entry in both output tables.
-#' - If no match is found for an encounter, a placeholder entry is created in `dp_mrp_calculations`.
+#' - If no match is found for an encounter, a placeholder entry is created in
+#'   `dp_mrp_calculations`.
 #' - The function merges all MRP types into two unified output tables.
 #'
-calculateMRPs <- function() {
+#' @examples
+#' \dontrun{
+#' # Run for all encounters with missing retrospective MRP evaluation
+#' calculateMRPs()
+#'
+#' # Run for encounters from the past 60 days
+#' calculateMRPs(Sys.Date() - 60)
+#'
+#' # Run for specific date range
+#' calculateMRPs("2025-10-01", "2025-10-31")
+#' }
+#'
+#' @export
+calculateMRPs <- function(start_date = NULL, end_date = NULL) {
 
   # Get all Einrichtungskontakt encounters that ended at least 14 days ago
   # and do not have a retrolective MRP evaluation for Drug_Disease
-  main_encounters_by_mrp_type <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
+
+  main_encounters_by_mrp_type <- if (!is.null(start_date)) {
+    start_time <- as.POSIXct(start_date, tz = GLOBAL_TIMEZONE)
+    end_time <- if (is.null(end_date)) {
+      as.POSIXct(Sys.time(), tz = GLOBAL_TIMEZONE)
+    } else {
+      as.POSIXct(end_date, tz = GLOBAL_TIMEZONE) +
+        lubridate::days(1) - lubridate::seconds(1)
+    }
+    getEncountersWithTimeRangeFromDB(start_time, end_time)
+  } else {
+    getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
+  }
+
   main_encounters <- main_encounters_by_mrp_type[["ALL_MRP_TYPES"]]
 
   mrp_table_lists_all <- list()
