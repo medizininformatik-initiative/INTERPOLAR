@@ -1105,7 +1105,7 @@ filterPatientIdsByLevel <- function(all_pids, duplicate_level, last_indices = NU
 
 addREDCapMedikationsanalyse <- function(dt_med_ana, patient_ids, day_offset) {
   # Load the necessary libraries
-  template <- loadDebugREDCapDataTemplate("medikationsanalyse")
+  template <- as.data.table(loadDebugREDCapDataTemplate("medikationsanalyse"))
   for (pid in patient_ids) {
     # Clean and add correct medication analysis datetime
     meda_datetime <- getDebugDatesRAWDateTime(day_offset, raw_index = "")
@@ -1118,8 +1118,14 @@ addREDCapMedikationsanalyse <- function(dt_med_ana, patient_ids, day_offset) {
     count <- data_to_import$medikationsanalyse[fall_meda_id == template$fall_meda_id, .N]
     # create a new meda_id by appending "-(count + 1)" to the fall_meda_id
     template[, meda_id := paste0(fall_meda_id, "-", count + 1)]
+    # set the redcap_repeat_instrument to "medikationsanalyse"
+    template[, redcap_repeat_instrument := "medikationsanalyse"]
+    # count how many entries already exist in "medikationsanalyse" for this record_id
+    count_redcap_repeat_instances <- data_to_import$medikationsanalyse[record_id == template$record_id, .N]
+    # set the redcap_repeat_instance to count + 1
+    template[, redcap_repeat_instance := count_redcap_repeat_instances + 1]
     # append the updated template row into the "medikationsanalyse" table
-    dt_med_ana <- rbind(dt_med_ana, template)
+    dt_med_ana <- rbind(dt_med_ana, template, fill = TRUE)
   }
   return(dt_med_ana)
 }
