@@ -16,8 +16,8 @@ getProjectDirNames <- function(project_name, project_time_stamp = MODULE_TIME_ST
   global_dir <- "outputGlobal"
   local_dir <- "outputLocal"
 
-  local_results_directories_names  <- c("bundles", "log", "performance", "tables", "reports")
-  global_results_directories_names <- c("performance", "requests", "reports")
+  local_results_directories_names  <- namedVectorByValue("bundles", "log", "performance", "tables", "reports")
+  global_results_directories_names <- namedVectorByValue("performance", "requests", "tables", "reports")
 
   global_dir <- fhircrackr::pastep(global_dir, project_name)
   local_dir <- fhircrackr::pastep(local_dir, project_name)
@@ -192,6 +192,54 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
     project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
   }
   saveRDS(object = object, file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData'))
+}
+
+#' Write an Excel file to a local or global tables directory
+#'
+#' Internal helper that determines the target directory based on `target` and writes
+#' the provided tables as an Excel file using `writeExcelFile()`.
+#'
+#' @param target Either "local" or "global" to choose the base directory.
+#' @param tables A `data.frame` or list that can be handled by `write.xlsx`.
+#' @param filename_without_extension Optional file name without extension. If NA, the
+#'   variable name of `tables` is used.
+#' @param with_column_names Logical indicating whether column names should be written.
+writeExcelFileInternal <- function(target = c("local", "global"), tables,
+                                   filename_without_extension = NA, with_column_names = TRUE) {
+  target <- match.arg(target)
+  if (is.na(filename_without_extension)) {
+    filename_without_extension <- as.character(substitute(tables))
+  }
+  project_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, "tables")
+  if (!dir.exists(project_sub_dir)) {
+    dir.create(project_sub_dir, recursive = TRUE)
+  }
+  file_name <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.xlsx')
+  writeExcelFile(tables, file_name, with_column_names)
+}
+
+#' Write an Excel file to the local tables directory
+#'
+#' @inheritParams writeExcelFileInternal
+#'
+#' @export
+writeExcelFileLocal <- function(tables, filename_without_extension = NA, with_column_names = TRUE) {
+  if (is.na(filename_without_extension)) {
+    filename_without_extension <- as.character(substitute(tables))
+  }
+  writeExcelFileInternal("local", tables, filename_without_extension, with_column_names)
+}
+
+#' Write an Excel file to the global tables directory
+#'
+#' @inheritParams writeExcelFileInternal
+#'
+#' @export
+writeExcelFileGlobal <- function(tables, filename_without_extension = NA, with_column_names = TRUE) {
+  if (is.na(filename_without_extension)) {
+    filename_without_extension <- as.character(substitute(tables))
+  }
+  writeExcelFileInternal("global", tables, filename_without_extension, with_column_names)
 }
 
 #' Write an HTML Table with Download Buttons
