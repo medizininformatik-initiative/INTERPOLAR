@@ -1138,8 +1138,10 @@ addREDCapMRPDokumentation <- function(dt_mrp_doku, patient_ids) {
     template[, mrp_id := paste0(mrp_meda_id, "-m", count + 1)]
     # set the redcap_repeat_instrument to "mrpdokumentation_validierung"
     template[, redcap_repeat_instrument := "mrpdokumentation_validierung"]
+    # count how many entries already exist in "mrpdokumentation_validierung" for this record_id
+    count_redcap_repeat_instances <- data_to_import$mrpdokumentation_validierung[record_id == template$record_id, .N]
     # set the redcap_repeat_instance to count + 1
-    template[, redcap_repeat_instance := count + 1]
+    template[, redcap_repeat_instance := count_redcap_repeat_instances + 1]
     # set the mrp_pigrund___21 to "Checked" (Kontraindikation (MF))
     template[, mrp_pigrund___21 := "Checked"]
     # set the mrp_ip_klasse to a random value from the given options
