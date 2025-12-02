@@ -586,7 +586,7 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
   # Combine all medication requests that are less than 1 day apart.
   # 1. sort, 2. group and 3. aggregate overlapping or subsequent time periods per atc_code
   # 1. sort
-  setorder(active_atc, atc_code, start_datetime)
+  data.table::setorder(active_atc, atc_code, start_datetime)
   # 2. group
   active_atc[, grp := cumsum(
     c(TRUE, diff(start_datetime) > 1) | c(TRUE, atc_code[-1] != atc_code[-.N])
