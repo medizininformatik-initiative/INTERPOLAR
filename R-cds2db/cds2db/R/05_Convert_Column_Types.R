@@ -105,9 +105,23 @@ isIndexedTable <- function(dt, brackets) {
   return(FALSE)
 }
 
+#' Get Resource Names to Skip Melting
+#'
+#' This function retrieves the resource names that should be skipped during the melting process
+#' based on debug environment variables.
+#'
+isSkipMeltingResource <- function(resource_name) {
+  if (etlutils::isDefinedAndNotEmpty("DEBUG_SKIP_MELTING_RESOURCES")) {
+    return(tolower(resource_name) %in% tolower(DEBUG_SKIP_MELTING_RESOURCES))
+  }
+  return(FALSE)
+}
+
+
 #' Melt Cracked FHIR Data
 #'
-#' This function melts cracked FHIR data in the resource tables according to the provided FHIR table descriptions.
+#' This function melts cracked FHIR data in the resource tables according to the
+#' provided FHIR table descriptions.
 #'
 #' @param resource_tables A list of data.tables containing the resource tables.
 #' @param fhir_table_descriptions A list of FHIR table description objects.
@@ -118,6 +132,11 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
   names(fhir_table_descriptions) <- tolower(names(fhir_table_descriptions))
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
+    if (isSkipMeltingResource(resource_name)) {
+      resource_tables[[i]] <- resource_tables[[i]][0]
+      print(paste0("Skipping melting of resource table ", resource_name, " due to debug variable 'DEBUG_SKIP_MELTING_RESOURCES.'"))
+      next
+    }
     fhir_table_description <- fhir_table_descriptions[[resource_name]]
     if (!is.null(fhir_table_description)) {
       brackets <- fhir_table_description@brackets
