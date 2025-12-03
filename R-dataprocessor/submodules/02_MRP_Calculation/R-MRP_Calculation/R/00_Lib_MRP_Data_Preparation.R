@@ -230,12 +230,12 @@ getMedicationRequestsFromDB <- function(patient_references) {
       data.table::fifelse(
         !is.na(medreq_doseinstruc_timing_event),
         etlutils::getStartOfNextDay(medreq_doseinstruc_timing_event),
-        medreq_authoredon)
+        NA)
     )]
   }
   # remove all now irrelevant timing and DB ID columns ()
   medication_requests[, c(
-    "medicationrequest_id", "medreq_authoredon","medreq_doseinstruc_timing_event",
+    "medicationrequest_id","medreq_doseinstruc_timing_event",
     "medreq_doseinstruc_timing_repeat_boundsperiod_start",
     "medreq_doseinstruc_timing_repeat_boundsperiod_end") := NULL]
   # for each medreq_id keep only the earliest start_datetime and the latest
@@ -550,14 +550,56 @@ getResourcesForMRPCalculation <- function(main_encounters) {
 #' @return A \code{data.table} with filtered active medication requests for the given encounter and time range.
 #'
 #' @export
-getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
-  active_requests <- medication_requests[
-    !is.na(start_datetime) &
-      start_datetime >= enc_period_start &
-      start_datetime <= meda_datetime &
-      (is.na(end_datetime) |
-         end_datetime >= meda_datetime)
+getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end, meda_datetime) {
+
+  # ensure medreq_authoredon is filled with a non NA value
+  medication_requests[is.na(medreq_authoredon),
+                      medreq_authoredon := pmin(start_datetime, meda_datetime, na.rm = TRUE)]
+
+  # ensure medreq_authoredon is not after start_datetime (can be if MedicationRequest is changed after first application)
+  medication_requests[medreq_authoredon > start_datetime, medreq_authoredon := start_datetime]
+
+  # ensure MedicationRequest end datetime is filled, if encounter end is NA
+  if (is.na(enc_period_end)) {
+    enc_period_end <- meda_datetime + lubridate::days(30)
+  }
+  medication_requests[is.na(end_datetime), end_datetime := enc_period_end]
+
+  # remove all medication requests where calculated start_datetime is before medreq_authoredon
+  medication_requests <- medication_requests[
+    start_datetime >= medreq_authoredon & (is.na(end_datetime) | end_datetime >= start_datetime)
   ]
-  atc_codes <- active_requests[, c("atc_code", "start_datetime")]
-  return(atc_codes)
+  # ensure medication start is not before encounter start
+  active_requests <- medication_requests[
+    medreq_authoredon >= enc_period_start &
+      start_datetime >= enc_period_start &
+      medreq_authoredon <= meda_datetime
+  ]
+
+  # keep only relevant columns and aggregate to get the overall start and end datetime per atc_code
+  active_atc <- active_requests[, c("atc_code", "start_datetime", "end_datetime")]
+  active_atc <- active_atc[, .(
+    start_datetime = min(start_datetime, na.rm = TRUE),
+    end_datetime = end_datetime[1]
+  ), by = .(atc_code, end_datetime)]
+
+  # Combine all medication requests that are less than 1 day apart.
+  # 1. sort, 2. group and 3. aggregate overlapping or subsequent time periods per atc_code
+  # 1. sort
+  setorder(active_atc, atc_code, start_datetime)
+  # 2. group
+  active_atc[, grp := cumsum(
+    c(TRUE, diff(start_datetime) > 1) | c(TRUE, atc_code[-1] != atc_code[-.N])
+  ), by = atc_code]
+  # 3. aggregate
+  active_atc <- active_atc[
+    , .(
+      start_datetime = min(start_datetime),
+      end_datetime = max(end_datetime)
+    ),
+    by = .(atc_code, grp)
+  ]
+  active_atc[, grp := NULL]
+
+  return(active_atc)
 }

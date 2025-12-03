@@ -239,30 +239,31 @@ getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
 #' This function compares ATC codes from a list of active medication requests with the keys
 #' (ATC codes) in the MRP rule definitions and returns all codes that appear in both.
 #'
-#' @param active_requests A \code{data.table} containing at least a column \code{atc_code}
+#' @param active_atcs A \code{data.table} containing at least a column \code{atc_code}
 #'        with the ATC codes from active medication requests.
 #' @param mrp_table_list_by_atc A named list of \code{data.table}s, where each name is an ATC code
 #'        and the corresponding table contains MRP rule definitions.
 #'
 #' @return A \code{data.table} with a single column \code{atc_code} listing all ATC codes
-#'         found in both \code{active_requests} and \code{mrp_table_list_by_atc}.
+#'         found in both \code{active_atcs} and \code{mrp_table_list_by_atc}.
 #'
-matchATCCodes <- function(active_requests, mrp_table_list_by_atc) {
+matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
   # Extract all ATC codes from the splitted MRP definitions (used as keys)
   mrp_atc_keys <- names(mrp_table_list_by_atc)
-  # Extract unique ATC codes from the active medication requests
-  active_atcs <- unique(active_requests$atc_code)
-  # Identify the intersection (matching ATC codes) between the two sets
-  matching_atcs <- intersect(active_atcs, mrp_atc_keys)
-  # Collect matched ATC codes into a data.table
-  matched_rows <- list()
-  for (atc in matching_atcs) {
-    row <- data.table::data.table(
-      atc_code = atc
-    )
-    matched_rows[[length(matched_rows) + 1]] <- row
-  }
-  return(data.table::rbindlist(matched_rows))
+  # Reduce active_atcs to the relevant ATC codes (and keep their dates!)
+  active_atcs_unique <- active_atcs[
+    , .(start_datetime = min(start_datetime, na.rm = TRUE)),
+    by = atc_code
+  ]
+  # Only keep those that also appear in MRP definitions
+  matching_atcs <- active_atcs_unique[atc_code %in% mrp_atc_keys]
+
+  # Build the output properly
+  result <- matching_atcs[
+    , .(atc_code, start_datetime)
+  ]
+
+  return(result)
 }
 
 #' Match ICD codes against MRP rules and ATC codes
@@ -380,14 +381,18 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
           diagnosis_cluster = mrp_table_list_row$CONDITION_DISPLAY_CLUSTER
         )
 
+        # Add start_datetime of the matched ATC code
+        new_row <- merge(new_row, match_atc_codes[, .(atc_code, start_datetime)],
+                         by = "atc_code", all.x = TRUE)
+
         new_row[, icd_display := {
           displays <- relevant_conditions[con_code_code %in% icd_code, con_code_display]
           displays <- unique(displays[!is.na(displays)])
           if (length(displays) == 0) NA_character_ else paste(displays, collapse = "; ")
         }]
 
-
-        new_row[, kurzbeschr_drug := paste0(mrp_table_list_row$ATC_DISPLAY, " - ", atc_code)]
+        new_row[, kurzbeschr_drug := paste0(mrp_table_list_row$ATC_DISPLAY, " - ", atc_code,
+                                            "  (", format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
         new_row[, kurzbeschr_item2 := paste0(icd_display, " - ", icd_code, "   (",
                                              format(condition_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
         new_row[, kurzbeschr_suffix := paste0("laut der entsprechenden Fachinformation [",
@@ -1132,13 +1137,17 @@ matchICDProxies <- function(
               mrp_index <- getOrCreateMrpIndex(match_proxy_row, getDrugDiseaseListRows())
 
               if (nrow(valid_proxy_rows)) {
+                # Get the start datetime of the matched ATC code
+                atc_start <- match_atc_codes[atc_code == match_proxy_row$ATC_FOR_CALCULATION, start_datetime][1]
+
                 new_row <- data.table::data.table(
                   mrp_index = mrp_index,
                   icd_code = match_proxy_row$ICD,
                   atc_code = match_proxy_row$ATC_FOR_CALCULATION,
                   proxy_code = proxy_code,
                   proxy_type = proxy_type,
-                  kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION),
+                  kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION,
+                                           "  (", format(atc_start, "%Y-%m-%d %H:%M:%S"), ")"),
                   kurzbeschr_item2 = paste0(proxy_display, " - ", proxy_code),
                   kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation [",
                                              match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontraindiziert."),
@@ -1270,7 +1279,7 @@ getSplittedMRPTablesDrugDisease <- function(mrp_pair_list) {
 #' If direct ICD matches are not found for an ATC, proxy rules are applied using medication
 #' and procedure history to infer possible conditions.
 #'
-#' @param active_requests A \code{data.table} of the patient's active medications (e.g. FHIR MedicationRequest).
+#' @param active_atcs A \code{data.table} of the patient's active medications (e.g. FHIR MedicationRequest).
 #' @param mrp_pair_list MRP-Pair list to create a list of lookup tables created by \code{getSplittedMRPTablesDrugDisease()}.
 #' @param resources A named list of all FHIR resource tables relevant to the encounter (conditions, medications, procedures, etc.).
 #' @param patient_id A character string representing the internal patient ID.
@@ -1278,12 +1287,12 @@ getSplittedMRPTablesDrugDisease <- function(mrp_pair_list) {
 #'
 #' @return A \code{data.table} containing matched Drug-Disease MRPs, including both direct and proxy-based findings.
 #'
-calculateMRPsDrugDisease <- function(active_requests, mrp_pair_list, resources, patient_id, meda_datetime) {
+calculateMRPsDrugDisease <- function(active_atcs, mrp_pair_list, resources, patient_id, meda_datetime) {
   loinc_mapping_table <- getLOINCMapping()$processed_content
   match_atc_and_icd_codes <- data.table::data.table()
   splitted_mrp_tables <- getSplittedMRPTablesDrugDisease(mrp_pair_list)
   # Match ATC-codes between encounter data and MRP definitions
-  match_atc_codes <- matchATCCodes(active_requests, splitted_mrp_tables$by_atc)
+  match_atc_codes <- matchATCCodes(active_atcs, splitted_mrp_tables$by_atc)
   # Get and match ICD-codes of the patient
   if (nrow(match_atc_codes)) {
     # Get relevant conditions

@@ -158,7 +158,7 @@ computeATCForCalculation <- function(data_table, primary_col, inclusion_col, out
 #' field) also occur in the active medications. For each matched ATC–ATC2 pair, it returns a descriptive
 #' entry indicating a potential contraindication.
 #'
-#' @param active_requests A \code{data.table} containing at least the column \code{atc_code},
+#' @param active_atcs A \code{data.table} containing at least the column \code{atc_code},
 #'        which lists ATC codes of currently active medication requests.
 #' @param mrp_table_list_by_atc A named list of \code{data.table}s, where each name corresponds to an
 #'        ATC code, and each table contains MRP rule definitions, including a column \code{ATC2_FOR_CALCULATION}.
@@ -171,7 +171,7 @@ computeATCForCalculation <- function(data_table, primary_col, inclusion_col, out
 #'     \item{\code{proxy_type}}{Currently unused (placeholder).}
 #'     \item{\code{kurzbeschr}}{A short textual description of the interaction.}
 #'   }
-matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
+matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
   # Initialize empty result data.table
   result_mrps <- data.table::data.table(
     mrp_index = integer(),
@@ -183,16 +183,17 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
     kurzbeschr_item2 = character(),
     kurzbeschr_suffix = character()
   )
-  active_requests_unique <- unique(active_requests, by = c("atc_code", "start_datetime"))
-  active_atcs <- unique(active_requests_unique$atc_code)
+  active_atcs_unique <- unique(active_atcs)
+  active_atcs <- unique(active_atcs_unique$atc_code)
 
   # Only use ATCs that are in the MRP table list
   used_keys <- intersect(names(mrp_table_list_by_atc), active_atcs)
-  active_requests_unique <- active_requests_unique[atc_code %in% used_keys]
+  active_atcs_unique <- active_atcs_unique[atc_code %in% used_keys]
 
-  for (i in seq_len(nrow(active_requests_unique))) {
-    atc <- active_requests_unique$atc_code[i]
-    start_datetime <- active_requests_unique$start_datetime[i]
+  for (i in seq_len(nrow(active_atcs_unique))) {
+    atc <- active_atcs_unique$atc_code[i]
+    start_datetime <- active_atcs_unique$start_datetime[i]
+    end_datetime <- active_atcs_unique$end_datetime[i]
 
     mrp_rows <- mrp_table_list_by_atc[[atc]]
     # Filter rows where the secondary ATC is also active
@@ -202,38 +203,51 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
       matched_row <- mrp_filtered[j]
       atc2 <- matched_row$ATC2_FOR_CALCULATION
 
-      # Check, if the pair (A,B) and (B,A) exists
-      duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+      active_atc2_rows <- active_atcs_unique[atc_code == atc2]
+      data.table::setorder(active_atc2_rows, start_datetime)
 
-      # There is no existing mrp in the result table with the same atc codes
-      if (!length(duplicate_idx)) {
+      for (k in seq_len(nrow(active_atc2_rows))) {
+        atc2_start_datetime <- active_atc2_rows$start_datetime[k]
+        atc2_end_datetime <- active_atc2_rows$end_datetime[k]
 
-        mrp_index <- if (nrow(result_mrps) == 0) {
-          1
-        } else {
-          max(result_mrps$mrp_index, na.rm = TRUE) + 1
+        # Check for overlapping time periods
+        if (start_datetime <= atc2_end_datetime && atc2_start_datetime <= end_datetime) {
+          # Check, if the pair (A,B) and (B,A) exists
+          duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+
+          # There is no existing mrp in the result table with the same atc codes
+          if (!length(duplicate_idx)) {
+
+            mrp_index <- if (nrow(result_mrps) == 0) {
+              1
+            } else {
+              max(result_mrps$mrp_index, na.rm = TRUE) + 1
+            }
+
+            mrp_row <- data.table::data.table(
+              mrp_index = mrp_index, # All rows for the same mrp have the same index. Its only used for grouping.
+              atc_code = atc,
+              atc2_code = atc2,
+              proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
+              proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
+              kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc, "   (",
+                                       format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+              kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (",
+                                        format(atc2_start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+              kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontraindiziert.")
+            )
+            result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
+          } else {
+            existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_drug], result_mrps[duplicate_idx, kurzbeschr_item2], result_mrps[duplicate_idx, kurzbeschr_suffix])
+            # If duplicate exists, append the new information to kurzbeschr
+            if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+              result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC2_DISPLAY, " und ", kurzbeschr_item2)]
+            } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+              result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC_DISPLAY, " und ", kurzbeschr_item2)]
+            }
+          }
         }
-
-        mrp_row <- data.table::data.table(
-          mrp_index = mrp_index, # All rows for the same mrp have the same index. Its only used for grouping.
-          atc_code = atc,
-          atc2_code = atc2,
-          proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
-          proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
-          kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc),
-          kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (",
-                                    format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
-          kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontraindiziert.")
-        )
-        result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
-      } else {
-        existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_drug], result_mrps[duplicate_idx, kurzbeschr_item2], result_mrps[duplicate_idx, kurzbeschr_suffix])
-        # If duplicate exists, append the new information to kurzbeschr
-        if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
-          result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC2_DISPLAY, " und ", kurzbeschr_item2)]
-        } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
-          result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC_DISPLAY, " und ", kurzbeschr_item2)]
-        }
+        break
       }
     }
   }
@@ -318,13 +332,13 @@ calculateMRPs <- function() {
           kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
 
           # Get active MedicationRequests for the encounter
-          active_requests <- getActiveMedicationRequests(medication_requests, encounter$enc_period_start, meda_datetime)
+          active_atcs <- getActiveATCs(medication_requests, encounter$enc_period_start, encounter$enc_period_end, meda_datetime)
           match_atc_and_item2_codes <- data.table::data.table()
 
-          if (nrow(active_requests) && meda_study_phase != "PhaseA") {
+          if (nrow(active_atcs) && meda_study_phase != "PhaseA") {
             fun <- getFunctionByName("calculateMRPs", mrp_type)
             args <- list(
-              active_requests = active_requests,
+              active_atcs = active_atcs,
               mrp_pair_list = mrp_pair_list,
               resources = resources,
               patient_id = patient_id,
@@ -388,7 +402,7 @@ calculateMRPs <- function() {
               ]
 
               kurzbeschr_cols <- grep("^kurzbeschr_", names(collapsed_match), value = TRUE)
-              collapsed_match[, kurzbeschr := do.call(paste, c(.SD, sep = " \n")), .SDcols = kurzbeschr_cols]
+              collapsed_match[, kurzbeschr := do.call(paste, c(.SD, sep = "\n")), .SDcols = kurzbeschr_cols]
 
               meda_id_value <- meda_id # we need this renaming for the following comparison
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
