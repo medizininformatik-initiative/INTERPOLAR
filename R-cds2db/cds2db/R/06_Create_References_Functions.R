@@ -19,6 +19,7 @@ getEncounterColNamesForReferenceCalculation <- function() {
       "_period_end",
       "_identifier_system",
       "_identifier_value",
+      "_class_code",
       "_partof_ref",
       "_partof_calculated_ref",
       "_main_encounter_calculated_ref"#,
@@ -30,6 +31,57 @@ getEncounterColNamesForReferenceCalculation <- function() {
 }
 
 createReferencesForEncounters <- function(encounters, common_encounter_fhir_identifier_system) {
+
+  #
+  # Find the best fitting parent encounter by timestamp and prefer inpatient encounters
+  #
+  findParentEncounter <- function(child_row, candidate_parent_encounters) {
+
+    child_start <- child_row$enc_period_start
+    child_end <- child_row$enc_period_end
+    # filter candidates that enclose the child encounter
+    # Keep candidates that start no later than the child start.
+    # Compare end times only if BOTH ends are present; otherwise ignore end.
+    candidate_parent_encounters <- candidate_parent_encounters[
+      enc_period_start <= child_start &
+        (is.na(child_end) | is.na(enc_period_end) | enc_period_end >= child_end)
+    ]
+    if (nrow(candidate_parent_encounters) > 1) {
+
+      getParentCandidates <- function(candidate_parent_encounters, enc_class) {
+        new_candidate_parent_encounters <- candidate_parent_encounters[enc_class_code == enc_class]
+        if (nrow(new_candidate_parent_encounters) >= 1) {
+          return(new_candidate_parent_encounters)
+        }
+        return(NULL)
+      }
+      new_candidate_parent_encounters <- getParentCandidates(candidate_parent_encounters, "IMP")
+      if (is.null(new_candidate_parent_encounters)) {
+        new_candidate_parent_encounters <- getParentCandidates(candidate_parent_encounters, "SS")
+      }
+      if (is.null(new_candidate_parent_encounters)) {
+        new_candidate_parent_encounters <- getParentCandidates(candidate_parent_encounters, "AMB")
+      }
+      if(!is.null(new_candidate_parent_encounters)) {
+        candidate_parent_encounters <- new_candidate_parent_encounters
+      }
+    }
+
+    if (nrow(candidate_parent_encounters) > 1) {
+      time_diff <- abs(as.numeric(difftime(
+        candidate_parent_encounters$enc_period_start,
+        child_start,
+        units = "secs"
+      )))
+      idx <- which.min(time_diff)
+      best_fit_parent <- candidate_parent_encounters[idx]
+    } else if (nrow(candidate_parent_encounters) == 1) {
+      best_fit_parent <- candidate_parent_encounters
+    } else {
+      best_fit_parent <- NULL
+    }
+    return(best_fit_parent)
+  }
 
   # add the both calculated columns
   if (!("enc_partof_calculated_ref" %in% names(encounters))) {
@@ -118,25 +170,13 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
               patient_ref <- encounters_of_lvl$enc_patient_ref[enc_index]
               candidate_parent_encounters <- parent_encounters_of_lvl[enc_patient_ref == patient_ref]
               if (nrow(candidate_parent_encounters)) {
-                # find the best fitting parent encounter by timestamp
-                child_start <- encounters_of_lvl$enc_period_start[enc_index]
-                child_end <- encounters_of_lvl$enc_period_end[enc_index]
-                # filter candidates that enclose the child encounter
-                # Keep candidates that start no later than the child start.
-                # Compare end times only if BOTH ends are present; otherwise ignore end.
-                candidate_parent_encounters <- candidate_parent_encounters[
-                  enc_period_start <= child_start &
-                    (is.na(child_end) | is.na(enc_period_end) | enc_period_end >= child_end)
-                ]
-                if (nrow(candidate_parent_encounters)) {
-                  time_diff <- abs(as.numeric(difftime(
-                    candidate_parent_encounters$enc_period_start,
-                    child_start,
-                    units = "secs"
-                  )))
-                  idx <- which.min(time_diff)
-                  best_fit_parent <- candidate_parent_encounters[idx]
-                  encounters_of_lvl[enc_index, enc_partof_calculated_ref := paste0("Encounter/", best_fit_parent$enc_id)]
+
+                parent_encounter <- findParentEncounter(
+                  child_row = encounters_of_lvl[enc_index],
+                  candidate_parent_encounters = candidate_parent_encounters
+                )
+                if (!is.null(parent_encounter)) {
+                  encounters_of_lvl[enc_index, enc_partof_calculated_ref := paste0("Encounter/", parent_encounter$enc_id)]
                 }
               }
             }
@@ -149,7 +189,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
         encounters_by_type[[i]] <- encounters_of_lvl
       }
     })
-
   })
 
   # update the encounters table in the list
@@ -313,6 +352,9 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
   return(resource_table)
 }
 
+#
+# Write calculated reference columns back to the full encounter table
+#
 joinCalculatedRefColumsToEncounter <- function(fullEncTable, encTableWithCalculatedRefs) {
   # get calculated ref columns by grep("_calculated_ref", ...)
   calculated_col_names <- grep("_calculated_ref$", names(encTableWithCalculatedRefs), value = TRUE)
@@ -326,4 +368,3 @@ joinCalculatedRefColumsToEncounter <- function(fullEncTable, encTableWithCalcula
 
   return(fullEncTable)
 }
-
