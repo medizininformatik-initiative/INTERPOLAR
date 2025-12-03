@@ -249,6 +249,35 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
     on = .(enc_id),
     enc_main_encounter_calculated_ref := i.enc_main_encounter_calculated_ref
   ]
+
+  # Determine missing enc_main_encounter_calculated_ref via temporal overlap, if hierarchy information missing
+  # Consider only "Versorgungsstellenkontakt" encounters (type 3)
+  enc_level_3 <- encounters[
+    enc_main_encounter_calculated_ref == "invalid" &
+      enc_type_code == ENCOUNTER_TYPES[3]
+  ]
+  if (nrow(enc_level_3)) {
+    # Get all "Einrichtungskontakt" encounters (type 1)
+    enc_level_1 <- encounters[
+      enc_type_code == ENCOUNTER_TYPES[1]
+    ][, .(enc_id, enc_period_start, enc_period_end, enc_class_code)]
+    # For each Versorgungsstellenkontakt, try to find a matching Einrichtungskontakt by temporal overlap
+    for (enc_index in seq_len(nrow(enc_level_3))) {
+
+      parent_encounter <- findParentEncounter(
+        child_row = enc_level_3[enc_index],
+        candidate_parent_encounters = enc_level_1
+      )
+
+      if (!is.null(parent_encounter)) {
+        encounters[
+          enc_id == enc_level_3[enc_index]$enc_id,
+          enc_main_encounter_calculated_ref :=
+            etlutils::fhirdataGetEncounterReference(parent_encounter$enc_id)
+        ]
+      }
+    }
+  }
   # End: create enc_main_encounter_calculated_ref
 
   return(encounters)
