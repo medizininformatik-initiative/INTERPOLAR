@@ -9,24 +9,23 @@ Excel-Dateien in den Ordnern outputLocal und outputGLobal zur Verfügung gestell
 
 ### Konfiguration
 
-TODO: abgefragter Zeitraum konfigurierbar - erste Version nimmt die letzten 2 Monate
+- abgefragter Zeitraum konfigurierbar über Start- und Endedatum als Argument
+- fehlt das Enddatum, wird der aktuelle Ausführungszeitpunkt genommen
+- fehlt das Startdatum, wird der aktuelle Ausführungszeitpunkt - 60 Tage genommen
+- Enddatum muss gleich dem Startdatum oder größer als dieses sein
 
 ### Ausführung
 
 Aufruf des dataprocessors mit folgenden Argumenten:
 
--   `MRP_Check`(=Name des Submoduls im Ordner manual_start) als Argument anhängen
+-   `mrp-check`(=Name des Submoduls im Ordner manual_start, wobei Groß-/Kleinschreibung ignoriert wird und statt eine `_` auch ein `-` genutzt werden kann) als Argument anhängen
 
 ``` console
-docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R MRP_Check
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R mrp-check
 ```
 
-#### TODO:
-
--   optional Anpassung des Zeitraumes über die Argumente `REPORT_PERIOD_START`und `REPORT_PERIOD_END`mit Name=Wert (ohne Leerzeichen zwischen Name und Wert) und Wert im Format YYYY-MM-DD oder YYYY/MM/DD
-
--   optional Ausgabe der zu Grunde liegenden Datentabellen in outputLocal über das Argument `WRITE_TABLE_LOCAL=TRUE`
+-   optional Anpassung des Zeitraumes über die Argumente `start-date` und `end-date` mit Name=Wert (ohne Leerzeichen zwischen Name und Wert) und Wert im Format YYYY-MM-DD
 
 ``` console
-docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R Statistical_Reports REPORT_PERIOD_START=2025-09-01 REPORT_PERIOD_END=2025-09-08 WRITE_TABLE_LOCAL=TRUE
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R mrp-check start-date=2025-09-01 end-date=2025-09-08
 ```

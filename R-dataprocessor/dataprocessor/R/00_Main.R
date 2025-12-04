@@ -14,13 +14,15 @@ runSubmodules <- function() {
 
   command_line_args <- commandArgs(trailingOnly = TRUE)
   # for debug purposes set hard our new submodule MRP_Check
-  #command_line_args <- "MRP_Check"
+  command_line_args <- c("mrp-check", "start-date=2025-12-01") # second parameter is irrelevant
 
   # Check if any submodule directories were specified in the command line arguments
   if (!interactive() || length(command_line_args)) {
+    # enable minus for underscrore in arguments and ignore case
+    command_line_args <- sub("-", "_", tolower(command_line_args), fixed = TRUE)
     called_manual_start_submodule_dirs <- manual_start_submodule_dirs[
-      basename(manual_start_submodule_dirs) %in% command_line_args]
-    sourceAllSubmodules()
+      tolower(basename(manual_start_submodule_dirs)) %in% command_line_args]
+    sourceAllSubmodules() # initialize all functions of all automatic submodules for a use in the now manual started submodule
   } else {
     called_manual_start_submodule_dirs <- as.character(c())
   }
