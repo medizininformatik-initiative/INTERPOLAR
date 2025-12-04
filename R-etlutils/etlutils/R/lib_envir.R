@@ -341,3 +341,126 @@ checkMandatoryParameters <- function(mandatory_parameters) {
     stop("The following parameters are mandatory and must be defined in the modules toml file:\n     ", paste0(missing_parameters, collapse = "\n     "))
   }
 }
+
+#' Initialize command-line arguments as key-value list or global variables
+#'
+#' Parses command-line arguments in the form `key=value` or `-flag` and returns a named list of
+#' parsed key-value pairs. Optionally, variables can be written into the global environment.
+#' Supports type conversion (date, timestamp, numeric, integer, boolean) and default values.
+#'
+#' @param argument2global_variable_name Named character vector or list to map argument names
+#'   to variable names. E.g. c("input" = "input_file"). Keys are normalized to lower_snake_case.
+#' @param defaults Named list or vector of default values for variables (by final variable name).
+#' @param command_arguments Character vector or single string of CLI arguments.
+#'   Default: commandArgs(trailingOnly = TRUE)
+#' @param store_as_global Logical. If TRUE, variables are assigned in the global environment.
+#'   Default is FALSE.
+#' @param timezone Timezone to use for parsing timestamps (POSIXct). Defaults to GLOBAL_TIMEZONE if set,
+#'   otherwise "Europe/Berlin".
+#'
+#' @return Named list of parsed and defaulted arguments.
+#'
+#' @export
+initCommandLineArguments <- function(argument2global_variable_name = c(),
+                                     defaults = list(),
+                                     command_arguments = NULL,
+                                     store_as_global = FALSE,
+                                     timezone = if (exists("GLOBAL_TIMEZONE", inherits = TRUE)) GLOBAL_TIMEZONE else "Europe/Berlin") {
+  #
+  # Normalize input string to character vector
+  #
+  if (is.null(command_arguments)) {
+    command_arguments <- commandArgs(trailingOnly = TRUE)
+  } else if (length(command_arguments) == 1L) {
+    command_arguments <- strsplit(command_arguments, " +")[[1]]
+  }
+
+  #
+  # Standardize mapping keys (lowercase, dashes to underscores)
+  #
+  if (length(argument2global_variable_name)) {
+    names(argument2global_variable_name) <- tolower(gsub("-", "_", names(argument2global_variable_name)))
+  }
+
+  #
+  # Helper function to parse value with type conversion
+  #
+  parseValue <- function(value_raw, timezone) {
+    if (grepl("[ T]", value_raw) && grepl(":", value_raw)) {
+      # Likely a timestamp
+      tryCatch({
+        val <- as.POSIXct(value_raw, tz = timezone)
+        if (!is.na(val)) return(val)
+      }, error = function(e) NULL)
+    } else {
+      # Likely a date
+      tryCatch({
+        val <- as.Date(value_raw)
+        if (!is.na(val)) return(val)
+      }, error = function(e) NULL)
+    }
+
+    if (grepl("^\\d+$", value_raw)) {
+      return(as.integer(value_raw))
+    }
+
+    if (grepl("^\\d+\\.\\d+$", value_raw)) {
+      return(as.numeric(value_raw))
+    }
+
+    if (tolower(value_raw) %in% c("true", "false")) {
+      return(tolower(value_raw) == "true")
+    }
+
+    return(value_raw)
+  }
+
+  initialized_variables <- list()
+
+  for (arg in command_arguments) {
+    name <- NULL
+    value_raw <- NULL
+
+    if (grepl("=", arg, fixed = TRUE)) {
+      split_arg <- strsplit(arg, "=", fixed = TRUE)[[1]]
+      if (length(split_arg) != 2 || nchar(split_arg[1]) == 0) next
+      name <- split_arg[1]
+      value_raw <- split_arg[2]
+    } else if (grepl("^-[^-]", arg)) {
+      name <- sub("^-+", "", arg)
+      value_raw <- "TRUE"
+    } else {
+      next
+    }
+
+    # Normalize the key: lowercase and replace "-" with "_"
+    name <- tolower(gsub("-", "_", name))
+
+    # Apply mapping if available
+    final_name <- if (!is.null(argument2global_variable_name[[name]])) {
+      argument2global_variable_name[[name]]
+    } else {
+      name
+    }
+
+    value <- parseValue(value_raw, timezone)
+
+    initialized_variables[[final_name]] <- value
+  }
+
+  # Fill in defaults if not already set
+  for (default_name in names(defaults)) {
+    if (!default_name %in% names(initialized_variables)) {
+      initialized_variables[[default_name]] <- defaults[[default_name]]
+    }
+  }
+
+  # Optional: assign to global environment
+  if (isTRUE(store_as_global)) {
+    for (var_name in names(initialized_variables)) {
+      assign(var_name, initialized_variables[[var_name]], envir = .GlobalEnv)
+    }
+  }
+
+  return(initialized_variables)
+}
