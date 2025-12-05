@@ -14,7 +14,9 @@ runSubmodules <- function() {
 
   command_line_args <- commandArgs(trailingOnly = TRUE)
   # for debug purposes set hard our new submodule MRP_Check
-  command_line_args <- c("mrp-check", "start-date=2025-12-01") # second parameter is irrelevant
+  # if (interactive()) {
+  #   command_line_args <- c("mrp-check", "start-date=2025-12-01") # second parameter is irrelevant
+  # }
 
   # Check if any submodule directories were specified in the command line arguments
   if (!interactive() || length(command_line_args)) {
