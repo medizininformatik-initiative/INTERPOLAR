@@ -114,14 +114,14 @@ getPatientData <- function(lock_id, table_name) {
 #'
 #' @param table_name A character string specifying the name of the database table to query.
 #'   The table must contain the following columns:
-#'   - `enc_id`, `enc_identifier_value`, `enc_patient_ref`, `enc_partof_ref`
+#'   - `enc_id`, `enc_identifier_value`, `enc_patient_ref`, `enc_partof_calculated_ref`
 #'   - `enc_class_code`
 #'   - `enc_type_system`, `enc_type_code`
 #'   - `enc_period_start`, `enc_period_end`, `enc_status`
 #'   - `enc_identifier_system`
 #'
 #' @return A data frame with distinct encounter records, including:
-#'   - IDs and references (`enc_id`, `enc_patient_ref`, `enc_partof_ref`, `enc_identifier_value`,
+#'   - IDs and references (`enc_id`, `enc_patient_ref`, `enc_partof_calculated_ref`, `enc_identifier_value`,
 #'   `enc_identifier_system`)
 #'   - Classification and type (`enc_class_code`, `enc_type_code_Kontaktebene`, `enc_type_code_Kontaktart`)
 #'   - Service and hospitalization info (`enc_status`)
@@ -154,7 +154,7 @@ getPatientData <- function(lock_id, table_name) {
 
 getEncounterData <- function(lock_id, table_name, report_period_start) {
   query <- paste0(
-    "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_ref, ",
+    "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
     "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
     "enc_identifier_system, enc_type_system ",
     "FROM ", table_name, "\n"
