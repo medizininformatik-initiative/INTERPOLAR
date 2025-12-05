@@ -141,13 +141,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   medikationsanalyse_fe_table <- getMedikationsanalyseFeData(
     lock_id = "statistical reports[6]",
-    table_name = "v_medikationsanalyse_fe_last_import"
+    table_name = "v_medikationsanalyse_fe"
   )
   # --> this table shows only the last version of each medikationsanalyse_fe entry
 
   mrp_dokumentation_validierung_fe_table <- getMRPDokumentationValidierungFeData(
     lock_id = "statistical reports[7]",
-    table_name = "v_mrpdokumentation_validierung_fe_last_import"
+    table_name = "v_mrpdokumentation_validierung_fe"
   )
   # --> this table shows only the last version of each mrp_dokumentation_validierung_fe entry
 

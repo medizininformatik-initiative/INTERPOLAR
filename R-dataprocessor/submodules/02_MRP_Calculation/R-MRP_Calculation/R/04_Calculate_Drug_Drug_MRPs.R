@@ -136,7 +136,7 @@ getSplittedMRPTablesDrugDrug <- function(mrp_pair_list) {
 #' \code{MedicationRequest} resources. For each medication, it checks against
 #' predefined interaction rules indexed by \code{ATC_FOR_CALCULATION}.
 #'
-#' @param active_requests A \code{data.table} of active medications for the encounter,
+#' @param active_atcs A \code{data.table} of active medications for the encounter,
 #'   expected to contain ATC codes.
 #' @param mrp_pair_list MRP-Pair list to create a list of lookup tables created by \code{getSplittedMRPTablesDrugDrug
 #' @param patient_id The internal patient ID (not used here, but required by interface).
@@ -145,7 +145,7 @@ getSplittedMRPTablesDrugDrug <- function(mrp_pair_list) {
 #' @return A \code{data.table} with matched Drug-Drug MRP results. The format is
 #'   compatible with downstream processing for MRP reporting and audit.
 #'
-calculateMRPsDrugDrug <- function(active_requests, mrp_pair_list, resources, patient_id, meda_datetime) { # don't remove the unused parameters!
+calculateMRPsDrugDrug <- function(active_atcs, mrp_pair_list, resources, patient_id, meda_datetime) { # don't remove the unused parameters!
   splitted_mrp_tables <- getSplittedMRPTablesDrugDrug(mrp_pair_list)
-  matchATCCodePairs(active_requests, splitted_mrp_tables$by_atc)
+  matchATCCodePairs(active_atcs, splitted_mrp_tables$by_atc)
 }
