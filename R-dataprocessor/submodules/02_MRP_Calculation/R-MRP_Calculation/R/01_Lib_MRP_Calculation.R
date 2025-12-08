@@ -275,6 +275,8 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
 #' @param end_date Optional. End of the date range as character or Date (e.g., "2025-10-31").
 #'   Only encounters ending on or before this date are included. Time is set to 23:59:59 if
 #'   provided, or to current system time if omitted.
+#' @param return_used_resources A vector of all table names of the used resource tables which should+
+#'   be returned in addition to the calculated tables. Default is NULL.
 #'
 #' @return A named list with two `data.table` objects:
 #'
@@ -307,7 +309,7 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
 #' }
 #'
 #' @export
-calculateMRPs <- function(start_date = NULL, end_date = NULL) {
+calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resources = NULL) {
 
   # Get all Einrichtungskontakt encounters that ended at least 14 days ago
   # and do not have a retrolective MRP evaluation for Drug_Disease
@@ -543,5 +545,10 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL) {
     )
   })
 
+  if (!is.null(return_used_resources)) {
+    for (table_name in return_used_resources) {
+      mrp_table_lists_all_merged[[table_name]] <- resources[[table_name]]
+    }
+  }
   return(mrp_table_lists_all_merged)
 }
