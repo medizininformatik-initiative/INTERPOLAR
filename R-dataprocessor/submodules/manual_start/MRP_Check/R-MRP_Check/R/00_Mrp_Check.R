@@ -26,6 +26,7 @@ mrpCheck <- function() {
                                                          "redcap_repeat_instance") := NULL]
     mrp_table_lists_all$dp_mrp_calculations[, c("ret_redcap_repeat_instance",
                                                 "input_file_processed_content_hash",
+                                                "study_phase",
                                                 "ward_name") := NULL]
     result <- mrp_table_lists_all$dp_mrp_calculations[mrp_table_lists_all$retrolektive_mrpbewertung_fe, on = "ret_id"]
     result[, record_id := as.character(record_id)]
