@@ -230,11 +230,9 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
               atc2_code = atc2,
               proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
               proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
-              kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc, "   (",
-                                       format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
-              kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (",
-                                        format(atc2_start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
-              kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontraindiziert.")
+              kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc, "   (", format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+              kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (", format(atc2_start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+              kurzbeschr_suffix = paste("kontraindiziert.")
             )
             result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
           } else {
@@ -397,41 +395,47 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL) {
               collapsed_match <- match[
                 ,
                 {
-                  # Standard collapsing for all columns
                   result <- lapply(.SD, function(x) {
                     vals <- unique(na.omit(trimws(x)))
                     if (length(vals) == 0) return(NA_character_)
                     paste(vals, collapse = " \n")
                   })
-
-                  # Special handling for kurzbeschr_drug
                   if ("kurzbeschr_drug" %in% names(.SD)) {
                     vals <- unique(na.omit(trimws(.SD$kurzbeschr_drug)))
-                    if (length(vals) == 0) {
-                      result$kurzbeschr_drug <- NA_character_
-                    } else {
-                      # Robust split on last " - " in each value
-                      parts <- t(sapply(vals, function(s) {
-                        split_pos <- max(gregexpr(" - ", s, fixed = TRUE)[[1]])
-                        if (split_pos == -1) {
-                          name <- s
-                          code <- NA_character_
-                        } else {
-                          name <- substr(s, 1, split_pos - 1)
-                          code <- substr(s, split_pos + 3, nchar(s))
-                        }
-                        c(name = name, code = code)
-                      }))
-                      # Extract unique names and codes
-                      drug_name <- unique(parts[, "name"])
-                      codes <- unique(na.omit(parts[, "code"]))
-                      # If all rows refer to same drug name, join codes
-                      if (length(drug_name) == 1) {
-                        result$kurzbeschr_drug <- paste0("[", drug_name, " - ", paste(codes, collapse = ", "), "] ist mit:")
-                      } else {
-                        # fallback if multiple different names exist
-                        result$kurzbeschr_drug <- paste(vals, collapse = "; ")
+                    result$kurzbeschr_drug <- paste0(vals, collapse = "\n")
+                  }
+                  if ("kurzbeschr_item2" %in% names(.SD)) {
+                    if ("kurzbeschr_type" %in% names(.SD)) {
+                      types <- unique(na.omit(.SD$kurzbeschr_type))
+                      # Define formatting for each type, including first and follow indentations
+                      # Change this to adjust formatting in REDCap field "kurzbeschr" in "retrolektive_mrpbewertung_fe"
+                      type_formats <- list(
+                        "Diagnose"   = list(first = 1, follow = 19),
+                        "Medikament" = list(first = 1, follow = 25),
+                        "Prozedur"   = list(first = 1, follow = 19),
+                        "Laborwert"  = list(first = 1, follow = 20)
+                      )
+                      pad_type <- function(type) {
+                        type_format <- type_formats[[type]]
+                        paste0(type, ":", strrep(" ", type_format$first))
                       }
+                      type_blocks <- sapply(types, function(type) {
+                        items <- unique(trimws(.SD[kurzbeschr_type == type, kurzbeschr_item2]))
+                        type_format  <- type_formats[[type]]
+                        prefix <- pad_type(type)
+                        first_line <- paste0(prefix, items[1])
+                        if (length(items) > 1) {
+                          follow_indent <- strrep(" ", type_format$follow)
+                          follow <- paste0(follow_indent, items[-1], collapse = "\n")
+                          paste(first_line, follow, sep = "\n")
+                        } else {
+                          first_line
+                        }
+                      })
+                      result$kurzbeschr_item2 <- paste(type_blocks, collapse = "\n")
+                    } else {
+                      items <- unique(na.omit(trimws(.SD$kurzbeschr_item2)))
+                      result$kurzbeschr_item2 <- paste(items, collapse = "\n")
                     }
                   }
                   result
@@ -439,8 +443,31 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL) {
                 by = mrp_index
               ]
 
-              kurzbeschr_cols <- grep("^kurzbeschr_", names(collapsed_match), value = TRUE)
-              collapsed_match[, kurzbeschr := do.call(paste, c(.SD, sep = "\n")), .SDcols = kurzbeschr_cols]
+              kurzbeschr_cols <- setdiff(
+                grep("^kurzbeschr_", names(collapsed_match), value = TRUE),
+                "kurzbeschr_type"
+              )
+
+              if (mrp_type == "Drug_Disease") {
+                collapsed_match[, kurzbeschr := {
+                  base <- paste0(
+                    kurzbeschr_drug, " ist mit\n ",
+                    kurzbeschr_suffix, "\n",
+                    kurzbeschr_item2
+                  )
+                  if ("kurzbeschr_additional" %in% names(collapsed_match) &&
+                      any(!is.na(kurzbeschr_additional))) {
+                    base <- paste(base, paste(kurzbeschr_additional, collapse = "\n"), sep = " ")
+                  }
+                  base
+                }]
+              } else {
+                collapsed_match[, kurzbeschr := paste0(
+                  kurzbeschr_drug, " ist mit\n ",
+                  kurzbeschr_item2, "\n",
+                  kurzbeschr_suffix
+                )]
+              }
 
               meda_id_value <- meda_id # we need this renaming for the following comparison
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
@@ -534,7 +561,6 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL) {
       use.names = TRUE, fill = TRUE
     )
   )
-
   # Write the merged tables to RData files
   lapply(names(mrp_table_lists_all_merged), function(name) {
     writeRData(

@@ -302,8 +302,9 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
     proxy_type = character(),
     diagnosis_cluster = character(),
     kurzbeschr_drug = character(),
-    kurzbeschr_item2 = character(),
-    kurzbeschr_suffix = character()
+    kurzbeschr_suffix = character(),
+    kurzbeschr_type = character(),
+    kurzbeschr_item2 = character()
   )
 
   # Filter all conditions for the current patient
@@ -393,10 +394,10 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
 
         new_row[, kurzbeschr_drug := paste0(mrp_table_list_row$ATC_DISPLAY, " - ", atc_code,
                                             "  (", format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
+        new_row[, kurzbeschr_suffix := paste0("  [", diagnosis_cluster, "] kontraindiziert.\n")]
+        new_row[, kurzbeschr_type := "Diagnose"]
         new_row[, kurzbeschr_item2 := paste0(icd_display, " - ", icd_code, "   (",
                                              format(condition_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
-        new_row[, kurzbeschr_suffix := paste0("laut der entsprechenden Fachinformation [",
-                                              diagnosis_cluster, "] kontraindiziert.")]
 
         matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
       }
@@ -498,7 +499,7 @@ generateMatchDescriptionReferenceCutoff <- function(obs, match_found, loinc_mapp
       unit     <- unique(matched_unit)
       # Create one formatted line per observation
       value_lines <- sprintf(
-        "\t\t%s %s (%s)",
+        "    %s %s (%s)",
         matched_values,
         matched_unit,
         format(matched_start_datetime, "%Y-%m-%d %H:%M:%S")
@@ -506,7 +507,7 @@ generateMatchDescriptionReferenceCutoff <- function(obs, match_found, loinc_mapp
       # Combine all lines for the group
       group_text <- paste0(
         sprintf(
-          "\nReferenzbereich: %s - %s %s\nWert:\t",
+          "Referenzbereich: %s - %s %s\n    ",
           ref_low, ref_high, unit
         ),
         trimws(paste(value_lines, collapse = "\n"))
@@ -526,9 +527,9 @@ generateMatchDescriptionReferenceCutoff <- function(obs, match_found, loinc_mapp
 
   # Combine everything into a final description text
   match_description <- paste0(
-    "Laborparameter: ", loinc_description, " (",
-    paste0(unique(matched_obs$matched_code), collapse = ", "),
-    ")\n",
+    " (", loinc_description, " (",
+    paste(unique(matched_obs$matched_code), collapse = ", "),
+    "))\n",
     obs_values_by_reference_range,
     "\n"
   )
@@ -554,13 +555,6 @@ generateMatchDescriptionReferenceCutoff <- function(obs, match_found, loinc_mapp
 #' @return A formatted character string describing all LOINC observations and their
 #'   corresponding values relative to the specified cutoff.
 generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, primary_loinc, cutoff_absolute, cutoff_unit) {
-
-  # Create header text summarizing the main LOINC and cutoff information
-  header <- sprintf(
-    "Primärer LOINC %s Grenzwert %s %s \n",
-    primary_loinc, cutoff_absolute, cutoff_unit
-  )
-
   # Build description entries for each LOINC code
   desc_list <- obs[, {
     loinc_name <- loinc_mapping_table[LOINC %in% code, GERMAN_NAME_LOINC_PRIMARY]
@@ -572,20 +566,21 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
     )
     lines <- sprintf(
       "%s %s %s%s   (%s)",
-      ifelse(seq_len(.N) == 1, "   Wert:", "             "),
+      ifelse(seq_len(.N) == 1, "  ", " "),
       value, unit,
       converted_text,
       format(start_datetime, "%Y-%m-%d %H:%M:%S")
     )
     entry <- paste0(
-      "\nLOINC: ", code, " (", loinc_name, ")\n",
-      paste(lines, collapse = "\n")
+      "\n (", loinc_name, ") ", cutoff_absolute, " ", cutoff_unit, ":\n",
+      paste(lines, collapse = "\n ")
     )
     list(text = entry)
   }, by = code]
 
   # Combine all entries into one final formatted text block
-  full_text <- paste0(header, paste(desc_list$text, collapse = "\n"), "\n")
+  full_text <- paste0(paste(desc_list$text, collapse = "\n"), "\n")
+
   return(full_text)
 }
 
@@ -1062,9 +1057,16 @@ matchICDProxies <- function(
       proxy_code = character(),
       proxy_type = character(),
       kurzbeschr_drug = character(),
-      kurzbeschr_item2 = character(),
       kurzbeschr_suffix = character(),
+      kurzbeschr_type = character(),
+      kurzbeschr_item2 = character(),
       kurzbeschr_additional = character()
+    )
+
+    type_code_to_display <- c(
+      ATC   = "Medikament",
+      OPS   = "Prozedur",
+      LOINC = "Laborwert"
     )
 
     mrp_matches <- list()
@@ -1148,9 +1150,9 @@ matchICDProxies <- function(
                   proxy_type = proxy_type,
                   kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION,
                                            "  (", format(atc_start, "%Y-%m-%d %H:%M:%S"), ")"),
+                  kurzbeschr_suffix = paste0("  [", match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontraindiziert.\n"),
+                  kurzbeschr_type = type_code_to_display[[proxy_type]],
                   kurzbeschr_item2 = paste0(proxy_display, " - ", proxy_code),
-                  kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation [",
-                                             match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontraindiziert."),
                   kurzbeschr_additional = NA_character_
                 )
 
