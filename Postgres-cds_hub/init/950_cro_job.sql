@@ -26,7 +26,7 @@ DECLARE
     current_record record;
 BEGIN
     err_section:='cron_job_data_transfer_break-01';    err_schema:='';    err_table:='pg_sleep';
-    SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory 
+    SELECT pg_sleep(2) INTO temp; -- Time to inelize dynamic shared memory
 
     -- Document changes to the database
     err_section:='cron_job_data_transfer_break-02';    err_schema:='db_config';    err_table:='db.log_table_view_structure';
@@ -55,7 +55,7 @@ BEGIN
         status:='cron_job_data_transfer nicht ausführen';
     END IF;
 
-    SELECT pg_sleep(1) INTO temp; -- Time to inelize dynamic shared memory 
+    SELECT pg_sleep(1) INTO temp; -- Time to inelize dynamic shared memory
 
     err_section:='cron_job_data_transfer-10';    err_schema:='db_config';    err_table:='/';
     IF status like 'Ongoing%' THEN -- Notaus überprüfen
@@ -96,7 +96,106 @@ BEGIN
         ) ) AS t(res TEXT) INTO erg;
 
         -- Semaphore setzen -----------------------------------------
-        status:='0/8 temp - set old calculated items';
+        status:='1/8 db.add_hist_raw_records()';
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
+
+--        err_section:='cron_job_data_transfer-23';    err_schema:='db';    err_table:='add_hist_raw_records()';
+
+--        -- FHIR Data db_log(Hist) -> cds2db_in
+--        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+--        'SELECT db.add_hist_raw_records()'
+--        )) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
+        status:='2/8 db.copy_raw_cds_in_to_db_log()';
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
+
+        err_section:='cron_job_data_transfer-25';    err_schema:='db';    err_table:='copy_raw_cds_in_to_db_log()';
+
+        -- FHIR Data cds2db_in -> db_log
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT db.copy_raw_cds_in_to_db_log()'
+        )) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
+        status:='3/8 db.copy_type_cds_in_to_db_log()';
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
+
+        err_section:='cron_job_data_transfer-30';    err_schema:='db';    err_table:='copy_type_cds_in_to_db_log()';
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT db.copy_type_cds_in_to_db_log()'
+        )) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
+        status:='4/8 db.take_over_last_check_date()';
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
+
+        err_section:='cron_job_data_transfer-35';    err_schema:='db';    err_table:='take_over_last_check_date()';
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT db.take_over_last_check_date()'
+        )) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
+        status:='5/8 db.copy_fe_dp_in_to_db_log()';
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
+
+        err_section:='cron_job_data_transfer-40';    err_schema:='db';    err_table:='copy_fe_dp_in_to_db_log()';
+
+        -- Study data
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT db.copy_fe_dp_in_to_db_log()'
+        )) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
+        status:='6/8 db.copy_fe_fe_in_to_db_log()';
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
+
+        err_section:='cron_job_data_transfer-42';    err_schema:='db';    err_table:='copy_fe_fe_in_to_db_log()';
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT db.copy_fe_fe_in_to_db_log()'
+        )) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
+        status:='7/8 db.copy_submodules_dp_in_to_db_log()';
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
+
+        err_section:='cron_job_data_transfer-44';    err_schema:='db';    err_table:='copy_submodules_dp_in_to_db_log()';
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT db.copy_submodules_dp_in_to_db_log()'
+        )) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
+        status:='8/8 db.copy_core_dp_in_to_db_log()';
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
+        ) ) AS t(res TEXT) INTO erg;
+
+        err_section:='cron_job_data_transfer-44';    err_schema:='db';    err_table:='copy_core_dp_in_to_db_log()';
+
+        SELECT res FROM public.pg_background_result(public.pg_background_launch(
+        'SELECT db.copy_core_dp_in_to_db_log()'
+        )) AS t(res TEXT) INTO erg;
+
+        -- Semaphore setzen -----------------------------------------
+        status:='zusaetzlich temp - set old calculated items';
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
         ) ) AS t(res TEXT) INTO erg;
@@ -105,9 +204,9 @@ BEGIN
         SELECT res FROM public.pg_background_result(public.pg_background_launch(
         'DELETE FROM cds2db_in.temp_calculated_items WHERE cal_calculated_value IS NULL'
         ) ) AS t(res TEXT) INTO erg;
-        
+
         -- Updates in die Resourcen übernehmen ----------------------------------------------------------------------
-num:= 10000; -- Anzahl der in einem Batch zu übertragenden berechneten Datensätze
+num:= 2000; -- Anzahl der in einem Batch zu übertragenden berechneten Datensätze
 -- Wenn num:=0 THEN keine Übertragung der berechneten Werte
 IF num>0 THEN
     SELECT COUNT(1) INTO num2 FROM cds2db_in.temp_calculated_items WHERE cal_schema='db_log' AND cal_resource='condition' AND cal_calculated_column_name='con_encounter_calculated_ref';
@@ -230,105 +329,6 @@ IF num>0 THEN
     END IF;
 END IF;
         -- Updates in die Resourcen übernehmen ----------------------------------------------------------------------
-
-        -- Semaphore setzen -----------------------------------------
-        status:='1/8 db.add_hist_raw_records()';
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
-        ) ) AS t(res TEXT) INTO erg;
-
---        err_section:='cron_job_data_transfer-23';    err_schema:='db';    err_table:='add_hist_raw_records()';
-
---        -- FHIR Data db_log(Hist) -> cds2db_in
---        SELECT res FROM public.pg_background_result(public.pg_background_launch(
---        'SELECT db.add_hist_raw_records()'
---        )) AS t(res TEXT) INTO erg;
-
-        -- Semaphore setzen -----------------------------------------
-        status:='2/8 db.copy_raw_cds_in_to_db_log()';
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
-        ) ) AS t(res TEXT) INTO erg;
-
-        err_section:='cron_job_data_transfer-25';    err_schema:='db';    err_table:='copy_raw_cds_in_to_db_log()';
-
-        -- FHIR Data cds2db_in -> db_log
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'SELECT db.copy_raw_cds_in_to_db_log()'
-        )) AS t(res TEXT) INTO erg;
-
-        -- Semaphore setzen -----------------------------------------
-        status:='3/8 db.copy_type_cds_in_to_db_log()';
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
-        ) ) AS t(res TEXT) INTO erg;
-
-        err_section:='cron_job_data_transfer-30';    err_schema:='db';    err_table:='copy_type_cds_in_to_db_log()';
-
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'SELECT db.copy_type_cds_in_to_db_log()'
-        )) AS t(res TEXT) INTO erg;
-
-        -- Semaphore setzen -----------------------------------------
-        status:='4/8 db.take_over_last_check_date()';
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
-        ) ) AS t(res TEXT) INTO erg;
-
-        err_section:='cron_job_data_transfer-35';    err_schema:='db';    err_table:='take_over_last_check_date()';
-
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'SELECT db.take_over_last_check_date()'
-        )) AS t(res TEXT) INTO erg;
-
-        -- Semaphore setzen -----------------------------------------
-        status:='5/8 db.copy_fe_dp_in_to_db_log()';
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
-        ) ) AS t(res TEXT) INTO erg;
-
-        err_section:='cron_job_data_transfer-40';    err_schema:='db';    err_table:='copy_fe_dp_in_to_db_log()';
-
-        -- Study data
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'SELECT db.copy_fe_dp_in_to_db_log()'
-        )) AS t(res TEXT) INTO erg;
-
-        -- Semaphore setzen -----------------------------------------
-        status:='6/8 db.copy_fe_fe_in_to_db_log()';
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
-        ) ) AS t(res TEXT) INTO erg;
-
-        err_section:='cron_job_data_transfer-42';    err_schema:='db';    err_table:='copy_fe_fe_in_to_db_log()';
-
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'SELECT db.copy_fe_fe_in_to_db_log()'
-        )) AS t(res TEXT) INTO erg;
-
-        -- Semaphore setzen -----------------------------------------
-        status:='7/8 db.copy_submodules_dp_in_to_db_log()';
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
-        ) ) AS t(res TEXT) INTO erg;
-
-        err_section:='cron_job_data_transfer-44';    err_schema:='db';    err_table:='copy_submodules_dp_in_to_db_log()';
-
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'SELECT db.copy_submodules_dp_in_to_db_log()'
-        )) AS t(res TEXT) INTO erg;
-
-        -- Semaphore setzen -----------------------------------------
-        status:='8/8 db.copy_core_dp_in_to_db_log()';
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'UPDATE db_config.db_process_control SET pc_value=''Ongoing - '||status||' (#db.cron_job_data_transfer#)'', last_change_timestamp=CURRENT_TIMESTAMP WHERE pc_name=''semaphor_cron_job_data_transfer'''
-        ) ) AS t(res TEXT) INTO erg;
-
-        err_section:='cron_job_data_transfer-44';    err_schema:='db';    err_table:='copy_core_dp_in_to_db_log()';
-
-        SELECT res FROM public.pg_background_result(public.pg_background_launch(
-        'SELECT db.copy_core_dp_in_to_db_log()'
-        )) AS t(res TEXT) INTO erg;
 
         -- ReadyToConnect (Pause) durchführen -----------------------
         err_section:='cron_job_data_transfer-50';    err_schema:='db_config';    err_table:='db_parameter';
@@ -475,20 +475,20 @@ BEGIN
 
         err_section:='db.data_transfer_stop-16';    err_schema:='db_config';    err_table:='db_process_control';
         SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-        IF num=0 THEN   
-            LOOP 
+        IF num=0 THEN
+            LOOP
                 SELECT pg_sleep(1) INTO temp; -- Time to write data
 
                 err_section:='db.data_transfer_stop-17';    err_schema:='db_config';    err_table:='db_process_control';
                 SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-    
+
                 -- Überprüfen, ob der Wert geschrieben wurde
                 IF num > 0 THEN EXIT; -- Schleife beenden
                 END IF;
-    
+
                 -- Inkrementieren der Schleifenvariable
                 i := i - 1;
-    
+
                 -- Schleife abbrechen, wenn anzahl des initialen Wertes durchlaufen
                 IF i <= 0 THEN
                     SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
@@ -511,7 +511,7 @@ BEGIN
                 IF num=0 THEN RETURN FALSE; END IF;
             END LOOP;
         END IF;
-	
+
     	RETURN TRUE; -- semaphore set successfully
     ELSE
         err_section:='db.data_transfer_stop-20';    err_schema:='db_config';    err_table:='db_process_control';
@@ -601,20 +601,20 @@ BEGIN
 
         err_section:='db.data_transfer_start-18';    err_schema:='db_config';    err_table:='db_process_control';
         SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-        IF num=0 THEN   
-            LOOP 
+        IF num=0 THEN
+            LOOP
                 SELECT pg_sleep(1) INTO temp; -- Time to write data
 
                 err_section:='db.data_transfer_start-19';    err_schema:='db_config';    err_table:='db_process_control';
                 SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-    
+
                 -- Überprüfen, ob der Wert geschrieben wurde
                 IF num > 0 THEN EXIT; -- Schleife beenden
                 END IF;
-    
+
                 -- Inkrementieren der Schleifenvariable
                 i := i - 1;
-    
+
                 -- Schleife abbrechen, wenn anzahl des initialen Wertes durchlaufen
                 IF i <= 0 THEN
                     SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
@@ -748,7 +748,7 @@ BEGIN
 
     err_section:='db.data_transfer_reset_lock-07';    err_schema:='db_log';    err_table:='data_import_hist';
     SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist;
-    
+
     err_section:='db.data_transfer_reset_lock-10';    err_schema:='db';    err_table:='error_log';
     SELECT db.error_log(
         err_schema => CAST(err_schema AS VARCHAR),                    -- err_schema (VARCHAR) Schema, in dem der Fehler auftrat
@@ -772,20 +772,20 @@ BEGIN
 
         err_section:='db.data_transfer_reset_lock-18';    err_schema:='db_config';    err_table:='db_process_control';
         SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-        IF num=0 THEN   
-            LOOP 
+        IF num=0 THEN
+            LOOP
                 SELECT pg_sleep(1) INTO temp; -- Time to write data
 
                 err_section:='db.data_transfer_reset_lock-19';    err_schema:='db_config';    err_table:='db_process_control';
                 SELECT count(1) INTO num FROM db_config.db_process_control WHERE pc_name='semaphor_cron_job_data_transfer' AND pc_value=status; -- Eintrag manuell Überprüfen
-    
+
                 -- Überprüfen, ob der Wert geschrieben wurde
                 IF num > 0 THEN EXIT; -- Schleife beenden
                 END IF;
-    
+
                 -- Inkrementieren der Schleifenvariable
                 i := i - 1;
-    
+
                 -- Schleife abbrechen, wenn anzahl des initialen Wertes durchlaufen
                 IF i <= 0 THEN
                     SELECT MAX(last_processing_nr) INTO num FROM db.data_import_hist; -- aktuelle proz.number zum Zeitpunkt des Fehlers mit dokumentieren
@@ -808,7 +808,7 @@ BEGIN
                 IF num=0 THEN RETURN FALSE; END IF;
             END LOOP;
         END IF;
-	
+
         RETURN TRUE; -- semaphore set successfully
     ELSE
         err_section:='db.data_transfer_reset_lock-21';    err_schema:='db_config';    err_table:='db_process_control';
@@ -890,7 +890,7 @@ EXCEPTION
         err_variables => CAST('Tab: db_process_control' AS VARCHAR),  -- err_variables (varchar) Debug-Informationen zu Variablen
         last_processing_nr => CAST(num AS INT)                          -- last_processing_nr (int) Letzte Verarbeitungsnummer - wenn vorhanden
     ) INTO temp;
-    
+
     RETURN 'Fehler bei Abfrage ist Aufgetreten -'||SQLSTATE;
 END;
 $inner$ LANGUAGE plpgsql; --db.data_transfer_status
