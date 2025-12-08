@@ -4,8 +4,9 @@
 
 ### Funktion
 
-Berechne alle MRP-Arten auf den Daten der Vergangenheit. Das Ergebnis wird als 
-Excel-Dateien in den Ordnern outputLocal und outputGLobal zur Verfügung gestellt.
+Berechne alle MRP-Arten auf den Daten der Vergangenheit unabhängig von der Studienphase des Falls.
+Voraussetzung ist, dass der Fall mind. eine Medikationsanalyse und [weitere Eigenschaften](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/1043) hat, die
+ein MRP-Auslösen.
 
 ### Konfiguration
 
@@ -29,3 +30,8 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 ``` console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R mrp-check start-date=2025-09-01 end-date=2025-09-08
 ```
+
+### Ergebnis
+
+- Tabelle `MRP_Check_Result_local.xlsx` im Ordner `outputLocal/dataprocessor/tables` mit allen IDs, wie sie in FHIR und REDCap vorkommen
+- Tabelle `MRP_Check_Result_global.xlsx` im Ordner `outputGlobal/dataprocessor/tables` mit anonymisierten IDs (durchnummeriert)
