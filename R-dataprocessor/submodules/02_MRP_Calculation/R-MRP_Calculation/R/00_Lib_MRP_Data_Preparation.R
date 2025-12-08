@@ -32,7 +32,7 @@ getEncountersWithTimeRangeFromDB <- function(start_time, end_time) {
     "AND enc_type_code = 'einrichtungskontakt'\n"
   )
   mrp_encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getEncountersWithTimeRangeFromDB()"))
-  mrp_encounters[, study_phase := "PhaseB"]
+  mrp_encounters[, study_phase := "PhaseB"] # we must set the studyphase for all encounters to PhaseB to trigger the MRP calculation
   encounters_per_mrp_type <- list()
   for (mrp_type in MRP_TYPE) {
     encounters_per_mrp_type[[mrp_type]] <- mrp_encounters
