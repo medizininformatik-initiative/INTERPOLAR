@@ -48,7 +48,7 @@ mergePatEnc <- function(patient_table, encounter_table) {
       enc_identifier_value,
       pat_id,
       pat_identifier_value,
-      enc_partof_ref,
+      enc_partof_calculated_ref,
       enc_class_code,
       enc_type_code_Kontaktebene,
       enc_type_code_Kontaktart,
@@ -122,13 +122,13 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #' This function adds a new column `main_enc_id` to the encounter table, identifying
 #' the top-level inpatient encounter (e.g., a facility-level "einrichtungskontakt" encounter)
 #' for each record. It determines the main encounter by walking up the encounter hierarchy
-#' based on encounter type and `enc_partof_ref` relationships. If part-of references are not
+#' based on encounter type and `enc_partof_calculated_ref` relationships. If part-of references are not
 #' available, it uses the unique`enc_identifier_value` to identify top-level encounters.
 #'
 #' @param encounter_table A data frame or tibble containing FHIR-based encounter data.
 #'   Must include the following columns:
 #'   - `enc_id`: Unique identifier of the encounter.
-#'   - `enc_partof_ref`: Reference to the parent encounter (e.g., "Encounter/123").
+#'   - `enc_partof_calculated_ref`: Reference to the parent encounter (e.g., "Encounter/123").
 #'   - `enc_type_code_Kontaktebene`: Type of the encounter (e.g., "einrichtungskontakt",
 #'                                   "abteilungskontakt", "versorgungsstellenkontakt").
 #'   - `enc_class_code`: Class of the encounter (e.g., "IMP" for inpatient).
@@ -141,7 +141,7 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #'
 #' @details
 #' The main encounter ID is determined using the following logic:
-#' 1. If the encounter has no parent (`enc_partof_ref` is `NA`), is of type `"einrichtungskontakt"`,
+#' 1. If the encounter has no parent (`enc_partof_calculated_ref` is `NA`), is of type `"einrichtungskontakt"`,
 #'    and class `"IMP"`, it is considered a top-level encounter, and its own `enc_id` is used.
 #' 2. If the encounter is of type `"abteilungskontakt"` (departmental contact), its parent is
 #'    assumed to be the main encounter.
@@ -159,19 +159,19 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 addMainEncId <- function(encounter_table) {
   if (any(!is.na(encounter_table$enc_type_code_Kontaktebene) &
     encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" &
-    is.na(encounter_table$enc_partof_ref) &
+    is.na(encounter_table$enc_partof_calculated_ref) &
     is.na(encounter_table$enc_identifier_value))) {
     encounter_table <- encounter_table |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
         enc_type_code_Kontaktebene != "einrichtungskontakt" &
-          is.na(enc_partof_ref) & is.na(enc_identifier_value) &
+          is.na(enc_partof_calculated_ref) & is.na(enc_identifier_value) &
           is.na(processing_exclusion_reason),
-        "No_enc_partof_ref_or_enc_identifier_value_for_non_einrichtungskontakt",
+        "No_enc_partof_calculated_ref_or_enc_identifier_value_for_non_einrichtungskontakt",
         processing_exclusion_reason
       ))
     print(encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene != "einrichtungskontakt" &
-        is.na(enc_partof_ref) & is.na(enc_identifier_value)), width = Inf)
+        is.na(enc_partof_calculated_ref) & is.na(enc_identifier_value)), width = Inf)
     warning("Some encounters of type other than 'einrichtungskontakt' have no parent reference or
     identifier value. Main_enc_id not defined. Please check the data.")
   }
@@ -208,21 +208,21 @@ addMainEncId <- function(encounter_table) {
       suffix = c("", "_einrichtungskontakt")
     ) |>
     dplyr::mutate(main_enc_id = dplyr::case_when(
-      is.na(enc_partof_ref) &
+      is.na(enc_partof_calculated_ref) &
         enc_type_code_Kontaktebene != "einrichtungskontakt" ~ enc_id_einrichtungskontakt,
 
       # Top-level: einrichtungskontakt
-      is.na(enc_partof_ref) &
+      is.na(enc_partof_calculated_ref) &
         enc_type_code_Kontaktebene == "einrichtungskontakt" &
         enc_class_code == "IMP" ~ enc_id,
 
       # Middle-level: abteilungskontakt
-      enc_type_code_Kontaktebene == "abteilungskontakt" ~ sub("^Encounter/", "", enc_partof_ref),
+      enc_type_code_Kontaktebene == "abteilungskontakt" ~ sub("^Encounter/", "", enc_partof_calculated_ref),
 
       # Bottom-level: versorgungsstellenkontakt
       enc_type_code_Kontaktebene == "versorgungsstellenkontakt" ~ {
-        parent_id <- sub("^Encounter/", "", enc_partof_ref)
-        grandparent_ref <- encounter_table$enc_partof_ref[match(parent_id, encounter_table$enc_id)]
+        parent_id <- sub("^Encounter/", "", enc_partof_calculated_ref)
+        grandparent_ref <- encounter_table$enc_partof_calculated_ref[match(parent_id, encounter_table$enc_id)]
         sub("^Encounter/", "", grandparent_ref)
       }
     )) |>
