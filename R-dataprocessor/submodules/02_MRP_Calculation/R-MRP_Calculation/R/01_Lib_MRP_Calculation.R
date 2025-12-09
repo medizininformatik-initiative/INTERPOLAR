@@ -188,12 +188,12 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
 
   # Only use ATCs that are in the MRP table list
   used_keys <- intersect(names(mrp_table_list_by_atc), active_atcs)
-  active_atcs_unique <- active_atcs_unique[atc_code %in% used_keys]
+  active_atcs_primary <- active_atcs_unique[atc_code %in% used_keys]
 
-  for (i in seq_len(nrow(active_atcs_unique))) {
-    atc <- active_atcs_unique$atc_code[i]
-    start_datetime <- active_atcs_unique$start_datetime[i]
-    end_datetime <- active_atcs_unique$end_datetime[i]
+  for (i in seq_len(nrow(active_atcs_primary))) {
+    atc <- active_atcs_primary$atc_code[i]
+    start_datetime <- active_atcs_primary$start_datetime[i]
+    end_datetime <- active_atcs_primary$end_datetime[i]
 
     mrp_rows <- mrp_table_list_by_atc[[atc]]
     # Filter rows where the secondary ATC is also active
