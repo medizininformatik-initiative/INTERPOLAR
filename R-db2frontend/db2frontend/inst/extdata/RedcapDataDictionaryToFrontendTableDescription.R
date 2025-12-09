@@ -52,7 +52,7 @@ for (i in 1:nrow(dt)) {
       expanded_rows <- rbindlist(list(expanded_rows, new_row), fill = TRUE)  # Safe combination
     }
   } else {
-    expanded_rows <- rbindlist(list(expanded_rows, as.data.table(row[, .(TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_TYPE, VALIDATION_TYPE)])), fill = TRUE)
+    expanded_rows <- rbindlist(list(expanded_rows, data.table::as.data.table(row[, .(TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_TYPE, VALIDATION_TYPE)])), fill = TRUE)
   }
 }
 
