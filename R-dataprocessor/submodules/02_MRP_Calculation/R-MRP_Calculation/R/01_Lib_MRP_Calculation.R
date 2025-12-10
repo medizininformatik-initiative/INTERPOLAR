@@ -542,7 +542,24 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
           }
         }
         # Combine all collected rows into data.tables
-        retrolektive_mrpbewertung <- data.table::rbindlist(retrolektive_mrpbewertung_rows, use.names = TRUE, fill = TRUE)
+        retrolektive_mrpbewertung <- if (length(retrolektive_mrpbewertung_rows)) {
+          unique(data.table::rbindlist(retrolektive_mrpbewertung_rows, use.names = TRUE, fill = TRUE))
+        } else {
+          data.table::data.table(
+            record_id = character(),
+            ret_id = character(),
+            ret_meda_id = character(),
+            ret_meda_dat1 = as.POSIXct(character()),
+            ret_kurzbeschr = character(),
+            ret_atc1 = character(),
+            ret_ip_klasse_01 = character(),
+            ret_ip_klasse_disease = character(),
+            ret_atc2 = character(),
+            retrolektive_mrpbewertung_complete = character(),
+            redcap_repeat_instrument = character(),
+            redcap_repeat_instance = character()
+          )
+        }
         dp_mrp_calculations <- data.table::rbindlist(dp_mrp_calculations_rows, use.names = TRUE, fill = TRUE)
 
         mrp_table_lists_all[[mrp_type]] <- list(
