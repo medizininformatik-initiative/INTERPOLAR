@@ -1105,7 +1105,7 @@ filterPatientIdsByLevel <- function(all_pids, duplicate_level, last_indices = NU
 
 addREDCapMedikationsanalyse <- function(dt_med_ana, patient_ids, day_offset) {
   # Load the necessary libraries
-  template <- as.data.table(loadDebugREDCapDataTemplate("medikationsanalyse"))
+  template <- data.table::as.data.table(loadDebugREDCapDataTemplate("medikationsanalyse"))
   for (pid in patient_ids) {
     # Clean and add correct medication analysis datetime
     meda_datetime <- getDebugDatesRAWDateTime(day_offset, raw_index = "")
@@ -1132,7 +1132,7 @@ addREDCapMedikationsanalyse <- function(dt_med_ana, patient_ids, day_offset) {
 
 addREDCapMRPDokumentation <- function(dt_mrp_doku, patient_ids) {
   # Load the necessary libraries
-  template <- as.data.table(loadDebugREDCapDataTemplate("mrpdokumentation_validierung"))
+  template <- data.table::as.data.table(loadDebugREDCapDataTemplate("mrpdokumentation_validierung"))
   for (pid in patient_ids) {
     # set the record_id in the template based on the current patient id
     template$record_id <- getRecordID(dt_patient, pid)
