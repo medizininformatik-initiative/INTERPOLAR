@@ -94,7 +94,8 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
     #
     # 2a.) Remove all Encounters which were never on a relevant ward (their FHIR ID is not in the fall_fe table)
     #
-    encounters <- encounters[enc_id %in% encs_fall_fe$fall_fhir_enc_id]
+    fall_fe_enc_id <- unique(encs_fall_fe$fall_fhir_enc_id)
+    encounters <- encounters[enc_id %in% fall_fe_enc_id]
 
     #
     # 2b.) Add the Study Phase to all remaining Encounters
