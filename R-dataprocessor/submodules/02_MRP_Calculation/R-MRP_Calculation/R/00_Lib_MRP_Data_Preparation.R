@@ -146,7 +146,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   for (mrp_type in names(encounters_per_mrp_type)) {
     encs <- encounters_per_mrp_type[[mrp_type]]
     # Merge with enriched encounters to get study_phase
-    encs <- merge(encs, encounters[, .(enc_id, study_phase)], by = "enc_id", all.x = TRUE)
+    encs <- merge(encs, encounters[, .(enc_id, study_phase)], by = "enc_id")
     encounters_per_mrp_type[[mrp_type]] <- encs
   }
 
