@@ -135,7 +135,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
       datetime <- DEBUG_DATES[DEBUG_DAY]
       return(etlutils::as.DateWithTimezone(datetime))
     }
-    return(etlutils::as.DateWithTimezone(Sys.Date())
+    return(etlutils::as.DateWithTimezone(Sys.Date()))
   }
 
   #
