@@ -122,7 +122,6 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' The resulting dataset includes distinct rows based on identifiers and key variables such as:
 #' - `medikationsanalyse_complete`
 #' - `mrp_dokup_hand_emp_akz`
-#' - `mrp_merp`
 #' - `mrpdokumentation_validierung_complete`
 #' - `main_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
 #'                                           for the main encounter)
@@ -141,7 +140,7 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       fall_id_cis, fall_station, fall_aufn_dat, enc_id, enc_status, meda_id,
       meda_dat, enc_period_start, medikationsanalyse_complete, mrp_id,
       mrp_pigrund___21, mrp_ip_klasse_01, mrp_dokup_hand_emp_akz,
-      mrp_merp, mrpdokumentation_validierung_complete, main_enc_any_processing_exclusion_fe
+      mrpdokumentation_validierung_complete, main_enc_any_processing_exclusion_fe
     ) |>
     dplyr::rename(
       Kontraindikation = mrp_pigrund___21,

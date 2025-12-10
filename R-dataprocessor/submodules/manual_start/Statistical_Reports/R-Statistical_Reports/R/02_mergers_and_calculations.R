@@ -506,9 +506,9 @@ mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 
 #' Add Medication Analysis data to Merged FE Table
 #'
-#' This function merges medication analysis data (`meda_id`, `meda_dat`, `meda_mrp_detekt`,
-#' `medikationsanalyse_complete`) into a merged front-end table that contains patient and case-level
-#' information. The merge is based on matching both `record_id` and `fall_id_cis` to `fall_meda_id`.
+#' This function merges medication analysis data (`meda_id`, `meda_dat`) into a merged
+#' front-end table that contains patient and case-level information.
+#' The merge is based on matching both `record_id` and `fall_id_cis` to `fall_meda_id`.
 #' It retains all original columns from the merged patient and fall data,
 #' and adds the medication analysis fields. In this step, it may happen, that a meda_id is added
 #' to a fall record that it doesen't belong to (e.g. it is the fall record of a different ward).
@@ -519,12 +519,10 @@ mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 #'   Must include `record_id` and `fall_id_cis`.
 #' @param medikationsanalyse_fe_table A data frame with medication analysis entries from the
 #' front-end system.
-#'   Must include `record_id`, `fall_meda_id`, `meda_id`, `meda_dat`, `meda_mrp_detekt`, and
-#'   `medikationsanalyse_complete`.
+#'   Must include `record_id`, `fall_meda_id`, `meda_id`, `meda_dat`.
 #'
 #' @return A data frame containing all original columns from `merged_fe_pat_fall_table`,
-#'   plus matched medication analysis fields: `meda_id`, `meda_dat`, `meda_mrp_detekt`, and
-#'   `medikationsanalyse_complete`.
+#'   plus matched medication analysis fields: `meda_id`, `meda_dat`
 #'
 #' @details
 #' The join is based on:
@@ -648,8 +646,7 @@ addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1)
 #'   validation entries as retrieved by `getMRPDokumentationValidierungFeData()`.
 #'
 #' @return A data frame that includes all columns from `merged_fe_pat_fall_meda_table_with_enc_id`
-#'   along with matching MRP documentation fields (e.g., `mrp_id`, `mrp_kurzbeschr`,
-#'   `mrp_hinweisgeber`, etc.) based on `record_id` and `meda_id`.
+#'   along with matching MRP documentation fields (e.g., `mrp_id`, etc.) based on `record_id` and `meda_id`.
 #'
 #' @details
 #' The merge operation is performed on the following keys:

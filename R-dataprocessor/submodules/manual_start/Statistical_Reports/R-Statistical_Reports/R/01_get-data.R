@@ -540,27 +540,9 @@ getFallFeData <- function(lock_id, table_name) {
 #' The following columns are retrieved from the specified table:
 #' \itemize{
 #'   \item `record_id` – Unique identifier for the patient record.
-#'   \item `meda_anlage` – identifier of the person who created the medication analysis.
-#'   \item `meda_edit` – identifier of the person who last edited the medication analysis.
 #'   \item `fall_meda_id` – Identifier linking to the specific encounter (cis id).
 #'   \item `meda_id` – Identifier for the medication analysis instance.
-#'   \item `meda_typ` – Type of medication analysis.
 #'   \item `meda_dat` – Date of the medication analysis.
-#'   \item `meda_gewicht_aktuell` – Current weight of the patient at the time of analysis.
-#'   \item `meda_gewicht_aktl_einheit` – Unit of measurement for the current weight.
-#'   \item `meda_groesse` – Height of the patient at the time of analysis.
-#'   \item `meda_groesse_einheit` – Unit of measurement for the height.
-#'   \item `meda_nieren_insuf_chron` – Flag indicating if the patient has chronic kidney
-#'                                     insufficiency.
-#'   \item `meda_nieren_insuf_ausmass` – Degree of chronic kidney insufficiency.
-#'   \item `meda_nieren_insuf_dialysev` – Flag indicating if the patient is on dialysis.
-#'   \item `meda_leber_insuf` – Flag indicating if the patient has liver insufficiency.
-#'   \item `meda_leber_insuf_ausmass` – Degree of liver insufficiency.
-#'   \item `meda_schwanger_mo` – Flag indicating if the patient is pregnant.
-#'   \item `meda_ma_thueberw` – Flag indicating if medication analysis is marked for representment
-#'   \item `meda_mrp_detekt` – Flag indicating if a medication-related problem (MRP) was detected.
-#'   \item `meda_aufwand_zeit` – Time spent on the medication analysis.
-#'   \item `meda_notiz` – Additional notes related to the medication analysis.
 #'   \item `medikationsanalyse_complete` – Completion status of the form.
 #' }
 #'
@@ -572,11 +554,7 @@ getFallFeData <- function(lock_id, table_name) {
 #' @export
 getMedikationsanalyseFeData <- function(lock_id, table_name) {
   query <- paste0(
-    "SELECT record_id, meda_anlage, meda_edit, fall_meda_id, ",
-    "meda_id, meda_typ, meda_dat, meda_gewicht_aktuell, meda_gewicht_aktl_einheit, ",
-    "meda_groesse, meda_groesse_einheit, meda_nieren_insuf_chron, meda_nieren_insuf_ausmass, ",
-    "meda_nieren_insuf_dialysev, meda_leber_insuf, meda_leber_insuf_ausmass, meda_schwanger_mo, ",
-    "meda_ma_thueberw, meda_mrp_detekt, meda_aufwand_zeit, meda_notiz, ",
+    "SELECT record_id, fall_meda_id, meda_id, meda_dat, ",
     "medikationsanalyse_complete FROM ", table_name, "\n"
   )
 
@@ -609,16 +587,10 @@ getMedikationsanalyseFeData <- function(lock_id, table_name) {
 #'
 #' @details
 #' The function fetches and returns the following:
-#' - Identifiers: `record_id`, `mrp_anlage`, `mrp_edit`, `mrp_meda_id`, `mrp_id`
-#' - Descriptors: `mrp_kurzbeschr`, `mrp_hinweisgeber`, `mrp_hinweisgeber_oth`
-#' - Medication fields: `mrp_wirkstoff`, `mrp_atc1` to `mrp_atc5`
-#' - Product-related fields: `mrp_med_prod`, `mrp_med_prod_sonst`
-#' - Problem indicators: `mrp_pigrund___1` to `mrp_pigrund___27`
-#' - Intervention categories: `mrp_ip_klasse_01`, `mrp_ip_klasse_disease`, `mrp_ip_klasse_nieren_insuf`
-#' - Measures taken (AM and organizational): `mrp_massn_am___1` to `mrp_massn_am___10`,
-#'   `mrp_massn_orga___1` to `mrp_massn_orga___8`
-#' - MRP details and intervention realization: `mrp_notiz`, `mrp_dokup_hand_emp_akz`, `mrp_merp`,
-#'   and completion status
+#' - Identifiers: `record_id`, `mrp_meda_id`, `mrp_id`
+#' - Problem indicators: `mrp_pigrund___21` for contraindications
+#' - contraindication categories: `mrp_ip_klasse_01`
+#' - MRP details and intervention realization: `mrp_dokup_hand_emp_akz` and completion status
 #'
 #' The function ensures uniqueness using `distinct()` and sorts results by `record_id`,
 #' `mrp_meda_id`, and `mrp_id` for easier downstream processing.
@@ -628,16 +600,8 @@ getMedikationsanalyseFeData <- function(lock_id, table_name) {
 #' @export
 getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
   query <- paste0(
-    "SELECT record_id, mrp_anlage, mrp_edit, ",
-    "mrp_meda_id, mrp_id, mrp_kurzbeschr, mrp_hinweisgeber, mrp_hinweisgeber_oth, ",
-    "mrp_wirkstoff, ",
-    paste0("mrp_atc", 1:5, collapse = ", "), ", ",
-    "mrp_med_prod, mrp_med_prod_sonst, ",
-    paste0("mrp_pigrund___", 1:27, collapse = ", "), ", ",
-    "mrp_ip_klasse_01, mrp_ip_klasse_disease, mrp_ip_klasse_nieren_insuf, ",
-    paste0("mrp_massn_am___", 1:10, collapse = ", "), ", ",
-    paste0("mrp_massn_orga___", 1:8, collapse = ", "), ", ",
-    "mrp_notiz, mrp_dokup_hand_emp_akz, mrp_merp, mrpdokumentation_validierung_complete ",
+    "SELECT record_id, mrp_meda_id, mrp_id, mrp_pigrund___21, ",
+    "mrp_ip_klasse_01, mrp_dokup_hand_emp_akz, mrpdokumentation_validierung_complete ",
     "FROM ", table_name, "\n"
   )
 
