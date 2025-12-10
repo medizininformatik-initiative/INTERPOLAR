@@ -10,8 +10,8 @@ etlutils::runLevel2("Calculate MRPs", {
   # load the command line arguments and rename them
   command_arguments <- etlutils::initCommandLineArguments(
     defaults = c(
-      start_date = Sys.Date() - 60,
-      end_date = Sys.time()
+      start_date = etlutils::as.POSIXctWithTimezone(Sys.Date() - 60),
+      end_date = etlutils::as.POSIXctWithTimezone(Sys.time())
     ),
     command_arguments = command_arguments
   )

@@ -315,10 +315,10 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
   main_encounters_by_mrp_type <- if (!is.null(start_date)) {
     start_time <- as.POSIXct(start_date, tz = GLOBAL_TIMEZONE)
     end_time <- if (is.null(end_date)) {
-      as.POSIXct(Sys.time(), tz = GLOBAL_TIMEZONE)
+      etlutils::as.POSIXctWithTimezone(Sys.time())
     } else {
-      as.POSIXct(end_date, tz = GLOBAL_TIMEZONE) +
-        lubridate::days(1) - lubridate::seconds(1)
+      # returns 23:59 h of the day with the end_date
+      etlutils::as.POSIXctWithTimezone(end_date) + lubridate::days(1) - lubridate::seconds(1)
     }
     getEncountersWithTimeRangeFromDB(start_time, end_time)
   } else {
