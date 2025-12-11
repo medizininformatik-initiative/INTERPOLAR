@@ -110,6 +110,8 @@ isIndexedTable <- function(dt, brackets) {
 #' This function retrieves the resource names that should be skipped during the melting process
 #' based on debug environment variables.
 #'
+#' @param resource_name The name of the resource to check.
+#'
 isSkipMeltingResource <- function(resource_name) {
   if (etlutils::isDefinedAndNotEmpty("DEBUG_SKIP_MELTING_RESOURCES")) {
     return(tolower(resource_name) %in% tolower(DEBUG_SKIP_MELTING_RESOURCES))
