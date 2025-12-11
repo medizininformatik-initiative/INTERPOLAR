@@ -18,6 +18,7 @@ mrpCheck <- function(start_date, end_date) {
 
     result[, record_id := as.character(record_id)]
     result <- mrp_table_lists_all$record_ids[result, on = "record_id"]
+    result <- unique(result)
   })
 
   data.table::setnames(result,

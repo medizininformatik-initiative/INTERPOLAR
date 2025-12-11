@@ -315,10 +315,10 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
   main_encounters_by_mrp_type <- if (!is.null(start_date)) {
     start_time <- as.POSIXct(start_date, tz = GLOBAL_TIMEZONE)
     end_time <- if (is.null(end_date)) {
-      as.POSIXct(Sys.time(), tz = GLOBAL_TIMEZONE)
+      etlutils::as.POSIXctWithTimezone(Sys.time())
     } else {
-      as.POSIXct(end_date, tz = GLOBAL_TIMEZONE) +
-        lubridate::days(1) - lubridate::seconds(1)
+      # returns 23:59 h of the day with the end_date
+      etlutils::as.POSIXctWithTimezone(end_date) + lubridate::days(1) - lubridate::seconds(1)
     }
     getEncountersWithTimeRangeFromDB(start_time, end_time)
   } else {
@@ -542,7 +542,24 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
           }
         }
         # Combine all collected rows into data.tables
-        retrolektive_mrpbewertung <- data.table::rbindlist(retrolektive_mrpbewertung_rows, use.names = TRUE, fill = TRUE)
+        retrolektive_mrpbewertung <- if (length(retrolektive_mrpbewertung_rows)) {
+          unique(data.table::rbindlist(retrolektive_mrpbewertung_rows, use.names = TRUE, fill = TRUE))
+        } else {
+          data.table::data.table(
+            record_id = character(),
+            ret_id = character(),
+            ret_meda_id = character(),
+            ret_meda_dat1 = as.POSIXct(character()),
+            ret_kurzbeschr = character(),
+            ret_atc1 = character(),
+            ret_ip_klasse_01 = character(),
+            ret_ip_klasse_disease = character(),
+            ret_atc2 = character(),
+            retrolektive_mrpbewertung_complete = character(),
+            redcap_repeat_instrument = character(),
+            redcap_repeat_instance = character()
+          )
+        }
         dp_mrp_calculations <- data.table::rbindlist(dp_mrp_calculations_rows, use.names = TRUE, fill = TRUE)
 
         mrp_table_lists_all[[mrp_type]] <- list(
