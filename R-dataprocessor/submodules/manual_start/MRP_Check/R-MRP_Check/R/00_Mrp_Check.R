@@ -17,7 +17,15 @@ mrpCheck <- function(start_date, end_date) {
     result <- unique(result[, ret_id := NULL])
 
     result[, record_id := as.character(record_id)]
-    result <- mrp_table_lists_all$record_ids[result, on = "record_id"]
+    if (nrow(result)) {
+      # merges the pat_id column as first column to the result table
+      result <- mrp_table_lists_all$record_ids[result, on = "record_id"]
+    } else {
+      # if the result is empty -> ensure all needed columns are present in the correct order
+      result[, pat_id := character()]
+      data.table::setcolorder(result, c("pat_id", setdiff(names(result), "pat_id")))
+    }
+
     result <- unique(result)
   })
 
