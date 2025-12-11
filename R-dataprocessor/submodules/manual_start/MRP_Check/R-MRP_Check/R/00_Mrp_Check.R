@@ -29,23 +29,29 @@ mrpCheck <- function(start_date, end_date) {
     result <- unique(result)
   })
 
-  data.table::setnames(result,
-                       old = c("pat_id",
-                               "record_id",
-                               "enc_id",
-                               "mrp_calculation_type",
-                               "meda_id",
-                               "ret_meda_dat1",
-                               "ret_kurzbeschr"),
-                       new = c("FHIR Patient ID",
-                               "REDCap Record ID",
-                               "FHIR Encounter ID",
-                               "MRP Typ",
-                               "REDCap Medikationsanalyse ID",
-                               "Datum Medikationsanalyse",
-                               "MRP Beschreibung"))
+  etlutils::runLevel2("Rename columns in calculated MRP Excel file", {
+    data.table::setnames(result,
+                         old = c("pat_id",
+                                 "record_id",
+                                 "enc_id",
+                                 "mrp_calculation_type",
+                                 "meda_id",
+                                 "ret_meda_dat1",
+                                 "ret_kurzbeschr"),
+                         new = c("FHIR Patient ID",
+                                 "REDCap Record ID",
+                                 "FHIR Encounter ID",
+                                 "MRP Typ",
+                                 "REDCap Medikationsanalyse ID",
+                                 "Datum Medikationsanalyse",
+                                 "MRP Beschreibung"))
 
-  etlutils::runLevel2("Save calculated MRPs as local Excel files", {
+
+    # add export period at the end of the table in the first column
+    result <- etlutils::addRowsWithFirstColumn(result, c("", paste("Start:", start_date), paste("End:", end_date)))
+  })
+
+  etlutils::runLevel2("Save calculated MRPs as local Excel file", {
     etlutils::writeExcelFileLocal(list("MRP Check" = result), "MRP_Check_Result_local")
   })
 
@@ -57,7 +63,7 @@ mrpCheck <- function(start_date, end_date) {
     }
   })
 
-  etlutils::runLevel2("Save calculated MRPs as local Excel files", {
+  etlutils::runLevel2("Save calculated MRPs as local Excel file", {
     etlutils::writeExcelFileGlobal(list("MRP Check" = result), "MRP_Check_Result_global")
   })
 
