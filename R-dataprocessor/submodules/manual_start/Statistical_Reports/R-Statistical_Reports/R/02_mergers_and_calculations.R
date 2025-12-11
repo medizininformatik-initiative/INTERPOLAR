@@ -48,7 +48,7 @@ mergePatEnc <- function(patient_table, encounter_table) {
       enc_identifier_value,
       pat_id,
       pat_identifier_value,
-      enc_partof_ref,
+      enc_partof_calculated_ref,
       enc_class_code,
       enc_type_code_Kontaktebene,
       enc_type_code_Kontaktart,
@@ -122,13 +122,13 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #' This function adds a new column `main_enc_id` to the encounter table, identifying
 #' the top-level inpatient encounter (e.g., a facility-level "einrichtungskontakt" encounter)
 #' for each record. It determines the main encounter by walking up the encounter hierarchy
-#' based on encounter type and `enc_partof_ref` relationships. If part-of references are not
+#' based on encounter type and `enc_partof_calculated_ref` relationships. If part-of references are not
 #' available, it uses the unique`enc_identifier_value` to identify top-level encounters.
 #'
 #' @param encounter_table A data frame or tibble containing FHIR-based encounter data.
 #'   Must include the following columns:
 #'   - `enc_id`: Unique identifier of the encounter.
-#'   - `enc_partof_ref`: Reference to the parent encounter (e.g., "Encounter/123").
+#'   - `enc_partof_calculated_ref`: Reference to the parent encounter (e.g., "Encounter/123").
 #'   - `enc_type_code_Kontaktebene`: Type of the encounter (e.g., "einrichtungskontakt",
 #'                                   "abteilungskontakt", "versorgungsstellenkontakt").
 #'   - `enc_class_code`: Class of the encounter (e.g., "IMP" for inpatient).
@@ -141,7 +141,7 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #'
 #' @details
 #' The main encounter ID is determined using the following logic:
-#' 1. If the encounter has no parent (`enc_partof_ref` is `NA`), is of type `"einrichtungskontakt"`,
+#' 1. If the encounter has no parent (`enc_partof_calculated_ref` is `NA`), is of type `"einrichtungskontakt"`,
 #'    and class `"IMP"`, it is considered a top-level encounter, and its own `enc_id` is used.
 #' 2. If the encounter is of type `"abteilungskontakt"` (departmental contact), its parent is
 #'    assumed to be the main encounter.
@@ -159,19 +159,19 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 addMainEncId <- function(encounter_table) {
   if (any(!is.na(encounter_table$enc_type_code_Kontaktebene) &
     encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" &
-    is.na(encounter_table$enc_partof_ref) &
+    is.na(encounter_table$enc_partof_calculated_ref) &
     is.na(encounter_table$enc_identifier_value))) {
     encounter_table <- encounter_table |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
         enc_type_code_Kontaktebene != "einrichtungskontakt" &
-          is.na(enc_partof_ref) & is.na(enc_identifier_value) &
+          is.na(enc_partof_calculated_ref) & is.na(enc_identifier_value) &
           is.na(processing_exclusion_reason),
-        "No_enc_partof_ref_or_enc_identifier_value_for_non_einrichtungskontakt",
+        "No_enc_partof_calculated_ref_or_enc_identifier_value_for_non_einrichtungskontakt",
         processing_exclusion_reason
       ))
     print(encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene != "einrichtungskontakt" &
-        is.na(enc_partof_ref) & is.na(enc_identifier_value)), width = Inf)
+        is.na(enc_partof_calculated_ref) & is.na(enc_identifier_value)), width = Inf)
     warning("Some encounters of type other than 'einrichtungskontakt' have no parent reference or
     identifier value. Main_enc_id not defined. Please check the data.")
   }
@@ -208,21 +208,21 @@ addMainEncId <- function(encounter_table) {
       suffix = c("", "_einrichtungskontakt")
     ) |>
     dplyr::mutate(main_enc_id = dplyr::case_when(
-      is.na(enc_partof_ref) &
+      is.na(enc_partof_calculated_ref) &
         enc_type_code_Kontaktebene != "einrichtungskontakt" ~ enc_id_einrichtungskontakt,
 
       # Top-level: einrichtungskontakt
-      is.na(enc_partof_ref) &
+      is.na(enc_partof_calculated_ref) &
         enc_type_code_Kontaktebene == "einrichtungskontakt" &
         enc_class_code == "IMP" ~ enc_id,
 
       # Middle-level: abteilungskontakt
-      enc_type_code_Kontaktebene == "abteilungskontakt" ~ sub("^Encounter/", "", enc_partof_ref),
+      enc_type_code_Kontaktebene == "abteilungskontakt" ~ sub("^Encounter/", "", enc_partof_calculated_ref),
 
       # Bottom-level: versorgungsstellenkontakt
       enc_type_code_Kontaktebene == "versorgungsstellenkontakt" ~ {
-        parent_id <- sub("^Encounter/", "", enc_partof_ref)
-        grandparent_ref <- encounter_table$enc_partof_ref[match(parent_id, encounter_table$enc_id)]
+        parent_id <- sub("^Encounter/", "", enc_partof_calculated_ref)
+        grandparent_ref <- encounter_table$enc_partof_calculated_ref[match(parent_id, encounter_table$enc_id)]
         sub("^Encounter/", "", grandparent_ref)
       }
     )) |>
@@ -506,9 +506,9 @@ mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 
 #' Add Medication Analysis data to Merged FE Table
 #'
-#' This function merges medication analysis data (`meda_id`, `meda_dat`, `meda_mrp_detekt`,
-#' `medikationsanalyse_complete`) into a merged front-end table that contains patient and case-level
-#' information. The merge is based on matching both `record_id` and `fall_id_cis` to `fall_meda_id`.
+#' This function merges medication analysis data (`meda_id`, `meda_dat`) into a merged
+#' front-end table that contains patient and case-level information.
+#' The merge is based on matching both `record_id` and `fall_id_cis` to `fall_meda_id`.
 #' It retains all original columns from the merged patient and fall data,
 #' and adds the medication analysis fields. In this step, it may happen, that a meda_id is added
 #' to a fall record that it doesen't belong to (e.g. it is the fall record of a different ward).
@@ -519,12 +519,10 @@ mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 #'   Must include `record_id` and `fall_id_cis`.
 #' @param medikationsanalyse_fe_table A data frame with medication analysis entries from the
 #' front-end system.
-#'   Must include `record_id`, `fall_meda_id`, `meda_id`, `meda_dat`, `meda_mrp_detekt`, and
-#'   `medikationsanalyse_complete`.
+#'   Must include `record_id`, `fall_meda_id`, `meda_id`, `meda_dat`.
 #'
 #' @return A data frame containing all original columns from `merged_fe_pat_fall_table`,
-#'   plus matched medication analysis fields: `meda_id`, `meda_dat`, `meda_mrp_detekt`, and
-#'   `medikationsanalyse_complete`.
+#'   plus matched medication analysis fields: `meda_id`, `meda_dat`
 #'
 #' @details
 #' The join is based on:
@@ -648,8 +646,7 @@ addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1)
 #'   validation entries as retrieved by `getMRPDokumentationValidierungFeData()`.
 #'
 #' @return A data frame that includes all columns from `merged_fe_pat_fall_meda_table_with_enc_id`
-#'   along with matching MRP documentation fields (e.g., `mrp_id`, `mrp_kurzbeschr`,
-#'   `mrp_hinweisgeber`, etc.) based on `record_id` and `meda_id`.
+#'   along with matching MRP documentation fields (e.g., `mrp_id`, etc.) based on `record_id` and `meda_id`.
 #'
 #' @details
 #' The merge operation is performed on the following keys:

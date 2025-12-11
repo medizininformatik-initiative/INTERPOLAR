@@ -314,11 +314,11 @@ convertLabUnits <- function(measured_value,
     }
   }, error = function(e) {
     warning_message <- paste0("Error converting lab units from '",
-                            as.character(units(u_measured)$numerator),
-                            "' to '",
-                            as.character(units(u_target)$numerator),
-                            "': ",
-                            additional_error_message)
+                              as.character(units(u_measured)$numerator),
+                              "' to '",
+                              as.character(units(u_target)$numerator),
+                              "': ",
+                              additional_error_message)
     if(!ignore_errors) {
       etlutils::catErrorMessage(warning_message)
       stop(e)

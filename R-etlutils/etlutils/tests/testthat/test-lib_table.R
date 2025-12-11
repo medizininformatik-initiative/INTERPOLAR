@@ -765,8 +765,10 @@ test_that("retainColumns handles column names not present in the data.table", {
   )
   columns_to_retain <- c("ID", "NonExistingColumn")
   result_dt <- retainColumns(dt, columns_to_retain)
+
   expected_dt <- data.table(
-    ID = 1:3
+    ID = 1:3,
+    NonExistingColumn = NA_character_
   )
   expect_equal(result_dt, expected_dt)
 })
@@ -776,7 +778,7 @@ test_that("retainColumns handles empty data.table correctly", {
   dt <- data.table()
   columns_to_retain <- c("ID", "Name")
   result_dt <- retainColumns(dt, columns_to_retain)
-  expect_equal(result_dt, data.table())
+  expect_equal(names(result_dt), columns_to_retain)
 })
 
 ##############################

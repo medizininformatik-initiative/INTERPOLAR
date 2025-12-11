@@ -46,7 +46,7 @@ defineFullAnalysisSet1 <- function(complete_table) {
 
   full_analysis_set_1 <- full_analysis_set_1_raw |>
     dplyr::select(-c(
-      enc_partof_ref, enc_class_code
+      enc_partof_calculated_ref, enc_class_code
     ))
 
   return(full_analysis_set_1)

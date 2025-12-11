@@ -199,19 +199,19 @@ if (exists("DEBUG_DAY")) {
     # Drug - Drug #
     ###############
 
-    # Drug_Drug_Interaction                  -> MedicationRequests - N06AX22 + J01MA02
-    addDrugs("UKB-0001_17", c("N06AX22", "J01MA02"))
-
     # Drug_Drug_Interaction                  -> MedicationRequests - J04AB02 + J05AP52
-    addDrugs("UKB-0001_18", c("J04AB02", "J05AP52"))
+    addDrugs("UKB-0001_17", c("J04AB02", "J05AP52"))
 
     # Drug_Drug_Interaction                  -> MedicationRequests - A02BD04 + A03FA03 ATC kommen jeweils gespiegelt vor in ATC und ATC2
-    addDrugs("UKB-0001_19", c("A02BD04", "A03FA03")) #  2 MRPS, weil diese Kombination in Drug Drug und Drug DrugGroup vorkommt
+    addDrugs("UKB-0001_18", c("A02BD04", "A03FA03")) #  2 MRPS, weil diese Kombination in Drug Drug und Drug DrugGroup vorkommt
 
 
     ####################
     # Drug - DrugGroup #
     ####################
+
+    # Drug_DrugGroup_Interaction                  -> MedicationRequests - N06AX22 + J01MA02
+    addDrugs("UKB-0001_19", c("N06AX22", "J01MA02"))
 
     # Drug_DrugGroup_Interaction             -> MedicationRequests - N06BA09 + C02KC01
     addDrugs("UKB-0001_20", c("N06BA09", "C02KC01"))

@@ -21,6 +21,27 @@ MRP_TYPE <- etlutils::namedVectorByParam(
 )
 
 #
+# Load all encounters for a time range
+#
+getEncountersWithTimeRangeFromDB <- function(start_time, end_time) {
+  query <- paste0(
+    "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
+    "FROM v_encounter_last_version\n",
+    "WHERE enc_period_start >= '", format(start_time, "%Y-%m-%d %H:%M:%S"), "'\n",
+    "AND enc_period_end <= '", format(end_time, "%Y-%m-%d %H:%M:%S"), "'\n",
+    "AND enc_type_code = 'einrichtungskontakt'\n"
+  )
+  mrp_encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getEncountersWithTimeRangeFromDB()"))
+  mrp_encounters[, study_phase := "PhaseB"] # we must set the studyphase for all encounters to PhaseB to trigger the MRP calculation
+  encounters_per_mrp_type <- list()
+  for (mrp_type in MRP_TYPE) {
+    encounters_per_mrp_type[[mrp_type]] <- mrp_encounters
+  }
+  encounters_per_mrp_type[["ALL_MRP_TYPES"]] <- mrp_encounters
+  return(encounters_per_mrp_type)
+}
+
+#
 # Load Einrichtungskontakt Encounters without retrolective MRP evaluation
 #
 getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
@@ -73,7 +94,8 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
     #
     # 2a.) Remove all Encounters which were never on a relevant ward (their FHIR ID is not in the fall_fe table)
     #
-    encounters <- encounters[enc_id %in% encs_fall_fe$fall_fhir_enc_id]
+    fall_fe_enc_id <- unique(encs_fall_fe$fall_fhir_enc_id)
+    encounters <- encounters[enc_id %in% fall_fe_enc_id]
 
     #
     # 2b.) Add the Study Phase to all remaining Encounters
@@ -111,9 +133,9 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   getCurrentDate <- function() {
     if (exists("DEBUG_DAY")) {
       datetime <- DEBUG_DATES[DEBUG_DAY]
-      return(as.Date(datetime))
+      return(etlutils::as.DateWithTimezone(datetime))
     }
-    return(Sys.Date())
+    return(etlutils::as.DateWithTimezone(Sys.Date()))
   }
 
   #
@@ -124,7 +146,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   for (mrp_type in names(encounters_per_mrp_type)) {
     encs <- encounters_per_mrp_type[[mrp_type]]
     # Merge with enriched encounters to get study_phase
-    encs <- merge(encs, encounters[, .(enc_id, study_phase)], by = "enc_id", all.x = TRUE)
+    encs <- merge(encs, encounters[, .(enc_id, study_phase)], by = "enc_id")
     encounters_per_mrp_type[[mrp_type]] <- encs
   }
 
@@ -230,12 +252,12 @@ getMedicationRequestsFromDB <- function(patient_references) {
       data.table::fifelse(
         !is.na(medreq_doseinstruc_timing_event),
         etlutils::getStartOfNextDay(medreq_doseinstruc_timing_event),
-        medreq_authoredon)
+        NA)
     )]
   }
   # remove all now irrelevant timing and DB ID columns ()
   medication_requests[, c(
-    "medicationrequest_id", "medreq_authoredon","medreq_doseinstruc_timing_event",
+    "medicationrequest_id","medreq_doseinstruc_timing_event",
     "medreq_doseinstruc_timing_repeat_boundsperiod_start",
     "medreq_doseinstruc_timing_repeat_boundsperiod_end") := NULL]
   # for each medreq_id keep only the earliest start_datetime and the latest
@@ -502,9 +524,9 @@ getResourcesForMRPCalculation <- function(main_encounters) {
   # 6.) Get existing ret_id's for the medication analyses
   getExistingRetrolectiveMRPEvaluationIDs <- function(medication_analyses_ids) {
     query <- paste0(
-      "SELECT meda_id, ret_id, ret_redcap_repeat_instance\n",
+      "SELECT DISTINCT meda_id, ret_id, ret_redcap_repeat_instance\n",
       "FROM v_dp_mrp_calculations\n",
-      "WHERE meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids))
+      "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids))
     return(etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingRetrolectiveMRPEvaluationIDs()"))
   }
   medication_analyses_ids <- unlist(lapply(encounters_first_medication_analysis, function(dt) if (!is.null(dt)) dt$meda_id else NULL), use.names = FALSE)
@@ -550,14 +572,56 @@ getResourcesForMRPCalculation <- function(main_encounters) {
 #' @return A \code{data.table} with filtered active medication requests for the given encounter and time range.
 #'
 #' @export
-getActiveMedicationRequests <- function(medication_requests, enc_period_start, meda_datetime) {
-  active_requests <- medication_requests[
-    !is.na(start_datetime) &
-      start_datetime >= enc_period_start &
-      start_datetime <= meda_datetime &
-      (is.na(end_datetime) |
-         end_datetime >= meda_datetime)
+getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end, meda_datetime) {
+
+  # ensure medreq_authoredon is filled with a non NA value
+  medication_requests[is.na(medreq_authoredon),
+                      medreq_authoredon := pmin(start_datetime, meda_datetime, na.rm = TRUE)]
+
+  # ensure medreq_authoredon is not after start_datetime (can be if MedicationRequest is changed after first application)
+  medication_requests[medreq_authoredon > start_datetime, medreq_authoredon := start_datetime]
+
+  # ensure MedicationRequest end datetime is filled, if encounter end is NA
+  if (is.na(enc_period_end)) {
+    enc_period_end <- meda_datetime + lubridate::days(30)
+  }
+  medication_requests[is.na(end_datetime), end_datetime := enc_period_end]
+
+  # remove all medication requests where calculated start_datetime is before medreq_authoredon
+  medication_requests <- medication_requests[
+    start_datetime >= medreq_authoredon & (is.na(end_datetime) | end_datetime >= start_datetime)
   ]
-  atc_codes <- active_requests[, c("atc_code", "start_datetime")]
-  return(atc_codes)
+  # ensure medication start is not before encounter start
+  active_requests <- medication_requests[
+    medreq_authoredon >= enc_period_start &
+      start_datetime >= enc_period_start &
+      medreq_authoredon <= meda_datetime
+  ]
+
+  # keep only relevant columns and aggregate to get the overall start and end datetime per atc_code
+  active_atc <- active_requests[, c("atc_code", "start_datetime", "end_datetime")]
+  active_atc <- active_atc[, .(
+    start_datetime = min(start_datetime, na.rm = TRUE),
+    end_datetime = end_datetime[1]
+  ), by = .(atc_code, end_datetime)]
+
+  # Combine all medication requests that are less than 1 day apart.
+  # 1. sort, 2. group and 3. aggregate overlapping or subsequent time periods per atc_code
+  # 1. sort
+  data.table::setorder(active_atc, atc_code, start_datetime)
+  # 2. group
+  active_atc[, grp := cumsum(
+    c(TRUE, diff(start_datetime) > 1) | c(TRUE, atc_code[-1] != atc_code[-.N])
+  ), by = atc_code]
+  # 3. aggregate
+  active_atc <- active_atc[
+    , .(
+      start_datetime = min(start_datetime),
+      end_datetime = max(end_datetime)
+    ),
+    by = .(atc_code, grp)
+  ]
+  active_atc[, grp := NULL]
+
+  return(active_atc)
 }

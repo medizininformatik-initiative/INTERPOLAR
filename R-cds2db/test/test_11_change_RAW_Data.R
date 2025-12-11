@@ -1,20 +1,19 @@
 # Patient UKB-0001 dupliziert
 # Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
 #        Erster Patient hat nichts, alle anderen haben jeweils ein MRP und eine
-#        Medikationsanalyse (diese kommt aus der zugehörigen change_REDCap_Data.R)
+#        Medikationsanalyse (diese kommt aus der zugehörigne change_REDCap_Data.R)
 # Tag 2: Encounter wird entlassen
 
-# Prüfung wie sich der Code verhält, wenn bestimmte Diagnosen/Medikamente etc. mehrfach/doppelt vorkommen,
-# die ein einzelnes MRP erzeugen.
-# Weitere Prüfung, wie sich der Code verhält, wenn Überschneidungen bei den
-# Medikamentenverordnungen auftreten.
+# Prüfung von RedCap-Dokumentation für Reporting (siehe test_11_change_REDCap_Data.R)
+# (change_RAW_Data Ausgangsbasis von Test 08: Prüfung wie sich der Code verhält,
+# wenn bestimmte Diagnosen/Medikamente etc. mehrfach/doppelt vorkommen,die ein einzelnes MRP erzeugen.)
 
 #################################
 # Start Define global variables #
 #################################
 
 # Define the days count for this test
-DEBUG_DAYS_COUNT <- 4
+DEBUG_DAYS_COUNT <- 2
 
 # Activate if only a specific debug day should be run
 #DEBUG_RUN_SINGLE_DAY_ONLY <- 2
@@ -39,6 +38,7 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 ###############################
 # End Define global variables #
 ###############################
+
 
 if (exists("DEBUG_DAY")) {
 
@@ -87,12 +87,12 @@ if (exists("DEBUG_DAY")) {
     # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
     testAdmission(pid1, "Raum 1-1", "Bett 1-1", "Station 1")
   })
-  runCodeForDebugDay(4, {
+  runCodeForDebugDay(2, {
     # Patient 1 Tag 2: Encounter wird entlassen
     testDischarge(pid1)
   })
 
-  duplicatePatients(5, 15)
+  duplicatePatients(12)
 
   runCodeForDebugDay(1, {
 
@@ -111,6 +111,14 @@ if (exists("DEBUG_DAY")) {
     addObservation(pid, "14933-6", day_offset = -0.5, value = 1000, unit = "umol/L")
     addObservation(pid, "14933-6", value = 2000, unit = "umol/L")
     addObservation(pid, "12980-9", value = 1000, unit = "umol/L") # secondary loinc code
+
+    # Zeile 1429 aus Drug Disease Originalliste -  Weiteres Drug-Disease MRP mit Diagnose/Procedure
+    addDrugs(pid, c("B01AB01",	"B01AB01", "B01AB51"))
+    addDrugs(pid, c("B05CX05",	"B01AB51"))
+    addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
+    addProcedures(pid, c("8-151.4"))
+    addConditions(pid, "G97.0")
+    addConditions(pid, "G97.0")
 
     # Drug_Drug                  -> MedicationRequests - N06AX22 + J01MA02
     addDrugs(pid, c("N06AX22", "J01MA02")) # zwei MRPS, weil in Drug Drug und in Drug Drug Group (Wird noch bereinigt)
@@ -161,54 +169,6 @@ if (exists("DEBUG_DAY")) {
     pid <- addDrugs("UKB-0001_12", "L01XX05")
     addConditions(pid, c("D69.58", "D69.61"))
 
-    # Drug-Disease Zeile 1, ATC systemisch
-    pid <- addDrugs("UKB-0001_13", "L01XK52", period_type = "timing_events", timing_events_count = 5, timing_events_day_offset = 0.05)
-    addConditions(pid, c("O09"))
-    addObservation(pid, "21198-7", day_offset = -5.0, value = 12, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
-    addObservation(pid, "21198-7", day_offset = -4.9, value = 13, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
-    addObservation(pid, "21198-7", day_offset = -4.8, value = 14, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
-    addObservation(pid, "21198-7", day_offset = -4.7, value = 15, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
-    addObservation(pid, "21198-7", day_offset = -4.6, value = 16, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
-
-    addObservation(pid, "2111-3", day_offset = -5.0, value = 1.2, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
-    addObservation(pid, "2111-3", day_offset = -4.9, value = 1.3, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
-    addObservation(pid, "2111-3", day_offset = -4.8, value = 1.4, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
-    addObservation(pid, "2111-3", day_offset = -4.7, value = 1.5, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
-    addObservation(pid, "2111-3", day_offset = -4.6, value = 1.6, unit = "g/dL", referencerange_low_value = 0.5, referencerange_high_value = 1.0)
-
-    # Drug-Disease check specific lab units
-    pid <- addDrugs("UKB-0001_14", "R05DA04")
-    addConditions(pid, c("J95.1"))
-    addObservation(pid, "11557-6", value = 70, unit = "%")
-
-    # Drug Drug mit Überschneidung innerhalb eines Tages
-    # Zwei Request mit dem selben Code am selben Tag (Startzeit vom ersten Request und Endzeit vom zweiten Event)
-    pid <- addDrugs("UKB-0001_15", "A02BD04", day_offset = -0.4, period_type = "timing_events", timing_events_count = 3, timing_events_day_offset = 0.05)
-    addDrugs(pid, "A02BD04", day_offset = -0.35, period_type = "timing_events", timing_events_count = 3, timing_events_day_offset = 0.1)
-    # Einzelner Request mit anderen Code am selben Tag
-    addDrugs(pid, "A03FA03", day_offset = -0.4, period_type = "timing_events", timing_events_count = 3, timing_events_day_offset = 0.11)
-
-    # Drug Drug mit Überschneidung über mehrere Tage
-    pid <- addDrugs("UKB-0001_16", "A02BD04", day_offset = -0.4, period_type = "timing_events", timing_events_count = 3, timing_events_day_offset = 0.4)
-    addDrugs(pid, "A02BD04", day_offset = -0.35, period_type = "timing_events", timing_events_count = 3, timing_events_day_offset = 0.4)
-    addDrugs(pid, "A02BD04", day_offset = 3, period_type = "timing_events", timing_events_count = 3, timing_events_day_offset = 0.4)
-    addDrugs(pid, "A03FA03", day_offset = -0.4, period_type = "start_and_end")
-    # Fake ATC Code hinzufügen, um zu testen, dass der Code nicht gefunden wird
-    addDrugs(pid, "A00AA00", day_offset = -0.4, period_type = "timing_events", timing_events_count = 8, timing_events_day_offset = 0.6)
-
-    # Drug Drug mit Überschneidung, aber mit Tag Pause dazwischen
-    pid <- addDrugs("UKB-0001_17", "A02BD04", period_type = "timing_events", timing_events_count = 2, timing_events_day_offset = 2.0)
-    addDrugs(pid, "A03FA03", period_type = "timing_events", timing_events_count = 2, timing_events_day_offset = 1.7)
-
-    # Drug Drug mit Überschneidung, aber mit Tag Pause dazwischen für mehrere Medication Requests
-    pid <- addDrugs("UKB-0001_18", "A02BD04", day_offset = -0.4, period_type = "timing_event")
-    addDrugs(pid, "A02BD04", day_offset = 1.6, period_type = "timing_event")
-    addDrugs(pid, "A03FA03", day_offset = -0.399, period_type = "timing_event")
-    addDrugs(pid, "A03FA03", day_offset = 1.599, period_type = "timing_event")
-
-    # Drug Drug ohne Überschneidung innerhalb eines Tages -> kein MRP
-    pid <- addDrugs("UKB-0001_19", "A02BD04", day_offset = -0.4, period_type = "timing_events", timing_events_count = 2, timing_events_day_offset = 0.05)
-    addDrugs(pid, "A03FA03", day_offset = 0.6, period_type = "timing_events", timing_events_count = 2, timing_events_day_offset = 1.15)
   })
 
   # Update the resource_tables list with the modified data tables
