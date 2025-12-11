@@ -733,38 +733,42 @@ removeTableHeader <- function(dt, pattern_list) {
 #'
 #' This function retains only the columns in a data table that are listed in the
 #' provided 'columnNames'. All other columns will be removed from the data table.
+#' Optionally, missing columns can be added with NA_character_ values.
 #'
 #' @param table A data table from which columns will be retained.
 #' @param columnNames A character vector containing the names of columns to be retained.
-#' If NA (default) then no column will be removed and the full input table will be returned.
+#'   If NA (default), then no column will be removed and the full input table will be returned.
+#' @param addMissingColumns Logical. If TRUE, columns from 'columnNames' that are not yet in
+#'   the table will be created and filled with NA_character_. Default is TRUE.
 #'
 #' @return The data table with only the specified columns retained. The object is changed
-#' by reference.
+#'   by reference.
 #'
 #' @examples
 #' library(data.table)
 #'
-#' # Create a sample data table
-#' dt <- data.table(
-#'   ID = 1:3,
-#'   Name = c("John", "Alice", "Bob"),
-#'   Age = c(25, 30, 22),
-#'   Country = c("USA", "Canada", "UK")
-#' )
+#' dt <- data.table(ID = 1:3, Name = c("A", "B", "C"))
+#' retainColumns(dt, c("ID", "Country"), addMissingColumns = TRUE)
 #'
-#' # Specify the columns to be retained
-#' columns_to_retain <- c("ID", "Name")
+#' dt <- data.table(ID = character(), Name = numeric())
+#' retainColumns(dt, c("ID", "Country"), addMissingColumns = TRUE)
 #'
-#' # Retain only the specified columns
-#' dt <- retainColumns(dt, columns_to_retain)
-#' print(dt)
+#' dt <- data.table()
+#' retainColumns(dt, c("ID", "Country"), addMissingColumns = TRUE)
 #'
 #' @export
-retainColumns <- function(table, columnNames = NA) {
+retainColumns <- function(table, columnNames = NA, addMissingColumns = TRUE) {
   if (!isSimpleNA(columnNames)) {
-    names <- names(table)
-    names <- names[!(names %in% columnNames)]
-    table[, (names) := NULL]
+    # Add missing columns as NA_character_, even for empty tables
+    if (addMissingColumns) {
+      missing_cols <- setdiff(columnNames, names(table))
+      for (col in missing_cols) {
+        table[, (col) := rep(NA_character_, .N)]
+      }
+    }
+    # Remove all columns not in columnNames
+    to_remove <- setdiff(names(table), columnNames)
+    table[, (to_remove) := NULL]
   }
   return(table)
 }
