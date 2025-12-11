@@ -897,6 +897,36 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
   data.table::setcolorder(dt, new_order)
 }
 
+#' Append rows to a data.table with values in the first column
+#'
+#' Adds one row per element in `values` to the provided data.table. If a value is `NA` or an empty
+#' string, a fully empty row is added. Otherwise, the value is inserted into the first column
+#' of the new row. The function returns the modified table and does not modify by reference.
+#'
+#' @param table A data.table to which rows will be appended. Must have at least one column,
+#'   and the first column is expected to be of type character.
+#' @param values A character vector of values to insert into the first column. NA or "" will
+#'   result in a completely empty row.
+#'
+#' @return A data.table with the new rows appended.
+#'
+#' @examples
+#' dt <- data.table::data.table(col1 = character(), col2 = integer())
+#' values <- c("First", NA, "", "Second")
+#' dt <- addRowsWithFirstColumn(dt, values)
+#'
+#' @export
+addRowsWithFirstColumn <- function(table, values) {
+  for (val in values) {
+    row <- setNames(as.list(rep(NA, ncol(table))), names(table))
+    if (!is.na(val) && val != "") {
+      row[[1]] <- val
+    }
+    table <- data.table::rbindlist(list(table, row), use.names = TRUE, fill = TRUE)
+  }
+  return(table)
+}
+
 #' Print a summary for a table
 #'
 #' This function prints a summary for the specified table, including information
