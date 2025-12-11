@@ -2,7 +2,7 @@
 output: html_document
 ---
 
-# "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienforschritts
+# "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienfortschritts
 
 ## Logik hinter den Kennzahlen detailliert erklärt
 
@@ -48,7 +48,7 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
     -   `enc_id` (FHIR Encounter ID)
     -   `enc_identifier_value` (Fallidentifikator im Klinikinformationssystem (CIS))
     -   `enc_patient_ref` (Referenz auf die FHIR Patienten ID (`pat_id`))
-    -   `enc_partof_ref` (Referenz auf übergeordneten Encounter in der 3-Stufen-Encounter-Hierarchie, falls vorhanden)
+    -   `enc_partof_calculated_ref` (Referenz auf übergeordneten Encounter in der 3-Stufen-Encounter-Hierarchie, falls initial nicht vorhanden, dann berechnet aus Zeitstempeln)
     -   `enc_class_code` (Encounter-Klasse, z.B. "IMP" für stationär)
     -   `enc_type_code` (Encounter-Typ, kann Kontaktebene (z.B. "versorgungsstellenkontakt"") oder Kontaktart (z.B. "normalstationaer") beinhalten)
     -   `enc_type_system` (System des FHIR Encounter-Typs, definiert ob Kontaktart oder Kontaktebene)
@@ -90,13 +90,13 @@ mögliche Optimierungen:
 
 #### `getPidsPerWardData` (`v_pids_per_ward`)
 
-Ziel: Erkennen, auf welcher INTERPOLAR-Station ein Fall aufgenommen wurde (Erkennen eines Falls auf einer INTERPOLAR-Station über die CDS-Toolchain konfigurierbar)
+Ziel: Erkennen, auf welcher INTERPOLAR-Station ein Fall aufgenommen wurde (Erkennen eines Falls auf einer INTERPOLAR-Station über die CDS-Toolchain konfigurierbar) und zu welchem Versorgungsstellenkontakt dieser INTERPOLAR-Fall gehört.
 
 -   lädt die Tabelle pids_per_ward, die bei jedem Durchlauf der CDS-Toolchain erfasst, welche Patienten sich aktuell auf einer INTERPOLAR-Station befinden
 -   Variablen:
     -   `ward_name` (Name der Station)
     -   `patient_id` (FHIR Patienten ID)
-    -   `encounter_id` (FHIR Encounter ID)
+    -   `encounter_id` (FHIR Encounter ID: alle Ebenen?!)
 -   stoppt das Skript wenn kein Datensatz gefunden wurde
 
 mögliche Optimierungen:
@@ -104,3 +104,72 @@ mögliche Optimierungen:
 -   richtige Annahme?
     -   über die pids_per_ward Tabelle (INTERPOLAR-DB) sind die Fälle auf Versorgungsstellenkontakt-Ebene einer Station zugeordnet
     -   encounter_id in pids_per_ward zeigt (unter Anderem) alle INTERPOLAR-Versorgungsstellenkontakte eines Falls
+
+#### `getPatientFeData` (`v_patient_fe` --\> in Erarbeitung: `v_patient_fe_last_version`?)
+
+Ziel: lade die für das Reporting relevanten Patienten-Daten aus der Frontend-Tabelle, um das Mapping zu weiteren Daten des Patienten zu vorzunehmen und ein Abgleich zwischen Frontend und FHIR-Daten zu ermöglichen.
+
+-   lädt die (letzte?) Version der Frontend-Patienten-Identifikatoren, die der INTERPOLAR-Datenbank bekannt ist (verschiedene Versionen sollten hier eigentlich nicht vorkommen, trotzdem ist sicherheitshalber `_last_version` zu verwenden, sobald verfügbar)
+-   Variablen:
+    -   `pat_id` (FHIR Patienten ID)
+    -   `pat_cis_pid` (Patientenidentifikator im Klinikinformationssystem (CIS)): für Frontend-Tabellen nur in dieser Tabelle vorhanden
+    -   `record_id` (Frontend Datensatz ID)
+-   legt die Variable `processing_exclusion_reason` an, für zukünftige Begründung, warum ein Patient von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten oder Uneindeutigkeit für die Zählung)
+-   stoppt das Skript wenn kein Datensatz gefunden wurde
+-   gibt Warnungen für:
+    -   mehrere Zeilen für die selbe `pat_id` (FHIR) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_id_in_fe"`)
+    -   mehrere Zeilen für den selben `pat_cis_pid` (CIS) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_identifier_in_fe"`)
+
+mögliche Optimierungen:
+
+-   `pat_cis_pid` könnte ggf. komplett weggelassen werden (redundant zu `pat_id`?)
+-   wurden wichtige Variablen zur Identifizierung vergessen?
+-   gibt es Gründe warum trotz der Filterung noch mehrere Zeilen pro Patient existieren?
+
+#### `getFallFeData` (`v_fall_fe` --\> in Erarbeitung: `v_fall_fe_last_version`?)
+
+Ziel: lade die für das Reporting relevanten Fall-Daten aus der Frontend-Tabelle, um das Mapping zu weiteren Daten des Falls vorzunehmen und ein Abgleich zwischen Frontend und FHIR-Daten zu ermöglichen. Weiterhin sind hier die Information über Studienphase, Station und Aufnahmedatum (Einrichtungskontakt) des Falls enthalten.
+
+-   lädt die (letzte?) Version der Frontend-Fall-Daten, die der INTERPOLAR-Datenbank bekannt ist (eine Änderung der Station sollte dabei in der Historie verfolgbar sein (kein Überschreiben), die Studienphase sollte immer die erste pro Fall abbilden)
+-   Variablen:
+    -   `record_id` (Frontend Datensatz ID)
+    -   `fall_fhir_enc_id` (FHIR Encounter ID: hier nur Einrichtungskontaktebene)
+    -   `fall_pat_id` (FHIR Patienten ID)
+    -   `fall_id` (Fallidentifikator im Klinikinformationssystem (CIS))
+    -   (`fall_studienphase` (Studienphase des Falls, z.B. "PhaseA", "PhaseBTest", "PhaseB" oder NA falls Fall vor Implementierung der Studienphasen erfasst wurde? (zählt dann zu PhaseA)): aktuell nicht verwendet, da nicht benötigt)
+    -   `fall_station` (Name der Station, auf der der Fall aufgenommen wurde)
+    -   `fall_aufn_dat` (Aufnahmedatum des Falls (Einrichtungskontakt))
+-   stoppt das Skript wenn kein Datensatz gefunden wurde
+
+mögliche Optimierungen:
+
+-   ist hier ein \_last_version notwendig, oder sollte immer die erste Version pro Sub-Fall (siehe Stationswechsel) verwendet werden (dann richtige Studienphase): Spezialfall bzgl. view nötig?
+-   wurden wichtige Variablen zur Identifizierung vergessen?
+-   ist das fall_additional_value Feld zu Nutzen (z.B. für einfachere Zuordnung Versorgunsgstellenkontakt?)
+
+#### `getMedikationsanalyseFeData` (`v_medikationsanalyse_fe` --\> in Erarbeitung: `v_medikationsanalyse_fe_last_version`)
+
+Ziel: lade die für das Reporting relevanten Medikationsanalyse-Daten aus der Frontend-Tabelle
+
+-   lädt die letzte Version der Frontend-Medikationsanalyse Einträge, die der INTERPOLAR-Datenbank bekannt ist (aktuell komplette Datenbanktabelle verwendet, besser: \_last_version)
+-   Variablen:
+    -   `record_id` (Frontend Datensatz ID)
+    -   `fall_meda_id` (Fallidentifikator im Klinikinformationssystem (CIS))
+    -   `meda_id` (ID der Medikationsanalyse (= Fallidentifikator im Klinikinformationssystem (CIS) + Suffix z.B. "-1" für erste Analyse))
+    -   `meda_dat` (Datum der Medikationsanalyse: wichtig für das Mapping zum Versorgungsstellenkontakt)
+    -   `medikationsanalyse_complete` (Form Status der Medikationsanalyse, z.B. "Complete" für abgeschlossene Analyse, "Incomplete" für unvollständige Analyse, "Unverified" für ungültige z.B. versehentliche Anlage?)
+-   stoppt das Skript wenn kein Datensatz gefunden wurde
+
+#### `getMRPDokumentationValidierungFeData` (`v_mrpdokumentation_validierung_fe` --\> in Erarbeitung: `v_mrpdokumentation_validierung_fe_last_version`)
+
+Ziel: lade die für das Reporting relevanten MRP-Dokumentation Validierungs-Daten aus der Frontend-Tabelle
+
+-   lädt die letzte Version der Frontend-MRP-Dokumentation Validierungs Einträge, die der INTERPOLAR-Datenbank bekannt ist (aktuell komplette Datenbanktabelle verwendet, besser: \_last_version)
+-   Variablen:
+    -   `record_id` (Frontend Datensatz ID)
+    -   `mrp_meda_id` (ID der Medikationsanalyse (= Fallidentifikator im Klinikinformationssystem (CIS) + Suffix z.B. "-1" für erste Analyse))
+    -   `mrp_id` (ID des MRP (= ID der Medikationsanalyse + Suffix z.B. "-m1" für erstes dokumentiertes MRP))
+    -   `mrp_pigrund___21` (Indikator, ob das MRP eine Kontraindikation darstellt ("Checked" = ja / "Unchecked" = nein))
+    -   `mrp_dokup_hand_emp_akz` (Ergebnis der Intervention: "Arzt / Pflege informiert", "Intervention vorgeschlagen und umgesetzt", "Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation)", "Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung)", "Intervention vorgeschlagen, Umsetzung unbekannt", "Problem nicht gelöst")
+    -   `mrpdokumentation_validierung_complete` (Form Status der MRP-Dokumentation, z.B. "Complete" für abgeschlossene Dokumentation, "Incomplete" für unvollständige Dokumentation, "Unverified" für ungültige z.B. versehentliche Anlage?)
+-   stoppt das Skript wenn kein Datensatz gefunden wurde

@@ -143,13 +143,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     lock_id = "statistical reports[6]",
     table_name = "v_medikationsanalyse_fe"
   )
-  # --> this table shows only the last version of each medikationsanalyse_fe entry
+  # --> this table should show only the last version of each medikationsanalyse_fe entry
 
   mrp_dokumentation_validierung_fe_table <- getMRPDokumentationValidierungFeData(
     lock_id = "statistical reports[7]",
     table_name = "v_mrpdokumentation_validierung_fe"
   )
-  # --> this table shows only the last version of each mrp_dokumentation_validierung_fe entry
+  # --> this table should show only the last version of each mrp_dokumentation_validierung_fe entry
 
   FHIR_table <- mergePatEnc(patient_table, encounter_table) |>
     addCuratedEncPeriodEnd() |>
@@ -185,6 +185,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   if (WRITE_TABLE_LOCAL) {
     writeHtmlTable(patient_table)
     writeHtmlTable(encounter_table)
+    writeHtmlTable(pids_per_ward_table)
     writeHtmlTable(FHIR_table)
     writeHtmlTable(full_analysis_set_1)
     writeHtmlTable(statistical_report_data)
