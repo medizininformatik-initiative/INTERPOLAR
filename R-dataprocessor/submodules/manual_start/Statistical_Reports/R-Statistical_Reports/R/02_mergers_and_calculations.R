@@ -19,6 +19,7 @@
 #' 1. Extracts the `pat_id` from the `enc_patient_ref` string in the `encounter_table`.
 #' 2. Performs a left join between the encounter table and the patient table using `pat_id` as the key.
 #' 3. Adds suffixes to overlapping column names (`_enc`, `_pat`) to distinguish their origin.
+#' 4. Merges the `processing_exclusion_reason` from both tables, prioritizing the patient-level reason
 #'
 #' This merged dataset is used for further filtering, enrichment, or analysis involving both patient
 #' and encounter context.
@@ -34,7 +35,8 @@ mergePatEnc <- function(patient_table, encounter_table) {
         dplyr::select(c(
           pat_id, pat_identifier_value, pat_birthdate,
           processing_exclusion_reason
-        )),
+        )) |>
+        dplyr::distinct(),
       by = "pat_id", suffix = c("_enc", "_pat")
     ) |>
     dplyr::mutate(
@@ -157,48 +159,6 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #' @importFrom dplyr mutate case_when relocate
 #' @export
 addMainEncId <- function(encounter_table) {
-  if (any(!is.na(encounter_table$enc_type_code_Kontaktebene) &
-    encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" &
-    is.na(encounter_table$enc_partof_calculated_ref) &
-    is.na(encounter_table$enc_identifier_value))) {
-    encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        enc_type_code_Kontaktebene != "einrichtungskontakt" &
-          is.na(enc_partof_calculated_ref) & is.na(enc_identifier_value) &
-          is.na(processing_exclusion_reason),
-        "No_enc_partof_calculated_ref_or_enc_identifier_value_for_non_einrichtungskontakt",
-        processing_exclusion_reason
-      ))
-    print(encounter_table |>
-      dplyr::filter(enc_type_code_Kontaktebene != "einrichtungskontakt" &
-        is.na(enc_partof_calculated_ref) & is.na(enc_identifier_value)), width = Inf)
-    warning("Some encounters of type other than 'einrichtungskontakt' have no parent reference or
-    identifier value. Main_enc_id not defined. Please check the data.")
-  }
-
-  if (checkMultipleRows(
-    (encounter_table |>
-      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
-      dplyr::distinct(enc_id, enc_identifier_value)),
-    c("enc_identifier_value")
-  )) {
-    warning("Multiple 'einrichtungskontakt' enc_ids found for the same enc_identifier_value.
-            Main_enc_id not defined. Please check the data.
-            (CAUTION!: processing_exclusion_reason not yet implemented in this case. Further processing is tried.)")
-  }
-
-  if (checkMultipleRows(
-    (encounter_table |>
-      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
-      dplyr::distinct(enc_id, enc_identifier_value)),
-    c("enc_id")
-  )) {
-    warning("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id.
-            Main_enc_id not defined. Please check the data and eventually define
-            COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.
-            (CAUTION!: processing_exclusion_reason not yet implemented in this case. Further processing is tried.)")
-  }
-
   encounter_table_with_main_enc <- encounter_table |>
     dplyr::left_join(
       encounter_table |>
@@ -227,7 +187,11 @@ addMainEncId <- function(encounter_table) {
       }
     )) |>
     dplyr::select(-enc_id_einrichtungskontakt) |>
-    dplyr::relocate(main_enc_id, .after = enc_id)
+    # use new calculation from cds-toolchain
+    dplyr::rename(main_enc_id_initial_try = main_enc_id) |>
+    dplyr::mutate(main_enc_id = sub("^Encounter/", "", enc_main_encounter_calculated_ref), .keep = "unused") |>
+    dplyr::relocate(main_enc_id, main_enc_id_initial_try, .after = enc_id) |>
+    dplyr::distinct()
 
   return(encounter_table_with_main_enc)
 }

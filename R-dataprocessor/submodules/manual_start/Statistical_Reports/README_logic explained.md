@@ -1,16 +1,17 @@
 ---
-output: html_document
+output: 
+  html_document: 
+    toc: true
+    toc_depth: 4
 ---
 
 # "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienfortschritts
 
-## Logik hinter den Kennzahlen detailliert erklärt
-
-## (work in progress)
+## Logik hinter den Kennzahlen detailliert erklärt (work in progress)
 
 ### 1. Laden und Filtern der Daten sowie Warnungen bei unerwarteten Datenkonstellationen
 
-#### `getPatientData` (`v_patient_last_version`)
+#### `getPatientData` (`v_patient_last_version`) --\> patient_table
 
 Ziel: lade die für INTERPOLAR relevanten Patienten und erhalte für jeden Patienten eine Zeile mit zugehöriger eindeutiger `pat_id` (FHIR) und `pat_identifier_value` (CIS) sowie seinem Geburtsdatum. ID und Identifier dienen dem Mapping auf Daten des Patienten aus anderen Datenbanktabellen. Das Geburtsdatum wird benötigt, um das Alter des Patienten bei Krankenhausaufnahme des für INTERPOLAR relevanten Falls zu berechnen.
 
@@ -39,7 +40,7 @@ mögliche Optimierungen:
 -   wurden wichtige Variablen zur Identifizierung vergessen?
 -   gibt es Gründe warum trotz der Filterung noch mehrere Zeilen pro Patient existieren?
 
-#### `getEncounterData` (`v_encounter_last_version`)
+#### `getEncounterData` (`v_encounter_last_version`) --\> encounter_table
 
 Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere auf die für INTERPOLAR und die MRP-Dokumentation relevante Fälle.
 
@@ -49,6 +50,7 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
     -   `enc_identifier_value` (Fallidentifikator im Klinikinformationssystem (CIS))
     -   `enc_patient_ref` (Referenz auf die FHIR Patienten ID (`pat_id`))
     -   `enc_partof_calculated_ref` (Referenz auf übergeordneten Encounter in der 3-Stufen-Encounter-Hierarchie, falls initial nicht vorhanden, dann berechnet aus Zeitstempeln)
+    -   `enc_main_encounter_calculated_ref` (berechnete Referenz auf den Haupt-Encounter in der 3-Stufen-Encounter-Hierarchie)
     -   `enc_class_code` (Encounter-Klasse, z.B. "IMP" für stationär)
     -   `enc_type_code` (Encounter-Typ, kann Kontaktebene (z.B. "versorgungsstellenkontakt"") oder Kontaktart (z.B. "normalstationaer") beinhalten)
     -   `enc_type_system` (System des FHIR Encounter-Typs, definiert ob Kontaktart oder Kontaktebene)
@@ -77,6 +79,9 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
     -   abgeschlossene inpatient encounter mit fehlendem Enddatum (`enc_status` = "finished" and `enc_period_end` is NA) (`processing_exclusion_reason` = "imp_finished_without_end_date")
     -   Encounter mit unerwartetem class_code (not in "AMB", "SS", "IMP") (`processing_exclusion_reason` = "unexpected_class_code")
     -   Encounter mit unbekannter Kontaktart (`processing_exclusion_reason` = "unexpected_kontaktart_code")
+    -   Encounter von Typ "Einrichtungskontakt" mit uneindeutiger `enc_identifier_value` - `enc_id` Kombination (`processing_exclusion_reason` = "multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value" / "multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id")
+    -   fehlende `enc_partof_calculated_ref` bei Abteilungs- oder Versorgungsstellenkontakten (kein processing_exclusion_reason, nur Warnung)
+    -   fehlende berechnete Referenz zum Einrichtungskontakt `enc_main_encounter_calculated_ref` (`processing_exclusion_reason` = "No_enc_main_encounter_calculated_ref")
 
 mögliche Optimierungen:
 
@@ -88,7 +93,7 @@ mögliche Optimierungen:
 -   werden die richtigen Codes herausgefiltert? Finden sie sich auf alle Encounter-Ebenen wider oder nur auf bestimmten?
 -   sind die Stopps und Warnungen so plausibel?
 
-#### `getPidsPerWardData` (`v_pids_per_ward`)
+#### `getPidsPerWardData` (`v_pids_per_ward`) --\> pids_per_ward_table
 
 Ziel: Erkennen, auf welcher INTERPOLAR-Station ein Fall aufgenommen wurde (Erkennen eines Falls auf einer INTERPOLAR-Station über die CDS-Toolchain konfigurierbar) und zu welchem Versorgungsstellenkontakt dieser INTERPOLAR-Fall gehört.
 
@@ -105,7 +110,7 @@ mögliche Optimierungen:
     -   über die pids_per_ward Tabelle (INTERPOLAR-DB) sind die Fälle auf Versorgungsstellenkontakt-Ebene einer Station zugeordnet
     -   encounter_id in pids_per_ward zeigt (unter Anderem) alle INTERPOLAR-Versorgungsstellenkontakte eines Falls
 
-#### `getPatientFeData` (`v_patient_fe` --\> in Erarbeitung: `v_patient_fe_last_version`?)
+#### `getPatientFeData` (`v_patient_fe` --\> in Erarbeitung: `v_patient_fe_last_version`?) --\> patient_fe_table
 
 Ziel: lade die für das Reporting relevanten Patienten-Daten aus der Frontend-Tabelle, um das Mapping zu weiteren Daten des Patienten zu vorzunehmen und ein Abgleich zwischen Frontend und FHIR-Daten zu ermöglichen.
 
@@ -126,7 +131,7 @@ mögliche Optimierungen:
 -   wurden wichtige Variablen zur Identifizierung vergessen?
 -   gibt es Gründe warum trotz der Filterung noch mehrere Zeilen pro Patient existieren?
 
-#### `getFallFeData` (`v_fall_fe` --\> in Erarbeitung: `v_fall_fe_last_version`?)
+#### `getFallFeData` (`v_fall_fe` --\> in Erarbeitung: `v_fall_fe_last_version`?) --\> fall_fe_table
 
 Ziel: lade die für das Reporting relevanten Fall-Daten aus der Frontend-Tabelle, um das Mapping zu weiteren Daten des Falls vorzunehmen und ein Abgleich zwischen Frontend und FHIR-Daten zu ermöglichen. Weiterhin sind hier die Information über Studienphase, Station und Aufnahmedatum (Einrichtungskontakt) des Falls enthalten.
 
@@ -147,7 +152,7 @@ mögliche Optimierungen:
 -   wurden wichtige Variablen zur Identifizierung vergessen?
 -   ist das fall_additional_value Feld zu Nutzen (z.B. für einfachere Zuordnung Versorgunsgstellenkontakt?)
 
-#### `getMedikationsanalyseFeData` (`v_medikationsanalyse_fe` --\> in Erarbeitung: `v_medikationsanalyse_fe_last_version`)
+#### `getMedikationsanalyseFeData` (`v_medikationsanalyse_fe` --\> in Erarbeitung: `v_medikationsanalyse_fe_last_version`) ---\> medikationsanalyse_fe_table
 
 Ziel: lade die für das Reporting relevanten Medikationsanalyse-Daten aus der Frontend-Tabelle
 
@@ -160,7 +165,7 @@ Ziel: lade die für das Reporting relevanten Medikationsanalyse-Daten aus der Fr
     -   `medikationsanalyse_complete` (Form Status der Medikationsanalyse, z.B. "Complete" für abgeschlossene Analyse, "Incomplete" für unvollständige Analyse, "Unverified" für ungültige z.B. versehentliche Anlage?)
 -   stoppt das Skript wenn kein Datensatz gefunden wurde
 
-#### `getMRPDokumentationValidierungFeData` (`v_mrpdokumentation_validierung_fe` --\> in Erarbeitung: `v_mrpdokumentation_validierung_fe_last_version`)
+#### `getMRPDokumentationValidierungFeData` (`v_mrpdokumentation_validierung_fe` --\> in Erarbeitung: `v_mrpdokumentation_validierung_fe_last_version`) --\> mrp_dokumentation_validierung_fe_table
 
 Ziel: lade die für das Reporting relevanten MRP-Dokumentation Validierungs-Daten aus der Frontend-Tabelle
 
@@ -173,3 +178,31 @@ Ziel: lade die für das Reporting relevanten MRP-Dokumentation Validierungs-Date
     -   `mrp_dokup_hand_emp_akz` (Ergebnis der Intervention: "Arzt / Pflege informiert", "Intervention vorgeschlagen und umgesetzt", "Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation)", "Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung)", "Intervention vorgeschlagen, Umsetzung unbekannt", "Problem nicht gelöst")
     -   `mrpdokumentation_validierung_complete` (Form Status der MRP-Dokumentation, z.B. "Complete" für abgeschlossene Dokumentation, "Incomplete" für unvollständige Dokumentation, "Unverified" für ungültige z.B. versehentliche Anlage?)
 -   stoppt das Skript wenn kein Datensatz gefunden wurde
+
+### 2. Mapping und Kuratieren der Daten unter Ableiten von Zusammenhängen
+
+#### Mapping der FHIR-Tabellen --\> FHIR_table
+
+#### `mergePatEnc`(patient_table, encounter_table)
+
+Ziel: Mappen der Patienten- und Falldaten aufeinander, um für jeden Fall die zugehörigen Patientendaten zu erhalten.
+
+-   führt einen Left-Join der patient_table (Variablen: pat_id, pat_identifier_value, pat_birthdate, processing_exclusion_reason) mit der encounter_table basierend auf der Beziehung `enc_patient_ref` referenziert auf `pat_id` durch
+-   setzt den processing_exclusion_reason auf der Wert aus der patient_table, falls vorhanden, falls nicht auf den Wert aus der encounter_table (NA falls beide nicht vorhanden)
+
+#### `addCuratedEncPeriodEnd`
+
+Ziel: Ergänzen der Falldaten um ein kuratiertes Enddatum für fehlende Enddaten aktiver Fälle
+
+-   erstellt die Variable `enc_period_end_curated`
+    -   falls das Enddatum eines Falls (`enc_period_end`) fehlt & der Status (`enc_status`) "in-progress" ist, wird das Enddatum auf das aktuelle Datum gesetzt (Annahme: Fall läuft noch)
+    -   falls das Enddatum eines Falls (`enc_period_end`) fehlt & der Status (`enc_status`) "onleave" ist, wird das Enddatum auf das Startdatum des Falls (enc_period_start) gesetzt (Fall aktuell nicht auf der Station)
+    -   anderenfalls wird das originale Enddatum (`enc_period_end`) verwendet
+-   daraus folgt: falls das Enddatum eines Falls (`enc_period_end`) fehlt & der Status (`enc_status`) "finished" ist, bleibt das Enddatum leer (NA) (Warnung wird bereits in getEncounterData generiert)
+-   falls aus diesem oder sonstigem Grund das kuratierte Enddatum fehlt wird hier (nochmals) eine Warnung generiert (processing_exclusion_reason = "NA_in_curated_enc_period_end") sowie der betroffene Datensatz ausgegeben
+
+#### `addMainEncId`
+
+Ziel: Ergänzen der Falldaten um die ID des Haupt-Encounters in der 3-Stufen-Encounter-Hierarchie (wichtig z.B. zur Ermittlung des Aufnahmedatums des Haupt-Falls (wichtig für Alter bei Aufnahme), sowie für weiteres Mapping zu Frontend Daten)
+
+-   Extrahiere die main_enc_id aus enc_main_encounter_calculated_ref (löst frühere Logik (`main_enc_id_initial_try`) ab)

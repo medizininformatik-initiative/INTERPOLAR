@@ -114,7 +114,8 @@ getPatientData <- function(lock_id, table_name) {
 #'
 #' @param table_name A character string specifying the name of the database table to query.
 #'   The table must contain the following columns:
-#'   - `enc_id`, `enc_identifier_value`, `enc_patient_ref`, `enc_partof_calculated_ref`
+#'   - `enc_id`, `enc_identifier_value`, `enc_patient_ref`
+#'   - `enc_partof_calculated_ref`, `enc_main_encounter_calculated_ref`
 #'   - `enc_class_code`
 #'   - `enc_type_system`, `enc_type_code`
 #'   - `enc_period_start`, `enc_period_end`, `enc_status`
@@ -156,7 +157,8 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   query <- paste0(
     "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
     "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-    "enc_identifier_system, enc_type_system ",
+    "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
+
     "FROM ", table_name, "\n"
   )
 
@@ -347,6 +349,77 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
       )) &
         !is.na(enc_type_code_Kontaktart)), width = Inf)
     warning("The encounter table contains type codes for Kontaktart with unexpected values.
+            Please check the data.")
+  }
+
+  if (checkMultipleRows(
+    (encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::distinct(enc_id, enc_identifier_value)),
+    c("enc_identifier_value")
+  )) {
+    warning("Multiple enc_ids found for the same 'einrichtungskontakt' enc_identifier_value. Please check the data.")
+    encounter_table <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::distinct(enc_id, enc_identifier_value, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
+      addMultipleRowsProcessingExclusionReason(
+        c("enc_identifier_value"),
+        "multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value"
+      ) |>
+      dplyr::distinct(enc_identifier_value, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
+      dplyr::right_join(encounter_table, by = c("enc_identifier_value", "enc_type_code_Kontaktebene")) |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(processing_exclusion_reason.y),
+        processing_exclusion_reason.x,
+        processing_exclusion_reason.y
+      ), .keep = "unused") |>
+      dplyr::distinct()
+  }
+
+  if (checkMultipleRows(
+    (encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::distinct(enc_id, enc_identifier_value)),
+    c("enc_id")
+  )) {
+    warning("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id. Please check the data.")
+    encounter_table <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::distinct(enc_id, enc_identifier_value, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
+      addMultipleRowsProcessingExclusionReason(
+        c("enc_id"),
+        "multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id"
+      ) |>
+      dplyr::distinct(enc_id, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
+      dplyr::right_join(encounter_table, by = c("enc_id", "enc_type_code_Kontaktebene")) |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(processing_exclusion_reason.y),
+        processing_exclusion_reason.x,
+        processing_exclusion_reason.y
+      ), .keep = "unused") |>
+      dplyr::distinct()
+  }
+
+  if (any(!is.na(encounter_table$enc_type_code_Kontaktebene) &
+    encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" &
+    is.na(encounter_table$enc_partof_calculated_ref))) {
+    print(encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene != "einrichtungskontakt" &
+        is.na(enc_partof_calculated_ref)), width = Inf)
+    warning("Some encounters of type other than 'einrichtungskontakt' have no calculated parent
+            reference. Please check the data.")
+  }
+
+  if (any(is.na(encounter_table$enc_main_encounter_calculated_ref))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(enc_main_encounter_calculated_ref) & is.na(processing_exclusion_reason),
+        "no_enc_main_encounter_calculated_ref",
+        processing_exclusion_reason
+      ))
+    print(encounter_table |>
+      dplyr::filter(is.na(enc_main_encounter_calculated_ref)), width = Inf)
+    warning("Some encounters have no calculated main encounter reference, main_enc_id cannot be defined.
             Please check the data.")
   }
 
