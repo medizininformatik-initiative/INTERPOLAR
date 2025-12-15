@@ -348,3 +348,79 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
     dplyr::distinct()
   return(data)
 }
+# DEBUG Section ----------------------------------------------------------
+
+DEBUG_TEST_REPORTING_WARNINGS <- FALSE
+
+if (DEBUG_TEST_REPORTING_WARNINGS) {
+  createEncounerDataWarningSituations <- function(encounter_table) {
+    missing_start_date_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt") |>
+      dplyr::slice(1) |>
+      dplyr::mutate(enc_period_start = as.POSIXct(NA))
+
+    missing_kontaktebene_for_imp_encounter_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::filter(enc_class_code == "IMP") |>
+      dplyr::slice(2) |>
+      dplyr::mutate(enc_type_code_Kontaktebene = as.character(NA))
+
+    unexpected_imp_status_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::filter(enc_class_code == "IMP") |>
+      dplyr::slice(3) |>
+      dplyr::mutate(enc_status = "test_status")
+
+    imp_finished_without_end_date_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::filter(enc_class_code == "IMP") |>
+      dplyr::slice(4) |>
+      dplyr::mutate(enc_status = "finished", enc_period_end = as.POSIXct(NA))
+
+    unexpected_class_code_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "abteilungskontakt") |>
+      dplyr::slice(5) |>
+      dplyr::mutate(enc_class_code = "TEST")
+
+    unexpected_kontaktart_code_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::slice(6) |>
+      dplyr::mutate(enc_type_code_Kontaktart = "TEST_KONTAKTART")
+
+    multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::slice(7) |>
+      dplyr::mutate(enc_identifier_value = paste0(enc_identifier_value, "-test"))
+
+    multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::slice(8) |>
+      dplyr::mutate(
+        enc_id = paste0(enc_id, "-test"),
+        enc_main_encounter_calculated_ref = paste0(enc_main_encounter_calculated_ref, "-test")
+      )
+
+    no_enc_main_encounter_calculated_ref_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::slice(9) |>
+      dplyr::mutate(enc_main_encounter_calculated_ref = as.character(NA))
+
+    check_encounter_table <- missing_start_date_check |>
+      rbind(missing_kontaktebene_for_imp_encounter_check) |>
+      rbind(unexpected_imp_status_check) |>
+      rbind(imp_finished_without_end_date_check) |>
+      rbind(unexpected_class_code_check) |>
+      rbind(unexpected_kontaktart_code_check) |>
+      rbind(no_enc_main_encounter_calculated_ref_check)
+
+    check_encounter_table_enc_ids <- check_encounter_table$enc_id
+
+    encounter_table <- encounter_table |>
+      dplyr::filter(!enc_id %in% check_encounter_table_enc_ids) |>
+      rbind(check_encounter_table) |>
+      rbind(multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id_check) |>
+      rbind(multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value_check)
+
+    return(encounter_table)
+  }
+}

@@ -230,7 +230,12 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
       dplyr::filter(is.na(enc_period_start)), width = Inf)
     warning("The encounter table contains NA values in enc_period_start.
             Relevant encounter data may be missed. Please check the data")
+  # DEBUG - CHECK Warnings-------------------------------
+  # change one row for each processing_exclusion_reason with different changes to test the warnings
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    encounter_table <- createEncounerDataWarningSituations(encounter_table)
   }
+  # DEBUG -------------------------------
 
   if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
     (is.na(encounter_table$enc_type_code_Kontaktebene)))) {
