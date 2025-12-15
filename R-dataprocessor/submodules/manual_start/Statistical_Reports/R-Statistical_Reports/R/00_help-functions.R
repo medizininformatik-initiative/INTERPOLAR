@@ -348,6 +348,47 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
     dplyr::distinct()
   return(data)
 }
+
+#' Check for Missing Encounter Start Dates
+#'
+#' Checks an encounter table for missing values in `enc_period_start` and marks
+#' affected rows with a processing exclusion reason. A warning is issued if any
+#' missing start dates are detected.
+#'
+#' @param encounter_table A data.frame containing encounter-level data.
+#'   Must include the columns `enc_period_start` and `processing_exclusion_reason`.
+#'
+#' @return A data.frame identical to `encounter_table`, but with
+#'   `processing_exclusion_reason` set to `"missing_start_date"` for rows where
+#'   `enc_period_start` is `NA` and no exclusion reason was previously defined.
+#'
+#' @details
+#' If at least one missing value is found in `enc_period_start`, the function:
+#' \enumerate{
+#'   \item Assigns `"missing_start_date"` to `processing_exclusion_reason`
+#'         where it is currently `NA`
+#'   \item Prints affected rows to the console
+#'   \item Emits a warning indicating potential data loss
+#' }
+#'
+#' This function does not stop execution and always returns the modified table.
+#'
+#' @importFrom dplyr mutate if_else filter
+#' @export
+CheckMissingStartDate <- function(encounter_table) {
+  if (any(is.na(encounter_table$enc_period_start))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(enc_period_start) &
+        is.na(processing_exclusion_reason), "missing_start_date", processing_exclusion_reason))
+    print(encounter_table |>
+      dplyr::filter(is.na(enc_period_start)), width = Inf)
+    warning("The encounter table contains NA values in enc_period_start.
+            Relevant encounter data may be missed. Please check the data")
+  }
+  return(encounter_table)
+}
+
+
 # DEBUG Section ----------------------------------------------------------
 
 DEBUG_TEST_REPORTING_WARNINGS <- FALSE

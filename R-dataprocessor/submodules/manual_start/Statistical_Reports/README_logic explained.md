@@ -72,8 +72,8 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
     -   erstellt Warnungen, wenn System oder Code unbekannt oder uneindeutig sind (sichtbar in `processing_exclusion_reason` = "undefined_kontaktebene_or_kontaktart")
 -   filtert Fälle mit Kontaktart "begleitperson" heraus, da diese für INTERPOLAR nicht relevant sind
 -   stoppt das Skript wenn kein Falldatensatz gefunden wurde oder wenn keinerlei Einrichtungskontakte oder Versorgungsstellenkontakte identifiziert wurden
--   gibt Warnungen für:
-    -   fehlende Startdaten (`enc_period_start` is NA) in `processing_exclusion_reason` = "missing_start_date"
+-   nachfolgende Funktionen geben Warnungen für:
+    -   `CheckMissingStartDate`: fehlende Startdaten (`enc_period_start` is NA) in `processing_exclusion_reason` = "missing_start_date"
     -   inpatient encounter (`enc_class_code` = "IMP") mit fehlender Kontaktebene (`processing_exclusion_reason` = "missing_kontaktebene_for_imp_encounter")
     -   inpatient encounter mit fehlender oder unerwartetem Status (`enc_status` not in "in-progress", "onleave", "finished") (`processing_exclusion_reason` = "unexpected_imp_status")
     -   abgeschlossene inpatient encounter mit fehlendem Enddatum (`enc_status` = "finished" and `enc_period_end` is NA) (`processing_exclusion_reason` = "imp_finished_without_end_date")

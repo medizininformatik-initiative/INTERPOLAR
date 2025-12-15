@@ -115,7 +115,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     lock_id = "statistical reports[2]",
     table_name = "v_encounter_last_version",
     report_period_start = REPORT_PERIOD_START
-  )
+  ) |> CheckMissingStartDate()
+
   # this table can have multiple rows per encounter
 
   pids_per_ward_table <- getPidsPerWardData(
