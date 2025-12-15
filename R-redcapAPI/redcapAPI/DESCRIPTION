@@ -1,7 +1,7 @@
 Package: redcapAPI
 Type: Package
-Title: Interface to 'REDCap'
-Version: 2.11.5.9000
+Title: Interface to 'REDCap' with CSV delimiter fixes
+Version: 2.11.5.9000-1
 Authors@R: c(
     person("Benjamin", "Nutter", email = "benjamin.nutter@gmail.com", 
            role = c("ctb", "aut")),
