@@ -64,8 +64,13 @@ RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-cds2db/cds2db
 
 RUN apt-get install -y libsodium-dev libsecret-1-0
 
-RUN /rocker_scripts/bin/install2.r -n $NCPUS redcapAPI
 RUN /rocker_scripts/bin/install2.r -n $NCPUS dplyr
+
+COPY R-redcapAPI R-redcapAPI
+
+RUN R CMD build R-redcapAPI/redcapAPI
+
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-redcapAPI/redcapAPI
 
 COPY R-db2frontend R-db2frontend
 
