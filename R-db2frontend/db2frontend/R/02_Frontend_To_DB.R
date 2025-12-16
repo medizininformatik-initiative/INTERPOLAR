@@ -22,9 +22,6 @@ importRedcap2DB <- function() {
 
   tables2Export <- list()
 
-  # get the CSV delimiter
-  csv_delimiter <- if (etlutils::isDefinedAndNotEmpty("REDCAP_CSV_DELIMITER")) REDCAP_CSV_DELIMITER else ","
-
   # Get data from REDCap
   for (i in seq_along(form_names)) {
     form_name <- form_names[i]
@@ -33,7 +30,7 @@ importRedcap2DB <- function() {
     # Aktuelle Lösung: Die Tabellen Risikofaktoren und Trigger werden nicht in das Frontend importiert.
     # Ob diese Instanzen überhaupt eine Relevanz haben, muss noch geklärt werden.
     if (!(form_name %in% c("risikofaktor", "trigger"))) {
-      data_from_redcap <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name, csv_delimiter = csv_delimiter))
+      data_from_redcap <- data.table::setDT(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name))
 
       # Remove the redcap_data_access_group values, as they are not needed in the database
       data_from_redcap[, redcap_data_access_group := NA]
