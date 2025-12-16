@@ -2,7 +2,7 @@
 #' @order 1
 #' @export
 
-exportProjectInformation <- function(rcon, 
+exportProjectInformation <- function(rcon,
                                      ...){
   UseMethod("exportProjectInformation")
 }
@@ -11,28 +11,29 @@ exportProjectInformation <- function(rcon,
 #' @order 3
 #' @export
 
-exportProjectInformation.redcapApiConnection <- function(rcon, 
+exportProjectInformation.redcapApiConnection <- function(rcon,
                                                          ...)
 {
    ##################################################################
   # Argument Validation
-  
+
   coll <- checkmate::makeAssertCollection()
-  
+
   checkmate::assert_class(x = rcon,
                           classes = "redcapApiConnection",
                           add = coll)
 
   checkmate::reportAssertions(coll)
-  
+
    ##################################################################
   # Make the Body List
-  
+
   body <- list(content = 'project',
                format = 'csv',
-               returnFormat = 'csv')
+               returnFormat = 'csv',
+               csvDelimiter = rcon$csv_delimiter_api())
 
    ##################################################################
   # Call the API
-  as.data.frame(makeApiCall(rcon, body, ...))
+  as.data.frame(makeApiCall(rcon, body, ...), sep = rcon$csv_delimiter())
 }
