@@ -99,21 +99,6 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
     )) |>
     dplyr::relocate(curated_enc_period_end, .after = enc_period_end)
 
-  if (any(is.na(encounter_table_with_curated_enc_period_end$curated_enc_period_end))) {
-    encounter_table_with_curated_enc_period_end <- encounter_table_with_curated_enc_period_end |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(curated_enc_period_end) &
-        is.na(processing_exclusion_reason),
-      "NA_in_curated_enc_period_end",
-      processing_exclusion_reason
-      ))
-    print(
-      encounter_table_with_curated_enc_period_end |>
-        dplyr::filter(is.na(curated_enc_period_end)),
-      width = Inf
-    )
-    warning("There are NA values in curated_enc_period_end. Please check the data.")
-  }
-
   return(encounter_table_with_curated_enc_period_end)
 }
 

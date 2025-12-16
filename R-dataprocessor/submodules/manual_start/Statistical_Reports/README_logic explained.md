@@ -30,7 +30,7 @@ Ziel: lade die für INTERPOLAR relevanten Patienten und erhalte für jeden Patie
     -   Wenn keine dieser Filter gesetzt oder aktiv sind (`""` oder Platzhalter `"."`), findet keine Filterung statt
 -   erstellt die Variable `processing_exclusion_reason`, für zukünftige Begründung, warum ein Patient von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten oder Uneindeutigkeit für die Zählung)
 -   stoppt das Skript wenn kein Patientendatensatz gefunden wurde
--   erstellt Warnungen, wenn:
+-   nachfolgende Funktionen geben Warnungen wenn:
     -   mehrere Zeilen für die selbe `pat_id` (FHIR) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_id"`)
     -   mehrere Zeilen für den selben `pat_identifier_value` (CIS) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_identifier_value"`)
 
@@ -121,7 +121,7 @@ Ziel: lade die für das Reporting relevanten Patienten-Daten aus der Frontend-Ta
     -   `record_id` (Frontend Datensatz ID)
 -   legt die Variable `processing_exclusion_reason` an, für zukünftige Begründung, warum ein Patient von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten oder Uneindeutigkeit für die Zählung)
 -   stoppt das Skript wenn kein Datensatz gefunden wurde
--   gibt Warnungen für:
+-   nachfolgende Funktionen geben Warnungen für:
     -   mehrere Zeilen für die selbe `pat_id` (FHIR) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_id_in_fe"`)
     -   mehrere Zeilen für den selben `pat_cis_pid` (CIS) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_identifier_in_fe"`)
 

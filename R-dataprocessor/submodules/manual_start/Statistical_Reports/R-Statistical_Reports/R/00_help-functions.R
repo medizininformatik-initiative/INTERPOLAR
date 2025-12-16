@@ -349,6 +349,78 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
   return(data)
 }
 
+#' Check Multiple Rows per Patient ID
+#'
+#' This function checks whether the patient table contains multiple rows for the
+#' same patient id (`pat_id`).
+#'
+#' If multiple rows are found for the same `pat_id`, a warning is issued and the
+#' function assigns a processing exclusion reason
+#' `"multiple_rows_per_pat_id"` using `addMultipleRowsProcessingExclusionReason`.
+#'
+#' @param patient_table A data frame containing patient-level data. The table
+#'   must include the column `pat_id`.
+#'
+#' @return
+#' A data frame identical to `patient_table`, with `processing_exclusion_reason`
+#' updated for patient IDs that appear in multiple rows.
+#'
+#' @details
+#' Multiple rows per patient ID may indicate duplicated patient entries (e.g. multiple
+#' pat_identifier_value). Flagging these rows ensures that downstream
+#' analyses handle such cases appropriately.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @export
+CheckMultipleRowsPerPatId <- function(patient_table) {
+  if (checkMultipleRows(patient_table, c("pat_id"))) {
+    warning("The patient table contains multiple rows for the same pat_id(FHIR).
+            Please check the data.")
+    patient_table <- patient_table |>
+      addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id")
+  }
+  return(patient_table)
+}
+
+#' Check Multiple Rows per Patient Identifier Value
+#'
+#' This function checks whether the patient table contains multiple rows for the
+#' same patient identifier value (`pat_identifier_value`).
+#'
+#' If multiple rows are found for the same `pat_identifier_value`, a warning is issued
+#' and the function assigns a processing exclusion reason
+#' `"multiple_rows_per_pat_identifier_value"` using `addMultipleRowsProcessingExclusionReason`.
+#'
+#' @param patient_table A data frame containing patient-level data. The table
+#'   must include the column `pat_identifier_value`.
+#'
+#' @return
+#' A data frame identical to `patient_table`, with `processing_exclusion_reason`
+#' updated for patient identifier values that appear in multiple rows.
+#'
+#' @details
+#' Multiple rows per patient identifier value may indicate duplicated patient
+#' entries or issues in data extraction. Flagging these rows ensures that
+#' downstream analyses handle such cases appropriately.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @export
+CheckMultipleRowsPerPatIdentifierValue <- function(patient_table) {
+  if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
+    warning("The patient table contains multiple rows for the same patient identifier (cis).
+            Please check the data.")
+    patient_table <- patient_table |>
+      addMultipleRowsProcessingExclusionReason(
+        c("pat_identifier_value"),
+        "multiple_rows_per_pat_identifier_value"
+      )
+  }
+  return(patient_table)
+}
+
+
 #' Check for Missing Encounter Start Dates
 #'
 #' Checks an encounter table for missing values in `enc_period_start` and marks
@@ -918,11 +990,157 @@ CheckEncountersWithoutCalculatedMainEncounterRef <- function(encounter_table) {
   return(encounter_table)
 }
 
+#' Check for Multiple Rows per Patient ID in FE Table
+#'
+#' This function checks whether the patient FE (Front-End) table contains
+#' multiple rows for the same `pat_id` (FHIR identifier).
+#'
+#' If multiple rows are found for a `pat_id`, a warning is issued and the
+#' `processing_exclusion_reason` column is updated with
+#' `"multiple_rows_per_pat_id_in_fe"` for the affected rows.
+#'
+#' @param patient_fe_table A data frame containing patient-level FE data.
+#'   The table must include the column `pat_id` and
+#'   `processing_exclusion_reason`.
+#'
+#' @return
+#' A data frame identical to `patient_fe_table`, with `processing_exclusion_reason`
+#' updated for rows where multiple entries exist for the same `pat_id`.
+#'
+#' @details
+#' Having multiple rows per `pat_id` may indicate duplicate records or data
+#' inconsistencies. This function flags such cases to ensure downstream
+#' analyses handle them appropriately.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @export
+CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
+  if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
+    patient_fe_table <- patient_fe_table |>
+      addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id_in_fe")
+    warning("The patient_fe table contains multiple rows for the same pat_id(FHIR).
+            Please check the data.")
+  }
+  return(patient_fe_table)
+}
+
+
+#' Check for Multiple Rows per Patient Identifier in FE Table
+#'
+#' This function checks whether the patient FE (Front-End) table contains
+#' multiple rows for the same `pat_cis_pid` (CIS patient identifier).
+#'
+#' If multiple rows are found for a `pat_cis_pid`, a warning is issued and the
+#' `processing_exclusion_reason` column is updated with
+#' `"multiple_rows_per_pat_identifier_in_fe"` for the affected rows.
+#'
+#' @param patient_fe_table A data frame containing patient-level FE data.
+#'   The table must include the columns `pat_cis_pid` and
+#'   `processing_exclusion_reason`.
+#'
+#' @return
+#' A data frame identical to `patient_fe_table`, with `processing_exclusion_reason`
+#' updated for rows where multiple entries exist for the same `pat_cis_pid`.
+#'
+#' @details
+#' Having multiple rows per `pat_cis_pid` may indicate duplicate records or data
+#' inconsistencies. This function flags such cases to ensure downstream
+#' analyses handle them appropriately.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @export
+CheckMultipleRowsPerPatIdentifierInFe <- function(patient_fe_table) {
+  if (checkMultipleRows(patient_fe_table, c("pat_cis_pid"))) {
+    patient_fe_table <- patient_fe_table |>
+      addMultipleRowsProcessingExclusionReason(
+        c("pat_cis_pid"),
+        "multiple_rows_per_pat_identifier_in_fe"
+      )
+    warning("The patient_fe table contains multiple rows for the same patient identifier (cis).
+            Please check the data.")
+  }
+  return(patient_fe_table)
+}
+
+#' Check for NA Values in Curated Encounter Period End
+#'
+#' This function checks whether the encounter table contains `NA` values
+#' in the `curated_enc_period_end` column.
+#'
+#' If any `NA` values are found, a warning is issued and the function assigns a
+#' processing exclusion reason `"NA_in_curated_enc_period_end"` for those rows.
+#'
+#' @param encounter_table_with_curated_enc_period_end A data frame containing
+#'   encounter-level data. The table must include the column
+#'   `curated_enc_period_end` and `processing_exclusion_reason`.
+#'
+#' @return
+#' A data frame identical to `encounter_table_with_curated_enc_period_end`,
+#' with `processing_exclusion_reason` updated for rows where
+#' `curated_enc_period_end` is `NA`.
+#'
+#' @details
+#' NA values in `curated_enc_period_end` indicate that the encounter end date
+#' could not be determined or was missing in the source data. Flagging these
+#' rows ensures downstream analyses handle such cases appropriately.
+#'
+#' @importFrom dplyr mutate filter
+#'
+#' @export
+CheckNAInCuratedEncPeriodEnd <- function(encounter_table_with_curated_enc_period_end) {
+  if (any(is.na(encounter_table_with_curated_enc_period_end$curated_enc_period_end))) {
+    encounter_table_with_curated_enc_period_end <- encounter_table_with_curated_enc_period_end |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(curated_enc_period_end) &
+        is.na(processing_exclusion_reason),
+      "NA_in_curated_enc_period_end",
+      processing_exclusion_reason
+      ))
+    print(
+      encounter_table_with_curated_enc_period_end |>
+        dplyr::filter(is.na(curated_enc_period_end)),
+      width = Inf
+    )
+    warning("There are NA values in curated_enc_period_end. Please check the data.")
+  }
+  return(encounter_table_with_curated_enc_period_end)
+}
+
 # DEBUG Section ----------------------------------------------------------
 
 DEBUG_TEST_REPORTING_WARNINGS <- FALSE
 
 if (DEBUG_TEST_REPORTING_WARNINGS) {
+  createPatientDataWarningsSituations <- function(patient_table) {
+    multiple_rows_per_pat_id_check_system <- patient_table |>
+      dplyr::slice(6) |>
+      dplyr::mutate(pat_identifier_system = paste0(pat_identifier_system, "-test"))
+
+    multiple_rows_per_pat_id_check_type_system <- patient_table |>
+      dplyr::slice(7) |>
+      dplyr::mutate(pat_identifier_type_system = paste0(pat_identifier_type_system, "-test"))
+
+    multiple_rows_per_pat_id_check_type_code <- patient_table |>
+      dplyr::slice(8) |>
+      dplyr::mutate(pat_identifier_type_code = paste0(pat_identifier_type_code, "-test"))
+
+    multiple_rows_per_pat_identifier_value_check <- patient_table |>
+      dplyr::slice(9) |>
+      dplyr::mutate(pat_id = paste0(pat_id, "-test"))
+
+    check_patient_table <- multiple_rows_per_pat_id_check_system |>
+      rbind(multiple_rows_per_pat_id_check_type_system) |>
+      rbind(multiple_rows_per_pat_id_check_type_code) |>
+      rbind(multiple_rows_per_pat_identifier_value_check)
+
+    patient_table <- patient_table |>
+      rbind(check_patient_table) |>
+      dplyr::arrange(pat_id)
+
+    return(patient_table)
+  }
+
   createEncounerDataWarningSituations <- function(encounter_table) {
     missing_start_date_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt") |>

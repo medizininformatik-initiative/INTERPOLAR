@@ -37,10 +37,8 @@
 #' - `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM`
 #' - `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE`
 #' 3. filters unique entries for the selected variables and sorts the data by `pat_id`.
-#' 4. Checks for potential duplicates in:
-#'    - `pat_id`: should uniquely identify patients in FHIR
-#'    - `pat_identifier_value`: should uniquely identify patients in the hospital system
-#'    If duplicates are found, warnings are issued for manual inspection.
+#' 4. Adds a `processing_exclusion_reason` column initialized with `NA` to log any processing exclusions.
+#' 5. Checks if the resulting data frame is empty and raises an error if so.
 #'
 #' @importFrom dplyr distinct arrange filter
 #' @export
@@ -51,8 +49,17 @@ getPatientData <- function(lock_id, table_name) {
     "FROM ", table_name, "\n"
   )
 
-  patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
-    dplyr::distinct() |>
+  patient_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct()
+
+  # DEBUG -------------------------------
+  # duplicate patient entries with different identifier systems/types to test the warnings
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    patient_table_raw <- createPatientDataWarningsSituations(patient_table_raw)
+  }
+  # DEBUG -------------------------------
+
+  patient_table <- patient_table_raw |>
     dplyr::filter(
       (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
         !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "") &
@@ -78,23 +85,6 @@ getPatientData <- function(lock_id, table_name) {
 
   if (nrow(patient_table) == 0) {
     stop("The patient table is empty. Please check the data.")
-  }
-
-  if (checkMultipleRows(patient_table, c("pat_id"))) {
-    warning("The patient table contains multiple rows for the same pat_id(FHIR).
-            Please check the data.")
-    patient_table <- patient_table |>
-      addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id")
-  }
-
-  if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
-    warning("The patient table contains multiple rows for the same patient identifier (cis).
-            Please check the data.")
-    patient_table <- patient_table |>
-      addMultipleRowsProcessingExclusionReason(
-        c("pat_identifier_value"),
-        "multiple_rows_per_pat_identifier_value"
-      )
   }
 
   return(patient_table)
@@ -222,7 +212,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     implementation of enc_class_code, enc_status, enc_type_code and enc_type_system.")
   }
 
-  # DEBUG - CHECK Warnings-------------------------------
+  # DEBUG -------------------------------
   # change one row for each processing_exclusion_reason with different changes to test the warnings
   if (DEBUG_TEST_REPORTING_WARNINGS) {
     encounter_table <- createEncounerDataWarningSituations(encounter_table)
@@ -326,23 +316,6 @@ getPatientFeData <- function(lock_id, table_name) {
 
   if (nrow(patient_fe_table) == 0) {
     stop("The patient_fe table is empty. Please check the data.")
-  }
-
-  if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
-    patient_fe_table <- patient_fe_table |>
-      addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id_in_fe")
-    warning("The patient_fe table contains multiple rows for the same pat_id(FHIR).
-            Please check the data.")
-  }
-
-  if (checkMultipleRows(patient_fe_table, c("pat_cis_pid"))) {
-    patient_fe_table <- patient_fe_table |>
-      addMultipleRowsProcessingExclusionReason(
-        c("pat_cis_pid"),
-        "multiple_rows_per_pat_identifier_in_fe"
-      )
-    warning("The patient_fe table contains multiple rows for the same patient identifier (cis).
-            Please check the data.")
   }
 
   return(patient_fe_table)

@@ -108,7 +108,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   patient_table <- getPatientData(
     lock_id = "statistical reports[1]",
     table_name = "v_patient_last_version"
-  )
+  ) |>
+    CheckMultipleRowsPerPatId() |>
+    CheckMultipleRowsPerPatIdentifierValue()
   # --> this table should only have one entry per patient (warning if not)
 
   encounter_table <- getEncounterData(
@@ -126,8 +128,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     CheckMultipleEinrichtungskontaktEncIdentifierValuesForSameEncId() |>
     CheckEncountersWithoutCalculatedParentRef() |>
     CheckEncountersWithoutCalculatedMainEncounterRef()
-
-  # this table can have multiple rows per encounter
+  # --> this table can have multiple rows per encounter
 
   pids_per_ward_table <- getPidsPerWardData(
     lock_id = "statistical reports[3]",
@@ -140,7 +141,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   patient_fe_table <- getPatientFeData(
     lock_id = "statistical reports[4]",
     table_name = "v_patient_fe"
-  )
+  ) |>
+    CheckMultipleRowsPerPatIdInFe() |>
+    CheckMultipleRowsPerPatIdentifierInFe()
   # --> this table should only have one entry per patient (warning if not)
 
   fall_fe_table <- getFallFeData(
@@ -164,6 +167,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   FHIR_table <- mergePatEnc(patient_table, encounter_table) |>
     addCuratedEncPeriodEnd() |>
+    CheckNAInCuratedEncPeriodEnd() |>
     addMainEncId() |>
     addMainEncPeriodStart() |>
     calculateAge() |>
