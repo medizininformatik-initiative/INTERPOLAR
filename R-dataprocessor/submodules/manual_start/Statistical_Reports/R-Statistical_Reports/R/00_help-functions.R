@@ -1113,76 +1113,97 @@ DEBUG_TEST_REPORTING_WARNINGS <- FALSE
 
 if (DEBUG_TEST_REPORTING_WARNINGS) {
   createPatientDataWarningsSituations <- function(patient_table) {
+    # all three identifier fields not matching
+    patient_fhir_identifier_filter_check <- patient_table |>
+      dplyr::filter(pat_id == "UKB-0001_1") |>
+      dplyr::mutate(
+        pat_identifier_system = paste0(pat_identifier_system, "-test"),
+        pat_identifier_type_system = paste0(pat_identifier_type_system, "-test"),
+        pat_identifier_type_code = paste0(pat_identifier_type_code, "-test")
+      )
+    # only one of the three identifier fields not matching (stays in the data, OR logic)
     multiple_rows_per_pat_id_check_system <- patient_table |>
-      dplyr::slice(6) |>
+      dplyr::filter(pat_id == "UKB-0001_2") |>
       dplyr::mutate(pat_identifier_system = paste0(pat_identifier_system, "-test"))
 
     multiple_rows_per_pat_id_check_type_system <- patient_table |>
-      dplyr::slice(7) |>
+      dplyr::filter(pat_id == "UKB-0001_3") |>
       dplyr::mutate(pat_identifier_type_system = paste0(pat_identifier_type_system, "-test"))
 
     multiple_rows_per_pat_id_check_type_code <- patient_table |>
-      dplyr::slice(8) |>
+      dplyr::filter(pat_id == "UKB-0001_4") |>
       dplyr::mutate(pat_identifier_type_code = paste0(pat_identifier_type_code, "-test"))
-
+    # multiple pat_ids for one identiifer
     multiple_rows_per_pat_identifier_value_check <- patient_table |>
-      dplyr::slice(9) |>
+      dplyr::filter(pat_id == "UKB-0001_5") |>
       dplyr::mutate(pat_id = paste0(pat_id, "-test"))
 
-    check_patient_table <- multiple_rows_per_pat_id_check_system |>
+    check_patient_table <- patient_fhir_identifier_filter_check |>
+      rbind(multiple_rows_per_pat_id_check_system) |>
       rbind(multiple_rows_per_pat_id_check_type_system) |>
       rbind(multiple_rows_per_pat_id_check_type_code) |>
       rbind(multiple_rows_per_pat_identifier_value_check)
 
     patient_table <- patient_table |>
-      rbind(check_patient_table) |>
-      dplyr::arrange(pat_id)
+      rbind(check_patient_table)
 
     return(patient_table)
   }
 
-  createEncounerDataWarningSituations <- function(encounter_table) {
+  createRawEncounterDataWarningSituations <- function(encounter_table_raw) {
+    common_encounter_fhir_identifier_system_filter_check <- encounter_table_raw |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_6") |>
+      dplyr::mutate(
+        enc_identifier_system = paste0(enc_identifier_system, "-test")
+      )
+    encounter_table_raw <- encounter_table_raw |>
+      rbind(common_encounter_fhir_identifier_system_filter_check)
+
+    return(encounter_table_raw)
+  }
+
+  createEncounterDataWarningSituations <- function(encounter_table) {
     missing_start_date_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt") |>
-      dplyr::slice(1) |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_7") |>
       dplyr::mutate(enc_period_start = as.POSIXct(NA))
 
     missing_kontaktebene_for_imp_encounter_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
       dplyr::filter(enc_class_code == "IMP") |>
-      dplyr::slice(2) |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_7") |>
       dplyr::mutate(enc_type_code_Kontaktebene = as.character(NA))
 
     unexpected_imp_status_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
       dplyr::filter(enc_class_code == "IMP") |>
-      dplyr::slice(3) |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_8") |>
       dplyr::mutate(enc_status = "test_status")
 
     imp_finished_without_end_date_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
       dplyr::filter(enc_class_code == "IMP") |>
-      dplyr::slice(4) |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_9") |>
       dplyr::mutate(enc_status = "finished", enc_period_end = as.POSIXct(NA))
 
     unexpected_class_code_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "abteilungskontakt") |>
-      dplyr::slice(5) |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_9") |>
       dplyr::mutate(enc_class_code = "TEST")
 
     unexpected_kontaktart_code_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
-      dplyr::slice(6) |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_10") |>
       dplyr::mutate(enc_type_code_Kontaktart = "TEST_KONTAKTART")
 
     multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
-      dplyr::slice(7) |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_11") |>
       dplyr::mutate(enc_identifier_value = paste0(enc_identifier_value, "-test"))
 
     multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
-      dplyr::slice(8) |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_12") |>
       dplyr::mutate(
         enc_id = paste0(enc_id, "-test"),
         enc_main_encounter_calculated_ref = paste0(enc_main_encounter_calculated_ref, "-test")
@@ -1190,7 +1211,7 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
 
     no_enc_main_encounter_calculated_ref_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
-      dplyr::slice(9) |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001") |>
       dplyr::mutate(enc_main_encounter_calculated_ref = as.character(NA))
 
     check_encounter_table <- missing_start_date_check |>

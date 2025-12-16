@@ -51,14 +51,12 @@ getPatientData <- function(lock_id, table_name) {
 
   patient_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct()
-
-  # DEBUG -------------------------------
+  # DEBUG START-------------------------------
   # duplicate patient entries with different identifier systems/types to test the warnings
   if (DEBUG_TEST_REPORTING_WARNINGS) {
     patient_table_raw <- createPatientDataWarningsSituations(patient_table_raw)
   }
-  # DEBUG -------------------------------
-
+  # DEBUG END-------------------------------
   patient_table <- patient_table_raw |>
     dplyr::filter(
       (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
@@ -86,7 +84,6 @@ getPatientData <- function(lock_id, table_name) {
   if (nrow(patient_table) == 0) {
     stop("The patient table is empty. Please check the data.")
   }
-
   return(patient_table)
 }
 
@@ -155,6 +152,12 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   encounter_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct()
 
+  # DEBUG START -------------------------------
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    encounter_table_raw <- createRawEncounterDataWarningSituations(encounter_table_raw)
+  }
+  # DEBUG END-------------------------------
+
   if (nrow(encounter_table_raw) == 0) {
     stop("No encounter data downloaded from database. Please check the database.")
   }
@@ -212,12 +215,12 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     implementation of enc_class_code, enc_status, enc_type_code and enc_type_system.")
   }
 
-  # DEBUG -------------------------------
+  # DEBUG START -------------------------------
   # change one row for each processing_exclusion_reason with different changes to test the warnings
   if (DEBUG_TEST_REPORTING_WARNINGS) {
-    encounter_table <- createEncounerDataWarningSituations(encounter_table)
+    encounter_table <- createEncounterDataWarningSituations(encounter_table)
   }
-  # DEBUG -------------------------------
+  # DEBUG END-------------------------------
 
   if (nrow(encounter_table |>
     dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt")) == 0) {
