@@ -130,7 +130,7 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 -   Encounter-Ressources mit status 'planned', 'cancelled', 'entered-in-error' & 'unknown' werden nicht für die Zählungen berücksichtigt
 -   für Encounter-Ressourcen mit status 'onleave' und fehlendem End-Datum, wird für Berechnungen das End-Datum auf deren Start-Datum gesetzt
 -   Encounter-Ressourcen mit class_code 'PRENC', 'VR', 'HH' werden nicht für die Zählungen berücksichtigt; 'AMB' und 'SS' könnten ggf. für komplexere Analysen benötigt werden (z.B. Ermittlung eines OP Aufenthalts), werden aber aktuell nicht in die Berechnungen einbezogen
--   stationäre INTERPOLAR-Kontakte tragen enc_class_code == "IMP" mindestens im Einrichtungskontakt
+-   stationäre INTERPOLAR-Kontakte tragen enc_class_code entsprechend der Definition in FRONTEND_DISPLAYED_ENCOUNTER_CLASS (e.g. "IMP"", ggf. "SS")
 -   Kontakte mit Kontaktart "begleitperson" werden in den Zählungen nicht berücksichtigt. Die Kontaktarten "vorstationaer", "nachstationaer", "ub", "konsil" und "operation" könnten als Sekundärkontakte für komplexere Analysen benötigt werden, werden aber aktuell nicht in die Berechnungen einbezogen. Die Kontaktarten "teilstationaer", "tagesklinik", "nachtklinik", "normalstationaer", "intensivstationaer" im Versorgungsstellenkontakt werden für INTERPOLAR Stationskontakte in den Zählungen berücksichtigt.
 -   später relevant: Wenn fall_studienphase in fall_fe leer ist, wird diese durch 'PhaseA' ersetzt (für Daten vor Einführung der Befüllung der Spalte Studienphase)
 -   Encounter-Altdaten (die ggf. in den lokalen Tabellen erscheinen) werden ressourcensparend aktuell gefiltert auf ein Startdatum(enc_period_start) von 1 Jahr vor REPORT_PERIOD_START

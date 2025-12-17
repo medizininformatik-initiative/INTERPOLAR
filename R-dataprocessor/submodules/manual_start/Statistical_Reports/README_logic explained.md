@@ -86,7 +86,6 @@ mögliche Optimierungen:
 -   wurden wichtige Variablen zur Identifizierung vergessen?
 -   ist die Filterung aller Einrichtungskontakte auf das erwartete FHIR-Identifikatorsystem so richtig? Werden damit die richtigen Fälle erfasst? Was passiert wenn es nicht definiert ist? Welche Fälle sind dann zu viel drin?
 -   ggf. kann das Laden von Altdaten hier noch weiter minimiert/ komplett entfernt werden
--   kann hier ggf. schon auf `enc_class_code` "AMB"(ambulatory) und "SS"(short stay) gefiltert werden, oder können sich hierunter INTERPOLAR-Stationskontakte verbergen?
 -   sind die definierten Codes, status & systeme so umgesetzt?
 -   werden die richtigen Codes herausgefiltert? Finden sie sich auf alle Encounter-Ebenen wider oder nur auf bestimmten?
 -   sind die Stopps und Warnungen so plausibel?
