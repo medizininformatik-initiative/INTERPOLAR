@@ -6,11 +6,11 @@
 
 Berechne alle MRP-Arten auf den Daten der Vergangenheit unabhängig von der Studienphase des Falls.
 Voraussetzung ist, dass der Fall mind. eine Medikationsanalyse und [weitere Eigenschaften](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/1043) hat, die
-ein MRP-Auslösen.
+ein MRP auslösen.
 
 ### Konfiguration
 
-- abgefragter Zeitraum konfigurierbar über Start- und Endedatum als Argument
+- abgefragter Zeitraum konfigurierbar über Start- und Enddatum als Argument
 - fehlt das Enddatum, wird der aktuelle Ausführungszeitpunkt genommen
 - fehlt das Startdatum, wird der aktuelle Ausführungszeitpunkt - 60 Tage genommen
 - Enddatum muss gleich dem Startdatum oder größer als dieses sein
