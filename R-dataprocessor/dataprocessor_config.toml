@@ -55,7 +55,7 @@ WARDS_PHASE_B = "" # Study phase B with regular calculation for retrolective MRP
 # To filter the correct patient ID from the hospital information system for the
 # frontend, there are 3 possible parameters.
 # These can be used to filter out the correct FHIR identifier of the patient
-# resource. They all target the system property of the identifier.
+# resource using an AND-conjunction logic. They all target the system property of the identifier.
 # All 3 work as patterns, i.e. if you simply enter a string, all identifiers
 # containing this string will be found.
 # If you want to search for the exact string, the string must be preceded by an

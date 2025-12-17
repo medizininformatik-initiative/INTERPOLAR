@@ -23,7 +23,7 @@ Ziel: lade die für INTERPOLAR relevanten Patienten und erhalte für jeden Patie
     -   `pat_identifier_type_code` (Code des FHIR Patientenidentifikator-Typs, z.B. "MR" für Medical Record Number)
     -   `pat_identifier_value` (Patientenidentifikator im Klinikinformationssystem (CIS))
     -   `pat_birthdate` (Geburtsdatum des Patienten)
--   filtert die Patientendatensätze basierend auf den in der dataprocessor_config.toml gesetzten Filtern (wenn eine oder mehrere der folgenden Bedingungen zutreffen):
+-   filtert die Patientendatensätze basierend auf den in der dataprocessor_config.toml gesetzten Filtern (wenn eine oder mehrere der folgenden Bedingungen zutreffen (UND-Verknüfung)):
     -   `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM` entspricht `pat_identifier_system`
     -   `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM` entspricht `pat_identifier_type_system`
     -   `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE` entspricht `pat_identifier_type_code`

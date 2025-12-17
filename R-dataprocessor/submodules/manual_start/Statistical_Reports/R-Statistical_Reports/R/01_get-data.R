@@ -25,7 +25,7 @@
 #' @details
 #' The function performs the following steps:
 #' 1. Executes a SQL query to retrieve required patient-related columns from the specified table.
-#' 2. Filters the results to include only rows where one or more of the following conditions are met:
+#' 2. Filters the results to include only rows where the following conditions are met, if defined:
 #'     - `pat_identifier_system` matches the FHIR identifier system for patients displayed in the
 #'        frontend.
 #'     - `pat_identifier_type_system` matches the FHIR identifier type system for patients displayed
@@ -57,26 +57,32 @@ getPatientData <- function(lock_id, table_name) {
     patient_table_raw <- createPatientDataWarningsSituations(patient_table_raw)
   }
   # DEBUG END-------------------------------
+
+  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
+    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "")) {
+    patient_table_raw <- patient_table_raw |>
+      dplyr::filter(
+        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system)
+      ) |>
+      dplyr::distinct()
+  }
+  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") &
+    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "")) {
+    patient_table_raw <- patient_table_raw |>
+      dplyr::filter(
+        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system)
+      ) |>
+      dplyr::distinct()
+  }
+  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") &
+    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", "")) {
+    patient_table_raw <- patient_table_raw |>
+      dplyr::filter(
+        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)
+      ) |>
+      dplyr::distinct()
+  }
   patient_table <- patient_table_raw |>
-    dplyr::filter(
-      (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
-        !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "") &
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system)) |
-        (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") &
-          !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "") &
-          grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system)) |
-        (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") &
-          !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", "") &
-          grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)) |
-        # keep all rows if all filters are inactive or missing
-        ((!exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") |
-          FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "")) &
-          (!exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") |
-            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "")) &
-          (!exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") |
-            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", ""))
-        )
-    ) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id) |>
     dplyr::mutate(processing_exclusion_reason = NA_character_)
