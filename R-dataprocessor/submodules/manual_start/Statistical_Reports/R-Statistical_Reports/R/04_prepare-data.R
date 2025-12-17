@@ -8,7 +8,7 @@
 #' @param full_analysis_set_1 A data frame or tibble representing the full_analysis_set_1 dataset.
 #' It must include the following columns:
 #'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `enc_identifier_value`, `pat_id`,
-#'   `pat_identifier_value`, `record_id`, `fall_id_cis`, `enc_type_code_Kontaktebene`,
+#'   `record_id`, `fall_id_cis`, `enc_type_code_Kontaktebene`,
 #'   `age_at_hospitalization`, `enc_period_start`, `calendar_week`, `enc_period_end`,
 #'   `ward_name`, `studienphase`, `enc_status` and `processing_exclusion_reason`.
 #' @param report_period_start A POSIXct date-time object representing the start of the reporting period.
@@ -49,7 +49,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
     dplyr::filter(!is.na(ward_name)) |> # only encounters with ward name (see addWardName)
     dplyr::mutate(calendar_week = data.table::isoweek(enc_period_start), .after = enc_period_start) |> # add calendar week
     dplyr::distinct(
-      enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
+      enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id,
       record_id, fall_id_cis, enc_type_code_Kontaktebene, age_at_hospitalization, enc_period_start,
       calendar_week, enc_period_end, ward_name,
       # studienphase,
@@ -136,7 +136,7 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::mutate(main_enc_any_processing_exclusion_fe = any(!is.na(processing_exclusion_reason))) |>
     dplyr::ungroup() |>
     dplyr::distinct(
-      pat_id, pat_cis_pid, record_id, fall_fhir_main_enc_id,
+      pat_id, record_id, fall_fhir_main_enc_id,
       fall_id_cis, fall_station, fall_aufn_dat, enc_id, enc_status, meda_id,
       meda_dat, enc_period_start, medikationsanalyse_complete, mrp_id,
       mrp_pigrund___21, mrp_ip_klasse_01, mrp_dokup_hand_emp_akz,

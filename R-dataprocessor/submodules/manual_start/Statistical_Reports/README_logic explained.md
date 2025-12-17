@@ -13,7 +13,7 @@ output:
 
 #### `getPatientData` (`v_patient_last_version`) --\> patient_table
 
-Ziel: lade die für INTERPOLAR relevanten Patienten und erhalte für jeden Patienten eine Zeile mit zugehöriger eindeutiger `pat_id` (FHIR) und `pat_identifier_value` (CIS) sowie seinem Geburtsdatum. ID und Identifier dienen dem Mapping auf Daten des Patienten aus anderen Datenbanktabellen. Das Geburtsdatum wird benötigt, um das Alter des Patienten bei Krankenhausaufnahme des für INTERPOLAR relevanten Falls zu berechnen.
+Ziel: lade die für INTERPOLAR relevanten Patienten und erhalte für jeden Patienten eine Zeile mit zugehöriger eindeutiger `pat_id` (FHIR) und `pat_identifier_value` (CIS) sowie seinem Geburtsdatum. Die ID dient dem Mapping auf Daten des Patienten aus anderen Datenbanktabellen. Der Identifier wird für das Mapping nicht verwendet, es wir djedoch geprüft, ob doppelte Zeilen vorkommen (dann sind ggf. `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_` Filter nicht korrekt umgesetzt). Das Geburtsdatum wird benötigt, um das Alter des Patienten bei Krankenhausaufnahme des für INTERPOLAR relevanten Falls zu berechnen.
 
 -   lädt die letzte Version der FHIR-Patientendaten, die der INTERPOLAR-Datenbank bekannt ist
 -   Variablen:
@@ -31,14 +31,12 @@ Ziel: lade die für INTERPOLAR relevanten Patienten und erhalte für jeden Patie
 -   erstellt die Variable `processing_exclusion_reason`, für zukünftige Begründung, warum ein Patient von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten oder Uneindeutigkeit für die Zählung)
 -   stoppt das Skript wenn kein Patientendatensatz gefunden wurde
 -   nachfolgende Funktionen geben Warnungen wenn:
-    -   mehrere Zeilen für die selbe `pat_id` (FHIR) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_id"`)
+    -   mehrere Zeilen für die selbe `pat_id` (FHIR) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben). Es folgt hier kein Ausschluss, da die `pat_id` für das Mapping zu den FHIR-Daten ausreicht (kein `processing_exclusion_reason`).
     -   mehrere Zeilen für den selben `pat_identifier_value` (CIS) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_identifier_value"`)
 
 mögliche Optimierungen:
 
--   `pat_identifier_value` könnte ggf. komplett weggelassen werden (redundant zu `pat_id`?)
 -   wurden wichtige Variablen zur Identifizierung vergessen?
--   gibt es Gründe warum trotz der Filterung noch mehrere Zeilen pro Patient existieren?
 
 #### `getEncounterData` (`v_encounter_last_version`) --\> encounter_table
 
@@ -117,17 +115,14 @@ Ziel: lade die für das Reporting relevanten Patienten-Daten aus der Frontend-Ta
 -   lädt die (letzte?) Version der Frontend-Patienten-Identifikatoren, die der INTERPOLAR-Datenbank bekannt ist (verschiedene Versionen sollten hier eigentlich nicht vorkommen, trotzdem ist sicherheitshalber `_last_version` zu verwenden, sobald verfügbar)
 -   Variablen:
     -   `pat_id` (FHIR Patienten ID)
-    -   `pat_cis_pid` (Patientenidentifikator im Klinikinformationssystem (CIS)): für Frontend-Tabellen nur in dieser Tabelle vorhanden
     -   `record_id` (Frontend Datensatz ID)
 -   legt die Variable `processing_exclusion_reason` an, für zukünftige Begründung, warum ein Patient von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten oder Uneindeutigkeit für die Zählung)
 -   stoppt das Skript wenn kein Datensatz gefunden wurde
 -   nachfolgende Funktionen geben Warnungen für:
     -   mehrere Zeilen für die selbe `pat_id` (FHIR) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_id_in_fe"`)
-    -   mehrere Zeilen für den selben `pat_cis_pid` (CIS) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben) (`processing_exclusion_reason = "multiple_rows_per_pat_identifier_in_fe"`)
 
 mögliche Optimierungen:
 
--   `pat_cis_pid` könnte ggf. komplett weggelassen werden (redundant zu `pat_id`?)
 -   wurden wichtige Variablen zur Identifizierung vergessen?
 -   gibt es Gründe warum trotz der Filterung noch mehrere Zeilen pro Patient existieren?
 
@@ -187,7 +182,7 @@ Ziel: lade die für das Reporting relevanten MRP-Dokumentation Validierungs-Date
 
 Ziel: Mappen der Patienten- und Falldaten aufeinander, um für jeden Fall die zugehörigen Patientendaten zu erhalten.
 
--   führt einen Left-Join der patient_table (Variablen: pat_id, pat_identifier_value, pat_birthdate, processing_exclusion_reason) mit der encounter_table basierend auf der Beziehung `enc_patient_ref` referenziert auf `pat_id` durch
+-   führt einen Left-Join der patient_table (Variablen: pat_id, pat_birthdate, processing_exclusion_reason) mit der encounter_table basierend auf der Beziehung `enc_patient_ref` referenziert auf `pat_id` durch
 -   setzt den processing_exclusion_reason auf der Wert aus der patient_table, falls vorhanden, falls nicht auf den Wert aus der encounter_table (NA falls beide nicht vorhanden)
 
 #### `addCuratedEncPeriodEnd`

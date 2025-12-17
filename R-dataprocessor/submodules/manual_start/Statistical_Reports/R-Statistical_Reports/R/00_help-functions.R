@@ -354,21 +354,17 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
 #' This function checks whether the patient table contains multiple rows for the
 #' same patient id (`pat_id`).
 #'
-#' If multiple rows are found for the same `pat_id`, a warning is issued and the
-#' function assigns a processing exclusion reason
-#' `"multiple_rows_per_pat_id"` using `addMultipleRowsProcessingExclusionReason`.
+#' If multiple rows are found for the same `pat_id`, a warning is issued.
 #'
 #' @param patient_table A data frame containing patient-level data. The table
 #'   must include the column `pat_id`.
 #'
 #' @return
-#' A data frame identical to `patient_table`, with `processing_exclusion_reason`
-#' updated for patient IDs that appear in multiple rows.
+#' A data frame identical to `patient_table`.
 #'
 #' @details
 #' Multiple rows per patient ID may indicate duplicated patient entries (e.g. multiple
-#' pat_identifier_value). Flagging these rows ensures that downstream
-#' analyses handle such cases appropriately.
+#' pat_identifier_value). This may be important for the display in the frontend.
 #'
 #' @importFrom dplyr mutate
 #'
@@ -377,8 +373,6 @@ CheckMultipleRowsPerPatId <- function(patient_table) {
   if (checkMultipleRows(patient_table, c("pat_id"))) {
     warning("The patient table contains multiple rows for the same pat_id(FHIR).
             Please check the data.")
-    patient_table <- patient_table |>
-      addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id")
   }
   return(patient_table)
 }
@@ -1020,45 +1014,6 @@ CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
     patient_fe_table <- patient_fe_table |>
       addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id_in_fe")
     warning("The patient_fe table contains multiple rows for the same pat_id(FHIR).
-            Please check the data.")
-  }
-  return(patient_fe_table)
-}
-
-
-#' Check for Multiple Rows per Patient Identifier in FE Table
-#'
-#' This function checks whether the patient FE (Front-End) table contains
-#' multiple rows for the same `pat_cis_pid` (CIS patient identifier).
-#'
-#' If multiple rows are found for a `pat_cis_pid`, a warning is issued and the
-#' `processing_exclusion_reason` column is updated with
-#' `"multiple_rows_per_pat_identifier_in_fe"` for the affected rows.
-#'
-#' @param patient_fe_table A data frame containing patient-level FE data.
-#'   The table must include the columns `pat_cis_pid` and
-#'   `processing_exclusion_reason`.
-#'
-#' @return
-#' A data frame identical to `patient_fe_table`, with `processing_exclusion_reason`
-#' updated for rows where multiple entries exist for the same `pat_cis_pid`.
-#'
-#' @details
-#' Having multiple rows per `pat_cis_pid` may indicate duplicate records or data
-#' inconsistencies. This function flags such cases to ensure downstream
-#' analyses handle them appropriately.
-#'
-#' @importFrom dplyr mutate
-#'
-#' @export
-CheckMultipleRowsPerPatIdentifierInFe <- function(patient_fe_table) {
-  if (checkMultipleRows(patient_fe_table, c("pat_cis_pid"))) {
-    patient_fe_table <- patient_fe_table |>
-      addMultipleRowsProcessingExclusionReason(
-        c("pat_cis_pid"),
-        "multiple_rows_per_pat_identifier_in_fe"
-      )
-    warning("The patient_fe table contains multiple rows for the same patient identifier (cis).
             Please check the data.")
   }
   return(patient_fe_table)

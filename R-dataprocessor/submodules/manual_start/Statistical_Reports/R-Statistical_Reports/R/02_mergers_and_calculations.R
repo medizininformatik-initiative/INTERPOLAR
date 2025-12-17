@@ -33,7 +33,7 @@ mergePatEnc <- function(patient_table, encounter_table) {
     dplyr::left_join(
       patient_table |>
         dplyr::select(c(
-          pat_id, pat_identifier_value, pat_birthdate,
+          pat_id, pat_birthdate,
           processing_exclusion_reason
         )) |>
         dplyr::distinct(),
@@ -49,7 +49,6 @@ mergePatEnc <- function(patient_table, encounter_table) {
     dplyr::relocate(
       enc_identifier_value,
       pat_id,
-      pat_identifier_value,
       enc_partof_calculated_ref,
       enc_class_code,
       enc_type_code_Kontaktebene,
@@ -325,14 +324,14 @@ addWardName <- function(merged_table_with_main_enc, pids_per_ward_table) {
 #' @param merged_table_with_ward A dataframe that includes patient and encounter information, likely
 #' merged with ward data. It should have columns that can be used to identify patients.
 #' @param patient_fe_table A dataframe containing patient front-end data, including columns
-#' `pat_id`, `pat_cis_pid`, and `record_id`.
+#' `pat_id`, and `record_id`.
 #'
 #' @return A dataframe identical to `merged_table_with_ward` but with an additional
-#' `record_id` column, which is relocated immediately after `pat_identifier_value`.
+#' `record_id` column, which is relocated immediately after `pat_id`.
 #'
 #' @details
 #' The function performs a left join on `merged_table_with_ward` using `pat_id` from the merged
-#' table and matches it with `pat_cis_pid` from `patient_fe_table`. This adds the `record_id` to the
+#' table and matches it with `pat_id` from `patient_fe_table`. This adds the `record_id` to the
 #' merged table, providing a unique identification feature that can be crucial for subsequent
 #' analyses or data organization tasks.
 #'
@@ -342,10 +341,10 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
   merged_table_with_record_id <- merged_table_with_ward |>
     dplyr::left_join(
       patient_fe_table |>
-        dplyr::select(pat_id, pat_cis_pid, record_id),
-      by = c("pat_id" = "pat_id", "pat_identifier_value" = "pat_cis_pid")
+        dplyr::select(pat_id, record_id),
+      by = c("pat_id" = "pat_id")
     ) |>
-    dplyr::relocate(record_id, .after = pat_identifier_value)
+    dplyr::relocate(record_id, .after = pat_id)
   return(merged_table_with_record_id)
 }
 
@@ -508,11 +507,11 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 #'
 #' @param merged_fe_pat_fall_meda_table A data frame containing merged patient, fall, and
 #' medication analysis data, typically resulting from `addMedaData()`. Must include `meda_dat`,
-#' `pat_id`, `record_id`, `fall_id_cis`, `pat_cis_pid`, `fall_fhir_main_enc_id`, `fall_studienphase`,
+#' `pat_id`, `record_id`, `fall_fhir_main_enc_id`, `fall_studienphase`,
 #' `fall_station`, and `fall_aufn_dat`.
 #'
 #' @param full_analysis_set_1 A data frame containing full encounter-level data. Must include columns:
-#'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `fall_id_cis`, `pat_id`, `pat_identifier_value`,
+#'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `fall_id_cis`, `pat_id`,
 #'   `record_id`, `enc_period_start`, `curated_enc_period_end`, `ward_name`, `studienphase`,
 #'   `enc_status`, and `processing_exclusion_reason`.
 #'
@@ -522,7 +521,7 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
 #'
 #' @details
 #' The join is based on a combination of:
-#' - Identifiers (`pat_id`, `pat_identifier_value`, `record_id`, `main_enc_id`, `fall_id_cis`)
+#' - Identifiers (`pat_id`, `record_id`, `main_enc_id`, `fall_id_cis`)
 #' - Temporal matching: `meda_dat` must lie within `[enc_period_start, curated_enc_period_end]`
 #' - Additional context: `studienphase`, `ward_name`, and `main_enc_period_start` must match the
 #' fall metadata
@@ -550,7 +549,7 @@ addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1)
         dplyr::ungroup() |>
         dplyr::select(
           enc_id, main_enc_id, main_enc_period_start, fall_id_cis,
-          pat_id, pat_identifier_value, record_id, enc_period_start,
+          pat_id, record_id, enc_period_start,
           curated_enc_period_end, ward_name,
           # studienphase,
           enc_status
@@ -558,7 +557,6 @@ addEncIdToFeData <- function(merged_fe_pat_fall_meda_table, full_analysis_set_1)
         dplyr::distinct(),
       by = dplyr::join_by(
         pat_id == pat_id,
-        pat_cis_pid == pat_identifier_value,
         record_id == record_id,
         fall_fhir_main_enc_id == main_enc_id,
         fall_id_cis == fall_id_cis,

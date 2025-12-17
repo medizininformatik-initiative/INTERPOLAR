@@ -142,8 +142,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     lock_id = "statistical reports[4]",
     table_name = "v_patient_fe"
   ) |>
-    CheckMultipleRowsPerPatIdInFe() |>
-    CheckMultipleRowsPerPatIdentifierInFe()
+    CheckMultipleRowsPerPatIdInFe()
   # --> this table should only have one entry per patient (warning if not)
 
   fall_fe_table <- getFallFeData(

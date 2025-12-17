@@ -295,22 +295,20 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' This is important for managing concurrent data access in environments where multiple processes
 #' might access the data simultaneously.
 #' @param table_name A character string specifying the name of the database table to query.
-#' This table should include columns `pat_id`, `pat_cis_pid`, `record_id`.
+#' This table should include columns `pat_id`, `record_id`.
 #'
 #' @return A dataframe (`patient_fe_table`) that includes patient data, cleaned to ensure distinct
 #' entries per `pat_id`, arranged in order.
 #'
 #' @details The function constructs an SQL query to select relevant columns from the specified table,
 #' retrieves the data while checking for read-only access, and processes it to remove duplicates and
-#' arrange the records. If there are multiple rows for a single `pat_id`
-#' (related to the FHIR identifier) or `pat_cis_pid` (related to the cis identifier), errors are
-#' issued to indicate potential data issues.
+#' arrange the records.
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
 #' @importFrom dplyr distinct arrange
 #' @export
 getPatientFeData <- function(lock_id, table_name) {
-  query <- paste0("SELECT pat_id, pat_cis_pid, record_id FROM ", table_name, "\n")
+  query <- paste0("SELECT pat_id, record_id FROM ", table_name, "\n")
 
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
