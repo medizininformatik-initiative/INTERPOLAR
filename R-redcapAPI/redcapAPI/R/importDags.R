@@ -2,8 +2,8 @@
 #' @order 2
 #' @export
 
-importDags <- function(rcon, 
-                       data, 
+importDags <- function(rcon,
+                       data,
                        ...){
   UseMethod("importDags")
 }
@@ -12,48 +12,48 @@ importDags <- function(rcon,
 #' @order 5
 #' @export
 
-importDags.redcapApiConnection <- function(rcon, 
+importDags.redcapApiConnection <- function(rcon,
                                            data,
                                            ...)
 {
   ###################################################################
   # Argument Validation                                          ####
-  
+
   coll <- checkmate::makeAssertCollection()
-  
-  checkmate::assert_class(x = rcon, 
-                          classes = "redcapApiConnection", 
+
+  checkmate::assert_class(x = rcon,
+                          classes = "redcapApiConnection",
                           add = coll)
-  
-  checkmate::assert_data_frame(x = data, 
-                               col.names = "named", 
+
+  checkmate::assert_data_frame(x = data,
+                               col.names = "named",
                                add = coll)
 
   checkmate::reportAssertions(coll)
-  
-  checkmate::assert_subset(names(data), 
-                           choices = c("data_access_group_name", 
-                                       "unique_group_name", 
-                                       "data_access_group_id"), 
+
+  checkmate::assert_subset(names(data),
+                           choices = c("data_access_group_name",
+                                       "unique_group_name",
+                                       "data_access_group_id"),
                            add = coll)
-  
+
   checkmate::reportAssertions(coll)
-  
-  
-  checkmate::assert_subset(data$unique_group_name, 
-                           choices = c(rcon$dags()$unique_group_name, NA_character_), 
+
+
+  checkmate::assert_subset(data$unique_group_name,
+                           choices = c(rcon$dags()$unique_group_name, NA_character_),
                            add = coll)
-  
+
   checkmate::reportAssertions(coll)
-  
+
   ###################################################################
   # Make the API Body list                                       ####
-  
+
   body <- list(content = "dag",
-               action = "import", 
-               format = "csv", 
-               returnFormat = "csv", 
-               data = writeDataForImport(data))
+               action = "import",
+               format = "csv",
+               returnFormat = "csv",
+               data = writeDataForImport(data, csv_delimiter = rcon$csv_delimiter()))
 
   ###################################################################
   # Call the API                                                 ####
