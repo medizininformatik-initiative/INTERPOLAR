@@ -48,7 +48,7 @@ mrpCheck <- function(start_date, end_date) {
 
 
     # add export period at the end of the table in the first column
-    result <- etlutils::addRowsWithFirstColumn(result, c("", paste("Start:", start_date), paste("End:", end_date)))
+    result <- etlutils::addRowsWithColumn(result, c("", paste("Start:", start_date), paste("End:", end_date)), column = "MRP Typ")
   })
 
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {
@@ -57,10 +57,17 @@ mrpCheck <- function(start_date, end_date) {
 
   etlutils::runLevel2("Create global MRP result table", {
     id_cols <- grep(" ID$", names(result), value = TRUE)
+
     for (col in id_cols) {
-      # Create unique integer IDs per column while preserving consistency
-      result[, (col) := .GRP, by = col]
+      # Create grouping only for non-NA values, keep NA as NA
+      result[, (col) := {
+        tmp <- rep(NA_integer_, .N)  # initialize with NA
+        non_na_idx <- !is.na(get(col))
+        tmp[non_na_idx] <- match(get(col)[non_na_idx], unique(get(col)[non_na_idx]))
+        tmp
+      }]
     }
+
   })
 
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {
