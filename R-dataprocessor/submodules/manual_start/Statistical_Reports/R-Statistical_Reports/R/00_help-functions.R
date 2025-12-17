@@ -1111,8 +1111,15 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       dplyr::mutate(
         enc_identifier_system = paste0(enc_identifier_system, "-test")
       )
+    one_year_historic_data_filter_check <- encounter_table_raw |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_6") |>
+      dplyr::mutate(
+        enc_period_start = as.POSIXct("2000-01-01"),
+        enc_period_end = as.POSIXct("2000-01-10")
+      )
     encounter_table_raw <- encounter_table_raw |>
-      rbind(common_encounter_fhir_identifier_system_filter_check)
+      rbind(common_encounter_fhir_identifier_system_filter_check) |>
+      rbind(one_year_historic_data_filter_check)
 
     return(encounter_table_raw)
   }
