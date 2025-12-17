@@ -307,12 +307,33 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
     kurzbeschr_item2 = character()
   )
 
+  # Function to check if validity days match any patient condition
+  PatientValidityDayMatches <- function(validity_days, patient_conditions, meda_datetime) {
+    if (tolower(validity_days) == "unbegrenzt") {
+      return(any(patient_conditions$start_datetime <= meda_datetime))
+    } else {
+      return(any(
+        patient_conditions$start_datetime >= (meda_datetime - lubridate::days(as.numeric(validity_days))) &
+          patient_conditions$start_datetime <= meda_datetime
+      ))
+    }
+  }
+
   # Filter all conditions for the current patient
   all_patient_conditions <- relevant_conditions[con_patient_ref == paste0("Patient/", patient_id)]
   used_icds <- unique(all_patient_conditions[!is.na(con_code_code), con_code_code])
   icds <- intersect(names(drug_disease_mrp_tables_by_icd), used_icds)
 
   for (mrp_icd in icds) {
+
+    # Find matching ICD conditions for this specific ICD
+    patient_conditions <- all_patient_conditions[
+      con_code_code == mrp_icd &
+        con_code_system == "http://fhir.de/CodeSystem/bfarm/icd-10-gm"
+    ]
+
+    if (!nrow(patient_conditions)) next
+
     # Extract all MRP rules for this ICD
     mrp_table_list_rows <- drug_disease_mrp_tables_by_icd[[mrp_icd]]
     mrp_table_list_rows <- mrp_table_list_rows[ATC_FOR_CALCULATION %in% match_atc_codes$atc_code]
@@ -321,6 +342,55 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
     keep_cols <- c("ATC_DISPLAY", "ATC_FOR_CALCULATION", "ICD_VALIDITY_DAYS", "CONDITION_DISPLAY_CLUSTER",
                    "ATC_FULL_LIST", "ICD_FULL_LIST")
     mrp_table_list_rows <- unique(mrp_table_list_rows[, ..keep_cols])
+
+    # Filter MRP rows based on validity days and patient conditions
+    mrp_table_list_rows <- mrp_table_list_rows[
+      ,
+      {
+        valid_rows <- .SD[
+          sapply(
+            ICD_VALIDITY_DAYS,
+            PatientValidityDayMatches,
+            patient_conditions = patient_conditions,
+            meda_datetime = meda_datetime
+          )
+        ]
+        if (!nrow(valid_rows)) return(NULL)
+        validity_num <- ifelse(
+          tolower(valid_rows$ICD_VALIDITY_DAYS) == "unbegrenzt",
+          Inf,
+          as.numeric(valid_rows$ICD_VALIDITY_DAYS)
+        )
+        valid_rows[validity_num == min(validity_num)]
+      },
+      by = .(ATC_DISPLAY, ATC_FOR_CALCULATION)
+    ]
+
+    if (!nrow(mrp_table_list_rows)) next
+
+    # Combine rows with same ATC, ICD and ICD validity by concatenating CONDITION_DISPLAY_CLUSTER
+    mrp_table_list_rows <- mrp_table_list_rows[
+      ,
+      .(
+        CONDITION_DISPLAY_CLUSTER = paste(
+          unique(CONDITION_DISPLAY_CLUSTER),
+          collapse = " und "
+        ),
+        ICD_FULL_LIST = paste(
+          unique(unlist(strsplit(ICD_FULL_LIST, "\\s+"))),
+          collapse = " "
+        ),
+        ATC_FULL_LIST = paste(
+          unique(unlist(strsplit(ATC_FULL_LIST, "\\s+"))),
+          collapse = " "
+        )
+      ),
+      by = .(
+        ATC_DISPLAY,
+        ATC_FOR_CALCULATION,
+        ICD_VALIDITY_DAYS
+      )
+    ]
 
     if (nrow(matched_rows)) {
       # Extract all diagnosis_cluster from matched_rows
@@ -335,32 +405,19 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
       ]
     }
 
-    # Find matching ICD conditions for this specific ICD
-    patient_conditions <- all_patient_conditions[
-      con_code_code == mrp_icd &
-        con_code_system == "http://fhir.de/CodeSystem/bfarm/icd-10-gm"
-    ]
-
-    if (!nrow(patient_conditions)) next
-
     for (j in seq_len(nrow(mrp_table_list_rows))) {
       mrp_table_list_row <- mrp_table_list_rows[j]
       validity_days <- mrp_table_list_row$ICD_VALIDITY_DAYS
 
-      # Check if at least one matching condition is within the validity window
       if (tolower(validity_days) == "unbegrenzt") {
-        matching_conditions <- patient_conditions[start_datetime <= meda_datetime]
+        condition_start_datetime <- max(patient_conditions$start_datetime)
       } else {
-        validity_days <- as.numeric(validity_days)
-        matching_conditions <- patient_conditions[
-          start_datetime >= (meda_datetime - lubridate::days(validity_days)) &
-            start_datetime <= meda_datetime
-        ]
+        condition_start_datetime <- patient_conditions[
+          start_datetime >= (meda_datetime - lubridate::days(as.numeric(validity_days))) &
+            start_datetime <= meda_datetime,
+          start_datetime
+        ][1]
       }
-
-      if (!nrow(matching_conditions)) next
-
-      condition_start_datetime <- matching_conditions$start_datetime[1]
 
       # Check if any of the matched ATC codes appear in the current ATC field of the MRP definition
       relevant_atcs <- match_atc_codes[
