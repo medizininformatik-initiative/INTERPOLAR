@@ -79,7 +79,7 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
     -   Encounter mit unbekannter Kontaktart (`processing_exclusion_reason` = "unexpected_kontaktart_code")
     -   Encounter von Typ "Einrichtungskontakt" mit uneindeutiger `enc_identifier_value` - `enc_id` Kombination (`processing_exclusion_reason` = "multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value" / "multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id")
     -   fehlende `enc_partof_calculated_ref` bei Abteilungs- oder Versorgungsstellenkontakten (kein processing_exclusion_reason, nur Warnung)
-    -   fehlende berechnete Referenz zum Einrichtungskontakt `enc_main_encounter_calculated_ref` (`processing_exclusion_reason` = "No_enc_main_encounter_calculated_ref")
+    -   fehlende berechnete Referenz zum Einrichtungskontakt `enc_main_encounter_calculated_ref` (kein processing_exclusion_reason, nur Warnung)
 
 mögliche Optimierungen:
 

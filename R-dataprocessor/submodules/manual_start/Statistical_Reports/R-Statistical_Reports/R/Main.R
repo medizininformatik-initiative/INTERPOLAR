@@ -168,6 +168,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     addCuratedEncPeriodEnd() |>
     CheckNAInCuratedEncPeriodEnd() |>
     addMainEncId() |>
+    CheckEncounterWithoutMainEncId() |>
     addMainEncPeriodStart() |>
     calculateAge() |>
     addWardName(pids_per_ward_table) |>

@@ -172,7 +172,8 @@ addMainEncId <- function(encounter_table) {
     dplyr::select(-enc_id_einrichtungskontakt) |>
     # use new calculation from cds-toolchain
     dplyr::rename(main_enc_id_initial_try = main_enc_id) |>
-    dplyr::mutate(main_enc_id = sub("^Encounter/", "", enc_main_encounter_calculated_ref), .keep = "unused") |>
+    dplyr::mutate(main_enc_id = sub("^Encounter/", "", enc_main_encounter_calculated_ref)) |>
+    dplyr::mutate(main_enc_id = dplyr::if_else(is.na(main_enc_id), main_enc_id_initial_try, main_enc_id)) |>
     dplyr::relocate(main_enc_id, main_enc_id_initial_try, .after = enc_id) |>
     dplyr::distinct()
 

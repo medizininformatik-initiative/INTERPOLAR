@@ -941,41 +941,29 @@ CheckEncountersWithoutCalculatedParentRef <- function(encounter_table) {
 #' This function checks whether encounters are missing a calculated main
 #' encounter reference (`enc_main_encounter_calculated_ref`).
 #'
-#' For encounters where `enc_main_encounter_calculated_ref` is `NA`, the function
-#' assigns the processing exclusion reason
-#' `"no_enc_main_encounter_calculated_ref"` if no exclusion reason has already
-#' been set. The affected rows are printed and a warning is issued to signal that
-#' the main encounter identifier (`main_enc_id`) cannot be determined.
+#' The affected rows are printed and a warning is issued to signal that
+#' the main encounter identifier (`main_enc_id`) may not be determined.
 #'
 #' @param encounter_table A data frame containing encounter-level data. The table
 #'   must include the columns `enc_main_encounter_calculated_ref` and
 #'   `processing_exclusion_reason`.
 #'
 #' @return
-#' A data frame identical to `encounter_table`, except that
-#' `processing_exclusion_reason` is updated for encounters without a calculated
-#' main encounter reference.
+#' A data frame identical to `encounter_table`.
 #'
 #' @details
 #' A calculated main encounter reference is required to derive a unique
 #' `main_enc_id`. Missing values may indicate incomplete encounter hierarchies or
-#' failures in earlier processing steps. Such encounters are flagged to prevent
-#' downstream analyses from silently using incomplete data.
+#' failures in earlier processing steps.
 #'
 #' @importFrom dplyr mutate filter if_else
 #'
 #' @export
 CheckEncountersWithoutCalculatedMainEncounterRef <- function(encounter_table) {
   if (any(is.na(encounter_table$enc_main_encounter_calculated_ref))) {
-    encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        is.na(enc_main_encounter_calculated_ref) & is.na(processing_exclusion_reason),
-        "no_enc_main_encounter_calculated_ref",
-        processing_exclusion_reason
-      ))
     print(encounter_table |>
       dplyr::filter(is.na(enc_main_encounter_calculated_ref)), width = Inf)
-    warning("Some encounters have no calculated main encounter reference, main_enc_id cannot be defined.
+    warning("Some encounters have no calculated main encounter reference, main_enc_id may not be defined.
             Please check the data.")
   }
   return(encounter_table)
@@ -1057,6 +1045,47 @@ CheckNAInCuratedEncPeriodEnd <- function(encounter_table_with_curated_enc_period
     warning("There are NA values in curated_enc_period_end. Please check the data.")
   }
   return(encounter_table_with_curated_enc_period_end)
+}
+
+#' Check Encounters Without Calculated Main Encounter ID
+#'
+#' This function checks whether encounters are missing a calculated main
+#' encounter ID (`main_enc_id`).
+#'
+#' For encounters where `main_enc_id` is `NA`, the function
+#' assigns the processing exclusion reason
+#' `encounter_without_main_enc_id` if no exclusion reason has already
+#' been set. The affected rows are printed and a warning is issued.
+#'
+#' @param encounter_table A data frame containing encounter-level data.
+#'   ``.
+#'
+#' @return
+#' A data frame identical to `encounter_table`, except that
+#' `processing_exclusion_reason` is updated.
+#'
+#' @details
+#' Missing values may indicate incomplete encounter hierarchies or
+#' failures in earlier processing steps. Such encounters are flagged to prevent
+#' downstream analyses from silently using incomplete data.
+#'
+#' @importFrom dplyr mutate filter if_else
+#'
+#' @export
+CheckEncounterWithoutMainEncId <- function(encounter_table_with_main_enc) {
+  if (any(is.na(encounter_table_with_main_enc$main_enc_id))) {
+    encounter_table_with_main_enc <- encounter_table_with_main_enc |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(main_enc_id) & is.na(processing_exclusion_reason),
+        "encounter_without_main_enc_id",
+        processing_exclusion_reason
+      ))
+    print(encounter_table_with_main_enc |>
+      dplyr::filter(is.na(main_enc_id)), width = Inf)
+    warning("Some encounters have no calculated main_enc_id.
+            Please check the data.")
+  }
+  return(encounter_table_with_main_enc)
 }
 
 # DEBUG Section ----------------------------------------------------------
