@@ -214,7 +214,8 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     ) |>
     dplyr::filter(!enc_type_code_Kontaktart %in% c("begleitperson")) |>
     dplyr::distinct() |>
-    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status)
+    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status) |>
+    dplyr::mutate(processing_exclusion_reason = NA_character_)
 
   if (nrow(encounter_table) == 0) {
     stop("The encounter table with extended filtering is empty. Please check the data for expected

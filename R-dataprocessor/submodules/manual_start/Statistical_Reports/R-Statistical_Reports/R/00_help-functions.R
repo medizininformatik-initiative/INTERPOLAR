@@ -512,12 +512,12 @@ CheckMissingKontaktebeneForImpEncounter <- function(encounter_table) {
 
 #' Check for Unexpected Status Values in Inpatient Encounters
 #'
-#' Identifies inpatient encounters (`enc_class_code == "IMP"`) with missing or
-#' unexpected encounter status values. Valid inpatient status values are
+#' Identifies encounters with missing or
+#' unexpected encounter status values. Valid status values are
 #' `"finished"`, `"in-progress"`, and `"onleave"`.
 #'
 #' For affected rows where no processing exclusion reason has yet been assigned,
-#' the function sets the exclusion reason to `"unexpected_imp_status"`.
+#' the function sets the exclusion reason to `"unexpected_status"`.
 #'
 #' If such encounters are found, the function prints the affected rows and
 #' issues a warning to alert the user to potentially invalid or incomplete
@@ -526,20 +526,17 @@ CheckMissingKontaktebeneForImpEncounter <- function(encounter_table) {
 #' @param encounter_table A data frame containing encounter-level data. The
 #'   table must include the columns:
 #'   \itemize{
-#'     \item \code{enc_class_code}
 #'     \item \code{enc_status}
 #'     \item \code{processing_exclusion_reason}
 #'   }
 #'
 #' @return
 #' A data frame identical to \code{encounter_table}, but with
-#' \code{processing_exclusion_reason} populated with `"unexpected_imp_status"`
-#' for inpatient encounters with missing or invalid status values.
+#' \code{processing_exclusion_reason} populated with `"unexpected_status"`
+#' for encounters with missing or invalid status values.
 #'
 #' @details
-#' The check applies only to inpatient encounters
-#' (\code{enc_class_code == "IMP"}). Existing values in
-#' \code{processing_exclusion_reason} are preserved and will not be overwritten.
+#' Existing values in \code{processing_exclusion_reason} are preserved and will not be overwritten.
 #'
 #' Encounter rows with \code{enc_status} equal to \code{NA} or not belonging to
 #' the allowed set (`"finished"`, `"in-progress"`, `"onleave"`) are considered
@@ -552,26 +549,26 @@ CheckMissingKontaktebeneForImpEncounter <- function(encounter_table) {
 #' @importFrom dplyr mutate if_else filter
 #'
 #' @export
-CheckUnexpectedImpStatus <- function(encounter_table) {
-  if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
+CheckUnexpectedStatus <- function(encounter_table) {
+  if (any(!is.na(encounter_table$enc_class_code) &
     (is.na(encounter_table$enc_status) | !encounter_table$enc_status %in% c(
       "finished", "in-progress", "onleave"
     )))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_class_code == "IMP" &
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
         (is.na(encounter_table$enc_status) | !enc_status %in% c("finished", "in-progress", "onleave")) &
-        is.na(processing_exclusion_reason),
-      "unexpected_imp_status", processing_exclusion_reason
+          is.na(processing_exclusion_reason),
+        "unexpected_status", processing_exclusion_reason
       ))
     print(
       encounter_table |>
-        dplyr::filter(enc_class_code == "IMP" & (is.na(enc_status) | !enc_status %in% c(
+        dplyr::filter((is.na(enc_status) | !enc_status %in% c(
           "finished", "in-progress",
           "onleave"
         ))),
       width = Inf
     )
-    warning("The encounter table contains inpatient encounters with unexpected or NA status values.
+    warning("The encounter table contains encounters with unexpected or NA status values.
             Please check the data.")
   }
   return(encounter_table)
@@ -1136,9 +1133,7 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001_7") |>
       dplyr::mutate(enc_type_code_Kontaktebene = as.character(NA))
 
-    unexpected_imp_status_check <- encounter_table |>
-      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
-      dplyr::filter(enc_class_code == "IMP") |>
+    unexpected_status_check <- encounter_table |>
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001_8") |>
       dplyr::mutate(enc_status = "test_status")
 
@@ -1178,7 +1173,7 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
 
     check_encounter_table <- missing_start_date_check |>
       rbind(missing_kontaktebene_for_imp_encounter_check) |>
-      rbind(unexpected_imp_status_check) |>
+      rbind(unexpected_status_check) |>
       rbind(imp_finished_without_end_date_check) |>
       rbind(unexpected_class_code_check) |>
       rbind(unexpected_kontaktart_code_check) |>

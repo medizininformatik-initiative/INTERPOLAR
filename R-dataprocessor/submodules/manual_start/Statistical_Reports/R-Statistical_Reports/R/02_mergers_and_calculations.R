@@ -128,7 +128,7 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #' @details
 #' The main encounter ID is determined using the following logic:
 #' 1. If the encounter has no parent (`enc_partof_calculated_ref` is `NA`), is of type `"einrichtungskontakt"`,
-#'    and class `"IMP"`, it is considered a top-level encounter, and its own `enc_id` is used.
+#' it is considered a top-level encounter, and its own `enc_id` is used.
 #' 2. If the encounter is of type `"abteilungskontakt"` (departmental contact), its parent is
 #'    assumed to be the main encounter.
 #' 3. If the encounter is of type `"versorgungsstellenkontakt"` (sub-departmental contact), the
@@ -146,7 +146,7 @@ addMainEncId <- function(encounter_table) {
   encounter_table_with_main_enc <- encounter_table |>
     dplyr::left_join(
       encounter_table |>
-        dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt" & enc_class_code == "IMP") |>
+        dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
         dplyr::distinct(enc_id, enc_identifier_value),
       by = "enc_identifier_value",
       suffix = c("", "_einrichtungskontakt")
@@ -157,8 +157,7 @@ addMainEncId <- function(encounter_table) {
 
       # Top-level: einrichtungskontakt
       is.na(enc_partof_calculated_ref) &
-        enc_type_code_Kontaktebene == "einrichtungskontakt" &
-        enc_class_code == "IMP" ~ enc_id,
+        enc_type_code_Kontaktebene == "einrichtungskontakt" ~ enc_id,
 
       # Middle-level: abteilungskontakt
       enc_type_code_Kontaktebene == "abteilungskontakt" ~ sub("^Encounter/", "", enc_partof_calculated_ref),

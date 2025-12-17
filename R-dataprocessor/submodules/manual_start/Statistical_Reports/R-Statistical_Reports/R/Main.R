@@ -120,7 +120,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   ) |>
     CheckMissingStartDate() |>
     CheckMissingKontaktebeneForImpEncounter() |>
-    CheckUnexpectedImpStatus() |>
+    CheckUnexpectedStatus() |>
     CheckImpFinishedWithoutEndDate() |>
     CheckUnexpectedClassCode() |>
     CheckUnexpectedKontaktartCode() |>

@@ -73,7 +73,7 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
 -   nachfolgende Funktionen geben Warnungen für:
     -   `CheckMissingStartDate`: fehlende Startdaten (`enc_period_start` is NA) in `processing_exclusion_reason` = "missing_start_date"
     -   inpatient encounter (`enc_class_code` = "IMP") mit fehlender Kontaktebene (`processing_exclusion_reason` = "missing_kontaktebene_for_imp_encounter")
-    -   inpatient encounter mit fehlender oder unerwartetem Status (`enc_status` not in "in-progress", "onleave", "finished") (`processing_exclusion_reason` = "unexpected_imp_status")
+    -   encounter mit fehlender oder unerwartetem Status (`enc_status` not in "in-progress", "onleave", "finished") (`processing_exclusion_reason` = "unexpected_status")
     -   abgeschlossene inpatient encounter mit fehlendem Enddatum (`enc_status` = "finished" and `enc_period_end` is NA) (`processing_exclusion_reason` = "imp_finished_without_end_date")
     -   Encounter mit unerwartetem class_code (not in "AMB", "SS", "IMP") (`processing_exclusion_reason` = "unexpected_class_code")
     -   Encounter mit unbekannter Kontaktart (`processing_exclusion_reason` = "unexpected_kontaktart_code")
