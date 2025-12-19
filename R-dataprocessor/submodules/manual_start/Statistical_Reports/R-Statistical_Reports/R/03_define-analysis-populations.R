@@ -31,15 +31,19 @@
 defineFullAnalysisSet1 <- function(complete_table) {
   inpatient_encounters <- complete_table |>
     dplyr::filter(enc_class_code %in% FRONTEND_DISPLAYED_ENCOUNTER_CLASS) |>
+    dplyr::distinct(main_enc_id) |>
+    dplyr::arrange(main_enc_id) |>
     dplyr::pull(main_enc_id)
 
   INTERPOLAR_encounters <- complete_table |>
     dplyr::filter(!is.na(ward_name)) |>
+    dplyr::distinct(main_enc_id) |>
+    dplyr::arrange(main_enc_id) |>
     dplyr::pull(main_enc_id)
 
   full_analysis_set_1_raw <- complete_table |>
     dplyr::filter(main_enc_id %in% inpatient_encounters) |> # only IMP patients
-    dplyr::filter(main_enc_id %in% INTERPOLAR_encounters) |> # only main encounters with any INTERPOLAR ward visit
+    dplyr::filter(main_enc_id %in% INTERPOLAR_encounters) |> # only encounters with any INTERPOLAR ward visit
     dplyr::filter(age_at_hospitalization >= 18) |> # only adults
     dplyr::distinct()
 

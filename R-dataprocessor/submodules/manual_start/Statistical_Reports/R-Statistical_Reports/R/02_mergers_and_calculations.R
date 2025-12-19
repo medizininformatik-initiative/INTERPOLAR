@@ -87,6 +87,11 @@ mergePatEnc <- function(patient_table, encounter_table) {
 #'  `curated_enc_period_end` is set to `enc_period_start`.
 #' - Otherwise, `curated_enc_period_end` takes the value of `enc_period_end`.
 #'
+#' If any `curated_enc_period_end` values remain `NA` after this process,
+#' a warning is issued and those rows are printed for review. The function also
+#' updates the `processing_exclusion_reason` column to indicate the presence of
+#' `NA` values in `curated_enc_period_end`: "NA_in_curated_enc_period_end".
+#'
 #' @importFrom dplyr mutate case_when relocate
 #' @export
 addCuratedEncPeriodEnd <- function(encounter_table) {
@@ -98,6 +103,20 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
     )) |>
     dplyr::relocate(curated_enc_period_end, .after = enc_period_end)
 
+  if (any(is.na(encounter_table_with_curated_enc_period_end$curated_enc_period_end))) {
+    encounter_table_with_curated_enc_period_end <- encounter_table_with_curated_enc_period_end |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(curated_enc_period_end) &
+        is.na(processing_exclusion_reason),
+      "NA_in_curated_enc_period_end",
+      processing_exclusion_reason
+      ))
+    print(
+      encounter_table_with_curated_enc_period_end |>
+        dplyr::filter(is.na(curated_enc_period_end)),
+      width = Inf
+    )
+    warning("There are NA values in curated_enc_period_end. Please check the data.")
+  }
   return(encounter_table_with_curated_enc_period_end)
 }
 
@@ -110,6 +129,8 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #' for each record. It determines the main encounter by walking up the encounter hierarchy
 #' based on encounter type and `enc_partof_calculated_ref` relationships. If part-of references are not
 #' available, it uses the unique`enc_identifier_value` to identify top-level encounters.
+#' Update: The function now also uses the pre-calculated `enc_main_encounter_calculated_ref` column
+#' from the cds-toolchain to determine the main encounter ID, falling back to the original logic if necessary.
 #'
 #' @param encounter_table A data frame or tibble containing FHIR-based encounter data.
 #'   Must include the following columns:
@@ -138,7 +159,12 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 #' unique identifier value. The function also checks for the presence of `enc_identifier_value` for
 #' top-level encounters and ensures that there are no multiple `einrichtungskontakt` encounters with
 #' the same identifier value. If any inconsistencies are found (e.g., multiple top-level encounters
-#' for the same identifier), an error is raised.
+#' for the same identifier), an error is raised. Update: The function now also uses the pre-calculated
+#' `enc_main_encounter_calculated_ref` column from the cds-toolchain to determine the main encounter ID,
+#' falling back to the original logic if necessary.
+#' If any encounters cannot be assigned a `main_enc_id`, a warning is issued, and those records
+#' are printed for review. The `processing_exclusion_reason` column is updated to indicate
+#' these cases: "encounter_without_main_enc_id".
 #'
 #' @importFrom dplyr mutate case_when relocate
 #' @export
@@ -177,6 +203,19 @@ addMainEncId <- function(encounter_table) {
     dplyr::relocate(main_enc_id, main_enc_id_initial_try, .after = enc_id) |>
     dplyr::distinct()
 
+  if (any(is.na(encounter_table_with_main_enc$main_enc_id))) {
+    encounter_table_with_main_enc <- encounter_table_with_main_enc |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(main_enc_id) & is.na(processing_exclusion_reason),
+        "encounter_without_main_enc_id",
+        processing_exclusion_reason
+      ))
+    print(encounter_table_with_main_enc |>
+      dplyr::filter(is.na(main_enc_id)), width = Inf)
+    warning("Some encounters have no calculated main_enc_id.
+            Please check the data.")
+  }
+
   return(encounter_table_with_main_enc)
 }
 
@@ -205,6 +244,9 @@ addMainEncId <- function(encounter_table) {
 #' of `main_enc_id` to `enc_period_start`. It ensures that each encounter record
 #' has easy access to the start date of its top-level (Einrichtungskontakt) encounter period.
 #' The new column is relocated immediately after `main_enc_id` for better readability.
+#' If any encounters cannot be assigned a `main_enc_period_start`, a warning is issued,
+#' and those records are printed for review. The `processing_exclusion_reason` column
+#' is updated to indicate these cases: "encounter_without_main_enc_period_start".
 #'
 #' @importFrom dplyr left_join select rename relocate
 #' @export
@@ -222,6 +264,19 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
       enc_period_start, enc_period_end
     )
 
+  if (any(is.na(encounter_table_with_MainEncPeriodStart$main_enc_period_start))) {
+    encounter_table_with_MainEncPeriodStart <- encounter_table_with_MainEncPeriodStart |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(main_enc_period_start) & is.na(processing_exclusion_reason),
+        "encounter_without_main_enc_period_start",
+        processing_exclusion_reason
+      ))
+    print(encounter_table_with_MainEncPeriodStart |>
+      dplyr::filter(is.na(main_enc_period_start)), width = Inf)
+    warning("Some encounters have no determined main_enc_period_start.
+            Please check the data.")
+  }
+
   return(encounter_table_with_MainEncPeriodStart)
 }
 
@@ -231,7 +286,8 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 #'
 #' This function calculates the patient's age at the start of the main encounter period
 #' (Einrichtungskontakt) by computing the difference between the main encounter start date and the
-#' patient's birthdate.
+#' patient's birthdate. It adds a new column `age_at_hospitalization` to the merged table.
+#' The age is calculated in completed years, rounding down to the nearest whole number.
 #'
 #' @param merged_table_with_MainEncPeriodStart A data frame or tibble containing merged patient
 #'   and encounter data. It must include the columns `pat_birthdate` (patient's birth date)
@@ -244,7 +300,14 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 #' @details
 #' The function calculates age by taking the difference between `main_enc_period_start` and
 #' `pat_birthdate`, converting it into days, dividing by 365.25 to account for leap years,
-#' and rounding down to the nearest whole number.
+#' and rounding down to the nearest whole number. If any patients cannot have their age
+#' determined (i.e., if `age_at_hospitalization` is `NA`), a warning is issued, and those
+#' records are printed for review. The `processing_exclusion_reason` column is updated to
+#' indicate these cases: "patient_without_determined_age". Similarly, if any patients have
+#' an implausible age (<= 0 or > 120), a warning is issued, and those records are printed
+#' for review. The `processing_exclusion_reason` column is updated to indicate these cases:
+#' "patient_with_implausible_age". If any patients are underage (< 18 years), the
+#' `processing_exclusion_reason` column is updated to indicate these cases: "patient_underage".
 #'
 #' @importFrom dplyr mutate
 #' @export
@@ -256,6 +319,41 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
     )) / 365.25)) |>
     dplyr::relocate(age_at_hospitalization, .after = pat_birthdate) |>
     dplyr::select(-pat_birthdate)
+
+  if (any(is.na(merged_table_with_age$age_at_hospitalization))) {
+    warning("Some patients have no determined age_at_hospitalization.
+            Please check the data.")
+    merged_table_with_age <- merged_table_with_age |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(age_at_hospitalization) & is.na(processing_exclusion_reason),
+        "patient_without_determined_age",
+        processing_exclusion_reason
+      ))
+    print(merged_table_with_age |>
+      dplyr::filter(is.na(age_at_hospitalization)), width = Inf)
+  }
+
+  if (any(merged_table_with_age$age_at_hospitalization <= 0 | merged_table_with_age$age_at_hospitalization > 120)) {
+    warning("Some patients have a implausible age_at_hospitalization (<= 0 or > 120).
+            Please check the data.")
+    merged_table_with_age <- merged_table_with_age |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        (age_at_hospitalization <= 0 | age_at_hospitalization > 120) & is.na(processing_exclusion_reason),
+        "patient_with_implausible_age",
+        processing_exclusion_reason
+      ))
+    print(merged_table_with_age |>
+      dplyr::filter(age_at_hospitalization <= 0 | age_at_hospitalization > 120), width = Inf)
+  }
+
+  if (any(merged_table_with_age$age_at_hospitalization < 18)) {
+    merged_table_with_age <- merged_table_with_age |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        age_at_hospitalization < 18,
+        "patient_underage",
+        processing_exclusion_reason
+      ))
+  }
 
   return(merged_table_with_age)
 }
@@ -283,7 +381,7 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 #' based on patient and encounter IDs. It uses the `enc_id` and `pat_id` from the encounter_table
 #' to match with `encounter_id` and `patient_id` in the pids_per_ward_table.
 #' it ensures that ward names are added only to INTERPOLAR Versorgungsstellenkontakte (i.e., those with
-#' `enc_type_code_Kontaktebene` of "versorgungsstellenkontakt" and enc_class_code not in "AMB" or "SS")
+#' `enc_type_code_Kontaktebene` of "versorgungsstellenkontakt" and enc_class_code not "AMB")
 #' and not of certain types (e.g., "vorstationaer", "nachstationaer", "ub", "konsil", "operation").
 #' It relocates the `ward_name` column to directly follow
 #' `enc_period_end`, ensuring that the returned table is free of duplicate rows.
@@ -302,7 +400,7 @@ addWardName <- function(merged_table_with_main_enc, pids_per_ward_table) {
     ) |>
     dplyr::mutate(ward_name = dplyr::if_else(
       enc_type_code_Kontaktebene == "versorgungsstellenkontakt" &
-        !enc_class_code %in% c("AMB", "SS") &
+        !enc_class_code %in% c("AMB") &
         !enc_type_code_Kontaktart %in% c(
           "vorstationaer", "nachstationaer",
           "ub", "konsil", "operation"
@@ -333,7 +431,10 @@ addWardName <- function(merged_table_with_main_enc, pids_per_ward_table) {
 #' The function performs a left join on `merged_table_with_ward` using `pat_id` from the merged
 #' table and matches it with `pat_id` from `patient_fe_table`. This adds the `record_id` to the
 #' merged table, providing a unique identification feature that can be crucial for subsequent
-#' analyses or data organization tasks.
+#' analyses or data organization tasks. If any patients in the merged table do not have a matching
+#' `record_id` in the patient front-end table, a warning is issued, and those records are printed
+#' for review. The `processing_exclusion_reason` column is updated to indicate these cases:
+#' "patient_without_matching_record_id_in_fe".
 #'
 #' @importFrom dplyr left_join select relocate
 #' @export
@@ -344,7 +445,22 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
         dplyr::select(pat_id, record_id),
       by = c("pat_id" = "pat_id")
     ) |>
-    dplyr::relocate(record_id, .after = pat_id)
+    dplyr::relocate(record_id, .after = pat_id) |>
+    dplyr::distinct()
+
+  if (any(is.na(merged_table_with_record_id$record_id))) {
+    warning("Some patients in the database have no matching record id in the frontend patient_fe datatable.
+            Please check the data.")
+    merged_table_with_record_id <- merged_table_with_record_id |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(record_id) & is.na(processing_exclusion_reason),
+        "patient_without_matching_record_id_in_fe",
+        processing_exclusion_reason
+      ))
+    print(merged_table_with_record_id |>
+      dplyr::filter(is.na(record_id)), width = Inf)
+  }
+
   return(merged_table_with_record_id)
 }
 
@@ -378,7 +494,9 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
 #'   \item `main_enc_period_start` = `fall_aufn_dat`
 #' }
 #' After the join, the function renames and relocates the relevant columns, and ensures uniqueness
-#' using `distinct()`.
+#' using `distinct()`. If any INTERPOLAR ward encounters lack a matching record in the
+#' `fall_fe_table`, a warning is issued, and those records are printed for review. The
+#' `processing_exclusion_reason` column is updated to indicate these cases: "encounter_without_matching_fall_fe_record".
 #' Note: fall_studienphase is currently not used in the analysis, therefore it is commented out.
 #'
 #'
@@ -400,6 +518,24 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
     dplyr::relocate(fall_id_cis, .after = enc_identifier_value) |>
     # dplyr::relocate(studienphase, .after = ward_name) |>
     dplyr::distinct()
+
+  if (any(merged_table_with_fall_id_and_studienphase$enc_type_code_Kontaktebene == "versorgungsstellenkontakt" &
+    !is.na(merged_table_with_fall_id_and_studienphase$ward_name) &
+    is.na(merged_table_with_fall_id_and_studienphase$fall_id_cis))) {
+    warning("Some INTERPOLAR-ward-encounters in the database have no matching record (CIS-identifier) in the
+            frontend fall_fe datatable. Please check the data.")
+    merged_table_with_fall_id_and_studienphase <- merged_table_with_fall_id_and_studienphase |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        enc_type_code_Kontaktebene == "versorgungsstellenkontakt" & !is.na(ward_name) &
+          is.na(fall_id_cis) & is.na(processing_exclusion_reason),
+        "encounter_without_matching_fall_fe_record",
+        processing_exclusion_reason
+      ))
+    print(merged_table_with_fall_id_and_studienphase |>
+      dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt" & !is.na(ward_name) &
+        is.na(fall_id_cis)), width = Inf)
+  }
+
   return(merged_table_with_fall_id_and_studienphase)
 }
 

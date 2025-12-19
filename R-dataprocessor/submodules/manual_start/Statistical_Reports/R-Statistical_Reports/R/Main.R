@@ -166,14 +166,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   FHIR_table <- mergePatEnc(patient_table, encounter_table) |>
     addCuratedEncPeriodEnd() |>
-    CheckNAInCuratedEncPeriodEnd() |>
     addMainEncId() |>
-    CheckEncounterWithoutMainEncId() |>
     addMainEncPeriodStart() |>
     calculateAge() |>
     addWardName(pids_per_ward_table) |>
     addRecordId(patient_fe_table) |>
-    addFallIdAndStudienphase(fall_fe_table)
+    addFallIdAndStudienphase(fall_fe_table) |>
+    ExpandProcessingExclusionReasonToAllEncounterLevels()
 
   full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table)
 

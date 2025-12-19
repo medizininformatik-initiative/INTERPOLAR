@@ -349,6 +349,71 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
   return(data)
 }
 
+#' Propagate Processing Exclusion Reasons Across Encounter Levels
+#'
+#' This function propagates existing `processing_exclusion_reason` values
+#' across all encounters that share the same `main_enc_id`.
+#'
+#' If any encounter within a group (defined by `main_enc_id`) has a
+#' non-`NA` `processing_exclusion_reason`, related encounters without an
+#' exclusion reason will be assigned a derived reason depending on their
+#' encounter level (`enc_type_code_kontaktebene`).
+#'
+#' @param encounter_table A data frame containing encounter-level data.
+#'   The table must include the columns `main_enc_id`,
+#'   `processing_exclusion_reason`, and `enc_type_code_kontaktebene`.
+#'
+#' @return
+#' A data frame identical to `encounter_table`, but with
+#' `processing_exclusion_reason` expanded to related encounters sharing
+#' the same `main_enc_id`. For underage patients, the reason
+#' `"patient_underage"` is prioritized.
+#'
+#' @details
+#' The propagation logic works as follows:
+#' \itemize{
+#'   \item If at least one encounter within a `main_enc_id` group has a
+#'   non-`NA` `processing_exclusion_reason`, all related encounters without
+#'   an exclusion reason are updated.
+#'   \item Encounters with `enc_type_code_kontaktebene == "einrichtungskontakt"`
+#'   receive the exclusion reason
+#'   `"sub_encounter_with_processing_exclusion_reason"`.
+#'   \item Encounters with other `enc_type_code_kontaktebene` values receive
+#'   the exclusion reason
+#'   `"related_encounter_with_processing_exclusion_reason"`.
+#'   \item Existing non-`NA` exclusion reasons are preserved.
+#' }
+#'
+#' This ensures consistent exclusion labeling across all encounter levels
+#' belonging to the same main encounter.
+#'
+#' @importFrom dplyr group_by mutate case_when ungroup distinct
+#'
+#' @export
+ExpandProcessingExclusionReasonToAllEncounterLevels <- function(encounter_table) {
+  encounter_table <- encounter_table |>
+    dplyr::group_by(main_enc_id) |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      any(!is.na(processing_exclusion_reason)) &
+        is.na(processing_exclusion_reason) &
+        enc_type_code_Kontaktebene == "einrichtungskontakt" ~
+        "sub_encounter_with_processing_exclusion_reason",
+      any(!is.na(processing_exclusion_reason)) &
+        is.na(processing_exclusion_reason) &
+        enc_type_code_Kontaktebene != "einrichtungskontakt" ~
+        "related_encounter_with_processing_exclusion_reason",
+      any(!is.na(processing_exclusion_reason)) &
+        any(processing_exclusion_reason == "patient_underage") ~
+        "patient_underage",
+      TRUE ~ processing_exclusion_reason
+    )) |>
+    dplyr::ungroup() |>
+    dplyr::distinct()
+
+  return(encounter_table)
+}
+
+
 #' Check Multiple Rows per Patient ID
 #'
 #' This function checks whether the patient table contains multiple rows for the
@@ -372,7 +437,8 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
 CheckMultipleRowsPerPatId <- function(patient_table) {
   if (checkMultipleRows(patient_table, c("pat_id"))) {
     warning("The patient table contains multiple rows for the same pat_id(FHIR).
-            Please check the data.")
+    Please check the data. It may be important for the display in the frontend
+    (FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_ defined?) but has no consequences for reporting.")
   }
   return(patient_table)
 }
@@ -404,12 +470,7 @@ CheckMultipleRowsPerPatId <- function(patient_table) {
 CheckMultipleRowsPerPatIdentifierValue <- function(patient_table) {
   if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
     warning("The patient table contains multiple rows for the same patient identifier (cis).
-            Please check the data.")
-    patient_table <- patient_table |>
-      addMultipleRowsProcessingExclusionReason(
-        c("pat_identifier_value"),
-        "multiple_rows_per_pat_identifier_value"
-      )
+            This could result in data processing problems. Please check the data.")
   }
   return(patient_table)
 }
@@ -550,7 +611,7 @@ CheckMissingKontaktebeneForImpEncounter <- function(encounter_table) {
 #'
 #' @export
 CheckUnexpectedStatus <- function(encounter_table) {
-  if (any(!is.na(encounter_table$enc_class_code) &
+  if (any(!is.na(encounter_table$enc_status) &
     (is.na(encounter_table$enc_status) | !encounter_table$enc_status %in% c(
       "finished", "in-progress", "onleave"
     )))) {
@@ -998,94 +1059,10 @@ CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
   if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
     patient_fe_table <- patient_fe_table |>
       addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id_in_fe")
-    warning("The patient_fe table contains multiple rows for the same pat_id(FHIR).
+    warning("The patient_fe table contains multiple record_ids for the same pat_id(FHIR).
             Please check the data.")
   }
   return(patient_fe_table)
-}
-
-#' Check for NA Values in Curated Encounter Period End
-#'
-#' This function checks whether the encounter table contains `NA` values
-#' in the `curated_enc_period_end` column.
-#'
-#' If any `NA` values are found, a warning is issued and the function assigns a
-#' processing exclusion reason `"NA_in_curated_enc_period_end"` for those rows.
-#'
-#' @param encounter_table_with_curated_enc_period_end A data frame containing
-#'   encounter-level data. The table must include the column
-#'   `curated_enc_period_end` and `processing_exclusion_reason`.
-#'
-#' @return
-#' A data frame identical to `encounter_table_with_curated_enc_period_end`,
-#' with `processing_exclusion_reason` updated for rows where
-#' `curated_enc_period_end` is `NA`.
-#'
-#' @details
-#' NA values in `curated_enc_period_end` indicate that the encounter end date
-#' could not be determined or was missing in the source data. Flagging these
-#' rows ensures downstream analyses handle such cases appropriately.
-#'
-#' @importFrom dplyr mutate filter
-#'
-#' @export
-CheckNAInCuratedEncPeriodEnd <- function(encounter_table_with_curated_enc_period_end) {
-  if (any(is.na(encounter_table_with_curated_enc_period_end$curated_enc_period_end))) {
-    encounter_table_with_curated_enc_period_end <- encounter_table_with_curated_enc_period_end |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(curated_enc_period_end) &
-        is.na(processing_exclusion_reason),
-      "NA_in_curated_enc_period_end",
-      processing_exclusion_reason
-      ))
-    print(
-      encounter_table_with_curated_enc_period_end |>
-        dplyr::filter(is.na(curated_enc_period_end)),
-      width = Inf
-    )
-    warning("There are NA values in curated_enc_period_end. Please check the data.")
-  }
-  return(encounter_table_with_curated_enc_period_end)
-}
-
-#' Check Encounters Without Calculated Main Encounter ID
-#'
-#' This function checks whether encounters are missing a calculated main
-#' encounter ID (`main_enc_id`).
-#'
-#' For encounters where `main_enc_id` is `NA`, the function
-#' assigns the processing exclusion reason
-#' `encounter_without_main_enc_id` if no exclusion reason has already
-#' been set. The affected rows are printed and a warning is issued.
-#'
-#' @param encounter_table A data frame containing encounter-level data.
-#'   ``.
-#'
-#' @return
-#' A data frame identical to `encounter_table`, except that
-#' `processing_exclusion_reason` is updated.
-#'
-#' @details
-#' Missing values may indicate incomplete encounter hierarchies or
-#' failures in earlier processing steps. Such encounters are flagged to prevent
-#' downstream analyses from silently using incomplete data.
-#'
-#' @importFrom dplyr mutate filter if_else
-#'
-#' @export
-CheckEncounterWithoutMainEncId <- function(encounter_table_with_main_enc) {
-  if (any(is.na(encounter_table_with_main_enc$main_enc_id))) {
-    encounter_table_with_main_enc <- encounter_table_with_main_enc |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        is.na(main_enc_id) & is.na(processing_exclusion_reason),
-        "encounter_without_main_enc_id",
-        processing_exclusion_reason
-      ))
-    print(encounter_table_with_main_enc |>
-      dplyr::filter(is.na(main_enc_id)), width = Inf)
-    warning("Some encounters have no calculated main_enc_id.
-            Please check the data.")
-  }
-  return(encounter_table_with_main_enc)
 }
 
 # DEBUG Section ----------------------------------------------------------
@@ -1164,7 +1141,13 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
 
     unexpected_status_check <- encounter_table |>
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001_8") |>
+      dplyr::filter(enc_type_code_Kontaktebene == "abteilungskontakt") |>
       dplyr::mutate(enc_status = "test_status")
+
+    underage_check <- encounter_table |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_8") |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::mutate(enc_period_start = as.POSIXct("1960-01-01"))
 
     imp_finished_without_end_date_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
@@ -1203,6 +1186,7 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
     check_encounter_table <- missing_start_date_check |>
       rbind(missing_kontaktebene_for_imp_encounter_check) |>
       rbind(unexpected_status_check) |>
+      rbind(underage_check) |>
       rbind(imp_finished_without_end_date_check) |>
       rbind(unexpected_class_code_check) |>
       rbind(unexpected_kontaktart_code_check) |>
