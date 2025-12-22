@@ -37,6 +37,9 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS fhircrackr
 RUN /rocker_scripts/bin/install2.r -n $NCPUS base64enc
 RUN /rocker_scripts/bin/install2.r -n $NCPUS digest
 RUN /rocker_scripts/bin/install2.r -n $NCPUS units
+RUN /rocker_scripts/bin/install2.r -n $NCPUS checkmate
+RUN /rocker_scripts/bin/install2.r -n $NCPUS chron
+RUN /rocker_scripts/bin/install2.r -n $NCPUS labelVector
 
 # Install R packages for interactive HTML tables
 RUN apt-get update && apt-get install -y pandoc
@@ -65,6 +68,7 @@ RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-cds2db/cds2db
 RUN apt-get install -y libsodium-dev libsecret-1-0
 
 RUN /rocker_scripts/bin/install2.r -n $NCPUS dplyr
+RUN /rocker_scripts/bin/install2.r -n $NCPUS shelter
 
 COPY R-redcapAPI R-redcapAPI
 
