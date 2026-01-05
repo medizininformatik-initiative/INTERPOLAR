@@ -1351,3 +1351,25 @@ dtRemoveCommentRows <- function(dt, comment_marker = "#", remove_empty = TRUE) {
   return(dt)
 }
 
+#' Rename columns in a list of data.tables
+#'
+#' Renames one or more columns in each data.table contained in a list.
+#' Column renaming is performed by reference using \code{data.table::setnames()},
+#' so the original data.tables are modified in place.
+#'
+#' Columns that are not present in a specific table are silently skipped.
+#'
+#' @param tbl_list A list of \code{data.table} objects.
+#' @param old A character vector of existing column names to be renamed.
+#' @param new A character vector of new column names. Must be the same length as \code{old}.
+#'
+#' @return A list of \code{data.table}s with renamed columns (same objects, modified by reference).
+#'
+#' @export
+renameColsInLists <- function(tbl_list, old, new) {
+  lapply(tbl_list, function(tbl) {
+    data.table::setnames(tbl, old = old, new = new, skip_absent = TRUE)
+    tbl
+  })
+}
+
