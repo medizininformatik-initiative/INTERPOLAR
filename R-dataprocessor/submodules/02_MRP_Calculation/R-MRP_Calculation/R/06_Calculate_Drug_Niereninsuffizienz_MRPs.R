@@ -7,21 +7,26 @@
 #' @return A named character vector of column names relevant to Drug-Niereninsuffizienz MRP definitions.
 getRelevantColumnNamesDrugNiereninsuffizienz <- function() {
   etlutils::namedVectorByValue(
-    "ATC_PRIMARY",
+    #"SMPC_NAME",
+    #"SMPC_VERSION",
     "ATC_DISPLAY",
-    "LOINC_PRIMARY",
-    "LOINC_CUTOFF_ABSOLUTE",
-    #"ursprünglicher Grenzwert (hart)",
-    "LOINC_PROXY_ICD",
+    "ATC_PRIMARY",
     "ATC_SYSTEMIC_SY",
-    "ATC_DERMATIKA_D",
-    "ATC_OPHTHALMIKA_O",
-    "ATC_INHALANDA_I",
-    "ATC_SONSTIGE_SO",
+    "ATC_DERMATIC_D",
+    "ATC_OPHTHALMOLOGIC_OP",
+    "ATC_INHALATIVE_I",
+    "ATC_OTHER_OT",
     "ATC_INCLUSION",
-    "LOINC_PROXY_ICD_VALIDITY_DAYS"#,
-    #"Bemerkung zu Fachinformation"
-    #"Quelle"
+    "CONDITION_DISPLAY",
+    "CONDITION_DISPLAY_CLUSTER",
+    "ICD",
+    "ICD_VALIDITY_DAYS",
+    "LOINC_PRIMARY_PROXY",
+    "LOINC_UNIT",
+    "LOINC_DISPLAY",
+    "LOINC_CUTOFF_REFERENCE",
+    "LOINC_CUTOFF_ABSOLUTE"#,
+    #"ursprünglicher Grenzwert (hart)"
   )
 }
 
