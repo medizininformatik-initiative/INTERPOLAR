@@ -49,7 +49,7 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
     -   `enc_status` (Status des Falls, z.B. "finished" für abgeschlossene Fälle)
     -   `enc_identifier_system` (System des FHIR Fallidentifikators)
 -   filtert Fälle (alle Ebenen) heraus, deren `enc_identifier_system` nicht dem erwarteten Fall-FHIR-Identifikatorsystem entsprechen (sofern als `COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM` definiert).
--   Filterung aller Falldaten falls Startdatum vorhanden auf `enc_period_start` innerhalb eines Jahres vor `reporting_period_start`, um das Laden von einer großen Menge Altdaten zu vermeiden
+-   Filterung aller Falldaten falls Startdatum/Enddatum vorhanden auf `enc_period_start` und `enc_period_end` innerhalb eines Jahres vor `reporting_period_start`, um das Laden von einer großen Menge Altdaten zu vermeiden
 -   filtert Fälle mit `enc_class_code` "PRENC"(pre-admission), "VR"(virtual) oder "HH"(home health) heraus, um irrelevante Datensätze auszuschließen.
 -   filtert Fälle mit `enc_status` "planned", "cancelled", "entered-in-error" oder "unknown" heraus, um irrelevante Datensätze auszuschließen; übrig sollten bleiben: "in-progress", "onleave" und "finished".
 -   verwendet die Spalten `enc_type_code` und `enc_type_system`, um Kontaktebene (z.B. Versorgungsstellenkontakt) und Kontaktart (z.B. normalstationär, intensivstationär) um die Tabelle zu verflachen:

@@ -125,7 +125,8 @@ getPatientData <- function(lock_id, table_name) {
 #' 1. Builds and runs a SQL query selecting the full encounter dataset from the specified table.
 #' 2. Filters out encounters that do not match the expected FHIR identifier
 #'    system for encounters (if defined as `COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM`).
-#' 3. Filters encounters to include only those with a start date within one year before the reporting_period_start
+#' 3. Filters encounters to include only those with a start date and end date within one year before
+#'    the reporting_period_start or with missing dates to keep track of potentially relevant records.
 #' 4. Filters out encounters with class codes "PRENC", "VR", or "HH" to exclude non-relevant records.
 #' 5. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown"
 #'    to focus on relevant records.
@@ -180,7 +181,8 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   }
 
   encounter_table <- encounter_table_raw |>
-    dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_start))
+    dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_start)) |>
+    dplyr::filter(enc_period_end >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_end))
 
   if (nrow(encounter_table) == 0) {
     stop("The downloaded and date-filtered encounter table (only encounter data from one year before
