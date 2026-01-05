@@ -20,6 +20,104 @@ MRP_TYPE <- etlutils::namedVectorByParam(
   #"Drug_Niereninsuffizienz"
 )
 
+#' Clean and Expand MRP Definition Table
+#'
+#' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
+#' splitting and trimming values, and expanding concatenated ICD codes.
+#'
+#' @param mrp_definition A data.table containing the MRP definition table.
+#' @param mrp_type A character string representing the base name of the MRP definition (e.g., `"Drug_Disease"`).
+#'
+#' @return A cleaned and expanded data.table containing the MRP definition table.
+#'
+#' @export
+processExcelContentDrugCondition <- function(mrp_definition, mrp_type) {
+
+  # Remove not necessary columns
+  mrp_columnnames <- getRelevantColumnNames(mrp_type)
+  mrp_definition <- mrp_definition[, ..mrp_columnnames]
+
+  # Remove rows with all empty code columns
+  code_column_names <- names(mrp_definition)[
+    (grepl("PROXY|ATC|ICD", names(mrp_definition))) &
+      !grepl("DISPLAY|INCLUSION|VALIDITY_DAYS", names(mrp_definition))
+  ]
+  mrp_definition <- etlutils::removeRowsWithNAorEmpty(mrp_definition, code_column_names)
+
+  # ICD column:
+  # remove white spaces around plus signs
+  etlutils::replacePatternsInColumn(mrp_definition, 'ICD', '\\s*\\+\\s*', '+')
+  # replace all invalid chars in the ICD codes by a simple whitespace -> can be trimmed and splitted
+  mrp_definition[, ICD := sapply(ICD, function(text) gsub('[^0-9A-Za-z. +]', '', text))]
+
+  computeATCForCalculation(
+    data_table = mrp_definition,
+    primary_col = "ATC_PRIMARY",
+    inclusion_col = "ATC_INCLUSION",
+    output_col = "ATC_FOR_CALCULATION",
+    secondary_cols = c("ATC_SYSTEMIC_SY", "ATC_DERMATIC_D", "ATC_OPHTHALMOLOGIC_OP", "ATC_INHALATIVE_I", "ATC_OTHER_OT")
+  )
+
+  # To prevent a large number of meaningless MRPs from being found, all lines for proxy codes that essentially
+  # mean the same thing must be combined. The reason for this is that a short form of an ICD code (e.g., K70)
+  # results in a large number of individual codes, which then all generate their own MRP for the LOINC proxy
+  # because LOINC says that the patient has all these diseases.
+
+  code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
+  # Create a new column for the full ATC list
+  mrp_definition[, ATC_FULL_LIST := ATC_FOR_CALCULATION]
+  # Create a new column for the full ICD list
+  mrp_definition[, ICD_FULL_LIST := ICD]
+  # SPLIT and TRIM: ICD and proxy column:
+  # split the whitespace separated lists in ICD and proxy columns in a single row per code
+  mrp_definition <- etlutils::splitColumnsToRows(mrp_definition, code_column_names)
+  # trim all values in the whole table
+  etlutils::trimTableValues(mrp_definition)
+  # ICD column: remove tailing points from ICD codes
+  etlutils::replacePatternsInColumn(mrp_definition, 'ICD', '\\.$', '')
+  # remove rows with empty ICD code and empty proxy codes (ATC, LOINC, OPS) again.
+  # After the replacing of special signs with an empty string their can be new empty rows in this both columns
+  mrp_definition <- etlutils::removeRowsWithNAorEmpty(mrp_definition, code_column_names)
+
+  # Remove duplicate rows
+  mrp_definition <- unique(mrp_definition)
+
+  # Clean rows with NA or empty values in relevant code columns
+  for (col in code_column_names) {
+    mrp_definition[[col]] <- ifelse(
+      is.na(mrp_definition[[col]]) |
+        !nzchar(trimws(mrp_definition[[col]])),
+      NA_character_,
+      mrp_definition[[col]]
+    )
+  }
+
+  # check column ATC and ATC_PROXY for correct ATC codes
+  invalid_atcs <- etlutils::getInvalidCodes(mrp_definition, "ATC_FOR_CALCULATION", etlutils::isATC)
+  invalid_atcs_proxy <- etlutils::getInvalidCodes(mrp_definition, "ICD_PROXY_ATC", etlutils::isATC7orSmaller)
+
+  # check column LOINC_PROXY for correct LOINC codes
+  invalid_loincs <- etlutils::getInvalidCodes(mrp_definition, "LOINC_PRIMARY_PROXY", etlutils::isLOINC)
+
+  error_messages <- c(
+    formatCodeErrors(invalid_atcs, "ATC"),
+    formatCodeErrors(invalid_atcs_proxy, "ATC_PROXY"),
+    formatCodeErrors(invalid_loincs, "LOINC")
+  )
+
+  if (length(error_messages) > 0) {
+    stop(paste(error_messages, collapse = "\n"))
+  }
+
+  # Apply the function to the 'ICD' column
+  mrp_definition$ICD <- expandAndConcatenateICDs(mrp_definition$ICD)
+  # Split concatenated ICD codes into separate rows
+  mrp_definition <- etlutils::splitColumnsToRows(mrp_definition, "ICD")
+  # Remove duplicate rows
+  mrp_definition <- unique(mrp_definition)
+  return(mrp_definition)
+}
+
 #
 # Load all encounters for a time range
 #
@@ -624,4 +722,30 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
   active_atc[, grp := NULL]
 
   return(active_atc)
+}
+
+#' Get relevant patient conditions up to a given date
+#'
+#' Filters the list of Condition resources to return conditions for a specific patient
+#' that occurred on or before the given medication analysis date. If the condition has a
+#' \code{con_recordeddate}, it is used for filtering; otherwise, \code{con_onsetperiod_start}
+#' is used as a fallback.
+#'
+#' @param conditions A \code{data.table} of FHIR Condition resources, including columns \code{pat_id},
+#' \code{con_recordeddate}, and \code{con_onsetperiod_start}.
+#' @param patient_id A character string identifying the patient whose conditions should be returned.
+#' @param meda_datetime A POSIXct timestamp representing the medication analysis date.
+#'
+#' @return A \code{data.table} of conditions that match the patient and date criteria.
+#'
+getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
+
+  # Filter conditions by patient ID and ensure recorded date is before or on meda_datetime
+  relevant_conditions <- conditions[
+    con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime]
+
+  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "con_code_display", "start_datetime")
+  relevant_conditions <- relevant_conditions[, ..relevant_cols]
+
+  return(relevant_conditions)
 }
