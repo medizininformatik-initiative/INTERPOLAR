@@ -6,7 +6,7 @@
 #'
 #' @param patient_table A data frame containing patient information, including at least:
 #'   - `pat_id`: FHIR patient ID
-#'   - Additional patient attributes such as birthdate, identifier, etc.
+#'   - Additional patient attributes such as birthdate
 #' @param encounter_table A data frame containing encounter information, including at least:
 #'   - `enc_patient_ref`: A reference to the patient (format: "Patient/<pat_id>")
 #'   - Other encounter attributes such as `enc_id`, `enc_type_code_Kontaktebene`, etc.
@@ -18,8 +18,6 @@
 #' The function performs the following steps:
 #' 1. Extracts the `pat_id` from the `enc_patient_ref` string in the `encounter_table`.
 #' 2. Performs a left join between the encounter table and the patient table using `pat_id` as the key.
-#' 3. Adds suffixes to overlapping column names (`_enc`, `_pat`) to distinguish their origin.
-#' 4. Merges the `processing_exclusion_reason` from both tables, prioritizing the patient-level reason
 #'
 #' This merged dataset is used for further filtering, enrichment, or analysis involving both patient
 #' and encounter context.
@@ -32,19 +30,9 @@ mergePatEnc <- function(patient_table, encounter_table) {
     dplyr::mutate(pat_id = sub("^Patient/", "", enc_patient_ref), .keep = "unused") |>
     dplyr::left_join(
       patient_table |>
-        dplyr::select(c(
-          pat_id, pat_birthdate,
-          processing_exclusion_reason
-        )) |>
+        dplyr::select(c(pat_id, pat_birthdate)) |>
         dplyr::distinct(),
-      by = "pat_id", suffix = c("_enc", "_pat")
-    ) |>
-    dplyr::mutate(
-      processing_exclusion_reason = dplyr::if_else(!is.na(processing_exclusion_reason_pat),
-        processing_exclusion_reason_pat,
-        processing_exclusion_reason_enc
-      ),
-      .keep = "unused"
+      by = "pat_id"
     ) |>
     dplyr::relocate(
       enc_identifier_value,
@@ -105,10 +93,15 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 
   if (any(is.na(encounter_table_with_curated_enc_period_end$curated_enc_period_end))) {
     encounter_table_with_curated_enc_period_end <- encounter_table_with_curated_enc_period_end |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(curated_enc_period_end) &
-        is.na(processing_exclusion_reason),
-      "NA_in_curated_enc_period_end",
-      processing_exclusion_reason
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(curated_enc_period_end),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "NA_in_curated_enc_period_end",
+          level = "sub_encounter",
+          type = "data_issues"
+        ),
+        processing_exclusion_reason
       ))
     print(
       encounter_table_with_curated_enc_period_end |>
@@ -206,8 +199,13 @@ addMainEncId <- function(encounter_table) {
   if (any(is.na(encounter_table_with_main_enc$main_enc_id))) {
     encounter_table_with_main_enc <- encounter_table_with_main_enc |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        is.na(main_enc_id) & is.na(processing_exclusion_reason),
-        "encounter_without_main_enc_id",
+        is.na(main_enc_id),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "encounter_without_main_enc_id",
+          level = "sub_encounter",
+          type = "data_issues"
+        ),
         processing_exclusion_reason
       ))
     print(encounter_table_with_main_enc |>
@@ -267,7 +265,13 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
   if (any(is.na(encounter_table_with_MainEncPeriodStart$main_enc_period_start))) {
     encounter_table_with_MainEncPeriodStart <- encounter_table_with_MainEncPeriodStart |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        is.na(main_enc_period_start) & is.na(processing_exclusion_reason),
+        is.na(main_enc_period_start),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "encounter_without_main_enc_period_start",
+          level = "sub_encounter",
+          type = "data_issues"
+        ),
         "encounter_without_main_enc_period_start",
         processing_exclusion_reason
       ))
@@ -325,8 +329,13 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
             Please check the data.")
     merged_table_with_age <- merged_table_with_age |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        is.na(age_at_hospitalization) & is.na(processing_exclusion_reason),
-        "patient_without_determined_age",
+        is.na(age_at_hospitalization),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "patient_without_determined_age",
+          level = "main_encounter",
+          type = "data_issues"
+        ),
         processing_exclusion_reason
       ))
     print(merged_table_with_age |>
@@ -338,8 +347,13 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
             Please check the data.")
     merged_table_with_age <- merged_table_with_age |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        (age_at_hospitalization <= 0 | age_at_hospitalization > 120) & is.na(processing_exclusion_reason),
-        "patient_with_implausible_age",
+        (age_at_hospitalization <= 0 | age_at_hospitalization > 120),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "patient_with_implausible_age",
+          level = "main_encounter",
+          type = "data_issues"
+        ),
         processing_exclusion_reason
       ))
     print(merged_table_with_age |>
@@ -350,7 +364,12 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
     merged_table_with_age <- merged_table_with_age |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
         age_at_hospitalization < 18,
-        "patient_underage",
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "patient_underage",
+          level = "main_encounter",
+          type = "inclusion_citeria"
+        ),
         processing_exclusion_reason
       ))
   }
@@ -453,8 +472,13 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
             Please check the data.")
     merged_table_with_record_id <- merged_table_with_record_id |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        is.na(record_id) & is.na(processing_exclusion_reason),
-        "patient_without_matching_record_id_in_fe",
+        is.na(record_id),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "patient_without_matching_record_id_in_fe",
+          level = "patient",
+          type = "linkage_issues"
+        ),
         processing_exclusion_reason
       ))
     print(merged_table_with_record_id |>
@@ -527,8 +551,13 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
     merged_table_with_fall_id_and_studienphase <- merged_table_with_fall_id_and_studienphase |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
         enc_type_code_Kontaktebene == "versorgungsstellenkontakt" & !is.na(ward_name) &
-          is.na(fall_id_cis) & is.na(processing_exclusion_reason),
-        "encounter_without_matching_fall_fe_record",
+          is.na(fall_id_cis),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "encounter_without_matching_fall_fe_record",
+          level = "main_encounter",
+          type = "linkage_issues"
+        ),
         processing_exclusion_reason
       ))
     print(merged_table_with_fall_id_and_studienphase |>

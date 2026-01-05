@@ -62,7 +62,7 @@
 #' }
 #'
 #' @section Output:
-#' - **Local output**: `FHIR_table`, `full_analysis_set_1`, `statistical_report_data`,
+#' - **Local output**: `FHIR_table_with_linkage_to_fe`, `full_analysis_set_1`, `statistical_report_data`,
 #'                     `frontend_table`, `frontend_summary_data`
 #' - **Global output**:
 #'   \itemize{
@@ -137,7 +137,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   # this table can have multiple entries per main encounter due to transferral to another ward,
   # it should include the encounter level "Versorgungsstellenkontakt"
 
-  # TODO: check if the appropriate views (last import vs last version) are used -------
   patient_fe_table <- getPatientFeData(
     lock_id = "statistical reports[4]",
     table_name = "v_patient_fe"
@@ -168,14 +167,14 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     addCuratedEncPeriodEnd() |>
     addMainEncId() |>
     addMainEncPeriodStart() |>
-    calculateAge() |>
+    calculateAge()
+  FHIR_table_with_linkage_to_fe <- FHIR_table |>
     addWardName(pids_per_ward_table) |>
     addRecordId(patient_fe_table) |>
     addFallIdAndStudienphase(fall_fe_table) |>
     ExpandProcessingExclusionReasonToAllEncounterLevels()
 
-  full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table)
-
+  full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table_with_linkage_to_fe)
   frontend_table <- mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
     addMedaData(medikationsanalyse_fe_table) |>
     addEncIdToFeData(full_analysis_set_1) |>
@@ -200,7 +199,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     writeHtmlTable(patient_table)
     writeHtmlTable(encounter_table)
     writeHtmlTable(pids_per_ward_table)
-    writeHtmlTable(FHIR_table)
+    writeHtmlTable(FHIR_table_with_linkage_to_fe)
     writeHtmlTable(full_analysis_set_1)
     writeHtmlTable(statistical_report_data)
     writeHtmlTable(frontend_table)

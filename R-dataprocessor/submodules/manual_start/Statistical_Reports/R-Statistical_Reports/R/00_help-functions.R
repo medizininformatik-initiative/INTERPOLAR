@@ -103,6 +103,61 @@ checkMultipleRows <- function(data, grouping_vars) {
 }
 
 #------------------------------------------------------------------------------#
+#' Add a Processing Exclusion Reason in a Structured Way
+#'
+#' This function appends a new processing exclusion reason to an existing
+#' exclusion reason field while avoiding duplicate entries.
+#'
+#' The exclusion reason is stored as a semicolon-separated character string.
+#' Each individual entry follows the format:
+#'
+#' \code{reason|level|type}
+#'
+#' If the new entry already exists in the exclusion reason string, the original
+#' value is returned unchanged.
+#'
+#' @param existing A character vector containing existing processing exclusion
+#'   reasons, or \code{NA}. Multiple reasons are expected to be separated by
+#'   semicolons.
+#'
+#' @param reason A character string describing the exclusion reason.
+#'
+#' @param level A character string indicating the data level at which the
+#'   exclusion applies ( e.g. 'patient', 'main_encounter' 'sub_encounter').
+#'
+#' @param type A character string describing the exclusion type (e.g. 'inclusion_citeria', 'data_issues').
+#'
+#' @return
+#' A character vector of the same length as \code{existing}, where the new
+#' exclusion reason has been appended if applicable.
+#'
+#' @details
+#' The function behaves as follows:
+#' \itemize{
+#'   \item If \code{existing} is \code{NA}, a new exclusion reason is created.
+#'   \item If the constructed exclusion reason already exists, it is not added
+#'         again.
+#'   \item Otherwise, the new exclusion reason is appended using a semicolon
+#'         separator.
+#' }
+#'
+#' This helper is intended for consistent and traceable accumulation of
+#' processing exclusion reasons across multiple validation and curation steps.
+#'
+#' @importFrom dplyr case_when
+#' @importFrom stringr str_detect fixed
+#' @export
+addProcessingExclusionReason <- function(existing, reason, level, type) {
+  new_entry <- paste(reason, level, type, sep = "|")
+
+  dplyr::case_when(
+    is.na(existing) ~ new_entry,
+    stringr::str_detect(existing, stringr::fixed(new_entry)) ~ existing,
+    TRUE ~ paste(existing, new_entry, sep = ";")
+  )
+}
+
+#------------------------------------------------------------------------------#
 #' Flag Groups with Multiple Rows by Adding a Processing Exclusion Reason
 #'
 #' This function checks whether groups defined by a set of variables contain
@@ -127,32 +182,25 @@ checkMultipleRows <- function(data, grouping_vars) {
 #' - If a group has only one row, the existing value in
 #'   `processing_exclusion_reason` is preserved.
 #'
-#' @examples
-#' library(dplyr)
-#' df <- data.frame(
-#'   patient_id = c(1, 1, 2, 3, 3, 3),
-#'   value = c(10, 12, 5, 7, 8, 9),
-#'   processing_exclusion_reason = NA_character_
-#' )
-#' df_flagged <- addMultipleRowsProcessingExclusionReason(
-#'   data = df,
-#'   grouping_vars = c("patient_id"),
-#'   processing_exclusion_reason_name = "Multiple entries for patient"
-#' )
-#' df_flagged
-#'
 #' @importFrom dplyr group_by add_count mutate if_else ungroup select across all_of
 #'
 #' @export
 addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars,
-                                                     processing_exclusion_reason_name) {
+                                                     processing_exclusion_reason_name,
+                                                     processing_exclusion_reason_level,
+                                                     processing_exclusion_reason_type) {
   data_add_multiple_row_reason <- data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
     dplyr::add_count() |>
-    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(n > 1 &
-      is.na(processing_exclusion_reason),
-    processing_exclusion_reason_name,
-    processing_exclusion_reason
+    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+      n > 1,
+      addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = processing_exclusion_reason_name,
+        level = processing_exclusion_reason_level,
+        type = processing_exclusion_reason_type
+      ),
+      processing_exclusion_reason
     )) |>
     dplyr::ungroup() |>
     dplyr::select(-n)
@@ -356,18 +404,16 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
 #'
 #' If any encounter within a group (defined by `main_enc_id`) has a
 #' non-`NA` `processing_exclusion_reason`, related encounters without an
-#' exclusion reason will be assigned a derived reason depending on their
-#' encounter level (`enc_type_code_kontaktebene`).
+#' exclusion reason will be assigned a derived reason.
 #'
 #' @param encounter_table A data frame containing encounter-level data.
 #'   The table must include the columns `main_enc_id`,
-#'   `processing_exclusion_reason`, and `enc_type_code_kontaktebene`.
+#'   `processing_exclusion_reason`.
 #'
 #' @return
 #' A data frame identical to `encounter_table`, but with
 #' `processing_exclusion_reason` expanded to related encounters sharing
-#' the same `main_enc_id`. For underage patients, the reason
-#' `"patient_underage"` is prioritized.
+#' the same `main_enc_id`.
 #'
 #' @details
 #' The propagation logic works as follows:
@@ -375,19 +421,18 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
 #'   \item If at least one encounter within a `main_enc_id` group has a
 #'   non-`NA` `processing_exclusion_reason`, all related encounters without
 #'   an exclusion reason are updated.
-#'   \item Encounters with `enc_type_code_kontaktebene == "einrichtungskontakt"`
-#'   receive the exclusion reason
-#'   `"sub_encounter_with_processing_exclusion_reason"`.
-#'   \item Encounters with other `enc_type_code_kontaktebene` values receive
-#'   the exclusion reason
-#'   `"related_encounter_with_processing_exclusion_reason"`.
+#'   \item If the existing exclusion reason contains `|main_encounter|`, the new reason
+#'    assigned is `related_encounter_with_processing_exclusion_reason_relevant_for_main_encounter`.
+#'   \item If the existing exclusion reason contains `|patient|`, the new reason
+#'   assigned is `related_encounter_with_processing_exclusion_reason_relevant_for_patient`.
 #'   \item Existing non-`NA` exclusion reasons are preserved.
 #' }
 #'
-#' This ensures consistent exclusion labeling across all encounter levels
-#' belonging to the same main encounter.
+#' This ensures consistent exclusion labeling across all encounter levels if relevant for main encounter
+#' or patient.
 #'
 #' @importFrom dplyr group_by mutate case_when ungroup distinct
+#' @importFrom stringr str_detect
 #'
 #' @export
 ExpandProcessingExclusionReasonToAllEncounterLevels <- function(encounter_table) {
@@ -396,15 +441,12 @@ ExpandProcessingExclusionReasonToAllEncounterLevels <- function(encounter_table)
     dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
       any(!is.na(processing_exclusion_reason)) &
         is.na(processing_exclusion_reason) &
-        enc_type_code_Kontaktebene == "einrichtungskontakt" ~
-        "sub_encounter_with_processing_exclusion_reason",
+        any(stringr::str_detect(processing_exclusion_reason, "\\|main_encounter\\|")) ~
+        "related_encounter_with_processing_exclusion_reason_relevant_for_main_encounter",
       any(!is.na(processing_exclusion_reason)) &
         is.na(processing_exclusion_reason) &
-        enc_type_code_Kontaktebene != "einrichtungskontakt" ~
-        "related_encounter_with_processing_exclusion_reason",
-      any(!is.na(processing_exclusion_reason)) &
-        any(processing_exclusion_reason == "patient_underage") ~
-        "patient_underage",
+        any(stringr::str_detect(processing_exclusion_reason, "\\|patient\\|")) ~
+        "related_encounter_with_processing_exclusion_reason_relevant_for_patient",
       TRUE ~ processing_exclusion_reason
     )) |>
     dplyr::ungroup() |>
@@ -505,8 +547,16 @@ CheckMultipleRowsPerPatIdentifierValue <- function(patient_table) {
 CheckMissingStartDate <- function(encounter_table) {
   if (any(is.na(encounter_table$enc_period_start))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(enc_period_start) &
-        is.na(processing_exclusion_reason), "missing_start_date", processing_exclusion_reason))
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(enc_period_start),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "missing_start_date",
+          level = "sub_encounter",
+          type = "data_issues"
+        ),
+        processing_exclusion_reason
+      ))
     print(encounter_table |>
       dplyr::filter(is.na(enc_period_start)), width = Inf)
     warning("The encounter table contains NA values in enc_period_start.
@@ -557,10 +607,15 @@ CheckMissingKontaktebeneForImpEncounter <- function(encounter_table) {
     (is.na(encounter_table$enc_type_code_Kontaktebene)))) {
     encounter_table <- encounter_table |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        is.na(processing_exclusion_reason) &
-          !is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
-          is.na(encounter_table$enc_type_code_Kontaktebene),
-        "missing_kontaktebene_for_imp_encounter", processing_exclusion_reason
+        !is.na(enc_class_code) & enc_class_code == "IMP" &
+          is.na(enc_type_code_Kontaktebene),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "missing_kontaktebene_for_imp_encounter",
+          level = "sub_encounter",
+          type = "data_issues"
+        ),
+        processing_exclusion_reason
       ))
     print(encounter_table |>
       dplyr::filter(enc_class_code == "IMP" & is.na(enc_type_code_Kontaktebene)), width = Inf)
@@ -617,9 +672,14 @@ CheckUnexpectedStatus <- function(encounter_table) {
     )))) {
     encounter_table <- encounter_table |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        (is.na(encounter_table$enc_status) | !enc_status %in% c("finished", "in-progress", "onleave")) &
-          is.na(processing_exclusion_reason),
-        "unexpected_status", processing_exclusion_reason
+        (is.na(enc_status) | !enc_status %in% c("finished", "in-progress", "onleave")),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "unexpected_status",
+          level = "sub_encounter",
+          type = "data_issues"
+        ),
+        processing_exclusion_reason
       ))
     print(
       encounter_table |>
@@ -685,9 +745,14 @@ CheckImpFinishedWithoutEndDate <- function(encounter_table) {
       encounter_table$enc_status == "finished") & is.na(encounter_table$enc_period_end))) {
     encounter_table <- encounter_table |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_class_code == "IMP" &
-        enc_status == "finished" & is.na(enc_period_end) &
-        is.na(processing_exclusion_reason),
-      "imp_finished_without_end_date", processing_exclusion_reason
+        enc_status == "finished" & is.na(enc_period_end),
+      addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "imp_finished_without_end_date",
+        level = "sub_encounter",
+        type = "data_issues"
+      ),
+      processing_exclusion_reason
       ))
     print(
       encounter_table |>
@@ -741,9 +806,14 @@ CheckUnexpectedClassCode <- function(encounter_table) {
     encounter_table <- encounter_table |>
       dplyr::mutate(processing_exclusion_reason = dplyr::if_else((!enc_class_code %in%
         c("AMB", "SS", "IMP")) &
-        !is.na(enc_class_code) &
-        is.na(processing_exclusion_reason),
-      "unexpected_class_code", processing_exclusion_reason
+        !is.na(enc_class_code),
+      addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "unexpected_class_code",
+        level = "sub_encounter",
+        type = "data_issues"
+      ),
+      processing_exclusion_reason
       ))
     print(encounter_table |>
       dplyr::filter((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
@@ -813,9 +883,14 @@ CheckUnexpectedKontaktartCode <- function(encounter_table) {
         "intensivstationaer", "ub", "konsil",
         "stationsaequivalent", "operation"
       )) &
-        !is.na(enc_type_code_Kontaktart) &
-        is.na(processing_exclusion_reason),
-      "unexpected_kontaktart_code", processing_exclusion_reason
+        !is.na(enc_type_code_Kontaktart),
+      addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "unexpected_kontaktart_code",
+        level = "sub_encounter",
+        type = "data_issues"
+      ),
+      processing_exclusion_reason
       ))
     print(encounter_table |>
       dplyr::filter((!enc_type_code_Kontaktart %in% c(
@@ -863,6 +938,7 @@ CheckUnexpectedKontaktartCode <- function(encounter_table) {
 #' \code{addMultipleRowsProcessingExclusionReason()} to assign the exclusion reason.
 #'
 #' @importFrom dplyr filter distinct right_join mutate if_else
+#' @importFrom stringr str_detect fixed
 #'
 #' @export
 CheckMultipleEinrichtungskontaktEncIdsForSameEncIdentifierValue <- function(encounter_table) {
@@ -878,7 +954,9 @@ CheckMultipleEinrichtungskontaktEncIdsForSameEncIdentifierValue <- function(enco
       dplyr::distinct(enc_id, enc_identifier_value, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
       addMultipleRowsProcessingExclusionReason(
         c("enc_identifier_value"),
-        "multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value"
+        processing_exclusion_reason_name = "multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value",
+        processing_exclusion_reason_level = "main_encounter",
+        processing_exclusion_reason_type = "data_issues"
       ) |>
       dplyr::distinct(enc_identifier_value, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
       dplyr::right_join(encounter_table, by = c("enc_identifier_value", "enc_type_code_Kontaktebene")) |>
@@ -939,7 +1017,9 @@ CheckMultipleEinrichtungskontaktEncIdentifierValuesForSameEncId <- function(enco
       dplyr::distinct(enc_id, enc_identifier_value, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
       addMultipleRowsProcessingExclusionReason(
         c("enc_id"),
-        "multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id"
+        processing_exclusion_reason_name = "multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id",
+        processing_exclusion_reason_level = "main_encounter",
+        processing_exclusion_reason_type = "data_issues"
       ) |>
       dplyr::distinct(enc_id, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
       dplyr::right_join(encounter_table, by = c("enc_id", "enc_type_code_Kontaktebene")) |>
@@ -1058,7 +1138,12 @@ CheckEncountersWithoutCalculatedMainEncounterRef <- function(encounter_table) {
 CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
   if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
     patient_fe_table <- patient_fe_table |>
-      addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id_in_fe")
+      addMultipleRowsProcessingExclusionReason(
+        c("pat_id"),
+        processing_exclusion_reason_name = "multiple_rows_per_pat_id_in_fe",
+        processing_exclusion_reason_level = "patient",
+        processing_exclusion_reason_type = "data_issues"
+      )
     warning("The patient_fe table contains multiple record_ids for the same pat_id(FHIR).
             Please check the data.")
   }
@@ -1155,14 +1240,10 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001_9") |>
       dplyr::mutate(enc_status = "finished", enc_period_end = as.POSIXct(NA))
 
-    unexpected_class_code_check <- encounter_table |>
-      dplyr::filter(enc_type_code_Kontaktebene == "abteilungskontakt") |>
-      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_9") |>
-      dplyr::mutate(enc_class_code = "TEST")
-
-    unexpected_kontaktart_code_check <- encounter_table |>
+    unexpected_class_and_kontaktart_code_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001_10") |>
+      dplyr::mutate(enc_class_code = "TEST") |>
       dplyr::mutate(enc_type_code_Kontaktart = "TEST_KONTAKTART")
 
     multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id_check <- encounter_table |>
@@ -1188,8 +1269,7 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       rbind(unexpected_status_check) |>
       rbind(underage_check) |>
       rbind(imp_finished_without_end_date_check) |>
-      rbind(unexpected_class_code_check) |>
-      rbind(unexpected_kontaktart_code_check) |>
+      rbind(unexpected_class_and_kontaktart_code_check) |>
       rbind(no_enc_main_encounter_calculated_ref_check)
 
     check_encounter_table_enc_ids <- check_encounter_table$enc_id

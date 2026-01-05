@@ -58,10 +58,15 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 
   if (anyNA(F1_prep_raw$enc_period_start)) {
     F1_prep_raw <- F1_prep_raw |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(enc_period_start) &
-        is.na(processing_exclusion_reason),
-      "Missing_start_date_ward_contact",
-      processing_exclusion_reason
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(enc_period_start),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "Missing_start_date_ward_contact",
+          level = "main_encounter",
+          type = "data_issues"
+        ),
+        processing_exclusion_reason
       ))
     print(F1_prep_raw |>
       dplyr::filter(is.na(enc_period_start)), width = Inf)

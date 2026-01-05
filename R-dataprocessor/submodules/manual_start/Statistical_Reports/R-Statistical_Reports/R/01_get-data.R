@@ -37,8 +37,7 @@
 #' - `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM`
 #' - `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE`
 #' 3. filters unique entries for the selected variables and sorts the data by `pat_id`.
-#' 4. Adds a `processing_exclusion_reason` column initialized with `NA` to log any processing exclusions.
-#' 5. Checks if the resulting data frame is empty and raises an error if so.
+#' 4. Checks if the resulting data frame is empty and raises an error if so.
 #'
 #' @importFrom dplyr distinct arrange filter
 #' @export
@@ -84,8 +83,7 @@ getPatientData <- function(lock_id, table_name) {
   }
   patient_table <- patient_table_raw |>
     dplyr::distinct() |>
-    dplyr::arrange(pat_id) |>
-    dplyr::mutate(processing_exclusion_reason = NA_character_)
+    dplyr::arrange(pat_id)
 
   if (nrow(patient_table) == 0) {
     stop("The patient table is empty. Please check the data.")
@@ -137,6 +135,8 @@ getPatientData <- function(lock_id, table_name) {
 #' 7. Sorts the data by patient reference, encounter ID, time-related fields, and status-related
 #'    fields.
 #' 8. Adds a `processing_exclusion_reason` column initialized with `NA` to log any processing exclusions.
+#'    These will exist of strings where the reason as well as the level ( e.g. 'patient', 'main_encounter' 'sub_encounter')
+#'    and the type of exclusion (e.g. 'inclusion_citeria', 'data_issues', 'linkage_issiues') are noted in a structured way.
 #' 9. Checks for empty results and issuing errors if necessary.
 #'
 #'

@@ -1,10 +1,3 @@
----
-output: 
-  html_document: 
-    toc: true
-    toc_depth: 4
----
-
 # "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienfortschritts
 
 ## Logik hinter den Kennzahlen detailliert erklärt (work in progress)
@@ -28,7 +21,6 @@ Ziel: lade die für INTERPOLAR relevanten Patienten und erhalte für jeden Patie
     -   `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM` entspricht `pat_identifier_type_system`
     -   `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE` entspricht `pat_identifier_type_code`
     -   Wenn keine dieser Filter gesetzt oder aktiv sind (`""` oder Platzhalter `"."`), findet keine Filterung statt
--   erstellt die Variable `processing_exclusion_reason`, für zukünftige Begründung, warum ein Patient von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten, Nichterfüllung der Einschlusskriterien für die Studienpopulation (\<18 Jahre))
 -   stoppt das Skript wenn kein Patientendatensatz gefunden wurde
 -   nachfolgende Funktionen geben Warnungen wenn:
     -   mehrere Zeilen für die selbe `pat_id` (FHIR) gefunden wurden (es sollte für die verwendeten Variablen nur eine eindeutige Kombination geben). Es folgt hier kein Ausschluss, da die `pat_id` für das Mapping zu den FHIR-Daten ausreicht (kein `processing_exclusion_reason`).
@@ -69,6 +61,8 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
         -   codes: "begleitperson", "vorstationaer", "nachstationaer", "teilstationaer", "tagesklinik", "nachtklinik", "normalstationaer", "intensivstationaer", "ub", "konsil", "stationsaequivalent", "operation"
     -   erstellt Warnungen, wenn System oder Code unbekannt oder uneindeutig sind (sichtbar in `processing_exclusion_reason` = "undefined_kontaktebene_or_kontaktart")
 -   filtert Fälle mit Kontaktart "begleitperson" heraus, da diese für INTERPOLAR nicht relevant sind
+-   erstellt die Variable `processing_exclusion_reason`, für zukünftige Begründung, warum ein Fall oder von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten, Nichterfüllung der Einschlusskriterien für die Studienpopulation (stationär auf einer INTERPOLAR-Station))
+-   diese Variable wird außerdem das Level ("patient", "main_encounter", "sub_encounter") und den Typ ("inclusion_citeria", "data_issues", "linkage_issues") des Ausschlussgrundes strukturiert enthalten
 -   stoppt das Skript wenn kein Falldatensatz gefunden wurde oder wenn keinerlei Einrichtungskontakte oder Versorgungsstellenkontakte identifiziert wurden
 -   nachfolgende Funktionen geben Warnungen für:
     -   `CheckMissingStartDate`: fehlende Startdaten (`enc_period_start` is NA) in `processing_exclusion_reason` = "missing_start_date"
@@ -181,8 +175,7 @@ Ziel: lade die für das Reporting relevanten MRP-Dokumentation Validierungs-Date
 
 Ziel: Mappen der Patienten- und Falldaten aufeinander, um für jeden Fall die zugehörigen Patientendaten zu erhalten.
 
--   führt einen Left-Join der patient_table (Variablen: pat_id, pat_birthdate, processing_exclusion_reason) mit der encounter_table basierend auf der Beziehung `enc_patient_ref` referenziert auf `pat_id` durch
--   setzt den processing_exclusion_reason auf der Wert aus der patient_table, falls vorhanden, falls nicht auf den Wert aus der encounter_table (NA falls beide nicht vorhanden)
+-   führt einen Left-Join der patient_table (Variablen: pat_id, pat_birthdate) mit der encounter_table basierend auf der Beziehung `enc_patient_ref` referenziert auf `pat_id` durch
 
 #### `addCuratedEncPeriodEnd`
 
@@ -201,9 +194,9 @@ Ziel: Ergänzen der Falldaten um die ID des Haupt-Encounters in der 3-Stufen-Enc
 
 -   Extrahiere die main_enc_id aus enc_main_encounter_calculated_ref (löst frühere Logik (`main_enc_id_initial_try`) ab)
 -   falls enc_main_encounter_calculated_ref nicht verfügbar, dann wird die frühere Logik verwendet (`main_enc_id_initial_try`):
-    - wenn es keine `enc_partof_calculated_ref`gibt, wird die Beziehung über einen gemeinsamen `enc_identifier_value` hergestellt:
-      -   wenn der Encounter vom Typ `"einrichtungskontakt"` ist, wird dieser als oberster Encounter betrachtet und seine eigene `enc_id` verwendet.
-      -   wenn der Encounter vom Typ `"abteilungskontakt"` ist, wird dessen übergeordneter Encounter als Haupt-Encounter angenommen.
-      -   wenn der Encounter vom Typ `"versorgungsstellenkontakt"` ist, wird die `enc_id` des übergeordneten Encounters extrahiert, dessen übergeordneter Encounter gefunden und dieser als oberster `main_enc_id` verwendet.
+    -   wenn es keine `enc_partof_calculated_ref`gibt, wird die Beziehung über einen gemeinsamen `enc_identifier_value` hergestellt:
+        -   wenn der Encounter vom Typ `"einrichtungskontakt"` ist, wird dieser als oberster Encounter betrachtet und seine eigene `enc_id` verwendet.
+        -   wenn der Encounter vom Typ `"abteilungskontakt"` ist, wird dessen übergeordneter Encounter als Haupt-Encounter angenommen.
+        -   wenn der Encounter vom Typ `"versorgungsstellenkontakt"` ist, wird die `enc_id` des übergeordneten Encounters extrahiert, dessen übergeordneter Encounter gefunden und dieser als oberster `main_enc_id` verwendet.
 -   falls `main_enc_id` nach diesen Schritten immer noch nicht zugewiesen werden konnte, wird eine Warnung generiert und der betroffene Datensatz ausgegeben
 -   der `processing_exclusion_reason` wird für diese Fälle auf "encounter_without_main_enc_id" gesetzt
