@@ -723,17 +723,19 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
 #'   `loinc_matching_function`.
 #'
 matchICDProxies <- function(
-    medication_resources,
-    procedure_resources,
-    observation_resources,
-    drug_disease_mrp_tables_by_atc_proxy,
-    drug_disease_mrp_tables_by_ops_proxy,
-    drug_disease_mrp_tables_by_loinc_proxy,
+    medication_resources = NULL,
+    procedure_resources  = NULL,
+    observation_resources = NULL,
+    drug_condition_mrp_tables_by_atc_proxy   = NULL,
+    drug_condition_mrp_tables_by_ops_proxy   = NULL,
+    drug_condition_mrp_tables_by_loinc_proxy = NULL,
     meda_datetime,
     match_atc_codes,
-    loinc_mapping_table,
-    loinc_matching_function
+    loinc_mapping_table = NULL,
+    loinc_matching_function = NULL
 ) {
+
+  all_matches <- list()
 
   matchProxy <- function(proxy_type, all_items, splitted_proxy_table) {
     # Initialize empty result data.table
@@ -871,47 +873,64 @@ matchICDProxies <- function(
     return(matched_rows)
   }
 
-  #  Combine all medication rows
-  all_medications <- rbind(
-    medication_resources$medication_requests[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
-    medication_resources$medication_statements[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
-    medication_resources$medication_administrations[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
-    fill = TRUE
-  )
-  #  Combine all procedures rows
-  all_procedures <- procedure_resources[, .(code = proc_code_code, display = proc_code_display, start_datetime, end_datetime)]
-  #  Combine all observation rows
-  all_observations <- observation_resources[, .(code = obs_code_code,
-                                                display = obs_code_display,
-                                                value = obs_valuequantity_value,
-                                                unit = obs_valuequantity_code,
-                                                reference_range_low_value = obs_referencerange_low_value,
-                                                reference_range_high_value = obs_referencerange_high_value,
-                                                reference_range_low_system = obs_referencerange_low_system,
-                                                reference_range_high_system = obs_referencerange_high_system,
-                                                reference_range_low_code = obs_referencerange_low_code,
-                                                reference_range_high_code = obs_referencerange_high_code,
-                                                reference_range_type = obs_referencerange_type_code,
-                                                start_datetime = start_datetime,
-                                                end_datetime = as.POSIXct(NA))] # Observations don't have an end datetime
-  # ATC-Proxy-Matching
-  atc_matches <- matchProxy(
-    proxy_type = "ATC",
-    all_items = all_medications,
-    splitted_proxy_table = drug_disease_mrp_tables_by_atc_proxy
-  )
-  # OPS-Proxy-Matching
-  ops_matches <- matchProxy(
-    proxy_type = "OPS",
-    all_items = all_procedures,
-    splitted_proxy_table = drug_disease_mrp_tables_by_ops_proxy
-  )
-  # LOINC-Proxy-Matching
-  loinc_matches <- matchProxy(
-    proxy_type = "LOINC",
-    all_items = all_observations,
-    splitted_proxy_table = drug_disease_mrp_tables_by_loinc_proxy
-  )
+  if (!is.null(medication_resources) &&
+      !is.null(drug_condition_mrp_tables_by_atc_proxy)) {
+    #  Combine all medication rows
+    all_medications <- rbind(
+      medication_resources$medication_requests[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      medication_resources$medication_statements[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      medication_resources$medication_administrations[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      fill = TRUE
+    )
+    # ATC-Proxy-Matching
+    atc_matches <- matchProxy(
+      proxy_type = "ATC",
+      all_items = all_medications,
+      splitted_proxy_table = drug_condition_mrp_tables_by_atc_proxy
+    )
+    all_matches[["ATC"]] <- atc_matches
+  }
 
-  return(data.table::rbindlist(list(atc_matches, ops_matches, loinc_matches), fill = TRUE))
+  if (!is.null(procedure_resources) &&
+      !is.null(drug_condition_mrp_tables_by_ops_proxy)) {
+    #  Combine all procedures rows
+    all_procedures <- procedure_resources[, .(code = proc_code_code, display = proc_code_display, start_datetime, end_datetime)]
+    # OPS-Proxy-Matching
+    ops_matches <- matchProxy(
+      proxy_type = "OPS",
+      all_items = all_procedures,
+      splitted_proxy_table = drug_condition_mrp_tables_by_ops_proxy
+    )
+    all_matches[["OPS"]] <- ops_matches
+  }
+
+  if (!is.null(observation_resources) &&
+      !is.null(drug_condition_mrp_tables_by_loinc_proxy) &&
+      !is.null(loinc_matching_function) &&
+      !is.null(loinc_mapping_table)) {
+    #  Combine all observation rows
+    all_observations <- observation_resources[, .(code = obs_code_code,
+                                                  display = obs_code_display,
+                                                  value = obs_valuequantity_value,
+                                                  unit = obs_valuequantity_code,
+                                                  reference_range_low_value = obs_referencerange_low_value,
+                                                  reference_range_high_value = obs_referencerange_high_value,
+                                                  reference_range_low_system = obs_referencerange_low_system,
+                                                  reference_range_high_system = obs_referencerange_high_system,
+                                                  reference_range_low_code = obs_referencerange_low_code,
+                                                  reference_range_high_code = obs_referencerange_high_code,
+                                                  reference_range_type = obs_referencerange_type_code,
+                                                  start_datetime = start_datetime,
+                                                  end_datetime = as.POSIXct(NA))] # Observations don't have an end datetime
+
+    # LOINC-Proxy-Matching
+    loinc_matches <- matchProxy(
+      proxy_type = "LOINC",
+      all_items = all_observations,
+      splitted_proxy_table = drug_condition_mrp_tables_by_loinc_proxy
+    )
+    all_matches[["LOINC"]] <- loinc_matches
+  }
+
+  return(data.table::rbindlist(all_matches, fill = TRUE))
 }
