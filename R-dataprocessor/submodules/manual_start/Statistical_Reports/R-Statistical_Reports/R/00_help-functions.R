@@ -147,7 +147,7 @@ checkMultipleRows <- function(data, grouping_vars) {
 #' @importFrom dplyr case_when
 #' @importFrom stringr str_detect fixed
 #' @export
-addProcessingExclusionReason <- function(existing = processing_exlcusion_reason,
+addProcessingExclusionReason <- function(existing = processing_exclusion_reason,
                                          reason,
                                          level = c("patient", "sub_encounter", "main_encounter"),
                                          type = c(
@@ -441,14 +441,21 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
 #' @importFrom stringr str_detect
 #'
 #' @export
-ExpandProcessingExclusionReasonToAllEncounterLevels <- function(encounter_table) {
-  encounter_table <- encounter_table |>
+ExpandProcessingExclusionReasonToAllEncounterLevels <- function(FHIR_table_with_all_processing_exclusion_reasons) {
+  FHIR_table_processing_exclusion_reason_expanded <- FHIR_table_with_all_processing_exclusion_reasons |>
     dplyr::group_by(main_enc_id) |>
+    dplyr::mutate(
+      processing_exclusion_reason = dplyr::case_when(
+        any(!is.na(processing_exclusion_reason)) &
+          is.na(processing_exclusion_reason) &
+          any(stringr::str_detect(processing_exclusion_reason, "\\|main_encounter\\|")) ~
+          "related_encounter_with_processing_exclusion_reason_relevant_for_main_encounter",
+        TRUE ~ processing_exclusion_reason
+      )
+    ) |>
+    dplyr::ungroup() |>
+    dplyr::group_by(pat_id) |>
     dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
-      any(!is.na(processing_exclusion_reason)) &
-        is.na(processing_exclusion_reason) &
-        any(stringr::str_detect(processing_exclusion_reason, "\\|main_encounter\\|")) ~
-        "related_encounter_with_processing_exclusion_reason_relevant_for_main_encounter",
       any(!is.na(processing_exclusion_reason)) &
         is.na(processing_exclusion_reason) &
         any(stringr::str_detect(processing_exclusion_reason, "\\|patient\\|")) ~
@@ -458,7 +465,7 @@ ExpandProcessingExclusionReasonToAllEncounterLevels <- function(encounter_table)
     dplyr::ungroup() |>
     dplyr::distinct()
 
-  return(encounter_table)
+  return(FHIR_table_processing_exclusion_reason_expanded)
 }
 
 
@@ -742,7 +749,7 @@ CheckUnexpectedStatus <- function(encounter_table) {
 #' When affected rows are found, they are printed for inspection and a warning
 #' is emitted to highlight potential data quality issues.
 #'
-#' @importFrom dplyr mutate if_else filter
+#' @importFrom dplyr mutate case_when filter
 #'
 #' @export
 CheckImpFinishedWithoutEndDate <- function(encounter_table) {
@@ -750,15 +757,16 @@ CheckImpFinishedWithoutEndDate <- function(encounter_table) {
     (!is.na(encounter_table$enc_status) &
       encounter_table$enc_status == "finished") & is.na(encounter_table$enc_period_end))) {
     encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_class_code == "IMP" &
-        enc_status == "finished" & is.na(enc_period_end),
-      addProcessingExclusionReason(
-        existing = processing_exclusion_reason,
-        reason = "imp_finished_without_end_date",
-        level = "sub_encounter",
-        type = "data_issues"
-      ),
-      processing_exclusion_reason
+      dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+        enc_class_code == "IMP" &
+          enc_status == "finished" & is.na(enc_period_end) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "imp_finished_without_end_date",
+            level = "sub_encounter",
+            type = "data_issues"
+          ),
+        TRUE ~ processing_exclusion_reason
       ))
     print(
       encounter_table |>

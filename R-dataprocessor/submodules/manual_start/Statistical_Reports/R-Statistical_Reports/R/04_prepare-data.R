@@ -41,7 +41,7 @@
 #' }
 #' Note: studienphase is not included in the output, as it is not used for the F1 report.
 #'
-#' @importFrom dplyr filter distinct select mutate across
+#' @importFrom dplyr filter distinct select mutate across if_else
 #' @importFrom data.table isoweek
 #' @export
 prepareF1data <- function(full_analysis_set_1, report_period_start, report_period_end) {

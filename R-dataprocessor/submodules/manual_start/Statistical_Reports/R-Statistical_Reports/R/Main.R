@@ -170,10 +170,11 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     calculateAge() |>
     tagAmbulantEncounters() |>
     tagKontaktartDenotingNoInpatientEncounter()
+
   FHIR_table_with_linkage_to_fe <- FHIR_table |>
     addWardName(pids_per_ward_table) |>
     addRecordId(patient_fe_table) |>
-    addFallIdAndStudienphase(fall_fe_table) |>
+    # addFallIdAndStudienphase(fall_fe_table) |>
     ExpandProcessingExclusionReasonToAllEncounterLevels()
 
   full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table_with_linkage_to_fe)

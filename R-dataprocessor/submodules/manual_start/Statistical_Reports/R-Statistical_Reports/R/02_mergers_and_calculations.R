@@ -313,7 +313,7 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 #' "patient_with_implausible_age". If any patients are underage (< 18 years), the
 #' `processing_exclusion_reason` column is updated to indicate these cases: "patient_underage".
 #'
-#' @importFrom dplyr mutate
+#' @importFrom dplyr mutate case_when if_else
 #' @export
 calculateAge <- function(merged_table_with_MainEncPeriodStart) {
   merged_table_with_age <- merged_table_with_MainEncPeriodStart |>
@@ -346,15 +346,15 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
     warning("Some patients have a implausible age_at_hospitalization (<= 0 or > 120).
             Please check the data.")
     merged_table_with_age <- merged_table_with_age |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        (age_at_hospitalization <= 0 | age_at_hospitalization > 120),
-        addProcessingExclusionReason(
-          existing = processing_exclusion_reason,
-          reason = "patient_with_implausible_age",
-          level = "main_encounter",
-          type = "data_issues"
-        ),
-        processing_exclusion_reason
+      dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+        (age_at_hospitalization <= 0 | age_at_hospitalization > 120) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "patient_with_implausible_age",
+            level = "main_encounter",
+            type = "data_issues"
+          ),
+        TRUE ~ processing_exclusion_reason
       ))
     print(merged_table_with_age |>
       dplyr::filter(age_at_hospitalization <= 0 | age_at_hospitalization > 120), width = Inf)
@@ -362,15 +362,15 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 
   if (any(merged_table_with_age$age_at_hospitalization < 18)) {
     merged_table_with_age <- merged_table_with_age |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        age_at_hospitalization < 18,
-        addProcessingExclusionReason(
-          existing = processing_exclusion_reason,
-          reason = "patient_underage",
-          level = "main_encounter",
-          type = "not_in_inclusion_criteria"
-        ),
-        processing_exclusion_reason
+      dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+        age_at_hospitalization < 18 ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "patient_underage",
+            level = "main_encounter",
+            type = "not_in_inclusion_criteria"
+          ),
+        TRUE ~ processing_exclusion_reason
       ))
   }
 
@@ -407,20 +407,20 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
 #' @seealso
 #' \code{\link{AddProcessingExclusionReason}}
 #'
-#' @importFrom dplyr mutate if_else
+#' @importFrom dplyr mutate case_when
 #'
 #' @export
 tagAmbulantEncounters <- function(merged_table) {
   merged_table_with_ambulant_tag <- merged_table |>
-    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-      enc_class_code == "AMB",
-      addProcessingExclusionReason(
-        existing = processing_exclusion_reason,
-        reason = "ambulant_encounter",
-        level = "sub_encounter",
-        type = "not_in_inclusion_criteria"
-      ),
-      processing_exclusion_reason
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      enc_class_code == "AMB" ~
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "ambulant_encounter",
+          level = "sub_encounter",
+          type = "not_in_inclusion_criteria"
+        ),
+      TRUE ~ processing_exclusion_reason
     ))
   return(merged_table_with_ambulant_tag)
 }
@@ -466,7 +466,7 @@ tagAmbulantEncounters <- function(merged_table) {
 #' @seealso
 #' \code{\link{AddProcessingExclusionReason}}
 #'
-#' @importFrom dplyr mutate if_else
+#' @importFrom dplyr mutate case_when
 #'
 #' @export
 tagKontaktartDenotingNoInpatientEncounter <- function(merged_table) {
@@ -476,15 +476,15 @@ tagKontaktartDenotingNoInpatientEncounter <- function(merged_table) {
   )
 
   merged_table_with_kontaktart_tag <- merged_table |>
-    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-      enc_type_code_Kontaktart %in% kontaktarten_denoting_no_inpatient_encounter,
-      addProcessingExclusionReason(
-        existing = processing_exclusion_reason,
-        reason = "kontaktart_denoting_no_inpatient_encounter",
-        level = "sub_encounter",
-        type = "not_in_inclusion_criteria"
-      ),
-      processing_exclusion_reason
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      enc_type_code_Kontaktart %in% kontaktarten_denoting_no_inpatient_encounter ~
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "kontaktart_denoting_no_inpatient_encounter",
+          level = "sub_encounter",
+          type = "not_in_inclusion_criteria"
+        ),
+      TRUE ~ processing_exclusion_reason
     ))
   return(merged_table_with_kontaktart_tag)
 }
@@ -495,32 +495,30 @@ tagKontaktartDenotingNoInpatientEncounter <- function(merged_table) {
 #'
 #' This function adds ward names to a table of patient encounters by merging it with a table that
 #' provides ward names for each patient and encounter.
-#' It ensures ward names are placed after the `enc_period_end` column and removes duplicate rows.
+#' It ensures ward names are placed after the `curated_enc_period_end` column and removes duplicate rows.
 #'
 #' @param merged_table_with_main_enc A data frame containing patient encounters. Must include
-#' `enc_id`, `pat_id`,`enc_period_end` and encounter type/class columns.
+#' `enc_id`, `pat_id`,`curated_enc_period_end` and encounter type/class columns.
 #' @param pids_per_ward_table A data frame containing ward names along with corresponding patient
 #' and encounter IDs of the "Versogungsstellenkontakt". Must include `ward_name`, `patient_id`, and
 #' `encounter_id`.
 #'
 #' @return A data frame similar to the input `merged_table_with_main_enc`, but with the `ward_name`
-#' column added and located after the `enc_period_end` column. Duplicate rows in the output are
+#' column added and located after the `curated_enc_period_end` column. Duplicate rows in the output are
 #' removed.
 #'
 #' @details
 #' The function performs a left join between `merged_table_with_main_enc` and `pids_per_ward_table`
 #' based on patient and encounter IDs. It uses the `enc_id` and `pat_id` from the encounter_table
 #' to match with `encounter_id` and `patient_id` in the pids_per_ward_table.
-#' it ensures that ward names are added only to INTERPOLAR Versorgungsstellenkontakte (i.e., those with
-#' `enc_type_code_Kontaktebene` of "versorgungsstellenkontakt" and enc_class_code not "AMB")
-#' and not of certain types (e.g., "vorstationaer", "nachstationaer", "ub", "konsil", "operation").
+#' it ensures that ward names are added only to 'Versorgungsstellenkontakten'.
 #' It relocates the `ward_name` column to directly follow
-#' `enc_period_end`, ensuring that the returned table is free of duplicate rows.
+#' `curated_enc_period_end`, ensuring that the returned table is free of duplicate rows.
 #'
 #' @seealso
 #' \code{\link[dplyr]{left_join}}, \code{\link[dplyr]{relocate}}, \code{\link[dplyr]{distinct}}
 #'
-#' @importFrom dplyr left_join select relocate distinct if_else
+#' @importFrom dplyr left_join select relocate distinct case_when
 #' @export
 addWardName <- function(merged_table_with_main_enc, pids_per_ward_table) {
   merged_table_with_ward <- merged_table_with_main_enc |>
@@ -529,14 +527,9 @@ addWardName <- function(merged_table_with_main_enc, pids_per_ward_table) {
         dplyr::select(ward_name, patient_id, encounter_id),
       by = c("enc_id" = "encounter_id", "pat_id" = "patient_id")
     ) |>
-    dplyr::mutate(ward_name = dplyr::if_else(
-      enc_type_code_Kontaktebene == "versorgungsstellenkontakt" &
-        !enc_class_code %in% c("AMB") &
-        !enc_type_code_Kontaktart %in% c(
-          "vorstationaer", "nachstationaer",
-          "ub", "konsil", "operation"
-        ),
-      ward_name, NA_character_
+    dplyr::mutate(ward_name = dplyr::case_when(
+      enc_type_code_Kontaktebene == "versorgungsstellenkontakt" ~
+        ward_name, TRUE ~ NA_character_
     )) |>
     dplyr::relocate(ward_name, .after = curated_enc_period_end) |>
     dplyr::distinct()
@@ -567,7 +560,7 @@ addWardName <- function(merged_table_with_main_enc, pids_per_ward_table) {
 #' for review. The `processing_exclusion_reason` column is updated to indicate these cases:
 #' "patient_without_matching_record_id_in_fe".
 #'
-#' @importFrom dplyr left_join select relocate
+#' @importFrom dplyr left_join select relocate if_else
 #' @export
 addRecordId <- function(merged_table_with_ward, patient_fe_table) {
   merged_table_with_record_id <- merged_table_with_ward |>
@@ -636,7 +629,7 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
 #' Note: fall_studienphase is currently not used in the analysis, therefore it is commented out.
 #'
 #'
-#' @importFrom dplyr left_join select rename relocate distinct
+#' @importFrom dplyr left_join select rename relocate distinct case_when
 #' @export
 addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table) {
   merged_table_with_fall_id_and_studienphase <- merged_table_with_record_id |>
@@ -661,16 +654,16 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
     warning("Some INTERPOLAR-ward-encounters in the database have no matching record (CIS-identifier) in the
             frontend fall_fe datatable. Please check the data.")
     merged_table_with_fall_id_and_studienphase <- merged_table_with_fall_id_and_studienphase |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+      dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
         enc_type_code_Kontaktebene == "versorgungsstellenkontakt" & !is.na(ward_name) &
-          is.na(fall_id_cis),
-        addProcessingExclusionReason(
-          existing = processing_exclusion_reason,
-          reason = "encounter_without_matching_fall_fe_record",
-          level = "main_encounter",
-          type = "linkage_issues"
-        ),
-        processing_exclusion_reason
+          is.na(fall_id_cis) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "encounter_without_matching_fall_fe_record",
+            level = "main_encounter",
+            type = "linkage_issues"
+          ),
+        TRUE ~ processing_exclusion_reason
       ))
     print(merged_table_with_fall_id_and_studienphase |>
       dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt" & !is.na(ward_name) &
