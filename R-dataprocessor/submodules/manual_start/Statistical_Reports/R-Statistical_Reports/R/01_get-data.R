@@ -137,7 +137,7 @@ getPatientData <- function(lock_id, table_name) {
 #'    fields.
 #' 8. Adds a `processing_exclusion_reason` column initialized with `NA` to log any processing exclusions.
 #'    These will exist of strings where the reason as well as the level ( e.g. 'patient', 'main_encounter' 'sub_encounter')
-#'    and the type of exclusion (e.g. 'inclusion_citeria', 'data_issues', 'linkage_issiues') are noted in a structured way.
+#'    and the type of exclusion (e.g. 'not_in_inclusion_criteria', 'data_issues', 'linkage_issiues') are noted in a structured way.
 #' 9. Checks for empty results and issuing errors if necessary.
 #'
 #'

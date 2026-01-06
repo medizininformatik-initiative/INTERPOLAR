@@ -62,7 +62,7 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
     -   erstellt Warnungen, wenn System oder Code unbekannt oder uneindeutig sind (sichtbar in `processing_exclusion_reason` = "undefined_kontaktebene_or_kontaktart")
 -   filtert Fälle mit Kontaktart "begleitperson" heraus, da diese für INTERPOLAR nicht relevant sind
 -   erstellt die Variable `processing_exclusion_reason`, für zukünftige Begründung, warum ein Fall oder von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten, Nichterfüllung der Einschlusskriterien für die Studienpopulation (stationär auf einer INTERPOLAR-Station))
--   diese Variable wird außerdem das Level ("patient", "main_encounter", "sub_encounter") und den Typ ("inclusion_citeria", "data_issues", "linkage_issues") des Ausschlussgrundes strukturiert enthalten
+-   diese Variable wird außerdem das Level ("patient", "main_encounter", "sub_encounter") und den Typ ("not_in_inclusion_criteria", "data_issues", "linkage_issues") des Ausschlussgrundes strukturiert enthalten
 -   stoppt das Skript wenn kein Falldatensatz gefunden wurde oder wenn keinerlei Einrichtungskontakte oder Versorgungsstellenkontakte identifiziert wurden
 -   nachfolgende Funktionen geben Warnungen für:
     -   `CheckMissingStartDate`: fehlende Startdaten (`enc_period_start` is NA) in `processing_exclusion_reason` = "missing_start_date"

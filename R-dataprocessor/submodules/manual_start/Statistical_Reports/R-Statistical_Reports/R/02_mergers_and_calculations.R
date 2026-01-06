@@ -368,13 +368,125 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart) {
           existing = processing_exclusion_reason,
           reason = "patient_underage",
           level = "main_encounter",
-          type = "inclusion_citeria"
+          type = "not_in_inclusion_criteria"
         ),
         processing_exclusion_reason
       ))
   }
 
   return(merged_table_with_age)
+}
+
+#------------------------------------------------------------------------------#
+#' Tag Ambulant Encounters in the Processing Exclusion Reason
+#'
+#' This function marks ambulant encounters by appending a structured
+#' processing exclusion reason to the \code{processing_exclusion_reason}
+#' column for encounters with class code \code{"AMB"}.
+#'
+#' The tagging uses \code{\link{AddProcessingExclusionReason}} to ensure
+#' consistent formatting and to avoid duplicate entries.
+#'
+#' @param merged_table A data frame containing encounter-level data.
+#'   It must include the columns \code{enc_class_code} and
+#'   \code{processing_exclusion_reason}.
+#'
+#' @return
+#' A data frame identical to \code{merged_table}, but with
+#' \code{processing_exclusion_reason} updated for ambulant encounters.
+#'
+#' @details
+#' For rows where \code{enc_class_code == "AMB"}, the following exclusion
+#' reason entry is added:
+#'
+#' \code{ambulant_encounter|sub_encounter|not_in_inclusion_criteria}
+#'
+#' If this exclusion reason already exists, it is not added again.
+#' Non-ambulant encounters are returned unchanged.
+#'
+#' @seealso
+#' \code{\link{AddProcessingExclusionReason}}
+#'
+#' @importFrom dplyr mutate if_else
+#'
+#' @export
+tagAmbulantEncounters <- function(merged_table) {
+  merged_table_with_ambulant_tag <- merged_table |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+      enc_class_code == "AMB",
+      addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "ambulant_encounter",
+        level = "sub_encounter",
+        type = "not_in_inclusion_criteria"
+      ),
+      processing_exclusion_reason
+    ))
+  return(merged_table_with_ambulant_tag)
+}
+
+#------------------------------------------------------------------------------#
+#' Tag Kontaktarten That Do Not Represent Inpatient Encounters
+#'
+#' This function identifies encounters whose \code{enc_type_code_Kontaktart}
+#' denotes a contact type that should not be considered an inpatient encounter
+#' and appends a structured processing exclusion reason accordingly.
+#'
+#' The tagging is performed using \code{\link{AddProcessingExclusionReason}}
+#' to ensure consistent formatting and to prevent duplicate entries.
+#'
+#' @param merged_table A data frame containing encounter-level data.
+#'   It must include the columns \code{enc_type_code_Kontaktart} and
+#'   \code{processing_exclusion_reason}.
+#'
+#' @return
+#' A data frame identical to \code{merged_table}, but with
+#' \code{processing_exclusion_reason} updated for encounters whose
+#' Kontaktart denotes no inpatient encounter.
+#'
+#' @details
+#' The following Kontaktart codes are interpreted as *not* representing
+#' inpatient encounters:
+#' \itemize{
+#'   \item \code{"vorstationaer"}
+#'   \item \code{"nachstationaer"}
+#'   \item \code{"ub"}
+#'   \item \code{"konsil"}
+#'   \item \code{"operation"}
+#' }
+#'
+#' For affected rows, the following entry is added to
+#' \code{processing_exclusion_reason}:
+#'
+#' \code{kontaktart_denoting_no_inpatient_encounter|sub_encounter|not_in_inclusion_criteria}
+#'
+#' If the entry already exists, it is not duplicated.
+#' Rows with other Kontaktart codes remain unchanged.
+#'
+#' @seealso
+#' \code{\link{AddProcessingExclusionReason}}
+#'
+#' @importFrom dplyr mutate if_else
+#'
+#' @export
+tagKontaktartDenotingNoInpatientEncounter <- function(merged_table) {
+  kontaktarten_denoting_no_inpatient_encounter <- c(
+    "vorstationaer", "nachstationaer",
+    "ub", "konsil", "operation"
+  )
+
+  merged_table_with_kontaktart_tag <- merged_table |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+      enc_type_code_Kontaktart %in% kontaktarten_denoting_no_inpatient_encounter,
+      addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "kontaktart_denoting_no_inpatient_encounter",
+        level = "sub_encounter",
+        type = "not_in_inclusion_criteria"
+      ),
+      processing_exclusion_reason
+    ))
+  return(merged_table_with_kontaktart_tag)
 }
 
 #------------------------------------------------------------------------------#

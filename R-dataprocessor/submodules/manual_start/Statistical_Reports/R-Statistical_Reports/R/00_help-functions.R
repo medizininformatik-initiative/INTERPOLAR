@@ -125,7 +125,7 @@ checkMultipleRows <- function(data, grouping_vars) {
 #' @param level A character string indicating the data level at which the
 #'   exclusion applies ( e.g. 'patient', 'main_encounter' 'sub_encounter').
 #'
-#' @param type A character string describing the exclusion type (e.g. 'inclusion_citeria', 'data_issues').
+#' @param type A character string describing the exclusion type (e.g. 'not_in_inclusion_criteria', 'data_issues').
 #'
 #' @return
 #' A character vector of the same length as \code{existing}, where the new
@@ -147,7 +147,13 @@ checkMultipleRows <- function(data, grouping_vars) {
 #' @importFrom dplyr case_when
 #' @importFrom stringr str_detect fixed
 #' @export
-addProcessingExclusionReason <- function(existing, reason, level, type) {
+addProcessingExclusionReason <- function(existing = processing_exlcusion_reason,
+                                         reason,
+                                         level = c("patient", "sub_encounter", "main_encounter"),
+                                         type = c(
+                                           "not_in_inclusion_criteria", "data_issues",
+                                           "linkage_issues"
+                                         )) {
   new_entry <- paste(reason, level, type, sep = "|")
 
   dplyr::case_when(
@@ -1264,13 +1270,25 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001") |>
       dplyr::mutate(enc_main_encounter_calculated_ref = as.character(NA))
 
+    amb_encounter_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "abteilungskontakt") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001") |>
+      dplyr::mutate(enc_class_code = "AMB")
+
+    konsil_kontaktart_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001") |>
+      dplyr::mutate(enc_type_code_Kontaktart = "konsil")
+
     check_encounter_table <- missing_start_date_check |>
       rbind(missing_kontaktebene_for_imp_encounter_check) |>
       rbind(unexpected_status_check) |>
       rbind(underage_check) |>
       rbind(imp_finished_without_end_date_check) |>
       rbind(unexpected_class_and_kontaktart_code_check) |>
-      rbind(no_enc_main_encounter_calculated_ref_check)
+      rbind(no_enc_main_encounter_calculated_ref_check) |>
+      rbind(amb_encounter_check) |>
+      rbind(konsil_kontaktart_check)
 
     check_encounter_table_enc_ids <- check_encounter_table$enc_id
 
