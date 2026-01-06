@@ -1,13 +1,13 @@
 .drug_condition_env <- new.env()
 
-setDrugDiseaseListRows <- function(drug_disease_list_rows) {
+setDrugConditionListRows <- function(drug_condition_list_rows) {
   # Set the resources in the environment
-  assign("drug_disease_list_rows", drug_disease_list_rows, envir = .drug_condition_env)
+  assign("drug_condition_list_rows", drug_condition_list_rows, envir = .drug_condition_env)
 }
 
-getDrugDiseaseListRows <- function() {
-  if (exists("drug_disease_list_rows", envir = .drug_condition_env)) {
-    get("drug_disease_list_rows", envir = .drug_condition_env)
+getDrugConditionListRows <- function() {
+  if (exists("drug_condition_list_rows", envir = .drug_condition_env)) {
+    get("drug_condition_list_rows", envir = .drug_condition_env)
   } else {
     data.table::data.table(
       ATC_FULL_LIST = character(),
@@ -19,8 +19,8 @@ getDrugDiseaseListRows <- function() {
 }
 
 getNextMrpIndex <- function() {
-  if (exists("drug_disease_list_rows", envir = .drug_condition_env)) {
-    tbl <- get("drug_disease_list_rows", envir = .drug_condition_env)
+  if (exists("drug_condition_list_rows", envir = .drug_condition_env)) {
+    tbl <- get("drug_condition_list_rows", envir = .drug_condition_env)
     if (nrow(tbl) > 0 && "mrp_index" %in% names(tbl)) {
       return(max(tbl$mrp_index, na.rm = TRUE) + 1)
     }
@@ -28,17 +28,17 @@ getNextMrpIndex <- function() {
   return(1L)
 }
 
-getOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
+getOrCreateMrpIndex <- function(match_proxy_row, drug_condition_list_rows) {
   # Arguments:
   #   match_proxy_row: data.table with columns ATC_FULL_LIST, ICD_FULL_LIST, CONDITION_DISPLAY_CLUSTER
-  #   drug_disease_list_rows: existing mapping table with same columns + mrp_index
+  #   drug_condition_list_rows: existing mapping table with same columns + mrp_index
 
   current_key <- match_proxy_row[, .(
     ATC_FULL_LIST,
     ICD_FULL_LIST,
     CONDITION_DISPLAY_CLUSTER
   )]
-  existing_entry <- drug_disease_list_rows[
+  existing_entry <- drug_condition_list_rows[
     ATC_FULL_LIST %in% current_key$ATC_FULL_LIST &
       CONDITION_DISPLAY_CLUSTER %in% current_key$CONDITION_DISPLAY_CLUSTER &
       ICD_FULL_LIST %in% current_key$ICD_FULL_LIST
@@ -48,8 +48,8 @@ getOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
     mrp_index <- existing_entry$mrp_index
   } else {
     mrp_index <- getNextMrpIndex()
-    drug_disease_list_rows <- rbind(
-      drug_disease_list_rows,
+    drug_condition_list_rows <- rbind(
+      drug_condition_list_rows,
       data.table::data.table(
         ATC_FULL_LIST = current_key$ATC_FULL_LIST,
         ICD_FULL_LIST = current_key$ICD_FULL_LIST,
@@ -59,7 +59,7 @@ getOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
       fill = TRUE
     )
 
-    setDrugDiseaseListRows(drug_disease_list_rows)
+    setDrugConditionListRows(drug_condition_list_rows)
   }
   return(mrp_index)
 }
@@ -91,8 +91,6 @@ getOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
 #'         of the contraindication).
 #'
 matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_codes, meda_datetime, patient_id) {
-  browser()
-  drug_disease_list_rows <- getDrugDiseaseListRows()
 
   # Initialize empty result data.table
   matched_rows <- data.table::data.table(
@@ -228,7 +226,7 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
       ]
 
       # Get or create mrp_index
-      mrp_index <- getOrCreateMrpIndex(mrp_table_list_row, getDrugDiseaseListRows())
+      mrp_index <- getOrCreateMrpIndex(mrp_table_list_row, getDrugConditionListRows())
 
       # Add directly to matched_rows
       if (length(relevant_atcs) > 0) {
@@ -650,73 +648,79 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
 
 #' Match ICD Proxies Using ATC, OPS, and LOINC Codes
 #'
-#' This function analyzes a patient's medication, procedure, and observation data to infer ICD diagnoses
-#' based on proxy rules defined in drug-disease MRP (medication risk profile) tables. These rules
-#' define ATC (Anatomical Therapeutic Chemical), OPS (Operationen- und Prozedurenschlüssel, i.e. German procedure),
-#' or LOINC (Logical Observation Identifiers Names and Codes) codes as proxies for ICD diagnoses.
+#' This function analyzes a patient's medication, procedure, and observation data to infer
+#' ICD diagnoses based on proxy rules defined in drug-disease MRP (medication risk profile) tables.
+#' Depending on the provided inputs, ATC (medications), OPS (procedures), and/or LOINC (laboratory
+#' observations) codes can be used as proxies for ICD diagnoses.
 #'
-#' The function evaluates whether proxy events (e.g., medication, procedure, or lab measurement entries) occurred within
-#' a rule-defined time window relative to a reference datetime. Matching proxies are returned
-#' as suggested ICD codes with context descriptions.
+#' Only proxy types for which both resource data and corresponding MRP rule tables are provided
+#' are evaluated. All proxy types are optional and can be combined arbitrarily.
 #'
-#' @param medication_resources A named list of `data.table`s containing medication information:
+#' @param medication_resources Optional. A named list of `data.table`s containing medication information:
 #'   - `medication_requests`
 #'   - `medication_statements`
 #'   - `medication_administrations`
-#'   Each must include columns `atc_code`, `start_datetime`, and optionally `end_datetime`.
+#'   Each table must include columns `atc_code`, `start_datetime`, and optionally `end_datetime`.
+#'   If `NULL`, ATC proxy matching is skipped.
 #'
-#' @param procedure_resources A `data.table` containing procedures with columns:
+#' @param procedure_resources Optional. A `data.table` containing procedures with columns:
 #'   - `proc_code_code`: the OPS code
 #'   - `start_datetime`: date of the procedure
 #'   - `end_datetime`: optional end date of the procedure
+#'   If `NULL`, OPS proxy matching is skipped.
 #'
-#' @param observation_resources A `data.table` containing lab or observation data with columns:
+#' @param observation_resources Optional. A `data.table` containing laboratory or observation data with columns:
 #'   - `obs_code_code`: the LOINC code
 #'   - `obs_valuequantity_value`: measured value
 #'   - `obs_valuequantity_unit`: measurement unit
 #'   - `obs_referencerange_low_value` / `obs_referencerange_high_value`: reference range
 #'   - `start_datetime`: date of measurement
-#'   - `end_datetime`: optional end date
+#'   If `NULL`, LOINC proxy matching is skipped.
 #'
-#' @param drug_disease_mrp_tables_by_atc_proxy A named list of `data.table`s, one per ATC code,
-#'   containing MRP rules. Each table should include: `ICD`, `ICD_PROXY_ATC`,
-#'   `ICD_PROXY_ATC_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
+#' @param drug_condition_mrp_tables_by_atc_proxy Optional. A named list of `data.table`s (one per ATC proxy)
+#'   containing MRP rules for ATC-based ICD inference. If `NULL`, ATC proxy matching is skipped.
 #'
-#' @param drug_disease_mrp_tables_by_ops_proxy A named list of `data.table`s, one per OPS code,
-#'   containing MRP rules. Each table should include: `ICD`, `ICD_PROXY_OPS`,
-#'   `ICD_PROXY_OPS_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
+#' @param drug_condition_mrp_tables_by_ops_proxy Optional. A named list of `data.table`s (one per OPS proxy)
+#'   containing MRP rules for OPS-based ICD inference. If `NULL`, OPS proxy matching is skipped.
 #'
-#' @param drug_disease_mrp_tables_by_loinc_proxy A named list of `data.table`s, one per LOINC code,
-#'   containing MRP rules. Each table should include: `ICD`, `LOINC_PRIMARY_PROXY`,
-#'   `LOINC_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
+#' @param drug_condition_mrp_tables_by_loinc_proxy Optional. A named list of `data.table`s (one per LOINC proxy)
+#'   containing MRP rules for LOINC-based ICD inference. If `NULL`, LOINC proxy matching is skipped.
 #'
 #' @param meda_datetime A `Date` or `POSIXct` object representing the reference datetime
 #'   for evaluating proxy validity windows.
 #'
-#' @param match_atc_codes A character vector of ATC codes that are being evaluated (e.g.,
-#'   medication in question triggering the contraindication check).
+#' @param match_atc_codes A `data.table` containing ATC codes under evaluation (e.g. medications
+#'   triggering a contraindication check), including at least columns `atc_code` and `start_datetime`.
 #'
-#' @param loinc_matching_function A function used for additional matching logic when evaluating LOINC proxies.
-#'   It must accept arguments `observation_resources`, `match_proxy_row`, and `loinc_mapping_table`
-#'   and return either `NA` (no match) or a character description of the match reasoning.
+#' @param loinc_mapping_table Optional. A `data.table` containing metadata for LOINC codes
+#'   (e.g. mappings between primary and secondary LOINC codes). Required only for LOINC proxy matching.
 #'
-#' @param loinc_mapping_table A `data.table` containing metadata for LOINC codes (e.g., German names).
+#' @param loinc_matching_function Optional. A function providing additional matching logic
+#'   for LOINC proxies. It must accept arguments `observation_resources`, `match_proxy_row`,
+#'   and `loinc_mapping_table`, and return either `NA` (no match) or a character vector describing
+#'   the match reasoning. Required only for LOINC proxy matching.
 #'
-#' @return A `data.table` of inferred ICD proxies with columns:
+#' @return
+#' A `data.table` containing inferred ICD diagnoses based on matched proxies.
+#' One row is returned per matched proxy rule. If no proxy matches are found,
+#' an empty `data.table` is returned.
+#'
+#' The result includes at least the following columns:
 #' \describe{
-#'   \item{icd_code}{The ICD code inferred via proxy}
-#'   \item{atc_code}{The ATC code evaluated (from the rule)}
-#'   \item{proxy_code}{The matching ATC, OPS, or LOINC proxy code that triggered the inference}
-#'   \item{proxy_type}{One of `"ATC"`, `"OPS"`, or `"LOINC"`}
-#'   \item{kurzbeschr}{A short German description of the match reasoning}
+#'   \item{icd_code}{The ICD code inferred via proxy matching}
+#'   \item{atc_code}{The ATC code evaluated (from the MRP rule)}
+#'   \item{proxy_code}{The ATC, OPS, or LOINC code that triggered the inference}
+#'   \item{proxy_type}{The proxy type used: `"ATC"`, `"OPS"`, or `"LOINC"`}
+#'   \item{kurzbeschr_*}{German textual descriptions explaining the matching context}
 #' }
 #'
 #' @details
-#' - The function returns one row per matched rule per ICD code.
-#' - Only rules with a valid, non-empty proxy field are evaluated.
-#' - Validity periods can be numerical (in days) or `"unbegrenzt"` (no time restriction).
-#' - Matching is performed via `grepl` with `fixed = TRUE` for proxy codes.
-#' - For LOINC proxies, an additional matching function can refine matches based on lab values and reference ranges.
+#' - Each proxy type (ATC, OPS, LOINC) is evaluated independently and only if the required inputs
+#'   are provided.
+#' - Validity periods can be numeric (days) or non-numeric (treated as unlimited).
+#' - Matching is performed using prefix matching on proxy codes.
+#' - For LOINC proxies, additional value- and reference-range-based logic can be applied via
+#'   `loinc_matching_function`.
 #'
 matchICDProxies <- function(
     medication_resources,
@@ -819,7 +823,7 @@ matchICDProxies <- function(
               proxy_start_datetime <- first_valid_row$start_datetime
 
               # Get or create mrp_index
-              mrp_index <- getOrCreateMrpIndex(match_proxy_row, getDrugDiseaseListRows())
+              mrp_index <- getOrCreateMrpIndex(match_proxy_row, getDrugConditionListRows())
 
               if (nrow(valid_proxy_rows)) {
                 # Get the start datetime of the matched ATC code

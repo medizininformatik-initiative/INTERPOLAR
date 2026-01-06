@@ -301,7 +301,7 @@ calculateMRPsDrugDisease <- function(active_atcs, mrp_pair_list, resources, pati
     # Match ICD codes against MRP definitions and ATC codes
     match_atc_and_icd_codes <- matchICDCodes(
       relevant_conditions = relevant_conditions,
-      drug_disease_mrp_tables_by_icd = splitted_mrp_tables$by_icd,
+      mrp_tables_by_icd = splitted_mrp_tables$by_icd,
       match_atc_codes = match_atc_codes,
       meda_datetime = meda_datetime,
       patient_id = patient_id
@@ -316,9 +316,9 @@ calculateMRPsDrugDisease <- function(active_atcs, mrp_pair_list, resources, pati
       ),
       procedure_resources = resources$procedures[proc_patient_ref %in% patient_ref],
       observation_resources = resources$observations[obs_patient_ref %in% patient_ref],
-      drug_disease_mrp_tables_by_atc_proxy = splitted_mrp_tables$by_atc_proxy,
-      drug_disease_mrp_tables_by_ops_proxy = splitted_mrp_tables$by_ops_proxy,
-      drug_disease_mrp_tables_by_loinc_proxy = splitted_mrp_tables$by_loinc_proxy,
+      drug_condition_mrp_tables_by_atc_proxy = splitted_mrp_tables$by_atc_proxy,
+      drug_condition_mrp_tables_by_ops_proxy = splitted_mrp_tables$by_ops_proxy,
+      drug_condition_mrp_tables_by_loinc_proxy = splitted_mrp_tables$by_loinc_proxy,
       meda_datetime = meda_datetime,
       match_atc_codes = match_atc_codes,
       loinc_mapping_table = loinc_mapping_table,
