@@ -1101,7 +1101,8 @@ filterPatientIdsByLevel <- function(all_pids, duplicate_level, last_indices = NU
   return(matching_ids)
 }
 
-addREDCapMedikationsanalyse <- function(dt_med_ana, patient_ids, day_offset) {
+addREDCapMedikationsanalyse <- function(dt_med_ana, patient_ids, day_offset, status = c("Complete", "Incomplete", "Unverified")) {
+  status <- match.arg(status)
   # Load the necessary libraries
   template <- data.table::as.data.table(loadDebugREDCapDataTemplate("medikationsanalyse"))
   for (pid in patient_ids) {
@@ -1120,6 +1121,7 @@ addREDCapMedikationsanalyse <- function(dt_med_ana, patient_ids, day_offset) {
     template[, redcap_repeat_instrument := "medikationsanalyse"]
     # count how many entries already exist in "medikationsanalyse" for this record_id
     count_redcap_repeat_instances <- data_to_import$medikationsanalyse[record_id == template$record_id, .N]
+    template[, medikationsanalyse_complete := status]
     # set the redcap_repeat_instance to count + 1
     template[, redcap_repeat_instance := count_redcap_repeat_instances + 1]
     # append the updated template row into the "medikationsanalyse" table
