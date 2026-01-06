@@ -488,7 +488,8 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     target_record_id <- record_ids[pat_id %in% patient_id, record_id][1]
 
     # meda_dat can be NA but we always need this value -> remove rows with NA
-    encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id & !is.na(meda_dat)]
+    # and ignore all medication analyses with a not "Complete" form status
+    encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id & !is.na(meda_dat) & medikationsanalyse_complete %in% "Complete"]
 
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
     if (nrow(encounter_medication_analyses)) {
