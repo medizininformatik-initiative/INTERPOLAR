@@ -1,6 +1,8 @@
 mrpCheck <- function(start_date, end_date) {
 
   etlutils::runLevel2("MRP Calculation", {
+    start_date <- etlutils::as.POSIXctWithTimezone(start_date)
+    end_date <- etlutils::as.POSIXctWithTimezone(end_date)
     mrp_table_lists_all <- calculateMRPs(start_date, end_date, return_used_resources = "record_ids")
   })
 
@@ -48,7 +50,7 @@ mrpCheck <- function(start_date, end_date) {
 
 
     # add export period at the end of the table in the first column
-    result <- etlutils::addRowsWithColumn(result, c("", paste("Start:", start_date), paste("End:", end_date)), column = "MRP Typ")
+    result <- etlutils::addRowsWithColumn(result, c("", paste("Start:", format(start_date, "%Y-%m-%d %H:%M:%S")), paste("End:", format(end_date, "%Y-%m-%d %H:%M:%S"))), column = "MRP Typ")
   })
 
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {
