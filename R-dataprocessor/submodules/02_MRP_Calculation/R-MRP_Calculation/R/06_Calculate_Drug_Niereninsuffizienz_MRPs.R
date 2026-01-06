@@ -47,78 +47,88 @@ getCategoryDisplayDrugNiereninsuffizienz <- function() {"Drug-Niereninsuffizienz
 #' @param mrp_type A character string representing the base name of the MRP definition (e.g., `"Drug_Disease"`).
 #'
 #' @return A cleaned and expanded data.table containing the MRP definition table.
-#'
-#' @export
 processExcelContentDrugNiereninsuffizienz <- function(drug_niereninsuffizienz_mrp_definition, mrp_type) {
 
-  # Remove not nesessary columns
-  mrp_columnnames <- getRelevantColumnNames(mrp_type)
-  drug_niereninsuffizienz_mrp_definition <- drug_niereninsuffizienz_mrp_definition[,  ..mrp_columnnames]
-
-  code_column_names <- names(drug_niereninsuffizienz_mrp_definition)[
-    (grepl("LOINC|ATC", names(drug_niereninsuffizienz_mrp_definition))) &
-      !grepl("DISPLAY|INCLUSION|VALIDITY_DAYS|CUTOFF", names(drug_niereninsuffizienz_mrp_definition))
-  ]
-  #code_column_names <- c("ATC_PRIMARY", "LOINC_PRIMARY", "LOINC_PROXY_ICD")
-  drug_niereninsuffizienz_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_niereninsuffizienz_mrp_definition, code_column_names)
-
-  # ICD column:
-  # remove white spaces around plus signs
-  etlutils::replacePatternsInColumn(drug_niereninsuffizienz_mrp_definition, 'LOINC_PROXY_ICD', '\\s*\\+\\s*', '+')
-  # replace all invalid chars in the ICD codes by a simple whitespace -> can be trimmed and splitted
-  drug_niereninsuffizienz_mrp_definition[, LOINC_PROXY_ICD := sapply(LOINC_PROXY_ICD, function(text) gsub('[^0-9A-Za-z. +]', '', text))]
-
-  computeATCForCalculation(
-    data_table = drug_niereninsuffizienz_mrp_definition,
-    primary_col = "ATC_PRIMARY",
-    inclusion_col = "ATC_INCLUSION",
-    output_col = "ATC_FOR_CALCULATION",
-    secondary_cols = c("ATC_SYSTEMIC_SY", "ATC_DERMATIKA_D", "ATC_OPHTHALMIKA_O", "ATC_INHALANDA_I", "ATC_SONSTIGE_SO")
-  )
-
-  code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
-  # SPLIT and TRIM: ICD and proxy column:
-  # split the whitespace separated lists in ICD and proxy columns in a single row per code
-  drug_niereninsuffizienz_mrp_definition <- etlutils::splitColumnsToRows(drug_niereninsuffizienz_mrp_definition, code_column_names)
-  # trim all values in the whole table
-  etlutils::trimTableValues(drug_niereninsuffizienz_mrp_definition)
-  # ICD column: remove tailing points from ICD codes
-  etlutils::replacePatternsInColumn(drug_niereninsuffizienz_mrp_definition, 'ICD', '\\.$', '')
-  # After the replacing of special signs with an empty string their can be new empty rows in this both columns
-  drug_niereninsuffizienz_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_niereninsuffizienz_mrp_definition, code_column_names)
-  # Remove duplicate rows
-  drug_niereninsuffizienz_mrp_definition <- unique(drug_niereninsuffizienz_mrp_definition)
-
-  # Clean rows with NA or empty values in relevant columns
-  for (col in code_column_names) {
-    drug_niereninsuffizienz_mrp_definition[[col]] <- ifelse(
-      is.na(drug_niereninsuffizienz_mrp_definition[[col]]) |
-        !nzchar(trimws(drug_niereninsuffizienz_mrp_definition[[col]])),
-      NA_character_,
-      drug_niereninsuffizienz_mrp_definition[[col]]
-    )
-  }
-
-  # check column ATC and ATC_PROXY for correct ATC codes
-  invalid_atcs <- etlutils::getInvalidCodes(drug_niereninsuffizienz_mrp_definition, "ATC_FOR_CALCULATION", etlutils::isATC)
-  # check column LOINC_PROXY for correct LOINC codes
-  invalid_loincs <- etlutils::getInvalidCodes(drug_niereninsuffizienz_mrp_definition, "LOINC_PRIMARY", etlutils::isLOINC)
-
-  error_messages <- c(
-    formatCodeErrors(invalid_atcs, "ATC"),
-    formatCodeErrors(invalid_loincs, "LOINC")
-  )
-
-  if (length(error_messages) > 0) {
-    stop(paste(error_messages, collapse = "\n"))
-  }
-
-  # Apply the function to the 'ICD' column
-  drug_niereninsuffizienz_mrp_definition$LOINC_PROXY_ICD <- expandAndConcatenateICDs(drug_niereninsuffizienz_mrp_definition$LOINC_PROXY_ICD)
-  # Split concatenated ICD codes into separate rows
-  drug_niereninsuffizienz_mrp_definition <- etlutils::splitColumnsToRows(drug_niereninsuffizienz_mrp_definition, "LOINC_PROXY_ICD")
-  # Remove duplicate rows
-  drug_niereninsuffizienz_mrp_definition <- unique(drug_niereninsuffizienz_mrp_definition)
+  drug_niereninsuffizienz_mrp_definition <- processExcelContentDrugCondition(drug_niereninsuffizienz_mrp_definition, mrp_type)
 
   return(drug_niereninsuffizienz_mrp_definition)
+}
+
+#' Split Drug-Niereninsuffizienz MRP Table into Lookup Structures
+#'
+#' Takes a full Drug-Disease MRP table and splits it into multiple lookup tables
+#' to support efficient MRP evaluation. Splitting is done by relevant rule keys such as:
+#' ATC codes, ICD codes, and proxy definitions (ATC and OPS).
+#'
+#' @param drug_disease# The complete MRP definition table for Drug-Disease interactions as a \code{data.table}.
+#'
+#' @return A list of named \code{data.table} lookup structures:
+#' \describe{
+#'   \item{by_atc}{Split by \code{ATC_FOR_CALCULATION}, used for direct ATC code matching.}
+#'   \item{by_icd}{Split by \code{ICD}, used to match ICD codes from conditions.}
+#'   \item{by_loinc_proxy}{Split by \code{ICD_PROXY_ATC}, used for proxy rules based on medication.}
+#' }
+#'
+getSplittedMRPTablesDrugNiereninsuffizienz <- function(mrp_pair_list) {
+
+  mrp_pair_list[, LOINC_VALIDITY_DAYS := if (!"LOINC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else LOINC_VALIDITY_DAYS]
+
+  splitted <- list(
+    by_atc = etlutils::splitTableToList(mrp_pair_list, "ATC_FOR_CALCULATION", rm.na = TRUE),
+    by_icd = etlutils::splitTableToList(mrp_pair_list, "ICD", rm.na = TRUE),
+    by_loinc_proxy = etlutils::splitTableToList(mrp_pair_list, "LOINC_PRIMARY_PROXY", rm.na = TRUE)
+  )
+
+  splitted$by_loinc_proxy <- etlutils::renameColsInLists(splitted$by_loinc_proxy, c("LOINC_PRIMARY_PROXY", "LOINC_VALIDITY_DAYS"), c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
+
+  return(splitted)
+}
+
+#' Calculate Drug-Disease Medication-Related Problems (MRPs)
+#'
+#' Detects MRPs by evaluating combinations of medications (ATC codes) and diseases (ICD codes).
+#' If direct ICD matches are not found for an ATC, proxy rules are applied using medication
+#' and procedure history to infer possible conditions.
+#'
+#' @param active_atcs A \code{data.table} of the patient's active medications (e.g. FHIR MedicationRequest).
+#' @param mrp_pair_list MRP-Pair list to create a list of lookup tables created by \code{getSplittedMRPTablesDrugDisease()}.
+#' @param resources A named list of all FHIR resource tables relevant to the encounter (conditions, medications, procedures, etc.).
+#' @param patient_id A character string representing the internal patient ID.
+#' @param meda_datetime A POSIXct timestamp representing the time of medication evaluation.
+#'
+#' @return A \code{data.table} containing matched Drug-Disease MRPs, including both direct and proxy-based findings.
+#'
+calculateMRPsDrugNiereninsuffizienz <- function(active_atcs, mrp_pair_list, resources, patient_id, meda_datetime) {
+  loinc_mapping_table <- getLOINCMapping()$processed_content
+  match_atc_and_icd_codes <- data.table::data.table()
+  splitted_mrp_tables <- getSplittedMRPTablesDrugNiereninsuffizienz(mrp_pair_list)
+  # Match ATC-codes between encounter data and MRP definitions
+  match_atc_codes <- matchATCCodes(active_atcs, splitted_mrp_tables$by_atc)
+  # Get and match ICD-codes of the patient
+  if (nrow(match_atc_codes)) {
+    # Get relevant conditions
+    relevant_conditions <- getRelevantConditions(resources$conditions, patient_id, meda_datetime)
+    # Match ICD codes against MRP definitions and ATC codes
+    match_atc_and_icd_codes <- matchICDCodes(
+      relevant_conditions = relevant_conditions,
+      mrp_tables_by_icd = splitted_mrp_tables$by_icd,
+      match_atc_codes = match_atc_codes,
+      meda_datetime = meda_datetime,
+      patient_id = patient_id
+    )
+    # check ATC and OPS Proxys for ICDs
+    patient_ref <- paste0("Patient/", patient_id)
+    match_icd_proxies <- matchICDProxies(
+      observation_resources = resources$observations[obs_patient_ref %in% patient_ref],
+      drug_condition_mrp_tables_by_loinc_proxy = splitted_mrp_tables$by_loinc_proxy,
+      meda_datetime = meda_datetime,
+      match_atc_codes = match_atc_codes,
+      loinc_mapping_table = loinc_mapping_table,
+      loinc_matching_function = matchLOINCCutoff
+    )
+    if (nrow(match_icd_proxies)) {
+      match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
+    }
+  }
+  return(match_atc_and_icd_codes)
 }

@@ -482,7 +482,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                 "kurzbeschr_type"
               )
 
-              if (mrp_type == "Drug_Disease") {
+              if (mrp_type == "Drug_Disease" || mrp_type == "Drug_Niereninsuffizienz") {
                 collapsed_match[, kurzbeschr := {
                   base <- paste0(
                     kurzbeschr_drug, " ist mit\n ",
