@@ -226,7 +226,7 @@ getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
 
   # Filter conditions by patient ID and ensure recorded date is before or on meda_datetime
   relevant_conditions <- conditions[
-    con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime]
+    con_patient_ref %in% paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime]
 
   relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "con_code_display", "start_datetime")
   relevant_conditions <- relevant_conditions[, ..relevant_cols]
@@ -308,7 +308,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
   )
 
   # Filter all conditions for the current patient
-  all_patient_conditions <- relevant_conditions[con_patient_ref == paste0("Patient/", patient_id)]
+  all_patient_conditions <- relevant_conditions[con_patient_ref %in% paste0("Patient/", patient_id)]
   used_icds <- unique(all_patient_conditions[!is.na(con_code_code), con_code_code])
   icds <- intersect(names(drug_disease_mrp_tables_by_icd), used_icds)
 

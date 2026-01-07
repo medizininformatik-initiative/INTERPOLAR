@@ -203,7 +203,7 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
       matched_row <- mrp_filtered[j]
       atc2 <- matched_row$ATC2_FOR_CALCULATION
 
-      active_atc2_rows <- active_atcs_unique[atc_code == atc2]
+      active_atc2_rows <- active_atcs_unique[atc_code %in% atc2]
       data.table::setorder(active_atc2_rows, start_datetime)
 
       for (k in seq_len(nrow(active_atc2_rows))) {
@@ -213,7 +213,7 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
         # Check for overlapping time periods
         if (start_datetime <= atc2_end_datetime && atc2_start_datetime <= end_datetime) {
           # Check, if the pair (A,B) and (B,A) exists
-          duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+          duplicate_idx <- result_mrps[(atc_code %in% atc & atc2_code %in% atc2) | (atc_code %in% atc2 & atc2_code %in% atc), .I]
 
           # There is no existing mrp in the result table with the same atc codes
           if (!length(duplicate_idx)) {
@@ -353,7 +353,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
 
         for (encounter_id in mrp_type_main_encounters$enc_id) {
           # Get encounter data and patient ID
-          encounter <- resources$main_encounters[enc_id == encounter_id]
+          encounter <- resources$main_encounters[enc_id %in% encounter_id]
           patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
           encounter_ref <- unique(etlutils::fhirdataGetEncounterReference(encounter$enc_id))
           # The calculated_ref column always reference to the main encounter
@@ -363,7 +363,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
           meda_id <- if (!is.null(meda)) meda$meda_id else NA_character_
           meda_datetime <- if (!is.null(meda)) meda$meda_dat else NA
           meda_study_phase <- encounter$study_phase
-          record_id <- as.integer(resources$record_ids[pat_id == patient_id, record_id])
+          record_id <- as.integer(resources$record_ids[pat_id %in% patient_id, record_id])
           # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
           ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
           ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
@@ -389,7 +389,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
             # Iterate over matched results and create new rows for retrolektive_mrpbewertung and dp_mrp_calculations
             for (current_mrp_index in unique(match_atc_and_item2_codes$mrp_index)) {
               # Subset all rows belonging to the same MRP index
-              match <- match_atc_and_item2_codes[mrp_index == current_mrp_index]
+              match <- match_atc_and_item2_codes[mrp_index %in% current_mrp_index]
               if ("kurzbeschr_additional" %in% names(match) && all(is.na(match$kurzbeschr_additional))) {
                 match[, kurzbeschr_additional := NULL]
               }
@@ -422,7 +422,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                         paste0(type, ":", strrep(" ", type_format$first))
                       }
                       type_blocks <- sapply(types, function(type) {
-                        items <- unique(trimws(.SD[kurzbeschr_type == type, kurzbeschr_item2]))
+                        items <- unique(trimws(.SD[kurzbeschr_type %in% type, kurzbeschr_item2]))
                         type_format  <- type_formats[[type]]
                         prefix <- pad_type(type)
                         first_line <- paste0(prefix, items[1])
@@ -472,8 +472,8 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
               }
 
               meda_id_value <- meda_id # we need this renaming for the following comparison
-              existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
-              existing_redcap_repeat_instances <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_redcap_repeat_instance]
+              existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id %in% meda_id_value, ret_id]
+              existing_redcap_repeat_instances <- resources$existing_retrolective_mrp_evaluation_ids[meda_id %in% meda_id_value, ret_redcap_repeat_instance]
               next_index <- if (length(existing_ret_ids) == 0) 1 else max(as.integer(sub(ret_id_prefix, "", existing_ret_ids)), na.rm = TRUE) + 1
 
               ids <- as.integer(sub(ret_id_prefix, "", existing_ret_ids))
