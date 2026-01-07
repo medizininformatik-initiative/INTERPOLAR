@@ -115,7 +115,7 @@ matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
   mrp_atc_keys <- names(mrp_table_list_by_atc)
   # Reduce active_atcs to the relevant ATC codes (and keep their dates!)
   active_atcs_unique <- active_atcs[
-    , .(start_datetime = min(start_datetime, na.rm = TRUE)),
+    , .(start_datetime = etlutils::getMinDatetime(start_datetime)),
     by = atc_code
   ]
   # Only keep those that also appear in MRP definitions

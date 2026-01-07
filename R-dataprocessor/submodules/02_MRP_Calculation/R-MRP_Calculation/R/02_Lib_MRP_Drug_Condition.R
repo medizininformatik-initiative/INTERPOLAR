@@ -156,10 +156,10 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
           )
         ]
         if (!nrow(valid_rows)) return(NULL)
-        validity_num <- ifelse(
+        validity_num <- data.table::fifelse(
           tolower(valid_rows$ICD_VALIDITY_DAYS) == "unbegrenzt",
           Inf,
-          as.numeric(valid_rows$ICD_VALIDITY_DAYS)
+          suppressWarnings(as.numeric(valid_rows$ICD_VALIDITY_DAYS))
         )
         valid_rows[validity_num == min(validity_num)]
       },

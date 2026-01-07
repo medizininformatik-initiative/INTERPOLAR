@@ -363,8 +363,8 @@ getMedicationRequestsFromDB <- function(patient_references) {
   medication_requests[
     ,
     `:=`(
-      start_datetime = min(start_datetime),
-      end_datetime = if (anyNA(end_datetime)) NA else max(end_datetime)
+      start_datetime = etlutils::getMinDatetime(start_datetime),
+      end_datetime = if (anyNA(end_datetime)) NA else getMaxDatetime(end_datetime)
     ),
     by = medreq_id
   ]
@@ -699,7 +699,7 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
   # keep only relevant columns and aggregate to get the overall start and end datetime per atc_code
   active_atc <- active_requests[, c("atc_code", "start_datetime", "end_datetime")]
   active_atc <- active_atc[, .(
-    start_datetime = min(start_datetime, na.rm = TRUE),
+    start_datetime = etlutils::getMinDatetime(start_datetime),
     end_datetime = end_datetime[1]
   ), by = .(atc_code, end_datetime)]
 
@@ -714,8 +714,8 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
   # 3. aggregate
   active_atc <- active_atc[
     , .(
-      start_datetime = min(start_datetime),
-      end_datetime = max(end_datetime)
+      start_datetime = etlutils::getMinDatetime(start_datetime),
+      end_datetime = etlutils::getMaxDatetime(end_datetime)
     ),
     by = .(atc_code, grp)
   ]
