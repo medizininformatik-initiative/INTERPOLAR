@@ -188,7 +188,7 @@ addProcessingExclusionReason <- function(existing = processing_exclusion_reason,
 #' - If a group has only one row, the existing value in
 #'   `processing_exclusion_reason` is preserved.
 #'
-#' @importFrom dplyr group_by add_count mutate if_else ungroup select across all_of
+#' @importFrom dplyr group_by add_count mutate case_when ungroup select across all_of
 #'
 #' @export
 addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars,
@@ -198,15 +198,15 @@ addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars,
   data_add_multiple_row_reason <- data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
     dplyr::add_count() |>
-    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-      n > 1,
-      addProcessingExclusionReason(
-        existing = processing_exclusion_reason,
-        reason = processing_exclusion_reason_name,
-        level = processing_exclusion_reason_level,
-        type = processing_exclusion_reason_type
-      ),
-      processing_exclusion_reason
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      n > 1 ~
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = processing_exclusion_reason_name,
+          level = processing_exclusion_reason_level,
+          type = processing_exclusion_reason_type
+        ),
+      TRUE ~ processing_exclusion_reason
     )) |>
     dplyr::ungroup() |>
     dplyr::select(-n)
@@ -275,6 +275,8 @@ parseNamedArgs <- function() {
 #'   from the second system.
 #' @param exclusion_reason Character string that will be written into
 #'   `processing_exclusion_reason` when unknown or multiple values are detected.
+#' @param exclusion_level Level of the exclusion_reason
+#' @param exclusion_type Type of the exclusion_reason.
 #' @param id_column Character string specifying an identifier column (e.g. encounter ID),
 #'   used only for warning messages to help trace problematic rows.
 #'
@@ -296,40 +298,12 @@ parseNamedArgs <- function() {
 #'         `"MULTIPLE_VALUES"` is inserted and `exclusion_reason` is set.
 #' }
 #'
-#' @importFrom dplyr mutate if_else select group_by summarise across all_of distinct
-#'
-#' @examples
-#' df <- data.frame(
-#'   id = c(1, 2, 3, 4),
-#'   enc_type_code = c(
-#'     "einrichtungskontakt", "normalstationaer",
-#'     "abteilungskontakt", "unknown_code"
-#'   ),
-#'   enc_type_system = c(
-#'     "http://fhir.de/CodeSystem/Kontaktebene",
-#'     "http://fhir.de/CodeSystem/kontaktart-de",
-#'     "http://fhir.de/CodeSystem/Kontaktebene",
-#'     "http://fhir.de/CodeSystem/Kontaktebene"
-#'   )
-#' )
-#'
-#' PivotWiderTwoSystems(
-#'   data = df,
-#'   system1 = "http://fhir.de/CodeSystem/Kontaktebene",
-#'   codes1 = c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt"),
-#'   system2 = "http://fhir.de/CodeSystem/kontaktart-de",
-#'   codes2 = c("normalstationaer"),
-#'   var_code = "enc_type_code",
-#'   var_system = "enc_type_system",
-#'   var_new_system_1 = "enc_type_code_Kontaktebene",
-#'   var_new_system_2 = "enc_type_code_Kontaktart",
-#'   exclusion_reason = "mapping_failed",
-#'   id_column = "id"
-#' )
+#' @importFrom dplyr mutate if_else case_when select group_by summarise across all_of distinct
 #'
 #' @export
 PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_code, var_system,
-                                 var_new_system_1, var_new_system_2, exclusion_reason, id_column) {
+                                 var_new_system_1, var_new_system_2, exclusion_reason,
+                                 exclusion_level, exclusion_type, id_column) {
   # Check for unexpected codes/systems
   unexpected_code_rows <- !is.na(data[[var_code]]) & !data[[var_code]] %in% c(codes1, codes2)
   if (any(unexpected_code_rows)) {
@@ -348,8 +322,14 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
     ))
   }
   data <- data |>
-    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-      !get(var_code) %in% c(codes1, codes2), exclusion_reason, NA_character_
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      !get(var_code) %in% c(codes1, codes2) ~ addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = exclusion_reason,
+        level = exclusion_level,
+        type = exclusion_type
+      ),
+      TRUE ~ processing_exclusion_reason
     )) |>
     # System 1-Mapping
     dplyr::mutate(!!var_new_system_1 := dplyr::if_else(get(var_system) %in% system1 |
@@ -392,10 +372,14 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
     # Add processing exclusion reason for multiple/unknown values
     dplyr::mutate(
       processing_exclusion_reason = dplyr::if_else(
-        is.na(processing_exclusion_reason) &
-          (.data[[var_new_system_1]] %in% c("MULTIPLE_VALUES") |
-            .data[[var_new_system_2]] %in% c("MULTIPLE_VALUES")),
-        exclusion_reason,
+        (.data[[var_new_system_1]] %in% c("MULTIPLE_VALUES") |
+          .data[[var_new_system_2]] %in% c("MULTIPLE_VALUES")),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = exclusion_reason,
+          level = exclusion_level,
+          type = exclusion_type
+        ),
         processing_exclusion_reason
       )
     ) |>
@@ -1208,20 +1192,44 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
   }
 
   createRawEncounterDataWarningSituations <- function(encounter_table_raw) {
-    common_encounter_fhir_identifier_system_filter_check <- encounter_table_raw |>
+    encounter_table_raw_with_enc_type_system_and_code <- encounter_table_raw |>
+      dplyr::mutate(enc_type_system = "http://fhir.de/CodeSystem/Kontaktebene") |>
+      rbind(encounter_table_raw |>
+        dplyr::mutate(
+          enc_type_system = "http://fhir.de/CodeSystem/kontaktart-de",
+          enc_type_code = "normalstationaer"
+        ))
+
+    common_encounter_fhir_identifier_system_filter_check <- encounter_table_raw_with_enc_type_system_and_code |>
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001_6") |>
       dplyr::mutate(
         enc_identifier_system = paste0(enc_identifier_system, "-test")
       )
-    one_year_historic_data_filter_check <- encounter_table_raw |>
+    one_year_historic_data_filter_check <- encounter_table_raw_with_enc_type_system_and_code |>
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001_6") |>
       dplyr::mutate(
         enc_period_start = as.POSIXct("2000-01-01"),
         enc_period_end = as.POSIXct("2000-01-10")
       )
-    encounter_table_raw <- encounter_table_raw |>
+
+    pivot_wider_two_systems_check_unknown_enc_type_code <- encounter_table_raw_with_enc_type_system_and_code |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_2") |>
+      dplyr::mutate(enc_type_code = "test")
+
+    pivot_wider_two_systems_check_unknown_enc_type_system <- encounter_table_raw_with_enc_type_system_and_code |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_3") |>
+      dplyr::mutate(enc_type_system = "test")
+
+    check_raw_encounter_table <- pivot_wider_two_systems_check_unknown_enc_type_code |>
+      rbind(pivot_wider_two_systems_check_unknown_enc_type_system)
+
+    check_raw_encounter_table_enc_ids <- check_raw_encounter_table$enc_id
+
+    encounter_table_raw <- encounter_table_raw_with_enc_type_system_and_code |>
+      dplyr::filter(!enc_id %in% check_raw_encounter_table_enc_ids) |>
       rbind(common_encounter_fhir_identifier_system_filter_check) |>
-      rbind(one_year_historic_data_filter_check)
+      rbind(one_year_historic_data_filter_check) |>
+      rbind(check_raw_encounter_table)
 
     return(encounter_table_raw)
   }

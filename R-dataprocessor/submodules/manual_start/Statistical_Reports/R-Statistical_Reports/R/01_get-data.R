@@ -191,6 +191,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   }
 
   encounter_table <- encounter_table |>
+    dplyr::mutate(processing_exclusion_reason = NA_character_) |>
     dplyr::filter(!enc_class_code %in% c("PRENC", "VR", "HH")) |>
     dplyr::filter(!enc_status %in% c("planned", "cancelled", "entered-in-error", "unknown")) |>
     dplyr::distinct() |>
@@ -212,12 +213,13 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
       var_new_system_1 = "enc_type_code_Kontaktebene",
       var_new_system_2 = "enc_type_code_Kontaktart",
       exclusion_reason = "undefined_kontaktebene_or_kontaktart",
+      exclusion_level = "sub_encounter",
+      exclusion_type = "data_issues",
       id_column = "enc_id"
     ) |>
     dplyr::filter(!enc_type_code_Kontaktart %in% c("begleitperson")) |>
     dplyr::distinct() |>
-    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status) |>
-    dplyr::mutate(processing_exclusion_reason = NA_character_)
+    dplyr::arrange(enc_patient_ref, enc_id, enc_period_start, enc_period_end, enc_status)
 
   if (nrow(encounter_table) == 0) {
     stop("The encounter table with extended filtering is empty. Please check the data for expected
