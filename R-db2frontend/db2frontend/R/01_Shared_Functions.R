@@ -23,14 +23,14 @@ getRedcapURL <- function() {
 getRedcapConnection <- function() {
   # Attempt to connect to REDCap
   frontend_connection <- tryCatch({
-    redcapAPI::redcapConnection(url = getRedcapURL(), token = REDCAP_TOKEN)
+    suppressWarnings(redcapAPI::redcapConnection(url = getRedcapURL(), token = REDCAP_TOKEN))
   }, error = function(e) {
     stop("Failed to establish a REDCap connection. Error: ", e$message)
   })
 
   # Test the connection by fetching metadata
   meta_data <- tryCatch({
-    redcapAPI::exportMetaData(frontend_connection)
+    suppressWarnings(redcapAPI::exportMetaData(frontend_connection))
   }, error = function(e) {
     stop("Invalid API token or REDCap URL! Error: ", e$message)
   })
@@ -73,14 +73,14 @@ deleteRedcapContent <- function() {
   frontend_connection <- db2frontend::getRedcapConnection()
 
   # Retrieve all record IDs
-  records <- redcapAPI::exportRecords(frontend_connection, fields = "record_id")
+  records <- suppressWarnings(redcapAPI::exportRecords(frontend_connection, fields = "record_id"))
 
   # Check if there are records to delete
   if (nrow(records) > 0) {
     record_ids <- records$record_id
 
     # Delete all records
-    delete_result <- redcapAPI::deleteRecords(frontend_connection, records = record_ids)
+    delete_result <- suppressWarnings(redcapAPI::deleteRecords(frontend_connection, records = record_ids))
 
   } else {
     message("No records found in the project.")
@@ -114,7 +114,7 @@ getRedcapFieldNames <- function(rcon) {
                      "redcap_data_access_group")
 
   # Add one "_complete" column per instrument
-  instruments <- redcapAPI::exportInstruments(rcon)
+  instruments <- suppressWarnings(redcapAPI::exportInstruments(rcon))
   complete_cols <- paste0(instruments$instrument_name, "_complete")
 
   # Combine all required columns
