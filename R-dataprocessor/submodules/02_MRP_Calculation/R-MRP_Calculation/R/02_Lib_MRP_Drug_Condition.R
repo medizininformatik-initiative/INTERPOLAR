@@ -135,7 +135,7 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
   # Filter all Conditions for the current patient
   all_patient_conditions <- relevant_conditions[con_patient_ref %in% paste0("Patient/", patient_id)]
   used_icds <- unique(all_patient_conditions[!is.na(con_code_code), con_code_code])
-  icds <- intersect(names(drug_disease_mrp_tables_by_icd), used_icds)
+  icds <- intersect(names(mrp_tables_by_icd), used_icds)
 
   for (mrp_icd in icds) {
 
