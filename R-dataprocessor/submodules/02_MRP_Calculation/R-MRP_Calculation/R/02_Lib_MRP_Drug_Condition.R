@@ -107,28 +107,41 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
     kurzbeschr_item2 = character()
   )
 
-  # Function to check if validity days match any patient condition
-  validity_matches_patient <- function(validity_days, patient_conditions, meda_datetime) {
-    if (tolower(validity_days) == "unbegrenzt") {
-      return(any(patient_conditions$start_datetime <= meda_datetime))
-    } else {
-      return(any(
-        patient_conditions$start_datetime >= (meda_datetime - lubridate::days(as.numeric(validity_days))) &
-          patient_conditions$start_datetime <= meda_datetime
-      ))
+  # Function to check if validity days match any patient Condition
+  patientValidityDayMatches <- function(validity_days, patient_conditions, meda_datetime) {
+
+    condition_start <- patient_conditions$start_datetime
+    isresult <- FALSE
+    if (!is.na(validity_days)) {
+      if (tolower(validity_days) %in% "unbegrenzt") {
+        result <- any(
+          condition_start <= meda_datetime,
+          na.rm = TRUE
+        )
+      } else {
+        validity_day <- suppressWarnings(as.numeric(validity_days))
+        if (!is.na(validity_day)) {
+          result <- any(
+            condition_start >= (meda_datetime - lubridate::days(validity_day)) &
+              condition_start <= meda_datetime,
+            na.rm = TRUE
+          )
+        }
+      }
     }
+    return(result)
   }
 
-  # Filter all conditions for the current patient
-  all_patient_conditions <- relevant_conditions[con_patient_ref == paste0("Patient/", patient_id)]
+  # Filter all Conditions for the current patient
+  all_patient_conditions <- relevant_conditions[con_patient_ref %in% paste0("Patient/", patient_id)]
   used_icds <- unique(all_patient_conditions[!is.na(con_code_code), con_code_code])
-  icds <- intersect(names(mrp_tables_by_icd), used_icds)
+  icds <- intersect(names(drug_disease_mrp_tables_by_icd), used_icds)
 
   for (mrp_icd in icds) {
 
     # Find matching ICD conditions for this specific ICD
     patient_conditions <- all_patient_conditions[
-      con_code_code == mrp_icd &
+      con_code_code %in% mrp_icd &
         con_code_system == "http://fhir.de/CodeSystem/bfarm/icd-10-gm"
     ]
 
@@ -150,18 +163,20 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
         valid_rows <- .SD[
           sapply(
             ICD_VALIDITY_DAYS,
-            validity_matches_patient,
+            patientValidityDayMatches,
             patient_conditions = patient_conditions,
             meda_datetime = meda_datetime
           )
         ]
         if (!nrow(valid_rows)) return(NULL)
-        validity_num <- data.table::fifelse(
-          tolower(valid_rows$ICD_VALIDITY_DAYS) == "unbegrenzt",
-          Inf,
-          suppressWarnings(as.numeric(valid_rows$ICD_VALIDITY_DAYS))
-        )
-        valid_rows[validity_num == min(validity_num)]
+
+        validity_num <- suppressWarnings(as.numeric(valid_rows$ICD_VALIDITY_DAYS))
+        validity_num[tolower(valid_rows$ICD_VALIDITY_DAYS) == "unbegrenzt"] <- Inf
+        validity_num[is.na(validity_num)] <- Inf
+        min_validity_num <- min(validity_num)
+
+        # Return only rows with the minimum validity days
+        valid_rows[validity_num == min_validity_num]
       },
       by = .(ATC_DISPLAY, ATC_FOR_CALCULATION)
     ]
