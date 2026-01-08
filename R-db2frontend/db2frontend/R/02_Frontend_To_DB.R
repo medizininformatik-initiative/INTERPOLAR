@@ -33,6 +33,9 @@ importRedcap2DB <- function() {
     if (!(form_name %in% c("risikofaktor", "trigger"))) {
       data_from_redcap <- data.table::setDT(suppressWarnings(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)))
 
+      # Remove all columns, that start with "db_filter_" (they are only for frontend view filtering)
+      data_from_redcap[, grep("^db_filter_", names(data_from_redcap), value = TRUE) := NULL]
+
       # Remove the redcap_data_access_group values, as they are not needed in the database
       data_from_redcap[, redcap_data_access_group := NA]
 
