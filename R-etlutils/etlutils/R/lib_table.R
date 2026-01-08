@@ -897,33 +897,62 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
   data.table::setcolorder(dt, new_order)
 }
 
-#' Append rows to a data.table with values in the first column
+#' Append rows to a data.table with values in a specified column
 #'
 #' Adds one row per element in `values` to the provided data.table. If a value is `NA` or an empty
-#' string, a fully empty row is added. Otherwise, the value is inserted into the first column
-#' of the new row. The function returns the modified table and does not modify by reference.
+#' string, a fully empty row is added. Otherwise, the value is inserted into the specified column
+#' of the new row. The column can be specified by name or by numeric index. The function returns
+#' the modified table and does not modify by reference.
 #'
 #' @param table A data.table to which rows will be appended. Must have at least one column,
-#'   and the first column is expected to be of type character.
-#' @param values A character vector of values to insert into the first column. NA or "" will
+#'   and the target column is expected to be of type character.
+#' @param values A character vector of values to insert into the specified column. NA or "" will
 #'   result in a completely empty row.
+#' @param column A character string (column name) or numeric index specifying the target column
+#'   for value insertion.
 #'
 #' @return A data.table with the new rows appended.
 #'
 #' @examples
 #' dt <- data.table::data.table(col1 = character(), col2 = integer())
 #' values <- c("First", NA, "", "Second")
-#' dt <- addRowsWithFirstColumn(dt, values)
+#' dt <- addRowsWithColumn(dt, values, "col1")
+#'
+#' dt2 <- data.table::data.table(col1 = character(), col2 = character())
+#' dt2 <- addRowsWithColumn(dt2, c("A", "B"), 2)
+#'
+#' # Error handling with tryCatch
+#' dt3 <- data.table::data.table(a = character())
+#' tryCatch(
+#'   addRowsWithColumn(dt3, "test", "b"),
+#'   error = function(e) message("Fehler: ", e$message)
+#' )
 #'
 #' @export
-addRowsWithFirstColumn <- function(table, values) {
+addRowsWithColumn <- function(table, values, column) {
+  if (is.character(column)) {
+    if (!(column %in% names(table))) {
+      stop(sprintf("Column name '%s' not found in table. Available columns are: %s.",
+                   column, paste(names(table), collapse = ", ")))
+    }
+    col_index <- which(names(table) == column)
+  } else if (is.numeric(column)) {
+    if (column < 1 || column > ncol(table)) {
+      stop(sprintf("Column index %d is out of bounds. Table has %d columns.", column, ncol(table)))
+    }
+    col_index <- column
+  } else {
+    stop("Argument 'column' must be either a character string (column name) or numeric index.")
+  }
+
   for (val in values) {
     row <- setNames(as.list(rep(NA, ncol(table))), names(table))
     if (!is.na(val) && val != "") {
-      row[[1]] <- val
+      row[[col_index]] <- val
     }
     table <- data.table::rbindlist(list(table, row), use.names = TRUE, fill = TRUE)
   }
+
   return(table)
 }
 
