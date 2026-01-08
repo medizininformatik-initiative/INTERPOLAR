@@ -376,6 +376,9 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
           ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
           kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
 
+          ward_names <- resources$encounters_ward_names[main_enc_id == encounter_id]
+          ward_names <- if (nrow(ward_names)) paste0(ward_names$ward_name, collapse = "\n") else NA_character_
+
           # Get active MedicationRequests for the encounter
           active_atcs <- getActiveATCs(medication_requests, encounter$enc_period_start, encounter$enc_period_end, meda_datetime)
           match_atc_and_item2_codes <- data.table::data.table()
@@ -523,7 +526,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                   mrp_calculation_type = mrp_type,
                   meda_id = meda_id,
                   study_phase = meda_study_phase,
-                  ward_name = NA_character_, # deprecated -> this value will remain NA all the time
+                  ward_name = ward_names, # ward_names, # we have changed the meaning from a single ward to all relevant wards, because we can't decide, which ward is the "correct" one
                   ret_id = ret_id,
                   ret_redcap_repeat_instance = ret_redcap_repeat_instance,
                   mrp_proxy_type = match_row$proxy_type,
@@ -539,7 +542,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
               mrp_calculation_type = mrp_type,
               meda_id = meda_id,
               study_phase = meda_study_phase,
-              ward_name = NA_character_, # deprecated -> this value will remain NA all the time
+              ward_name = NA_character_,
               ret_id = NA_character_,
               ret_redcap_repeat_instance = NA_character_,
               mrp_proxy_type = NA_character_,
