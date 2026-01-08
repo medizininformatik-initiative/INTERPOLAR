@@ -1,6 +1,8 @@
 mrpCheck <- function(start_date, end_date) {
 
   etlutils::runLevel2("MRP Calculation", {
+    start_date <- etlutils::as.POSIXctWithTimezone(start_date)
+    end_date <- etlutils::as.POSIXctWithTimezone(end_date)
     mrp_table_lists_all <- calculateMRPs(start_date, end_date, return_used_resources = "record_ids")
   })
 
@@ -9,7 +11,7 @@ mrpCheck <- function(start_date, end_date) {
     etlutils::retainColumns(mrp_table_lists_all$retrolektive_mrpbewertung_fe, needed_cols)
     mrp_table_lists_all$retrolektive_mrpbewertung_fe <- unique(mrp_table_lists_all$retrolektive_mrpbewertung_fe)
 
-    needed_cols <- c("ret_id", "enc_id", "mrp_calculation_type", "meda_id")
+    needed_cols <- c("ret_id", "enc_id", "mrp_calculation_type", "meda_id", "ward_name")
     etlutils::retainColumns(mrp_table_lists_all$dp_mrp_calculations, needed_cols)
     mrp_table_lists_all$dp_mrp_calculations <- unique(mrp_table_lists_all$dp_mrp_calculations)
 
@@ -36,6 +38,7 @@ mrpCheck <- function(start_date, end_date) {
                                  "enc_id",
                                  "mrp_calculation_type",
                                  "meda_id",
+                                 "ward_name",
                                  "ret_meda_dat1",
                                  "ret_kurzbeschr"),
                          new = c("FHIR Patient ID",
@@ -43,12 +46,13 @@ mrpCheck <- function(start_date, end_date) {
                                  "FHIR Encounter ID",
                                  "MRP Typ",
                                  "REDCap Medikationsanalyse ID",
+                                 "Station",
                                  "Datum Medikationsanalyse",
                                  "MRP Beschreibung"))
 
 
     # add export period at the end of the table in the first column
-    result <- etlutils::addRowsWithColumn(result, c("", paste("Start:", start_date), paste("End:", end_date)), column = "MRP Typ")
+    result <- etlutils::addRowsWithColumn(result, c("", paste("Start:", format(start_date, "%Y-%m-%d %H:%M:%S")), paste("End:", format(end_date, "%Y-%m-%d %H:%M:%S"))), column = "MRP Typ")
   })
 
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {

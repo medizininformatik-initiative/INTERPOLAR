@@ -258,7 +258,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
 #
 getMedicationAnalysesFromDB <- function(record_ids) {
   query_ids <- etlutils::fhirdbGetQueryList(record_ids$record_id)
-  query <- paste0("SELECT * FROM v_medikationsanalyse_fe WHERE record_id in ", query_ids, "\n")
+  query <- paste0("SELECT * FROM v_medikationsanalyse_fe WHERE record_id IN ", query_ids, "\n")
   medication_analyses <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getMedicationAnalysesFromDB()")
   data.table::setorder(medication_analyses, meda_dat)
   return(medication_analyses)
@@ -625,15 +625,26 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     query <- paste0(
       "SELECT DISTINCT meda_id, ret_id, ret_redcap_repeat_instance\n",
       "FROM v_dp_mrp_calculations\n",
-      "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids))
+      "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids), "\n")
     return(etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingRetrolectiveMRPEvaluationIDs()"))
   }
   medication_analyses_ids <- unlist(lapply(encounters_first_medication_analysis, function(dt) if (!is.null(dt)) dt$meda_id else NULL), use.names = FALSE)
   existing_retrolective_mrp_evaluation_ids <- getExistingRetrolectiveMRPEvaluationIDs(medication_analyses_ids)
 
-  # 7.) Get all necessary resources for the MRP calculation for these Encounters and return them as a list
-  # Get patient references
+  # 7.) Get all ward names from the fall_fe table for the current main encounters
+  getWardNames <- function(encounter_ids) {
+    query <- paste0(
+      "SELECT DISTINCT fall_fhir_enc_id, fall_station\n",
+      "FROM v_fall_fe\n",
+      "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(encounter_ids), "\n")
+    ward_names <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingRetrolectiveMRPEvaluationIDs()")
+    names(ward_names) <- c("main_enc_id", "ward_name")
+    return(ward_names)
+  }
+  encounters_ward_names <- getWardNames(main_encounters$enc_id)
 
+  # 8.) Get all necessary resources for the MRP calculation for these Encounters and return them as a list
+  # Get patient references
   patient_references <- main_encounters[enc_id %in% names(encounters_first_medication_analysis)]$enc_patient_ref
 
   # Extract Medication resources
@@ -651,6 +662,7 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     main_encounters = main_encounters,
     record_ids = record_ids,
     encounters_first_medication_analysis = encounters_first_medication_analysis,
+    encounters_ward_names = encounters_ward_names,
     existing_retrolective_mrp_evaluation_ids = existing_retrolective_mrp_evaluation_ids,
     medication_requests = medication_requests,
     medication_administrations = medication_administrations,
