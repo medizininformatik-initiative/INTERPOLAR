@@ -355,6 +355,13 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
           # Get encounter data and patient ID
           encounter <- resources$main_encounters[enc_id == encounter_id]
           patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
+
+          # Skip invalid encounters without patient reference
+          if (!etlutils::isSimpleNotEmptyString(patient_id)) {
+            etlutils::catWarningMessage(paste0("Missing patient reference in FHIR data for Encounter with ID ", encounter$enc_id))
+            next
+          }
+
           encounter_ref <- unique(etlutils::fhirdataGetEncounterReference(encounter$enc_id))
           # The calculated_ref column always reference to the main encounter
           medication_requests <- resources$medication_requests[medreq_encounter_calculated_ref %in% encounter_ref]
