@@ -198,6 +198,7 @@ addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars,
   data_add_multiple_row_reason <- data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
     dplyr::add_count() |>
+    dplyr::ungroup() |>
     dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
       n > 1 ~
         addProcessingExclusionReason(
@@ -208,11 +209,56 @@ addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars,
         ),
       TRUE ~ processing_exclusion_reason
     )) |>
-    dplyr::ungroup() |>
     dplyr::select(-n)
   return(data_add_multiple_row_reason)
 }
 
+#------------------------------------------------------------------------------#
+
+#' Detect Multiple Distinct Values Within Groups
+#'
+#' This function checks, for each group defined by one or more grouping
+#' variables, whether more than one distinct (non-NA) value occurs in a
+#' specified variable. The result is stored as a logical indicator in a
+#' new column.
+#'
+#' @param data A data frame containing the data to be checked.
+#'
+#' @param grouping_vars A character vector specifying the column names
+#'   used to define groups.
+#'
+#' @param variable_to_check A column (unquoted) whose distinct values
+#'   are evaluated within each group.
+#'
+#' @param result_variable_name A character string giving the name of the
+#'   logical result column to be created. The column is \code{TRUE} for
+#'   groups with more than one distinct non-NA value in
+#'   \code{variable_to_check}, and \code{FALSE} otherwise.
+#'
+#' @return
+#' A data frame identical to \code{data}, with an additional logical
+#' column named according to \code{result_variable_name}.
+#'
+#' @details
+#' Grouping is performed using \code{dplyr::group_by()} on the variables
+#' supplied in \code{grouping_vars}. Distinct values are counted using
+#' \code{dplyr::n_distinct()} with \code{na.rm = TRUE}.
+#'
+#' The resulting logical indicator is constant within each group and is
+#' propagated to all rows belonging to that group.
+#'
+#' @importFrom dplyr group_by ungroup mutate across all_of n_distinct
+#'
+#' @export
+detectMultipleEntries <- function(data, grouping_vars, variable_to_check,
+                                  result_variable_name) {
+  data_multiple_detected <- data |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
+    dplyr::mutate(!!result_variable_name := dplyr::n_distinct({{ variable_to_check }}, na.rm = TRUE) > 1) |>
+    dplyr::ungroup()
+
+  return(data_multiple_detected)
+}
 #------------------------------------------------------------------------------#
 
 #' Parse Named Command-Line Arguments
@@ -1179,16 +1225,40 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       dplyr::filter(pat_id == "UKB-0001_5") |>
       dplyr::mutate(pat_id = paste0(pat_id, "-test"))
 
+    underage_check <- patient_table |>
+      dplyr::filter(pat_id == "UKB-0001_8") |>
+      dplyr::mutate(pat_birthdate = as.Date("2020-01-01"))
+
     check_patient_table <- patient_fhir_identifier_filter_check |>
       rbind(multiple_rows_per_pat_id_check_system) |>
       rbind(multiple_rows_per_pat_id_check_type_system) |>
       rbind(multiple_rows_per_pat_id_check_type_code) |>
       rbind(multiple_rows_per_pat_identifier_value_check)
 
+    check_patient_table_replace <- underage_check
+    check_patient_table_replace_ids <- check_patient_table_replace$pat_id
+
     patient_table <- patient_table |>
+      dplyr::filter(!pat_id %in% check_patient_table_replace_ids) |>
+      rbind(check_patient_table_replace) |>
       rbind(check_patient_table)
 
     return(patient_table)
+  }
+
+  createPatientFeDataWarningsSituations <- function(patient_fe_table) {
+    underage_check <- patient_fe_table |>
+      dplyr::filter(pat_id == "UKB-0001_8") |>
+      dplyr::mutate(pat_gebdat = as.Date("2020-01-01"))
+
+    check_patient_fe_table_replace <- underage_check
+    check_patient_fe_table_replace_ids <- check_patient_fe_table_replace$pat_id
+
+    patient_fe_table <- patient_fe_table |>
+      dplyr::filter(!pat_id %in% check_patient_fe_table_replace_ids) |>
+      rbind(check_patient_fe_table_replace)
+
+    return(patient_fe_table)
   }
 
   createRawEncounterDataWarningSituations <- function(encounter_table_raw) {
@@ -1251,11 +1321,6 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       dplyr::filter(enc_type_code_Kontaktebene == "abteilungskontakt") |>
       dplyr::mutate(enc_status = "test_status")
 
-    underage_check <- encounter_table |>
-      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_8") |>
-      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
-      dplyr::mutate(enc_period_start = as.POSIXct("1960-01-01"))
-
     imp_finished_without_end_date_check <- encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
       dplyr::filter(enc_class_code == "IMP") |>
@@ -1299,7 +1364,6 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
     check_encounter_table <- missing_start_date_check |>
       rbind(missing_kontaktebene_for_imp_encounter_check) |>
       rbind(unexpected_status_check) |>
-      rbind(underage_check) |>
       rbind(imp_finished_without_end_date_check) |>
       rbind(unexpected_class_and_kontaktart_code_check) |>
       rbind(no_enc_main_encounter_calculated_ref_check) |>
@@ -1315,5 +1379,16 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       rbind(multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value_check)
 
     return(encounter_table)
+  }
+
+  createFallFeDataWarningsSituations <- function(fall_fe_table) {
+    ward_change_check <- fall_fe_table |>
+      dplyr::filter(fall_pat_id == "UKB-0001_6") |>
+      dplyr::mutate(fall_station = "Test")
+
+    fall_fe_table <- fall_fe_table |>
+      rbind(ward_change_check)
+
+    return(fall_fe_table)
   }
 }

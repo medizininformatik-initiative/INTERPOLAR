@@ -306,7 +306,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' This is important for managing concurrent data access in environments where multiple processes
 #' might access the data simultaneously.
 #' @param table_name A character string specifying the name of the database table to query.
-#' This table should include columns `pat_id`, `record_id`.
+#' This table should include columns `pat_id`, `record_id` and `pat_gebdat`.
 #'
 #' @return A dataframe (`patient_fe_table`) that includes patient data, cleaned to ensure distinct
 #' entries per `pat_id`, arranged in order.
@@ -319,12 +319,18 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' @importFrom dplyr distinct arrange
 #' @export
 getPatientFeData <- function(lock_id, table_name) {
-  query <- paste0("SELECT pat_id, record_id FROM ", table_name, "\n")
+  query <- paste0("SELECT pat_id, record_id, pat_gebdat FROM ", table_name, "\n")
 
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id) |>
     dplyr::mutate(processing_exclusion_reason = NA_character_)
+
+  # DEBUG START-------------------------------
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    patient_fe_table <- createPatientFeDataWarningsSituations(patient_fe_table)
+  }
+  # DEBUG END-------------------------------
 
   if (nrow(patient_fe_table) == 0) {
     stop("The patient_fe table is empty. Please check the data.")
@@ -393,6 +399,12 @@ getFallFeData <- function(lock_id, table_name) {
   #     )) |>
   #     dplyr::distinct()
   # }
+
+  # DEBUG START-------------------------------
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    fall_fe_table <- createFallFeDataWarningsSituations(fall_fe_table)
+  }
+  # DEBUG END-------------------------------
 
   if (nrow(fall_fe_table) == 0) {
     stop("The fall_fe table is empty. Please check the data.")

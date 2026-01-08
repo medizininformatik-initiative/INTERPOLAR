@@ -142,8 +142,10 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::ungroup() |>
     dplyr::distinct(
       pat_id, record_id, fall_fhir_main_enc_id,
-      fall_id_cis, fall_station, fall_aufn_dat, enc_id, enc_status, meda_id,
-      meda_dat, enc_period_start, medikationsanalyse_complete, mrp_id,
+      fall_id_cis, fall_station, fall_aufn_dat,
+      # enc_id, enc_status, enc_period_start
+      meda_id,
+      meda_dat, medikationsanalyse_complete, mrp_id,
       mrp_pigrund___21, mrp_ip_klasse_01, mrp_dokup_hand_emp_akz,
       mrpdokumentation_validierung_complete, main_enc_any_processing_exclusion_fe
     ) |>

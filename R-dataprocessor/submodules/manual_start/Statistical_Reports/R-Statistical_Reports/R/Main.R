@@ -62,7 +62,7 @@
 #' }
 #'
 #' @section Output:
-#' - **Local output**: `FHIR_table_with_linkage_to_fe`, `full_analysis_set_1`, `statistical_report_data`,
+#' - **Local output**: `FHIR_table_with_ward_name_and_record_id`, `full_analysis_set_1`, `statistical_report_data`,
 #'                     `frontend_table`, `frontend_summary_data`
 #' - **Global output**:
 #'   \itemize{
@@ -171,28 +171,50 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     tagAmbulantEncounters() |>
     tagKontaktartDenotingNoInpatientEncounter()
 
-  FHIR_table_with_linkage_to_fe <- FHIR_table |>
+  FHIR_table_with_ward_name_and_record_id <- FHIR_table |>
     addWardName(pids_per_ward_table) |>
     addRecordId(patient_fe_table) |>
     # addFallIdAndStudienphase(fall_fe_table) |>
     ExpandProcessingExclusionReasonToAllEncounterLevels()
 
-  full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table_with_linkage_to_fe)
+  # full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table_with_ward_name_and_record_id)
+
   frontend_table <- mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
+    calculateAge(
+      main_enc_period_start = fall_aufn_dat,
+      pat_birthdate = pat_gebdat
+    ) |>
+    detectMultipleEntries(
+      grouping_vars = c("pat_id"),
+      variable_to_check = fall_fhir_main_enc_id,
+      result_variable_name = "multiple_main_encounters_per_patient"
+    ) |>
+    detectMultipleEntries(
+      grouping_vars = c("pat_id", "fall_fhir_main_enc_id"),
+      variable_to_check = fall_station,
+      result_variable_name = "multiple_wards_per_main_encounter"
+    ) |>
     addMedaData(medikationsanalyse_fe_table) |>
-    addEncIdToFeData(full_analysis_set_1) |>
-    addMRPDokuData(mrp_dokumentation_validierung_fe_table)
+    detectMultipleEntries(
+      grouping_vars = c("pat_id"),
+      variable_to_check = meda_id,
+      result_variable_name = "multiple_medas_per_patient"
+    ) |>
+
+    # addEncIdToFeData(full_analysis_set_1) |>
+    addMRPDokuData(mrp_dokumentation_validierung_fe_table) |>
+    dplyr::arrange(record_id, meda_dat, mrp_id)
 
   frontend_summary_data <- prepareFeSummaryData(
     frontend_table, REPORT_PERIOD_START,
     REPORT_PERIOD_END
   )
 
-  statistical_report_data <- prepareF1data(
-    full_analysis_set_1, REPORT_PERIOD_START,
-    REPORT_PERIOD_END
-  ) |>
-    addFeDataToF1data(frontend_summary_data)
+  # statistical_report_data <- prepareF1data(
+  #   full_analysis_set_1, REPORT_PERIOD_START,
+  #   REPORT_PERIOD_END
+  # ) |>
+  #   addFeDataToF1data(frontend_summary_data)
 
   # FAS2_1 <- defineFAS2_1(full_analysis_set_1, REPORT_PERIOD_END)
   # F2_data <- prepareF2data(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
@@ -202,9 +224,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     writeHtmlTable(patient_table)
     writeHtmlTable(encounter_table)
     writeHtmlTable(pids_per_ward_table)
-    writeHtmlTable(FHIR_table_with_linkage_to_fe)
-    writeHtmlTable(full_analysis_set_1)
-    writeHtmlTable(statistical_report_data)
+    writeHtmlTable(FHIR_table_with_ward_name_and_record_id)
+    # writeHtmlTable(full_analysis_set_1)
+    # writeHtmlTable(statistical_report_data)
     writeHtmlTable(frontend_table)
     writeHtmlTable(frontend_summary_data)
   }
@@ -212,30 +234,30 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   frontend_summary <- calculateFeSummary(frontend_summary_data)
 
-  statistical_report <- calculateF1(statistical_report_data) |>
-    calculateFeAddOnToF1(statistical_report_data)
+  # statistical_report <- calculateF1(statistical_report_data) |>
+  #   calculateFeAddOnToF1(statistical_report_data)
   # calculateF2(F2_data)
 
   # print report to outputGlobal
-  writeHtmlTable(statistical_report,
-    output_location = "global",
-    caption = paste0("report for period: ", REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
-    footnote = c(
-      "F1: Cumulative number of hospitalized cases on INTERPOLAR wards
-      (>18y, initial INTERPOLAR ward contact)",
-      "Medication analysis and mrp counts:
-      only for first medication analysis of initial INTERPOLAR ward contact for each case"
-    ),
-    colnames = c(
-      "ward", "calendar week", "F1 (patients)", "F1 (patients also in frontend)",
-      "F1 (encounters)", "F1 (encounters also in frontend)",
-      "processing excluded F1 encounters", "medication analyses",
-      "completed medication analyses", "MRP", "completed MRP documention",
-      "resolved MRP", "MRP resolution not informative", "contra-indications",
-      "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
-      "processing excluded frontend encounters"
-    )
-  )
+  # writeHtmlTable(statistical_report,
+  #   output_location = "global",
+  #   caption = paste0("report for period: ", REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
+  #   footnote = c(
+  #     "F1: Cumulative number of hospitalized cases on INTERPOLAR wards
+  #     (>18y, initial INTERPOLAR ward contact)",
+  #     "Medication analysis and mrp counts:
+  #     only for first medication analysis of initial INTERPOLAR ward contact for each case"
+  #   ),
+  #   colnames = c(
+  #     "ward", "calendar week", "F1 (patients)", "F1 (patients also in frontend)",
+  #     "F1 (encounters)", "F1 (encounters also in frontend)",
+  #     "processing excluded F1 encounters", "medication analyses",
+  #     "completed medication analyses", "MRP", "completed MRP documention",
+  #     "resolved MRP", "MRP resolution not informative", "contra-indications",
+  #     "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
+  #     "processing excluded frontend encounters"
+  #   )
+  # )
 
   writeHtmlTable(frontend_summary,
     output_location = "global",
@@ -250,7 +272,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "completed medication analyses", "MRP", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
-      "processing excluded frontend encounters"
+      "excluded encounters (e.g. patient underage or linkage issues)"
     )
   )
 
