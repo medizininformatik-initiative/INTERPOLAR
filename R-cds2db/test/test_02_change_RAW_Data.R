@@ -90,7 +90,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(20)
+  duplicatePatients(23)
 
   runCodeForDebugDay(1, {
 
@@ -215,6 +215,26 @@ if (exists("DEBUG_DAY")) {
 
     # Drug_DrugGroup_Interaction             -> MedicationRequests - N06BA09 + C02KC01
     addDrugs("UKB-0001_20", c("N06BA09", "C02KC01"))
+
+    #################################
+    # Drug - DrugNiereninsuffizienz #
+    #################################
+
+    # Drug_DrugNiereninsuffizienz_Interaction
+    # MedicationRequests - N02BA01 mit Observation 62238-1 (GFR 10 ml/min)
+    pid <- addDrugs("UKB-0001_21", "N02BA01")
+    addObservation(pid, "62238-1", value = 10, unit = "ml/min")
+
+    # Drug_DrugNiereninsuffizienz_Interaction
+    # MedicationRequests - A02AD10 mit Condition N18.4
+    pid <- addDrugs("UKB-0001_22", "A02AD10")
+    addConditions(pid, "N18.4")
+
+    # Drug_DrugNiereninsuffizienz_Interaction
+    # MedicationRequests - M04AA51 mit Condition N18.5 + Observation 62238-1 (GFR 19 ml/min)
+    pid <- addDrugs("UKB-0001_23", "M04AA51")
+    addConditions(pid, "N18.5")
+    addObservation(pid, "62238-1", value = 19, unit = "ml/min")
 
   })
 

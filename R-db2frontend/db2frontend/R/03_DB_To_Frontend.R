@@ -114,7 +114,7 @@ importDB2Redcap <- function() {
   etlutils::runLevel2Line("Import data into frontend", {
     # Import data into REDCap
     for (table_name in names(data_to_import)) {
-      tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]]))
+      tryRedcap(function() suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]])))
     }
   })
 
@@ -125,7 +125,7 @@ importDB2Redcap <- function() {
       ward_names <- unique(record_ids_with_data_access_group$fall_station)
 
       # Get all data access groups from Redcap
-      data_access_groups <- data.table::setDT((redcapAPI::exportDags(rcon = frontend_connection)))
+      data_access_groups <- data.table::setDT((suppressWarnings(redcapAPI::exportDags(rcon = frontend_connection))))
 
       # Get all ward names not present in data access group name
       new_ward_names <- ward_names[!ward_names %in% data_access_groups$data_access_group_name]
@@ -137,11 +137,11 @@ importDB2Redcap <- function() {
           unique_group_name = NA_character_
         )
 
-        redcapAPI::importDags(rcon = frontend_connection, data = new_data_access_groups)
+        suppressWarnings(redcapAPI::importDags(rcon = frontend_connection, data = new_data_access_groups))
       }
 
       # Get all data access groups from Redcap inclusive the new data access groups
-      data_access_groups <- redcapAPI::exportDags(rcon = frontend_connection)
+      data_access_groups <- suppressWarnings(redcapAPI::exportDags(rcon = frontend_connection))
 
       # Join the record_ids with the unique_group_names
       record_ids_with_data_access_group <- data.table::merge.data.table(
@@ -158,7 +158,7 @@ importDB2Redcap <- function() {
 
     etlutils::runLevel2Line("Write data to Redcap", {
       # Set the data access groups in Redcap
-      redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group)
+      suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group))
     })
 
   })

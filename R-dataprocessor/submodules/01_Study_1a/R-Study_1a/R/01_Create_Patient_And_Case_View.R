@@ -39,7 +39,7 @@ getLocationString <- function(encounters, locations) {
       room_value <- NA_character_
       bed_value <- NA_character_
       # Keep only rows with latest period start
-      encounters <- encounters[enc_period_start %in% max(enc_period_start, na.rm = TRUE)]
+      encounters <- encounters[enc_period_start %in% etlutils::getMaxDatetime(enc_period_start)]
 
       room_encounter <- encounters[enc_location_physicaltype_code %in% "ro"]
       room_encounter <- if (nrow(room_encounter)) room_encounter[1] else NULL

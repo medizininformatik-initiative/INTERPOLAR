@@ -97,6 +97,38 @@ expandAndConcatenateICDs <- function(icd_column) {
 # MRP Calculation #
 ###################
 
+#' Match ATC codes between active medication requests and MRP definitions
+#'
+#' This function compares ATC codes from a list of active medication requests with the keys
+#' (ATC codes) in the MRP rule definitions and returns all codes that appear in both.
+#'
+#' @param active_atcs A \code{data.table} containing at least a column \code{atc_code}
+#'        with the ATC codes from active medication requests.
+#' @param mrp_table_list_by_atc A named list of \code{data.table}s, where each name is an ATC code
+#'        and the corresponding table contains MRP rule definitions.
+#'
+#' @return A \code{data.table} with a single column \code{atc_code} listing all ATC codes
+#'         found in both \code{active_atcs} and \code{mrp_table_list_by_atc}.
+#'
+matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
+  # Extract all ATC codes from the splitted MRP definitions (used as keys)
+  mrp_atc_keys <- names(mrp_table_list_by_atc)
+  # Reduce active_atcs to the relevant ATC codes (and keep their dates!)
+  active_atcs_unique <- active_atcs[
+    , .(start_datetime = etlutils::getMinDatetime(start_datetime)),
+    by = atc_code
+  ]
+  # Only keep those that also appear in MRP definitions
+  matching_atcs <- active_atcs_unique[atc_code %in% mrp_atc_keys]
+
+  # Build the output properly
+  result <- matching_atcs[
+    , .(atc_code, start_datetime)
+  ]
+
+  return(result)
+}
+
 #' Compute combined ATC codes for calculation
 #'
 #' Diese Funktion berechnet eine kombinierte Liste von ATC-Codes, basierend auf einer
@@ -450,7 +482,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                 "kurzbeschr_type"
               )
 
-              if (mrp_type == "Drug_Disease") {
+              if (mrp_type == "Drug_Disease" || mrp_type == "Drug_Niereninsuffizienz") {
                 collapsed_match[, kurzbeschr := {
                   base <- paste0(
                     kurzbeschr_drug, " ist mit\n ",
