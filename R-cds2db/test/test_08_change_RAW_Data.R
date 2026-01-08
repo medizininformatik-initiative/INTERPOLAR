@@ -91,7 +91,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(12)
+  duplicatePatients(17)
 
   runCodeForDebugDay(1, {
 
@@ -106,10 +106,6 @@ if (exists("DEBUG_DAY")) {
     addDrugs(pid, c("M04AA01"))
     addDrugs(pid, c("M04AA03"))
     addDrugs(pid, c("C09DA06", "C09DA06"))
-    addObservation(pid, "14933-6", value = 1000, unit = "umol/L")
-    addObservation(pid, "14933-6", day_offset = -0.5, value = 1000, unit = "umol/L")
-    addObservation(pid, "14933-6", value = 2000, unit = "umol/L")
-    addObservation(pid, "12980-9", value = 1000, unit = "umol/L") # secondary loinc code
 
     # Zeile 1429 aus Drug Disease Originalliste -  Weiteres Drug-Disease MRP mit Diagnose/Procedure
     addDrugs(pid, c("B01AB01",	"B01AB01", "B01AB51"))
@@ -118,11 +114,6 @@ if (exists("DEBUG_DAY")) {
     addProcedures(pid, c("8-151.4"))
     addConditions(pid, "G97.0")
     addConditions(pid, "G97.0")
-
-    # Drug_Drug                  -> MedicationRequests - N06AX22 + J01MA02
-    addDrugs(pid, c("N06AX22", "J01MA02")) # zwei MRPS, weil in Drug Drug und in Drug Drug Group (Wird noch bereinigt)
-    # Drug_DrugGroup             -> MedicationRequests - N06BA09 + C02KC01
-    addDrugs(pid, c("N06BA09", "C02KC01"))
 
     pid <- addDrugs("UKB-0001_2", "C09DA06")
     addConditions(pid, c("M10.00", "M10.00", "M10.01", "M14.00"))
@@ -168,6 +159,35 @@ if (exists("DEBUG_DAY")) {
     pid <- addDrugs("UKB-0001_12", "L01XX05")
     addConditions(pid, c("D69.58", "D69.61"))
 
+    #############################
+    ## Test for MRP Clustering ##
+    #############################
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - M01AB11 + Diagnosis - I60/I60.1 -> 1 MRP mit zwei Diagnose-Codes und zwei Diagnose Cluster
+    pid <- addDrugs("UKB-0001_13", "M01AB11")
+    addConditions(pid, "I60")
+    addConditions(pid, "I60.1")
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - C10BX02 + Diagnosis - K72.0 -> 2 MRP mit zwei zwei Diagnose Cluster und 2 ATC Displays
+    pid <- addDrugs("UKB-0001_14", "C10BX02")
+    addConditions(pid, "K72.0")
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - M01AB68 + Diagnosis - I60.5 -> 1 MRP mit zwei Diagnose Cluster
+    pid <- addDrugs("UKB-0001_15", "M01AB68")
+    addConditions(pid, "I60.5")
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - R03CC03 + Diagnosis - I47 -> 1 MRP mit zwei Diagnose Cluster
+    pid <- addDrugs("UKB-0001_16", c("R03CC03", "R03CC53"))
+    addConditions(pid, "I47")
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - R03CC53 + Diagnosis - I47 -> 1 MRP mit zwei Diagnose Cluster
+    pid <- addDrugs("UKB-0001_17", "R03CC53")
+    addConditions(pid, "I47")
   })
 
   # Update the resource_tables list with the modified data tables
