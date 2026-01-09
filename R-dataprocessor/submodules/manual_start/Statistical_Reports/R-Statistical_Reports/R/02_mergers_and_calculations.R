@@ -106,7 +106,7 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
     print(
       encounter_table_with_curated_enc_period_end |>
         dplyr::filter(is.na(curated_enc_period_end)),
-      width = Inf
+      width = 1000
     )
     warning("There are NA values in curated_enc_period_end. Please check the data.")
   }
@@ -209,7 +209,7 @@ addMainEncId <- function(encounter_table) {
         processing_exclusion_reason
       ))
     print(encounter_table_with_main_enc |>
-      dplyr::filter(is.na(main_enc_id)), width = Inf)
+      dplyr::filter(is.na(main_enc_id)), width = 1000)
     warning("Some encounters have no calculated main_enc_id.
             Please check the data.")
   }
@@ -276,7 +276,7 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
         processing_exclusion_reason
       ))
     print(encounter_table_with_MainEncPeriodStart |>
-      dplyr::filter(is.na(main_enc_period_start)), width = Inf)
+      dplyr::filter(is.na(main_enc_period_start)), width = 1000)
     warning("Some encounters have no determined main_enc_period_start.
             Please check the data.")
   }
@@ -343,15 +343,18 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart,
         processing_exclusion_reason
       ))
     print(merged_table_with_age |>
-      dplyr::filter(is.na(age_at_hospitalization)), width = Inf)
+      dplyr::filter(is.na(age_at_hospitalization)), width = 1000)
   }
 
-  if (any(merged_table_with_age$age_at_hospitalization <= 0 | merged_table_with_age$age_at_hospitalization > 120)) {
+  if (any(merged_table_with_age$age_at_hospitalization <= 0 | merged_table_with_age$age_at_hospitalization > 120,
+    na.rm = TRUE
+  )) {
     warning("Some patients have a implausible age_at_hospitalization (<= 0 or > 120).
             Please check the data.")
     merged_table_with_age <- merged_table_with_age |>
       dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
-        (age_at_hospitalization <= 0 | age_at_hospitalization > 120) ~
+        !is.na(age_at_hospitalization) &
+          (age_at_hospitalization <= 0 | age_at_hospitalization > 120) ~
           addProcessingExclusionReason(
             existing = processing_exclusion_reason,
             reason = "patient_with_implausible_age",
@@ -361,13 +364,14 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart,
         TRUE ~ processing_exclusion_reason
       ))
     print(merged_table_with_age |>
-      dplyr::filter(age_at_hospitalization <= 0 | age_at_hospitalization > 120), width = Inf)
+      dplyr::filter(age_at_hospitalization <= 0 | age_at_hospitalization > 120), width = 1000)
   }
 
-  if (any(merged_table_with_age$age_at_hospitalization < 18)) {
+  if (any(merged_table_with_age$age_at_hospitalization < 18, na.rm = TRUE)) {
     merged_table_with_age <- merged_table_with_age |>
       dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
-        age_at_hospitalization < 18 ~
+        !is.na(age_at_hospitalization) &
+          age_at_hospitalization < 18 ~
           addProcessingExclusionReason(
             existing = processing_exclusion_reason,
             reason = "patient_underage",
@@ -591,7 +595,7 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
         processing_exclusion_reason
       ))
     print(merged_table_with_record_id |>
-      dplyr::filter(is.na(record_id)), width = Inf)
+      dplyr::filter(is.na(record_id)), width = 1000)
   }
 
   return(merged_table_with_record_id)
@@ -672,7 +676,7 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
       ))
     print(merged_table_with_fall_id_and_studienphase |>
       dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt" & !is.na(ward_name) &
-        is.na(fall_id_cis)), width = Inf)
+        is.na(fall_id_cis)), width = 1000)
   }
 
   return(merged_table_with_fall_id_and_studienphase)

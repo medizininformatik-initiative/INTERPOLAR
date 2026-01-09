@@ -97,7 +97,7 @@ checkMultipleRows <- function(data, grouping_vars) {
     dplyr::filter(n > 1) |>
     dplyr::ungroup()
   if (nrow(data_check_multiple_row) > 0) {
-    print(data_check_multiple_row, width = Inf)
+    print(data_check_multiple_row, width = 1000)
   }
   return(nrow(data_check_multiple_row) > 0)
 }
@@ -601,7 +601,7 @@ CheckMissingStartDate <- function(encounter_table) {
         processing_exclusion_reason
       ))
     print(encounter_table |>
-      dplyr::filter(is.na(enc_period_start)), width = Inf)
+      dplyr::filter(is.na(enc_period_start)), width = 1000)
     warning("The encounter table contains NA values in enc_period_start.
             Relevant encounter data may be missed. Please check the data")
   }
@@ -661,7 +661,7 @@ CheckMissingKontaktebeneForImpEncounter <- function(encounter_table) {
         processing_exclusion_reason
       ))
     print(encounter_table |>
-      dplyr::filter(enc_class_code == "IMP" & is.na(enc_type_code_Kontaktebene)), width = Inf)
+      dplyr::filter(enc_class_code == "IMP" & is.na(enc_type_code_Kontaktebene)), width = 1000)
     warning("The encounter table with extended filtering contains inpatient encounters with missing
     type codes for Kontaktebene. Please check the data for expected implementation of enc_type_code
             and enc_type_system.")
@@ -730,7 +730,7 @@ CheckUnexpectedStatus <- function(encounter_table) {
           "finished", "in-progress",
           "onleave"
         ))),
-      width = Inf
+      width = 1000
     )
     warning("The encounter table contains encounters with unexpected or NA status values.
             Please check the data.")
@@ -802,7 +802,7 @@ CheckImpFinishedWithoutEndDate <- function(encounter_table) {
       encounter_table |>
         dplyr::filter(enc_class_code == "IMP" & enc_status == "finished" &
           is.na(encounter_table$enc_period_end)),
-      width = Inf
+      width = 1000
     )
     warning("The encounter table contains finished IMP encounters without an end date.
          Please check the data.")
@@ -861,7 +861,7 @@ CheckUnexpectedClassCode <- function(encounter_table) {
       ))
     print(encounter_table |>
       dplyr::filter((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
-        !is.na(encounter_table$enc_class_code)), width = Inf)
+        !is.na(encounter_table$enc_class_code)), width = 1000)
     warning("The encounter table contains class codes with unexpected values.
             Please check the data.")
   }
@@ -944,7 +944,7 @@ CheckUnexpectedKontaktartCode <- function(encounter_table) {
         "intensivstationaer", "ub", "konsil",
         "stationsaequivalent", "operation"
       )) &
-        !is.na(enc_type_code_Kontaktart)), width = Inf)
+        !is.na(enc_type_code_Kontaktart)), width = 1000)
     warning("The encounter table contains type codes for Kontaktart with unexpected values.
             Please check the data.")
   }
@@ -1114,7 +1114,7 @@ CheckEncountersWithoutCalculatedParentRef <- function(encounter_table) {
     is.na(encounter_table$enc_partof_calculated_ref))) {
     print(encounter_table |>
       dplyr::filter(enc_type_code_Kontaktebene != "einrichtungskontakt" &
-        is.na(enc_partof_calculated_ref)), width = Inf)
+        is.na(enc_partof_calculated_ref)), width = 1000)
     warning("Some encounters of type other than 'einrichtungskontakt' have no calculated parent
             reference. Please check the data.")
   }
@@ -1147,7 +1147,7 @@ CheckEncountersWithoutCalculatedParentRef <- function(encounter_table) {
 CheckEncountersWithoutCalculatedMainEncounterRef <- function(encounter_table) {
   if (any(is.na(encounter_table$enc_main_encounter_calculated_ref))) {
     print(encounter_table |>
-      dplyr::filter(is.na(enc_main_encounter_calculated_ref)), width = Inf)
+      dplyr::filter(is.na(enc_main_encounter_calculated_ref)), width = 1000)
     warning("Some encounters have no calculated main encounter reference, main_enc_id may not be defined.
             Please check the data.")
   }
@@ -1251,7 +1251,12 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       dplyr::filter(pat_id == "UKB-0001_8") |>
       dplyr::mutate(pat_gebdat = as.Date("2020-01-01"))
 
-    check_patient_fe_table_replace <- underage_check
+    birthdate_na_check <- patient_fe_table |>
+      dplyr::filter(pat_id == "UKB-0001_4") |>
+      dplyr::mutate(pat_gebdat = NA)
+
+    check_patient_fe_table_replace <- underage_check |>
+      rbind(birthdate_na_check)
     check_patient_fe_table_replace_ids <- check_patient_fe_table_replace$pat_id
 
     patient_fe_table <- patient_fe_table |>

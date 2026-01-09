@@ -69,7 +69,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
         processing_exclusion_reason
       ))
     print(F1_prep_raw |>
-      dplyr::filter(is.na(enc_period_start)), width = Inf)
+      dplyr::filter(is.na(enc_period_start)), width = 1000)
     warning("Starting day undefined for a INTERPOLAR-ward contact (NA start date).
             Please check the data.")
   }

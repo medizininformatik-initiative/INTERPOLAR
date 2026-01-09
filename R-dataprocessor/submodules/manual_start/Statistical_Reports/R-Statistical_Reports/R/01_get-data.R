@@ -235,14 +235,14 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
 
   if (nrow(encounter_table |>
     dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt")) == 0) {
-    print(encounter_table, width = Inf)
+    print(encounter_table, width = 1000)
     stop("The encounter table with extended filtering does not contain any encounters of type 'einrichtungskontakt'.
          Please check the data for expected implementation of enc_type_code and enc_type_system.")
   }
 
   if (nrow(encounter_table |>
     dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt")) == 0) {
-    print(encounter_table, width = Inf)
+    print(encounter_table, width = 1000)
     stop("The encounter table does not contain any encounters of type 'versorgungsstellenkontakt'.
          Please check the data for expected implementation of enc_type_code and enc_type_system.")
   }
