@@ -4,17 +4,17 @@
 #' using patient, encounter, and front-end documentation data within a defined reporting period.
 #' The report computes base population metrics (F1) and a summary of medication safety documentation
 #' for internal monitoring and evaluation. REPORT_PERIOD_START and REPORT_PERIOD_END can be set
-#' via command line arguments. Defaults are set to `"2025-01-01"` for the start date and the
+#' via command line arguments. Defaults are set to `"2024-01-01"` for the start date and the
 #' current date for the end date.
 #'
 #' @param REPORT_PERIOD_START Character string in `"YYYY-MM-DD"` format.
-#'   Start date of the reporting period.
+#'   Start date of the reporting period. Default is `"2024-01-01"`.
 #' @param REPORT_PERIOD_END Character string in `"YYYY-MM-DD"` format.
 #'   End date of the reporting period. Defaults to `Sys.Date()`.
-#' @param WRITE_TABLE_LOCAL Logical. If `TRUE`, intermediate tables are written to the outputLocal folder
+#' @param WRITE_TABLE_LOCAL Logical. If `TRUE`, intermediate tables are written to the outputLocal folder.
 #'
 #' @return Invisibly returns `NULL`. This function is called for its side effects:
-#' writing local and global summary tables and producing a structured internal report.
+#'   writing local and global summary tables and producing a structured internal report.
 #'
 #' @details
 #' The function performs the following main steps:
@@ -26,21 +26,22 @@
 #'       \item `getEncounterData()` – multiple rows per encounter possible
 #'       \item `getPidsPerWardData()` – ward stays per sub-encounter
 #'       \item `getPatientFeData()` – one row per patient
-#'       \item `getFallFeData()` – one or more rows per case
-#'       \item `getMedikationsanalyseFeData()` – latest version per entry
-#'       \item `getMRPDokumentationValidierungFeData()` – latest version per entry
+#'       \item `getFallFeData()` – one or more rows per case e.g. different wards
+#'       \item `getMedikationsanalyseFeData()` – not yet latest version per entry
+#'       \item `getMRPDokumentationValidierungFeData()` – not yet latest version per entry
 #'     }
 #'
 #'   \item Constructs the core encounter-patient dataset:
 #'     \itemize{
 #'       \item `mergePatEnc()`, `addCuratedEncPeriodEnd()`, `addMainEncId()`,
-#'             `addMainEncPeriodStart()`,
-#'       \item `calculateAge()`, `addWardName()`, `addRecordId()`, `addFallIdAndStudienphase()`
+#'             `addMainEncPeriodStart()`, `calculateAge()`, `addWardName()`,
+#'       \item `addRecordId()`, `addFallIdAndStudienphase()`
 #'     }
 #'
 #'   \item Merges and enriches front-end documentation:
 #'     \itemize{
-#'       \item `mergePatFeFallFe()`, `addMedaData()`, `addEncIdToFeData()`, `addMRPDokuData()`
+#'       \item `mergePatFeFallFe()`, `addMedaData()`, `addVersorgungsstellenkontaktToFeData()`,
+#'             `addMRPDokuData()`
 #'     }
 #'
 #'   \item Defines the Full Analysis Set 1 (FAS1) base population with `defineFullAnalysisSet1()`
@@ -57,13 +58,13 @@
 #'
 #'   \item Writes outputs:
 #'     \itemize{
-#'       \item `writeHtmlTable()` – html table in output local (default) or global (if definded)
+#'       \item `writeHtmlTable()` – html table in output local (default) or global (if defined)
 #'     }
 #' }
 #'
 #' @section Output:
 #' - **Local output**: `FHIR_table_with_ward_name_and_record_id`, `full_analysis_set_1`, `statistical_report_data`,
-#'                     `frontend_table`, `frontend_summary_data`
+#'   `frontend_table`, `frontend_summary_data`
 #' - **Global output**:
 #'   \itemize{
 #'     \item `statistical_report`: F1 metrics with front-end add-ons
@@ -74,7 +75,6 @@
 #'
 #' @note
 #' Additional functionality for F2 metrics is scaffolded in the function but currently inactive.
-#' Future versions may support Quarto or PDF report rendering.
 #'
 #' @seealso
 #' [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
@@ -147,14 +147,18 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   fall_fe_table <- getFallFeData(
     lock_id = "statistical reports[5]",
     table_name = "v_fall_fe"
-  )
+  ) |>
+    CheckMissingFallIdInFallFe()
+
   # --> this table shows the trajectory of each case in the front-end system
   #     (multiple rows per case possible)
 
   medikationsanalyse_fe_table <- getMedikationsanalyseFeData(
     lock_id = "statistical reports[6]",
     table_name = "v_medikationsanalyse_fe"
-  )
+  ) |>
+    CheckMissingFallMedaId() |>
+    CheckMissingMedaDat()
   # --> this table should show only the last version of each medikationsanalyse_fe entry
 
   mrp_dokumentation_validierung_fe_table <- getMRPDokumentationValidierungFeData(
@@ -184,6 +188,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       main_enc_period_start = fall_aufn_dat,
       pat_birthdate = pat_gebdat
     ) |>
+    CheckMultipleRowsPerPatAndWardInMergedPatFallFe() |>
     detectMultipleEntries(
       grouping_vars = c("pat_id"),
       variable_to_check = fall_fhir_main_enc_id,
@@ -194,14 +199,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       variable_to_check = fall_station,
       result_variable_name = "multiple_wards_per_main_encounter"
     ) |>
+    addVersorgungsstellenkontaktToFeData(FHIR_table_with_ward_name_and_record_id) |>
     addMedaData(medikationsanalyse_fe_table) |>
     detectMultipleEntries(
       grouping_vars = c("pat_id"),
       variable_to_check = meda_id,
       result_variable_name = "multiple_medas_per_patient"
     ) |>
-
-    # addEncIdToFeData(full_analysis_set_1) |>
     addMRPDokuData(mrp_dokumentation_validierung_fe_table) |>
     dplyr::arrange(record_id, meda_dat, mrp_id)
 

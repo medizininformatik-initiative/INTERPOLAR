@@ -175,6 +175,11 @@ addProcessingExclusionReason <- function(existing = processing_exclusion_reason,
 #' @param grouping_vars A character vector of column names used to define groups.
 #' @param processing_exclusion_reason_name A character string specifying the
 #'   reason to assign when a group contains more than one row.
+#' @param processing_exclusion_reason_level A character string specifying the
+#'  level of the exclusion reason (e.g., 'patient', 'main_encounter', 'sub_encounter').
+#' @param processing_exclusion_reason_type A character string specifying the
+#' type of the exclusion reason (e.g., 'not_in_inclusion_criteria', 'data_issues',
+#' 'linkage_issues').
 #'
 #' @return A `tibble` with the same structure as `data`, but with the column
 #'   `processing_exclusion_reason` updated for groups with multiple rows.
@@ -275,8 +280,8 @@ detectMultipleEntries <- function(data, grouping_vars, variable_to_check,
 #'
 #' Arguments without an `=` sign are ignored.
 #'
+#' @importFrom stats setNames
 #' @export
-
 parseNamedArgs <- function() {
   command_arguments <- commandArgs(trailingOnly = TRUE)
 
@@ -285,7 +290,7 @@ parseNamedArgs <- function() {
   # Convert to named character vector
   parsed <- sapply(named_args, function(arg) {
     parts <- strsplit(arg, "=", fixed = TRUE)[[1]]
-    parts <- setNames(parts[2], parts[1])
+    parts <- stats::setNames(parts[2], parts[1])
   }, USE.NAMES = FALSE)
 
   return(parsed)
@@ -345,6 +350,7 @@ parseNamedArgs <- function() {
 #' }
 #'
 #' @importFrom dplyr mutate if_else case_when select group_by summarise across all_of distinct
+#' @importFrom stats na.omit
 #'
 #' @export
 PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_code, var_system,
@@ -392,7 +398,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
     dplyr::group_by(dplyr::across(-dplyr::all_of(c(var_new_system_1, var_new_system_2)))) |>
     dplyr::summarise(
       !!var_new_system_1 := {
-        vals <- na.omit(.data[[var_new_system_1]])
+        vals <- stats::na.omit(.data[[var_new_system_1]])
         if (length(unique(vals)) > 1) {
           warning(paste0(
             "Multiple ", var_new_system_1,
@@ -403,7 +409,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
         } else if (length(vals) == 0) NA_character_ else vals[1]
       },
       !!var_new_system_2 := {
-        vals <- na.omit(.data[[var_new_system_2]])
+        vals <- stats::na.omit(.data[[var_new_system_2]])
         if (length(unique(vals)) > 1) {
           warning(paste0(
             "Multiple ", var_new_system_2,
@@ -433,41 +439,45 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
   return(data)
 }
 
-#' Propagate Processing Exclusion Reasons Across Encounter Levels
+#' Expand Processing Exclusion Reasons Across Encounter Hierarchies
 #'
-#' This function propagates existing `processing_exclusion_reason` values
-#' across all encounters that share the same `main_enc_id`.
+#' This function propagates existing processing exclusion reasons across
+#' encounter and patient hierarchies. If any encounter within the same
+#' main encounter or patient has a processing exclusion reason that is
+#' relevant at a higher level, related encounters without an exclusion
+#' reason are tagged accordingly.
 #'
-#' If any encounter within a group (defined by `main_enc_id`) has a
-#' non-`NA` `processing_exclusion_reason`, related encounters without an
-#' exclusion reason will be assigned a derived reason.
-#'
-#' @param encounter_table A data frame containing encounter-level data.
-#'   The table must include the columns `main_enc_id`,
-#'   `processing_exclusion_reason`.
+#' @param FHIR_table_with_all_processing_exclusion_reasons A data frame
+#'   containing encounter-level data with processing exclusion reasons.
+#'   The table must include at least the columns
+#'   \code{main_enc_id}, \code{pat_id}, and
+#'   \code{processing_exclusion_reason}.
 #'
 #' @return
-#' A data frame identical to `encounter_table`, but with
-#' `processing_exclusion_reason` expanded to related encounters sharing
-#' the same `main_enc_id`.
+#' A data frame with expanded \code{processing_exclusion_reason} values,
+#' where encounters without an exclusion reason may be assigned a derived
+#' reason if a related encounter at the same main encounter or patient
+#' level has a relevant exclusion reason.
 #'
 #' @details
-#' The propagation logic works as follows:
+#' The function applies two hierarchical expansion steps:
 #' \itemize{
-#'   \item If at least one encounter within a `main_enc_id` group has a
-#'   non-`NA` `processing_exclusion_reason`, all related encounters without
-#'   an exclusion reason are updated.
-#'   \item If the existing exclusion reason contains `|main_encounter|`, the new reason
-#'    assigned is `related_encounter_with_processing_exclusion_reason_relevant_for_main_encounter`.
-#'   \item If the existing exclusion reason contains `|patient|`, the new reason
-#'   assigned is `related_encounter_with_processing_exclusion_reason_relevant_for_patient`.
-#'   \item Existing non-`NA` exclusion reasons are preserved.
+#'   \item \strong{Main encounter level}: Within each \code{main_enc_id},
+#'   encounters without an exclusion reason are tagged if any related
+#'   encounter contains an exclusion reason marked as relevant for the
+#'   main encounter (detected via the pattern
+#'   \code{"|main_encounter|"}).
+#'
+#'   \item \strong{Patient level}: Within each \code{pat_id}, encounters
+#'   without an exclusion reason are tagged if any related encounter
+#'   contains an exclusion reason marked as relevant for the patient
+#'   (detected via the pattern \code{"|patient|"}).
 #' }
 #'
-#' This ensures consistent exclusion labeling across all encounter levels if relevant for main encounter
-#' or patient.
+#' The function does not overwrite existing exclusion reasons and ensures
+#' uniqueness of rows in the returned table.
 #'
-#' @importFrom dplyr group_by mutate case_when ungroup distinct
+#' @importFrom dplyr group_by mutate ungroup distinct
 #' @importFrom stringr str_detect
 #'
 #' @export
@@ -1159,39 +1169,175 @@ CheckEncountersWithoutCalculatedMainEncounterRef <- function(encounter_table) {
 #' This function checks whether the patient FE (Front-End) table contains
 #' multiple rows for the same `pat_id` (FHIR identifier).
 #'
-#' If multiple rows are found for a `pat_id`, a warning is issued and the
-#' `processing_exclusion_reason` column is updated with
-#' `"multiple_rows_per_pat_id_in_fe"` for the affected rows.
+#' If multiple rows are found for a `pat_id`, a warning is issued.
 #'
 #' @param patient_fe_table A data frame containing patient-level FE data.
-#'   The table must include the column `pat_id` and
-#'   `processing_exclusion_reason`.
+#'   The table must include the column `pat_id`.
 #'
 #' @return
-#' A data frame identical to `patient_fe_table`, with `processing_exclusion_reason`
-#' updated for rows where multiple entries exist for the same `pat_id`.
+#' A data frame identical to `patient_fe_table``.
 #'
 #' @details
 #' Having multiple rows per `pat_id` may indicate duplicate records or data
-#' inconsistencies. This function flags such cases to ensure downstream
-#' analyses handle them appropriately.
+#' inconsistencies.
 #'
-#' @importFrom dplyr mutate
 #'
 #' @export
 CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
   if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
-    patient_fe_table <- patient_fe_table |>
-      addMultipleRowsProcessingExclusionReason(
-        c("pat_id"),
-        processing_exclusion_reason_name = "multiple_rows_per_pat_id_in_fe",
-        processing_exclusion_reason_level = "patient",
-        processing_exclusion_reason_type = "data_issues"
-      )
     warning("The patient_fe table contains multiple record_ids for the same pat_id(FHIR).
             Please check the data.")
   }
   return(patient_fe_table)
+}
+
+#' Check for Multiple Rows Per Patient and Ward in Merged Patient and Fall Tables
+#'
+#' This function checks if there are multiple records for the same patient
+#' (`pat_id`) and ward (`fall_station`) combination in the provided merged
+#' patient and fall table (`merged_table_with_age`). If any such combinations
+#' are found, it adds a processing exclusion reason and generates a warning to
+#' notify the user about potential data issues affecting the age calculation.
+#'
+#' @param merged_table_with_age A data frame containing merged patient and
+#'   fall data with age information, which must include the columns `pat_id`
+#'   and `fall_station`. These columns are used to check for multiple records
+#'   per patient and ward combination.
+#'
+#' @return A data frame, `merged_table_with_age`, with no modifications to the
+#'   original data, except for the exclusion reason added to the `processing_exclusion_reason`
+#'   column for records with multiple rows for the same patient and ward.
+#'
+#' @details If multiple rows are found for the same `pat_id` and `fall_station`,
+#'   the function adds an exclusion reason ("multiple_rows_per_pat_id_and_ward")
+#'   at the patient level and issues a warning. The warning indicates that the
+#'   presence of multiple records for the same patient and ward may lead to
+#'   inconclusive age data. Users are encouraged to review and correct the data.
+#'
+#' @importFrom dplyr mutate
+#' @export
+CheckMultipleRowsPerPatAndWardInMergedPatFallFe <- function(merged_table_with_age) {
+  if (checkMultipleRows(merged_table_with_age, c("pat_id","fall_station"))) {
+    merged_table_with_age <- merged_table_with_age |>
+        addMultipleRowsProcessingExclusionReason(
+          c("pat_id","fall_station"),
+          processing_exclusion_reason_name = "multiple_rows_per_pat_id_and_ward",
+          processing_exclusion_reason_level = "patient",
+          processing_exclusion_reason_type = "data_issues"
+        )
+    warning("The merged patient_fe and fall_fe table contains multiple record_ids for the same pat_id(FHIR) and ward.
+            Age may be inconclusive. Please check the data.")
+  }
+  return(merged_table_with_age)
+}
+
+#' Check for Missing Fall Meda IDs in Medikationsanalyse Table
+#'
+#' This function checks for any missing \code{fall_meda_id} values in the
+#' \code{medikationsanalyse_fe_table}, which may indicate a linkage issue
+#' with the corresponding case in \code{fall_fe}. If any missing values are
+#' found, it issues a warning and prints the affected records.
+#'
+#' @param medikationsanalyse_fe_table A data frame containing the medikationsanalyse
+#'   records. It must include at least the column \code{fall_meda_id}.
+#'
+#' @return
+#' The input \code{medikationsanalyse_fe_table}, possibly with a warning
+#' printed for records with missing \code{fall_meda_id}.
+#'
+#' @details
+#' This function identifies records that lack the \code{fall_meda_id} field, which
+#' represents the connection between medication analysis and the corresponding case
+#' in the \code{fall_fe} table. Missing values may cause issues during the linking
+#' of medication data to patient encounters or cases.
+#'
+#' The function will print all records with missing \code{fall_meda_id}, and
+#' generate a warning to inform the user of potential data quality issues.
+#'
+#' @importFrom dplyr filter
+#'
+#' @export
+CheckMissingFallMedaId <- function(medikationsanalyse_fe_table) {
+  if (any(is.na(medikationsanalyse_fe_table$fall_meda_id))) {
+    print(medikationsanalyse_fe_table |>
+            dplyr::filter(is.na(fall_meda_id)), width = 1000)
+    warning("Some records in medikationsanalyse_fe have no connection to the case from
+    fall_fe (missing fall_meda_id) which may leed to linking issues. Please check and correct the data")
+  }
+  return(medikationsanalyse_fe_table)
+}
+
+#' Check for Missing `meda_dat` in Medication Analysis Table
+#'
+#' This function checks if there are any missing (`NA`) values in the `meda_dat`
+#' column of the provided `medikationsanalyse_fe_table`. If any missing values
+#' are found, it prints the rows with the missing data and issues a warning to
+#' notify the user about potential data issues that could affect data linking
+#' and algorithmic calculations.
+#'
+#' @param medikationsanalyse_fe_table A data frame containing medication
+#'   analysis data, which must include a column `meda_dat`. This column
+#'   typically represents the date or timestamp of the medication record.
+#'
+#' @return A data frame, `medikationsanalyse_fe_table`, with no modifications
+#'   to the original data, except for the warning message generated if there
+#'   are missing `meda_dat` values.
+#'
+#' @details If any rows in `medikationsanalyse_fe_table` contain missing
+#'   (`NA`) values in the `meda_dat` column, the function will print those
+#'   rows and issue a warning indicating that missing `meda_dat` values may
+#'   lead to issues with data linking and the inability to calculate the
+#'   Medication Review Process (MRP).
+#'
+#'   Users are advised to review and correct the data to ensure that all
+#'   necessary records are present and properly linked.
+#'
+#' @importFrom dplyr filter
+#' @export
+CheckMissingMedaDat <- function(medikationsanalyse_fe_table) {
+  if (any(is.na(medikationsanalyse_fe_table$meda_dat))) {
+    print(medikationsanalyse_fe_table |>
+            dplyr::filter(is.na(meda_dat)), width = 1000)
+    warning("Some records in medikationsanalyse_fe have no meda_dat which leeds to linking
+            issues and exclude possibilty of calculate algorithmic MRP. Please check the data")
+  }
+  return(medikationsanalyse_fe_table)
+}
+
+#' Check for Missing Fall IDs in Fall Fe Table
+#'
+#' This function checks for any missing \code{fall_id} values in the
+#' \code{fall_fe_table}, which may indicate a linkage issue with medication
+#' analysis or other related data. If any missing values are found, the function
+#' issues a warning and prints the affected records.
+#'
+#' @param fall_fe_table A data frame containing the fall records. It must include at least
+#'   the column \code{fall_id}, which serves as a key linking to other related data.
+#'
+#' @return
+#' The input \code{fall_fe_table}, possibly with a warning printed for records with
+#' missing \code{fall_id}.
+#'
+#' @details
+#' This function identifies records in the \code{fall_fe_table} that lack the
+#' \code{fall_id} field. The \code{fall_id} is crucial for linking fall records to
+#' other data such as medication analysis and encounter records. Missing values can lead
+#' to incomplete or erroneous data linkage.
+#'
+#' If any missing \code{fall_id} values are detected, the function will print those records
+#' and generate a warning message to notify the user about potential data integrity issues.
+#'
+#' @importFrom dplyr filter
+#'
+#' @export
+CheckMissingFallIdInFallFe <- function(fall_fe_table) {
+  if (any(is.na(fall_fe_table$fall_id))) {
+    print(fall_fe_table |>
+            dplyr::filter(is.na(fall_id)), width = 1000)
+    warning("Some records in fall_fe have no linked cis identifier (missing fall_id) which may leed
+    to linking issues to documented medication analysis. Please check the data pipeline")
+  }
+  return(fall_fe_table)
 }
 
 # DEBUG Section ----------------------------------------------------------
@@ -1255,13 +1401,18 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
       dplyr::filter(pat_id == "UKB-0001_4") |>
       dplyr::mutate(pat_gebdat = NA)
 
+    double_birthdate_check <- patient_fe_table |>
+      dplyr::filter(pat_id == "UKB-0001_5") |>
+      dplyr::mutate(pat_gebdat = as.Date("1980-01-01"))
+
     check_patient_fe_table_replace <- underage_check |>
       rbind(birthdate_na_check)
     check_patient_fe_table_replace_ids <- check_patient_fe_table_replace$pat_id
 
     patient_fe_table <- patient_fe_table |>
       dplyr::filter(!pat_id %in% check_patient_fe_table_replace_ids) |>
-      rbind(check_patient_fe_table_replace)
+      rbind(check_patient_fe_table_replace) |>
+      rbind(double_birthdate_check)
 
     return(patient_fe_table)
   }

@@ -1,6 +1,6 @@
 # "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienfortschritts
 
-## Version 0.4 (08.01.2025)
+## Version 0.4 (12.01.2025)
 
 ### Funktion
 
@@ -46,7 +46,7 @@ gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataproce
 
     -   Anzahl nicht verwertbarer Fälle aus dem Frontend (unplausible oder fehlende Daten)
 
--   fe_summary.html beinhaltet die Zählungen für alle im Frontend dokumentierten Fälle, gesplittet nach Station
+-   fe_summary.html beinhaltet die Zählungen für alle im Frontend dokumentierten Fälle, gesplittet nach Station. War ein Fall auf mehreren INTERPOLAR-Stationen, wird er auf jeder Station gezählt, wodurch die Summen über alle Stationen höher als die Gesamtanzahl der Fälle sein können.
 
     -   Anzahl der im Frontend aufgeführten Patienten
 
@@ -135,4 +135,4 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 -   später relevant: Wenn fall_studienphase in fall_fe leer ist, wird diese durch 'PhaseA' ersetzt (für Daten vor Einführung der Befüllung der Spalte Studienphase)
 -   Encounter-Altdaten (die ggf. in den lokalen Tabellen erscheinen) werden ressourcensparend aktuell gefiltert auf ein Startdatum(enc_period_start) von 1 Jahr vor REPORT_PERIOD_START
 -   Dateneinträge mit processing_exclusion_reason waren betroffen von einem der Datenqualitätschecks und werden nicht weiter verarbeitet (siehe warnings)
--   dokumentierte Medikationsanalysen müssen mit einem Fall verknüpft sein (im Frontend Fall-ID setzen); falls dies fehlt, fehlen diese Analysen im Reporting, da sie keine Fall zugeordnet werden können
+-   dokumentierte Medikationsanalysen müssen mit einem Fall verknüpft sein (im Frontend Fall-ID setzen); falls dies fehlt und es meherer Fälle für einen Patienten gibt, fehlen die zugehörigen Analysen im Reporting, da sie keinem Fall zugeordnet werden können

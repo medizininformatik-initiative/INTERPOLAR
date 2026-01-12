@@ -326,7 +326,8 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart,
       {{ pat_birthdate }}
     )) / 365.25)) |>
     dplyr::relocate(age_at_hospitalization, .after = {{ pat_birthdate }}) |>
-    dplyr::select(-{{ pat_birthdate }})
+    dplyr::select(-{{ pat_birthdate }}) |>
+    dplyr::distinct()
 
   if (any(is.na(merged_table_with_age$age_at_hospitalization))) {
     warning("Some patients have no determined age_at_hospitalization.
@@ -392,7 +393,7 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart,
 #' processing exclusion reason to the \code{processing_exclusion_reason}
 #' column for encounters with class code \code{"AMB"}.
 #'
-#' The tagging uses \code{\link{AddProcessingExclusionReason}} to ensure
+#' The tagging uses \code{\link{addProcessingExclusionReason}} to ensure
 #' consistent formatting and to avoid duplicate entries.
 #'
 #' @param merged_table A data frame containing encounter-level data.
@@ -413,7 +414,7 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart,
 #' Non-ambulant encounters are returned unchanged.
 #'
 #' @seealso
-#' \code{\link{AddProcessingExclusionReason}}
+#' \code{\link{addProcessingExclusionReason}}
 #'
 #' @importFrom dplyr mutate case_when
 #'
@@ -440,7 +441,7 @@ tagAmbulantEncounters <- function(merged_table) {
 #' denotes a contact type that should not be considered an inpatient encounter
 #' and appends a structured processing exclusion reason accordingly.
 #'
-#' The tagging is performed using \code{\link{AddProcessingExclusionReason}}
+#' The tagging is performed using \code{\link{addProcessingExclusionReason}}
 #' to ensure consistent formatting and to prevent duplicate entries.
 #'
 #' @param merged_table A data frame containing encounter-level data.
@@ -472,7 +473,7 @@ tagAmbulantEncounters <- function(merged_table) {
 #' Rows with other Kontaktart codes remain unchanged.
 #'
 #' @seealso
-#' \code{\link{AddProcessingExclusionReason}}
+#' \code{\link{addProcessingExclusionReason}}
 #'
 #' @importFrom dplyr mutate case_when
 #'
@@ -731,41 +732,50 @@ mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 
 #------------------------------------------------------------------------------#
 
-#' Add Medication Analysis data to Merged FE Table
+#' Add Medication Analysis Data to Fall Event Data
 #'
-#' This function merges medication analysis data (`meda_id`, `meda_dat`) into a merged
-#' front-end table that contains patient and case-level information.
-#' The merge is based on matching both `record_id` and `fall_id_cis` to `fall_meda_id`.
-#' It retains all original columns from the merged patient and fall data,
-#' and adds the medication analysis fields.
-#' In this step, it may happen, that a meda_id is added
-#' to a fall record that it doesen't belong to (e.g. it is the fall record of a different ward).
+#' This function merges medication analysis data (`medikationsanalyse_fe_table`)
+#' with fall event data (`merged_fe_pat_fall_table_with_enc_id`) based on various
+#' conditions, creating new columns for processing exclusion reasons when necessary.
+#' The function handles four distinct scenarios: one encounter with one ward,
+#' multiple encounters with one ward, one encounter with multiple wards, and
+#' multiple encounters with multiple wards. It ensures data consistency through
+#' left joins, distinct rows, and proper handling of missing or conflicting data.
 #'
-#' Not active at the moment:
-#' This is fixed in the next step after adding only the fitting Versorungsstellenkontakt
-#' enc_id with the ovberlapping period_start/end and meda_dat.
+#' @param merged_fe_pat_fall_table_with_enc_id A data frame containing fall event
+#'   data, including patient and encounter ids, as well as ward-related
+#'   information as ward, and period of stay.
+#' @param medikationsanalyse_fe_table A data frame containing documented medication analysis
+#'   data from fronted, including medication date (`meda_dat`) and medication fall ID (`fall_meda_id`).
 #'
-#' @param merged_fe_pat_fall_table A data frame that includes merged patient and fall data.
-#'   Must include `record_id` and `fall_id_cis`.
-#' @param medikationsanalyse_fe_table A data frame with medication analysis entries from the
-#' front-end system.
-#'   Must include `record_id`, `fall_meda_id`, `meda_id`, `meda_dat`.
-#'
-#' @return A data frame containing all original columns from `merged_fe_pat_fall_table`,
-#'   plus matched medication analysis fields: `meda_id`, `meda_dat`
+#' @return A data frame containing the merged fall event and medication analysis data
+#'   with additional columns for processing exclusion reasons.
 #'
 #' @details
-#' The join is based on:
-#' - Equality of `record_id`
-#' - Equality of `fall_id_cis` and `fall_meda_id`
+#' The function performs four distinct filtering and merging operations based on
+#' combinations of the following variables:
+#' - `multiple_main_encounters_per_patient`
+#' - `multiple_wards_per_main_encounter`
+#'
+#' For each condition, the function applies a left join with the medication analysis
+#' table, adds processing exclusion reasons if necessary, and ensures that the
+#' resulting data frame contains only distinct rows. The function handles situations
+#' where `fall_id_cis` or `enc_id` might be missing and adds appropriate exclusion
+#' reasons.
+#'
+#' The final result is a single data frame containing the merged data, with
+#' exclusion reasons applied where necessary, ready for further analysis or processing.
 #'
 #' @note
-#' - Multiple medication analysis entries per fall are retained.
+#' The `addProcessingExclusionReason()` function must be defined elsewhere in the
+#' code for this function to work correctly. It is used to append exclusion reasons
+#' to the `processing_exclusion_reason` column.
 #'
-#' @importFrom dplyr left_join select distinct
+#' @importFrom dplyr filter left_join distinct mutate case_when join_by between
+#'
 #' @export
-addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
-  one_encounter_one_ward <- merged_fe_pat_fall_table |>
+addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse_fe_table) {
+  one_encounter_one_ward <- merged_fe_pat_fall_table_with_enc_id |>
     dplyr::filter(multiple_main_encounters_per_patient == FALSE &
       multiple_wards_per_main_encounter == FALSE) |>
     # use assignment only depending on record_id
@@ -776,7 +786,7 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
     ) |>
     dplyr::distinct()
 
-  multiple_encounters_one_ward <- merged_fe_pat_fall_table |>
+  multiple_encounters_one_ward <- merged_fe_pat_fall_table_with_enc_id |>
     dplyr::filter(multiple_main_encounters_per_patient == TRUE &
       multiple_wards_per_main_encounter == FALSE) |>
     # use assigment depending on record_id and fall_meda_id
@@ -787,106 +797,155 @@ addMedaData <- function(merged_fe_pat_fall_table, medikationsanalyse_fe_table) {
         "fall_id_cis" = "fall_meda_id"
       )
     ) |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      is.na(fall_id_cis) ~ addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "missing_fall_id_in_fall_fe",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      ),
+      TRUE ~ processing_exclusion_reason
+    )) |>
     dplyr::distinct()
 
-  one_encounter_multiple_wards <- merged_fe_pat_fall_table |>
+  one_encounter_multiple_wards <- merged_fe_pat_fall_table_with_enc_id |>
     dplyr::filter(multiple_main_encounters_per_patient == FALSE &
       multiple_wards_per_main_encounter == TRUE) |>
-    dplyr::mutate(processing_exclusion_reason = addProcessingExclusionReason(
+    # use assignment depending on record_id and linking medication analysis date to ward stay period
+    dplyr::left_join(
+      medikationsanalyse_fe_table |>
+        dplyr::filter(!is.na(meda_dat)) |>
+        dplyr::distinct(),
+      by = dplyr::join_by(
+        record_id == record_id,
+        dplyr::between(
+          y$meda_dat,
+          x$enc_period_start,
+          x$curated_enc_period_end
+        ))) |>
+  dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+    is.na(enc_id) ~ addProcessingExclusionReason(
       existing = processing_exclusion_reason,
-      reason = "multiple_wards_per_main_encounter",
-      level = "main_encounter",
+      reason = "no_matching_Versorgungsstellenkontakt_enc_id_for_ward",
+      level = "sub_encounter",
       type = "linkage_issues"
-    ))
+    ),
+    !is.na(enc_id) & (is.na(enc_period_start) | is.na(curated_enc_period_end)) ~ addProcessingExclusionReason(
+      existing = processing_exclusion_reason,
+      reason = "missing_Versorgungsstellenkontakt_start_or_end_date",
+      level = "sub_encounter",
+      type = "linkage_issues"
+    ),
+    TRUE ~ processing_exclusion_reason
+  )) |>
+    dplyr::distinct()
 
-  multiple_encounters_multiple_wards <- merged_fe_pat_fall_table |>
+  multiple_encounters_multiple_wards <- merged_fe_pat_fall_table_with_enc_id |>
     dplyr::filter(multiple_main_encounters_per_patient == TRUE &
       multiple_wards_per_main_encounter == TRUE) |>
-    dplyr::mutate(processing_exclusion_reason = addProcessingExclusionReason(
-      existing = processing_exclusion_reason,
-      reason = "multiple_wards_per_main_encounter",
-      level = "main_encounter",
-      type = "linkage_issues"
-    ))
+    # use assignment depending on record_id  and fall_meda_id and linking medication analysis date
+    # to ward stay period
+    dplyr::left_join(
+      medikationsanalyse_fe_table |>
+        dplyr::filter(!is.na(meda_dat)) |>
+        dplyr::distinct(),
+      by = dplyr::join_by(
+        record_id == record_id,
+        fall_id_cis == fall_meda_id,
+        dplyr::between(
+          y$meda_dat,
+          x$enc_period_start,
+          x$curated_enc_period_end
+        ))) |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      is.na(fall_id_cis) ~ addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "missing_fall_id_in_fall_fe",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      ),
+      !is.na(fall_id_cis) & is.na(enc_id) ~ addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "no_matching_Versorgungsstellenkontakt_enc_id_for_ward",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      ),
+      !is.na(fall_id_cis) & !is.na(enc_id) & (is.na(enc_period_start) | is.na(curated_enc_period_end)) ~
+        addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "missing_Versorgungsstellenkontakt_start_or_end_date",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      ),
+      TRUE ~ processing_exclusion_reason
+    )) |>
+    dplyr::distinct()
 
+  # merge all four scenarios back together
   merged_fe_pat_fall_meda_table <- one_encounter_one_ward |>
-    dplyr::full_join(multiple_encounters_one_ward) |>
-    dplyr::full_join(one_encounter_multiple_wards) |>
-    dplyr::full_join(multiple_encounters_multiple_wards)
+    rbind(multiple_encounters_one_ward) |>
+    rbind(one_encounter_multiple_wards) |>
+    rbind(multiple_encounters_multiple_wards) |>
+    dplyr::distinct()
 
   return(merged_fe_pat_fall_meda_table)
 }
 
 #------------------------------------------------------------------------------#
-#' Add Encounter ID to Front-End Medication Analysis Table
+#' Add Encounter data of the Versorgungsstellenkontakt to Frontend patient and case data
 #'
-#' This function enriches a merged front-end data table (`merged_fe_pat_fall_meda_table`) with
-#' `enc_id` and additional sub-encounter-related dates by performing a multi-key, non-equi join with
-#' the complete FHIR data. The join ensures that medication analysis entries (`meda_dat`) are
-#' matched to the corresponding ward stay segment.
+#' This function adds encounter-related information (including encounter ID and
+#' period start and end dates) from a FHIR table to a merged frontend patient-fall data table.
+#' It performs a left join based on patient ID, main encounter ID, and ward name
+#' to combine the relevant columns, ensuring that only distinct rows are included
+#' in the final dataset.
 #'
+#' @param merged_fe_pat_fall_table A data frame containing fall event data for
+#'   patients, including patient ID, fall event details, and ward-related information.
+#' @param FHIR_table_with_ward_name_and_record_id A data frame containing FHIR
+#'   records (patient & encounter ressources) including encounter ID, main encounter ID, patient ID,
+#'   and ward name, as well as encounter start and end periods.
 #'
-#' @param merged_fe_pat_fall_meda_table A data frame containing merged patient, fall, and
-#' medication analysis data, typically resulting from `addMedaData()`. Must include `meda_dat`,
-#' `pat_id`, `record_id`, `fall_fhir_main_enc_id`, `fall_studienphase`,
-#' `fall_station`, and `fall_aufn_dat`.
-#'
-#' @param full_analysis_set_1 A data frame containing full encounter-level data. Must include columns:
-#'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `fall_id_cis`, `pat_id`,
-#'   `record_id`, `enc_period_start`, `curated_enc_period_end`, `ward_name`, `studienphase`,
-#'   `enc_status`, and `processing_exclusion_reason`.
-#'
-#' @return A data frame containing all original columns from `merged_fe_pat_fall_meda_table` plus the
-#'   matched `enc_id` and related encounter period dates. Only rows where a valid encounter match is
-#'   found are retained.
+#' @return A data frame that contains the original fall event data with additional
+#'   FHIR-sub-encounter-related columns, including `enc_id`, `enc_period_start`, and
+#'   `curated_enc_period_end`.
 #'
 #' @details
-#' The join is based on a combination of:
-#' - Identifiers (`pat_id`, `record_id`, `main_enc_id`, `fall_id_cis`)
-#' - Temporal matching: `meda_dat` must lie within `[enc_period_start, curated_enc_period_end]`
-#' - Additional context: `studienphase`, `ward_name`, and `main_enc_period_start` must match the
-#' fall metadata
-#'
-#' The function filters the `full_analysis_set_1` to only include main encounters without any
-#' processing exclusion reason.
-#' Rows with no matching `enc_id` (e.g., due to unmatched date windows or inconsistencies) are
-#' excluded post-join.
+#' This function performs a left join between the fall event data (`merged_fe_pat_fall_table`)
+#' and a FHIR table (`FHIR_table_with_ward_name_and_record_id`). The join is done using
+#' `pat_id`, `fall_fhir_main_enc_id`, and `fall_station` as keys. After joining,
+#' the resulting data frame is de-duplicated (`distinct()`) and the encounter columns
+#' (`enc_id`, `enc_period_start`, `curated_enc_period_end`) are relocated after the
+#' `fall_aufn_dat` column for better organization.
 #'
 #' @note
-#' - Make sure `curated_enc_period_end` is preprocessed (e.g., using `addCuratedEncperiodEnd()`) to
-#' avoid NAs.
-#' - This function is useful when matching granular front-end entries (e.g., medication records) to
-#' sub-encounter blocks.
-#' - fall_studienphase is currently not used in the analysis, therefore it is commented out.
+#' The added information is specifically needed to match the correct medication analysis data
+#' to the correct ward stay period via overlap with medication analysis date.
+#' In that way multiple rows in fall_fe due to multiple wards per main encounter are handled correctly.
+#' The ward name already linked to the input FHIR-data is originated from the `pids_per_ward_table` and only
+#' added for the sub-encounter level Versorgungsstellenkontakt, which ensures the correct date assigments
+#' per ward-stay.
 #'
-#' @importFrom dplyr left_join select distinct filter join_by between
+#' @importFrom dplyr left_join select distinct relocate join_by
+#'
 #' @export
-addEncIdToFeData <- function(merged_fe_pat_fall_table, FHIR_table_with_ward_name_and_record_id) {
+addVersorgungsstellenkontaktToFeData <- function(merged_fe_pat_fall_table, FHIR_table_with_ward_name_and_record_id) {
   merged_fe_pat_fall_table_with_enc_id <- merged_fe_pat_fall_table |>
     dplyr::left_join(
       FHIR_table_with_ward_name_and_record_id |>
         dplyr::select(
           enc_id, main_enc_id, pat_id,
           enc_period_start,
-          curated_enc_period_end, ward_name,
-          processing_exclusion_reason
+          curated_enc_period_end, ward_name
         ) |>
         dplyr::distinct(),
       by = dplyr::join_by(
         pat_id == pat_id,
         fall_fhir_main_enc_id == main_enc_id,
         fall_station == ward_name,
-        # dplyr::between(
-        #   meda_dat,
-        #   enc_period_start,
-        #   curated_enc_period_end
-        # )
-      ), suffix = c("_frontend", "_FHIR")
-    ) |>
-    # dplyr::filter(!(is.na(enc_id) & !is.na(meda_id))) |>
+      )) |>
     dplyr::distinct() |>
     dplyr::relocate(enc_id, enc_period_start, curated_enc_period_end,
-      processing_exclusion_reason_FHIR,
       .after = fall_aufn_dat
     )
   return(merged_fe_pat_fall_table_with_enc_id)
