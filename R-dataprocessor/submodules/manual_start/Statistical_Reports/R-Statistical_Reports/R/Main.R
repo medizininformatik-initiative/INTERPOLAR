@@ -188,7 +188,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       main_enc_period_start = fall_aufn_dat,
       pat_birthdate = pat_gebdat
     ) |>
-    CheckMultipleRowsPerPatAndWardInMergedPatFallFe() |>
+    CheckMultipleRowsPerMainEncAndWardInMergedPatFallFe() |>
     detectMultipleEntries(
       grouping_vars = c("pat_id"),
       variable_to_check = fall_fhir_main_enc_id,

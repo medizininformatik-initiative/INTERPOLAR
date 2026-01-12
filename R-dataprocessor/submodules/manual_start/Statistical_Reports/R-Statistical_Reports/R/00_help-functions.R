@@ -1191,10 +1191,10 @@ CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
   return(patient_fe_table)
 }
 
-#' Check for Multiple Rows Per Patient and Ward in Merged Patient and Fall Tables
+#' Check for Multiple Rows Per Case and Ward in Merged Patient and Fall Tables
 #'
 #' This function checks if there are multiple records for the same patient
-#' (`pat_id`) and ward (`fall_station`) combination in the provided merged
+#' (`pat_id`), case (`fall_fhir_main_enc_id`) and ward (`fall_station`) combination in the provided merged
 #' patient and fall table (`merged_table_with_age`). If any such combinations
 #' are found, it adds a processing exclusion reason and generates a warning to
 #' notify the user about potential data issues affecting the age calculation.
@@ -1208,7 +1208,7 @@ CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
 #'   original data, except for the exclusion reason added to the `processing_exclusion_reason`
 #'   column for records with multiple rows for the same patient and ward.
 #'
-#' @details If multiple rows are found for the same `pat_id` and `fall_station`,
+#' @details If multiple rows are found for the same `pat_id`, `fall_fhir_main_enc_id` and `fall_station`,
 #'   the function adds an exclusion reason ("multiple_rows_per_pat_id_and_ward")
 #'   at the patient level and issues a warning. The warning indicates that the
 #'   presence of multiple records for the same patient and ward may lead to
@@ -1216,17 +1216,17 @@ CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
 #'
 #' @importFrom dplyr mutate
 #' @export
-CheckMultipleRowsPerPatAndWardInMergedPatFallFe <- function(merged_table_with_age) {
-  if (checkMultipleRows(merged_table_with_age, c("pat_id","fall_station"))) {
+CheckMultipleRowsPerMainEncAndWardInMergedPatFallFe <- function(merged_table_with_age) {
+  if (checkMultipleRows(merged_table_with_age, c("pat_id","fall_fhir_main_enc_id","fall_station"))) {
     merged_table_with_age <- merged_table_with_age |>
         addMultipleRowsProcessingExclusionReason(
-          c("pat_id","fall_station"),
-          processing_exclusion_reason_name = "multiple_rows_per_pat_id_and_ward",
-          processing_exclusion_reason_level = "patient",
+          c("pat_id","fall_fhir_main_enc_id","fall_station"),
+          processing_exclusion_reason_name = "multiple_rows_per_fall_fhir_main_enc_id_and_ward",
+          processing_exclusion_reason_level = "main_encounter",
           processing_exclusion_reason_type = "data_issues"
         )
-    warning("The merged patient_fe and fall_fe table contains multiple record_ids for the same pat_id(FHIR) and ward.
-            Age may be inconclusive. Please check the data.")
+    warning("The merged patient_fe and fall_fe table contains multiple record_ids for the same main encounter (fall_fhir_main_enc_id) and ward.
+            Age or date of admission may be inconclusive. Please check the frontend_table.")
   }
   return(merged_table_with_age)
 }
