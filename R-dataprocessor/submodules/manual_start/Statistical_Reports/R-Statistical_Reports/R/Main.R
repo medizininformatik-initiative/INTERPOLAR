@@ -151,7 +151,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     CheckMissingFallIdInFallFe()
 
   # --> this table shows the trajectory of each case in the front-end system
-  #     (multiple rows per case possible)
+  #     (multiple rows per case possible, if the case was treated on different INTERPOLAR wards)
 
   medikationsanalyse_fe_table <- getMedikationsanalyseFeData(
     lock_id = "statistical reports[6]",

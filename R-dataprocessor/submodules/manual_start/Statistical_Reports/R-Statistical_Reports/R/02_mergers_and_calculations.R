@@ -771,7 +771,7 @@ mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 #' code for this function to work correctly. It is used to append exclusion reasons
 #' to the `processing_exclusion_reason` column.
 #'
-#' @importFrom dplyr filter left_join distinct mutate case_when join_by between
+#' @importFrom dplyr filter left_join distinct mutate case_when join_by between select
 #'
 #' @export
 addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse_fe_table) {
@@ -781,6 +781,7 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
     # use assignment only depending on record_id
     dplyr::left_join(
       medikationsanalyse_fe_table |>
+        dplyr::select(-fall_meda_id) |>
         dplyr::distinct(),
       by = c("record_id")
     ) |>
@@ -814,6 +815,7 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
     # use assignment depending on record_id and linking medication analysis date to ward stay period
     dplyr::left_join(
       medikationsanalyse_fe_table |>
+        dplyr::select(-fall_meda_id) |>
         dplyr::filter(!is.na(meda_dat)) |>
         dplyr::distinct(),
       by = dplyr::join_by(
