@@ -3,17 +3,17 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 13:49:10
--- Rights definition file size        : 16391 Byte
+-- Rights definition file last update : 2026-01-13 11:37:49
+-- Rights definition file size        : 16352 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-11-10 22:15:12
+-- Create time: 2026-01-13 13:21:00
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db_log_user
 -- OWNER_SCHEMA:  db_log
--- TAGS:  INT_ID
+-- TAGS:  INT_ID FE_RC_ID
 -- TABLE_PREFIX:  
 -- TABLE_POSTFIX:  _fe
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
@@ -3650,6 +3650,46 @@ BEGIN
 	    CREATE INDEX idx_patient_fe_id ON db_log.patient_fe USING btree (patient_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
+      -- Primary key in RedCap frontend record_id - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient_fe' AND column_name = 'record_id'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_fe_record_id',1,63) AND schemaname = 'db_log' AND tablename = 'patient_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'patient_fe' AND substr(indexname,1,63)=substr('idx_patient_fe_record_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_patient_fe_record_id ON db_log.patient_fe USING btree (record_id DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_patient_fe_record_id RENAME TO del_idx_patient_fe_record_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_patient_fe_record_id;
+       	        CREATE INDEX idx_patient_fe_record_id ON db_log.patient_fe USING btree (record_id DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_patient_fe_record_id ON db_log.patient_fe USING btree (record_id DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
+      -- Primary key in RedCap frontend redcap_repeat_instance - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'patient_fe' AND column_name = 'redcap_repeat_instance'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_patient_fe_rc_re_id',1,63) AND schemaname = 'db_log' AND tablename = 'patient_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'patient_fe' AND substr(indexname,1,63)=substr('idx_patient_fe_rc_re_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_patient_fe_rc_re_id ON db_log.patient_fe USING btree (redcap_repeat_instance DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_patient_fe_rc_re_id RENAME TO del_idx_patient_fe_rc_re_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_patient_fe_rc_re_id;
+       	        CREATE INDEX idx_patient_fe_rc_re_id ON db_log.patient_fe USING btree (redcap_repeat_instance DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_patient_fe_rc_re_id ON db_log.patient_fe USING btree (redcap_repeat_instance DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_db_log_patient_fe_input_dt for Table "patient_fe" in schema "db_log"
 ----------------------------------------------------
@@ -3789,6 +3829,46 @@ END IF; -- target column
 	    CREATE INDEX idx_fall_fe_id ON db_log.fall_fe USING btree (fall_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
+      -- Primary key in RedCap frontend record_id - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'fall_fe' AND column_name = 'record_id'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_fall_fe_record_id',1,63) AND schemaname = 'db_log' AND tablename = 'fall_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'fall_fe' AND substr(indexname,1,63)=substr('idx_fall_fe_record_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_fall_fe_record_id ON db_log.fall_fe USING btree (record_id DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_fall_fe_record_id RENAME TO del_idx_fall_fe_record_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_fall_fe_record_id;
+       	        CREATE INDEX idx_fall_fe_record_id ON db_log.fall_fe USING btree (record_id DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_fall_fe_record_id ON db_log.fall_fe USING btree (record_id DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
+      -- Primary key in RedCap frontend redcap_repeat_instance - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'fall_fe' AND column_name = 'redcap_repeat_instance'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_fall_fe_rc_re_id',1,63) AND schemaname = 'db_log' AND tablename = 'fall_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'fall_fe' AND substr(indexname,1,63)=substr('idx_fall_fe_rc_re_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_fall_fe_rc_re_id ON db_log.fall_fe USING btree (redcap_repeat_instance DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_fall_fe_rc_re_id RENAME TO del_idx_fall_fe_rc_re_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_fall_fe_rc_re_id;
+       	        CREATE INDEX idx_fall_fe_rc_re_id ON db_log.fall_fe USING btree (redcap_repeat_instance DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_fall_fe_rc_re_id ON db_log.fall_fe USING btree (redcap_repeat_instance DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_db_log_fall_fe_input_dt for Table "fall_fe" in schema "db_log"
 ----------------------------------------------------
@@ -3928,6 +4008,46 @@ END IF; -- target column
 	    CREATE INDEX idx_medikationsanalyse_fe_id ON db_log.medikationsanalyse_fe USING btree (medikationsanalyse_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
+      -- Primary key in RedCap frontend record_id - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medikationsanalyse_fe' AND column_name = 'record_id'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medikationsanalyse_fe_record_id',1,63) AND schemaname = 'db_log' AND tablename = 'medikationsanalyse_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'medikationsanalyse_fe' AND substr(indexname,1,63)=substr('idx_medikationsanalyse_fe_record_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_medikationsanalyse_fe_record_id ON db_log.medikationsanalyse_fe USING btree (record_id DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_medikationsanalyse_fe_record_id RENAME TO del_idx_medikationsanalyse_fe_record_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_medikationsanalyse_fe_record_id;
+       	        CREATE INDEX idx_medikationsanalyse_fe_record_id ON db_log.medikationsanalyse_fe USING btree (record_id DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_medikationsanalyse_fe_record_id ON db_log.medikationsanalyse_fe USING btree (record_id DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
+      -- Primary key in RedCap frontend redcap_repeat_instance - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'medikationsanalyse_fe' AND column_name = 'redcap_repeat_instance'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_medikationsanalyse_fe_rc_re_id',1,63) AND schemaname = 'db_log' AND tablename = 'medikationsanalyse_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'medikationsanalyse_fe' AND substr(indexname,1,63)=substr('idx_medikationsanalyse_fe_rc_re_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_medikationsanalyse_fe_rc_re_id ON db_log.medikationsanalyse_fe USING btree (redcap_repeat_instance DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_medikationsanalyse_fe_rc_re_id RENAME TO del_idx_medikationsanalyse_fe_rc_re_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_medikationsanalyse_fe_rc_re_id;
+       	        CREATE INDEX idx_medikationsanalyse_fe_rc_re_id ON db_log.medikationsanalyse_fe USING btree (redcap_repeat_instance DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_medikationsanalyse_fe_rc_re_id ON db_log.medikationsanalyse_fe USING btree (redcap_repeat_instance DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_db_log_medikationsanalyse_fe_input_dt for Table "medikationsanalyse_fe" in schema "db_log"
 ----------------------------------------------------
@@ -4067,6 +4187,46 @@ END IF; -- target column
 	    CREATE INDEX idx_mrpdokumentation_validierung_fe_id ON db_log.mrpdokumentation_validierung_fe USING btree (mrpdokumentation_validierung_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
+      -- Primary key in RedCap frontend record_id - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'record_id'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_mrpdokumentation_validierung_fe_record_id',1,63) AND schemaname = 'db_log' AND tablename = 'mrpdokumentation_validierung_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'mrpdokumentation_validierung_fe' AND substr(indexname,1,63)=substr('idx_mrpdokumentation_validierung_fe_record_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_mrpdokumentation_validierung_fe_record_id ON db_log.mrpdokumentation_validierung_fe USING btree (record_id DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_mrpdokumentation_validierung_fe_record_id RENAME TO del_idx_mrpdokumentation_validierung_fe_record_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_mrpdokumentation_validierung_fe_record_id;
+       	        CREATE INDEX idx_mrpdokumentation_validierung_fe_record_id ON db_log.mrpdokumentation_validierung_fe USING btree (record_id DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_mrpdokumentation_validierung_fe_record_id ON db_log.mrpdokumentation_validierung_fe USING btree (record_id DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
+      -- Primary key in RedCap frontend redcap_repeat_instance - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'redcap_repeat_instance'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_mrpdokumentation_validierung_fe_rc_re_id',1,63) AND schemaname = 'db_log' AND tablename = 'mrpdokumentation_validierung_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'mrpdokumentation_validierung_fe' AND substr(indexname,1,63)=substr('idx_mrpdokumentation_validierung_fe_rc_re_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_mrpdokumentation_validierung_fe_rc_re_id ON db_log.mrpdokumentation_validierung_fe USING btree (redcap_repeat_instance DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_mrpdokumentation_validierung_fe_rc_re_id RENAME TO del_idx_mrpdokumentation_validierung_fe_rc_re_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_mrpdokumentation_validierung_fe_rc_re_id;
+       	        CREATE INDEX idx_mrpdokumentation_validierung_fe_rc_re_id ON db_log.mrpdokumentation_validierung_fe USING btree (redcap_repeat_instance DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_mrpdokumentation_validierung_fe_rc_re_id ON db_log.mrpdokumentation_validierung_fe USING btree (redcap_repeat_instance DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_db_log_mrpdokumentation_validierung_fe_input_dt for Table "mrpdokumentation_validierung_fe" in schema "db_log"
 ----------------------------------------------------
@@ -4206,6 +4366,46 @@ END IF; -- target column
 	    CREATE INDEX idx_retrolektive_mrpbewertung_fe_id ON db_log.retrolektive_mrpbewertung_fe USING btree (retrolektive_mrpbewertung_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
+      -- Primary key in RedCap frontend record_id - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'record_id'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_retrolektive_mrpbewertung_fe_record_id',1,63) AND schemaname = 'db_log' AND tablename = 'retrolektive_mrpbewertung_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'retrolektive_mrpbewertung_fe' AND substr(indexname,1,63)=substr('idx_retrolektive_mrpbewertung_fe_record_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_retrolektive_mrpbewertung_fe_record_id ON db_log.retrolektive_mrpbewertung_fe USING btree (record_id DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_retrolektive_mrpbewertung_fe_record_id RENAME TO del_idx_retrolektive_mrpbewertung_fe_record_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_retrolektive_mrpbewertung_fe_record_id;
+       	        CREATE INDEX idx_retrolektive_mrpbewertung_fe_record_id ON db_log.retrolektive_mrpbewertung_fe USING btree (record_id DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_retrolektive_mrpbewertung_fe_record_id ON db_log.retrolektive_mrpbewertung_fe USING btree (record_id DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
+      -- Primary key in RedCap frontend redcap_repeat_instance - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'redcap_repeat_instance'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_retrolektive_mrpbewertung_fe_rc_re_id',1,63) AND schemaname = 'db_log' AND tablename = 'retrolektive_mrpbewertung_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'retrolektive_mrpbewertung_fe' AND substr(indexname,1,63)=substr('idx_retrolektive_mrpbewertung_fe_rc_re_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_retrolektive_mrpbewertung_fe_rc_re_id ON db_log.retrolektive_mrpbewertung_fe USING btree (redcap_repeat_instance DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_retrolektive_mrpbewertung_fe_rc_re_id RENAME TO del_idx_retrolektive_mrpbewertung_fe_rc_re_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_retrolektive_mrpbewertung_fe_rc_re_id;
+       	        CREATE INDEX idx_retrolektive_mrpbewertung_fe_rc_re_id ON db_log.retrolektive_mrpbewertung_fe USING btree (redcap_repeat_instance DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_retrolektive_mrpbewertung_fe_rc_re_id ON db_log.retrolektive_mrpbewertung_fe USING btree (redcap_repeat_instance DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_db_log_retrolektive_mrpbewertung_fe_input_dt for Table "retrolektive_mrpbewertung_fe" in schema "db_log"
 ----------------------------------------------------
@@ -4345,6 +4545,46 @@ END IF; -- target column
 	    CREATE INDEX idx_risikofaktor_fe_id ON db_log.risikofaktor_fe USING btree (risikofaktor_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
+      -- Primary key in RedCap frontend record_id - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe' AND column_name = 'record_id'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_risikofaktor_fe_record_id',1,63) AND schemaname = 'db_log' AND tablename = 'risikofaktor_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'risikofaktor_fe' AND substr(indexname,1,63)=substr('idx_risikofaktor_fe_record_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_risikofaktor_fe_record_id ON db_log.risikofaktor_fe USING btree (record_id DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_risikofaktor_fe_record_id RENAME TO del_idx_risikofaktor_fe_record_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_risikofaktor_fe_record_id;
+       	        CREATE INDEX idx_risikofaktor_fe_record_id ON db_log.risikofaktor_fe USING btree (record_id DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_risikofaktor_fe_record_id ON db_log.risikofaktor_fe USING btree (record_id DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
+      -- Primary key in RedCap frontend redcap_repeat_instance - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe' AND column_name = 'redcap_repeat_instance'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_risikofaktor_fe_rc_re_id',1,63) AND schemaname = 'db_log' AND tablename = 'risikofaktor_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'risikofaktor_fe' AND substr(indexname,1,63)=substr('idx_risikofaktor_fe_rc_re_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_risikofaktor_fe_rc_re_id ON db_log.risikofaktor_fe USING btree (redcap_repeat_instance DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_risikofaktor_fe_rc_re_id RENAME TO del_idx_risikofaktor_fe_rc_re_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_risikofaktor_fe_rc_re_id;
+       	        CREATE INDEX idx_risikofaktor_fe_rc_re_id ON db_log.risikofaktor_fe USING btree (redcap_repeat_instance DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_risikofaktor_fe_rc_re_id ON db_log.risikofaktor_fe USING btree (redcap_repeat_instance DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_db_log_risikofaktor_fe_input_dt for Table "risikofaktor_fe" in schema "db_log"
 ----------------------------------------------------
@@ -4484,6 +4724,46 @@ END IF; -- target column
 	    CREATE INDEX idx_trigger_fe_id ON db_log.trigger_fe USING btree (trigger_fe_id DESC);
         END IF; -- INDEX available
     END IF; -- target column
+      -- Primary key in RedCap frontend record_id - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'trigger_fe' AND column_name = 'record_id'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_trigger_fe_record_id',1,63) AND schemaname = 'db_log' AND tablename = 'trigger_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'trigger_fe' AND substr(indexname,1,63)=substr('idx_trigger_fe_record_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_trigger_fe_record_id ON db_log.trigger_fe USING btree (record_id DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_trigger_fe_record_id RENAME TO del_idx_trigger_fe_record_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_trigger_fe_record_id;
+       	        CREATE INDEX idx_trigger_fe_record_id ON db_log.trigger_fe USING btree (record_id DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_trigger_fe_record_id ON db_log.trigger_fe USING btree (record_id DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
+      -- Primary key in RedCap frontend redcap_repeat_instance - for last version
+      IF EXISTS ( -- target column
+          SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'trigger_fe' AND column_name = 'redcap_repeat_instance'
+      ) THEN
+          IF EXISTS ( -- INDEX available
+              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_trigger_fe_rc_re_id',1,63) AND schemaname = 'db_log' AND tablename = 'trigger_fe'
+          ) THEN -- check current status
+              IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+                  AND schemaname = 'db_log' AND tablename = 'trigger_fe' AND substr(indexname,1,63)=substr('idx_trigger_fe_rc_re_id',1,63)
+	         	 AND indexdef != 'CREATE INDEX idx_trigger_fe_rc_re_id ON db_log.trigger_fe USING btree (redcap_repeat_instance DESC)'
+              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+	        	ALTER INDEX db_log.idx_trigger_fe_rc_re_id RENAME TO del_idx_trigger_fe_rc_re_id;
+	        	DROP INDEX IF EXISTS db_log.del_idx_trigger_fe_rc_re_id;
+       	        CREATE INDEX idx_trigger_fe_rc_re_id ON db_log.trigger_fe USING btree (redcap_repeat_instance DESC);
+              END IF; -- check current status
+  	 ELSE -- (easy) Create new
+	             CREATE INDEX idx_trigger_fe_rc_re_id ON db_log.trigger_fe USING btree (redcap_repeat_instance DESC);
+          END IF; -- INDEX available
+      END IF; -- target column
 
 -- Index idx_db_log_trigger_fe_input_dt for Table "trigger_fe" in schema "db_log"
 ----------------------------------------------------
