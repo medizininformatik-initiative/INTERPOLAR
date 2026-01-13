@@ -1103,7 +1103,7 @@ matchICDProxies <- function(
     all_observations <- observation_resources[, .(code = obs_code_code,
                                                   display = obs_code_display,
                                                   value = obs_valuequantity_value,
-                                                  unit = obs_valuequantity_code,
+                                                  unit = data.table::fifelse(isValidUnit(obs_valuequantity_code), obs_valuequantity_code, obs_valuequantity_unit),
                                                   reference_range_low_value = obs_referencerange_low_value,
                                                   reference_range_high_value = obs_referencerange_high_value,
                                                   reference_range_low_system = obs_referencerange_low_system,

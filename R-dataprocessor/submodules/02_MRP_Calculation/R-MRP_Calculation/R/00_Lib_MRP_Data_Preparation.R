@@ -460,6 +460,7 @@ getObservationsFromDB <- function(patient_references) {
                                                       "obs_effectivedatetime",
                                                       "obs_valuequantity_value",
                                                       "obs_valuequantity_code",
+                                                      "obs_valuequantity_unit",
                                                       "obs_referencerange_low_value",
                                                       "obs_referencerange_high_value",
                                                       "obs_referencerange_low_code",
