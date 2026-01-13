@@ -316,12 +316,15 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' arrange the records.
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
-#' @importFrom dplyr distinct arrange
+#' @importFrom dplyr distinct arrange slice_max select mutate
 #' @export
 getPatientFeData <- function(lock_id, table_name) {
-  query <- paste0("SELECT pat_id, record_id, pat_gebdat FROM ", table_name, "\n")
-
+  query <- paste0("SELECT pat_id, record_id, pat_gebdat, input_processing_nr FROM ", table_name, "\n")
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    # create last version view
+    dplyr::slice_max(input_processing_nr, by = pat_id) |>
+    dplyr::select(-input_processing_nr) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id) |>
     dplyr::mutate(processing_exclusion_reason = NA_character_)
@@ -371,16 +374,20 @@ getPatientFeData <- function(lock_id, table_name) {
 #' }
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
-#' @importFrom dplyr distinct arrange select
+#' @importFrom dplyr distinct arrange select slice_max
 #' @export
 getFallFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
-    "fall_id, fall_studienphase, fall_station, fall_aufn_dat ",
+    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, input_processing_nr ",
     "FROM ", table_name, "\n"
   )
-
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    # create last version view with ward as additional grouping variable
+    dplyr::slice_max(input_processing_nr, by = c(fall_fhir_enc_id, fall_station)) |>
+    dplyr::select(-input_processing_nr) |>
+    dplyr::distinct() |>
     # temporary remove fall_studienphase, since it is not used at the moment (transformation dependent on purpose)
     dplyr::select(-fall_studienphase) |>
     dplyr::distinct() |>
@@ -440,15 +447,19 @@ getFallFeData <- function(lock_id, table_name) {
 #' `fall_meda_id`, and `meda_dat`.
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
-#' @importFrom dplyr distinct arrange
+#' @importFrom dplyr distinct arrange slice_max select
 #' @export
 getMedikationsanalyseFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, fall_meda_id, meda_id, meda_dat, ",
-    "medikationsanalyse_complete FROM ", table_name, "\n"
+    "medikationsanalyse_complete, last_processing_nr, redcap_repeat_instance FROM ", table_name, "\n"
   )
 
   medikationsanalyse_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    # create last version view
+    dplyr::slice_max(last_processing_nr, by = c(record_id, redcap_repeat_instance)) |>
+    dplyr::select(-c(last_processing_nr, redcap_repeat_instance)) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id, fall_meda_id, meda_dat)
 
@@ -486,16 +497,21 @@ getMedikationsanalyseFeData <- function(lock_id, table_name) {
 #' `mrp_meda_id`, and `mrp_id` for easier downstream processing.
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
-#' @importFrom dplyr distinct arrange
+#' @importFrom dplyr distinct arrange slice_max select
 #' @export
 getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, mrp_meda_id, mrp_id, mrp_pigrund___21, ",
-    "mrp_ip_klasse_01, mrp_dokup_hand_emp_akz, mrpdokumentation_validierung_complete ",
+    "mrp_ip_klasse_01, mrp_dokup_hand_emp_akz, mrpdokumentation_validierung_complete, ",
+    "last_processing_nr, redcap_repeat_instance ",
     "FROM ", table_name, "\n"
   )
 
   mrp_dokumentation_validierung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    # create last version view
+    dplyr::slice_max(last_processing_nr, by = c(record_id, redcap_repeat_instance)) |>
+    dplyr::select(-c(last_processing_nr, redcap_repeat_instance)) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id, mrp_meda_id, mrp_id)
 

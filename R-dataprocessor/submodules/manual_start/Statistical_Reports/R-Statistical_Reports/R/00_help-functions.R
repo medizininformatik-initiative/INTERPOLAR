@@ -1217,14 +1217,14 @@ CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
 #' @importFrom dplyr mutate
 #' @export
 CheckMultipleRowsPerMainEncAndWardInMergedPatFallFe <- function(merged_table_with_age) {
-  if (checkMultipleRows(merged_table_with_age, c("pat_id","fall_fhir_main_enc_id","fall_station"))) {
+  if (checkMultipleRows(merged_table_with_age, c("pat_id", "fall_fhir_main_enc_id", "fall_station"))) {
     merged_table_with_age <- merged_table_with_age |>
-        addMultipleRowsProcessingExclusionReason(
-          c("pat_id","fall_fhir_main_enc_id","fall_station"),
-          processing_exclusion_reason_name = "multiple_rows_per_fall_fhir_main_enc_id_and_ward",
-          processing_exclusion_reason_level = "main_encounter",
-          processing_exclusion_reason_type = "data_issues"
-        )
+      addMultipleRowsProcessingExclusionReason(
+        c("pat_id", "fall_fhir_main_enc_id", "fall_station"),
+        processing_exclusion_reason_name = "multiple_rows_per_fall_fhir_main_enc_id_and_ward",
+        processing_exclusion_reason_level = "main_encounter",
+        processing_exclusion_reason_type = "data_issues"
+      )
     warning("The merged patient_fe and fall_fe table contains multiple record_ids for the same main encounter (fall_fhir_main_enc_id) and ward.
             Age or date of admission may be inconclusive. Please check the frontend_table.")
   }
@@ -1260,7 +1260,7 @@ CheckMultipleRowsPerMainEncAndWardInMergedPatFallFe <- function(merged_table_wit
 CheckMissingFallMedaId <- function(medikationsanalyse_fe_table) {
   if (any(is.na(medikationsanalyse_fe_table$fall_meda_id))) {
     print(medikationsanalyse_fe_table |>
-            dplyr::filter(is.na(fall_meda_id)), width = 1000)
+      dplyr::filter(is.na(fall_meda_id)), width = 1000)
     warning("Some records in medikationsanalyse_fe have no connection to the case from
     fall_fe (missing fall_meda_id) which may leed to linking issues. Please check and correct the data")
   }
@@ -1297,7 +1297,7 @@ CheckMissingFallMedaId <- function(medikationsanalyse_fe_table) {
 CheckMissingMedaDat <- function(medikationsanalyse_fe_table) {
   if (any(is.na(medikationsanalyse_fe_table$meda_dat))) {
     print(medikationsanalyse_fe_table |>
-            dplyr::filter(is.na(meda_dat)), width = 1000)
+      dplyr::filter(is.na(meda_dat)), width = 1000)
     warning("Some records in medikationsanalyse_fe have no meda_dat which leeds to linking
             issues and exclude possibilty of calculate algorithmic MRP. Please check the data")
   }
@@ -1333,7 +1333,7 @@ CheckMissingMedaDat <- function(medikationsanalyse_fe_table) {
 CheckMissingFallIdInFallFe <- function(fall_fe_table) {
   if (any(is.na(fall_fe_table$fall_id))) {
     print(fall_fe_table |>
-            dplyr::filter(is.na(fall_id)), width = 1000)
+      dplyr::filter(is.na(fall_id)), width = 1000)
     warning("Some records in fall_fe have no linked cis identifier (missing fall_id) which may leed
     to linking issues to documented medication analysis. Please check the data pipeline")
   }

@@ -824,22 +824,24 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
           y$meda_dat,
           x$enc_period_start,
           x$curated_enc_period_end
-        ))) |>
-  dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
-    is.na(enc_id) ~ addProcessingExclusionReason(
-      existing = processing_exclusion_reason,
-      reason = "no_matching_Versorgungsstellenkontakt_enc_id_for_ward",
-      level = "sub_encounter",
-      type = "linkage_issues"
-    ),
-    !is.na(enc_id) & (is.na(enc_period_start) | is.na(curated_enc_period_end)) ~ addProcessingExclusionReason(
-      existing = processing_exclusion_reason,
-      reason = "missing_Versorgungsstellenkontakt_start_or_end_date",
-      level = "sub_encounter",
-      type = "linkage_issues"
-    ),
-    TRUE ~ processing_exclusion_reason
-  )) |>
+        )
+      )
+    ) |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      is.na(enc_id) ~ addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "no_matching_Versorgungsstellenkontakt_enc_id_for_ward",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      ),
+      !is.na(enc_id) & (is.na(enc_period_start) | is.na(curated_enc_period_end)) ~ addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "missing_Versorgungsstellenkontakt_start_or_end_date",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      ),
+      TRUE ~ processing_exclusion_reason
+    )) |>
     dplyr::distinct()
 
   multiple_encounters_multiple_wards <- merged_fe_pat_fall_table_with_enc_id |>
@@ -858,7 +860,9 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
           y$meda_dat,
           x$enc_period_start,
           x$curated_enc_period_end
-        ))) |>
+        )
+      )
+    ) |>
     dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
       is.na(fall_id_cis) ~ addProcessingExclusionReason(
         existing = processing_exclusion_reason,
@@ -874,11 +878,11 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
       ),
       !is.na(fall_id_cis) & !is.na(enc_id) & (is.na(enc_period_start) | is.na(curated_enc_period_end)) ~
         addProcessingExclusionReason(
-        existing = processing_exclusion_reason,
-        reason = "missing_Versorgungsstellenkontakt_start_or_end_date",
-        level = "sub_encounter",
-        type = "linkage_issues"
-      ),
+          existing = processing_exclusion_reason,
+          reason = "missing_Versorgungsstellenkontakt_start_or_end_date",
+          level = "sub_encounter",
+          type = "linkage_issues"
+        ),
       TRUE ~ processing_exclusion_reason
     )) |>
     dplyr::distinct()
@@ -945,7 +949,8 @@ addVersorgungsstellenkontaktToFeData <- function(merged_fe_pat_fall_table, FHIR_
         pat_id == pat_id,
         fall_fhir_main_enc_id == main_enc_id,
         fall_station == ward_name,
-      )) |>
+      )
+    ) |>
     dplyr::distinct() |>
     dplyr::relocate(enc_id, enc_period_start, curated_enc_period_end,
       .after = fall_aufn_dat
