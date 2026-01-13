@@ -298,58 +298,83 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
   # "MedicationStatement, MedicationAdministration". We need the all unique different
   # resource names in this column
   reference_types <- unique(etlutils::extractWords(table_descriptions$reference_types$REFERENCE_TYPES))
-  for (reference_type in reference_types) {
-    referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
-    if (!is.null(referenced_table_description)) {
-      # now extract all rows where the single reference_type is in the reference_types column as whole word
-      whole_word_pattern <- paste0("\\b", reference_type, "\\b")
-      sub_reference_type <- table_descriptions$reference_types[grepl(whole_word_pattern, REFERENCE_TYPES)]
+  for (reference_class in c("to_other_type", "to_same_type")) {
+    for (reference_type in reference_types) {
+      referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
+      if (!is.null(referenced_table_description)) {
+        # now extract all rows where the single reference_type is in the reference_types column as whole word
+        whole_word_pattern <- paste0("\\b", reference_type, "\\b")
+        sub_reference_type <- table_descriptions$reference_types[
+          grepl(whole_word_pattern, REFERENCE_TYPES) & (
+            (reference_class == "to_other_type" & RESOURCE != reference_type) |
+            (reference_class ==  "to_same_type" & RESOURCE == reference_type)
+          )
+        ]
 
-      referenced_ids <- c()
-      for (i in seq_len(nrow(sub_reference_type))) {
-        resource_name <- sub_reference_type[i]$RESOURCE
-        column_name <- sub_reference_type[i]$COLUMN_NAME
-        new_referenced_ids <- resource_tables[[resource_name]][[column_name]]
-        new_referenced_ids <- unique(na.omit(new_referenced_ids))
-        referenced_ids <- c(referenced_ids, new_referenced_ids)
-      }
-      table_description_sep <- referenced_table_description@sep
-      referenced_ids <- unlist(strsplit(referenced_ids, table_description_sep, fixed = TRUE))
-      referenced_ids <- getAfterLastSlash(referenced_ids)
-      referenced_ids <- unique(referenced_ids)
+        # should happen only in case reference_class == "to_same_type"
+        if (!nrow(sub_reference_type )) {
+          next
+        }
 
-      #########################
-      # START: FOR DEBUG ONLY #
-      #########################
+        referenced_ids <- c()
+        for (i in seq_len(nrow(sub_reference_type))) {
+          resource_name <- sub_reference_type[i]$RESOURCE
+          column_name <- sub_reference_type[i]$COLUMN_NAME
+          new_referenced_ids <- resource_tables[[resource_name]][[column_name]]
+          new_referenced_ids <- unique(na.omit(new_referenced_ids))
+          referenced_ids <- c(referenced_ids, new_referenced_ids)
+        }
+        table_description_sep <- referenced_table_description@sep
+        referenced_ids <- unlist(strsplit(referenced_ids, table_description_sep, fixed = TRUE))
+        referenced_ids <- getAfterLastSlash(referenced_ids)
+        referenced_ids <- unique(referenced_ids)
 
-      # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
-      resources_add_search_parameter <- debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions$pid_independant)
+        #########################
+        # START: FOR DEBUG ONLY #
+        #########################
 
-      #######################
-      # END: FOR DEBUG ONLY #
-      #######################
+        # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
+        resources_add_search_parameter <- debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions$pid_independant)
 
-      resource_name <- referenced_table_description@resource@.Data
-      if (!(resource_name %in% names(resources_add_search_parameter)) ||
-          nchar(resources_add_search_parameter[[resource_name]]) != 0) {
-        resource_tables[[reference_type]] <- etlutils::fhirsearchResourcesByOwnID(referenced_ids,
-                                                                                  referenced_table_description,
-                                                                                  additional_search_parameter = resources_add_search_parameter)
-      } else {
-        # if there are no IDs -> create an empty table with all needed columns as character columns
-        resource_tables <- etlutils::fhirdataCreateResourceTable(
-          referenced_table_description,
-          resource_key = resource_name,
-          resource_collection = resource_tables
-        )
-      }
-      if (!is.null(resource_tables[[resource_name]]) && nrow(resource_tables[[resource_name]])) {
-        printAllTables(resource_tables[[resource_name]], resource_name)
-      } else if (resource_name %in% names(resources_add_search_parameter) &&
-                 nchar(resources_add_search_parameter[[resource_name]]) == 0) {
-        catInfoMessage(paste("Info: No", resource_name, "resources downloaded because DEBUG_ADD_FHIR_SEARCH_ for the given resource is empty.\n"))
-      } else {
-        catInfoMessage(paste("Info: No", resource_name, "resources found for the given Patient IDs.\n"))
+        #######################
+        # END: FOR DEBUG ONLY #
+        #######################
+
+        if (!(reference_type %in% names(resources_add_search_parameter)) ||
+            nchar(resources_add_search_parameter[[reference_type]]) != 0) {
+          new_resources <- etlutils::fhirsearchResourcesByOwnID(referenced_ids,
+                                                                referenced_table_description,
+                                                                additional_search_parameter = resources_add_search_parameter)
+          existing_resources <- resource_tables[[reference_type]] %||% NULL
+          if (!is.null(existing_resources) && nrow(existing_resources)) {
+            if (nrow(new_resources)) {
+              # Combine existing and new resources, ensuring no duplicates based on the resource ID column
+              # Remove all new_resources which are already in existing_resources (simple compare the whole row)
+              new_resources <- new_resources[!existing_resources, on = names(new_resources)]
+              combined_resources <- rbind(existing_resources, new_resources)
+              #combined_resources <- unique(combined_resources)
+              resource_tables[[reference_type]] <- combined_resources
+            }
+          } else {
+            resource_tables[[reference_type]] <- new_resources
+          }
+
+        } else {
+          # if there are no IDs -> create an empty table with all needed columns as character columns
+          resource_tables <- etlutils::fhirdataCreateResourceTable(
+            referenced_table_description,
+            resource_key = reference_type,
+            resource_collection = resource_tables
+          )
+        }
+        if (!is.null(resource_tables[[reference_type]]) && nrow(resource_tables[[reference_type]])) {
+          printAllTables(resource_tables[[reference_type]], reference_type)
+        } else if (reference_type %in% names(resources_add_search_parameter) &&
+                   nchar(resources_add_search_parameter[[reference_type]]) == 0) {
+          catInfoMessage(paste("Info: No", reference_type, "resources downloaded because DEBUG_ADD_FHIR_SEARCH_ for the given resource is empty.\n"))
+        } else {
+          catInfoMessage(paste("Info: No", reference_type, "resources found for the given Patient IDs.\n"))
+        }
       }
     }
   }
