@@ -287,7 +287,7 @@ writeHtmlTable <- function(table, output_location = "local", filename_without_ex
     if (!dir.exists(project_sub_dir)) {
       dir.create(project_sub_dir, recursive = TRUE)
     }
-    download_name <- paste0(filename_without_extension, "_", format(Sys.Date(), "%Y%m%d"))
+    download_name <- filename_without_extension
     if (is.null(colnames)) {
       colnames <- colnames(table)
     }

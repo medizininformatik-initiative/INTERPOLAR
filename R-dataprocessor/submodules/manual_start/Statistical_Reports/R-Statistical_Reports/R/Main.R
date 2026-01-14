@@ -265,6 +265,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   writeHtmlTable(frontend_summary,
     output_location = "global",
+    filename_without_extension = paste0("frontend_summary_", format(Sys.Date(), "%Y%m%d")),
     caption = paste0(
       "Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
       REPORT_PERIOD_END
