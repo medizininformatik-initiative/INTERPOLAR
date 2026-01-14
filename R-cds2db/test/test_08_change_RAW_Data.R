@@ -91,7 +91,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(17)
+  duplicatePatients(19)
 
   runCodeForDebugDay(1, {
 
@@ -188,6 +188,22 @@ if (exists("DEBUG_DAY")) {
     # MedicationRequest - R03CC53 + Diagnosis - I47 -> 1 MRP mit zwei Diagnose Cluster
     pid <- addDrugs("UKB-0001_17", "R03CC53")
     addConditions(pid, "I47")
+
+    #####################################
+    ## Add self-referenced medications ##
+    #####################################
+    pid <- addDrugs(pid = "UKB-0001_18", ref_codes = c("R03CC03", "R03CC53"))
+    addConditions(pid, "I47")
+
+    pid <- addDrugs(
+      pid = "UKB-0001_19",
+      ref_codes = list(
+        c("R03CC04", "R03CC03", "R03CC53"),
+        c("M01AB68", "M01AB69", "M01AB70")
+      )
+    )
+    addConditions(pid, c("I47", "I60.5"))
+
   })
 
   # Update the resource_tables list with the modified data tables
