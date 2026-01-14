@@ -429,6 +429,7 @@ getMedicationStatementsFromDB <- function(patient_references) {
 # Medication (filtered by Medications with ATC)
 #
 getATCMedicationsFromDB <- function(medication_request, medication_administrations, medication_statements) {
+
   medication_ids <- etlutils::fhirdataExtractIDs(unique(c(
     medication_request$medreq_medicationreference_ref,
     medication_administrations$medadm_medicationreference_ref,
@@ -436,13 +437,75 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 
   medication_ids <- etlutils::fhirdbGetQueryList(medication_ids)
   where_clause <- paste0("WHERE med_id IN ", medication_ids, "\n",
-                         "AND med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n")
-  query <- getQueryToLoadResourcesLastVersionFromDB(resource_name = "Medication",
-                                                    column_names = c("med_id",
-                                                                     "med_code_code",
-                                                                     "med_code_display"),
-                                                    filter = where_clause)
-  medications <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getATCMedicationsFromDB()")
+                         "AND (med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n",
+                         "     OR med_ingredient_itemreference_ref IS NOT NULL)\n")
+
+  query <- getQueryToLoadResourcesLastVersionFromDB(
+    resource_name = "Medication",
+    column_names = c("med_id",
+                     "med_code_code",
+                     "med_code_display",
+                     "med_ingredient_itemreference_ref"),
+    filter = where_clause
+  )
+
+  medications_with_atc_OR_with_reference <- etlutils::dbGetReadOnlyQuery(
+    query,
+    lock_id = "getATCMedicationsFromDB()#atc_OR_reference"
+  )
+
+  # extract medications with ATC codes
+  medications_with_atc <- medications_with_atc_OR_with_reference[is.na(med_ingredient_itemreference_ref) & !is.na(med_code_code) & nzchar(trimws(med_code_code))]
+  # extract medications with ingredient references
+  medications_with_reference <- medications_with_atc_OR_with_reference[!is.na(med_ingredient_itemreference_ref) & nzchar(trimws(med_ingredient_itemreference_ref))]
+  rm(medications_with_atc_OR_with_reference) # free memory
+
+  # if there are medications with ingredient references then load the referenced medications
+  if (nrow(medications_with_reference)) {
+    ingredient_medication_ids <- etlutils::fhirdataExtractIDs(medications_with_reference$med_ingredient_itemreference_ref)
+    ingredient_medication_ids <- etlutils::fhirdbGetQueryList(ingredient_medication_ids)
+
+    where_clause <- paste0("WHERE med_id IN ", ingredient_medication_ids, "\n",
+                           "AND med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n")
+
+    query <- getQueryToLoadResourcesLastVersionFromDB(
+      resource_name = "Medication",
+      column_names = c("med_id",
+                       "med_code_code",
+                       "med_code_display"),
+      filter = where_clause
+    )
+
+    referenced_medications_with_atc <- etlutils::dbGetReadOnlyQuery(
+      query,
+      lock_id = "getATCMedicationsFromDB()#referenced_medications_with_atc"
+    )
+  } else {
+    referenced_medications_with_atc <- data.table::data.table(
+      med_id = character(),
+      med_code_code = character(),
+      med_code_display = character(),
+      med_ingredient_itemreference_ref = character()
+    )
+    medications_with_reference <- data.table::data.table(
+      med_id = character(),
+      med_code_code = character(),
+      med_code_display = character(),
+      med_ingredient_itemreference_ref = character()
+    )
+  }
+
+  # combine both medication data.tables
+  medications <- data.table::rbindlist(
+    list(
+      medications_with_atc,
+      medications_with_reference,
+      referenced_medications_with_atc
+    ),
+    use.names = TRUE,
+    fill = TRUE
+  )
+
   return(medications)
 }
 
