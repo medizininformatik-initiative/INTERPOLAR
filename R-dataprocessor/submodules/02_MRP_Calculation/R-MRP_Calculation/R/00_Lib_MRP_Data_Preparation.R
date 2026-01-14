@@ -597,21 +597,62 @@ getConditionsFromDB <- function(patient_references) {
 # Extract ATC code of referenced Medication. If not exists then remove the resource.
 #
 appendATCColumns <- function(medication_resources, medications) {
-  # Perform join: match each medication_resource to its medication by med_id
-  result <- medication_resources[
-    medications,
+
+  # join medications directly carrying an ATC code
+  direct_atc <- medication_resources[
+    medications[!is.na(med_code_code)],
     on = .(med_id),
-    allow.cartesian = TRUE
+    nomatch = 0L
   ]
 
-  # Rename joined columns
-  data.table::setnames(result, c("med_code_code", "med_code_display"), c("atc_code", "atc_display"))
+  # fill medications referencing other medications with ATC codes
+  medications_filled <- medications[
+    !is.na(med_ingredient_itemreference_ref) &
+      nzchar(trimws(med_ingredient_itemreference_ref))
+  ][
+    ,
+    referenced_med_id := etlutils::fhirdataExtractIDs(
+      med_ingredient_itemreference_ref
+    )
+  ][
+    medications[!is.na(med_code_code)],
+    on = .(referenced_med_id = med_id),
+    `:=`(
+      med_code_code    = i.med_code_code,
+      med_code_display = i.med_code_display
+    )
+  ][
+    ,
+    referenced_med_id := NULL
+  ]
 
-  # Keep only resource columns and the renamed ATC columns
+  # join medication resources with medications referencing other medications with ATC codes
+  referenced_atc <- medication_resources[
+    medications_filled[!is.na(med_code_code)],
+    on = .(med_id),
+    nomatch = 0L
+  ]
+
+  # combine both result sets
+  result <- data.table::rbindlist(
+    list(direct_atc, referenced_atc),
+    use.names = TRUE,
+    fill = TRUE
+  )
+
+  # rename ATC columns
+  data.table::setnames(
+    result,
+    c("med_code_code", "med_code_display"),
+    c("atc_code", "atc_display"),
+    skip_absent = TRUE
+  )
+
+  # keep only resource columns and ATC columns
   keep_cols <- c(names(medication_resources), "atc_code", "atc_display")
   result <- result[, ..keep_cols]
 
-  # Drop rows without ATC code
+  # drop rows without ATC code
   result <- result[!is.na(atc_code)]
 
   return(result)
