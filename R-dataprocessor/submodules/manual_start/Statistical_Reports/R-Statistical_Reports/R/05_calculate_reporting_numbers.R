@@ -116,6 +116,7 @@ calculateF1 <- function(F1_prep) {
 #'   - `MRP_drug_disease`: Drug-disease interactions
 #'   - `MRP_drug_renal_insufficiency`: Drug interactions with renal insufficiency
 #'   - `encounters_processing_exclusion`: Encounters excluded due to processing criteria
+#'   - `not_in_inclusion_criteria`: Encounters not meeting inclusion criteria
 #'
 #' @details
 #' - Summarization is grouped by `ward_name` derived from `ward_name`
@@ -197,6 +198,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       encounters_processing_exclusion = dplyr::n_distinct(
         main_enc_id[main_enc_any_processing_exclusion_fe],
         na.rm = TRUE
+      ),
+      not_in_inclusion_criteria = dplyr::n_distinct(
+        main_enc_id[main_enc_not_in_inclusion_criteria],
+        na.rm = TRUE
       ), .groups = "drop"
     )
 
@@ -267,6 +272,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ),
       encounters_processing_exclusion = dplyr::n_distinct(
         main_enc_id[main_enc_any_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      not_in_inclusion_criteria = dplyr::n_distinct(
+        main_enc_id[main_enc_not_in_inclusion_criteria],
         na.rm = TRUE
       )
     )

@@ -277,7 +277,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "completed medication analyses", "MRP", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
-      "excluded encounters (e.g. patient underage or linkage issues)"
+      "processing excluded encounters (linkage issues)",
+      "not meeting inclusion criteria (patient underage)"
     )
   )
 
