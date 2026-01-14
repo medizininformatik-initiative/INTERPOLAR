@@ -8,7 +8,7 @@ Zählung von Patienten, Fällen, Medikationsanalysen und MRPs in FHIR und Fronte
 
 ### Ausgabe
 
-gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataprocessor/reports)
+gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataprocessor/reports) (aktuelle Funktion begrenzt auf eine (frontend_summary.html))
 
 -   statistical_reports.html beinhaltet Zählungen für die Full Analysis Set 1 (FAS1) gesplittet nach Station und Aufnahmewoche (nur erster Kontakt eines Falls auf einer INTERPOLAR-Station und davon nur die erste Medikationanalyse und dazugehörige MRPs)
 
@@ -48,31 +48,41 @@ gibt zwei Tabellen in OutputGlobal als html Datei aus (../outputGlobal/dataproce
 
 -   fe_summary.html beinhaltet die Zählungen für alle im Frontend dokumentierten Fälle, gesplittet nach Station. War ein Fall auf mehreren INTERPOLAR-Stationen, wird er auf jeder Station gezählt, wodurch die Summen über alle Stationen höher als die Gesamtanzahl der Fälle sein können.
 
-    -   Anzahl der im Frontend aufgeführten Patienten
+    -   Spalte zur Auflistung der Station (ward)
+    
+    -   Anzahl der im Frontend aufgeführten Patienten (patients)
 
-    -   Anzahl der im Frontend aufgeführten Fälle
+    -   Anzahl der im Frontend aufgeführten Fälle (encounters)
+    
+    -   Anzahl der Fälle mit abgeschlossener Medikationsanalyse im Frontend = Status: "completed" (encounters with completed medication analysis)
 
-    -   Anzahl der angelegten Medikationsanalysen
+    -   Anzahl der angelegten Medikationsanalysen (medication analyses)
 
-    -   Anzahl der abgeschlossenen Medikationsanalysen (status: "completed")
+    -   Anzahl der abgeschlossenen Medikationsanalysen = status: "completed" (completed medication analyses)
 
-    -   Anzahl der dokumentierten MRP
+    -   Anzahl der dokumentierten MRP (MRP)
 
-    -   Anzahl der abgeschlossenen MRP-Dokumentationen (status: "completed")
+    -   Anzahl der abgeschlossenen MRP-Dokumentationen = status: "completed" (completed MRP documentation)
 
-    -   Anzahl der gelösten MRP (im Sinne von: vorgeschlagene Intervention umgesetzt)
+    -   Anzahl der gelösten MRP = im Sinne von: vorgeschlagene Intervention umgesetzt (resolved MRP)
 
-    -   Anzahl der MRP mit nicht-informativem Lösungszustand ("Arzt / Pflege informiert", "Intervention vorgeschlagen, Umsetzung unbekannt")
+    -   Anzahl der MRP mit nicht-informativem Lösungszustand = nicht ausgewählt, "Arzt / Pflege informiert", "Intervention vorgeschlagen, Umsetzung unbekannt" (MRP resolution not informative)
 
-    -   Anzahl der Kontraindikationen
+    -   Anzahl der Kontraindikationen (contraindications)
+    
+    -   Anzahl der gelösten Kontraindikationen (resolved contraindications)
 
-    -   Anzahl von drug-drug Kontraindikationen
+    -   Anzahl von drug-drug Kontraindikationen (class: drug-drug)
 
-    -   Anzahl von drug-disease Kontraindikationen
+    -   Anzahl von drug-disease Kontraindikationen (class: drug-disease)
 
-    -   Anzahl von drug-Niereninsuffizienz Kontraindikationen
+    -   Anzahl von drug-Niereninsuffizienz Kontraindikationen (class: drug-renal insufficiency)
+    
+    -   Anzahl der Kontraindikationen mit nicht ausgewählter Klasse (class not assigned)
 
-    -   Anzahl nicht verwertbarer Fälle aus dem Frontend (unplausible oder fehlende Daten)
+    -   Anzahl nicht verwertbarer Fälle aus dem Frontend (processing excluded encounters (linkage issues))
+    
+    -   Anzahl der Fälle die die Einschlusskriterien für die INTERPOLAR-Kohorte nicht erfüllen z.B. minderjährige Patienten (not meeting inclusion criteria (patient underage))
 
 ### Details
 

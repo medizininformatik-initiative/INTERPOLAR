@@ -105,6 +105,7 @@ calculateF1 <- function(F1_prep) {
 #'   The columns include:
 #'   - `patients`: Number of distinct patients
 #'   - `encounters`: Number of distinct hospital stays
+#'   - `encounters_with_completed_meda`: Encounters with at least one completed medication analysis
 #'   - `medication_analyses`: Total medication analyses
 #'   - `medication_analyses_complete`: Analyses marked "Complete"
 #'   - `MRP`: Total MRP entries
@@ -112,9 +113,11 @@ calculateF1 <- function(F1_prep) {
 #'   - `MRP_resolved`: MRPs marked as resolved with intervention implemented
 #'   - `MRP_resolution_non_informative`: MRPs with documentation but no clear resolution
 #'   - `contraindications`: MRPs flagged as contraindications
+#'   - `contraindications_resolved`: Contraindications marked as resolved
 #'   - `MRP_drug_drug`: Drug-drug interactions
 #'   - `MRP_drug_disease`: Drug-disease interactions
 #'   - `MRP_drug_renal_insufficiency`: Drug interactions with renal insufficiency
+#'   - `MRP_class_na`: MRPs with contraindications but no interaction class assigned
 #'   - `encounters_processing_exclusion`: Encounters excluded due to processing criteria
 #'   - `not_in_inclusion_criteria`: Encounters not meeting inclusion criteria
 #'
@@ -136,6 +139,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ),
       encounters = dplyr::n_distinct(
         main_enc_id[!main_enc_any_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      encounters_with_completed_meda = dplyr::n_distinct(
+        main_enc_id[!main_enc_any_processing_exclusion_fe & sub_enc_any_completed_medication_analysis],
         na.rm = TRUE
       ),
       medication_analyses = dplyr::n_distinct(
@@ -165,7 +172,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       MRP_resolution_non_informative = dplyr::n_distinct(
-        dplyr::if_else(
+        dplyr::if_else(is.na(mrp_dokup_hand_emp_akz) |
           mrp_dokup_hand_emp_akz %in% c("Arzt / Pflege informiert", "Intervention vorgeschlagen,
                                         Umsetzung unbekannt"), mrp_id, NA
         )[!main_enc_any_processing_exclusion_fe],
@@ -174,6 +181,13 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       contraindications = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked", mrp_id, NA
+        )[!main_enc_any_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      contraindications_resolved = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" &
+            mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
         )[!main_enc_any_processing_exclusion_fe],
         na.rm = TRUE
       ),
@@ -192,6 +206,12 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       MRP_drug_renal_insufficiency = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Niereninsuffizienz", mrp_id, NA
+        )[!main_enc_any_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      MRP_class_na = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" & is.na(mrp_ip_klasse_01), mrp_id, NA
         )[!main_enc_any_processing_exclusion_fe],
         na.rm = TRUE
       ),
@@ -214,6 +234,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ),
       encounters = dplyr::n_distinct(
         main_enc_id[!main_enc_any_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      encounters_with_completed_meda = dplyr::n_distinct(
+        main_enc_id[!main_enc_any_processing_exclusion_fe & sub_enc_any_completed_medication_analysis],
         na.rm = TRUE
       ),
       medication_analyses = dplyr::n_distinct(
@@ -240,7 +264,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       MRP_resolution_non_informative = dplyr::n_distinct(
-        dplyr::if_else(
+        dplyr::if_else(is.na(mrp_dokup_hand_emp_akz) |
           mrp_dokup_hand_emp_akz %in% c("Arzt / Pflege informiert", "Intervention vorgeschlagen,
                                         Umsetzung unbekannt"), mrp_id, NA
         )[!main_enc_any_processing_exclusion_fe],
@@ -249,6 +273,13 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       contraindications = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked", mrp_id, NA
+        )[!main_enc_any_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      contraindications_resolved = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" &
+            mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
         )[!main_enc_any_processing_exclusion_fe],
         na.rm = TRUE
       ),
@@ -267,6 +298,12 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       MRP_drug_renal_insufficiency = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Niereninsuffizienz", mrp_id, NA
+        )[!main_enc_any_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      MRP_class_na = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" & is.na(mrp_ip_klasse_01), mrp_id, NA
         )[!main_enc_any_processing_exclusion_fe],
         na.rm = TRUE
       ),

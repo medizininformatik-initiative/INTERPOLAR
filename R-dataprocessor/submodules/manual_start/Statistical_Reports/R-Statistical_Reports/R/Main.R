@@ -273,10 +273,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),
     colnames = c(
-      "ward", "patients", "encounters", "medication analyses",
+      "ward", "patients", "encounters", "encounters with completed medication analysis",
+      "medication analyses",
       "completed medication analyses", "MRP", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
+      "resolved contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
+      "class not assigned",
       "processing excluded encounters (linkage issues)",
       "not meeting inclusion criteria (patient underage)"
     )

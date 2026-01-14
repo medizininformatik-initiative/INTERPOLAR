@@ -132,6 +132,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #'                                           for the main encounter)
 #' - `main_enc_not_in_inclusion_criteria` (indicating if the main encounter is excluded due to
 #'                                           not being in inclusion criteria)
+#' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
 #'
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
 #'
@@ -148,9 +149,14 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::mutate(main_enc_not_in_inclusion_criteria = any(stringr::str_detect(processing_exclusion_reason,
                                                          pattern = "not_in_inclusion_criteria"))) |>
     dplyr::ungroup() |>
+    dplyr::group_by(fall_fhir_main_enc_id, fall_station) |>
+    dplyr::mutate(sub_enc_any_completed_medication_analysis = any(!is.na(meda_id) &
+                                                          medikationsanalyse_complete == "Complete")) |>
+    dplyr::ungroup() |>
     dplyr::distinct(
       pat_id, record_id, fall_fhir_main_enc_id,
       fall_id_cis, fall_station, fall_aufn_dat,
+      sub_enc_any_completed_medication_analysis,
       # enc_id, enc_status, enc_period_start
       meda_id,
       meda_dat, medikationsanalyse_complete, mrp_id,
