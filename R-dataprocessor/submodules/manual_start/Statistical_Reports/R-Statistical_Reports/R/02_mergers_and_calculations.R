@@ -964,7 +964,10 @@ addVersorgungsstellenkontaktToFeData <- function(merged_fe_pat_fall_table, FHIR_
 #'
 #' This function merges MRP (Medication-Related Problems) documentation validation data
 #' into a processed table that already includes medication analysis data, encounter linkage,
-#' and patient/case-level identifiers.
+#' and patient/case-level identifiers. The merge is performed based on `record_id` and
+#' `meda_id`, ensuring that each medication analysis entry is enriched with its corresponding
+#' MRP documentation details. The function handles cases where patients have either a single
+#' or multiple medication analyses, applying the appropriate join conditions for each scenario.
 #'
 #' @param merged_fe_pat_fall_meda_table_with_enc_id A data frame containing merged patient,
 #'   case, and encounter data, enriched with medication analysis IDs (`meda_id`) and linked
@@ -987,7 +990,20 @@ addVersorgungsstellenkontaktToFeData <- function(merged_fe_pat_fall_table, FHIR_
 #' @export
 addMRPDokuData <- function(merged_fe_pat_fall_meda_table_with_enc_id,
                            mrp_dokumentation_validierung_fe_table) {
-  merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku <- merged_fe_pat_fall_meda_table_with_enc_id |>
+  one_medication_analysis <- merged_fe_pat_fall_meda_table_with_enc_id |>
+    dplyr::filter(!multiple_medas_per_patient) |>
+    # use assignment only depending on record_id
+    dplyr::left_join(
+      mrp_dokumentation_validierung_fe_table |>
+        dplyr::select(-mrp_meda_id) |>
+        dplyr::distinct(),
+      by = c("record_id")
+    ) |>
+    dplyr::distinct()
+
+  multiple_medication_analyses <- merged_fe_pat_fall_meda_table_with_enc_id |>
+    dplyr::filter(multiple_medas_per_patient) |>
+    # use assigment depending on record_id and mrp_meda_id
     dplyr::left_join(
       mrp_dokumentation_validierung_fe_table |>
         dplyr::distinct(),
@@ -995,6 +1011,21 @@ addMRPDokuData <- function(merged_fe_pat_fall_meda_table_with_enc_id,
         "meda_id" = "mrp_meda_id"
       )
     ) |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      !is.na(meda_dat) & is.na(meda_id) ~ addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "missing_meda_id_in_medikationsanalyse_fe",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      ),
+      TRUE ~ processing_exclusion_reason
+    )) |>
     dplyr::distinct()
+
+  # merge both scenarios back together
+  merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku <- one_medication_analysis |>
+    rbind(multiple_medication_analyses) |>
+    dplyr::distinct()
+
   return(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku)
 }
