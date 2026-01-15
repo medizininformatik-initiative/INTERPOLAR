@@ -91,7 +91,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(17)
+  duplicatePatients(21)
 
   runCodeForDebugDay(1, {
 
@@ -188,6 +188,51 @@ if (exists("DEBUG_DAY")) {
     # MedicationRequest - R03CC53 + Diagnosis - I47 -> 1 MRP mit zwei Diagnose Cluster
     pid <- addDrugs("UKB-0001_17", "R03CC53")
     addConditions(pid, "I47")
+
+    #####################################
+    ## Add self-referenced medications ##
+    #####################################
+
+    # Drug_Disease - Medication mit 2 selbstreferenzierenden Medications
+    # 1 MRP R03CC03/R03CC53 + I47
+    pid <- addDrugs(pid = "UKB-0001_18", ref_codes = c("R03CC03", "R03CC53")) # Medication 1: 2 Ingredients
+    addConditions(pid, "I47")
+
+    # Drug_Disease - 2 Medication mit mehreren selbstreferenzierenden Medications
+    # 3 MRPs M01AB68 + I60.5 und R03CC04 + I47 und R03CC03/R03CC53 + I47
+    pid <- addDrugs(
+      pid = "UKB-0001_19",
+      ref_codes = list(
+        c("R03CC04", "R03CC03", "R03CC53"), # Medication 1: 3 Ingredients
+        c("M01AB68", "M01AB69", "M01AB70") # Medication 2: 3 Ingredients
+      )
+    )
+    addConditions(pid, c("I47", "I60.5"))
+
+    # Drug_Disease - 2 Medication mit eigenen ATC-Codes und selbstreferenzierenden Medications
+    # 3 MRPs M01AB68 + I60.5 and R03CC04 + I47 and R03CC53 + I47
+    pid <- addDrugs(
+      pid = "UKB-0001_20",
+      codes = list(c("R03CC04", "R03CC53")), # Medication 1: 2 Codes
+      ref_codes = list(c("M01AB68", "R03CC53")) # Medication 1: 2 Ingredients
+    )
+    addConditions(pid, c("I47", "I60.5"))
+
+    # Drug_Disease - 2 Medication mit eigenen ATC-Codes und eine mit selbstreferenzierende Medication
+    # 3 MRPs M01AB68 + I60.5 and R03CC04 + I47 and R03CC03/R03CC53 + I47
+    pid <- addDrugs(
+      pid = "UKB-0001_21",
+      codes = list(
+        c("R03CC03", "R03CC53"),  # Medication 1: 2 Codes
+        "R03CC04"                # Medication 2: 1 Code
+      ),
+      ref_codes = list(
+        c("M01AB68"),             # Medication 1: 1 Ingredient
+        character(0)              # Medication 2: no Ingredients
+      )
+    )
+    addConditions(pid, c("I47", "I60.5"))
+
   })
 
   # Update the resource_tables list with the modified data tables

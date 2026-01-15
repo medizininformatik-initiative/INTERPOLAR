@@ -72,8 +72,7 @@ testAddEncounterLevel3 <- function(dt_enc) {
   rows_to_duplicate <- dt_enc[grepl(pattern, enc_id)]
   if (nrow(rows_to_duplicate) == 0) return(dt_enc)
 
-  rows_to_duplicate[, enc_partof_ref := sub("(Encounter/).*",
-                                            paste0("\\1", sub(".*]", "", enc_id)), enc_partof_ref)]
+  rows_to_duplicate[, enc_partof_ref := paste0("Encounter/", sub(".*]", "", enc_id))]
   rows_to_duplicate[, enc_id := sub(pattern, "-A-\\1-V-\\1", enc_id)]
   rows_to_duplicate[, enc_type_code := sub("\\](.*)", "]versorgungsstellenkontakt", enc_type_code)]
   rows_to_duplicate[, enc_type_display := sub("\\](.*)", "]Versorgungsstellenkontakt", enc_type_display)]
@@ -751,14 +750,14 @@ duplicatePatients <- function(count, duplicated_start_index = 1) {
   testSetResourceTables(new_resource_tables)
 }
 
-addDrugs <- function(pid, codes, day_offset = -0.4, authoredon = NA, period_type = c(
+addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, period_type = c(
   "start",
   "start_and_end",
   "start_and_end_and_timing_event",
   "timing_event",
   "timing_events",
   "all_timestamps_NA"
-), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2) {
+), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, ref_codes = NULL) {
 
   period_type <- match.arg(period_type)
 
@@ -768,6 +767,20 @@ addDrugs <- function(pid, codes, day_offset = -0.4, authoredon = NA, period_type
 
   # Get current resource tables
   resource_tables <- testGetResourceTables()
+
+  # Normalize ref_codes
+  if (is.null(codes)) {
+    codes <- vector("list", length(ref_codes))
+  }
+  if (is.null(ref_codes)) {
+    ref_codes <- vector("list", length(codes))
+  }
+
+  # ensure list structure
+  if (!is.list(codes)) codes <- as.list(codes)
+  if (!is.list(ref_codes)) ref_codes <- as.list(ref_codes)
+
+  stopifnot(length(ref_codes) == length(codes))
 
   # Determine the next available index for encounters, MedicationRequests, and Medications
   # If encounter_id is not NULL or NA get the index from the encounter id
@@ -822,16 +835,48 @@ addDrugs <- function(pid, codes, day_offset = -0.4, authoredon = NA, period_type
     dt
   }))
 
-  # Create Medication entries for each code
+  # Medications (Parent + optional Ingredients)
   med_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
-    dt <- data.table::copy(med_templates)
-    # Generate unique ID for Medication
-    dt[, med_id := paste0("[1]", pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))]
-    dt[, med_identifier_value := paste0("[1.1]", pid, "-MR-", med_req_index - 1, "-M-", med_index + (i - 1))]
-    # Assign the drug code
-    dt[, med_code_code := paste0("[1.1.1]", codes[i])]
-    dt[, med_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
-    dt
+    parent_id <- paste0(pid, "-MR-", med_req_index, "-M-", med_index + (i - 1))
+    parent_dt <- data.table::copy(med_templates)
+    parent_dt[, med_id := paste0("[1]", parent_id)]
+    parent_dt[, med_identifier_value := paste0("[1.1]", parent_id)]
+    parent_dt[, med_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+
+    ref_code <- ref_codes[[i]]
+    parent_codes <- codes[[i]]
+
+    if (!is.null(parent_codes) && length(parent_codes) > 0) {
+      parent_dt[, med_code_code := paste(
+        vapply(seq_along(parent_codes), function(k) {
+          paste0("[1.1.", k, "]", parent_codes[k])
+        }, character(1)),
+        collapse = " ~ "
+      )]
+    } else {
+      parent_dt[, med_code_code := NA_character_]
+    }
+
+    # No Ingredients return only parent medications
+    if (is.null(ref_code) || length(ref_code) == 0) {
+      return(parent_dt)
+    }
+
+    ingredient_dt <- data.table::rbindlist(lapply(seq_along(ref_code), function(j) {
+      dt <- data.table::copy(med_templates)
+      dt[, med_id := paste0("[1]", parent_id, "-", j)]
+      dt[, med_identifier_value := paste0("[1.1]", parent_id, "-", j)]
+      dt[, med_code_code := paste0("[1.1.1]", ref_code[j])]
+      dt[, med_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+      dt
+    }))
+
+    refs <- vapply(seq_along(ref_code), function(j) {
+      paste0("[", j, ".1.1]Medication/", parent_id, "-", j)
+    }, character(1))
+    parent_dt[, med_ingredient_itemreference_ref := paste(refs, collapse = " ~ ")]
+
+    data.table::rbindlist(list(parent_dt, ingredient_dt))
   }))
 
   # Append the new entries to the resource tables
