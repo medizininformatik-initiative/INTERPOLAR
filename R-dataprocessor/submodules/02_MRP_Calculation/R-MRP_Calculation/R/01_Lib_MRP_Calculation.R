@@ -270,9 +270,9 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
           } else {
             existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_drug], result_mrps[duplicate_idx, kurzbeschr_item2], result_mrps[duplicate_idx, kurzbeschr_suffix])
             # If duplicate exists, append the new information to kurzbeschr
-            if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+            if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, fixed = TRUE)) {
               result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC2_DISPLAY, " und ", kurzbeschr_item2)]
-            } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
+            } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, fixed = TRUE)) {
               result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC_DISPLAY, " und ", kurzbeschr_item2)]
             }
           }

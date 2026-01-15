@@ -172,7 +172,8 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
       obs_code_system = character(),
       obs_effectivedatetime = as.POSIXct(character()),
       obs_valuequantity_value = numeric(),
-      obs_valuequantity_code = character()
+      obs_valuequantity_code = character(),
+      obs_valuequantity_unit = character()
     )
     for (pat_ref in unique_pat_refs) {
       patient_obs <- observations[obs_patient_ref %in% pat_ref & !is.na(obs_effectivedatetime)]
@@ -517,12 +518,29 @@ createFrontendTables <- function() {
         obs_weight <- observations_weight[obs_patient_ref %in% pid_ref]
         if (nrow(obs_weight)) {
           data.table::set(enc_frontend_table, target_index, "fall_gewicht_aktuell", obs_weight$obs_valuequantity_value)
-          data.table::set(enc_frontend_table, target_index, "fall_gewicht_aktl_einheit", obs_weight$obs_valuequantity_code)
+          data.table::set(enc_frontend_table,
+                          target_index,
+                          "fall_gewicht_aktl_einheit",
+                          data.table::fifelse(
+                            isValidUnit(obs_weight$obs_valuequantity_code),
+                            obs_weight$obs_valuequantity_code,
+                            obs_weight$obs_valuequantity_unit
+                          )
+          )
+
         }
         obs_height <- observations_height[obs_patient_ref %in% pid_ref]
         if (nrow(obs_height)) {
           data.table::set(enc_frontend_table, target_index, "fall_groesse", obs_height$obs_valuequantity_value)
-          data.table::set(enc_frontend_table, target_index, "fall_groesse_einheit", obs_height$obs_valuequantity_code)
+          data.table::set(enc_frontend_table,
+                          target_index,
+                          "fall_groesse_einheit",
+                          data.table::fifelse(
+                            isValidUnit(obs_height$obs_valuequantity_code),
+                            obs_height$obs_valuequantity_code,
+                            obs_height$obs_valuequantity_unit
+                          )
+          )
         }
 
         # For unknown reasons, a BMI written to the RedCap is always written back from the
