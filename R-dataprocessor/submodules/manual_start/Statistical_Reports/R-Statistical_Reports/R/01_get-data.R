@@ -323,7 +323,7 @@ getPatientFeData <- function(lock_id, table_name) {
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # create last version view
-    dplyr::slice_max(input_processing_nr, by = pat_id) |>
+    # dplyr::slice_max(input_processing_nr, by = pat_id) |>
     dplyr::select(-input_processing_nr) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id) |>
@@ -458,7 +458,7 @@ getMedikationsanalyseFeData <- function(lock_id, table_name) {
   medikationsanalyse_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # create last version view
-    dplyr::slice_max(last_processing_nr, by = c(record_id, redcap_repeat_instance)) |>
+    # dplyr::slice_max(last_processing_nr, by = c(record_id, redcap_repeat_instance)) |>
     dplyr::select(-c(last_processing_nr, redcap_repeat_instance)) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id, fall_meda_id, meda_dat)
@@ -510,7 +510,7 @@ getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
   mrp_dokumentation_validierung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # create last version view
-    dplyr::slice_max(last_processing_nr, by = c(record_id, redcap_repeat_instance)) |>
+    # dplyr::slice_max(last_processing_nr, by = c(record_id, redcap_repeat_instance)) |>
     dplyr::select(-c(last_processing_nr, redcap_repeat_instance)) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id, mrp_meda_id, mrp_id)

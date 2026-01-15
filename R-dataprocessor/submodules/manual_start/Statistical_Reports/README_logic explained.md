@@ -119,11 +119,11 @@ mögliche Optimierungen:
 -   wurden wichtige Variablen zur Identifizierung vergessen?
 -   gibt es Gründe warum trotz der Filterung noch mehrere Zeilen pro Patient existieren?
 
-#### `getFallFeData` (`v_fall_fe` --\> in Erarbeitung: `v_fall_fe_last_version`?) --\> fall_fe_table
+#### `getFallFeData` (`v_fall_fe`) --\> fall_fe_table
 
 Ziel: lade die für das Reporting relevanten Fall-Daten aus der Frontend-Tabelle, um das Mapping zu weiteren Daten des Falls vorzunehmen und ein Abgleich zwischen Frontend und FHIR-Daten zu ermöglichen. Weiterhin sind hier die Information über Studienphase, Station und Aufnahmedatum (Einrichtungskontakt) des Falls enthalten.
 
--   lädt die (letzte?) Version der Frontend-Fall-Daten, die der INTERPOLAR-Datenbank bekannt ist (eine Änderung der Station sollte dabei in der Historie verfolgbar sein (kein Überschreiben), die Studienphase sollte immer die erste pro Fall abbilden)
+-   erstellt manuell die letzte Version der Frontend-Fall-Daten, die der INTERPOLAR-Datenbank bekannt ist (eine Änderung der Station sollte dabei in der Historie verfolgbar sein (kein Überschreiben), die Studienphase sollte immer die erste pro Fall abbilden)
 -   Variablen:
     -   `record_id` (Frontend Datensatz ID)
     -   `fall_fhir_enc_id` (FHIR Encounter ID: hier nur Einrichtungskontaktebene)
@@ -136,7 +136,7 @@ Ziel: lade die für das Reporting relevanten Fall-Daten aus der Frontend-Tabelle
 
 mögliche Optimierungen:
 
--   ist hier ein \_last_version notwendig, oder sollte immer die erste Version pro Sub-Fall (siehe Stationswechsel) verwendet werden (dann richtige Studienphase): Spezialfall bzgl. view nötig?
+-   wie wird die richtige Studienphase ermittelt?
 -   wurden wichtige Variablen zur Identifizierung vergessen?
 -   ist das fall_additional_value Feld zu Nutzen (z.B. für einfachere Zuordnung Versorgunsgstellenkontakt?)
 
