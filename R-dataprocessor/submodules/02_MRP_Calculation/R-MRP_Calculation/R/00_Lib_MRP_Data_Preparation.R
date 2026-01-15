@@ -613,7 +613,8 @@ appendATCColumns <- function(medication_resources, medications) {
     ,
     referenced_med_id := etlutils::fhirdataExtractIDs(
       med_ingredient_itemreference_ref
-    )
+    ),
+    by = .I
   ][
     medications[!is.na(med_code_code)],
     on = .(referenced_med_id = med_id),
@@ -654,6 +655,9 @@ appendATCColumns <- function(medication_resources, medications) {
 
   # drop rows without ATC code
   result <- result[!is.na(atc_code)]
+
+  # if medication resources have a direct ATC code or a referenced ATC code then drop duplicates
+  result <- unique(result)
 
   return(result)
 }

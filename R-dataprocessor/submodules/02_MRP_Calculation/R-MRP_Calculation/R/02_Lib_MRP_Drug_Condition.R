@@ -151,6 +151,8 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
     mrp_table_list_rows <- mrp_tables_by_icd[[mrp_icd]]
     mrp_table_list_rows <- mrp_table_list_rows[ATC_FOR_CALCULATION %in% match_atc_codes$atc_code]
 
+    if (!nrow(mrp_table_list_rows)) next
+
     # Keep only relevant columns
     keep_cols <- c("ATC_DISPLAY", "ATC_FOR_CALCULATION", "ICD_VALIDITY_DAYS", "CONDITION_DISPLAY_CLUSTER",
                    "ATC_FULL_LIST", "ICD_FULL_LIST")

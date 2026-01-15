@@ -769,11 +769,17 @@ addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, peri
   resource_tables <- testGetResourceTables()
 
   # Normalize ref_codes
+  if (is.null(codes)) {
+    codes <- vector("list", length(ref_codes))
+  }
   if (is.null(ref_codes)) {
     ref_codes <- vector("list", length(codes))
-  } else {
-    codes <- rep(NA_character_, length(ref_codes))
   }
+
+  # ensure list structure
+  if (!is.list(codes)) codes <- as.list(codes)
+  if (!is.list(ref_codes)) ref_codes <- as.list(ref_codes)
+
   stopifnot(length(ref_codes) == length(codes))
 
   # Determine the next available index for encounters, MedicationRequests, and Medications
@@ -838,11 +844,22 @@ addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, peri
     parent_dt[, med_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
 
     ref_code <- ref_codes[[i]]
-    if (is.null(ref_code) || length(ref_code) == 0) {
-      parent_dt[, med_code_code := paste0("[1.1.1]", codes[i])]
-      return(parent_dt)
+    parent_codes <- codes[[i]]
+
+    if (!is.null(parent_codes) && length(parent_codes) > 0) {
+      parent_dt[, med_code_code := paste(
+        vapply(seq_along(parent_codes), function(k) {
+          paste0("[1.1.", k, "]", parent_codes[k])
+        }, character(1)),
+        collapse = " ~ "
+      )]
     } else {
       parent_dt[, med_code_code := NA_character_]
+    }
+
+    # No Ingredients return only parent medications
+    if (is.null(ref_code) || length(ref_code) == 0) {
+      return(parent_dt)
     }
 
     ingredient_dt <- data.table::rbindlist(lapply(seq_along(ref_code), function(j) {
@@ -855,7 +872,7 @@ addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, peri
     }))
 
     refs <- vapply(seq_along(ref_code), function(j) {
-      paste0("[1.1.", j, "]Medication/", parent_id, "-", j)
+      paste0("[", j, ".1.1]Medication/", parent_id, "-", j)
     }, character(1))
     parent_dt[, med_ingredient_itemreference_ref := paste(refs, collapse = " ~ ")]
 
