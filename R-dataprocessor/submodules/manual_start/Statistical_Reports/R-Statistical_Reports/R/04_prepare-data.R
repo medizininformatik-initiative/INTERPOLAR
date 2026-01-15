@@ -129,29 +129,67 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' - `mrp_dokup_hand_emp_akz`
 #' - `mrpdokumentation_validierung_complete`
 #' - `main_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
-#'                                           for the main encounter)
+#'                                           for the main encounter (if not already in 'not in inclusion criteria'))
 #' - `main_enc_not_in_inclusion_criteria` (indicating if the main encounter is excluded due to
 #'                                           not being in inclusion criteria)
 #' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
+#' - `sub_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
+#'                                          for the sub encounter  (if not already in 'not in inclusion criteria'))
+#' - `sub_enc_all_processing_exclusion_fe` (indicating if all entries for the sub encounters have
+#'                                         processing exclusion reasons (if not already in 'not in inclusion criteria'))
 #'
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
 #'
-#' @importFrom dplyr distinct filter
+#' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename
 #' @export
 prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
   frontend_summary_prep <- frontend_table |>
     dplyr::group_by(fall_fhir_main_enc_id) |>
-    dplyr::mutate(main_enc_any_processing_exclusion_fe = any(
+    dplyr::mutate(main_enc_any_processing_exclusion_fe = dplyr::if_else(any(
       !is.na(processing_exclusion_reason) &
-               stringr::str_detect(processing_exclusion_reason,
-                                   pattern = "not_in_inclusion_criteria",
-                                   negate = TRUE))) |>
-    dplyr::mutate(main_enc_not_in_inclusion_criteria = any(stringr::str_detect(processing_exclusion_reason,
-                                                         pattern = "not_in_inclusion_criteria"))) |>
+        stringr::str_detect(processing_exclusion_reason,
+          pattern = "main_encounter"
+        ) &
+        stringr::str_detect(processing_exclusion_reason,
+          pattern = "not_in_inclusion_criteria",
+          negate = TRUE
+        )
+    ), TRUE, FALSE, missing = FALSE)) |>
+    dplyr::mutate(main_enc_not_in_inclusion_criteria = dplyr::if_else(
+      any(stringr::str_detect(processing_exclusion_reason,
+        pattern = "not_in_inclusion_criteria"
+      )), TRUE, FALSE, missing = FALSE
+    )) |>
+    dplyr::mutate(sub_enc_all_processing_exclusion_fe = dplyr::if_else(
+      all(
+        !is.na(processing_exclusion_reason) &
+          stringr::str_detect(processing_exclusion_reason,
+            pattern = "sub_encounter"
+          ) &
+          stringr::str_detect(processing_exclusion_reason,
+            pattern = "not_in_inclusion_criteria",
+            negate = TRUE
+          )
+      ), TRUE, FALSE, missing = FALSE
+    )) |>
     dplyr::ungroup() |>
     dplyr::group_by(fall_fhir_main_enc_id, fall_station) |>
-    dplyr::mutate(sub_enc_any_completed_medication_analysis = any(!is.na(meda_id) &
-                                                          medikationsanalyse_complete == "Complete")) |>
+    dplyr::mutate(sub_enc_any_completed_medication_analysis = dplyr::if_else(
+      any(!is.na(meda_id) &
+        medikationsanalyse_complete == "Complete"), TRUE, FALSE, missing = FALSE
+    )) |>
+    dplyr::mutate(sub_enc_any_processing_exclusion_fe = dplyr::if_else(
+      any(
+        !is.na(processing_exclusion_reason) &
+          stringr::str_detect(processing_exclusion_reason,
+            pattern = "sub_encounter"
+          ) &
+          stringr::str_detect(processing_exclusion_reason,
+            pattern = "not_in_inclusion_criteria",
+            negate = TRUE
+          )
+      ), TRUE, FALSE, missing = FALSE
+    )) |>
     dplyr::ungroup() |>
     dplyr::distinct(
       pat_id, record_id, fall_fhir_main_enc_id,
@@ -162,7 +200,8 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       meda_dat, medikationsanalyse_complete, mrp_id,
       mrp_pigrund___21, mrp_ip_klasse_01, mrp_dokup_hand_emp_akz,
       mrpdokumentation_validierung_complete, main_enc_any_processing_exclusion_fe,
-      main_enc_not_in_inclusion_criteria
+      main_enc_not_in_inclusion_criteria, sub_enc_any_processing_exclusion_fe,
+      sub_enc_all_processing_exclusion_fe
     ) |>
     dplyr::rename(
       Kontraindikation = mrp_pigrund___21,
