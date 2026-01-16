@@ -59,6 +59,46 @@
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "	             CREATE INDEX idx_<%TABLE_NAME%>_already_processed ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (raw_already_processed DESC);"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "          END IF; -- INDEX available"%>
 <%IF RIGHTS_DEFINITION:TAGS "\bRAW\b" "      END IF; -- target column"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "      -- Primary key in RedCap frontend record_id - for last version"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "      IF EXISTS ( -- target column"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "          SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'record_id'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "      ) THEN"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "          IF EXISTS ( -- INDEX available"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_record_id',1,63) AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "          ) THEN -- check current status"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "              IF EXISTS ( -- INDEX nicht auf akuellen Stand"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "                  AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>' AND substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_record_id',1,63)"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "	         	 AND indexdef != 'CREATE INDEX idx_<%TABLE_NAME%>_record_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (record_id DESC)'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "	        	ALTER INDEX <%OWNER_SCHEMA%>.idx_<%TABLE_NAME%>_record_id RENAME TO del_idx_<%TABLE_NAME%>_record_id;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "	        	DROP INDEX IF EXISTS <%OWNER_SCHEMA%>.del_idx_<%TABLE_NAME%>_record_id;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "       	        CREATE INDEX idx_<%TABLE_NAME%>_record_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (record_id DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "              END IF; -- check current status"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "  	 ELSE -- (easy) Create new"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "	             CREATE INDEX idx_<%TABLE_NAME%>_record_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (record_id DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "          END IF; -- INDEX available"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "      END IF; -- target column"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "      -- Primary key in RedCap frontend redcap_repeat_instance - for last version"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "      IF EXISTS ( -- target column"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "          SELECT 1 FROM information_schema.columns WHERE table_schema = '<%OWNER_SCHEMA%>' AND table_name = '<%TABLE_NAME%>' AND column_name = 'redcap_repeat_instance'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "      ) THEN"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "          IF EXISTS ( -- INDEX available"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "              SELECT 1 FROM pg_indexes where substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_rc_re_id',1,63) AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "          ) THEN -- check current status"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "              IF EXISTS ( -- INDEX nicht auf akuellen Stand"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "                  SELECT 1 FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog', 'information_schema')"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "                  AND schemaname = '<%OWNER_SCHEMA%>' AND tablename = '<%TABLE_NAME%>' AND substr(indexname,1,63)=substr('idx_<%TABLE_NAME%>_rc_re_id',1,63)"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "	         	 AND indexdef != 'CREATE INDEX idx_<%TABLE_NAME%>_rc_re_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (redcap_repeat_instance DESC)'"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "              ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "	        	ALTER INDEX <%OWNER_SCHEMA%>.idx_<%TABLE_NAME%>_rc_re_id RENAME TO del_idx_<%TABLE_NAME%>_rc_re_id;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "	        	DROP INDEX IF EXISTS <%OWNER_SCHEMA%>.del_idx_<%TABLE_NAME%>_rc_re_id;"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "       	        CREATE INDEX idx_<%TABLE_NAME%>_rc_re_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (redcap_repeat_instance DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "              END IF; -- check current status"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "  	 ELSE -- (easy) Create new"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "	             CREATE INDEX idx_<%TABLE_NAME%>_rc_re_id ON <%OWNER_SCHEMA%>.<%TABLE_NAME%> USING btree (redcap_repeat_instance DESC);"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "          END IF; -- INDEX available"%>
+<%IF RIGHTS_DEFINITION:TAGS "\bFE_RC_ID\b" "      END IF; -- target column"%>
 
 -- Index idx_<%OWNER_SCHEMA%>_<%TABLE_NAME%>_input_dt for Table "<%TABLE_NAME%>" in schema "<%OWNER_SCHEMA%>"
 ----------------------------------------------------
