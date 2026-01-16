@@ -187,6 +187,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   # full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table_with_ward_name_and_record_id)
 
   frontend_table <- mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
+    restrictToDefinedWards() |>
     calculateAge(
       main_enc_period_start = fall_aufn_dat,
       pat_birthdate = pat_gebdat

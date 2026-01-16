@@ -285,6 +285,61 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 }
 
 #------------------------------------------------------------------------------#
+#' Restrict Front-End Fall Data to Defined INTERPOLAR Wards
+#'
+#' Filters the merged patient and fall front-end data to include only rows that
+#' belong to wards explicitly defined for the reporting phases. The set of valid
+#' wards is constructed from the objects `WARDS_PHASE_A`, `WARDS_PHASE_B`, and
+#' `WARDS_PHASE_B_TEST`, if they exist and are not empty.
+#'
+#' @param merged_pat_fall_fe_table A data frame containing merged patient and fall
+#'   front-end data, including a `fall_station` column identifying the ward.
+#'
+#' @return A data frame containing only rows whose `fall_station` is included in
+#'   the set of defined wards. The result is de-duplicated using `distinct()`.
+#'
+#' @details
+#' The function dynamically builds the list of valid wards by checking whether
+#' the objects `WARDS_PHASE_A`, `WARDS_PHASE_B`, and `WARDS_PHASE_B_TEST` are
+#' defined and non-empty in the current environment. All available ward vectors
+#' are concatenated into a single set of allowed wards.
+#'
+#' The input table is then filtered so that only rows with `fall_station` values
+#' contained in this set are retained. Finally, duplicate rows are removed.
+#'
+#' This design allows flexible configuration of reporting phases without
+#' modifying the function itself, relying instead on externally defined ward
+#' vectors.
+#'
+#' @importFrom dplyr filter distinct
+#'
+#' @export
+restrictToDefinedWards <- function(merged_pat_fall_fe_table) {
+
+  wards_phase_a <- c()
+  wards_phase_b <- c()
+  wards_phase_b_test <- c()
+
+  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_A")) {
+    wards_phase_a <- WARDS_PHASE_A
+  }
+  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B")) {
+    wards_phase_b <- WARDS_PHASE_B
+  }
+  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST")) {
+    wards_phase_b_test <- WARDS_PHASE_B_TEST
+  }
+  defined_wards <- c(wards_phase_a, wards_phase_b, wards_phase_b_test)
+
+  merged_pat_fall_fe_table_restricted_to_defined_wards <- merged_pat_fall_fe_table |>
+    dplyr::filter(fall_station %in% defined_wards) |>
+    dplyr::distinct()
+
+  return(merged_pat_fall_fe_table_restricted_to_defined_wards)
+}
+
+
+#------------------------------------------------------------------------------#
 
 #' Calculate Patient Age at Main Encounter Start
 #'
