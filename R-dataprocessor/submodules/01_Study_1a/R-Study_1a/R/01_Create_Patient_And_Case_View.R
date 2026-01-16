@@ -522,7 +522,7 @@ createFrontendTables <- function() {
                           target_index,
                           "fall_gewicht_aktl_einheit",
                           data.table::fifelse(
-                            isValidUnit(obs_weight$obs_valuequantity_code),
+                            etlutils::isValidUnit(obs_weight$obs_valuequantity_code),
                             obs_weight$obs_valuequantity_code,
                             obs_weight$obs_valuequantity_unit
                           )
@@ -536,7 +536,7 @@ createFrontendTables <- function() {
                           target_index,
                           "fall_groesse_einheit",
                           data.table::fifelse(
-                            isValidUnit(obs_height$obs_valuequantity_code),
+                            etlutils::isValidUnit(obs_height$obs_valuequantity_code),
                             obs_height$obs_valuequantity_code,
                             obs_height$obs_valuequantity_unit
                           )
