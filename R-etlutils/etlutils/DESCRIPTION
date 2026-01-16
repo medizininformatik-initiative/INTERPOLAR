@@ -35,7 +35,8 @@ Imports:
     htmlwidgets,
     htmltools,
     DT,
-    jsonlite
+    jsonlite,
+    units
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

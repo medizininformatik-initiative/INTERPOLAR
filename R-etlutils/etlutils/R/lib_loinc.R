@@ -157,6 +157,7 @@ isValidUnit <- function(u) {
 #'   conversion_unit = "mmHg",
 #'   additional_error_message = "Custom error message for debugging."
 #' )
+#' @export
 convertLabUnits <- function(measured_value,
                             measured_unit,
                             target_unit,
