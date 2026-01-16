@@ -377,7 +377,7 @@ filterObservations <- function(obs, reference_value_col, invalid_obs) {
       isConvertibleUnit <- function(unit_from, unit_to) {
         # Missing reference unit counts as convertible
         if (is.na(unit_to)) return(TRUE)
-        !is.na(convertLabUnits(1, unit_from, unit_to))
+        !is.na(etlutils::convertLabUnits(1, unit_from, unit_to))
       }
       # --- 1.1: Try to use rows where reference_range_type == "normal" ---
       preferred <- .SD[reference_range_type == "normal"]
@@ -432,7 +432,7 @@ filterObservations <- function(obs, reference_value_col, invalid_obs) {
       obs_row <- obs_to_convert_unit[i]
 
       # Attempt conversion
-      converted_val <- convertLabUnits(
+      converted_val <- etlutils::convertLabUnits(
         measured_value = obs_row$value,
         measured_unit = unit_from,
         target_unit = unit_target,
@@ -688,7 +688,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
       if (!is.na(reference_value_col)) {
         # --- 1. Invalid observations based on numeric value or unit ---
         invalid_obs <- observation_resources[
-          is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)
+          is.na(suppressWarnings(as.numeric(value))) | !etlutils::isValidUnit(unit)
         ]
 
         # --- 2. Temporarily remove those invalid ones from main table ---
@@ -761,7 +761,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
         if (!is.null(cutoff) && !any(is.na(cutoff))) {
 
           # Split observation_resources in valid and invalid ones
-          invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)]
+          invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !etlutils::isValidUnit(unit)]
           obs <- data.table::fsetdiff(observation_resources, invalid_obs)
 
           if (nrow(obs)) {
@@ -779,7 +779,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
               obs_value_converted_to_threshold_unit <- c()
               for (i in seq_len(nrow(obs))) {
                 obs_row <- obs[i]
-                obs_value_converted_to_threshold_unit[i] <- convertLabUnits(
+                obs_value_converted_to_threshold_unit[i] <- etlutils::convertLabUnits(
                   measured_value = obs_row$value,
                   measured_unit = obs_row$unit,
                   target_unit = mapping_row$UNIT,
@@ -1105,7 +1105,7 @@ matchICDProxies <- function(
     all_observations <- observation_resources[, .(code = obs_code_code,
                                                   display = obs_code_display,
                                                   value = obs_valuequantity_value,
-                                                  unit = data.table::fifelse(isValidUnit(obs_valuequantity_code), obs_valuequantity_code, obs_valuequantity_unit),
+                                                  unit = data.table::fifelse(etlutils::isValidUnit(obs_valuequantity_code), obs_valuequantity_code, obs_valuequantity_unit),
                                                   reference_range_low_value = obs_referencerange_low_value,
                                                   reference_range_high_value = obs_referencerange_high_value,
                                                   reference_range_low_system = obs_referencerange_low_system,
