@@ -506,6 +506,10 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
     fill = TRUE
   )
 
+  # clean up
+  medications[, medication_id := NULL]
+  medications <- unique(medications)
+
   return(medications)
 }
 
