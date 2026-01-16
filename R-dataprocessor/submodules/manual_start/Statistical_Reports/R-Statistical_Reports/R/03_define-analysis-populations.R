@@ -12,8 +12,7 @@
 #'
 #' @details
 #' The function applies a series of filters to identify the Full Analysis Set 1 (FAS1) group:
-#' - Encounters must be classified as inpatient (i.e., `enc_class_code` is "IMP") under facility
-#'   contact (`enc_type_code_Kontaktebene` is "einrichtungskontakt").
+#' - inpatient INTERPOLAR Encounters must be classified as defined in FRONTEND_DISPLAYED_ENCOUNTER_CLASS
 #' - Encounters must have a non-missing `ward_name`, denoting an INTERPOLAR encounter obtainen
 #'   from the Versorgungsstellenkontakte in the `pids_per_ward` table.
 #' - Patients in these encounters must be adults, defined as individuals aged 18 or over
@@ -31,16 +30,20 @@
 
 defineFullAnalysisSet1 <- function(complete_table) {
   inpatient_encounters <- complete_table |>
-    dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt" & enc_class_code == "IMP") |>
+    dplyr::filter(enc_class_code %in% FRONTEND_DISPLAYED_ENCOUNTER_CLASS) |>
+    dplyr::distinct(main_enc_id) |>
+    dplyr::arrange(main_enc_id) |>
     dplyr::pull(main_enc_id)
 
   INTERPOLAR_encounters <- complete_table |>
     dplyr::filter(!is.na(ward_name)) |>
+    dplyr::distinct(main_enc_id) |>
+    dplyr::arrange(main_enc_id) |>
     dplyr::pull(main_enc_id)
 
   full_analysis_set_1_raw <- complete_table |>
     dplyr::filter(main_enc_id %in% inpatient_encounters) |> # only IMP patients
-    dplyr::filter(main_enc_id %in% INTERPOLAR_encounters) |> # only main encounters with any INTERPOLAR ward visit
+    dplyr::filter(main_enc_id %in% INTERPOLAR_encounters) |> # only encounters with any INTERPOLAR ward visit
     dplyr::filter(age_at_hospitalization >= 18) |> # only adults
     dplyr::distinct()
 
