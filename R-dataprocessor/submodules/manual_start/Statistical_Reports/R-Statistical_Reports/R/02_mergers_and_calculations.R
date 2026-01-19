@@ -315,7 +315,6 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 #'
 #' @export
 restrictToDefinedWards <- function(merged_pat_fall_fe_table) {
-
   wards_phase_a <- c()
   wards_phase_b <- c()
   wards_phase_b_test <- c()

@@ -61,8 +61,7 @@ Ziel: lade die Falldaten der für INTERPOLAR relevanten Patienten und filtere au
         -   codes: "begleitperson", "vorstationaer", "nachstationaer", "teilstationaer", "tagesklinik", "nachtklinik", "normalstationaer", "intensivstationaer", "ub", "konsil", "stationsaequivalent", "operation"
     -   erstellt Warnungen, wenn System oder Code unbekannt oder uneindeutig sind (sichtbar in `processing_exclusion_reason` = "undefined_kontaktebene_or_kontaktart")
 -   filtert Fälle mit Kontaktart "begleitperson" heraus, da diese für INTERPOLAR nicht relevant sind
--   erstellt die Variable `processing_exclusion_reason`, für zukünftige Begründung, warum ein Fall oder von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten, Nichterfüllung der Einschlusskriterien für die Studienpopulation (stationär auf einer INTERPOLAR-Station))
--   diese Variable wird außerdem das Level ("patient", "main_encounter", "sub_encounter") und den Typ ("not_in_inclusion_criteria", "data_issues", "linkage_issues") des Ausschlussgrundes strukturiert enthalten
+-   erstellt die Variable `processing_exclusion_reason`, für zukünftige Begründung, warum ein Fall oder von der Verarbeitung ausgeschlossen wurde (z.B. fehlende Daten, Nichterfüllung der Einschlusskriterien für die Studienpopulation (stationär auf einer INTERPOLAR-Station)); diese Variable wird außerdem das Level ("patient", "main_encounter", "sub_encounter") und den Typ ("not_in_inclusion_criteria", "data_issues", "linkage_issues") des Ausschlussgrundes strukturiert enthalten
 -   stoppt das Skript wenn kein Falldatensatz gefunden wurde oder wenn keinerlei Einrichtungskontakte oder Versorgungsstellenkontakte identifiziert wurden
 -   nachfolgende Funktionen geben Warnungen für:
     -   `CheckMissingStartDate`: fehlende Startdaten (`enc_period_start` is NA) in `processing_exclusion_reason` = "missing_start_date"
@@ -101,11 +100,11 @@ mögliche Optimierungen:
     -   über die pids_per_ward Tabelle (INTERPOLAR-DB) sind die Fälle auf Versorgungsstellenkontakt-Ebene einer Station zugeordnet
     -   encounter_id in pids_per_ward zeigt (unter Anderem) alle INTERPOLAR-Versorgungsstellenkontakte eines Falls
 
-#### `getPatientFeData` (`v_patient_fe` --\> in Erarbeitung: `v_patient_fe_last_version`?) --\> patient_fe_table
+#### `getPatientFeData` (`v_patient_fe_last_version`?) --\> patient_fe_table
 
-Ziel: lade die für das Reporting relevanten Patienten-Daten aus der Frontend-Tabelle, um das Mapping zu weiteren Daten des Patienten zu vorzunehmen und ein Abgleich zwischen Frontend und FHIR-Daten zu ermöglichen.
+Ziel: lade die für das Reporting relevanten Patienten-Daten aus der Frontend-Tabelle, um die im Frontend dokumentierten Einträge darzustellen, das Mapping zu weiteren Daten des Patienten vorzunehmen und ein Abgleich zwischen Frontend und FHIR-Daten zu ermöglichen.
 
--   lädt die (letzte?) Version der Frontend-Patienten-Identifikatoren, die der INTERPOLAR-Datenbank bekannt ist (verschiedene Versionen sollten hier eigentlich nicht vorkommen, trotzdem ist sicherheitshalber `_last_version` zu verwenden, sobald verfügbar)
+-   lädt die letzte Version der Frontend-Patienten-Identifikatoren, die der INTERPOLAR-Datenbank bekannt ist
 -   Variablen:
     -   `pat_id` (FHIR Patienten ID)
     -   `record_id` (Frontend Datensatz ID)
@@ -123,7 +122,7 @@ mögliche Optimierungen:
 
 Ziel: lade die für das Reporting relevanten Fall-Daten aus der Frontend-Tabelle, um das Mapping zu weiteren Daten des Falls vorzunehmen und ein Abgleich zwischen Frontend und FHIR-Daten zu ermöglichen. Weiterhin sind hier die Information über Studienphase, Station und Aufnahmedatum (Einrichtungskontakt) des Falls enthalten.
 
--   erstellt manuell die letzte Version der Frontend-Fall-Daten, die der INTERPOLAR-Datenbank bekannt ist (eine Änderung der Station sollte dabei in der Historie verfolgbar sein (kein Überschreiben), die Studienphase sollte immer die erste pro Fall abbilden)
+-   erstellt manuell die letzte Version der Frontend-Fall-Daten, die der INTERPOLAR-Datenbank bekannt ist (eine Änderung der Station sollte dabei in der Historie verfolgbar sein, die Studienphase sollte immer die erste pro Fall abbilden (aktuell noch nicht verwendet))
 -   Variablen:
     -   `record_id` (Frontend Datensatz ID)
     -   `fall_fhir_enc_id` (FHIR Encounter ID: hier nur Einrichtungskontaktebene)
@@ -132,6 +131,7 @@ Ziel: lade die für das Reporting relevanten Fall-Daten aus der Frontend-Tabelle
     -   (`fall_studienphase` (Studienphase des Falls, z.B. "PhaseA", "PhaseBTest", "PhaseB" oder NA falls Fall vor Implementierung der Studienphasen erfasst wurde? (zählt dann zu PhaseA)): aktuell nicht verwendet, da nicht benötigt)
     -   `fall_station` (Name der Station, auf der der Fall aufgenommen wurde)
     -   `fall_aufn_dat` (Aufnahmedatum des Falls (Einrichtungskontakt))
+    -   `input_processing_nr` (Verarbeitungsnummer des Frontend-Datensatzes, um die aktuellste Version zu identifizieren)
 -   stoppt das Skript wenn kein Datensatz gefunden wurde
 
 mögliche Optimierungen:
@@ -140,11 +140,11 @@ mögliche Optimierungen:
 -   wurden wichtige Variablen zur Identifizierung vergessen?
 -   ist das fall_additional_value Feld zu Nutzen (z.B. für einfachere Zuordnung Versorgunsgstellenkontakt?)
 
-#### `getMedikationsanalyseFeData` (`v_medikationsanalyse_fe` --\> in Erarbeitung: `v_medikationsanalyse_fe_last_version`) ---\> medikationsanalyse_fe_table
+#### `getMedikationsanalyseFeData`(`v_medikationsanalyse_fe_last_version`) ---\> medikationsanalyse_fe_table
 
 Ziel: lade die für das Reporting relevanten Medikationsanalyse-Daten aus der Frontend-Tabelle
 
--   lädt die letzte Version der Frontend-Medikationsanalyse Einträge, die der INTERPOLAR-Datenbank bekannt ist (aktuell komplette Datenbanktabelle verwendet, besser: \_last_version)
+-   lädt die letzte Version der Frontend-Medikationsanalyse Einträge, die der INTERPOLAR-Datenbank bekannt ist
 -   Variablen:
     -   `record_id` (Frontend Datensatz ID)
     -   `fall_meda_id` (Fallidentifikator im Klinikinformationssystem (CIS))
@@ -153,11 +153,11 @@ Ziel: lade die für das Reporting relevanten Medikationsanalyse-Daten aus der Fr
     -   `medikationsanalyse_complete` (Form Status der Medikationsanalyse, z.B. "Complete" für abgeschlossene Analyse, "Incomplete" für unvollständige Analyse, "Unverified" für ungültige z.B. versehentliche Anlage?)
 -   stoppt das Skript wenn kein Datensatz gefunden wurde
 
-#### `getMRPDokumentationValidierungFeData` (`v_mrpdokumentation_validierung_fe` --\> in Erarbeitung: `v_mrpdokumentation_validierung_fe_last_version`) --\> mrp_dokumentation_validierung_fe_table
+#### `getMRPDokumentationValidierungFeData` (`v_mrpdokumentation_validierung_fe_last_version`) --\> mrp_dokumentation_validierung_fe_table
 
-Ziel: lade die für das Reporting relevanten MRP-Dokumentation Validierungs-Daten aus der Frontend-Tabelle
+Ziel: lade die für das Reporting relevanten MRP-Dokumentations-Daten aus der Frontend-Tabelle
 
--   lädt die letzte Version der Frontend-MRP-Dokumentation Validierungs Einträge, die der INTERPOLAR-Datenbank bekannt ist (aktuell komplette Datenbanktabelle verwendet, besser: \_last_version)
+-   lädt die letzte Version der Frontend-MRP-Dokumentation Validierungs Einträge, die der INTERPOLAR-Datenbank bekannt ist
 -   Variablen:
     -   `record_id` (Frontend Datensatz ID)
     -   `mrp_meda_id` (ID der Medikationsanalyse (= Fallidentifikator im Klinikinformationssystem (CIS) + Suffix z.B. "-1" für erste Analyse))
@@ -190,7 +190,7 @@ Ziel: Ergänzen der Falldaten um ein kuratiertes Enddatum für fehlende Enddaten
 
 #### `addMainEncId`
 
-Ziel: Ergänzen der Falldaten um die ID des Haupt-Encounters in der 3-Stufen-Encounter-Hierarchie (wichtig z.B. zur Ermittlung des Aufnahmedatums des Haupt-Falls (wichtig für Alter bei Aufnahme), sowie für weiteres Mapping zu Frontend Daten)
+Ziel: Ergänzen der Falldaten um die ID des Haupt-Encounters in der 3-Stufen-Encounter-Hierarchie (wichtig z.B. zur Ermittlung des Aufnahmedatums des Haupt-Falls, sowie für weiteres Mapping zu Frontend Daten)
 
 -   Extrahiere die main_enc_id aus enc_main_encounter_calculated_ref (löst frühere Logik (`main_enc_id_initial_try`) ab)
 -   falls enc_main_encounter_calculated_ref nicht verfügbar, dann wird die frühere Logik verwendet (`main_enc_id_initial_try`):
