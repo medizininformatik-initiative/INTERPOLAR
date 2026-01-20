@@ -25,7 +25,7 @@
 #' @details
 #' The function performs the following steps:
 #' 1. Executes a SQL query to retrieve required patient-related columns from the specified table.
-#' 2. Filters the results to include only rows where one or more of the following conditions are met:
+#' 2. Filters the results to include only rows where the following conditions are met, if defined:
 #'     - `pat_identifier_system` matches the FHIR identifier system for patients displayed in the
 #'        frontend.
 #'     - `pat_identifier_type_system` matches the FHIR identifier type system for patients displayed
@@ -37,10 +37,7 @@
 #' - `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM`
 #' - `FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE`
 #' 3. filters unique entries for the selected variables and sorts the data by `pat_id`.
-#' 4. Checks for potential duplicates in:
-#'    - `pat_id`: should uniquely identify patients in FHIR
-#'    - `pat_identifier_value`: should uniquely identify patients in the hospital system
-#'    If duplicates are found, warnings are issued for manual inspection.
+#' 4. Checks if the resulting data frame is empty and raises an error if so.
 #'
 #' @importFrom dplyr distinct arrange filter
 #' @export
@@ -51,52 +48,46 @@ getPatientData <- function(lock_id, table_name) {
     "FROM ", table_name, "\n"
   )
 
-  patient_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+  patient_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct()
+  # DEBUG START-------------------------------
+  # duplicate patient entries with different identifier systems/types to test the warnings
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    patient_table_raw <- createPatientDataWarningsSituations(patient_table_raw)
+  }
+  # DEBUG END-------------------------------
+
+  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
+    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "")) {
+    patient_table_raw <- patient_table_raw |>
+      dplyr::filter(
+        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system)
+      ) |>
+      dplyr::distinct()
+  }
+  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") &
+    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "")) {
+    patient_table_raw <- patient_table_raw |>
+      dplyr::filter(
+        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system)
+      ) |>
+      dplyr::distinct()
+  }
+  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") &
+    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", "")) {
+    patient_table_raw <- patient_table_raw |>
+      dplyr::filter(
+        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)
+      ) |>
+      dplyr::distinct()
+  }
+  patient_table <- patient_table_raw |>
     dplyr::distinct() |>
-    dplyr::filter(
-      (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
-        !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "") &
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system)) |
-        (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") &
-          !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "") &
-          grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system)) |
-        (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") &
-          !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", "") &
-          grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)) |
-        # keep all rows if all filters are inactive or missing
-        ((!exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") |
-          FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "")) &
-          (!exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") |
-            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "")) &
-          (!exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") |
-            FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", ""))
-        )
-    ) |>
-    dplyr::distinct() |>
-    dplyr::arrange(pat_id) |>
-    dplyr::mutate(processing_exclusion_reason = NA_character_)
+    dplyr::arrange(pat_id)
 
   if (nrow(patient_table) == 0) {
     stop("The patient table is empty. Please check the data.")
   }
-
-  if (checkMultipleRows(patient_table, c("pat_id"))) {
-    warning("The patient table contains multiple rows for the same pat_id(FHIR).
-            Please check the data.")
-    patient_table <- patient_table |>
-      addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id")
-  }
-
-  if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
-    warning("The patient table contains multiple rows for the same patient identifier (cis).
-            Please check the data.")
-    patient_table <- patient_table |>
-      addMultipleRowsProcessingExclusionReason(
-        c("pat_identifier_value"),
-        "multiple_rows_per_pat_identifier_value"
-      )
-  }
-
   return(patient_table)
 }
 
@@ -114,7 +105,8 @@ getPatientData <- function(lock_id, table_name) {
 #'
 #' @param table_name A character string specifying the name of the database table to query.
 #'   The table must contain the following columns:
-#'   - `enc_id`, `enc_identifier_value`, `enc_patient_ref`, `enc_partof_calculated_ref`
+#'   - `enc_id`, `enc_identifier_value`, `enc_patient_ref`
+#'   - `enc_partof_calculated_ref`, `enc_main_encounter_calculated_ref`
 #'   - `enc_class_code`
 #'   - `enc_type_system`, `enc_type_code`
 #'   - `enc_period_start`, `enc_period_end`, `enc_status`
@@ -131,9 +123,10 @@ getPatientData <- function(lock_id, table_name) {
 #' @details
 #' This function performs the following:
 #' 1. Builds and runs a SQL query selecting the full encounter dataset from the specified table.
-#' 2. Filters out einrichtungskontakt encounters that do not match the expected FHIR identifier
+#' 2. Filters out encounters that do not match the expected FHIR identifier
 #'    system for encounters (if defined as `COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM`).
-#' 3. Filters encounters to include only those with a start date within one year before the reporting_period_start
+#' 3. Filters encounters to include only those with a start date and end date within one year before
+#'    the reporting_period_start or with missing dates to keep track of potentially relevant records.
 #' 4. Filters out encounters with class codes "PRENC", "VR", or "HH" to exclude non-relevant records.
 #' 5. Filters out encounters with statuses "planned", "cancelled", "entered-in-error" or "unknown"
 #'    to focus on relevant records.
@@ -143,7 +136,9 @@ getPatientData <- function(lock_id, table_name) {
 #' 7. Sorts the data by patient reference, encounter ID, time-related fields, and status-related
 #'    fields.
 #' 8. Adds a `processing_exclusion_reason` column initialized with `NA` to log any processing exclusions.
-#' 9. Checks for empty results and unexpected status values, issuing errors or warnings if necessary.
+#'    These will exist of strings where the reason as well as the level ( e.g. 'patient', 'main_encounter' 'sub_encounter')
+#'    and the type of exclusion (e.g. 'not_in_inclusion_criteria', 'data_issues', 'linkage_issiues') are noted in a structured way.
+#' 9. Checks for empty results and issuing errors if necessary.
 #'
 #'
 #' @importFrom dplyr distinct arrange filter mutate if_else
@@ -156,12 +151,19 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   query <- paste0(
     "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
     "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-    "enc_identifier_system, enc_type_system ",
+    "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
+
     "FROM ", table_name, "\n"
   )
 
   encounter_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct()
+
+  # DEBUG START -------------------------------
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    encounter_table_raw <- createRawEncounterDataWarningSituations(encounter_table_raw)
+  }
+  # DEBUG END-------------------------------
 
   if (nrow(encounter_table_raw) == 0) {
     stop("No encounter data downloaded from database. Please check the database.")
@@ -169,17 +171,18 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
 
   if (etlutils::isDefinedAndNotEmpty("COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
     encounter_table_raw <- encounter_table_raw |>
-      dplyr::filter(!(enc_type_code == "einrichtungskontakt" &
-        !enc_identifier_system %in% COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM))
+      dplyr::filter(enc_identifier_system %in% COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM) |>
+      dplyr::distinct()
   }
 
   if (nrow(encounter_table_raw) == 0) {
     stop("The downloaded and identifier-filtered encounter table is empty. Please check (if defined)
-    for the correct definition of COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM (especially for 'einrichtungskontakte').")
+    for the correct definition of COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
   }
 
   encounter_table <- encounter_table_raw |>
-    dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_start))
+    dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_start)) |>
+    dplyr::filter(enc_period_end >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_end))
 
   if (nrow(encounter_table) == 0) {
     stop("The downloaded and date-filtered encounter table (only encounter data from one year before
@@ -188,6 +191,7 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   }
 
   encounter_table <- encounter_table |>
+    dplyr::mutate(processing_exclusion_reason = NA_character_) |>
     dplyr::filter(!enc_class_code %in% c("PRENC", "VR", "HH")) |>
     dplyr::filter(!enc_status %in% c("planned", "cancelled", "entered-in-error", "unknown")) |>
     dplyr::distinct() |>
@@ -209,6 +213,8 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
       var_new_system_1 = "enc_type_code_Kontaktebene",
       var_new_system_2 = "enc_type_code_Kontaktart",
       exclusion_reason = "undefined_kontaktebene_or_kontaktart",
+      exclusion_level = "sub_encounter",
+      exclusion_type = "data_issues",
       id_column = "enc_id"
     ) |>
     dplyr::filter(!enc_type_code_Kontaktart %in% c("begleitperson")) |>
@@ -220,134 +226,25 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     implementation of enc_class_code, enc_status, enc_type_code and enc_type_system.")
   }
 
-  if (any(is.na(encounter_table$enc_period_start))) {
-    encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(enc_period_start) &
-        is.na(processing_exclusion_reason), "missing_start_date", processing_exclusion_reason))
-    print(encounter_table |>
-      dplyr::filter(is.na(enc_period_start)), width = Inf)
-    warning("The encounter table contains NA values in enc_period_start.
-            Relevant encounter data may be missed. Please check the data")
+  # DEBUG START -------------------------------
+  # change one row for each processing_exclusion_reason with different changes to test the warnings
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    encounter_table <- createEncounterDataWarningSituations(encounter_table)
   }
-
-  if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
-    (is.na(encounter_table$enc_type_code_Kontaktebene)))) {
-    encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-        is.na(processing_exclusion_reason) &
-          !is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
-          is.na(encounter_table$enc_type_code_Kontaktebene),
-        "missing_kontaktebene_for_imp_encounter", processing_exclusion_reason
-      ))
-    print(encounter_table |>
-      dplyr::filter(enc_class_code == "IMP" & is.na(enc_type_code_Kontaktebene)), width = Inf)
-    warning("The encounter table with extended filtering contains inpatient encounters with missing
-    type codes for Kontaktebene. Please check the data for expected implementation of enc_type_code
-            and enc_type_system.")
-  }
+  # DEBUG END-------------------------------
 
   if (nrow(encounter_table |>
     dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt")) == 0) {
-    print(encounter_table, width = Inf)
+    print(encounter_table, width = 1000)
     stop("The encounter table with extended filtering does not contain any encounters of type 'einrichtungskontakt'.
          Please check the data for expected implementation of enc_type_code and enc_type_system.")
   }
 
   if (nrow(encounter_table |>
     dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt")) == 0) {
-    print(encounter_table, width = Inf)
+    print(encounter_table, width = 1000)
     stop("The encounter table does not contain any encounters of type 'versorgungsstellenkontakt'.
          Please check the data for expected implementation of enc_type_code and enc_type_system.")
-  }
-
-  if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
-    (is.na(encounter_table$enc_status) | !encounter_table$enc_status %in% c(
-      "finished", "in-progress", "onleave"
-    )))) {
-    encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_class_code == "IMP" &
-        (is.na(encounter_table$enc_status) | !enc_status %in% c("finished", "in-progress", "onleave")) &
-        is.na(processing_exclusion_reason),
-      "unexpected_imp_status", processing_exclusion_reason
-      ))
-    print(
-      encounter_table |>
-        dplyr::filter(enc_class_code == "IMP" & (is.na(enc_status) | !enc_status %in% c(
-          "finished", "in-progress",
-          "onleave"
-        ))),
-      width = Inf
-    )
-    warning("The encounter table contains inpatient encounters with unexpected or NA status values.
-            Please check the data.")
-  }
-
-  if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
-    (!is.na(encounter_table$enc_status) &
-      encounter_table$enc_status == "finished") & is.na(encounter_table$enc_period_end))) {
-    encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(enc_class_code == "IMP" &
-        enc_status == "finished" & is.na(enc_period_end) &
-        is.na(processing_exclusion_reason),
-      "imp_finished_without_end_date", processing_exclusion_reason
-      ))
-    print(
-      encounter_table |>
-        dplyr::filter(enc_class_code == "IMP" & enc_status == "finished" &
-          is.na(encounter_table$enc_period_end)),
-      width = Inf
-    )
-    warning("The encounter table contains finished IMP encounters without an end date.
-         Please check the data.")
-  }
-
-  if (any((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
-    !is.na(encounter_table$enc_class_code))) {
-    encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else((!enc_class_code %in%
-        c("AMB", "SS", "IMP")) &
-        !is.na(enc_class_code) &
-        is.na(processing_exclusion_reason),
-      "unexpected_class_code", processing_exclusion_reason
-      ))
-    print(encounter_table |>
-      dplyr::filter((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
-        !is.na(encounter_table$enc_class_code)), width = Inf)
-    warning("The encounter table contains class codes with unexpected values.
-            Please check the data.")
-  }
-
-  if (any((!encounter_table$enc_type_code_Kontaktart %in% c(
-    "vorstationaer", "nachstationaer",
-    "teilstationaer", "tagesklinik",
-    "nachtklinik", "normalstationaer",
-    "intensivstationaer", "ub", "konsil",
-    "stationsaequivalent", "operation"
-  )) &
-    !is.na(encounter_table$enc_type_code_Kontaktart))) {
-    encounter_table <- encounter_table |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else((!enc_type_code_Kontaktart %in% c(
-        "vorstationaer", "nachstationaer",
-        "teilstationaer", "tagesklinik",
-        "nachtklinik", "normalstationaer",
-        "intensivstationaer", "ub", "konsil",
-        "stationsaequivalent", "operation"
-      )) &
-        !is.na(enc_type_code_Kontaktart) &
-        is.na(processing_exclusion_reason),
-      "unexpected_kontaktart_code", processing_exclusion_reason
-      ))
-    print(encounter_table |>
-      dplyr::filter((!enc_type_code_Kontaktart %in% c(
-        "vorstationaer", "nachstationaer",
-        "teilstationaer", "tagesklinik",
-        "nachtklinik", "normalstationaer",
-        "intensivstationaer", "ub", "konsil",
-        "stationsaequivalent", "operation"
-      )) &
-        !is.na(enc_type_code_Kontaktart)), width = Inf)
-    warning("The encounter table contains type codes for Kontaktart with unexpected values.
-            Please check the data.")
   }
 
   return(encounter_table)
@@ -409,47 +306,37 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' This is important for managing concurrent data access in environments where multiple processes
 #' might access the data simultaneously.
 #' @param table_name A character string specifying the name of the database table to query.
-#' This table should include columns `pat_id`, `pat_cis_pid`, `record_id`.
+#' This table should include columns `pat_id`, `record_id` and `pat_gebdat`.
 #'
 #' @return A dataframe (`patient_fe_table`) that includes patient data, cleaned to ensure distinct
 #' entries per `pat_id`, arranged in order.
 #'
 #' @details The function constructs an SQL query to select relevant columns from the specified table,
 #' retrieves the data while checking for read-only access, and processes it to remove duplicates and
-#' arrange the records. If there are multiple rows for a single `pat_id`
-#' (related to the FHIR identifier) or `pat_cis_pid` (related to the cis identifier), errors are
-#' issued to indicate potential data issues.
+#' arrange the records.
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
-#' @importFrom dplyr distinct arrange
+#' @importFrom dplyr distinct arrange slice_max select mutate
 #' @export
 getPatientFeData <- function(lock_id, table_name) {
-  query <- paste0("SELECT pat_id, pat_cis_pid, record_id FROM ", table_name, "\n")
-
+  query <- paste0("SELECT pat_id, record_id, pat_gebdat, input_processing_nr FROM ", table_name, "\n")
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    # create last version view
+    # dplyr::slice_max(input_processing_nr, by = pat_id) |>
+    dplyr::select(-input_processing_nr) |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id) |>
     dplyr::mutate(processing_exclusion_reason = NA_character_)
 
+  # DEBUG START-------------------------------
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    patient_fe_table <- createPatientFeDataWarningsSituations(patient_fe_table)
+  }
+  # DEBUG END-------------------------------
+
   if (nrow(patient_fe_table) == 0) {
     stop("The patient_fe table is empty. Please check the data.")
-  }
-
-  if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
-    patient_fe_table <- patient_fe_table |>
-      addMultipleRowsProcessingExclusionReason(c("pat_id"), "multiple_rows_per_pat_id_in_fe")
-    warning("The patient_fe table contains multiple rows for the same pat_id(FHIR).
-            Please check the data.")
-  }
-
-  if (checkMultipleRows(patient_fe_table, c("pat_cis_pid"))) {
-    patient_fe_table <- patient_fe_table |>
-      addMultipleRowsProcessingExclusionReason(
-        c("pat_cis_pid"),
-        "multiple_rows_per_pat_identifier_in_fe"
-      )
-    warning("The patient_fe table contains multiple rows for the same patient identifier (cis).
-            Please check the data.")
   }
 
   return(patient_fe_table)
@@ -487,16 +374,20 @@ getPatientFeData <- function(lock_id, table_name) {
 #' }
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
-#' @importFrom dplyr distinct arrange select
+#' @importFrom dplyr distinct arrange select slice_max
 #' @export
 getFallFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
-    "fall_id, fall_studienphase, fall_station, fall_aufn_dat ",
+    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, input_processing_nr ",
     "FROM ", table_name, "\n"
   )
-
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    # create last version view with ward as additional grouping variable
+    dplyr::slice_max(input_processing_nr, by = c(fall_fhir_enc_id, fall_station)) |>
+    dplyr::select(-input_processing_nr) |>
+    dplyr::distinct() |>
     # temporary remove fall_studienphase, since it is not used at the moment (transformation dependent on purpose)
     dplyr::select(-fall_studienphase) |>
     dplyr::distinct() |>
@@ -515,6 +406,12 @@ getFallFeData <- function(lock_id, table_name) {
   #     )) |>
   #     dplyr::distinct()
   # }
+
+  # DEBUG START-------------------------------
+  if (DEBUG_TEST_REPORTING_WARNINGS) {
+    fall_fe_table <- createFallFeDataWarningsSituations(fall_fe_table)
+  }
+  # DEBUG END-------------------------------
 
   if (nrow(fall_fe_table) == 0) {
     stop("The fall_fe table is empty. Please check the data.")
@@ -550,15 +447,19 @@ getFallFeData <- function(lock_id, table_name) {
 #' `fall_meda_id`, and `meda_dat`.
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
-#' @importFrom dplyr distinct arrange
+#' @importFrom dplyr distinct arrange slice_max select
 #' @export
 getMedikationsanalyseFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, fall_meda_id, meda_id, meda_dat, ",
-    "medikationsanalyse_complete FROM ", table_name, "\n"
+    "medikationsanalyse_complete, last_processing_nr, redcap_repeat_instance FROM ", table_name, "\n"
   )
 
   medikationsanalyse_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    # create last version view
+    # dplyr::slice_max(last_processing_nr, by = c(record_id, redcap_repeat_instance)) |>
+    dplyr::select(-c(last_processing_nr, redcap_repeat_instance)) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id, fall_meda_id, meda_dat)
 
@@ -596,16 +497,21 @@ getMedikationsanalyseFeData <- function(lock_id, table_name) {
 #' `mrp_meda_id`, and `mrp_id` for easier downstream processing.
 #'
 #' @importFrom etlutils dbGetReadOnlyQuery
-#' @importFrom dplyr distinct arrange
+#' @importFrom dplyr distinct arrange slice_max select
 #' @export
 getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, mrp_meda_id, mrp_id, mrp_pigrund___21, ",
-    "mrp_ip_klasse_01, mrp_dokup_hand_emp_akz, mrpdokumentation_validierung_complete ",
+    "mrp_ip_klasse_01, mrp_dokup_hand_emp_akz, mrpdokumentation_validierung_complete, ",
+    "last_processing_nr, redcap_repeat_instance ",
     "FROM ", table_name, "\n"
   )
 
   mrp_dokumentation_validierung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    # create last version view
+    # dplyr::slice_max(last_processing_nr, by = c(record_id, redcap_repeat_instance)) |>
+    dplyr::select(-c(last_processing_nr, redcap_repeat_instance)) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id, mrp_meda_id, mrp_id)
 
