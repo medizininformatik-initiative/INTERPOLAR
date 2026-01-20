@@ -170,15 +170,17 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
             meda_datetime = meda_datetime
           )
         ]
-        if (!nrow(valid_rows)) return(NULL)
 
-        validity_num <- suppressWarnings(as.numeric(valid_rows$ICD_VALIDITY_DAYS))
-        validity_num[tolower(valid_rows$ICD_VALIDITY_DAYS) == "unbegrenzt"] <- Inf
-        validity_num[is.na(validity_num)] <- Inf
-        min_validity_num <- min(validity_num)
-
-        # Return only rows with the minimum validity days
-        valid_rows[validity_num == min_validity_num]
+        if (nrow(valid_rows)) {
+          validity_num <- suppressWarnings(as.numeric(valid_rows$ICD_VALIDITY_DAYS))
+          validity_num[tolower(valid_rows$ICD_VALIDITY_DAYS) == "unbegrenzt"] <- Inf
+          validity_num[is.na(validity_num)] <- Inf
+          min_validity_num <- min(validity_num)
+          # Return only rows with the minimum validity days
+          valid_rows[validity_num == min_validity_num]
+        } else {
+          valid_rows[0]
+        }
       },
       by = .(ATC_DISPLAY, ATC_FOR_CALCULATION)
     ]
