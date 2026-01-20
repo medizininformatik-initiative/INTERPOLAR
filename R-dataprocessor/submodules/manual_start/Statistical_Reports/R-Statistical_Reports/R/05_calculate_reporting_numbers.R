@@ -105,6 +105,7 @@ calculateF1 <- function(F1_prep) {
 #'   The columns include:
 #'   - `patients`: Number of distinct patients
 #'   - `encounters`: Number of distinct hospital stays
+#'   - `encounters_with_completed_meda`: Encounters with at least one completed medication analysis
 #'   - `medication_analyses`: Total medication analyses
 #'   - `medication_analyses_complete`: Analyses marked "Complete"
 #'   - `MRP`: Total MRP entries
@@ -112,10 +113,13 @@ calculateF1 <- function(F1_prep) {
 #'   - `MRP_resolved`: MRPs marked as resolved with intervention implemented
 #'   - `MRP_resolution_non_informative`: MRPs with documentation but no clear resolution
 #'   - `contraindications`: MRPs flagged as contraindications
+#'   - `contraindications_resolved`: Contraindications marked as resolved
 #'   - `MRP_drug_drug`: Drug-drug interactions
 #'   - `MRP_drug_disease`: Drug-disease interactions
 #'   - `MRP_drug_renal_insufficiency`: Drug interactions with renal insufficiency
+#'   - `MRP_class_na`: MRPs with contraindications but no interaction class assigned
 #'   - `encounters_processing_exclusion`: Encounters excluded due to processing criteria
+#'   - `not_in_inclusion_criteria`: Encounters not meeting inclusion criteria
 #'
 #' @details
 #' - Summarization is grouped by `ward_name` derived from `ward_name`
@@ -126,76 +130,106 @@ calculateF1 <- function(F1_prep) {
 #' @importFrom dplyr group_by summarise bind_rows n_distinct rename across all_of any_of if_else
 #' @export
 calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("ward_name")) {
+  frontend_summary_data <- frontend_summary_data |>
+    dplyr::mutate(valid_for_counting = !main_enc_any_processing_exclusion_fe &
+      !sub_enc_any_processing_exclusion_fe &
+      !main_enc_not_in_inclusion_criteria)
+
   fe_grouped_counts <- frontend_summary_data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_variables))) |>
     dplyr::summarise(
       patients = dplyr::n_distinct(
-        pat_id[!main_enc_any_processing_exclusion_fe],
+        pat_id[valid_for_counting],
         na.rm = TRUE
       ),
       encounters = dplyr::n_distinct(
-        main_enc_id[!main_enc_any_processing_exclusion_fe],
+        main_enc_id[valid_for_counting],
+        na.rm = TRUE
+      ),
+      encounters_with_completed_meda = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_completed_medication_analysis],
         na.rm = TRUE
       ),
       medication_analyses = dplyr::n_distinct(
-        meda_id[!main_enc_any_processing_exclusion_fe],
+        meda_id[valid_for_counting],
         na.rm = TRUE
       ),
       medication_analyses_complete = dplyr::n_distinct(
         dplyr::if_else(
           medikationsanalyse_complete == "Complete", meda_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP = dplyr::n_distinct(
-        mrp_id[!main_enc_any_processing_exclusion_fe],
+        mrp_id[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_documentation_complete = dplyr::n_distinct(
         dplyr::if_else(
           mrpdokumentation_validierung_complete == "Complete", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_resolved = dplyr::n_distinct(
         dplyr::if_else(
           mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_resolution_non_informative = dplyr::n_distinct(
-        dplyr::if_else(
-          mrp_dokup_hand_emp_akz %in% c("Arzt / Pflege informiert", "Intervention vorgeschlagen,
-                                        Umsetzung unbekannt"), mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        dplyr::if_else(is.na(mrp_dokup_hand_emp_akz) |
+          mrp_dokup_hand_emp_akz %in% c(
+            "Arzt / Pflege informiert",
+            "Intervention vorgeschlagen, Umsetzung unbekannt"
+          ),
+        mrp_id, NA
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       contraindications = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      contraindications_resolved = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" &
+            mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_drug_drug = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Drug", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_drug_disease = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Disease", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_drug_renal_insufficiency = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Niereninsuffizienz", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
+      MRP_class_na = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" & is.na(mrp_ip_klasse_01), mrp_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      # grouped: exclusion if any main or sub encounter is excluded
       encounters_processing_exclusion = dplyr::n_distinct(
-        main_enc_id[main_enc_any_processing_exclusion_fe],
+        main_enc_id[main_enc_any_processing_exclusion_fe | sub_enc_any_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      not_in_inclusion_criteria = dplyr::n_distinct(
+        main_enc_id[main_enc_not_in_inclusion_criteria],
         na.rm = TRUE
       ), .groups = "drop"
     )
@@ -204,69 +238,94 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
     dplyr::summarise(
       dplyr::across(dplyr::any_of(c("ward_name", "calendar_week")), ~"all"),
       patients = dplyr::n_distinct(
-        pat_id[!main_enc_any_processing_exclusion_fe],
+        pat_id[valid_for_counting],
         na.rm = TRUE
       ),
       encounters = dplyr::n_distinct(
-        main_enc_id[!main_enc_any_processing_exclusion_fe],
+        main_enc_id[valid_for_counting],
+        na.rm = TRUE
+      ),
+      encounters_with_completed_meda = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_completed_medication_analysis],
         na.rm = TRUE
       ),
       medication_analyses = dplyr::n_distinct(
-        meda_id[!main_enc_any_processing_exclusion_fe],
+        meda_id[valid_for_counting],
         na.rm = TRUE
       ),
       medication_analyses_complete = dplyr::n_distinct(
-        dplyr::if_else(medikationsanalyse_complete == "Complete", meda_id, NA)[!main_enc_any_processing_exclusion_fe],
+        dplyr::if_else(medikationsanalyse_complete == "Complete", meda_id, NA)[valid_for_counting],
         na.rm = TRUE
       ),
       MRP = dplyr::n_distinct(
-        mrp_id[!main_enc_any_processing_exclusion_fe],
+        mrp_id[valid_for_counting],
         na.rm = TRUE
       ), MRP_documentation_complete = dplyr::n_distinct(
         dplyr::if_else(
           mrpdokumentation_validierung_complete == "Complete", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_resolved = dplyr::n_distinct(
         dplyr::if_else(
           mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_resolution_non_informative = dplyr::n_distinct(
-        dplyr::if_else(
-          mrp_dokup_hand_emp_akz %in% c("Arzt / Pflege informiert", "Intervention vorgeschlagen,
-                                        Umsetzung unbekannt"), mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        dplyr::if_else(is.na(mrp_dokup_hand_emp_akz) |
+          mrp_dokup_hand_emp_akz %in% c(
+            "Arzt / Pflege informiert",
+            "Intervention vorgeschlagen, Umsetzung unbekannt"
+          ),
+        mrp_id, NA
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       contraindications = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      contraindications_resolved = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" &
+            mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_drug_drug = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Drug", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_drug_disease = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Disease", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
       MRP_drug_renal_insufficiency = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Niereninsuffizienz", mrp_id, NA
-        )[!main_enc_any_processing_exclusion_fe],
+        )[valid_for_counting],
         na.rm = TRUE
       ),
+      MRP_class_na = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" & is.na(mrp_ip_klasse_01), mrp_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      # total: exclusion only if any main or all sub encounters are excluded
       encounters_processing_exclusion = dplyr::n_distinct(
-        main_enc_id[main_enc_any_processing_exclusion_fe],
+        main_enc_id[main_enc_any_processing_exclusion_fe | sub_enc_all_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      not_in_inclusion_criteria = dplyr::n_distinct(
+        main_enc_id[main_enc_not_in_inclusion_criteria],
         na.rm = TRUE
       )
     )

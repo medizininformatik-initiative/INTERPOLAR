@@ -48,3 +48,8 @@ REDCAP_URL = "http://redcap/redcap/api/"
 # REDCap API token
 #################
 REDCAP_TOKEN = "Fill with your REDCap API token"
+#################
+# REDCap delimiter used to parse CSV data (default is ",")
+# Allowed values are: choices = c(",", ";", "\t", " ", "|", "^")
+#################
+#REDCAP_CSV_DELIMITER = ","
