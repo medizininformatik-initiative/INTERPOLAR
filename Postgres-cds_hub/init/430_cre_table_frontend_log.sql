@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-01-13 11:37:49
+-- Rights definition file last update : 2026-01-16 14:53:36
 -- Rights definition file size        : 16352 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-01-13 13:21:40
+-- Create time: 2026-01-19 15:01:52
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1856,10 +1856,16 @@ BEGIN
             ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_meda_id varchar;   -- Zuordnung Meda -> rMRP (varchar)
         END IF; -- column (ret_meda_id)
 
+        IF NOT EXISTS ( -- column not exists (ret_meda_dat_referenz)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_meda_dat_referenz'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_meda_dat_referenz timestamp;   -- Referenzdatum der Medikationsanalyse (timestamp)
+        END IF; -- column (ret_meda_dat_referenz)
+
         IF NOT EXISTS ( -- column not exists (ret_meda_dat1)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_meda_dat1'
         ) THEN
-            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_meda_dat1 timestamp;   -- Datum der retrolektiven Betrachtung* (timestamp)
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_meda_dat1 timestamp;   -- Datum der retrolektiven Bewertung* (timestamp)
         END IF; -- column (ret_meda_dat1)
 
         IF NOT EXISTS ( -- column not exists (ret_kurzbeschr)
@@ -1913,7 +1919,7 @@ BEGIN
         IF NOT EXISTS ( -- column not exists (ret_gewissheit1)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewissheit1'
         ) THEN
-            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewissheit1 varchar;   -- Sicherheit des detektierten MRP (varchar)
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewissheit1 varchar;   -- Bewertung des detektierten MRP* (varchar)
         END IF; -- column (ret_gewissheit1)
 
         IF NOT EXISTS ( -- column not exists (ret_mrp_zuordnung1)
@@ -1934,6 +1940,90 @@ BEGIN
             ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund1_abl varchar;   -- Grund für nicht Bestätigung (varchar)
         END IF; -- column (ret_gewiss_grund1_abl)
 
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger1_falsch___1)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_trigger1_falsch___1'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_trigger1_falsch___1 varchar;   -- 1 - ret_atc1 (varchar)
+        END IF; -- column (ret_gewiss_trigger1_falsch___1)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger1_falsch___2)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_trigger1_falsch___2'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_trigger1_falsch___2 varchar;   -- 2 - ret_atc2 (varchar)
+        END IF; -- column (ret_gewiss_trigger1_falsch___2)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger1_falsch___3)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_trigger1_falsch___3'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_trigger1_falsch___3 varchar;   -- 3 - ret_ip_klasse_disease (varchar)
+        END IF; -- column (ret_gewiss_trigger1_falsch___3)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger1_falsch___4)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_trigger1_falsch___4'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_trigger1_falsch___4 varchar;   -- 4 - ret_ip_klasse_nieren_insuf (varchar)
+        END IF; -- column (ret_gewiss_trigger1_falsch___4)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1___1)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_1___1'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_1___1 varchar;   -- 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_1___1)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1___2)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_1___2'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_1___2 varchar;   -- 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_1___2)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1___3)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_1___3'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_1___3 varchar;   -- 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_1___3)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1___4)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_1___4'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_1___4 varchar;   -- 4 - Anderer Fehler (bitte näher erläutern) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_1___4)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2___1)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_2___1'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_2___1 varchar;   -- 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_2___1)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2___2)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_2___2'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_2___2 varchar;   -- 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_2___2)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2___3)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_2___3'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_2___3 varchar;   -- 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_2___3)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2___4)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_2___4'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_2___4 varchar;   -- 4 - Anderer Fehler (bitte näher erläutern) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_2___4)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1_oth)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_1_oth'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_1_oth varchar;   -- Kommentar (1. Trigger) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_1_oth)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2_oth)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl1_2_oth'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_2_oth varchar;   -- Kommentar (2. Trigger) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl1_2_oth)
+
         IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_sonst1)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_grund_abl_sonst1'
         ) THEN
@@ -1943,7 +2033,7 @@ BEGIN
         IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_klin1)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_grund_abl_klin1'
         ) THEN
-            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund_abl_klin1 varchar;   -- WARUM ist das MRP nicht klinisch relevant (varchar)
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund_abl_klin1 varchar;   -- WARUM ist das MRP nicht klinisch relevant? (varchar)
         END IF; -- column (ret_gewiss_grund_abl_klin1)
 
         IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_klin1_neg___1)
@@ -2099,7 +2189,7 @@ BEGIN
         IF NOT EXISTS ( -- column not exists (ret_gewissheit2)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewissheit2'
         ) THEN
-            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewissheit2 varchar;   -- Sicherheit des detektierten MRP (varchar)
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewissheit2 varchar;   -- Bewertung des detektierten MRP* (varchar)
         END IF; -- column (ret_gewissheit2)
 
         IF NOT EXISTS ( -- column not exists (ret_mrp_zuordnung2)
@@ -2126,10 +2216,94 @@ BEGIN
             ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund_abl_sonst2 varchar;   -- Bitte näher beschreiben (varchar)
         END IF; -- column (ret_gewiss_grund_abl_sonst2)
 
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger2_falsch___1)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_trigger2_falsch___1'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_trigger2_falsch___1 varchar;   -- 1 - ret_atc1 (varchar)
+        END IF; -- column (ret_gewiss_trigger2_falsch___1)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger2_falsch___2)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_trigger2_falsch___2'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_trigger2_falsch___2 varchar;   -- 2 - ret_atc2 (varchar)
+        END IF; -- column (ret_gewiss_trigger2_falsch___2)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger2_falsch___3)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_trigger2_falsch___3'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_trigger2_falsch___3 varchar;   -- 3 - ret_ip_klasse_disease (varchar)
+        END IF; -- column (ret_gewiss_trigger2_falsch___3)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger2_falsch___4)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_trigger2_falsch___4'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_trigger2_falsch___4 varchar;   -- 4 - ret_ip_klasse_nieren_insuf (varchar)
+        END IF; -- column (ret_gewiss_trigger2_falsch___4)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1___1)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_1___1'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_1___1 varchar;   -- 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_1___1)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1___2)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_1___2'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_1___2 varchar;   -- 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_1___2)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1___3)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_1___3'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_1___3 varchar;   -- 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_1___3)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1___4)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_1___4'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_1___4 varchar;   -- 4 - Anderer Fehler (bitte näher erläutern) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_1___4)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2___1)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_2___1'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_2___1 varchar;   -- 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_2___1)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2___2)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_2___2'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_2___2 varchar;   -- 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_2___2)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2___3)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_2___3'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_2___3 varchar;   -- 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_2___3)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2___4)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_2___4'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_2___4 varchar;   -- 4 - Anderer Fehler (bitte näher erläutern) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_2___4)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1_oth)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_1_oth'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_1_oth varchar;   -- Kommentar (1. Trigger) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_1_oth)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2_oth)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_datengrundl2_2_oth'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_2_oth varchar;   -- Kommentar (2. Trigger) (varchar)
+        END IF; -- column (ret_gewiss_datengrundl2_2_oth)
+
         IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_klin2)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_grund_abl_klin2'
         ) THEN
-            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund_abl_klin2 varchar;   -- WARUM ist das MRP nicht klinisch relevant (varchar)
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund_abl_klin2 varchar;   -- WARUM ist das MRP nicht klinisch relevant? (varchar)
         END IF; -- column (ret_gewiss_grund_abl_klin2)
 
         IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_klin2_neg___1)
@@ -2281,6 +2455,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_bewerter1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_id), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_meda_id), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_meda_dat_referenz), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_meda_dat1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_kurzbeschr), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_ip_klasse), ''#NULL#'') || ''|||'' ||
@@ -2294,6 +2469,20 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewissheit1_oth), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___1), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___2), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___3), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___4), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___1), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___2), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___3), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___4), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___1), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___2), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___3), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___4), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1_oth), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2_oth), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1_neg___1), ''#NULL#'') || ''|||'' ||
@@ -2326,6 +2515,20 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___1), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___2), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___3), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___4), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___1), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___2), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___3), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___4), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___1), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___2), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___3), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___4), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1_oth), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2_oth), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2_neg___1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_massn_am2___1), ''#NULL#'') || ''|||'' ||
@@ -2365,7 +2568,8 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_bewerter1), '#NULL#') || '|||' || -- hash from: 1. Bewertung von (ret_bewerter1)
           COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (ret_id)
           COALESCE(db.to_char_immutable(ret_meda_id), '#NULL#') || '|||' || -- hash from: Zuordnung Meda -> rMRP (ret_meda_id)
-          COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat1)
+          COALESCE(db.to_char_immutable(ret_meda_dat_referenz), '#NULL#') || '|||' || -- hash from: Referenzdatum der Medikationsanalyse (ret_meda_dat_referenz)
+          COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Bewertung* (ret_meda_dat1)
           COALESCE(db.to_char_immutable(ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
           COALESCE(db.to_char_immutable(ret_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse)
           COALESCE(db.to_char_immutable(ret_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse_01)
@@ -2374,12 +2578,26 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (ret_ip_klasse_disease)
           COALESCE(db.to_char_immutable(ret_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (ret_ip_klasse_labor)
           COALESCE(db.to_char_immutable(ret_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (ret_ip_klasse_nieren_insuf)
-          COALESCE(db.to_char_immutable(ret_gewissheit1), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit1)
+          COALESCE(db.to_char_immutable(ret_gewissheit1), '#NULL#') || '|||' || -- hash from: Bewertung des detektierten MRP* (ret_gewissheit1)
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung1), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung1)
           COALESCE(db.to_char_immutable(ret_gewissheit1_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit1_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger1_falsch___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger1_falsch___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger1_falsch___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___4), '#NULL#') || '|||' || -- hash from: 4 - ret_ip_klasse_nieren_insuf (ret_gewiss_trigger1_falsch___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl1_1___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl1_1___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl1_1___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_1___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl1_2___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl1_2___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl1_2___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_2___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl1_1_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl1_2_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst1)
-          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant (ret_gewiss_grund_abl_klin1)
+          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin1)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin1_neg___1)
           COALESCE(db.to_char_immutable(ret_massn_am1___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am1___1)
           COALESCE(db.to_char_immutable(ret_massn_am1___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am1___2)
@@ -2405,12 +2623,26 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter2)
           COALESCE(db.to_char_immutable(ret_bewerter3), '#NULL#') || '|||' || -- hash from:  (ret_bewerter3)
           COALESCE(db.to_char_immutable(ret_bewerter2_pipeline), '#NULL#') || '|||' || -- hash from:  (ret_bewerter2_pipeline)
-          COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit2)
+          COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Bewertung des detektierten MRP* (ret_gewissheit2)
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst2)
-          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant (ret_gewiss_grund_abl_klin2)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger2_falsch___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger2_falsch___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger2_falsch___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___4), '#NULL#') || '|||' || -- hash from: 4 - ret_ip_klasse_nieren_insuf (ret_gewiss_trigger2_falsch___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl2_1___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl2_1___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl2_1___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_1___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl2_2___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl2_2___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl2_2___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_2___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl2_1_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl2_2_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin2)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin2_neg___1)
           COALESCE(db.to_char_immutable(ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am2___1)
           COALESCE(db.to_char_immutable(ret_massn_am2___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am2___2)
@@ -2455,7 +2687,8 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_bewerter1), '#NULL#') || '|||' || -- hash from: 1. Bewertung von (ret_bewerter1)
           COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (ret_id)
           COALESCE(db.to_char_immutable(ret_meda_id), '#NULL#') || '|||' || -- hash from: Zuordnung Meda -> rMRP (ret_meda_id)
-          COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat1)
+          COALESCE(db.to_char_immutable(ret_meda_dat_referenz), '#NULL#') || '|||' || -- hash from: Referenzdatum der Medikationsanalyse (ret_meda_dat_referenz)
+          COALESCE(db.to_char_immutable(ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Bewertung* (ret_meda_dat1)
           COALESCE(db.to_char_immutable(ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
           COALESCE(db.to_char_immutable(ret_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse)
           COALESCE(db.to_char_immutable(ret_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse_01)
@@ -2464,12 +2697,26 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (ret_ip_klasse_disease)
           COALESCE(db.to_char_immutable(ret_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (ret_ip_klasse_labor)
           COALESCE(db.to_char_immutable(ret_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (ret_ip_klasse_nieren_insuf)
-          COALESCE(db.to_char_immutable(ret_gewissheit1), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit1)
+          COALESCE(db.to_char_immutable(ret_gewissheit1), '#NULL#') || '|||' || -- hash from: Bewertung des detektierten MRP* (ret_gewissheit1)
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung1), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung1)
           COALESCE(db.to_char_immutable(ret_gewissheit1_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit1_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger1_falsch___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger1_falsch___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger1_falsch___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___4), '#NULL#') || '|||' || -- hash from: 4 - ret_ip_klasse_nieren_insuf (ret_gewiss_trigger1_falsch___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl1_1___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl1_1___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl1_1___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_1___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl1_2___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl1_2___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl1_2___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_2___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl1_1_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl1_2_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst1)
-          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant (ret_gewiss_grund_abl_klin1)
+          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin1)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin1_neg___1)
           COALESCE(db.to_char_immutable(ret_massn_am1___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am1___1)
           COALESCE(db.to_char_immutable(ret_massn_am1___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am1___2)
@@ -2495,12 +2742,26 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter2)
           COALESCE(db.to_char_immutable(ret_bewerter3), '#NULL#') || '|||' || -- hash from:  (ret_bewerter3)
           COALESCE(db.to_char_immutable(ret_bewerter2_pipeline), '#NULL#') || '|||' || -- hash from:  (ret_bewerter2_pipeline)
-          COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Sicherheit des detektierten MRP (ret_gewissheit2)
+          COALESCE(db.to_char_immutable(ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Bewertung des detektierten MRP* (ret_gewissheit2)
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst2)
-          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant (ret_gewiss_grund_abl_klin2)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger2_falsch___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger2_falsch___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger2_falsch___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___4), '#NULL#') || '|||' || -- hash from: 4 - ret_ip_klasse_nieren_insuf (ret_gewiss_trigger2_falsch___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl2_1___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl2_1___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl2_1___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_1___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl2_2___1)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl2_2___2)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl2_2___3)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_2___4)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl2_1_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl2_2_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin2)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin2_neg___1)
           COALESCE(db.to_char_immutable(ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am2___1)
           COALESCE(db.to_char_immutable(ret_massn_am2___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am2___2)
@@ -2691,12 +2952,6 @@ BEGIN
             ALTER TABLE db_log.risikofaktor_fe ADD rskfk_entern int;   -- ent. Ern. (int)
         END IF; -- column (rskfk_entern)
 
-        IF NOT EXISTS ( -- column not exists (rskfkt_anz_rskamklassen)
-            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe' AND column_name = 'rskfkt_anz_rskamklassen'
-        ) THEN
-            ALTER TABLE db_log.risikofaktor_fe ADD rskfkt_anz_rskamklassen double precision;   -- Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (double precision)
-        END IF; -- column (rskfkt_anz_rskamklassen)
-
         IF NOT EXISTS ( -- column not exists (risikofaktor_complete)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'risikofaktor_fe' AND column_name = 'risikofaktor_complete'
         ) THEN
@@ -2730,7 +2985,6 @@ BEGIN
           COALESCE(db.to_char_immutable(rskfk_meld), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(rskfk_dialyse), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(rskfk_entern), ''#NULL#'') || ''|||'' ||
-          COALESCE(db.to_char_immutable(rskfkt_anz_rskamklassen), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(risikofaktor_complete), ''#NULL#'') || ''|||'' ||''#''
                 ','(',''),')',''))
             ) THEN
@@ -2758,7 +3012,6 @@ BEGIN
           COALESCE(db.to_char_immutable(rskfk_meld), '#NULL#') || '|||' || -- hash from: MELD (rskfk_meld)
           COALESCE(db.to_char_immutable(rskfk_dialyse), '#NULL#') || '|||' || -- hash from: Dialyse (rskfk_dialyse)
           COALESCE(db.to_char_immutable(rskfk_entern), '#NULL#') || '|||' || -- hash from: ent. Ern. (rskfk_entern)
-          COALESCE(db.to_char_immutable(rskfkt_anz_rskamklassen), '#NULL#') || '|||' || -- hash from: Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (rskfkt_anz_rskamklassen)
           COALESCE(db.to_char_immutable(risikofaktor_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (risikofaktor_complete)
                  '#'
                )
@@ -2792,7 +3045,6 @@ BEGIN
           COALESCE(db.to_char_immutable(rskfk_meld), '#NULL#') || '|||' || -- hash from: MELD (rskfk_meld)
           COALESCE(db.to_char_immutable(rskfk_dialyse), '#NULL#') || '|||' || -- hash from: Dialyse (rskfk_dialyse)
           COALESCE(db.to_char_immutable(rskfk_entern), '#NULL#') || '|||' || -- hash from: ent. Ern. (rskfk_entern)
-          COALESCE(db.to_char_immutable(rskfkt_anz_rskamklassen), '#NULL#') || '|||' || -- hash from: Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (rskfkt_anz_rskamklassen)
           COALESCE(db.to_char_immutable(risikofaktor_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (risikofaktor_complete)
                  '#'
                )
@@ -3455,7 +3707,8 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.redcap_data_access_group I
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter1 IS '1. Bewertung von (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_id IS 'Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_id IS 'Zuordnung Meda -> rMRP (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_dat1 IS 'Datum der retrolektiven Betrachtung* (timestamp)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_dat_referenz IS 'Referenzdatum der Medikationsanalyse (timestamp)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_meda_dat1 IS 'Datum der retrolektiven Bewertung* (timestamp)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_kurzbeschr IS 'Kurzbeschreibung des MRPs (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse IS 'MRP-Klasse (INTERPOLAR) (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_01 IS 'MRP-Klasse (INTERPOLAR) (varchar)';
@@ -3464,12 +3717,26 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_atc2 IS '2. Medikament
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_disease IS 'Disease (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_labor IS 'Labor (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_ip_klasse_nieren_insuf IS 'Grad der Nierenfunktionseinschränkung (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit1 IS 'Sicherheit des detektierten MRP (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit1 IS 'Bewertung des detektierten MRP* (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung1 IS 'Zuordnung zu manuellem MRP (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit1_oth IS 'Weitere Informationen (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund1_abl IS 'Grund für nicht Bestätigung (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger1_falsch___1 IS '1 - ret_atc1 (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger1_falsch___2 IS '2 - ret_atc2 (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger1_falsch___3 IS '3 - ret_ip_klasse_disease (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger1_falsch___4 IS '4 - ret_ip_klasse_nieren_insuf (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_1___1 IS '1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_1___2 IS '2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_1___3 IS '3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_1___4 IS '4 - Anderer Fehler (bitte näher erläutern) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_2___1 IS '1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_2___2 IS '2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_2___3 IS '3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_2___4 IS '4 - Anderer Fehler (bitte näher erläutern) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_1_oth IS 'Kommentar (1. Trigger) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_2_oth IS 'Kommentar (2. Trigger) (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst1 IS 'Bitte näher beschreiben (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin1 IS 'WARUM ist das MRP nicht klinisch relevant (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin1 IS 'WARUM ist das MRP nicht klinisch relevant? (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin1_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___1 IS '1 - Anweisung für die Applikation geben (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am1___2 IS '2 - Arzneimittel ändern (varchar)';
@@ -3495,12 +3762,26 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_2ndbewertung___1 IS '1
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter2 IS '2. Bewertung von (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter3 IS ' (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_bewerter2_pipeline IS ' (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit2 IS 'Sicherheit des detektierten MRP (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit2 IS 'Bewertung des detektierten MRP* (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung2 IS 'Zuordnung zu manuellem MRP (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit2_oth IS 'Weitere Informationen (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund2_abl IS 'Grund für nicht Bestätigung (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst2 IS 'Bitte näher beschreiben (varchar)';
-COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin2 IS 'WARUM ist das MRP nicht klinisch relevant (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger2_falsch___1 IS '1 - ret_atc1 (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger2_falsch___2 IS '2 - ret_atc2 (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger2_falsch___3 IS '3 - ret_ip_klasse_disease (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger2_falsch___4 IS '4 - ret_ip_klasse_nieren_insuf (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_1___1 IS '1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_1___2 IS '2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_1___3 IS '3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_1___4 IS '4 - Anderer Fehler (bitte näher erläutern) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_2___1 IS '1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_2___2 IS '2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_2___3 IS '3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_2___4 IS '4 - Anderer Fehler (bitte näher erläutern) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_1_oth IS 'Kommentar (1. Trigger) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_2_oth IS 'Kommentar (2. Trigger) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin2 IS 'WARUM ist das MRP nicht klinisch relevant? (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin2_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___1 IS '1 - Anweisung für die Applikation geben (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___2 IS '2 - Arzneimittel ändern (varchar)';
@@ -3558,7 +3839,6 @@ COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_qtc IS 'QTc (int)';
 COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_meld IS 'MELD (int)';
 COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_dialyse IS 'Dialyse (int)';
 COMMENT ON COLUMN db_log.risikofaktor_fe.rskfk_entern IS 'ent. Ern. (int)';
-COMMENT ON COLUMN db_log.risikofaktor_fe.rskfkt_anz_rskamklassen IS 'Aggregation der Felder 27-33: Anzahl der Felder mit Ausprägung >0 (double precision)';
 COMMENT ON COLUMN db_log.risikofaktor_fe.risikofaktor_complete IS 'Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)';
 COMMENT ON COLUMN db_log.risikofaktor_fe.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db_log.risikofaktor_fe.last_check_datetime IS 'Time at which data record was last checked';

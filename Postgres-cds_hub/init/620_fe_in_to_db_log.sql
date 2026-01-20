@@ -3,17 +3,17 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 13:49:10
--- Rights definition file size        : 16391 Byte
+-- Rights definition file last update : 2026-01-16 14:53:36
+-- Rights definition file size        : 16352 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 16:37:43
+-- Create time: 2026-01-19 15:01:59
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db_log_user
 -- OWNER_SCHEMA:  db_log
--- TAGS:  INT_ID
+-- TAGS:  INT_ID FE_RC_ID
 -- TABLE_PREFIX:  
 -- TABLE_POSTFIX:  _fe
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
@@ -1018,6 +1018,7 @@ BEGIN
                                 ret_bewerter1,
                                 ret_id,
                                 ret_meda_id,
+                                ret_meda_dat_referenz,
                                 ret_meda_dat1,
                                 ret_kurzbeschr,
                                 ret_ip_klasse,
@@ -1031,6 +1032,20 @@ BEGIN
                                 ret_mrp_zuordnung1,
                                 ret_gewissheit1_oth,
                                 ret_gewiss_grund1_abl,
+                                ret_gewiss_trigger1_falsch___1,
+                                ret_gewiss_trigger1_falsch___2,
+                                ret_gewiss_trigger1_falsch___3,
+                                ret_gewiss_trigger1_falsch___4,
+                                ret_gewiss_datengrundl1_1___1,
+                                ret_gewiss_datengrundl1_1___2,
+                                ret_gewiss_datengrundl1_1___3,
+                                ret_gewiss_datengrundl1_1___4,
+                                ret_gewiss_datengrundl1_2___1,
+                                ret_gewiss_datengrundl1_2___2,
+                                ret_gewiss_datengrundl1_2___3,
+                                ret_gewiss_datengrundl1_2___4,
+                                ret_gewiss_datengrundl1_1_oth,
+                                ret_gewiss_datengrundl1_2_oth,
                                 ret_gewiss_grund_abl_sonst1,
                                 ret_gewiss_grund_abl_klin1,
                                 ret_gewiss_grund_abl_klin1_neg___1,
@@ -1063,6 +1078,20 @@ BEGIN
                                 ret_gewissheit2_oth,
                                 ret_gewiss_grund2_abl,
                                 ret_gewiss_grund_abl_sonst2,
+                                ret_gewiss_trigger2_falsch___1,
+                                ret_gewiss_trigger2_falsch___2,
+                                ret_gewiss_trigger2_falsch___3,
+                                ret_gewiss_trigger2_falsch___4,
+                                ret_gewiss_datengrundl2_1___1,
+                                ret_gewiss_datengrundl2_1___2,
+                                ret_gewiss_datengrundl2_1___3,
+                                ret_gewiss_datengrundl2_1___4,
+                                ret_gewiss_datengrundl2_2___1,
+                                ret_gewiss_datengrundl2_2___2,
+                                ret_gewiss_datengrundl2_2___3,
+                                ret_gewiss_datengrundl2_2___4,
+                                ret_gewiss_datengrundl2_1_oth,
+                                ret_gewiss_datengrundl2_2_oth,
                                 ret_gewiss_grund_abl_klin2,
                                 ret_gewiss_grund_abl_klin2_neg___1,
                                 ret_massn_am2___1,
@@ -1100,6 +1129,7 @@ BEGIN
                                 current_record.ret_bewerter1,
                                 current_record.ret_id,
                                 current_record.ret_meda_id,
+                                current_record.ret_meda_dat_referenz,
                                 current_record.ret_meda_dat1,
                                 current_record.ret_kurzbeschr,
                                 current_record.ret_ip_klasse,
@@ -1113,6 +1143,20 @@ BEGIN
                                 current_record.ret_mrp_zuordnung1,
                                 current_record.ret_gewissheit1_oth,
                                 current_record.ret_gewiss_grund1_abl,
+                                current_record.ret_gewiss_trigger1_falsch___1,
+                                current_record.ret_gewiss_trigger1_falsch___2,
+                                current_record.ret_gewiss_trigger1_falsch___3,
+                                current_record.ret_gewiss_trigger1_falsch___4,
+                                current_record.ret_gewiss_datengrundl1_1___1,
+                                current_record.ret_gewiss_datengrundl1_1___2,
+                                current_record.ret_gewiss_datengrundl1_1___3,
+                                current_record.ret_gewiss_datengrundl1_1___4,
+                                current_record.ret_gewiss_datengrundl1_2___1,
+                                current_record.ret_gewiss_datengrundl1_2___2,
+                                current_record.ret_gewiss_datengrundl1_2___3,
+                                current_record.ret_gewiss_datengrundl1_2___4,
+                                current_record.ret_gewiss_datengrundl1_1_oth,
+                                current_record.ret_gewiss_datengrundl1_2_oth,
                                 current_record.ret_gewiss_grund_abl_sonst1,
                                 current_record.ret_gewiss_grund_abl_klin1,
                                 current_record.ret_gewiss_grund_abl_klin1_neg___1,
@@ -1145,6 +1189,20 @@ BEGIN
                                 current_record.ret_gewissheit2_oth,
                                 current_record.ret_gewiss_grund2_abl,
                                 current_record.ret_gewiss_grund_abl_sonst2,
+                                current_record.ret_gewiss_trigger2_falsch___1,
+                                current_record.ret_gewiss_trigger2_falsch___2,
+                                current_record.ret_gewiss_trigger2_falsch___3,
+                                current_record.ret_gewiss_trigger2_falsch___4,
+                                current_record.ret_gewiss_datengrundl2_1___1,
+                                current_record.ret_gewiss_datengrundl2_1___2,
+                                current_record.ret_gewiss_datengrundl2_1___3,
+                                current_record.ret_gewiss_datengrundl2_1___4,
+                                current_record.ret_gewiss_datengrundl2_2___1,
+                                current_record.ret_gewiss_datengrundl2_2___2,
+                                current_record.ret_gewiss_datengrundl2_2___3,
+                                current_record.ret_gewiss_datengrundl2_2___4,
+                                current_record.ret_gewiss_datengrundl2_1_oth,
+                                current_record.ret_gewiss_datengrundl2_2_oth,
                                 current_record.ret_gewiss_grund_abl_klin2,
                                 current_record.ret_gewiss_grund_abl_klin2_neg___1,
                                 current_record.ret_massn_am2___1,
@@ -1317,7 +1375,6 @@ BEGIN
                                 rskfk_meld,
                                 rskfk_dialyse,
                                 rskfk_entern,
-                                rskfkt_anz_rskamklassen,
                                 risikofaktor_complete,
                                 input_datetime,
                                 last_check_datetime,
@@ -1343,7 +1400,6 @@ BEGIN
                                 current_record.rskfk_meld,
                                 current_record.rskfk_dialyse,
                                 current_record.rskfk_entern,
-                                current_record.rskfkt_anz_rskamklassen,
                                 current_record.risikofaktor_complete,
                                 current_record.input_datetime,
                                 last_pro_datetime,
