@@ -28,6 +28,10 @@ getRedcapConnection <- function() {
     stop("Failed to establish a REDCap connection. Error: ", e$message)
   })
 
+  if (etlutils::isDefinedAndNotEmpty("REDCAP_CSV_DELIMITER")) {
+    frontend_connection$set_csv_delimiter(REDCAP_CSV_DELIMITER)
+  }
+
   # Test the connection by fetching metadata
   meta_data <- tryCatch({
     suppressWarnings(redcapAPI::exportMetaData(frontend_connection))
