@@ -2,9 +2,6 @@
 # Unit Convertion #
 ###################
 
-# Default is "symbols" but we need "standard", because "symbols" does'nt work in our cases
-units::units_options(set_units_mode = "standard")
-
 #' Clean and normalize unit strings for downstream parsing
 #'
 #' This helper function preprocesses a unit string for consistent handling. It
@@ -166,6 +163,11 @@ convertLabUnits <- function(measured_value,
                             ignore_errors = TRUE,
                             additional_error_message = NA) {
 
+  # Default is "symbols" but we need "standard", because "symbols" does'nt work in our cases
+  # To set this globally outside this function doesnt work
+  # This option is relevant for units::set_units() function
+  units::units_options(set_units_mode = "standard")
+  # Initialize result
   result <- NA
   tryCatch({
     measured_unit <- asUnit(measured_unit)
