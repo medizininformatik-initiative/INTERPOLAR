@@ -91,7 +91,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(21)
+  duplicatePatients(22)
 
   runCodeForDebugDay(1, {
 
@@ -232,6 +232,11 @@ if (exists("DEBUG_DAY")) {
       )
     )
     addConditions(pid, c("I47", "I60.5"))
+
+    # Diagnose mit 30 Tage Gültigkeitszeitraum, aber vor mehr als 30 Tagen gestartet
+    # No MRP
+    pid <- addDrugs("UKB-0001_22", "L02BX03")
+    addConditions(pid, "O09", day_offset = -40)
 
   })
 
