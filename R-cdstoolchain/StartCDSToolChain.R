@@ -62,16 +62,11 @@ setDebugPathToConfigToml <- function(module_name) {
 
 shouldStart <- function(module_name) {
   if (!etlutils::isErrorOccured()) {
-    if (exists("DEBUG_START_SINGLE_MODULE") && DEBUG_START_SINGLE_MODULE == module_name) {
+    if (!exists("DEBUG_START_SINGLE_MODULE") ||
+        (exists("DEBUG_START_SINGLE_MODULE") && identical(DEBUG_START_SINGLE_MODULE, module_name))) {
       resetMemory()
       setDebugPathToConfigToml(module_name)
       return(TRUE)
-    } else if (!exists("DEBUG_START_SINGLE_MODULE")) {
-      resetMemory()
-      setDebugPathToConfigToml(module_name)
-      return(TRUE)
-    } else {
-      return(FALSE)
     }
   }
   return(FALSE)
