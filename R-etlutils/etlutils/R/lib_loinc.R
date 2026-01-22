@@ -101,6 +101,10 @@ isValidUnit <- function(u) {
 #' @param conversion_unit Character (optional).
 #'   The intermediate unit used for conversion
 #'   (e.g., `"mg/dl"`, `"U/l"`).
+#' @param ignore_errors Logical (default: `TRUE`).
+#'  If `TRUE`, conversion errors will be caught and a warning
+#' @param additional_error_message Character (optional).
+#' Additional context to include in error/warning messages.
 #'
 #' @return Numeric. The value converted into the target unit (without unit object).
 #'
