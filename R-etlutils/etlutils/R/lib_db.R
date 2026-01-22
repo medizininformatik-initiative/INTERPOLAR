@@ -1143,6 +1143,18 @@ dbPrintTimeAndTimezone <- function(db_connection) {
   print(paste0("R Sys.timezone(): ", Sys.timezone()))
 }
 
+#' Get the Release Version of the Database
+#'
+#' This function retrieves the release version of the connected PostgreSQL database.
+#'
+#' @return A string representing the release version of the database.
+#'
+#' @export
+dbGetVersion <- function() {
+  #TODO: implement this function
+  return("1.5.0")
+}
+
 #' Get the Current Schema of a PostgreSQL Connection
 #'
 #' This function retrieves the current schema of an active PostgreSQL connection by executing
