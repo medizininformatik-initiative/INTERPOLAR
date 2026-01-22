@@ -27,8 +27,8 @@ for (arg in args) {
     if (arg == "--resetLockAndStop") {
       quit(status = 0, save = "no")  # clean exit without error
     }
-  } else {
-    stop("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop")
+  } else if (!arg %in% c("--ignoreNewerDBVersion")) {
+    stop("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop, --ignoreNewerDBVersion")
   }
 }
 
@@ -76,6 +76,9 @@ shouldStart <- function(module_name) {
   }
   return(FALSE)
 }
+
+# Check if the release version of the database is compatible
+etlutils::checkVersion(ingnore_newer_db_version = "--ignoreNewerDBVersion" %in% args)
 
 tryCatch({
   if (shouldStart("cds2db")) {
