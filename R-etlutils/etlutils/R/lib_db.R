@@ -158,14 +158,7 @@ dbLog <- function(...) {
 }
 
 dbGetPort <- function() {
-  port <- .lib_db_env[["DB_PORT"]]
-  if (exists("DEBUG_VM_PORT_INDEX")) {
-    if (nchar(port == 5)) {
-      port <- substr(port, 2, 5)
-    }
-    port <- paste0(DEBUG_VM_PORT_INDEX, port)
-  }
-  return(port)
+  return(if (exists("DEBUG_DB_PORT")) DEBUG_DB_PORT else .lib_db_env[["DB_PORT"]])
 }
 
 #' Get a PostgreSQL Database Connection
