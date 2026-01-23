@@ -72,21 +72,19 @@ shouldStart <- function(module_name) {
   return(FALSE)
 }
 
-# Check if the release version of the database is compatible
-etlutils::checkVersion(ingnore_newer_db_version = "--ignoreNewerDBVersion" %in% args)
-
 tryCatch({
+  ignore_newer_db_version = "--ignoreNewerDBVersion" %in% args
   if (shouldStart("cds2db")) {
-    cds2db::retrieve()
+    cds2db::retrieve(ignore_newer_db_version = ignore_newer_db_version)
   }
   if (shouldStart("db2frontend")) {
-    db2frontend::startFrontend2DB()
+    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version)
   }
   if (shouldStart("dataprocessor")) {
-    dataprocessor::processData()
+    dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version)
   }
   if (shouldStart("db2frontend")) {
-    db2frontend::startDB2Frontend()
+    db2frontend::startDB2Frontend(ignore_newer_db_version = ignore_newer_db_version)
   }
   if (etlutils::isErrorOccured()) {
     stop(etlutils::getErrorMessage())

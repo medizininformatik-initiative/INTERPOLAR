@@ -567,25 +567,25 @@ getReleaseVersion <- function() {
 #' If the database version is older than the release version, execution is
 #' stopped and the user is instructed to run the required database migrations.
 #'
-#' If the database version is newer than the release version, execution is also
-#' stopped by default. This safeguard can be disabled to allow a forced run,
-#' which is intended for rollback scenarios where the database schema is
+#' If the database version is newer than the release version, execution is
+#' stopped unless explicitly allowed. Allowing newer database versions is
+#' intended for rollback scenarios where the database schema is assumed to be
 #' backward-compatible with older releases.
 #'
 #' The version check is performed only once per R session.
 #'
-#' @param ingnore_newer_db_version Logical flag indicating whether execution
-#'   should be stopped when the database version is newer than the release
-#'   version. If \code{TRUE} (default), execution is stopped and the user is
-#'   instructed to explicitly force the run. If \code{FALSE}, newer database
-#'   versions are accepted.
+#' @param ignore_newer_db_version Logical flag indicating whether execution
+#'   should continue when the database version is newer than the release
+#'   version. If \code{FALSE}, execution is stopped and the user is instructed
+#'   to explicitly force the run. If \code{TRUE}, newer database versions are
+#'   accepted.
 #'
 #' @return Invisibly returns \code{NULL}. This function is called for its side
 #'   effects and will stop execution with an error if version compatibility
 #'   requirements are not met.
 #'
 #' @export
-checkVersion <- function(ingnore_newer_db_version = TRUE) {
+checkVersion <- function(ignore_newer_db_version) {
   if (!isDefinedAndTrue("VERSION_ALREADY_CHECKED", .lib_envir_env)) {
     db_version <- dbGetVersion()
     # read the first line of the release-version.txt file in the main directory
@@ -596,8 +596,8 @@ checkVersion <- function(ingnore_newer_db_version = TRUE) {
                   "  docker compose exec -w /cds_hub-initdb.d cds_hub psql -U cds_hub_db_admin -d cds_hub_db -f ./migration/migration.sql\n",
                   "  or see https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."))
     } else if (compare_result > 0L) { # DB is newer than release version -> allow force run
-      if (!ingnore_newer_db_version) {
-        stop(paste0(". The database version '", db_version, "' is newer than the release version '", release_version, "'. If you know what you are doing:",
+      if (!ignore_newer_db_version) {
+        stop(paste0("The database version '", db_version, "' is newer than the release version '", release_version, "'. If you know what you are doing:",
                     " You can force the run anyway, if you start the full toolchain or a single module with the parameter '--", forceRunIndicatorGlobalVariableName, "'."))
       }
     }
