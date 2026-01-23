@@ -21,6 +21,9 @@ retrieve <- function(reset_lock_only = FALSE) {
     return()
   }
 
+  # Check if the release version of the database is compatible
+  etlutils::checkVersion()
+
   try(etlutils::runLevel1("Run Retrieve", {
 
     # Reset database lock from unfinished previous cds2db run

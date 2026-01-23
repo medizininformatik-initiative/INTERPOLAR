@@ -23,6 +23,9 @@ startFrontend2DB <- function(reset_lock_only = FALSE) {
     return()
   }
 
+  # Check if the release version of the database is compatible
+  etlutils::checkVersion()
+
   try(etlutils::runLevel1("Run Frontend -> DB", {
 
     # Reset database lock from unfinished previous db2frontend run
@@ -78,6 +81,9 @@ startDB2Frontend <- function(reset_lock_only = FALSE) {
     etlutils::dbResetLock()
     return()
   }
+
+  # Check if the release version of the database is compatible
+  etlutils::checkVersion()
 
   try(etlutils::runLevel1("Run DB -> Frontend", {
 
