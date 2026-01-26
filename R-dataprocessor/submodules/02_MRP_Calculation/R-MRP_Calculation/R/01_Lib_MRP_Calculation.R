@@ -245,7 +245,8 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
         # Check for overlapping time periods
         if (start_datetime <= atc2_end_datetime && atc2_start_datetime <= end_datetime) {
           # Check, if the pair (A,B) and (B,A) exists
-          duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+          result_mrps <- result_mrps[, index := .I]
+          duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc)]$index
 
           # There is no existing mrp in the result table with the same atc codes
           if (!length(duplicate_idx)) {
@@ -281,6 +282,10 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
       }
     }
   }
+  if ("index" %in% colnames(result_mrps)) {
+    result_mrps[, index := NULL]
+  }
+
   return(result_mrps)
 }
 
