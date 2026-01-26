@@ -757,7 +757,7 @@ addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, peri
   "timing_event",
   "timing_events",
   "all_timestamps_NA"
-), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, ref_codes = NULL) {
+), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, timing_repeat_end_offset = 5, ref_codes = NULL) {
 
   period_type <- match.arg(period_type)
 
@@ -817,7 +817,7 @@ addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, peri
     }
     if (period_type %in% c("start_and_end",
                            "start_and_end_and_timing_event")) {
-      dt[, medreq_doseinstruc_timing_repeat_boundsperiod_end := getDebugDatesRAWDateTime(day_offset + 5, raw_index = "[1.1.1.1.1]")]
+      dt[, medreq_doseinstruc_timing_repeat_boundsperiod_end := getDebugDatesRAWDateTime(day_offset + timing_repeat_end_offset, raw_index = "[1.1.1.1.1]")]
     }
     if (period_type %in% c("start_and_end_and_timing_event",
                            "timing_event")) {
