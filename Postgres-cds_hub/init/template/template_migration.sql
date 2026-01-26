@@ -40,6 +40,7 @@
 \i ./450_cre_table_frontend_in_trig.sql
 \i ./460_cre_view_fe_dataproc_last_import.sql
 \i ./470_cre_view_fe_dataproc_all.sql
+\i ./480_cre_view_fe_dataproc_last_version.sql
 \i ./520_cre_view_fe_out.sql
 \i ./600_dp_in_to_db_log.sql
 \i ./620_fe_in_to_db_log.sql

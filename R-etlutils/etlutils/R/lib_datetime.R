@@ -219,3 +219,65 @@ getStartOfNextDay <- function(datetime) {
   next_day$sec <- 0
   as.POSIXct(next_day, tz = tz)
 }
+
+#' Safely compute the minimum of a POSIXct vector
+#'
+#' Computes the minimum value of a `POSIXct` vector while safely handling
+#' empty vectors and vectors containing only `NA` values.
+#' In such cases, the function returns `NA` instead of `Inf` and suppresses
+#' warnings produced by `min(..., na.rm = TRUE)`.
+#'
+#' @param x A `POSIXct` vector.
+#'
+#' @return
+#' A single `POSIXct` value representing the minimum of `x`,
+#' or `NA` if `x` is empty or contains only missing values.
+#'
+#' @details
+#' This helper is intended for use in grouped operations (e.g. with
+#' `data.table`) where `min()` may otherwise be called on empty groups.
+#'
+#' @examples
+#' getMinDatetime(as.POSIXct(c("2024-01-01", "2024-01-05")))
+#' getMinDatetime(as.POSIXct(c(NA, NA)))
+#' getMinDatetime(as.POSIXct(character(0)))
+#'
+#' @export
+getMinDatetime <- function(x) {
+  if (length(x) == 0 || all(is.na(x))) {
+    as.POSIXct(NA)
+  } else {
+    min(x, na.rm = TRUE)
+  }
+}
+
+#' Safely compute the maximum of a POSIXct vector
+#'
+#' Computes the maximum value of a `POSIXct` vector while safely handling
+#' empty vectors and vectors containing only `NA` values.
+#' In such cases, the function returns `NA` instead of `-Inf` and suppresses
+#' warnings produced by `max(..., na.rm = TRUE)`.
+#'
+#' @param x A `POSIXct` vector.
+#'
+#' @return
+#' A single `POSIXct` value representing the maximum of `x`,
+#' or `NA` if `x` is empty or contains only missing values.
+#'
+#' @details
+#' This helper is intended for use in grouped operations (e.g. with
+#' `data.table`) where `max()` may otherwise be called on empty groups.
+#'
+#' @examples
+#' getMaxDatetime(as.POSIXct(c("2024-01-01", "2024-01-05")))
+#' getMaxDatetime(as.POSIXct(c(NA, NA)))
+#' getMaxDatetime(as.POSIXct(character(0)))
+#'
+#' @export
+getMaxDatetime <- function(x) {
+  if (length(x) == 0 || all(is.na(x))) {
+    as.POSIXct(NA)
+  } else {
+    max(x, na.rm = TRUE)
+  }
+}

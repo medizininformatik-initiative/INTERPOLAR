@@ -91,7 +91,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(12)
+  duplicatePatients(22)
 
   runCodeForDebugDay(1, {
 
@@ -106,10 +106,6 @@ if (exists("DEBUG_DAY")) {
     addDrugs(pid, c("M04AA01"))
     addDrugs(pid, c("M04AA03"))
     addDrugs(pid, c("C09DA06", "C09DA06"))
-    addObservation(pid, "14933-6", value = 1000, unit = "umol/L")
-    addObservation(pid, "14933-6", day_offset = -0.5, value = 1000, unit = "umol/L")
-    addObservation(pid, "14933-6", value = 2000, unit = "umol/L")
-    addObservation(pid, "12980-9", value = 1000, unit = "umol/L") # secondary loinc code
 
     # Zeile 1429 aus Drug Disease Originalliste -  Weiteres Drug-Disease MRP mit Diagnose/Procedure
     addDrugs(pid, c("B01AB01",	"B01AB01", "B01AB51"))
@@ -118,11 +114,6 @@ if (exists("DEBUG_DAY")) {
     addProcedures(pid, c("8-151.4"))
     addConditions(pid, "G97.0")
     addConditions(pid, "G97.0")
-
-    # Drug_Drug                  -> MedicationRequests - N06AX22 + J01MA02
-    addDrugs(pid, c("N06AX22", "J01MA02")) # zwei MRPS, weil in Drug Drug und in Drug Drug Group (Wird noch bereinigt)
-    # Drug_DrugGroup             -> MedicationRequests - N06BA09 + C02KC01
-    addDrugs(pid, c("N06BA09", "C02KC01"))
 
     pid <- addDrugs("UKB-0001_2", "C09DA06")
     addConditions(pid, c("M10.00", "M10.00", "M10.01", "M14.00"))
@@ -167,6 +158,85 @@ if (exists("DEBUG_DAY")) {
     # ATC und mehrere Diagnosen mit mehreren Zeilen in der nach ICD gesplitteten Drug Disease Liste
     pid <- addDrugs("UKB-0001_12", "L01XX05")
     addConditions(pid, c("D69.58", "D69.61"))
+
+    #############################
+    ## Test for MRP Clustering ##
+    #############################
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - M01AB11 + Diagnosis - I60/I60.1 -> 1 MRP mit zwei Diagnose-Codes und zwei Diagnose Cluster
+    pid <- addDrugs("UKB-0001_13", "M01AB11")
+    addConditions(pid, "I60")
+    addConditions(pid, "I60.1")
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - C10BX02 + Diagnosis - K72.0 -> 2 MRP mit zwei zwei Diagnose Cluster und 2 ATC Displays
+    pid <- addDrugs("UKB-0001_14", "C10BX02")
+    addConditions(pid, "K72.0")
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - M01AB68 + Diagnosis - I60.5 -> 1 MRP mit zwei Diagnose Cluster
+    pid <- addDrugs("UKB-0001_15", "M01AB68")
+    addConditions(pid, "I60.5")
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - R03CC03 + Diagnosis - I47 -> 1 MRP mit zwei Diagnose Cluster
+    pid <- addDrugs("UKB-0001_16", c("R03CC03", "R03CC53"))
+    addConditions(pid, "I47")
+
+    # Drug_Disease -> Drug  + simple Disease
+    # MedicationRequest - R03CC53 + Diagnosis - I47 -> 1 MRP mit zwei Diagnose Cluster
+    pid <- addDrugs("UKB-0001_17", "R03CC53")
+    addConditions(pid, "I47")
+
+    #####################################
+    ## Add self-referenced medications ##
+    #####################################
+
+    # Drug_Disease - Medication mit 2 selbstreferenzierenden Medications
+    # 1 MRP R03CC03/R03CC53 + I47
+    pid <- addDrugs(pid = "UKB-0001_18", ref_codes = c("R03CC03", "R03CC53")) # Medication 1: 2 Ingredients
+    addConditions(pid, "I47")
+
+    # Drug_Disease - 2 Medication mit mehreren selbstreferenzierenden Medications
+    # 3 MRPs M01AB68 + I60.5 und R03CC04 + I47 und R03CC03/R03CC53 + I47
+    pid <- addDrugs(
+      pid = "UKB-0001_19",
+      ref_codes = list(
+        c("R03CC04", "R03CC03", "R03CC53"), # Medication 1: 3 Ingredients
+        c("M01AB68", "M01AB69", "M01AB70") # Medication 2: 3 Ingredients
+      )
+    )
+    addConditions(pid, c("I47", "I60.5"))
+
+    # Drug_Disease - 2 Medication mit eigenen ATC-Codes und selbstreferenzierenden Medications
+    # 3 MRPs M01AB68 + I60.5 and R03CC04 + I47 and R03CC53 + I47
+    pid <- addDrugs(
+      pid = "UKB-0001_20",
+      codes = list(c("R03CC04", "R03CC53")), # Medication 1: 2 Codes
+      ref_codes = list(c("M01AB68", "R03CC53")) # Medication 1: 2 Ingredients
+    )
+    addConditions(pid, c("I47", "I60.5"))
+
+    # Drug_Disease - 2 Medication mit eigenen ATC-Codes und eine mit selbstreferenzierende Medication
+    # 3 MRPs M01AB68 + I60.5 and R03CC04 + I47 and R03CC03/R03CC53 + I47
+    pid <- addDrugs(
+      pid = "UKB-0001_21",
+      codes = list(
+        c("R03CC03", "R03CC53"),  # Medication 1: 2 Codes
+        "R03CC04"                # Medication 2: 1 Code
+      ),
+      ref_codes = list(
+        c("M01AB68"),             # Medication 1: 1 Ingredient
+        character(0)              # Medication 2: no Ingredients
+      )
+    )
+    addConditions(pid, c("I47", "I60.5"))
+
+    # Diagnose mit 30 Tage Gültigkeitszeitraum, aber vor mehr als 30 Tagen gestartet
+    # No MRP
+    pid <- addDrugs("UKB-0001_22", "L02BX03")
+    addConditions(pid, "O09", day_offset = -40)
 
   })
 

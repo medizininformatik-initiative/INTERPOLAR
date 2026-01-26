@@ -1,13 +1,13 @@
-.drug_disease_env <- new.env()
+.drug_condition_env <- new.env()
 
-setDrugDiseaseListRows <- function(drug_disease_list_rows) {
+setDrugConditionListRows <- function(drug_condition_list_rows) {
   # Set the resources in the environment
-  assign("drug_disease_list_rows", drug_disease_list_rows, envir = .drug_disease_env)
+  assign("drug_condition_list_rows", drug_condition_list_rows, envir = .drug_condition_env)
 }
 
-getDrugDiseaseListRows <- function() {
-  if (exists("drug_disease_list_rows", envir = .drug_disease_env)) {
-    get("drug_disease_list_rows", envir = .drug_disease_env)
+getDrugConditionListRows <- function() {
+  if (exists("drug_condition_list_rows", envir = .drug_condition_env)) {
+    get("drug_condition_list_rows", envir = .drug_condition_env)
   } else {
     data.table::data.table(
       ATC_FULL_LIST = character(),
@@ -19,8 +19,8 @@ getDrugDiseaseListRows <- function() {
 }
 
 getNextMrpIndex <- function() {
-  if (exists("drug_disease_list_rows", envir = .drug_disease_env)) {
-    tbl <- get("drug_disease_list_rows", envir = .drug_disease_env)
+  if (exists("drug_condition_list_rows", envir = .drug_condition_env)) {
+    tbl <- get("drug_condition_list_rows", envir = .drug_condition_env)
     if (nrow(tbl) > 0 && "mrp_index" %in% names(tbl)) {
       return(max(tbl$mrp_index, na.rm = TRUE) + 1)
     }
@@ -28,17 +28,17 @@ getNextMrpIndex <- function() {
   return(1L)
 }
 
-getOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
+getOrCreateMrpIndex <- function(match_proxy_row, drug_condition_list_rows) {
   # Arguments:
   #   match_proxy_row: data.table with columns ATC_FULL_LIST, ICD_FULL_LIST, CONDITION_DISPLAY_CLUSTER
-  #   drug_disease_list_rows: existing mapping table with same columns + mrp_index
+  #   drug_condition_list_rows: existing mapping table with same columns + mrp_index
 
   current_key <- match_proxy_row[, .(
     ATC_FULL_LIST,
     ICD_FULL_LIST,
     CONDITION_DISPLAY_CLUSTER
   )]
-  existing_entry <- drug_disease_list_rows[
+  existing_entry <- drug_condition_list_rows[
     ATC_FULL_LIST %in% current_key$ATC_FULL_LIST &
       CONDITION_DISPLAY_CLUSTER %in% current_key$CONDITION_DISPLAY_CLUSTER &
       ICD_FULL_LIST %in% current_key$ICD_FULL_LIST
@@ -48,8 +48,8 @@ getOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
     mrp_index <- existing_entry$mrp_index
   } else {
     mrp_index <- getNextMrpIndex()
-    drug_disease_list_rows <- rbind(
-      drug_disease_list_rows,
+    drug_condition_list_rows <- rbind(
+      drug_condition_list_rows,
       data.table::data.table(
         ATC_FULL_LIST = current_key$ATC_FULL_LIST,
         ICD_FULL_LIST = current_key$ICD_FULL_LIST,
@@ -59,212 +59,14 @@ getOrCreateMrpIndex <- function(match_proxy_row, drug_disease_list_rows) {
       fill = TRUE
     )
 
-    setDrugDiseaseListRows(drug_disease_list_rows)
+    setDrugConditionListRows(drug_condition_list_rows)
   }
   return(mrp_index)
 }
 
-#' Get Column Names for Drug-Disease MRP Pair List
-#'
-#' Returns a named character vector of relevant column names used in the
-#' Drug-Disease medication-related problem (MRP) pair list.
-#' These columns define the structure of the MRP rule table, including
-#' primary ATC codes, condition codes (ICD), proxy rules, and laboratory proxies (LOINC).
-#'
-#' @return A named character vector of column names relevant to Drug-Disease MRP definitions.
-getRelevantColumnNamesDrugDisease <- function() {
-  etlutils::namedVectorByValue(
-    #"SMPC_NAME",
-    #"SMPC_VERSION",
-    "ATC_DISPLAY",
-    "ATC_PRIMARY",
-    "ATC_SYSTEMIC_SY",
-    "ATC_DERMATIC_D",
-    "ATC_OPHTHALMOLOGIC_OP",
-    "ATC_INHALATIVE_I",
-    "ATC_OTHER_OT",
-    "ATC_INCLUSION",
-    "CONDITION_DISPLAY",
-    "CONDITION_DISPLAY_CLUSTER",
-    "ICD",
-    "ICD_VALIDITY_DAYS",
-    "ICD_PROXY_ATC",
-    "ICD_PROXY_ATC_VALIDITY_DAYS",
-    "ICD_PROXY_OPS",
-    "ICD_PROXY_OPS_VALIDITY_DAYS",
-    "LOINC_PRIMARY_PROXY",
-    "LOINC_UNIT",
-    "LOINC_DISPLAY",
-    "LOINC_VALIDITY_DAYS",
-    "LOINC_CUTOFF_REFERENCE",
-    "LOINC_CUTOFF_ABSOLUTE")
-}
-
-#' Get Category Display Name for Drug-Disease MRPs
-#'
-#' Returns the display label for the MRP category "Drug-Disease", used for
-#' tagging or labeling MRPs in evaluation outputs.
-#'
-#' @return A character string: \code{"Drug-Disease"}
-getCategoryDisplayDrugDisease <- function() {"Drug-Disease"}
-
-#' Clean and Expand Drug_Disease_MRP Definition Table
-#'
-#' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
-#' splitting and trimming values, and expanding concatenated ICD codes.
-#'
-#' @param drug_disease_mrp_definition A data.table containing the MRP definition table.
-#' @param mrp_type A character string representing the base name of the MRP definition (e.g., `"Drug_Disease"`).
-#'
-#' @return A cleaned and expanded data.table containing the MRP definition table.
-#'
-#' @export
-processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type) {
-
-  # Remove not nesessary columns
-  mrp_columnnames <- getRelevantColumnNames(mrp_type)
-  drug_disease_mrp_definition <- drug_disease_mrp_definition[, ..mrp_columnnames]
-
-  # Remove rows with all empty code columns
-  proxy_column_names <- names(drug_disease_mrp_definition)[
-    (grepl("PROXY|ATC", names(drug_disease_mrp_definition))) &
-      !grepl("DISPLAY|INCLUSION|VALIDITY_DAYS", names(drug_disease_mrp_definition))
-  ]
-  code_column_names <- c("ICD", proxy_column_names)
-  drug_disease_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_disease_mrp_definition, code_column_names)
-
-  # ICD column:
-  # remove white spaces around plus signs
-  etlutils::replacePatternsInColumn(drug_disease_mrp_definition, 'ICD', '\\s*\\+\\s*', '+')
-  # replace all invalid chars in the ICD codes by a simple whitespace -> can be trimmed and splitted
-  drug_disease_mrp_definition[, ICD := sapply(ICD, function(text) gsub('[^0-9A-Za-z. +]', '', text))]
-
-  computeATCForCalculation(
-    data_table = drug_disease_mrp_definition,
-    primary_col = "ATC_PRIMARY",
-    inclusion_col = "ATC_INCLUSION",
-    output_col = "ATC_FOR_CALCULATION",
-    secondary_cols = c("ATC_SYSTEMIC_SY", "ATC_DERMATIC_D", "ATC_OPHTHALMOLOGIC_OP", "ATC_INHALATIVE_I", "ATC_OTHER_OT")
-  )
-
-  # To prevent a large number of meaningless MRPs from being found, all lines for proxy codes that essentially
-  # mean the same thing must be combined. The reason for this is that a short form of an ICD code (e.g., K70)
-  # results in a large number of individual codes, which then all generate their own MRP for the LOINC proxy
-  # because LOINC says that the patient has all these diseases.
-
-  code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
-  # Create a new column for the full ATC list
-  drug_disease_mrp_definition[, ATC_FULL_LIST := ATC_FOR_CALCULATION]
-  # Create a new column for the full ICD list
-  drug_disease_mrp_definition[, ICD_FULL_LIST := ICD]
-  # SPLIT and TRIM: ICD and proxy column:
-  # split the whitespace separated lists in ICD and proxy columns in a single row per code
-  drug_disease_mrp_definition <- etlutils::splitColumnsToRows(drug_disease_mrp_definition, code_column_names)
-  # trim all values in the whole table
-  etlutils::trimTableValues(drug_disease_mrp_definition)
-  # ICD column: remove tailing points from ICD codes
-  etlutils::replacePatternsInColumn(drug_disease_mrp_definition, 'ICD', '\\.$', '')
-  # remove rows with empty ICD code and empty proxy codes (ATC, LOINC, OPS) again.
-  # After the replacing of special signs with an empty string their can be new empty rows in this both columns
-  drug_disease_mrp_definition <- etlutils::removeRowsWithNAorEmpty(drug_disease_mrp_definition, code_column_names)
-
-  # Remove duplicate rows
-  drug_disease_mrp_definition <- unique(drug_disease_mrp_definition)
-
-  # Clean rows with NA or empty values in relevant code columns
-  for (col in code_column_names) {
-    drug_disease_mrp_definition[[col]] <- ifelse(
-      is.na(drug_disease_mrp_definition[[col]]) |
-        !nzchar(trimws(drug_disease_mrp_definition[[col]])),
-      NA_character_,
-      drug_disease_mrp_definition[[col]]
-    )
-  }
-
-  # check column ATC and ATC_PROXY for correct ATC codes
-  invalid_atcs <- etlutils::getInvalidCodes(drug_disease_mrp_definition, "ATC_FOR_CALCULATION", etlutils::isATC)
-  invalid_atcs_proxy <- etlutils::getInvalidCodes(drug_disease_mrp_definition, "ICD_PROXY_ATC", etlutils::isATC7orSmaller)
-
-  # check column LOINC_PROXY for correct LOINC codes
-  invalid_loincs <- etlutils::getInvalidCodes(drug_disease_mrp_definition, "LOINC_PRIMARY_PROXY", etlutils::isLOINC)
-
-  error_messages <- c(
-    formatCodeErrors(invalid_atcs, "ATC"),
-    formatCodeErrors(invalid_atcs_proxy, "ATC_PROXY"),
-    formatCodeErrors(invalid_loincs, "LOINC")
-  )
-
-  if (length(error_messages) > 0) {
-    stop(paste(error_messages, collapse = "\n"))
-  }
-
-  # Apply the function to the 'ICD' column
-  drug_disease_mrp_definition$ICD <- expandAndConcatenateICDs(drug_disease_mrp_definition$ICD)
-  # Split concatenated ICD codes into separate rows
-  drug_disease_mrp_definition <- etlutils::splitColumnsToRows(drug_disease_mrp_definition, "ICD")
-  # Remove duplicate rows
-  drug_disease_mrp_definition <- unique(drug_disease_mrp_definition)
-
-  return(drug_disease_mrp_definition)
-}
-
-#' Get relevant patient conditions up to a given date
-#'
-#' Filters the list of Condition resources to return conditions for a specific patient
-#' that occurred on or before the given medication analysis date. If the condition has a
-#' \code{con_recordeddate}, it is used for filtering; otherwise, \code{con_onsetperiod_start}
-#' is used as a fallback.
-#'
-#' @param conditions A \code{data.table} of FHIR Condition resources, including columns \code{pat_id},
-#' \code{con_recordeddate}, and \code{con_onsetperiod_start}.
-#' @param patient_id A character string identifying the patient whose conditions should be returned.
-#' @param meda_datetime A POSIXct timestamp representing the medication analysis date.
-#'
-#' @return A \code{data.table} of conditions that match the patient and date criteria.
-#'
-getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
-
-  # Filter conditions by patient ID and ensure recorded date is before or on meda_datetime
-  relevant_conditions <- conditions[
-    con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime]
-
-  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "con_code_display", "start_datetime")
-  relevant_conditions <- relevant_conditions[, ..relevant_cols]
-
-  return(relevant_conditions)
-}
-
-#' Match ATC codes between active medication requests and MRP definitions
-#'
-#' This function compares ATC codes from a list of active medication requests with the keys
-#' (ATC codes) in the MRP rule definitions and returns all codes that appear in both.
-#'
-#' @param active_atcs A \code{data.table} containing at least a column \code{atc_code}
-#'        with the ATC codes from active medication requests.
-#' @param mrp_table_list_by_atc A named list of \code{data.table}s, where each name is an ATC code
-#'        and the corresponding table contains MRP rule definitions.
-#'
-#' @return A \code{data.table} with a single column \code{atc_code} listing all ATC codes
-#'         found in both \code{active_atcs} and \code{mrp_table_list_by_atc}.
-#'
-matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
-  # Extract all ATC codes from the splitted MRP definitions (used as keys)
-  mrp_atc_keys <- names(mrp_table_list_by_atc)
-  # Reduce active_atcs to the relevant ATC codes (and keep their dates!)
-  active_atcs_unique <- active_atcs[
-    , .(start_datetime = min(start_datetime, na.rm = TRUE)),
-    by = atc_code
-  ]
-  # Only keep those that also appear in MRP definitions
-  matching_atcs <- active_atcs_unique[atc_code %in% mrp_atc_keys]
-
-  # Build the output properly
-  result <- matching_atcs[
-    , .(atc_code, start_datetime)
-  ]
-
-  return(result)
-}
+####################################################################################################
+# Functions that are only required for MRP calculation of Drug_Disease and Drug_Niereninsuffizienz #
+####################################################################################################
 
 #' Match ICD codes against MRP rules and ATC codes
 #'
@@ -276,7 +78,7 @@ matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
 #' @param relevant_conditions A \code{data.table} of FHIR Condition resources, including columns
 #'        \code{pat_id}, \code{con_code_code}, \code{con_code_system},
 #'        \code{con_recordeddate}, and \code{con_onsetperiod_start}.
-#' @param drug_disease_mrp_tables_by_icd A named list of \code{data.table}s containing MRP rules grouped by ICD code
+#' @param mrp_tables_by_icd A named list of \code{data.table}s containing MRP rules grouped by ICD code
 #'        (names are ICD-10-GM codes).
 #' @param match_atc_codes A \code{data.table} with a column \code{atc_code}, representing ATC codes
 #'        matched from active medication requests.
@@ -288,9 +90,7 @@ matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
 #'         Each row includes columns \code{icd}, \code{atc}, and \code{kurzbeschr} (a textual description
 #'         of the contraindication).
 #'
-matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, match_atc_codes, meda_datetime, patient_id) {
-
-  drug_disease_list_rows <- getDrugDiseaseListRows()
+matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_codes, meda_datetime, patient_id) {
 
   # Initialize empty result data.table
   matched_rows <- data.table::data.table(
@@ -307,20 +107,109 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
     kurzbeschr_item2 = character()
   )
 
-  # Filter all conditions for the current patient
-  all_patient_conditions <- relevant_conditions[con_patient_ref == paste0("Patient/", patient_id)]
+  # Function to check if validity days match any patient Condition
+  patientValidityDayMatches <- function(validity_days, patient_conditions, meda_datetime) {
+
+    condition_start <- patient_conditions$start_datetime
+    isresult <- FALSE
+    if (!is.na(validity_days)) {
+      if (tolower(validity_days) %in% "unbegrenzt") {
+        result <- any(
+          condition_start <= meda_datetime,
+          na.rm = TRUE
+        )
+      } else {
+        validity_day <- suppressWarnings(as.numeric(validity_days))
+        if (!is.na(validity_day)) {
+          result <- any(
+            condition_start >= (meda_datetime - lubridate::days(validity_day)) &
+              condition_start <= meda_datetime,
+            na.rm = TRUE
+          )
+        }
+      }
+    }
+    return(result)
+  }
+
+  # Filter all Conditions for the current patient
+  all_patient_conditions <- relevant_conditions[con_patient_ref %in% paste0("Patient/", patient_id)]
   used_icds <- unique(all_patient_conditions[!is.na(con_code_code), con_code_code])
-  icds <- intersect(names(drug_disease_mrp_tables_by_icd), used_icds)
+  icds <- intersect(names(mrp_tables_by_icd), used_icds)
 
   for (mrp_icd in icds) {
+
+    # Find matching ICD conditions for this specific ICD
+    patient_conditions <- all_patient_conditions[
+      con_code_code %in% mrp_icd &
+        con_code_system == "http://fhir.de/CodeSystem/bfarm/icd-10-gm"
+    ]
+
+    if (!nrow(patient_conditions)) next
+
     # Extract all MRP rules for this ICD
-    mrp_table_list_rows <- drug_disease_mrp_tables_by_icd[[mrp_icd]]
+    mrp_table_list_rows <- mrp_tables_by_icd[[mrp_icd]]
     mrp_table_list_rows <- mrp_table_list_rows[ATC_FOR_CALCULATION %in% match_atc_codes$atc_code]
+
+    if (!nrow(mrp_table_list_rows)) next
 
     # Keep only relevant columns
     keep_cols <- c("ATC_DISPLAY", "ATC_FOR_CALCULATION", "ICD_VALIDITY_DAYS", "CONDITION_DISPLAY_CLUSTER",
                    "ATC_FULL_LIST", "ICD_FULL_LIST")
     mrp_table_list_rows <- unique(mrp_table_list_rows[, ..keep_cols])
+
+    # Filter MRP rows based on validity days and patient conditions
+    mrp_table_list_rows <- mrp_table_list_rows[
+      ,
+      {
+        valid_rows <- .SD[
+          sapply(
+            ICD_VALIDITY_DAYS,
+            patientValidityDayMatches,
+            patient_conditions = patient_conditions,
+            meda_datetime = meda_datetime
+          )
+        ]
+
+        if (nrow(valid_rows)) {
+          validity_num <- suppressWarnings(as.numeric(valid_rows$ICD_VALIDITY_DAYS))
+          validity_num[tolower(valid_rows$ICD_VALIDITY_DAYS) == "unbegrenzt"] <- Inf
+          validity_num[is.na(validity_num)] <- Inf
+          min_validity_num <- min(validity_num)
+          # Return only rows with the minimum validity days
+          valid_rows[validity_num == min_validity_num]
+        } else {
+          valid_rows[0]
+        }
+      },
+      by = .(ATC_DISPLAY, ATC_FOR_CALCULATION)
+    ]
+
+    if (!nrow(mrp_table_list_rows)) next
+
+    # Combine rows with same ATC, ICD and ICD validity by concatenating CONDITION_DISPLAY_CLUSTER
+    mrp_table_list_rows <- mrp_table_list_rows[
+      ,
+      .(
+        CONDITION_DISPLAY_CLUSTER = paste(
+          unique(CONDITION_DISPLAY_CLUSTER),
+          collapse = " und "
+        ),
+        ICD_FULL_LIST = paste(
+          unique(unlist(strsplit(ICD_FULL_LIST, "\\s+"))),
+          collapse = " "
+        ),
+        ATC_FULL_LIST = paste(
+          unique(unlist(strsplit(ATC_FULL_LIST, "\\s+"))),
+          collapse = " "
+        )
+      ),
+      by = .(
+        ATC_DISPLAY,
+        ATC_FOR_CALCULATION,
+        ICD_VALIDITY_DAYS
+      )
+    ]
 
     if (nrow(matched_rows)) {
       # Extract all diagnosis_cluster from matched_rows
@@ -335,32 +224,19 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
       ]
     }
 
-    # Find matching ICD conditions for this specific ICD
-    patient_conditions <- all_patient_conditions[
-      con_code_code == mrp_icd &
-        con_code_system == "http://fhir.de/CodeSystem/bfarm/icd-10-gm"
-    ]
-
-    if (!nrow(patient_conditions)) next
-
     for (j in seq_len(nrow(mrp_table_list_rows))) {
       mrp_table_list_row <- mrp_table_list_rows[j]
       validity_days <- mrp_table_list_row$ICD_VALIDITY_DAYS
 
-      # Check if at least one matching condition is within the validity window
       if (tolower(validity_days) == "unbegrenzt") {
-        matching_conditions <- patient_conditions[start_datetime <= meda_datetime]
+        condition_start_datetime <- max(patient_conditions$start_datetime)
       } else {
-        validity_days <- as.numeric(validity_days)
-        matching_conditions <- patient_conditions[
-          start_datetime >= (meda_datetime - lubridate::days(validity_days)) &
-            start_datetime <= meda_datetime
-        ]
+        condition_start_datetime <- patient_conditions[
+          start_datetime >= (meda_datetime - lubridate::days(as.numeric(validity_days))) &
+            start_datetime <= meda_datetime,
+          start_datetime
+        ][1]
       }
-
-      if (!nrow(matching_conditions)) next
-
-      condition_start_datetime <- matching_conditions$start_datetime[1]
 
       # Check if any of the matched ATC codes appear in the current ATC field of the MRP definition
       relevant_atcs <- match_atc_codes[
@@ -369,7 +245,7 @@ matchICDCodes <- function(relevant_conditions, drug_disease_mrp_tables_by_icd, m
       ]
 
       # Get or create mrp_index
-      mrp_index <- getOrCreateMrpIndex(mrp_table_list_row, getDrugDiseaseListRows())
+      mrp_index <- getOrCreateMrpIndex(mrp_table_list_row, getDrugConditionListRows())
 
       # Add directly to matched_rows
       if (length(relevant_atcs) > 0) {
@@ -454,6 +330,160 @@ catInvalidObservationsWarning <- function(invalid_obs) {
       )
     )
   }
+}
+
+#' Filter and Convert Laboratory Observations to Reference Units
+#'
+#' This function processes a laboratory observation table (`obs`) by:
+#' \itemize{
+#'   \item Resolving conflicts in `reference_range_type`, keeping only "normal" if multiple types exist.
+#'   \item Selecting one row per group defined by `non_ref_cols` while prioritizing:
+#'     \itemize{
+#'       \item `reference_range_type == "normal"`
+#'       \item Rows with standard system `"http://unitsofmeasure.org"`
+#'       \item Rows where the reference unit matches the observation unit
+#'       \item If multiple candidates remain, the first is kept.
+#'     }
+#'   \item Splitting observations into those that can be converted and those that cannot.
+#'   \item Converting observation values to the reference unit using `convertLabUnits()`.
+#'   \item Collecting invalid or non-convertible observations into `invalid_obs` and issuing a warning.
+#'   \item Printing a warning for observations whose unit was successfully converted.
+#' }
+#'
+#' @param obs A `data.table` containing laboratory observations.
+#' @param reference_value_col The name of the reference value column (e.g., `"reference_range_high_value"`).
+#' @param invalid_obs A `data.table` of invalid observations (can be empty initially).
+#'
+#' @return A `data.table` containing filtered and unit-normalized observations,
+#' with a new column `converted_value` representing the value in reference units.
+#'
+#' @examples
+#' # Example usage:
+#' # obs <- data.table(code = "1742-6", value = 61, unit = "mg/dL", reference_range_high_value = 10, ...)
+#' # invalid_obs <- data.table()
+#' # obs_filtered <- filterObservations(obs, "reference_range_high_value", invalid_obs)
+filterObservations <- function(obs, reference_value_col, invalid_obs) {
+
+  # Derive the corresponding unit and system columns from the reference value column
+  reference_unit_col   <- sub("_value$", "_code", reference_value_col)
+  reference_system_col <- sub("_value$", "_system", reference_value_col)
+
+  # Identify columns that define unique observations, excluding reference columns
+  non_ref_cols <- setdiff(names(obs), grep("^reference_", names(obs), value = TRUE))
+
+  # Step 1: Filter observations based on reference_range_type and unit convertibility
+  valid_obs <- obs[
+    ,
+    {
+      # --- Helper function to test whether a unit can be converted ---
+      isConvertibleUnit <- function(unit_from, unit_to) {
+        # Missing reference unit counts as convertible
+        if (is.na(unit_to)) return(TRUE)
+        !is.na(etlutils::convertLabUnits(1, unit_from, unit_to))
+      }
+      # --- 1.1: Try to use rows where reference_range_type == "normal" ---
+      preferred <- .SD[reference_range_type == "normal"]
+      # --- 1.2: If no "normal" rows exist, try those with missing type ---
+      if (!nrow(preferred)) {
+        preferred <- .SD[is.na(reference_range_type)]
+      }
+      # --- 1.3: If neither "normal" nor NA exists → mark as invalid ---
+      if (!nrow(preferred)) {
+        NULL
+      } else {
+        # Determine which rows have convertible or missing reference units
+        # preferred[, is_convertible := mapply(isConvertibleUnit, unit, get(reference_unit_col))]
+        #
+        # convertible <- preferred[is_convertible == TRUE]
+        convertible <- preferred[
+          mapply(isConvertibleUnit, unit, get(reference_unit_col))
+        ]
+        # --- 1.1.2: If no convertible rows exist → mark as invalid ---
+        if (!nrow(convertible)) {
+          NULL
+        } else {
+          # --- 1.1.1: Keep the first convertible row ---
+          convertible[1]
+        }
+      }
+    },
+    by = non_ref_cols
+  ]
+
+  if (nrow(valid_obs)) {
+    # Sort column order before fsetdiff
+    data.table::setcolorder(obs, sort(names(obs)))
+    data.table::setcolorder(valid_obs, sort(names(valid_obs)))
+    # Invalid observations are those that were dropped
+    invalid_obs <- data.table::fsetdiff(obs, valid_obs)
+    obs <- valid_obs
+
+    # Step 2: Split observations into convertible and non-convertible
+    obs_to_convert_unit <- obs[!is.na(get(reference_unit_col)) & !is.na(unit)]
+    obs_no_convert_unit <- obs[is.na(get(reference_unit_col)) | is.na(unit)]
+    obs_no_convert_unit[, converted_value := value]  # Non-convertible → value unchanged
+    obs_to_convert_unit[, converted_value := NA_real_]  # Initialize converted values
+    obs_no_convert_unit[, converted_unit := unit]  # Non-convertible → value unchanged
+    obs_to_convert_unit[, converted_unit := NA_real_]  # Initialize converted values
+
+    # Step 3: Perform unit conversion row by row
+    invalid_idx <- c()
+    for (i in seq_len(nrow(obs_to_convert_unit))) {
+      unit_from <- obs_to_convert_unit$unit[i]
+      unit_target <- obs_to_convert_unit[[reference_unit_col]][i]
+      obs_row <- obs_to_convert_unit[i]
+
+      # Attempt conversion
+      converted_val <- etlutils::convertLabUnits(
+        measured_value = obs_row$value,
+        measured_unit = unit_from,
+        target_unit = unit_target,
+        additional_error_message = paste0(" for LOINC code ", obs_row$code)
+      )
+      if (is.na(converted_val)) {
+        invalid_obs <- if (nrow(invalid_obs) > 0) rbind(invalid_obs, obs_row, fill = TRUE) else obs_row
+        invalid_idx <- c(invalid_idx, i)
+      } else {
+        obs_to_convert_unit$converted_value[i] <- converted_val
+        obs_to_convert_unit$converted_unit[i] <- unit_target
+      }
+    }
+    # Remove invalid observations after the loop
+    if (length(invalid_idx) > 0) {
+      obs_to_convert_unit <- obs_to_convert_unit[-invalid_idx]
+    }
+
+    # Step 4: Warn for observations whose units were converted
+    changed_rows <- obs_to_convert_unit[
+      !is.na(converted_value) & !is.na(value) & converted_value != value
+    ]
+    if (nrow(changed_rows)) {
+      details <- character(nrow(changed_rows))
+      for (i in seq_len(nrow(changed_rows))) {
+        details[i] <- paste0(
+          "  code=", changed_rows$code[i],
+          ", value=", changed_rows$value[i], " ", changed_rows$unit[i],
+          " changed to ", changed_rows$converted_value[i], " ", changed_rows[[reference_unit_col]][i]
+        )
+      }
+      etlutils::catWarningMessage(
+        paste0(
+          "For the following observations, the unit had to be converted to match the reference range:\n",
+          paste(details, collapse = "\n")
+        )
+      )
+    }
+    # Step 5: Combine converted and non-converted observations
+    obs <- rbind(obs_to_convert_unit, obs_no_convert_unit)
+  } else {
+    invalid_obs <- obs
+    obs <- data.table::data.table()
+  }
+
+  # Immediately issue warning for this single invalid observation
+  catInvalidObservationsWarning(invalid_obs)
+
+  return(obs)
 }
 
 #' Generate a formatted description of matched laboratory observations
@@ -584,160 +614,6 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
   return(full_text)
 }
 
-#' Filter and Convert Laboratory Observations to Reference Units
-#'
-#' This function processes a laboratory observation table (`obs`) by:
-#' \itemize{
-#'   \item Resolving conflicts in `reference_range_type`, keeping only "normal" if multiple types exist.
-#'   \item Selecting one row per group defined by `non_ref_cols` while prioritizing:
-#'     \itemize{
-#'       \item `reference_range_type == "normal"`
-#'       \item Rows with standard system `"http://unitsofmeasure.org"`
-#'       \item Rows where the reference unit matches the observation unit
-#'       \item If multiple candidates remain, the first is kept.
-#'     }
-#'   \item Splitting observations into those that can be converted and those that cannot.
-#'   \item Converting observation values to the reference unit using `convertLabUnits()`.
-#'   \item Collecting invalid or non-convertible observations into `invalid_obs` and issuing a warning.
-#'   \item Printing a warning for observations whose unit was successfully converted.
-#' }
-#'
-#' @param obs A `data.table` containing laboratory observations.
-#' @param reference_value_col The name of the reference value column (e.g., `"reference_range_high_value"`).
-#' @param invalid_obs A `data.table` of invalid observations (can be empty initially).
-#'
-#' @return A `data.table` containing filtered and unit-normalized observations,
-#' with a new column `converted_value` representing the value in reference units.
-#'
-#' @examples
-#' # Example usage:
-#' # obs <- data.table(code = "1742-6", value = 61, unit = "mg/dL", reference_range_high_value = 10, ...)
-#' # invalid_obs <- data.table()
-#' # obs_filtered <- filterObservations(obs, "reference_range_high_value", invalid_obs)
-filterObservations <- function(obs, reference_value_col, invalid_obs) {
-
-  # Derive the corresponding unit and system columns from the reference value column
-  reference_unit_col   <- sub("_value$", "_code", reference_value_col)
-  reference_system_col <- sub("_value$", "_system", reference_value_col)
-
-  # Identify columns that define unique observations, excluding reference columns
-  non_ref_cols <- setdiff(names(obs), grep("^reference_", names(obs), value = TRUE))
-
-  # Step 1: Filter observations based on reference_range_type and unit convertibility
-  valid_obs <- obs[
-    ,
-    {
-      # --- Helper function to test whether a unit can be converted ---
-      isConvertibleUnit <- function(unit_from, unit_to) {
-        # Missing reference unit counts as convertible
-        if (is.na(unit_to)) return(TRUE)
-        !is.na(convertLabUnits(1, unit_from, unit_to))
-      }
-      # --- 1.1: Try to use rows where reference_range_type == "normal" ---
-      preferred <- .SD[reference_range_type == "normal"]
-      # --- 1.2: If no "normal" rows exist, try those with missing type ---
-      if (!nrow(preferred)) {
-        preferred <- .SD[is.na(reference_range_type)]
-      }
-      # --- 1.3: If neither "normal" nor NA exists → mark as invalid ---
-      if (!nrow(preferred)) {
-        NULL
-      } else {
-        # Determine which rows have convertible or missing reference units
-        # preferred[, is_convertible := mapply(isConvertibleUnit, unit, get(reference_unit_col))]
-        #
-        # convertible <- preferred[is_convertible == TRUE]
-        convertible <- preferred[
-          mapply(isConvertibleUnit, unit, get(reference_unit_col))
-        ]
-        # --- 1.1.2: If no convertible rows exist → mark as invalid ---
-        if (!nrow(convertible)) {
-          NULL
-        } else {
-          # --- 1.1.1: Keep the first convertible row ---
-          convertible[1]
-        }
-      }
-    },
-    by = non_ref_cols
-  ]
-
-  if (nrow(valid_obs)) {
-    # Sort column order before fsetdiff
-    data.table::setcolorder(obs, sort(names(obs)))
-    data.table::setcolorder(valid_obs, sort(names(valid_obs)))
-    # Invalid observations are those that were dropped
-    invalid_obs <- data.table::fsetdiff(obs, valid_obs)
-    obs <- valid_obs
-
-    # Step 2: Split observations into convertible and non-convertible
-    obs_to_convert_unit <- obs[!is.na(get(reference_unit_col)) & !is.na(unit)]
-    obs_no_convert_unit <- obs[is.na(get(reference_unit_col)) | is.na(unit)]
-    obs_no_convert_unit[, converted_value := value]  # Non-convertible → value unchanged
-    obs_to_convert_unit[, converted_value := NA_real_]  # Initialize converted values
-    obs_no_convert_unit[, converted_unit := unit]  # Non-convertible → value unchanged
-    obs_to_convert_unit[, converted_unit := NA_real_]  # Initialize converted values
-
-    # Step 3: Perform unit conversion row by row
-    invalid_idx <- c()
-    for (i in seq_len(nrow(obs_to_convert_unit))) {
-      unit_from <- obs_to_convert_unit$unit[i]
-      unit_target <- obs_to_convert_unit[[reference_unit_col]][i]
-      obs_row <- obs_to_convert_unit[i]
-
-      # Attempt conversion
-      converted_val <- convertLabUnits(
-        measured_value = obs_row$value,
-        measured_unit = unit_from,
-        target_unit = unit_target,
-        additional_error_message = paste0(" for LOINC code ", obs_row$code)
-      )
-      if (is.na(converted_val)) {
-        invalid_obs <- if (nrow(invalid_obs) > 0) rbind(invalid_obs, obs_row, fill = TRUE) else obs_row
-        invalid_idx <- c(invalid_idx, i)
-      } else {
-        obs_to_convert_unit$converted_value[i] <- converted_val
-        obs_to_convert_unit$converted_unit[i] <- unit_target
-      }
-    }
-    # Remove invalid observations after the loop
-    if (length(invalid_idx) > 0) {
-      obs_to_convert_unit <- obs_to_convert_unit[-invalid_idx]
-    }
-
-    # Step 4: Warn for observations whose units were converted
-    changed_rows <- obs_to_convert_unit[
-      !is.na(converted_value) & !is.na(value) & converted_value != value
-    ]
-    if (nrow(changed_rows)) {
-      details <- character(nrow(changed_rows))
-      for (i in seq_len(nrow(changed_rows))) {
-        details[i] <- paste0(
-          "  code=", changed_rows$code[i],
-          ", value=", changed_rows$value[i], " ", changed_rows$unit[i],
-          " changed to ", changed_rows$converted_value[i], " ", changed_rows[[reference_unit_col]][i]
-        )
-      }
-      etlutils::catWarningMessage(
-        paste0(
-          "For the following observations, the unit had to be converted to match the reference range:\n",
-          paste(details, collapse = "\n")
-        )
-      )
-    }
-    # Step 5: Combine converted and non-converted observations
-    obs <- rbind(obs_to_convert_unit, obs_no_convert_unit)
-  } else {
-    invalid_obs <- obs
-    obs <- data.table::data.table()
-  }
-
-  # Immediately issue warning for this single invalid observation
-  catInvalidObservationsWarning(invalid_obs)
-
-  return(obs)
-}
-
 #' Match LOINC Cutoff Reference Against Observation Values
 #'
 #' This function checks whether any laboratory observation exceeds or falls below
@@ -814,7 +690,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
       if (!is.na(reference_value_col)) {
         # --- 1. Invalid observations based on numeric value or unit ---
         invalid_obs <- observation_resources[
-          is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)
+          is.na(suppressWarnings(as.numeric(value))) | !etlutils::isValidUnit(unit)
         ]
 
         # --- 2. Temporarily remove those invalid ones from main table ---
@@ -887,7 +763,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
         if (!is.null(cutoff) && !any(is.na(cutoff))) {
 
           # Split observation_resources in valid and invalid ones
-          invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !isValidUnit(unit)]
+          invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !etlutils::isValidUnit(unit)]
           obs <- data.table::fsetdiff(observation_resources, invalid_obs)
 
           if (nrow(obs)) {
@@ -905,7 +781,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
               obs_value_converted_to_threshold_unit <- c()
               for (i in seq_len(nrow(obs))) {
                 obs_row <- obs[i]
-                obs_value_converted_to_threshold_unit[i] <- convertLabUnits(
+                obs_value_converted_to_threshold_unit[i] <- etlutils::convertLabUnits(
                   measured_value = obs_row$value,
                   measured_unit = obs_row$unit,
                   target_unit = mapping_row$UNIT,
@@ -967,86 +843,94 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
 
 #' Match ICD Proxies Using ATC, OPS, and LOINC Codes
 #'
-#' This function analyzes a patient's medication, procedure, and observation data to infer ICD diagnoses
-#' based on proxy rules defined in drug-disease MRP (medication risk profile) tables. These rules
-#' define ATC (Anatomical Therapeutic Chemical), OPS (Operationen- und Prozedurenschlüssel, i.e. German procedure),
-#' or LOINC (Logical Observation Identifiers Names and Codes) codes as proxies for ICD diagnoses.
+#' This function analyzes a patient's medication, procedure, and observation data to infer
+#' ICD diagnoses based on proxy rules defined in drug-disease MRP (medication risk profile) tables.
+#' Depending on the provided inputs, ATC (medications), OPS (procedures), and/or LOINC (laboratory
+#' observations) codes can be used as proxies for ICD diagnoses.
 #'
-#' The function evaluates whether proxy events (e.g., medication, procedure, or lab measurement entries) occurred within
-#' a rule-defined time window relative to a reference datetime. Matching proxies are returned
-#' as suggested ICD codes with context descriptions.
+#' Only proxy types for which both resource data and corresponding MRP rule tables are provided
+#' are evaluated. All proxy types are optional and can be combined arbitrarily.
 #'
-#' @param medication_resources A named list of `data.table`s containing medication information:
+#' @param medication_resources Optional. A named list of `data.table`s containing medication information:
 #'   - `medication_requests`
 #'   - `medication_statements`
 #'   - `medication_administrations`
-#'   Each must include columns `atc_code`, `start_datetime`, and optionally `end_datetime`.
+#'   Each table must include columns `atc_code`, `start_datetime`, and optionally `end_datetime`.
+#'   If `NULL`, ATC proxy matching is skipped.
 #'
-#' @param procedure_resources A `data.table` containing procedures with columns:
+#' @param procedure_resources Optional. A `data.table` containing procedures with columns:
 #'   - `proc_code_code`: the OPS code
 #'   - `start_datetime`: date of the procedure
 #'   - `end_datetime`: optional end date of the procedure
+#'   If `NULL`, OPS proxy matching is skipped.
 #'
-#' @param observation_resources A `data.table` containing lab or observation data with columns:
+#' @param observation_resources Optional. A `data.table` containing laboratory or observation data with columns:
 #'   - `obs_code_code`: the LOINC code
 #'   - `obs_valuequantity_value`: measured value
 #'   - `obs_valuequantity_unit`: measurement unit
 #'   - `obs_referencerange_low_value` / `obs_referencerange_high_value`: reference range
 #'   - `start_datetime`: date of measurement
-#'   - `end_datetime`: optional end date
+#'   If `NULL`, LOINC proxy matching is skipped.
 #'
-#' @param drug_disease_mrp_tables_by_atc_proxy A named list of `data.table`s, one per ATC code,
-#'   containing MRP rules. Each table should include: `ICD`, `ICD_PROXY_ATC`,
-#'   `ICD_PROXY_ATC_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
+#' @param drug_condition_mrp_tables_by_atc_proxy Optional. A named list of `data.table`s (one per ATC proxy)
+#'   containing MRP rules for ATC-based ICD inference. If `NULL`, ATC proxy matching is skipped.
 #'
-#' @param drug_disease_mrp_tables_by_ops_proxy A named list of `data.table`s, one per OPS code,
-#'   containing MRP rules. Each table should include: `ICD`, `ICD_PROXY_OPS`,
-#'   `ICD_PROXY_OPS_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
+#' @param drug_condition_mrp_tables_by_ops_proxy Optional. A named list of `data.table`s (one per OPS proxy)
+#'   containing MRP rules for OPS-based ICD inference. If `NULL`, OPS proxy matching is skipped.
 #'
-#' @param drug_disease_mrp_tables_by_loinc_proxy A named list of `data.table`s, one per LOINC code,
-#'   containing MRP rules. Each table should include: `ICD`, `LOINC_PRIMARY_PROXY`,
-#'   `LOINC_VALIDITY_DAYS`, `ICD_VALIDITY_DAYS`, and `ATC_FOR_CALCULATION`.
+#' @param drug_condition_mrp_tables_by_loinc_proxy Optional. A named list of `data.table`s (one per LOINC proxy)
+#'   containing MRP rules for LOINC-based ICD inference. If `NULL`, LOINC proxy matching is skipped.
 #'
 #' @param meda_datetime A `Date` or `POSIXct` object representing the reference datetime
 #'   for evaluating proxy validity windows.
 #'
-#' @param match_atc_codes A character vector of ATC codes that are being evaluated (e.g.,
-#'   medication in question triggering the contraindication check).
+#' @param match_atc_codes A `data.table` containing ATC codes under evaluation (e.g. medications
+#'   triggering a contraindication check), including at least columns `atc_code` and `start_datetime`.
 #'
-#' @param loinc_matching_function A function used for additional matching logic when evaluating LOINC proxies.
-#'   It must accept arguments `observation_resources`, `match_proxy_row`, and `loinc_mapping_table`
-#'   and return either `NA` (no match) or a character description of the match reasoning.
+#' @param loinc_mapping_table Optional. A `data.table` containing metadata for LOINC codes
+#'   (e.g. mappings between primary and secondary LOINC codes). Required only for LOINC proxy matching.
 #'
-#' @param loinc_mapping_table A `data.table` containing metadata for LOINC codes (e.g., German names).
+#' @param loinc_matching_function Optional. A function providing additional matching logic
+#'   for LOINC proxies. It must accept arguments `observation_resources`, `match_proxy_row`,
+#'   and `loinc_mapping_table`, and return either `NA` (no match) or a character vector describing
+#'   the match reasoning. Required only for LOINC proxy matching.
 #'
-#' @return A `data.table` of inferred ICD proxies with columns:
+#' @return
+#' A `data.table` containing inferred ICD diagnoses based on matched proxies.
+#' One row is returned per matched proxy rule. If no proxy matches are found,
+#' an empty `data.table` is returned.
+#'
+#' The result includes at least the following columns:
 #' \describe{
-#'   \item{icd_code}{The ICD code inferred via proxy}
-#'   \item{atc_code}{The ATC code evaluated (from the rule)}
-#'   \item{proxy_code}{The matching ATC, OPS, or LOINC proxy code that triggered the inference}
-#'   \item{proxy_type}{One of `"ATC"`, `"OPS"`, or `"LOINC"`}
-#'   \item{kurzbeschr}{A short German description of the match reasoning}
+#'   \item{icd_code}{The ICD code inferred via proxy matching}
+#'   \item{atc_code}{The ATC code evaluated (from the MRP rule)}
+#'   \item{proxy_code}{The ATC, OPS, or LOINC code that triggered the inference}
+#'   \item{proxy_type}{The proxy type used: `"ATC"`, `"OPS"`, or `"LOINC"`}
+#'   \item{kurzbeschr_*}{German textual descriptions explaining the matching context}
 #' }
 #'
 #' @details
-#' - The function returns one row per matched rule per ICD code.
-#' - Only rules with a valid, non-empty proxy field are evaluated.
-#' - Validity periods can be numerical (in days) or `"unbegrenzt"` (no time restriction).
-#' - Matching is performed via `grepl` with `fixed = TRUE` for proxy codes.
-#' - For LOINC proxies, an additional matching function can refine matches based on lab values and reference ranges.
+#' - Each proxy type (ATC, OPS, LOINC) is evaluated independently and only if the required inputs
+#'   are provided.
+#' - Validity periods can be numeric (days) or non-numeric (treated as unlimited).
+#' - Matching is performed using prefix matching on proxy codes.
+#' - For LOINC proxies, additional value- and reference-range-based logic can be applied via
+#'   `loinc_matching_function`.
 #'
 matchICDProxies <- function(
-    medication_resources,
-    procedure_resources,
-    observation_resources,
-    drug_disease_mrp_tables_by_atc_proxy,
-    drug_disease_mrp_tables_by_ops_proxy,
-    drug_disease_mrp_tables_by_loinc_proxy,
+    medication_resources = NULL,
+    procedure_resources  = NULL,
+    observation_resources = NULL,
+    drug_condition_mrp_tables_by_atc_proxy   = NULL,
+    drug_condition_mrp_tables_by_ops_proxy   = NULL,
+    drug_condition_mrp_tables_by_loinc_proxy = NULL,
     meda_datetime,
     match_atc_codes,
-    loinc_mapping_table,
-    loinc_matching_function
+    loinc_mapping_table = NULL,
+    loinc_matching_function = NULL
 ) {
+
+  all_matches <- list()
 
   matchProxy <- function(proxy_type, all_items, splitted_proxy_table) {
     # Initialize empty result data.table
@@ -1136,7 +1020,7 @@ matchICDProxies <- function(
               proxy_start_datetime <- first_valid_row$start_datetime
 
               # Get or create mrp_index
-              mrp_index <- getOrCreateMrpIndex(match_proxy_row, getDrugDiseaseListRows())
+              mrp_index <- getOrCreateMrpIndex(match_proxy_row, getDrugConditionListRows())
 
               if (nrow(valid_proxy_rows)) {
                 # Get the start datetime of the matched ATC code
@@ -1184,150 +1068,64 @@ matchICDProxies <- function(
     return(matched_rows)
   }
 
-  #  Combine all medication rows
-  all_medications <- rbind(
-    medication_resources$medication_requests[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
-    medication_resources$medication_statements[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
-    medication_resources$medication_administrations[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
-    fill = TRUE
-  )
-  #  Combine all procedures rows
-  all_procedures <- procedure_resources[, .(code = proc_code_code, display = proc_code_display, start_datetime, end_datetime)]
-  #  Combine all observation rows
-  all_observations <- observation_resources[, .(code = obs_code_code,
-                                                display = obs_code_display,
-                                                value = obs_valuequantity_value,
-                                                unit = obs_valuequantity_code,
-                                                reference_range_low_value = obs_referencerange_low_value,
-                                                reference_range_high_value = obs_referencerange_high_value,
-                                                reference_range_low_system = obs_referencerange_low_system,
-                                                reference_range_high_system = obs_referencerange_high_system,
-                                                reference_range_low_code = obs_referencerange_low_code,
-                                                reference_range_high_code = obs_referencerange_high_code,
-                                                reference_range_type = obs_referencerange_type_code,
-                                                start_datetime = start_datetime,
-                                                end_datetime = as.POSIXct(NA))] # Observations don't have an end datetime
-  # ATC-Proxy-Matching
-  atc_matches <- matchProxy(
-    proxy_type = "ATC",
-    all_items = all_medications,
-    splitted_proxy_table = drug_disease_mrp_tables_by_atc_proxy
-  )
-  # OPS-Proxy-Matching
-  ops_matches <- matchProxy(
-    proxy_type = "OPS",
-    all_items = all_procedures,
-    splitted_proxy_table = drug_disease_mrp_tables_by_ops_proxy
-  )
-  # LOINC-Proxy-Matching
-  loinc_matches <- matchProxy(
-    proxy_type = "LOINC",
-    all_items = all_observations,
-    splitted_proxy_table = drug_disease_mrp_tables_by_loinc_proxy
-  )
-
-  return(data.table::rbindlist(list(atc_matches, ops_matches, loinc_matches), fill = TRUE))
-}
-
-#' Split Drug-Disease MRP Table into Lookup Structures
-#'
-#' Takes a full Drug-Disease MRP table and splits it into multiple lookup tables
-#' to support efficient MRP evaluation. Splitting is done by relevant rule keys such as:
-#' ATC codes, ICD codes, and proxy definitions (ATC and OPS).
-#'
-#' @param drug_disease# The complete MRP definition table for Drug-Disease interactions as a \code{data.table}.
-#'
-#' @return A list of named \code{data.table} lookup structures:
-#' \describe{
-#'   \item{by_atc}{Split by \code{ATC_FOR_CALCULATION}, used for direct ATC code matching.}
-#'   \item{by_icd}{Split by \code{ICD}, used to match ICD codes from conditions.}
-#'   \item{by_atc_proxy}{Split by \code{ICD_PROXY_ATC}, used for proxy rules based on medication.}
-#'   \item{by_ops_proxy}{Split by \code{ICD_PROXY_OPS}, used for proxy rules based on procedures.}
-#' }
-#'
-getSplittedMRPTablesDrugDisease <- function(mrp_pair_list) {
-
-  # ensure the optional columns for the proxy validity days are present in the pair list table
-  mrp_pair_list[, ICD_PROXY_ATC_VALIDITY_DAYS := if (!"ICD_PROXY_ATC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else ICD_PROXY_ATC_VALIDITY_DAYS]
-  mrp_pair_list[, ICD_PROXY_OPS_VALIDITY_DAYS := if (!"ICD_PROXY_OPS_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else ICD_PROXY_OPS_VALIDITY_DAYS]
-  mrp_pair_list[, LOINC_VALIDITY_DAYS := if (!"LOINC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else LOINC_VALIDITY_DAYS]
-
-  splitted <- list(
-    by_atc = etlutils::splitTableToList(mrp_pair_list, "ATC_FOR_CALCULATION", rm.na = TRUE),
-    by_icd = etlutils::splitTableToList(mrp_pair_list, "ICD", rm.na = TRUE),
-    by_atc_proxy = etlutils::splitTableToList(mrp_pair_list, "ICD_PROXY_ATC", rm.na = TRUE),
-    by_ops_proxy = etlutils::splitTableToList(mrp_pair_list, "ICD_PROXY_OPS", rm.na = TRUE),
-    by_loinc_proxy = etlutils::splitTableToList(mrp_pair_list, "LOINC_PRIMARY_PROXY", rm.na = TRUE)
-  )
-
-  # Helper function to rename columns inside each list of data.tables
-  renameProxyCols <- function(tbl_list, old, new) {
-    lapply(tbl_list, function(tbl) {
-      data.table::setnames(tbl, old = old, new = new, skip_absent = TRUE)
-      tbl
-    })
+  if (!is.null(medication_resources) &&
+      !is.null(drug_condition_mrp_tables_by_atc_proxy)) {
+    #  Combine all medication rows
+    all_medications <- rbind(
+      medication_resources$medication_requests[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      medication_resources$medication_statements[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      medication_resources$medication_administrations[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      fill = TRUE
+    )
+    # ATC-Proxy-Matching
+    atc_matches <- matchProxy(
+      proxy_type = "ATC",
+      all_items = all_medications,
+      splitted_proxy_table = drug_condition_mrp_tables_by_atc_proxy
+    )
+    all_matches[["ATC"]] <- atc_matches
   }
 
-  splitted$by_atc_proxy   <- renameProxyCols(splitted$by_atc_proxy,   c("ICD_PROXY_ATC",       "ICD_PROXY_ATC_VALIDITY_DAYS"), c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
-  splitted$by_ops_proxy   <- renameProxyCols(splitted$by_ops_proxy,   c("ICD_PROXY_OPS",       "ICD_PROXY_OPS_VALIDITY_DAYS"), c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
-  splitted$by_loinc_proxy <- renameProxyCols(splitted$by_loinc_proxy, c("LOINC_PRIMARY_PROXY", "LOINC_VALIDITY_DAYS"),         c("ICD_PROXY", "ICD_PROXY_VALIDITY_DAYS"))
-
-  return(splitted)
-}
-
-#' Calculate Drug-Disease Medication-Related Problems (MRPs)
-#'
-#' Detects MRPs by evaluating combinations of medications (ATC codes) and diseases (ICD codes).
-#' If direct ICD matches are not found for an ATC, proxy rules are applied using medication
-#' and procedure history to infer possible conditions.
-#'
-#' @param active_atcs A \code{data.table} of the patient's active medications (e.g. FHIR MedicationRequest).
-#' @param mrp_pair_list MRP-Pair list to create a list of lookup tables created by \code{getSplittedMRPTablesDrugDisease()}.
-#' @param resources A named list of all FHIR resource tables relevant to the encounter (conditions, medications, procedures, etc.).
-#' @param patient_id A character string representing the internal patient ID.
-#' @param meda_datetime A POSIXct timestamp representing the time of medication evaluation.
-#'
-#' @return A \code{data.table} containing matched Drug-Disease MRPs, including both direct and proxy-based findings.
-#'
-calculateMRPsDrugDisease <- function(active_atcs, mrp_pair_list, resources, patient_id, meda_datetime) {
-  loinc_mapping_table <- getLOINCMapping()$processed_content
-  match_atc_and_icd_codes <- data.table::data.table()
-  splitted_mrp_tables <- getSplittedMRPTablesDrugDisease(mrp_pair_list)
-  # Match ATC-codes between encounter data and MRP definitions
-  match_atc_codes <- matchATCCodes(active_atcs, splitted_mrp_tables$by_atc)
-  # Get and match ICD-codes of the patient
-  if (nrow(match_atc_codes)) {
-    # Get relevant conditions
-    relevant_conditions <- getRelevantConditions(resources$conditions, patient_id, meda_datetime)
-    # Match ICD codes against MRP definitions and ATC codes
-    match_atc_and_icd_codes <- matchICDCodes(
-      relevant_conditions = relevant_conditions,
-      drug_disease_mrp_tables_by_icd = splitted_mrp_tables$by_icd,
-      match_atc_codes = match_atc_codes,
-      meda_datetime = meda_datetime,
-      patient_id = patient_id
+  if (!is.null(procedure_resources) &&
+      !is.null(drug_condition_mrp_tables_by_ops_proxy)) {
+    #  Combine all procedures rows
+    all_procedures <- procedure_resources[, .(code = proc_code_code, display = proc_code_display, start_datetime, end_datetime)]
+    # OPS-Proxy-Matching
+    ops_matches <- matchProxy(
+      proxy_type = "OPS",
+      all_items = all_procedures,
+      splitted_proxy_table = drug_condition_mrp_tables_by_ops_proxy
     )
-    # check ATC and OPS Proxys for ICDs
-    patient_ref <- paste0("Patient/", patient_id)
-    match_icd_proxies <- matchICDProxies(
-      medication_resources = list(
-        medication_requests = resources$medication_requests[medreq_patient_ref %in% patient_ref],
-        medication_statements = resources$medication_statements[medstat_patient_ref %in% patient_ref],
-        medication_administrations = resources$medication_administrations[medadm_patient_ref %in% patient_ref]
-      ),
-      procedure_resources = resources$procedures[proc_patient_ref %in% patient_ref],
-      observation_resources = resources$observations[obs_patient_ref %in% patient_ref],
-      drug_disease_mrp_tables_by_atc_proxy = splitted_mrp_tables$by_atc_proxy,
-      drug_disease_mrp_tables_by_ops_proxy = splitted_mrp_tables$by_ops_proxy,
-      drug_disease_mrp_tables_by_loinc_proxy = splitted_mrp_tables$by_loinc_proxy,
-      meda_datetime = meda_datetime,
-      match_atc_codes = match_atc_codes,
-      loinc_mapping_table = loinc_mapping_table,
-      loinc_matching_function = matchLOINCCutoff
-    )
-    if (nrow(match_icd_proxies)) {
-      match_atc_and_icd_codes <- rbind(match_atc_and_icd_codes, match_icd_proxies, fill = TRUE)
-    }
+    all_matches[["OPS"]] <- ops_matches
   }
-  return(match_atc_and_icd_codes)
+
+  if (!is.null(observation_resources) &&
+      !is.null(drug_condition_mrp_tables_by_loinc_proxy) &&
+      !is.null(loinc_matching_function) &&
+      !is.null(loinc_mapping_table)) {
+    #  Combine all observation rows
+    all_observations <- observation_resources[, .(code = obs_code_code,
+                                                  display = obs_code_display,
+                                                  value = obs_valuequantity_value,
+                                                  unit = data.table::fifelse(etlutils::isValidUnit(obs_valuequantity_code), obs_valuequantity_code, obs_valuequantity_unit),
+                                                  reference_range_low_value = obs_referencerange_low_value,
+                                                  reference_range_high_value = obs_referencerange_high_value,
+                                                  reference_range_low_system = obs_referencerange_low_system,
+                                                  reference_range_high_system = obs_referencerange_high_system,
+                                                  reference_range_low_code = obs_referencerange_low_code,
+                                                  reference_range_high_code = obs_referencerange_high_code,
+                                                  reference_range_type = obs_referencerange_type_code,
+                                                  start_datetime = start_datetime,
+                                                  end_datetime = as.POSIXct(NA))] # Observations don't have an end datetime
+
+    # LOINC-Proxy-Matching
+    loinc_matches <- matchProxy(
+      proxy_type = "LOINC",
+      all_items = all_observations,
+      splitted_proxy_table = drug_condition_mrp_tables_by_loinc_proxy
+    )
+    all_matches[["LOINC"]] <- loinc_matches
+  }
+
+  return(data.table::rbindlist(all_matches, fill = TRUE))
 }

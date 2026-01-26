@@ -186,6 +186,9 @@ Erstellt Views im Schnittstellenschema db2dataprocessor_out um die aktuellesten 
 ### 470_cre_view_fe_dataproc_all
 Erstellt Views im Schnittstellenschema db2dataprocessor_out um alle Studiendaten (inc. Historische) dem Modul Dataprocessor zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
+### 480_cre_view_fe_dataproc_last_version
+Erstellt Views im Schnittstellenschema db2dataprocessor_out um alle Studiendaten in ihrer letzten Version darzustellen (ohne Historische) dem Modul Dataprocessor zur Verfügung zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
+
 ### 520_cre_view_fe_out
 Erstellt Views im Schnittstellenschema db2frontend_out um aktuelle Daten aus dem Kern dem Frontend zur Übergabe bereit zu stellen. Enthält auch die Vergabe der benötigten Berechtigungen für die zugehörigen Datenbanknutzer.
 
