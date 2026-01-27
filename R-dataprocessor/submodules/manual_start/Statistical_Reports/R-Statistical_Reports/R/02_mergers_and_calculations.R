@@ -315,7 +315,6 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 #'
 #' @export
 restrictToDefinedWards <- function(merged_pat_fall_fe_table) {
-
   wards_phase_a <- c()
   wards_phase_b <- c()
   wards_phase_b_test <- c()
@@ -378,7 +377,8 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart,
   merged_table_with_age <- merged_table_with_MainEncPeriodStart |>
     dplyr::mutate(age_at_hospitalization = floor(as.numeric(difftime(
       as.Date({{ main_enc_period_start }}),
-      {{ pat_birthdate }}
+      as.Date({{ pat_birthdate }}),
+      units = "days"
     )) / 365.25)) |>
     dplyr::relocate(age_at_hospitalization, .after = {{ pat_birthdate }}) |>
     dplyr::select(-{{ pat_birthdate }}) |>
