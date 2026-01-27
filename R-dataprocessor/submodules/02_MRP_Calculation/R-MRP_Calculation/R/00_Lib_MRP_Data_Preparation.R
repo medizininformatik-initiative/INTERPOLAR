@@ -149,16 +149,25 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   # 1.) Get all Einrichtungskontakt encounters that ended before now and do not
   #     have a retrolective MRP evaluation for a given type
   #
-
   for (mrp_type in names(MRP_TYPE)) {
     query <- paste0(
       "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
       "FROM v_encounter_last_version\n",
       "WHERE enc_period_end <= '", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "'\n",
       "AND enc_type_code = 'einrichtungskontakt'\n",
-      "AND enc_id NOT IN (\n",
+      "AND (\n",
+      "  enc_id NOT IN (\n",
       "  SELECT enc_id FROM v_dp_mrp_calculations\n",
       "  WHERE mrp_calculation_type = '", mrp_type, "'\n",
+      "  )\n",
+      # If there are Medication analyses added later that 14 days after encounter end -> recalculate MRPs for this cases
+      # so we search additionally for PhaseB encounters which had never a linked meda_id in the dp_mrp_calculations table
+      "  OR enc_id IN (\n",
+      "    SELECT enc_id FROM v_dp_mrp_calculations\n",
+      "    WHERE mrp_calculation_type = '", mrp_type, "' AND study_phase = 'PhaseB'\n",
+      "    GROUP BY enc_id\n",
+      "    HAVING COUNT(meda_id) = 0\n",
+      "  )\n",
       ")"
     )
     mrp_encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getEncountersWithoutRetrolectiveMRPEvaluationFromDB() - ", mrp_type))
