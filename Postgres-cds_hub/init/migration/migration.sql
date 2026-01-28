@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-11-27 11:42:05
--- Rights definition file size        : 14124 Byte
+-- Rights definition file last update : 2026-01-28 05:45:13
+-- Rights definition file size        : 16573 Byte
 --
 -- Create SQL Tables in Schema "NA"
--- Create time: 2026-01-12 22:30:53
+-- Create time: 2026-01-28 05:51:30
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  migration/migration.sql
 -- TEMPLATE:  template_migration.sql
@@ -33,6 +33,9 @@
 \i ./001_main_user_schema_sequence.sql
 \i ./020_db_config_tools.sql
 \i ./030_db_parameter.sql
+\i ./031_cre_view_parameter_cds2db_out.sql
+\i ./032_cre_view_parameter_dataproc_out.sql
+\i ./033_cre_view_parameter_frontend_out.sql
 \i ./035_db_log_table_structure.sql
 \i ./100_cre_table_raw_cds2db_in.sql
 \i ./120_cre_table_raw_db_log.sql
