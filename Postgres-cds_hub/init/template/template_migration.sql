@@ -4,6 +4,9 @@
 \i ./001_main_user_schema_sequence.sql
 \i ./020_db_config_tools.sql
 \i ./030_db_parameter.sql
+\i ./031_cre_view_parameter_cds2db_out.sql
+\i ./032_cre_view_parameter_dataproc_out.sql
+\i ./033_cre_view_parameter_frontend_out.sql
 \i ./035_db_log_table_structure.sql
 \i ./100_cre_table_raw_cds2db_in.sql
 \i ./120_cre_table_raw_db_log.sql
