@@ -7,7 +7,7 @@ mrpCheck <- function(start_date, end_date) {
   })
 
   etlutils::runLevel2("Create local MRP result table", {
-    needed_cols <- c("ret_id", "record_id", "ret_kurzbeschr", "ret_meda_dat1")
+    needed_cols <- c("ret_id", "record_id", "ret_kurzbeschr", "ret_meda_dat_referenz")
     etlutils::retainColumns(mrp_table_lists_all$retrolektive_mrpbewertung_fe, needed_cols)
     mrp_table_lists_all$retrolektive_mrpbewertung_fe <- unique(mrp_table_lists_all$retrolektive_mrpbewertung_fe)
 
@@ -39,7 +39,7 @@ mrpCheck <- function(start_date, end_date) {
                                  "mrp_calculation_type",
                                  "meda_id",
                                  "ward_name",
-                                 "ret_meda_dat1",
+                                 "ret_meda_dat_referenz",
                                  "ret_kurzbeschr"),
                          new = c("FHIR Patient ID",
                                  "REDCap Record ID",

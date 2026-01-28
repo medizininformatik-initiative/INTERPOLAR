@@ -537,7 +537,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                 record_id = record_id,
                 ret_id = ret_id,
                 ret_meda_id = meda_id,
-                ret_meda_dat1 = meda_datetime,
+                ret_meda_dat_referenz = meda_datetime,
                 ret_kurzbeschr = paste0(kurzbeschr_prefix, collapsed_match$kurzbeschr),
                 ret_atc1 = match$atc_code[1], # take the first ATC code from the match
                 ret_ip_klasse_01 = getCategoryDisplay(mrp_type),
@@ -591,7 +591,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
             record_id = character(),
             ret_id = character(),
             ret_meda_id = character(),
-            ret_meda_dat1 = as.POSIXct(character()),
+            ret_meda_dat_referenz = as.POSIXct(character()),
             ret_kurzbeschr = character(),
             ret_atc1 = character(),
             ret_ip_klasse_01 = character(),
