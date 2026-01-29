@@ -97,9 +97,8 @@ services:
       - cds_hub_db-data:/var/lib/postgresql/data
       - ./Postgres-cds_hub/postgresql.conf:/etc/postgresql.conf
       # Zur automatischen Initialisierung die nachfolgende Zeile einkommentieren, siehe Hinweise unter https://medizininformatik-initiative.github.io/INTERPOLAR/Install
-      # - ./Postgres-cds_hub/init/:/docker-entrypoint-initdb.d/
+      - ./Postgres-cds_hub/sql/init/:/docker-entrypoint-initdb.d/
       # Script zum Anlegen der für INTERPOLAR benötigten Rollen per docker-entrypoint, d.h. beim initialen Ausführen von "docker compose up"
-      - ./Postgres-cds_hub/init/001_main_user_schema_sequence.sql:/docker-entrypoint-initdb.d/001_main_user_schema_sequence.sql
       - ./Postgres-cds_hub/init/:/cds_hub-initdb.d/
 
   # Web-administration of cds_hub__db (optional)
