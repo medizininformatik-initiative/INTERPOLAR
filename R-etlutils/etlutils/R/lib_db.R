@@ -1144,8 +1144,7 @@ dbPrintTimeAndTimezone <- function(db_connection) {
 #'
 #' @export
 dbGetVersion <- function() {
-  #TODO: implement this function
-  return("1.5.0")
+  dbGetSingleValue("SELECT parameter_value FROM v_db_parameter WHERE parameter_name='release_version'")
 }
 
 #' Get the Current Schema of a PostgreSQL Connection
