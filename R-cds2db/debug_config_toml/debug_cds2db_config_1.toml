@@ -78,7 +78,7 @@ DEBUG_SKIP_MELTING_RESOURCES = [
   #"MedicationAdministration",
   #"MedicationRequest",
   #"MedicationStatement",
-  "Observation",
+  #"Observation",
   #"Patient",
   #"Procedure",
   #"ServiceRequest"

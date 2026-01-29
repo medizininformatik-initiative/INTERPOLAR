@@ -16,9 +16,107 @@ if (!exists("DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS")) {
 MRP_TYPE <- etlutils::namedVectorByParam(
   "Drug_Disease",
   "Drug_Drug",
-  "Drug_DrugGroup"#,
-  #"Drug_Niereninsuffizienz"
+  "Drug_DrugGroup",
+  "Drug_Niereninsuffizienz"
 )
+
+#' Clean and Expand MRP Definition Table
+#'
+#' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
+#' splitting and trimming values, and expanding concatenated ICD codes.
+#'
+#' @param mrp_definition A data.table containing the MRP definition table.
+#' @param mrp_type A character string representing the base name of the MRP definition (e.g., `"Drug_Disease"`).
+#'
+#' @return A cleaned and expanded data.table containing the MRP definition table.
+#'
+#' @export
+processExcelContentDrugCondition <- function(mrp_definition, mrp_type) {
+
+  # Remove not necessary columns
+  mrp_columnnames <- getRelevantColumnNames(mrp_type)
+  mrp_definition <- mrp_definition[, ..mrp_columnnames]
+
+  # Remove rows with all empty code columns
+  code_column_names <- names(mrp_definition)[
+    (grepl("PROXY|ATC|ICD", names(mrp_definition))) &
+      !grepl("DISPLAY|INCLUSION|VALIDITY_DAYS", names(mrp_definition))
+  ]
+  mrp_definition <- etlutils::removeRowsWithNAorEmpty(mrp_definition, code_column_names)
+
+  # ICD column:
+  # remove white spaces around plus signs
+  etlutils::replacePatternsInColumn(mrp_definition, 'ICD', '\\s*\\+\\s*', '+')
+  # replace all invalid chars in the ICD codes by a simple whitespace -> can be trimmed and splitted
+  mrp_definition[, ICD := sapply(ICD, function(text) gsub('[^0-9A-Za-z. +]', '', text))]
+
+  computeATCForCalculation(
+    data_table = mrp_definition,
+    primary_col = "ATC_PRIMARY",
+    inclusion_col = "ATC_INCLUSION",
+    output_col = "ATC_FOR_CALCULATION",
+    secondary_cols = c("ATC_SYSTEMIC_SY", "ATC_DERMATIC_D", "ATC_OPHTHALMOLOGIC_OP", "ATC_INHALATIVE_I", "ATC_OTHER_OT")
+  )
+
+  # To prevent a large number of meaningless MRPs from being found, all lines for proxy codes that essentially
+  # mean the same thing must be combined. The reason for this is that a short form of an ICD code (e.g., K70)
+  # results in a large number of individual codes, which then all generate their own MRP for the LOINC proxy
+  # because LOINC says that the patient has all these diseases.
+
+  code_column_names <- c(code_column_names[!startsWith(code_column_names, "ATC")], "ATC_FOR_CALCULATION")
+  # Create a new column for the full ATC list
+  mrp_definition[, ATC_FULL_LIST := ATC_FOR_CALCULATION]
+  # Create a new column for the full ICD list
+  mrp_definition[, ICD_FULL_LIST := ICD]
+  # SPLIT and TRIM: ICD and proxy column:
+  # split the whitespace separated lists in ICD and proxy columns in a single row per code
+  mrp_definition <- etlutils::splitColumnsToRows(mrp_definition, code_column_names)
+  # trim all values in the whole table
+  etlutils::trimTableValues(mrp_definition)
+  # ICD column: remove tailing points from ICD codes
+  etlutils::replacePatternsInColumn(mrp_definition, 'ICD', '\\.$', '')
+  # remove rows with empty ICD code and empty proxy codes (ATC, LOINC, OPS) again.
+  # After the replacing of special signs with an empty string their can be new empty rows in this both columns
+  mrp_definition <- etlutils::removeRowsWithNAorEmpty(mrp_definition, code_column_names)
+
+  # Remove duplicate rows
+  mrp_definition <- unique(mrp_definition)
+
+  # Clean rows with NA or empty values in relevant code columns
+  for (col in code_column_names) {
+    mrp_definition[[col]] <- ifelse(
+      is.na(mrp_definition[[col]]) |
+        !nzchar(trimws(mrp_definition[[col]])),
+      NA_character_,
+      mrp_definition[[col]]
+    )
+  }
+
+  # check column ATC and ATC_PROXY for correct ATC codes
+  invalid_atcs <- etlutils::getInvalidCodes(mrp_definition, "ATC_FOR_CALCULATION", etlutils::isATC)
+  invalid_atcs_proxy <- etlutils::getInvalidCodes(mrp_definition, "ICD_PROXY_ATC", etlutils::isATC7orSmaller)
+
+  # check column LOINC_PROXY for correct LOINC codes
+  invalid_loincs <- etlutils::getInvalidCodes(mrp_definition, "LOINC_PRIMARY_PROXY", etlutils::isLOINC)
+
+  error_messages <- c(
+    formatCodeErrors(invalid_atcs, "ATC"),
+    formatCodeErrors(invalid_atcs_proxy, "ATC_PROXY"),
+    formatCodeErrors(invalid_loincs, "LOINC")
+  )
+
+  if (length(error_messages) > 0) {
+    stop(paste(error_messages, collapse = "\n"))
+  }
+
+  # Apply the function to the 'ICD' column
+  mrp_definition$ICD <- expandAndConcatenateICDs(mrp_definition$ICD)
+  # Split concatenated ICD codes into separate rows
+  mrp_definition <- etlutils::splitColumnsToRows(mrp_definition, "ICD")
+  # Remove duplicate rows
+  mrp_definition <- unique(mrp_definition)
+  return(mrp_definition)
+}
 
 #
 # Load all encounters for a time range
@@ -32,7 +130,7 @@ getEncountersWithTimeRangeFromDB <- function(start_time, end_time) {
     "AND enc_type_code = 'einrichtungskontakt'\n"
   )
   mrp_encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getEncountersWithTimeRangeFromDB()"))
-  mrp_encounters[, study_phase := "PhaseB"]
+  mrp_encounters[, study_phase := "PhaseB"] # we must set the studyphase for all encounters to PhaseB to trigger the MRP calculation
   encounters_per_mrp_type <- list()
   for (mrp_type in MRP_TYPE) {
     encounters_per_mrp_type[[mrp_type]] <- mrp_encounters
@@ -51,16 +149,25 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   # 1.) Get all Einrichtungskontakt encounters that ended before now and do not
   #     have a retrolective MRP evaluation for a given type
   #
-
   for (mrp_type in names(MRP_TYPE)) {
     query <- paste0(
       "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
       "FROM v_encounter_last_version\n",
       "WHERE enc_period_end <= '", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "'\n",
       "AND enc_type_code = 'einrichtungskontakt'\n",
-      "AND enc_id NOT IN (\n",
+      "AND (\n",
+      "  enc_id NOT IN (\n",
       "  SELECT enc_id FROM v_dp_mrp_calculations\n",
       "  WHERE mrp_calculation_type = '", mrp_type, "'\n",
+      "  )\n",
+      # If there are Medication analyses added later that 14 days after encounter end -> recalculate MRPs for this cases
+      # so we search additionally for PhaseB encounters which had never a linked meda_id in the dp_mrp_calculations table
+      "  OR enc_id IN (\n",
+      "    SELECT enc_id FROM v_dp_mrp_calculations\n",
+      "    WHERE mrp_calculation_type = '", mrp_type, "' AND study_phase = 'PhaseB'\n",
+      "    GROUP BY enc_id\n",
+      "    HAVING COUNT(meda_id) = 0\n",
+      "  )\n",
       ")"
     )
     mrp_encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getEncountersWithoutRetrolectiveMRPEvaluationFromDB() - ", mrp_type))
@@ -94,7 +201,8 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
     #
     # 2a.) Remove all Encounters which were never on a relevant ward (their FHIR ID is not in the fall_fe table)
     #
-    encounters <- encounters[enc_id %in% encs_fall_fe$fall_fhir_enc_id]
+    fall_fe_enc_id <- unique(encs_fall_fe$fall_fhir_enc_id)
+    encounters <- encounters[enc_id %in% fall_fe_enc_id]
 
     #
     # 2b.) Add the Study Phase to all remaining Encounters
@@ -132,9 +240,9 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   getCurrentDate <- function() {
     if (exists("DEBUG_DAY")) {
       datetime <- DEBUG_DATES[DEBUG_DAY]
-      return(as.Date(datetime))
+      return(etlutils::as.DateWithTimezone(datetime))
     }
-    return(Sys.Date())
+    return(etlutils::as.DateWithTimezone(Sys.Date()))
   }
 
   #
@@ -145,7 +253,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   for (mrp_type in names(encounters_per_mrp_type)) {
     encs <- encounters_per_mrp_type[[mrp_type]]
     # Merge with enriched encounters to get study_phase
-    encs <- merge(encs, encounters[, .(enc_id, study_phase)], by = "enc_id", all.x = TRUE)
+    encs <- merge(encs, encounters[, .(enc_id, study_phase)], by = "enc_id")
     encounters_per_mrp_type[[mrp_type]] <- encs
   }
 
@@ -159,7 +267,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
 #
 getMedicationAnalysesFromDB <- function(record_ids) {
   query_ids <- etlutils::fhirdbGetQueryList(record_ids$record_id)
-  query <- paste0("SELECT * FROM v_medikationsanalyse_fe WHERE record_id in ", query_ids, "\n")
+  query <- paste0("SELECT * FROM v_medikationsanalyse_fe WHERE record_id IN ", query_ids, "\n")
   medication_analyses <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getMedicationAnalysesFromDB()")
   data.table::setorder(medication_analyses, meda_dat)
   return(medication_analyses)
@@ -264,8 +372,8 @@ getMedicationRequestsFromDB <- function(patient_references) {
   medication_requests[
     ,
     `:=`(
-      start_datetime = min(start_datetime),
-      end_datetime = if (anyNA(end_datetime)) NA else max(end_datetime)
+      start_datetime = etlutils::getMinDatetime(start_datetime),
+      end_datetime = if (anyNA(end_datetime)) NA else getMaxDatetime(end_datetime)
     ),
     by = medreq_id
   ]
@@ -330,6 +438,7 @@ getMedicationStatementsFromDB <- function(patient_references) {
 # Medication (filtered by Medications with ATC)
 #
 getATCMedicationsFromDB <- function(medication_request, medication_administrations, medication_statements) {
+
   medication_ids <- etlutils::fhirdataExtractIDs(unique(c(
     medication_request$medreq_medicationreference_ref,
     medication_administrations$medadm_medicationreference_ref,
@@ -337,13 +446,79 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 
   medication_ids <- etlutils::fhirdbGetQueryList(medication_ids)
   where_clause <- paste0("WHERE med_id IN ", medication_ids, "\n",
-                         "AND med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n")
-  query <- getQueryToLoadResourcesLastVersionFromDB(resource_name = "Medication",
-                                                    column_names = c("med_id",
-                                                                     "med_code_code",
-                                                                     "med_code_display"),
-                                                    filter = where_clause)
-  medications <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getATCMedicationsFromDB()")
+                         "AND (med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n",
+                         "     OR med_ingredient_itemreference_ref IS NOT NULL)\n")
+
+  query <- getQueryToLoadResourcesLastVersionFromDB(
+    resource_name = "Medication",
+    column_names = c("med_id",
+                     "med_code_code",
+                     "med_code_display",
+                     "med_ingredient_itemreference_ref"),
+    filter = where_clause
+  )
+
+  medications_with_atc_OR_with_reference <- etlutils::dbGetReadOnlyQuery(
+    query,
+    lock_id = "getATCMedicationsFromDB()#atc_OR_reference"
+  )
+
+  # extract medications with ATC codes
+  medications_with_atc <- medications_with_atc_OR_with_reference[is.na(med_ingredient_itemreference_ref) & !is.na(med_code_code) & nzchar(trimws(med_code_code))]
+  # extract medications with ingredient references
+  medications_with_reference <- medications_with_atc_OR_with_reference[!is.na(med_ingredient_itemreference_ref) & nzchar(trimws(med_ingredient_itemreference_ref))]
+  rm(medications_with_atc_OR_with_reference) # free memory
+
+  # if there are medications with ingredient references then load the referenced medications
+  if (nrow(medications_with_reference)) {
+    ingredient_medication_ids <- etlutils::fhirdataExtractIDs(medications_with_reference$med_ingredient_itemreference_ref)
+    ingredient_medication_ids <- etlutils::fhirdbGetQueryList(ingredient_medication_ids)
+
+    where_clause <- paste0("WHERE med_id IN ", ingredient_medication_ids, "\n",
+                           "AND med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n")
+
+    query <- getQueryToLoadResourcesLastVersionFromDB(
+      resource_name = "Medication",
+      column_names = c("med_id",
+                       "med_code_code",
+                       "med_code_display"),
+      filter = where_clause
+    )
+
+    referenced_medications_with_atc <- etlutils::dbGetReadOnlyQuery(
+      query,
+      lock_id = "getATCMedicationsFromDB()#referenced_medications_with_atc"
+    )
+  } else {
+    referenced_medications_with_atc <- data.table::data.table(
+      med_id = character(),
+      med_code_code = character(),
+      med_code_display = character(),
+      med_ingredient_itemreference_ref = character()
+    )
+    medications_with_reference <- data.table::data.table(
+      med_id = character(),
+      med_code_code = character(),
+      med_code_display = character(),
+      med_ingredient_itemreference_ref = character()
+    )
+  }
+
+  # combine both medication data.tables
+  medications <- data.table::rbindlist(
+    list(
+      medications_with_atc,
+      medications_with_reference,
+      referenced_medications_with_atc
+    ),
+    use.names = TRUE,
+    fill = TRUE
+  )
+
+  # clean up
+  medications[, medication_id := NULL]
+  medications <- unique(medications)
+
   return(medications)
 }
 
@@ -361,6 +536,7 @@ getObservationsFromDB <- function(patient_references) {
                                                       "obs_effectivedatetime",
                                                       "obs_valuequantity_value",
                                                       "obs_valuequantity_code",
+                                                      "obs_valuequantity_unit",
                                                       "obs_referencerange_low_value",
                                                       "obs_referencerange_high_value",
                                                       "obs_referencerange_low_code",
@@ -434,22 +610,67 @@ getConditionsFromDB <- function(patient_references) {
 # Extract ATC code of referenced Medication. If not exists then remove the resource.
 #
 appendATCColumns <- function(medication_resources, medications) {
-  # Perform join: match each medication_resource to its medication by med_id
-  result <- medication_resources[
-    medications,
+
+  # join medications directly carrying an ATC code
+  direct_atc <- medication_resources[
+    medications[!is.na(med_code_code)],
     on = .(med_id),
-    allow.cartesian = TRUE
+    nomatch = 0L
   ]
 
-  # Rename joined columns
-  data.table::setnames(result, c("med_code_code", "med_code_display"), c("atc_code", "atc_display"))
+  # fill medications referencing other medications with ATC codes
+  medications_filled <- medications[
+    !is.na(med_ingredient_itemreference_ref) &
+      nzchar(trimws(med_ingredient_itemreference_ref))
+  ][
+    ,
+    referenced_med_id := etlutils::fhirdataExtractIDs(
+      med_ingredient_itemreference_ref
+    ),
+    by = .I
+  ][
+    medications[!is.na(med_code_code)],
+    on = .(referenced_med_id = med_id),
+    `:=`(
+      med_code_code    = i.med_code_code,
+      med_code_display = i.med_code_display
+    )
+  ][
+    ,
+    referenced_med_id := NULL
+  ]
 
-  # Keep only resource columns and the renamed ATC columns
+  # join medication resources with medications referencing other medications with ATC codes
+  referenced_atc <- medication_resources[
+    medications_filled[!is.na(med_code_code)],
+    on = .(med_id),
+    nomatch = 0L
+  ]
+
+  # combine both result sets
+  result <- data.table::rbindlist(
+    list(direct_atc, referenced_atc),
+    use.names = TRUE,
+    fill = TRUE
+  )
+
+  # rename ATC columns
+  data.table::setnames(
+    result,
+    c("med_code_code", "med_code_display"),
+    c("atc_code", "atc_display"),
+    skip_absent = TRUE
+  )
+
+  # keep only resource columns and ATC columns
   keep_cols <- c(names(medication_resources), "atc_code", "atc_display")
   result <- result[, ..keep_cols]
 
-  # Drop rows without ATC code
+  # drop rows without ATC code
   result <- result[!is.na(atc_code)]
+
+  # if medication resources have a direct ATC code or a referenced ATC code then drop duplicates
+  result <- unique(result)
 
   return(result)
 }
@@ -487,7 +708,8 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     target_record_id <- record_ids[pat_id %in% patient_id, record_id][1]
 
     # meda_dat can be NA but we always need this value -> remove rows with NA
-    encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id & !is.na(meda_dat)]
+    # and ignore all medication analyses with a not "Complete" form status
+    encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id & !is.na(meda_dat) & medikationsanalyse_complete %in% "Complete"]
 
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
     if (nrow(encounter_medication_analyses)) {
@@ -523,17 +745,28 @@ getResourcesForMRPCalculation <- function(main_encounters) {
   # 6.) Get existing ret_id's for the medication analyses
   getExistingRetrolectiveMRPEvaluationIDs <- function(medication_analyses_ids) {
     query <- paste0(
-      "SELECT meda_id, ret_id, ret_redcap_repeat_instance\n",
+      "SELECT DISTINCT meda_id, ret_id, ret_redcap_repeat_instance\n",
       "FROM v_dp_mrp_calculations\n",
-      "WHERE meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids))
+      "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids), "\n")
     return(etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingRetrolectiveMRPEvaluationIDs()"))
   }
   medication_analyses_ids <- unlist(lapply(encounters_first_medication_analysis, function(dt) if (!is.null(dt)) dt$meda_id else NULL), use.names = FALSE)
   existing_retrolective_mrp_evaluation_ids <- getExistingRetrolectiveMRPEvaluationIDs(medication_analyses_ids)
 
-  # 7.) Get all necessary resources for the MRP calculation for these Encounters and return them as a list
-  # Get patient references
+  # 7.) Get all ward names from the fall_fe table for the current main encounters
+  getWardNames <- function(encounter_ids) {
+    query <- paste0(
+      "SELECT DISTINCT fall_fhir_enc_id, fall_station\n",
+      "FROM v_fall_fe\n",
+      "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(encounter_ids), "\n")
+    ward_names <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingRetrolectiveMRPEvaluationIDs()")
+    names(ward_names) <- c("main_enc_id", "ward_name")
+    return(ward_names)
+  }
+  encounters_ward_names <- getWardNames(main_encounters$enc_id)
 
+  # 8.) Get all necessary resources for the MRP calculation for these Encounters and return them as a list
+  # Get patient references
   patient_references <- main_encounters[enc_id %in% names(encounters_first_medication_analysis)]$enc_patient_ref
 
   # Extract Medication resources
@@ -551,6 +784,7 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     main_encounters = main_encounters,
     record_ids = record_ids,
     encounters_first_medication_analysis = encounters_first_medication_analysis,
+    encounters_ward_names = encounters_ward_names,
     existing_retrolective_mrp_evaluation_ids = existing_retrolective_mrp_evaluation_ids,
     medication_requests = medication_requests,
     medication_administrations = medication_administrations,
@@ -600,7 +834,7 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
   # keep only relevant columns and aggregate to get the overall start and end datetime per atc_code
   active_atc <- active_requests[, c("atc_code", "start_datetime", "end_datetime")]
   active_atc <- active_atc[, .(
-    start_datetime = min(start_datetime, na.rm = TRUE),
+    start_datetime = etlutils::getMinDatetime(start_datetime),
     end_datetime = end_datetime[1]
   ), by = .(atc_code, end_datetime)]
 
@@ -615,12 +849,38 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
   # 3. aggregate
   active_atc <- active_atc[
     , .(
-      start_datetime = min(start_datetime),
-      end_datetime = max(end_datetime)
+      start_datetime = etlutils::getMinDatetime(start_datetime),
+      end_datetime = etlutils::getMaxDatetime(end_datetime)
     ),
     by = .(atc_code, grp)
   ]
   active_atc[, grp := NULL]
 
   return(active_atc)
+}
+
+#' Get relevant patient conditions up to a given date
+#'
+#' Filters the list of Condition resources to return conditions for a specific patient
+#' that occurred on or before the given medication analysis date. If the condition has a
+#' \code{con_recordeddate}, it is used for filtering; otherwise, \code{con_onsetperiod_start}
+#' is used as a fallback.
+#'
+#' @param conditions A \code{data.table} of FHIR Condition resources, including columns \code{pat_id},
+#' \code{con_recordeddate}, and \code{con_onsetperiod_start}.
+#' @param patient_id A character string identifying the patient whose conditions should be returned.
+#' @param meda_datetime A POSIXct timestamp representing the medication analysis date.
+#'
+#' @return A \code{data.table} of conditions that match the patient and date criteria.
+#'
+getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
+
+  # Filter conditions by patient ID and ensure recorded date is before or on meda_datetime
+  relevant_conditions <- conditions[
+    con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime]
+
+  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "con_code_display", "start_datetime")
+  relevant_conditions <- relevant_conditions[, ..relevant_cols]
+
+  return(relevant_conditions)
 }

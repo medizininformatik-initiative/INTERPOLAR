@@ -1,3 +1,6 @@
+# Environment for saving current states
+.lib_envir_env <- new.env()
+
 #' Read a TOML File into a Named List
 #'
 #' This function reads a TOML configuration file and returns its content as a
@@ -291,6 +294,27 @@ isDefinedAndTrue <- function(variable_name, envir = parent.frame()) {
   return(exists(variable_name, envir = envir) && isTRUE(get(variable_name, envir = envir)))
 }
 
+#' Check if a Variable is Defined and False
+#'
+#' This function checks if a given variable is defined in the specified environment and if its value is `TRUE`.
+#'
+#' @param variable_name The name of the variable to check, provided as a string.
+#' @param envir The environment in which to check for the variable. Defaults to the current environment.
+#'
+#' @return TRUE if the variable is defined and its value is `TRUE`, otherwise FALSE.
+#'
+#' @examples
+#' var1 <- TRUE
+#' var2 <- FALSE
+#' isDefinedAndFalse("var1")  # Returns FALSE
+#' isDefinedAndFalse("var2")  # Returns TRUE
+#' isDefinedAndFalse("var3")  # Returns FALSE, since var3 is not defined
+#'
+#' @export
+isDefinedAndFalse <- function(variable_name, envir = parent.frame()) {
+  return(exists(variable_name, envir = envir) && !isTRUE(get(variable_name, envir = envir)))
+}
+
 #' Check if a Variable is Defined and Not Empty
 #'
 #' This function checks if a given variable is defined in the specified environment and whether its
@@ -463,4 +487,120 @@ initCommandLineArguments <- function(argument2global_variable_name = c(),
   }
 
   return(initialized_variables)
+}
+
+####
+# Version
+####
+
+#' Compare two semantic version strings
+#'
+#' Compares two version strings using semantic versioning rules. The versions do
+#' not need to have the same number of components. Missing components are treated
+#' as zero. The comparison is performed component-wise from left to right.
+#'
+#' @param version_a Character scalar. First version string to compare, e.g.
+#'   \code{"1.5.0"}.
+#' @param version_b Character scalar. Second version string to compare, e.g.
+#'   \code{"1.10"}.
+#'
+#' @return Integer scalar indicating the comparison result: \code{-1L} if
+#'   \code{version_a} is smaller than \code{version_b}, \code{0L} if both versions
+#'   are equal, and \code{1L} if \code{version_a} is greater than
+#'   \code{version_b}.
+#'
+#' @examples
+#' compareVersionsSemver("1.5.0", "1.5")      # 0
+#' compareVersionsSemver("1.5.0", "1.6.0")    # -1
+#' compareVersionsSemver("2.0", "1.9.9")      # 1
+#'
+#' @export
+compareVersionsSemver <- function(version_a, version_b) {
+  # split versions into numeric components
+  parse_version <- function(version) {
+    parts <- strsplit(version, "\\.", fixed = FALSE)[[1]]
+    as.integer(parts)
+  }
+
+  a <- parse_version(version_a)
+  b <- parse_version(version_b)
+
+  # compare component-wise up to the longest version
+  max_len <- max(length(a), length(b))
+
+  for (i in seq_len(max_len)) {
+    a_i <- if (i <= length(a)) a[i] else 0L
+    b_i <- if (i <= length(b)) b[i] else 0L
+
+    if (a_i < b_i) return(-1L)
+    if (a_i > b_i) return(1L)
+  }
+
+  return(0L)
+}
+
+#' Read the release version from file
+#'
+#' Reads the release version string from the first line of the
+#' \code{release-version.txt} file located in the project root directory. Leading
+#' and trailing whitespace is removed. If the version string starts with a
+#' leading \code{"v"} (case-insensitive), it is stripped.
+#'
+#' @return Character scalar containing the normalized release version string,
+#'   e.g. \code{"1.5.0"}.
+#'
+getReleaseVersion <- function() {
+  release_version <- readLines("./release-version.txt", n = 1L)
+  release_version <- trimws(release_version)
+  # if the release version starts with "v", remove it
+  if (startsWith(tolower(release_version), "v")) {
+    release_version <- substring(release_version, 2L)
+  }
+  return(release_version)
+}
+
+#' Check database version against the release version
+#'
+#' Compares the database schema version stored in the database with the release
+#' version expected by the R project and enforces compatibility rules.
+#'
+#' If the database version is older than the release version, execution is
+#' stopped and the user is instructed to run the required database migrations.
+#'
+#' If the database version is newer than the release version, execution is
+#' stopped unless explicitly allowed. Allowing newer database versions is
+#' intended for rollback scenarios where the database schema is assumed to be
+#' backward-compatible with older releases.
+#'
+#' The version check is performed only once per R session.
+#'
+#' @param ignore_newer_db_version Logical flag indicating whether execution
+#'   should continue when the database version is newer than the release
+#'   version. If \code{FALSE}, execution is stopped and the user is instructed
+#'   to explicitly force the run. If \code{TRUE}, newer database versions are
+#'   accepted.
+#'
+#' @return Invisibly returns \code{NULL}. This function is called for its side
+#'   effects and will stop execution with an error if version compatibility
+#'   requirements are not met.
+#'
+#' @export
+checkVersion <- function(ignore_newer_db_version) {
+  if (!isDefinedAndTrue("VERSION_ALREADY_CHECKED", .lib_envir_env)) {
+    db_version <- dbGetVersion()
+    # read the first line of the release-version.txt file in the main directory
+    release_version <- getReleaseVersion()
+    compare_result <- compareVersionsSemver(db_version, release_version)
+    if (compare_result < 0L) { # DB is older than release version -> stop execution
+      stop(paste0("The database version '", db_version, "' is older than the release version '", release_version, "'. Please update the database via migration. Run\n",
+                  "  docker compose exec -w /cds_hub-initdb.d cds_hub psql -U cds_hub_db_admin -d cds_hub_db -f ./migration/migration.sql\n",
+                  "  or see https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."))
+    } else if (compare_result > 0L) { # DB is newer than release version -> allow force run
+      if (!ignore_newer_db_version) {
+        stop(paste0("The database version '", db_version, "' is newer than the release version '", release_version, "'. If you know what you are doing:",
+                    " You can force the run anyway, if you start the full toolchain or a single module with the parameter '--", forceRunIndicatorGlobalVariableName, "'."))
+      }
+    }
+    .lib_envir_env[["VERSION_ALREADY_CHECKED"]] <- TRUE
+  }
 }

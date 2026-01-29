@@ -733,38 +733,42 @@ removeTableHeader <- function(dt, pattern_list) {
 #'
 #' This function retains only the columns in a data table that are listed in the
 #' provided 'columnNames'. All other columns will be removed from the data table.
+#' Optionally, missing columns can be added with NA_character_ values.
 #'
 #' @param table A data table from which columns will be retained.
 #' @param columnNames A character vector containing the names of columns to be retained.
-#' If NA (default) then no column will be removed and the full input table will be returned.
+#'   If NA (default), then no column will be removed and the full input table will be returned.
+#' @param addMissingColumns Logical. If TRUE, columns from 'columnNames' that are not yet in
+#'   the table will be created and filled with NA_character_. Default is TRUE.
 #'
 #' @return The data table with only the specified columns retained. The object is changed
-#' by reference.
+#'   by reference.
 #'
 #' @examples
 #' library(data.table)
 #'
-#' # Create a sample data table
-#' dt <- data.table(
-#'   ID = 1:3,
-#'   Name = c("John", "Alice", "Bob"),
-#'   Age = c(25, 30, 22),
-#'   Country = c("USA", "Canada", "UK")
-#' )
+#' dt <- data.table(ID = 1:3, Name = c("A", "B", "C"))
+#' retainColumns(dt, c("ID", "Country"), addMissingColumns = TRUE)
 #'
-#' # Specify the columns to be retained
-#' columns_to_retain <- c("ID", "Name")
+#' dt <- data.table(ID = character(), Name = numeric())
+#' retainColumns(dt, c("ID", "Country"), addMissingColumns = TRUE)
 #'
-#' # Retain only the specified columns
-#' dt <- retainColumns(dt, columns_to_retain)
-#' print(dt)
+#' dt <- data.table()
+#' retainColumns(dt, c("ID", "Country"), addMissingColumns = TRUE)
 #'
 #' @export
-retainColumns <- function(table, columnNames = NA) {
+retainColumns <- function(table, columnNames = NA, addMissingColumns = TRUE) {
   if (!isSimpleNA(columnNames)) {
-    names <- names(table)
-    names <- names[!(names %in% columnNames)]
-    table[, (names) := NULL]
+    # Add missing columns as NA_character_, even for empty tables
+    if (addMissingColumns) {
+      missing_cols <- setdiff(columnNames, names(table))
+      for (col in missing_cols) {
+        table[, (col) := rep(NA_character_, .N)]
+      }
+    }
+    # Remove all columns not in columnNames
+    to_remove <- setdiff(names(table), columnNames)
+    table[, (to_remove) := NULL]
   }
   return(table)
 }
@@ -891,6 +895,65 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
 
   # Apply the new order
   data.table::setcolorder(dt, new_order)
+}
+
+#' Append rows to a data.table with values in a specified column
+#'
+#' Adds one row per element in `values` to the provided data.table. If a value is `NA` or an empty
+#' string, a fully empty row is added. Otherwise, the value is inserted into the specified column
+#' of the new row. The column can be specified by name or by numeric index. The function returns
+#' the modified table and does not modify by reference.
+#'
+#' @param table A data.table to which rows will be appended. Must have at least one column,
+#'   and the target column is expected to be of type character.
+#' @param values A character vector of values to insert into the specified column. NA or "" will
+#'   result in a completely empty row.
+#' @param column A character string (column name) or numeric index specifying the target column
+#'   for value insertion.
+#'
+#' @return A data.table with the new rows appended.
+#'
+#' @examples
+#' dt <- data.table::data.table(col1 = character(), col2 = integer())
+#' values <- c("First", NA, "", "Second")
+#' dt <- addRowsWithColumn(dt, values, "col1")
+#'
+#' dt2 <- data.table::data.table(col1 = character(), col2 = character())
+#' dt2 <- addRowsWithColumn(dt2, c("A", "B"), 2)
+#'
+#' # Error handling with tryCatch
+#' dt3 <- data.table::data.table(a = character())
+#' tryCatch(
+#'   addRowsWithColumn(dt3, "test", "b"),
+#'   error = function(e) message("Fehler: ", e$message)
+#' )
+#'
+#' @export
+addRowsWithColumn <- function(table, values, column) {
+  if (is.character(column)) {
+    if (!(column %in% names(table))) {
+      stop(sprintf("Column name '%s' not found in table. Available columns are: %s.",
+                   column, paste(names(table), collapse = ", ")))
+    }
+    col_index <- which(names(table) == column)
+  } else if (is.numeric(column)) {
+    if (column < 1 || column > ncol(table)) {
+      stop(sprintf("Column index %d is out of bounds. Table has %d columns.", column, ncol(table)))
+    }
+    col_index <- column
+  } else {
+    stop("Argument 'column' must be either a character string (column name) or numeric index.")
+  }
+
+  for (val in values) {
+    row <- setNames(as.list(rep(NA, ncol(table))), names(table))
+    if (!is.na(val) && val != "") {
+      row[[col_index]] <- val
+    }
+    table <- data.table::rbindlist(list(table, row), use.names = TRUE, fill = TRUE)
+  }
+
+  return(table)
 }
 
 #' Print a summary for a table
@@ -1315,5 +1378,27 @@ dtRemoveCommentRows <- function(dt, comment_marker = "#", remove_empty = TRUE) {
   }
 
   return(dt)
+}
+
+#' Rename columns in a list of data.tables
+#'
+#' Renames one or more columns in each data.table contained in a list.
+#' Column renaming is performed by reference using \code{data.table::setnames()},
+#' so the original data.tables are modified in place.
+#'
+#' Columns that are not present in a specific table are silently skipped.
+#'
+#' @param tbl_list A list of \code{data.table} objects.
+#' @param old A character vector of existing column names to be renamed.
+#' @param new A character vector of new column names. Must be the same length as \code{old}.
+#'
+#' @return A list of \code{data.table}s with renamed columns (same objects, modified by reference).
+#'
+#' @export
+renameColsInLists <- function(tbl_list, old, new) {
+  lapply(tbl_list, function(tbl) {
+    data.table::setnames(tbl, old = old, new = new, skip_absent = TRUE)
+    tbl
+  })
 }
 
