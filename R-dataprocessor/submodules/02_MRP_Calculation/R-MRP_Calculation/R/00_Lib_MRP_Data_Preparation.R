@@ -20,6 +20,13 @@ MRP_TYPE <- etlutils::namedVectorByParam(
   "Drug_Niereninsuffizienz"
 )
 
+#
+# Check if current submodule is MRP Check
+#
+isMRPCheckSubmodule <- function() {
+  return(grepl("^mrp.*check$", SUBMODULE_NAME, ignore.case = TRUE))
+}
+
 #' Clean and Expand MRP Definition Table
 #'
 #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
