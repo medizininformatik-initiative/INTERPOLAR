@@ -50,7 +50,7 @@ mrpCheck <- function(start_date, end_date) {
       "mrp_calculation_type",
       "meda_id",
       "ward_name",
-      "ret_meda_dat_referenz",
+      "ret_meda_dat1",
       "ret_kurzbeschr"
     )
 
