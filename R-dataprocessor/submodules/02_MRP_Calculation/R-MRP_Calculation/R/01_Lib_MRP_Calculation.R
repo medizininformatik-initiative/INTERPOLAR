@@ -635,5 +635,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
       mrp_table_lists_all_merged[[table_name]] <- resources[[table_name]]
     }
   }
+  mrp_table_lists_all_merged[["main_encounters"]] <- main_encounters
+
   return(mrp_table_lists_all_merged)
 }
