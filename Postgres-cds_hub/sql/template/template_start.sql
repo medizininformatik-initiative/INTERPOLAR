@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------
-\i ./000_stop_semapore_during_run.sql
+\i ./base/000_stop_semapore_during_run.sql
 ------------------------------------------------------
 \i ./init/001_main_user_schema_sequence.sql
 ------------------------------------------------------
@@ -51,5 +51,5 @@
 \i ./base/950_cro_job.sql
 \i ./base/recalculations/700_calculated_ref_create.sql
 ------------------------------------------------------
-\i ./999_start_semapore_after_run.sql
+\i ./base/999_start_semapore_after_run.sql
 ----------------------------------------------------------------------------
