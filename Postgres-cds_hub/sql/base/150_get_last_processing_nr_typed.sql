@@ -2,14 +2,14 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 13:49:10
--- Rights definition file size        : 16391 Byte
+-- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2026-02-02 13:24:46
+-- Rights definition file size        : 16590 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2025-09-17 15:49:46
+-- Create time: 2026-02-02 13:35:15
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
--- SCRIPTNAME:  140_cre_table_typ_cds2db_in.sql
+-- SCRIPTNAME:  base/140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  cds2db_user
 -- OWNER_SCHEMA:  cds2db_in
@@ -19,7 +19,7 @@
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  cds2db_user
 -- GRANT_TARGET_USER (2):  db_user
--- COPY_FUNC_SCRIPTNAME:  150_get_last_processing_nr_typed.sql
+-- COPY_FUNC_SCRIPTNAME:  base/150_get_last_processing_nr_typed.sql
 -- COPY_FUNC_TEMPLATE:  template_get_last_pnr_typed.sql
 -- COPY_FUNC_NAME:  get_last_processing_nr_typed
 -- SCHEMA_2:  db_log

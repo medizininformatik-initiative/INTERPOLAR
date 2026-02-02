@@ -2,14 +2,14 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-01-16 14:53:36
--- Rights definition file size        : 16352 Byte
+-- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2026-02-02 10:00:19
+-- Rights definition file size        : 16573 Byte
 --
 -- Create SQL Tables in Schema "db2frontend_in"
--- Create time: 2026-01-19 15:01:36
+-- Create time: 2026-02-02 10:26:38
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
--- SCRIPTNAME:  440_cre_table_frontend_in.sql
+-- SCRIPTNAME:  base/440_cre_table_frontend_in.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db2frontend_user
 -- OWNER_SCHEMA:  db2frontend_in

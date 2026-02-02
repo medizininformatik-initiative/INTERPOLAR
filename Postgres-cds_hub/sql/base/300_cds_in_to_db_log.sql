@@ -2,14 +2,14 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-11-13 15:50:53
--- Rights definition file size        : 14124 Byte
+-- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2026-02-02 13:24:46
+-- Rights definition file size        : 16590 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-11-13 15:57:24
+-- Create time: 2026-02-02 13:32:34
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
--- SCRIPTNAME:  120_cre_table_raw_db_log.sql
+-- SCRIPTNAME:  base/120_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db_log_user
 -- OWNER_SCHEMA:  db_log
@@ -19,7 +19,7 @@
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
 -- GRANT_TARGET_USER (2):  db_user
--- COPY_FUNC_SCRIPTNAME:  300_cds_in_to_db_log.sql
+-- COPY_FUNC_SCRIPTNAME:  base/300_cds_in_to_db_log.sql
 -- COPY_FUNC_TEMPLATE:  template_copy_function.sql
 -- COPY_FUNC_NAME:  copy_raw_cds_in_to_db_log
 -- SCHEMA_2:  cds2db_in

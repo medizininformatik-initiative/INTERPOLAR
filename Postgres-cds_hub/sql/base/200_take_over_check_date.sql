@@ -2,14 +2,14 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/init/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2025-07-01 13:49:10
--- Rights definition file size        : 16391 Byte
+-- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2026-02-02 10:00:19
+-- Rights definition file size        : 16573 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2025-09-17 16:35:32
+-- Create time: 2026-02-02 10:25:51
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
--- SCRIPTNAME:  200_take_over_check_date.sql
+-- SCRIPTNAME:  base/200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
 -- OWNER_USER:  
 -- OWNER_SCHEMA:  db_log

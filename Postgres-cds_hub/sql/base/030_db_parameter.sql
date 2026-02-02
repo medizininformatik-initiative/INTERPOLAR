@@ -5,8 +5,8 @@ $$
 DECLARE
 ---------------------------------------------------------------------------------------
    -- >>>> WICHTIG Standort / Zeitabhängig <<<< -- Hier bitte Variablen setzen
-   release_version VARCHAR := '1.5.0';              -- GitHup release version
-   release_version_nr INT := 150;                   -- version number - first 3 digits as integer for comparison
+   release_version VARCHAR := '1.5.1';              -- GitHup release version
+   release_version_nr INT := 151;                   -- version number - first 3 digits as integer for comparison
    release_version_date VARCHAR := '2026-01-14';    -- GitHup (likely) release version date
    pause_after_process_execution VARCHAR := '10';   -- Pause after copy process execution in second [5-30 sec] - ready to connect
    data_import_hist_every_dataset VARCHAR := 'no';  -- Documentation of each individual data record (db_log.data_import_hist) in all the transfer functions [yes|no] - large resource requirements only for debugging
