@@ -20,6 +20,13 @@ MRP_TYPE <- etlutils::namedVectorByParam(
   "Drug_Niereninsuffizienz"
 )
 
+#
+# Check if current submodule is MRP Check
+#
+isMRPCheckSubmodule <- function() {
+  return(grepl("^mrp.*check$", SUBMODULE_NAME, ignore.case = TRUE))
+}
+
 #' Clean and Expand MRP Definition Table
 #'
 #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
@@ -704,7 +711,7 @@ getResourcesForMRPCalculation <- function(main_encounters) {
 
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
 
-    if (grepl("^mrp.*check$", SUBMODULE_NAME, ignore.case = TRUE)) {
+    if (isMRPCheckSubmodule()) {
       if (etlutils::isDefinedAndNotEmpty("MRP_CHECK_MEDICATION_ANALYSIS_DAYS_OFFSET")) {
         meda_dat_enc_start_offset <- as.numeric(MRP_CHECK_MEDICATION_ANALYSIS_DAYS_OFFSET)
         start <- main_encounter$enc_period_start
