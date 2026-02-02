@@ -20,6 +20,13 @@ MRP_TYPE <- etlutils::namedVectorByParam(
   "Drug_Niereninsuffizienz"
 )
 
+#
+# Check if current submodule is MRP Check
+#
+isMRPCheckSubmodule <- function() {
+  return(grepl("^mrp.*check$", SUBMODULE_NAME, ignore.case = TRUE))
+}
+
 #' Clean and Expand MRP Definition Table
 #'
 #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
@@ -712,7 +719,23 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id & !is.na(meda_dat) & medikationsanalyse_complete %in% "Complete"]
 
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
-    if (nrow(encounter_medication_analyses)) {
+
+    if (isMRPCheckSubmodule()) {
+      if (etlutils::isDefinedAndNotEmpty("MRP_CHECK_MEDICATION_ANALYSIS_DAYS_OFFSET")) {
+        meda_dat_enc_start_offset <- as.numeric(MRP_CHECK_MEDICATION_ANALYSIS_DAYS_OFFSET)
+        start <- main_encounter$enc_period_start
+        if (!is.na(start)) {
+          meda_dat <- start + as.difftime(meda_dat_enc_start_offset, units = "days")
+          if (!is.na(main_encounter$enc_period_end) && meda_dat > main_encounter$enc_period_end) {
+            meda_dat <- main_encounter$enc_period_end
+          }
+        }
+        encounters_first_medication_analysis[[main_encounter$enc_id]] <- data.table::data.table(
+          meda_id = paste0(main_encounter$enc_id, "-proxydate-", meda_dat_enc_start_offset),
+          meda_dat = meda_dat
+        )
+      }
+    } else if (nrow(encounter_medication_analyses)) {
       # Find the first medication analysis with a date in the encounters period
       # sort medication analyses by date
       encounter_medication_analyses <- encounter_medication_analyses[order(meda_dat)]
