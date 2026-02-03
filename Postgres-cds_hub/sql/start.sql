@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 16:02:10
--- Rights definition file size        : 16818 Byte
+-- Rights definition file last update : 2026-02-03 12:19:40
+-- Rights definition file size        : 16836 Byte
 --
 -- Create SQL Tables in Schema "NA"
--- Create time: 2026-02-02 16:35:09
+-- Create time: 2026-02-03 12:31:58
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  start.sql
 -- TEMPLATE:  template_start.sql
@@ -81,7 +81,8 @@
 \i ./base/600_dp_in_to_db_log.sql
 \i ./base/620_fe_in_to_db_log.sql
 \i ./base/950_cro_job.sql
-\i ./base/recalculations/700_calculated_ref_create.sql
+------------------------------------------------------
+\i ./recalculations/700_calculated_ref_create.sql
 ------------------------------------------------------
 \i ./base/999_start_semapore_after_run.sql
 ----------------------------------------------------------------------------
