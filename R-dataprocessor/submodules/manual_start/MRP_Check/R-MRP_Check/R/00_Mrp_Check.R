@@ -1,5 +1,108 @@
 mrpCheck <- function(start_date, end_date) {
 
+  anonymizeTimestampsByPatient <- function(
+    dt,
+    patient_id_col = "FHIR Patient ID",
+    text_col = "MRP Beschreibung",
+    min_future_days = 365,
+    max_future_days = 365 * 10
+  ) {
+    # Identify rows
+    patient_rows <- which(!is.na(dt[[patient_id_col]]))
+    na_rows <- which(is.na(dt[[patient_id_col]]))
+
+    # Identify POSIXct columns
+    time_cols <- names(dt)[vapply(dt, inherits, logical(1), what = "POSIXct")]
+
+    timestamp_pattern <- "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"
+
+    # ------------------------------------------------------------------
+    # Generate shifts
+    # ------------------------------------------------------------------
+    if (length(patient_rows) > 0L) {
+      shifts <- dt[
+        patient_rows,
+        .(shift_seconds = sample.int(
+          max_future_days * 86400 - min_future_days * 86400 + 1L,
+          1L
+        ) + min_future_days * 86400),
+        by = patient_id_col
+      ]
+      dt[shifts, shift_seconds := i.shift_seconds, on = patient_id_col]
+    }
+
+    if (length(na_rows) > 0L) {
+      na_shift_seconds <-
+        sample.int(
+          max_future_days * 86400 - min_future_days * 86400 + 1L,
+          1L
+        ) + min_future_days * 86400
+    }
+
+    # ------------------------------------------------------------------
+    # Shift POSIXct columns (patients only)
+    # ------------------------------------------------------------------
+    for (col in time_cols) {
+      for (i in patient_rows) {
+        val <- dt[[col]][i]
+        if (is.na(val)) next
+        data.table::set(
+          dt,
+          i = i,
+          j = col,
+          value = val + dt$shift_seconds[i]
+        )
+      }
+    }
+
+    # ------------------------------------------------------------------
+    # Shift timestamps inside text (patients + NA rows)
+    # ------------------------------------------------------------------
+    for (i in c(patient_rows, na_rows)) {
+      txt <- dt[[text_col]][i]
+      if (is.na(txt)) next
+
+      matches <- gregexpr(timestamp_pattern, txt, perl = TRUE)[[1]]
+      if (length(matches) == 1L && matches[1] == -1L) next
+
+      match_len <- attr(matches, "match.length")
+
+      shift_val <- if (!is.na(dt[[patient_id_col]][i])) {
+        dt$shift_seconds[i]
+      } else {
+        na_shift_seconds
+      }
+
+      for (k in rev(seq_along(matches))) {
+        old_ts <- substr(
+          txt,
+          matches[k],
+          matches[k] + match_len[k] - 1L
+        )
+
+        new_ts <- format(
+          as.POSIXct(old_ts, tz = "UTC") + shift_val,
+          "%Y-%m-%d %H:%M:%S"
+        )
+
+        substr(
+          txt,
+          matches[k],
+          matches[k] + match_len[k] - 1L
+        ) <- new_ts
+      }
+
+      data.table::set(dt, i = i, j = text_col, value = txt)
+    }
+
+    # Cleanup
+    if ("shift_seconds" %in% names(dt)) {
+      dt[, shift_seconds := NULL]
+    }
+
+    invisible(dt)
+  }
+
   etlutils::runLevel2("MRP Calculation", {
     start_date <- etlutils::as.POSIXctWithTimezone(start_date)
     end_date <- etlutils::as.POSIXctWithTimezone(end_date)
@@ -74,8 +177,8 @@ mrpCheck <- function(start_date, end_date) {
                                  "MRP Beschreibung"))
 
 
-    # add export period at the end of the table in the first column
-    result <- etlutils::addRowsWithColumn(result, c("", paste("Start:", format(start_date, "%Y-%m-%d %H:%M:%S")), paste("End:", format(end_date, "%Y-%m-%d %H:%M:%S"))), column = "MRP Typ")
+    # Add export period at the end of the table in the first column
+    result <- etlutils::addRowsWithColumn(result, c("", paste("Start:", format(start_date, "%Y-%m-%d %H:%M:%S")), paste("End:", format(end_date, "%Y-%m-%d %H:%M:%S"))), column = "MRP Beschreibung")
   })
 
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {
@@ -95,6 +198,11 @@ mrpCheck <- function(start_date, end_date) {
       }]
     }
 
+    # Remove encounter start and end date columns in global output file
+    result[, c("FHIR Encounter End") := NULL]
+
+    # Anonymize all dates
+    result <- anonymizeTimestampsByPatient(result)
   })
 
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {
