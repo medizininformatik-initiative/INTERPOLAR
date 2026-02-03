@@ -43,8 +43,11 @@
 \i ./base/440_cre_table_frontend_in.sql
 \i ./base/450_cre_table_frontend_in_trig.sql
 \i ./base/460_cre_view_fe_dataproc_last_import.sql
-\i ./base/470_cre_view_fe_dataproc_all.sql
-\i ./base/480_cre_view_fe_dataproc_last_version.sql
+\i ./base/461_cre_view_fe_dataproc_all.sql
+\i ./base/462_cre_view_fe_dataproc_last_version.sql
+\i ./base/470_cre_view_fe_frontend_last_import.sql
+\i ./base/471_cre_view_fe_frontend_all.sql
+\i ./base/472_cre_view_fe_frontend_last_version.sql
 \i ./base/520_cre_view_fe_out.sql
 \i ./base/600_dp_in_to_db_log.sql
 \i ./base/620_fe_in_to_db_log.sql

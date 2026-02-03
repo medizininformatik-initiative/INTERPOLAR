@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 10:00:19
--- Rights definition file size        : 16573 Byte
+-- Rights definition file last update : 2026-02-02 16:02:10
+-- Rights definition file size        : 16818 Byte
 --
 -- Create SQL Tables in Schema "NA"
--- Create time: 2026-02-02 10:54:55
+-- Create time: 2026-02-02 16:35:09
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  start.sql
 -- TEMPLATE:  template_start.sql
@@ -72,8 +72,11 @@
 \i ./base/440_cre_table_frontend_in.sql
 \i ./base/450_cre_table_frontend_in_trig.sql
 \i ./base/460_cre_view_fe_dataproc_last_import.sql
-\i ./base/470_cre_view_fe_dataproc_all.sql
-\i ./base/480_cre_view_fe_dataproc_last_version.sql
+\i ./base/461_cre_view_fe_dataproc_all.sql
+\i ./base/462_cre_view_fe_dataproc_last_version.sql
+\i ./base/470_cre_view_fe_frontend_last_import.sql
+\i ./base/471_cre_view_fe_frontend_all.sql
+\i ./base/472_cre_view_fe_frontend_last_version.sql
 \i ./base/520_cre_view_fe_out.sql
 \i ./base/600_dp_in_to_db_log.sql
 \i ./base/620_fe_in_to_db_log.sql
