@@ -52,7 +52,8 @@
 \i ./base/600_dp_in_to_db_log.sql
 \i ./base/620_fe_in_to_db_log.sql
 \i ./base/950_cro_job.sql
-\i ./base/recalculations/700_calculated_ref_create.sql
+------------------------------------------------------
+\i ./recalculations/700_calculated_ref_create.sql
 ------------------------------------------------------
 \i ./base/999_start_semapore_after_run.sql
 ----------------------------------------------------------------------------
