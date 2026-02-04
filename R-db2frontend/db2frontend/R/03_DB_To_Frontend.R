@@ -42,7 +42,7 @@ importDB2Redcap <- function() {
     phaseB_active <- etlutils::dbGetReadOnlyQuery(
       "SELECT EXISTS (
         SELECT 1
-        FROM v_fall
+        FROM v_fall_fe
         WHERE fall_studienphase = 'PhaseB'
       ) AS phaseb_active",
       lock_id = "importDB2Redcap_check_phaseB"
@@ -57,7 +57,7 @@ importDB2Redcap <- function() {
       # Get ret_ids of all PhaseBTest MRPs which are not new in this run
       ret_ids_to_clear <- etlutils::dbGetReadOnlyQuery(
         "SELECT DISTINCT ret_id
-         FROM v_retrolektive_mrpbewertung
+         FROM v_retrolektive_mrpbewertung_fe_last_version
          WHERE ret_kurzbeschr ILIKE '*TEST*%'",
         lock_id = "importDB2Redcap_phaseBTestMRP"
       )$ret_id
@@ -156,7 +156,7 @@ importDB2Redcap <- function() {
         # Get ret_ids of all PhaseBTest MRPs which are new in this run
         ret_ids_to_delete <- etlutils::dbGetReadOnlyQuery(
           "SELECT DISTINCT ret_id
-          FROM v_retrolektive_mrpbewertung
+          FROM v_retrolektive_mrpbewertung_fe_last_version
           WHERE ret_kurzbeschr ILIKE '*TEST%'",
           lock_id = "importDB2Redcap_phaseBTestMRP")$ret_id
 
