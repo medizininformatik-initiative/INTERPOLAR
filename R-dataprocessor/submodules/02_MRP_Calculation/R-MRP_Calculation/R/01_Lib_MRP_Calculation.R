@@ -411,7 +411,15 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
           # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
           ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
           ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
-          kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
+
+          kurzbeschr_prefix <- ""
+          if (meda_study_phase == "PhaseBTest") {
+            kurzbeschr_prefix <- if (isPhaseBActive()) {
+              "*TEST nach Phase B Aktivierung* MRP FÜR FALL AUS PHASE B MIT TEST FÜR PHASE B *TEST nach Phase B Aktivierung*\n\n"
+            } else {
+              "*TEST* MRP FÜR FALL AUS PHASE B MIT TEST FÜR PHASE B *TEST*\n\n"
+            }
+          }
 
           ward_names <- resources$encounters_ward_names[main_enc_id == encounter_id]
           ward_names <- if (nrow(ward_names)) paste0(ward_names$ward_name, collapse = "\n") else NA_character_
