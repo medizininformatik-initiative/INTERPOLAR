@@ -1,16 +1,16 @@
 -- ########################################################################################################
 --
--- This file is generated. Changes should only be made by regenerating the file.
+-- This file is not generated. Changes only manuel.
 --
--- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-03 14:24:44
--- Rights definition file size        : 19645 Byte
+-- Rights definition file             : here
+-- Rights definition file last update : 2026-01-12 12:00:00
+-- Rights definition file size        : /
 --
 -- Create SQL Tables in Schema "db2frontend_out"
--- Create time: 2026-02-03 14:25:41
--- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
--- SCRIPTNAME:  base/472_cre_view_fe_frontend_last_version.sql
--- TEMPLATE:  template_cre_view_all.sql
+-- Create time: 2026-01-12 12:00:00
+-- TABLE_DESCRIPTION:  /
+-- SCRIPTNAME:  480_cre_view_fe_dataproc_last_version.sql
+-- TEMPLATE:  /
 -- OWNER_USER:  db2frontend_user
 -- OWNER_SCHEMA:  db2frontend_out
 -- TAGS:  
@@ -22,7 +22,7 @@
 -- COPY_FUNC_TEMPLATE:  
 -- COPY_FUNC_NAME:  
 -- SCHEMA_2:  db_log
--- TABLE_POSTFIX_2:  _fe
+-- TABLE_POSTFIX_2:  _fe_last_version
 -- SCHEMA_3:  
 -- TABLE_POSTFIX_3:  
 -- ########################################################################################################
@@ -34,7 +34,7 @@ BEGIN
         SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
     ) THEN
 --------------------------------------------------------------------
---Create View for typed tables for schema db2frontend_out
+--Create View with last version data for typed tables for schema db2frontend_out
 
 ------------------------------------------------------------------------------------------------------------------
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
@@ -51,7 +51,13 @@ BEGIN
             DROP VIEW db2frontend_out.v_patient_fe_last_version; -- first drop the view
         END IF; -- DROP VIEW
 ----------------------------
-        CREATE OR REPLACE VIEW db2frontend_out.v_patient_fe_last_version AS (SELECT * from db_log.patient_fe);
+        CREATE OR REPLACE VIEW db2frontend_out.v_patient_fe_last_version AS (
+        SELECT o.* FROM db_log.patient_fe o
+        WHERE (o.record_id, o.pat_id, o.input_processing_nr) IN (SELECT i.record_id, i.pat_id, MAX(i.input_processing_nr)
+                                                                 FROM db_log.patient_fe i
+                                                                 GROUP BY i.record_id, i.pat_id
+                                                                )
+        );
 
         GRANT SELECT ON db2frontend_out.v_patient_fe_last_version TO db2frontend_user;
         GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
@@ -60,9 +66,7 @@ BEGIN
 END
 $innerview$;
 
-
 ------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
 DO
 $innerview$
 BEGIN
@@ -76,7 +80,13 @@ BEGIN
             DROP VIEW db2frontend_out.v_fall_fe_last_version; -- first drop the view
         END IF; -- DROP VIEW
 ----------------------------
-        CREATE OR REPLACE VIEW db2frontend_out.v_fall_fe_last_version AS (SELECT * from db_log.fall_fe);
+        CREATE OR REPLACE VIEW db2frontend_out.v_fall_fe_last_version AS (
+        SELECT o.* FROM db_log.fall_fe o
+        WHERE (o.record_id, o.fall_fhir_enc_id, o.input_processing_nr) IN (SELECT i.record_id, i.fall_fhir_enc_id, MAX(i.input_processing_nr)
+                                                                           FROM db_log.fall_fe i
+                                                                           GROUP BY i.record_id, i.fall_fhir_enc_id
+                                                                          )
+        );
 
         GRANT SELECT ON db2frontend_out.v_fall_fe_last_version TO db2frontend_user;
         GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
@@ -85,9 +95,7 @@ BEGIN
 END
 $innerview$;
 
-
 ------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
 DO
 $innerview$
 BEGIN
@@ -101,7 +109,13 @@ BEGIN
             DROP VIEW db2frontend_out.v_medikationsanalyse_fe_last_version; -- first drop the view
         END IF; -- DROP VIEW
 ----------------------------
-        CREATE OR REPLACE VIEW db2frontend_out.v_medikationsanalyse_fe_last_version AS (SELECT * from db_log.medikationsanalyse_fe);
+        CREATE OR REPLACE VIEW db2frontend_out.v_medikationsanalyse_fe_last_version AS (
+        SELECT o.* FROM db_log.medikationsanalyse_fe o
+        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+                                                                                 FROM db_log.medikationsanalyse_fe i
+                                                                                 GROUP BY i.record_id, i.redcap_repeat_instance
+                                                                                )
+        );
 
         GRANT SELECT ON db2frontend_out.v_medikationsanalyse_fe_last_version TO db2frontend_user;
         GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
@@ -110,9 +124,7 @@ BEGIN
 END
 $innerview$;
 
-
 ------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
 DO
 $innerview$
 BEGIN
@@ -126,7 +138,13 @@ BEGIN
             DROP VIEW db2frontend_out.v_mrpdokumentation_validierung_fe_last_version; -- first drop the view
         END IF; -- DROP VIEW
 ----------------------------
-        CREATE OR REPLACE VIEW db2frontend_out.v_mrpdokumentation_validierung_fe_last_version AS (SELECT * from db_log.mrpdokumentation_validierung_fe);
+        CREATE OR REPLACE VIEW db2frontend_out.v_mrpdokumentation_validierung_fe_last_version AS (
+        SELECT o.* FROM db_log.mrpdokumentation_validierung_fe o
+        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+                                                                                 FROM db_log.mrpdokumentation_validierung_fe i
+                                                                                 GROUP BY i.record_id, i.redcap_repeat_instance
+                                                                                )
+        );
 
         GRANT SELECT ON db2frontend_out.v_mrpdokumentation_validierung_fe_last_version TO db2frontend_user;
         GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
@@ -135,9 +153,7 @@ BEGIN
 END
 $innerview$;
 
-
 ------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
 DO
 $innerview$
 BEGIN
@@ -151,7 +167,13 @@ BEGIN
             DROP VIEW db2frontend_out.v_retrolektive_mrpbewertung_fe_last_version; -- first drop the view
         END IF; -- DROP VIEW
 ----------------------------
-        CREATE OR REPLACE VIEW db2frontend_out.v_retrolektive_mrpbewertung_fe_last_version AS (SELECT * from db_log.retrolektive_mrpbewertung_fe);
+        CREATE OR REPLACE VIEW db2frontend_out.v_retrolektive_mrpbewertung_fe_last_version AS (
+        SELECT o.* FROM db_log.retrolektive_mrpbewertung_fe o
+        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+                                                                                 FROM db_log.retrolektive_mrpbewertung_fe i
+                                                                                 GROUP BY i.record_id, i.redcap_repeat_instance
+                                                                                )
+        );
 
         GRANT SELECT ON db2frontend_out.v_retrolektive_mrpbewertung_fe_last_version TO db2frontend_user;
         GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
@@ -160,9 +182,7 @@ BEGIN
 END
 $innerview$;
 
-
 ------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
 DO
 $innerview$
 BEGIN
@@ -176,7 +196,13 @@ BEGIN
             DROP VIEW db2frontend_out.v_risikofaktor_fe_last_version; -- first drop the view
         END IF; -- DROP VIEW
 ----------------------------
-        CREATE OR REPLACE VIEW db2frontend_out.v_risikofaktor_fe_last_version AS (SELECT * from db_log.risikofaktor_fe);
+        CREATE OR REPLACE VIEW db2frontend_out.v_risikofaktor_fe_last_version AS (
+        SELECT o.* FROM db_log.risikofaktor_fe o
+        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+                                                                                 FROM db_log.risikofaktor_fe i
+                                                                                 GROUP BY i.record_id, i.redcap_repeat_instance
+                                                                                )
+        );
 
         GRANT SELECT ON db2frontend_out.v_risikofaktor_fe_last_version TO db2frontend_user;
         GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
@@ -185,9 +211,7 @@ BEGIN
 END
 $innerview$;
 
-
 ------------------------------------------------------------------------------------------------------------------
--- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
 DO
 $innerview$
 BEGIN
@@ -201,7 +225,13 @@ BEGIN
             DROP VIEW db2frontend_out.v_trigger_fe_last_version; -- first drop the view
         END IF; -- DROP VIEW
 ----------------------------
-        CREATE OR REPLACE VIEW db2frontend_out.v_trigger_fe_last_version AS (SELECT * from db_log.trigger_fe);
+        CREATE OR REPLACE VIEW db2frontend_out.v_trigger_fe_last_version AS (
+        SELECT o.* FROM db_log.trigger_fe o
+        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+                                                                                 FROM db_log.trigger_fe i
+                                                                                 GROUP BY i.record_id, i.redcap_repeat_instance
+                                                                                )
+        );
 
         GRANT SELECT ON db2frontend_out.v_trigger_fe_last_version TO db2frontend_user;
         GRANT USAGE ON SCHEMA db2frontend_out TO db2frontend_user;
@@ -210,9 +240,7 @@ BEGIN
 END
 $innerview$;
 
-
 --------------------------------------------------------------------
     END IF; -- do migration
 END
 $$;
-
