@@ -39,9 +39,10 @@ DEBUG_VM_INDEX <- 2
 ##########################
 
 DEBUG_VM_PORTS <- data.table::data.table(
-     vm_index = c(   1,     2,     3,     4,     5,     6),
-      db_port = c(5432, 25432, 35432, 45432, 55432, 25436),
-  redcap_port = c(8082, 28082, 38082, 48082, 58082, 28087)
+                  # local,   TB, FS+AXS,    MR, FS+AXS, FS+AXS, FS+AXS,   TOP
+     vm_index = c(      0,    1,      2,     3,      4,      5,      6,     7),
+      db_port = c(   5432, 5432,  25432, 35432,  45432,  55432,  25436, 15433),
+  redcap_port = c(     80, 8082,  28082, 38082,  48082,  58082,  28087,  8083)
 )
 
 DEBUG_DB_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, db_port]
