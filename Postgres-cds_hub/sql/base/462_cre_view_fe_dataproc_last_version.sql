@@ -3,7 +3,7 @@
 -- This file is not generated. Changes only manuel.
 --
 -- Rights definition file             : here
--- Rights definition file last update : 2026-01-12 12:00:00
+-- Rights definition file last update : 2026-02-06 12:00:00
 -- Rights definition file size        : /
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
@@ -53,7 +53,7 @@ BEGIN
 ----------------------------
         CREATE OR REPLACE VIEW db2dataprocessor_out.v_patient_fe_last_version AS (
         SELECT o.* FROM db_log.patient_fe o
-        WHERE (o.record_id, o.pat_id, o.input_processing_nr) IN (SELECT i.record_id, i.pat_id, MAX(i.input_processing_nr)
+        WHERE (o.record_id, o.pat_id, o.last_processing_nr) IN (SELECT i.record_id, i.pat_id, MAX(i.last_processing_nr)
                                                                  FROM db_log.patient_fe i
                                                                  GROUP BY i.record_id, i.pat_id
                                                                 )
@@ -82,7 +82,7 @@ BEGIN
 ----------------------------
         CREATE OR REPLACE VIEW db2dataprocessor_out.v_fall_fe_last_version AS (
         SELECT o.* FROM db_log.fall_fe o
-        WHERE (o.record_id, o.fall_fhir_enc_id, o.input_processing_nr) IN (SELECT i.record_id, i.fall_fhir_enc_id, MAX(i.input_processing_nr)
+        WHERE (o.record_id, o.fall_fhir_enc_id, o.last_processing_nr) IN (SELECT i.record_id, i.fall_fhir_enc_id, MAX(i.last_processing_nr)
                                                                            FROM db_log.fall_fe i
                                                                            GROUP BY i.record_id, i.fall_fhir_enc_id
                                                                           )
@@ -111,7 +111,7 @@ BEGIN
 ----------------------------
         CREATE OR REPLACE VIEW db2dataprocessor_out.v_medikationsanalyse_fe_last_version AS (
         SELECT o.* FROM db_log.medikationsanalyse_fe o
-        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+        WHERE (o.record_id, o.redcap_repeat_instance, o.last_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.last_processing_nr)
                                                                                  FROM db_log.medikationsanalyse_fe i
                                                                                  GROUP BY i.record_id, i.redcap_repeat_instance
                                                                                 )
@@ -140,7 +140,7 @@ BEGIN
 ----------------------------
         CREATE OR REPLACE VIEW db2dataprocessor_out.v_mrpdokumentation_validierung_fe_last_version AS (
         SELECT o.* FROM db_log.mrpdokumentation_validierung_fe o
-        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+        WHERE (o.record_id, o.redcap_repeat_instance, o.last_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.last_processing_nr)
                                                                                  FROM db_log.mrpdokumentation_validierung_fe i
                                                                                  GROUP BY i.record_id, i.redcap_repeat_instance
                                                                                 )
@@ -169,7 +169,7 @@ BEGIN
 ----------------------------
         CREATE OR REPLACE VIEW db2dataprocessor_out.v_retrolektive_mrpbewertung_fe_last_version AS (
         SELECT o.* FROM db_log.retrolektive_mrpbewertung_fe o
-        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+        WHERE (o.record_id, o.redcap_repeat_instance, o.last_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.last_processing_nr)
                                                                                  FROM db_log.retrolektive_mrpbewertung_fe i
                                                                                  GROUP BY i.record_id, i.redcap_repeat_instance
                                                                                 )
@@ -198,7 +198,7 @@ BEGIN
 ----------------------------
         CREATE OR REPLACE VIEW db2dataprocessor_out.v_risikofaktor_fe_last_version AS (
         SELECT o.* FROM db_log.risikofaktor_fe o
-        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+        WHERE (o.record_id, o.redcap_repeat_instance, o.last_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.last_processing_nr)
                                                                                  FROM db_log.risikofaktor_fe i
                                                                                  GROUP BY i.record_id, i.redcap_repeat_instance
                                                                                 )
@@ -227,7 +227,7 @@ BEGIN
 ----------------------------
         CREATE OR REPLACE VIEW db2dataprocessor_out.v_trigger_fe_last_version AS (
         SELECT o.* FROM db_log.trigger_fe o
-        WHERE (o.record_id, o.redcap_repeat_instance, o.input_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.input_processing_nr)
+        WHERE (o.record_id, o.redcap_repeat_instance, o.last_processing_nr) IN (SELECT i.record_id, i.redcap_repeat_instance, MAX(i.last_processing_nr)
                                                                                  FROM db_log.trigger_fe i
                                                                                  GROUP BY i.record_id, i.redcap_repeat_instance
                                                                                 )
