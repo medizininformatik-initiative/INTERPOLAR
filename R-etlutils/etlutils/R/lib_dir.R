@@ -218,6 +218,40 @@ writeExcelFileInternal <- function(target = c("local", "global"), tables,
   writeExcelFile(tables, file_name, with_column_names)
 }
 
+#' Write an Excel file to the local tables directory if debugging is enabled
+#'
+#' This function conditionally writes an Excel file to the local tables directory.
+#' Writing only occurs if `really_save` evaluates to TRUE. Optionally, the write
+#' operation can be wrapped in a `runLevel3Line()` call to integrate with level-3
+#' logging.
+#'
+#' @param tables A `data.frame` or list that can be handled by `writeExcelFile()`.
+#' @param filename_without_extension Optional file name without extension. If NA, the
+#'   variable name of `tables` is used.
+#' @param really_save Logical flag indicating whether the Excel file should actually
+#'   be written. Defaults to `isDefinedAndTrue("DEBUG_WRITE_TABLES_AS_EXCEL")`.
+#' @param runLevel3Message Optional message passed to `runLevel3Line()`. If NA, the
+#'   file is written directly without level-3 logging.
+#'
+#' @return Invisibly returns NULL.
+#'
+#' @export
+writeDebugExcelFile <- function(tables, filename_without_extension = NA, really_save = isDefinedAndTrue("DEBUG_WRITE_TABLES_AS_EXCEL"), runLevel3Message = NA) {
+  if (really_save) {
+    if (is.na(filename_without_extension)) {
+      filename_without_extension <- as.character(substitute(tables))
+    }
+
+    if (!is.na(runLevel3Message)) {
+      runLevel3Line(runLevel3Message, {
+        writeExcelFileInternal("local", tables, filename_without_extension, with_column_names = TRUE)
+      })
+    } else {
+      writeExcelFileInternal("local", tables, filename_without_extension, with_column_names = TRUE)
+    }
+  }
+}
+
 #' Write an Excel file to the local tables directory
 #'
 #' @inheritParams writeExcelFileInternal
