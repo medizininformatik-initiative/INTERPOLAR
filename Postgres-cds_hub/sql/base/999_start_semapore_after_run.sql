@@ -7,7 +7,9 @@ BEGIN
       FROM (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version') a
           ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_last_migration_start') b
           ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag') c
-      WHERE a.parameter_value!=b.parameter_value AND c.parameter_value='1'
+          ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_nr') d
+          ,(SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_nr_last_migration_start') e
+      WHERE (a.parameter_value!=b.parameter_value AND c.parameter_value='1') or (d.parameter_value<e.parameter_value)
    ) THEN
       UPDATE db_config.db_parameter SET parameter_value = (SELECT parameter_value FROM db_config.db_parameter WHERE parameter_name = 'release_version_last_migration_start')
       WHERE parameter_name = 'release_version';
