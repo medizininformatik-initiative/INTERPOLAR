@@ -598,7 +598,7 @@ checkVersion <- function(ignore_newer_db_version) {
     } else if (compare_result > 0L) { # DB is newer than release version -> allow force run
       if (!ignore_newer_db_version) {
         stop(paste0("The database version '", db_version, "' is newer than the release version '", release_version, "'. If you know what you are doing:",
-                    " You can force the run anyway, if you start the full toolchain or a single module with the parameter '--", forceRunIndicatorGlobalVariableName, "'."))
+                    " You can force the run anyway, if you start the full toolchain with the parameter '--ignoreNewerDBVersion'. This works not for single modules!"))
       }
     }
     .lib_envir_env[["VERSION_ALREADY_CHECKED"]] <- TRUE

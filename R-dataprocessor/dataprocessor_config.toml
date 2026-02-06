@@ -138,6 +138,12 @@ INPUT_REPO_PATH = ["./Input-Repo/INTERPOLAR-WP7"]
 # Default value that applies to the validity period in days for the laboratory values
 DEFAULT_LOINC_VALIDITY_DAYS = 7
 
+#################
+# Number of days after the start of the Encounter for which MRPs in MRP-Check should
+# be calculated. The timestamp of a the medication analyses will be ignored.
+# You can specify parts of days as fractional numbers (e.g., '2.5' for 2 and a half days).
+#################
+#MRP_CHECK_MEDICATION_ANALYSIS_DAYS_OFFSET = 3.0
 
 [database]
 
