@@ -114,6 +114,16 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     })
 
     etlutils::runLevel2("Run createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)", {
+
+      if (DEBUG_RECALCULATE_INVALID_REFS) {
+        calc_enc_col <- grep("_calculated_ref$", names(all_encounters), value = TRUE)
+        all_encounters <- all_encounters[
+          enc_partof_calculated_ref == "invalid" |
+            enc_main_encounter_calculated_ref == "invalid"
+        ]
+        all_encounters[, (calc_enc_col) := lapply(.SD, function(x) ifelse(x == "invalid", NA_character_, x)), .SDcols = calc_enc_col]
+      }
+
       all_encounters <- createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)
       resource_tables[["encounter"]] <- all_encounters
     })
@@ -124,6 +134,15 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       for (resource_name in names(start_time_column_names)) {
         start_column_names <- start_time_column_names[[resource_name]]
         resource_table <- getAllLastViewNonEncounterResources(resource_name)
+
+        if (DEBUG_RECALCULATE_INVALID_REFS) {
+          calc_enc_col <- grep("_encounter_calculated_ref$", names(resource_table), value = TRUE)
+          resource_table <- resource_table[
+            get(calc_enc_col) == "invalid"
+          ]
+          resource_table[, (calc_enc_col) := lapply(.SD, function(x) ifelse(x == "invalid", NA_character_, x)), .SDcols = calc_enc_col]
+        }
+
         resource_table <- createReferencesForResource(all_encounters, resource_name, resource_table, start_column_names)
         # write resource with the new references table back to DB
         writeTableWithReferencesToDB(
@@ -135,6 +154,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
         resource_tables[[resource_name]] <- resource_table
       }
     })
+
     etlutils::runLevel2("Write Encounters with references to database", {
       # write encounters with the new reference columns to database as last (because
       # the whole process will be repeated, if the encounters are not written correctly)

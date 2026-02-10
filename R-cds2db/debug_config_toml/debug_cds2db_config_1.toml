@@ -131,3 +131,9 @@ DEBUG_SKIP_MELTING_RESOURCES = [
 # afterwards.
 #################
 #DEBUG_FILTER_PIDS_PATTERN = "UKB"
+
+#################
+# If this parameter is set to true, all calculated encounter references in all resources are recalculated for
+# rows that have invalid references.
+#################
+#DEBUG_RECALCULATE_INVALID_REFS = true
