@@ -8,7 +8,7 @@
 #' @param full_analysis_set_1 A data frame or tibble representing the full_analysis_set_1 dataset.
 #' It must include the following columns:
 #'   `enc_id`, `main_enc_id`, `main_enc_period_start`, `enc_identifier_value`, `pat_id`,
-#'   `pat_identifier_value`, `record_id`, `fall_id_cis`, `enc_type_code_Kontaktebene`,
+#'   `record_id`, `fall_id_cis`, `enc_type_code_Kontaktebene`,
 #'   `age_at_hospitalization`, `enc_period_start`, `calendar_week`, `enc_period_end`,
 #'   `ward_name`, `studienphase`, `enc_status` and `processing_exclusion_reason`.
 #' @param report_period_start A POSIXct date-time object representing the start of the reporting period.
@@ -41,7 +41,7 @@
 #' }
 #' Note: studienphase is not included in the output, as it is not used for the F1 report.
 #'
-#' @importFrom dplyr filter distinct select mutate across
+#' @importFrom dplyr filter distinct select mutate across if_else
 #' @importFrom data.table isoweek
 #' @export
 prepareF1data <- function(full_analysis_set_1, report_period_start, report_period_end) {
@@ -49,7 +49,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
     dplyr::filter(!is.na(ward_name)) |> # only encounters with ward name (see addWardName)
     dplyr::mutate(calendar_week = data.table::isoweek(enc_period_start), .after = enc_period_start) |> # add calendar week
     dplyr::distinct(
-      enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id, pat_identifier_value,
+      enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id,
       record_id, fall_id_cis, enc_type_code_Kontaktebene, age_at_hospitalization, enc_period_start,
       calendar_week, enc_period_end, ward_name,
       # studienphase,
@@ -58,13 +58,18 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 
   if (anyNA(F1_prep_raw$enc_period_start)) {
     F1_prep_raw <- F1_prep_raw |>
-      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(is.na(enc_period_start) &
-        is.na(processing_exclusion_reason),
-      "Missing_start_date_ward_contact",
-      processing_exclusion_reason
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(enc_period_start),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "Missing_start_date_ward_contact",
+          level = "main_encounter",
+          type = "data_issues"
+        ),
+        processing_exclusion_reason
       ))
     print(F1_prep_raw |>
-      dplyr::filter(is.na(enc_period_start)), width = Inf)
+      dplyr::filter(is.na(enc_period_start)), width = 1000)
     warning("Starting day undefined for a INTERPOLAR-ward contact (NA start date).
             Please check the data.")
   }
@@ -122,26 +127,81 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' The resulting dataset includes distinct rows based on identifiers and key variables such as:
 #' - `medikationsanalyse_complete`
 #' - `mrp_dokup_hand_emp_akz`
-#' - `mrp_merp`
 #' - `mrpdokumentation_validierung_complete`
 #' - `main_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
-#'                                           for the main encounter)
+#'                                           for the main encounter (if not already in 'not in inclusion criteria'))
+#' - `main_enc_not_in_inclusion_criteria` (indicating if the main encounter is excluded due to
+#'                                           not being in inclusion criteria)
+#' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
+#' - `sub_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
+#'                                          for the sub encounter  (if not already in 'not in inclusion criteria'))
+#' - `sub_enc_all_processing_exclusion_fe` (indicating if all entries for the sub encounters have
+#'                                         processing exclusion reasons (if not already in 'not in inclusion criteria'))
 #'
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
 #'
-#' @importFrom dplyr distinct filter
+#' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename
 #' @export
 prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
   frontend_summary_prep <- frontend_table |>
     dplyr::group_by(fall_fhir_main_enc_id) |>
-    dplyr::mutate(main_enc_any_processing_exclusion_fe = any(!is.na(processing_exclusion_reason))) |>
+    dplyr::mutate(main_enc_any_processing_exclusion_fe = dplyr::if_else(any(
+      !is.na(processing_exclusion_reason) &
+        stringr::str_detect(processing_exclusion_reason,
+          pattern = "main_encounter"
+        ) &
+        stringr::str_detect(processing_exclusion_reason,
+          pattern = "not_in_inclusion_criteria",
+          negate = TRUE
+        )
+    ), TRUE, FALSE, missing = FALSE)) |>
+    dplyr::mutate(main_enc_not_in_inclusion_criteria = dplyr::if_else(
+      any(stringr::str_detect(processing_exclusion_reason,
+        pattern = "not_in_inclusion_criteria"
+      )), TRUE, FALSE, missing = FALSE
+    )) |>
+    dplyr::mutate(sub_enc_all_processing_exclusion_fe = dplyr::if_else(
+      all(
+        !is.na(processing_exclusion_reason) &
+          stringr::str_detect(processing_exclusion_reason,
+            pattern = "sub_encounter"
+          ) &
+          stringr::str_detect(processing_exclusion_reason,
+            pattern = "not_in_inclusion_criteria",
+            negate = TRUE
+          )
+      ), TRUE, FALSE, missing = FALSE
+    )) |>
+    dplyr::ungroup() |>
+    dplyr::group_by(fall_fhir_main_enc_id, fall_station) |>
+    dplyr::mutate(sub_enc_any_completed_medication_analysis = dplyr::if_else(
+      any(!is.na(meda_id) &
+        medikationsanalyse_complete == "Complete"), TRUE, FALSE, missing = FALSE
+    )) |>
+    dplyr::mutate(sub_enc_any_processing_exclusion_fe = dplyr::if_else(
+      any(
+        !is.na(processing_exclusion_reason) &
+          stringr::str_detect(processing_exclusion_reason,
+            pattern = "sub_encounter"
+          ) &
+          stringr::str_detect(processing_exclusion_reason,
+            pattern = "not_in_inclusion_criteria",
+            negate = TRUE
+          )
+      ), TRUE, FALSE, missing = FALSE
+    )) |>
     dplyr::ungroup() |>
     dplyr::distinct(
-      pat_id, pat_cis_pid, record_id, fall_fhir_main_enc_id,
-      fall_id_cis, fall_station, fall_aufn_dat, enc_id, enc_status, meda_id,
-      meda_dat, enc_period_start, medikationsanalyse_complete, mrp_id,
+      pat_id, record_id, fall_fhir_main_enc_id,
+      fall_id_cis, fall_station, fall_aufn_dat,
+      sub_enc_any_completed_medication_analysis,
+      # enc_id, enc_status, enc_period_start
+      meda_id,
+      meda_dat, medikationsanalyse_complete, mrp_id,
       mrp_pigrund___21, mrp_ip_klasse_01, mrp_dokup_hand_emp_akz,
-      mrp_merp, mrpdokumentation_validierung_complete, main_enc_any_processing_exclusion_fe
+      mrpdokumentation_validierung_complete, main_enc_any_processing_exclusion_fe,
+      main_enc_not_in_inclusion_criteria, sub_enc_any_processing_exclusion_fe,
+      sub_enc_all_processing_exclusion_fe
     ) |>
     dplyr::rename(
       Kontraindikation = mrp_pigrund___21,
@@ -202,11 +262,17 @@ addFeDataToF1data <- function(F1_data, frontend_summary_data) {
     dplyr::left_join(
       frontend_summary_data |>
         dplyr::distinct(
+          main_enc_id, main_enc_any_processing_exclusion_fe
+        ),
+      by = c("main_enc_id")
+    ) |>
+    dplyr::left_join(
+      frontend_summary_data |>
+        dplyr::distinct(
           pat_id, main_enc_id, enc_id, record_id, fall_id_cis,
           ward_name, meda_id, meda_dat, medikationsanalyse_complete,
           mrp_id, Kontraindikation, mrp_ip_klasse_01,
-          mrp_dokup_hand_emp_akz, mrpdokumentation_validierung_complete,
-          main_enc_any_processing_exclusion_fe
+          mrp_dokup_hand_emp_akz, mrpdokumentation_validierung_complete
         ),
       by = c(
         "pat_id", "main_enc_id", "enc_id", "record_id",

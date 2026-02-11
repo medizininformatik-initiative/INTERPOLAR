@@ -158,14 +158,7 @@ dbLog <- function(...) {
 }
 
 dbGetPort <- function() {
-  port <- .lib_db_env[["DB_PORT"]]
-  if (exists("DEBUG_VM_PORT_INDEX")) {
-    if (nchar(port == 5)) {
-      port <- substr(port, 2, 5)
-    }
-    port <- paste0(DEBUG_VM_PORT_INDEX, port)
-  }
-  return(port)
+  return(if (exists("DEBUG_DB_PORT")) DEBUG_DB_PORT else .lib_db_env[["DB_PORT"]])
 }
 
 #' Get a PostgreSQL Database Connection
@@ -1143,26 +1136,38 @@ dbPrintTimeAndTimezone <- function(db_connection) {
   print(paste0("R Sys.timezone(): ", Sys.timezone()))
 }
 
+#' Get the Release Version of the Database
+#'
+#' This function retrieves the release version of the connected PostgreSQL database.
+#'
+#' @return A string representing the release version of the database.
+#'
+#' @export
+dbGetVersion <- function() {
+  dbGetSingleValue("SELECT parameter_value FROM v_db_parameter WHERE parameter_name='release_version'")
+}
+
 #' Get the Current Schema of a PostgreSQL Connection
 #'
 #' This function retrieves the current schema of an active PostgreSQL connection by executing
 #' the query `SELECT current_schema();`.
 #'
-#' @param db_connection A valid database connection object to the PostgreSQL database.
+#' @param readonly Logical. If `TRUE`, the database connection remains in read-only
+#'        mode after the operation. Default is `FALSE`.
 #'
 #' @return A string representing the name of the current schema.
 #'
 #' @details
-#' - Logs the executed query if `log = TRUE`.
 #' - Uses the schema to identify tables and other database objects accessible in the connection.
 #'
-dbGetCurrentSchema <- function(db_connection) {
+dbGetCurrentSchema <- function(readonly = FALSE) {
   # SQL query to retrieve the current schema
   query <- "SELECT current_schema();"
   # Execute the query and store the result
-  result <- dbGetQuery(query)
+  result <- dbGetQuery(query, readonly = readonly)
   # Return the schema name from the first row and column
-  return(result$current_schema[1])
+  schema <- result$current_schema[1]
+  return(schema)
 }
 
 #' Retrieve Column Names and Data Types of a Database Table
@@ -1184,10 +1189,9 @@ dbGetCurrentSchema <- function(db_connection) {
 #'
 #' @details
 #' - Retrieves column metadata from `information_schema.columns` for the current schema.
-#' - Logs the executed SQL query if `log = TRUE`.
 #'
 dbGetTableColumnTypes <- function(table_name, readonly = FALSE) {
-  schema <- dbGetCurrentSchema()
+  schema <- dbGetCurrentSchema(readonly)
   # SQL query to retrieve column names and data types
   query <- paste0(
     "SELECT column_name, data_type

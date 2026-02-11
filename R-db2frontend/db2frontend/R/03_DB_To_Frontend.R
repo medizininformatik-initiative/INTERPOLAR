@@ -38,6 +38,67 @@ importDB2Redcap <- function() {
     # Connect to REDCap
     frontend_connection <- getRedcapConnection()
 
+    # Check if any ward is in PhaseB in fall_fe
+    phaseB_active <- etlutils::dbGetReadOnlyQuery(
+      "SELECT EXISTS (
+        SELECT 1
+        FROM v_fall_fe
+        WHERE fall_studienphase = 'PhaseB'
+      ) AS phaseb_active",
+      lock_id = "importDB2Redcap_check_phaseB"
+    )$phaseb_active
+
+    is_phaseB_active <- isTRUE(phaseB_active)
+
+    ret_ids_to_empty <- integer(0)
+
+    if (is_phaseB_active) {
+
+      # Get ret_ids of all PhaseBTest MRPs which are not new in this run
+      ret_ids_to_clear <- etlutils::dbGetReadOnlyQuery(
+        "SELECT DISTINCT ret_id
+         FROM v_retrolektive_mrpbewertung_fe_last_version
+         WHERE ret_kurzbeschr ILIKE '*TEST*%'",
+        lock_id = "importDB2Redcap_phaseBTestMRP"
+      )$ret_id
+
+      if (length(ret_ids_to_clear)) {
+        # Fetch all retrolektive_mrpbewertung instances for the ret_ids to empty
+        mrp_instances <- suppressWarnings(redcapAPI::exportRecordsTyped(
+          rcon = frontend_connection,
+          forms = "retrolektive_mrpbewertung"
+        ))
+
+        mrp_instances <- data.table::as.data.table(mrp_instances)
+        # Filter to only the instances which are not new in this run
+        mrp_instances <- mrp_instances[ret_id %in% ret_ids_to_clear]
+
+        if (nrow(mrp_instances)) {
+
+          # Keep only the ID columns and the _complete column, set all other columns to NA
+          needed_cols <- c("record_id", "redcap_repeat_instrument", "redcap_repeat_instance", "retrolektive_mrpbewertung_complete")
+          mrp_instances[, (setdiff(names(mrp_instances), c(needed_cols))) := NA]
+          # For unknown reasons, redcap_repeat_instrument is not the correct string in the dt from redcapAPI
+          mrp_instances[, redcap_repeat_instrument := as.character("retrolektive_mrpbewertung")]
+          mrp_instances[, redcap_repeat_instance  := as.integer(redcap_repeat_instance)]
+
+          # Set the ret_kurzbeschr to indicate that this MRP evaluation has been cleared
+          mrp_instances[, ret_kurzbeschr := "Diese retrolektive MRP-Bewertung wurde geleert, weil der Fall in PhaseBTest war."]
+          mrp_instances[, retrolektive_mrpbewertung_complete := "Unverified"]
+
+          # Import the cleared instances back to REDCap
+          return_count <- suppressWarnings(
+            redcapAPI::importRecords(
+              rcon = frontend_connection,
+              data = mrp_instances,
+              overwriteBehavior = "overwrite",
+              returnContent = "count"
+            )
+          )
+        }
+      }
+    }
+
     # Get splitted frontend table descriptions
     table_description <- getFrontendTableDescription()
 
@@ -88,6 +149,21 @@ importDB2Redcap <- function() {
           data_from_db[[col_name]] <- etlutils::redcapEscape(data_from_db[[col_name]])
         }
       }
+
+      # If PhaseB is active, exclude all new PhaseBTest MRPs from the data to import
+      if (is_phaseB_active && table_name == "retrolektive_mrpbewertung") {
+
+        # Get ret_ids of all PhaseBTest MRPs which are new in this run
+        ret_ids_to_delete <- etlutils::dbGetReadOnlyQuery(
+          "SELECT DISTINCT ret_id
+          FROM v_retrolektive_mrpbewertung_fe_last_version
+          WHERE ret_kurzbeschr ILIKE '*TEST%'",
+          lock_id = "importDB2Redcap_phaseBTestMRP")$ret_id
+
+        # Filter out these ret_ids from the data to import
+        data_from_db <- data_from_db[!ret_id %in% ret_ids_to_delete]
+      }
+
       data_to_import[[table_name]] <- data_from_db
 
       if (table_name %in% "fall") {
@@ -114,7 +190,7 @@ importDB2Redcap <- function() {
   etlutils::runLevel2Line("Import data into frontend", {
     # Import data into REDCap
     for (table_name in names(data_to_import)) {
-      tryRedcap(function() redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]]))
+      tryRedcap(function() suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]])))
     }
   })
 
@@ -125,7 +201,7 @@ importDB2Redcap <- function() {
       ward_names <- unique(record_ids_with_data_access_group$fall_station)
 
       # Get all data access groups from Redcap
-      data_access_groups <- data.table::setDT((redcapAPI::exportDags(rcon = frontend_connection)))
+      data_access_groups <- data.table::setDT((suppressWarnings(redcapAPI::exportDags(rcon = frontend_connection))))
 
       # Get all ward names not present in data access group name
       new_ward_names <- ward_names[!ward_names %in% data_access_groups$data_access_group_name]
@@ -137,11 +213,11 @@ importDB2Redcap <- function() {
           unique_group_name = NA_character_
         )
 
-        redcapAPI::importDags(rcon = frontend_connection, data = new_data_access_groups)
+        suppressWarnings(redcapAPI::importDags(rcon = frontend_connection, data = new_data_access_groups))
       }
 
       # Get all data access groups from Redcap inclusive the new data access groups
-      data_access_groups <- redcapAPI::exportDags(rcon = frontend_connection)
+      data_access_groups <- suppressWarnings(redcapAPI::exportDags(rcon = frontend_connection))
 
       # Join the record_ids with the unique_group_names
       record_ids_with_data_access_group <- data.table::merge.data.table(
@@ -158,7 +234,7 @@ importDB2Redcap <- function() {
 
     etlutils::runLevel2Line("Write data to Redcap", {
       # Set the data access groups in Redcap
-      redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group)
+      suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group))
     })
 
   })

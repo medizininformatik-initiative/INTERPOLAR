@@ -1,3 +1,6 @@
+# Environment for saving current states
+.lib_envir_env <- new.env()
+
 #' Read a TOML File into a Named List
 #'
 #' This function reads a TOML configuration file and returns its content as a
@@ -291,6 +294,27 @@ isDefinedAndTrue <- function(variable_name, envir = parent.frame()) {
   return(exists(variable_name, envir = envir) && isTRUE(get(variable_name, envir = envir)))
 }
 
+#' Check if a Variable is Defined and False
+#'
+#' This function checks if a given variable is defined in the specified environment and if its value is `TRUE`.
+#'
+#' @param variable_name The name of the variable to check, provided as a string.
+#' @param envir The environment in which to check for the variable. Defaults to the current environment.
+#'
+#' @return TRUE if the variable is defined and its value is `TRUE`, otherwise FALSE.
+#'
+#' @examples
+#' var1 <- TRUE
+#' var2 <- FALSE
+#' isDefinedAndFalse("var1")  # Returns FALSE
+#' isDefinedAndFalse("var2")  # Returns TRUE
+#' isDefinedAndFalse("var3")  # Returns FALSE, since var3 is not defined
+#'
+#' @export
+isDefinedAndFalse <- function(variable_name, envir = parent.frame()) {
+  return(exists(variable_name, envir = envir) && !isTRUE(get(variable_name, envir = envir)))
+}
+
 #' Check if a Variable is Defined and Not Empty
 #'
 #' This function checks if a given variable is defined in the specified environment and whether its
@@ -339,5 +363,244 @@ checkMandatoryParameters <- function(mandatory_parameters) {
   }
   if (length(missing_parameters)) {
     stop("The following parameters are mandatory and must be defined in the modules toml file:\n     ", paste0(missing_parameters, collapse = "\n     "))
+  }
+}
+
+#' Initialize command-line arguments as key-value list or global variables
+#'
+#' Parses command-line arguments in the form `key=value` or `-flag` and returns a named list of
+#' parsed key-value pairs. Optionally, variables can be written into the global environment.
+#' Supports type conversion (date, timestamp, numeric, integer, boolean) and default values.
+#'
+#' @param argument2global_variable_name Named character vector or list to map argument names
+#'   to variable names. E.g. c("input" = "input_file"). Keys are normalized to lower_snake_case.
+#' @param defaults Named list or vector of default values for variables (by final variable name).
+#' @param command_arguments Character vector or single string of CLI arguments.
+#'   Default: commandArgs(trailingOnly = TRUE)
+#' @param store_as_global Logical. If TRUE, variables are assigned in the global environment.
+#'   Default is FALSE.
+#' @param timezone Timezone to use for parsing timestamps (POSIXct). Defaults to GLOBAL_TIMEZONE if set,
+#'   otherwise "Europe/Berlin".
+#'
+#' @return Named list of parsed and defaulted arguments.
+#'
+#' @export
+initCommandLineArguments <- function(argument2global_variable_name = c(),
+                                     defaults = list(),
+                                     command_arguments = NULL,
+                                     store_as_global = FALSE,
+                                     timezone = if (exists("GLOBAL_TIMEZONE", inherits = TRUE)) GLOBAL_TIMEZONE else "Europe/Berlin") {
+  #
+  # Normalize input string to character vector
+  #
+  if (is.null(command_arguments)) {
+    command_arguments <- commandArgs(trailingOnly = TRUE)
+  } else if (length(command_arguments) == 1L) {
+    command_arguments <- strsplit(command_arguments, " +")[[1]]
+  }
+
+  #
+  # Standardize mapping keys (lowercase, dashes to underscores)
+  #
+  if (length(argument2global_variable_name)) {
+    names(argument2global_variable_name) <- tolower(gsub("-", "_", names(argument2global_variable_name)))
+  }
+
+  #
+  # Helper function to parse value with type conversion
+  #
+  parseValue <- function(value_raw, timezone) {
+    if (grepl("[ T]", value_raw) && grepl(":", value_raw)) {
+      # Likely a timestamp
+      tryCatch({
+        val <- as.POSIXct(value_raw, tz = timezone)
+        if (!is.na(val)) return(val)
+      }, error = function(e) NULL)
+    } else {
+      # Likely a date
+      tryCatch({
+        val <- as.Date(value_raw)
+        if (!is.na(val)) return(val)
+      }, error = function(e) NULL)
+    }
+
+    if (grepl("^\\d+$", value_raw)) {
+      return(as.integer(value_raw))
+    }
+
+    if (grepl("^\\d+\\.\\d+$", value_raw)) {
+      return(as.numeric(value_raw))
+    }
+
+    if (tolower(value_raw) %in% c("true", "false")) {
+      return(tolower(value_raw) == "true")
+    }
+
+    return(value_raw)
+  }
+
+  initialized_variables <- list()
+
+  for (arg in command_arguments) {
+    name <- NULL
+    value_raw <- NULL
+
+    if (grepl("=", arg, fixed = TRUE)) {
+      split_arg <- strsplit(arg, "=", fixed = TRUE)[[1]]
+      if (length(split_arg) != 2 || nchar(split_arg[1]) == 0) next
+      name <- split_arg[1]
+      value_raw <- split_arg[2]
+    } else if (grepl("^-[^-]", arg)) {
+      name <- sub("^-+", "", arg)
+      value_raw <- "TRUE"
+    } else {
+      next
+    }
+
+    # Normalize the key: lowercase and replace "-" with "_"
+    name <- tolower(gsub("-", "_", name))
+
+    # Apply mapping if available
+    final_name <- if (!is.null(argument2global_variable_name[[name]])) {
+      argument2global_variable_name[[name]]
+    } else {
+      name
+    }
+
+    value <- parseValue(value_raw, timezone)
+
+    initialized_variables[[final_name]] <- value
+  }
+
+  # Fill in defaults if not already set
+  for (default_name in names(defaults)) {
+    if (!default_name %in% names(initialized_variables)) {
+      initialized_variables[[default_name]] <- defaults[[default_name]]
+    }
+  }
+
+  # Optional: assign to global environment
+  if (isTRUE(store_as_global)) {
+    for (var_name in names(initialized_variables)) {
+      assign(var_name, initialized_variables[[var_name]], envir = .GlobalEnv)
+    }
+  }
+
+  return(initialized_variables)
+}
+
+####
+# Version
+####
+
+#' Compare two semantic version strings
+#'
+#' Compares two version strings using semantic versioning rules. The versions do
+#' not need to have the same number of components. Missing components are treated
+#' as zero. The comparison is performed component-wise from left to right.
+#'
+#' @param version_a Character scalar. First version string to compare, e.g.
+#'   \code{"1.5.0"}.
+#' @param version_b Character scalar. Second version string to compare, e.g.
+#'   \code{"1.10"}.
+#'
+#' @return Integer scalar indicating the comparison result: \code{-1L} if
+#'   \code{version_a} is smaller than \code{version_b}, \code{0L} if both versions
+#'   are equal, and \code{1L} if \code{version_a} is greater than
+#'   \code{version_b}.
+#'
+#' @examples
+#' compareVersionsSemver("1.5.0", "1.5")      # 0
+#' compareVersionsSemver("1.5.0", "1.6.0")    # -1
+#' compareVersionsSemver("2.0", "1.9.9")      # 1
+#'
+#' @export
+compareVersionsSemver <- function(version_a, version_b) {
+  # split versions into numeric components
+  parse_version <- function(version) {
+    parts <- strsplit(version, "\\.", fixed = FALSE)[[1]]
+    as.integer(parts)
+  }
+
+  a <- parse_version(version_a)
+  b <- parse_version(version_b)
+
+  # compare component-wise up to the longest version
+  max_len <- max(length(a), length(b))
+
+  for (i in seq_len(max_len)) {
+    a_i <- if (i <= length(a)) a[i] else 0L
+    b_i <- if (i <= length(b)) b[i] else 0L
+
+    if (a_i < b_i) return(-1L)
+    if (a_i > b_i) return(1L)
+  }
+
+  return(0L)
+}
+
+#' Read the release version from file
+#'
+#' Reads the release version string from the first line of the
+#' \code{release-version.txt} file located in the project root directory. Leading
+#' and trailing whitespace is removed. If the version string starts with a
+#' leading \code{"v"} (case-insensitive), it is stripped.
+#'
+#' @return Character scalar containing the normalized release version string,
+#'   e.g. \code{"1.5.0"}.
+#'
+getReleaseVersion <- function() {
+  release_version <- readLines("./release-version.txt", n = 1L)
+  release_version <- trimws(release_version)
+  # if the release version starts with "v", remove it
+  if (startsWith(tolower(release_version), "v")) {
+    release_version <- substring(release_version, 2L)
+  }
+  return(release_version)
+}
+
+#' Check database version against the release version
+#'
+#' Compares the database schema version stored in the database with the release
+#' version expected by the R project and enforces compatibility rules.
+#'
+#' If the database version is older than the release version, execution is
+#' stopped and the user is instructed to run the required database migrations.
+#'
+#' If the database version is newer than the release version, execution is
+#' stopped unless explicitly allowed. Allowing newer database versions is
+#' intended for rollback scenarios where the database schema is assumed to be
+#' backward-compatible with older releases.
+#'
+#' The version check is performed only once per R session.
+#'
+#' @param ignore_newer_db_version Logical flag indicating whether execution
+#'   should continue when the database version is newer than the release
+#'   version. If \code{FALSE}, execution is stopped and the user is instructed
+#'   to explicitly force the run. If \code{TRUE}, newer database versions are
+#'   accepted.
+#'
+#' @return Invisibly returns \code{NULL}. This function is called for its side
+#'   effects and will stop execution with an error if version compatibility
+#'   requirements are not met.
+#'
+#' @export
+checkVersion <- function(ignore_newer_db_version) {
+  if (!isDefinedAndTrue("VERSION_ALREADY_CHECKED", .lib_envir_env)) {
+    db_version <- dbGetVersion()
+    # read the first line of the release-version.txt file in the main directory
+    release_version <- getReleaseVersion()
+    compare_result <- compareVersionsSemver(db_version, release_version)
+    if (compare_result < 0L) { # DB is older than release version -> stop execution
+      stop(paste0("The database version '", db_version, "' is older than the release version '", release_version, "'. Please update the database via migration. Run\n",
+                  "  docker compose exec -w /cds_hub-initdb.d cds_hub psql -U cds_hub_db_admin -d cds_hub_db -f ./migration/migration.sql\n",
+                  "  or see https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."))
+    } else if (compare_result > 0L) { # DB is newer than release version -> allow force run
+      if (!ignore_newer_db_version) {
+        stop(paste0("The database version '", db_version, "' is newer than the release version '", release_version, "'. If you know what you are doing:",
+                    " You can force the run anyway, if you start the full toolchain with the parameter '--ignoreNewerDBVersion'. This works not for single modules!"))
+      }
+    }
+    .lib_envir_env[["VERSION_ALREADY_CHECKED"]] <- TRUE
   }
 }

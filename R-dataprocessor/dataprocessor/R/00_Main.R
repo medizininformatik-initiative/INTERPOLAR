@@ -8,25 +8,28 @@
 #'
 runSubmodules <- function() {
 
-  # Paths to the submodule directory and the manual start submodule directory
-  #submodule_path <- system.file("submodules", package = "dataprocessor")
-  submodule_path <- "./R-dataprocessor/submodules"
-  manual_start_path <- "./R-dataprocessor/submodules/manual_start"
-
   # Get lists of submodule directories
-  submodule_dirs <- list.dirs(submodule_path, recursive = FALSE)
-  manual_start_submodule_dirs <- list.dirs(manual_start_path, recursive = FALSE)
+  submodule_dirs <- list.dirs(DATAPROCESSOR_SUBMODULES_PATH, recursive = FALSE)
+  manual_start_submodule_dirs <- list.dirs(DATAPROCESSOR_MANUAL_START_PATH, recursive = FALSE)
+
+  command_line_args <- commandArgs(trailingOnly = TRUE)
+  # for debug purposes set hard our new submodule MRP_Check
+  # if (interactive()) {
+  #   command_line_args <- c("mrp-check", "start-date=2025-12-01") # second parameter is irrelevant
+  # }
 
   # Check if any submodule directories were specified in the command line arguments
-  if (!interactive()) {
+  if (!interactive() || length(command_line_args)) {
+    # enable minus for underscrore in arguments and ignore case
+    command_line_args <- sub("-", "_", tolower(command_line_args), fixed = TRUE)
     called_manual_start_submodule_dirs <- manual_start_submodule_dirs[
-      basename(manual_start_submodule_dirs) %in% commandArgs(trailingOnly = TRUE)]
+      tolower(basename(manual_start_submodule_dirs)) %in% command_line_args]
+    sourceAllSubmodules() # initialize all functions of all automatic submodules for a use in the now manual started submodule
   } else {
     called_manual_start_submodule_dirs <- as.character(c())
-
-
   }
-  if(length(called_manual_start_submodule_dirs) > 0) {
+
+  if (length(called_manual_start_submodule_dirs) > 0) {
     submodule_dirs <- called_manual_start_submodule_dirs
   }
 
@@ -38,7 +41,6 @@ runSubmodules <- function() {
   # }
 
   if (exists("DEBUG_SUBMODULE_DIR")) submodule_dirs <- DEBUG_SUBMODULE_DIR
-
 
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
@@ -55,25 +57,8 @@ runSubmodules <- function() {
       etlutils::catList(submodule_config, "Submodule configuration:\n------------------------\n", "\n")
 
       # Source all R scripts in R subdirectory of an package project
-      submodule_subdirs <- list.dirs(dir, recursive = FALSE)
-      for (subdir in submodule_subdirs) {
-        subdir_rpath <- paste0(subdir, "/R")
-        if (dir.exists(subdir_rpath)) {
-          r_scripts <- list.files(subdir_rpath, pattern = "\\.R$", full.names = TRUE)
-          for (script in r_scripts) {
-            source(script)
-          }
-        }
-      }
-
-      # Source all R files in the subdirectory itself (but not Start.R)
-      r_scripts <- list.files(dir, pattern = "\\.R$", full.names = TRUE)
-      for (script in r_scripts) {
-        # Source each R script except Start.R
-        if (basename(script) != "Start.R") {
-          source(script)
-        }
-      }
+      # and all R files in the subdirectory itself (but not Start.R)
+      sourceSubmoduleRFiles(dir)
 
       # Check for Start.R and source it if exists
       start_script <- file.path(dir, "Start.R")
@@ -96,9 +81,11 @@ runSubmodules <- function() {
 #' the lock and exits without executing any further logic.
 #'
 #' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
+#' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
+#' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-processData <- function(reset_lock_only = FALSE) {
+processData <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
 
   # Initialize and start module
   etlutils::startModule("dataprocessor",
@@ -109,6 +96,9 @@ processData <- function(reset_lock_only = FALSE) {
     etlutils::dbResetLock()
     return()
   }
+
+  # Check if the release version of the database is compatible
+  etlutils::checkVersion(ignore_newer_db_version)
 
   try(etlutils::runLevel1("Run Dataprocessor", {
 

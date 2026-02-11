@@ -27,8 +27,8 @@ for (arg in args) {
     if (arg == "--resetLockAndStop") {
       quit(status = 0, save = "no")  # clean exit without error
     }
-  } else {
-    stop("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop")
+  } else if (!arg %in% c("--ignoreNewerDBVersion")) {
+    stop("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop, --ignoreNewerDBVersion")
   }
 }
 
@@ -62,33 +62,29 @@ setDebugPathToConfigToml <- function(module_name) {
 
 shouldStart <- function(module_name) {
   if (!etlutils::isErrorOccured()) {
-    if (exists("DEBUG_START_SINGLE_MODULE") && DEBUG_START_SINGLE_MODULE == module_name) {
+    if (!exists("DEBUG_START_SINGLE_MODULE") ||
+        (exists("DEBUG_START_SINGLE_MODULE") && identical(DEBUG_START_SINGLE_MODULE, module_name))) {
       resetMemory()
       setDebugPathToConfigToml(module_name)
       return(TRUE)
-    } else if (!exists("DEBUG_START_SINGLE_MODULE")) {
-      resetMemory()
-      setDebugPathToConfigToml(module_name)
-      return(TRUE)
-    } else {
-      return(FALSE)
     }
   }
   return(FALSE)
 }
 
 tryCatch({
+  ignore_newer_db_version = "--ignoreNewerDBVersion" %in% args
   if (shouldStart("cds2db")) {
-    cds2db::retrieve()
+    cds2db::retrieve(ignore_newer_db_version = ignore_newer_db_version)
   }
   if (shouldStart("db2frontend")) {
-    db2frontend::startFrontend2DB()
+    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version)
   }
   if (shouldStart("dataprocessor")) {
-    dataprocessor::processData()
+    dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version)
   }
   if (shouldStart("db2frontend")) {
-    db2frontend::startDB2Frontend()
+    db2frontend::startDB2Frontend(ignore_newer_db_version = ignore_newer_db_version)
   }
   if (etlutils::isErrorOccured()) {
     stop(etlutils::getErrorMessage())

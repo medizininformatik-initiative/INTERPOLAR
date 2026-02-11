@@ -64,6 +64,27 @@ DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004",
 #DEBUG_ADD_FHIR_SEARCH_SERVICEREQUEST = ""
 
 #################
+# These parameters can be used to skip the melting of specific resources after downloading.
+# The resources listed here are not processed further in the 'cds2db' module after downloading.
+# This can be used to speed up test cases if certain resources are not needed.
+#################
+DEBUG_SKIP_MELTING_RESOURCES = [
+  #"Condition",
+  #"Consent",
+  #"DiagnosticReport",
+  #"Encounter",
+  #"Location",
+  #"Medication",
+  #"MedicationAdministration",
+  #"MedicationRequest",
+  #"MedicationStatement",
+  #"Observation",
+  #"Patient",
+  #"Procedure",
+  #"ServiceRequest"
+]
+
+#################
 # Set this parameter to "true" if last_update_date should be ignored. In this case all data will be downloaded
 # from FHIR-server without checking last implemented data in database.
 #################

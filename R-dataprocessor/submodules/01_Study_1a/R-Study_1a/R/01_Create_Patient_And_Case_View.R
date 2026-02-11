@@ -39,7 +39,7 @@ getLocationString <- function(encounters, locations) {
       room_value <- NA_character_
       bed_value <- NA_character_
       # Keep only rows with latest period start
-      encounters <- encounters[enc_period_start %in% max(enc_period_start, na.rm = TRUE)]
+      encounters <- encounters[enc_period_start %in% etlutils::getMaxDatetime(enc_period_start)]
 
       room_encounter <- encounters[enc_location_physicaltype_code %in% "ro"]
       room_encounter <- if (nrow(room_encounter)) room_encounter[1] else NULL
@@ -172,7 +172,8 @@ getObservations <- function(encounters, query_datetime, obs_codes, obs_system, o
       obs_code_system = character(),
       obs_effectivedatetime = as.POSIXct(character()),
       obs_valuequantity_value = numeric(),
-      obs_valuequantity_code = character()
+      obs_valuequantity_code = character(),
+      obs_valuequantity_unit = character()
     )
     for (pat_ref in unique_pat_refs) {
       patient_obs <- observations[obs_patient_ref %in% pat_ref & !is.na(obs_effectivedatetime)]
@@ -394,6 +395,20 @@ createFrontendTables <- function() {
     # Create a new data.table with only pid and ward_name, ensuring unique rows
     unique_pid_ward <- unique(pids_per_ward[, .(patient_id, ward_name)])
 
+    main_encounters_ids <- paste0("('", paste(unique(main_encounters$enc_id), collapse = "','"), "')")
+    column_names <- c("fall_fhir_enc_id",
+                      "fall_studienphase")
+
+    query <- paste0(
+      "SELECT DISTINCT ON (fall_fhir_enc_id) ",
+      paste(column_names, collapse = ", "), "\n",
+      "FROM v_fall_fe\n",
+      "WHERE fall_fhir_enc_id IN ", main_encounters_ids, "\n",
+      "ORDER BY fall_fhir_enc_id, input_datetime ASC"
+    )
+
+    enc_studyphase_at_admission <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[3]")
+
     for (pid_index in seq_len(nrow(unique_pid_ward))) {
 
       pid <- unique_pid_ward$patient_id[pid_index]
@@ -477,19 +492,13 @@ createFrontendTables <- function() {
         data.table::set(enc_frontend_table, target_index, "fall_status", enc_status)
 
         # Store all known Encounter IDs in toml syntax in the additional values
-        pids_per_ward_encounters <- pids_per_ward[patient_id %in% pid]
         fall_additional_values <- ""
-
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             sort(unique(pids_per_ward_encounters$encounter_id)),
-                                                             key = "pids_per_ward_encounters",
-                                                             comment = "FHIR ID of all Encounters of this medical case that were in the pids_per_ward table")
-        fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             sort(pid_main_encounter_ids),
+                                                             pid_main_encounter_ids,
                                                              key = "main_encounters",
                                                              comment = "FHIR ID of all main Encounter(s) for the medical case (should be exactly one)")
         fall_additional_values <- etlutils::tomlAppendVector(fall_additional_values,
-                                                             sort(unique(pid_part_of_encounters$enc_id)),
+                                                             unique(pid_part_of_encounters$enc_id),
                                                              key = "part_encounters",
                                                              comment = "FHIR ID of all Encounters for the medical case at this point which are not the main Encounter")
         data.table::set(enc_frontend_table, target_index, "fall_additional_values", fall_additional_values)
@@ -504,9 +513,22 @@ createFrontendTables <- function() {
         ward_name <- unique_pid_ward$ward_name[pid_index]
         data.table::set(enc_frontend_table, target_index, "fall_station", ward_name)
 
+        study_phase <- NA_character_
+
+        if(nrow(enc_studyphase_at_admission)) {
+          # Get the study phase at admission for the Encounter if it exists in the database (fall_fe table)
+          study_phase <- enc_studyphase_at_admission[
+            fall_fhir_enc_id == enc_id,
+            fall_studienphase
+          ][1L]
+        }
+
         # Get the current study phase for the ward of the Encounter
-        study_phase <- getStudyPhase(ward_name)
-        if (is.null(study_phase)) {
+        if (!etlutils::isSimpleNotEmptyString(study_phase)) {
+          study_phase <- getStudyPhase(ward_name)
+        }
+
+        if (is.na(study_phase)) {
           stop("ERROR: No study phase found for ward '", ward_name, "'.\n",
                "Please check the study phase configuration in the dataprocessor_config.toml for parameters WARDS_PHASE_A, WARDS_PHASE_B_TEST and WARDS_PHASE_B.")
         }
@@ -523,12 +545,29 @@ createFrontendTables <- function() {
         obs_weight <- observations_weight[obs_patient_ref %in% pid_ref]
         if (nrow(obs_weight)) {
           data.table::set(enc_frontend_table, target_index, "fall_gewicht_aktuell", obs_weight$obs_valuequantity_value)
-          data.table::set(enc_frontend_table, target_index, "fall_gewicht_aktl_einheit", obs_weight$obs_valuequantity_code)
+          data.table::set(enc_frontend_table,
+                          target_index,
+                          "fall_gewicht_aktl_einheit",
+                          data.table::fifelse(
+                            etlutils::isValidUnit(obs_weight$obs_valuequantity_code),
+                            obs_weight$obs_valuequantity_code,
+                            obs_weight$obs_valuequantity_unit
+                          )
+          )
+
         }
         obs_height <- observations_height[obs_patient_ref %in% pid_ref]
         if (nrow(obs_height)) {
           data.table::set(enc_frontend_table, target_index, "fall_groesse", obs_height$obs_valuequantity_value)
-          data.table::set(enc_frontend_table, target_index, "fall_groesse_einheit", obs_height$obs_valuequantity_code)
+          data.table::set(enc_frontend_table,
+                          target_index,
+                          "fall_groesse_einheit",
+                          data.table::fifelse(
+                            etlutils::isValidUnit(obs_height$obs_valuequantity_code),
+                            obs_height$obs_valuequantity_code,
+                            obs_height$obs_valuequantity_unit
+                          )
+          )
         }
 
         # For unknown reasons, a BMI written to the RedCap is always written back from the

@@ -428,12 +428,12 @@ getPIDsSplittedByWard <- function(log_result = TRUE) {
 
     # Step 1: Keep only the encounters with the **latest `period/start`** per patient_id
     pids_per_ward <- pids_per_ward[
-      pids_per_ward[, .I[`period/start` == max(`period/start`, na.rm = TRUE)], by = patient_id]$V1
+      pids_per_ward[, .I[`period/start` == etlutils::getMaxDatetime(`period/start`)], by = patient_id]$V1
     ]
 
     # Step 2: If multiple entries per patient_id remain, keep those with latest meta-lastUpdateDate
     pids_per_ward <- pids_per_ward[
-      pids_per_ward[, .I[`meta/lastUpdated` == max(`meta/lastUpdated`, na.rm = TRUE)], by = patient_id]$V1
+      pids_per_ward[, .I[`meta/lastUpdated` == etlutils::getMaxDatetime(`meta/lastUpdated`)], by = patient_id]$V1
     ]
 
     # Step 3: If still multiple per patient_id: keep only the first (arbitrary stable choice)

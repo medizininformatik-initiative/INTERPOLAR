@@ -43,7 +43,7 @@ parseQueryList <- function(list_string, split = " ") {
 getCurrentDatetime <- function(encounters) {
   encounters_end <- na.omit(encounters$enc_period_end)
   sys_time <- Sys.time()
-  datetime <- if (length(encounters_end)) max(encounters_end) - 1 else sys_time
+  datetime <- if (length(encounters_end)) etlutils::getMaxDatetime(encounters_end) - 1 else sys_time
   if (datetime > sys_time) {
     # if the latest encounter end is in the future, use the current system time
     datetime <- sys_time
@@ -207,6 +207,13 @@ getStudyPhase <- function(ward_name) {
 #
 # Check if the study has no or not only Phase A wards defined in the configuration.
 #
-hasPhaseBWards <- function() {
+hasPhaseBOrBTestWards <- function() {
   return(etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B") || etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST"))
+}
+
+#
+# Check if the study has Phase B wards defined in the configuration.
+#
+isPhaseBActive <- function() {
+  return(etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B"))
 }

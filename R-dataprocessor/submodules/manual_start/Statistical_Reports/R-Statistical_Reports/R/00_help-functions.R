@@ -97,9 +97,70 @@ checkMultipleRows <- function(data, grouping_vars) {
     dplyr::filter(n > 1) |>
     dplyr::ungroup()
   if (nrow(data_check_multiple_row) > 0) {
-    print(data_check_multiple_row, width = Inf)
+    print(data_check_multiple_row, width = 1000)
   }
   return(nrow(data_check_multiple_row) > 0)
+}
+
+#------------------------------------------------------------------------------#
+#' Add a Processing Exclusion Reason in a Structured Way
+#'
+#' This function appends a new processing exclusion reason to an existing
+#' exclusion reason field while avoiding duplicate entries.
+#'
+#' The exclusion reason is stored as a semicolon-separated character string.
+#' Each individual entry follows the format:
+#'
+#' \code{reason|level|type}
+#'
+#' If the new entry already exists in the exclusion reason string, the original
+#' value is returned unchanged.
+#'
+#' @param existing A character vector containing existing processing exclusion
+#'   reasons, or \code{NA}. Multiple reasons are expected to be separated by
+#'   semicolons.
+#'
+#' @param reason A character string describing the exclusion reason.
+#'
+#' @param level A character string indicating the data level at which the
+#'   exclusion applies ( e.g. 'patient', 'main_encounter' 'sub_encounter').
+#'
+#' @param type A character string describing the exclusion type (e.g. 'not_in_inclusion_criteria', 'data_issues').
+#'
+#' @return
+#' A character vector of the same length as \code{existing}, where the new
+#' exclusion reason has been appended if applicable.
+#'
+#' @details
+#' The function behaves as follows:
+#' \itemize{
+#'   \item If \code{existing} is \code{NA}, a new exclusion reason is created.
+#'   \item If the constructed exclusion reason already exists, it is not added
+#'         again.
+#'   \item Otherwise, the new exclusion reason is appended using a semicolon
+#'         separator.
+#' }
+#'
+#' This helper is intended for consistent and traceable accumulation of
+#' processing exclusion reasons across multiple validation and curation steps.
+#'
+#' @importFrom dplyr case_when
+#' @importFrom stringr str_detect fixed
+#' @export
+addProcessingExclusionReason <- function(existing = processing_exclusion_reason,
+                                         reason,
+                                         level = c("patient", "sub_encounter", "main_encounter"),
+                                         type = c(
+                                           "not_in_inclusion_criteria", "data_issues",
+                                           "linkage_issues"
+                                         )) {
+  new_entry <- paste(reason, level, type, sep = "|")
+
+  dplyr::case_when(
+    is.na(existing) ~ new_entry,
+    stringr::str_detect(existing, stringr::fixed(new_entry)) ~ existing,
+    TRUE ~ paste(existing, new_entry, sep = ";")
+  )
 }
 
 #------------------------------------------------------------------------------#
@@ -114,6 +175,11 @@ checkMultipleRows <- function(data, grouping_vars) {
 #' @param grouping_vars A character vector of column names used to define groups.
 #' @param processing_exclusion_reason_name A character string specifying the
 #'   reason to assign when a group contains more than one row.
+#' @param processing_exclusion_reason_level A character string specifying the
+#'  level of the exclusion reason (e.g., 'patient', 'main_encounter', 'sub_encounter').
+#' @param processing_exclusion_reason_type A character string specifying the
+#' type of the exclusion reason (e.g., 'not_in_inclusion_criteria', 'data_issues',
+#' 'linkage_issues').
 #'
 #' @return A `tibble` with the same structure as `data`, but with the column
 #'   `processing_exclusion_reason` updated for groups with multiple rows.
@@ -127,38 +193,77 @@ checkMultipleRows <- function(data, grouping_vars) {
 #' - If a group has only one row, the existing value in
 #'   `processing_exclusion_reason` is preserved.
 #'
-#' @examples
-#' library(dplyr)
-#' df <- data.frame(
-#'   patient_id = c(1, 1, 2, 3, 3, 3),
-#'   value = c(10, 12, 5, 7, 8, 9),
-#'   processing_exclusion_reason = NA_character_
-#' )
-#' df_flagged <- addMultipleRowsProcessingExclusionReason(
-#'   data = df,
-#'   grouping_vars = c("patient_id"),
-#'   processing_exclusion_reason_name = "Multiple entries for patient"
-#' )
-#' df_flagged
-#'
-#' @importFrom dplyr group_by add_count mutate if_else ungroup select across all_of
+#' @importFrom dplyr group_by add_count mutate case_when ungroup select across all_of
 #'
 #' @export
 addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars,
-                                                     processing_exclusion_reason_name) {
+                                                     processing_exclusion_reason_name,
+                                                     processing_exclusion_reason_level,
+                                                     processing_exclusion_reason_type) {
   data_add_multiple_row_reason <- data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
     dplyr::add_count() |>
-    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(n > 1 &
-      is.na(processing_exclusion_reason),
-    processing_exclusion_reason_name,
-    processing_exclusion_reason
-    )) |>
     dplyr::ungroup() |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      n > 1 ~
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = processing_exclusion_reason_name,
+          level = processing_exclusion_reason_level,
+          type = processing_exclusion_reason_type
+        ),
+      TRUE ~ processing_exclusion_reason
+    )) |>
     dplyr::select(-n)
   return(data_add_multiple_row_reason)
 }
 
+#------------------------------------------------------------------------------#
+
+#' Detect Multiple Distinct Values Within Groups
+#'
+#' This function checks, for each group defined by one or more grouping
+#' variables, whether more than one distinct (non-NA) value occurs in a
+#' specified variable. The result is stored as a logical indicator in a
+#' new column.
+#'
+#' @param data A data frame containing the data to be checked.
+#'
+#' @param grouping_vars A character vector specifying the column names
+#'   used to define groups.
+#'
+#' @param variable_to_check A column (unquoted) whose distinct values
+#'   are evaluated within each group.
+#'
+#' @param result_variable_name A character string giving the name of the
+#'   logical result column to be created. The column is \code{TRUE} for
+#'   groups with more than one distinct non-NA value in
+#'   \code{variable_to_check}, and \code{FALSE} otherwise.
+#'
+#' @return
+#' A data frame identical to \code{data}, with an additional logical
+#' column named according to \code{result_variable_name}.
+#'
+#' @details
+#' Grouping is performed using \code{dplyr::group_by()} on the variables
+#' supplied in \code{grouping_vars}. Distinct values are counted using
+#' \code{dplyr::n_distinct()} with \code{na.rm = TRUE}.
+#'
+#' The resulting logical indicator is constant within each group and is
+#' propagated to all rows belonging to that group.
+#'
+#' @importFrom dplyr group_by ungroup mutate across all_of n_distinct
+#'
+#' @export
+detectMultipleEntries <- function(data, grouping_vars, variable_to_check,
+                                  result_variable_name) {
+  data_multiple_detected <- data |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
+    dplyr::mutate(!!result_variable_name := dplyr::n_distinct({{ variable_to_check }}, na.rm = TRUE) > 1) |>
+    dplyr::ungroup()
+
+  return(data_multiple_detected)
+}
 #------------------------------------------------------------------------------#
 
 #' Parse Named Command-Line Arguments
@@ -175,8 +280,8 @@ addMultipleRowsProcessingExclusionReason <- function(data, grouping_vars,
 #'
 #' Arguments without an `=` sign are ignored.
 #'
+#' @importFrom stats setNames
 #' @export
-
 parseNamedArgs <- function() {
   command_arguments <- commandArgs(trailingOnly = TRUE)
 
@@ -185,7 +290,7 @@ parseNamedArgs <- function() {
   # Convert to named character vector
   parsed <- sapply(named_args, function(arg) {
     parts <- strsplit(arg, "=", fixed = TRUE)[[1]]
-    parts <- setNames(parts[2], parts[1])
+    parts <- stats::setNames(parts[2], parts[1])
   }, USE.NAMES = FALSE)
 
   return(parsed)
@@ -221,6 +326,8 @@ parseNamedArgs <- function() {
 #'   from the second system.
 #' @param exclusion_reason Character string that will be written into
 #'   `processing_exclusion_reason` when unknown or multiple values are detected.
+#' @param exclusion_level Level of the exclusion_reason
+#' @param exclusion_type Type of the exclusion_reason.
 #' @param id_column Character string specifying an identifier column (e.g. encounter ID),
 #'   used only for warning messages to help trace problematic rows.
 #'
@@ -242,40 +349,13 @@ parseNamedArgs <- function() {
 #'         `"MULTIPLE_VALUES"` is inserted and `exclusion_reason` is set.
 #' }
 #'
-#' @importFrom dplyr mutate if_else select group_by summarise across all_of distinct
-#'
-#' @examples
-#' df <- data.frame(
-#'   id = c(1, 2, 3, 4),
-#'   enc_type_code = c(
-#'     "einrichtungskontakt", "normalstationaer",
-#'     "abteilungskontakt", "unknown_code"
-#'   ),
-#'   enc_type_system = c(
-#'     "http://fhir.de/CodeSystem/Kontaktebene",
-#'     "http://fhir.de/CodeSystem/kontaktart-de",
-#'     "http://fhir.de/CodeSystem/Kontaktebene",
-#'     "http://fhir.de/CodeSystem/Kontaktebene"
-#'   )
-#' )
-#'
-#' PivotWiderTwoSystems(
-#'   data = df,
-#'   system1 = "http://fhir.de/CodeSystem/Kontaktebene",
-#'   codes1 = c("einrichtungskontakt", "abteilungskontakt", "versorgungsstellenkontakt"),
-#'   system2 = "http://fhir.de/CodeSystem/kontaktart-de",
-#'   codes2 = c("normalstationaer"),
-#'   var_code = "enc_type_code",
-#'   var_system = "enc_type_system",
-#'   var_new_system_1 = "enc_type_code_Kontaktebene",
-#'   var_new_system_2 = "enc_type_code_Kontaktart",
-#'   exclusion_reason = "mapping_failed",
-#'   id_column = "id"
-#' )
+#' @importFrom dplyr mutate if_else case_when select group_by summarise across all_of distinct
+#' @importFrom stats na.omit
 #'
 #' @export
 PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_code, var_system,
-                                 var_new_system_1, var_new_system_2, exclusion_reason, id_column) {
+                                 var_new_system_1, var_new_system_2, exclusion_reason,
+                                 exclusion_level, exclusion_type, id_column) {
   # Check for unexpected codes/systems
   unexpected_code_rows <- !is.na(data[[var_code]]) & !data[[var_code]] %in% c(codes1, codes2)
   if (any(unexpected_code_rows)) {
@@ -294,8 +374,14 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
     ))
   }
   data <- data |>
-    dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
-      !get(var_code) %in% c(codes1, codes2), exclusion_reason, NA_character_
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      !get(var_code) %in% c(codes1, codes2) ~ addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = exclusion_reason,
+        level = exclusion_level,
+        type = exclusion_type
+      ),
+      TRUE ~ processing_exclusion_reason
     )) |>
     # System 1-Mapping
     dplyr::mutate(!!var_new_system_1 := dplyr::if_else(get(var_system) %in% system1 |
@@ -312,7 +398,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
     dplyr::group_by(dplyr::across(-dplyr::all_of(c(var_new_system_1, var_new_system_2)))) |>
     dplyr::summarise(
       !!var_new_system_1 := {
-        vals <- na.omit(.data[[var_new_system_1]])
+        vals <- stats::na.omit(.data[[var_new_system_1]])
         if (length(unique(vals)) > 1) {
           warning(paste0(
             "Multiple ", var_new_system_1,
@@ -323,7 +409,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
         } else if (length(vals) == 0) NA_character_ else vals[1]
       },
       !!var_new_system_2 := {
-        vals <- na.omit(.data[[var_new_system_2]])
+        vals <- stats::na.omit(.data[[var_new_system_2]])
         if (length(unique(vals)) > 1) {
           warning(paste0(
             "Multiple ", var_new_system_2,
@@ -338,13 +424,1127 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
     # Add processing exclusion reason for multiple/unknown values
     dplyr::mutate(
       processing_exclusion_reason = dplyr::if_else(
-        is.na(processing_exclusion_reason) &
-          (.data[[var_new_system_1]] %in% c("MULTIPLE_VALUES") |
-            .data[[var_new_system_2]] %in% c("MULTIPLE_VALUES")),
-        exclusion_reason,
+        (.data[[var_new_system_1]] %in% c("MULTIPLE_VALUES") |
+          .data[[var_new_system_2]] %in% c("MULTIPLE_VALUES")),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = exclusion_reason,
+          level = exclusion_level,
+          type = exclusion_type
+        ),
         processing_exclusion_reason
       )
     ) |>
     dplyr::distinct()
   return(data)
+}
+
+#' Expand Processing Exclusion Reasons Across Encounter Hierarchies
+#'
+#' This function propagates existing processing exclusion reasons across
+#' encounter and patient hierarchies. If any encounter within the same
+#' main encounter or patient has a processing exclusion reason that is
+#' relevant at a higher level, related encounters without an exclusion
+#' reason are tagged accordingly.
+#'
+#' @param FHIR_table_with_all_processing_exclusion_reasons A data frame
+#'   containing encounter-level data with processing exclusion reasons.
+#'   The table must include at least the columns
+#'   \code{main_enc_id}, \code{pat_id}, and
+#'   \code{processing_exclusion_reason}.
+#'
+#' @return
+#' A data frame with expanded \code{processing_exclusion_reason} values,
+#' where encounters without an exclusion reason may be assigned a derived
+#' reason if a related encounter at the same main encounter or patient
+#' level has a relevant exclusion reason.
+#'
+#' @details
+#' The function applies two hierarchical expansion steps:
+#' \itemize{
+#'   \item \strong{Main encounter level}: Within each \code{main_enc_id},
+#'   encounters without an exclusion reason are tagged if any related
+#'   encounter contains an exclusion reason marked as relevant for the
+#'   main encounter (detected via the pattern
+#'   \code{"|main_encounter|"}).
+#'
+#'   \item \strong{Patient level}: Within each \code{pat_id}, encounters
+#'   without an exclusion reason are tagged if any related encounter
+#'   contains an exclusion reason marked as relevant for the patient
+#'   (detected via the pattern \code{"|patient|"}).
+#' }
+#'
+#' The function does not overwrite existing exclusion reasons and ensures
+#' uniqueness of rows in the returned table.
+#'
+#' @importFrom dplyr group_by mutate ungroup distinct
+#' @importFrom stringr str_detect
+#'
+#' @export
+ExpandProcessingExclusionReasonToAllEncounterLevels <- function(FHIR_table_with_all_processing_exclusion_reasons) {
+  FHIR_table_processing_exclusion_reason_expanded <- FHIR_table_with_all_processing_exclusion_reasons |>
+    dplyr::group_by(main_enc_id) |>
+    dplyr::mutate(
+      processing_exclusion_reason = dplyr::case_when(
+        any(!is.na(processing_exclusion_reason)) &
+          is.na(processing_exclusion_reason) &
+          any(stringr::str_detect(processing_exclusion_reason, "\\|main_encounter\\|")) ~
+          "related_encounter_with_processing_exclusion_reason_relevant_for_main_encounter",
+        TRUE ~ processing_exclusion_reason
+      )
+    ) |>
+    dplyr::ungroup() |>
+    dplyr::group_by(pat_id) |>
+    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+      any(!is.na(processing_exclusion_reason)) &
+        is.na(processing_exclusion_reason) &
+        any(stringr::str_detect(processing_exclusion_reason, "\\|patient\\|")) ~
+        "related_encounter_with_processing_exclusion_reason_relevant_for_patient",
+      TRUE ~ processing_exclusion_reason
+    )) |>
+    dplyr::ungroup() |>
+    dplyr::distinct()
+
+  return(FHIR_table_processing_exclusion_reason_expanded)
+}
+
+
+#' Check Multiple Rows per Patient ID
+#'
+#' This function checks whether the patient table contains multiple rows for the
+#' same patient id (`pat_id`).
+#'
+#' If multiple rows are found for the same `pat_id`, a warning is issued.
+#'
+#' @param patient_table A data frame containing patient-level data. The table
+#'   must include the column `pat_id`.
+#'
+#' @return
+#' A data frame identical to `patient_table`.
+#'
+#' @details
+#' Multiple rows per patient ID may indicate duplicated patient entries (e.g. multiple
+#' pat_identifier_value). This may be important for the display in the frontend.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @export
+CheckMultipleRowsPerPatId <- function(patient_table) {
+  if (checkMultipleRows(patient_table, c("pat_id"))) {
+    warning("The patient table contains multiple rows for the same pat_id(FHIR).
+    Please check the data. It may be important for the display in the frontend
+    (FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_ defined?) but has no consequences for reporting.")
+  }
+  return(patient_table)
+}
+
+#' Check Multiple Rows per Patient Identifier Value
+#'
+#' This function checks whether the patient table contains multiple rows for the
+#' same patient identifier value (`pat_identifier_value`).
+#'
+#' If multiple rows are found for the same `pat_identifier_value`, a warning is issued
+#' and the function assigns a processing exclusion reason
+#' `"multiple_rows_per_pat_identifier_value"` using `addMultipleRowsProcessingExclusionReason`.
+#'
+#' @param patient_table A data frame containing patient-level data. The table
+#'   must include the column `pat_identifier_value`.
+#'
+#' @return
+#' A data frame identical to `patient_table`, with `processing_exclusion_reason`
+#' updated for patient identifier values that appear in multiple rows.
+#'
+#' @details
+#' Multiple rows per patient identifier value may indicate duplicated patient
+#' entries or issues in data extraction. Flagging these rows ensures that
+#' downstream analyses handle such cases appropriately.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @export
+CheckMultipleRowsPerPatIdentifierValue <- function(patient_table) {
+  if (checkMultipleRows(patient_table, c("pat_identifier_value"))) {
+    warning("The patient table contains multiple rows for the same patient identifier (cis).
+            This could result in data processing problems. Please check the data.")
+  }
+  return(patient_table)
+}
+
+
+#' Check for Missing Encounter Start Dates
+#'
+#' Checks an encounter table for missing values in `enc_period_start` and marks
+#' affected rows with a processing exclusion reason. A warning is issued if any
+#' missing start dates are detected.
+#'
+#' @param encounter_table A data.frame containing encounter-level data.
+#'   Must include the columns `enc_period_start` and `processing_exclusion_reason`.
+#'
+#' @return A data.frame identical to `encounter_table`, but with
+#'   `processing_exclusion_reason` set to `"missing_start_date"` for rows where
+#'   `enc_period_start` is `NA` and no exclusion reason was previously defined.
+#'
+#' @details
+#' If at least one missing value is found in `enc_period_start`, the function:
+#' \enumerate{
+#'   \item Assigns `"missing_start_date"` to `processing_exclusion_reason`
+#'         where it is currently `NA`
+#'   \item Prints affected rows to the console
+#'   \item Emits a warning indicating potential data loss
+#' }
+#'
+#' This function does not stop execution and always returns the modified table.
+#'
+#' @importFrom dplyr mutate if_else filter
+#' @export
+CheckMissingStartDate <- function(encounter_table) {
+  if (any(is.na(encounter_table$enc_period_start))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(enc_period_start),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "missing_start_date",
+          level = "sub_encounter",
+          type = "data_issues"
+        ),
+        processing_exclusion_reason
+      ))
+    print(encounter_table |>
+      dplyr::filter(is.na(enc_period_start)), width = 1000)
+    warning("The encounter table contains NA values in enc_period_start.
+            Relevant encounter data may be missed. Please check the data")
+  }
+  return(encounter_table)
+}
+
+#' Check Missing Kontaktebene for Inpatient Encounters
+#'
+#' Identifies inpatient encounters (`enc_class_code == "IMP"`) that are missing
+#' a Kontaktebene classification (`enc_type_code_Kontaktebene`). For affected
+#' rows where no processing exclusion reason has yet been set, the function
+#' assigns the exclusion reason `"missing_kontaktebene_for_imp_encounter"`.
+#'
+#' If such cases are detected, the function prints the affected rows and issues
+#' a warning to indicate potentially incomplete or unexpected encounter type
+#' coding.
+#'
+#' @param encounter_table A data frame containing encounter-level data. The
+#'   table must include the columns:
+#'   \itemize{
+#'     \item \code{enc_class_code}
+#'     \item \code{enc_type_code_Kontaktebene}
+#'     \item \code{processing_exclusion_reason}
+#'   }
+#'
+#' @return
+#' A data frame identical to \code{encounter_table}, but with
+#' \code{processing_exclusion_reason} populated with
+#' `"missing_kontaktebene_for_imp_encounter"` for inpatient encounters missing
+#' Kontaktebene information.
+#'
+#' @details
+#' The function only applies to encounters classified as inpatient
+#' (\code{enc_class_code == "IMP"}). Existing values in
+#' \code{processing_exclusion_reason} are preserved and will not be overwritten.
+#'
+#' When missing Kontaktebene values are detected, the affected encounter rows
+#' are printed and a warning is raised to alert the user that encounter filtering
+#' or downstream analyses may be impacted.
+#'
+#' @importFrom dplyr mutate if_else filter
+#'
+#' @export
+CheckMissingKontaktebeneForImpEncounter <- function(encounter_table) {
+  if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
+    (is.na(encounter_table$enc_type_code_Kontaktebene)))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        !is.na(enc_class_code) & enc_class_code == "IMP" &
+          is.na(enc_type_code_Kontaktebene),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "missing_kontaktebene_for_imp_encounter",
+          level = "sub_encounter",
+          type = "data_issues"
+        ),
+        processing_exclusion_reason
+      ))
+    print(encounter_table |>
+      dplyr::filter(enc_class_code == "IMP" & is.na(enc_type_code_Kontaktebene)), width = 1000)
+    warning("The encounter table with extended filtering contains inpatient encounters with missing
+    type codes for Kontaktebene. Please check the data for expected implementation of enc_type_code
+            and enc_type_system.")
+  }
+  return(encounter_table)
+}
+
+#' Check for Unexpected Status Values in Inpatient Encounters
+#'
+#' Identifies encounters with missing or
+#' unexpected encounter status values. Valid status values are
+#' `"finished"`, `"in-progress"`, and `"onleave"`.
+#'
+#' For affected rows where no processing exclusion reason has yet been assigned,
+#' the function sets the exclusion reason to `"unexpected_status"`.
+#'
+#' If such encounters are found, the function prints the affected rows and
+#' issues a warning to alert the user to potentially invalid or incomplete
+#' encounter status coding.
+#'
+#' @param encounter_table A data frame containing encounter-level data. The
+#'   table must include the columns:
+#'   \itemize{
+#'     \item \code{enc_status}
+#'     \item \code{processing_exclusion_reason}
+#'   }
+#'
+#' @return
+#' A data frame identical to \code{encounter_table}, but with
+#' \code{processing_exclusion_reason} populated with `"unexpected_status"`
+#' for encounters with missing or invalid status values.
+#'
+#' @details
+#' Existing values in \code{processing_exclusion_reason} are preserved and will not be overwritten.
+#'
+#' Encounter rows with \code{enc_status} equal to \code{NA} or not belonging to
+#' the allowed set (`"finished"`, `"in-progress"`, `"onleave"`) are considered
+#' invalid.
+#'
+#' When invalid statuses are detected, affected rows are printed and a warning
+#' is emitted to indicate that downstream filtering or reporting may be
+#' affected.
+#'
+#' @importFrom dplyr mutate if_else filter
+#'
+#' @export
+CheckUnexpectedStatus <- function(encounter_table) {
+  if (any(!is.na(encounter_table$enc_status) &
+    (is.na(encounter_table$enc_status) | !encounter_table$enc_status %in% c(
+      "finished", "in-progress", "onleave"
+    )))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        (is.na(enc_status) | !enc_status %in% c("finished", "in-progress", "onleave")),
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "unexpected_status",
+          level = "sub_encounter",
+          type = "data_issues"
+        ),
+        processing_exclusion_reason
+      ))
+    print(
+      encounter_table |>
+        dplyr::filter((is.na(enc_status) | !enc_status %in% c(
+          "finished", "in-progress",
+          "onleave"
+        ))),
+      width = 1000
+    )
+    warning("The encounter table contains encounters with unexpected or NA status values.
+            Please check the data.")
+  }
+  return(encounter_table)
+}
+
+#' Check Finished Inpatient Encounters Without an End Date
+#'
+#' Identifies inpatient encounters (`enc_class_code == "IMP"`) that are marked
+#' as `"finished"` but have a missing encounter end date
+#' (`enc_period_end == NA`).
+#'
+#' For affected rows where no processing exclusion reason has yet been assigned,
+#' the function sets the exclusion reason to
+#' `"imp_finished_without_end_date"`.
+#'
+#' If such encounters are detected, the affected rows are printed and a warning
+#' is issued to inform the user about potentially incomplete encounter period
+#' data.
+#'
+#' @param encounter_table A data frame containing encounter-level data. The
+#'   table must include the columns:
+#'   \itemize{
+#'     \item \code{enc_class_code}
+#'     \item \code{enc_status}
+#'     \item \code{enc_period_end}
+#'     \item \code{processing_exclusion_reason}
+#'   }
+#'
+#' @return
+#' A data frame identical to \code{encounter_table}, but with
+#' \code{processing_exclusion_reason} set to
+#' `"imp_finished_without_end_date"` for inpatient encounters that are marked
+#' as finished but lack an end date.
+#'
+#' @details
+#' The check applies only to inpatient encounters
+#' (\code{enc_class_code == "IMP"}). Existing values in
+#' \code{processing_exclusion_reason} are preserved and will not be overwritten.
+#'
+#' Finished inpatient encounters are expected to have a valid end date.
+#' Missing end dates may lead to incorrect length-of-stay calculations or
+#' incomplete reporting.
+#'
+#' When affected rows are found, they are printed for inspection and a warning
+#' is emitted to highlight potential data quality issues.
+#'
+#' @importFrom dplyr mutate case_when filter
+#'
+#' @export
+CheckImpFinishedWithoutEndDate <- function(encounter_table) {
+  if (any(!is.na(encounter_table$enc_class_code) & encounter_table$enc_class_code == "IMP" &
+    (!is.na(encounter_table$enc_status) &
+      encounter_table$enc_status == "finished") & is.na(encounter_table$enc_period_end))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
+        enc_class_code == "IMP" &
+          enc_status == "finished" & is.na(enc_period_end) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "imp_finished_without_end_date",
+            level = "sub_encounter",
+            type = "data_issues"
+          ),
+        TRUE ~ processing_exclusion_reason
+      ))
+    print(
+      encounter_table |>
+        dplyr::filter(enc_class_code == "IMP" & enc_status == "finished" &
+          is.na(encounter_table$enc_period_end)),
+      width = 1000
+    )
+    warning("The encounter table contains finished IMP encounters without an end date.
+         Please check the data.")
+  }
+  return(encounter_table)
+}
+
+#' Check for Unexpected Encounter Class Codes
+#'
+#' This function checks an encounter table for encounter class codes that are
+#' not among the expected values (`"AMB"`, `"SS"`, `"IMP"`). If such values are
+#' found, the function assigns the processing exclusion reason
+#' `"unexpected_class_code"` to affected rows where no exclusion reason is
+#' already present.
+#'
+#' In addition, the affected rows are printed to the console and a warning is
+#' issued to alert the user that unexpected class codes were detected.
+#'
+#' @param encounter_table A data frame containing encounter-level data. The
+#'   table must include the columns `enc_class_code` and
+#'   `processing_exclusion_reason`.
+#'
+#' @return
+#' A data frame with the same structure as `encounter_table`. Rows with
+#' unexpected encounter class codes have their `processing_exclusion_reason`
+#' updated accordingly.
+#'
+#' @details
+#' Expected encounter class codes are:
+#' \itemize{
+#'   \item \code{"AMB"} – ambulatory encounters
+#'   \item \code{"SS"} – same-day surgery encounters
+#'   \item \code{"IMP"} – inpatient encounters
+#' }
+#'
+#' Any non-missing value of \code{enc_class_code} that is not one of these
+#' values is considered unexpected.
+#'
+#' @importFrom dplyr mutate if_else filter
+#'
+#' @export
+CheckUnexpectedClassCode <- function(encounter_table) {
+  if (any((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
+    !is.na(encounter_table$enc_class_code))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else((!enc_class_code %in%
+        c("AMB", "SS", "IMP")) &
+        !is.na(enc_class_code),
+      addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "unexpected_class_code",
+        level = "sub_encounter",
+        type = "data_issues"
+      ),
+      processing_exclusion_reason
+      ))
+    print(encounter_table |>
+      dplyr::filter((!encounter_table$enc_class_code %in% c("AMB", "SS", "IMP")) &
+        !is.na(encounter_table$enc_class_code)), width = 1000)
+    warning("The encounter table contains class codes with unexpected values.
+            Please check the data.")
+  }
+  return(encounter_table)
+}
+
+#' Check for Unexpected Kontaktart Type Codes
+#'
+#' This function checks an encounter table for unexpected values in the
+#' `enc_type_code_Kontaktart` column. If encounter type codes are found that are
+#' not among the expected Kontaktart codes, the function assigns the processing
+#' exclusion reason `"unexpected_kontaktart_code"` to the affected rows where no
+#' exclusion reason is already present.
+#'
+#' The affected rows are printed to the console and a warning is issued to inform
+#' the user that unexpected Kontaktart type codes were detected.
+#'
+#' @param encounter_table A data frame containing encounter-level data. The
+#'   table must include the columns `enc_type_code_Kontaktart` and
+#'   `processing_exclusion_reason`.
+#'
+#' @return
+#' A data frame with the same structure as `encounter_table`. Rows containing
+#' unexpected Kontaktart type codes have their
+#' `processing_exclusion_reason` updated accordingly.
+#'
+#' @details
+#' Expected Kontaktart type codes are:
+#' \itemize{
+#'   \item \code{"vorstationaer"}
+#'   \item \code{"nachstationaer"}
+#'   \item \code{"teilstationaer"}
+#'   \item \code{"tagesklinik"}
+#'   \item \code{"nachtklinik"}
+#'   \item \code{"normalstationaer"}
+#'   \item \code{"intensivstationaer"}
+#'   \item \code{"ub"}
+#'   \item \code{"konsil"}
+#'   \item \code{"stationsaequivalent"}
+#'   \item \code{"operation"}
+#' }
+#'
+#' Any non-missing value of \code{enc_type_code_Kontaktart} that is not one of
+#' these values is considered unexpected.
+#'
+#' @importFrom dplyr mutate if_else filter
+#'
+#' @export
+CheckUnexpectedKontaktartCode <- function(encounter_table) {
+  if (any((!encounter_table$enc_type_code_Kontaktart %in% c(
+    "vorstationaer", "nachstationaer",
+    "teilstationaer", "tagesklinik",
+    "nachtklinik", "normalstationaer",
+    "intensivstationaer", "ub", "konsil",
+    "stationsaequivalent", "operation"
+  )) &
+    !is.na(encounter_table$enc_type_code_Kontaktart))) {
+    encounter_table <- encounter_table |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else((!enc_type_code_Kontaktart %in% c(
+        "vorstationaer", "nachstationaer",
+        "teilstationaer", "tagesklinik",
+        "nachtklinik", "normalstationaer",
+        "intensivstationaer", "ub", "konsil",
+        "stationsaequivalent", "operation"
+      )) &
+        !is.na(enc_type_code_Kontaktart),
+      addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "unexpected_kontaktart_code",
+        level = "sub_encounter",
+        type = "data_issues"
+      ),
+      processing_exclusion_reason
+      ))
+    print(encounter_table |>
+      dplyr::filter((!enc_type_code_Kontaktart %in% c(
+        "vorstationaer", "nachstationaer",
+        "teilstationaer", "tagesklinik",
+        "nachtklinik", "normalstationaer",
+        "intensivstationaer", "ub", "konsil",
+        "stationsaequivalent", "operation"
+      )) &
+        !is.na(enc_type_code_Kontaktart)), width = 1000)
+    warning("The encounter table contains type codes for Kontaktart with unexpected values.
+            Please check the data.")
+  }
+  return(encounter_table)
+}
+
+#' Check for Multiple Einrichtungskontakt Encounter IDs per Identifier
+#'
+#' This function checks whether multiple encounter IDs (`enc_id`) exist for the
+#' same encounter identifier value (`enc_identifier_value`) among encounters
+#' classified as `"einrichtungskontakt"` on the Kontaktebene level.
+#'
+#' If multiple encounter IDs are found for the same identifier value, the function
+#' assigns the processing exclusion reason
+#' `"multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value"` to the
+#' affected encounters where no exclusion reason is already present and issues a
+#' warning to inform the user about the data inconsistency.
+#'
+#' @param encounter_table A data frame containing encounter-level data. The table
+#'   must include the columns `enc_id`, `enc_identifier_value`,
+#'   `enc_type_code_Kontaktebene`, and `processing_exclusion_reason`.
+#'
+#' @return
+#' A data frame with the same structure as `encounter_table`. For
+#' `"einrichtungskontakt"` encounters that share the same
+#' `enc_identifier_value` across multiple `enc_id` values, the
+#' `processing_exclusion_reason` is updated accordingly.
+#'
+#' @details
+#' The check is limited to encounters where
+#' \code{enc_type_code_Kontaktebene == "einrichtungskontakt"}.
+#'
+#' If multiple rows are detected per `enc_identifier_value`, the function relies on
+#' \code{checkMultipleRows()} to identify the condition and
+#' \code{addMultipleRowsProcessingExclusionReason()} to assign the exclusion reason.
+#'
+#' @importFrom dplyr filter distinct right_join mutate if_else
+#' @importFrom stringr str_detect fixed
+#'
+#' @export
+CheckMultipleEinrichtungskontaktEncIdsForSameEncIdentifierValue <- function(encounter_table) {
+  if (checkMultipleRows(
+    (encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::distinct(enc_id, enc_identifier_value)),
+    c("enc_identifier_value")
+  )) {
+    warning("Multiple enc_ids found for the same 'einrichtungskontakt' enc_identifier_value. Please check the data.")
+    encounter_table <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::distinct(enc_id, enc_identifier_value, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
+      addMultipleRowsProcessingExclusionReason(
+        c("enc_identifier_value"),
+        processing_exclusion_reason_name = "multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value",
+        processing_exclusion_reason_level = "main_encounter",
+        processing_exclusion_reason_type = "data_issues"
+      ) |>
+      dplyr::distinct(enc_identifier_value, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
+      dplyr::right_join(encounter_table, by = c("enc_identifier_value", "enc_type_code_Kontaktebene")) |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(processing_exclusion_reason.y),
+        processing_exclusion_reason.x,
+        processing_exclusion_reason.y
+      ), .keep = "unused") |>
+      dplyr::distinct()
+  }
+  return(encounter_table)
+}
+
+#' Check for Multiple Einrichtungskontakt Identifier Values per Encounter ID
+#'
+#' This function checks whether multiple encounter identifier values
+#' (`enc_identifier_value`) are associated with the same encounter ID (`enc_id`)
+#' for encounters classified as `"einrichtungskontakt"` on the Kontaktebene level.
+#'
+#' If more than one identifier value is found for the same `enc_id`, the function
+#' assigns the processing exclusion reason
+#' `"multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id"` to the
+#' affected encounters where no exclusion reason is already present and issues a
+#' warning to inform the user about the data inconsistency.
+#'
+#' @param encounter_table A data frame containing encounter-level data. The table
+#'   must include the columns `enc_id`, `enc_identifier_value`,
+#'   `enc_type_code_Kontaktebene`, and `processing_exclusion_reason`.
+#'
+#' @return
+#' A data frame with the same structure as `encounter_table`. For
+#' `"einrichtungskontakt"` encounters that have multiple
+#' `enc_identifier_value` values associated with the same `enc_id`, the
+#' `processing_exclusion_reason` is updated accordingly.
+#'
+#' @details
+#' The check is restricted to encounters where
+#' \code{enc_type_code_Kontaktebene == "einrichtungskontakt"}.
+#'
+#' Detection of multiple rows is performed using \code{checkMultipleRows()}.
+#' The exclusion reason is assigned using
+#' \code{addMultipleRowsProcessingExclusionReason()}.
+#'
+#' @importFrom dplyr filter distinct right_join mutate if_else
+#'
+#' @export
+
+CheckMultipleEinrichtungskontaktEncIdentifierValuesForSameEncId <- function(encounter_table) {
+  if (checkMultipleRows(
+    (encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::distinct(enc_id, enc_identifier_value)),
+    c("enc_id")
+  )) {
+    warning("Multiple enc_identifier_values found for the same 'einrichtungskontakt' enc_id. Please check the data.")
+    encounter_table <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::distinct(enc_id, enc_identifier_value, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
+      addMultipleRowsProcessingExclusionReason(
+        c("enc_id"),
+        processing_exclusion_reason_name = "multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id",
+        processing_exclusion_reason_level = "main_encounter",
+        processing_exclusion_reason_type = "data_issues"
+      ) |>
+      dplyr::distinct(enc_id, processing_exclusion_reason, enc_type_code_Kontaktebene) |>
+      dplyr::right_join(encounter_table, by = c("enc_id", "enc_type_code_Kontaktebene")) |>
+      dplyr::mutate(processing_exclusion_reason = dplyr::if_else(
+        is.na(processing_exclusion_reason.y),
+        processing_exclusion_reason.x,
+        processing_exclusion_reason.y
+      ), .keep = "unused") |>
+      dplyr::distinct()
+  }
+  return(encounter_table)
+}
+
+#' Check Encounters Without Calculated Parent Reference
+#'
+#' This function checks whether encounters that are *not* of Kontaktebene
+#' `"einrichtungskontakt"` are missing a calculated parent encounter reference
+#' (`enc_partof_calculated_ref`).
+#'
+#' For all encounters where `enc_type_code_Kontaktebene` is not
+#' `"einrichtungskontakt"` and `enc_partof_calculated_ref` is `NA`, the function
+#' prints the affected rows and issues a warning to highlight the potential data
+#' inconsistency.
+#'
+#' The encounter table itself is not modified by this function; it is returned
+#' unchanged.
+#'
+#' @param encounter_table A data frame containing encounter-level data. The table
+#'   must include the columns `enc_type_code_Kontaktebene` and
+#'   `enc_partof_calculated_ref`.
+#'
+#' @return
+#' A data frame identical to `encounter_table`. The function performs validation
+#' checks only and does not alter the data.
+#'
+#' @details
+#' In hierarchical encounter structures, encounters other than
+#' `"einrichtungskontakt"` are expected to reference a parent encounter. Missing
+#' values in `enc_partof_calculated_ref` may indicate incomplete linkage or
+#' errors in parent reference calculation.
+#'
+#' @importFrom dplyr filter
+#'
+#' @export
+CheckEncountersWithoutCalculatedParentRef <- function(encounter_table) {
+  if (any(!is.na(encounter_table$enc_type_code_Kontaktebene) &
+    encounter_table$enc_type_code_Kontaktebene != "einrichtungskontakt" &
+    is.na(encounter_table$enc_partof_calculated_ref))) {
+    print(encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene != "einrichtungskontakt" &
+        is.na(enc_partof_calculated_ref)), width = 1000)
+    warning("Some encounters of type other than 'einrichtungskontakt' have no calculated parent
+            reference. Please check the data.")
+  }
+  return(encounter_table)
+}
+
+#' Check Encounters Without Calculated Main Encounter Reference
+#'
+#' This function checks whether encounters are missing a calculated main
+#' encounter reference (`enc_main_encounter_calculated_ref`).
+#'
+#' The affected rows are printed and a warning is issued to signal that
+#' the main encounter identifier (`main_enc_id`) may not be determined.
+#'
+#' @param encounter_table A data frame containing encounter-level data. The table
+#'   must include the columns `enc_main_encounter_calculated_ref` and
+#'   `processing_exclusion_reason`.
+#'
+#' @return
+#' A data frame identical to `encounter_table`.
+#'
+#' @details
+#' A calculated main encounter reference is required to derive a unique
+#' `main_enc_id`. Missing values may indicate incomplete encounter hierarchies or
+#' failures in earlier processing steps.
+#'
+#' @importFrom dplyr mutate filter if_else
+#'
+#' @export
+CheckEncountersWithoutCalculatedMainEncounterRef <- function(encounter_table) {
+  if (any(is.na(encounter_table$enc_main_encounter_calculated_ref))) {
+    print(encounter_table |>
+      dplyr::filter(is.na(enc_main_encounter_calculated_ref)), width = 1000)
+    warning("Some encounters have no calculated main encounter reference, main_enc_id may not be defined.
+            Please check the data.")
+  }
+  return(encounter_table)
+}
+
+#' Check for Multiple Rows per Patient ID in FE Table
+#'
+#' This function checks whether the patient FE (Front-End) table contains
+#' multiple rows for the same `pat_id` (FHIR identifier).
+#'
+#' If multiple rows are found for a `pat_id`, a warning is issued.
+#'
+#' @param patient_fe_table A data frame containing patient-level FE data.
+#'   The table must include the column `pat_id`.
+#'
+#' @return
+#' A data frame identical to `patient_fe_table``.
+#'
+#' @details
+#' Having multiple rows per `pat_id` may indicate duplicate records or data
+#' inconsistencies.
+#'
+#'
+#' @export
+CheckMultipleRowsPerPatIdInFe <- function(patient_fe_table) {
+  if (checkMultipleRows(patient_fe_table, c("pat_id"))) {
+    warning("The patient_fe table contains multiple record_ids for the same pat_id(FHIR).
+            Please check the data.")
+  }
+  return(patient_fe_table)
+}
+
+#' Check for Multiple Rows Per Case and Ward in Merged Patient and Fall Tables
+#'
+#' This function checks if there are multiple records for the same patient
+#' (`pat_id`), case (`fall_fhir_main_enc_id`) and ward (`fall_station`) combination in the provided merged
+#' patient and fall table (`merged_table_with_age`). If any such combinations
+#' are found, it adds a processing exclusion reason and generates a warning to
+#' notify the user about potential data issues affecting the age calculation.
+#'
+#' @param merged_table_with_age A data frame containing merged patient and
+#'   fall data with age information, which must include the columns `pat_id`
+#'   and `fall_station`. These columns are used to check for multiple records
+#'   per patient and ward combination.
+#'
+#' @return A data frame, `merged_table_with_age`, with no modifications to the
+#'   original data, except for the exclusion reason added to the `processing_exclusion_reason`
+#'   column for records with multiple rows for the same patient and ward.
+#'
+#' @details If multiple rows are found for the same `pat_id`, `fall_fhir_main_enc_id` and `fall_station`,
+#'   the function adds an exclusion reason ("multiple_rows_per_pat_id_and_ward")
+#'   at the patient level and issues a warning. The warning indicates that the
+#'   presence of multiple records for the same patient and ward may lead to
+#'   inconclusive age data. Users are encouraged to review and correct the data.
+#'
+#' @importFrom dplyr mutate
+#' @export
+CheckMultipleRowsPerMainEncAndWardInMergedPatFallFe <- function(merged_table_with_age) {
+  if (checkMultipleRows(merged_table_with_age, c("pat_id", "fall_fhir_main_enc_id", "fall_station"))) {
+    merged_table_with_age <- merged_table_with_age |>
+      addMultipleRowsProcessingExclusionReason(
+        c("pat_id", "fall_fhir_main_enc_id", "fall_station"),
+        processing_exclusion_reason_name = "multiple_rows_per_fall_fhir_main_enc_id_and_ward",
+        processing_exclusion_reason_level = "main_encounter",
+        processing_exclusion_reason_type = "data_issues"
+      )
+    warning("The merged patient_fe and fall_fe table contains multiple record_ids for the same main encounter (fall_fhir_main_enc_id) and ward.
+            Age or date of admission may be inconclusive. Please check the frontend_table.")
+  }
+  return(merged_table_with_age)
+}
+
+#' Check for Missing Fall Meda IDs in Medikationsanalyse Table
+#'
+#' This function checks for any missing \code{fall_meda_id} values in the
+#' \code{medikationsanalyse_fe_table}, which may indicate a linkage issue
+#' with the corresponding case in \code{fall_fe}. If any missing values are
+#' found, it issues a warning and prints the affected records.
+#'
+#' @param medikationsanalyse_fe_table A data frame containing the medikationsanalyse
+#'   records. It must include at least the column \code{fall_meda_id}.
+#'
+#' @return
+#' The input \code{medikationsanalyse_fe_table}, possibly with a warning
+#' printed for records with missing \code{fall_meda_id}.
+#'
+#' @details
+#' This function identifies records that lack the \code{fall_meda_id} field, which
+#' represents the connection between medication analysis and the corresponding case
+#' in the \code{fall_fe} table. Missing values may cause issues during the linking
+#' of medication data to patient encounters or cases.
+#'
+#' The function will print all records with missing \code{fall_meda_id}, and
+#' generate a warning to inform the user of potential data quality issues.
+#'
+#' @importFrom dplyr filter
+#'
+#' @export
+CheckMissingFallMedaId <- function(medikationsanalyse_fe_table) {
+  if (any(is.na(medikationsanalyse_fe_table$fall_meda_id))) {
+    print(medikationsanalyse_fe_table |>
+      dplyr::filter(is.na(fall_meda_id)), width = 1000)
+    warning("Some records in medikationsanalyse_fe have no connection to the case from
+    fall_fe (missing fall_meda_id) which may leed to linking issues. Please check and correct the data")
+  }
+  return(medikationsanalyse_fe_table)
+}
+
+#' Check for Missing `meda_dat` in Medication Analysis Table
+#'
+#' This function checks if there are any missing (`NA`) values in the `meda_dat`
+#' column of the provided `medikationsanalyse_fe_table`. If any missing values
+#' are found, it prints the rows with the missing data and issues a warning to
+#' notify the user about potential data issues that could affect data linking
+#' and algorithmic calculations.
+#'
+#' @param medikationsanalyse_fe_table A data frame containing medication
+#'   analysis data, which must include a column `meda_dat`. This column
+#'   typically represents the date or timestamp of the medication record.
+#'
+#' @return A data frame, `medikationsanalyse_fe_table`, with no modifications
+#'   to the original data, except for the warning message generated if there
+#'   are missing `meda_dat` values.
+#'
+#' @details If any rows in `medikationsanalyse_fe_table` contain missing
+#'   (`NA`) values in the `meda_dat` column, the function will print those
+#'   rows and issue a warning indicating that missing `meda_dat` values may
+#'   lead to issues with data linking and the inability to calculate the
+#'   Medication Review Process (MRP).
+#'
+#'   Users are advised to review and correct the data to ensure that all
+#'   necessary records are present and properly linked.
+#'
+#' @importFrom dplyr filter
+#' @export
+CheckMissingMedaDat <- function(medikationsanalyse_fe_table) {
+  if (any(is.na(medikationsanalyse_fe_table$meda_dat))) {
+    print(medikationsanalyse_fe_table |>
+      dplyr::filter(is.na(meda_dat)), width = 1000)
+    warning("Some records in medikationsanalyse_fe have no meda_dat which leeds to linking
+            issues and exclude possibilty of calculate algorithmic MRP. Please check the data")
+  }
+  return(medikationsanalyse_fe_table)
+}
+
+#' Check for Missing Fall IDs in Fall Fe Table
+#'
+#' This function checks for any missing \code{fall_id} values in the
+#' \code{fall_fe_table}, which may indicate a linkage issue with medication
+#' analysis or other related data. If any missing values are found, the function
+#' issues a warning and prints the affected records.
+#'
+#' @param fall_fe_table A data frame containing the fall records. It must include at least
+#'   the column \code{fall_id}, which serves as a key linking to other related data.
+#'
+#' @return
+#' The input \code{fall_fe_table}, possibly with a warning printed for records with
+#' missing \code{fall_id}.
+#'
+#' @details
+#' This function identifies records in the \code{fall_fe_table} that lack the
+#' \code{fall_id} field. The \code{fall_id} is crucial for linking fall records to
+#' other data such as medication analysis and encounter records. Missing values can lead
+#' to incomplete or erroneous data linkage.
+#'
+#' If any missing \code{fall_id} values are detected, the function will print those records
+#' and generate a warning message to notify the user about potential data integrity issues.
+#'
+#' @importFrom dplyr filter
+#'
+#' @export
+CheckMissingFallIdInFallFe <- function(fall_fe_table) {
+  if (any(is.na(fall_fe_table$fall_id))) {
+    print(fall_fe_table |>
+      dplyr::filter(is.na(fall_id)), width = 1000)
+    warning("Some records in fall_fe have no linked cis identifier (missing fall_id) which may leed
+    to linking issues to documented medication analysis. Please check the data pipeline")
+  }
+  return(fall_fe_table)
+}
+
+# DEBUG Section ----------------------------------------------------------
+
+DEBUG_TEST_REPORTING_WARNINGS <- FALSE
+
+if (DEBUG_TEST_REPORTING_WARNINGS) {
+  createPatientDataWarningsSituations <- function(patient_table) {
+    # all three identifier fields not matching
+    patient_fhir_identifier_filter_check <- patient_table |>
+      dplyr::filter(pat_id == "UKB-0001_1") |>
+      dplyr::mutate(
+        pat_identifier_system = paste0(pat_identifier_system, "-test"),
+        pat_identifier_type_system = paste0(pat_identifier_type_system, "-test"),
+        pat_identifier_type_code = paste0(pat_identifier_type_code, "-test")
+      )
+    # only one of the three identifier fields not matching (stays in the data, OR logic)
+    multiple_rows_per_pat_id_check_system <- patient_table |>
+      dplyr::filter(pat_id == "UKB-0001_2") |>
+      dplyr::mutate(pat_identifier_system = paste0(pat_identifier_system, "-test"))
+
+    multiple_rows_per_pat_id_check_type_system <- patient_table |>
+      dplyr::filter(pat_id == "UKB-0001_3") |>
+      dplyr::mutate(pat_identifier_type_system = paste0(pat_identifier_type_system, "-test"))
+
+    multiple_rows_per_pat_id_check_type_code <- patient_table |>
+      dplyr::filter(pat_id == "UKB-0001_4") |>
+      dplyr::mutate(pat_identifier_type_code = paste0(pat_identifier_type_code, "-test"))
+    # multiple pat_ids for one identiifer
+    multiple_rows_per_pat_identifier_value_check <- patient_table |>
+      dplyr::filter(pat_id == "UKB-0001_5") |>
+      dplyr::mutate(pat_id = paste0(pat_id, "-test"))
+
+    underage_check <- patient_table |>
+      dplyr::filter(pat_id == "UKB-0001_8") |>
+      dplyr::mutate(pat_birthdate = as.Date("2020-01-01"))
+
+    check_patient_table <- patient_fhir_identifier_filter_check |>
+      rbind(multiple_rows_per_pat_id_check_system) |>
+      rbind(multiple_rows_per_pat_id_check_type_system) |>
+      rbind(multiple_rows_per_pat_id_check_type_code) |>
+      rbind(multiple_rows_per_pat_identifier_value_check)
+
+    check_patient_table_replace <- underage_check
+    check_patient_table_replace_ids <- check_patient_table_replace$pat_id
+
+    patient_table <- patient_table |>
+      dplyr::filter(!pat_id %in% check_patient_table_replace_ids) |>
+      rbind(check_patient_table_replace) |>
+      rbind(check_patient_table)
+
+    return(patient_table)
+  }
+
+  createPatientFeDataWarningsSituations <- function(patient_fe_table) {
+    underage_check <- patient_fe_table |>
+      dplyr::filter(pat_id == "UKB-0001_8") |>
+      dplyr::mutate(pat_gebdat = as.Date("2020-01-01"))
+
+    birthdate_na_check <- patient_fe_table |>
+      dplyr::filter(pat_id == "UKB-0001_4") |>
+      dplyr::mutate(pat_gebdat = NA)
+
+    double_birthdate_check <- patient_fe_table |>
+      dplyr::filter(pat_id == "UKB-0001_5") |>
+      dplyr::mutate(pat_gebdat = as.Date("1980-01-01"))
+
+    check_patient_fe_table_replace <- underage_check |>
+      rbind(birthdate_na_check)
+    check_patient_fe_table_replace_ids <- check_patient_fe_table_replace$pat_id
+
+    patient_fe_table <- patient_fe_table |>
+      dplyr::filter(!pat_id %in% check_patient_fe_table_replace_ids) |>
+      rbind(check_patient_fe_table_replace) |>
+      rbind(double_birthdate_check)
+
+    return(patient_fe_table)
+  }
+
+  createRawEncounterDataWarningSituations <- function(encounter_table_raw) {
+    encounter_table_raw_with_enc_type_system_and_code <- encounter_table_raw |>
+      dplyr::mutate(enc_type_system = "http://fhir.de/CodeSystem/Kontaktebene") |>
+      rbind(encounter_table_raw |>
+        dplyr::mutate(
+          enc_type_system = "http://fhir.de/CodeSystem/kontaktart-de",
+          enc_type_code = "normalstationaer"
+        ))
+
+    common_encounter_fhir_identifier_system_filter_check <- encounter_table_raw_with_enc_type_system_and_code |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_6") |>
+      dplyr::mutate(
+        enc_identifier_system = paste0(enc_identifier_system, "-test")
+      )
+    one_year_historic_data_filter_check <- encounter_table_raw_with_enc_type_system_and_code |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_6") |>
+      dplyr::mutate(
+        enc_period_start = as.POSIXct("2000-01-01"),
+        enc_period_end = as.POSIXct("2000-01-10")
+      )
+
+    pivot_wider_two_systems_check_unknown_enc_type_code <- encounter_table_raw_with_enc_type_system_and_code |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_2") |>
+      dplyr::mutate(enc_type_code = "test")
+
+    pivot_wider_two_systems_check_unknown_enc_type_system <- encounter_table_raw_with_enc_type_system_and_code |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_3") |>
+      dplyr::mutate(enc_type_system = "test")
+
+    check_raw_encounter_table <- pivot_wider_two_systems_check_unknown_enc_type_code |>
+      rbind(pivot_wider_two_systems_check_unknown_enc_type_system)
+
+    check_raw_encounter_table_enc_ids <- check_raw_encounter_table$enc_id
+
+    encounter_table_raw <- encounter_table_raw_with_enc_type_system_and_code |>
+      dplyr::filter(!enc_id %in% check_raw_encounter_table_enc_ids) |>
+      rbind(common_encounter_fhir_identifier_system_filter_check) |>
+      rbind(one_year_historic_data_filter_check) |>
+      rbind(check_raw_encounter_table)
+
+    return(encounter_table_raw)
+  }
+
+  createEncounterDataWarningSituations <- function(encounter_table) {
+    missing_start_date_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_7") |>
+      dplyr::mutate(enc_period_start = as.POSIXct(NA))
+
+    missing_kontaktebene_for_imp_encounter_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::filter(enc_class_code == "IMP") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_7") |>
+      dplyr::mutate(enc_type_code_Kontaktebene = as.character(NA))
+
+    unexpected_status_check <- encounter_table |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_8") |>
+      dplyr::filter(enc_type_code_Kontaktebene == "abteilungskontakt") |>
+      dplyr::mutate(enc_status = "test_status")
+
+    imp_finished_without_end_date_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::filter(enc_class_code == "IMP") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_9") |>
+      dplyr::mutate(enc_status = "finished", enc_period_end = as.POSIXct(NA))
+
+    unexpected_class_and_kontaktart_code_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_10") |>
+      dplyr::mutate(enc_class_code = "TEST") |>
+      dplyr::mutate(enc_type_code_Kontaktart = "TEST_KONTAKTART")
+
+    multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_11") |>
+      dplyr::mutate(enc_identifier_value = paste0(enc_identifier_value, "-test"))
+
+    multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001_12") |>
+      dplyr::mutate(
+        enc_id = paste0(enc_id, "-test"),
+        enc_main_encounter_calculated_ref = paste0(enc_main_encounter_calculated_ref, "-test")
+      )
+
+    no_enc_main_encounter_calculated_ref_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001") |>
+      dplyr::mutate(enc_main_encounter_calculated_ref = as.character(NA))
+
+    amb_encounter_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "abteilungskontakt") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001") |>
+      dplyr::mutate(enc_class_code = "AMB")
+
+    konsil_kontaktart_check <- encounter_table |>
+      dplyr::filter(enc_type_code_Kontaktebene == "versorgungsstellenkontakt") |>
+      dplyr::filter(enc_patient_ref == "Patient/UKB-0001") |>
+      dplyr::mutate(enc_type_code_Kontaktart = "konsil")
+
+    check_encounter_table <- missing_start_date_check |>
+      rbind(missing_kontaktebene_for_imp_encounter_check) |>
+      rbind(unexpected_status_check) |>
+      rbind(imp_finished_without_end_date_check) |>
+      rbind(unexpected_class_and_kontaktart_code_check) |>
+      rbind(no_enc_main_encounter_calculated_ref_check) |>
+      rbind(amb_encounter_check) |>
+      rbind(konsil_kontaktart_check)
+
+    check_encounter_table_enc_ids <- check_encounter_table$enc_id
+
+    encounter_table <- encounter_table |>
+      dplyr::filter(!enc_id %in% check_encounter_table_enc_ids) |>
+      rbind(check_encounter_table) |>
+      rbind(multiple_einrichtungskontakt_enc_identifier_values_for_same_enc_id_check) |>
+      rbind(multiple_einrichtungskontakt_enc_ids_for_same_enc_identifier_value_check)
+
+    return(encounter_table)
+  }
+
+  createFallFeDataWarningsSituations <- function(fall_fe_table) {
+    ward_change_check <- fall_fe_table |>
+      dplyr::filter(fall_pat_id == "UKB-0001_6") |>
+      dplyr::mutate(fall_station = "Test")
+
+    fall_fe_table <- fall_fe_table |>
+      rbind(ward_change_check)
+
+    return(fall_fe_table)
+  }
 }

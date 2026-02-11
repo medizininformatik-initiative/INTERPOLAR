@@ -97,6 +97,38 @@ expandAndConcatenateICDs <- function(icd_column) {
 # MRP Calculation #
 ###################
 
+#' Match ATC codes between active medication requests and MRP definitions
+#'
+#' This function compares ATC codes from a list of active medication requests with the keys
+#' (ATC codes) in the MRP rule definitions and returns all codes that appear in both.
+#'
+#' @param active_atcs A \code{data.table} containing at least a column \code{atc_code}
+#'        with the ATC codes from active medication requests.
+#' @param mrp_table_list_by_atc A named list of \code{data.table}s, where each name is an ATC code
+#'        and the corresponding table contains MRP rule definitions.
+#'
+#' @return A \code{data.table} with a single column \code{atc_code} listing all ATC codes
+#'         found in both \code{active_atcs} and \code{mrp_table_list_by_atc}.
+#'
+matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
+  # Extract all ATC codes from the splitted MRP definitions (used as keys)
+  mrp_atc_keys <- names(mrp_table_list_by_atc)
+  # Reduce active_atcs to the relevant ATC codes (and keep their dates!)
+  active_atcs_unique <- active_atcs[
+    , .(start_datetime = etlutils::getMinDatetime(start_datetime)),
+    by = atc_code
+  ]
+  # Only keep those that also appear in MRP definitions
+  matching_atcs <- active_atcs_unique[atc_code %in% mrp_atc_keys]
+
+  # Build the output properly
+  result <- matching_atcs[
+    , .(atc_code, start_datetime)
+  ]
+
+  return(result)
+}
+
 #' Compute combined ATC codes for calculation
 #'
 #' Diese Funktion berechnet eine kombinierte Liste von ATC-Codes, basierend auf einer
@@ -158,7 +190,7 @@ computeATCForCalculation <- function(data_table, primary_col, inclusion_col, out
 #' field) also occur in the active medications. For each matched ATC–ATC2 pair, it returns a descriptive
 #' entry indicating a potential contraindication.
 #'
-#' @param active_requests A \code{data.table} containing at least the column \code{atc_code},
+#' @param active_atcs A \code{data.table} containing at least the column \code{atc_code},
 #'        which lists ATC codes of currently active medication requests.
 #' @param mrp_table_list_by_atc A named list of \code{data.table}s, where each name corresponds to an
 #'        ATC code, and each table contains MRP rule definitions, including a column \code{ATC2_FOR_CALCULATION}.
@@ -171,7 +203,7 @@ computeATCForCalculation <- function(data_table, primary_col, inclusion_col, out
 #'     \item{\code{proxy_type}}{Currently unused (placeholder).}
 #'     \item{\code{kurzbeschr}}{A short textual description of the interaction.}
 #'   }
-matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
+matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
   # Initialize empty result data.table
   result_mrps <- data.table::data.table(
     mrp_index = integer(),
@@ -183,16 +215,17 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
     kurzbeschr_item2 = character(),
     kurzbeschr_suffix = character()
   )
-  active_requests_unique <- unique(active_requests, by = c("atc_code", "start_datetime"))
-  active_atcs <- unique(active_requests_unique$atc_code)
+  active_atcs_unique <- unique(active_atcs)
+  active_atcs <- unique(active_atcs_unique$atc_code)
 
   # Only use ATCs that are in the MRP table list
   used_keys <- intersect(names(mrp_table_list_by_atc), active_atcs)
-  active_requests_unique <- active_requests_unique[atc_code %in% used_keys]
+  active_atcs_primary <- active_atcs_unique[atc_code %in% used_keys]
 
-  for (i in seq_len(nrow(active_requests_unique))) {
-    atc <- active_requests_unique$atc_code[i]
-    start_datetime <- active_requests_unique$start_datetime[i]
+  for (i in seq_len(nrow(active_atcs_primary))) {
+    atc <- active_atcs_primary$atc_code[i]
+    start_datetime <- active_atcs_primary$start_datetime[i]
+    end_datetime <- active_atcs_primary$end_datetime[i]
 
     mrp_rows <- mrp_table_list_by_atc[[atc]]
     # Filter rows where the secondary ATC is also active
@@ -202,41 +235,57 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
       matched_row <- mrp_filtered[j]
       atc2 <- matched_row$ATC2_FOR_CALCULATION
 
-      # Check, if the pair (A,B) and (B,A) exists
-      duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+      active_atc2_rows <- active_atcs_unique[atc_code == atc2]
+      data.table::setorder(active_atc2_rows, start_datetime)
 
-      # There is no existing mrp in the result table with the same atc codes
-      if (!length(duplicate_idx)) {
+      for (k in seq_len(nrow(active_atc2_rows))) {
+        atc2_start_datetime <- active_atc2_rows$start_datetime[k]
+        atc2_end_datetime <- active_atc2_rows$end_datetime[k]
 
-        mrp_index <- if (nrow(result_mrps) == 0) {
-          1
-        } else {
-          max(result_mrps$mrp_index, na.rm = TRUE) + 1
+        # Check for overlapping time periods
+        if (start_datetime <= atc2_end_datetime && atc2_start_datetime <= end_datetime) {
+          # Check, if the pair (A,B) and (B,A) exists
+          result_mrps <- result_mrps[, index := .I]
+          duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc)]$index
+
+          # There is no existing mrp in the result table with the same atc codes
+          if (!length(duplicate_idx)) {
+
+            mrp_index <- if (nrow(result_mrps) == 0) {
+              1
+            } else {
+              max(result_mrps$mrp_index, na.rm = TRUE) + 1
+            }
+
+            mrp_row <- data.table::data.table(
+              mrp_index = mrp_index, # All rows for the same mrp have the same index. Its only used for grouping.
+              atc_code = atc,
+              atc2_code = atc2,
+              proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
+              proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
+              kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc, "   (", format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+              kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (", format(atc2_start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+              kurzbeschr_suffix = paste("kontraindiziert.")
+            )
+            result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
+          } else {
+            existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_drug], result_mrps[duplicate_idx, kurzbeschr_item2], result_mrps[duplicate_idx, kurzbeschr_suffix])
+            # If duplicate exists, append the new information to kurzbeschr
+            if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, fixed = TRUE)) {
+              result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC2_DISPLAY, " und ", kurzbeschr_item2)]
+            } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, fixed = TRUE)) {
+              result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC_DISPLAY, " und ", kurzbeschr_item2)]
+            }
+          }
         }
-
-        mrp_row <- data.table::data.table(
-          mrp_index = mrp_index, # All rows for the same mrp have the same index. Its only used for grouping.
-          atc_code = atc,
-          atc2_code = atc2,
-          proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
-          proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
-          kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc),
-          kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (",
-                                    format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
-          kurzbeschr_suffix = paste0("laut der entsprechenden Fachinformation kontraindiziert.")
-        )
-        result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
-      } else {
-        existing_kurzbeschr <- paste0(result_mrps[duplicate_idx, kurzbeschr_drug], result_mrps[duplicate_idx, kurzbeschr_item2], result_mrps[duplicate_idx, kurzbeschr_suffix])
-        # If duplicate exists, append the new information to kurzbeschr
-        if (!grepl(matched_row$ATC2_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
-          result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC2_DISPLAY, " und ", kurzbeschr_item2)]
-        } else if (!grepl(matched_row$ATC_DISPLAY, existing_kurzbeschr, ignore.case = TRUE, fixed = TRUE)) {
-          result_mrps[duplicate_idx, kurzbeschr_item2 := paste0(matched_row$ATC_DISPLAY, " und ", kurzbeschr_item2)]
-        }
+        break
       }
     }
   }
+  if ("index" %in% colnames(result_mrps)) {
+    result_mrps[, index := NULL]
+  }
+
   return(result_mrps)
 }
 
@@ -256,10 +305,21 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
 #'   \item Compiles results into descriptive and audit tables.
 #' }
 #'
+#' @param start_date Optional. Start of the date range as character or Date (e.g., "2025-10-01").
+#'   Only encounters starting on or after this date are included. Time is set to 00:00:00.
+#' @param end_date Optional. End of the date range as character or Date (e.g., "2025-10-31").
+#'   Only encounters ending on or before this date are included. Time is set to 23:59:59 if
+#'   provided, or to current system time if omitted.
+#' @param return_used_resources A vector of all table names of the used resource tables which should+
+#'   be returned in addition to the calculated tables. Default is NULL.
+#'
 #' @return A named list with two `data.table` objects:
+#'
 #' \describe{
-#'   \item{retrolektive_mrpbewertung_fe}{Combined MRP evaluations across all types, ready for reporting or REDCap import.}
-#'   \item{dp_mrp_calculations}{Combined audit log of all MRP evaluation steps, including proxy type and code used.}
+#'   \item{retrolektive_mrpbewertung_fe}{Combined MRP evaluations across all types, ready for
+#'   reporting or REDCap import.}
+#'   \item{dp_mrp_calculations}{Combined audit log of all MRP evaluation steps, including proxy
+#'   type and code used.}
 #' }
 #'
 #' @details
@@ -267,14 +327,41 @@ matchATCCodePairs <- function(active_requests, mrp_table_list_by_atc) {
 #' - ATC codes are matched using `matchATCCodes()`, ICDs using `matchICDCodes()`.
 #' - If no ICD match is found, `matchICDProxies()` evaluates proxy rules (ATC/OPS).
 #' - Each match results in one entry in both output tables.
-#' - If no match is found for an encounter, a placeholder entry is created in `dp_mrp_calculations`.
+#' - If no match is found for an encounter, a placeholder entry is created in
+#'   `dp_mrp_calculations`.
 #' - The function merges all MRP types into two unified output tables.
 #'
-calculateMRPs <- function() {
+#' @examples
+#' \dontrun{
+#' # Run for all encounters with missing retrospective MRP evaluation
+#' calculateMRPs()
+#'
+#' # Run for encounters from the past 60 days
+#' calculateMRPs(Sys.Date() - 60)
+#'
+#' # Run for specific date range
+#' calculateMRPs("2025-10-01", "2025-10-31")
+#' }
+#'
+#' @export
+calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resources = NULL) {
 
   # Get all Einrichtungskontakt encounters that ended at least 14 days ago
   # and do not have a retrolective MRP evaluation for Drug_Disease
-  main_encounters_by_mrp_type <- getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
+
+  main_encounters_by_mrp_type <- if (!is.null(start_date)) {
+    start_time <- as.POSIXct(start_date, tz = GLOBAL_TIMEZONE)
+    end_time <- if (is.null(end_date)) {
+      etlutils::as.POSIXctWithTimezone(Sys.time())
+    } else {
+      # returns 23:59 h of the day with the end_date
+      etlutils::as.POSIXctWithTimezone(end_date) + lubridate::days(1) - lubridate::seconds(1)
+    }
+    getEncountersWithTimeRangeFromDB(start_time, end_time)
+  } else {
+    getEncountersWithoutRetrolectiveMRPEvaluationFromDB()
+  }
+
   main_encounters <- main_encounters_by_mrp_type[["ALL_MRP_TYPES"]]
 
   mrp_table_lists_all <- list()
@@ -299,10 +386,19 @@ calculateMRPs <- function() {
         retrolektive_mrpbewertung_rows <- list()
         dp_mrp_calculations_rows <- list()
 
-        for (encounter_id in resources$main_encounters$enc_id) {
+        mrp_type_main_encounters <- main_encounters_by_mrp_type[[mrp_type]]
+
+        for (encounter_id in mrp_type_main_encounters$enc_id) {
           # Get encounter data and patient ID
           encounter <- resources$main_encounters[enc_id == encounter_id]
           patient_id <- etlutils::fhirdataExtractIDs(encounter$enc_patient_ref)
+
+          # Skip invalid encounters without patient reference
+          if (!etlutils::isSimpleNotEmptyString(patient_id)) {
+            etlutils::catWarningMessage(paste0("Missing patient reference in FHIR data for Encounter with ID ", encounter$enc_id))
+            next
+          }
+
           encounter_ref <- unique(etlutils::fhirdataGetEncounterReference(encounter$enc_id))
           # The calculated_ref column always reference to the main encounter
           medication_requests <- resources$medication_requests[medreq_encounter_calculated_ref %in% encounter_ref]
@@ -315,16 +411,27 @@ calculateMRPs <- function() {
           # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
           ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
           ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
-          kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
+
+          kurzbeschr_prefix <- ""
+          if (meda_study_phase == "PhaseBTest") {
+            kurzbeschr_prefix <- if (isPhaseBActive()) {
+              "*TEST nach Phase B Aktivierung* MRP FÜR FALL AUS PHASE B MIT TEST FÜR PHASE B *TEST nach Phase B Aktivierung*\n\n"
+            } else {
+              "*TEST* MRP FÜR FALL AUS PHASE B MIT TEST FÜR PHASE B *TEST*\n\n"
+            }
+          }
+
+          ward_names <- resources$encounters_ward_names[main_enc_id == encounter_id]
+          ward_names <- if (nrow(ward_names)) paste0(ward_names$ward_name, collapse = "\n") else NA_character_
 
           # Get active MedicationRequests for the encounter
-          active_requests <- getActiveMedicationRequests(medication_requests, encounter$enc_period_start, meda_datetime)
+          active_atcs <- getActiveATCs(medication_requests, encounter$enc_period_start, encounter$enc_period_end, meda_datetime)
           match_atc_and_item2_codes <- data.table::data.table()
 
-          if (nrow(active_requests) && meda_study_phase != "PhaseA") {
+          if (nrow(active_atcs) && meda_study_phase != "PhaseA") {
             fun <- getFunctionByName("calculateMRPs", mrp_type)
             args <- list(
-              active_requests = active_requests,
+              active_atcs = active_atcs,
               mrp_pair_list = mrp_pair_list,
               resources = resources,
               patient_id = patient_id,
@@ -345,41 +452,47 @@ calculateMRPs <- function() {
               collapsed_match <- match[
                 ,
                 {
-                  # Standard collapsing for all columns
                   result <- lapply(.SD, function(x) {
                     vals <- unique(na.omit(trimws(x)))
                     if (length(vals) == 0) return(NA_character_)
                     paste(vals, collapse = " \n")
                   })
-
-                  # Special handling for kurzbeschr_drug
                   if ("kurzbeschr_drug" %in% names(.SD)) {
                     vals <- unique(na.omit(trimws(.SD$kurzbeschr_drug)))
-                    if (length(vals) == 0) {
-                      result$kurzbeschr_drug <- NA_character_
-                    } else {
-                      # Robust split on last " - " in each value
-                      parts <- t(sapply(vals, function(s) {
-                        split_pos <- max(gregexpr(" - ", s, fixed = TRUE)[[1]])
-                        if (split_pos == -1) {
-                          name <- s
-                          code <- NA_character_
-                        } else {
-                          name <- substr(s, 1, split_pos - 1)
-                          code <- substr(s, split_pos + 3, nchar(s))
-                        }
-                        c(name = name, code = code)
-                      }))
-                      # Extract unique names and codes
-                      drug_name <- unique(parts[, "name"])
-                      codes <- unique(na.omit(parts[, "code"]))
-                      # If all rows refer to same drug name, join codes
-                      if (length(drug_name) == 1) {
-                        result$kurzbeschr_drug <- paste0("[", drug_name, " - ", paste(codes, collapse = ", "), "] ist mit:")
-                      } else {
-                        # fallback if multiple different names exist
-                        result$kurzbeschr_drug <- paste(vals, collapse = "; ")
+                    result$kurzbeschr_drug <- paste0(vals, collapse = "\n")
+                  }
+                  if ("kurzbeschr_item2" %in% names(.SD)) {
+                    if ("kurzbeschr_type" %in% names(.SD)) {
+                      types <- unique(na.omit(.SD$kurzbeschr_type))
+                      # Define formatting for each type, including first and follow indentations
+                      # Change this to adjust formatting in REDCap field "kurzbeschr" in "retrolektive_mrpbewertung_fe"
+                      type_formats <- list(
+                        "Diagnose"   = list(first = 1, follow = 19),
+                        "Medikament" = list(first = 1, follow = 25),
+                        "Prozedur"   = list(first = 1, follow = 19),
+                        "Laborwert"  = list(first = 1, follow = 20)
+                      )
+                      pad_type <- function(type) {
+                        type_format <- type_formats[[type]]
+                        paste0(type, ":", strrep(" ", type_format$first))
                       }
+                      type_blocks <- sapply(types, function(type) {
+                        items <- unique(trimws(.SD[kurzbeschr_type == type, kurzbeschr_item2]))
+                        type_format  <- type_formats[[type]]
+                        prefix <- pad_type(type)
+                        first_line <- paste0(prefix, items[1])
+                        if (length(items) > 1) {
+                          follow_indent <- strrep(" ", type_format$follow)
+                          follow <- paste0(follow_indent, items[-1], collapse = "\n")
+                          paste(first_line, follow, sep = "\n")
+                        } else {
+                          first_line
+                        }
+                      })
+                      result$kurzbeschr_item2 <- paste(type_blocks, collapse = "\n")
+                    } else {
+                      items <- unique(na.omit(trimws(.SD$kurzbeschr_item2)))
+                      result$kurzbeschr_item2 <- paste(items, collapse = "\n")
                     }
                   }
                   result
@@ -387,8 +500,31 @@ calculateMRPs <- function() {
                 by = mrp_index
               ]
 
-              kurzbeschr_cols <- grep("^kurzbeschr_", names(collapsed_match), value = TRUE)
-              collapsed_match[, kurzbeschr := do.call(paste, c(.SD, sep = " \n")), .SDcols = kurzbeschr_cols]
+              kurzbeschr_cols <- setdiff(
+                grep("^kurzbeschr_", names(collapsed_match), value = TRUE),
+                "kurzbeschr_type"
+              )
+
+              if (mrp_type == "Drug_Disease" || mrp_type == "Drug_Niereninsuffizienz") {
+                collapsed_match[, kurzbeschr := {
+                  base <- paste0(
+                    kurzbeschr_drug, " ist mit\n ",
+                    kurzbeschr_suffix, "\n",
+                    kurzbeschr_item2
+                  )
+                  if ("kurzbeschr_additional" %in% names(collapsed_match) &&
+                      any(!is.na(kurzbeschr_additional))) {
+                    base <- paste(base, paste(kurzbeschr_additional, collapse = "\n"), sep = " ")
+                  }
+                  base
+                }]
+              } else {
+                collapsed_match[, kurzbeschr := paste0(
+                  kurzbeschr_drug, " ist mit\n ",
+                  kurzbeschr_item2, "\n",
+                  kurzbeschr_suffix
+                )]
+              }
 
               meda_id_value <- meda_id # we need this renaming for the following comparison
               existing_ret_ids <- resources$existing_retrolective_mrp_evaluation_ids[meda_id == meda_id_value, ret_id]
@@ -414,11 +550,11 @@ calculateMRPs <- function() {
                 record_id = record_id,
                 ret_id = ret_id,
                 ret_meda_id = meda_id,
-                ret_meda_dat1 = meda_datetime,
+                ret_meda_dat_referenz = meda_datetime,
                 ret_kurzbeschr = paste0(kurzbeschr_prefix, collapsed_match$kurzbeschr),
                 ret_atc1 = match$atc_code[1], # take the first ATC code from the match
                 ret_ip_klasse_01 = getCategoryDisplay(mrp_type),
-                ret_ip_klasse_disease = ifelse(all(is.na(match$icd_code)), NA_character_, na.omit(match$icd_code)[1]), # take the first non-NA ICD code if available
+                ret_ip_klasse_disease = ifelse(all(is.na(match$diagnosis_cluster)), NA_character_, na.omit(match$diagnosis_cluster)[1]), # take the first non-NA diagnosis cluster code if available
                 ret_atc2 = if (is.null(match$atc2_code)) NA_character_ else match$atc2_code,
                 retrolektive_mrpbewertung_complete = ret_status,
                 redcap_repeat_instrument = "retrolektive_mrpbewertung",
@@ -435,7 +571,7 @@ calculateMRPs <- function() {
                   mrp_calculation_type = mrp_type,
                   meda_id = meda_id,
                   study_phase = meda_study_phase,
-                  ward_name = NA_character_, # deprecated -> this value will remain NA all the time
+                  ward_name = ward_names, # ward_names, # we have changed the meaning from a single ward to all relevant wards, because we can't decide, which ward is the "correct" one
                   ret_id = ret_id,
                   ret_redcap_repeat_instance = ret_redcap_repeat_instance,
                   mrp_proxy_type = match_row$proxy_type,
@@ -451,7 +587,7 @@ calculateMRPs <- function() {
               mrp_calculation_type = mrp_type,
               meda_id = meda_id,
               study_phase = meda_study_phase,
-              ward_name = NA_character_, # deprecated -> this value will remain NA all the time
+              ward_name = NA_character_,
               ret_id = NA_character_,
               ret_redcap_repeat_instance = NA_character_,
               mrp_proxy_type = NA_character_,
@@ -461,7 +597,24 @@ calculateMRPs <- function() {
           }
         }
         # Combine all collected rows into data.tables
-        retrolektive_mrpbewertung <- data.table::rbindlist(retrolektive_mrpbewertung_rows, use.names = TRUE, fill = TRUE)
+        retrolektive_mrpbewertung <- if (length(retrolektive_mrpbewertung_rows)) {
+          unique(data.table::rbindlist(retrolektive_mrpbewertung_rows, use.names = TRUE, fill = TRUE))
+        } else {
+          data.table::data.table(
+            record_id = character(),
+            ret_id = character(),
+            ret_meda_id = character(),
+            ret_meda_dat_referenz = as.POSIXct(character()),
+            ret_kurzbeschr = character(),
+            ret_atc1 = character(),
+            ret_ip_klasse_01 = character(),
+            ret_ip_klasse_disease = character(),
+            ret_atc2 = character(),
+            retrolektive_mrpbewertung_complete = character(),
+            redcap_repeat_instrument = character(),
+            redcap_repeat_instance = character()
+          )
+        }
         dp_mrp_calculations <- data.table::rbindlist(dp_mrp_calculations_rows, use.names = TRUE, fill = TRUE)
 
         mrp_table_lists_all[[mrp_type]] <- list(
@@ -482,7 +635,6 @@ calculateMRPs <- function() {
       use.names = TRUE, fill = TRUE
     )
   )
-
   # Write the merged tables to RData files
   lapply(names(mrp_table_lists_all_merged), function(name) {
     writeRData(
@@ -490,6 +642,15 @@ calculateMRPs <- function() {
       filename_without_extension = paste0("dataprocessor_", name)
     )
   })
+
+  if (!is.null(return_used_resources)) {
+    for (table_name in return_used_resources) {
+      mrp_table_lists_all_merged[[table_name]] <- resources[[table_name]]
+    }
+  }
+  if (isMRPCheckSubmodule()) {
+    mrp_table_lists_all_merged[["main_encounters"]] <- main_encounters
+  }
 
   return(mrp_table_lists_all_merged)
 }
