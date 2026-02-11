@@ -207,6 +207,13 @@ getStudyPhase <- function(ward_name) {
 #
 # Check if the study has no or not only Phase A wards defined in the configuration.
 #
-hasPhaseBWards <- function() {
+hasPhaseBOrBTestWards <- function() {
   return(etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B") || etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST"))
+}
+
+#
+# Check if the study has Phase B wards defined in the configuration.
+#
+isPhaseBActive <- function() {
+  return(etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B"))
 }

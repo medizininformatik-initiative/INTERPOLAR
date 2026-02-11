@@ -12,7 +12,7 @@ RAW_DATA_FHIR_CRACKR_INDICES_STRING_WIDTH = 15
 # Static Definitions of Paths, File- and Columnnames #
 ######################################################
 
-getDBScriptsTargetDir <- function() "./Postgres-cds_hub/init/"
+getDBScriptsTargetDir <- function() "./Postgres-cds_hub/sql/"
 getTemplateDir <- function() paste0(getDBScriptsTargetDir(), "template/")
 getRightsDefinitionDirName <- function() getTemplateDir()
 getRightsDefinitionFileName <- function() paste0(getRightsDefinitionDirName(), "User_Schema_Rights_Definition.xlsx")

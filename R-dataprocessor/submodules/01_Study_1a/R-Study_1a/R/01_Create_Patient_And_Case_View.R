@@ -395,6 +395,20 @@ createFrontendTables <- function() {
     # Create a new data.table with only pid and ward_name, ensuring unique rows
     unique_pid_ward <- unique(pids_per_ward[, .(patient_id, ward_name)])
 
+    main_encounters_ids <- paste0("('", paste(unique(main_encounters$enc_id), collapse = "','"), "')")
+    column_names <- c("fall_fhir_enc_id",
+                      "fall_studienphase")
+
+    query <- paste0(
+      "SELECT DISTINCT ON (fall_fhir_enc_id) ",
+      paste(column_names, collapse = ", "), "\n",
+      "FROM v_fall_fe\n",
+      "WHERE fall_fhir_enc_id IN ", main_encounters_ids, "\n",
+      "ORDER BY fall_fhir_enc_id, input_datetime ASC"
+    )
+
+    enc_studyphase_at_admission <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[3]")
+
     for (pid_index in seq_len(nrow(unique_pid_ward))) {
 
       pid <- unique_pid_ward$patient_id[pid_index]
@@ -499,9 +513,22 @@ createFrontendTables <- function() {
         ward_name <- unique_pid_ward$ward_name[pid_index]
         data.table::set(enc_frontend_table, target_index, "fall_station", ward_name)
 
+        study_phase <- NA_character_
+
+        if(nrow(enc_studyphase_at_admission)) {
+          # Get the study phase at admission for the Encounter if it exists in the database (fall_fe table)
+          study_phase <- enc_studyphase_at_admission[
+            fall_fhir_enc_id == enc_id,
+            fall_studienphase
+          ][1L]
+        }
+
         # Get the current study phase for the ward of the Encounter
-        study_phase <- getStudyPhase(ward_name)
-        if (is.null(study_phase)) {
+        if (!etlutils::isSimpleNotEmptyString(study_phase)) {
+          study_phase <- getStudyPhase(ward_name)
+        }
+
+        if (is.na(study_phase)) {
           stop("ERROR: No study phase found for ward '", ward_name, "'.\n",
                "Please check the study phase configuration in the dataprocessor_config.toml for parameters WARDS_PHASE_A, WARDS_PHASE_B_TEST and WARDS_PHASE_B.")
         }

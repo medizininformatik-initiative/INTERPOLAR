@@ -20,6 +20,13 @@ MRP_TYPE <- etlutils::namedVectorByParam(
   "Drug_Niereninsuffizienz"
 )
 
+#
+# Check if current submodule is MRP Check
+#
+isMRPCheckSubmodule <- function() {
+  return(grepl("^mrp.*check$", SUBMODULE_NAME, ignore.case = TRUE))
+}
+
 #' Clean and Expand MRP Definition Table
 #'
 #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
@@ -149,16 +156,25 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   # 1.) Get all Einrichtungskontakt encounters that ended before now and do not
   #     have a retrolective MRP evaluation for a given type
   #
-
   for (mrp_type in names(MRP_TYPE)) {
     query <- paste0(
       "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
       "FROM v_encounter_last_version\n",
       "WHERE enc_period_end <= '", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "'\n",
       "AND enc_type_code = 'einrichtungskontakt'\n",
-      "AND enc_id NOT IN (\n",
+      "AND (\n",
+      "  enc_id NOT IN (\n",
       "  SELECT enc_id FROM v_dp_mrp_calculations\n",
       "  WHERE mrp_calculation_type = '", mrp_type, "'\n",
+      "  )\n",
+      # If there are Medication analyses added later that 14 days after encounter end -> recalculate MRPs for this cases
+      # so we search additionally for PhaseB encounters which had never a linked meda_id in the dp_mrp_calculations table
+      "  OR enc_id IN (\n",
+      "    SELECT enc_id FROM v_dp_mrp_calculations\n",
+      "    WHERE mrp_calculation_type = '", mrp_type, "' AND study_phase = 'PhaseB'\n",
+      "    GROUP BY enc_id\n",
+      "    HAVING COUNT(meda_id) = 0\n",
+      "  )\n",
       ")"
     )
     mrp_encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getEncountersWithoutRetrolectiveMRPEvaluationFromDB() - ", mrp_type))
@@ -703,7 +719,21 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id & !is.na(meda_dat) & medikationsanalyse_complete %in% "Complete"]
 
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
-    if (nrow(encounter_medication_analyses)) {
+
+    if (isMRPCheckSubmodule() && etlutils::isDefinedAndNotEmpty("MRP_CHECK_MEDICATION_ANALYSIS_DAYS_OFFSET")) {
+      meda_dat_enc_start_offset <- as.numeric(MRP_CHECK_MEDICATION_ANALYSIS_DAYS_OFFSET)
+      start <- main_encounter$enc_period_start
+      if (!is.na(start)) {
+        meda_dat <- start + as.difftime(meda_dat_enc_start_offset, units = "days")
+        if (!is.na(main_encounter$enc_period_end) && meda_dat > main_encounter$enc_period_end) {
+          meda_dat <- main_encounter$enc_period_end
+        }
+      }
+      encounters_first_medication_analysis[[main_encounter$enc_id]] <- data.table::data.table(
+        meda_id = paste0(main_encounter$enc_id, "-proxydate-", meda_dat_enc_start_offset),
+        meda_dat = meda_dat
+      )
+    } else if (nrow(encounter_medication_analyses)) {
       # Find the first medication analysis with a date in the encounters period
       # sort medication analyses by date
       encounter_medication_analyses <- encounter_medication_analyses[order(meda_dat)]

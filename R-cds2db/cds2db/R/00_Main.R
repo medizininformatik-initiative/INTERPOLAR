@@ -6,9 +6,11 @@
 #' the lock is reset and the function exits without running the ETL process.
 #'
 #' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
+#' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
+#' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-retrieve <- function(reset_lock_only = FALSE) {
+retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
 
   # Initialize and start module
   etlutils::startModule("cds2db",
@@ -20,6 +22,9 @@ retrieve <- function(reset_lock_only = FALSE) {
     etlutils::dbResetLock()
     return()
   }
+
+  # Check if the release version of the database is compatible
+  etlutils::checkVersion(ignore_newer_db_version)
 
   try(etlutils::runLevel1("Run Retrieve", {
 

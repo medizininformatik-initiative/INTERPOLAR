@@ -1,4 +1,4 @@
-if (hasPhaseBWards()) {
+if (hasPhaseBOrBTestWards()) {
   etlutils::runLevel2("MRP Calculation", {
     mrp_table_lists_all <- calculateMRPs()
   })

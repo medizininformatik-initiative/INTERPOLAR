@@ -245,7 +245,8 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
         # Check for overlapping time periods
         if (start_datetime <= atc2_end_datetime && atc2_start_datetime <= end_datetime) {
           # Check, if the pair (A,B) and (B,A) exists
-          duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc), .I]
+          result_mrps <- result_mrps[, index := .I]
+          duplicate_idx <- result_mrps[(atc_code == atc & atc2_code == atc2) | (atc_code == atc2 & atc2_code == atc)]$index
 
           # There is no existing mrp in the result table with the same atc codes
           if (!length(duplicate_idx)) {
@@ -281,6 +282,10 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
       }
     }
   }
+  if ("index" %in% colnames(result_mrps)) {
+    result_mrps[, index := NULL]
+  }
+
   return(result_mrps)
 }
 
@@ -406,7 +411,15 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
           # results in "1234-TEST-r" or "1234-r" with the meda_id = "1234"
           ret_id_prefix <- paste0(ifelse(meda_study_phase == "PhaseBTest", paste0(meda_id, "-TEST"), meda_id), "-r")
           ret_status <- ifelse(meda_study_phase == "PhaseBTest", "Unverified", NA_character_)
-          kurzbeschr_prefix <- ifelse(meda_study_phase == "PhaseBTest", "*TEST* MRP FÜR FALL AUS PHASE A MIT TEST FÜR PHASE B *TEST*\n\n", "")
+
+          kurzbeschr_prefix <- ""
+          if (meda_study_phase == "PhaseBTest") {
+            kurzbeschr_prefix <- if (isPhaseBActive()) {
+              "*TEST nach Phase B Aktivierung* MRP FÜR FALL AUS PHASE B MIT TEST FÜR PHASE B *TEST nach Phase B Aktivierung*\n\n"
+            } else {
+              "*TEST* MRP FÜR FALL AUS PHASE B MIT TEST FÜR PHASE B *TEST*\n\n"
+            }
+          }
 
           ward_names <- resources$encounters_ward_names[main_enc_id == encounter_id]
           ward_names <- if (nrow(ward_names)) paste0(ward_names$ward_name, collapse = "\n") else NA_character_
@@ -537,11 +550,11 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                 record_id = record_id,
                 ret_id = ret_id,
                 ret_meda_id = meda_id,
-                ret_meda_dat1 = meda_datetime,
+                ret_meda_dat_referenz = meda_datetime,
                 ret_kurzbeschr = paste0(kurzbeschr_prefix, collapsed_match$kurzbeschr),
                 ret_atc1 = match$atc_code[1], # take the first ATC code from the match
                 ret_ip_klasse_01 = getCategoryDisplay(mrp_type),
-                ret_ip_klasse_disease = ifelse(all(is.na(match$icd_code)), NA_character_, na.omit(match$icd_code)[1]), # take the first non-NA ICD code if available
+                ret_ip_klasse_disease = ifelse(all(is.na(match$diagnosis_cluster)), NA_character_, na.omit(match$diagnosis_cluster)[1]), # take the first non-NA diagnosis cluster code if available
                 ret_atc2 = if (is.null(match$atc2_code)) NA_character_ else match$atc2_code,
                 retrolektive_mrpbewertung_complete = ret_status,
                 redcap_repeat_instrument = "retrolektive_mrpbewertung",
@@ -591,7 +604,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
             record_id = character(),
             ret_id = character(),
             ret_meda_id = character(),
-            ret_meda_dat1 = as.POSIXct(character()),
+            ret_meda_dat_referenz = as.POSIXct(character()),
             ret_kurzbeschr = character(),
             ret_atc1 = character(),
             ret_ip_klasse_01 = character(),
@@ -635,5 +648,9 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
       mrp_table_lists_all_merged[[table_name]] <- resources[[table_name]]
     }
   }
+  if (isMRPCheckSubmodule()) {
+    mrp_table_lists_all_merged[["main_encounters"]] <- main_encounters
+  }
+
   return(mrp_table_lists_all_merged)
 }
