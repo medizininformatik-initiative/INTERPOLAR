@@ -279,8 +279,9 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
       }
     }
   }
-  # Remove helper columns at the end
-  matched_rows[, c("icd_display", "diagnosis_cluster") := NULL]
+  # Remove helper column at the end
+  matched_rows[, icd_display := NULL]
+
   return(matched_rows)
 }
 
@@ -940,6 +941,7 @@ matchICDProxies <- function(
       atc_code = character(),
       proxy_code = character(),
       proxy_type = character(),
+      diagnosis_cluster = character(),
       kurzbeschr_drug = character(),
       kurzbeschr_suffix = character(),
       kurzbeschr_type = character(),
@@ -1032,6 +1034,7 @@ matchICDProxies <- function(
                   atc_code = match_proxy_row$ATC_FOR_CALCULATION,
                   proxy_code = proxy_code,
                   proxy_type = proxy_type,
+                  diagnosis_cluster = match_proxy_row$CONDITION_DISPLAY_CLUSTER,
                   kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION,
                                            "  (", format(atc_start, "%Y-%m-%d %H:%M:%S"), ")"),
                   kurzbeschr_suffix = paste0("  [", match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontraindiziert.\n"),

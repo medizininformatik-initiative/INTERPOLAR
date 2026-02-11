@@ -554,7 +554,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                 ret_kurzbeschr = paste0(kurzbeschr_prefix, collapsed_match$kurzbeschr),
                 ret_atc1 = match$atc_code[1], # take the first ATC code from the match
                 ret_ip_klasse_01 = getCategoryDisplay(mrp_type),
-                ret_ip_klasse_disease = ifelse(all(is.na(match$icd_code)), NA_character_, na.omit(match$icd_code)[1]), # take the first non-NA ICD code if available
+                ret_ip_klasse_disease = ifelse(all(is.na(match$diagnosis_cluster)), NA_character_, na.omit(match$diagnosis_cluster)[1]), # take the first non-NA diagnosis cluster code if available
                 ret_atc2 = if (is.null(match$atc2_code)) NA_character_ else match$atc2_code,
                 retrolektive_mrpbewertung_complete = ret_status,
                 redcap_repeat_instrument = "retrolektive_mrpbewertung",
