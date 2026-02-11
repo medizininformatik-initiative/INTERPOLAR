@@ -25,6 +25,12 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     servicerequest = "servreq_authoredon"
   )
 
+  if (etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")) {
+    start_time_column_names <- start_time_column_names[
+      intersect(names(start_time_column_names), DEBUG_RECALULATE_REFS_FOR_RESOURCES)
+    ]
+  }
+
   getAllLastViewResources <- function(resource_name, column_names, where_clause = NULL) {
     # get all resources from DB via the v_encounter_last_version view
     resource_name <- tolower(resource_name)
@@ -114,16 +120,6 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     })
 
     etlutils::runLevel2("Run createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)", {
-
-      if (DEBUG_RECALCULATE_INVALID_REFS) {
-        calc_enc_col <- grep("_calculated_ref$", names(all_encounters), value = TRUE)
-        all_encounters <- all_encounters[
-          enc_partof_calculated_ref == "invalid" |
-            enc_main_encounter_calculated_ref == "invalid"
-        ]
-        all_encounters[, (calc_enc_col) := lapply(.SD, function(x) ifelse(x == "invalid", NA_character_, x)), .SDcols = calc_enc_col]
-      }
-
       all_encounters <- createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)
       resource_tables[["encounter"]] <- all_encounters
     })
@@ -135,7 +131,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
         start_column_names <- start_time_column_names[[resource_name]]
         resource_table <- getAllLastViewNonEncounterResources(resource_name)
 
-        if (DEBUG_RECALCULATE_INVALID_REFS) {
+        if (etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS")) {
           calc_enc_col <- grep("_encounter_calculated_ref$", names(resource_table), value = TRUE)
           resource_table <- resource_table[
             get(calc_enc_col) == "invalid"

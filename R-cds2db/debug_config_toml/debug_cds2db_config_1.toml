@@ -137,3 +137,18 @@ DEBUG_SKIP_MELTING_RESOURCES = [
 # rows that have invalid references.
 #################
 #DEBUG_RECALCULATE_INVALID_REFS = true
+
+#################
+# If this parameter is activated, only the resources listed
+# here are recalculated. If this list is empty or this parameter is deactivated, all resources are recalculated.
+#################
+#DEBUG_RECALULATE_REFS_FOR_RESOURCES = [
+  #"observation",
+  #"procedure",
+  #"medicationadministration",
+  #"medicationstatement",
+  #"medicationrequest"#,
+  #"condition",
+  #"diagnosticreport",
+  #"servicerequest"
+#]
