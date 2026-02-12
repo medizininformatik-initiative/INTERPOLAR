@@ -54,7 +54,13 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       etlutils::fhirdbGetColumns(resource_name, "_patient_ref"),
       start_time_column_names[[resource_name]]
     )
-    resources <- getAllLastViewResources(resource_name, column_names)
+
+    if (etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS")) {
+      ref_col <- grep("_encounter_calculated_ref$", column_names, value = TRUE)
+      where_clause <- paste0("WHERE ", ref_col, " = 'invalid'")
+    }
+
+    resources <- getAllLastViewResources(resource_name, column_names, where_clause)
     return(resources)
   }
 
@@ -130,15 +136,6 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       for (resource_name in names(start_time_column_names)) {
         start_column_names <- start_time_column_names[[resource_name]]
         resource_table <- getAllLastViewNonEncounterResources(resource_name)
-
-        if (etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS")) {
-          calc_enc_col <- grep("_encounter_calculated_ref$", names(resource_table), value = TRUE)
-          resource_table <- resource_table[
-            get(calc_enc_col) == "invalid"
-          ]
-          resource_table[, (calc_enc_col) := lapply(.SD, function(x) ifelse(x == "invalid", NA_character_, x)), .SDcols = calc_enc_col]
-        }
-
         resource_table <- createReferencesForResource(all_encounters, resource_name, resource_table, start_column_names)
         # write resource with the new references table back to DB
         writeTableWithReferencesToDB(
