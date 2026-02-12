@@ -29,7 +29,7 @@ services:
 
   # SQL Server for redcap
   redcap_db:
-    image: mariadb:11
+    image: mariadb:12
     restart: unless-stopped
     environment:
       TZ: Europe/Berlin
