@@ -328,29 +328,20 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
 
       for (row_index in seq_len(nrow(resource_table))) {
         resource_encounter_ref <- resource_table[row_index, get(ref_col_name)]
+        # first try to get the reference from the existing encounter reference column (if it exists)
         if (!is.na(resource_encounter_ref)) {
           resource_encounter_id <- etlutils::fhirdataExtractIDs(resource_encounter_ref)
-          # the encounter of the calculated reference must be an einrichtungskontakt -> trace back via partOf
           encounter_resource <- encounters[enc_id == resource_encounter_id]
           parent_encounter_id <- NA_character_
-          while (nrow(encounter_resource)) {
-            # we just take the very first because all should have the same values in the columns we are interested in
-            encounter_resource <- encounter_resource[1]
-            partof_ref <- encounter_resource$enc_partof_calculated_ref
-            if (is.na(partof_ref)) {
-              parent_encounter_id <- encounter_resource$enc_id
-              break
+          if (nrow(encounter_resource)) {
+            encounter_row <- encounter_resource[
+              !is.na(enc_main_encounter_calculated_ref) &
+                enc_main_encounter_calculated_ref != "invalid"
+            ][1]
+            if (nrow(encounter_row)) {
+              encounter_ref <- etlutils::fhirdataExtractIDs(encounter_row$enc_main_encounter_calculated_ref)
+              resource_table[row_index, (calculated_ref_col_name) := encounter_ref]
             }
-            parent_encounter_id <- etlutils::fhirdataExtractIDs(partof_ref)
-            if (identical(parent_encounter_id, "invalid")) {
-              parent_encounter_id <- NA_character_
-              break
-            }
-            encounter_resource <- encounters[enc_id == parent_encounter_id]
-          }
-          if (!is.na(parent_encounter_id)) {
-            encounter_ref <- etlutils::fhirdataGetEncounterReference(parent_encounter_id)
-            resource_table[row_index, (calculated_ref_col_name) := encounter_ref]
           }
         }
         # get the reference from the timestamps
