@@ -41,7 +41,7 @@ retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
       if (mustCreateReferencesForOldData() || debug_active) {
         createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
         if (debug_active) {
-          stop("References for old data have been created.")
+          stop("References for invalid calculated encounter references have been fixed")
         }
       }
     })
