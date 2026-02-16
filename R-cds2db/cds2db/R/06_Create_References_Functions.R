@@ -332,7 +332,6 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
         if (!is.na(resource_encounter_ref)) {
           resource_encounter_id <- etlutils::fhirdataExtractIDs(resource_encounter_ref)
           encounter_resource <- encounters[enc_id == resource_encounter_id]
-          parent_encounter_id <- NA_character_
           if (nrow(encounter_resource)) {
             encounter_row <- encounter_resource[
               !is.na(enc_main_encounter_calculated_ref) &

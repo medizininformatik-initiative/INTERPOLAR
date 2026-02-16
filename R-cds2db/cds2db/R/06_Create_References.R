@@ -107,7 +107,6 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     return(dt)
   }
 
-
   # if the resources are null that indicates that we must create all references for old data
   if (is.null(resource_tables)) {
 
