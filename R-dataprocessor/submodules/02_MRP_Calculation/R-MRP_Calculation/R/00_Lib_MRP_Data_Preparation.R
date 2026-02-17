@@ -454,7 +454,7 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
   medication_ids <- etlutils::fhirdbGetQueryList(medication_ids)
   where_clause <- paste0("WHERE med_id IN ", medication_ids, "\n",
                          "AND (med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n",
-                         "     OR med_ingredient_itemreference_ref IS NOT NULL)\n")
+                         "    OR med_ingredient_itemreference_ref LIKE 'Medication/%')\n")
 
   query <- getQueryToLoadResourcesLastVersionFromDB(
     resource_name = "Medication",
