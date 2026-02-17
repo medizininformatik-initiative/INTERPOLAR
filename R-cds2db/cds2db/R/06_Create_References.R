@@ -98,11 +98,13 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
   }
 
   cleanInvalidCalculatedRefs <- function(dt) {
-    if (!(debug_invalid_refs || debug_specific_refs)) {return(dt)}
-    ref_cols <- grep("_calculated_ref$", names(dt), value = TRUE)
-    if (length(ref_cols) == 0L) {return(dt)}
-    for (ref_col in ref_cols) {
-      dt[get(ref_col) == "invalid", (ref_col) := NA_character_]
+    if (debug_invalid_refs || debug_specific_refs) {
+      ref_cols <- grep("_calculated_ref$", names(dt), value = TRUE)
+      if (length(ref_cols)) {
+        for (ref_col in ref_cols) {
+          dt[get(ref_col) == "invalid", (ref_col) := NA_character_]
+        }
+      }
     }
     return(dt)
   }
