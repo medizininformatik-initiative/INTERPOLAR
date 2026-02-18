@@ -454,7 +454,7 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
   medication_ids <- etlutils::fhirdbGetQueryList(medication_ids)
   where_clause <- paste0("WHERE med_id IN ", medication_ids, "\n",
                          "AND (med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n",
-                         "     OR med_ingredient_itemreference_ref IS NOT NULL)\n")
+                         "    OR med_ingredient_itemreference_ref LIKE 'Medication/%')\n")
 
   query <- getQueryToLoadResourcesLastVersionFromDB(
     resource_name = "Medication",
@@ -622,36 +622,44 @@ appendATCColumns <- function(medication_resources, medications) {
   direct_atc <- medication_resources[
     medications[!is.na(med_code_code)],
     on = .(med_id),
-    nomatch = 0L
+    nomatch = 0L,
+    allow.cartesian = TRUE
   ]
 
-  # fill medications referencing other medications with ATC codes
-  medications_filled <- medications[
+  # exctrat medications with ATC codes
+  med_with_atc <- medications[!is.na(med_code_code)]
+  # extract medication resources referencing other medications
+  med_with_ref <- medications[
     !is.na(med_ingredient_itemreference_ref) &
       nzchar(trimws(med_ingredient_itemreference_ref))
   ][
     ,
-    referenced_med_id := etlutils::fhirdataExtractIDs(
-      med_ingredient_itemreference_ref
-    ),
-    by = .I
-  ][
-    medications[!is.na(med_code_code)],
-    on = .(referenced_med_id = med_id),
-    `:=`(
-      med_code_code    = i.med_code_code,
-      med_code_display = i.med_code_display
-    )
+    referenced_med_id :=
+      sub("Medication/", "", med_ingredient_itemreference_ref)
+  ]
+
+  # join medications with ATC codes with medications referencing other medications to get the ATC code for the referenced medications
+  medications_filled <- med_with_atc[
+    med_with_ref,
+    on = .(med_id = referenced_med_id),
+    nomatch = 0L,
+    allow.cartesian = TRUE
   ][
     ,
-    referenced_med_id := NULL
+    .(
+      med_id = i.med_id,
+      med_ingredient_itemreference_ref = i.med_ingredient_itemreference_ref,
+      med_code_code,
+      med_code_display
+    )
   ]
 
   # join medication resources with medications referencing other medications with ATC codes
   referenced_atc <- medication_resources[
     medications_filled[!is.na(med_code_code)],
     on = .(med_id),
-    nomatch = 0L
+    nomatch = 0L,
+    allow.cartesian = TRUE
   ]
 
   # combine both result sets
