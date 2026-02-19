@@ -335,11 +335,11 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
           if (nrow(encounter_resource)) {
             encounter_row <- encounter_resource[
               !is.na(enc_main_encounter_calculated_ref) &
-                enc_main_encounter_calculated_ref != "invalid"
-            ][1]
+                trimws(enc_main_encounter_calculated_ref) != "invalid"
+            ][seq_len(min(.N, 1))]
+
             if (nrow(encounter_row)) {
-              encounter_ref <- etlutils::fhirdataExtractIDs(encounter_row$enc_main_encounter_calculated_ref)
-              encounter_ref <- etlutils::fhirdataGetEncounterReference(encounter_ref)
+              encounter_ref <- encounter_row$enc_main_encounter_calculated_ref
               resource_table <- resource_table[row_index, (calculated_ref_col_name) := encounter_ref]
             }
           }
