@@ -380,7 +380,7 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
         if (is.na(resource_table[row_index, get(calculated_ref_col_name)])) {
           patient_ref_col_name <- etlutils::fhirdbGetColumns(resource_name, "_patient_ref")
           patient_ref <- resource_table[row_index, get(patient_ref_col_name)]
-          candidate_encounters <- encounters[enc_patient_ref == patient_ref & enc_type_code == ENCOUNTER_TYPES[[1]]]
+          candidate_encounters <- encounters[enc_patient_ref == patient_ref & enc_type_code == ENCOUNTER_TYPES[[1]] & enc_class_code %in% c("IMP", "SS")]
           if (nrow(candidate_encounters)) {
             # find the best fitting encounter by timestamp
             for (start_column_name in start_column_names) {
