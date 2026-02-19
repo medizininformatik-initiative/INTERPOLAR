@@ -322,7 +322,6 @@ addMedicationIdColumn <- function(medication_resources) {
     function(x) if (is.na(x) || trimws(x) == "") NA_character_ else etlutils::fhirdataExtractIDs(x, unique = FALSE),
     character(1) # return value is always single string
   )]
-  medication_resources <- medication_resources[!is.na(med_id) & nzchar(trimws(med_id))]
   return(medication_resources)
 }
 
@@ -627,6 +626,24 @@ getConditionsFromDB <- function(patient_references) {
 #
 appendATCColumns <- function(medication_resources, medications) {
 
+  system_col <- grep("_medicationcodeableconcept_system$", names(medication_resources), value = TRUE)
+  medication_resource_prefix <- sub("_medicationcodeableconcept_system$", "", system_col)
+  code_col <- paste0(medication_resource_prefix, "_medicationcodeableconcept_code")
+  display_col <- paste0(medication_resource_prefix, "_medicationcodeableconcept_display")
+  reference_col <- paste0(medication_resource_prefix, "_medicationreference_ref")
+
+  direct_resource_atc <- medication_resources[
+    (is.na(get(reference_col)) | !nzchar(trimws(get(reference_col)))) &
+      get(system_col) == "http://fhir.de/CodeSystem/bfarm/atc" &
+      !is.na(get(code_col))
+  ][
+    ,
+    `:=`(
+      atc_code = get(code_col),
+      atc_display = get(display_col)
+    )
+  ]
+
   # join medications directly carrying an ATC code
   direct_atc <- medication_resources[
     medications[!is.na(med_code_code)],
@@ -671,19 +688,30 @@ appendATCColumns <- function(medication_resources, medications) {
     allow.cartesian = TRUE
   ]
 
-  # combine both result sets
+  # Rename columns
+  referenced_atc[
+    ,
+    `:=`(
+      atc_code = med_code_code,
+      atc_display = med_code_display
+    )
+  ]
+  direct_atc[
+    ,
+    `:=`(
+      atc_code = med_code_code,
+      atc_display = med_code_display
+    )
+  ]
+
   result <- data.table::rbindlist(
-    list(direct_atc, referenced_atc),
+    list(
+      direct_resource_atc,
+      direct_atc,
+      referenced_atc
+    ),
     use.names = TRUE,
     fill = TRUE
-  )
-
-  # rename ATC columns
-  data.table::setnames(
-    result,
-    c("med_code_code", "med_code_display"),
-    c("atc_code", "atc_display"),
-    skip_absent = TRUE
   )
 
   # keep only resource columns and ATC columns
