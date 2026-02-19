@@ -168,6 +168,21 @@ services:
       - internal
     command: ["/bin/true"]
 
+  top-framework:
+    profiles:
+      - top
+    image: ghcr.io/onto-med/top-interpolar-algorithms:1
+    restart: "no"
+    init: true
+    env_file:
+      - .env_top-framework
+    volumes:
+      - ./outputLocal/top-results:/opt/app/results
+    depends_on:
+      - cds_hub
+    networks:
+      - internal
+
 
 networks:
   external:
