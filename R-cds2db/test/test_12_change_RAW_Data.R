@@ -4,13 +4,16 @@
 # Patient erst auf PhaseBTest und erst nach Entlassung ein andere Patient auf PhaseB ->
 # retrolektiven MRP Bewertungen für Patient auf PhaseBTest werden in Redcap geleert
 
-# Wichtig: es sind zwei Anpassungen in den Skripten nötig, damit der Verlauf korrekt funktioniert:
+# Wichtig: es sind drei Anpassungen in den Skripten nötig, damit der Verlauf korrekt funktioniert:
 # 1: In dem Skript lib_envir, Zeile 46 hiermit ersetzen:
 # if (!exists(variable_name, envir = envir)) {
 #   assign(variable_name, constants[[variable_name]], envir = envir)
 # }
 # 2: In dem Skript 00_Lib_MRP_Data_Preparation, Zeile 258 auskommentieren:
 #encounters <- encounters[!(study_phase %in% "PhaseB" & enc_period_end > (getCurrentDate() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
+# 3: in dataprocessor toml:
+#WARDS_PHASE_B_TEST = ["Station 1"] # Study phase A but with test calculation for retrolective MRP evaluations
+#WARDS_PHASE_B = ["Station 2"] # Study phase B with regular calculation for retrolective MRP evaluations 14 days
 
 #################################
 # Start Define global variables #

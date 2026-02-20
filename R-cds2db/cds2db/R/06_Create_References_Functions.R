@@ -250,34 +250,46 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
     enc_main_encounter_calculated_ref := i.enc_main_encounter_calculated_ref
   ]
 
-  # Determine missing enc_main_encounter_calculated_ref via temporal overlap, if hierarchy information missing
-  # Consider only "Versorgungsstellenkontakt" encounters (type 3)
-  enc_level_3 <- encounters[
-    enc_main_encounter_calculated_ref == "invalid" &
-      enc_type_code == ENCOUNTER_TYPES[3]
-  ]
-  if (nrow(enc_level_3)) {
-    # Get all "Einrichtungskontakt" encounters (type 1)
-    enc_level_1 <- encounters[
-      enc_type_code == ENCOUNTER_TYPES[1]
-    ][, .(enc_id, enc_period_start, enc_period_end, enc_class_code)]
-    # For each Versorgungsstellenkontakt, try to find a matching Einrichtungskontakt by temporal overlap
-    for (enc_index in seq_len(nrow(enc_level_3))) {
+  # Determine missing enc_main_encounter_calculated_ref via temporal overlap with einrichtungskontakt
+  # encounters for the same patients, if hierarchy information missing
+  assignMissingMainEncounterRefs <- function(encounters, child_type, enc_level_1) {
+    # all Encounters of type with invalid main_ref
+    enc_children <- encounters[
+      enc_main_encounter_calculated_ref == "invalid" &
+        enc_type_code == child_type
+    ]
 
-      parent_encounter <- findParentEncounter(
-        child_row = enc_level_3[enc_index],
-        candidate_parent_encounters = enc_level_1
-      )
-
-      if (!is.null(parent_encounter)) {
-        encounters[
-          enc_id == enc_level_3[enc_index]$enc_id,
-          enc_main_encounter_calculated_ref :=
-            etlutils::fhirdataGetEncounterReference(parent_encounter$enc_id)
-        ]
+    if (nrow(enc_children)) {
+      for (enc_index in seq_len(nrow(enc_children))) {
+        child_row <- enc_children[enc_index]
+        parent_encounter <- findParentEncounter(
+          child_row = child_row,
+          candidate_parent_encounters =
+            enc_level_1[enc_patient_ref == child_row$enc_patient_ref]
+        )
+        if (!is.null(parent_encounter)) {
+          encounters[
+            enc_id == child_row$enc_id,
+            enc_main_encounter_calculated_ref :=
+              etlutils::fhirdataGetEncounterReference(parent_encounter$enc_id)
+          ]
+        }
       }
     }
+    return(encounters)
   }
+
+  # all Einrichtungskontakte (type 1)
+  enc_level_1 <- encounters[
+    enc_type_code == ENCOUNTER_TYPES[1],
+    .(enc_id, enc_patient_ref, enc_period_start, enc_period_end, enc_class_code)
+  ]
+
+  # add missing main encounter refs for abteilungskontakt and versorgungsstellenkontakt Encounters based on temporal overlap
+  for (type in ENCOUNTER_TYPES[c(2, 3)]) {
+    assignMissingMainEncounterRefs(encounters, type, enc_level_1)
+  }
+
   # End: create enc_main_encounter_calculated_ref
 
   return(encounters)
@@ -316,36 +328,59 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
 
       for (row_index in seq_len(nrow(resource_table))) {
         resource_encounter_ref <- resource_table[row_index, get(ref_col_name)]
+        # first try to get the reference from the existing encounter reference column (if it exists)
         if (!is.na(resource_encounter_ref)) {
           resource_encounter_id <- etlutils::fhirdataExtractIDs(resource_encounter_ref)
-          # the encounter of the calculated reference must be an einrichtungskontakt -> trace back via partOf
           encounter_resource <- encounters[enc_id == resource_encounter_id]
-          parent_encounter_id <- NA_character_
-          while (nrow(encounter_resource)) {
-            # we just take the very first because all should have the same values in the columns we are interested in
-            encounter_resource <- encounter_resource[1]
-            partof_ref <- encounter_resource$enc_partof_calculated_ref
-            if (is.na(partof_ref)) {
-              parent_encounter_id <- encounter_resource$enc_id
-              break
+          if (nrow(encounter_resource)) {
+            encounter_row <- encounter_resource[
+              !is.na(enc_main_encounter_calculated_ref) &
+                trimws(enc_main_encounter_calculated_ref) != "invalid"
+            ][seq_len(min(.N, 1))]
+
+            if (nrow(encounter_row)) {
+              encounter_ref <- encounter_row$enc_main_encounter_calculated_ref
+              resource_table <- resource_table[row_index, (calculated_ref_col_name) := encounter_ref]
             }
-            parent_encounter_id <- etlutils::fhirdataExtractIDs(partof_ref)
-            if (identical(parent_encounter_id, "invalid")) {
-              parent_encounter_id <- NA_character_
-              break
-            }
-            encounter_resource <- encounters[enc_id == parent_encounter_id]
-          }
-          if (!is.na(parent_encounter_id)) {
-            encounter_ref <- etlutils::fhirdataGetEncounterReference(parent_encounter_id)
-            resource_table[row_index, (calculated_ref_col_name) := encounter_ref]
           }
         }
+
+        # the encounter of the calculated reference must be an einrichtungskontakt -> trace back via partOf
+        if (is.na(resource_table[row_index, get(calculated_ref_col_name)])) {
+          resource_encounter_ref <- resource_table[row_index, get(ref_col_name)]
+          # first try to get the reference from the existing encounter reference column (if it exists)
+          if (!is.na(resource_encounter_ref)) {
+            resource_encounter_id <- etlutils::fhirdataExtractIDs(resource_encounter_ref)
+            encounter_resource <- encounters[enc_id == resource_encounter_id]
+
+            parent_encounter_id <- NA_character_
+            while (nrow(encounter_resource)) {
+              # we just take the very first because all should have the same values in the columns we are interested in
+              encounter_resource <- encounter_resource[1]
+              partof_ref <- encounter_resource$enc_partof_calculated_ref
+              if (is.na(partof_ref)) {
+                parent_encounter_id <- encounter_resource$enc_id
+                break
+              }
+              parent_encounter_id <- etlutils::fhirdataExtractIDs(partof_ref)
+              if (identical(parent_encounter_id, "invalid")) {
+                parent_encounter_id <- NA_character_
+                break
+              }
+              encounter_resource <- encounters[enc_id == parent_encounter_id]
+            }
+            if (!is.na(parent_encounter_id)) {
+              encounter_ref <- etlutils::fhirdataGetEncounterReference(parent_encounter_id)
+              resource_table[row_index, (calculated_ref_col_name) := encounter_ref]
+            }
+          }
+        }
+
         # get the reference from the timestamps
         if (is.na(resource_table[row_index, get(calculated_ref_col_name)])) {
           patient_ref_col_name <- etlutils::fhirdbGetColumns(resource_name, "_patient_ref")
           patient_ref <- resource_table[row_index, get(patient_ref_col_name)]
-          candidate_encounters <- encounters[enc_patient_ref == patient_ref & enc_type_code == ENCOUNTER_TYPES[[1]]]
+          candidate_encounters <- encounters[enc_patient_ref == patient_ref & enc_type_code == ENCOUNTER_TYPES[[1]] & enc_class_code %in% c("IMP", "SS")]
           if (nrow(candidate_encounters)) {
             # find the best fitting encounter by timestamp
             for (start_column_name in start_column_names) {
