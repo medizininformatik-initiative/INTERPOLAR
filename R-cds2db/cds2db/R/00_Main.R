@@ -35,8 +35,14 @@ retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
 
     # Check if we must create references for old data (should be executed exactly once and then never again)
     etlutils::runLevel2("Create references for old data", {
-      if (mustCreateReferencesForOldData()) {
+
+      debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
+
+      if (mustCreateReferencesForOldData() || debug_active) {
         createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+        if (debug_active) {
+          stop("References for invalid calculated encounter references have been fixed")
+        }
       }
     })
 

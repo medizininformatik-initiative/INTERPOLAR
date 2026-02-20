@@ -14,6 +14,11 @@ mustCreateReferencesForOldData <- function() {
 
 createReferences <- function(resource_tables, common_encounter_fhir_identifier_system = NULL) {
 
+  # Initialize debug variables for specific reference recalculation scenarios
+  # See debug cds2db_config_toml
+  debug_invalid_refs  <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS")
+  debug_specific_refs <- etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
+
   start_time_column_names <- list(
     observation = "obs_effectivedatetime",
     procedure = c("proc_performedperiod_start", "proc_performeddatetime"),
@@ -24,6 +29,12 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     diagnosticreport = c("diagrep_effectivedatetime", "diagrep_issued"),
     servicerequest = "servreq_authoredon"
   )
+
+  if (debug_specific_refs) {
+    start_time_column_names <- start_time_column_names[
+      intersect(names(start_time_column_names), DEBUG_RECALULATE_REFS_FOR_RESOURCES)
+    ]
+  }
 
   getAllLastViewResources <- function(resource_name, column_names, where_clause = NULL) {
     # get all resources from DB via the v_encounter_last_version view
@@ -48,7 +59,15 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       etlutils::fhirdbGetColumns(resource_name, "_patient_ref"),
       start_time_column_names[[resource_name]]
     )
-    resources <- getAllLastViewResources(resource_name, column_names)
+
+    if (debug_invalid_refs) {
+      ref_col <- grep("_encounter_calculated_ref$", column_names, value = TRUE)
+      where_clause <- paste0("WHERE ", ref_col, " = 'invalid'")
+      resources <- getAllLastViewResources(resource_name, column_names, where_clause)
+    } else {
+      resources <- getAllLastViewResources(resource_name, column_names)
+    }
+
     return(resources)
   }
 
@@ -76,6 +95,18 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       }
     }
     return(encounters)
+  }
+
+  cleanInvalidCalculatedRefs <- function(dt) {
+    if (debug_invalid_refs || debug_specific_refs) {
+      ref_cols <- grep("_calculated_ref$", names(dt), value = TRUE)
+      if (length(ref_cols)) {
+        for (ref_col in ref_cols) {
+          dt[get(ref_col) == "invalid", (ref_col) := NA_character_]
+        }
+      }
+    }
+    return(dt)
   }
 
   # if the resources are null that indicates that we must create all references for old data
@@ -114,6 +145,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     })
 
     etlutils::runLevel2("Run createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)", {
+      all_encounters <- cleanInvalidCalculatedRefs(all_encounters)
       all_encounters <- createReferencesForEncounters(all_encounters, common_encounter_fhir_identifier_system)
       resource_tables[["encounter"]] <- all_encounters
     })
@@ -124,6 +156,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       for (resource_name in names(start_time_column_names)) {
         start_column_names <- start_time_column_names[[resource_name]]
         resource_table <- getAllLastViewNonEncounterResources(resource_name)
+        resource_table <- cleanInvalidCalculatedRefs(resource_table)
         resource_table <- createReferencesForResource(all_encounters, resource_name, resource_table, start_column_names)
         # write resource with the new references table back to DB
         writeTableWithReferencesToDB(
@@ -135,6 +168,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
         resource_tables[[resource_name]] <- resource_table
       }
     })
+
     etlutils::runLevel2("Write Encounters with references to database", {
       # write encounters with the new reference columns to database as last (because
       # the whole process will be repeated, if the encounters are not written correctly)

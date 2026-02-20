@@ -91,7 +91,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(23)
+  duplicatePatients(24)
 
   runCodeForDebugDay(1, {
 
@@ -239,8 +239,12 @@ if (exists("DEBUG_DAY")) {
     addConditions(pid, "O09", day_offset = -40)
 
     # Drug_DrugGroup_Interaction
-    addDrugs("UKB-0001_23", c("J02AC01", "A04AA01", "N06AB10"))
-    addDrugs("UKB-0001_23", c("J02AC01", "A04AA01", "N06AB10"), day_offset = -0.41, period_type = "start_and_end", timing_repeat_end_offset = 0.5)
+    pid <- addDrugs("UKB-0001_23", c("J02AC01", "A04AA01", "N06AB10"))
+    addDrugs(pid, c("J02AC01", "A04AA01", "N06AB10"), day_offset = -0.41, period_type = "start_and_end", timing_repeat_end_offset = 0.5)
+
+    # Add Drug in MedicationRequests without Medication
+    pid <- addDrugsWithoutMedications("UKB-0001_24", c("J02AC01", "A04AA01"))
+    addDrugs(pid, c("J04AB02", "J05AP52"))
 
   })
 

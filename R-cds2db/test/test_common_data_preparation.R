@@ -889,6 +889,97 @@ addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, peri
   return(pid) # convenience to write compact tests
 }
 
+addDrugsWithoutMedications <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, period_type = c(
+  "start",
+  "start_and_end",
+  "start_and_end_and_timing_event",
+  "timing_event",
+  "timing_events",
+  "all_timestamps_NA"
+), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, timing_repeat_end_offset = 5) {
+
+  period_type <- match.arg(period_type)
+
+  # Load template tables from environment
+  med_req_templates <- get("med_req_templates", envir = .test_env)
+  med_templates <- get("med_templates", envir = .test_env)
+
+  # Get current resource tables
+  resource_tables <- testGetResourceTables()
+
+  # Normalize ref_codes
+  if (is.null(codes)) {
+    codes <- vector("list", length(ref_codes))
+  }
+
+  # ensure list structure
+  if (!is.list(codes)) codes <- as.list(codes)
+
+  # Determine the next available index for encounters, MedicationRequests, and Medications
+  # If encounter_id is not NULL or NA get the index from the encounter id
+  if (!is.null(encounter_id) && !is.na(encounter_id)) {
+    enc_index <- as.numeric(sub(".*-E-(\\d+).*", "\\1", encounter_id))
+    enc_ref_id <- gsub("^\\[\\d+\\]", "", encounter_id)
+  } else { # if encounter_id is NULL enc_ref_id has the next available index; if NA enc_ref_id is NA
+    enc_index <- nrow(resource_tables[["Encounter"]][grepl(paste0("^\\[1\\]", pid, "-E-\\d+$"), enc_id)])
+    enc_ref_id <- if (is.null(encounter_id)) paste0(pid, "-E-", enc_index) else NA_character_
+  }
+
+  med_req_index <- nrow(resource_tables[["MedicationRequest"]][grepl(paste0("^\\[1\\]", pid, "-E-", enc_index, "-MR-\\d+$"), medreq_id)]) + 1
+  med_index <- nrow(resource_tables[["Medication"]][grepl(paste0("^\\[1\\]", pid, "-MR-", med_req_index, "-M-\\d+$"), med_id)]) + 1
+
+  # Create MedicationRequest entries for each code
+  med_req_dt <- data.table::rbindlist(lapply(seq_along(codes), function(i) {
+    dt <- data.table::copy(med_req_templates)
+    # Generate unique ID for MedicationRequest
+    medreq_base_id <- paste0(pid, "-E-", enc_index, "-MR-", med_req_index + (i - 1))
+    dt[, medreq_id := paste0("[1]", medreq_base_id)]
+    dt[, medreq_identifier_value := paste0("[1.1]", medreq_base_id)]
+    # Reference patient and encounter
+    dt[, medreq_patient_ref := paste0("[1.1]Patient/", pid)]
+    dt[, medreq_encounter_ref := if (!is.na(enc_ref_id)) paste0("[1.1]Encounter/", enc_ref_id) else NA_character_]
+    dt[, medreq_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
+
+    code <- codes[[i]]
+    dt[, medreq_medicationcodeableconcept_system := "[1.1.1]http://fhir.de/CodeSystem/bfarm/atc"]
+    dt[, medreq_medicationcodeableconcept_code := paste0("[1.1.1]", code)]
+
+    # calculate boundsperiod start and end and and timing event(s) and authoredon based on period_type
+    if (period_type %in% c("start",
+                           "start_and_end",
+                           "start_and_end_and_timing_event")) {
+      dt[, medreq_doseinstruc_timing_repeat_boundsperiod_start := getDebugDatesRAWDateTime(day_offset, raw_index = "[1.1.1.1.1]")]
+    }
+    if (period_type %in% c("start_and_end",
+                           "start_and_end_and_timing_event")) {
+      dt[, medreq_doseinstruc_timing_repeat_boundsperiod_end := getDebugDatesRAWDateTime(day_offset + timing_repeat_end_offset, raw_index = "[1.1.1.1.1]")]
+    }
+    if (period_type %in% c("start_and_end_and_timing_event",
+                           "timing_event")) {
+      dt[, medreq_doseinstruc_timing_event := getDebugDatesRAWDateTime(day_offset + 0.05, raw_index = "[1.1.1]")]
+    }
+    if (period_type %in% c("timing_events")) {
+      events <- c()
+      for (j in 1:timing_events_count) {
+        events <- c(events, getDebugDatesRAWDateTime(day_offset + 0.05 + (j - 1) * timing_events_day_offset, raw_index = paste0("[1.1.", j, "]")))
+      }
+      dt[, medreq_doseinstruc_timing_event := paste0(events, collapse = " ~ ")]
+    }
+    if (!is.na(authoredon)) authoredon <- getDebugDatesRAWDateTime(authoredon, raw_index = "[1]")
+    dt[, medreq_authoredon := authoredon]
+    dt
+  }))
+
+  # Append the new entries to the resource tables
+  resource_tables[["MedicationRequest"]] <- rbind(resource_tables[["MedicationRequest"]], med_req_dt, fill = TRUE)
+
+  # Save the updated resource tables
+  testSetResourceTables(resource_tables)
+
+  return(pid) # convenience to write compact tests
+}
+
+
 addConditions <- function(pid, codes, day_offset = -0.5) {
   # Load template table for Condition
   con_templates <- get("con_templates", envir = .test_env)
