@@ -19,7 +19,6 @@ options(error = NULL)
 
 start_full <- Sys.time()
 
-
 ############################
 ### START TEST DEFINITON ###
 ############################
@@ -28,16 +27,25 @@ start_full <- Sys.time()
 # Set the index of the test that should be run. This is used to determine the
 # script names to load/change the RAW and REDCap data.
 ###
-DEBUG_TEST_INDEX <- 2
+DEBUG_TEST_INDEX <- 8
 
 ###
 # Set the index of the virtual machine that should be used for the debug run.
 ###
-DEBUG_VM_PORT_INDEX <- 2
+DEBUG_VM_INDEX <- 2
 
 ##########################
 ### END TEST DEFINITON ###
 ##########################
+
+DEBUG_VM_PORTS <- data.table::data.table(
+     vm_index = c(   1,     2,     3,     4,     5,     6),
+      db_port = c(5432, 25432, 35432, 45432, 55432, 25436),
+  redcap_port = c(8082, 28082, 38082, 48082, 58082, 28087)
+)
+
+DEBUG_DB_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, db_port]
+DEBUG_REDCAP_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, redcap_port]
 
 ###
 # For test_index = 4 this returns file name "./R-cds2db/test/test_04_change_RAW_Data.R"

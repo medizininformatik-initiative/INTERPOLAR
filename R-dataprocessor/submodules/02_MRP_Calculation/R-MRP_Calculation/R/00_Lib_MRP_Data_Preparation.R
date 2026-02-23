@@ -20,6 +20,13 @@ MRP_TYPE <- etlutils::namedVectorByParam(
   "Drug_Niereninsuffizienz"
 )
 
+#
+# Check if current submodule is MRP Check
+#
+isMRPCheckSubmodule <- function() {
+  return(grepl("^mrp.*check$", SUBMODULE_NAME, ignore.case = TRUE))
+}
+
 #' Clean and Expand MRP Definition Table
 #'
 #' This function cleans and expands the MRP definition table by removing unnecessary rows and columns,
@@ -149,16 +156,25 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   # 1.) Get all Einrichtungskontakt encounters that ended before now and do not
   #     have a retrolective MRP evaluation for a given type
   #
-
   for (mrp_type in names(MRP_TYPE)) {
     query <- paste0(
       "SELECT DISTINCT enc_id, enc_period_start, enc_period_end, enc_patient_ref\n",
       "FROM v_encounter_last_version\n",
       "WHERE enc_period_end <= '", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "'\n",
       "AND enc_type_code = 'einrichtungskontakt'\n",
-      "AND enc_id NOT IN (\n",
+      "AND (\n",
+      "  enc_id NOT IN (\n",
       "  SELECT enc_id FROM v_dp_mrp_calculations\n",
       "  WHERE mrp_calculation_type = '", mrp_type, "'\n",
+      "  )\n",
+      # If there are Medication analyses added later that 14 days after encounter end -> recalculate MRPs for this cases
+      # so we search additionally for PhaseB encounters which had never a linked meda_id in the dp_mrp_calculations table
+      "  OR enc_id IN (\n",
+      "    SELECT enc_id FROM v_dp_mrp_calculations\n",
+      "    WHERE mrp_calculation_type = '", mrp_type, "' AND study_phase = 'PhaseB'\n",
+      "    GROUP BY enc_id\n",
+      "    HAVING COUNT(meda_id) = 0\n",
+      "  )\n",
       ")"
     )
     mrp_encounters <- etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getEncountersWithoutRetrolectiveMRPEvaluationFromDB() - ", mrp_type))
@@ -306,7 +322,6 @@ addMedicationIdColumn <- function(medication_resources) {
     function(x) if (is.na(x) || trimws(x) == "") NA_character_ else etlutils::fhirdataExtractIDs(x, unique = FALSE),
     character(1) # return value is always single string
   )]
-  medication_resources <- medication_resources[!is.na(med_id) & nzchar(trimws(med_id))]
   return(medication_resources)
 }
 
@@ -319,6 +334,9 @@ getMedicationRequestsFromDB <- function(patient_references) {
                                                              "medreq_encounter_calculated_ref",
                                                              "medreq_patient_ref",
                                                              "medreq_medicationreference_ref",
+                                                             "medreq_medicationcodeableconcept_system",
+                                                             "medreq_medicationcodeableconcept_code",
+                                                             "medreq_medicationcodeableconcept_display",
                                                              "medreq_authoredon",
                                                              "medreq_doseinstruc_timing_event",
                                                              "medreq_doseinstruc_timing_repeat_boundsperiod_start",
@@ -382,6 +400,9 @@ getMedicationAdministrationsFromDB <- function(patient_references) {
                                                                     "medadm_encounter_calculated_ref",
                                                                     "medadm_patient_ref",
                                                                     "medadm_medicationreference_ref",
+                                                                    "medadm_medicationcodeableconcept_system",
+                                                                    "medadm_medicationcodeableconcept_code",
+                                                                    "medadm_medicationcodeableconcept_display",
                                                                     "medadm_effectivedatetime",
                                                                     "medadm_effectiveperiod_start",
                                                                     "medadm_effectiveperiod_end"),
@@ -408,6 +429,9 @@ getMedicationStatementsFromDB <- function(patient_references) {
                                                                "medstat_encounter_calculated_ref",
                                                                "medstat_patient_ref",
                                                                "medstat_medicationreference_ref",
+                                                               "medstat_medicationcodeableconcept_system",
+                                                               "medstat_medicationcodeableconcept_code",
+                                                               "medstat_medicationcodeableconcept_display",
                                                                "medstat_effectivedatetime",
                                                                "medstat_effectiveperiod_start",
                                                                "medstat_effectiveperiod_end"),
@@ -438,7 +462,7 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
   medication_ids <- etlutils::fhirdbGetQueryList(medication_ids)
   where_clause <- paste0("WHERE med_id IN ", medication_ids, "\n",
                          "AND (med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n",
-                         "     OR med_ingredient_itemreference_ref IS NOT NULL)\n")
+                         "    OR med_ingredient_itemreference_ref LIKE 'Medication/%')\n")
 
   query <- getQueryToLoadResourcesLastVersionFromDB(
     resource_name = "Medication",
@@ -602,55 +626,92 @@ getConditionsFromDB <- function(patient_references) {
 #
 appendATCColumns <- function(medication_resources, medications) {
 
+  system_col <- grep("_medicationcodeableconcept_system$", names(medication_resources), value = TRUE)
+  medication_resource_prefix <- sub("_medicationcodeableconcept_system$", "", system_col)
+  code_col <- paste0(medication_resource_prefix, "_medicationcodeableconcept_code")
+  display_col <- paste0(medication_resource_prefix, "_medicationcodeableconcept_display")
+  reference_col <- paste0(medication_resource_prefix, "_medicationreference_ref")
+
+  direct_resource_atc <- medication_resources[
+    (is.na(get(reference_col)) | !nzchar(trimws(get(reference_col)))) &
+      get(system_col) == "http://fhir.de/CodeSystem/bfarm/atc" &
+      !is.na(get(code_col))
+  ][
+    ,
+    `:=`(
+      atc_code = get(code_col),
+      atc_display = get(display_col)
+    )
+  ]
+
   # join medications directly carrying an ATC code
   direct_atc <- medication_resources[
     medications[!is.na(med_code_code)],
     on = .(med_id),
-    nomatch = 0L
+    nomatch = 0L,
+    allow.cartesian = TRUE
   ]
 
-  # fill medications referencing other medications with ATC codes
-  medications_filled <- medications[
+  # exctrat medications with ATC codes
+  med_with_atc <- medications[!is.na(med_code_code)]
+  # extract medication resources referencing other medications
+  med_with_ref <- medications[
     !is.na(med_ingredient_itemreference_ref) &
       nzchar(trimws(med_ingredient_itemreference_ref))
   ][
     ,
-    referenced_med_id := etlutils::fhirdataExtractIDs(
-      med_ingredient_itemreference_ref
-    ),
-    by = .I
-  ][
-    medications[!is.na(med_code_code)],
-    on = .(referenced_med_id = med_id),
-    `:=`(
-      med_code_code    = i.med_code_code,
-      med_code_display = i.med_code_display
-    )
+    referenced_med_id :=
+      sub("Medication/", "", med_ingredient_itemreference_ref)
+  ]
+
+  # join medications with ATC codes with medications referencing other medications to get the ATC code for the referenced medications
+  medications_filled <- med_with_atc[
+    med_with_ref,
+    on = .(med_id = referenced_med_id),
+    nomatch = 0L,
+    allow.cartesian = TRUE
   ][
     ,
-    referenced_med_id := NULL
+    .(
+      med_id = i.med_id,
+      med_ingredient_itemreference_ref = i.med_ingredient_itemreference_ref,
+      med_code_code,
+      med_code_display
+    )
   ]
 
   # join medication resources with medications referencing other medications with ATC codes
   referenced_atc <- medication_resources[
     medications_filled[!is.na(med_code_code)],
     on = .(med_id),
-    nomatch = 0L
+    nomatch = 0L,
+    allow.cartesian = TRUE
   ]
 
-  # combine both result sets
+  # Rename columns
+  referenced_atc[
+    ,
+    `:=`(
+      atc_code = med_code_code,
+      atc_display = med_code_display
+    )
+  ]
+  direct_atc[
+    ,
+    `:=`(
+      atc_code = med_code_code,
+      atc_display = med_code_display
+    )
+  ]
+
   result <- data.table::rbindlist(
-    list(direct_atc, referenced_atc),
+    list(
+      direct_resource_atc,
+      direct_atc,
+      referenced_atc
+    ),
     use.names = TRUE,
     fill = TRUE
-  )
-
-  # rename ATC columns
-  data.table::setnames(
-    result,
-    c("med_code_code", "med_code_display"),
-    c("atc_code", "atc_display"),
-    skip_absent = TRUE
   )
 
   # keep only resource columns and ATC columns
@@ -703,7 +764,21 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     encounter_medication_analyses <- medication_analyses[record_id %in% target_record_id & !is.na(meda_dat) & medikationsanalyse_complete %in% "Complete"]
 
     encounters_first_medication_analysis[[main_encounter$enc_id]] <- NULL
-    if (nrow(encounter_medication_analyses)) {
+
+    if (isMRPCheckSubmodule() && etlutils::isDefinedAndNotEmpty("MRP_CHECK_MEDICATION_ANALYSIS_DAYS_OFFSET")) {
+      meda_dat_enc_start_offset <- as.numeric(MRP_CHECK_MEDICATION_ANALYSIS_DAYS_OFFSET)
+      start <- main_encounter$enc_period_start
+      if (!is.na(start)) {
+        meda_dat <- start + as.difftime(meda_dat_enc_start_offset, units = "days")
+        if (!is.na(main_encounter$enc_period_end) && meda_dat > main_encounter$enc_period_end) {
+          meda_dat <- main_encounter$enc_period_end
+        }
+      }
+      encounters_first_medication_analysis[[main_encounter$enc_id]] <- data.table::data.table(
+        meda_id = paste0(main_encounter$enc_id, "-proxydate-", meda_dat_enc_start_offset),
+        meda_dat = meda_dat
+      )
+    } else if (nrow(encounter_medication_analyses)) {
       # Find the first medication analysis with a date in the encounters period
       # sort medication analyses by date
       encounter_medication_analyses <- encounter_medication_analyses[order(meda_dat)]

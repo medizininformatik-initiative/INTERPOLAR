@@ -6,9 +6,11 @@
 #' the lock is reset and the function exits without running the ETL process.
 #'
 #' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
+#' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
+#' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-retrieve <- function(reset_lock_only = FALSE) {
+retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
 
   # Initialize and start module
   etlutils::startModule("cds2db",
@@ -21,6 +23,9 @@ retrieve <- function(reset_lock_only = FALSE) {
     return()
   }
 
+  # Check if the release version of the database is compatible
+  etlutils::checkVersion(ignore_newer_db_version)
+
   try(etlutils::runLevel1("Run Retrieve", {
 
     # Reset database lock from unfinished previous cds2db run
@@ -30,8 +35,14 @@ retrieve <- function(reset_lock_only = FALSE) {
 
     # Check if we must create references for old data (should be executed exactly once and then never again)
     etlutils::runLevel2("Create references for old data", {
-      if (mustCreateReferencesForOldData()) {
+
+      debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
+
+      if (mustCreateReferencesForOldData() || debug_active) {
         createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+        if (debug_active) {
+          stop("References for invalid calculated encounter references have been fixed")
+        }
       }
     })
 

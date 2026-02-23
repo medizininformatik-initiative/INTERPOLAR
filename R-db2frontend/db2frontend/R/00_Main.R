@@ -7,9 +7,11 @@
 #' only resets the lock and exits without executing the ETL job.
 #'
 #' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
+#' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
+#' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-startFrontend2DB <- function(reset_lock_only = FALSE) {
+startFrontend2DB <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
 
   # Initialize and start module
   etlutils::startModule("frontend2db",
@@ -23,6 +25,9 @@ startFrontend2DB <- function(reset_lock_only = FALSE) {
     return()
   }
 
+  # Check if the release version of the database is compatible
+  etlutils::checkVersion(ignore_newer_db_version)
+
   try(etlutils::runLevel1("Run Frontend -> DB", {
 
     # Reset database lock from unfinished previous db2frontend run
@@ -31,7 +36,7 @@ startFrontend2DB <- function(reset_lock_only = FALSE) {
     })
 
     # Delete Redcap content (DEBUG and TESTS)
-    if (exists("DEBUG_DAY") && DEBUG_DAY == 1) {
+    if (exists("DEBUG_DAY") && DEBUG_DAY == 1 && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_REDCAP_DATA")) {
       etlutils::runLevel2("DEBUG_DAY == 1 -> Delete all Redcap records", {
         deleteRedcapContent()
       })
@@ -64,9 +69,11 @@ startFrontend2DB <- function(reset_lock_only = FALSE) {
 #' only resets the lock and exits without executing the ETL job.
 #'
 #' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
+#' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
+#' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-startDB2Frontend <- function(reset_lock_only = FALSE) {
+startDB2Frontend <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
 
   # Initialize and start module
   etlutils::startModule("db2frontend",
@@ -78,6 +85,9 @@ startDB2Frontend <- function(reset_lock_only = FALSE) {
     etlutils::dbResetLock()
     return()
   }
+
+  # Check if the release version of the database is compatible
+  etlutils::checkVersion(ignore_newer_db_version)
 
   try(etlutils::runLevel1("Run DB -> Frontend", {
 
