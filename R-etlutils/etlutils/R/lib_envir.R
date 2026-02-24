@@ -592,9 +592,8 @@ checkVersion <- function(ignore_newer_db_version) {
     release_version <- getReleaseVersion()
     compare_result <- compareVersionsSemver(db_version, release_version)
     if (compare_result < 0L) { # DB is older than release version -> stop execution
-      stop(paste0("The database version '", db_version, "' is older than the release version '", release_version, "'. Please update the database via migration. Run\n",
-                  "  docker compose exec -w /cds_hub-initdb.d cds_hub psql -U cds_hub_db_admin -d cds_hub_db -f ./migration/migration.sql\n",
-                  "  or see https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."))
+      stop(paste0("The database version '", db_version, "' is older than the release version '", release_version, "'. Please update the database via migration.\n",
+                  "  See https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."))
     } else if (compare_result > 0L) { # DB is newer than release version -> allow force run
       if (!ignore_newer_db_version) {
         stop(paste0("The database version '", db_version, "' is newer than the release version '", release_version, "'. If you know what you are doing:",
