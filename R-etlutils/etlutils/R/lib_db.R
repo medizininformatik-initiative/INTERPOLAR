@@ -1388,7 +1388,7 @@ dbReset <- function(tables_with_schema = NULL) {
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id), add = TRUE)
 
-  if (is.null(tables_with_schema)){
+  if (is.null(tables_with_schema)) {
     # Convert schemas vector into SQL-friendly format
     schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
     query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")

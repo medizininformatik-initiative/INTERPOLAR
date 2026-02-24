@@ -79,7 +79,7 @@ startModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = 
     path_to_toml = path_to_toml
   )
 
-  if(!init_constants_only) {
+  if (!init_constants_only) {
     # Check for mandatory parameters
     checkMandatoryParameters(mandatory_parameters)
     # Create necessary directories

@@ -62,7 +62,7 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
       if (is.null(new_candidate_parent_encounters)) {
         new_candidate_parent_encounters <- getParentCandidates(candidate_parent_encounters, "AMB")
       }
-      if(!is.null(new_candidate_parent_encounters)) {
+      if (!is.null(new_candidate_parent_encounters)) {
         candidate_parent_encounters <- new_candidate_parent_encounters
       }
     }

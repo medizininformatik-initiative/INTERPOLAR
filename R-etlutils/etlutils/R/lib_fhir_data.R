@@ -243,7 +243,7 @@ fhirdataFilterMainAndSubEncounters <- function(main_encounter_id, all_encounters
         enc_identifier_system == common_encounter_fhir_identifier_system &
           enc_identifier_value %in% common_identifier_value
       ]
-       if(nrow(common_identifier_encounters) > 0) {
+       if (nrow(common_identifier_encounters) > 0) {
          encounters[["common_identifier_encounters"]] <- common_identifier_encounters
        }
     }

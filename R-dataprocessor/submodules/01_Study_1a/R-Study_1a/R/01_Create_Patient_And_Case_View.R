@@ -130,7 +130,7 @@ getAdmissionDiagnoses <- function(encounter, conditions) {
   }
 
   return_value <- paste0(return_value, collapse = "\n")
-  return(if(nzchar(return_value)) return_value else NA_character_)
+  return(if (nzchar(return_value)) return_value else NA_character_)
 }
 
 getObservations <- function(encounters, query_datetime, obs_codes, obs_system, obs_by_pid = FALSE) {
@@ -515,7 +515,7 @@ createFrontendTables <- function() {
 
         study_phase <- NA_character_
 
-        if(nrow(enc_studyphase_at_admission)) {
+        if (nrow(enc_studyphase_at_admission)) {
           # Get the study phase at admission for the Encounter if it exists in the database (fall_fe table)
           study_phase <- enc_studyphase_at_admission[
             fall_fhir_enc_id == enc_id,
