@@ -228,16 +228,14 @@ writeExcelFileInternal <- function(target = c("local", "global"), tables,
 #' @param tables A `data.frame` or list that can be handled by `writeExcelFile()`.
 #' @param filename_without_extension Optional file name without extension. If NA, the
 #'   variable name of `tables` is used.
-#' @param really_save Logical flag indicating whether the Excel file should actually
-#'   be written. Defaults to `isDefinedAndTrue("DEBUG_WRITE_TABLES_AS_EXCEL")`.
 #' @param runLevel3Message Optional message passed to `runLevel3Line()`. If NA, the
 #'   file is written directly without level-3 logging.
 #'
 #' @return Invisibly returns NULL.
 #'
 #' @export
-writeDebugExcelFile <- function(tables, filename_without_extension = NA, really_save = isDefinedAndTrue("DEBUG_WRITE_TABLES_AS_EXCEL"), runLevel3Message = NA) {
-  if (really_save) {
+writeDebugExcelFile <- function(tables, filename_without_extension = NA, runLevel3Message = NA) {
+  if (isDefinedAndTrue("LOG_TEMP_EXCEL_TABLES")) {
     if (is.na(filename_without_extension)) {
       filename_without_extension <- as.character(substitute(tables))
     }
