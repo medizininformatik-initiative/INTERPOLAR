@@ -569,7 +569,7 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
   #######################
 
   for (i in seq_along(resource_tables)) {
-    writeRData(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
+    etlutils::writeDebugExcelFile(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
   }
   return(resource_tables)
 }

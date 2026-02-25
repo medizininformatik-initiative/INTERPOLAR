@@ -35,6 +35,14 @@ USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
 #################
 MAX_DIR_COUNT = 5
 
+#################
+# If this parameter is activated, specified tables are written as Excel files in the folder outputLocal/tables.
+# This can be used to check results from FHIR download, melting or other steps.
+# Per default, there are some tables which are written, see code sections with the function writeDebugExcelFile()
+# Write this function in relevant code sections for debugging process.
+#################
+#LOG_TEMP_EXCEL_TABLES = true
+
 [analyse]
 
 #################

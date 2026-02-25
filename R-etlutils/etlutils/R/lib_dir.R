@@ -218,6 +218,38 @@ writeExcelFileInternal <- function(target = c("local", "global"), tables,
   writeExcelFile(tables, file_name, with_column_names)
 }
 
+#' Write an Excel file to the local tables directory if debugging is enabled
+#'
+#' This function conditionally writes an Excel file to the local tables directory.
+#' Writing only occurs if `really_save` evaluates to TRUE. Optionally, the write
+#' operation can be wrapped in a `runLevel3Line()` call to integrate with level-3
+#' logging.
+#'
+#' @param tables A `data.frame` or list that can be handled by `writeExcelFile()`.
+#' @param filename_without_extension Optional file name without extension. If NA, the
+#'   variable name of `tables` is used.
+#' @param runLevel3Message Optional message passed to `runLevel3Line()`. If NA, the
+#'   file is written directly without level-3 logging.
+#'
+#' @return Invisibly returns NULL.
+#'
+#' @export
+writeDebugExcelFile <- function(tables, filename_without_extension = NA, runLevel3Message = NA) {
+  if (isDefinedAndTrue("LOG_TEMP_EXCEL_TABLES")) {
+    if (is.na(filename_without_extension)) {
+      filename_without_extension <- as.character(substitute(tables))
+    }
+
+    if (!is.na(runLevel3Message)) {
+      runLevel3Line(runLevel3Message, {
+        writeExcelFileInternal("local", tables, filename_without_extension, with_column_names = TRUE)
+      })
+    } else {
+      writeExcelFileInternal("local", tables, filename_without_extension, with_column_names = TRUE)
+    }
+  }
+}
+
 #' Write an Excel file to the local tables directory
 #'
 #' @inheritParams writeExcelFileInternal
@@ -515,70 +547,3 @@ readRData <- function(filename_without_extension, load_from_last_run = FALSE) {
   }
   data
 }
-
-#' #' Get the filename for an RData file corresponding to a table
-#' #'
-#' #' This function constructs the filename for an RData file corresponding to the specified table.
-#' #'
-#' #' @param table_name The name of the table.
-#' #' @return A character string representing the filename for the RData file.
-#' #'
-#' #' @export
-#' getLocalRdataFileName <- function(table_name) {
-#'   fhircrackr::pastep(MODULE_DIRS$local_dir, "tables", table_name, ext = '.RData')
-#' }
-#'
-#' #' Get file information for an RData file
-#' #'
-#' #' This function retrieves information about an RData file corresponding to the specified table.
-#' #'
-#' #' @param table_name The name of the table.
-#' #' @return A list containing file information such as size, permissions, and timestamps.
-#' #'
-#' #' @export
-#' getLocalRdataFileInfo <- function(table_name) {
-#'   table_name <- getLocalRdataFileName(table_name)
-#'   file_info <- list()
-#'   if (file.exists(table_name)) {
-#'     file_info <- file.info(table_name)
-#'   }
-#'   return(file_info)
-#' }
-#'
-#' #' Check if an RData file exists locally
-#' #'
-#' #' This function checks if an RData file corresponding to the specified table exists locally.
-#' #'
-#' #' @param table_name The name of the table.
-#' #' @return TRUE if the RData file exists locally, otherwise FALSE.
-#' #'
-#' #' @export
-#' existsLocalRdataFile <- function(table_name) {
-#'   file.exists(getLocalRdataFileName(table_name))
-#' }
-#'
-#' #' Read Content from a File into a Single String
-#' #'
-#' #' This function reads the entire content of a given file and returns it as a single string,
-#' #' ensuring that the final newline character is preserved if it exists.
-#' #'
-#' #' Note: of the original file ends with a new line character then this caracter is missing in
-#' #' the result.
-#' #'
-#' #' @param file_path A string representing the path to the file.
-#' #'
-#' #' @return A single string containing the entire content of the file, including the final
-#' #' newline character if it was present.
-#' #'
-#' #' @examples
-#' #' \dontrun{
-#' #'   file_content <- readFileLinesAsString("path/to/your/file.txt")
-#' #'   print(file_content)
-#' #' }
-#' #'
-#' #' @export
-#' readFileLinesAsString <- function(file_path) {
-#'   file_content <- readLines(file_path, warn = FALSE)
-#'   full_content <- paste(file_content, collapse = "\n")
-#'   return(full_content)
-#' }
