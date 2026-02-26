@@ -55,7 +55,7 @@ DEBUG_REDCAP_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, redcap_port]
 getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCap")) {
   change_data_type <- match.arg(change_data_type)
 
-  # do not overwite the debug script name if it is already defined
+  # do not overwrite the debug script name if it is already defined
   if (change_data_type == "RAW" && exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
     return(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME)
   }
@@ -129,7 +129,7 @@ for (debug_day_index in seq_along(DEBUG_DATES)) {
 }
 end_full <- Sys.time()
 
-cat("\nAll days took:")
+cat("\nDays duration:/n")
 for (debug_day_index in seq_along(day_times)) {
   print(day_times[debug_day_index])
 }
