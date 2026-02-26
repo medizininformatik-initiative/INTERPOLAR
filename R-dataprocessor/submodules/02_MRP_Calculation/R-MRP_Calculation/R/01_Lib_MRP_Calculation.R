@@ -116,14 +116,14 @@ matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
   # Reduce active_atcs to the relevant ATC codes (and keep their dates!)
   active_atcs_unique <- active_atcs[
     , .(start_datetime = etlutils::getMinDatetime(start_datetime)),
-    by = atc_code
+    by = .(fhir_id, atc_code)
   ]
   # Only keep those that also appear in MRP definitions
   matching_atcs <- active_atcs_unique[atc_code %in% mrp_atc_keys]
 
   # Build the output properly
   result <- matching_atcs[
-    , .(atc_code, start_datetime)
+    , .(fhir_id, atc_code, start_datetime)
   ]
 
   return(result)
@@ -208,9 +208,11 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
   result_mrps <- data.table::data.table(
     mrp_index = integer(),
     atc_code = character(),
+    atc_fhir_id = character(),
     atc2_code = character(),
     proxy_code = character(),
     proxy_type = character(),
+    proxy_fhir_id = character(),
     kurzbeschr_drug = character(),
     kurzbeschr_item2 = character(),
     kurzbeschr_suffix = character()
@@ -224,6 +226,7 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
 
   for (i in seq_len(nrow(active_atcs_primary))) {
     atc <- active_atcs_primary$atc_code[i]
+    atc_fhir_id <- active_atcs_primary$fhir_id[i]
     start_datetime <- active_atcs_primary$start_datetime[i]
     end_datetime <- active_atcs_primary$end_datetime[i]
 
@@ -241,6 +244,7 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
       for (k in seq_len(nrow(active_atc2_rows))) {
         atc2_start_datetime <- active_atc2_rows$start_datetime[k]
         atc2_end_datetime <- active_atc2_rows$end_datetime[k]
+        atc2_fhir_id <- active_atc2_rows$fhir_id[k]
 
         # Check for overlapping time periods
         if (start_datetime <= atc2_end_datetime && atc2_start_datetime <= end_datetime) {
@@ -260,9 +264,11 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
             mrp_row <- data.table::data.table(
               mrp_index = mrp_index, # All rows for the same mrp have the same index. Its only used for grouping.
               atc_code = atc,
+              atc_fhir_id = atc_fhir_id,
               atc2_code = atc2,
               proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
               proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
+              proxy_fhir_id = atc2_fhir_id, # there is no fhir id for the atc codes, so we leave this empty
               kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc, "   (", format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
               kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (", format(atc2_start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
               kurzbeschr_suffix = paste("kontraindiziert.")
@@ -574,8 +580,10 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                   ward_name = ward_names, # ward_names, # we have changed the meaning from a single ward to all relevant wards, because we can't decide, which ward is the "correct" one
                   ret_id = ret_id,
                   ret_redcap_repeat_instance = ret_redcap_repeat_instance,
+                  atc1_medreq_fhir_id = match_row$atc_fhir_id,
                   mrp_proxy_type = match_row$proxy_type,
                   mrp_proxy_code = match_row$proxy_code,
+                  mrp_proxy_fhir_id = match_row$proxy_fhir_id,
                   input_file_processed_content_hash = mrp_pair_list_processed_content_hash
                 )
               }
@@ -590,8 +598,10 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
               ward_name = NA_character_,
               ret_id = NA_character_,
               ret_redcap_repeat_instance = NA_character_,
+              atc1_medreq_fhir_id = NA_character_,
               mrp_proxy_type = NA_character_,
               mrp_proxy_code = NA_character_,
+              mrp_proxy_fhir_id = NA_character_,
               input_file_processed_content_hash = mrp_pair_list_processed_content_hash
             )
           }
@@ -635,6 +645,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
       use.names = TRUE, fill = TRUE
     )
   )
+
   # Write the merged tables to RData files
   lapply(names(mrp_table_lists_all_merged), function(name) {
     etlutils::writeDebugExcelFile(mrp_table_lists_all_merged[[name]], paste0("dataprocessor_", name))
