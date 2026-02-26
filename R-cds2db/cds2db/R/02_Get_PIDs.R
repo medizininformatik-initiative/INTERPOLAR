@@ -150,7 +150,7 @@ extractPIDsSplittedByWard <- function(encounters, all_wards_filter_patterns) {
     ward_encounters <- etlutils::filterResources(encounters, ward_filter_patterns)
 
     # Save filtered encounters
-    etlutils::writeRData(ward_encounters, paste0("pid_source_encounter_filtered_", i))
+    etlutils::writeDebugExcelFile(ward_encounters, paste0("pid_source_encounter_filtered_", i))
 
     # Create a data.table with PID and Encounter ID
     dt <- data.table(
@@ -306,11 +306,7 @@ getEncounters <- function(table_description, current_datetime) {
     })
 
     etlutils::printAllTables(table_enc)
-
-    runLevel3Line("Save and Delete Encounters Table", {
-      etlutils::writeRData(table_enc, "pid_source_encounter_unfiltered")
-    })
-
+    etlutils::writeDebugExcelFile(table_enc, "pid_source_encounter_unfiltered", runLevel3Message = "Save Encounters Table as local Excel files")
   })
 
   return(table_enc)

@@ -255,6 +255,23 @@ readExcelFileAsTableList <- function(excelFile, maxSheetIndex = 1000) {
 #' @seealso \code{\link[openxlsx]{write.xlsx}} for the underlying function used to write Excel files.
 #' @export
 writeExcelFile <- function(tables, file_name, with_column_names) {
+
+  # Convert list columns to character columns by concatenating list elements with a separator.
+  # Excel cannot save list columns, so we need to convert them to character columns before writing the file.
+  convertListColumns <- function(dt, sep = "\n") {
+    problem_cols <- names(dt)[vapply(dt, function(x) {
+      is.list(x) || inherits(x, "hms") || inherits(x, "difftime")
+    }, logical(1))]
+    for (col in problem_cols) {
+      dt[[col]] <- vapply(dt[[col]], function(x) {
+        if (length(x) == 0) return(NA_character_)
+        paste(as.character(x), collapse = sep)
+      }, character(1))
+    }
+    invisible(dt)
+  }
+
+  tables <- convertListColumns(tables)
   openxlsx::write.xlsx(tables, file_name, colNames = with_column_names)
 }
 

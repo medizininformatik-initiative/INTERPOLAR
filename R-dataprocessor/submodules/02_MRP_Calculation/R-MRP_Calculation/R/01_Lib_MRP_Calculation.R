@@ -637,10 +637,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
   )
   # Write the merged tables to RData files
   lapply(names(mrp_table_lists_all_merged), function(name) {
-    writeRData(
-      object = mrp_table_lists_all_merged[[name]],
-      filename_without_extension = paste0("dataprocessor_", name)
-    )
+    etlutils::writeDebugExcelFile(mrp_table_lists_all_merged[[name]], paste0("dataprocessor_", name))
   })
 
   if (!is.null(return_used_resources)) {
