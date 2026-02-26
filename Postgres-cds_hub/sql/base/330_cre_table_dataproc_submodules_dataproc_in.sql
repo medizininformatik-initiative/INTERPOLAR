@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 10:00:19
--- Rights definition file size        : 16573 Byte
+-- Rights definition file last update : 2026-02-17 09:36:28
+-- Rights definition file size        : 19645 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2026-02-02 10:28:27
+-- Create time: 2026-02-26 16:07:08
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/330_cre_table_dataproc_submodules_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -135,6 +135,12 @@ BEGIN
             ALTER TABLE db2dataprocessor_in.dp_mrp_calculations ADD ret_redcap_repeat_instance varchar;   -- optional – Redcap repeat instance id (varchar)
         END IF; -- column (ret_redcap_repeat_instance)
 
+        IF NOT EXISTS ( -- column not exists (atc1_medreq_fhir_id)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'dp_mrp_calculations' AND column_name = 'atc1_medreq_fhir_id'
+        ) THEN
+            ALTER TABLE db2dataprocessor_in.dp_mrp_calculations ADD atc1_medreq_fhir_id varchar;   -- optional – FHIR ID of ATC1 (varchar)
+        END IF; -- column (atc1_medreq_fhir_id)
+
         IF NOT EXISTS ( -- column not exists (mrp_proxy_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'dp_mrp_calculations' AND column_name = 'mrp_proxy_type'
         ) THEN
@@ -146,6 +152,12 @@ BEGIN
         ) THEN
             ALTER TABLE db2dataprocessor_in.dp_mrp_calculations ADD mrp_proxy_code varchar;   -- optional – Code of the proxy (varchar)
         END IF; -- column (mrp_proxy_code)
+
+        IF NOT EXISTS ( -- column not exists (mrp_proxy_fhir_id)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'dp_mrp_calculations' AND column_name = 'mrp_proxy_fhir_id'
+        ) THEN
+            ALTER TABLE db2dataprocessor_in.dp_mrp_calculations ADD mrp_proxy_fhir_id varchar;   -- optional – FHIR ID of the proxy (varchar)
+        END IF; -- column (mrp_proxy_fhir_id)
 
         IF NOT EXISTS ( -- column not exists (input_file_processed_content_hash)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'dp_mrp_calculations' AND column_name = 'input_file_processed_content_hash'
@@ -170,8 +182,10 @@ BEGIN
           COALESCE(db.to_char_immutable(study_phase), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_id), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_redcap_repeat_instance), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(atc1_medreq_fhir_id), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_proxy_type), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_proxy_code), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(mrp_proxy_fhir_id), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(input_file_processed_content_hash), ''#NULL#'') || ''|||'' ||''#''
                 ','(',''),')',''))
             ) THEN
@@ -189,8 +203,10 @@ BEGIN
           COALESCE(db.to_char_immutable(study_phase), '#NULL#') || '|||' || -- hash from: Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (study_phase)
           COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: optional – Redcap ID of the generated retrolective_mrpbewertung_fe (ret_id)
           COALESCE(db.to_char_immutable(ret_redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: optional – Redcap repeat instance id (ret_redcap_repeat_instance)
+          COALESCE(db.to_char_immutable(atc1_medreq_fhir_id), '#NULL#') || '|||' || -- hash from: optional – FHIR ID of ATC1 (atc1_medreq_fhir_id)
           COALESCE(db.to_char_immutable(mrp_proxy_type), '#NULL#') || '|||' || -- hash from: optional – ICD, ATC, OPS, LOINC (mrp_proxy_type)
           COALESCE(db.to_char_immutable(mrp_proxy_code), '#NULL#') || '|||' || -- hash from: optional – Code of the proxy (mrp_proxy_code)
+          COALESCE(db.to_char_immutable(mrp_proxy_fhir_id), '#NULL#') || '|||' || -- hash from: optional – FHIR ID of the proxy (mrp_proxy_fhir_id)
           COALESCE(db.to_char_immutable(input_file_processed_content_hash), '#NULL#') || '|||' || -- hash from: Processed content hash from input_data_files_processed_content of the MRP list (input_file_processed_content_hash)
                  '#'
                )
@@ -214,8 +230,10 @@ BEGIN
           COALESCE(db.to_char_immutable(study_phase), '#NULL#') || '|||' || -- hash from: Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (study_phase)
           COALESCE(db.to_char_immutable(ret_id), '#NULL#') || '|||' || -- hash from: optional – Redcap ID of the generated retrolective_mrpbewertung_fe (ret_id)
           COALESCE(db.to_char_immutable(ret_redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: optional – Redcap repeat instance id (ret_redcap_repeat_instance)
+          COALESCE(db.to_char_immutable(atc1_medreq_fhir_id), '#NULL#') || '|||' || -- hash from: optional – FHIR ID of ATC1 (atc1_medreq_fhir_id)
           COALESCE(db.to_char_immutable(mrp_proxy_type), '#NULL#') || '|||' || -- hash from: optional – ICD, ATC, OPS, LOINC (mrp_proxy_type)
           COALESCE(db.to_char_immutable(mrp_proxy_code), '#NULL#') || '|||' || -- hash from: optional – Code of the proxy (mrp_proxy_code)
+          COALESCE(db.to_char_immutable(mrp_proxy_fhir_id), '#NULL#') || '|||' || -- hash from: optional – FHIR ID of the proxy (mrp_proxy_fhir_id)
           COALESCE(db.to_char_immutable(input_file_processed_content_hash), '#NULL#') || '|||' || -- hash from: Processed content hash from input_data_files_processed_content of the MRP list (input_file_processed_content_hash)
                  '#'
                )
@@ -263,8 +281,10 @@ COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.ward_name IS 'Name of 
 COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.study_phase IS 'Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.ret_id IS 'optional – Redcap ID of the generated retrolective_mrpbewertung_fe (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.ret_redcap_repeat_instance IS 'optional – Redcap repeat instance id (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.atc1_medreq_fhir_id IS 'optional – FHIR ID of ATC1 (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.mrp_proxy_type IS 'optional – ICD, ATC, OPS, LOINC (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.mrp_proxy_code IS 'optional – Code of the proxy (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.mrp_proxy_fhir_id IS 'optional – FHIR ID of the proxy (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.input_file_processed_content_hash IS 'Processed content hash from input_data_files_processed_content of the MRP list (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.input_datetime IS 'Time at which the data record is inserted';
 COMMENT ON COLUMN db2dataprocessor_in.dp_mrp_calculations.last_check_datetime IS 'Time at which data record was last checked';
