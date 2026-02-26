@@ -46,16 +46,42 @@ MAX_DIR_COUNT = 5
 [analyse]
 
 #################
-# All ward names must be defined here for exactly 1 phase.
-# These ward names must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS
-# in the cds2db_config.toml.
+# Study phase A but with test calculation for retrolective MRP evaluations
+# immediately after the end of an encounter of this ward.
+# NOTE: This overwrites the phase_x_start for the same ward(s) in the
+#       PHASES_WARD_X variables below.
+# The ward_name must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS in the cds2db_config.toml.
 #################
-WARDS_PHASE_A = ["Station 1", "Station 3"] # Study phase A without retrolective MRP evaluations
-WARDS_PHASE_B_TEST = ["Station 2"] # Study phase A but with test calculation for retrolective MRP evaluations
-                                   # immediately after the end of an encounter of this ward.
-WARDS_PHASE_B = "" # Study phase B with regular calculation for retrolective MRP evaluations 14 days
-                   # after the end of an encounter of this ward.
+#WARDS_PHASE_B_TEST = [
+#  "Station 1",
+#  "Station 2",
+#  "Station 3"
+#]
 
+#################
+# Define the phase start times for every ward. ward_name and phase_a_start is
+# mandatory, phase_b_start is optional. If phase_b_start is not specified, then
+# the phase A never ends and phase B never starts. If phase_b_start is specified,
+# then phase A ends one second before the start of phase B.
+# The ward_name must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS in the cds2db_config.toml.
+#################
+PHASES_WARD_1 = [
+  "ward_name = 'Station 1'",
+  "phase_a_start = '2026-01-11 10:00:00'",
+  "phase_b_start = '2026-01-21 10:00:00'"
+]
+
+PHASES_WARD_2 = [
+  "ward_name     = 'Station 2'",
+  "phase_a_start = '2026-01-11'", # same as 2026-01-11 00:00:00
+  "phase_b_start = '2026-01-12'"
+]
+
+PHASES_WARD_3 = [
+  "    ward_name =           'Station 3'",
+  "phase_a_start = '2026-01-11 10:00'"#, # same as 2026-01-11 10:00:00
+  #"phase_b_start = '2026-04-21 10:00:00'"
+]
 
 #################
 # Filter for the displayable PID

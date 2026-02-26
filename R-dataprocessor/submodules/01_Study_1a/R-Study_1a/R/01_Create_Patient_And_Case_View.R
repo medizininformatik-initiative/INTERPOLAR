@@ -525,12 +525,12 @@ createFrontendTables <- function() {
 
         # Get the current study phase for the ward of the Encounter
         if (!etlutils::isSimpleNotEmptyString(study_phase)) {
-          study_phase <- getStudyPhase(ward_name)
+          study_phase <- getStudyPhase(ward_name, enc_period_start)
         }
 
         if (is.na(study_phase)) {
           stop("ERROR: No study phase found for ward '", ward_name, "'.\n",
-               "Please check the study phase configuration in the dataprocessor_config.toml for parameters WARDS_PHASE_A, WARDS_PHASE_B_TEST and WARDS_PHASE_B.")
+               "Please check the study phase configuration in the dataprocessor_config.toml.")
         }
         data.table::set(enc_frontend_table, target_index, "fall_studienphase", study_phase)
 
