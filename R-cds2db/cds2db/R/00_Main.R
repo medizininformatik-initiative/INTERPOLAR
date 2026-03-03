@@ -18,33 +18,38 @@ retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
                         hide_value_pattern = "^FHIR_(?!SEARCH_).+",
                         init_constants_only = reset_lock_only)
 
-  if (reset_lock_only) {
-    etlutils::dbResetLock()
-    return()
-  }
+  skip_db_operations <- etlutils::isDefinedAndTrue("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
 
-  # Check if the release version of the database is compatible
-  etlutils::checkVersion(ignore_newer_db_version)
+  if (!skip_db_operations) {
+    if (reset_lock_only) {
+      etlutils::dbResetLock()
+      return()
+    }
+    # Check if the release version of the database is compatible
+    etlutils::checkVersion(ignore_newer_db_version)
+  }
 
   try(etlutils::runLevel1("Run Retrieve", {
 
-    # Reset database lock from unfinished previous cds2db run
-    etlutils::runLevel2("Reset database lock from unfinished previous run", {
-      etlutils::dbResetLock()
-    })
+    if (!skip_db_operations) {
+      # Reset database lock from unfinished previous cds2db run
+      etlutils::runLevel2("Reset database lock from unfinished previous run", {
+        etlutils::dbResetLock()
+      })
 
-    # Check if we must create references for old data (should be executed exactly once and then never again)
-    etlutils::runLevel2("Create references for old data", {
+      # Check if we must create references for old data (should be executed exactly once and then never again)
+      etlutils::runLevel2("Create references for old data", {
 
-      debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
+        debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
 
-      if (mustCreateReferencesForOldData() || debug_active) {
-        createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
-        if (debug_active) {
-          stop("References for invalid calculated encounter references have been fixed")
+        if (mustCreateReferencesForOldData() || debug_active) {
+          createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+          if (debug_active) {
+            stop("References for invalid calculated encounter references have been fixed")
+          }
         }
-      }
-    })
+      })
+    }
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
