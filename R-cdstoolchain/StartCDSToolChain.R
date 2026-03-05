@@ -16,13 +16,31 @@ if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
   cat("START DEBUG_DAY", DEBUG_DAY, "\n")
 }
 
+# Process command line arguments
+# Currently supported arguments:
+# --resetLock: Resets all locks and continues with the execution. This is useful if
+#              a lock is set due to an error or interruption in a previous run and
+#              you want to run the toolchain again after fixing the error without
+#              waiting for the lock to expire.
+# --resetLockAndStop: Resets all locks and stops the execution. This is useful
+#                     if a lock is set due to an error or interruption in a previous
+#                     run and you want to reset the lock after fixing the error
+#                     without waiting for the lock to expire, but you don't want to
+#                     run the toolchain again immediately.
+# --ignoreNewerDBVersion: Ignores if the database version is newer than the
+#                         release version. This is useful if you are running the
+#                         toolchain with a newer database version than the release
+#                         version and you want to ignore the check for compatibility.
+#                         Use this with caution, as it may lead to unexpected errors
+#                         if the database version is not compatible with the toolchain.
 args <- commandArgs(trailingOnly = TRUE)
 for (arg in args) {
   if (arg %in% c("--resetLock", "--resetLockAndStop")) {
     message("Resetting lock")
-    cds2db::retrieve(reset_lock_only = TRUE)
-    dataprocessor::processData(reset_lock_only = TRUE)
-    db2frontend::startDB2Frontend(reset_lock_only = TRUE)
+    cds2db::resetLock()
+    dataprocessor::resetLock()
+    db2frontend::resetLockFrontend2DB()
+    db2frontend::resetLockDB2Frontend()
     message("All locks resettet")
     if (arg == "--resetLockAndStop") {
       quit(status = 0, save = "no")  # clean exit without error
@@ -33,22 +51,29 @@ for (arg in args) {
 }
 
 resetMemory <- function() {
-  rm(list = setdiff(ls(), c(
+  etlutils::resetMemory(protected_objects = c(
     "DEBUG_DAY",
     "DEBUG_DATES",
     "DEBUG_MODULES_PATH_TO_CONFIG_TOML",
 
+    "DEBUG_DB_PORT",
+    "DEBUG_REDCAP_PORT",
     "DEBUG_PATH_TO_RAW_RDATA_FILES",
     "DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME",
-
     "DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME",
 
     "DEBUG_SUBMODULE_DIR",
     "DEBUG_RUN_SINGLE_DAY_ONLY",
     "DEBUG_START_SINGLE_MODULE",
 
-    "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS"
-  )))
+    "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS",
+
+    # Runtime variables from StartDebugCDSToolChain.R that should not be deleted
+    "start_full",
+    "day_times",
+    "start_day",
+    "debug_day_index"
+  ))
 }
 
 setDebugPathToConfigToml <- function(module_name) {
@@ -72,19 +97,27 @@ shouldStart <- function(module_name) {
   return(FALSE)
 }
 
+# Initialize modules and validate configurations
+for (init_function in c(cds2db::init, dataprocessor::init, db2frontend::initFrontend2DB, db2frontend::initDB2Frontend)) {
+  resetMemory()
+  init_function()
+}
+resetMemory()
+
 tryCatch({
+  args <- commandArgs(trailingOnly = TRUE)
   ignore_newer_db_version = "--ignoreNewerDBVersion" %in% args
   if (shouldStart("cds2db")) {
-    cds2db::retrieve(ignore_newer_db_version = ignore_newer_db_version)
+    cds2db::retrieve(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
   }
   if (shouldStart("db2frontend")) {
-    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version)
+    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
   }
   if (shouldStart("dataprocessor")) {
-    dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version)
+    dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
   }
   if (shouldStart("db2frontend")) {
-    db2frontend::startDB2Frontend(ignore_newer_db_version = ignore_newer_db_version)
+    db2frontend::startDB2Frontend(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
   }
   if (etlutils::isErrorOccured()) {
     stop(etlutils::getErrorMessage())
