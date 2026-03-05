@@ -42,58 +42,51 @@ getGitInfo <- function(git_dir = ".git") {
   })
 }
 
-#' Initialize and Start a Module
-#'
-#' This function initializes the module by setting up necessary constants,
-#' creating required directories, starting a process clock, and logging configuration details.
-#' It ensures that the module environment is properly configured before execution.
+#' Initialize Module Context
 #'
 #' @param module_name A character string specifying the name of the module.
-#' @param db_schema_base_name The base name of the database schema. If NULL the module name is used.
+#' @param db_schema_base_name The base name of the database schema. If NULL the
+#' module name is used.
 #' @param path_to_toml (Optional) A character string specifying the path to the
 #' TOML configuration file. Default is `NA`.
-#' @param hide_value_pattern (Optional) A character string pattern used to hide
-#' certain values in the logged configuration output. Default is `""`.
 #' @param mandatory_parameters (Optional) A character vector containing the names
 #' of mandatory parameters. If these parameters are not found in the configuration
 #' file, an error is thrown.
-#' @param init_constants_only A logical value indicating whether only module constants
-#' should be initialized (`TRUE`) or if the full module setup (including directory creation,
-#' logging, and process clock initialization) should be performed (`FALSE`).
-#'
-#' @details
-#' - Initializes module-specific constants using `initModuleConstants()`.
-#' - Creates necessary directories using `createDIRS()`, if `init_constants_only = FALSE`.
-#' - Initializes a global process clock using `createClock()`, if `init_constants_only = FALSE`.
-#' - Starts logging all console outputs using `startLogging()`, if `init_constants_only = FALSE`.
-#' - Logs all configuration parameters while optionally hiding values that match `hide_value_pattern`.
-#'
-#' @return This function does not return a value. It performs setup operations as a side effect.
 #'
 #' @export
-startModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = NA, hide_value_pattern = "", mandatory_parameters = c(), init_constants_only) {
+initModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = NA, mandatory_parameters = c()) {
   # Init module constants
   config <- initModuleConstants(
     module_name = module_name,
     db_schema_base_name = db_schema_base_name,
     path_to_toml = path_to_toml
   )
+  # Check for mandatory parameters
+  checkMandatoryParameters(mandatory_parameters)
+}
 
-  if (!init_constants_only) {
-    # Check for mandatory parameters
-    checkMandatoryParameters(mandatory_parameters)
-    # Create necessary directories
-    createDIRS(module_name)
-    # Create globally used process clock
-    createClock()
-    # Start logging console outputs
-    startLogging(module_name)
-    # Log github active tag and branch
-    cat("\n---------------------------\nGithub Script Version:\n---------------------------\n")
-    cat(getGitInfo())
-    # Log all configuration parameters, optionally hiding values based on the pattern
-    catList(config, prefix = "\n---------------------------\nConfiguration:\n---------------------------\n", suffix = "\n", hide_value_pattern)
-  }
+#' Start Module Execution (logging and directories)
+#'
+#' @param config A list containing the module configuration parameters. This is typically
+#' the output of `initModuleConstants()` which initializes the module context and loads
+#' the configuration from a TOML file. The `config` object should contain all necessary
+#' parameters for the module execution, and it will be logged at the start of the module run.
+#' @param hide_value_pattern (Optional) A character string pattern used to hide
+#' certain values in the logged configuration output. Default is `""`.
+#'
+#' @export
+startModule <- function(config, hide_value_pattern = "") {
+  # Create necessary directories
+  createDIRS(MODULE_NAME) # MODULE_NAME is set in initModuleConstants
+  # Create globally used process clock
+  createClock()
+  # Start logging console outputs
+  startLogging(MODULE_NAME)
+  # Log github active tag and branch
+  cat("\n---------------------------\nGithub Script Version:\n---------------------------\n")
+  cat(getGitInfo())
+  # Log all configuration parameters, optionally hiding values based on the pattern
+  catList(config, prefix = "\n---------------------------\nConfiguration:\n---------------------------\n", suffix = "\n", hide_value_pattern)
 }
 
 #' Store Finish Data in a Log File
