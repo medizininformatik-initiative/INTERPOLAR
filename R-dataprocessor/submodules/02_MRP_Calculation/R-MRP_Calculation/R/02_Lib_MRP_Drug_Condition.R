@@ -98,8 +98,10 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
     icd_code = character(),
     icd_display = character(),
     atc_code = character(),
+    atc_fhir_id = character(),
     proxy_code = character(),
     proxy_type = character(),
+    proxy_fhir_id = character(),
     diagnosis_cluster = character(),
     kurzbeschr_drug = character(),
     kurzbeschr_suffix = character(),
@@ -228,20 +230,35 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
       mrp_table_list_row <- mrp_table_list_rows[j]
       validity_days <- mrp_table_list_row$ICD_VALIDITY_DAYS
 
+      # Determine newest matching condition including con_id
       if (tolower(validity_days) == "unbegrenzt") {
-        condition_start_datetime <- max(patient_conditions$start_datetime)
+        matching_conditions <- patient_conditions[
+          start_datetime <= meda_datetime
+        ]
       } else {
-        condition_start_datetime <- patient_conditions[
-          start_datetime >= (meda_datetime - lubridate::days(as.numeric(validity_days))) &
-            start_datetime <= meda_datetime,
-          start_datetime
-        ][1]
+        validity_num <- suppressWarnings(as.numeric(validity_days))
+        matching_conditions <- patient_conditions[
+          start_datetime >= (meda_datetime - lubridate::days(validity_num)) &
+            start_datetime <= meda_datetime
+        ]
       }
+      if (!nrow(matching_conditions)) next
+      # Select newest condition (latest start_datetime)
+      newest_condition <- matching_conditions[
+        which.max(start_datetime)
+      ]
+      condition_start_datetime <- newest_condition$start_datetime
+      condition_fhir_id <- newest_condition$con_id
 
       # Check if any of the matched ATC codes appear in the current ATC field of the MRP definition
       relevant_atcs <- match_atc_codes[
-        grepl(mrp_table_list_row$ATC_FOR_CALCULATION, atc_code),
-        atc_code
+        grepl(mrp_table_list_row$ATC_FOR_CALCULATION, atc_code)
+      ][
+        order(-start_datetime)
+      ][
+        , .SD[1], by = atc_code
+      ][
+        , .(atc_code, fhir_id)
       ]
 
       # Get or create mrp_index
@@ -252,15 +269,17 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
         new_row <- data.table::data.table(
           mrp_index = mrp_index,
           icd_code = mrp_icd,
-          atc_code = relevant_atcs,
+          atc_code = relevant_atcs$atc_code,
+          atc_fhir_id = relevant_atcs$fhir_id,
           proxy_code = mrp_icd, # for ICD MRP without a real proxy we set the ICD code as "proxy" code to get this value in the dp_mrp_calculations table in the proxy_code column
           proxy_type = "ICD", # same like with proxy code (even if this is not a proxy)
+          proxy_fhir_id = condition_fhir_id, # no real proxy, so no fhir id
           diagnosis_cluster = mrp_table_list_row$CONDITION_DISPLAY_CLUSTER
         )
 
         # Add start_datetime of the matched ATC code
-        new_row <- merge(new_row, match_atc_codes[, .(atc_code, start_datetime)],
-                         by = "atc_code", all.x = TRUE)
+        new_row <- unique(merge(new_row, match_atc_codes[, .(atc_code, start_datetime)],
+                         by = "atc_code", all.x = TRUE))
 
         new_row[, icd_display := {
           displays <- relevant_conditions[con_code_code %in% icd_code, con_code_display]
@@ -939,8 +958,10 @@ matchICDProxies <- function(
       mrp_index = integer(),
       icd_code = character(),
       atc_code = character(),
+      atc_fhir_id = character(),
       proxy_code = character(),
       proxy_type = character(),
+      proxy_fhir_id = character(),
       diagnosis_cluster = character(),
       kurzbeschr_drug = character(),
       kurzbeschr_suffix = character(),
@@ -1020,20 +1041,28 @@ matchICDProxies <- function(
               }
               proxy_display <- first_valid_row$display
               proxy_start_datetime <- first_valid_row$start_datetime
+              proxy_fhir_id <- first_valid_row$fhir_id
 
               # Get or create mrp_index
               mrp_index <- getOrCreateMrpIndex(match_proxy_row, getDrugConditionListRows())
 
               if (nrow(valid_proxy_rows)) {
                 # Get the start datetime of the matched ATC code
-                atc_start <- match_atc_codes[atc_code == match_proxy_row$ATC_FOR_CALCULATION, start_datetime][1]
+                matched_values <- match_atc_codes[
+                  atc_code == match_proxy_row$ATC_FOR_CALCULATION,
+                  .(start_datetime, fhir_id)
+                ][1]
+                atc_start <- matched_values$start_datetime
+                fhir_id   <- matched_values$fhir_id
 
                 new_row <- data.table::data.table(
                   mrp_index = mrp_index,
                   icd_code = match_proxy_row$ICD,
                   atc_code = match_proxy_row$ATC_FOR_CALCULATION,
+                  atc_fhir_id = fhir_id,
                   proxy_code = proxy_code,
                   proxy_type = proxy_type,
+                  proxy_fhir_id = proxy_fhir_id,
                   diagnosis_cluster = match_proxy_row$CONDITION_DISPLAY_CLUSTER,
                   kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION,
                                            "  (", format(atc_start, "%Y-%m-%d %H:%M:%S"), ")"),
@@ -1075,9 +1104,9 @@ matchICDProxies <- function(
       !is.null(drug_condition_mrp_tables_by_atc_proxy)) {
     #  Combine all medication rows
     all_medications <- rbind(
-      medication_resources$medication_requests[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
-      medication_resources$medication_statements[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
-      medication_resources$medication_administrations[, .(code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      medication_resources$medication_requests[, .(fhir_id = medreq_id, code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      medication_resources$medication_statements[, .(fhir_id = medstat_id, code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      medication_resources$medication_administrations[, .(fhir_id = medadm_id, code = atc_code, display = atc_display, start_datetime, end_datetime)],
       fill = TRUE
     )
     # ATC-Proxy-Matching
@@ -1092,7 +1121,7 @@ matchICDProxies <- function(
   if (!is.null(procedure_resources) &&
       !is.null(drug_condition_mrp_tables_by_ops_proxy)) {
     #  Combine all procedures rows
-    all_procedures <- procedure_resources[, .(code = proc_code_code, display = proc_code_display, start_datetime, end_datetime)]
+    all_procedures <- procedure_resources[, .(fhir_id = proc_id, code = proc_code_code, display = proc_code_display, start_datetime, end_datetime)]
     # OPS-Proxy-Matching
     ops_matches <- matchProxy(
       proxy_type = "OPS",
@@ -1107,7 +1136,8 @@ matchICDProxies <- function(
       !is.null(loinc_matching_function) &&
       !is.null(loinc_mapping_table)) {
     #  Combine all observation rows
-    all_observations <- observation_resources[, .(code = obs_code_code,
+    all_observations <- observation_resources[, .(fhir_id = obs_id,
+                                                  code = obs_code_code,
                                                   display = obs_code_display,
                                                   value = obs_valuequantity_value,
                                                   unit = data.table::fifelse(etlutils::isValidUnit(obs_valuequantity_code), obs_valuequantity_code, obs_valuequantity_unit),

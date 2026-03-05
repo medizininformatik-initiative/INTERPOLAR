@@ -60,9 +60,13 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
   config <- init(validate_config)
   etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+")
 
-  skip_db_operations <- exists("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
+  skip_db_operations <- etlutils::isDefinedAndTrue("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
 
   if (!skip_db_operations) {
+    if (reset_lock_only) {
+      etlutils::dbResetLock()
+      return()
+    }
     # Check if the release version of the database is compatible
     etlutils::checkVersion(ignore_newer_db_version)
   }

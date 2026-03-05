@@ -208,19 +208,42 @@ getEncounters <- function(table_description, current_datetime) {
       # Only if both parameters exist then we search with starts after (sa) and ends before (eb)
       # and only then the current_datetime is a vector with 2 entries (start date at 1 and end date
       # at 2)
-      if (exists("DEBUG_ENCOUNTER_DATETIME_START") && exists("DEBUG_ENCOUNTER_DATETIME_END") && nchar(DEBUG_ENCOUNTER_DATETIME_END) > 0) {
+      if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_DATETIME_START") && etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_DATETIME_END")) {
         encounter_dates <- c(
-          "date"   = paste0("sa", current_datetime[["start_datetime"]]),
-          "date"   = paste0("eb", current_datetime[["end_datetime"]])
+          "date"   = paste0("ge", current_datetime[["start_datetime"]]),
+          "date"   = paste0("lt", current_datetime[["end_datetime"]])
         )
         # If there is no end date given, but a start date, then we search with 'lower than' (lt).
         # If in the toml file a start date is given (parameter DEBUG_ENCOUNTER_DATETIME_START) then
         # this date replaces the current date of the system.
-      } else {
+      } else if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_DATETIME_START")) {
+        encounter_dates <- c(
+          "date"   = paste0("ge", current_datetime[["start_datetime"]])
+        )
+
+      } else if (!exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") || !grepl("&date=", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, fixed = TRUE)) {
         encounter_dates <- c(
           "date"   = paste0("lt", current_datetime)
         )
-      }
+      } else if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") & grepl("&date=", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, fixed = TRUE)) {
+        # Extract all date parameters from FHIR search string
+        date_values <- unlist(
+          regmatches(
+            FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS,
+            gregexpr("(?<=&date=)[^&]+",
+                     FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS,
+                     perl = TRUE)
+          )
+        )
+        # Build named vector (multiple date params allowed)
+        encounter_dates <- setNames(date_values, rep("date", length(date_values)))
+        # Remove all &date=... parameters from FHIR search string
+        FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS <- gsub(
+          "&date=[^&]+",
+          "",
+          FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS
+        )
+     }
 
       # default encounter status "in-progress" can be replaced in the toml file  by the
       # parameter FHIR_SEARCH_ENCOUNTER_STATUS. If it is given as vector then the values
@@ -269,7 +292,7 @@ getEncounters <- function(table_description, current_datetime) {
         parameters = parameters
       )
 
-      if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS")) {
+      if (etlutils::isDefinedAndNotEmpty("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS")) {
         request_encounter <- paste0(request_encounter, FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS)
       }
 
