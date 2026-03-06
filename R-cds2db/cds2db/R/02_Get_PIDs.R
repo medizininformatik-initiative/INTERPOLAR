@@ -208,19 +208,16 @@ getEncounters <- function(table_description, current_datetime) {
       # Only if both parameters exist then we search with starts after (sa) and ends before (eb)
       # and only then the current_datetime is a vector with 2 entries (start date at 1 and end date
       # at 2)
-      if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_DATETIME_START") && etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_DATETIME_END")) {
+      if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_STARTS_AFTER")) {
         encounter_dates <- c(
-          "date"   = paste0("ge", current_datetime[["start_datetime"]]),
-          "date"   = paste0("lt", current_datetime[["end_datetime"]])
+          "date"   = paste0("sa", current_datetime[["period_start"]])
         )
-        # If there is no end date given, but a start date, then we search with 'lower than' (lt).
-        # If in the toml file a start date is given (parameter DEBUG_ENCOUNTER_DATETIME_START) then
-        # this date replaces the current date of the system.
-      } else if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_DATETIME_START")) {
-        encounter_dates <- c(
-          "date"   = paste0("ge", current_datetime[["start_datetime"]])
-        )
-
+        if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_STARTS_AT_OR_BEFORE")) {
+          encounter_dates <- c(
+            encounter_dates,
+            "date"   = paste0("le", current_datetime[["period_end"]])
+          )
+        }
       } else if (!exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") || !grepl("&date=", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, fixed = TRUE)) {
         encounter_dates <- c(
           "date"   = paste0("lt", current_datetime)
@@ -243,7 +240,7 @@ getEncounters <- function(table_description, current_datetime) {
           "",
           FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS
         )
-     }
+      }
 
       # default encounter status "in-progress" can be replaced in the toml file  by the
       # parameter FHIR_SEARCH_ENCOUNTER_STATUS. If it is given as vector then the values
@@ -320,7 +317,7 @@ getEncounters <- function(table_description, current_datetime) {
              "Encounters: ", paste0(invalid_encounters$id, collapse = ", "), "\n")
       } else if (nrow(invalid_encounters)) {
         etlutils::catWarningMessage(paste0("The following encounters have no valid subject reference:\n",
-                                    paste0(invalid_encounters$id, collapse = ", ")), "\n")
+                                           paste0(invalid_encounters$id, collapse = ", ")), "\n")
       }
     })
 
@@ -392,11 +389,11 @@ getPIDsSplittedByWard <- function(log_result = TRUE) {
         ]
         if (length(na_columns)) {
           warning_message <- paste0("The following columns have only NA values:\n",
-                                  paste(na_columns, collapse = ", "), "\n",
-                                  "Please check the filter patterns in the toml file.\n",
-                                  "This may indicate that invalid column names are specified in",
-                                  " ENCOUNTER_FILTER_PATTERNS. Wards with such invalid Encounter",
-                                  " column names will never be able to contain patients.\n")
+                                    paste(na_columns, collapse = ", "), "\n",
+                                    "Please check the filter patterns in the toml file.\n",
+                                    "This may indicate that invalid column names are specified in",
+                                    " ENCOUNTER_FILTER_PATTERNS. Wards with such invalid Encounter",
+                                    " column names will never be able to contain patients.\n")
           etlutils::catWarningMessage(warning_message)
         }
       })
