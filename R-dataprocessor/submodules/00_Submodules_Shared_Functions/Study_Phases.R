@@ -30,29 +30,6 @@ extractValues <- function(list_with_string_vector, key) {
 }
 
 #
-# Parse a timestamp string in the format "YYYY-MM-DD", "YYYY-MM-DD HH:MM", or "YYYY-MM-DD HH:MM:SS" into a POSIXct object. Returns NA for invalid formats.
-#
-parseTimestamp <- function(x) {
-  if (is.na(x)) return(NA)
-  # Allow:
-  # YYYY-MM-DD
-  # YYYY-MM-DD HH:MM
-  # YYYY-MM-DD HH:MM:SS
-  if (!grepl("^\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2}(:\\d{2})?)?$", x, perl = TRUE)) {
-    stop("Invalid timestamp format: ", x)
-  }
-  # Only date
-  if (nchar(x) == 10L) {
-    x <- paste0(x, " 00:00:00")
-  }
-  # Date + HH:MM (no seconds)
-  if (nchar(x) == 16L) {
-    x <- paste0(x, ":00")
-  }
-  as.POSIXct(x, tz = GLOBAL_TIMEZONE, format = "%Y-%m-%d %H:%M:%S")
-}
-
-#
 # Validate the ward phase definitions from the configuration. Checks for required fields, correct formats, and logical consistency.
 #
 validateWardPhasesDefinition <- function() {
@@ -80,11 +57,11 @@ validateWardPhasesDefinition <- function() {
       if (is.na(phase_a))
         stop("Missing phase_a_start in ward '", ward_name, "'.")
 
-      phase_a <- parseTimestamp(phase_a)
+      phase_a <- etlutils::parseTimestamp(phase_a, stop_on_invalid = TRUE)
 
       phase_b <- extractSingleEntryLinesValue(lines, "phase_b_start")
       if (!is.na(phase_b)) {
-        phase_b <- parseTimestamp(phase_b)
+        phase_b <- etlutils::parseTimestamp(phase_b, stop_on_invalid = TRUE)
         if (!(phase_a < phase_b))
           stop("phase_a_start must be earlier than phase_b_start in ward '", ward_name, "'.")
       }
@@ -139,11 +116,11 @@ getStudyPhase <- function(ward_name, date_time) {
   if (phase_def_index != -1L) {
     phase <- "NoPhaseActive" # indicates that the ward is defined in the configuration but no phase is active for the given date_time
     lines <- ward_phases[[phase_def_index]][[1]]
-    phase_b_start <- parseTimestamp(extractSingleEntryLinesValue(lines, "phase_b_start"))
+    phase_b_start <- etlutils::parseTimestamp(extractSingleEntryLinesValue(lines, "phase_b_start"))
     if (!is.na(phase_b_start) && date_time >= phase_b_start) {
       phase <- "PhaseB"
     } else {
-      phase_a_start <- parseTimestamp(extractSingleEntryLinesValue(lines, "phase_a_start"))
+      phase_a_start <- etlutils::parseTimestamp(extractSingleEntryLinesValue(lines, "phase_a_start"))
       if (date_time >= phase_a_start) {
         phase <- "PhaseA"
       }
@@ -168,7 +145,7 @@ isPhaseBActive <- function(timestamp =  etlutils::as.POSIXctWithTimezone(Sys.tim
   # the timestamp cannot be empty or invalid format because this is already checked in validateWardPhase
   # which is called in before this function is called
   for (phase_b_start in phase_b_starts) {
-    phase_b_start <- parseTimestamp(phase_b_start)
+    phase_b_start <- etlutils::parseTimestamp(phase_b_start)
     if (phase_b_start <= timestamp) {
       return(TRUE)
     }
@@ -184,10 +161,8 @@ hasPhaseBOrBTestWards <- function(timestamp =  etlutils::as.POSIXctWithTimezone(
   # the correct format of the ward phases and that all necessary fields are present. This check is not
   # computationally expensive and should be done before any processing of the ward phases is done.
   validateWardPhasesDefinition()
-
   if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST")) {
     return(TRUE)
   }
   return(isPhaseBActive(timestamp))
 }
-

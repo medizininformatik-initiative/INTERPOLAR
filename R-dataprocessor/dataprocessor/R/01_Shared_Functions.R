@@ -34,19 +34,6 @@
 #'
 #' @export
 validateWardPhases <- function(ward_phases, timezone = GLOBAL_TIMEZONE) {
-  parseTimestamp <- function(x) {
-    if (!grepl("^\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2}(:\\d{2})?)?$", x, perl = TRUE)) {
-      return(NA)
-    }
-
-    if (nchar(x) == 10L) {
-      x <- paste0(x, " 00:00:00")
-    } else if (nchar(x) == 16L) {
-      x <- paste0(x, ":00")
-    }
-
-    as.POSIXct(x, tz = timezone, format = "%Y-%m-%d %H:%M:%S")
-  }
 
   parsed_records <- etlutils::parseStructuredConfigDefinitions(
     definitions = ward_phases,
@@ -95,14 +82,14 @@ validateWardPhases <- function(ward_phases, timezone = GLOBAL_TIMEZONE) {
       stop("Duplicate ward_name found: '", ward_name_record$value, "'.")
     }
 
-    phase_a_start <- parseTimestamp(phase_a_record$value)
+    phase_a_start <- etlutils::parseTimestamp(phase_a_record$value)
     if (is.na(phase_a_start)) {
       stop("phase_a_start is not a valid date/time in ", phase_a_record$definition_name, " / ", phase_a_record$entry_name, " / line ", phase_a_record$line_index, ": ", phase_a_record$value)
     }
 
     if (length(phase_b_records) == 1L) {
       phase_b_record <- phase_b_records[[1]]
-      phase_b_start <- parseTimestamp(phase_b_record$value)
+      phase_b_start <- etlutils::parseTimestamp(phase_b_record$value)
 
       if (is.na(phase_b_start)) {
         stop("phase_b_start is not a valid date/time in ", phase_b_record$definition_name, " / ", phase_b_record$entry_name, " / line ", phase_b_record$line_index, ": ", phase_b_record$value)
