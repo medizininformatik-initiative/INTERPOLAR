@@ -1,3 +1,124 @@
+#' Validate ward phase definitions
+#'
+#' This function validates ward phase definitions. It checks that each
+#' definition contains exactly one non-empty `ward_name`, exactly one
+#' `phase_a_start`, and at most one `phase_b_start`. It also checks that all
+#' phase timestamps have a valid format and can be parsed as POSIXct values.
+#'
+#' @param ward_phases A list of named lists containing ward phase definitions.
+#' @param timezone A character string defining the timezone used for parsing
+#'   phase timestamps.
+#'
+#' @return Invisibly returns `TRUE` if all definitions are valid. Otherwise, the
+#'   function stops with an error describing the first invalid definition found.
+#'
+#' @examples
+#' ward_phases <- list(
+#'   list(
+#'     PHASES_WARD_1 = c(
+#'       "ward_name = 'Station 1'",
+#'       "phase_a_start = '2026-01-11 10:00:00'",
+#'       "phase_b_start = '2026-01-21 10:00:00'"
+#'     )
+#'   ),
+#'   list(
+#'     PHASES_WARD_2 = c(
+#'       "ward_name = 'Station 2'",
+#'       "phase_a_start = '2026-01-11'",
+#'       "phase_b_start = '2026-01-12'"
+#'     )
+#'   )
+#' )
+#'
+#' validateWardPhases(ward_phases, timezone = "UTC")
+#'
+#' @export
+validateWardPhases <- function(ward_phases, timezone = GLOBAL_TIMEZONE) {
+  parseTimestamp <- function(x) {
+    if (!grepl("^\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2}(:\\d{2})?)?$", x, perl = TRUE)) {
+      return(NA)
+    }
+
+    if (nchar(x) == 10L) {
+      x <- paste0(x, " 00:00:00")
+    } else if (nchar(x) == 16L) {
+      x <- paste0(x, ":00")
+    }
+
+    as.POSIXct(x, tz = timezone, format = "%Y-%m-%d %H:%M:%S")
+  }
+
+  parsed_records <- etlutils::parseStructuredConfigDefinitions(
+    definitions = ward_phases,
+    allowed_key_pattern = "ward_name|phase_a_start|phase_b_start",
+    allow_plus = FALSE
+  )
+
+  if (length(parsed_records) == 0L) {
+    return(invisible(TRUE))
+  }
+
+  definition_names <- unique(vapply(parsed_records, `[[`, "", "definition_name"))
+  ward_names <- character()
+
+  for (definition_name in definition_names) {
+    definition_records <- parsed_records[
+      vapply(parsed_records, `[[`, "", "definition_name") == definition_name
+    ]
+
+    keys <- vapply(definition_records, `[[`, "", "key")
+
+    ward_name_records <- definition_records[keys == "ward_name"]
+    phase_a_records <- definition_records[keys == "phase_a_start"]
+    phase_b_records <- definition_records[keys == "phase_b_start"]
+
+    if (length(ward_name_records) != 1L) {
+      stop("Definition ", definition_name," must contain exactly one ward_name, but contains ",length(ward_name_records), ".")
+    }
+
+    if (length(phase_a_records) != 1L) {
+      stop("Definition ", definition_name," must contain exactly one phase_a_start, but contains ",length(phase_a_records), ".")
+    }
+
+    if (length(phase_b_records) > 1L) {
+      stop("Definition ", definition_name," must contain at most one phase_b_start, but contains ",length(phase_b_records), ".")
+    }
+
+    ward_name_record <- ward_name_records[[1]]
+    phase_a_record <- phase_a_records[[1]]
+
+    if (trimws(ward_name_record$value) == "") {
+      stop("ward_name must not be empty in ", ward_name_record$definition_name, " / ",ward_name_record$entry_name, " / line ", ward_name_record$line_index)
+    }
+
+    if (ward_name_record$value %in% ward_names) {
+      stop("Duplicate ward_name found: '", ward_name_record$value, "'.")
+    }
+
+    phase_a_start <- parseTimestamp(phase_a_record$value)
+    if (is.na(phase_a_start)) {
+      stop("phase_a_start is not a valid date/time in ", phase_a_record$definition_name, " / ", phase_a_record$entry_name, " / line ", phase_a_record$line_index, ": ", phase_a_record$value)
+    }
+
+    if (length(phase_b_records) == 1L) {
+      phase_b_record <- phase_b_records[[1]]
+      phase_b_start <- parseTimestamp(phase_b_record$value)
+
+      if (is.na(phase_b_start)) {
+        stop("phase_b_start is not a valid date/time in ", phase_b_record$definition_name, " / ", phase_b_record$entry_name, " / line ", phase_b_record$line_index, ": ", phase_b_record$value)
+      }
+
+      if (phase_b_start < phase_a_start) {
+        stop("phase_b_start must not be earlier than phase_a_start in ",definition_name, ".")
+      }
+    }
+
+    ward_names <- c(ward_names, ward_name_record$value)
+  }
+
+  invisible(TRUE)
+}
+
 # This function constructs an error or warning message with optional additional
 # information such as related tables and database connection details. It can be
 # used to provide more context when reporting errors or warnings.
