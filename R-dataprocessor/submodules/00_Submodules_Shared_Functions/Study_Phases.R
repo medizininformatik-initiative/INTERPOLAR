@@ -39,7 +39,7 @@ parseTimestamp <- function(x) {
   # YYYY-MM-DD HH:MM
   # YYYY-MM-DD HH:MM:SS
   if (!grepl("^\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2}(:\\d{2})?)?$", x, perl = TRUE)) {
-    stop("Invalid timestamp format: ", x, call. = FALSE)
+    stop("Invalid timestamp format: ", x)
   }
   # Only date
   if (nchar(x) == 10L) {
@@ -64,21 +64,21 @@ validateWardPhasesDefinition <- function() {
 
       entry <- ward_phases[[i]]
       if (!is.list(entry) || length(entry) < 1L)
-        stop("Entry ", i, " is not a valid ward definition.", call. = FALSE)
+        stop("Entry ", i, " is not a valid ward definition.")
 
       lines <- entry[[1]]
       if (!is.character(lines))
-        stop("Entry ", i, " does not contain a character vector.", call. = FALSE)
+        stop("Entry ", i, " does not contain a character vector.")
 
       ward_name <- extractSingleEntryLinesValue(lines, "ward_name")
       if (is.na(ward_name) || !nzchar(ward_name))
-        stop("Missing ward_name in entry ", i, ".", call. = FALSE)
+        stop("Missing ward_name in entry ", i, ".")
 
       ward_names[i] <- ward_name
 
       phase_a <- extractSingleEntryLinesValue(lines, "phase_a_start")
       if (is.na(phase_a))
-        stop("Missing phase_a_start in ward '", ward_name, "'.", call. = FALSE)
+        stop("Missing phase_a_start in ward '", ward_name, "'.")
 
       phase_a <- parseTimestamp(phase_a)
 
@@ -86,17 +86,13 @@ validateWardPhasesDefinition <- function() {
       if (!is.na(phase_b)) {
         phase_b <- parseTimestamp(phase_b)
         if (!(phase_a < phase_b))
-          stop(
-            "phase_a_start must be earlier than phase_b_start in ward '",
-            ward_name, "'.",
-            call. = FALSE
-          )
+          stop("phase_a_start must be earlier than phase_b_start in ward '", ward_name, "'.")
       }
     }
 
     if (any(duplicated(ward_names))) {
       dup <- ward_names[duplicated(ward_names)][1]
-      stop("Duplicate ward_name detected: '", dup, "'.", call. = FALSE)
+      stop("Duplicate ward_name detected: '", dup, "'.")
     }
 
     assign("STUDY_PHASE_IS_VALID", TRUE, envir = .dataprocessor_shared_functions_env)
