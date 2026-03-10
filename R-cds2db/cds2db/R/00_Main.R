@@ -29,6 +29,9 @@ init <- function(validate_config = TRUE) {
     encounter_filter_patterns <-etlutils::getGlobalVariablesByPrefix("ENCOUNTER_FILTER_PATTERN")
     validateEncounterFilterPatterns(encounter_filter_patterns)
 
+    if (etlutils::isDefinedAndTrue("DATA_IMPORT_IS_ACTIVE")) {
+      # TODO: checke die Parameter aus der cds2db_config.toml aus dem Abschnitt [data.import]
+    }
   }
   return(config)
 }
@@ -62,7 +65,7 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
   # Initialize and start module
   config <- init(validate_config)
-  etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+")
+  etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+|^DATA_IMPORT_PATH_")
 
   skip_db_operations <- etlutils::isDefinedAndTrue("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
 

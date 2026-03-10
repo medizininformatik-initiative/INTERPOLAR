@@ -69,6 +69,8 @@ resetMemory <- function(...) {
 
     "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS",
 
+    "DATA_IMPORT_IS_ACTIVE",
+
     # Runtime variables from StartDebugCDSToolChain.R that should not be deleted
     "start_full",
     "day_times",
