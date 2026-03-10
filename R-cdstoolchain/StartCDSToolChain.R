@@ -50,8 +50,9 @@ for (arg in args) {
   }
 }
 
-resetMemory <- function() {
+resetMemory <- function(...) {
   etlutils::resetMemory(protected_objects = c(
+    ...,
     "DEBUG_DAY",
     "DEBUG_DATES",
     "DEBUG_MODULES_PATH_TO_CONFIG_TOML",
@@ -98,10 +99,20 @@ shouldStart <- function(module_name) {
 }
 
 # Initialize modules and validate configurations
-for (init_function in c(cds2db::init, dataprocessor::init, db2frontend::initFrontend2DB, db2frontend::initDB2Frontend)) {
-  resetMemory()
-  init_function()
-}
+resetMemory()
+config_cds2db <- cds2db::init()
+resetMemory("config_cds2db")
+config_dataprocessor <- dataprocessor::init()
+
+#TODO: Check if the parameters in config_cds2db and config_dataprocessor are compatible, e.g. if the encounter filter pattern in config_cds2db matches the expected ward definition in config_dataprocessor
+
+resetMemory("config_cds2db", "config_dataprocessor")
+config_db2frontend <- db2frontend::initFrontend2DB()
+# checks needed config_cds2db or config_dataprocessor vs. config_db2frontend?
+resetMemory("config_cds2db", "config_dataprocessor", "config_db2frontend")
+config_frontend2db <- db2frontend::initDB2Frontend()
+# checks needed config_cds2db or config_dataprocessor vs. config_frontend2db?
+# config_frontend2db and config_db2frontend should be the same and should be checked vise versa during the init of one of these modules
 resetMemory()
 
 tryCatch({
