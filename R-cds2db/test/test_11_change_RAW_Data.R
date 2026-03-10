@@ -92,7 +92,7 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(12)
+  duplicatePatients(30)
 
   runCodeForDebugDay(1, {
 
