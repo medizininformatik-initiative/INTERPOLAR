@@ -63,6 +63,7 @@ initModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = N
   )
   # Check for mandatory parameters
   checkMandatoryParameters(mandatory_parameters)
+  return(config)
 }
 
 #' Start Module Execution (logging and directories)
