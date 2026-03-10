@@ -147,14 +147,13 @@ processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE)
   config <- init(validate_config)
   etlutils::startModule(config)
 
-  # Check if the release version of the database is compatible
-  etlutils::checkVersion(ignore_newer_db_version)
-
   try(etlutils::runLevel1("Run Dataprocessor", {
 
     # Reset lock from unfinished previous dataprocessor run
     etlutils::runLevel2("Reset database lock from unfinished previous run", {
       etlutils::dbResetLock()
+      # Check if the release version of the database is compatible
+      etlutils::checkVersion(ignore_newer_db_version)
     })
 
     etlutils::runLevel2("Source function script", {

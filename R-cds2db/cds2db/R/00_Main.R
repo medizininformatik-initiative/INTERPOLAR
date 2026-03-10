@@ -66,21 +66,14 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
   skip_db_operations <- etlutils::isDefinedAndTrue("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
 
-  if (!skip_db_operations) {
-    if (reset_lock_only) {
-      etlutils::dbResetLock()
-      return()
-    }
-    # Check if the release version of the database is compatible
-    etlutils::checkVersion(ignore_newer_db_version)
-  }
-
   try(etlutils::runLevel1("Run Retrieve", {
 
     if (!skip_db_operations) {
       # Reset database lock from unfinished previous cds2db run
       etlutils::runLevel2("Reset database lock from unfinished previous run", {
         etlutils::dbResetLock()
+        # Check if the release version of the database is compatible
+        etlutils::checkVersion(ignore_newer_db_version)
       })
       # Check if we must create references for old data (should be executed exactly once and then never again)
       etlutils::runLevel2("Create references for old data", {

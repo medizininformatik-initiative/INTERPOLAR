@@ -103,14 +103,13 @@ startFrontend2DB <- function(ignore_newer_db_version = FALSE, validate_config = 
   config <- initFrontend2DB(validate_config)
   etlutils::startModule(config, hide_value_pattern = "^REDCAP_")
 
-  # Check if the release version of the database is compatible
-  etlutils::checkVersion(ignore_newer_db_version)
-
   try(etlutils::runLevel1("Run Frontend -> DB", {
 
     # Reset database lock from unfinished previous db2frontend run
     etlutils::runLevel2("Reset database lock from unfinished previous run", {
       etlutils::dbResetLock()
+      # Check if the release version of the database is compatible
+      etlutils::checkVersion(ignore_newer_db_version)
     })
 
     # Delete Redcap content (DEBUG and TESTS)
@@ -158,15 +157,13 @@ startDB2Frontend <- function(ignore_newer_db_version = FALSE, validate_config = 
   config <- initDB2Frontend(validate_config)
   etlutils::startModule(config, hide_value_pattern = "^REDCAP_")
 
-
-  # Check if the release version of the database is compatible
-  etlutils::checkVersion(ignore_newer_db_version)
-
   try(etlutils::runLevel1("Run DB -> Frontend", {
 
     # Reset database lock from unfinished previous db2frontend run
     etlutils::runLevel2("Reset database lock from unfinished previous run", {
       etlutils::dbResetLock()
+      # Check if the release version of the database is compatible
+      etlutils::checkVersion(ignore_newer_db_version)
     })
 
     # Import Data from Database to Frontend
