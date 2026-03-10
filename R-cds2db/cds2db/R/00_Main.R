@@ -24,7 +24,11 @@ init <- function(validate_config = TRUE) {
                        )
   )
   if (validate_config) {
-    # TODO: add validation
+
+    # get the list of pattern vectors
+    encounter_filter_patterns <-etlutils::getGlobalVariablesByPrefix("ENCOUNTER_FILTER_PATTERN")
+    validateEncounterFilterPatterns(encounter_filter_patterns)
+
   }
   return(config)
 }

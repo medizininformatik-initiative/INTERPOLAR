@@ -3,5 +3,6 @@
 export(init)
 export(resetLock)
 export(retrieve)
+export(validateEncounterFilterPatterns)
 import(data.table)
 import(etlutils)
