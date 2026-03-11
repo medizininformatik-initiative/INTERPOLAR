@@ -81,22 +81,58 @@ validateEncounterFilterPatterns <- function(encounter_filter_patterns) {
 #' Validate configuration parameters for the data import process
 #'
 validateConfig <- function() {
-  # get the list of pattern vectors
-  encounter_filter_patterns <-etlutils::getGlobalVariablesByPrefix("ENCOUNTER_FILTER_PATTERN")
+  # Get the list of pattern vectors
+  encounter_filter_patterns <- etlutils::getGlobalVariablesByPrefix("ENCOUNTER_FILTER_PATTERN")
+
+  ###
+  # Check the correct structure of encounter filter patterns
+  ###
   validateEncounterFilterPatterns(encounter_filter_patterns)
 
+  if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") && length(FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS) > 1) {
+    stop("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS must be defined as single string.")
+  }
+
+  has_addition_parameters_with_date <- exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") && grepl("&date=", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, fixed = TRUE)
+
+  ###
+  # Validate data import parameters
+  ###
   if (etlutils::isDefinedAndTrue("DATA_IMPORT_IS_ACTIVE")) {
-    if (etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_START") && etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_END")) {
-      if (!etlutils::isValidTimestampString(DATA_IMPORT_RANGE_START) || !etlutils::isValidTimestampString(DATA_IMPORT_RANGE_END)) {
-        stop("DATA_IMPORT_RANGE_START and DATA_IMPORT_RANGE_END must be valid timestamp strings in the format 'YYYY-MM-DD HH:MM:SS'.")
+
+    ###
+    # Remove all DEBUG parameters from global conext if the data export is running to prevent any side effects
+    ###
+    debug_parameters <- grep("^DEBUG_", ls(.GlobalEnv), value = TRUE)
+    if (length(debug_parameters)) {
+      etlutils::catWarningMessage("In data import all debug parameters are ignored!")
+    }
+    rm(list = debug_parameters, envir = .GlobalEnv)
+
+    ###
+    # Validate the date range parameters for data import
+    ###
+    if (!etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_START") || !etlutils::isValidTimestampString(DATA_IMPORT_RANGE_START)) {
+      stop("DATA_IMPORT_RANGE_START must be valid timestamp strings in the format 'YYYY-MM-DD HH:MM:SS' for the data import.")
+    }
+    if (etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_END")) {
+      if (!etlutils::isValidTimestampString(DATA_IMPORT_RANGE_END)) {
+        stop("DATA_IMPORT_RANGE_END must be valid timestamp strings in the format 'YYYY-MM-DD HH:MM:SS'.")
+      } else if (DATA_IMPORT_RANGE_START >= DATA_IMPORT_RANGE_END) { # we can use the string order here
+        stop("DATA_IMPORT_RANGE_END must be greater than DATA_IMPORT_RANGE_START for the data import..")
       }
-    } else if (etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_START")) {
-      stop("DATA_IMPORT_RANGE_END must be defined and not empty when DATA_IMPORT_RANGE_START is defined and not empty.")
-    } else if (etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_END")) {
-      stop("DATA_IMPORT_RANGE_START must be defined and not empty when DATA_IMPORT_RANGE_END is defined and not empty.")
     }
 
+    ###
+    # Ensure FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS does not contain &date= if data import is running
+    ###
+    if (has_addition_parameters_with_date) {
+      stop("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS can not contain '&date=' if data import is active.")
+    }
+
+    ###
     # Check, if the following parameters are defined and not empty but not defined, if any of the others is defined and not empty:
+    ###
     params <- c(
       "DATA_IMPORT_PATH_TO_FHIR_PIDS",
       "DATA_IMPORT_PATH_TO_FHIR_ENC_IDS",
@@ -105,20 +141,24 @@ validateConfig <- function() {
       "DATA_IMPORT_FHIR_ENC_IDS",
       "DATA_IMPORT_FHIR_IDENTIFIERS"
     )
-
     defined <- vapply(
       params,
       etlutils::isDefinedAndNotEmpty,
       logical(1)
     )
-
     if (sum(defined) > 1) {
-      stop(
-        "The following parameters are mutually exclusive and only one may be defined with non empty values:\n    ",
-        paste(params[defined], collapse = "\n    "),
-        call. = FALSE
-      )
+      stop("The following parameters are mutually exclusive and only one may be defined with non empty values:\n    ",
+           paste(params[defined], collapse = "\n    "))
     }
-
   }
+
+  ###
+  # Ensure FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS does not contain &date= if debug dates are given
+  ###
+  if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_STARTS_AT_OR_BEFORE") || etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_STARTS_AFTER")) {
+    if (has_addition_parameters_with_date) {
+      stop("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS can not contain '&date=' if degub encouter start dates are defined.")
+    }
+  }
+
 }
