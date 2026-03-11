@@ -205,47 +205,36 @@ getEncounters <- function(table_description, current_datetime) {
 
     runLevel3("Download and Crack Encounters", {
 
-      # Only if both parameters exist then we search with starts after (sa) and ends before (eb)
-      # and only then the current_datetime is a vector with 2 entries (start date at 1 and end date
-      # at 2)
-      if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_STARTS_AFTER")) {
-        encounter_dates <- c(
-          "date"   = paste0("sa", current_datetime[["period_start"]])
-        )
-        if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_STARTS_AT_OR_BEFORE")) {
-          encounter_dates <- c(
-            encounter_dates,
-            "date"   = paste0("le", current_datetime[["period_end"]])
-          )
+      # current_date_time contains the NA value with the name period_start_is_set_by_param
+      # if the start date is not Sys.time() but explicitly set by a toml parameter like
+      # DEBUG_ENCOUNTER_STARTS_AFTER or DATA_IMPORT_RANGE_START
+      if ("period_start_is_set_by_param" %in% names(current_datetime)) {
+        encounter_dates <- c("date" = paste0("sa", current_datetime[["period_start"]]))
+        if ("period_end" %in% names(current_datetime)) {
+          encounter_dates <- c(encounter_dates, "date" = paste0("le", current_datetime[["period_end"]]))
         }
       } else if (!exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") || !grepl("&date=", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, fixed = TRUE)) {
-        encounter_dates <- c(
-          "date"   = paste0("lt", current_datetime)
-        )
-      } else if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") & grepl("&date=", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, fixed = TRUE)) {
+        encounter_dates <- c("date" = paste0("lt", current_datetime))
+      } else if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") && grepl("&date=", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, fixed = TRUE)) {
         # Extract all date parameters from FHIR search string
         date_values <- unlist(
           regmatches(
             FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS,
-            gregexpr("(?<=&date=)[^&]+",
-                     FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS,
-                     perl = TRUE)
+            gregexpr("(?<=&date=)[^&]+", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, perl = TRUE)
           )
         )
         # Build named vector (multiple date params allowed)
         encounter_dates <- setNames(date_values, rep("date", length(date_values)))
         # Remove all &date=... parameters from FHIR search string
-        FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS <- gsub(
-          "&date=[^&]+",
-          "",
-          FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS
-        )
+        FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS <- gsub("&date=[^&]+", "", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS)
       }
 
       # default encounter status "in-progress" can be replaced in the toml file  by the
       # parameter FHIR_SEARCH_ENCOUNTER_STATUS. If it is given as vector then the values
       # will be comma separated pasted together.
-      if (exists("FHIR_SEARCH_ENCOUNTER_STATUS")) {
+      if (etlutils::isDefinedAndTrue("DATA_IMPORT_IS_ACTIVE")) {
+        encounter_status <- "finsihed"
+      } else if (exists("FHIR_SEARCH_ENCOUNTER_STATUS")) {
         if (!nchar(trimws(FHIR_SEARCH_ENCOUNTER_STATUS))) { # Intentionally empty status
           encounter_status <- NA_character_
         } else {
@@ -376,7 +365,7 @@ getPIDsSplittedByWard <- function(log_result = TRUE) {
         names(encounters) <- filter_enc_table_description@cols@.Data
       })
 
-      etlutils::runLevel3("Validate Encounter Filters", {
+      etlutils::runLevel3("Check downloaded Encounters have values in filter columns", {
         # Check if any column except the period/end column has only NA values -> generate warning
         cols_to_check <- setdiff(names(encounters), "period/end")
         # find columns with all values NA
