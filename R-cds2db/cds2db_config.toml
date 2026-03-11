@@ -149,6 +149,14 @@ FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 #################
 #COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
 
+#################
+# Activate this parameter to test which FHIR search request for Encounter is sent to the FHIR server.
+# This will only output the request, but not execute the entire 'cds2db' module.
+# Use this to see the result of the above debug parameters or, without the debug parameters, the
+# first FHIR search request for Encounter.
+#################
+#FHIR_SEARCH_ENCOUNTER_REQUEST_TEST = true
+
 
 [retrieve.patient_id_filtering]
 
