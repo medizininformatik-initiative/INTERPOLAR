@@ -24,14 +24,7 @@ init <- function(validate_config = TRUE) {
                        )
   )
   if (validate_config) {
-
-    # get the list of pattern vectors
-    encounter_filter_patterns <-etlutils::getGlobalVariablesByPrefix("ENCOUNTER_FILTER_PATTERN")
-    validateEncounterFilterPatterns(encounter_filter_patterns)
-
-    if (etlutils::isDefinedAndTrue("DATA_IMPORT_IS_ACTIVE")) {
-      # TODO: checke die Parameter aus der cds2db_config.toml aus dem Abschnitt [data.import]
-    }
+    validateConfig()
   }
   return(config)
 }
