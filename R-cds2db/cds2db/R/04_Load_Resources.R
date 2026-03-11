@@ -1,33 +1,3 @@
-#' Get Current Datetime
-#'
-#' This function returns the current datetime. If the global variable `DEBUG_ENCOUNTER_DATETIME_START` exists, it returns its value as a POSIXct object.
-#' Otherwise, it returns the current system time.
-#'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME_START` if it exists.
-#'
-getCurrentDatetime <- function() {
-  period_start <- etlutils::as.POSIXctWithTimezone(Sys.time())
-  if (etlutils::isDefinedAndNotEmpty('DEBUG_ENCOUNTER_STARTS_AFTER')) {
-    period_start <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_STARTS_AFTER)
-    if (etlutils::isDefinedAndNotEmpty('DEBUG_ENCOUNTER_STARTS_AT_OR_BEFORE') > 0) {
-      period_end <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_STARTS_AT_OR_BEFORE)
-      return(c(period_start = period_start, period_end = period_end))
-    }
-  }
-  return(c(period_start = period_start))
-}
-
-#' Get Query Datetime
-#'
-#' This function returns the current datetime formatted for SQL queries.
-#' It retrieves the current datetime using the \code{getCurrentDatetime} function and formats it as a string in "YYYY-MM-DD HH:MM:SS" format.
-#'
-#' @return A character string representing the current datetime formatted for SQL queries.
-#'
-getQueryDatetime <- function() {
-  format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
-}
-
 #' Get active encounter patient IDs from the database
 #'
 #' This function retrieves patient IDs from encounters that are active based on
