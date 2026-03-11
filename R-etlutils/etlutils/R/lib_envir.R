@@ -338,11 +338,9 @@ isDefinedAndFalse <- function(variable_name, envir = parent.frame()) {
 #'
 #' @export
 isDefinedAndNotEmpty <- function(variable_name, envir = parent.frame()) {
-  if (!exists(variable_name, envir = envir)) {
-    return(FALSE)
-  }
+  if (!exists(variable_name, envir = envir)) return(FALSE)
   val <- get(variable_name, envir = envir)
-  return(length(val) > 0 && any(nzchar(val)))
+  return(length(val) > 0 && (!is.character(val) || any(nzchar(val))))
 }
 
 #' Check for the existence of mandatory parameters
