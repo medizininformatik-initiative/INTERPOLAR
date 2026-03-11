@@ -132,7 +132,7 @@ parseQueryList <- function(list_string, split = " ") {
   etlutils::fhirdbGetQueryList(splitted)
 }
 
-#' Get the most relevant current datetime
+#' Get the end datetime of the given encounters
 #'
 #' This function retrieves the latest encounter end datetime from the `encounters` table.
 #' If no valid end datetime is available, it defaults to the current system time (`Sys.time()`).
@@ -148,7 +148,7 @@ parseQueryList <- function(list_string, split = " ") {
 #' @return A `POSIXct` object representing the most recent encounter end datetime
 #'         or the current system time if no valid datetime is found.
 #'
-getCurrentDatetime <- function(encounters) {
+getEncountersPeriodEnd <- function(encounters) {
   encounters_end <- na.omit(encounters$enc_period_end)
   sys_time <- Sys.time()
   datetime <- if (length(encounters_end)) etlutils::getMaxDatetime(encounters_end) - 1 else sys_time
@@ -161,7 +161,7 @@ getCurrentDatetime <- function(encounters) {
 
 #' Format datetime for SQL queries for Observations.
 #'
-#' This function formats the datetime returned by `getCurrentDatetime()` into an SQL-compatible
+#' This function formats the datetime returned by `getEncountersEndDatetime()` into an SQL-compatible
 #' timestamp string in the format `"YYYY-MM-DD HH:MM:SS"`.
 #'
 #' @param encounters A `data.table` or `data.frame` containing encounter records.
@@ -170,7 +170,8 @@ getCurrentDatetime <- function(encounters) {
 #' @return A character string representing the formatted SQL datetime.
 #'
 getObservationQueryDatetime <- function(encounters) {
-  format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
+  encounters_end <- getEncountersPeriodEnd(encounters)
+  format(encounters_end, "%Y-%m-%d %H:%M:%S")
 }
 
 #' Load Resources Last Version From Database Query
