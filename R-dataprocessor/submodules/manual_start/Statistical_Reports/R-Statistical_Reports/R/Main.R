@@ -154,6 +154,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   # --> this table shows the trajectory of each case in the front-end system
   #     (multiple rows per case possible, if the case was treated on different INTERPOLAR wards)
 
+  first_case_in <- getFirstCaseDateInFe(fall_fe_table)
+  last_case_in <- getLastCaseDateInFe(fall_fe_table)
+
   medikationsanalyse_fe_table <- getMedikationsanalyseFeData(
     lock_id = "statistical reports[6]",
     # table_name = "v_medikationsanalyse_fe"
@@ -272,7 +275,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     filename_without_extension = paste0("frontend_summary_", format(Sys.Date(), "%Y%m%d")),
     caption = paste0(
       "Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
-      REPORT_PERIOD_END
+      REPORT_PERIOD_END, " (hospitalizations from: ", first_case_in, " to ",
+      last_case_in, ")"
     ),
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),

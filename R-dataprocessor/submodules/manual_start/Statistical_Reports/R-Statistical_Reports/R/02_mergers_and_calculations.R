@@ -1,3 +1,62 @@
+#' Get First Case Date from Fall Front-End Data
+#'
+#' Determines the earliest documented case admission date in the fall front-end
+#' dataset.
+#'
+#' @param fall_fe_table A data frame containing fall front-end documentation data.
+#'   The table must include a `fall_aufn_dat` column representing the case
+#'   admission date.
+#'
+#' @return A `Date` value representing the earliest non-missing `fall_aufn_dat`
+#'   in the provided table.
+#'
+#' @details
+#' The function filters the input table to remove rows with missing
+#' `fall_aufn_dat` values and then calculates the minimum admission date using
+#' `min(..., na.rm = TRUE)`. The resulting value is returned as a single scalar.
+#'
+#' @importFrom dplyr filter summarise pull
+#'
+#' @export
+getFirstCaseDateInFe <- function(fall_fe_table) {
+  first_case_date_in_fe <- fall_fe_table |>
+    dplyr::filter(!is.na(fall_aufn_dat)) |>
+    dplyr::summarise(first_case_date = min(fall_aufn_dat, na.rm = TRUE)) |>
+    dplyr::pull(first_case_date) |>
+    as.Date()
+  return(first_case_date_in_fe)
+}
+
+#' Get Last Case Date from Fall Front-End Data
+#'
+#' Determines the most recent documented case admission date in the fall
+#' front-end dataset.
+#'
+#' @param fall_fe_table A data frame containing fall front-end documentation
+#'   data. The table must include a `fall_aufn_dat` column representing the
+#'   case admission date.
+#'
+#' @return A `Date` value representing the latest non-missing `fall_aufn_dat`
+#'   in the provided table.
+#'
+#' @details
+#' The function filters the input table to remove rows with missing
+#' `fall_aufn_dat` values and then calculates the maximum admission date using
+#' `max(..., na.rm = TRUE)`. The resulting value is extracted and converted to
+#' `Date` before being returned as a single scalar.
+#'
+#' @importFrom dplyr filter summarise pull
+#'
+#' @export
+getLastCaseDateInFe <- function(fall_fe_table) {
+  last_case_date_in_fe <- fall_fe_table |>
+    dplyr::filter(!is.na(fall_aufn_dat)) |>
+    dplyr::summarise(last_case_date = max(fall_aufn_dat, na.rm = TRUE)) |>
+    dplyr::pull(last_case_date) |>
+    as.Date()
+  return(last_case_date_in_fe)
+}
+
 #' Merge Patient and Encounter Data
 #'
 #' This function merges patient-level data with encounter-level data into a unified dataset.
