@@ -16,8 +16,10 @@ getProjectDirNames <- function(project_name, project_time_stamp = MODULE_TIME_ST
   global_dir <- "outputGlobal"
   local_dir <- "outputLocal"
 
-  local_results_directories_names  <- namedVectorByValue("bundles", "log", "performance", "tables", "reports")
-  global_results_directories_names <- namedVectorByValue("performance", "requests", "tables", "reports")
+  local_results_dir_names  <- namedVectorByValue("bundles", "log", "performance", "tables", "reports")
+  global_results_dir_names <- namedVectorByValue("performance", "requests", "tables", "reports")
+
+  local_cache_dir_name <- "cache" # will be copied from last run to current run
 
   global_dir <- fhircrackr::pastep(global_dir, project_name)
   local_dir <- fhircrackr::pastep(local_dir, project_name)
@@ -28,8 +30,9 @@ getProjectDirNames <- function(project_name, project_time_stamp = MODULE_TIME_ST
   namedListByParam(
     global_dir,
     local_dir,
-    local_results_directories_names,
-    global_results_directories_names
+    local_results_dir_names,
+    global_results_dir_names,
+    local_cache_dir_name
   )
 }
 
@@ -107,14 +110,22 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
 createDIRS <- function(project_name, showWarnings = FALSE) {
   module_dirs <- getProjectDirNames(project_name)
   module_dirs$last_global_dir <- renameWithCreationTimeIfDirExists(module_dirs$global_dir, MAX_DIR_COUNT)
-  module_dirs$last_al_dir <- renameWithCreationTimeIfDirExists(module_dirs$local_dir, MAX_DIR_COUNT)
-  for (rd in module_dirs$global_results_directories_names) {
-    dir.create(paste0(module_dirs$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
+  module_dirs$last_local_dir <- renameWithCreationTimeIfDirExists(module_dirs$local_dir, MAX_DIR_COUNT)
+  for (dir_name in module_dirs$global_results_dir_names) {
+    dir.create(paste0(module_dirs$global_dir, "/", dir_name), recursive = TRUE, showWarnings = showWarnings)
   }
-  for (rd in module_dirs$local_results_directories_names) {
-    dir.create(paste0(module_dirs$local_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
+  for (dir_name in module_dirs$local_results_dir_names) {
+    dir.create(paste0(module_dirs$local_dir, "/", dir_name), recursive = TRUE, showWarnings = showWarnings)
   }
   assign("MODULE_DIRS", module_dirs, envir = .GlobalEnv)
+
+  # copy the cache from last run to current run
+  cache_dir_name <- paste0(module_dirs$local_dir, "/", module_dirs$local_cache_dir_name)
+  old_cache_dir_name <- paste0(module_dirs$last_local_dir, "/", module_dirs$local_cache_dir_name)
+  if (!file.rename(old_cache_dir_name, cache_dir_name)) {
+    dir.create(cache_dir_name, recursive = TRUE, showWarnings = showWarnings)
+  }
+  return(module_dirs)
 }
 
 #' Return the path to the log directory of the specific sub project
