@@ -168,31 +168,110 @@ savePerformance <- function(filename_without_extension = "Performance_informatio
   clock$write(filename_without_extension = fhircrackr::pastep(MODULE_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }
 
-#' Save an Object as RDS-File in the *private* `tables` directory to which was created for the specific subproject.
+
+####
+# Read/Write RDS
+####
+
+#' Write an RDS (single R object) file to a local or global tables directory
 #'
-#' a <- 1
-#' writeRData(a)
+#' Internal helper that determines the target directory based on `target` and writes
+#' the provided tables as an RDS file.
 #'
-#' @param object the table to write
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#' @param project_sub_dir subdirectory of the current working directory where the table is located. If NA (default),
-#' then the tables will be loaded from outputLocal/tables'.
+#' @param target Either "local" or "global" to choose the base directory.
+#' @param object A object to write.
+#' @param filename_without_extension File name without extension. If NA, the
+#'   variable name of `object` is used.
+#' @param subdir subdirectory where the files will be written
+writeRDSFileInternal <- function(target = c("local", "global"), object, filename_without_extension, subdir = "tables") {
+  target <- match.arg(target)
+  project_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, subdir)
+  if (!dir.exists(project_sub_dir)) {
+    dir.create(project_sub_dir, recursive = TRUE)
+  }
+  file_name <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.rds')
+  saveRDS(object, file_name)
+}
+
 #'
-#' @return Nothing.
+#'
+#' Write an Object as RDS-File in the *private* directory to which was created for the specific subproject.
+#'
+#' @inheritParams writeRDSFileInternal
 #'
 #' @export
-writeRData <- function(object = table, filename_without_extension = NA, project_sub_dir = NA) {
+writeRDSFileLocal <- function(object, filename_without_extension = NA,  subdir = "tables") {
   if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
+    filename_without_extension <- as.character(substitute(object))
   }
-  if (is.na(project_sub_dir)) {
-    project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "tables")
-    #saveRDS(object = object, file = fhircrackr::pastep(MODULE_DIRS$local_dir, "tables", filename_without_extension, ext = '.RData'))
-  } else {
-    project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
-  }
-  saveRDS(object = object, file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData'))
+  writeRDSFileInternal("local", object, filename_without_extension, subdir)
 }
+
+#' Write an Object as RDS-File in the *public* directory to which was created for the specific subproject.
+#'
+#' @inheritParams writeRDSFileInternal
+#'
+#' @export
+writeRDSFileGlobal <- function(object, filename_without_extension = NA,  subdir = "tables") {
+  if (is.na(filename_without_extension)) {
+    filename_without_extension <- as.character(substitute(object))
+  }
+  writeRDSFileInternal("global", object, filename_without_extension, subdir)
+}
+
+#' Read an Object from RDS-File from a local or global directory of the current module.
+#'
+#' @param target Either "local" or "global" to choose the base directory.
+#' @param filename_without_extension the name of the file
+#' @param subdir subdirectory where the files is stored
+#'
+#' @return the object
+#'
+readRDSFileInternal <- function(target = c("local", "global"), filename_without_extension, subdir = "tables") {
+  target <- match.arg(target)
+  project_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, subdir)
+  file_name <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.rds')
+  object <- NULL
+  if (file.exists(fname)) {
+    # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
+    # 5.3 Reading data.table from RDS or RData file
+    #
+    # *.RDS and *.RData are file types which can store in-memory R objects
+    # on disk efficiently. However, storing data.table into the binary file
+    # loses its column over-allocation. This isn't a big deal – your
+    # data.table will be copied in memory on the next by reference
+    # operation and throw a warning. Therefore it is recommended to call
+    # setalloccol() on each data.table loaded with readRDS() or load() calls.
+    object <- readRDS(fname)
+    if ('data.table' %in% class(object)) {
+      invisible(data.table::setalloccol(object))
+    }
+  }
+  object
+}
+
+#' Read an Object as RDS-File from the local directory of the current module.
+#'
+#' @inheritParams readRDSFileInternal
+#'
+#' @export
+readRDSFileLocal <- function(filename_without_extension, subdir = "tables") {
+  readRDSFileInternal("local", filename_without_extension, subdir)
+}
+
+#' Read an Object as RDS-File from the global directory of the current module.
+#'
+#' @inheritParams readRDSFileInternal
+#'
+#' @export
+readRDSFileGlobal <- function(filename_without_extension, subdir = "tables") {
+  readRDSFileInternal("global", filename_without_extension, subdir)
+}
+
+
+####
+# Read/Write Excel
+####
 
 #' Write an Excel file to a local or global tables directory
 #'
@@ -204,13 +283,10 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
 #' @param filename_without_extension Optional file name without extension. If NA, the
 #'   variable name of `tables` is used.
 #' @param with_column_names Logical indicating whether column names should be written.
-writeExcelFileInternal <- function(target = c("local", "global"), tables,
-                                   filename_without_extension = NA, with_column_names = TRUE) {
+#' @param subdir subdirectory where the files will be written
+writeExcelFileInternal <- function(target = c("local", "global"), tables, filename_without_extension, with_column_names = TRUE, subdir = "tables") {
   target <- match.arg(target)
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(substitute(tables))
-  }
-  project_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, "tables")
+  project_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, subdir)
   if (!dir.exists(project_sub_dir)) {
     dir.create(project_sub_dir, recursive = TRUE)
   }
@@ -239,13 +315,12 @@ writeDebugExcelFile <- function(tables, filename_without_extension = NA, runLeve
     if (is.na(filename_without_extension)) {
       filename_without_extension <- as.character(substitute(tables))
     }
-
     if (!is.na(runLevel3Message)) {
       runLevel3Line(runLevel3Message, {
-        writeExcelFileInternal("local", tables, filename_without_extension, with_column_names = TRUE)
+        writeExcelFileInternal("local", tables, filename_without_extension)
       })
     } else {
-      writeExcelFileInternal("local", tables, filename_without_extension, with_column_names = TRUE)
+      writeExcelFileInternal("local", tables, filename_without_extension)
     }
   }
 }
@@ -255,11 +330,11 @@ writeDebugExcelFile <- function(tables, filename_without_extension = NA, runLeve
 #' @inheritParams writeExcelFileInternal
 #'
 #' @export
-writeExcelFileLocal <- function(tables, filename_without_extension = NA, with_column_names = TRUE) {
+writeExcelFileLocal <- function(tables, filename_without_extension = NA, with_column_names = TRUE, subdir = "tables") {
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(substitute(tables))
   }
-  writeExcelFileInternal("local", tables, filename_without_extension, with_column_names)
+  writeExcelFileInternal("local", tables, filename_without_extension, with_column_names, subdir)
 }
 
 #' Write an Excel file to the global tables directory
@@ -267,12 +342,17 @@ writeExcelFileLocal <- function(tables, filename_without_extension = NA, with_co
 #' @inheritParams writeExcelFileInternal
 #'
 #' @export
-writeExcelFileGlobal <- function(tables, filename_without_extension = NA, with_column_names = TRUE) {
+writeExcelFileGlobal <- function(tables, filename_without_extension = NA, with_column_names = TRUE, subdir = "tables") {
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(substitute(tables))
   }
-  writeExcelFileInternal("global", tables, filename_without_extension, with_column_names)
+  writeExcelFileInternal("global", tables, filename_without_extension, with_column_names, subdir)
 }
+
+
+####
+# Write HTML #
+####
 
 #' Write an HTML Table with Download Buttons
 #'
@@ -513,37 +593,4 @@ getFilesByPrefix <- function(prefix, directories, extension = NA, recursive = FA
 #' @export
 getExcelFilesByPrefixInDirsAndSubdirs <- function(prefix, directories) {
   return(getFilesByPrefix(prefix = prefix, directories = directories, extension = "xlsx", recursive = TRUE))
-}
-
-#' Read an Object as RDS-File from the *private* `tables` directory to which was created for the specific subproject.
-#'
-#' a <- ReadRData('a')
-#'
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#' @param load_from_last_run fehlende Beschreibung
-#'
-#' @return the object
-#'
-#' @export
-readRData <- function(filename_without_extension, load_from_last_run = FALSE) {
-  if (load_from_last_run) dir <- MODULE_DIRS$local_dir else MODULE_DIRS$last_local_dir
-  project_sub_dir <- fhircrackr::pastep(dir, "tables")
-  fname <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData')
-  data <- NULL
-  if (file.exists(fname)) {
-    # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
-    # 5.3 Reading data.table from RDS or RData file
-    # ---------------------------------------------
-    # *.RDS and *.RData are file types which can store in-memory R objects
-    # on disk efficiently. However, storing data.table into the binary file
-    # loses its column over-allocation. This isn't a big deal – your
-    # data.table will be copied in memory on the next by reference
-    # operation and throw a warning. Therefore it is recommended to call
-    # setalloccol() on each data.table loaded with readRDS() or load() calls.
-    data <- readRDS(fname)
-    if ('data.table' %in% class(data)) {
-      invisible(data.table::setalloccol(data))
-    }
-  }
-  data
 }
