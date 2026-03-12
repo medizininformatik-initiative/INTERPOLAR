@@ -204,8 +204,18 @@ writeRDSFileInternal <- function(target = c("local", "global"), object, filename
   saveRDS(object, file_name)
 }
 
+#' Write a RDS file to the local cache
 #'
+#' @inheritParams writeRDSFileInternal
 #'
+#' @export
+writeRDSFileCache <- function(object, filename_without_extension = NA, subdir = "tables") {
+  if (is.na(filename_without_extension)) {
+    filename_without_extension <- as.character(substitute(object))
+  }
+  writeRDSFileInternal("local", object, filename_without_extension, subdir = paste0(MODULE_DIRS$local_cache_dir_name, "/", subdir))
+}
+
 #' Write an Object as RDS-File in the *private* directory to which was created for the specific subproject.
 #'
 #' @inheritParams writeRDSFileInternal
@@ -259,6 +269,16 @@ readRDSFileInternal <- function(target = c("local", "global"), filename_without_
     }
   }
   object
+}
+
+#' Read an Object as RDS-File from the local cache directory of the current module.
+#'
+#' @inheritParams readRDSFileInternal
+#'
+#' @export
+readRDSFileCache <- function(filename_without_extension, subdir = "tables") {
+  subdir <- paste0(MODULE_DIRS$local_cache_dir_name, "/", subdir)
+  readRDSFileInternal("local", filename_without_extension, subdir)
 }
 
 #' Read an Object as RDS-File from the local directory of the current module.
@@ -334,6 +354,18 @@ writeDebugExcelFile <- function(tables, filename_without_extension = NA, runLeve
       writeExcelFileInternal("local", tables, filename_without_extension)
     }
   }
+}
+
+#' Write an Excel file to the local cache
+#'
+#' @inheritParams writeExcelFileInternal
+#'
+#' @export
+writeExcelFileCache <- function(tables, filename_without_extension = NA, with_column_names = TRUE, subdir = "tables") {
+  if (is.na(filename_without_extension)) {
+    filename_without_extension <- as.character(substitute(tables))
+  }
+  writeExcelFileInternal("local", tables, filename_without_extension, with_column_names, subdir = paste0(MODULE_DIRS$local_cache_dir_name, "/", subdir))
 }
 
 #' Write an Excel file to the local tables directory
