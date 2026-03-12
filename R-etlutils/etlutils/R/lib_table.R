@@ -244,7 +244,7 @@ readExcelFileAsTableList <- function(excelFile, maxSheetIndex = 1000) {
 #' The objects in the list should be compatible with `writeData()` or `writeDataTable()`
 #' functions from the `openxlsx` package. It uses `write.xlsx` from `openxlsx` to perform the write operation.
 #'
-#' @param tables A `data.frame` or a (named) list of objects that can be handled by `writeData()`
+#' @param table_or_tables_list A `data.frame` or a (named) list of objects that can be handled by `writeData()`
 #' or `writeDataTable()` from the `openxlsx` package to write to an Excel file.
 #' @param file_name A string specifying the file path where the xlsx file will be saved.
 #' @param with_column_names logical indicating whether column names should be written in the first
@@ -254,7 +254,7 @@ readExcelFileAsTableList <- function(excelFile, maxSheetIndex = 1000) {
 #'
 #' @seealso \code{\link[openxlsx]{write.xlsx}} for the underlying function used to write Excel files.
 #' @export
-writeExcelFile <- function(tables, file_name, with_column_names) {
+writeExcelFile <- function(table_or_tables_list, file_name, with_column_names) {
 
   # Convert list columns to character columns by concatenating list elements with a separator.
   # Excel cannot save list columns, so we need to convert them to character columns before writing the file.
@@ -271,8 +271,14 @@ writeExcelFile <- function(tables, file_name, with_column_names) {
     invisible(dt)
   }
 
-  tables <- convertListColumns(tables)
-  openxlsx::write.xlsx(tables, file_name, colNames = with_column_names)
+  # If input is a list of data.tables apply conversion to each
+  if (is.list(table_or_tables_list) && !is.data.frame(table_or_tables_list)) {
+    table_or_tables_list <- lapply(table_or_tables_list, convertListColumns)
+  } else {
+    table_or_tables_list <- convertListColumns(table_or_tables_list)
+  }
+
+  openxlsx::write.xlsx(table_or_tables_list, file_name, colNames = with_column_names)
 }
 
 #' Read the first Excel file that matches the specified name pattern in the given directory.
