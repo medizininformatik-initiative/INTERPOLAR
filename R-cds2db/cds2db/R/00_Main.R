@@ -20,6 +20,8 @@ retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
 
   skip_db_operations <- etlutils::isDefinedAndTrue("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
 
+  just_melting <- etlutils::isDefinedAndNotEmpty("DEBUG_MELTING_CHUNK_SIZE")
+
   if (!skip_db_operations) {
     if (reset_lock_only) {
       etlutils::dbResetLock()
@@ -31,33 +33,35 @@ retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
 
   try(etlutils::runLevel1("Run Retrieve", {
 
-    if (!skip_db_operations) {
-      # Reset database lock from unfinished previous cds2db run
-      etlutils::runLevel2("Reset database lock from unfinished previous run", {
-        etlutils::dbResetLock()
-      })
+    if (!just_melting) {
 
-      # Check if we must create references for old data (should be executed exactly once and then never again)
-      etlutils::runLevel2("Create references for old data", {
+      if (!skip_db_operations) {
+        # Reset database lock from unfinished previous cds2db run
+        etlutils::runLevel2("Reset database lock from unfinished previous run", {
+          etlutils::dbResetLock()
+        })
 
-        debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
+        # Check if we must create references for old data (should be executed exactly once and then never again)
+        etlutils::runLevel2("Create references for old data", {
 
-        if (mustCreateReferencesForOldData() || debug_active) {
-          createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
-          if (debug_active) {
-            stop("References for invalid calculated encounter references have been fixed")
+          debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
+
+          if (mustCreateReferencesForOldData() || debug_active) {
+            createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+            if (debug_active) {
+              stop("References for invalid calculated encounter references have been fixed")
+            }
           }
-        }
+        })
+      }
+
+      # Extract Patient IDs
+      etlutils::runLevel2("Extract Patient IDs", {
+        pids_splitted_by_ward <- getPIDsSplittedByWard()
+        all_wards_empty <- !length(unlist(pids_splitted_by_ward))
       })
-    }
 
-    # Extract Patient IDs
-    etlutils::runLevel2("Extract Patient IDs", {
-      pids_splitted_by_ward <- getPIDsSplittedByWard()
-      all_wards_empty <- !length(unlist(pids_splitted_by_ward))
-    })
-
-    if (!all_wards_empty) {
+      #if (!all_wards_empty) {
       # Load Table Description
       etlutils::runLevel2("Load Table Description", {
         fhir_table_descriptions <- getFhircrackrTableDescriptions()
@@ -96,9 +100,10 @@ retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
             stop_if_table_not_empty = TRUE)
         })
       }
-
-      # Convert Column Types in resource tables
-      etlutils::runLevel2("Load untyped RAW tables from database", {
+    }
+    # Convert Column Types in resource tables
+    etlutils::runLevel2("Load untyped RAW tables from database", {
+      if (!just_melting) {
         # it could be that some resources could not be downloaded in the current run but in the last
         # run, but the melt and type process was interrupted for any reason -> try not to download
         # only the resources from this run from the database, but also all other resources to melt
@@ -111,19 +116,28 @@ retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
         all_current_run_table_names <- names(resource_tables)
         all_table_names_raw_diff <- unique(c(all_current_run_table_names, all_resource_raw_table_names))
         all_table_names_raw_diff <- paste0("v_", all_table_names_raw_diff, "_diff")
+      } else {
+        # Load Table Description
+        etlutils::runLevel2("Load Table Description", {
+          fhir_table_descriptions <- getFhircrackrTableDescriptions()
+          fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
+        })
+        all_table_names_raw_diff <- paste0("v_", tolower(names(fhir_table_descriptions)), "_raw_diff")
+      }
 
-        resource_tables_raw_diff <- etlutils::dbReadTables(
-          table_names = all_table_names_raw_diff,
-          lock_id = "Load untyped RAW tables from database")
+      resource_tables_raw_diff <- etlutils::dbReadTables(
+        table_names = all_table_names_raw_diff,
+        lock_id = "Load untyped RAW tables from database")
 
-        all_empty_raw <- all(sapply(resource_tables_raw_diff, function(dt) nrow(dt) == 0))
-        if (all_empty_raw) {
-          etlutils::catWarningMessage("No (new) untyped RAW tables found in database")
-          cat("Note: This warning only means that only data already in the database has been loaded from the FHIR server.\n")
-        }
-      })
+      all_empty_raw <- all(sapply(resource_tables_raw_diff, function(dt) nrow(dt) == 0))
+      if (all_empty_raw) {
+        etlutils::catWarningMessage("No (new) untyped RAW tables found in database")
+        cat("Note: This warning only means that only data already in the database has been loaded from the FHIR server.\n")
+      }
+    })
 
-      if (!all_empty_raw) {
+    if (!all_empty_raw) {
+      if (!just_melting) {
 
         etlutils::runLevel2("Convert RAW tables to typed tables", {
           fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
@@ -141,9 +155,60 @@ retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
             stop_if_table_not_empty = TRUE)
         })
 
+      } else {
+        resource_tables_raw_diff_encounter <- list(encounter_raw_diff = resource_tables_raw_diff[["encounter_raw_diff"]])
+
+        etlutils::runLevel2("Convert RAW encounter table to typed table", {
+          encounter_table <- convertTypes(resource_tables_raw_diff_encounter, fhir_table_descriptions)
+        })
+
+        etlutils::runLevel2("Create references (partOf, encounter, context)", {
+          encounter_table <- createReferences(encounter_table, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+        })
+
+        all_encounters <- encounter_table[[1]]
+        resource_tables_raw_diff <- resource_tables_raw_diff[setdiff(names(resource_tables_raw_diff), "encounter_raw_diff")]
+
+        for (table_name in names(resource_tables_raw_diff)) {
+          if (!etlutils::isDefinedAndNotEmpty("DEBUG_MELTING_CHUNK_SIZE")) {
+            DEBUG_MELTING_CHUNK_SIZE <- 10000
+          }
+          chunk_size <- DEBUG_MELTING_CHUNK_SIZE
+          dt <- resource_tables_raw_diff[[table_name]]
+          n_chunks <- ceiling(nrow(dt) / chunk_size)
+          chunks <- split(dt, ceiling(seq_len(nrow(dt)) / chunk_size))
+
+          for (j in seq_along(chunks)) {
+
+            chunk_dt <- chunks[[j]]
+            chunk_list <- list(chunk_dt)
+            names(chunk_list) <- table_name
+
+            etlutils::runLevel2(paste0("Convert RAW tables to typed table ", table_name, " chunk ", j , " of ", length(chunks)), {
+              resource_tables <- convertTypes(chunk_list, fhir_table_descriptions)
+            })
+
+            etlutils::runLevel2("Create references (partOf, encounter, context)", {
+              resource_tables <- createReferences(resource_tables, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM, all_encounters)
+            })
+
+            etlutils::runLevel2(paste0("Write typed table to database"), {
+              etlutils::dbWriteTables(
+                tables = resource_tables,
+                lock_id = "Write typed tables to database",
+                stop_if_table_not_empty = TRUE)
+            })
+          }
+        }
+
+        etlutils::runLevel2("Write typed encounter table to database", {
+          etlutils::dbWriteTables(
+            tables = encounter_table,
+            lock_id = "Write typed tables to database",
+            stop_if_table_not_empty = TRUE)
+        })
       }
     }
-
   }))
 
   # Reset lock and close all database connections. Do not surround this with runLevelX!

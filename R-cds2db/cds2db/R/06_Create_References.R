@@ -12,7 +12,7 @@ mustCreateReferencesForOldData <- function() {
   return(nrow(res) == 1)
 }
 
-createReferences <- function(resource_tables, common_encounter_fhir_identifier_system = NULL) {
+createReferences <- function(resource_tables, common_encounter_fhir_identifier_system = NULL, all_encounters = NULL) {
 
   # Initialize debug variables for specific reference recalculation scenarios
   # See debug cds2db_config_toml
@@ -185,15 +185,19 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
 
     # we must create the references only for new download resources
   } else {
-    etlutils::runLevel2("Create references for Encounters", {
-      # 1.) Fill the calculated reference columns for Encounters
-      # filter the resource_tables$encounter to the columns we need for reference creation
-      encounters <- resource_tables$encounter[, c(getEncounterColNamesForReferenceCalculation()), with = FALSE]
-      encounters <- getAllLastViewEncounterResourcesForPIDs(encounters)
-      encounters <- createReferencesForEncounters(encounters, common_encounter_fhir_identifier_system)
-      # fill encounter table with the calculated ref columns
-      resource_tables$encounter <- joinCalculatedRefColumsToEncounter(resource_tables$encounter, encounters)
-    })
+    if (is.null(all_encounters)) {
+      etlutils::runLevel2("Create references for Encounters", {
+        # 1.) Fill the calculated reference columns for Encounters
+        # filter the resource_tables$encounter to the columns we need for reference creation
+        encounters <- resource_tables$encounter[, c(getEncounterColNamesForReferenceCalculation()), with = FALSE]
+        encounters <- getAllLastViewEncounterResourcesForPIDs(encounters)
+        encounters <- createReferencesForEncounters(encounters, common_encounter_fhir_identifier_system)
+        # fill encounter table with the calculated ref columns
+        resource_tables$encounter <- joinCalculatedRefColumsToEncounter(resource_tables$encounter, encounters)
+      })
+    } else {
+      encounters <- all_encounters
+    }
     etlutils::runLevel2("Create references for Encounter depending resources", {
       # 2.) Fill the ..._encounter_calculated_ref of all Encounter referencing resources using
       #     the enc_partof_calculated_ref or timestamps

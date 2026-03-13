@@ -66,25 +66,10 @@ DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004",
 #DEBUG_ADD_FHIR_SEARCH_SERVICEREQUEST = ""
 
 #################
-# These parameters can be used to skip the melting of specific resources after downloading.
-# The resources listed here are not processed further in the 'cds2db' module after downloading.
-# This can be used to speed up test cases if certain resources are not needed.
+# This parameter can be used to restrict the melting step to a specific chunk size. If the number of
+# rows in a resource table exceeds this chunk size, only the first rows up to this chunk size.
 #################
-DEBUG_SKIP_MELTING_RESOURCES = [
-  #"Condition",
-  #"Consent",
-  #"DiagnosticReport",
-  #"Encounter",
-  #"Location",
-  #"Medication",
-  #"MedicationAdministration",
-  #"MedicationRequest",
-  #"MedicationStatement",
-  #"Observation",
-  #"Patient",
-  #"Procedure",
-  #"ServiceRequest"
-]
+#DEBUG_MELTING_CHUNK_SIZE = 10000
 
 #################
 # Set this parameter to "true" if last_update_date should be ignored. In this case all data will be downloaded
