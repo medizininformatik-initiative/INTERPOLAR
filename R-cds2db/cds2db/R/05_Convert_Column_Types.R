@@ -66,7 +66,7 @@ joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, co
 #'
 joinUnmeltableMultiEntries <- function(resource_tables, fhir_table_descriptions) {
   patient_fhir_table_description <- fhir_table_descriptions$Patient
-  if (!is.null(patient_fhir_table_description)) {
+  if (!is.null(patient_fhir_table_description) && !is.null(resource_tables[["patient"]])) {
     # These are constants! In all cases these columns must be joined and not melted if they are
     # present in the table description of the patients.
     patient_column_names_2_join <- c("name/given", "name/prefix", "name/suffix", "adress/line")
@@ -105,21 +105,6 @@ isIndexedTable <- function(dt, brackets) {
   return(FALSE)
 }
 
-#' Get Resource Names to Skip Melting
-#'
-#' This function retrieves the resource names that should be skipped during the melting process
-#' based on debug environment variables.
-#'
-#' @param resource_name The name of the resource to check.
-#'
-isSkipMeltingResource <- function(resource_name) {
-  if (etlutils::isDefinedAndNotEmpty("DEBUG_SKIP_MELTING_RESOURCES")) {
-    return(tolower(resource_name) %in% tolower(DEBUG_SKIP_MELTING_RESOURCES))
-  }
-  return(FALSE)
-}
-
-
 #' Melt Cracked FHIR Data
 #'
 #' This function melts cracked FHIR data in the resource tables according to the
@@ -134,11 +119,6 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
   names(fhir_table_descriptions) <- tolower(names(fhir_table_descriptions))
   for (i in seq_along(resource_tables)) {
     resource_name <- names(resource_tables)[i]
-    if (isSkipMeltingResource(resource_name)) {
-      resource_tables[[i]] <- resource_tables[[i]][0]
-      print(paste0("Skipping melting of resource table ", resource_name, " due to debug variable 'DEBUG_SKIP_MELTING_RESOURCES.'"))
-      next
-    }
     fhir_table_description <- fhir_table_descriptions[[resource_name]]
     if (!is.null(fhir_table_description)) {
       brackets <- fhir_table_description@brackets
