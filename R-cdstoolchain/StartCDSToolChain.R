@@ -1,11 +1,14 @@
-# chance the working directory to the main directory
-if (grepl('/cdstoolchain$', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
-
 library(etlutils)
 library(cds2db)
 library(dataprocessor)
 library(db2frontend)
+
+setProcess("FullToolchain")
+
+# chance the working directory to the main directory
+if (grepl('/cdstoolchain$', getwd())) setwd("../..")
+if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
+
 
 # Reset error status
 options(error = NULL)
@@ -53,6 +56,7 @@ for (arg in args) {
 resetMemory <- function(...) {
   etlutils::resetMemory(protected_objects = c(
     ...,
+
     "DEBUG_DAY",
     "DEBUG_DATES",
     "DEBUG_MODULES_PATH_TO_CONFIG_TOML",
@@ -60,16 +64,12 @@ resetMemory <- function(...) {
     "DEBUG_DB_PORT",
     "DEBUG_REDCAP_PORT",
     "DEBUG_PATH_TO_RAW_RDATA_FILES",
-    "DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME",
-    "DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME",
 
     "DEBUG_SUBMODULE_DIR",
     "DEBUG_RUN_SINGLE_DAY_ONLY",
     "DEBUG_START_SINGLE_MODULE",
 
     "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS",
-
-    "DATA_IMPORT_IS_ACTIVE",
 
     # Runtime variables from StartDebugCDSToolChain.R that should not be deleted
     "start_full",
@@ -105,9 +105,6 @@ resetMemory()
 config_cds2db <- cds2db::init()
 resetMemory("config_cds2db")
 config_dataprocessor <- dataprocessor::init()
-
-#TODO: Check if the parameters in config_cds2db and config_dataprocessor are compatible, e.g. if the encounter filter pattern in config_cds2db matches the expected ward definition in config_dataprocessor
-
 resetMemory("config_cds2db", "config_dataprocessor")
 config_db2frontend <- db2frontend::initFrontend2DB()
 # checks needed config_cds2db or config_dataprocessor vs. config_db2frontend?
@@ -115,6 +112,11 @@ resetMemory("config_cds2db", "config_dataprocessor", "config_db2frontend")
 config_frontend2db <- db2frontend::initDB2Frontend()
 # checks needed config_cds2db or config_dataprocessor vs. config_frontend2db?
 # config_frontend2db and config_db2frontend should be the same and should be checked vise versa during the init of one of these modules
+
+
+#TODO: Check if the parameters in config_cds2db and config_dataprocessor are compatible, e.g. if the encounter filter pattern in config_cds2db matches the expected ward definition in config_dataprocessor
+
+
 resetMemory()
 
 tryCatch({

@@ -6,8 +6,9 @@
 #'
 #' The following precedence is applied:
 #'
-#' 1. If `DATA_IMPORT_IS_ACTIVE` is defined and `TRUE`, the range is taken from
-#'    `DATA_IMPORT_RANGE_START` and optionally `DATA_IMPORT_RANGE_END`.
+#' 1. If the process `DataImport` is active (`isProcess("DataImport")`), the
+#'    range is taken from `DATA_IMPORT_RANGE_START` and optionally
+#'    `DATA_IMPORT_RANGE_END`.
 #' 2. Otherwise, if debug parameters are defined, the range is taken from
 #'    `DEBUG_ENCOUNTER_STARTS_AFTER` and optionally
 #'    `DEBUG_ENCOUNTER_STARTS_AT_OR_BEFORE`.
@@ -28,7 +29,7 @@ getCurrentDatetime <- function() {
   period_start <- etlutils::as.POSIXctWithTimezone(Sys.time())
   period_end <- NULL
   period_start_is_set_by_param <- NULL
-  if (etlutils::isDefinedAndTrue("DATA_IMPORT_IS_ACTIVE")) {
+  if (isProcess("DataImport")) {
     period_start <- etlutils::parseTimestamp(DATA_IMPORT_RANGE_START)
     if (etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_END")) {
       period_end <- etlutils::parseTimestamp(DATA_IMPORT_RANGE_END)

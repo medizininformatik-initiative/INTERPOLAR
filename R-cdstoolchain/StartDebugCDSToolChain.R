@@ -56,11 +56,12 @@ getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCa
   change_data_type <- match.arg(change_data_type)
 
   # do not overwrite the debug script name if it is already defined
-  if (change_data_type == "RAW" && exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
-    return(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME)
+  if (change_data_type == "RAW" && hasVal("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
+    return(getVal("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME"))
   }
-  if (change_data_type == "REDCap" && exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
-    return(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)
+
+  if (change_data_type == "REDCap" && hasVal("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
+    return(getVal("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME"))
   }
 
   # calculate the variable test_index as string with length 2 (if DEBUG_TEST_INDEX < 10 then add a leading 0)
@@ -77,14 +78,14 @@ getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCa
 # purposes. It contains a path to a script that is sourced after the downloaded
 # and cracking of the FHIR RAW data.
 ###
-DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "RAW")
+setVal("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME", getChangeDataFileName(DEBUG_TEST_INDEX, "RAW"))
 
 ###
 # If the data that should be exported to REDCap must be changed for test or debug
 # purposes, then this variable can be used to define a path to a script that
 # is sourced when the data is prepared for REDCap export.
 ###
-DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "REDCap")
+setVal("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME", getChangeDataFileName(DEBUG_TEST_INDEX, "REDCap"))
 
 # Create a vector of debug dates from now - count days in the past until now
 initDebugDates <- function(count, offset = 1) {

@@ -232,8 +232,8 @@ getEncounters <- function(table_description, current_datetime) {
       # default encounter status "in-progress" can be replaced in the toml file  by the
       # parameter FHIR_SEARCH_ENCOUNTER_STATUS. If it is given as vector then the values
       # will be comma separated pasted together.
-      if (etlutils::isDefinedAndTrue("DATA_IMPORT_IS_ACTIVE")) {
-        encounter_status <- "finsihed"
+      if (isProcess("DataImport")) {
+        encounter_status <- "finished"
       } else if (exists("FHIR_SEARCH_ENCOUNTER_STATUS")) {
         if (!nchar(trimws(FHIR_SEARCH_ENCOUNTER_STATUS))) { # Intentionally empty status
           encounter_status <- NA_character_
