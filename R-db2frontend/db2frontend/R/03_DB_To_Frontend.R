@@ -176,8 +176,8 @@ importDB2Redcap <- function() {
   #########################
   # START: FOR DEBUG ONLY #
   #########################
-  if (isNonEmptyVal("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
-    for (script_name in getVal("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
+  if (etlutils::isDefinedAndNotEmpty("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
+    for (script_name in DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME) {
       source(script_name, local = TRUE) # this should change the data_to_import list
     }
     writeTablesAsExcel(data_to_import, suffix = "_debugchanged")
