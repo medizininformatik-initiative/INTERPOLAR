@@ -98,7 +98,7 @@ validateConfig <- function() {
   ###
   # Validate data import parameters
   ###
-  if (etlutils::isDefinedAndTrue("DATA_IMPORT_IS_ACTIVE")) {
+  if (isProcess("DataImport")) {
 
     ###
     # Remove all DEBUG parameters from global conext if the data export is running to prevent any side effects
