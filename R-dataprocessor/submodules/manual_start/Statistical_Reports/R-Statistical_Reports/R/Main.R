@@ -232,18 +232,32 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   # if needed: Print datasets for verification to outputLocal
   if (WRITE_TABLE_LOCAL) {
-    writeHtmlTable(patient_table)
-    writeHtmlTable(encounter_table)
-    writeHtmlTable(pids_per_ward_table)
-    writeHtmlTable(FHIR_table_with_ward_name_and_record_id)
+    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(patient_table)),
+      pagename = "patient_table"
+    )
+    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(encounter_table)),
+      pagename = "encounter_table"
+    )
+    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(pids_per_ward_table)),
+      pagename = "pids_per_ward_table"
+    )
+    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(FHIR_table_with_ward_name_and_record_id)),
+      pagename = "FHIR_table_with_ward_name_and_record_id"
+    )
+    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(frontend_table)),
+      pagename = "frontend_table"
+    )
+    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(frontend_summary_data)),
+      pagename = "frontend_summary_data"
+    )
     # writeHtmlTable(full_analysis_set_1)
     # writeHtmlTable(statistical_report_data)
-    writeHtmlTable(frontend_table)
-    writeHtmlTable(frontend_summary_data)
   }
 
-
   frontend_summary <- calculateFeSummary(frontend_summary_data)
+  frontend_summary_weekly <- calculateFeSummary(frontend_summary_data,
+    grouping_variables = c("ward_name", "calendar_week")
+  )
 
   # statistical_report <- calculateF1(statistical_report_data) |>
   #   calculateFeAddOnToF1(statistical_report_data)
@@ -270,8 +284,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   #   )
   # )
 
-  writeHtmlTable(frontend_summary,
-    output_location = "global",
+  frontend_summary_html_table <- etlutils::buildHtmlTable(frontend_summary,
     filename_without_extension = paste0("frontend_summary_", format(Sys.Date(), "%Y%m%d")),
     caption = paste0(
       "Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
@@ -293,4 +306,34 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     )
   )
 
+  frontend_summary_weekly_html_table <- etlutils::buildHtmlTable(frontend_summary_weekly,
+    filename_without_extension = paste0("frontend_summary_weekly_", format(Sys.Date(), "%Y%m%d")),
+    caption = paste0(
+      "Weekly Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
+      REPORT_PERIOD_END, " (hospitalizations from: ", first_case_in, " to ",
+      last_case_in, ")"
+    ),
+    footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
+                 INTERPOLAR ward contacts for each case"),
+    colnames = c(
+      "ward", "calendar week", "patients", "encounters", "encounters with completed medication analysis",
+      "medication analyses",
+      "completed medication analyses", "MRP", "completed MRP documention",
+      "resolved MRP", "MRP resolution not informative", "contra-indications",
+      "resolved contra-indications",
+      "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
+      "class not assigned",
+      "processing excluded encounters (linkage issues)",
+      "not meeting inclusion criteria (patient underage)"
+    )
+  )
+
+  etlutils::writeHtmlPage(
+    html_content_list = list(
+      frontend_summary_html_table,
+      frontend_summary_weekly_html_table
+    ),
+    output_location = "global",
+    pagename = "INTERPOLAR-Reporting"
+  )
 }

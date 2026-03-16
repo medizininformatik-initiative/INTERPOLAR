@@ -242,39 +242,109 @@ writeExcelFileGlobal <- function(tables, filename_without_extension = NA, with_c
   writeExcelFileInternal("global", tables, filename_without_extension, with_column_names)
 }
 
-#' Write an HTML Table with Download Buttons
+#' Build an HTML Table with Download Buttons
 #'
 #' Generates an interactive HTML table from a data frame, including optional caption and footnote,
-#' with CSV and Excel download buttons. Saves the table to a local or global project directory.
+#' with CSV and Excel download buttons.
 #'
 #' @param table A data frame or matrix to be converted into an HTML table.
-#' @param output_location Character; either "local" or "global" to determine where the table should be saved.
 #' @param filename_without_extension Character; optional filename prefix. If NA, the variable name of `table` is used.
-#' @param project_sub_dir Character; optional sub-directory within the project to store the table. Defaults to "reports" inside the chosen output location.
 #' @param caption Character; optional caption displayed above the table.
 #' @param footnote Character; optional footnote displayed below the table. Defaults to an empty string.
 #' @param colnames Character vector; optional column names for the table. Defaults to `colnames(table)`.
 #'
-#' @return Invisibly returns NULL. The function primarily writes a self-contained HTML file with the interactive table.
+#' @return An HTML widget containing the interactive table with download buttons.
 #'
 #' @details
 #' This function wraps `DT::datatable()` to create interactive HTML tables with scrollable views,
-#' top filters, and download buttons for CSV and Excel formats. The HTML file is self-contained,
-#' meaning no accompanying `_files` folder is required. If the `_files` folder exists, it is removed.
+#' top filters, and download buttons for CSV and Excel formats.
 #'
 #' @importFrom htmlwidgets createWidget prependContent saveWidget JS
 #' @importFrom htmltools tags HTML tagList
 #' @importFrom DT datatable
-#' @importFrom fhircrackr pastep
 #' @importFrom jsonlite toJSON
 #'
 #' @export
-writeHtmlTable <- function(table, output_location = "local", filename_without_extension = NA,
-                           project_sub_dir = NA, caption = NA, footnote = "", colnames = NULL) {
-  if (!is.null(table) & output_location %in% c("local", "global")) {
-    if (is.na(filename_without_extension)) {
-      filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
-    }
+buildHtmlTable <- function(table, caption = NA, footnote = "", colnames = NULL,
+                           filename_without_extension = NA) {
+  if (is.na(filename_without_extension)) {
+    filename_without_extension <- deparse(substitute(table)) # get the table variable name
+  }
+  download_name <- filename_without_extension
+  if (is.null(colnames)) {
+    colnames <- colnames(table)
+  }
+  tbl <- DT::datatable(table,
+    caption = caption,
+    escape = FALSE,
+    colnames = colnames,
+    filter = "top",
+    extensions = c("Buttons", "Scroller"),
+    options = list(
+      dom = "Bfrtip",
+      buttons = list(list(
+        extend = "collection",
+        buttons = list(
+          list(
+            extend = "csv", filename = download_name,
+            exportOptions = list(
+              format = list(
+                header = htmlwidgets::JS(
+                  sprintf(
+                    "function (data, columnIdx) { return %s[columnIdx]; }",
+                    jsonlite::toJSON(c("row_id", colnames(table)))
+                  )
+                )
+              )
+            )
+          ),
+          list(extend = "excel", filename = download_name)
+        ),
+        text = "Download"
+      )),
+      autoWidth = TRUE,
+      deferRender = TRUE,
+      scroller = TRUE,
+      scrollY = 400,
+      scrollX = TRUE
+    )
+  )
+  note <- htmltools::tags$p(
+    style = "font-size: 1em; color: #000;",
+    htmltools::HTML(paste(footnote, collapse = "<br>"))
+  )
+  html_table <- htmltools::tagList(
+    tbl,
+    note
+  )
+  return(html_table)
+}
+
+#' writes an HTML page from a list of HTML content to a local or global directory
+#'
+#' @param html_content_list a list of HTML content to be included in the page
+#' @param output_location either "local" or "global" to specify the base directory
+#' @param project_sub_dir optional subdirectory within the base directory; if NA, defaults to "reports"
+#' within the respective base directory
+#' @param pagename the name of the HTML page to be created (without extension and without path)
+#'
+#' @return None. The function saves the generated HTML page to the specified location.
+#'
+#' @details The function creates an HTML page by combining the provided HTML content and saves it to
+#' the specified location. If the output location is "local", the page is saved in the "reports"
+#' subdirectory of the local directory; if "global", it is saved in the "reports" subdirectory of
+#' the global directory. The function ensures that the target directory exists and creates it if
+#' necessary. The resulting HTML file is self-contained, and any accompanying files (like images or
+#' stylesheets) are removed after saving since they are embedded within the HTML.
+#'
+#' @importFrom htmlwidgets createWidget prependContent saveWidget
+#' @importFrom htmltools tags tagList
+#' @importFrom fhircrackr pastep
+#' @export
+writeHtmlPage <- function(html_content_list, output_location = "local",
+                          project_sub_dir = NA,
+                          pagename = "local report") {
+  if (!is.null(html_content_list) && output_location %in% c("local", "global")) {
     if (is.na(project_sub_dir)) {
       if (output_location == "local") {
         project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
@@ -287,60 +357,25 @@ writeHtmlTable <- function(table, output_location = "local", filename_without_ex
     if (!dir.exists(project_sub_dir)) {
       dir.create(project_sub_dir, recursive = TRUE)
     }
-    download_name <- filename_without_extension
-    if (is.null(colnames)) {
-      colnames <- colnames(table)
+
+    page <- htmltools::tagList()
+
+    for (i in seq_along(html_content_list)) {
+      page <- htmltools::tagAppendChildren(page, html_content_list[[i]])
+
+      if (i < length(html_content_list)) {
+        page <- htmltools::tagAppendChildren(page, htmltools::tags$hr())
+      }
     }
-    tbl <- DT::datatable(table,
-      caption = caption,
-      escape = FALSE,
-      colnames = colnames,
-      filter = "top",
-      extensions = c("Buttons", "Scroller"),
-      options = list(
-        dom = "Bfrtip",
-        buttons = list(list(
-          extend = "collection",
-          buttons = list(
-            list(
-              extend = "csv", filename = download_name,
-              exportOptions = list(
-                format = list(
-                  header = htmlwidgets::JS(
-                    sprintf(
-                      "function (data, columnIdx) { return %s[columnIdx]; }",
-                      jsonlite::toJSON(c("row_id", colnames(table)))
-                    )
-                  )
-                )
-              )
-            ),
-            list(extend = "excel", filename = download_name)
-          ),
-          text = "Download"
-        )),
-        autoWidth = TRUE,
-        deferRender = TRUE,
-        scroller = TRUE,
-        scrollY = 400,
-        scrollX = TRUE
-      )
-    )
-    note <- htmltools::tags$p(
-      style = "font-size: 1em; color: #000;",
-      htmltools::HTML(paste(footnote, collapse = "<br>"))
-    )
-    page <- htmltools::tagList(
-      tbl,
-      note
-    )
+
     widget <- htmlwidgets::createWidget(
-      name = "INTERPOLAR-Reporting",
+      name = pagename,
       x = list(),
       package = "htmlwidgets"
     )
+
     widget <- htmlwidgets::prependContent(widget, page)
-    output_html <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".html"))
+    output_html <- fhircrackr::pastep(project_sub_dir, pagename, ext = paste0("_", Sys.Date(), ".html"))
     htmlwidgets::saveWidget(
       widget = widget,
       file = output_html,
@@ -353,7 +388,7 @@ writeHtmlTable <- function(table, output_location = "local", filename_without_ex
     }
   } else {
     warning(paste0(
-      "The table '", deparse(substitute(table)), "' is NULL or the output_location '",
+      "The html content creation was not succuessful or the output_location '",
       output_location, "' is invalid. No file was written."
     ))
   }

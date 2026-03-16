@@ -94,6 +94,25 @@ if (exists("DEBUG_DAY")) {
 
   duplicatePatients(30)
 
+  # create some patients with encounters starting one week and year earlier
+  week_earlier_patients <- paste0("UKB-0001_", 21:25)
+  for (pid in week_earlier_patients) {
+    testChangeDataForPIDEncounter(
+      pid,
+      "enc_period_start",
+      getDebugDatesRAWDateTime(-7, 1)
+    )
+  }
+  year_earlier_patients <- paste0("UKB-0001_", 26:30)
+
+  for (pid in year_earlier_patients) {
+    testChangeDataForPIDEncounter(
+      pid,
+      "enc_period_start",
+      getDebugDatesRAWDateTime(-365, 1)
+    )
+  }
+
   runCodeForDebugDay(1, {
 
     ################

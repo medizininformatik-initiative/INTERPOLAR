@@ -125,6 +125,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #'
 #' @details
 #' The resulting dataset includes distinct rows based on identifiers and key variables such as:
+#' - `calendar_week` (derived from `fall_aufn_dat`; including the year)
 #' - `medikationsanalyse_complete`
 #' - `mrp_dokup_hand_emp_akz`
 #' - `mrpdokumentation_validierung_complete`
@@ -141,9 +142,14 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
 #'
 #' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename
+#' @importFrom data.table isoweek year
 #' @export
 prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
   frontend_summary_prep <- frontend_table |>
+    dplyr::mutate(
+      calendar_week = paste0(data.table::year(fall_aufn_dat), "-", data.table::isoweek(fall_aufn_dat)),
+      .after = fall_aufn_dat
+    ) |> # add calendar week and year
     dplyr::group_by(fall_fhir_main_enc_id) |>
     dplyr::mutate(main_enc_any_processing_exclusion_fe = dplyr::if_else(any(
       !is.na(processing_exclusion_reason) &
@@ -194,6 +200,7 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::distinct(
       pat_id, record_id, fall_fhir_main_enc_id,
       fall_id_cis, fall_station, fall_aufn_dat,
+      calendar_week,
       sub_enc_any_completed_medication_analysis,
       # enc_id, enc_status, enc_period_start
       meda_id,

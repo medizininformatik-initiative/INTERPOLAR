@@ -236,7 +236,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
 
   fe_total_counts <- frontend_summary_data |>
     dplyr::summarise(
-      dplyr::across(dplyr::any_of(c("ward_name", "calendar_week")), ~"all"),
+      dplyr::across(dplyr::any_of(grouping_variables), ~"all"),
       patients = dplyr::n_distinct(
         pat_id[valid_for_counting],
         na.rm = TRUE
