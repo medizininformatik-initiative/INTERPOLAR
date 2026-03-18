@@ -87,7 +87,19 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
-      pids_splitted_by_ward <- getPIDsSplittedByWard()
+      if (isProcess("DataImport")) {
+        if (!hasNextCacheFile()) {
+          # This writes the list of pids_splitted_by_ward into the cache. Same
+          # PIDs are present in multiple different cache files)
+          list_of_pids_splitted_by_ward <- getPIDsSplittedByWard(remove_multiple_pids = FALSE)
+          cds2db::writeCacheFiles(list_of_pids_splitted_by_ward)
+        }
+        pids_splitted_by_ward <- readNextCacheFile()
+      } else {
+        # Get a single pids_splitted_by_ward without using the cache and
+        # ensuring that every PID is present at most 1 time.
+        pids_splitted_by_ward <- getPIDsSplittedByWard(remove_multiple_pids = TRUE)
+      }
       all_wards_empty <- !length(unlist(pids_splitted_by_ward))
     })
 
