@@ -179,6 +179,6 @@ if (!etlutils::isErrorOccured()) {
   status <- 1
 }
 
-if (!interactive() && !exists("DEBUG_DAY")) {
+if (!interactive() && !etlutils::isProcess("FullToolchain")) {
   quit(status = status, save = "no")
 }
