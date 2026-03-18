@@ -1143,3 +1143,93 @@ addMRPDokuData <- function(merged_fe_pat_fall_meda_table_with_enc_id,
 
   return(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku)
 }
+
+#' Add Retrospective MRP Evaluation Data with Matching Logic
+#'
+#' Merges retrospective MRP (medication-related problem) evaluation data into
+#' a front-end dataset containing patient, fall, medication analysis, encounter,
+#' and MRP documentation data. The function distinguishes between fully matching
+#' retrospective records and partially matching records, applying different join
+#' strategies.
+#'
+#' @param merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku A data frame
+#'   containing merged front-end data, including patient, fall, medication
+#'   analysis, encounter identifiers, and MRP documentation variables.
+#' @param retrolektive_mrpbewertung_fe_table A data frame containing
+#'   retrospective MRP evaluation front-end data.
+#'
+#' @return A data frame containing the merged dataset enriched with
+#'   retrospective MRP evaluation data, ordered by `record_id`, `meda_dat`,
+#'   `mrp_id`, and `ret_id`. Duplicate rows are removed.
+#'
+#' @details
+#' The function performs a two-step merging process:
+#'
+#' \enumerate{
+#'   \item Fully matching retrospective records are identified using an
+#'   `inner_join()` on `record_id`, `meda_id` (matched to `ret_meda_id`),
+#'   and `mrp_id` (matched to `ret_mrp_zuordnung1`). These matches represent
+#'   the most precise linkage between front-end and retrospective data.
+#'
+#'   \item Remaining retrospective records (not matched in the first step)
+#'   are joined using a `left_join()` based on `record_id` and `meda_id`
+#'   only.
+#' }
+#'
+#' The two resulting datasets are combined using `rbind()`, duplicates are
+#' removed, and the final dataset is sorted for consistent downstream use.
+#'
+#' Joins are performed with `na_matches = "never"` to prevent matching on
+#' missing key values.
+#'
+#' Note: The `retrolektive_mrpbewertung_fe_table` is expected to contain retrospective
+#' MRP evaluation results that are linked to the medication analyses. One medication analysis can
+#' result in multiple manually documented but also multiple retrospective algorithmic MRP evaluation,
+#' both not nessecarily linked to each other (although they might be linkable via `ret_mrp_zuordnung1`).
+#' This may result in duplication of algorithmic MRP
+#' evaluation results when merged with the medication analysis data, which is not necessarily wrong
+#' but should be kept in mind when interpreting the results.
+#'
+#' @importFrom dplyr inner_join left_join distinct rename select filter pull arrange
+#'
+#' @export
+addRetrolektiveMRPBewertungData <- function(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku,
+                                            retrolektive_mrpbewertung_fe_table) {
+  merged_matching_ret_data <- merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku |>
+    dplyr::inner_join(
+      retrolektive_mrpbewertung_fe_table |>
+        dplyr::distinct(),
+      by = c("record_id",
+        "meda_id" = "ret_meda_id",
+        "mrp_id" = "ret_mrp_zuordnung1"
+      ),
+      na_matches = "never",
+      keep = TRUE
+    ) |>
+    dplyr::rename(record_id = record_id.x) |>
+    dplyr::select(-c(record_id.y, ret_meda_id)) |>
+    dplyr::distinct()
+
+  matching_ret_ids <- merged_matching_ret_data |>
+    dplyr::distinct(ret_id) |>
+    dplyr::pull()
+
+  merged_not_matching_ret_data <- merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku |>
+    dplyr::left_join(
+      retrolektive_mrpbewertung_fe_table |>
+        dplyr::filter(!ret_id %in% matching_ret_ids) |>
+        dplyr::distinct(),
+      by = c("record_id",
+        "meda_id" = "ret_meda_id"
+      ),
+      na_matches = "never"
+    ) |>
+    dplyr::distinct()
+
+  merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku_retrolektive <- merged_matching_ret_data |>
+    rbind(merged_not_matching_ret_data) |>
+    dplyr::distinct() |>
+    dplyr::arrange(record_id, meda_dat, mrp_id, ret_id)
+
+  return(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku_retrolektive)
+}

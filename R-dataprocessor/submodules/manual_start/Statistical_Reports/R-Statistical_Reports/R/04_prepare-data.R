@@ -129,10 +129,17 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' - `medikationsanalyse_complete`
 #' - `mrp_dokup_hand_emp_akz`
 #' - `mrpdokumentation_validierung_complete`
+#' - `mrp_ip_klasse_01`
+#' - `Kontraindikation` (derived from `mrp_pigrund___21`)
+#' - `ret_ip_klasse_01`
+#' - `ret_mrp_zuordnung1`
+#' - `retrolektive_mrpbewertung_complete`
 #' - `main_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
 #'                                           for the main encounter (if not already in 'not in inclusion criteria'))
 #' - `main_enc_not_in_inclusion_criteria` (indicating if the main encounter is excluded due to
 #'                                           not being in inclusion criteria)
+#' - `sub_enc_any_MRP` (indicating if any MRP documentation exists for the sub encounter)
+#' - `sub_enc_any_algorithmic_MRP` (indicating if any algorithmic MRP documentation exists for the sub encounter)
 #' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
 #' - `sub_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
 #'                                          for the sub encounter  (if not already in 'not in inclusion criteria'))
@@ -184,6 +191,13 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       any(!is.na(meda_id) &
         medikationsanalyse_complete == "Complete"), TRUE, FALSE, missing = FALSE
     )) |>
+    dplyr::mutate(sub_enc_any_MRP = dplyr::if_else(
+      any(!is.na(mrp_id) &
+        mrpdokumentation_validierung_complete == "Complete"), TRUE, FALSE, missing = FALSE
+    )) |>
+    dplyr::mutate(sub_enc_any_algorithmic_MRP = dplyr::if_else(
+      any(!is.na(ret_id)), TRUE, FALSE, missing = FALSE
+    )) |>
     dplyr::mutate(sub_enc_any_processing_exclusion_fe = dplyr::if_else(
       any(
         !is.na(processing_exclusion_reason) &
@@ -202,11 +216,15 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       fall_id_cis, fall_station, fall_aufn_dat,
       calendar_week,
       sub_enc_any_completed_medication_analysis,
-      # enc_id, enc_status, enc_period_start
+      sub_enc_any_MRP, sub_enc_any_algorithmic_MRP,
+      # enc_id, enc_status, enc_period_start,
       meda_id,
       meda_dat, medikationsanalyse_complete, mrp_id,
       mrp_pigrund___21, mrp_ip_klasse_01, mrp_dokup_hand_emp_akz,
-      mrpdokumentation_validierung_complete, main_enc_any_processing_exclusion_fe,
+      mrpdokumentation_validierung_complete,
+      ret_id, ret_mrp_zuordnung1, ret_ip_klasse_01,
+      retrolektive_mrpbewertung_complete,
+      main_enc_any_processing_exclusion_fe,
       main_enc_not_in_inclusion_criteria, sub_enc_any_processing_exclusion_fe,
       sub_enc_all_processing_exclusion_fe
     ) |>

@@ -105,9 +105,12 @@ calculateF1 <- function(F1_prep) {
 #'   The columns include:
 #'   - `patients`: Number of distinct patients
 #'   - `encounters`: Number of distinct hospital stays
+#'   - `encounters_processing_exclusion`: Encounters excluded due to processing criteria
+#'   - `not_in_inclusion_criteria`: Encounters not meeting inclusion criteria
 #'   - `encounters_with_completed_meda`: Encounters with at least one completed medication analysis
 #'   - `medication_analyses`: Total medication analyses
 #'   - `medication_analyses_complete`: Analyses marked "Complete"
+#'   - `encounters_with_any_completed_mrp`: Encounters with at least one completed MRP documentation
 #'   - `MRP`: Total MRP entries
 #'   - `MRP_documentation_complete`: MRP documentation completed
 #'   - `MRP_resolved`: MRPs marked as resolved with intervention implemented
@@ -118,8 +121,12 @@ calculateF1 <- function(F1_prep) {
 #'   - `MRP_drug_disease`: Drug-disease interactions
 #'   - `MRP_drug_renal_insufficiency`: Drug interactions with renal insufficiency
 #'   - `MRP_class_na`: MRPs with contraindications but no interaction class assigned
-#'   - `encounters_processing_exclusion`: Encounters excluded due to processing criteria
-#'   - `not_in_inclusion_criteria`: Encounters not meeting inclusion criteria
+#'   - `encounters_with_any_algorithmic_mrp`: Encounters with at least one algorithmically identified MRP
+#'   - `algorithmic_MRP`: Total algorithmic MRPs
+#'   - `retrolective_MRP_evaluation_complete`: Algorithmic MRPs with completed algorithmic retrolective evaluation
+#'   - `algorithmic_MRP_drug_drug`: Algorithmic drug-drug interactions
+#'   - `algorithmic_MRP_drug_disease`: Algorithmic drug-disease interactions
+#'   - `algorithmic_MRP_drug_Niereninsuffizienz`: Algorithmic drug-renal insufficiency interactions
 #'
 #' @details
 #' - Summarization is grouped by `ward_name` derived from `ward_name`
@@ -146,6 +153,15 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         main_enc_id[valid_for_counting],
         na.rm = TRUE
       ),
+      # grouped: exclusion if any main or sub encounter is excluded
+      encounters_processing_exclusion = dplyr::n_distinct(
+        main_enc_id[main_enc_any_processing_exclusion_fe | sub_enc_any_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      not_in_inclusion_criteria = dplyr::n_distinct(
+        main_enc_id[main_enc_not_in_inclusion_criteria],
+        na.rm = TRUE
+      ),
       encounters_with_completed_meda = dplyr::n_distinct(
         main_enc_id[valid_for_counting & sub_enc_any_completed_medication_analysis],
         na.rm = TRUE
@@ -158,6 +174,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           medikationsanalyse_complete == "Complete", meda_id, NA
         )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      encounters_with_any_completed_mrp = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_MRP],
         na.rm = TRUE
       ),
       MRP = dplyr::n_distinct(
@@ -223,13 +243,36 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         )[valid_for_counting],
         na.rm = TRUE
       ),
-      # grouped: exclusion if any main or sub encounter is excluded
-      encounters_processing_exclusion = dplyr::n_distinct(
-        main_enc_id[main_enc_any_processing_exclusion_fe | sub_enc_any_processing_exclusion_fe],
+      encounters_with_any_algorithmic_mrp = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP],
         na.rm = TRUE
       ),
-      not_in_inclusion_criteria = dplyr::n_distinct(
-        main_enc_id[main_enc_not_in_inclusion_criteria],
+      algorithmic_MRP = dplyr::n_distinct(
+        ret_id[valid_for_counting],
+        na.rm = TRUE
+      ),
+      retrolective_MRP_evaluation_complete = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_drug_drug = dplyr::n_distinct(
+        dplyr::if_else(
+          ret_ip_klasse_01 == "Drug-Drug", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_drug_disease = dplyr::n_distinct(
+        dplyr::if_else(
+          ret_ip_klasse_01 == "Drug-Disease", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_drug_renal_insufficiency = dplyr::n_distinct(
+        dplyr::if_else(
+          ret_ip_klasse_01 == "Drug-Niereninsuffizienz", ret_id, NA
+        )[valid_for_counting],
         na.rm = TRUE
       ), .groups = "drop"
     )
@@ -245,6 +288,15 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         main_enc_id[valid_for_counting],
         na.rm = TRUE
       ),
+      # total: exclusion only if any main or all sub encounters are excluded
+      encounters_processing_exclusion = dplyr::n_distinct(
+        main_enc_id[main_enc_any_processing_exclusion_fe | sub_enc_all_processing_exclusion_fe],
+        na.rm = TRUE
+      ),
+      not_in_inclusion_criteria = dplyr::n_distinct(
+        main_enc_id[main_enc_not_in_inclusion_criteria],
+        na.rm = TRUE
+      ),
       encounters_with_completed_meda = dplyr::n_distinct(
         main_enc_id[valid_for_counting & sub_enc_any_completed_medication_analysis],
         na.rm = TRUE
@@ -257,10 +309,15 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(medikationsanalyse_complete == "Complete", meda_id, NA)[valid_for_counting],
         na.rm = TRUE
       ),
+      encounters_with_any_completed_mrp = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_MRP],
+        na.rm = TRUE
+      ),
       MRP = dplyr::n_distinct(
         mrp_id[valid_for_counting],
         na.rm = TRUE
-      ), MRP_documentation_complete = dplyr::n_distinct(
+      ),
+      MRP_documentation_complete = dplyr::n_distinct(
         dplyr::if_else(
           mrpdokumentation_validierung_complete == "Complete", mrp_id, NA
         )[valid_for_counting],
@@ -319,13 +376,36 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         )[valid_for_counting],
         na.rm = TRUE
       ),
-      # total: exclusion only if any main or all sub encounters are excluded
-      encounters_processing_exclusion = dplyr::n_distinct(
-        main_enc_id[main_enc_any_processing_exclusion_fe | sub_enc_all_processing_exclusion_fe],
+      encounters_with_any_algorithmic_mrp = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP],
         na.rm = TRUE
       ),
-      not_in_inclusion_criteria = dplyr::n_distinct(
-        main_enc_id[main_enc_not_in_inclusion_criteria],
+      algorithmic_MRP = dplyr::n_distinct(
+        ret_id[valid_for_counting],
+        na.rm = TRUE
+      ),
+      retrolective_MRP_evaluation_complete = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_drug_drug = dplyr::n_distinct(
+        dplyr::if_else(
+          ret_ip_klasse_01 == "Drug-Drug", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_drug_disease = dplyr::n_distinct(
+        dplyr::if_else(
+          ret_ip_klasse_01 == "Drug-Disease", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_drug_renal_insufficiency = dplyr::n_distinct(
+        dplyr::if_else(
+          ret_ip_klasse_01 == "Drug-Niereninsuffizienz", ret_id, NA
+        )[valid_for_counting],
         na.rm = TRUE
       )
     )

@@ -173,6 +173,11 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   )
   # --> this table should show only the last version of each mrp_dokumentation_validierung_fe entry
 
+  retrolektive_mrpbewertung_fe_table <- getRetrolektiveMRPBewertungFeData(
+    lock_id = "statistical reports[8]",
+    table_name = "v_retrolektive_mrpbewertung_fe_last_version"
+  )
+
   FHIR_table <- mergePatEnc(patient_table, encounter_table) |>
     addCuratedEncPeriodEnd() |>
     addMainEncId() |>
@@ -214,7 +219,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       result_variable_name = "multiple_medas_per_patient"
     ) |>
     addMRPDokuData(mrp_dokumentation_validierung_fe_table) |>
-    dplyr::arrange(record_id, meda_dat, mrp_id)
+    addRetrolektiveMRPBewertungData(retrolektive_mrpbewertung_fe_table)
 
   frontend_summary_data <- prepareFeSummaryData(
     frontend_table, REPORT_PERIOD_START,
@@ -294,15 +299,22 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),
     colnames = c(
-      "ward", "patients", "encounters", "encounters with completed medication analysis",
+      "ward", "patients", "encounters",
+      "processing excluded encounters (linkage issues)",
+      "not meeting inclusion criteria (patient underage)",
+      "encounters with completed medication analysis",
       "medication analyses",
-      "completed medication analyses", "MRP", "completed MRP documention",
+      "completed medication analyses",
+      "encounters with completed MRP documentation",
+      "MRP", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
       "resolved contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
       "class not assigned",
-      "processing excluded encounters (linkage issues)",
-      "not meeting inclusion criteria (patient underage)"
+      "encounters with algorithmic MRP",
+      "algorithmic MRP",
+      "completed retrolective algorithmic MRP evaluation",
+      "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency"
     )
   )
 
@@ -316,15 +328,22 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),
     colnames = c(
-      "ward", "calendar week", "patients", "encounters", "encounters with completed medication analysis",
+      "ward", "calendar week", "patients", "encounters",
+      "processing excluded encounters (linkage issues)",
+      "not meeting inclusion criteria (patient underage)",
+      "encounters with completed medication analysis",
       "medication analyses",
-      "completed medication analyses", "MRP", "completed MRP documention",
+      "completed medication analyses",
+      "encounters with completed MRP documentation",
+      "MRP", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
       "resolved contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
       "class not assigned",
-      "processing excluded encounters (linkage issues)",
-      "not meeting inclusion criteria (patient underage)"
+      "encounters with algorithmic MRP",
+      "algorithmic MRP",
+      "completed retrolective algorithmic MRP evaluation",
+      "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency"
     )
   )
 

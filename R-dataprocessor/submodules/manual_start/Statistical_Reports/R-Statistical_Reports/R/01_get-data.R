@@ -521,3 +521,55 @@ getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
 
   return(mrp_dokumentation_validierung_fe_table)
 }
+
+#' Retrieve Retrospective MRP Evaluation Front-End Data
+#'
+#' Retrieves retrospective MRP (medication-related problem) evaluation data
+#' from the specified front-end database table. The function executes a
+#' read-only SQL query to extract a predefined subset of variables and
+#' returns a cleaned and ordered data frame.
+#'
+#' @param lock_id Character string used to identify the database access lock
+#'   for the query. This ensures coordinated access to the data source.
+#' @param table_name Character string specifying the name of the database
+#'   table containing retrospective MRP evaluation front-end data.
+#'
+#' @return A data frame containing the selected retrospective MRP evaluation
+#'   variables, ordered by `record_id`, `ret_meda_id`, and `ret_id`, with
+#'   duplicate rows removed.
+#'
+#' @details
+#' The function builds a SQL query dynamically using the provided table
+#' name and retrieves the data via `etlutils::dbGetReadOnlyQuery()`. Only
+#' a subset of available variables is currently selected, focusing on
+#' identifiers and key classification fields required for reporting.
+#'
+#' After retrieval, duplicate rows are removed using `distinct()` and the
+#' data is sorted by `record_id`, `ret_meda_id`, and `ret_id` to ensure a
+#' consistent structure for downstream processing.
+#'
+#' If the resulting table is empty, a warning is issued indicating that
+#' the retrospective MRP evaluation data might not yet be available (for
+#' example if Phase B has not been active long enough).
+#'
+#' @importFrom dplyr distinct arrange
+#' @importFrom etlutils dbGetReadOnlyQuery
+#'
+#' @export
+getRetrolektiveMRPBewertungFeData <- function(lock_id, table_name) {
+  query <- paste0(
+    "SELECT record_id, ret_meda_id, ret_id, ret_mrp_zuordnung1, ret_ip_klasse_01, ",
+    "retrolektive_mrpbewertung_complete ",
+    "FROM ", table_name, "\n"
+  )
+
+  retrolektive_mrpbewertung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    dplyr::arrange(record_id, ret_meda_id, ret_id)
+
+  if (nrow(retrolektive_mrpbewertung_fe_table) == 0) {
+    warning("The mrpbewertung_retro_fe table is empty. Please check the data if Phase B is already ongoing for more than 3 weeks.")
+  }
+
+  return(retrolektive_mrpbewertung_fe_table)
+}
