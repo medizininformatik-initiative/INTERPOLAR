@@ -121,6 +121,7 @@ calculateF1 <- function(F1_prep) {
 #'   - `MRP_drug_disease`: Drug-disease interactions
 #'   - `MRP_drug_renal_insufficiency`: Drug interactions with renal insufficiency
 #'   - `MRP_class_na`: MRPs with contraindications but no interaction class assigned
+#'   - `encounters_eligible_for_algorithmic_mrp`: Encounters eligible for algorithmic MRP calculation
 #'   - `encounters_with_any_algorithmic_mrp`: Encounters with at least one algorithmically identified MRP
 #'   - `algorithmic_MRP`: Total algorithmic MRPs
 #'   - `retrolective_MRP_evaluation_complete`: Algorithmic MRPs with completed algorithmic retrolective evaluation
@@ -140,7 +141,20 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
   frontend_summary_data <- frontend_summary_data |>
     dplyr::mutate(valid_for_counting = !main_enc_any_processing_exclusion_fe &
       !sub_enc_any_processing_exclusion_fe &
-      !main_enc_not_in_inclusion_criteria)
+      !main_enc_not_in_inclusion_criteria) |>
+    # restict to variables that are needed for counting
+    dplyr::select(c(
+      pat_id, main_enc_id, meda_id, mrp_id, ret_id,
+      dplyr::all_of(grouping_variables),
+      valid_for_counting,
+      main_enc_any_processing_exclusion_fe, sub_enc_any_processing_exclusion_fe,
+      sub_enc_all_processing_exclusion_fe, main_enc_not_in_inclusion_criteria,
+      sub_enc_any_completed_medication_analysis, sub_enc_any_MRP, sub_enc_any_algorithmic_MRP,
+      medikationsanalyse_complete, mrpdokumentation_validierung_complete,
+      mrp_dokup_hand_emp_akz, Kontraindikation, mrp_ip_klasse_01, retrolektive_mrpbewertung_complete,
+      ret_ip_klasse_01, eligible_for_algorithmic_MRP_calculation
+    )) |>
+    dplyr::distinct()
 
   fe_grouped_counts <- frontend_summary_data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_variables))) |>
@@ -241,6 +255,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           Kontraindikation == "Checked" & is.na(mrp_ip_klasse_01), mrp_id, NA
         )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      encounters_eligible_for_algorithmic_mrp = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & eligible_for_algorithmic_MRP_calculation],
         na.rm = TRUE
       ),
       encounters_with_any_algorithmic_mrp = dplyr::n_distinct(
@@ -374,6 +392,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           Kontraindikation == "Checked" & is.na(mrp_ip_klasse_01), mrp_id, NA
         )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      encounters_eligible_for_algorithmic_mrp = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & eligible_for_algorithmic_MRP_calculation],
         na.rm = TRUE
       ),
       encounters_with_any_algorithmic_mrp = dplyr::n_distinct(

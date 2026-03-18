@@ -105,7 +105,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 
 #' Prepare Front-End Summary Data for Reporting Period
 #'
-#' Filters and reduces the complete front-end dataset to the relevant summary variables for
+#' Enriches the complete front-end dataset with summary variables for
 #' reporting within a defined period. Only entries with a `fall_aufn_dat` timestamp falling
 #' within the specified `report_period_start` and `report_period_end` range are retained.
 #' To show all frontend cases, this is needed (instead of using the enc_period_start),
@@ -120,31 +120,32 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' @param report_period_end A character string representing the end of the reporting period
 #'                          (format: "YYYY-MM-DD").
 #'
-#' @return A filtered and deduplicated data frame containing selected columns of interest
-#'   for encounters with starting date (`fall_aufn_dat`) within the reporting period.
+#' @return A data frame containing enriched front-end summary data for encounters with `fall_aufn_dat`
+#' within the specified reporting period. The dataset includes additional variables derived from the
+#' original front-end data, such as calendar week, eligibility for algorithmic MRP calculation, and various flags
+#' indicating the presence of MRP documentation, medication analysis, and processing exclusion reasons
+#' for both main and sub encounters.
 #'
 #' @details
-#' The resulting dataset includes distinct rows based on identifiers and key variables such as:
+#' The resulting dataset includes additional variables derived from the original front-end data:
 #' - `calendar_week` (derived from `fall_aufn_dat`; including the year)
-#' - `medikationsanalyse_complete`
-#' - `mrp_dokup_hand_emp_akz`
-#' - `mrpdokumentation_validierung_complete`
-#' - `mrp_ip_klasse_01`
 #' - `Kontraindikation` (derived from `mrp_pigrund___21`)
-#' - `ret_ip_klasse_01`
-#' - `ret_mrp_zuordnung1`
-#' - `retrolektive_mrpbewertung_complete`
+#' - `main_enc_id` (derived from `fall_fhir_main_enc_id`)
+#' - `ward_name` (derived from `fall_station`)
 #' - `main_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
 #'                                           for the main encounter (if not already in 'not in inclusion criteria'))
 #' - `main_enc_not_in_inclusion_criteria` (indicating if the main encounter is excluded due to
 #'                                           not being in inclusion criteria)
-#' - `sub_enc_any_MRP` (indicating if any MRP documentation exists for the sub encounter)
-#' - `sub_enc_any_algorithmic_MRP` (indicating if any algorithmic MRP documentation exists for the sub encounter)
-#' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
 #' - `sub_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
 #'                                          for the sub encounter  (if not already in 'not in inclusion criteria'))
 #' - `sub_enc_all_processing_exclusion_fe` (indicating if all entries for the sub encounters have
 #'                                         processing exclusion reasons (if not already in 'not in inclusion criteria'))
+#' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
+#' - `sub_enc_any_MRP` (indicating if any MRP documentation exists for the sub encounter)
+#' - `eligible_for_algorithmic_MRP_calculation` (indicating if the sub encounter is eligible for algorithmic MRP
+#'                                              calculation based on the time since discharge (>14 days) and presence of
+#'                                              completed medication analysis)
+#' - `sub_enc_any_algorithmic_MRP` (indicating if any algorithmic MRP documentation exists for the sub encounter)
 #'
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
 #'
@@ -156,7 +157,7 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::mutate(
       calendar_week = paste0(data.table::year(fall_aufn_dat), "-", data.table::isoweek(fall_aufn_dat)),
       .after = fall_aufn_dat
-    ) |> # add calendar week and year
+    ) |>
     dplyr::group_by(fall_fhir_main_enc_id) |>
     dplyr::mutate(main_enc_any_processing_exclusion_fe = dplyr::if_else(any(
       !is.na(processing_exclusion_reason) &
@@ -211,30 +212,19 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       ), TRUE, FALSE, missing = FALSE
     )) |>
     dplyr::ungroup() |>
-    dplyr::distinct(
-      pat_id, record_id, fall_fhir_main_enc_id,
-      fall_id_cis, fall_station, fall_aufn_dat,
-      calendar_week,
-      sub_enc_any_completed_medication_analysis,
-      sub_enc_any_MRP, sub_enc_any_algorithmic_MRP,
-      # enc_id, enc_status, enc_period_start,
-      meda_id,
-      meda_dat, medikationsanalyse_complete, mrp_id,
-      mrp_pigrund___21, mrp_ip_klasse_01, mrp_dokup_hand_emp_akz,
-      mrpdokumentation_validierung_complete,
-      ret_id, ret_mrp_zuordnung1, ret_ip_klasse_01,
-      retrolektive_mrpbewertung_complete,
-      main_enc_any_processing_exclusion_fe,
-      main_enc_not_in_inclusion_criteria, sub_enc_any_processing_exclusion_fe,
-      sub_enc_all_processing_exclusion_fe
-    ) |>
+    dplyr::mutate(eligible_for_algorithmic_MRP_calculation = dplyr::if_else(
+      ((as.POSIXct(report_period_end) - fall_ent_dat) > 14) &
+        sub_enc_any_completed_medication_analysis,
+      TRUE, FALSE, missing = FALSE
+    ), .after = sub_enc_any_MRP) |>
     dplyr::rename(
       Kontraindikation = mrp_pigrund___21,
       main_enc_id = fall_fhir_main_enc_id,
       ward_name = fall_station
     ) |>
     dplyr::filter(fall_aufn_dat >= as.POSIXct(report_period_start)) |> # only main-encounter start date in reporting period
-    dplyr::filter(fall_aufn_dat < as.POSIXct(report_period_end))
+    dplyr::filter(fall_aufn_dat < as.POSIXct(report_period_end)) |>
+    dplyr::distinct()
 
   return(frontend_summary_prep)
 }

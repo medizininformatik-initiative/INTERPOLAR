@@ -364,6 +364,7 @@ getPatientFeData <- function(lock_id, table_name) {
 #'   \item{fall_studienphase}{Study phase associated with the case}
 #'   \item{fall_station}{INTERPOLAR-ward fromt he pids_per_ward table}
 #'   \item{fall_aufn_dat}{Admission date of the main encounter}
+#'   \item{fall_ent_dat}{Discharge date of the main encounter}
 #'
 #' @details
 #' The function executes a SQL `SELECT` query on the specified `table_name`, retrieving all
@@ -379,7 +380,7 @@ getPatientFeData <- function(lock_id, table_name) {
 getFallFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
-    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, input_processing_nr ",
+    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, input_processing_nr ",
     "FROM ", table_name, "\n"
   )
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
