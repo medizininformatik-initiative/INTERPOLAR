@@ -36,6 +36,19 @@ getProjectDirNames <- function(project_name, project_time_stamp = MODULE_TIME_ST
   )
 }
 
+#' List cache files
+#'
+#' @param subdir Optional subdirectory inside the local module directory.
+#' @param pattern Regular expression used to filter file names.
+#'
+#' @return A character vector containing the matching file names.
+#'
+#' @export
+listCacheFiles <- function(subdir = NULL, pattern) {
+  dir_name <- paste0(MODULE_DIRS$local_dir, "/", MODULE_DIRS$local_cache_dir_name, "/", subdir)
+  list.files(dir_name, pattern = pattern)
+}
+
 #' Rename a Directory with Creation Timestamp If It Exists
 #'
 #' This function checks if a specified directory exists. If it does, the directory is renamed
@@ -209,7 +222,7 @@ writeRDSFileInternal <- function(target = c("local", "global"), object, filename
 #' @inheritParams writeRDSFileInternal
 #'
 #' @export
-writeRDSFileCache <- function(object, filename_without_extension = NA, subdir = "tables") {
+writeRDSFileCache <- function(object, filename_without_extension = NA, subdir = NULL) {
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(substitute(object))
   }
@@ -253,7 +266,7 @@ readRDSFileInternal <- function(target = c("local", "global"), filename_without_
   project_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, subdir)
   file_name <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.rds')
   object <- NULL
-  if (file.exists(fname)) {
+  if (file.exists(file_name)) {
     # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
     # 5.3 Reading data.table from RDS or RData file
     #
@@ -263,7 +276,7 @@ readRDSFileInternal <- function(target = c("local", "global"), filename_without_
     # data.table will be copied in memory on the next by reference
     # operation and throw a warning. Therefore it is recommended to call
     # setalloccol() on each data.table loaded with readRDS() or load() calls.
-    object <- readRDS(fname)
+    object <- readRDS(file_name)
     if ('data.table' %in% class(object)) {
       invisible(data.table::setalloccol(object))
     }
@@ -276,7 +289,7 @@ readRDSFileInternal <- function(target = c("local", "global"), filename_without_
 #' @inheritParams readRDSFileInternal
 #'
 #' @export
-readRDSFileCache <- function(filename_without_extension, subdir = "tables") {
+readRDSFileCache <- function(filename_without_extension, subdir = NULL) {
   subdir <- paste0(MODULE_DIRS$local_cache_dir_name, "/", subdir)
   readRDSFileInternal("local", filename_without_extension, subdir)
 }
@@ -361,7 +374,7 @@ writeDebugExcelFile <- function(tables, filename_without_extension = NA, runLeve
 #' @inheritParams writeExcelFileInternal
 #'
 #' @export
-writeExcelFileCache <- function(tables, filename_without_extension = NA, with_column_names = TRUE, subdir = "tables") {
+writeExcelFileCache <- function(tables, filename_without_extension = NA, with_column_names = TRUE, subdir = NULL) {
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(substitute(tables))
   }
