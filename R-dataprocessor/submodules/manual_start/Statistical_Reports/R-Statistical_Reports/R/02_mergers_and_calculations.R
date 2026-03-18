@@ -370,6 +370,8 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 #' modifying the function itself, relying instead on externally defined ward
 #' vectors.
 #'
+#' NOTE: This has to be updated with 1.7.0 (currently not used)
+#'
 #' @importFrom dplyr filter distinct
 #'
 #' @export
