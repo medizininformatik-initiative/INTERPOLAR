@@ -405,8 +405,8 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
 
   # This variable should be set to change the downloaded RAW data for DEBUG
   # purposes. It contains paths to scripts that is sourced at this point in the given order.
-  if (isNonEmptyVal("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
-    source(getVal("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME"), local = TRUE)
+  if (etlutils::isDefinedAndNotEmpty("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
+    source(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME, local = TRUE)
   }
 
   # Prefix of all global debug variables. One for each FHIR resources.
