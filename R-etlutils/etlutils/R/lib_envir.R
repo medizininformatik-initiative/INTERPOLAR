@@ -810,12 +810,24 @@ rmAll <- function(pattern) {
 #'
 #' @param process_name Name of the process.
 #'
-#' @return None.
+#' @return The provided process name
 #'
 #' @export
 setProcess <- function(process_name) {
-  processes <- getVal("PROCESS_NAME")
-  .penv[["PROCESS_NAME"]] <- unique(c(processes, process_name))
+  if (is.null(.penv[["PROCESS_NAME"]])) {
+    .penv[["PROCESS_NAME"]] <- process_name
+  }
+  process_name
+}
+
+#' Get name of the first registered process
+#'
+#' @return The name of the first registered process or `NULL` if no process
+#'   has been registered.
+#'
+#' @export
+getProcess <- function() {
+  return(getVal("PROCESS_NAME"))
 }
 
 #' Check if process is active
@@ -826,5 +838,6 @@ setProcess <- function(process_name) {
 #'
 #' @export
 isProcess <- function(process_name) {
-  tolower(process_name) %in% tolower(getVal("PROCESS_NAME"))
+  tolower(process_name) %in% tolower(getProcess())
 }
+
