@@ -14,6 +14,8 @@ library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
+process_name <- setProcess("DebugCDSToolchain")
+
 # Reset error status
 options(error = NULL)
 
