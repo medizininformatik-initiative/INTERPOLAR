@@ -183,7 +183,13 @@ mrpCheck <- function(start_date, end_date) {
 
 
     # Add export period at the end of the table in the first column
-    result <- etlutils::addRowsWithColumn(result, c("", paste("Start:", format(start_date, "%Y-%m-%d %H:%M:%S")), paste("End:", format(end_date, "%Y-%m-%d %H:%M:%S"))), column = "MRP Beschreibung")
+    result <- etlutils::addRowsWithColumn(result, c("",
+                                                    paste("Start:", format(start_date, "%Y-%m-%d %H:%M:%S")),
+                                                    paste("End:", format(end_date, "%Y-%m-%d %H:%M:%S")),
+                                                    paste("Exported on:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
+                                                    paste("Minimum Encounter Start:", format(min(result$`FHIR Encounter Start`, na.rm = TRUE), "%Y-%m-%d %H:%M:%S")),
+                                                    paste("Release Version:", etlutils::getReleaseVersion())),
+                                          column = "MRP Typ")
   })
 
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {
