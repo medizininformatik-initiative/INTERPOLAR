@@ -643,6 +643,7 @@ compareVersionsSemver <- function(version_a, version_b) {
 #' @return Character scalar containing the normalized release version string,
 #'   e.g. \code{"1.5.0"}.
 #'
+#' @export
 getReleaseVersion <- function() {
   release_version <- readLines("./release-version.txt", n = 1L)
   release_version <- trimws(release_version)
