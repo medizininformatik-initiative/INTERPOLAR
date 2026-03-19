@@ -13,7 +13,7 @@ if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
 # Reset error status
 options(error = NULL)
 
-start <- Sys.time()
+start_full <- Sys.time()
 
 if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
   cat("START DEBUG_DAY", DEBUG_DAY, "\n")
@@ -172,8 +172,8 @@ if (!etlutils::isErrorOccured()) {
     cat("END DEBUG_DAY", DEBUG_DAY, "\n")
   } else {
     # Print the elapsed time
-    end <- Sys.time()
-    cat("Full toolchain took ", capture.output(print(end - start)), "\n")
+    end_full <- Sys.time()
+    cat("Full toolchain took ", capture.output(print(end_full - start_full)), "\n")
   }
 } else {
   status <- 1
