@@ -16,6 +16,7 @@
 #' @export
 registerCache <- function(files_base_name, var_prefix = etlutils::getProcess()) {
   .cache_env[[var_prefix]] <- list(
+    module_name = getModuleName(),
     base = files_base_name,
     pattern = paste0("^", files_base_name, "_\\d+\\.rds$")
   )

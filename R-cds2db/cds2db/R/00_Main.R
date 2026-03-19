@@ -1,3 +1,8 @@
+#' @export
+getModuleName <- function() {
+  return("cds2db")
+}
+
 #' Initializes the module context for cds2db.
 #'
 #' This function initializes the module context for the cds2db module by loading
@@ -15,7 +20,7 @@
 #' @export
 init <- function(validate_config = TRUE) {
   # Initialize and start module if init_constants_only == FALSE
-  config <- etlutils::initModule("cds2db",
+  config <- etlutils::initModule(getModuleName(),
                        path_to_toml = "./R-cds2db/cds2db_config.toml",
                        mandatory_parameters = c(
                          "FHIR_SERVER_ENDPOINT",
