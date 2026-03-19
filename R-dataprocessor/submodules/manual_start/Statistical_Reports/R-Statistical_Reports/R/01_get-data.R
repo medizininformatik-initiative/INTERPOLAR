@@ -390,9 +390,6 @@ getFallFeData <- function(lock_id, table_name) {
     dplyr::slice_max(input_processing_nr, by = c(fall_fhir_enc_id, fall_station)) |>
     dplyr::select(-input_processing_nr) |>
     dplyr::distinct() |>
-    # temporary remove fall_studienphase, since it is not used at the moment (transformation dependent on purpose)
-    dplyr::select(-fall_studienphase) |>
-    dplyr::distinct() |>
     dplyr::arrange(record_id)
 
   # temporary deactivate, since fall_studienphase is not used at the moment

@@ -144,8 +144,8 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
 #' - `sub_enc_any_MRP` (indicating if any MRP documentation exists for the sub encounter)
 #' - `eligible_for_algorithmic_MRP_calculation` (indicating if the sub encounter is eligible for algorithmic MRP
-#'                                              calculation based on the time since discharge (>14 days) and presence of
-#'                                              completed medication analysis)
+#'                                              calculation based on the time since discharge (>14 days), presence of
+#'                                              completed medication analysis and being in Phase B of the study)
 #' - `sub_enc_any_algorithmic_MRP` (indicating if any algorithmic MRP documentation exists for the sub encounter)
 #'
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
@@ -220,7 +220,8 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::ungroup() |>
     dplyr::mutate(eligible_for_algorithmic_MRP_calculation = dplyr::if_else(
       ((as.POSIXct(report_period_end) - fall_ent_dat) > 14) &
-        sub_enc_any_completed_medication_analysis,
+        sub_enc_any_completed_medication_analysis &
+        fall_studienphase == "PhaseB",
       TRUE, FALSE, missing = FALSE
     ), .after = sub_enc_any_MRP) |>
     dplyr::rename(
