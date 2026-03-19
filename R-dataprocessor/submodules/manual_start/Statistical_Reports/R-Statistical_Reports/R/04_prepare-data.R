@@ -132,6 +132,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' - `Kontraindikation` (derived from `mrp_pigrund___21`)
 #' - `main_enc_id` (derived from `fall_fhir_main_enc_id`)
 #' - `ward_name` (derived from `fall_station`)
+#' - `unverified_pat_or_sub_enc` (indicating if either the patient or the sub encounter is unverified)
 #' - `main_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
 #'                                           for the main encounter (if not already in 'not in inclusion criteria'))
 #' - `main_enc_not_in_inclusion_criteria` (indicating if the main encounter is excluded due to
@@ -158,6 +159,10 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       calendar_week = paste0(data.table::year(fall_aufn_dat), "-", data.table::isoweek(fall_aufn_dat)),
       .after = fall_aufn_dat
     ) |>
+    dplyr::mutate(unverified_pat_or_sub_enc = dplyr::if_else(
+      patient_complete == "Unverified" | fall_complete == "Unverified",
+      TRUE, FALSE, missing = FALSE
+    )) |>
     dplyr::group_by(fall_fhir_main_enc_id) |>
     dplyr::mutate(main_enc_any_processing_exclusion_fe = dplyr::if_else(any(
       !is.na(processing_exclusion_reason) &
@@ -197,7 +202,8 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
         mrpdokumentation_validierung_complete == "Complete"), TRUE, FALSE, missing = FALSE
     )) |>
     dplyr::mutate(sub_enc_any_algorithmic_MRP = dplyr::if_else(
-      any(!is.na(ret_id)), TRUE, FALSE, missing = FALSE
+      any(!is.na(ret_id) &
+        retrolektive_mrpbewertung_complete != "Unverified"), TRUE, FALSE, missing = FALSE
     )) |>
     dplyr::mutate(sub_enc_any_processing_exclusion_fe = dplyr::if_else(
       any(

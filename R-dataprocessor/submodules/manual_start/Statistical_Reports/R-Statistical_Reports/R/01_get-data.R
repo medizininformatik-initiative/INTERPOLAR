@@ -306,7 +306,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' This is important for managing concurrent data access in environments where multiple processes
 #' might access the data simultaneously.
 #' @param table_name A character string specifying the name of the database table to query.
-#' This table should include columns `pat_id`, `record_id` and `pat_gebdat`.
+#' This table should include columns `pat_id`, `record_id`, `pat_gebdat` and `patient_complete` ("Unverified"= invalid record).
 #'
 #' @return A dataframe (`patient_fe_table`) that includes patient data, cleaned to ensure distinct
 #' entries per `pat_id`, arranged in order.
@@ -319,7 +319,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' @importFrom dplyr distinct arrange slice_max select mutate
 #' @export
 getPatientFeData <- function(lock_id, table_name) {
-  query <- paste0("SELECT pat_id, record_id, pat_gebdat, input_processing_nr FROM ", table_name, "\n")
+  query <- paste0("SELECT pat_id, record_id, pat_gebdat, patient_complete, input_processing_nr FROM ", table_name, "\n")
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # create last version view
@@ -365,6 +365,7 @@ getPatientFeData <- function(lock_id, table_name) {
 #'   \item{fall_station}{INTERPOLAR-ward fromt he pids_per_ward table}
 #'   \item{fall_aufn_dat}{Admission date of the main encounter}
 #'   \item{fall_ent_dat}{Discharge date of the main encounter}
+#'   \item{fall_complete}{"Complete"= hospitalized, "Incomplete"=discharged, "Unverified"= invalid record}
 #'
 #' @details
 #' The function executes a SQL `SELECT` query on the specified `table_name`, retrieving all
@@ -380,7 +381,7 @@ getPatientFeData <- function(lock_id, table_name) {
 getFallFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
-    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, input_processing_nr ",
+    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, fall_complete, input_processing_nr ",
     "FROM ", table_name, "\n"
   )
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>

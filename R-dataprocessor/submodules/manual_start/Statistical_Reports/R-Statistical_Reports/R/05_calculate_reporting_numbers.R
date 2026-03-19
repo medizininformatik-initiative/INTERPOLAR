@@ -141,7 +141,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
   frontend_summary_data <- frontend_summary_data |>
     dplyr::mutate(valid_for_counting = !main_enc_any_processing_exclusion_fe &
       !sub_enc_any_processing_exclusion_fe &
-      !main_enc_not_in_inclusion_criteria) |>
+      !main_enc_not_in_inclusion_criteria &
+      !unverified_pat_or_sub_enc) |>
     # restict to variables that are needed for counting
     dplyr::select(c(
       pat_id, main_enc_id, meda_id, mrp_id, ret_id,
@@ -181,7 +182,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       medication_analyses = dplyr::n_distinct(
-        meda_id[valid_for_counting],
+        meda_id[valid_for_counting & medikationsanalyse_complete != "Unverified"],
         na.rm = TRUE
       ),
       medication_analyses_complete = dplyr::n_distinct(
@@ -195,7 +196,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       MRP = dplyr::n_distinct(
-        mrp_id[valid_for_counting],
+        mrp_id[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_documentation_complete = dplyr::n_distinct(
@@ -207,7 +208,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       MRP_resolved = dplyr::n_distinct(
         dplyr::if_else(
           mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_resolution_non_informative = dplyr::n_distinct(
@@ -217,44 +218,44 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
             "Intervention vorgeschlagen, Umsetzung unbekannt"
           ),
         mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       contraindications = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       contraindications_resolved = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked" &
             mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_drug_drug = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Drug", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_drug_disease = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Disease", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_drug_renal_insufficiency = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Niereninsuffizienz", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_class_na = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked" & is.na(mrp_ip_klasse_01), mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       encounters_eligible_for_algorithmic_mrp = dplyr::n_distinct(
@@ -266,7 +267,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       algorithmic_MRP = dplyr::n_distinct(
-        ret_id[valid_for_counting],
+        ret_id[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       ),
       retrolective_MRP_evaluation_complete = dplyr::n_distinct(
@@ -278,19 +279,19 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       algorithmic_MRP_drug_drug = dplyr::n_distinct(
         dplyr::if_else(
           ret_ip_klasse_01 == "Drug-Drug", ret_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       ),
       algorithmic_MRP_drug_disease = dplyr::n_distinct(
         dplyr::if_else(
           ret_ip_klasse_01 == "Drug-Disease", ret_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       ),
       algorithmic_MRP_drug_renal_insufficiency = dplyr::n_distinct(
         dplyr::if_else(
           ret_ip_klasse_01 == "Drug-Niereninsuffizienz", ret_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       ), .groups = "drop"
     )
@@ -320,7 +321,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       medication_analyses = dplyr::n_distinct(
-        meda_id[valid_for_counting],
+        meda_id[valid_for_counting & medikationsanalyse_complete != "Unverified"],
         na.rm = TRUE
       ),
       medication_analyses_complete = dplyr::n_distinct(
@@ -332,7 +333,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       MRP = dplyr::n_distinct(
-        mrp_id[valid_for_counting],
+        mrp_id[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_documentation_complete = dplyr::n_distinct(
@@ -344,7 +345,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       MRP_resolved = dplyr::n_distinct(
         dplyr::if_else(
           mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_resolution_non_informative = dplyr::n_distinct(
@@ -354,44 +355,44 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
             "Intervention vorgeschlagen, Umsetzung unbekannt"
           ),
         mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       contraindications = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       contraindications_resolved = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked" &
             mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_drug_drug = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Drug", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_drug_disease = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Disease", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_drug_renal_insufficiency = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Niereninsuffizienz", mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       MRP_class_na = dplyr::n_distinct(
         dplyr::if_else(
           Kontraindikation == "Checked" & is.na(mrp_ip_klasse_01), mrp_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
       encounters_eligible_for_algorithmic_mrp = dplyr::n_distinct(
@@ -403,31 +404,31 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       algorithmic_MRP = dplyr::n_distinct(
-        ret_id[valid_for_counting],
+        ret_id[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       ),
       retrolective_MRP_evaluation_complete = dplyr::n_distinct(
         dplyr::if_else(
           retrolektive_mrpbewertung_complete == "Complete", ret_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       ),
       algorithmic_MRP_drug_drug = dplyr::n_distinct(
         dplyr::if_else(
           ret_ip_klasse_01 == "Drug-Drug", ret_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       ),
       algorithmic_MRP_drug_disease = dplyr::n_distinct(
         dplyr::if_else(
           ret_ip_klasse_01 == "Drug-Disease", ret_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       ),
       algorithmic_MRP_drug_renal_insufficiency = dplyr::n_distinct(
         dplyr::if_else(
           ret_ip_klasse_01 == "Drug-Niereninsuffizienz", ret_id, NA
-        )[valid_for_counting],
+        )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       )
     )
