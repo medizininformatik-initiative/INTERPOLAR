@@ -47,6 +47,31 @@ resetLock <- function() {
   etlutils::dbResetLock()
 }
 
+#' Initializes the a cache for the current process
+#'
+#' @param delete_old_cache If TRUE existing cache files with the same base name will be deleted
+#'
+#' @return The number of files in this cache
+#'
+#' @export
+initCache <- function(delete_old_cache) {
+  etlutils::registerCache(files_base_name = etlutils::getProcess(), module_name = getModuleName())
+  if (delete_old_cache) {
+    etlutils::deleteAllCacheFiles(module_name = getModuleName())
+  }
+  return(etlutils::getCacheFilesCount(module_name = getModuleName()))
+}
+
+#' Deletes the next cache file
+#'
+#' @return The number of files in this cache
+#'
+#' @export
+deleteNextCacheFile <- function() {
+  etlutils::deleteNextCacheFile(module_name = getModuleName())
+  return(etlutils::getCacheFilesCount(module_name = getModuleName()))
+}
+
 #' Starts the ETL retrieval process from FHIR to the database
 #'
 #' This is the main entry point for the ETL process. It initializes the module,
@@ -93,17 +118,17 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
       if (isProcess("DataImport")) {
-        if (!hasNextCacheFile()) {
+        if (!etlutils::hasNextCacheFile()) {
           # This writes the list of pids_splitted_by_ward into the cache. Same
           # PIDs are present in multiple different cache files)
-          list_of_pids_splitted_by_ward <- getPIDsSplittedByWard(remove_multiple_pids = FALSE)
-          cds2db::writeCacheFiles(list_of_pids_splitted_by_ward)
+          list_of_pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = FALSE)
+          etlutils::writeCacheFiles(list_of_pids_splitted_by_ward)
         }
-        pids_splitted_by_ward <- readNextCacheFile()
+        pids_splitted_by_ward <- etlutils::readNextCacheFile()
       } else {
         # Get a single pids_splitted_by_ward without using the cache and
         # ensuring that every PID is present at most 1 time.
-        pids_splitted_by_ward <- getPIDsSplittedByWard(remove_multiple_pids = TRUE)
+        pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = TRUE)
       }
       all_wards_empty <- !length(unlist(pids_splitted_by_ward))
     })

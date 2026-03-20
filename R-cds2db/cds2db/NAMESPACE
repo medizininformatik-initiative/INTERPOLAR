@@ -3,6 +3,7 @@
 export(deleteNextCacheFile)
 export(getModuleName)
 export(init)
+export(initCache)
 export(resetLock)
 export(retrieve)
 export(validateEncounterFilterPatterns)
