@@ -5,44 +5,35 @@
 #' The function utilizes predefined global and local output folder names and appends a module-specific timestamp to them.
 #' The resulting directory names are organized into a named list for easy access and reference.
 #'
-#' @param module_name The name of the module.
+#' @param module_name The name of the module. If NULL then the previously initialized MODULE_DIRS will be returned.
 #'
 #' @return A named list containing directory names for global and local module outputs.
 #'
 #' @export
 getModuleDirNames <- function(module_name) {
-
+  if (is.null(module_name) || (exists("MODULE_DIRS") && module_name %in% MODULE_DIRS$module_name)) {
+    return(MODULE_DIRS)
+  }
   global_dir <- "outputGlobal"
   local_dir <- "outputLocal"
 
   local_results_dir_names  <- namedVectorByValue("bundles", "log", "performance", "tables", "reports")
   global_results_dir_names <- namedVectorByValue("performance", "requests", "tables", "reports")
 
-  local_cache_dir_name <- "cache" # will be copied from last run to current run
-
   global_dir <- fhircrackr::pastep(global_dir, module_name)
   local_dir <- fhircrackr::pastep(local_dir, module_name)
 
+  local_cache_dir_name <- "cache" # will be copied from last run to current run
+  local_full_cache_dir_name <- paste0(local_dir, "/", local_cache_dir_name)
   namedListByParam(
+    module_name,
     global_dir,
     local_dir,
     local_results_dir_names,
     global_results_dir_names,
-    local_cache_dir_name
+    local_cache_dir_name,
+    local_full_cache_dir_name
   )
-}
-
-#' List cache files
-#'
-#' @param subdir Optional subdirectory inside the local module directory.
-#' @param pattern Regular expression used to filter file names.
-#'
-#' @return A character vector containing the matching file names.
-#'
-#' @export
-listCacheFiles <- function(subdir = NULL, pattern) {
-  dir_name <- paste0(MODULE_DIRS$local_dir, "/", MODULE_DIRS$local_cache_dir_name, "/", subdir)
-  list.files(dir_name, pattern = pattern)
 }
 
 #' Rename a Directory with Creation Timestamp If It Exists
@@ -193,76 +184,22 @@ savePerformance <- function(filename_without_extension = "Performance_informatio
 # Read/Write RDS
 ####
 
-#' Write an RDS (single R object) file to a local or global tables directory
-#'
-#' Internal helper that determines the target directory based on `target` and writes
-#' the provided tables as an RDS file.
-#'
-#' @param target Either "local" or "global" to choose the base directory.
-#' @param object A object to write.
-#' @param filename_without_extension File name without extension. If NA, the
-#'   variable name of `object` is used.
-#' @param subdir subdirectory where the files will be written
-writeRDSFileInternal <- function(target = c("local", "global"), object, filename_without_extension, subdir = "tables") {
-  target <- match.arg(target)
-  module_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, subdir)
-  if (!dir.exists(module_sub_dir)) {
-    dir.create(module_sub_dir, recursive = TRUE)
+writeFile <- function(object, full_file_name_with_path) {
+  if (endsWith(full_file_name_with_path, ".rds")) {
+    saveRDS(object, full_file_name_with_path)
+  } else if (endsWith(full_file_name_with_path, ".Rdata")) {
+    save(object, full_file_name_with_path)
+  } else {
+    stop("Can not write this file type with writeFile: ", full_file_name_with_path)
   }
-  file_name <- fhircrackr::pastep(module_sub_dir, filename_without_extension, ext = '.rds')
-  saveRDS(object, file_name)
+  return(TRUE)
 }
 
-#' Write a RDS file to the local cache
-#'
-#' @inheritParams writeRDSFileInternal
-#'
-#' @export
-writeRDSFileCache <- function(object, filename_without_extension = NA, subdir = NULL) {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(substitute(object))
+readFile <- function(full_file_name_with_path) {
+  if (isSimpleNAorNULL(full_file_name_with_path) || !file.exists(full_file_name_with_path)) {
+    return(NULL)
   }
-  writeRDSFileInternal("local", object, filename_without_extension, subdir = paste0(MODULE_DIRS$local_cache_dir_name, "/", subdir))
-}
-
-#' Write an Object as RDS-File in the *private* directory to which was created for the specific submodule.
-#'
-#' @inheritParams writeRDSFileInternal
-#'
-#' @export
-writeRDSFileLocal <- function(object, filename_without_extension = NA,  subdir = "tables") {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(substitute(object))
-  }
-  writeRDSFileInternal("local", object, filename_without_extension, subdir)
-}
-
-#' Write an Object as RDS-File in the *public* directory to which was created for the specific submodule.
-#'
-#' @inheritParams writeRDSFileInternal
-#'
-#' @export
-writeRDSFileGlobal <- function(object, filename_without_extension = NA,  subdir = "tables") {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(substitute(object))
-  }
-  writeRDSFileInternal("global", object, filename_without_extension, subdir)
-}
-
-#' Read an Object from RDS-File from a local or global directory of the current module.
-#'
-#' @param target Either "local" or "global" to choose the base directory.
-#' @param filename_without_extension the name of the file
-#' @param subdir subdirectory where the files is stored
-#'
-#' @return the object
-#'
-readRDSFileInternal <- function(target = c("local", "global"), filename_without_extension, subdir = "tables") {
-  target <- match.arg(target)
-  module_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, subdir)
-  file_name <- fhircrackr::pastep(module_sub_dir, filename_without_extension, ext = '.rds')
-  object <- NULL
-  if (file.exists(file_name)) {
+  object <- if (endsWith(full_file_name_with_path, ".rds")) {
     # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
     # 5.3 Reading data.table from RDS or RData file
     #
@@ -272,42 +209,20 @@ readRDSFileInternal <- function(target = c("local", "global"), filename_without_
     # data.table will be copied in memory on the next by reference
     # operation and throw a warning. Therefore it is recommended to call
     # setalloccol() on each data.table loaded with readRDS() or load() calls.
-    object <- readRDS(file_name)
-    if ('data.table' %in% class(object)) {
-      invisible(data.table::setalloccol(object))
+    rds_content <- readRDS(full_file_name_with_path)
+    if ('data.table' %in% class(rds_content)) {
+      invisible(data.table::setalloccol(rds_content))
     }
+    rds_content
+  } else if (endsWith(full_file_name_with_path, ".rRata")) {
+    load(fileName)
+    #} else if (endsWith(full_file_name_with_path, ".???")) {
+    # TODO
+  } else {
+    readFileAsString(full_file_name_with_path)
   }
-  object
+  return(object)
 }
-
-#' Read an Object as RDS-File from the local cache directory of the current module.
-#'
-#' @inheritParams readRDSFileInternal
-#'
-#' @export
-readRDSFileCache <- function(filename_without_extension, subdir = NULL) {
-  subdir <- paste0(MODULE_DIRS$local_cache_dir_name, "/", subdir)
-  readRDSFileInternal("local", filename_without_extension, subdir)
-}
-
-#' Read an Object as RDS-File from the local directory of the current module.
-#'
-#' @inheritParams readRDSFileInternal
-#'
-#' @export
-readRDSFileLocal <- function(filename_without_extension, subdir = "tables") {
-  readRDSFileInternal("local", filename_without_extension, subdir)
-}
-
-#' Read an Object as RDS-File from the global directory of the current module.
-#'
-#' @inheritParams readRDSFileInternal
-#'
-#' @export
-readRDSFileGlobal <- function(filename_without_extension, subdir = "tables") {
-  readRDSFileInternal("global", filename_without_extension, subdir)
-}
-
 
 ####
 # Read/Write Excel
@@ -363,18 +278,6 @@ writeDebugExcelFile <- function(tables, filename_without_extension = NA, runLeve
       writeExcelFileInternal("local", tables, filename_without_extension)
     }
   }
-}
-
-#' Write an Excel file to the local cache
-#'
-#' @inheritParams writeExcelFileInternal
-#'
-#' @export
-writeExcelFileCache <- function(tables, filename_without_extension = NA, with_column_names = TRUE, subdir = NULL) {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(substitute(tables))
-  }
-  writeExcelFileInternal("local", tables, filename_without_extension, with_column_names, subdir = paste0(MODULE_DIRS$local_cache_dir_name, "/", subdir))
 }
 
 #' Write an Excel file to the local tables directory
