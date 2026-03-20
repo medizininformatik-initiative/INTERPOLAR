@@ -30,18 +30,18 @@ testSetResourceTable <- function(resource_name, resource_table) {
 }
 
 runCodeForDebugDay <- function(debug_day, code_block) {
-  current_debug_day <- get("DEBUG_DAY", envir = .GlobalEnv)
+  current_debug_day <- get("TOOLCHAIN_DAY", envir = .GlobalEnv)
   if (!exists("DEBUG_RUN_SINGLE_DAY_ONLY") || isTRUE(DEBUG_RUN_SINGLE_DAY_ONLY == debug_day)) {
     if (current_debug_day >= debug_day) {
-      assign("DEBUG_DAY", debug_day, envir = .GlobalEnv)
+      assign("TOOLCHAIN_DAY", debug_day, envir = .GlobalEnv)
       eval(substitute(code_block))
-      assign("DEBUG_DAY", current_debug_day, envir = .GlobalEnv)
+      assign("TOOLCHAIN_DAY", current_debug_day, envir = .GlobalEnv)
     }
   }
 }
 
 isDebugDay <- function(index = NULL) {
-  return(exists("DEBUG_DAY") && (is.null(index) || DEBUG_DAY == index))
+  return(exists("TOOLCHAIN_DAY") && (is.null(index) || TOOLCHAIN_DAY == index))
 }
 
 testEnsureRAWId <- function(id) {
@@ -220,11 +220,11 @@ testRetainRAWTables <- function(...) {
 #'
 #' @examples
 #' getFormattedRAWDateTime(as.POSIXct("2023-10-07 12:00:00", tz = "Europe/Berlin"), offset_days_minus = 2)
-#' # Example with default values (won't run due to missing DEBUG_DATES and DEBUG_DAY):
+#' # Example with default values (won't run due to missing DEBUG_DATES and TOOLCHAIN_DAY):
 #' # getFormattedRAWDateTime()
 #'
 #' @export
-getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_days_minus = 1, raw_index = "[1.1]") {
+getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[TOOLCHAIN_DAY], offset_days_minus = 1, raw_index = "[1.1]") {
   datetime <- as.POSIXct(datetime)
   # Subtract the specified number of days from the given datetime
   datetime <- datetime - offset_days_minus * 86400
@@ -257,7 +257,7 @@ getFormattedRAWDateTime <- function(datetime = DEBUG_DATES[DEBUG_DAY], offset_da
 #' }
 #'
 #' @export
-getDebugDatesRAWDateTime <- function(offset_days = 0, debug_date_index = DEBUG_DAY, raw_index = "[1.1]") {
+getDebugDatesRAWDateTime <- function(offset_days = 0, debug_date_index = TOOLCHAIN_DAY, raw_index = "[1.1]") {
   datetime <- DEBUG_DATES[debug_date_index]
   # Get the formatted RAW datetime
   raw_datetime <- getFormattedRAWDateTime(datetime, -as.numeric(offset_days), raw_index)

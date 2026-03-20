@@ -15,8 +15,8 @@ options(error = NULL)
 
 start_full <- Sys.time()
 
-if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
-  cat("START DEBUG_DAY", DEBUG_DAY, "\n")
+if (exists("TOOLCHAIN_DAY") && !etlutils::isErrorOccured()) {
+  cat("START TOOLCHAIN_DAY", TOOLCHAIN_DAY, "\n")
 }
 
 # Process command line arguments
@@ -57,7 +57,7 @@ resetMemory <- function(...) {
   etlutils::resetMemory(protected_objects = c(
     ...,
 
-    "DEBUG_DAY",
+    "TOOLCHAIN_DAY",
     "DEBUG_DATES",
     "DEBUG_MODULES_PATH_TO_CONFIG_TOML",
 
@@ -168,8 +168,8 @@ tryCatch({
 
 if (!etlutils::isErrorOccured()) {
   status <- 0
-  if (exists("DEBUG_DAY")) {
-    cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+  if (exists("TOOLCHAIN_DAY")) {
+    cat("END TOOLCHAIN_DAY", TOOLCHAIN_DAY, "\n")
   } else {
     # Print the elapsed time
     end_full <- Sys.time()

@@ -46,13 +46,11 @@ DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
 DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 
 
-#DEBUG_DONT_DELETE_REDCAP_DATA <- TRUE
-#DEBUG_DONT_DELETE_DB_DATA <- TRUE
 ###############################
 # End Define global variables #
 ###############################
 
-if (exists("DEBUG_DAY")) {
+if (exists("TOOLCHAIN_DAY")) {
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   # resources are a list of data tables from outside we want to change for the test
@@ -64,10 +62,7 @@ if (exists("DEBUG_DAY")) {
   pid4 <- "UKB-0004"
   pats <- c(pid1, pid2, pid3, pid4) # present at day 1
 
-  if (DEBUG_DAY == 1  && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
-    # clear database on Day 1
-    etlutils::dbReset()
-  } else {
+  if (TOOLCHAIN_DAY > 1) {
     if (exists("DEBUG_RUN_SINGLE_DAY_ONLY")) {
       etlutils::dbReset(c("db_log.dp_mrp_calculations", "db_log.retrolektive_mrpbewertung_fe"))
     }
@@ -95,7 +90,7 @@ if (exists("DEBUG_DAY")) {
   # Show the current state of the resources
   # dt_enc <- testGetResourceTable("Encounter")
   # pids_per_wards <- testGetResourceTable("pids_per_ward")
-  current_debug_day <- DEBUG_DAY
+  current_debug_day <- TOOLCHAIN_DAY
 
   runCodeForDebugDay(1, {
     # Die Stationen werden den Phasen zugeordnet.Das ist notwenig, damit diese dann nicht über die toml Dateien geändert werden

@@ -12,7 +12,7 @@ DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS <- 14
 
 # Ergebnis: Am Ende soll im Redcap nach Tag 5 die retrolektive MRP-Bewertung angelegt werden.
 
-if (exists("DEBUG_DAY")) {
+if (exists("TOOLCHAIN_DAY")) {
 
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
@@ -22,10 +22,7 @@ if (exists("DEBUG_DAY")) {
   pid1 <- "UKB-0001"
   pats <- pid1 # present at day 1
 
-  if (DEBUG_DAY == 1) {
-    # clear database on Day 1
-    etlutils::dbReset()
-  } else {
+  if (TOOLCHAIN_DAY > 1) {
     # Load all encounters from the database which, according to the database,
     # have not yet ended on the 'current' date and determine the PIDs.
     # Background: We want to track all cases that have ever been on a relevant
@@ -50,7 +47,7 @@ if (exists("DEBUG_DAY")) {
   # Show the current state of the resources
   # dt_enc <- testGetResourceTable("Encounter")
   # pids_per_wards <- testGetResourceTable("pids_per_ward")
-  current_debug_day <- DEBUG_DAY
+  current_debug_day <- TOOLCHAIN_DAY
 
   runCodeForDebugDay(1, {
     # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1

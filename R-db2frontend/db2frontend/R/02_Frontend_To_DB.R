@@ -64,7 +64,7 @@ importRedcap2DB <- function() {
         data_from_redcap[[colname]] <- etlutils::redcapUnescape(data_from_redcap[[colname]])
       }
 
-      table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
+      table_filename_prefix <- if (exists("TOOLCHAIN_DAY")) paste0(TOOLCHAIN_DAY, "_") else ""
       etlutils::writeDebugExcelFile(data_from_redcap, paste0(table_filename_prefix, "frontend2db_", i, "_", form_name))
 
       tables2Export[[form_name]] <- data_from_redcap
