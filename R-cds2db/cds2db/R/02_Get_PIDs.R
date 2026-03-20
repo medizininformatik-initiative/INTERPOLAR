@@ -325,12 +325,12 @@ getEncounters <- function(table_description, current_datetime) {
 #' the relevant patient IDs are extracted by Encounters downloaded from the FHIR server. If the file name
 #' parameter is not NA then the patient IDs are loaded from the specified file (one PID per line).
 #'
-#' @param remove_multiple_pids If TRUE then ... else ...
+#' @param create_single_pids_per_ward If TRUE then ... else ...
 #' @param log_result logical indicating that the result of the functions should be logged via cat. Default is TRUE.
 #'
 #' @return the relevant patient IDs per ward
 #'
-getPIDsSplittedByWard <- function(remove_multiple_pids, log_result = TRUE) {
+getPIDsSplittedByWard <- function(create_single_pids_per_ward, log_result = TRUE) {
 
   read_pids_from_file <- exists("DEBUG_PATH_TO_RAW_RDATA_FILES")
 
@@ -469,6 +469,7 @@ getPIDsSplittedByWard <- function(remove_multiple_pids, log_result = TRUE) {
       contains_row <- single_pids_per_ward[patient_id == row[["patient_id"]] & `period/start` < row[["period/start"]], .N] > 0
 
       if (contains_row) {
+        single_pids_per_ward <- removeMultipleEncountersForPid(single_pids_per_ward)
         single_pids_splitted_by_ward <- splitPidsPerWardByWard(single_pids_per_ward)
         list_of_pids_splitted_by_wards[[length(list_of_pids_splitted_by_wards) + 1]] <- single_pids_splitted_by_ward
         single_pids_per_ward <- pids_per_ward_with_encounter_details[0]
@@ -486,7 +487,8 @@ getPIDsSplittedByWard <- function(remove_multiple_pids, log_result = TRUE) {
   }
 
   pids_per_ward_with_encounter_details <- joinPidsPerWardAndEnconters(pids_per_ward, encounters)
-  if (!remove_multiple_pids) {
+
+  if (!create_single_pids_per_ward) {
     list_of_pids_splitted_by_ward <- splitPidsPerWardByWardForUniquePidsAndEncounterStart(pids_per_ward_with_encounter_details)
     pids_splitted_by_ward <- unlist(list_of_pids_splitted_by_ward, recursive = FALSE) # needed only for logging in the next part
   } else {
