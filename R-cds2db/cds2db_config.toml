@@ -21,15 +21,6 @@
 VERBOSE               = 10 # Retrieval / analysis verbose level
 
 #################
-# Set true if every sourcing of the 00_Main file should create result directories in the
-# otuputGlobal and otuputLocal directories with a timestamp suffix. If false then every run will
-# write in the same subdirectory without a timestamp.
-# The default behavior should write in subdirectories with only the project name (false) or in or
-# in a subdirectory with the project name and the suffix '_timestamp'.
-#################
-USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
-
-#################
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 #################
 MAX_DIR_COUNT = 5

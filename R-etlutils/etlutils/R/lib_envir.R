@@ -119,14 +119,6 @@ initModuleConstants <- function(module_name, db_schema_base_name = NULL, path_to
     constants <- addConstants(DEBUG_PATH_TO_CONFIG_TOML, constants, envir)
   }
 
-  # Initialize the project timestamp if not already set
-  if (!exists("MODULE_TIME_STAMP", envir = envir)) {
-    project_time_stamp <- ""
-    if (isDefinedAndTrue("USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX", envir = envir)) {
-      project_time_stamp <- format(Sys.time(), "-%Y-%m%d-%H%M%S")
-    }
-    assign("MODULE_TIME_STAMP", project_time_stamp, envir = envir)
-  }
   # Initialize the database context if the database TOML path is provided
   path_to_db_toml <- constants[["PATH_TO_DB_CONFIG_TOML"]]
   if (!is.null(path_to_db_toml)) {

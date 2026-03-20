@@ -23,9 +23,6 @@ getModuleDirNames <- function(module_name) {
   global_dir <- fhircrackr::pastep(global_dir, module_name)
   local_dir <- fhircrackr::pastep(local_dir, module_name)
 
-  global_dir <- paste0(global_dir, MODULE_TIME_STAMP)
-  local_dir <- paste0(local_dir, MODULE_TIME_STAMP)
-
   namedListByParam(
     global_dir,
     local_dir,
