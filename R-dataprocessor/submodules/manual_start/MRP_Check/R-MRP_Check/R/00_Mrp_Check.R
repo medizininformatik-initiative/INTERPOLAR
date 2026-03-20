@@ -181,13 +181,17 @@ mrpCheck <- function(start_date, end_date) {
                                  "Datum Medikationsanalyse",
                                  "MRP Beschreibung"))
 
+    query <- paste0("SELECT MIN(enc_period_start) AS min_enc_period_start\n",
+                    "FROM v_encounter_last_version\n",
+                    "WHERE enc_period_start BETWEEN '", start_date, "' AND '", end_date, "';")
+    min_encounter_start <- etlutils::dbGetReadOnlyQuery(query, lock_id = "get encounter minimum startdate")
 
     # Add export period at the end of the table in the first column
     result <- etlutils::addRowsWithColumn(result, c("",
                                                     paste("Start:", format(start_date, "%Y-%m-%d %H:%M:%S")),
                                                     paste("End:", format(end_date, "%Y-%m-%d %H:%M:%S")),
                                                     paste("Exported on:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
-                                                    paste("Minimum Encounter Start:", format(min(result$`FHIR Encounter Start`, na.rm = TRUE), "%Y-%m-%d %H:%M:%S")),
+                                                    paste("Minimum Encounter Start:", format(min_encounter_start, "%Y-%m-%d %H:%M:%S")),
                                                     paste("Release Version:", etlutils::getReleaseVersion())),
                                           column = "MRP Typ")
   })
