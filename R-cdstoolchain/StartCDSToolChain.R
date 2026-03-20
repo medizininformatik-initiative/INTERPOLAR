@@ -71,6 +71,7 @@ resetMemory <- function(...) {
     "DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME",
     "DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME",
 
+    "CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1",
 
     "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS",
 
@@ -78,7 +79,8 @@ resetMemory <- function(...) {
     "start_full",
     "day_times",
     "start_day",
-    "debug_day_index"
+    "debug_day_index",
+    "delete_db_and_redcap"
   ))
 }
 
@@ -119,17 +121,21 @@ config_frontend2db <- db2frontend::initDB2Frontend()
 
 #TODO: Check if the parameters in config_cds2db and config_dataprocessor are compatible, e.g. if the encounter filter pattern in config_cds2db matches the expected ward definition in config_dataprocessor
 
-
 resetMemory()
+
+delete_db_and_redcap <- etlutils::isDefinedAndTrue("CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1") && exists("TOOLCHAIN_DAY") && TOOLCHAIN_DAY == 1
 
 tryCatch({
   args <- commandArgs(trailingOnly = TRUE)
   ignore_newer_db_version = "--ignoreNewerDBVersion" %in% args
   if (shouldStart("cds2db")) {
+    if (delete_db_and_redcap && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
+      etlutils::dbReset()
+    }
     cds2db::retrieve(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
   }
   if (shouldStart("db2frontend")) {
-    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
+    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
   }
   if (shouldStart("dataprocessor")) {
     dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
