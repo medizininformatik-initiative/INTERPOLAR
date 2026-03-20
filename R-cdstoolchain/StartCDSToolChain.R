@@ -3,7 +3,7 @@ library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
-setProcess("FullToolchain")
+etlutils::setProcess("FullToolchain")
 
 # chance the working directory to the main directory
 if (grepl('/cdstoolchain$', getwd())) setwd("../..")

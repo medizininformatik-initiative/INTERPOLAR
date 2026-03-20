@@ -3,7 +3,7 @@ library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
-process_name <- setProcess("DataImport")
+etlutils::setProcess("DataImport")
 
 mustFinishPreviousDataImport <- function() {
   # TODO: implementieren
