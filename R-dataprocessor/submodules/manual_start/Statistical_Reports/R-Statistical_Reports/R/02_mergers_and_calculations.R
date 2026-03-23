@@ -1224,7 +1224,8 @@ addRetrolektiveMRPBewertungData <- function(merged_fe_pat_fall_meda_table_with_e
       by = c("record_id",
         "meda_id" = "ret_meda_id"
       ),
-      na_matches = "never"
+      na_matches = "never",
+      relationship = "many-to-many"
     ) |>
     dplyr::distinct()
 

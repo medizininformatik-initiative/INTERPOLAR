@@ -154,9 +154,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   # --> this table shows the trajectory of each case in the front-end system
   #     (multiple rows per case possible, if the case was treated on different INTERPOLAR wards)
 
-  first_case_in <- getFirstCaseDateInFe(fall_fe_table)
-  last_case_in <- getLastCaseDateInFe(fall_fe_table)
-
   medikationsanalyse_fe_table <- getMedikationsanalyseFeData(
     lock_id = "statistical reports[6]",
     # table_name = "v_medikationsanalyse_fe"
@@ -225,6 +222,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     frontend_table, REPORT_PERIOD_START,
     REPORT_PERIOD_END
   )
+
+  first_case_in <- getFirstCaseDateInFe(frontend_summary_data)
+  last_case_in <- getLastCaseDateInFe(frontend_summary_data)
 
   # statistical_report_data <- prepareF1data(
   #   full_analysis_set_1, REPORT_PERIOD_START,
@@ -306,15 +306,15 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "medication analyses",
       "completed medication analyses",
       "encounters with completed MRP documentation",
-      "MRP", "completed MRP documention",
+      "MRP documented", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
       "resolved contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
       "class not assigned",
       "encounters eligible for algorithmic MRP",
       "encounters with algorithmic MRP",
-      "algorithmic MRP",
-      "completed retrolective algorithmic MRP evaluation",
+      "algorithmic MRP found",
+      "completed algorithmic MRP evaluation",
       "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency"
     )
   )
@@ -336,15 +336,15 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "medication analyses",
       "completed medication analyses",
       "encounters with completed MRP documentation",
-      "MRP", "completed MRP documention",
+      "MRP documented", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
       "resolved contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
       "class not assigned",
       "encounters eligible for algorithmic MRP",
       "encounters with algorithmic MRP",
-      "algorithmic MRP",
-      "completed retrolective algorithmic MRP evaluation",
+      "algorithmic MRP found",
+      "completed algorithmic MRP evaluation",
       "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency"
     )
   )
