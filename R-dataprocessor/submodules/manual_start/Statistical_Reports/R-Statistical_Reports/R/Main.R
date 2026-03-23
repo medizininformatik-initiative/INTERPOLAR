@@ -308,14 +308,20 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "encounters with completed MRP documentation",
       "MRP documented", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
-      "resolved contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
       "class not assigned",
+      "resolved contra-indications",
       "encounters eligible for algorithmic MRP",
       "encounters with algorithmic MRP",
       "algorithmic MRP found",
+      "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency",
       "completed algorithmic MRP evaluation",
-      "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency"
+      "evaluation: new and clinically relevant",
+      "evaluation: already manually documented",
+      "evaluation: no contraindication",
+      "evaluation: based on incorrect data items",
+      "evaluation: clinically irrelevant",
+      "evaluation: always clinically irrelevant"
     )
   )
 
@@ -338,14 +344,20 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "encounters with completed MRP documentation",
       "MRP documented", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
-      "resolved contra-indications",
       "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
       "class not assigned",
+      "resolved contra-indications",
       "encounters eligible for algorithmic MRP",
       "encounters with algorithmic MRP",
       "algorithmic MRP found",
+      "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency",
       "completed algorithmic MRP evaluation",
-      "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency"
+      "evaluation: new and clinically relevant",
+      "evaluation: already manually documented",
+      "evaluation: no contraindication",
+      "evaluation: based on incorrect data items",
+      "evaluation: clinically irrelevant",
+      "evaluation: always clinically irrelevant"
     )
   )
 

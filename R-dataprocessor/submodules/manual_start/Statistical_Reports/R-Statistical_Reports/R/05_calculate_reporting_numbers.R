@@ -116,18 +116,29 @@ calculateF1 <- function(F1_prep) {
 #'   - `MRP_resolved`: MRPs marked as resolved with intervention implemented
 #'   - `MRP_resolution_non_informative`: MRPs with documentation but no clear resolution
 #'   - `contraindications`: MRPs flagged as contraindications
-#'   - `contraindications_resolved`: Contraindications marked as resolved
 #'   - `MRP_drug_drug`: Drug-drug interactions
 #'   - `MRP_drug_disease`: Drug-disease interactions
 #'   - `MRP_drug_renal_insufficiency`: Drug interactions with renal insufficiency
 #'   - `MRP_class_na`: MRPs with contraindications but no interaction class assigned
+#'   - `contraindications_resolved`: Contraindications marked as resolved
 #'   - `encounters_eligible_for_algorithmic_mrp`: Encounters eligible for algorithmic MRP calculation
 #'   - `encounters_with_any_algorithmic_mrp`: Encounters with at least one algorithmically identified MRP
 #'   - `algorithmic_MRP`: Total algorithmic MRPs
-#'   - `retrolective_MRP_evaluation_complete`: Algorithmic MRPs with completed algorithmic retrolective evaluation
 #'   - `algorithmic_MRP_drug_drug`: Algorithmic drug-drug interactions
 #'   - `algorithmic_MRP_drug_disease`: Algorithmic drug-disease interactions
 #'   - `algorithmic_MRP_drug_Niereninsuffizienz`: Algorithmic drug-renal insufficiency interactions
+#'   - `retrolective_MRP_evaluation_complete`: Algorithmic MRPs with completed algorithmic retrolective evaluation
+#'   - `algorithmic_MRP_new_and_clinical_relevant`: Algorithmic MRPs that are new and clinically relevant
+#'      based on retrolective evaluation (algorithmic only)
+#'   - `algorithmic_MRP_already_documented`: Algorithmic MRPs that were already documented by the ward pharmacist
+#'   - `algorithmic_MRP_no_contraindication`: Algorithmic MRPs that were evaluated as not clinically
+#'      relevant (no contraindication)
+#'   - `algorithmic_MRP_incorrect_data_items`: Algorithmic MRPs that were evaluated as not clinically
+#'      relevant due to incorrect data items
+#'   - `algorithmic_MRP_clinically_irrelevant`: Algoithmic MRPs that were evaluated as not clinically
+#'      relevant due to case-specific risk assessment
+#'   - `algorithmic_MRP_always_clinically_irrelevant_on_ward`: Algoithmic MRPs that were evaluated as not clinically
+#'      relevant for every case on this ward
 #'
 #' @details
 #' - Summarization is grouped by `ward_name` derived from `ward_name`
@@ -153,7 +164,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       sub_enc_any_completed_medication_analysis, sub_enc_any_MRP, sub_enc_any_algorithmic_MRP,
       medikationsanalyse_complete, mrpdokumentation_validierung_complete,
       mrp_dokup_hand_emp_akz, Kontraindikation, mrp_ip_klasse_01, retrolektive_mrpbewertung_complete,
-      ret_ip_klasse_01, eligible_for_algorithmic_MRP_calculation
+      ret_ip_klasse_01, eligible_for_algorithmic_MRP_calculation, ret_gewissheit1, ret_gewiss_grund1_abl,
+      ret_gewiss_grund_abl_klin1_neg___1
     )) |>
     dplyr::distinct()
 
@@ -227,13 +239,6 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
-      contraindications_resolved = dplyr::n_distinct(
-        dplyr::if_else(
-          Kontraindikation == "Checked" &
-            mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
-        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
-        na.rm = TRUE
-      ),
       MRP_drug_drug = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Drug", mrp_id, NA
@@ -258,6 +263,13 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
+      contraindications_resolved = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" &
+            mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
+        na.rm = TRUE
+      ),
       encounters_eligible_for_algorithmic_mrp = dplyr::n_distinct(
         main_enc_id[valid_for_counting & eligible_for_algorithmic_MRP_calculation],
         na.rm = TRUE
@@ -268,12 +280,6 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ),
       algorithmic_MRP = dplyr::n_distinct(
         ret_id[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
-        na.rm = TRUE
-      ),
-      retrolective_MRP_evaluation_complete = dplyr::n_distinct(
-        dplyr::if_else(
-          retrolektive_mrpbewertung_complete == "Complete", ret_id, NA
-        )[valid_for_counting],
         na.rm = TRUE
       ),
       algorithmic_MRP_drug_drug = dplyr::n_distinct(
@@ -293,7 +299,61 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
           ret_ip_klasse_01 == "Drug-Niereninsuffizienz", ret_id, NA
         )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
-      ), .groups = "drop"
+      ),
+      retrolective_MRP_evaluation_complete = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_new_and_clinical_relevant = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP bestätigt", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_already_documented = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP bestätigt und von Stationsapotheker vorher identifiziert", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_no_contraindication = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl == "MRP sachlich falsch (keine Kontraindikation)", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_incorrect_data_items = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber falsche Datengrundlage", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_clinically_irrelevant = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_always_clinically_irrelevant_on_ward = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant" &
+            ret_gewiss_grund_abl_klin1_neg___1 == "Checked", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      .groups = "drop"
     )
 
   fe_total_counts <- frontend_summary_data |>
@@ -364,13 +424,6 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
-      contraindications_resolved = dplyr::n_distinct(
-        dplyr::if_else(
-          Kontraindikation == "Checked" &
-            mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
-        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
-        na.rm = TRUE
-      ),
       MRP_drug_drug = dplyr::n_distinct(
         dplyr::if_else(
           mrp_ip_klasse_01 == "Drug-Drug", mrp_id, NA
@@ -395,6 +448,13 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
         na.rm = TRUE
       ),
+      contraindications_resolved = dplyr::n_distinct(
+        dplyr::if_else(
+          Kontraindikation == "Checked" &
+            mrp_dokup_hand_emp_akz == "Intervention vorgeschlagen und umgesetzt", mrp_id, NA
+        )[valid_for_counting & mrpdokumentation_validierung_complete != "Unverified"],
+        na.rm = TRUE
+      ),
       encounters_eligible_for_algorithmic_mrp = dplyr::n_distinct(
         main_enc_id[valid_for_counting & eligible_for_algorithmic_MRP_calculation],
         na.rm = TRUE
@@ -405,12 +465,6 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ),
       algorithmic_MRP = dplyr::n_distinct(
         ret_id[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
-        na.rm = TRUE
-      ),
-      retrolective_MRP_evaluation_complete = dplyr::n_distinct(
-        dplyr::if_else(
-          retrolektive_mrpbewertung_complete == "Complete", ret_id, NA
-        )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
       ),
       algorithmic_MRP_drug_drug = dplyr::n_distinct(
@@ -429,6 +483,59 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           ret_ip_klasse_01 == "Drug-Niereninsuffizienz", ret_id, NA
         )[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
+        na.rm = TRUE
+      ),
+      retrolective_MRP_evaluation_complete = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_new_and_clinical_relevant = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP bestätigt", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_already_documented = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP bestätigt und von Stationsapotheker vorher identifiziert", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_no_contraindication = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl == "MRP sachlich falsch (keine Kontraindikation)", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_incorrect_data_items = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber falsche Datengrundlage", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_clinically_irrelevant = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant", ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_always_clinically_irrelevant_on_ward = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant" &
+            ret_gewiss_grund_abl_klin1_neg___1 == "Checked", ret_id, NA
+        )[valid_for_counting],
         na.rm = TRUE
       )
     )
