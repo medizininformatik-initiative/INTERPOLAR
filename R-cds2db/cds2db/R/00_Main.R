@@ -1,50 +1,89 @@
+#' Initializes the module context for cds2db.
+#'
+#' This function initializes the module context for the cds2db module by loading
+#' the necessary configuration parameters from a specified TOML file and setting up
+#' the module environment. It ensures that all mandatory parameters are present and
+#' can optionally validate the configuration values.
+#'
+#' @param validate_config Logical. If TRUE, validates the module configuration
+#' after initialization. Default is TRUE.
+#'
+#' @return A list containing the module configuration parameters loaded from the
+#' TOML file and initialized in the module context. This list will be used for the
+#' execution of the module and contains all necessary parameters for the ETL process.
+#'
+#' @export
+init <- function(validate_config = TRUE) {
+  # Initialize and start module if init_constants_only == FALSE
+  config <- etlutils::initModule("cds2db",
+                       path_to_toml = "./R-cds2db/cds2db_config.toml",
+                       mandatory_parameters = c(
+                         "FHIR_SERVER_ENDPOINT",
+                         "ENCOUNTER_FILTER_PATTERN",
+                         "PATH_TO_DB_CONFIG_TOML"
+                       )
+  )
+  if (validate_config) {
+    # TODO: add validation
+  }
+  return(config)
+}
+
+#' Resets the database lock.
+#'
+#' Resets the database lock, if this module has set a lock in a previous run and
+#' the lock was not reset due to an error or interruption. This allows to run
+#' the module again after fixing the error without having to wait for the lock
+#' to expire.
+#'
+#' @export
+resetLock <- function() {
+  init(validate_config = FALSE)
+  etlutils::dbResetLock()
+}
+
 #' Starts the ETL retrieval process from FHIR to the database
 #'
 #' This is the main entry point for the ETL process. It initializes the module,
 #' validates mandatory parameters, and starts the data retrieval workflow from
-#' the FHIR API to the database. If `reset_lock_only` is set to `TRUE`, only
-#' the lock is reset and the function exits without running the ETL process.
+#' the FHIR API to the database.
 #'
-#' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
 #' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
+#' @param validate_config Logical. If TRUE, validates the module configuration before starting
+#'                        the retrieval process. Default is TRUE.
 #' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-retrieve <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
+retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
   # Initialize and start module
-  etlutils::startModule("cds2db",
-                        path_to_toml = "./R-cds2db/cds2db_config.toml",
-                        hide_value_pattern = "^FHIR_(?!SEARCH_).+",
-                        init_constants_only = reset_lock_only)
+  config <- init(validate_config)
+  etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+")
 
-  if (reset_lock_only) {
-    etlutils::dbResetLock()
-    return()
-  }
-
-  # Check if the release version of the database is compatible
-  etlutils::checkVersion(ignore_newer_db_version)
+  skip_db_operations <- etlutils::isDefinedAndTrue("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
 
   try(etlutils::runLevel1("Run Retrieve", {
 
-    # Reset database lock from unfinished previous cds2db run
-    etlutils::runLevel2("Reset database lock from unfinished previous run", {
-      etlutils::dbResetLock()
-    })
+    if (!skip_db_operations) {
+      # Reset database lock from unfinished previous cds2db run
+      etlutils::runLevel2("Reset database lock from unfinished previous run", {
+        etlutils::dbResetLock()
+        # Check if the release version of the database is compatible
+        etlutils::checkVersion(ignore_newer_db_version)
+      })
+      # Check if we must create references for old data (should be executed exactly once and then never again)
+      etlutils::runLevel2("Create references for old data", {
 
-    # Check if we must create references for old data (should be executed exactly once and then never again)
-    etlutils::runLevel2("Create references for old data", {
+        debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
 
-      debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
-
-      if (mustCreateReferencesForOldData() || debug_active) {
-        createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
-        if (debug_active) {
-          stop("References for invalid calculated encounter references have been fixed")
+        if (mustCreateReferencesForOldData() || debug_active) {
+          createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
+          if (debug_active) {
+            stop("References for invalid calculated encounter references have been fixed")
+          }
         }
-      }
-    })
+      })
+    }
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {

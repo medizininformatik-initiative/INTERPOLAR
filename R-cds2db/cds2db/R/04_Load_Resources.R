@@ -6,15 +6,15 @@
 #' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME_START` if it exists.
 #'
 getCurrentDatetime <- function() {
-  start_datetime <- etlutils::as.POSIXctWithTimezone(Sys.time())
-  if (exists('DEBUG_ENCOUNTER_DATETIME_START')) {
-    start_datetime <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME_START)
-    if (exists('DEBUG_ENCOUNTER_DATETIME_END') && nchar(DEBUG_ENCOUNTER_DATETIME_END) > 0) {
-      end_datetime <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME_END)
-      return(c(start_datetime = start_datetime, end_datetime = end_datetime))
+  period_start <- etlutils::as.POSIXctWithTimezone(Sys.time())
+  if (etlutils::isDefinedAndNotEmpty('DEBUG_ENCOUNTER_STARTS_AFTER')) {
+    period_start <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_STARTS_AFTER)
+    if (etlutils::isDefinedAndNotEmpty('DEBUG_ENCOUNTER_STARTS_AT_OR_BEFORE') > 0) {
+      period_end <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_STARTS_AT_OR_BEFORE)
+      return(c(period_start = period_start, period_end = period_end))
     }
   }
-  return(c(start_datetime = start_datetime))
+  return(c(period_start = period_start))
 }
 
 #' Get Query Datetime
@@ -44,7 +44,7 @@ getQueryDatetime <- function() {
 getActiveEncounterPIDsFromDB <- function() {
   # Get current or debug datetime
   query_datetime <- getQueryDatetime()
-  datetime <- query_datetime[["start_datetime"]]
+  datetime <- query_datetime[["period_start"]]
 
   encounter_class_condition <- ""
   if (exists("FHIR_SEARCH_ENCOUNTER_CLASS")) {
@@ -569,7 +569,7 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
   #######################
 
   for (i in seq_along(resource_tables)) {
-    writeRData(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
+    etlutils::writeDebugExcelFile(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
   }
   return(resource_tables)
 }

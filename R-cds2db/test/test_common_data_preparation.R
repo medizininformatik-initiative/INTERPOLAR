@@ -533,7 +533,7 @@ testGetEncounterLevel <- function(pid, enc_level, last_only = TRUE) {
 }
 
 # Get encounter templates for a specific patient ID
-getEncounterTemplates <- function(pid, encounter_level = NA){
+getEncounterTemplates <- function(pid, encounter_level = NA) {
   enc_templates <- get("enc_templates", envir = .test_env)[enc_patient_ref == paste0("[1.1]Patient/", pid)]
   if (!is.na(encounter_level)) {
     enc_templates <- enc_templates[[encounter_level]]
@@ -1020,7 +1020,7 @@ createReferenceRange <- function(referencerange_low_value = NULL, referencerange
                                  referencerange_type_code = NULL,
                                  referencerange_low_system = NULL, referencerange_high_system = NULL) {
 
-  if(!etlutils::isSimpleNAorNULL(referencerange_low_value) || !etlutils::isSimpleNAorNULL(referencerange_high_value)) {
+  if (!etlutils::isSimpleNAorNULL(referencerange_low_value) || !etlutils::isSimpleNAorNULL(referencerange_high_value)) {
     reference_range <- etlutils::namedListByParam(
       referencerange_low_value,
       referencerange_high_value,
@@ -1132,7 +1132,7 @@ addObservationWithRanges <- function(pid, code, day_offset = -0.5, value = NULL,
     }
     pasteRAW <- function(vec) {
       raw <- paste0(vec, collapse = " ~ ")
-      if(!nchar(raw)) raw <- NA_character_ # vec = NULL return empty string
+      if (!nchar(raw)) raw <- NA_character_ # vec = NULL return empty string
       return(raw)
     }
     obs_dt[, obs_referencerange_low_value   := pasteRAW(low_values)]

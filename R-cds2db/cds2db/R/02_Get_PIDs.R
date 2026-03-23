@@ -150,7 +150,7 @@ extractPIDsSplittedByWard <- function(encounters, all_wards_filter_patterns) {
     ward_encounters <- etlutils::filterResources(encounters, ward_filter_patterns)
 
     # Save filtered encounters
-    etlutils::writeRData(ward_encounters, paste0("pid_source_encounter_filtered_", i))
+    etlutils::writeDebugExcelFile(ward_encounters, paste0("pid_source_encounter_filtered_", i))
 
     # Create a data.table with PID and Encounter ID
     dt <- data.table(
@@ -208,17 +208,37 @@ getEncounters <- function(table_description, current_datetime) {
       # Only if both parameters exist then we search with starts after (sa) and ends before (eb)
       # and only then the current_datetime is a vector with 2 entries (start date at 1 and end date
       # at 2)
-      if (exists("DEBUG_ENCOUNTER_DATETIME_START") && exists("DEBUG_ENCOUNTER_DATETIME_END") && nchar(DEBUG_ENCOUNTER_DATETIME_END) > 0) {
+      if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_STARTS_AFTER")) {
         encounter_dates <- c(
-          "date"   = paste0("sa", current_datetime[["start_datetime"]]),
-          "date"   = paste0("eb", current_datetime[["end_datetime"]])
+          "date"   = paste0("sa", current_datetime[["period_start"]])
         )
-        # If there is no end date given, but a start date, then we search with 'lower than' (lt).
-        # If in the toml file a start date is given (parameter DEBUG_ENCOUNTER_DATETIME_START) then
-        # this date replaces the current date of the system.
-      } else {
+        if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_STARTS_AT_OR_BEFORE")) {
+          encounter_dates <- c(
+            encounter_dates,
+            "date"   = paste0("le", current_datetime[["period_end"]])
+          )
+        }
+      } else if (!exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") || !grepl("&date=", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, fixed = TRUE)) {
         encounter_dates <- c(
           "date"   = paste0("lt", current_datetime)
+        )
+      } else if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") & grepl("&date=", FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS, fixed = TRUE)) {
+        # Extract all date parameters from FHIR search string
+        date_values <- unlist(
+          regmatches(
+            FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS,
+            gregexpr("(?<=&date=)[^&]+",
+                     FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS,
+                     perl = TRUE)
+          )
+        )
+        # Build named vector (multiple date params allowed)
+        encounter_dates <- setNames(date_values, rep("date", length(date_values)))
+        # Remove all &date=... parameters from FHIR search string
+        FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS <- gsub(
+          "&date=[^&]+",
+          "",
+          FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS
         )
       }
 
@@ -269,7 +289,7 @@ getEncounters <- function(table_description, current_datetime) {
         parameters = parameters
       )
 
-      if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS")) {
+      if (etlutils::isDefinedAndNotEmpty("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS")) {
         request_encounter <- paste0(request_encounter, FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS)
       }
 
@@ -297,7 +317,7 @@ getEncounters <- function(table_description, current_datetime) {
              "Encounters: ", paste0(invalid_encounters$id, collapse = ", "), "\n")
       } else if (nrow(invalid_encounters)) {
         etlutils::catWarningMessage(paste0("The following encounters have no valid subject reference:\n",
-                                    paste0(invalid_encounters$id, collapse = ", ")), "\n")
+                                           paste0(invalid_encounters$id, collapse = ", ")), "\n")
       }
     })
 
@@ -306,11 +326,7 @@ getEncounters <- function(table_description, current_datetime) {
     })
 
     etlutils::printAllTables(table_enc)
-
-    runLevel3Line("Save and Delete Encounters Table", {
-      etlutils::writeRData(table_enc, "pid_source_encounter_unfiltered")
-    })
-
+    etlutils::writeDebugExcelFile(table_enc, "pid_source_encounter_unfiltered", runLevel3Message = "Save Encounters Table as local Excel files")
   })
 
   return(table_enc)
@@ -369,11 +385,11 @@ getPIDsSplittedByWard <- function(log_result = TRUE) {
         ]
         if (length(na_columns)) {
           warning_message <- paste0("The following columns have only NA values:\n",
-                                  paste(na_columns, collapse = ", "), "\n",
-                                  "Please check the filter patterns in the toml file.\n",
-                                  "This may indicate that invalid column names are specified in",
-                                  " ENCOUNTER_FILTER_PATTERNS. Wards with such invalid Encounter",
-                                  " column names will never be able to contain patients.\n")
+                                    paste(na_columns, collapse = ", "), "\n",
+                                    "Please check the filter patterns in the toml file.\n",
+                                    "This may indicate that invalid column names are specified in",
+                                    " ENCOUNTER_FILTER_PATTERNS. Wards with such invalid Encounter",
+                                    " column names will never be able to contain patients.\n")
           etlutils::catWarningMessage(warning_message)
         }
       })

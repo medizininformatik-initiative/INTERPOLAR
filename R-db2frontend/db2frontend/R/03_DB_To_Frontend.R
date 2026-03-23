@@ -25,11 +25,11 @@ importDB2Redcap <- function() {
     })
   }
 
-  writeTablesAsRdata <- function(tables, suffix = "") {
+  writeTablesAsExcel <- function(tables, suffix = "") {
     table_names <- names(tables)
     for (i in seq_along(table_names)) {
-      table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
-      etlutils::writeRData(data_from_db, paste0(table_filename_prefix, "db2frontend_", i, "_", table_name, suffix))
+      table_filename_prefix <- if (exists("DEBUG_DAY")) paste0("DEBUG_DAY_", DEBUG_DAY, "_") else ""
+      etlutils::writeDebugExcelFile(data_from_db, paste0(table_filename_prefix, "db2frontend_", table_names[i], suffix))
     }
   }
 
@@ -170,8 +170,7 @@ importDB2Redcap <- function() {
         record_ids_with_data_access_group <- unique(data_from_db[, c("record_id", "fall_station")])
       }
     }
-
-    writeTablesAsRdata(data_to_import)
+    writeTablesAsExcel(data_to_import)
   })
 
   #########################
@@ -181,7 +180,7 @@ importDB2Redcap <- function() {
     for (script_name in DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME) {
       source(script_name, local = TRUE) # this should change the data_to_import list
     }
-    writeTablesAsRdata(data_to_import, suffix = "_debugchanged")
+    writeTablesAsExcel(data_to_import, suffix = "_debugchanged")
   }
   #######################
   # END: FOR DEBUG ONLY #

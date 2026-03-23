@@ -898,11 +898,12 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
   ]
 
   # keep only relevant columns and aggregate to get the overall start and end datetime per atc_code
-  active_atc <- active_requests[, c("atc_code", "start_datetime", "end_datetime")]
+  active_atc <- active_requests[, .(fhir_id = medreq_id, atc_code, start_datetime, end_datetime)]
+
   active_atc <- active_atc[, .(
     start_datetime = etlutils::getMinDatetime(start_datetime),
-    end_datetime = end_datetime[1]
-  ), by = .(atc_code, end_datetime)]
+    end_datetime = etlutils::getMaxDatetime(end_datetime)
+  ), by = .(fhir_id, atc_code)]
 
   # Combine all medication requests that are less than 1 day apart.
   # 1. sort, 2. group and 3. aggregate overlapping or subsequent time periods per atc_code
@@ -918,7 +919,7 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
       start_datetime = etlutils::getMinDatetime(start_datetime),
       end_datetime = etlutils::getMaxDatetime(end_datetime)
     ),
-    by = .(atc_code, grp)
+    by = .(fhir_id, atc_code, grp)
   ]
   active_atc[, grp := NULL]
 
@@ -945,7 +946,7 @@ getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
   relevant_conditions <- conditions[
     con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime]
 
-  relevant_cols <- c("con_patient_ref", "con_code_code", "con_code_system", "con_code_display", "start_datetime")
+  relevant_cols <- c("con_id", "con_patient_ref", "con_code_code", "con_code_system", "con_code_display", "start_datetime")
   relevant_conditions <- relevant_conditions[, ..relevant_cols]
 
   return(relevant_conditions)
