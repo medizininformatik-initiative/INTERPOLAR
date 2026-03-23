@@ -232,9 +232,7 @@ getEncounters <- function(table_description, current_datetime) {
       # default encounter status "in-progress" can be replaced in the toml file  by the
       # parameter FHIR_SEARCH_ENCOUNTER_STATUS. If it is given as vector then the values
       # will be comma separated pasted together.
-      if (isProcess("DataImport")) {
-        encounter_status <- "finished"
-      } else if (exists("FHIR_SEARCH_ENCOUNTER_STATUS")) {
+      if (exists("FHIR_SEARCH_ENCOUNTER_STATUS")) {
         if (!nchar(trimws(FHIR_SEARCH_ENCOUNTER_STATUS))) { # Intentionally empty status
           encounter_status <- NA_character_
         } else {
@@ -242,6 +240,16 @@ getEncounters <- function(table_description, current_datetime) {
         }
       } else { # Default is "in-progress"
         encounter_status <- "in-progress"
+      }
+
+      if (isProcess("DataImport")) {
+        if (!grepl("finished", encounter_status)) {
+          if (is.na(encounter_status) || !nzchar(encounter_status)) {
+            encounter_status <- "finished"
+          } else {
+            encounter_status <- paste0(encounter_status, ",finished")
+          }
+        }
       }
 
       # same as the status with the parameter FHIR_SEARCH_ENCOUNTER_CLASS for the FHIR search
