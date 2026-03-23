@@ -3,7 +3,7 @@
 #' Determines the earliest documented case admission date in the fall front-end
 #' dataset.
 #'
-#' @param fall_fe_table A data frame containing fall front-end documentation data.
+#' @param frontend_summary_data A data frame containing fall front-end documentation data.
 #'   The table must include a `fall_aufn_dat` column representing the case
 #'   admission date.
 #'
@@ -18,8 +18,8 @@
 #' @importFrom dplyr filter summarise pull
 #'
 #' @export
-getFirstCaseDateInFe <- function(fall_fe_table) {
-  first_case_date_in_fe <- fall_fe_table |>
+getFirstCaseDateInFe <- function(frontend_summary_data) {
+  first_case_date_in_fe <- frontend_summary_data |>
     dplyr::filter(!is.na(fall_aufn_dat)) |>
     dplyr::summarise(first_case_date = min(fall_aufn_dat, na.rm = TRUE)) |>
     dplyr::pull(first_case_date) |>
@@ -32,7 +32,7 @@ getFirstCaseDateInFe <- function(fall_fe_table) {
 #' Determines the most recent documented case admission date in the fall
 #' front-end dataset.
 #'
-#' @param fall_fe_table A data frame containing fall front-end documentation
+#' @param frontend_summary_data A data frame containing fall front-end documentation
 #'   data. The table must include a `fall_aufn_dat` column representing the
 #'   case admission date.
 #'
@@ -48,8 +48,8 @@ getFirstCaseDateInFe <- function(fall_fe_table) {
 #' @importFrom dplyr filter summarise pull
 #'
 #' @export
-getLastCaseDateInFe <- function(fall_fe_table) {
-  last_case_date_in_fe <- fall_fe_table |>
+getLastCaseDateInFe <- function(frontend_summary_data) {
+  last_case_date_in_fe <- frontend_summary_data |>
     dplyr::filter(!is.na(fall_aufn_dat)) |>
     dplyr::summarise(last_case_date = max(fall_aufn_dat, na.rm = TRUE)) |>
     dplyr::pull(last_case_date) |>
