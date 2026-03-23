@@ -151,13 +151,13 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
 #'
 #' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename
-#' @importFrom data.table isoweek isoyear
+#' @importFrom data.table isoweek year
 #' @export
 prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
   frontend_summary_prep <- frontend_table |>
     dplyr::mutate(
       calendar_week = paste0(
-        data.table::isoyear(fall_aufn_dat), "-",
+        data.table::year(fall_aufn_dat), "-",
         sprintf("%02d", data.table::isoweek(fall_aufn_dat))
       ),
       .after = fall_aufn_dat
