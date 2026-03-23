@@ -4,7 +4,7 @@ Dieses Repository enthält die Bestandteile der CDS tool chain zur Verarbeitung 
 
 ![CDS tool chain](./doc/CDS_Tool_Chain_architecture.png?raw=true)
 Der detaillierte Datenfluss zwischen den und innerhalb der Module ist in der Datei [Dataflow](Dataflow) beschrieben.
-doc/CDS_Tool_Chain_architecture.png
+
 Der gesamte Ablauf der CDS Toolchain ist in der Datei [full_toolchain_description](full_toolchain_description) beschrieben.
 
 ## Bestandteile der CDS tool chain
