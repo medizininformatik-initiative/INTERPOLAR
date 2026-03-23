@@ -3,7 +3,7 @@
 ## Überblick
 Die CDS-HUB DB dient dazu die importierten FHIR-Daten sowie die erhobenen Studiendaten des Zentrums für spätere Auswertungen persistent zu speichern. Die Datenbank enthält für verschiedene Aufgaben und Zugriffsrollen mehrere Bereiche. Sie beinhaltet nur rudimentäre Logik, die ausschließlich der dauerhaften Speicherung der Daten (Logging) sowie der Bereitstellung der aktuellen Daten an den Schnittstellen dient.
 
-![CDS tool chain](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/5671404/d8ee4fb8-c9fb-40f2-81cb-2adeda6d20b2)
+![CDS tool chain](../doc/CDS_Tool_Chain_architecture.png?raw=true)
 
 ## Arten der Daten
 In der CDS-HUB DB werden verschiedene Arten von Daten gespeichert. Diese unterscheiden sich entweder im Verwendungszweck oder dem Verarbeitungsstatus.
