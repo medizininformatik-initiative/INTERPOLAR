@@ -1,35 +1,38 @@
-#' Generate directory names for project outputs.
+#' Generate directory names for module outputs.
 #'
-#' This function takes a project name and constructs directory names for both global and local project outputs.
+#' This function takes a module name and constructs directory names for both global and local module outputs.
 #' It creates directory names for various result categories, including bundles, log, performance, and tables.
-#' The function utilizes predefined global and local output folder names and appends a project-specific timestamp to them.
+#' The function utilizes predefined global and local output folder names and appends a module-specific timestamp to them.
 #' The resulting directory names are organized into a named list for easy access and reference.
 #'
-#' @param project_name The name of the project.
-#' @param project_time_stamp Time stamp as extension for the current project subfolders
+#' @param module_name The name of the module. If NULL then the previously initialized MODULE_DIRS will be returned.
 #'
-#' @return A named list containing directory names for global and local project outputs.
+#' @return A named list containing directory names for global and local module outputs.
 #'
 #' @export
-getProjectDirNames <- function(project_name, project_time_stamp = MODULE_TIME_STAMP) {
-
+getModuleDirNames <- function(module_name) {
+  if (is.null(module_name) || (exists("MODULE_DIRS") && module_name %in% MODULE_DIRS$module_name)) {
+    return(MODULE_DIRS)
+  }
   global_dir <- "outputGlobal"
   local_dir <- "outputLocal"
 
-  local_results_directories_names  <- namedVectorByValue("bundles", "log", "performance", "tables", "reports")
-  global_results_directories_names <- namedVectorByValue("performance", "requests", "tables", "reports")
+  local_results_dir_names  <- namedVectorByValue("bundles", "log", "performance", "tables", "reports")
+  global_results_dir_names <- namedVectorByValue("performance", "requests", "tables", "reports")
 
-  global_dir <- fhircrackr::pastep(global_dir, project_name)
-  local_dir <- fhircrackr::pastep(local_dir, project_name)
+  global_dir <- fhircrackr::pastep(global_dir, module_name)
+  local_dir <- fhircrackr::pastep(local_dir, module_name)
 
-  global_dir <- paste0(global_dir, MODULE_TIME_STAMP)
-  local_dir <- paste0(local_dir, MODULE_TIME_STAMP)
-
+  local_cache_dir_name <- "cache" # will be copied from last run to current run
+  local_full_cache_dir_name <- paste0(local_dir, "/", local_cache_dir_name)
   namedListByParam(
+    module_name,
     global_dir,
     local_dir,
-    local_results_directories_names,
-    global_results_directories_names
+    local_results_dir_names,
+    global_results_dir_names,
+    local_cache_dir_name,
+    local_full_cache_dir_name
   )
 }
 
@@ -100,64 +103,72 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
 #'
 #' This function is used by the framework itself
 #'
-#' @param project_name name of the project
+#' @param module_name name of the module
 #' @param showWarnings logical; should the warnings on failure be shown?
 #'
 #' @export
-createDIRS <- function(project_name, showWarnings = FALSE) {
-  module_dirs <- getProjectDirNames(project_name)
+createDIRS <- function(module_name, showWarnings = FALSE) {
+  module_dirs <- getModuleDirNames(module_name)
   module_dirs$last_global_dir <- renameWithCreationTimeIfDirExists(module_dirs$global_dir, MAX_DIR_COUNT)
-  module_dirs$last_al_dir <- renameWithCreationTimeIfDirExists(module_dirs$local_dir, MAX_DIR_COUNT)
-  for (rd in module_dirs$global_results_directories_names) {
-    dir.create(paste0(module_dirs$global_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
+  module_dirs$last_local_dir <- renameWithCreationTimeIfDirExists(module_dirs$local_dir, MAX_DIR_COUNT)
+  for (dir_name in module_dirs$global_results_dir_names) {
+    dir.create(paste0(module_dirs$global_dir, "/", dir_name), recursive = TRUE, showWarnings = showWarnings)
   }
-  for (rd in module_dirs$local_results_directories_names) {
-    dir.create(paste0(module_dirs$local_dir, "/", rd), recursive = TRUE, showWarnings = showWarnings)
+  for (dir_name in module_dirs$local_results_dir_names) {
+    dir.create(paste0(module_dirs$local_dir, "/", dir_name), recursive = TRUE, showWarnings = showWarnings)
   }
   assign("MODULE_DIRS", module_dirs, envir = .GlobalEnv)
+
+  # copy the cache from last run to current run
+  cache_dir_name <- paste0(module_dirs$local_dir, "/", module_dirs$local_cache_dir_name)
+  old_cache_dir_name <- paste0(module_dirs$last_local_dir, "/", module_dirs$local_cache_dir_name)
+  if (!file.rename(old_cache_dir_name, cache_dir_name)) {
+    dir.create(cache_dir_name, recursive = TRUE, showWarnings = showWarnings)
+  }
+  return(module_dirs)
 }
 
-#' Return the path to the log directory of the specific sub project
+#' Return the path to the log directory of the specific sub module
 #'
-#' @return A character of length one containing the path to the sub project specific log directory.
+#' @return A character of length one containing the path to the sub module specific log directory.
 #'
 #' @export
 getLoggingDirectory <- function() {
   fhircrackr::pastep(MODULE_DIRS$local_dir, "log")
 }
 
-#' Return the combined paths of the log directory of the specific sub project and a new path
+#' Return the combined paths of the log directory of the specific sub module and a new path
 #'
 #' @param path the sub directory or file name to add
 #'
-#' @return A character of length one containing the path to add to the sub project specific log directory.
+#' @return A character of length one containing the path to add to the sub module specific log directory.
 #'
 #' @export
 combineLoggingPaths <- function(path) {
   fhircrackr::pastep(getLoggingDirectory(), path)
 }
 
-#' Return the path to the bundles directory of the specific sub project
+#' Return the path to the bundles directory of the specific sub module
 #'
-#' @return A character of length one containing the path to the sub project specific log directory.
+#' @return A character of length one containing the path to the sub module specific log directory.
 #'
 #' @export
 getBundlesDirectory <- function() {
   fhircrackr::pastep(MODULE_DIRS$local_dir, "bundles")
 }
 
-#' Return the combined paths of the bundles directory of the specific sub project and a new path
+#' Return the combined paths of the bundles directory of the specific sub module and a new path
 #'
 #' @param path the sub directory or file name to add
 #'
-#' @return A character of length one containing the path to add to the sub project specific bundles directory.
+#' @return A character of length one containing the path to add to the sub module specific bundles directory.
 #'
 #' @export
 combineBundlePaths <- function(path) {
   fhircrackr::pastep(getBundlesDirectory(), path)
 }
 
-#' Save a Clock history in the *public* `performance` directory to which was created for the specific subproject.
+#' Save a Clock history in the *public* `performance` directory to which was created for the specific submodule.
 #'
 #' @param filename_without_extension A character vector of length one.
 #' @param clock A `Clock` object. Defaults to the global environment `Clock` object `clock_`.
@@ -168,31 +179,54 @@ savePerformance <- function(filename_without_extension = "Performance_informatio
   clock$write(filename_without_extension = fhircrackr::pastep(MODULE_DIRS$global_dir, "performance", filename_without_extension), hide_errors = TRUE)
 }
 
-#' Save an Object as RDS-File in the *private* `tables` directory to which was created for the specific subproject.
-#'
-#' a <- 1
-#' writeRData(a)
-#'
-#' @param object the table to write
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#' @param project_sub_dir subdirectory of the current working directory where the table is located. If NA (default),
-#' then the tables will be loaded from outputLocal/tables'.
-#'
-#' @return Nothing.
-#'
-#' @export
-writeRData <- function(object = table, filename_without_extension = NA, project_sub_dir = NA) {
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
-  }
-  if (is.na(project_sub_dir)) {
-    project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "tables")
-    #saveRDS(object = object, file = fhircrackr::pastep(MODULE_DIRS$local_dir, "tables", filename_without_extension, ext = '.RData'))
+
+####
+# Read/Write RDS
+####
+
+writeFile <- function(object, full_file_name_with_path) {
+  if (endsWith(full_file_name_with_path, ".rds")) {
+    saveRDS(object, full_file_name_with_path)
+  } else if (endsWith(full_file_name_with_path, ".Rdata")) {
+    save(object, full_file_name_with_path)
   } else {
-    project_sub_dir <- fhircrackr::pastep('.', project_sub_dir)
+    stop("Can not write this file type with writeFile: ", full_file_name_with_path)
   }
-  saveRDS(object = object, file = fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData'))
+  return(TRUE)
 }
+
+readFile <- function(full_file_name_with_path) {
+  if (isSimpleNAorNULL(full_file_name_with_path) || !file.exists(full_file_name_with_path)) {
+    return(NULL)
+  }
+  object <- if (endsWith(full_file_name_with_path, ".rds")) {
+    # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
+    # 5.3 Reading data.table from RDS or RData file
+    #
+    # *.RDS and *.RData are file types which can store in-memory R objects
+    # on disk efficiently. However, storing data.table into the binary file
+    # loses its column over-allocation. This isn't a big deal – your
+    # data.table will be copied in memory on the next by reference
+    # operation and throw a warning. Therefore it is recommended to call
+    # setalloccol() on each data.table loaded with readRDS() or load() calls.
+    rds_content <- readRDS(full_file_name_with_path)
+    if ('data.table' %in% class(rds_content)) {
+      invisible(data.table::setalloccol(rds_content))
+    }
+    rds_content
+  } else if (endsWith(full_file_name_with_path, ".rRata")) {
+    load(fileName)
+    #} else if (endsWith(full_file_name_with_path, ".???")) {
+    # TODO
+  } else {
+    readFileAsString(full_file_name_with_path)
+  }
+  return(object)
+}
+
+####
+# Read/Write Excel
+####
 
 #' Write an Excel file to a local or global tables directory
 #'
@@ -204,17 +238,14 @@ writeRData <- function(object = table, filename_without_extension = NA, project_
 #' @param filename_without_extension Optional file name without extension. If NA, the
 #'   variable name of `tables` is used.
 #' @param with_column_names Logical indicating whether column names should be written.
-writeExcelFileInternal <- function(target = c("local", "global"), tables,
-                                   filename_without_extension = NA, with_column_names = TRUE) {
+#' @param subdir subdirectory where the files will be written
+writeExcelFileInternal <- function(target = c("local", "global"), tables, filename_without_extension, with_column_names = TRUE, subdir = "tables") {
   target <- match.arg(target)
-  if (is.na(filename_without_extension)) {
-    filename_without_extension <- as.character(substitute(tables))
+  module_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, subdir)
+  if (!dir.exists(module_sub_dir)) {
+    dir.create(module_sub_dir, recursive = TRUE)
   }
-  project_sub_dir <- fhircrackr::pastep(if (target == "local") MODULE_DIRS$local_dir else MODULE_DIRS$global_dir, "tables")
-  if (!dir.exists(project_sub_dir)) {
-    dir.create(project_sub_dir, recursive = TRUE)
-  }
-  file_name <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.xlsx')
+  file_name <- fhircrackr::pastep(module_sub_dir, filename_without_extension, ext = '.xlsx')
   writeExcelFile(tables, file_name, with_column_names)
 }
 
@@ -239,13 +270,12 @@ writeDebugExcelFile <- function(tables, filename_without_extension = NA, runLeve
     if (is.na(filename_without_extension)) {
       filename_without_extension <- as.character(substitute(tables))
     }
-
     if (!is.na(runLevel3Message)) {
       runLevel3Line(runLevel3Message, {
-        writeExcelFileInternal("local", tables, filename_without_extension, with_column_names = TRUE)
+        writeExcelFileInternal("local", tables, filename_without_extension)
       })
     } else {
-      writeExcelFileInternal("local", tables, filename_without_extension, with_column_names = TRUE)
+      writeExcelFileInternal("local", tables, filename_without_extension)
     }
   }
 }
@@ -255,11 +285,11 @@ writeDebugExcelFile <- function(tables, filename_without_extension = NA, runLeve
 #' @inheritParams writeExcelFileInternal
 #'
 #' @export
-writeExcelFileLocal <- function(tables, filename_without_extension = NA, with_column_names = TRUE) {
+writeExcelFileLocal <- function(tables, filename_without_extension = NA, with_column_names = TRUE, subdir = "tables") {
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(substitute(tables))
   }
-  writeExcelFileInternal("local", tables, filename_without_extension, with_column_names)
+  writeExcelFileInternal("local", tables, filename_without_extension, with_column_names, subdir)
 }
 
 #' Write an Excel file to the global tables directory
@@ -267,22 +297,27 @@ writeExcelFileLocal <- function(tables, filename_without_extension = NA, with_co
 #' @inheritParams writeExcelFileInternal
 #'
 #' @export
-writeExcelFileGlobal <- function(tables, filename_without_extension = NA, with_column_names = TRUE) {
+writeExcelFileGlobal <- function(tables, filename_without_extension = NA, with_column_names = TRUE, subdir = "tables") {
   if (is.na(filename_without_extension)) {
     filename_without_extension <- as.character(substitute(tables))
   }
-  writeExcelFileInternal("global", tables, filename_without_extension, with_column_names)
+  writeExcelFileInternal("global", tables, filename_without_extension, with_column_names, subdir)
 }
+
+
+####
+# Write HTML #
+####
 
 #' Write an HTML Table with Download Buttons
 #'
 #' Generates an interactive HTML table from a data frame, including optional caption and footnote,
-#' with CSV and Excel download buttons. Saves the table to a local or global project directory.
+#' with CSV and Excel download buttons. Saves the table to a local or global module directory.
 #'
 #' @param table A data frame or matrix to be converted into an HTML table.
 #' @param output_location Character; either "local" or "global" to determine where the table should be saved.
 #' @param filename_without_extension Character; optional filename prefix. If NA, the variable name of `table` is used.
-#' @param project_sub_dir Character; optional sub-directory within the project to store the table. Defaults to "reports" inside the chosen output location.
+#' @param module_sub_dir Character; optional sub-directory within the module to store the table. Defaults to "reports" inside the chosen output location.
 #' @param caption Character; optional caption displayed above the table.
 #' @param footnote Character; optional footnote displayed below the table. Defaults to an empty string.
 #' @param colnames Character vector; optional column names for the table. Defaults to `colnames(table)`.
@@ -302,22 +337,22 @@ writeExcelFileGlobal <- function(tables, filename_without_extension = NA, with_c
 #'
 #' @export
 writeHtmlTable <- function(table, output_location = "local", filename_without_extension = NA,
-                           project_sub_dir = NA, caption = NA, footnote = "", colnames = NULL) {
+                           module_sub_dir = NA, caption = NA, footnote = "", colnames = NULL) {
   if (!is.null(table) & output_location %in% c("local", "global")) {
     if (is.na(filename_without_extension)) {
       filename_without_extension <- as.character(sys.call()[2]) # get the table variable name
     }
-    if (is.na(project_sub_dir)) {
+    if (is.na(module_sub_dir)) {
       if (output_location == "local") {
-        project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
+        module_sub_dir <- fhircrackr::pastep(MODULE_DIRS$local_dir, "reports")
       } else if (output_location == "global") {
-        project_sub_dir <- fhircrackr::pastep(MODULE_DIRS$global_dir, "reports")
+        module_sub_dir <- fhircrackr::pastep(MODULE_DIRS$global_dir, "reports")
       }
     } else {
-      project_sub_dir <- fhircrackr::pastep(".", project_sub_dir)
+      module_sub_dir <- fhircrackr::pastep(".", module_sub_dir)
     }
-    if (!dir.exists(project_sub_dir)) {
-      dir.create(project_sub_dir, recursive = TRUE)
+    if (!dir.exists(module_sub_dir)) {
+      dir.create(module_sub_dir, recursive = TRUE)
     }
     download_name <- filename_without_extension
     if (is.null(colnames)) {
@@ -372,7 +407,7 @@ writeHtmlTable <- function(table, output_location = "local", filename_without_ex
       package = "htmlwidgets"
     )
     widget <- htmlwidgets::prependContent(widget, page)
-    output_html <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = paste0(".html"))
+    output_html <- fhircrackr::pastep(module_sub_dir, filename_without_extension, ext = paste0(".html"))
     htmlwidgets::saveWidget(
       widget = widget,
       file = output_html,
@@ -513,37 +548,4 @@ getFilesByPrefix <- function(prefix, directories, extension = NA, recursive = FA
 #' @export
 getExcelFilesByPrefixInDirsAndSubdirs <- function(prefix, directories) {
   return(getFilesByPrefix(prefix = prefix, directories = directories, extension = "xlsx", recursive = TRUE))
-}
-
-#' Read an Object as RDS-File from the *private* `tables` directory to which was created for the specific subproject.
-#'
-#' a <- ReadRData('a')
-#'
-#' @param filename_without_extension If the default NA is not changed then the name is the name of the table variable.
-#' @param load_from_last_run fehlende Beschreibung
-#'
-#' @return the object
-#'
-#' @export
-readRData <- function(filename_without_extension, load_from_last_run = FALSE) {
-  if (load_from_last_run) dir <- MODULE_DIRS$local_dir else MODULE_DIRS$last_local_dir
-  project_sub_dir <- fhircrackr::pastep(dir, "tables")
-  fname <- fhircrackr::pastep(project_sub_dir, filename_without_extension, ext = '.RData')
-  data <- NULL
-  if (file.exists(fname)) {
-    # https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-faq.html#reading-data.table-from-rds-or-rdata-file
-    # 5.3 Reading data.table from RDS or RData file
-    # ---------------------------------------------
-    # *.RDS and *.RData are file types which can store in-memory R objects
-    # on disk efficiently. However, storing data.table into the binary file
-    # loses its column over-allocation. This isn't a big deal – your
-    # data.table will be copied in memory on the next by reference
-    # operation and throw a warning. Therefore it is recommended to call
-    # setalloccol() on each data.table loaded with readRDS() or load() calls.
-    data <- readRDS(fname)
-    if ('data.table' %in% class(data)) {
-      invisible(data.table::setalloccol(data))
-    }
-  }
-  data
 }

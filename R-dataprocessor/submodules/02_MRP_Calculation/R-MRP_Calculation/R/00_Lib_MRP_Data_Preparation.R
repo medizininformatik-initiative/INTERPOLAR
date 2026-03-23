@@ -245,8 +245,8 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
 
   # TODO: Diese Funktion an die "richtige" Stelle verschieben
   getCurrentDate <- function() {
-    if (exists("DEBUG_DAY")) {
-      datetime <- DEBUG_DATES[DEBUG_DAY]
+    if (exists("DEBUG_DATES")) {
+      datetime <- DEBUG_DATES[TOOLCHAIN_DAY]
       return(etlutils::as.DateWithTimezone(datetime))
     }
     return(etlutils::as.DateWithTimezone(Sys.Date()))

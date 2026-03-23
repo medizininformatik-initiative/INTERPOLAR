@@ -1,3 +1,8 @@
+#' @export
+getModuleName <- function() {
+  return("cds2db")
+}
+
 #' Initializes the module context for cds2db.
 #'
 #' This function initializes the module context for the cds2db module by loading
@@ -15,7 +20,7 @@
 #' @export
 init <- function(validate_config = TRUE) {
   # Initialize and start module if init_constants_only == FALSE
-  config <- etlutils::initModule("cds2db",
+  config <- etlutils::initModule(getModuleName(),
                        path_to_toml = "./R-cds2db/cds2db_config.toml",
                        mandatory_parameters = c(
                          "FHIR_SERVER_ENDPOINT",
@@ -24,7 +29,7 @@ init <- function(validate_config = TRUE) {
                        )
   )
   if (validate_config) {
-    # TODO: add validation
+    validateConfig()
   }
   return(config)
 }
@@ -40,6 +45,31 @@ init <- function(validate_config = TRUE) {
 resetLock <- function() {
   init(validate_config = FALSE)
   etlutils::dbResetLock()
+}
+
+#' Initializes the a cache for the current process
+#'
+#' @param delete_old_cache If TRUE existing cache files with the same base name will be deleted
+#'
+#' @return The number of files in this cache
+#'
+#' @export
+initCache <- function(delete_old_cache) {
+  etlutils::registerCache(files_base_name = etlutils::getProcess(), module_name = getModuleName())
+  if (delete_old_cache) {
+    etlutils::deleteAllCacheFiles(module_name = getModuleName())
+  }
+  return(etlutils::getCacheFilesCount(module_name = getModuleName()))
+}
+
+#' Deletes the next cache file
+#'
+#' @return The number of files in this cache
+#'
+#' @export
+deleteNextCacheFile <- function() {
+  etlutils::deleteNextCacheFile(module_name = getModuleName())
+  return(etlutils::getCacheFilesCount(module_name = getModuleName()))
 }
 
 #' Starts the ETL retrieval process from FHIR to the database
@@ -58,9 +88,9 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
   # Initialize and start module
   config <- init(validate_config)
-  etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+")
+  etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+|^DATA_IMPORT_PATH_")
 
-  skip_db_operations <- etlutils::isDefinedAndTrue("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
+  skip_db_operations <- etlutils::isDefinedAndTrue("FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
 
   try(etlutils::runLevel1("Run Retrieve", {
 
@@ -87,7 +117,19 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
-      pids_splitted_by_ward <- getPIDsSplittedByWard()
+      if (isProcess("DataImport")) {
+        if (!etlutils::hasNextCacheFile()) {
+          # This writes the list of pids_splitted_by_ward into the cache. Same
+          # PIDs are present in multiple different cache files)
+          list_of_pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = FALSE)
+          etlutils::writeCacheFiles(list_of_pids_splitted_by_ward)
+        }
+        pids_splitted_by_ward <- etlutils::readNextCacheFile()
+      } else {
+        # Get a single pids_splitted_by_ward without using the cache and
+        # ensuring that every PID is present at most 1 time.
+        pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = TRUE)
+      }
       all_wards_empty <- !length(unlist(pids_splitted_by_ward))
     })
 

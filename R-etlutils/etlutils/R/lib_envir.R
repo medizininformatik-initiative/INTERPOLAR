@@ -119,14 +119,6 @@ initModuleConstants <- function(module_name, db_schema_base_name = NULL, path_to
     constants <- addConstants(DEBUG_PATH_TO_CONFIG_TOML, constants, envir)
   }
 
-  # Initialize the project timestamp if not already set
-  if (!exists("MODULE_TIME_STAMP", envir = envir)) {
-    project_time_stamp <- ""
-    if (isDefinedAndTrue("USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX", envir = envir)) {
-      project_time_stamp <- format(Sys.time(), "-%Y-%m%d-%H%M%S")
-    }
-    assign("MODULE_TIME_STAMP", project_time_stamp, envir = envir)
-  }
   # Initialize the database context if the database TOML path is provided
   path_to_db_toml <- constants[["PATH_TO_DB_CONFIG_TOML"]]
   if (!is.null(path_to_db_toml)) {
@@ -338,11 +330,9 @@ isDefinedAndFalse <- function(variable_name, envir = parent.frame()) {
 #'
 #' @export
 isDefinedAndNotEmpty <- function(variable_name, envir = parent.frame()) {
-  if (!exists(variable_name, envir = envir)) {
-    return(FALSE)
-  }
+  if (!exists(variable_name, envir = envir)) return(FALSE)
   val <- get(variable_name, envir = envir)
-  return(length(val) > 0 && any(nzchar(val)))
+  return(length(val) > 0 && (!is.character(val) || any(nzchar(val))))
 }
 
 #' Check for the existence of mandatory parameters
@@ -698,3 +688,149 @@ checkVersion <- function(ignore_newer_db_version) {
     .lib_envir_env[["VERSION_ALREADY_CHECKED"]] <- TRUE
   }
 }
+
+###---###---###---##
+# TOOL_CHAIN_STATE #
+###---###---###---##
+
+# Environment for saving process states
+.penv <- new.env()
+
+#' Set value in process environment
+#'
+#' @param name Name of the variable.
+#' @param value Value to store.
+#'
+#' @return None.
+#'
+#' @export
+setVal <- function(name, value) {
+  .penv[[name]] <- value
+}
+
+#' Get value from process environment
+#'
+#' @param name Name of the variable.
+#'
+#' @return The stored value or `NULL` if it does not exist.
+#'
+#' @export
+getVal <- function(name) {
+  .penv[[name]]
+}
+
+#' Check if value exists in process environment
+#'
+#' @param name Name of the variable.
+#'
+#' @return `TRUE` if the value exists, otherwise `FALSE`.
+#'
+#' @export
+hasVal <- function(name) {
+  exists(name, envir = .penv, inherits = FALSE)
+}
+
+#' Add value to existing entry
+#'
+#' @param name Name of the variable.
+#' @param value Value to append.
+#'
+#' @return None.
+#'
+#' @export
+addVal <- function(name, value) {
+  old_value <- getVal(name)
+  .penv[[name]] <- c(old_value, value)
+}
+
+#' Check if value is TRUE
+#'
+#' @param name Name of the variable.
+#'
+#' @return `TRUE` if the stored value is `TRUE`, otherwise `FALSE`.
+#'
+#' @export
+isVal <- function(name) {
+  isTRUE(getVal(name))
+}
+
+#' Check if value is non-empty
+#'
+#' @param name Name of the variable.
+#'
+#' @return `TRUE` if the stored value exists and is not empty, otherwise `FALSE`.
+#'
+#' @export
+isNonEmptyVal <- function(name) {
+  if (!hasVal(name)) return(FALSE)
+  val <- getVal(name)
+  if (is.null(val) || length(val) == 0) return(FALSE)
+  if (is.character(val)) return(any(nzchar(val)))
+  if (all(is.na(val))) return(FALSE)
+  return(TRUE)
+}
+
+#' Remove value from process environment
+#'
+#' @param name Name of the variable.
+#'
+#' @return None.
+#'
+#' @export
+rmVal <- function(name) {
+  if (exists(name, envir = .penv, inherits = FALSE)) {
+    rm(list = name, envir = .penv)
+  }
+}
+
+#' Remove all values matching a pattern
+#'
+#' @param pattern Regular expression used to match variable names.
+#'
+#' @return `TRUE` if any values were removed, otherwise `FALSE`.
+#'
+#' @export
+rmAll <- function(pattern) {
+  vars <- ls(.penv, pattern = pattern)
+  if (!length(vars)) {
+    return(FALSE)
+  }
+  rm(list = vars, envir = .penv)
+  return(TRUE)
+}
+
+#' Register active process
+#'
+#' @param process_name Name of the process.
+#'
+#' @return The provided process name
+#'
+#' @export
+setProcess <- function(process_name) {
+  if (is.null(.penv[["PROCESS_NAME"]])) {
+    .penv[["PROCESS_NAME"]] <- process_name
+  }
+  process_name
+}
+
+#' Get name of the first registered process
+#'
+#' @return The name of the first registered process or `NULL` if no process
+#'   has been registered.
+#'
+#' @export
+getProcess <- function() {
+  return(getVal("PROCESS_NAME"))
+}
+
+#' Check if process is active
+#'
+#' @param process_name Name of the process.
+#'
+#' @return `TRUE` if the process is registered, otherwise `FALSE`.
+#'
+#' @export
+isProcess <- function(process_name) {
+  tolower(process_name) %in% tolower(getProcess())
+}
+

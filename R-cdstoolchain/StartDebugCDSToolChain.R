@@ -14,6 +14,8 @@ library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
+etlutils::setProcess("DebugCDSToolchain")
+
 # Reset error status
 options(error = NULL)
 
@@ -59,6 +61,7 @@ getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCa
   if (change_data_type == "RAW" && exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
     return(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME)
   }
+
   if (change_data_type == "REDCap" && exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
     return(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)
   }
@@ -117,7 +120,7 @@ day_times <- c()
 
 for (debug_day_index in seq_along(DEBUG_DATES)) {
   if (exists("DEBUG_RUN_SINGLE_DAY_ONLY") && debug_day_index != DEBUG_RUN_SINGLE_DAY_ONLY) next
-  DEBUG_DAY <- debug_day_index
+  TOOLCHAIN_DAY <- debug_day_index
 
   start_day <- Sys.time()
   source("./R-cdstoolchain/StartCDSToolChain.R")

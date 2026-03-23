@@ -28,7 +28,7 @@ importDB2Redcap <- function() {
   writeTablesAsExcel <- function(tables, suffix = "") {
     table_names <- names(tables)
     for (i in seq_along(table_names)) {
-      table_filename_prefix <- if (exists("DEBUG_DAY")) paste0("DEBUG_DAY_", DEBUG_DAY, "_") else ""
+      table_filename_prefix <- if (exists("TOOLCHAIN_DAY")) paste0("TOOLCHAIN_DAY_", TOOLCHAIN_DAY, "_") else ""
       etlutils::writeDebugExcelFile(data_from_db, paste0(table_filename_prefix, "db2frontend_", table_names[i], suffix))
     }
   }
@@ -108,10 +108,10 @@ importDB2Redcap <- function() {
     valid_fields <- tryRedcap(function() getRedcapFieldNames(frontend_connection))
 
     # Exclude "risikofaktor", "trigger" always and medikationsanalyse and mrpdokumentation_validierung
-    # in normal run (= not debug). In debg runs we must change the last state of medikationsanalyse
+    # in normal run (= not debug). In debug runs we must change the last state of medikationsanalyse
     # and mrpdokumentation_validierung, so we need to import them.
     excluded_tables <- c("risikofaktor", "trigger")
-    if (!exists("DEBUG_DAY")) {
+    if (!etlutils::isProcess("DebugCDSToolchain")) {
       # In debug mode, do not exclude medikationsanalyse and mrpdokumentation_validierung
       excluded_tables <- c(excluded_tables, "medikationsanalyse", "mrpdokumentation_validierung")
     }
@@ -176,7 +176,7 @@ importDB2Redcap <- function() {
   #########################
   # START: FOR DEBUG ONLY #
   #########################
-  if (exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME") && !is.na(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)) {
+  if (etlutils::isDefinedAndNotEmpty("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
     for (script_name in DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME) {
       source(script_name, local = TRUE) # this should change the data_to_import list
     }

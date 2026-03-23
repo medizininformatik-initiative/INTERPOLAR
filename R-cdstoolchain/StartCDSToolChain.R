@@ -1,19 +1,22 @@
-# chance the working directory to the main directory
-if (grepl('/cdstoolchain$', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
-
 library(etlutils)
 library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
+etlutils::setProcess("FullToolchain")
+
+# chance the working directory to the main directory
+if (grepl('/cdstoolchain$', getwd())) setwd("../..")
+if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
+
+
 # Reset error status
 options(error = NULL)
 
-start <- Sys.time()
+start_full <- Sys.time()
 
-if (exists("DEBUG_DAY") && !etlutils::isErrorOccured()) {
-  cat("START DEBUG_DAY", DEBUG_DAY, "\n")
+if (exists("TOOLCHAIN_DAY") && !etlutils::isErrorOccured()) {
+  cat("START TOOLCHAIN_DAY", TOOLCHAIN_DAY, "\n")
 }
 
 # Process command line arguments
@@ -50,21 +53,25 @@ for (arg in args) {
   }
 }
 
-resetMemory <- function() {
+resetMemory <- function(...) {
   etlutils::resetMemory(protected_objects = c(
-    "DEBUG_DAY",
+    ...,
+
+    "TOOLCHAIN_DAY",
     "DEBUG_DATES",
     "DEBUG_MODULES_PATH_TO_CONFIG_TOML",
 
     "DEBUG_DB_PORT",
     "DEBUG_REDCAP_PORT",
     "DEBUG_PATH_TO_RAW_RDATA_FILES",
-    "DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME",
-    "DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME",
 
     "DEBUG_SUBMODULE_DIR",
     "DEBUG_RUN_SINGLE_DAY_ONLY",
     "DEBUG_START_SINGLE_MODULE",
+    "DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME",
+    "DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME",
+
+    "CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1",
 
     "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS",
 
@@ -72,7 +79,8 @@ resetMemory <- function() {
     "start_full",
     "day_times",
     "start_day",
-    "debug_day_index"
+    "debug_day_index",
+    "delete_db_and_redcap"
   ))
 }
 
@@ -98,20 +106,36 @@ shouldStart <- function(module_name) {
 }
 
 # Initialize modules and validate configurations
-for (init_function in c(cds2db::init, dataprocessor::init, db2frontend::initFrontend2DB, db2frontend::initDB2Frontend)) {
-  resetMemory()
-  init_function()
-}
 resetMemory()
+config_cds2db <- cds2db::init()
+resetMemory("config_cds2db")
+config_dataprocessor <- dataprocessor::init()
+resetMemory("config_cds2db", "config_dataprocessor")
+config_db2frontend <- db2frontend::initFrontend2DB()
+# checks needed config_cds2db or config_dataprocessor vs. config_db2frontend?
+resetMemory("config_cds2db", "config_dataprocessor", "config_db2frontend")
+config_frontend2db <- db2frontend::initDB2Frontend()
+# checks needed config_cds2db or config_dataprocessor vs. config_frontend2db?
+# config_frontend2db and config_db2frontend should be the same and should be checked vise versa during the init of one of these modules
+
+
+#TODO: Check if the parameters in config_cds2db and config_dataprocessor are compatible, e.g. if the encounter filter pattern in config_cds2db matches the expected ward definition in config_dataprocessor
+
+resetMemory()
+
+delete_db_and_redcap <- etlutils::isDefinedAndTrue("CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1") && exists("TOOLCHAIN_DAY") && TOOLCHAIN_DAY == 1
 
 tryCatch({
   args <- commandArgs(trailingOnly = TRUE)
   ignore_newer_db_version = "--ignoreNewerDBVersion" %in% args
   if (shouldStart("cds2db")) {
+    if (delete_db_and_redcap && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
+      etlutils::dbReset()
+    }
     cds2db::retrieve(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
   }
   if (shouldStart("db2frontend")) {
-    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
+    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
   }
   if (shouldStart("dataprocessor")) {
     dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
@@ -150,17 +174,17 @@ tryCatch({
 
 if (!etlutils::isErrorOccured()) {
   status <- 0
-  if (exists("DEBUG_DAY")) {
-    cat("END DEBUG_DAY", DEBUG_DAY, "\n")
+  if (exists("TOOLCHAIN_DAY")) {
+    cat("END TOOLCHAIN_DAY", TOOLCHAIN_DAY, "\n")
   } else {
     # Print the elapsed time
-    end <- Sys.time()
-    cat("Full toolchain took ", capture.output(print(end - start)), "\n")
+    end_full <- Sys.time()
+    cat("Full toolchain took ", capture.output(print(end_full - start_full)), "\n")
   }
 } else {
   status <- 1
 }
 
-if (!interactive() && !exists("DEBUG_DAY")) {
+if (!interactive() && !etlutils::isProcess("FullToolchain")) {
   quit(status = status, save = "no")
 }
