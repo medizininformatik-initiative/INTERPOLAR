@@ -329,12 +329,6 @@ writeExcelFileGlobal <- function(tables, filename_without_extension = NA, with_c
 #' top filters, and download buttons for CSV and Excel formats. The HTML file is self-contained,
 #' meaning no accompanying `_files` folder is required. If the `_files` folder exists, it is removed.
 #'
-#' @importFrom htmlwidgets createWidget prependContent saveWidget JS
-#' @importFrom htmltools tags HTML tagList
-#' @importFrom DT datatable
-#' @importFrom fhircrackr pastep
-#' @importFrom jsonlite toJSON
-#'
 #' @export
 writeHtmlTable <- function(table, output_location = "local", filename_without_extension = NA,
                            module_sub_dir = NA, caption = NA, footnote = "", colnames = NULL) {
