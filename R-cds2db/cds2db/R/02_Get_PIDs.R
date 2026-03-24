@@ -449,6 +449,8 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, log_result = TRUE
     dt <- dt[dt[, .I[`meta/lastUpdated` == etlutils::getMaxDatetime(`meta/lastUpdated`)], by = patient_id]$V1]
     # Step 3: If still multiple per patient_id: keep only the first (arbitrary stable choice)
     dt <- dt[dt[, .I[1], by = patient_id]$V1]
+    # Step 4: Remove full NA rows
+    dt <- na.omit(dt)
     return(dt) # return the filtered pids_per_ward_with_encounter_details
   }
 
