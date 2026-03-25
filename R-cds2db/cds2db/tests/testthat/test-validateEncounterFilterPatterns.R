@@ -76,7 +76,7 @@ testthat::test_that("validateEncounterFilterPatterns rejects invalid key names",
     list(
       ENCOUNTER_FILTER_PATTERN_1 = c(
         "ward_name = 'Station 1'",
-        "Location/location/reference = 'Location/location_id_1'"
+        "Location1/location/reference = 'Location/location_id_1'"
       )
     )
   )
@@ -252,3 +252,15 @@ testthat::test_that("validateEncounterFilterPatterns allows same encounter condi
   testthat::expect_true(isTRUE(validateEncounterFilterPatterns(encounter_filter_patterns)))
 })
 
+testthat::test_that("validateEncounterFilterPatterns allows capital letters in key names", {
+  encounter_filter_patterns <- list(
+    list(
+      ENCOUNTER_FILTER_PATTERN_1 = c(
+        "ward_name = 'Nephrologie'",
+        "serviceProvider/identifier/value = 'M4D03'"
+      )
+    )
+  )
+
+  testthat::expect_true(isTRUE(validateEncounterFilterPatterns(encounter_filter_patterns)))
+})
