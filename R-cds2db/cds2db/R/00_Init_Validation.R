@@ -33,7 +33,7 @@
 validateEncounterFilterPatterns <- function(encounter_filter_patterns) {
   parsed_records <- etlutils::parseStructuredConfigDefinitions(
     definitions = encounter_filter_patterns,
-    allowed_key_pattern = "ward_name|[a-z/]+",
+    allowed_key_pattern = "ward_name|[A-Za-z/]+",
     allow_plus = TRUE
   )
 
