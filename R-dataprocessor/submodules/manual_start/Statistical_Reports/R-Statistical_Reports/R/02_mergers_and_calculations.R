@@ -819,8 +819,6 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
 #' @details
 #' The merge operation:
 #' - Performs a left join using `record_id` and `pat_id` (matched to `fall_pat_id`),
-#' - Adds fall-specific columns such as `fall_fhir_enc_id`, `fall_id`, and `fall_studienphase`
-#'   to the patient FE data.
 #' - Removes duplicate rows after the merge.
 #'
 #' This is useful for linking case trajectories from the FE system with individual

@@ -114,7 +114,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #'
 #' @param frontend_table A data frame containing merged front-end data, including medication analysis
 #'   and MRP documentation information. Must include at least `pat_id`, `record_id`, `fall_id_cis`,
-#'   `enc_id`, `fall_aufn_dat`,  relevant MRP fields and `processing_exclusion_reason`.
+#'   `actual_fall_studienphase`, `enc_id`, `fall_aufn_dat`,  relevant MRP fields and `processing_exclusion_reason`.
 #' @param report_period_start A character string representing the start of the reporting period
 #'                           (format: "YYYY-MM-DD").
 #' @param report_period_end A character string representing the end of the reporting period
@@ -224,7 +224,7 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::mutate(eligible_for_algorithmic_MRP_calculation = dplyr::if_else(
       ((as.POSIXct(report_period_end) - fall_ent_dat) > 14) &
         sub_enc_any_completed_medication_analysis &
-        fall_studienphase == "PhaseB",
+        actual_fall_studienphase == "PhaseB",
       TRUE, FALSE, missing = FALSE
     ), .after = sub_enc_any_MRP) |>
     dplyr::rename(

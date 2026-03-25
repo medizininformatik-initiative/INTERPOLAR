@@ -362,6 +362,7 @@ getPatientFeData <- function(lock_id, table_name) {
 #'   \item{fall_pat_id}{FHIR-based Patient ID}
 #'   \item{fall_id}{Fall ID from the hospital intern system (cis)}
 #'   \item{fall_studienphase}{Study phase associated with the case}
+#'   \item{actual_fall_studienphase}{correct study phase associated with the case}
 #'   \item{fall_station}{INTERPOLAR-ward fromt he pids_per_ward table}
 #'   \item{fall_aufn_dat}{Admission date of the main encounter}
 #'   \item{fall_ent_dat}{Discharge date of the main encounter}
@@ -386,25 +387,33 @@ getFallFeData <- function(lock_id, table_name) {
   )
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
+    # get correct study phase (first one in fall_fe for each case)
+    dplyr::group_by(fall_fhir_enc_id) |>
+    dplyr::arrange(input_processing_nr, .by_group = TRUE) |>
+    dplyr::mutate(
+      actual_fall_studienphase = dplyr::first(fall_studienphase),
+      .after = fall_studienphase
+    ) |>
+    dplyr::ungroup() |>
     # create last version view with ward as additional grouping variable
     dplyr::slice_max(input_processing_nr, by = c(fall_fhir_enc_id, fall_station)) |>
     dplyr::select(-input_processing_nr) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id)
 
-  # temporary deactivate, since fall_studienphase is not used at the moment
+  if (any(is.na(fall_fe_table$actual_fall_studienphase)) ||
+    any(fall_fe_table$actual_fall_studienphase == "PhaseBTest")) {
+    warning("The calculated study phase (first one) in ward specific last version view of fall_fe table
+            (manually created) contains NA and PhaseBTest values. These will be replaced with 'PhaseA'.")
 
-  # if (any(is.na(fall_fe_table$fall_studienphase))) {
-  #   warning("The fall_fe table contains NA values in fall_studienphase.
-  #           These will be replaced with 'PhaseA'.")
-  #
-  #   fall_fe_table <- fall_fe_table |>
-  #     dplyr::mutate(fall_studienphase = dplyr::if_else(is.na(fall_studienphase),
-  #       "PhaseA",
-  #       fall_studienphase
-  #     )) |>
-  #     dplyr::distinct()
-  # }
+    fall_fe_table <- fall_fe_table |>
+      dplyr::mutate(actual_fall_studienphase = dplyr::if_else(
+        is.na(actual_fall_studienphase) | actual_fall_studienphase == "PhaseBTest",
+        "PhaseA",
+        actual_fall_studienphase
+      )) |>
+      dplyr::distinct()
+  }
 
   # DEBUG START-------------------------------
   if (DEBUG_TEST_REPORTING_WARNINGS) {
