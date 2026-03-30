@@ -224,7 +224,7 @@ convertLabUnits <- function(measured_value,
                               as.character(units(u_target)$numerator),
                               "': ",
                               additional_error_message)
-    if(!ignore_errors) {
+    if (!ignore_errors) {
       etlutils::catErrorMessage(warning_message)
       stop(e)
     }

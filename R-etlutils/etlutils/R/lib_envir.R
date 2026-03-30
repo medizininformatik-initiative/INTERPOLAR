@@ -119,14 +119,6 @@ initModuleConstants <- function(module_name, db_schema_base_name = NULL, path_to
     constants <- addConstants(DEBUG_PATH_TO_CONFIG_TOML, constants, envir)
   }
 
-  # Initialize the project timestamp if not already set
-  if (!exists("MODULE_TIME_STAMP", envir = envir)) {
-    project_time_stamp <- ""
-    if (isDefinedAndTrue("USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX", envir = envir)) {
-      project_time_stamp <- format(Sys.time(), "-%Y-%m%d-%H%M%S")
-    }
-    assign("MODULE_TIME_STAMP", project_time_stamp, envir = envir)
-  }
   # Initialize the database context if the database TOML path is provided
   path_to_db_toml <- constants[["PATH_TO_DB_CONFIG_TOML"]]
   if (!is.null(path_to_db_toml)) {
@@ -338,32 +330,124 @@ isDefinedAndFalse <- function(variable_name, envir = parent.frame()) {
 #'
 #' @export
 isDefinedAndNotEmpty <- function(variable_name, envir = parent.frame()) {
-  if (!exists(variable_name, envir = envir)) {
-    return(FALSE)
-  }
+  if (!exists(variable_name, envir = envir)) return(FALSE)
   val <- get(variable_name, envir = envir)
-  return(length(val) > 0 && any(nzchar(val)))
+  return(length(val) > 0 && (!is.character(val) || any(nzchar(val))))
 }
 
 #' Check for the existence of mandatory parameters
 #'
-#' This function verifies whether all specified mandatory parameters exist in the current environment.
-#' If any of the parameters are missing, an error is raised, listing the missing parameters.
+#' This function verifies whether all specified mandatory parameters exist in the
+#' given environment. For each name in `mandatory_parameters`, it first checks
+#' whether an object with the exact name exists. If not, it checks whether at least
+#' one object exists whose name starts with the provided string. If neither
+#' condition is fulfilled, the parameter is considered missing and an error is
+#' raised listing all missing parameters.
 #'
-#' @param mandatory_parameters A character vector containing the names of the parameters to check.
+#' @param mandatory_parameters A character vector containing the names of the
+#'   parameters to check.
+#' @param envir Environment in which to check for the parameters. Defaults to
+#'   `.GlobalEnv`.
 #'
-#' @return None. The function stops execution if any mandatory parameters are missing.
+#' @return Invisibly returns `NULL`. The function stops execution with an error if
+#'   any mandatory parameters are missing.
 #'
-checkMandatoryParameters <- function(mandatory_parameters) {
-  missing_parameters <- c()
+#' @examples
+#' # Create a temporary environment
+#' tmp_env <- new.env(parent = emptyenv())
+#' tmp_env$alpha <- 1
+#' tmp_env$beta_value <- 2
+#'
+#' # This will pass because 'alpha' exists and 'beta' matches 'beta_value'
+#' checkMandatoryParameters(
+#'   mandatory_parameters = c("alpha", "beta"),
+#'   envir = tmp_env
+#' )
+#'
+#' @export
+checkMandatoryParameters <- function(mandatory_parameters, envir = .GlobalEnv) {
+  # Validate inputs
+  if (!is.character(mandatory_parameters)) {
+    stop("`mandatory_parameters` must be a character vector.")
+  }
+  if (!is.environment(envir)) {
+    stop("`envir` must be an environment.")
+  }
+
+  missing_parameters <- character()
+
+  # Get all objects from the target environment
+  existing_objects <- ls(envir = envir)
+
   for (param in mandatory_parameters) {
-    if (!exists(param)) {
-      missing_parameters <- c(missing_parameters, param)
+    # Check for exact match
+    if (!exists(param, envir = envir, inherits = FALSE)) {
+
+      # Check for variables starting with the given string
+      starts_with_match <- any(startsWith(existing_objects, param))
+
+      if (!starts_with_match) {
+        missing_parameters <- c(missing_parameters, param)
+      }
     }
   }
+
   if (length(missing_parameters)) {
-    stop("The following parameters are mandatory and must be defined in the modules toml file:\n     ", paste0(missing_parameters, collapse = "\n     "))
+    stop(
+      "The following parameters are mandatory and must be defined in the modules toml file:\n     ",
+      paste0(missing_parameters, collapse = "\n     ")
+    )
   }
+
+  invisible(NULL)
+}
+
+#' Remove non-function objects from an environment while keeping protected objects.
+#'
+#' Deletes only non-function objects found in `envir`. Objects listed in
+#' `protected_objects` are never removed, even if they are not functions.
+#'
+#' @param protected_objects Character vector of object names that must not be removed.
+#' @param envir Environment to clean. Defaults to `.GlobalEnv`.
+#'
+#' @return Invisible `NULL`. Called for its side effect of removing objects.
+#'
+#' @examples
+#' # Create a temporary environment to demonstrate behavior
+#' tmp_env <- new.env(parent = emptyenv())
+#' tmp_env$x <- 1
+#' tmp_env$f <- function() 1
+#' tmp_env$keep_me <- 42
+#'
+#' resetMemory(protected_objects = "keep_me", envir = tmp_env)
+#' ls(tmp_env)
+#'
+#' @export
+resetMemory <- function(protected_objects, envir = .GlobalEnv) {
+  # Validate inputs
+  if (!is.character(protected_objects)) {
+    stop("`protected_objects` must be a character vector of object names.")
+  }
+  if (!is.environment(envir)) {
+    stop("`envir` must be an environment.")
+  }
+
+  # Get all objects in the target environment
+  all_objects <- ls(envir = envir)
+
+  # Keep only non-function objects (avoid deleting any functions)
+  non_function_objects <- all_objects[
+    !vapply(all_objects, function(obj) {
+      is.function(get(obj, envir = envir, inherits = FALSE))
+    }, logical(1L))
+  ]
+
+  # Remove only non-function and non-protected objects
+  objects_to_remove <- setdiff(non_function_objects, protected_objects)
+
+  rm(list = objects_to_remove, envir = envir)
+
+  invisible(NULL)
 }
 
 #' Initialize command-line arguments as key-value list or global variables
@@ -549,6 +633,7 @@ compareVersionsSemver <- function(version_a, version_b) {
 #' @return Character scalar containing the normalized release version string,
 #'   e.g. \code{"1.5.0"}.
 #'
+#' @export
 getReleaseVersion <- function() {
   release_version <- readLines("./release-version.txt", n = 1L)
   release_version <- trimws(release_version)
@@ -592,9 +677,8 @@ checkVersion <- function(ignore_newer_db_version) {
     release_version <- getReleaseVersion()
     compare_result <- compareVersionsSemver(db_version, release_version)
     if (compare_result < 0L) { # DB is older than release version -> stop execution
-      stop(paste0("The database version '", db_version, "' is older than the release version '", release_version, "'. Please update the database via migration. Run\n",
-                  "  docker compose exec -w /cds_hub-initdb.d cds_hub psql -U cds_hub_db_admin -d cds_hub_db -f ./migration/migration.sql\n",
-                  "  or see https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."))
+      stop(paste0("The database version '", db_version, "' is older than the release version '", release_version, "'. Please update the database via migration.\n",
+                  "  See https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."))
     } else if (compare_result > 0L) { # DB is newer than release version -> allow force run
       if (!ignore_newer_db_version) {
         stop(paste0("The database version '", db_version, "' is newer than the release version '", release_version, "'. If you know what you are doing:",
@@ -604,3 +688,149 @@ checkVersion <- function(ignore_newer_db_version) {
     .lib_envir_env[["VERSION_ALREADY_CHECKED"]] <- TRUE
   }
 }
+
+###---###---###---##
+# TOOL_CHAIN_STATE #
+###---###---###---##
+
+# Environment for saving process states
+.penv <- new.env()
+
+#' Set value in process environment
+#'
+#' @param name Name of the variable.
+#' @param value Value to store.
+#'
+#' @return None.
+#'
+#' @export
+setVal <- function(name, value) {
+  .penv[[name]] <- value
+}
+
+#' Get value from process environment
+#'
+#' @param name Name of the variable.
+#'
+#' @return The stored value or `NULL` if it does not exist.
+#'
+#' @export
+getVal <- function(name) {
+  .penv[[name]]
+}
+
+#' Check if value exists in process environment
+#'
+#' @param name Name of the variable.
+#'
+#' @return `TRUE` if the value exists, otherwise `FALSE`.
+#'
+#' @export
+hasVal <- function(name) {
+  exists(name, envir = .penv, inherits = FALSE)
+}
+
+#' Add value to existing entry
+#'
+#' @param name Name of the variable.
+#' @param value Value to append.
+#'
+#' @return None.
+#'
+#' @export
+addVal <- function(name, value) {
+  old_value <- getVal(name)
+  .penv[[name]] <- c(old_value, value)
+}
+
+#' Check if value is TRUE
+#'
+#' @param name Name of the variable.
+#'
+#' @return `TRUE` if the stored value is `TRUE`, otherwise `FALSE`.
+#'
+#' @export
+isVal <- function(name) {
+  isTRUE(getVal(name))
+}
+
+#' Check if value is non-empty
+#'
+#' @param name Name of the variable.
+#'
+#' @return `TRUE` if the stored value exists and is not empty, otherwise `FALSE`.
+#'
+#' @export
+isNonEmptyVal <- function(name) {
+  if (!hasVal(name)) return(FALSE)
+  val <- getVal(name)
+  if (is.null(val) || length(val) == 0) return(FALSE)
+  if (is.character(val)) return(any(nzchar(val)))
+  if (all(is.na(val))) return(FALSE)
+  return(TRUE)
+}
+
+#' Remove value from process environment
+#'
+#' @param name Name of the variable.
+#'
+#' @return None.
+#'
+#' @export
+rmVal <- function(name) {
+  if (exists(name, envir = .penv, inherits = FALSE)) {
+    rm(list = name, envir = .penv)
+  }
+}
+
+#' Remove all values matching a pattern
+#'
+#' @param pattern Regular expression used to match variable names.
+#'
+#' @return `TRUE` if any values were removed, otherwise `FALSE`.
+#'
+#' @export
+rmAll <- function(pattern) {
+  vars <- ls(.penv, pattern = pattern)
+  if (!length(vars)) {
+    return(FALSE)
+  }
+  rm(list = vars, envir = .penv)
+  return(TRUE)
+}
+
+#' Register active process
+#'
+#' @param process_name Name of the process.
+#'
+#' @return The provided process name
+#'
+#' @export
+setProcess <- function(process_name) {
+  if (is.null(.penv[["PROCESS_NAME"]])) {
+    .penv[["PROCESS_NAME"]] <- process_name
+  }
+  process_name
+}
+
+#' Get name of the first registered process
+#'
+#' @return The name of the first registered process or `NULL` if no process
+#'   has been registered.
+#'
+#' @export
+getProcess <- function() {
+  return(getVal("PROCESS_NAME"))
+}
+
+#' Check if process is active
+#'
+#' @param process_name Name of the process.
+#'
+#' @return `TRUE` if the process is registered, otherwise `FALSE`.
+#'
+#' @export
+isProcess <- function(process_name) {
+  tolower(process_name) %in% tolower(getProcess())
+}
+

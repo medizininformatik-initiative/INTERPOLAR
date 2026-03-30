@@ -21,19 +21,17 @@
 VERBOSE               = 10 # Retrieval / analysis verbose level
 
 #################
-# Set true if every sourcing of the 00_Main file should create result directories in the
-# otuputGlobal and otuputLocal directories with a timestamp suffix. If false then every run will
-# write in the same subdirectory without a timestamp.
-# The default behavior should write in subdirectories with only the project name (false) or in or
-# in a subdirectory with the project name and the suffix '_timestamp'.
-#################
-USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
-
-#################
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 #################
 MAX_DIR_COUNT = 5
 
+#################
+# If this parameter is activated, specified tables are written as Excel files in the folder outputLocal/tables.
+# This can be used to check results from FHIR download, melting or other steps.
+# Per default, there are some tables which are written, see code sections with the function writeDebugExcelFile()
+# Write this function in relevant code sections for debugging process.
+#################
+#LOG_TEMP_EXCEL_TABLES = true
 
 [retrieve]
 
@@ -142,6 +140,14 @@ FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 #################
 #COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
 
+#################
+# Activate this parameter to test which FHIR search request for Encounter is sent to the FHIR server.
+# This will only output the request, but not execute the entire 'cds2db' module.
+# Use this to see the result of the above debug parameters or, without the debug parameters, the
+# first FHIR search request for Encounter.
+#################
+#FHIR_SEARCH_ENCOUNTER_REQUEST_TEST = true
+
 
 [retrieve.patient_id_filtering]
 
@@ -190,6 +196,31 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # This mechanism is also used for running integration tests.
 #################
 #DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
+
+[data.import]
+#Alles Nachladen (Fallebene: Fälle über FHIR-PID, FHIR-Enc-ID, FHIR-Identifier oder Zeitraum herunterladen):
+DATA_IMPORT_RANGE_START = "2025-01-01 00:00:00"
+DATA_IMPORT_RANGE_END = "2026-01-01 00:00:00"
+
+DATA_IMPORT_PATH_TO_FHIR_PIDS = ""
+DATA_IMPORT_PATH_TO_FHIR_ENC_IDS = ""
+DATA_IMPORT_PATH_TO_FHIR_IDENTIFIERS = ""
+DATA_IMPORT_FHIR_PIDS = [
+  "patient_id_1",
+  "patient_id_2",
+  "patient_id_3"
+]
+DATA_IMPORT_FHIR_ENC_IDS = [
+  "encounter_id_1",
+  "encounter_id_2",
+  "encounter_id_3"
+]
+DATA_IMPORT_FHIR_IDENTIFIERS = [
+  #"system = 'http://www.commonidentifiersystem.de'", Braucht man das?
+  "identifier1",
+  "identifier2",
+  "identifier3"
+]
 
 
 [database]

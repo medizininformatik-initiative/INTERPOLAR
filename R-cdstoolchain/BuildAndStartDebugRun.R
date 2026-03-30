@@ -38,12 +38,12 @@ buildAndInstall <- function(pkg_dir) {
   # Build source tarball and install it (like R CMD INSTALL)
   withr::with_dir(pkg_dir, {
     if (!file.exists("DESCRIPTION")) {
-      stop("No DESCRIPTION found in: ", normalizePath(pkg_dir))
+      stop("No DESCRIPTION found in: ", pkg_dir)
     }
     desc <- readLines("DESCRIPTION", warn = FALSE)
     pkg_name <- sub("^Package:\\s*", "", grep("^Package:", desc, value = TRUE))
 
-    logInfo("Processing package: ", pkg_name, " (", normalizePath(pkg_dir), ")")
+    logInfo("Processing package: ", pkg_name, " (", pkg_dir, ")")
 
     logInfo("  • Roxygenize")
     roxygen2::roxygenise()

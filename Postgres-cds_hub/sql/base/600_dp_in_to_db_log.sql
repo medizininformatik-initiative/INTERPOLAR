@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 13:24:46
--- Rights definition file size        : 16590 Byte
+-- Rights definition file last update : 2026-03-16 11:41:52
+-- Rights definition file size        : 19645 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-02-02 13:39:50
+-- Create time: 2026-03-25 13:58:58
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  base/420_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -732,6 +732,11 @@ BEGIN
                                 mrp_atc3,
                                 mrp_atc4,
                                 mrp_atc5,
+                                mrp_atc1_2026,
+                                mrp_atc2_2026,
+                                mrp_atc3_2026,
+                                mrp_atc4_2026,
+                                mrp_atc5_2026,
                                 mrp_med_prod,
                                 mrp_med_prod_sonst,
                                 mrp_dokup_fehler,
@@ -819,6 +824,11 @@ BEGIN
                                 current_record.mrp_atc3,
                                 current_record.mrp_atc4,
                                 current_record.mrp_atc5,
+                                current_record.mrp_atc1_2026,
+                                current_record.mrp_atc2_2026,
+                                current_record.mrp_atc3_2026,
+                                current_record.mrp_atc4_2026,
+                                current_record.mrp_atc5_2026,
                                 current_record.mrp_med_prod,
                                 current_record.mrp_med_prod_sonst,
                                 current_record.mrp_dokup_fehler,

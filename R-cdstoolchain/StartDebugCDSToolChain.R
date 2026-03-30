@@ -14,6 +14,8 @@ library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
+etlutils::setProcess("DebugCDSToolchain")
+
 # Reset error status
 options(error = NULL)
 
@@ -39,9 +41,10 @@ DEBUG_VM_INDEX <- 2
 ##########################
 
 DEBUG_VM_PORTS <- data.table::data.table(
-     vm_index = c(   1,     2,     3,     4,     5,     6),
-      db_port = c(5432, 25432, 35432, 45432, 55432, 25436),
-  redcap_port = c(8082, 28082, 38082, 48082, 58082, 28087)
+                  # local,   MR, FS+AXS,    TB, FS+AXS, FS+AXS, FS+AXS,   TOP
+     vm_index = c(      0,    1,      2,     3,      4,      5,      6,     7),
+      db_port = c(   5432, 5432,  25432, 35432,  45432,  55432,  25436, 15433),
+  redcap_port = c(     80, 8082,  28082,  8091,  48082,  58082,  28087,  8083)
 )
 
 DEBUG_DB_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, db_port]
@@ -54,10 +57,11 @@ DEBUG_REDCAP_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, redcap_port]
 getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCap")) {
   change_data_type <- match.arg(change_data_type)
 
-  # do not overwite the debug script name if it is already defined
+  # do not overwrite the debug script name if it is already defined
   if (change_data_type == "RAW" && exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
     return(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME)
   }
+
   if (change_data_type == "REDCap" && exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
     return(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)
   }
@@ -116,7 +120,7 @@ day_times <- c()
 
 for (debug_day_index in seq_along(DEBUG_DATES)) {
   if (exists("DEBUG_RUN_SINGLE_DAY_ONLY") && debug_day_index != DEBUG_RUN_SINGLE_DAY_ONLY) next
-  DEBUG_DAY <- debug_day_index
+  TOOLCHAIN_DAY <- debug_day_index
 
   start_day <- Sys.time()
   source("./R-cdstoolchain/StartCDSToolChain.R")
@@ -128,7 +132,7 @@ for (debug_day_index in seq_along(DEBUG_DATES)) {
 }
 end_full <- Sys.time()
 
-cat("\nAll days took:")
+cat("\nDays duration:/n")
 for (debug_day_index in seq_along(day_times)) {
   print(day_times[debug_day_index])
 }

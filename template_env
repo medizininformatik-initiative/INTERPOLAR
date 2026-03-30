@@ -1,0 +1,18 @@
+# Profile ermöglichen es gezielt Services zu starten, die in der docker-compose.yml definiert sind.
+# Default-mäßig, also bei jedem Aufruf von 'docker compose up' mit oder ohne Angabe eines Profils 
+# werden die folgenden Services gestartet:
+# cds_hub und r-env
+#
+# Profile sind z.B. für die folgenden Services verfügbar (siehe profiles Einträge in docker-compose.yml):
+# blaze-DIC, redcap, pgadmin, top-framework
+#
+# Verwendung (bitte ggf. anpassen):
+#
+# Default Services + Redcap starten
+#COMPOSE_PROFILES=redcap
+
+# Default Services + pgadmin starten (ohne redcap)
+#COMPOSE_PROFILES=pgadmin
+
+# Default Services + pgadmin + redcap starten
+#COMPOSE_PROFILES=redcap,pgadmin

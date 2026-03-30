@@ -1,3 +1,111 @@
+#' Validate ward phase definitions
+#'
+#' This function validates ward phase definitions. It checks that each
+#' definition contains exactly one non-empty `ward_name`, exactly one
+#' `phase_a_start`, and at most one `phase_b_start`. It also checks that all
+#' phase timestamps have a valid format and can be parsed as POSIXct values.
+#'
+#' @param ward_phases A list of named lists containing ward phase definitions.
+#' @param timezone A character string defining the timezone used for parsing
+#'   phase timestamps.
+#'
+#' @return Invisibly returns `TRUE` if all definitions are valid. Otherwise, the
+#'   function stops with an error describing the first invalid definition found.
+#'
+#' @examples
+#' ward_phases <- list(
+#'   list(
+#'     PHASES_WARD_1 = c(
+#'       "ward_name = 'Station 1'",
+#'       "phase_a_start = '2026-01-11 10:00:00'",
+#'       "phase_b_start = '2026-01-21 10:00:00'"
+#'     )
+#'   ),
+#'   list(
+#'     PHASES_WARD_2 = c(
+#'       "ward_name = 'Station 2'",
+#'       "phase_a_start = '2026-01-11'",
+#'       "phase_b_start = '2026-01-12'"
+#'     )
+#'   )
+#' )
+#'
+#' validateWardPhases(ward_phases, timezone = "UTC")
+#'
+#' @export
+validateWardPhases <- function(ward_phases, timezone = GLOBAL_TIMEZONE) {
+
+  parsed_records <- etlutils::parseStructuredConfigDefinitions(
+    definitions = ward_phases,
+    allowed_key_pattern = "ward_name|phase_a_start|phase_b_start",
+    allow_plus = FALSE
+  )
+
+  if (length(parsed_records) == 0L) {
+    return(invisible(TRUE))
+  }
+
+  definition_names <- unique(vapply(parsed_records, `[[`, "", "definition_name"))
+  ward_names <- character()
+
+  for (definition_name in definition_names) {
+    definition_records <- parsed_records[
+      vapply(parsed_records, `[[`, "", "definition_name") == definition_name
+    ]
+
+    keys <- vapply(definition_records, `[[`, "", "key")
+
+    ward_name_records <- definition_records[keys == "ward_name"]
+    phase_a_records <- definition_records[keys == "phase_a_start"]
+    phase_b_records <- definition_records[keys == "phase_b_start"]
+
+    if (length(ward_name_records) != 1L) {
+      stop("Definition ", definition_name," must contain exactly one ward_name, but contains ",length(ward_name_records), ".")
+    }
+
+    if (length(phase_a_records) != 1L) {
+      stop("Definition ", definition_name," must contain exactly one phase_a_start, but contains ",length(phase_a_records), ".")
+    }
+
+    if (length(phase_b_records) > 1L) {
+      stop("Definition ", definition_name," must contain at most one phase_b_start, but contains ",length(phase_b_records), ".")
+    }
+
+    ward_name_record <- ward_name_records[[1]]
+    phase_a_record <- phase_a_records[[1]]
+
+    if (trimws(ward_name_record$value) == "") {
+      stop("ward_name must not be empty in ", ward_name_record$definition_name, " / ",ward_name_record$entry_name, " / line ", ward_name_record$line_index)
+    }
+
+    if (ward_name_record$value %in% ward_names) {
+      stop("Duplicate ward_name found: '", ward_name_record$value, "'.")
+    }
+
+    phase_a_start <- etlutils::parseTimestamp(phase_a_record$value)
+    if (is.na(phase_a_start)) {
+      stop("phase_a_start is not a valid date/time in ", phase_a_record$definition_name, " / ", phase_a_record$entry_name, " / line ", phase_a_record$line_index, ": ", phase_a_record$value)
+    }
+
+    if (length(phase_b_records) == 1L) {
+      phase_b_record <- phase_b_records[[1]]
+      phase_b_start <- etlutils::parseTimestamp(phase_b_record$value)
+
+      if (is.na(phase_b_start)) {
+        stop("phase_b_start is not a valid date/time in ", phase_b_record$definition_name, " / ", phase_b_record$entry_name, " / line ", phase_b_record$line_index, ": ", phase_b_record$value)
+      }
+
+      if (phase_b_start < phase_a_start) {
+        stop("phase_b_start must not be earlier than phase_a_start in ",definition_name, ".")
+      }
+    }
+
+    ward_names <- c(ward_names, ward_name_record$value)
+  }
+
+  invisible(TRUE)
+}
+
 # This function constructs an error or warning message with optional additional
 # information such as related tables and database connection details. It can be
 # used to provide more context when reporting errors or warnings.
@@ -24,7 +132,7 @@ parseQueryList <- function(list_string, split = " ") {
   etlutils::fhirdbGetQueryList(splitted)
 }
 
-#' Get the most relevant current datetime
+#' Get the end datetime of the given encounters
 #'
 #' This function retrieves the latest encounter end datetime from the `encounters` table.
 #' If no valid end datetime is available, it defaults to the current system time (`Sys.time()`).
@@ -40,7 +148,7 @@ parseQueryList <- function(list_string, split = " ") {
 #' @return A `POSIXct` object representing the most recent encounter end datetime
 #'         or the current system time if no valid datetime is found.
 #'
-getCurrentDatetime <- function(encounters) {
+getEncountersPeriodEnd <- function(encounters) {
   encounters_end <- na.omit(encounters$enc_period_end)
   sys_time <- Sys.time()
   datetime <- if (length(encounters_end)) etlutils::getMaxDatetime(encounters_end) - 1 else sys_time
@@ -53,7 +161,7 @@ getCurrentDatetime <- function(encounters) {
 
 #' Format datetime for SQL queries for Observations.
 #'
-#' This function formats the datetime returned by `getCurrentDatetime()` into an SQL-compatible
+#' This function formats the datetime returned by `getEncountersEndDatetime()` into an SQL-compatible
 #' timestamp string in the format `"YYYY-MM-DD HH:MM:SS"`.
 #'
 #' @param encounters A `data.table` or `data.frame` containing encounter records.
@@ -62,7 +170,8 @@ getCurrentDatetime <- function(encounters) {
 #' @return A character string representing the formatted SQL datetime.
 #'
 getObservationQueryDatetime <- function(encounters) {
-  format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
+  encounters_end <- getEncountersPeriodEnd(encounters)
+  format(encounters_end, "%Y-%m-%d %H:%M:%S")
 }
 
 #' Load Resources Last Version From Database Query
@@ -186,34 +295,4 @@ loadExistingRecordIDsFromDB <- function(pat_ids) {
   query <- paste0("SELECT pat_id, record_id FROM v_patient_fe WHERE pat_id IN ", query_ids)
   existing_record_ids <- etlutils::dbGetReadOnlyQuery(query, lock_id = "loadExistingRecordIDsFromDB()")
   return(existing_record_ids)
-}
-
-#
-# Get the study phase for a unique ward_name from defined toml parameters.
-#
-getStudyPhase <- function(ward_name) {
-  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_A") && ward_name %in% WARDS_PHASE_A) {
-    return("PhaseA")
-  }
-  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST") && ward_name %in% WARDS_PHASE_B_TEST) {
-    return("PhaseBTest")
-  }
-  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B") && ward_name %in% WARDS_PHASE_B) {
-    return("PhaseB")
-  }
-  return(NULL)
-}
-
-#
-# Check if the study has no or not only Phase A wards defined in the configuration.
-#
-hasPhaseBOrBTestWards <- function() {
-  return(etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B") || etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST"))
-}
-
-#
-# Check if the study has Phase B wards defined in the configuration.
-#
-isPhaseBActive <- function() {
-  return(etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B"))
 }

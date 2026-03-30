@@ -1,33 +1,3 @@
-#' Get Current Datetime
-#'
-#' This function returns the current datetime. If the global variable `DEBUG_ENCOUNTER_DATETIME_START` exists, it returns its value as a POSIXct object.
-#' Otherwise, it returns the current system time.
-#'
-#' @return A POSIXct object representing the current datetime or the value of `DEBUG_ENCOUNTER_DATETIME_START` if it exists.
-#'
-getCurrentDatetime <- function() {
-  start_datetime <- etlutils::as.POSIXctWithTimezone(Sys.time())
-  if (exists('DEBUG_ENCOUNTER_DATETIME_START')) {
-    start_datetime <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME_START)
-    if (exists('DEBUG_ENCOUNTER_DATETIME_END') && nchar(DEBUG_ENCOUNTER_DATETIME_END) > 0) {
-      end_datetime <- etlutils::as.POSIXctWithTimezone(DEBUG_ENCOUNTER_DATETIME_END)
-      return(c(start_datetime = start_datetime, end_datetime = end_datetime))
-    }
-  }
-  return(c(start_datetime = start_datetime))
-}
-
-#' Get Query Datetime
-#'
-#' This function returns the current datetime formatted for SQL queries.
-#' It retrieves the current datetime using the \code{getCurrentDatetime} function and formats it as a string in "YYYY-MM-DD HH:MM:SS" format.
-#'
-#' @return A character string representing the current datetime formatted for SQL queries.
-#'
-getQueryDatetime <- function() {
-  format(getCurrentDatetime(), "%Y-%m-%d %H:%M:%S")
-}
-
 #' Get active encounter patient IDs from the database
 #'
 #' This function retrieves patient IDs from encounters that are active based on
@@ -44,7 +14,7 @@ getQueryDatetime <- function() {
 getActiveEncounterPIDsFromDB <- function() {
   # Get current or debug datetime
   query_datetime <- getQueryDatetime()
-  datetime <- query_datetime[["start_datetime"]]
+  datetime <- query_datetime[["period_start"]]
 
   encounter_class_condition <- ""
   if (exists("FHIR_SEARCH_ENCOUNTER_CLASS")) {
@@ -435,7 +405,7 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
 
   # This variable should be set to change the downloaded RAW data for DEBUG
   # purposes. It contains paths to scripts that is sourced at this point in the given order.
-  if (exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME") && length(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME)) {
+  if (etlutils::isDefinedAndNotEmpty("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
     source(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME, local = TRUE)
   }
 
@@ -569,7 +539,7 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
   #######################
 
   for (i in seq_along(resource_tables)) {
-    writeRData(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
+    etlutils::writeDebugExcelFile(resource_tables[[i]], tolower(paste0(names(resource_tables)[i], "_raw")))
   }
   return(resource_tables)
 }

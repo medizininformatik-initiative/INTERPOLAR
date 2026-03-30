@@ -19,20 +19,17 @@
 VERBOSE               = 10 # Retrieval / analysis verbose level
 
 #################
-# Set true if every sourcing of the 00_Main file should create result
-# directories in the otuputGlobal and otuputLocal directores with a timestamp
-# suffix. If false then every run will write in the same subdirectory without
-# a timestamp. The default behaviour should write in subdirectories with only
-# the project name (false) or in or in a subdirectory with the project name
-# and the suffix '_timestamp'. (true)
-#################
-USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
-
-#################
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 #################
 MAX_DIR_COUNT = 5
 
+#################
+# If this parameter is activated, specified tables are written as Excel files in the folder outputLocal/tables.
+# This can be used to check results from FHIR download, melting or other steps.
+# Per default, there are some tables which are written, see code sections with the function writeDebugExcelFile()
+# Write this function in relevant code sections for debugging process.
+#################
+#LOG_TEMP_EXCEL_TABLES = true
 
 [database]
 
