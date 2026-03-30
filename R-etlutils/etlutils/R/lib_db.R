@@ -177,12 +177,12 @@ dbGetConnection <- function(readonly = FALSE) {
   schema_name <- if (readonly) .lib_db_env[["DB_SCHEMA_OUT"]] else .lib_db_env[["DB_SCHEMA_IN"]]
 
   dbLog(
-    "Attempting to connect with: \n",
-    "dbname=", .lib_db_env[["DB_NAME"]], "\n",
-    "host=", .lib_db_env[["DB_HOST"]], "\n",
-    "port=", dbGetPort(), "\n",
-    "user=", .lib_db_env[["DB_USER"]], "\n",
-    "schema=", schema_name, "\n"
+    "Attempting to connect with:",
+    " dbname=", .lib_db_env[["DB_NAME"]],
+    " host=", .lib_db_env[["DB_HOST"]],
+    " port=", dbGetPort(),
+    " user=", .lib_db_env[["DB_USER"]],
+    " schema=", schema_name, "\n"
   )
 
   db_connection <- DBI::dbConnect(
@@ -213,11 +213,11 @@ dbGetConnection <- function(readonly = FALSE) {
 #'
 dbGetAdminConnection <- function() {
   dbLog(
-    "Attempting to connect with admin user: \n",
-    "dbname=", .lib_db_env[["DB_NAME"]], "\n",
-    "host=", .lib_db_env[["DB_HOST"]], "\n",
-    "port=", dbGetPort(), "\n",
-    "user=", .lib_db_env[["DB_ADMIN_USER"]], "\n"
+    "Attempting to connect with admin user:",
+    " dbname=", .lib_db_env[["DB_NAME"]],
+    " host=", .lib_db_env[["DB_HOST"]],
+    " port=", dbGetPort(),
+    " user=", .lib_db_env[["DB_ADMIN_USER"]], "\n"
   )
 
   admin_connection <- DBI::dbConnect(
@@ -799,26 +799,6 @@ dbDeleteContent <- function(table_name, lock_id = NULL) {
 #'   regular connection. Default is `FALSE`.
 #'
 #' @return The result returned by the provided `db_call` function.
-#'
-#' @examples
-#' # Example: simple query
-#' result <- dbWithRetry(
-#'   db_call = function(db_connection) {
-#'     DBI::dbGetQuery(db_connection, "SELECT 1;")
-#'   },
-#'   call_label = "DBI::dbGetQuery",
-#'   sql = "SELECT 1;",
-#'   readonly = TRUE
-#' )
-#'
-#' # Example: write operation
-#' dbWithRetry(
-#'   db_call = function(db_connection) {
-#'     DBI::dbExecute(db_connection, "DELETE FROM my_table;")
-#'   },
-#'   call_label = "DBI::dbExecute",
-#'   sql = "DELETE FROM my_table;"
-#' )
 #'
 dbWithRetry <- function(db_call,
                         call_label,
@@ -1483,6 +1463,7 @@ dbGetInfo <- function(readonly = TRUE) {
 
   return(log_message)
 }
+
 #' Reset the database by truncating tables in specified schemas or by explicit table list.
 #'
 #' This function connects to the database using `dbGetAdminConnection()` and removes
@@ -1512,87 +1493,51 @@ dbGetInfo <- function(readonly = TRUE) {
 #'
 #' @export
 dbReset <- function(tables_with_schema = NULL) {
+  con <- dbGetAdminConnection()
+  on.exit(  invisible(try(suppressWarnings(DBI::dbDisconnect(con)), silent = TRUE)), add = TRUE)
+
   lock_id <- "Clear database"
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id), add = TRUE)
 
-  tables <- dbWithRetry(
-    db_call = function(db_connection) {
-      if (is.null(tables_with_schema)) {
-        # Convert schemas vector into SQL-friendly format
-        schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
-        query <- paste0(
-          "SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (",
-          schema_list,
-          ");"
-        )
+  if (is.null(tables_with_schema)) {
+    # Convert schemas vector into SQL-friendly format
+    schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
+    query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")
 
-        return(data.table::as.data.table(DBI::dbGetQuery(db_connection, query)))
-      }
-
-      data.table::data.table(full = tables_with_schema)[
-        , c("schemaname", "tablename") := data.table::tstrsplit(full, ".", fixed = TRUE)
-      ][, !"full"]
-    },
-    call_label = "DBI::dbGetQuery",
-    sql = if (is.null(tables_with_schema)) {
-      "SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (...)"
-    } else {
-      "PARSE PROVIDED TABLE LIST"
-    },
-    admin = TRUE
-  )
+    # Get all tables to clear
+    tables <- DBI::dbGetQuery(con, query)
+  } else {
+    tables <- data.table::data.table(full = tables_with_schema)[
+      , c("schemaname", "tablename") := data.table::tstrsplit(full, ".", fixed = TRUE)][, !"full"]
+  }
 
   # Clear all tables in the provided schemas
   for (i in seq_len(nrow(tables))) {
     schema <- tables$schemaname[i]
     table_name <- tables$tablename[i]
 
-    truncate_statement <- paste0(
-      "TRUNCATE TABLE ", schema, ".", table_name, " RESTART IDENTITY CASCADE;"
-    )
+    truncate_statement <- paste0("TRUNCATE TABLE ", schema, ".", table_name, " RESTART IDENTITY CASCADE;")
 
-    tryCatch(
-      {
-        dbWithRetry(
-          db_call = function(db_connection) {
-            DBI::dbExecute(db_connection, truncate_statement)
-          },
-          call_label = "DBI::dbExecute",
-          sql = truncate_statement,
-          admin = TRUE
-        )
-      },
-      error = function(error) {
-        message("Error truncating table: ", schema, ".", table_name)
-        message("Error message: ", conditionMessage(error))
-      }
-    )
+    tryCatch({
+      DBI::dbExecute(con, truncate_statement)
+    }, error = function(e) {
+      message("Error truncating table: ", schema, ".", table_name)
+      message("Error message: ", e$message)
+    })
   }
 
   # Check if tables still contain data after truncation
-  remaining_data <- data.table::data.table()
+  remaining_data <- data.table()
   for (i in seq_len(nrow(tables))) {
     schema <- tables$schemaname[i]
     table_name <- tables$tablename[i]
-    query <- paste0("SELECT COUNT(*) AS row_count FROM ", schema, ".", table_name, ";")
 
-    row_count <- dbWithRetry(
-      db_call = function(db_connection) {
-        DBI::dbGetQuery(db_connection, query)$row_count
-      },
-      call_label = "DBI::dbGetQuery",
-      sql = query,
-      admin = TRUE
-    )
+    query <- paste0("SELECT COUNT(*) AS row_count FROM ", schema, ".", table_name, ";")
+    row_count <- DBI::dbGetQuery(con, query)$row_count
 
     if (row_count > 0) {
-      remaining_data <- data.table::rbindlist(
-        list(
-          remaining_data,
-          data.table::data.table(SCHEMA = schema, TABLE = table_name, ROWS = row_count)
-        )
-      )
+      remaining_data <- data.table::rbindlist(list(remaining_data, data.table(SCHEMA = schema, TABLE = table_name, ROWS = row_count)))
     }
   }
 
@@ -1604,6 +1549,7 @@ dbReset <- function(tables_with_schema = NULL) {
     print("All tables have been successfully truncated.")
   }
 }
+
 #' Remove Special Characters from a SQL comment.
 #'
 #' This function removes potentially problematic special characters from SQL comment strings.
