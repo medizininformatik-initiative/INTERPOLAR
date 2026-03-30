@@ -437,7 +437,7 @@ writeHtmlPage <- function(html_content_list, output_location = "local",
     )
 
     widget <- htmlwidgets::prependContent(widget, page)
-    output_html <- fhircrackr::pastep(project_sub_dir, pagename, ext = paste0("_", Sys.Date(), ".html"))
+    output_html <- fhircrackr::pastep(module_sub_dir, pagename, ext = paste0("_", Sys.Date(), ".html"))
     htmlwidgets::saveWidget(
       widget = widget,
       file = output_html,
