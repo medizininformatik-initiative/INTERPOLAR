@@ -207,6 +207,38 @@ initSubmoduleConstants <- function(path_to_toml, defaults = c(), envir = .Global
   return(constants)
 }
 
+#' Get Variables by Prefix
+#'
+#' Retrieves variables from a given environment whose names start with a specified prefix.
+#' The result can be returned either as a named list or as a flattened named vector.
+#'
+#' @param prefix Character string defining the prefix that variable names must start with.
+#' @param astype Character string specifying the return type. Either "list" (default)
+#' or "vector". If "vector" is chosen, the result is flattened via unlist().
+#' @param envir Environment from which variables should be retrieved. Defaults to .GlobalEnv.
+#'
+#' @return A named list or named vector containing the matched variables and their values.
+#'
+#' @export
+getVariablesByPrefix <- function(prefix, astype = c("list", "vector"), envir = .GlobalEnv) {
+  astype <- match.arg(astype)
+  vars <- ls(envir) # Get all variables
+  matching_vars <- grep(paste0("^", prefix), vars, value = TRUE) # Match variables with the prefix
+  result_list <- lapply(matching_vars, function(var_name) {
+    if (is.environment(envir)) {
+      var_value <- get(var_name, envir = envir) # Get the variable value
+    } else {
+      var_value <- envir[[var_name]] # Get the variable value from the current environment
+    }
+    setNames(list(var_value), var_name) # Create a named list element
+  })
+  # Return as vector if specified
+  if (astype %in% "vector") {
+    return(unlist(result_list))
+  }
+  return(result_list) # Default return as list
+}
+
 #' Get Global Variables by Prefix
 #'
 #' This function retrieves all global variables from the environment that match a given prefix and returns them as either a list or a vector.
@@ -226,18 +258,7 @@ initSubmoduleConstants <- function(path_to_toml, defaults = c(), envir = .Global
 #'
 #' @export
 getGlobalVariablesByPrefix <- function(prefix, astype = c("list", "vector")) {
-  astype <- match.arg(astype)
-  global_vars <- ls(globalenv()) # Get all global variables
-  matching_vars <- grep(paste0("^", prefix), global_vars, value = TRUE) # Match variables with the prefix
-  result_list <- lapply(matching_vars, function(var_name) {
-    var_value <- get(var_name, envir = globalenv()) # Get the variable value
-    setNames(list(var_value), var_name) # Create a named list element
-  })
-  # Return as vector if specified
-  if (astype %in% "vector") {
-    return(unlist(result_list))
-  }
-  return(result_list) # Default return as list
+  getVariablesByPrefix(prefix, astype, envir = .GlobalEnv)
 }
 
 #' Get the value of a variable by name or a default value if the variable is missing.
