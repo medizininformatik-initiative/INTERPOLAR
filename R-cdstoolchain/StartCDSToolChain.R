@@ -224,6 +224,6 @@ if (!etlutils::isErrorOccured()) {
   status <- 1
 }
 
-if (!interactive() && !etlutils::isProcess("FullToolchain")) {
+if (!interactive() && etlutils::isProcess("FullToolchain")) {
   quit(status = status, save = "no")
 }
