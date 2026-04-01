@@ -153,7 +153,7 @@ extractPIDsSplittedByWard <- function(encounters, all_wards_filter_patterns) {
     etlutils::writeDebugExcelFile(ward_encounters, paste0("pid_source_encounter_filtered_", i))
 
     # Create a data.table with PID and Encounter ID
-    dt <- data.table(
+    dt <- data.table::data.table(
       patient_id = ward_encounters$`subject/reference`,
       encounter_id = ward_encounters$id
     )

@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 10:00:19
--- Rights definition file size        : 16573 Byte
+-- Rights definition file last update : 2026-03-16 11:41:52
+-- Rights definition file size        : 19645 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2026-02-02 10:26:03
+-- Create time: 2026-03-25 13:58:22
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  base/400_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1116,6 +1116,36 @@ BEGIN
             ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ADD mrp_atc5 varchar;   -- 5. Medikament ATC / Name (varchar)
         END IF; -- column (mrp_atc5)
 
+        IF NOT EXISTS ( -- column not exists (mrp_atc1_2026)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'mrp_atc1_2026'
+        ) THEN
+            ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ADD mrp_atc1_2026 varchar;   -- 1. Medikament ATC / Name*: (varchar)
+        END IF; -- column (mrp_atc1_2026)
+
+        IF NOT EXISTS ( -- column not exists (mrp_atc2_2026)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'mrp_atc2_2026'
+        ) THEN
+            ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ADD mrp_atc2_2026 varchar;   -- 2. Medikament ATC / Name: (varchar)
+        END IF; -- column (mrp_atc2_2026)
+
+        IF NOT EXISTS ( -- column not exists (mrp_atc3_2026)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'mrp_atc3_2026'
+        ) THEN
+            ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ADD mrp_atc3_2026 varchar;   -- 3. Medikament ATC / Name: (varchar)
+        END IF; -- column (mrp_atc3_2026)
+
+        IF NOT EXISTS ( -- column not exists (mrp_atc4_2026)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'mrp_atc4_2026'
+        ) THEN
+            ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ADD mrp_atc4_2026 varchar;   -- 4. Medikament ATC / Name: (varchar)
+        END IF; -- column (mrp_atc4_2026)
+
+        IF NOT EXISTS ( -- column not exists (mrp_atc5_2026)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'mrp_atc5_2026'
+        ) THEN
+            ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe ADD mrp_atc5_2026 varchar;   -- 5. Medikament ATC / Name: (varchar)
+        END IF; -- column (mrp_atc5_2026)
+
         IF NOT EXISTS ( -- column not exists (mrp_med_prod)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db2dataprocessor_in' AND table_name = 'mrpdokumentation_validierung_fe' AND column_name = 'mrp_med_prod'
         ) THEN
@@ -1506,6 +1536,11 @@ BEGIN
           COALESCE(db.to_char_immutable(mrp_atc3), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_atc4), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_atc5), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(mrp_atc1_2026), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(mrp_atc2_2026), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(mrp_atc3_2026), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(mrp_atc4_2026), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(mrp_atc5_2026), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_med_prod), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_med_prod_sonst), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(mrp_dokup_fehler), ''#NULL#'') || ''|||'' ||
@@ -1595,6 +1630,11 @@ BEGIN
           COALESCE(db.to_char_immutable(mrp_atc3), '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name (mrp_atc3)
           COALESCE(db.to_char_immutable(mrp_atc4), '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name (mrp_atc4)
           COALESCE(db.to_char_immutable(mrp_atc5), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name (mrp_atc5)
+          COALESCE(db.to_char_immutable(mrp_atc1_2026), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name*: (mrp_atc1_2026)
+          COALESCE(db.to_char_immutable(mrp_atc2_2026), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name: (mrp_atc2_2026)
+          COALESCE(db.to_char_immutable(mrp_atc3_2026), '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name: (mrp_atc3_2026)
+          COALESCE(db.to_char_immutable(mrp_atc4_2026), '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name: (mrp_atc4_2026)
+          COALESCE(db.to_char_immutable(mrp_atc5_2026), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name: (mrp_atc5_2026)
           COALESCE(db.to_char_immutable(mrp_med_prod), '#NULL#') || '|||' || -- hash from: Medizinprodukt betroffen? (mrp_med_prod)
           COALESCE(db.to_char_immutable(mrp_med_prod_sonst), '#NULL#') || '|||' || -- hash from: Bezeichnung Präparat (mrp_med_prod_sonst)
           COALESCE(db.to_char_immutable(mrp_dokup_fehler), '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung  (mrp_dokup_fehler)
@@ -1690,6 +1730,11 @@ BEGIN
           COALESCE(db.to_char_immutable(mrp_atc3), '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name (mrp_atc3)
           COALESCE(db.to_char_immutable(mrp_atc4), '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name (mrp_atc4)
           COALESCE(db.to_char_immutable(mrp_atc5), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name (mrp_atc5)
+          COALESCE(db.to_char_immutable(mrp_atc1_2026), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name*: (mrp_atc1_2026)
+          COALESCE(db.to_char_immutable(mrp_atc2_2026), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name: (mrp_atc2_2026)
+          COALESCE(db.to_char_immutable(mrp_atc3_2026), '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name: (mrp_atc3_2026)
+          COALESCE(db.to_char_immutable(mrp_atc4_2026), '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name: (mrp_atc4_2026)
+          COALESCE(db.to_char_immutable(mrp_atc5_2026), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name: (mrp_atc5_2026)
           COALESCE(db.to_char_immutable(mrp_med_prod), '#NULL#') || '|||' || -- hash from: Medizinprodukt betroffen? (mrp_med_prod)
           COALESCE(db.to_char_immutable(mrp_med_prod_sonst), '#NULL#') || '|||' || -- hash from: Bezeichnung Präparat (mrp_med_prod_sonst)
           COALESCE(db.to_char_immutable(mrp_dokup_fehler), '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung  (mrp_dokup_fehler)
@@ -3631,6 +3676,11 @@ COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc2 I
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc3 IS '3. Medikament ATC / Name (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc4 IS '4. Medikament ATC / Name (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc5 IS '5. Medikament ATC / Name (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc1_2026 IS '1. Medikament ATC / Name*: (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc2_2026 IS '2. Medikament ATC / Name: (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc3_2026 IS '3. Medikament ATC / Name: (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc4_2026 IS '4. Medikament ATC / Name: (varchar)';
+COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_atc5_2026 IS '5. Medikament ATC / Name: (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_med_prod IS 'Medizinprodukt betroffen? (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_med_prod_sonst IS 'Bezeichnung Präparat (varchar)';
 COMMENT ON COLUMN db2dataprocessor_in.mrpdokumentation_validierung_fe.mrp_dokup_fehler IS 'Frage / Fehlerbeschreibung  (varchar)';
