@@ -135,6 +135,7 @@ dbIsRunCronJobImmediately <- function() {
 #' @param ... Character strings to be logged. These strings are concatenated
 #'        and printed if logging is enabled. If no arguments are provided,
 #'        the function only returns the logging status.
+#' @param dont_repeat_key An optional character string key to prevent repeated logging
 #'
 #' @return Logical. \code{TRUE} if logging is enabled, \code{FALSE} otherwise.
 #'
@@ -147,12 +148,20 @@ dbIsRunCronJobImmediately <- function() {
 #' dbLog()                            # Returns TRUE (since logging is enabled)
 #'
 #' @export
-dbLog <- function(...) {
+dbLog <- function(..., dont_repeat_key = NULL) {
   log <- isDefinedAndTrue("DB_LOG", envir = .lib_db_env)
   if (length(list(...)) > 0 && log) {
     message <- paste0(...)
     message <- ifelse(endsWith(message, "\n"), message, paste0(message, "\n"))
-    cat(message, sep = "")
+    if (!is.null(dont_repeat_key)) {
+      last_message <- .lib_db_env[[paste0("LAST_LOG_MESSAGE_", dont_repeat_key)]]
+      if (!identical(last_message, message)) {
+        .lib_db_env[[paste0("LAST_LOG_MESSAGE_", dont_repeat_key)]] <- message
+        cat(message, sep = "")
+      }
+    } else {
+      cat(message, sep = "")
+    }
   }
   return(log)
 }
@@ -182,7 +191,8 @@ dbGetConnection <- function(readonly = FALSE) {
     " host=", .lib_db_env[["DB_HOST"]],
     " port=", dbGetPort(),
     " user=", .lib_db_env[["DB_USER"]],
-    " schema=", schema_name, "\n"
+    " schema=", schema_name, "\n",
+    dont_repeat_key = "dbGetConnection()"
   )
 
   db_connection <- DBI::dbConnect(
@@ -903,7 +913,7 @@ dbWithRetry <- function(db_call,
 dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id, readonly), add = TRUE)
-  dbLog("dbExecute:\n", statement)
+  dbLog("dbExecute:\n", statement, dont_repeat_key = "dbExecute()")
   dbWithRetry(
     db_call = function(db_connection) {
       DBI::dbExecute(db_connection, statement)
@@ -942,7 +952,8 @@ dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id, readonly), add = TRUE)
   dbLog("dbGetQuery:\n", query,
-        if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")))
+        if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")),
+        dont_repeat_key = "dbGetQuery()")
   table <- dbWithRetry(
     db_call = function(db_connection) {
       data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
