@@ -403,8 +403,8 @@ getFallFeData <- function(lock_id, table_name) {
 
   if (any(is.na(fall_fe_table$actual_fall_studienphase)) ||
     any(fall_fe_table$actual_fall_studienphase == "PhaseBTest")) {
-    warning("The calculated study phase (first one) in ward specific last version view of fall_fe table
-            (manually created) contains NA and PhaseBTest values. These will be replaced with 'PhaseA'.")
+    warning("The study phase from fall_fe contains NA or PhaseBTest values. These will be replaced with 'PhaseA'.
+            For manual check compare fall_studienphase and actual_fall_studienphase in frontend_table in outpulLocal.")
 
     fall_fe_table <- fall_fe_table |>
       dplyr::mutate(actual_fall_studienphase = dplyr::if_else(
