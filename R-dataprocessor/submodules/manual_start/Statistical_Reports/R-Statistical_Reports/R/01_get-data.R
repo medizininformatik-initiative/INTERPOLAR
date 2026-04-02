@@ -252,6 +252,71 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
 
 #------------------------------------------------------------------------------#
 
+#' Retrieve Consent Data from Database
+#'
+#' Executes a read-only SQL query to retrieve consent-related data from the
+#' specified database table. The function throws a warning if the resulting data frame is empty.
+#'
+#' @param lock_id Character string used to identify the database access lock
+#'   for the query.
+#' @param table_name Character string specifying the name of the database
+#'   table containing consent data.
+#'
+#' @return A data frame containing consent information with duplicate rows
+#'   removed.
+#' The returned data frame includes the following columns:
+#' - `cons_patient_ref`: Reference to the patient resource.
+#' - `cons_status`: Status of the consent resource (e.g., "active").
+#' - `cons_provision_provision_type`: Type of provision (e.g., "permit").
+#' - `cons_provision_provision_code_system`: Code system for the provision code (e.g., "urn:oid:2.16.840.1.113883.3.1937.777.24.5.3").
+#' - `cons_provision_provision_code_code`: Specific provision code (e.g., "2.16.840.1.113883.3.1937.777.24.5.3.8" for "MDAT wissenschaftlich nutzen").
+#'    (see https://www.medizininformatik-initiative.de/Kerndatensatz/KDS_Consent_2026/MIIIGModulConsent-TechnischeImplementierung-Terminologien.html)
+#' - `cons_provision_provision_period_start`: Start date of the provision period.
+#' - `cons_provision_provision_period_end`: End date of the provision period.
+#'
+#' @details
+#' The function constructs and executes a SQL query using
+#' `etlutils::dbGetReadOnlyQuery()` to retrieve selected consent-related
+#' variables, including patient reference, consent status, provision type,
+#' provision codes, and provision period start and end dates.
+#'
+#' After retrieval, duplicate rows are removed using `distinct()` to ensure
+#' a clean dataset for downstream processing.
+#'
+#' Additional consent variables not used at the moment:
+#' - `cons_scope_code` for the scope of the consent (e.g., "research").
+#' - `cons_category_system` `(https://www.medizininformatik-initiative.de/fhir/modul-consent/CodeSystem/mii-cs-consent-version-modules)
+#'    and `cons_category_code` (2.16.840.1.113883.3.1937.777.24.2.184) for general MII broad consent information.
+#' - `cons_policy_uri` for specific policies related to the consent, such as different versions of the MII Broad Consent.
+#'    (urn:oid:2.16.840.1.113883.3.1937.777.24.2.1790 (MII Broad Consent Version 1.6d);
+#'    urn:oid:2.16.840.1.113883.3.1937.777.24.2.1791 (MII Broad Consent Version 1.6f);
+#'    urn:oid:2.16.840.1.113883.3.1937.777.24.2.2079 (MII Broad Consent Version 1.7.2))
+#' -  `cons_provision_period_start`, `cons_provision_period_end`: broader level of vallidity period
+#'
+#' @importFrom dplyr distinct
+#' @importFrom etlutils dbGetReadOnlyQuery
+#'
+#' @export
+getConsentData <- function(lock_id, table_name) {
+  query <- paste0(
+    "SELECT cons_patient_ref, cons_status, cons_provision_provision_type, ",
+    "cons_provision_provision_code_system, cons_provision_provision_code_code, ",
+    "cons_provision_provision_period_start, cons_provision_provision_period_end ",
+    "FROM ", table_name, "\n"
+  )
+
+  consent_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct()
+
+  if (nrow(consent_table) == 0) {
+    warning("The processed consent table is empty. Please check the data.")
+  }
+
+  return(consent_table)
+}
+
+#------------------------------------------------------------------------------#
+
 #' Retrieve Patient IDs Per Ward Data
 #'
 #' This function retrieves patient data associated with wards, including the ward name,

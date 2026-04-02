@@ -175,6 +175,10 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     table_name = "v_retrolektive_mrpbewertung_fe_last_version"
   )
 
+  consent_table <- getConsentData(
+    lock_id = "statistical reports[9]",
+    table_name = "v_consent_last_version"
+  )
   FHIR_table <- mergePatEnc(patient_table, encounter_table) |>
     addCuratedEncPeriodEnd() |>
     addMainEncId() |>
@@ -216,7 +220,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       result_variable_name = "multiple_medas_per_patient"
     ) |>
     addMRPDokuData(mrp_dokumentation_validierung_fe_table) |>
-    addRetrolektiveMRPBewertungData(retrolektive_mrpbewertung_fe_table)
+    addRetrolektiveMRPBewertungData(retrolektive_mrpbewertung_fe_table) |>
+    addBroadConsentInformation(consent_table)
+
 
   frontend_summary_data <- prepareFeSummaryData(
     frontend_table, REPORT_PERIOD_START,
@@ -301,6 +307,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     colnames = c(
       "ward", "patients",
       "censored patients (n < 5)",
+      "consent given (MDAT wissenschaftlich nutzen)",
       "encounters",
       "processing excluded encounters (linkage issues)",
       "not meeting inclusion criteria (patient underage)",
@@ -340,6 +347,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     colnames = c(
       "ward", "calendar week", "patients",
       "censored patients (n < 5)",
+      "consent given (MDAT wissenschaftlich nutzen)",
       "encounters",
       "processing excluded encounters (linkage issues)",
       "not meeting inclusion criteria (patient underage)",

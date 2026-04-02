@@ -1234,3 +1234,58 @@ addRetrolektiveMRPBewertungData <- function(merged_fe_pat_fall_meda_table_with_e
 
   return(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku_retrolektive)
 }
+
+#------------------------------------------------------------------------------#
+
+#' Add Broad Consent Information to Front-End Data
+#'
+#' Enriches a front-end dataset with information on whether a patient has
+#' given valid broad consent for scientific use of their data.
+#'
+#' @param frontend_tablend A data frame containing front-end data with a
+#'   `pat_id` column.
+#' @param consent_table A data frame containing consent information,
+#'   including patient references, consent status, provision details, and
+#'   validity periods.
+#'
+#' @return A data frame identical to `frontend_tablend` with an additional
+#'   logical column `MDAT_wissenschaftlich_nutzen`, indicating whether the
+#'   patient has a currently valid consent for his Policy.
+#'
+#' @details
+#' The function extracts patient IDs from the consent table by removing the
+#' `"Patient/"` prefix from `cons_patient_ref`. It then filters for active
+#' consents that:
+#' \itemize{
+#'   \item have status `"active"`
+#'   \item are of type `"permit"`
+#'   \item match a specific consent code system and code
+#'   \item are currently valid based on the provision period (`start <= now < end`)
+#' }
+#'
+#' The resulting set of patient IDs is used to create a new logical variable
+#' in the front-end dataset, indicating whether each patient has valid broad
+#' consent at the current time.
+#'
+#' @importFrom dplyr mutate filter distinct pull
+#'
+#' @export
+addBroadConsentInformation <- function(frontend_tablend, consent_table) {
+  consent_pids <- consent_table |>
+    dplyr::mutate(pat_id = sub("^Patient/", "", cons_patient_ref), .keep = "unused") |>
+    dplyr::filter(
+      cons_status == "active",
+      cons_provision_provision_type == "permit",
+      cons_provision_provision_code_system == "urn:oid:2.16.840.1.113883.3.1937.777.24.5.3",
+      cons_provision_provision_code_code == "2.16.840.1.113883.3.1937.777.24.5.3.8",
+      cons_provision_provision_period_start <= as.POSIXct(Sys.time()),
+      cons_provision_provision_period_end > as.POSIXct(Sys.time())
+    ) |>
+    dplyr::distinct(pat_id) |>
+    dplyr::pull(pat_id)
+
+  frontend_tablend_with_consent <- frontend_tablend |>
+    dplyr::mutate(MDAT_wissenschaftlich_nutzen = pat_id %in% consent_pids)
+
+  return(frontend_tablend_with_consent)
+}

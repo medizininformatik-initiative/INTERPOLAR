@@ -190,7 +190,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       mrp_dokup_hand_emp_akz, Kontraindikation, mrp_ip_klasse_01, retrolektive_mrpbewertung_complete,
       ret_ip_klasse_01, eligible_for_algorithmic_MRP_calculation, ret_gewissheit1, ret_gewiss_grund1_abl,
       ret_gewiss_grund1_abl_01,
-      ret_gewiss_grund_abl_klin1_neg___1
+      ret_gewiss_grund_abl_klin1_neg___1,
+      MDAT_wissenschaftlich_nutzen
     )) |>
     dplyr::distinct()
 
@@ -203,6 +204,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ),
       patients_excluded_due_to_table_count_less_than_5 = dplyr::n_distinct(
         pat_id[table_count_less_than_5_patients],
+        na.rm = TRUE
+      ),
+      MDAT_wissenschaftlich_nutzen = dplyr::n_distinct(
+        pat_id[valid_for_counting & MDAT_wissenschaftlich_nutzen],
         na.rm = TRUE
       ),
       encounters = dplyr::n_distinct(
@@ -406,6 +411,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ),
       patients_excluded_due_to_table_count_less_than_5 = dplyr::n_distinct(
         pat_id[overall_count_less_than_5],
+        na.rm = TRUE
+      ),
+      MDAT_wissenschaftlich_nutzen = dplyr::n_distinct(
+        pat_id[valid_for_overall_counting & MDAT_wissenschaftlich_nutzen],
         na.rm = TRUE
       ),
       encounters = dplyr::n_distinct(
