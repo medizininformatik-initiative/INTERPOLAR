@@ -299,7 +299,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),
     colnames = c(
-      "ward", "patients", "encounters",
+      "ward", "patients",
+      "censored patients (n < 5)",
+      "encounters",
       "processing excluded encounters (linkage issues)",
       "not meeting inclusion criteria (patient underage)",
       "encounters with completed medication analysis",
@@ -335,7 +337,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),
     colnames = c(
-      "ward", "calendar week", "patients", "encounters",
+      "ward", "calendar week", "patients",
+      "censored patients (n < 5)",
+      "encounters",
       "processing excluded encounters (linkage issues)",
       "not meeting inclusion criteria (patient underage)",
       "encounters with completed medication analysis",

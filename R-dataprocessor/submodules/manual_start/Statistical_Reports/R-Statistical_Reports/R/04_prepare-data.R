@@ -150,7 +150,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #'
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
 #'
-#' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename
+#' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename n_distinct
 #' @importFrom data.table isoweek year
 #' @export
 prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
@@ -220,6 +220,13 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
           )
       ), TRUE, FALSE, missing = FALSE
     )) |>
+    dplyr::ungroup() |>
+    dplyr::mutate(overall_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
+    dplyr::group_by(fall_station) |>
+    dplyr::mutate(ward_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
+    dplyr::ungroup() |>
+    dplyr::group_by(fall_station, calendar_week) |>
+    dplyr::mutate(ward_week_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
     dplyr::ungroup() |>
     dplyr::mutate(eligible_for_algorithmic_MRP_calculation = dplyr::if_else(
       ((as.POSIXct(report_period_end) - fall_ent_dat) > 14) &
