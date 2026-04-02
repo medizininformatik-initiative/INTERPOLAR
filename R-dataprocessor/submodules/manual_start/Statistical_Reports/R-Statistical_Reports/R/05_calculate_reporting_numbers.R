@@ -104,6 +104,8 @@ calculateF1 <- function(F1_prep) {
 #' @return A data frame with summarized counts per `ward_name`, including a row for `"all"`.
 #'   The columns include:
 #'   - `patients`: Number of distinct patients
+#'   - `patients_excluded_due_to_table_count_less_than_5`: Patients excluded from counting due to small group size`
+#'   - `consent_MDAT_wissenschaftlich_nutzen`: Number of patients with consent
 #'   - `encounters`: Number of distinct hospital stays
 #'   - `encounters_processing_exclusion`: Encounters excluded due to processing criteria
 #'   - `not_in_inclusion_criteria`: Encounters not meeting inclusion criteria
@@ -123,6 +125,7 @@ calculateF1 <- function(F1_prep) {
 #'   - `contraindications_resolved`: Contraindications marked as resolved
 #'   - `encounters_eligible_for_algorithmic_mrp`: Encounters eligible for algorithmic MRP calculation
 #'   - `encounters_with_any_algorithmic_mrp`: Encounters with at least one algorithmically identified MRP
+#'   - `encounters_with_any_algorithmic_mrp_and_consent`: Encounters with at least one algorithmic MRP and consent given
 #'   - `algorithmic_MRP`: Total algorithmic MRPs
 #'   - `algorithmic_MRP_drug_drug`: Algorithmic drug-drug interactions
 #'   - `algorithmic_MRP_drug_disease`: Algorithmic drug-disease interactions
@@ -141,7 +144,6 @@ calculateF1 <- function(F1_prep) {
 #'      relevant due to case-specific risk assessment
 #'   - `algorithmic_MRP_always_clinically_irrelevant_on_ward`: Algoithmic MRPs that were evaluated as not clinically
 #'      relevant for every case on this ward
-#'   -  `patients_excluded_due_to_table_count_less_than_5`: Patients excluded from counting due to small group size`
 #'
 #'
 #' @details
@@ -206,7 +208,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         pat_id[table_count_less_than_5_patients],
         na.rm = TRUE
       ),
-      MDAT_wissenschaftlich_nutzen = dplyr::n_distinct(
+      consent_MDAT_wissenschaftlich_nutzen = dplyr::n_distinct(
         pat_id[valid_for_counting & MDAT_wissenschaftlich_nutzen],
         na.rm = TRUE
       ),
@@ -312,6 +314,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP],
         na.rm = TRUE
       ),
+      encounters_with_any_algorithmic_mrp_and_consent = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP & MDAT_wissenschaftlich_nutzen],
+        na.rm = TRUE
+      ),
       algorithmic_MRP = dplyr::n_distinct(
         ret_id[valid_for_counting & retrolektive_mrpbewertung_complete != "Unverified"],
         na.rm = TRUE
@@ -413,7 +419,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         pat_id[overall_count_less_than_5],
         na.rm = TRUE
       ),
-      MDAT_wissenschaftlich_nutzen = dplyr::n_distinct(
+      consent_MDAT_wissenschaftlich_nutzen = dplyr::n_distinct(
         pat_id[valid_for_overall_counting & MDAT_wissenschaftlich_nutzen],
         na.rm = TRUE
       ),
@@ -515,6 +521,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ),
       encounters_with_any_algorithmic_mrp = dplyr::n_distinct(
         main_enc_id[valid_for_overall_counting & sub_enc_any_algorithmic_MRP],
+        na.rm = TRUE
+      ),
+      encounters_with_any_algorithmic_mrp_and_consent = dplyr::n_distinct(
+        main_enc_id[valid_for_overall_counting & sub_enc_any_algorithmic_MRP & MDAT_wissenschaftlich_nutzen],
         na.rm = TRUE
       ),
       algorithmic_MRP = dplyr::n_distinct(

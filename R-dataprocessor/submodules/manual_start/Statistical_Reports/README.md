@@ -1,6 +1,6 @@
 # "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienfortschritts
 
-## Version 0.5 (01.04.2026)
+## Version 0.5 (07.04.2026)
 
 ### Funktion
 
