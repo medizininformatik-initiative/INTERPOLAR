@@ -1,3 +1,62 @@
+#' Get First Case Date from Fall Front-End Data
+#'
+#' Determines the earliest documented case admission date in the fall front-end
+#' dataset.
+#'
+#' @param frontend_summary_data A data frame containing fall front-end documentation data.
+#'   The table must include a `fall_aufn_dat` column representing the case
+#'   admission date.
+#'
+#' @return A `Date` value representing the earliest non-missing `fall_aufn_dat`
+#'   in the provided table.
+#'
+#' @details
+#' The function filters the input table to remove rows with missing
+#' `fall_aufn_dat` values and then calculates the minimum admission date using
+#' `min(..., na.rm = TRUE)`. The resulting value is returned as a single scalar.
+#'
+#' @importFrom dplyr filter summarise pull
+#'
+#' @export
+getFirstCaseDateInFe <- function(frontend_summary_data) {
+  first_case_date_in_fe <- frontend_summary_data |>
+    dplyr::filter(!is.na(fall_aufn_dat)) |>
+    dplyr::summarise(first_case_date = min(fall_aufn_dat, na.rm = TRUE)) |>
+    dplyr::pull(first_case_date) |>
+    as.Date()
+  return(first_case_date_in_fe)
+}
+
+#' Get Last Case Date from Fall Front-End Data
+#'
+#' Determines the most recent documented case admission date in the fall
+#' front-end dataset.
+#'
+#' @param frontend_summary_data A data frame containing fall front-end documentation
+#'   data. The table must include a `fall_aufn_dat` column representing the
+#'   case admission date.
+#'
+#' @return A `Date` value representing the latest non-missing `fall_aufn_dat`
+#'   in the provided table.
+#'
+#' @details
+#' The function filters the input table to remove rows with missing
+#' `fall_aufn_dat` values and then calculates the maximum admission date using
+#' `max(..., na.rm = TRUE)`. The resulting value is extracted and converted to
+#' `Date` before being returned as a single scalar.
+#'
+#' @importFrom dplyr filter summarise pull
+#'
+#' @export
+getLastCaseDateInFe <- function(frontend_summary_data) {
+  last_case_date_in_fe <- frontend_summary_data |>
+    dplyr::filter(!is.na(fall_aufn_dat)) |>
+    dplyr::summarise(last_case_date = max(fall_aufn_dat, na.rm = TRUE)) |>
+    dplyr::pull(last_case_date) |>
+    as.Date()
+  return(last_case_date_in_fe)
+}
+
 #' Merge Patient and Encounter Data
 #'
 #' This function merges patient-level data with encounter-level data into a unified dataset.
@@ -310,6 +369,8 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 #' This design allows flexible configuration of reporting phases without
 #' modifying the function itself, relying instead on externally defined ward
 #' vectors.
+#'
+#' NOTE: This has to be updated with 1.7.0 (currently not used)
 #'
 #' @importFrom dplyr filter distinct
 #'
@@ -758,8 +819,6 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
 #' @details
 #' The merge operation:
 #' - Performs a left join using `record_id` and `pat_id` (matched to `fall_pat_id`),
-#' - Adds fall-specific columns such as `fall_fhir_enc_id`, `fall_id`, and `fall_studienphase`
-#'   to the patient FE data.
 #' - Removes duplicate rows after the merge.
 #'
 #' This is useful for linking case trajectories from the FE system with individual
@@ -1083,4 +1142,150 @@ addMRPDokuData <- function(merged_fe_pat_fall_meda_table_with_enc_id,
     dplyr::distinct()
 
   return(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku)
+}
+
+#' Add Retrospective MRP Evaluation Data with Matching Logic
+#'
+#' Merges retrospective MRP (medication-related problem) evaluation data into
+#' a front-end dataset containing patient, fall, medication analysis, encounter,
+#' and MRP documentation data. The function distinguishes between fully matching
+#' retrospective records and partially matching records, applying different join
+#' strategies.
+#'
+#' @param merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku A data frame
+#'   containing merged front-end data, including patient, fall, medication
+#'   analysis, encounter identifiers, and MRP documentation variables.
+#' @param retrolektive_mrpbewertung_fe_table A data frame containing
+#'   retrospective MRP evaluation front-end data.
+#'
+#' @return A data frame containing the merged dataset enriched with
+#'   retrospective MRP evaluation data, ordered by `record_id`, `meda_dat`,
+#'   `mrp_id`, and `ret_id`. Duplicate rows are removed.
+#'
+#' @details
+#' The function performs a two-step merging process:
+#'
+#' \enumerate{
+#'   \item Fully matching retrospective records are identified using an
+#'   `inner_join()` on `record_id`, `meda_id` (matched to `ret_meda_id`),
+#'   and `mrp_id` (matched to `ret_mrp_zuordnung1`). These matches represent
+#'   the most precise linkage between front-end and retrospective data.
+#'
+#'   \item Remaining retrospective records (not matched in the first step)
+#'   are joined using a `left_join()` based on `record_id` and `meda_id`
+#'   only.
+#' }
+#'
+#' The two resulting datasets are combined using `rbind()`, duplicates are
+#' removed, and the final dataset is sorted for consistent downstream use.
+#'
+#' Joins are performed with `na_matches = "never"` to prevent matching on
+#' missing key values.
+#'
+#' Note: The `retrolektive_mrpbewertung_fe_table` is expected to contain retrospective
+#' MRP evaluation results that are linked to the medication analyses. One medication analysis can
+#' result in multiple manually documented but also multiple retrospective algorithmic MRP evaluation,
+#' both not nessecarily linked to each other (although they might be linkable via `ret_mrp_zuordnung1`).
+#' This may result in duplication of algorithmic MRP
+#' evaluation results when merged with the medication analysis data, which is not necessarily wrong
+#' but should be kept in mind when interpreting the results.
+#'
+#' @importFrom dplyr inner_join left_join distinct rename select filter pull arrange
+#'
+#' @export
+addRetrolektiveMRPBewertungData <- function(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku,
+                                            retrolektive_mrpbewertung_fe_table) {
+  merged_matching_ret_data <- merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku |>
+    dplyr::inner_join(
+      retrolektive_mrpbewertung_fe_table |>
+        dplyr::distinct(),
+      by = c("record_id",
+        "meda_id" = "ret_meda_id",
+        "mrp_id" = "ret_mrp_zuordnung1"
+      ),
+      na_matches = "never",
+      keep = TRUE
+    ) |>
+    dplyr::rename(record_id = record_id.x) |>
+    dplyr::select(-c(record_id.y, ret_meda_id)) |>
+    dplyr::distinct()
+
+  matching_ret_ids <- merged_matching_ret_data |>
+    dplyr::distinct(ret_id) |>
+    dplyr::pull()
+
+  merged_not_matching_ret_data <- merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku |>
+    dplyr::left_join(
+      retrolektive_mrpbewertung_fe_table |>
+        dplyr::filter(!ret_id %in% matching_ret_ids) |>
+        dplyr::distinct(),
+      by = c("record_id",
+        "meda_id" = "ret_meda_id"
+      ),
+      na_matches = "never",
+      relationship = "many-to-many"
+    ) |>
+    dplyr::distinct()
+
+  merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku_retrolektive <- merged_matching_ret_data |>
+    rbind(merged_not_matching_ret_data) |>
+    dplyr::distinct() |>
+    dplyr::arrange(record_id, meda_dat, mrp_id, ret_id)
+
+  return(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku_retrolektive)
+}
+
+#------------------------------------------------------------------------------#
+
+#' Add Broad Consent Information to Front-End Data
+#'
+#' Enriches a front-end dataset with information on whether a patient has
+#' given valid broad consent for scientific use of their data.
+#'
+#' @param frontend_tablend A data frame containing front-end data with a
+#'   `pat_id` column.
+#' @param consent_table A data frame containing consent information,
+#'   including patient references, consent status, provision details, and
+#'   validity periods.
+#'
+#' @return A data frame identical to `frontend_tablend` with an additional
+#'   logical column `MDAT_wissenschaftlich_nutzen`, indicating whether the
+#'   patient has a currently valid consent for his Policy.
+#'
+#' @details
+#' The function extracts patient IDs from the consent table by removing the
+#' `"Patient/"` prefix from `cons_patient_ref`. It then filters for active
+#' consents that:
+#' \itemize{
+#'   \item have status `"active"`
+#'   \item are of type `"permit"`
+#'   \item match a specific consent code system and code
+#'   \item are currently valid based on the provision period (`start <= now < end`)
+#' }
+#'
+#' The resulting set of patient IDs is used to create a new logical variable
+#' in the front-end dataset, indicating whether each patient has valid broad
+#' consent at the current time.
+#'
+#' @importFrom dplyr mutate filter distinct pull
+#'
+#' @export
+addBroadConsentInformation <- function(frontend_tablend, consent_table) {
+  consent_pids <- consent_table |>
+    dplyr::mutate(pat_id = sub("^Patient/", "", cons_patient_ref), .keep = "unused") |>
+    dplyr::filter(
+      cons_status == "active",
+      cons_provision_provision_type == "permit",
+      cons_provision_provision_code_system == "urn:oid:2.16.840.1.113883.3.1937.777.24.5.3",
+      cons_provision_provision_code_code == "2.16.840.1.113883.3.1937.777.24.5.3.8",
+      cons_provision_provision_period_start <= as.POSIXct(Sys.time()),
+      cons_provision_provision_period_end > as.POSIXct(Sys.time())
+    ) |>
+    dplyr::distinct(pat_id) |>
+    dplyr::pull(pat_id)
+
+  frontend_tablend_with_consent <- frontend_tablend |>
+    dplyr::mutate(MDAT_wissenschaftlich_nutzen = pat_id %in% consent_pids)
+
+  return(frontend_tablend_with_consent)
 }

@@ -1,5 +1,4 @@
 mrpCheck <- function(start_date, end_date) {
-
   anonymizeTimestampsByPatient <- function(
     dt,
     patient_id_col = "FHIR Patient ID",
@@ -108,6 +107,7 @@ mrpCheck <- function(start_date, end_date) {
     end_date <- etlutils::as.POSIXctWithTimezone(end_date)
     mrp_table_lists_all <- calculateMRPs(start_date, end_date, return_used_resources = "record_ids")
   })
+
   etlutils::runLevel2("Create local MRP result table", {
     needed_cols <- c("ret_id", "record_id", "ret_kurzbeschr", "ret_meda_dat_referenz")
     etlutils::retainColumns(mrp_table_lists_all$retrolektive_mrpbewertung_fe, needed_cols)
@@ -164,12 +164,17 @@ mrpCheck <- function(start_date, end_date) {
 
   etlutils::runLevel2("Rename columns in calculated MRP Excel file", {
     data.table::setnames(result,
-                         old = old_col_names,
+                         old = c("pat_id",
+                                 "record_id",
+                                 "enc_id",
+                                 "mrp_calculation_type",
+                                 "meda_id",
+                                 "ward_name",
+                                 "ret_meda_dat_referenz",
+                                 "ret_kurzbeschr"),
                          new = c("FHIR Patient ID",
                                  "REDCap Record ID",
                                  "FHIR Encounter ID",
-                                 "FHIR Encounter Start",
-                                 "FHIR Encounter End",
                                  "MRP Typ",
                                  "REDCap Medikationsanalyse ID",
                                  "Station",
