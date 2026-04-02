@@ -567,7 +567,8 @@ getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
 getRetrolektiveMRPBewertungFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, ret_meda_id, ret_id, ret_mrp_zuordnung1, ret_ip_klasse_01, ",
-    "retrolektive_mrpbewertung_complete, ret_gewissheit1, ret_gewiss_grund1_abl, ret_gewiss_grund_abl_klin1_neg___1 ",
+    "retrolektive_mrpbewertung_complete, ret_gewissheit1, ret_gewiss_grund1_abl, ret_gewiss_grund1_abl_01, ",
+    "ret_gewiss_grund_abl_klin1_neg___1 ",
     "FROM ", table_name, "\n"
   )
 

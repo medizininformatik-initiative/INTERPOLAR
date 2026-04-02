@@ -322,6 +322,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "evaluation: already manually documented",
       "evaluation: no contraindication",
       "evaluation: based on incorrect data items",
+      "evaluation: MRP concept unspecific",
       "evaluation: clinically irrelevant",
       "evaluation: always clinically irrelevant"
     )
@@ -360,6 +361,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "evaluation: already manually documented",
       "evaluation: no contraindication",
       "evaluation: based on incorrect data items",
+      "evaluation: MRP concept unspecific",
       "evaluation: clinically irrelevant",
       "evaluation: always clinically irrelevant"
     )

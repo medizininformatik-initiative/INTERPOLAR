@@ -135,6 +135,8 @@ calculateF1 <- function(F1_prep) {
 #'      relevant (no contraindication)
 #'   - `algorithmic_MRP_incorrect_data_items`: Algorithmic MRPs that were evaluated as not clinically
 #'      relevant due to incorrect data items
+#'   - `algorithmic_MRP_unspecific_mrp_concept`: Algorithmic MRPs that were evaluated as not clinically
+#'      relevant due to unspecific MRP concept
 #'   - `algorithmic_MRP_clinically_irrelevant`: Algoithmic MRPs that were evaluated as not clinically
 #'      relevant due to case-specific risk assessment
 #'   - `algorithmic_MRP_always_clinically_irrelevant_on_ward`: Algoithmic MRPs that were evaluated as not clinically
@@ -187,6 +189,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       medikationsanalyse_complete, mrpdokumentation_validierung_complete,
       mrp_dokup_hand_emp_akz, Kontraindikation, mrp_ip_klasse_01, retrolektive_mrpbewertung_complete,
       ret_ip_klasse_01, eligible_for_algorithmic_MRP_calculation, ret_gewissheit1, ret_gewiss_grund1_abl,
+      ret_gewiss_grund1_abl_01,
       ret_gewiss_grund_abl_klin1_neg___1
     )) |>
     dplyr::distinct()
@@ -350,7 +353,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           retrolektive_mrpbewertung_complete == "Complete" &
             ret_gewissheit1 == "MRP nicht bestätigt" &
-            ret_gewiss_grund1_abl == "MRP sachlich falsch (keine Kontraindikation)", ret_id, NA
+            (ret_gewiss_grund1_abl == "MRP sachlich falsch (keine Kontraindikation)" |
+              ret_gewiss_grund1_abl_01 == "MRP sachlich falsch (keine Kontraindikation)"), ret_id, NA
         )[valid_for_counting],
         na.rm = TRUE
       ),
@@ -358,7 +362,16 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           retrolektive_mrpbewertung_complete == "Complete" &
             ret_gewissheit1 == "MRP nicht bestätigt" &
-            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber falsche Datengrundlage", ret_id, NA
+            (ret_gewiss_grund1_abl == "MRP sachlich richtig, aber falsche Datengrundlage" |
+              ret_gewiss_grund1_abl_01 == "MRP sachlich richtig, aber falsche Datengrundlage"), ret_id, NA
+        )[valid_for_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_unspecific_mrp_concept = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl_01 == "MRP-Konzept zu unspezifisch", ret_id, NA
         )[valid_for_counting],
         na.rm = TRUE
       ),
@@ -366,7 +379,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           retrolektive_mrpbewertung_complete == "Complete" &
             ret_gewissheit1 == "MRP nicht bestätigt" &
-            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant", ret_id, NA
+            (ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant" |
+              ret_gewiss_grund1_abl_01 == "MRP sachlich richtig, aber klinisch nicht relevant"), ret_id, NA
         )[valid_for_counting],
         na.rm = TRUE
       ),
@@ -374,7 +388,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           retrolektive_mrpbewertung_complete == "Complete" &
             ret_gewissheit1 == "MRP nicht bestätigt" &
-            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant" &
+            (ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant" |
+              ret_gewiss_grund1_abl_01 == "MRP sachlich richtig, aber klinisch nicht relevant") &
             ret_gewiss_grund_abl_klin1_neg___1 == "Checked", ret_id, NA
         )[valid_for_counting],
         na.rm = TRUE
@@ -539,7 +554,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           retrolektive_mrpbewertung_complete == "Complete" &
             ret_gewissheit1 == "MRP nicht bestätigt" &
-            ret_gewiss_grund1_abl == "MRP sachlich falsch (keine Kontraindikation)", ret_id, NA
+            (ret_gewiss_grund1_abl == "MRP sachlich falsch (keine Kontraindikation)" |
+              ret_gewiss_grund1_abl_01 == "MRP sachlich falsch (keine Kontraindikation)"), ret_id, NA
         )[valid_for_overall_counting],
         na.rm = TRUE
       ),
@@ -547,7 +563,16 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           retrolektive_mrpbewertung_complete == "Complete" &
             ret_gewissheit1 == "MRP nicht bestätigt" &
-            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber falsche Datengrundlage", ret_id, NA
+            (ret_gewiss_grund1_abl == "MRP sachlich richtig, aber falsche Datengrundlage" |
+              ret_gewiss_grund1_abl_01 == "MRP sachlich richtig, aber falsche Datengrundlage"), ret_id, NA
+        )[valid_for_overall_counting],
+        na.rm = TRUE
+      ),
+      algorithmic_MRP_unspecific_mrp_concept = dplyr::n_distinct(
+        dplyr::if_else(
+          retrolektive_mrpbewertung_complete == "Complete" &
+            ret_gewissheit1 == "MRP nicht bestätigt" &
+            ret_gewiss_grund1_abl_01 == "MRP-Konzept zu unspezifisch", ret_id, NA
         )[valid_for_overall_counting],
         na.rm = TRUE
       ),
@@ -555,7 +580,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           retrolektive_mrpbewertung_complete == "Complete" &
             ret_gewissheit1 == "MRP nicht bestätigt" &
-            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant", ret_id, NA
+            (ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant" |
+              ret_gewiss_grund1_abl_01 == "MRP sachlich richtig, aber klinisch nicht relevant"), ret_id, NA
         )[valid_for_overall_counting],
         na.rm = TRUE
       ),
@@ -563,7 +589,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         dplyr::if_else(
           retrolektive_mrpbewertung_complete == "Complete" &
             ret_gewissheit1 == "MRP nicht bestätigt" &
-            ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant" &
+            (ret_gewiss_grund1_abl == "MRP sachlich richtig, aber klinisch nicht relevant" |
+              ret_gewiss_grund1_abl_01 == "MRP sachlich richtig, aber klinisch nicht relevant") &
             ret_gewiss_grund_abl_klin1_neg___1 == "Checked", ret_id, NA
         )[valid_for_overall_counting],
         na.rm = TRUE
