@@ -1,7 +1,5 @@
 # Environment for saving everything but the connections
 .lib_db_env <- new.env()
-# Environment for saving the connections
-.lib_db_connection_env <- new.env()
 
 dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
   constants <- initConstants(path_to_db_toml, envir = .lib_db_env)
@@ -17,8 +15,9 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
     schema_out = constants[[paste0("DB_", module_name_upper, "_SCHEMA_OUT")]],
     admin_user = constants[["DB_ADMIN_USER"]],
     admin_password = constants[["DB_ADMIN_PASSWORD"]],
-    admin_schema = constants[["DB_ADMIN_SCHEMAS"]],
-    log = log)
+    admin_schemas = constants[["DB_ADMIN_SCHEMAS"]],
+    log = log
+  )
 }
 
 #' Set the Database Connection Context
@@ -96,7 +95,7 @@ dbSetContext <- function(module_name,
 #' dbIsLog()
 #'
 #' @export
-dbIsLog <- function() .lib_db_env[["DB_LOG"]]
+dbIsLog <- function() {.lib_db_env[["DB_LOG"]]}
 
 #' Get the Module Name from the Database Context
 #'
@@ -112,16 +111,17 @@ dbIsLog <- function() .lib_db_env[["DB_LOG"]]
 #' dbGetModuleName()
 #'
 #' @export
-dbGetModuleName <- function() .lib_db_env[["MODULE_NAME"]]
+dbGetModuleName <- function() {.lib_db_env[["MODULE_NAME"]]}
 
-#' If true, the database cron job will be startet by R code alwas if it is necessary.
+#' If true, the database cron job will be started by R code immediately if necessary.
 #' This should prevent unnecessary waiting times if the cron job is only started once
 #' a minute by the database itself.
 #'
-#' #' @return A logical value. \code{TRUE} if the cron job should be started immediately,
-#' \code{FALSE} otherwise.
-#'
-dbIsRunCronJobImmediately <- function() isDefinedAndTrue("DB_RUN_CRON_JOB_IMMEDIATELY", envir = .lib_db_env)
+#' @return A logical value. `TRUE` if the cron job should be started immediately,
+#'   `FALSE` otherwise.
+dbIsRunCronJobImmediately <- function() {
+  isDefinedAndTrue("DB_RUN_CRON_JOB_IMMEDIATELY", envir = .lib_db_env)
+}
 
 #' Log Messages to the Console if Logging is Enabled
 #'
@@ -135,6 +135,7 @@ dbIsRunCronJobImmediately <- function() isDefinedAndTrue("DB_RUN_CRON_JOB_IMMEDI
 #' @param ... Character strings to be logged. These strings are concatenated
 #'        and printed if logging is enabled. If no arguments are provided,
 #'        the function only returns the logging status.
+#' @param dont_repeat_key An optional character string key to prevent repeated logging
 #'
 #' @return Logical. \code{TRUE} if logging is enabled, \code{FALSE} otherwise.
 #'
@@ -147,12 +148,20 @@ dbIsRunCronJobImmediately <- function() isDefinedAndTrue("DB_RUN_CRON_JOB_IMMEDI
 #' dbLog()                            # Returns TRUE (since logging is enabled)
 #'
 #' @export
-dbLog <- function(...) {
+dbLog <- function(..., dont_repeat_key = NULL) {
   log <- isDefinedAndTrue("DB_LOG", envir = .lib_db_env)
   if (length(list(...)) > 0 && log) {
     message <- paste0(...)
     message <- ifelse(endsWith(message, "\n"), message, paste0(message, "\n"))
-    cat(message, sep = "")
+    if (!is.null(dont_repeat_key)) {
+      last_message <- .lib_db_env[[paste0("LAST_LOG_MESSAGE_", dont_repeat_key)]]
+      if (!identical(last_message, message)) {
+        .lib_db_env[[paste0("LAST_LOG_MESSAGE_", dont_repeat_key)]] <- message
+        cat(message, sep = "")
+      }
+    } else {
+      cat(message, sep = "")
+    }
   }
   return(log)
 }
@@ -161,41 +170,30 @@ dbGetPort <- function() {
   return(if (exists("DEBUG_DB_PORT")) DEBUG_DB_PORT else .lib_db_env[["DB_PORT"]])
 }
 
-#' Get a PostgreSQL Database Connection
+#' Get a Fresh PostgreSQL Database Connection
 #'
-#' This function retrieves a PostgreSQL database connection from the environment
-#' or establishes a new one if no valid connection exists. The connection is stored
-#' in a private environment for reuse.
+#' This function establishes and returns a new PostgreSQL database connection
+#' using the settings stored in `.lib_db_env`. A fresh connection is created
+#' for every call. The connection uses the configured schema as `search_path`
+#' and sets `work_mem` to `32MB`.
 #'
-#' If the connection does not exist or is invalid, a new connection is created
-#' using the settings defined in the environment `.lib_db_env`.
-#'
-#' The function distinguishes between read-only and write connections based on the
-#' `readonly` parameter. It automatically adjusts the memory allocation for improved performance.
-#'
-#' @param readonly Logical. If \code{TRUE}, a read-only connection is requested.
-#'        Otherwise, a write-enabled connection is established.
+#' @param readonly Logical. If `TRUE`, a connection using the read schema is
+#'   created. Otherwise, a connection using the write schema is created.
 #'
 #' @return A valid PostgreSQL database connection object.
 #'
-dbGetConnection <- function(readonly) {
+dbGetConnection <- function(readonly = FALSE) {
   schema_name <- if (readonly) .lib_db_env[["DB_SCHEMA_OUT"]] else .lib_db_env[["DB_SCHEMA_IN"]]
-  db_connection <- .lib_db_connection_env[[schema_name]]
 
-  if (!is.null(db_connection) && DBI::dbIsValid(db_connection)) {
-    dbDisconnect(db_connection)
-  }
-
-  if (is.null(db_connection)) {
-    dbLog(
-      "Attempting to connect with: \n",
-      "dbname=", .lib_db_env[["DB_NAME"]], "\n",
-      "host=", .lib_db_env[["DB_HOST"]], "\n",
-      "port=", dbGetPort(), "\n",
-      "user=", .lib_db_env[["DB_USER"]], "\n",
-      "schema=", schema_name, "\n"
-    )
-  }
+  dbLog(
+    "Attempting to connect with:",
+    " dbname=", .lib_db_env[["DB_NAME"]],
+    " host=", .lib_db_env[["DB_HOST"]],
+    " port=", dbGetPort(),
+    " user=", .lib_db_env[["DB_USER"]],
+    " schema=", schema_name, "\n",
+    dont_repeat_key = "dbGetConnection()"
+  )
 
   db_connection <- DBI::dbConnect(
     RPostgres::Postgres(),
@@ -211,9 +209,6 @@ dbGetConnection <- function(readonly) {
   # Increase memory allocation
   DBI::dbExecute(db_connection, "set work_mem to '32MB';")
 
-  # Store the connection in the environment
-  .lib_db_connection_env[[schema_name]] <- db_connection
-
   return(db_connection)
 }
 
@@ -227,6 +222,14 @@ dbGetConnection <- function(readonly) {
 #' @return A `DBIConnection` object representing the active database connection.
 #'
 dbGetAdminConnection <- function() {
+  dbLog(
+    "Attempting to connect with admin user:",
+    " dbname=", .lib_db_env[["DB_NAME"]],
+    " host=", .lib_db_env[["DB_HOST"]],
+    " port=", dbGetPort(),
+    " user=", .lib_db_env[["DB_ADMIN_USER"]], "\n"
+  )
+
   admin_connection <- DBI::dbConnect(
     RPostgres::Postgres(),
     dbname = .lib_db_env[["DB_NAME"]],
@@ -234,31 +237,14 @@ dbGetAdminConnection <- function() {
     port = dbGetPort(),
     user = .lib_db_env[["DB_ADMIN_USER"]],
     password = .lib_db_env[["DB_ADMIN_PASSWORD"]],
-    #options = paste0("-c search_path=", .lib_db_env[["DB_ADMIN_SCHEMA"]]),
     timezone = "Europe/Berlin"
   )
+
   # Increase memory allocation
   DBI::dbExecute(admin_connection, "set work_mem to '32MB';")
+
   return(admin_connection)
 }
-
-#' Get Database Read Connection
-#'
-#' This function retrieves a read-only database connection for the default schema.
-#' It is a wrapper around the `dbGetConnection` function.
-#'
-#' @return A database connection object for the default read schema.
-#'
-dbGetReadConnection <- function() dbGetConnection(readonly = TRUE)
-
-#' Get Database Write Connection
-#'
-#' This function retrieves a write-enabled database connection for the default schema.
-#' It is a wrapper around the \code{dbGetConnection} function.
-#'
-#' @return A database connection object for the default write schema.
-#'
-dbGetWriteConnection <- function() dbGetConnection(readonly = FALSE)
 
 #' Execute a Query and Retrieve a Single Value
 #'
@@ -289,21 +275,31 @@ dbGetSingleValue <- function(query) {
 #'
 #' The query is expected to return a single value from the database.
 #'
-#' @return The status returned by the `data_transfer_status()` function in the database.
-#'         If no result is found, \code{NULL} is returned.
+#' @return The status returned by the `data_transfer_status()` function in the
+#'   database. If no result is found, `NULL` is returned.
 #'
 dbGetStatus <- function() {
   status <- dbGetSingleValue("SELECT db.data_transfer_status();")
-  if (dbIsRunCronJobImmediately()) {
+  if (dbIsRunCronJobImmediately() && !is.null(status) && nzchar(status)) {
     if (grepl("WaitForCronJob", status)) {
-      admin_connection <- dbGetAdminConnection()
-      DBI::dbExecute(admin_connection,
-                     "UPDATE db_config.db_process_control
-                     SET pc_value = 'ReadyToConnect', last_change_timestamp = CURRENT_TIMESTAMP
-                     WHERE pc_name = 'semaphor_cron_job_data_transfer';")
+      update_statement <- paste0(
+        "UPDATE db_config.db_process_control\n",
+        "SET pc_value = 'ReadyToConnect', last_change_timestamp = CURRENT_TIMESTAMP\n",
+        "WHERE pc_name = 'semaphor_cron_job_data_transfer';"
+      )
+      dbWithRetry(
+        db_call = function(db_connection) {
+          DBI::dbExecute(db_connection, update_statement)
+        },
+        call_label = "DBI::dbExecute",
+        sql = update_statement,
+        admin = TRUE
+      )
       status <- dbGetSingleValue("SELECT db.data_transfer_status();")
-      dbDisconnect(admin_connection)
     }
+  }
+  if (is.null(status) || identical(status, "")) {
+    return(NULL)
   }
   return(status)
 }
@@ -433,7 +429,6 @@ dbLock <- function(lock_id) {
 }
 
 dbTransferDataInternal <- function() {
-  admin_connection <- dbGetAdminConnection()
   queries <- c(
     "SELECT db.add_hist_raw_records();",
     "SELECT db.copy_raw_cds_in_to_db_log();",
@@ -442,10 +437,17 @@ dbTransferDataInternal <- function() {
     "SELECT db.copy_fe_dp_in_to_db_log();",
     "SELECT db.copy_fe_fe_in_to_db_log();"
   )
+
   for (query in queries) {
-    DBI::dbExecute(admin_connection, query)
+    dbWithRetry(
+      db_call = function(db_connection) {
+        DBI::dbExecute(db_connection, query)
+      },
+      call_label = "DBI::dbExecute",
+      sql = query,
+      admin = TRUE
+    )
   }
-  dbDisconnect(admin_connection)
 }
 
 #' Unlock a Database for Read or Write Access
@@ -471,8 +473,19 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
     unlock_request <- paste0("SELECT db.data_transfer_start('", dbGetModuleName(), "', '", full_lock_id, "', ", readonly, ");")
     unlock_successful <- dbGetSingleValue(unlock_request)
     if (dbLog()) {
-      status <- dbGetStatus()
-      cat("Current database status after lock request:", status, "\n")
+      tryCatch({
+        status <- dbGetStatus()
+        cat("Current database status after lock request:", status, "\n")
+      }, error = function(error) {
+        etlutils::catErrorMessage(
+          paste0(
+            "Could not retrieve database status after unlock request.\n",
+            "Lock ID: ", full_lock_id, "\n",
+            "Readonly: ", readonly, "\n",
+            "Error:\n", conditionMessage(error), "\n"
+          )
+        )
+      })
     }
     if (!unlock_successful) {
       status <- dbGetStatus()
@@ -487,6 +500,7 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
   }
   return(unlock_successful)
 }
+
 
 #' Forcefully Reset a Database Lock for a Project
 #'
@@ -524,63 +538,62 @@ dbResetLock <- function() {
   return(unlock_successful)
 }
 
-#' Disconnect from a database connection
+#' Close Database Resources
 #'
-#' Closes an active database connection and suppresses any warnings that may occur
-#' during disconnection (e.g., if the connection is already closed).
-#'
-#' @param db_connection A `DBIConnection` object representing the active database connection
-#'
-#' @return Invisible `TRUE` (if disconnection succeeds) or `FALSE`
-#'
-dbDisconnect <- function(db_connection) {
-  suppressWarnings(DBI::dbDisconnect(db_connection))
-}
-
-#' Close All Database Connections
-#'
-#' This function closes all active database connections stored in the global
-#' connection environment `.lib_db_connection_env`. It iterates through all
-#' connection objects, disconnects them, and removes them from the environment.
-#'
-#' If no connections are found, the function logs a message indicating that
-#' there are no active connections to close.
+#' This function resets the database lock state for the current module. As
+#' connections are no longer cached globally, there are no persistent
+#' connections to close here.
 #'
 #' @return This function does not return a value. It performs the side effect
-#'         of closing and removing all active database connections.
+#'   of resetting the database lock state.
 #'
 #' @export
 dbCloseAllConnections <- function() {
   dbResetLock()
-  for (db_connection_variable_name in ls(.lib_db_connection_env)) {
-    db_connection <- get(db_connection_variable_name, envir = .lib_db_connection_env)
-    if (DBI::dbIsValid(db_connection)) {
-      dbDisconnect(db_connection)
-      rm(list = db_connection_variable_name, envir = .lib_db_connection_env)
-    }
-  }
 }
 
 #' List Table Names in a Database
 #'
-#' This function retrieves and displays the list of existing table names in the database connected
-#' through the provided connection. It provides a quick overview of the database structure.
+#' This function retrieves and returns the list of existing table names in the
+#' database for the selected connection mode.
 #'
-#' @param db_connection A valid database connection object, typically created using `DBI::dbConnect`.
+#' @param readonly Logical. If `TRUE`, the table names are retrieved using a
+#'   read connection. Otherwise, a write connection is used.
 #'
-#' @return A character vector containing the names of the tables in the connected database.
+#' @return A character vector containing the names of the tables in the
+#'   connected database.
 #'
-#' @seealso \code{\link[DBI]{dbListTables}} for the underlying DBI function used to retrieve table names.
+#' @seealso `DBI::dbListTables()` for the underlying DBI function used to
+#'   retrieve table names.
 #'
-dbListTableNames <- function(db_connection) {
-  # Get existing table names from the database connection
-  db_table_names <- DBI::dbListTables(db_connection)
+dbListTableNames <- function(readonly = FALSE) {
+  db_table_names <- dbWithRetry(
+    db_call = function(db_connection) {
+      DBI::dbListTables(db_connection)
+    },
+    call_label = "DBI::dbListTables",
+    sql = "LIST TABLES",
+    readonly = readonly
+  )
+
   # Display the table names
   dbLog("The following tables are found in database: ", paste(db_table_names, collapse = ", "))
   if (length(db_table_names) == 0) {
-    warning("There are no tables found in database for connection\n", dbGetInfoInternal(db_connection))
+    warning("There are no tables found in database.")
   }
+
   return(db_table_names)
+}
+
+dbListFields <- function(table_name, readonly = FALSE) {
+  dbWithRetry(
+    db_call = function(db_connection) {
+      DBI::dbListFields(db_connection, table_name)
+    },
+    call_label = "DBI::dbListFields",
+    sql = paste0("LIST FIELDS ", table_name),
+    readonly = readonly
+  )
 }
 
 #' Check Column Widths of a Table in a PostgreSQL Database
@@ -620,9 +633,7 @@ dbCheckColumsWidthBeforeWrite <- function(table_name, table, allow_truncate = FA
 
   # Retrieve column widths
   #there is no need to check the column width for read connections
-  db_connection <- dbGetWriteConnection()
-  column_widths <- DBI::dbGetQuery(db_connection, sql_query)
-  dbDisconnect(db_connection)
+  column_widths <- dbGetQuery(sql_query, readonly = FALSE)
   column_widths <- unique(column_widths)
 
   # Filter relevant columns
@@ -719,20 +730,25 @@ dbAddContent <- function(table_name, table, lock_id = NULL) {
     # Normalize empty strings to NA for character columns
     char_cols <- names(table)[sapply(table, is.character)]
     if (length(char_cols)) {
-      table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)), .SDcols = char_cols]
+      table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)),
+            .SDcols = char_cols]
     }
 
     # Lock + connection with guaranteed cleanup
     dbLock(lock_id)
     on.exit(dbUnlock(lock_id), add = TRUE)
 
-    db_connection <- dbGetWriteConnection()
-    on.exit(dbDisconnect(db_connection), add = TRUE)
-
-    RPostgres::dbAppendTable(db_connection, table_name, table)
+    dbWithRetry(
+      db_call = function(db_connection) {
+        RPostgres::dbAppendTable(db_connection, table_name, table)
+      },
+      call_label = "RPostgres::dbAppendTable",
+      sql = paste0("APPEND TABLE ", table_name),
+      readonly = FALSE
+    )
   }
 
-  duration <- difftime(Sys.time(), time0, units = 'secs')
+  duration <- difftime(Sys.time(), time0, units = "secs")
   dbLog("Inserted in ", table_name, ", ", row_count, " rows (took ", duration, " seconds)")
 }
 
@@ -766,6 +782,114 @@ dbDeleteContent <- function(table_name, lock_id = NULL) {
   dbLog("Deleted ", deleted_rows, " rows from table ", table_name)
 }
 
+#' Execute a Database Call with Retry Logic
+#'
+#' This function executes a database operation with automatic retry handling.
+#' It is the central mechanism for all database interactions and ensures that
+#' transient connection issues (e.g. network interruptions) are handled robustly.
+#'
+#' For each attempt, a fresh database connection is established, the provided
+#' `db_call` is executed, and the connection is closed afterwards. If an error
+#' occurs, the operation is retried using exponential backoff.
+#'
+#' The retry intervals are: 1, 2, 4, 8, 16, 32, and 64 seconds. After the final
+#' attempt, the function stops with a detailed error message.
+#'
+#' @param db_call A function that takes a single argument (`db_connection`) and
+#'   performs the desired database operation.
+#' @param call_label A character string describing the database call (e.g.
+#'   `"DBI::dbGetQuery"`). Used for logging and error messages.
+#' @param sql A character string representing the SQL statement or a descriptive
+#'   label of the operation. Included in logs and error messages.
+#' @param readonly Logical. If `TRUE`, a read-only connection is used. Otherwise,
+#'   a write connection is established. Default is `FALSE`.
+#' @param params Optional named list of parameters used in the query. These are
+#'   only used for logging purposes. Default is `NULL`.
+#' @param admin Logical. If `TRUE`, an admin connection is used instead of a
+#'   regular connection. Default is `FALSE`.
+#'
+#' @return The result returned by the provided `db_call` function.
+#'
+dbWithRetry <- function(db_call,
+                        call_label,
+                        sql,
+                        readonly = FALSE,
+                        params = NULL,
+                        admin = FALSE) {
+  wait_times <- c(1, 2, 4, 8, 16, 32, 64)
+  total_attempts <- length(wait_times) + 1L
+
+  for (attempt in seq_len(total_attempts)) {
+    db_connection <- NULL
+
+    result <- tryCatch(
+      {
+        # Create a fresh connection for every attempt
+        db_connection <- if (admin) dbGetAdminConnection() else dbGetConnection(readonly)
+
+        value <- db_call(db_connection)
+
+        list(success = TRUE, value = value)
+      },
+      error = function(error) {
+        list(success = FALSE, error = error)
+      },
+      finally = {
+        # Always try to close the connection quietly
+        if (!is.null(db_connection)) {
+          invisible(try(suppressWarnings(DBI::dbDisconnect(db_connection)), silent = TRUE))
+        }
+      }
+    )
+
+    if (isTRUE(result$success)) {
+      return(result$value)
+    }
+
+    error_message <- conditionMessage(result$error)
+
+    params_text <- if (is.null(params)) {
+      ""
+    } else {
+      paste0(
+        "\nParameters:\n",
+        paste0(names(params), "=", unlist(params), collapse = "\n")
+      )
+    }
+
+    if (attempt < total_attempts) {
+      wait_time <- wait_times[attempt]
+      etlutils::catErrorMessage(
+        paste0(
+          if (admin) "Admin database call failed and will be retried.\n"
+          else "Database call failed and will be retried.\n",
+          "Call: ", call_label, "\n",
+          "Attempt: ", attempt, "/", total_attempts, "\n",
+          "Next retry in: ", wait_time, " seconds\n",
+          "Error:\n", error_message, "\n",
+          "SQL:\n", sql,
+          params_text,
+          "\n"
+        )
+      )
+      Sys.sleep(wait_time)
+    } else {
+      stop(
+        paste0(
+          if (admin) "Admin database call failed permanently after "
+          else "Database call failed permanently after ",
+          total_attempts, " attempts.\n",
+          "Call: ", call_label, "\n",
+          "Last error:\n", error_message, "\n",
+          "SQL:\n", sql,
+          params_text
+        ),
+        call. = FALSE
+      )
+    }
+  }
+}
+
 #' Execute a SQL Statement on a Database Connection
 #'
 #' This function executes a given SQL statement on a specified PostgreSQL
@@ -789,10 +913,15 @@ dbDeleteContent <- function(table_name, lock_id = NULL) {
 dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id, readonly), add = TRUE)
-  dbLog("dbExecute:\n", statement)
-  db_connection <- dbGetConnection(readonly)
-  on.exit(dbDisconnect(db_connection), add = TRUE)
-  DBI::dbExecute(db_connection, statement)
+  dbLog("dbExecute:\n", statement, dont_repeat_key = "dbExecute()")
+  dbWithRetry(
+    db_call = function(db_connection) {
+      DBI::dbExecute(db_connection, statement)
+    },
+    call_label = "DBI::dbExecute",
+    sql = statement,
+    readonly = readonly
+  )
 }
 
 #' Execute a SQL Query on a PostgreSQL Database
@@ -823,10 +952,18 @@ dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id, readonly), add = TRUE)
   dbLog("dbGetQuery:\n", query,
-        if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")))
-  db_connection <- dbGetConnection(readonly)
-  on.exit(dbDisconnect(db_connection), add = TRUE)
-  table <- data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
+        if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")),
+        dont_repeat_key = "dbGetQuery()")
+  table <- dbWithRetry(
+    db_call = function(db_connection) {
+      data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
+    },
+    call_label = "DBI::dbGetQuery",
+    sql = query,
+    readonly = readonly,
+    params = params
+  )
+
   return(table)
 }
 
@@ -877,11 +1014,17 @@ dbReadTable <- function(table_name, lock_id = NULL) {
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id, readonly = TRUE), add = TRUE)
   dbLog("dbReadTable: ", table_name)
-  db_connection <- dbGetReadConnection()
-  on.exit(dbDisconnect(db_connection), add = TRUE)
-  table <- data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
+  table <- dbWithRetry(
+    db_call = function(db_connection) {
+      data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
+    },
+    call_label = "DBI::dbReadTable",
+    sql = paste0("READ TABLE ", table_name),
+    readonly = TRUE
+  )
   return(table)
 }
+
 
 #' Check if a PostgreSQL Table is Empty
 #'
@@ -942,9 +1085,7 @@ dbIsTableEmptyBeforeWrite <- function(table_name) {
 dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALSE, ignore_missing_db_columns = FALSE) {
   table_names <- names(tables)
 
-  db_connection <- dbGetWriteConnection()
-  on.exit(dbDisconnect(db_connection), add = TRUE)
-  db_table_names <- dbListTableNames(db_connection)
+  db_table_names <- dbListTableNames(readonly = FALSE)
 
   # Stop with error if there are tables that do not exist in the database
   missing_db_table_names <- setdiff(table_names, db_table_names)
@@ -961,9 +1102,7 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
   # Optionally drop columns that do not exist in the DB schema
   if (isTRUE(ignore_missing_db_columns) && length(table_names) > 0) {
     for (table_name in table_names) {
-      con_cols <- dbGetWriteConnection()
-      on.exit(dbDisconnect(con_cols), add = TRUE)
-      db_cols <- DBI::dbListFields(con_cols, table_name)
+      db_cols <- dbListFields(table_name, readonly = FALSE)
 
       incoming <- tables[[table_name]]
       keep <- intersect(names(incoming), db_cols)
@@ -1061,12 +1200,8 @@ dbWriteTable <- function(table, table_name = NA, lock_id = NULL, stop_if_table_n
 #'
 #' @export
 dbReadTables <- function(table_names = NA, lock_id = NULL) {
-  # Establish a read-only database connection to list tables
-  db_connection <- dbGetReadConnection()
-  on.exit(dbDisconnect(db_connection), add = TRUE)  # ensure connection is closed
-
   # Get the list of tables in the database
-  db_table_names <- dbListTableNames(db_connection)
+  db_table_names <- dbListTableNames(readonly = TRUE)
 
   # If no table names are provided, read all available tables
   if (isSimpleNA(table_names)) {
@@ -1101,37 +1236,45 @@ dbReadTables <- function(table_names = NA, lock_id = NULL) {
 
 #' Print Database Timezone and Current Time
 #'
-#' This function retrieves and prints the current timezone and time from the connected
-#' PostgreSQL database. It also prints the current time and timezone of the R session for
-#' comparison.
+#' This function retrieves and prints the current timezone and time from the
+#' connected PostgreSQL database. It also prints the current time and timezone
+#' of the R session for comparison.
 #'
-#' @param db_connection A valid database connection object to the PostgreSQL database.
+#' @param readonly Logical. If `TRUE`, a read connection is used. Otherwise, a
+#'   write connection is used.
 #'
-#' @return `NULL`. The function is used for its side effects of printing the database timezone
-#'         and time.
+#' @return `NULL`. The function is used for its side effects of printing the
+#'   database timezone and time.
 #'
 #' @details
-#' - Queries the PostgreSQL database for its current timezone using `SHOW timezone;`.
-#' - Retrieves the current time from the database using `SELECT NOW();` and `SELECT CURRENT_TIMESTAMP;`.
-#' - Prints the R session's current time and timezone alongside the database's information.
+#' - Queries the PostgreSQL database for its current timezone using
+#'   `SHOW timezone;`.
+#' - Retrieves the current time from the database using `SELECT NOW();` and
+#'   `SELECT CURRENT_TIMESTAMP;`.
+#' - Prints the R session's current time and timezone alongside the database's
+#'   information.
 #'
-dbPrintTimeAndTimezone <- function(db_connection) {
-  # Query to get the current timezone
-  query <- "SHOW timezone;"
-  timezone <- DBI::dbGetQuery(db_connection, query)
-  print(paste0("DB Timezone: ", timezone))
+dbPrintTimeAndTimezone <- function(readonly = TRUE) {
+  result <- dbWithRetry(
+    db_call = function(db_connection) {
+      timezone <- DBI::dbGetQuery(db_connection, "SHOW timezone;")
+      now_time <- DBI::dbGetQuery(db_connection, "SELECT NOW();")
+      current_timestamp <- DBI::dbGetQuery(db_connection, "SELECT CURRENT_TIMESTAMP;")
 
-  # Query to get the current time
-  query <- "SELECT NOW();"
-  now_time <- DBI::dbGetQuery(db_connection, query)
-  print(paste0("DB SELECT NOW(): ", now_time$now))
+      list(
+        timezone = timezone,
+        now_time = now_time,
+        current_timestamp = current_timestamp
+      )
+    },
+    call_label = "DBI::dbGetQuery",
+    sql = "SHOW timezone; SELECT NOW(); SELECT CURRENT_TIMESTAMP;",
+    readonly = readonly
+  )
 
-  # Query to get the current timestamp
-  query <- "SELECT CURRENT_TIMESTAMP;"
-  current_timestamp <- DBI::dbGetQuery(db_connection, query)
-  #print(paste0("CURRENT_TIMESTAMP: ", current_timestamp$current_timestamp))
-  print(paste0("DB CURRENT_TIMESTAMP: ", current_timestamp))
-
+  print(paste0("DB Timezone: ", result$timezone))
+  print(paste0("DB SELECT NOW(): ", result$now_time$now))
+  print(paste0("DB CURRENT_TIMESTAMP: ", result$current_timestamp))
   print(paste0("R Sys.time(): ", Sys.time()))
   print(paste0("R Sys.timezone(): ", Sys.timezone()))
 }
@@ -1200,7 +1343,7 @@ dbGetTableColumnTypes <- function(table_name, readonly = FALSE) {
      AND table_schema = '", schema, "'"
   )
   # Execute the query and return the result as a data.table
-  result <- dbGetQuery(query)
+  result <- dbGetQuery(query, readonly = readonly)
   # Ensure the result is not empty
   if (nrow(result) == 0) {
     stop("Table '", table_name, "' does not exist or has no columns defined.")
@@ -1264,69 +1407,6 @@ dbConvertToDBTypes <- function(dt, table_name) {
 
 #' Retrieve Detailed Database Connection Information
 #'
-#' This function retrieves and formats metadata about a database connection. For PostgreSQL
-#' connections, it includes additional details such as the current user, database name, host
-#' address, and server version.
-#'
-#' @param db_connection A valid database connection object created using `DBI::dbConnect`.
-#'
-#' @return A character string containing formatted connection details, including driver information,
-#'         host, port, database name, user, and additional PostgreSQL-specific details if available.
-#'
-#' @details
-#' - Retrieves standard connection metadata using `DBI::dbGetInfo`.
-#' - For PostgreSQL connections, executes additional SQL queries to fetch server-specific details,
-#'   such as IP address, port, and version.
-#' - Formats the retrieved details into a human-readable log message.
-#'
-dbGetInfoInternal <- function(db_connection = dbGetReadConnection()) {
-  # Retrieve standard connection information
-  info <- DBI::dbGetInfo(db_connection)
-
-  # Additional information for PostgreSQL
-  additional_info <- NULL
-  if (inherits(db_connection, "PqConnection")) {
-    tryCatch({
-      # Fetch additional details using SQL queries
-      additional_info <- DBI::dbGetQuery(db_connection,
-        "SELECT
-          current_user AS user,
-          current_database() AS database,
-          inet_server_addr() AS host,
-          inet_server_port() AS port,
-          current_setting('server_version') AS version;"
-      )
-    }, error = function(e) {
-      warning("Failed to fetch additional PostgreSQL details: ", conditionMessage(e))
-    })
-  }
-
-  # Create a formatted log message
-  log_message <- paste0(
-    "Database Connection Details:\n",
-    "-----------------------------\n",
-    "Driver       : ", info$driver, "\n",
-    "Host         : ", info$host, "\n",
-    "Port         : ", info$port, "\n",
-    "Database     : ", info$dbname, "\n",
-    "User         : ", info$user, "\n",
-    if (!is.null(additional_info)) {
-      paste0(
-        "Server Info  :\n",
-        "  - IP       : ", additional_info$host[1], "\n",
-        "  - Port     : ", additional_info$port[1], "\n",
-        "  - Version  : ", additional_info$version[1], "\n"
-      )
-    } else "",
-    "Connection Valid: ", ifelse(info$valid, "Yes", "No"), "\n"
-  )
-
-  # Return the log message
-  return(log_message)
-}
-
-#' Retrieve Detailed Database Connection Information
-#'
 #' This function retrieves and formats metadata about a PostgreSQL database connection.
 #' It includes standard connection details such as the database name, user, host, and port.
 #' For PostgreSQL-specific connections, additional details like IP address and server version
@@ -1346,10 +1426,53 @@ dbGetInfoInternal <- function(db_connection = dbGetReadConnection()) {
 #'
 #' @export
 dbGetInfo <- function(readonly = TRUE) {
-  db_connection <- dbGetConnection(readonly)
-  info <- dbGetInfoInternal(db_connection)
-  dbDisconnect(db_connection)
-  return(info)
+  info <- dbWithRetry(
+    db_call = function(db_connection) {
+      dbi_info <- DBI::dbGetInfo(db_connection)
+
+      additional_info <- NULL
+      if (inherits(db_connection, "PqConnection")) {
+        additional_info <- DBI::dbGetQuery(
+          db_connection,
+          "SELECT
+             current_user AS user,
+             current_database() AS database,
+             inet_server_addr() AS host,
+             inet_server_port() AS port,
+             current_setting('server_version') AS version;"
+        )
+      }
+
+      list(dbi_info = dbi_info, additional_info = additional_info)
+    },
+    call_label = "DBI::dbGetInfo",
+    sql = "GET CONNECTION INFO",
+    readonly = readonly
+  )
+
+  dbi_info <- info$dbi_info
+  additional_info <- info$additional_info
+
+  log_message <- paste0(
+    "Database Connection Details:\n",
+    "-----------------------------\n",
+    "Driver       : ", dbi_info$driver, "\n",
+    "Host         : ", dbi_info$host, "\n",
+    "Port         : ", dbi_info$port, "\n",
+    "Database     : ", dbi_info$dbname, "\n",
+    "User         : ", dbi_info$user, "\n",
+    if (!is.null(additional_info)) {
+      paste0(
+        "Server Info  :\n",
+        "  - IP       : ", additional_info$host[1], "\n",
+        "  - Port     : ", additional_info$port[1], "\n",
+        "  - Version  : ", additional_info$version[1], "\n"
+      )
+    } else "",
+    "Connection Valid: ", ifelse(dbi_info$valid, "Yes", "No"), "\n"
+  )
+
+  return(log_message)
 }
 
 #' Reset the database by truncating tables in specified schemas or by explicit table list.
@@ -1382,7 +1505,7 @@ dbGetInfo <- function(readonly = TRUE) {
 #' @export
 dbReset <- function(tables_with_schema = NULL) {
   con <- dbGetAdminConnection()
-  on.exit(dbDisconnect(con), add = TRUE)
+  on.exit(  invisible(try(suppressWarnings(DBI::dbDisconnect(con)), silent = TRUE)), add = TRUE)
 
   lock_id <- "Clear database"
   dbLock(lock_id)
