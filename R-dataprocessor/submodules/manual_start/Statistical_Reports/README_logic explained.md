@@ -200,3 +200,5 @@ Ziel: Ergänzen der Falldaten um die ID des Haupt-Encounters in der 3-Stufen-Enc
         -   wenn der Encounter vom Typ `"versorgungsstellenkontakt"` ist, wird die `enc_id` des übergeordneten Encounters extrahiert, dessen übergeordneter Encounter gefunden und dieser als oberster `main_enc_id` verwendet.
 -   falls `main_enc_id` nach diesen Schritten immer noch nicht zugewiesen werden konnte, wird eine Warnung generiert und der betroffene Datensatz ausgegeben
 -   der `processing_exclusion_reason` wird für diese Fälle auf "encounter_without_main_enc_id" gesetzt
+
+... Fortsetzung folgt
