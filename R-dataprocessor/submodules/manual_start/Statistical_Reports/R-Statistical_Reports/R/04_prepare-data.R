@@ -102,7 +102,68 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
   return(F1_prep)
 }
 #------------------------------------------------------------------------------#
+#' Combine Wards for Analysis
+#'
+#' Standardizes ward names in the front-end dataset by replacing specified
+#' groups of wards with a common reference ward for analysis purposes.
+#'
+#' @param frontend_table A data frame containing front-end data with a
+#'   `fall_station` column representing ward names.
+#'
+#' @return A data frame in which specified ward names have been replaced by
+#'   their corresponding reference ward names.
+#'
+#' @details
+#' The function dynamically identifies ward combination definitions from the
+#' global environment by searching for objects matching the pattern
+#' `"^COMBINE_WARDS_FOR_ANALYSIS_"`.
+#'
+#' Each definition is expected to contain:
+#' \itemize{
+#'   \item A reference ward (first element)
+#'   \item A set of ward names to be replaced (second element)
+#' }
+#'
+#' The reference ward is extracted and cleaned using
+#' `stringr::str_split_i()`. The additional wards are parsed by splitting
+#' and cleaning the definition string using `stringr` functions.
+#'
+#' For each definition, the function updates the `fall_station` column by
+#' replacing any occurrence of the specified wards with the corresponding
+#' reference ward.
+#'
+#' @importFrom dplyr mutate case_when
+#' @importFrom etlutils isDefinedAndNotEmpty
+#' @importFrom stringr str_split_i str_remove_all str_split
+#'
+#' @export
+CombineWardsForAnalysis <- function(frontend_table) {
+  combined_wards_definition <- ls(pattern = "^COMBINE_WARDS_FOR_ANALYSIS_", envir = .GlobalEnv)
+  frontend_table_combined_wards <- frontend_table
+  for (i in seq_along(combined_wards_definition)) {
+    ward_definition_information <- combined_wards_definition[i]
+    if (etlutils::isDefinedAndNotEmpty(ward_definition_information)) {
+      regular_ward <- get(ward_definition_information, envir = .GlobalEnv)[1] |>
+        stringr::str_split_i("'", 2)
+      additional_wards <- get(ward_definition_information, envir = .GlobalEnv)[2] |>
+        stringr::str_split_i("=", 2) |>
+        stringr::str_remove_all(" '") |>
+        stringr::str_remove_all("' ") |>
+        stringr::str_remove_all("'") |>
+        stringr::str_split(",") |>
+        unlist()
 
+      frontend_table_combined_wards <- frontend_table_combined_wards |>
+        dplyr::mutate(fall_station = dplyr::case_when(
+          fall_station %in% additional_wards ~ regular_ward,
+          TRUE ~ fall_station
+        ))
+    }
+  }
+  return(frontend_table_combined_wards)
+}
+
+#------------------------------------------------------------------------------#
 #' Prepare Front-End Summary Data for Reporting Period
 #'
 #' Enriches the complete front-end dataset with summary variables for
@@ -131,7 +192,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' - `calendar_week` (derived from `fall_aufn_dat`; including the year)
 #' - `Kontraindikation` (derived from `mrp_pigrund___21`)
 #' - `main_enc_id` (derived from `fall_fhir_main_enc_id`)
-#' - `ward_name` (derived from `fall_station`)
+#' - `ward_name` (derived from `fall_station`, optionally after combining wards for analysis)
 #' - `unverified_pat_or_sub_enc` (indicating if either the patient or the sub encounter is unverified)
 #' - `main_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
 #'                                           for the main encounter (if not already in 'not in inclusion criteria'))
@@ -155,6 +216,7 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #' @export
 prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
   frontend_summary_prep <- frontend_table |>
+    CombineWardsForAnalysis() |>
     dplyr::mutate(
       calendar_week = paste0(
         data.table::year(fall_aufn_dat), "-",

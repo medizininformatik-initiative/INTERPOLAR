@@ -344,60 +344,52 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 }
 
 #------------------------------------------------------------------------------#
-#' Restrict Front-End Fall Data to Defined INTERPOLAR Wards
+#' Restrict Front-End Fall Data to Dynamically Defined INTERPOLAR Wards
 #'
-#' Filters the merged patient and fall front-end data to include only rows that
-#' belong to wards explicitly defined for the reporting phases. The set of valid
-#' wards is constructed from the objects `WARDS_PHASE_A`, `WARDS_PHASE_B`, and
-#' `WARDS_PHASE_B_TEST`, if they exist and are not empty.
+#' Filters the merged patient and fall front-end data to include only rows
+#' belonging to INTERPOLAR wards defined via global environment variables.
 #'
-#' @param merged_pat_fall_fe_table A data frame containing merged patient and fall
-#'   front-end data, including a `fall_station` column identifying the ward.
+#' @param merged_pat_fall_fe_table A data frame containing merged patient and
+#'   fall front-end data, including a `fall_station` column identifying the ward.
 #'
-#' @return A data frame containing only rows whose `fall_station` is included in
-#'   the set of defined wards. The result is de-duplicated using `distinct()`.
+#' @return A data frame containing only rows whose `fall_station` matches one of
+#'   the dynamically defined INTERPOLAR wards. Duplicate rows are removed.
 #'
 #' @details
-#' The function dynamically builds the list of valid wards by checking whether
-#' the objects `WARDS_PHASE_A`, `WARDS_PHASE_B`, and `WARDS_PHASE_B_TEST` are
-#' defined and non-empty in the current environment. All available ward vectors
-#' are concatenated into a single set of allowed wards.
+#' The function searches the global environment for objects with names matching
+#' the pattern `"^PHASES_WARD_"`. For each matching object, it checks whether it
+#' is defined and non-empty using `etlutils::isDefinedAndNotEmpty()`.
 #'
-#' The input table is then filtered so that only rows with `fall_station` values
-#' contained in this set are retained. Finally, duplicate rows are removed.
+#' The first element of each valid object is extracted and processed to derive
+#' the ward name using `stringr::str_split_i()`. All extracted ward names are
+#' combined into a vector of valid INTERPOLAR wards.
 #'
-#' This design allows flexible configuration of reporting phases without
-#' modifying the function itself, relying instead on externally defined ward
-#' vectors.
-#'
-#' NOTE: This has to be updated with 1.7.0 (currently not used)
+#' The input table is then filtered to retain only rows where `fall_station`
+#' matches one of these wards. Duplicate rows are removed using `distinct()`.
 #'
 #' @importFrom dplyr filter distinct
+#' @importFrom etlutils isDefinedAndNotEmpty
+#' @importFrom stringr str_split_i
 #'
 #' @export
 restrictToDefinedWards <- function(merged_pat_fall_fe_table) {
-  wards_phase_a <- c()
-  wards_phase_b <- c()
-  wards_phase_b_test <- c()
-
-  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_A")) {
-    wards_phase_a <- WARDS_PHASE_A
+  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
+  interpolar_wards <- c()
+  for (i in seq_along(interpolar_wards_definition)) {
+    ward_phase_defintion <- interpolar_wards_definition[i]
+    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
+      ward_name <- get(ward_phase_defintion, envir = .GlobalEnv)[1] |>
+        stringr::str_split_i("'", 2)
+      interpolar_wards <- c(interpolar_wards, ward_name)
+    }
   }
-  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B")) {
-    wards_phase_b <- WARDS_PHASE_B
-  }
-  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST")) {
-    wards_phase_b_test <- WARDS_PHASE_B_TEST
-  }
-  defined_wards <- c(wards_phase_a, wards_phase_b, wards_phase_b_test)
 
   merged_pat_fall_fe_table_restricted_to_defined_wards <- merged_pat_fall_fe_table |>
-    dplyr::filter(fall_station %in% defined_wards) |>
+    dplyr::filter(fall_station %in% interpolar_wards) |>
     dplyr::distinct()
 
   return(merged_pat_fall_fe_table_restricted_to_defined_wards)
 }
-
 
 #------------------------------------------------------------------------------#
 
