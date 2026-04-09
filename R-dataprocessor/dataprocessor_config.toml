@@ -54,6 +54,7 @@ MAX_DIR_COUNT = 5
 # the phase A never ends and phase B never starts. If phase_b_start is specified,
 # then phase A ends one second before the start of phase B.
 # The ward_name must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS in the cds2db_config.toml.
+# The defined ward names are also used to restrict reporting and analysis to INTERPOLAR wards.
 #################
 PHASES_WARD_1 = [
   "ward_name = 'Station 1'",
@@ -72,6 +73,25 @@ PHASES_WARD_3 = [
   "phase_a_start = '2026-01-11 10:00'"#, # same as 2026-01-11 10:00:00
   #"phase_b_start = '2026-04-21 10:00:00'"
 ]
+
+#################
+# Optionally indicate wards that were previously defined as separate wards but should belong to
+# one regular INTERPOLAR ward for reporting and analysis. This could be the case if patients from one
+# INTERPOLAR ward where temporarily treated on another ward due to, e.g., renovation work.
+# The ward names must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS in the cds2db_config.toml.
+# The definition pattern is as follows: The regular ward is specified in the first line and the
+# additional ward(s) which should be replaced are specified in the second line.
+# Multiple additional wards are separated by commas.
+# Patients captured in the additional ward(s) are counted for the regular ward for reporting and analysis.
+#################
+#COMBINE_WARDS_FOR_ANALYSIS_1 = [
+#  "regular_ward     = 'Station 1'",
+#  "additional_wards = 'Station 2','Station 3'"
+#]
+#COMBINE_WARDS_FOR_ANALYSIS_2 = [
+#  "regular_ward     = 'Station A'",
+#  "additional_wards = 'Station B'"
+#]
 
 #################
 # Filter for the displayable PID
