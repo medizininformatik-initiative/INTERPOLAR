@@ -222,21 +222,26 @@ initSubmoduleConstants <- function(path_to_toml, defaults = c(), envir = .Global
 #' @export
 getVariablesByPrefix <- function(prefix, astype = c("list", "vector"), envir = .GlobalEnv) {
   astype <- match.arg(astype)
-  vars <- ls(envir) # Get all variables
-  matching_vars <- grep(paste0("^", prefix), vars, value = TRUE) # Match variables with the prefix
-  result_list <- lapply(matching_vars, function(var_name) {
-    if (is.environment(envir)) {
-      var_value <- get(var_name, envir = envir) # Get the variable value
-    } else {
-      var_value <- envir[[var_name]] # Get the variable value from the current environment
-    }
-    setNames(list(var_value), var_name) # Create a named list element
-  })
-  # Return as vector if specified
+  vars <- if (is.environment(envir)) {
+    ls(envir)
+  } else {
+    names(envir)
+  }
+  matching_vars <- grep(paste0("^", prefix), vars, value = TRUE)
+  result_list <- setNames(
+    lapply(matching_vars, function(var_name) {
+      if (is.environment(envir)) {
+        get(var_name, envir = envir)
+      } else {
+        envir[[var_name]]
+      }
+    }),
+    matching_vars
+  )
   if (astype %in% "vector") {
     return(unlist(result_list))
   }
-  return(result_list) # Default return as list
+  return(result_list)
 }
 
 #' Get Global Variables by Prefix

@@ -100,7 +100,7 @@ getStudyPhase <- function(ward_name, date_time) {
     # Build regex allowing arbitrary whitespace around '='
     pattern <- paste0("ward_name\\s*=\\s*'", ward_name, "'")
     for (i in seq_along(ward_phases)) {
-      lines <- ward_phases[[i]][[1]]
+      lines <- ward_phases[[i]]
       if (any(grepl(pattern, lines, perl = TRUE))) {
         return(i)
       }
@@ -115,7 +115,7 @@ getStudyPhase <- function(ward_name, date_time) {
   phase_def_index <- getWardPhaseIndex(ward_phases, ward_name)
   if (phase_def_index != -1L) {
     phase <- "NoPhaseActive" # indicates that the ward is defined in the configuration but no phase is active for the given date_time
-    lines <- ward_phases[[phase_def_index]][[1]]
+    lines <- ward_phases[[phase_def_index]]
     phase_b_start <- etlutils::parseTimestamp(extractSingleEntryLinesValue(lines, "phase_b_start"))
     if (!is.na(phase_b_start) && date_time >= phase_b_start) {
       phase <- "PhaseB"

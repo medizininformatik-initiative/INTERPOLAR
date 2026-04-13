@@ -115,17 +115,17 @@ shouldStart <- function(module_name) {
 # match the ward names defined in the PHASES_WARD definitions in config_dataprocessor. If there is a
 # mismatch, it throws an error with details about the mismatch.
 validateConfigs <- function() {
+
   encounter_filter_patterns_wards <- etlutils::getVariablesByPrefix("ENCOUNTER_FILTER_PATTERN", envir = config_cds2db)
   phases_wards <- etlutils::getVariablesByPrefix("PHASES_WARD", envir = config_dataprocessor)
 
   getWardNames <- function(x) {
     pattern <- "^\\s*ward_name\\s*=\\s*'([^']*)'\\s*$"
-    unlist(lapply(x, function(lst) {
-      vals <- unlist(lst)
-      matches <- vals[grepl(pattern, vals)]
-      sub(pattern, "\\1", matches)
-    }))
+    vals <- unlist(x, use.names = FALSE)
+    matches <- vals[grepl(pattern, vals)]
+    sub(pattern, "\\1", matches)
   }
+
   ward_names_cds2db <- getWardNames(encounter_filter_patterns_wards)
   ward_names_dataprocessor <- getWardNames(phases_wards)
 
@@ -133,10 +133,10 @@ validateConfigs <- function() {
   if (!setequal(ward_names_cds2db, ward_names_dataprocessor)) {
     stop(
       paste0(
-        "Mismatch between ward names in ENCOUNTER_FILTER_PATTERN in 'cds2db_config.toml' and PHASES_WARD definitions in 'dataprocessor_config.toml'. Please fix and restart process.\n",
-        "Only in ENCOUNTER_FILTER_PATTERN: ",
+        "Mismatch between ward names in ENCOUNTER_FILTER_PATTERN in 'cds2db_config.toml' and PHASES_WARD definitions in 'dataprocessor_config.toml'. Please fix and restart process.",
+        "\n  Only in ENCOUNTER_FILTER_PATTERN: ",
         paste(setdiff(ward_names_cds2db, ward_names_dataprocessor), collapse = ", "),
-        "\nOnly in PHASES_WARD: ",
+        "\n  Only in PHASES_WARD: ",
         paste(setdiff(ward_names_dataprocessor, ward_names_cds2db), collapse = ", ")
       )
     )
