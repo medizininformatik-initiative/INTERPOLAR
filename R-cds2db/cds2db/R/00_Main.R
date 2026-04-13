@@ -1,3 +1,5 @@
+#' Gets the name of the module.
+#'
 #' @export
 getModuleName <- function() {
   return("cds2db")
