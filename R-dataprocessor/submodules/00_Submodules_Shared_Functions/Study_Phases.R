@@ -20,7 +20,7 @@ extractSingleEntryLinesValue <- function(entry_lines, key) {
 extractValues <- function(list_with_string_vector, key) {
   values <- c()
   for (i in seq_along(list_with_string_vector)) {
-    lines <- list_with_string_vector[[i]][[1]]
+    lines <- list_with_string_vector[[i]]
     value <- extractSingleEntryLinesValue(lines, key)
     if (!is.na(value)) {
       values <- c(values, value)
