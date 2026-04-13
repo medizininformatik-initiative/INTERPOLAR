@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-03-16 11:41:52
+-- Rights definition file last update : 2026-02-23 15:20:49
 -- Rights definition file size        : 19645 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-03-25 13:59:11
+-- Create time: 2026-04-02 14:59:47
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  base/430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1042,6 +1042,7 @@ BEGIN
                                 ret_mrp_zuordnung1,
                                 ret_gewissheit1_oth,
                                 ret_gewiss_grund1_abl,
+                                ret_gewiss_grund1_abl_01,
                                 ret_gewiss_trigger1_falsch___1,
                                 ret_gewiss_trigger1_falsch___2,
                                 ret_gewiss_trigger1_falsch___3,
@@ -1056,6 +1057,7 @@ BEGIN
                                 ret_gewiss_datengrundl1_2___4,
                                 ret_gewiss_datengrundl1_1_oth,
                                 ret_gewiss_datengrundl1_2_oth,
+                                ret_gewiss_mrpkonzept1,
                                 ret_gewiss_grund_abl_sonst1,
                                 ret_gewiss_grund_abl_klin1,
                                 ret_gewiss_grund_abl_klin1_neg___1,
@@ -1087,6 +1089,7 @@ BEGIN
                                 ret_mrp_zuordnung2,
                                 ret_gewissheit2_oth,
                                 ret_gewiss_grund2_abl,
+                                ret_gewiss_grund2_abl_01,
                                 ret_gewiss_grund_abl_sonst2,
                                 ret_gewiss_trigger2_falsch___1,
                                 ret_gewiss_trigger2_falsch___2,
@@ -1102,6 +1105,7 @@ BEGIN
                                 ret_gewiss_datengrundl2_2___4,
                                 ret_gewiss_datengrundl2_1_oth,
                                 ret_gewiss_datengrundl2_2_oth,
+                                ret_gewiss_mrpkonzept2,
                                 ret_gewiss_grund_abl_klin2,
                                 ret_gewiss_grund_abl_klin2_neg___1,
                                 ret_massn_am2___1,
@@ -1153,6 +1157,7 @@ BEGIN
                                 current_record.ret_mrp_zuordnung1,
                                 current_record.ret_gewissheit1_oth,
                                 current_record.ret_gewiss_grund1_abl,
+                                current_record.ret_gewiss_grund1_abl_01,
                                 current_record.ret_gewiss_trigger1_falsch___1,
                                 current_record.ret_gewiss_trigger1_falsch___2,
                                 current_record.ret_gewiss_trigger1_falsch___3,
@@ -1167,6 +1172,7 @@ BEGIN
                                 current_record.ret_gewiss_datengrundl1_2___4,
                                 current_record.ret_gewiss_datengrundl1_1_oth,
                                 current_record.ret_gewiss_datengrundl1_2_oth,
+                                current_record.ret_gewiss_mrpkonzept1,
                                 current_record.ret_gewiss_grund_abl_sonst1,
                                 current_record.ret_gewiss_grund_abl_klin1,
                                 current_record.ret_gewiss_grund_abl_klin1_neg___1,
@@ -1198,6 +1204,7 @@ BEGIN
                                 current_record.ret_mrp_zuordnung2,
                                 current_record.ret_gewissheit2_oth,
                                 current_record.ret_gewiss_grund2_abl,
+                                current_record.ret_gewiss_grund2_abl_01,
                                 current_record.ret_gewiss_grund_abl_sonst2,
                                 current_record.ret_gewiss_trigger2_falsch___1,
                                 current_record.ret_gewiss_trigger2_falsch___2,
@@ -1213,6 +1220,7 @@ BEGIN
                                 current_record.ret_gewiss_datengrundl2_2___4,
                                 current_record.ret_gewiss_datengrundl2_1_oth,
                                 current_record.ret_gewiss_datengrundl2_2_oth,
+                                current_record.ret_gewiss_mrpkonzept2,
                                 current_record.ret_gewiss_grund_abl_klin2,
                                 current_record.ret_gewiss_grund_abl_klin2_neg___1,
                                 current_record.ret_massn_am2___1,
