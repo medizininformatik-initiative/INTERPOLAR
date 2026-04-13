@@ -48,7 +48,7 @@ for (arg in args) {
     if (arg == "--resetLockAndStop") {
       quit(status = 0, save = "no")  # clean exit without error
     }
-  } else if (!arg %in% c("--ignoreNewerDBVersion")) {
+  } else if (!arg %in% c("--ignoreNewerDBVersion", "--ignoreWardNameMismatch")) {
     stop("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop, --ignoreNewerDBVersion")
   }
 }
@@ -116,6 +116,12 @@ shouldStart <- function(module_name) {
 # mismatch, it throws an error with details about the mismatch.
 validateConfigs <- function() {
 
+  args <- commandArgs(trailingOnly = TRUE)
+  if ("--ignoreWardNameMismatch" %in% args) {
+    etlutils::catWarningMessage("Ignoring ward name mismatch between config_cds2db and config_dataprocessor due to --ignoreWardNameMismatch argument.")
+    return()
+  }
+
   encounter_filter_patterns_wards <- etlutils::getVariablesByPrefix("ENCOUNTER_FILTER_PATTERN", envir = config_cds2db)
   phases_wards <- etlutils::getVariablesByPrefix("PHASES_WARD", envir = config_dataprocessor)
 
@@ -137,7 +143,8 @@ validateConfigs <- function() {
         "\n  Only in ENCOUNTER_FILTER_PATTERN: ",
         paste(setdiff(ward_names_cds2db, ward_names_dataprocessor), collapse = ", "),
         "\n  Only in PHASES_WARD: ",
-        paste(setdiff(ward_names_dataprocessor, ward_names_cds2db), collapse = ", ")
+        paste(setdiff(ward_names_dataprocessor, ward_names_cds2db), collapse = ", "),
+        "\n  If this should be ignored, the start the toolchain with the argument --ignoreWardNameMismatch (use with caution, as it may lead to unexpected errors if the ward names are not compatible between the modules)."
       )
     )
   }
