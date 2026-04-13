@@ -252,6 +252,71 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
 
 #------------------------------------------------------------------------------#
 
+#' Retrieve Consent Data from Database
+#'
+#' Executes a read-only SQL query to retrieve consent-related data from the
+#' specified database table. The function throws a warning if the resulting data frame is empty.
+#'
+#' @param lock_id Character string used to identify the database access lock
+#'   for the query.
+#' @param table_name Character string specifying the name of the database
+#'   table containing consent data.
+#'
+#' @return A data frame containing consent information with duplicate rows
+#'   removed.
+#' The returned data frame includes the following columns:
+#' - `cons_patient_ref`: Reference to the patient resource.
+#' - `cons_status`: Status of the consent resource (e.g., "active").
+#' - `cons_provision_provision_type`: Type of provision (e.g., "permit").
+#' - `cons_provision_provision_code_system`: Code system for the provision code (e.g., "urn:oid:2.16.840.1.113883.3.1937.777.24.5.3").
+#' - `cons_provision_provision_code_code`: Specific provision code (e.g., "2.16.840.1.113883.3.1937.777.24.5.3.8" for "MDAT wissenschaftlich nutzen").
+#'    (see https://www.medizininformatik-initiative.de/Kerndatensatz/KDS_Consent_2026/MIIIGModulConsent-TechnischeImplementierung-Terminologien.html)
+#' - `cons_provision_provision_period_start`: Start date of the provision period.
+#' - `cons_provision_provision_period_end`: End date of the provision period.
+#'
+#' @details
+#' The function constructs and executes a SQL query using
+#' `etlutils::dbGetReadOnlyQuery()` to retrieve selected consent-related
+#' variables, including patient reference, consent status, provision type,
+#' provision codes, and provision period start and end dates.
+#'
+#' After retrieval, duplicate rows are removed using `distinct()` to ensure
+#' a clean dataset for downstream processing.
+#'
+#' Additional consent variables not used at the moment:
+#' - `cons_scope_code` for the scope of the consent (e.g., "research").
+#' - `cons_category_system` `(https://www.medizininformatik-initiative.de/fhir/modul-consent/CodeSystem/mii-cs-consent-version-modules)
+#'    and `cons_category_code` (2.16.840.1.113883.3.1937.777.24.2.184) for general MII broad consent information.
+#' - `cons_policy_uri` for specific policies related to the consent, such as different versions of the MII Broad Consent.
+#'    (urn:oid:2.16.840.1.113883.3.1937.777.24.2.1790 (MII Broad Consent Version 1.6d);
+#'    urn:oid:2.16.840.1.113883.3.1937.777.24.2.1791 (MII Broad Consent Version 1.6f);
+#'    urn:oid:2.16.840.1.113883.3.1937.777.24.2.2079 (MII Broad Consent Version 1.7.2))
+#' -  `cons_provision_period_start`, `cons_provision_period_end`: broader level of vallidity period
+#'
+#' @importFrom dplyr distinct
+#' @importFrom etlutils dbGetReadOnlyQuery
+#'
+#' @export
+getConsentData <- function(lock_id, table_name) {
+  query <- paste0(
+    "SELECT cons_patient_ref, cons_status, cons_provision_provision_type, ",
+    "cons_provision_provision_code_system, cons_provision_provision_code_code, ",
+    "cons_provision_provision_period_start, cons_provision_provision_period_end ",
+    "FROM ", table_name, "\n"
+  )
+
+  consent_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct()
+
+  if (nrow(consent_table) == 0) {
+    warning("The processed consent table is empty. Please check the data.")
+  }
+
+  return(consent_table)
+}
+
+#------------------------------------------------------------------------------#
+
 #' Retrieve Patient IDs Per Ward Data
 #'
 #' This function retrieves patient data associated with wards, including the ward name,
@@ -306,7 +371,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' This is important for managing concurrent data access in environments where multiple processes
 #' might access the data simultaneously.
 #' @param table_name A character string specifying the name of the database table to query.
-#' This table should include columns `pat_id`, `record_id` and `pat_gebdat`.
+#' This table should include columns `pat_id`, `record_id`, `pat_gebdat` and `patient_complete` ("Unverified"= invalid record).
 #'
 #' @return A dataframe (`patient_fe_table`) that includes patient data, cleaned to ensure distinct
 #' entries per `pat_id`, arranged in order.
@@ -319,7 +384,7 @@ getPidsPerWardData <- function(lock_id, table_name) {
 #' @importFrom dplyr distinct arrange slice_max select mutate
 #' @export
 getPatientFeData <- function(lock_id, table_name) {
-  query <- paste0("SELECT pat_id, record_id, pat_gebdat, input_processing_nr FROM ", table_name, "\n")
+  query <- paste0("SELECT pat_id, record_id, pat_gebdat, patient_complete, input_processing_nr FROM ", table_name, "\n")
   patient_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # create last version view
@@ -362,8 +427,11 @@ getPatientFeData <- function(lock_id, table_name) {
 #'   \item{fall_pat_id}{FHIR-based Patient ID}
 #'   \item{fall_id}{Fall ID from the hospital intern system (cis)}
 #'   \item{fall_studienphase}{Study phase associated with the case}
+#'   \item{actual_fall_studienphase}{correct study phase associated with the case}
 #'   \item{fall_station}{INTERPOLAR-ward fromt he pids_per_ward table}
 #'   \item{fall_aufn_dat}{Admission date of the main encounter}
+#'   \item{fall_ent_dat}{Discharge date of the main encounter}
+#'   \item{fall_complete}{"Complete"= hospitalized, "Incomplete"=discharged, "Unverified"= invalid record}
 #'
 #' @details
 #' The function executes a SQL `SELECT` query on the specified `table_name`, retrieving all
@@ -379,33 +447,38 @@ getPatientFeData <- function(lock_id, table_name) {
 getFallFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
-    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, input_processing_nr ",
+    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, fall_complete, input_processing_nr ",
     "FROM ", table_name, "\n"
   )
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
+    # get correct study phase (first one in fall_fe for each case)
+    dplyr::group_by(fall_fhir_enc_id) |>
+    dplyr::arrange(input_processing_nr, .by_group = TRUE) |>
+    dplyr::mutate(
+      actual_fall_studienphase = dplyr::first(fall_studienphase),
+      .after = fall_studienphase
+    ) |>
+    dplyr::ungroup() |>
     # create last version view with ward as additional grouping variable
     dplyr::slice_max(input_processing_nr, by = c(fall_fhir_enc_id, fall_station)) |>
     dplyr::select(-input_processing_nr) |>
     dplyr::distinct() |>
-    # temporary remove fall_studienphase, since it is not used at the moment (transformation dependent on purpose)
-    dplyr::select(-fall_studienphase) |>
-    dplyr::distinct() |>
     dplyr::arrange(record_id)
 
-  # temporary deactivate, since fall_studienphase is not used at the moment
+  if (any(is.na(fall_fe_table$actual_fall_studienphase)) ||
+    any(fall_fe_table$actual_fall_studienphase == "PhaseBTest")) {
+    warning("The study phase from fall_fe contains NA or PhaseBTest values. These will be replaced with 'PhaseA'.
+            For manual check compare fall_studienphase and actual_fall_studienphase in frontend_table in outpulLocal.")
 
-  # if (any(is.na(fall_fe_table$fall_studienphase))) {
-  #   warning("The fall_fe table contains NA values in fall_studienphase.
-  #           These will be replaced with 'PhaseA'.")
-  #
-  #   fall_fe_table <- fall_fe_table |>
-  #     dplyr::mutate(fall_studienphase = dplyr::if_else(is.na(fall_studienphase),
-  #       "PhaseA",
-  #       fall_studienphase
-  #     )) |>
-  #     dplyr::distinct()
-  # }
+    fall_fe_table <- fall_fe_table |>
+      dplyr::mutate(actual_fall_studienphase = dplyr::if_else(
+        is.na(actual_fall_studienphase) | actual_fall_studienphase == "PhaseBTest",
+        "PhaseA",
+        actual_fall_studienphase
+      )) |>
+      dplyr::distinct()
+  }
 
   # DEBUG START-------------------------------
   if (DEBUG_TEST_REPORTING_WARNINGS) {
@@ -520,4 +593,57 @@ getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
   }
 
   return(mrp_dokumentation_validierung_fe_table)
+}
+
+#' Retrieve Retrospective MRP Evaluation Front-End Data
+#'
+#' Retrieves retrospective MRP (medication-related problem) evaluation data
+#' from the specified front-end database table. The function executes a
+#' read-only SQL query to extract a predefined subset of variables and
+#' returns a cleaned and ordered data frame.
+#'
+#' @param lock_id Character string used to identify the database access lock
+#'   for the query. This ensures coordinated access to the data source.
+#' @param table_name Character string specifying the name of the database
+#'   table containing retrospective MRP evaluation front-end data.
+#'
+#' @return A data frame containing the selected retrospective MRP evaluation
+#'   variables, ordered by `record_id`, `ret_meda_id`, and `ret_id`, with
+#'   duplicate rows removed.
+#'
+#' @details
+#' The function builds a SQL query dynamically using the provided table
+#' name and retrieves the data via `etlutils::dbGetReadOnlyQuery()`. Only
+#' a subset of available variables is currently selected, focusing on
+#' identifiers and key classification fields required for reporting.
+#'
+#' After retrieval, duplicate rows are removed using `distinct()` and the
+#' data is sorted by `record_id`, `ret_meda_id`, and `ret_id` to ensure a
+#' consistent structure for downstream processing.
+#'
+#' If the resulting table is empty, a warning is issued indicating that
+#' the retrospective MRP evaluation data might not yet be available (for
+#' example if Phase B has not been active long enough).
+#'
+#' @importFrom dplyr distinct arrange
+#' @importFrom etlutils dbGetReadOnlyQuery
+#'
+#' @export
+getRetrolektiveMRPBewertungFeData <- function(lock_id, table_name) {
+  query <- paste0(
+    "SELECT record_id, ret_meda_id, ret_id, ret_mrp_zuordnung1, ret_ip_klasse_01, ",
+    "retrolektive_mrpbewertung_complete, ret_gewissheit1, ret_gewiss_grund1_abl, ret_gewiss_grund1_abl_01, ",
+    "ret_gewiss_grund_abl_klin1_neg___1 ",
+    "FROM ", table_name, "\n"
+  )
+
+  retrolektive_mrpbewertung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
+    dplyr::distinct() |>
+    dplyr::arrange(record_id, ret_meda_id, ret_id)
+
+  if (nrow(retrolektive_mrpbewertung_fe_table) == 0) {
+    warning("The mrpbewertung_retro_fe table is empty. Please check the data if Phase B is already ongoing for more than 3 weeks.")
+  }
+
+  return(retrolektive_mrpbewertung_fe_table)
 }
