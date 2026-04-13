@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-03-16 11:41:52
+-- Rights definition file last update : 2026-02-23 15:20:49
 -- Rights definition file size        : 19645 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-03-25 13:58:59
+-- Create time: 2026-04-02 14:59:40
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  base/430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -1985,6 +1985,12 @@ BEGIN
             ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund1_abl varchar;   -- Grund für nicht Bestätigung (varchar)
         END IF; -- column (ret_gewiss_grund1_abl)
 
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_grund1_abl_01)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_grund1_abl_01'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund1_abl_01 varchar;   -- Grund für nicht Bestätigung (varchar)
+        END IF; -- column (ret_gewiss_grund1_abl_01)
+
         IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger1_falsch___1)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_trigger1_falsch___1'
         ) THEN
@@ -2068,6 +2074,12 @@ BEGIN
         ) THEN
             ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl1_2_oth varchar;   -- Kommentar (2. Trigger) (varchar)
         END IF; -- column (ret_gewiss_datengrundl1_2_oth)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_mrpkonzept1)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_mrpkonzept1'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_mrpkonzept1 varchar;   -- WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (varchar)
+        END IF; -- column (ret_gewiss_mrpkonzept1)
 
         IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_sonst1)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_grund_abl_sonst1'
@@ -2255,6 +2267,12 @@ BEGIN
             ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund2_abl varchar;   -- Grund für nicht Bestätigung (varchar)
         END IF; -- column (ret_gewiss_grund2_abl)
 
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_grund2_abl_01)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_grund2_abl_01'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_grund2_abl_01 varchar;   -- Grund für nicht Bestätigung (varchar)
+        END IF; -- column (ret_gewiss_grund2_abl_01)
+
         IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_sonst2)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_grund_abl_sonst2'
         ) THEN
@@ -2344,6 +2362,12 @@ BEGIN
         ) THEN
             ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_datengrundl2_2_oth varchar;   -- Kommentar (2. Trigger) (varchar)
         END IF; -- column (ret_gewiss_datengrundl2_2_oth)
+
+        IF NOT EXISTS ( -- column not exists (ret_gewiss_mrpkonzept2)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_mrpkonzept2'
+        ) THEN
+            ALTER TABLE db_log.retrolektive_mrpbewertung_fe ADD ret_gewiss_mrpkonzept2 varchar;   -- WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (varchar)
+        END IF; -- column (ret_gewiss_mrpkonzept2)
 
         IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_klin2)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'db_log' AND table_name = 'retrolektive_mrpbewertung_fe' AND column_name = 'ret_gewiss_grund_abl_klin2'
@@ -2514,6 +2538,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewissheit1_oth), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl_01), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___3), ''#NULL#'') || ''|||'' ||
@@ -2528,6 +2553,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___4), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1_oth), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2_oth), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_mrpkonzept1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1_neg___1), ''#NULL#'') || ''|||'' ||
@@ -2559,6 +2585,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl_01), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___2), ''#NULL#'') || ''|||'' ||
@@ -2574,6 +2601,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___4), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1_oth), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2_oth), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(ret_gewiss_mrpkonzept2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2_neg___1), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(ret_massn_am2___1), ''#NULL#'') || ''|||'' ||
@@ -2627,6 +2655,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung1), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung1)
           COALESCE(db.to_char_immutable(ret_gewissheit1_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit1_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl)
+          COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl_01), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl_01)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger1_falsch___1)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger1_falsch___2)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger1_falsch___3)
@@ -2641,6 +2670,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_2___4)
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl1_1_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl1_2_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_mrpkonzept1), '#NULL#') || '|||' || -- hash from: WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (ret_gewiss_mrpkonzept1)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst1)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin1)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin1_neg___1)
@@ -2672,6 +2702,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl)
+          COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl_01), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl_01)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst2)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger2_falsch___1)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger2_falsch___2)
@@ -2687,6 +2718,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_2___4)
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl2_1_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl2_2_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_mrpkonzept2), '#NULL#') || '|||' || -- hash from: WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (ret_gewiss_mrpkonzept2)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin2)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin2_neg___1)
           COALESCE(db.to_char_immutable(ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am2___1)
@@ -2746,6 +2778,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung1), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung1)
           COALESCE(db.to_char_immutable(ret_gewissheit1_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit1_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl)
+          COALESCE(db.to_char_immutable(ret_gewiss_grund1_abl_01), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl_01)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger1_falsch___1)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger1_falsch___2)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger1_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger1_falsch___3)
@@ -2760,6 +2793,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_2___4)
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl1_1_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl1_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl1_2_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_mrpkonzept1), '#NULL#') || '|||' || -- hash from: WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (ret_gewiss_mrpkonzept1)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst1)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin1)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin1_neg___1)
@@ -2791,6 +2825,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
           COALESCE(db.to_char_immutable(ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl)
+          COALESCE(db.to_char_immutable(ret_gewiss_grund2_abl_01), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl_01)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst2)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger2_falsch___1)
           COALESCE(db.to_char_immutable(ret_gewiss_trigger2_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger2_falsch___2)
@@ -2806,6 +2841,7 @@ BEGIN
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_2___4)
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl2_1_oth)
           COALESCE(db.to_char_immutable(ret_gewiss_datengrundl2_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl2_2_oth)
+          COALESCE(db.to_char_immutable(ret_gewiss_mrpkonzept2), '#NULL#') || '|||' || -- hash from: WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (ret_gewiss_mrpkonzept2)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin2)
           COALESCE(db.to_char_immutable(ret_gewiss_grund_abl_klin2_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin2_neg___1)
           COALESCE(db.to_char_immutable(ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am2___1)
@@ -3771,6 +3807,7 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit1 IS 'Bewert
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung1 IS 'Zuordnung zu manuellem MRP (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit1_oth IS 'Weitere Informationen (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund1_abl IS 'Grund für nicht Bestätigung (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund1_abl_01 IS 'Grund für nicht Bestätigung (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger1_falsch___1 IS '1 - ret_atc1 (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger1_falsch___2 IS '2 - ret_atc2 (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger1_falsch___3 IS '3 - ret_ip_klasse_disease (varchar)';
@@ -3785,6 +3822,7 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_2_
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_2___4 IS '4 - Anderer Fehler (bitte näher erläutern) (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_1_oth IS 'Kommentar (1. Trigger) (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl1_2_oth IS 'Kommentar (2. Trigger) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_mrpkonzept1 IS 'WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst1 IS 'Bitte näher beschreiben (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin1 IS 'WARUM ist das MRP nicht klinisch relevant? (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin1_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
@@ -3816,6 +3854,7 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit2 IS 'Bewert
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_mrp_zuordnung2 IS 'Zuordnung zu manuellem MRP (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewissheit2_oth IS 'Weitere Informationen (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund2_abl IS 'Grund für nicht Bestätigung (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund2_abl_01 IS 'Grund für nicht Bestätigung (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_sonst2 IS 'Bitte näher beschreiben (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger2_falsch___1 IS '1 - ret_atc1 (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_trigger2_falsch___2 IS '2 - ret_atc2 (varchar)';
@@ -3831,6 +3870,7 @@ COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_2_
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_2___4 IS '4 - Anderer Fehler (bitte näher erläutern) (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_1_oth IS 'Kommentar (1. Trigger) (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_datengrundl2_2_oth IS 'Kommentar (2. Trigger) (varchar)';
+COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_mrpkonzept2 IS 'WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin2 IS 'WARUM ist das MRP nicht klinisch relevant? (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_gewiss_grund_abl_klin2_neg___1 IS '1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)';
 COMMENT ON COLUMN db_log.retrolektive_mrpbewertung_fe.ret_massn_am2___1 IS '1 - Anweisung für die Applikation geben (varchar)';
