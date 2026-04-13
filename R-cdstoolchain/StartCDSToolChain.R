@@ -152,14 +152,11 @@ resetMemory()
 config_db2frontend <- db2frontend::initFrontend2DB()
 # checks needed config_cds2db or config_dataprocessor vs. config_db2frontend?
 resetMemory()
-config_frontend2db <- db2frontend::initDB2Frontend()
-# checks needed config_cds2db or config_dataprocessor vs. config_frontend2db?
-# config_frontend2db and config_db2frontend should be the same and should be checked vise versa during the init of one of these modules
+config_frontend2db <- db2frontend::initDB2Frontend() # should be the same like config_db2frontend
 
 # Check if the parameters in config_cds2db and config_dataprocessor are compatible, e.g. if the encounter
 # filter pattern in config_cds2db matches the expected ward definition in config_dataprocessor
 validateConfigs()
-
 resetMemory()
 
 delete_db_and_redcap <- etlutils::isDefinedAndTrue("CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1") && exists("TOOLCHAIN_DAY") && TOOLCHAIN_DAY == 1

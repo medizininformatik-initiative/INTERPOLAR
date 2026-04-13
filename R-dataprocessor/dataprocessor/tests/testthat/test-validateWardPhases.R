@@ -289,6 +289,6 @@ testthat::test_that("validateWardPhases rejects phase_b_start earlier than phase
 
   testthat::expect_error(
     validateWardPhases(ward_phases, timezone = "UTC"),
-    "phase_b_start must not be earlier than phase_a_start"
+    "phase_b_start must be later than phase_a_start in"
   )
 })
