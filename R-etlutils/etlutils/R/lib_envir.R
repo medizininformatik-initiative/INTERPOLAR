@@ -266,6 +266,68 @@ getGlobalVariablesByPrefix <- function(prefix, astype = c("list", "vector")) {
   getVariablesByPrefix(prefix, astype, envir = .GlobalEnv)
 }
 
+#' Extract value for a given key from key-value lines
+#'
+#' Extracts the first matching value for a specified key from a character vector
+#' of lines. Each line is expected to follow the format `key = 'value'`. If the
+#' key is not found, `NA_character_` is returned.
+#'
+#' @param key_value_line A character vector containing lines with key-value pairs.
+#' @param key A character string specifying the key whose value should be extracted.
+#'
+#' @return A character string containing the extracted value, or `NA_character_`
+#'   if the key is not found.
+#'
+#' @examples
+#' lines <- c(
+#'   "ward_name = 'Station 1'",
+#'   "phase_a_start = '2026-01-01'"
+#' )
+#' extractValuesForKey(lines, "ward_name")
+#'
+#' extractValuesForKey(lines, "phase_b_start")
+#'
+#' @export
+extractValuesForKey <- function(key_value_line, key) {
+  pattern <- paste0("^\\s*", key, "\\s*=\\s*'([^']*)'\\s*$")
+  for (line in key_value_line) {
+    m <- regexec(pattern, line, perl = TRUE)
+    reg <- regmatches(line, m)[[1]]
+    if (length(reg) == 2L) return(reg[2])
+  }
+  NA_character_
+}
+
+#' Extract values for a given key from variables matching a prefix
+#'
+#' Retrieves variables from a given environment whose names start with a
+#' specified prefix and extracts the value for a given key from each variable.
+#' Each variable is expected to be a character vector containing lines in the
+#' format `key = 'value'`.
+#'
+#' @param prefix A character string defining the prefix that variable names
+#'   must start with.
+#' @param key A character string specifying the key whose value should be
+#'   extracted from each variable.
+#' @param envir An environment or named list from which variables should be
+#'   retrieved. Defaults to `.GlobalEnv`.
+#'
+#' @return A named character vector containing the extracted values. The names
+#'   correspond to the variable names. If a key is not found in a variable,
+#'   `NA_character_` is returned for that entry.
+#'
+#' @examples
+#' TEST_VAR1 <- c("ward_name = 'Station 1'")
+#' TEST_VAR2 <- c("ward_name = 'Station 2'")
+#' extractVariablesListValues("TEST_", "ward_name")
+#'
+#' @export
+extractVariablesListValues <- function(prefix, key, envir = .GlobalEnv) {
+  global_vars <- getVariablesByPrefix(prefix, "list", envir)
+  values <- sapply(global_vars, function(lines) extractValuesForKey(lines, key))
+  return(values)
+}
+
 #' Get the value of a variable by name or a default value if the variable is missing.
 #'
 #' This function checks if a variable with the specified name exists. If it does,
@@ -627,13 +689,13 @@ initCommandLineArguments <- function(argument2global_variable_name = c(),
 #' @export
 compareVersionsSemver <- function(version_a, version_b) {
   # split versions into numeric components
-  parse_version <- function(version) {
+  parseVersion <- function(version) {
     parts <- strsplit(version, "\\.", fixed = FALSE)[[1]]
     as.integer(parts)
   }
 
-  a <- parse_version(version_a)
-  b <- parse_version(version_b)
+  a <- parseVersion(version_a)
+  b <- parseVersion(version_b)
 
   # compare component-wise up to the longest version
   max_len <- max(length(a), length(b))
