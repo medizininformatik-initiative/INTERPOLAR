@@ -1,3 +1,5 @@
+#' Gets the name of the module.
+#'
 #' @export
 getModuleName <- function() {
   return("cds2db")
@@ -78,13 +80,17 @@ deleteNextCacheFile <- function() {
 #' validates mandatory parameters, and starts the data retrieval workflow from
 #' the FHIR API to the database.
 #'
+#' @param phase_a_starts A named list of timestamps indicating the start of phase A for each
+#' ward. The names of the list should correspond to the ward names. This is used to determine
+#' which encounters belong to phase A and which do not, based on their start time and the ward
+#' they took place in.
 #' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
 #' @param validate_config Logical. If TRUE, validates the module configuration before starting
 #'                        the retrieval process. Default is TRUE.
 #' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
+retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
   # Initialize and start module
   config <- init(validate_config)
@@ -121,14 +127,14 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
         if (!etlutils::hasNextCacheFile()) {
           # This writes the list of pids_splitted_by_ward into the cache. Same
           # PIDs are present in multiple different cache files)
-          list_of_pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = FALSE)
+          list_of_pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = FALSE, wards_min_encounter_start_date = phase_a_starts)
           etlutils::writeCacheFiles(list_of_pids_splitted_by_ward)
         }
         pids_splitted_by_ward <- etlutils::readNextCacheFile()
       } else {
         # Get a single pids_splitted_by_ward without using the cache and
         # ensuring that every PID is present at most 1 time.
-        pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = TRUE)
+        pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = TRUE, wards_min_encounter_start_date = phase_a_starts)
       }
       all_wards_empty <- !length(unlist(pids_splitted_by_ward))
     })

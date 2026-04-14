@@ -207,6 +207,43 @@ initSubmoduleConstants <- function(path_to_toml, defaults = c(), envir = .Global
   return(constants)
 }
 
+#' Get Variables by Prefix
+#'
+#' Retrieves variables from a given environment whose names start with a specified prefix.
+#' The result can be returned either as a named list or as a flattened named vector.
+#'
+#' @param prefix Character string defining the prefix that variable names must start with.
+#' @param astype Character string specifying the return type. Either "list" (default)
+#' or "vector". If "vector" is chosen, the result is flattened via unlist().
+#' @param envir Environment from which variables should be retrieved. Defaults to .GlobalEnv.
+#'
+#' @return A named list or named vector containing the matched variables and their values.
+#'
+#' @export
+getVariablesByPrefix <- function(prefix, astype = c("list", "vector"), envir = .GlobalEnv) {
+  astype <- match.arg(astype)
+  vars <- if (is.environment(envir)) {
+    ls(envir)
+  } else {
+    names(envir)
+  }
+  matching_vars <- grep(paste0("^", prefix), vars, value = TRUE)
+  result_list <- setNames(
+    lapply(matching_vars, function(var_name) {
+      if (is.environment(envir)) {
+        get(var_name, envir = envir)
+      } else {
+        envir[[var_name]]
+      }
+    }),
+    matching_vars
+  )
+  if (astype %in% "vector") {
+    return(unlist(result_list))
+  }
+  return(result_list)
+}
+
 #' Get Global Variables by Prefix
 #'
 #' This function retrieves all global variables from the environment that match a given prefix and returns them as either a list or a vector.
@@ -226,18 +263,69 @@ initSubmoduleConstants <- function(path_to_toml, defaults = c(), envir = .Global
 #'
 #' @export
 getGlobalVariablesByPrefix <- function(prefix, astype = c("list", "vector")) {
-  astype <- match.arg(astype)
-  global_vars <- ls(globalenv()) # Get all global variables
-  matching_vars <- grep(paste0("^", prefix), global_vars, value = TRUE) # Match variables with the prefix
-  result_list <- lapply(matching_vars, function(var_name) {
-    var_value <- get(var_name, envir = globalenv()) # Get the variable value
-    setNames(list(var_value), var_name) # Create a named list element
-  })
-  # Return as vector if specified
-  if (astype %in% "vector") {
-    return(unlist(result_list))
+  getVariablesByPrefix(prefix, astype, envir = .GlobalEnv)
+}
+
+#' Extract value for a given key from key-value lines
+#'
+#' Extracts the first matching value for a specified key from a character vector
+#' of lines. Each line is expected to follow the format `key = 'value'`. If the
+#' key is not found, `NA_character_` is returned.
+#'
+#' @param key_value_line A character vector containing lines with key-value pairs.
+#' @param key A character string specifying the key whose value should be extracted.
+#'
+#' @return A character string containing the extracted value, or `NA_character_`
+#'   if the key is not found.
+#'
+#' @examples
+#' lines <- c(
+#'   "ward_name = 'Station 1'",
+#'   "phase_a_start = '2026-01-01'"
+#' )
+#' extractValuesForKey(lines, "ward_name")
+#'
+#' extractValuesForKey(lines, "phase_b_start")
+#'
+#' @export
+extractValuesForKey <- function(key_value_line, key) {
+  pattern <- paste0("^\\s*", key, "\\s*=\\s*'([^']*)'\\s*$")
+  for (line in key_value_line) {
+    m <- regexec(pattern, line, perl = TRUE)
+    reg <- regmatches(line, m)[[1]]
+    if (length(reg) == 2L) return(reg[2])
   }
-  return(result_list) # Default return as list
+  NA_character_
+}
+
+#' Extract values for a given key from variables matching a prefix
+#'
+#' Retrieves variables from a given environment whose names start with a
+#' specified prefix and extracts the value for a given key from each variable.
+#' Each variable is expected to be a character vector containing lines in the
+#' format `key = 'value'`.
+#'
+#' @param prefix A character string defining the prefix that variable names
+#'   must start with.
+#' @param key A character string specifying the key whose value should be
+#'   extracted from each variable.
+#' @param envir An environment or named list from which variables should be
+#'   retrieved. Defaults to `.GlobalEnv`.
+#'
+#' @return A named character vector containing the extracted values. The names
+#'   correspond to the variable names. If a key is not found in a variable,
+#'   `NA_character_` is returned for that entry.
+#'
+#' @examples
+#' TEST_VAR1 <- c("ward_name = 'Station 1'")
+#' TEST_VAR2 <- c("ward_name = 'Station 2'")
+#' extractVariablesListValues("TEST_", "ward_name")
+#'
+#' @export
+extractVariablesListValues <- function(prefix, key, envir = .GlobalEnv) {
+  global_vars <- getVariablesByPrefix(prefix, "list", envir)
+  values <- sapply(global_vars, function(lines) extractValuesForKey(lines, key))
+  return(values)
 }
 
 #' Get the value of a variable by name or a default value if the variable is missing.
@@ -601,13 +689,13 @@ initCommandLineArguments <- function(argument2global_variable_name = c(),
 #' @export
 compareVersionsSemver <- function(version_a, version_b) {
   # split versions into numeric components
-  parse_version <- function(version) {
+  parseVersion <- function(version) {
     parts <- strsplit(version, "\\.", fixed = FALSE)[[1]]
     as.integer(parts)
   }
 
-  a <- parse_version(version_a)
-  b <- parse_version(version_b)
+  a <- parseVersion(version_a)
+  b <- parseVersion(version_b)
 
   # compare component-wise up to the longest version
   max_len <- max(length(a), length(b))

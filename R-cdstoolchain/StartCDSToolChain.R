@@ -48,7 +48,7 @@ for (arg in args) {
     if (arg == "--resetLockAndStop") {
       quit(status = 0, save = "no")  # clean exit without error
     }
-  } else if (!arg %in% c("--ignoreNewerDBVersion")) {
+  } else if (!arg %in% c("--ignoreNewerDBVersion", "--ignoreWardNameMismatch")) {
     stop("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop, --ignoreNewerDBVersion")
   }
 }
@@ -80,7 +80,13 @@ resetMemory <- function(...) {
     "day_times",
     "start_day",
     "debug_day_index",
-    "delete_db_and_redcap"
+    "delete_db_and_redcap",
+
+    # Module configurations
+    "config_cds2db",
+    "config_dataprocessor",
+    "config_db2frontend",
+    "config_frontend2db"
   ))
 }
 
@@ -105,22 +111,59 @@ shouldStart <- function(module_name) {
   return(FALSE)
 }
 
+# This function checks if the ward names defined in the encounter filter patterns in config_cds2db
+# match the ward names defined in the PHASES_WARD definitions in config_dataprocessor. If there is a
+# mismatch, it throws an error with details about the mismatch.
+validateConfigs <- function() {
+
+  args <- commandArgs(trailingOnly = TRUE)
+  if ("--ignoreWardNameMismatch" %in% args) {
+    etlutils::catWarningMessage("Ignoring ward name mismatch between config_cds2db and config_dataprocessor due to --ignoreWardNameMismatch argument.")
+    return()
+  }
+
+  encounter_filter_patterns_wards <- etlutils::getVariablesByPrefix("ENCOUNTER_FILTER_PATTERN", envir = config_cds2db)
+  phases_wards <- etlutils::getVariablesByPrefix("PHASES_WARD", envir = config_dataprocessor)
+
+  getWardNames <- function(x) {
+    pattern <- "^\\s*ward_name\\s*=\\s*'([^']*)'\\s*$"
+    vals <- unlist(x, use.names = FALSE)
+    matches <- vals[grepl(pattern, vals)]
+    sub(pattern, "\\1", matches)
+  }
+
+  ward_names_cds2db <- getWardNames(encounter_filter_patterns_wards)
+  ward_names_dataprocessor <- getWardNames(phases_wards)
+
+  # Validate that both ward name vectors contain exactly the same elements
+  if (!setequal(ward_names_cds2db, ward_names_dataprocessor)) {
+    stop(
+      paste0(
+        "Mismatch between ward names in ENCOUNTER_FILTER_PATTERN in 'cds2db_config.toml' and PHASES_WARD definitions in 'dataprocessor_config.toml'. Please fix and restart process.",
+        "\n  Only in ENCOUNTER_FILTER_PATTERN: ",
+        paste(setdiff(ward_names_cds2db, ward_names_dataprocessor), collapse = ", "),
+        "\n  Only in PHASES_WARD: ",
+        paste(setdiff(ward_names_dataprocessor, ward_names_cds2db), collapse = ", "),
+        "\n  If this should be ignored, the start the toolchain with the argument --ignoreWardNameMismatch (use with caution, as it may lead to unexpected errors if the ward names are not compatible between the modules)."
+      )
+    )
+  }
+}
+
 # Initialize modules and validate configurations
 resetMemory()
 config_cds2db <- cds2db::init()
-resetMemory("config_cds2db")
+resetMemory()
 config_dataprocessor <- dataprocessor::init()
-resetMemory("config_cds2db", "config_dataprocessor")
+resetMemory()
 config_db2frontend <- db2frontend::initFrontend2DB()
 # checks needed config_cds2db or config_dataprocessor vs. config_db2frontend?
-resetMemory("config_cds2db", "config_dataprocessor", "config_db2frontend")
-config_frontend2db <- db2frontend::initDB2Frontend()
-# checks needed config_cds2db or config_dataprocessor vs. config_frontend2db?
-# config_frontend2db and config_db2frontend should be the same and should be checked vise versa during the init of one of these modules
+resetMemory()
+config_frontend2db <- db2frontend::initDB2Frontend() # should be the same like config_db2frontend
 
-
-#TODO: Check if the parameters in config_cds2db and config_dataprocessor are compatible, e.g. if the encounter filter pattern in config_cds2db matches the expected ward definition in config_dataprocessor
-
+# Check if the parameters in config_cds2db and config_dataprocessor are compatible, e.g. if the encounter
+# filter pattern in config_cds2db matches the expected ward definition in config_dataprocessor
+validateConfigs()
 resetMemory()
 
 delete_db_and_redcap <- etlutils::isDefinedAndTrue("CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1") && exists("TOOLCHAIN_DAY") && TOOLCHAIN_DAY == 1
@@ -132,7 +175,14 @@ tryCatch({
     if (delete_db_and_redcap && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
       etlutils::dbReset()
     }
-    cds2db::retrieve(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
+    # the dataprocessors validator ensures that there is exact 1 ward name and 1 phase_a_start defined for each ward in the PHASES_WARD definitions.
+    # Therefore, we can safely assume that the length of the vectors is the same and the order is the same, so we can use the ward names and
+    # phase_a_start values in the same order for both modules.
+    ward_names <- etlutils::extractVariablesListValues("PHASES_WARD", "ward_name", config_dataprocessor)
+    phase_a_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start", config_dataprocessor)
+    # set the ward names for the phase_a_start values to get the map from ward_name to it's phase a start date
+    names(phase_a_starts) <- ward_names
+    cds2db::retrieve(phase_a_starts, ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
   }
   if (shouldStart("db2frontend")) {
     db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
@@ -185,6 +235,6 @@ if (!etlutils::isErrorOccured()) {
   status <- 1
 }
 
-if (!interactive() && !etlutils::isProcess("FullToolchain")) {
+if (!interactive() && etlutils::isProcess("FullToolchain")) {
   quit(status = status, save = "no")
 }

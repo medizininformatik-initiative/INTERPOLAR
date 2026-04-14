@@ -31,11 +31,7 @@ init <- function(validate_config = TRUE) {
                        )
   )
   if (validate_config) {
-    # TODO: add validation
-
-    # get the list of wards phases
-    ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")
-    validateWardPhases(ward_phases)
+    validateWardPhases()
   }
   return(config)
 }

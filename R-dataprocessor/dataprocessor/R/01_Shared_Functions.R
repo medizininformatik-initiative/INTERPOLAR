@@ -1,108 +1,119 @@
 #' Validate ward phase definitions
 #'
-#' This function validates ward phase definitions. It checks that each
-#' definition contains exactly one non-empty `ward_name`, exactly one
-#' `phase_a_start`, and at most one `phase_b_start`. It also checks that all
-#' phase timestamps have a valid format and can be parsed as POSIXct values.
+#' Validates ward phase definitions loaded from global variables with the prefix
+#' `PHASES_WARD`. Each definition must contain exactly one non-empty
+#' `ward_name`, exactly one `phase_a_start`, and at most one `phase_b_start`.
+#' The function also checks that all timestamps have a valid format and that
+#' `phase_b_start`, if present, is later than `phase_a_start`.
 #'
-#' @param ward_phases A list of named lists containing ward phase definitions.
 #' @param timezone A character string defining the timezone used for parsing
 #'   phase timestamps.
 #'
-#' @return Invisibly returns `TRUE` if all definitions are valid. Otherwise, the
-#'   function stops with an error describing the first invalid definition found.
+#' @return Invisibly returns `TRUE` if all ward phase definitions are valid.
+#'   Otherwise, the function stops with an error describing the first invalid
+#'   definition found.
 #'
 #' @examples
-#' ward_phases <- list(
-#'   list(
-#'     PHASES_WARD_1 = c(
-#'       "ward_name = 'Station 1'",
-#'       "phase_a_start = '2026-01-11 10:00:00'",
-#'       "phase_b_start = '2026-01-21 10:00:00'"
-#'     )
-#'   ),
-#'   list(
-#'     PHASES_WARD_2 = c(
-#'       "ward_name = 'Station 2'",
-#'       "phase_a_start = '2026-01-11'",
-#'       "phase_b_start = '2026-01-12'"
-#'     )
-#'   )
+#' PHASES_WARD_1 <- c(
+#'   "ward_name = 'Station 1'",
+#'   "phase_a_start = '2026-01-11 10:00:00'",
+#'   "phase_b_start = '2026-01-21 10:00:00'"
 #' )
 #'
-#' validateWardPhases(ward_phases, timezone = "UTC")
+#' PHASES_WARD_2 <- c(
+#'   "ward_name = 'Station 2'",
+#'   "phase_a_start = '2026-01-11'",
+#'   "phase_b_start = '2026-01-12'"
+#' )
+#'
+#' validateWardPhases(timezone = "UTC")
 #'
 #' @export
-validateWardPhases <- function(ward_phases, timezone = GLOBAL_TIMEZONE) {
+validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
 
-  parsed_records <- etlutils::parseStructuredConfigDefinitions(
-    definitions = ward_phases,
-    allowed_key_pattern = "ward_name|phase_a_start|phase_b_start",
-    allow_plus = FALSE
-  )
+  msg_prefix <- "dataprocessor_config.toml: "
 
-  if (length(parsed_records) == 0L) {
+  ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")
+  if (!is.list(ward_phases) || length(ward_phases) == 0L) {
     return(invisible(TRUE))
   }
 
-  definition_names <- unique(vapply(parsed_records, `[[`, "", "definition_name"))
+  pattern <- "^\\s*(ward_name|phase_a_start|phase_b_start)\\s*=\\s*'([^']*)'\\s*$"
+
   ward_names <- character()
-
-  for (definition_name in definition_names) {
-    definition_records <- parsed_records[
-      vapply(parsed_records, `[[`, "", "definition_name") == definition_name
-    ]
-
-    keys <- vapply(definition_records, `[[`, "", "key")
-
-    ward_name_records <- definition_records[keys == "ward_name"]
-    phase_a_records <- definition_records[keys == "phase_a_start"]
-    phase_b_records <- definition_records[keys == "phase_b_start"]
-
-    if (length(ward_name_records) != 1L) {
-      stop("Definition ", definition_name," must contain exactly one ward_name, but contains ",length(ward_name_records), ".")
+  getEntryName <- function(x, index) {
+    x_names <- names(x)
+    if (is.null(x_names) || length(x_names) < index || is.na(x_names[index]) || x_names[index] == "") {
+      return(paste0("[[", index, "]]"))
     }
-
-    if (length(phase_a_records) != 1L) {
-      stop("Definition ", definition_name," must contain exactly one phase_a_start, but contains ",length(phase_a_records), ".")
-    }
-
-    if (length(phase_b_records) > 1L) {
-      stop("Definition ", definition_name," must contain at most one phase_b_start, but contains ",length(phase_b_records), ".")
-    }
-
-    ward_name_record <- ward_name_records[[1]]
-    phase_a_record <- phase_a_records[[1]]
-
-    if (trimws(ward_name_record$value) == "") {
-      stop("ward_name must not be empty in ", ward_name_record$definition_name, " / ",ward_name_record$entry_name, " / line ", ward_name_record$line_index)
-    }
-
-    if (ward_name_record$value %in% ward_names) {
-      stop("Duplicate ward_name found: '", ward_name_record$value, "'.")
-    }
-
-    phase_a_start <- etlutils::parseTimestamp(phase_a_record$value)
-    if (is.na(phase_a_start)) {
-      stop("phase_a_start is not a valid date/time in ", phase_a_record$definition_name, " / ", phase_a_record$entry_name, " / line ", phase_a_record$line_index, ": ", phase_a_record$value)
-    }
-
-    if (length(phase_b_records) == 1L) {
-      phase_b_record <- phase_b_records[[1]]
-      phase_b_start <- etlutils::parseTimestamp(phase_b_record$value)
-
-      if (is.na(phase_b_start)) {
-        stop("phase_b_start is not a valid date/time in ", phase_b_record$definition_name, " / ", phase_b_record$entry_name, " / line ", phase_b_record$line_index, ": ", phase_b_record$value)
-      }
-
-      if (phase_b_start < phase_a_start) {
-        stop("phase_b_start must not be earlier than phase_a_start in ",definition_name, ".")
-      }
-    }
-
-    ward_names <- c(ward_names, ward_name_record$value)
+    x_names[index]
   }
 
+  for (i in seq_along(ward_phases)) {
+
+    entry_name <- getEntryName(ward_phases, i)
+
+    entry <- ward_phases[[i]]
+    if (!is.character(entry)) {
+      stop(msg_prefix, "Entry ", entry_name, " must be a character vector.")
+    }
+    if (length(entry) == 0L) {
+      stop(msg_prefix, "Entry ", entry_name, " must not be empty.")
+    }
+
+    keys <- character()
+    values <- character()
+
+    for (line_index in seq_along(entry)) {
+      line <- entry[[line_index]]
+      parts <- strsplit(line, "(?=(?:[^']*'[^']*')*[^']*$)\\+", perl = TRUE)[[1]]
+      if (length(parts) > 1L) {
+        stop(msg_prefix, "Character '+' is not allowed in entry ", entry_name, " / line ", line_index, ": ", line)
+      }
+      if (!grepl(pattern, line, perl = TRUE)) {
+        stop(msg_prefix, "Invalid line in entry ", entry_name, " / line ", line_index, ": ", line)
+      }
+      match <- regmatches(line, regexec(pattern, line, perl = TRUE))[[1]]
+      keys <- c(keys, match[2])
+      values <- c(values, match[3])
+    }
+
+    if (sum(keys == "ward_name") != 1L) {
+      stop(msg_prefix, "Entry ", entry_name, " must contain exactly one ward_name.")
+    }
+    if (sum(keys == "phase_a_start") != 1L) {
+      stop(msg_prefix, "Entry ", entry_name, " must contain exactly one phase_a_start.")
+    }
+    if (sum(keys == "phase_b_start") > 1L) {
+      stop(msg_prefix, "Entry ", entry_name, " must contain at most one phase_b_start.")
+    }
+
+    ward_name <- values[keys == "ward_name"]
+    if (trimws(ward_name) == "") {
+      stop(msg_prefix, "ward_name must not be empty in entry ", entry_name, ".")
+    }
+    if (ward_name %in% ward_names) {
+      stop(msg_prefix, "Duplicate ward_name found: '", ward_name, "'.")
+    }
+
+    phase_a_raw <- values[keys == "phase_a_start"]
+    phase_a <- etlutils::parseTimestamp(phase_a_raw, timezone = timezone)
+
+    if (is.na(phase_a)) {
+      stop(msg_prefix, "phase_a_start is not a valid timestamp in entry ", entry_name, ": ", phase_a_raw)
+    }
+    if (any(keys == "phase_b_start")) {
+      phase_b_raw <- values[keys == "phase_b_start"]
+      phase_b <- etlutils::parseTimestamp(phase_b_raw, timezone = timezone)
+      if (is.na(phase_b)) {
+        stop(msg_prefix, "phase_b_start is not a valid timestamp in entry ", entry_name, ": ", phase_b_raw)
+      }
+      if (!(phase_a < phase_b)) {
+        stop(msg_prefix, "phase_a_start must be earlier than phase_b_start in entry ", entry_name, ".")
+      }
+    }
+    ward_names <- c(ward_names, ward_name)
+  }
   invisible(TRUE)
 }
 

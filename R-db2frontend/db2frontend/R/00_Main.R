@@ -1,16 +1,17 @@
 initInternal <- function(module_name, validate_config = TRUE) {
-  etlutils::initModule(module_name,
-                       db_schema_base_name = "db2frontend",
-                       path_to_toml = "./R-db2frontend/db2frontend_config.toml",
-                       mandatory_parameters = c(
-                         "REDCAP_URL",
-                         "REDCAP_TOKEN",
-                         "PATH_TO_DB_CONFIG_TOML"
-                       )
+  config <- etlutils::initModule(module_name,
+                                 db_schema_base_name = "db2frontend",
+                                 path_to_toml = "./R-db2frontend/db2frontend_config.toml",
+                                 mandatory_parameters = c(
+                                   "REDCAP_URL",
+                                   "REDCAP_TOKEN",
+                                   "PATH_TO_DB_CONFIG_TOML"
+                                 )
   )
   if (validate_config) {
     # TODO: add validation for common parameters of frontend2db and db2frontend
   }
+  return(config)
 }
 
 #' Initializes the module context for frontend2db.

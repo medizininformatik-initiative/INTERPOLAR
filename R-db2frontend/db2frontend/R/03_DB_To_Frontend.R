@@ -127,7 +127,7 @@ importDB2Redcap <- function() {
       columns <- c(db_generated_id_col_name, table_description[[table_name]]$COLUMN_NAME)
 
       # Create SQL query dynamically based on columns
-      query <- sprintf("SELECT %s FROM v_%s", paste(columns, collapse = ", "), table_name)
+      query <- sprintf("SELECT %s FROM v_%s_fe_last_version", paste(columns, collapse = ", "), table_name)
 
       # Fetch data from the database
       data_from_db <- etlutils::dbGetReadOnlyQuery(query, lock_id = "importDB2Redcap()")

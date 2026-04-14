@@ -334,11 +334,13 @@ getEncounters <- function(table_description, current_datetime) {
 #' parameter is not NA then the patient IDs are loaded from the specified file (one PID per line).
 #'
 #' @param create_single_pids_per_ward If TRUE then ... else ...
+#' @param wards_min_encounter_start_date a map from a ward name to the minimum encounter start date of encounters which
+#' should be considered for the assignment of patients to this ward. If NULL then no filtering by encounter start date is applied.
 #' @param log_result logical indicating that the result of the functions should be logged via cat. Default is TRUE.
 #'
 #' @return the relevant patient IDs per ward
 #'
-getPIDsSplittedByWard <- function(create_single_pids_per_ward, log_result = TRUE) {
+getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encounter_start_date = NULL, log_result = TRUE) {
 
   read_pids_from_file <- exists("DEBUG_PATH_TO_RAW_RDATA_FILES")
 
@@ -399,36 +401,9 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, log_result = TRUE
     })
   }
 
-  # extract ID from references
-  for (i in seq_along(pids_splitted_by_ward)) {
-    pids_splitted_by_ward[[i]][, patient_id := etlutils::getAfterLastSlash(patient_id)]
-  }
-
-  etlutils::runLevel3("Ensure every Encounter/Patient ID is only assigned to one ward", {
-    # Combine all patient IDs from the list into a data table with their corresponding stations
-    pids_per_ward <- rbindPidsSplittedByWard(pids_splitted_by_ward)
-
-    # Find patient IDs that appear in multiple different wards
-    multi_ward_patients <- unique(pids_per_ward[, .(patient_id, ward_name)])[, .N, by = patient_id][N > 1, patient_id]
-    # Keep only rows where patient_id appears in multiple different wards
-    duplicates_pids_per_ward <- pids_per_ward[patient_id %in% multi_ward_patients]
-    # Stop if duplicates pids are found
-    if (nrow(duplicates_pids_per_ward)) {
-      if (read_pids_from_file) {
-        error_message_part <- paste0("Please fix it in the file '", path_to_PID_list_file, "'.\n")
-      } else {
-        error_message_part <- "Please fix the variables 'ENCOUNTER_FILTER_PATTERN' in the toml file.\n"
-      }
-      error_message <- paste0("Invalid patient_ids: The following patient_ids are assigned more than in one ward.\n",
-                              error_message_part,
-                              etlutils::getPrintString(duplicates_pids_per_ward), "\n",
-                              "Hint: To ensure that a patient only has exactly one Encounter assigned to exactly one ward, all but one Encounter will be removed.\n",
-                              "      Only the encounters with the latest start date are left.\n",
-                              "      If there are several, then the lastUpdateDate of the Encounter is checked.\n",
-                              "      If there are still several, the first Encounter in the list is simply left.\n")
-      etlutils::catWarningMessage(error_message) # first this was an stop error but now it is a warning
-    }
-  })
+  ###
+  ### START helper functions ###
+  ###
 
   joinPidsPerWardAndEnconters <- function(pids_per_ward, encounters) {
     # Join encounter info (start + meta) to combined table
@@ -496,38 +471,87 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, log_result = TRUE
     return(list_of_pids_splitted_by_wards)
   }
 
-  pids_per_ward_with_encounter_details <- joinPidsPerWardAndEnconters(pids_per_ward, encounters)
+  ###
+  ### END helper functions ###
+  ###
 
-  if (!create_single_pids_per_ward) {
-    list_of_pids_splitted_by_ward <- splitPidsPerWardByWardForUniquePidsAndEncounterStart(pids_per_ward_with_encounter_details)
-    pids_splitted_by_ward <- unlist(list_of_pids_splitted_by_ward, recursive = FALSE) # needed only for logging in the next part
-  } else {
-    pids_per_ward_with_encounter_details <- removeMultipleEncountersForPid(pids_per_ward_with_encounter_details)
-    pids_splitted_by_ward <- splitPidsPerWardByWard(pids_per_ward_with_encounter_details)
-  }
+  etlutils::runLevel3(paste("Generate single pids_per_ward"), {
+    # extract ID from references
+    for (i in seq_along(pids_splitted_by_ward)) {
+      pids_splitted_by_ward[[i]][, patient_id := etlutils::getAfterLastSlash(patient_id)]
+    }
+    # Combine all patient IDs from the list into a data table with their corresponding stations
+    pids_per_ward <- rbindPidsSplittedByWard(pids_splitted_by_ward)
+    pids_per_ward_with_encounter_details <- joinPidsPerWardAndEnconters(pids_per_ward, encounters)
+  })
+
+  etlutils::runLevel3("Remove all Encounter/Patient IDs which start before the phaseA start of the current ward", {
+    if (!is.null(wards_min_encounter_start_date)) {
+      for (ward in names(wards_min_encounter_start_date)) {
+        min_start_date <- wards_min_encounter_start_date[[ward]]
+        pids_per_ward_with_encounter_details <- pids_per_ward_with_encounter_details[!(ward_name == ward & `period/start` < min_start_date)]
+      }
+    }
+  })
+
+  etlutils::runLevel3("Warn if Encounter/Patient ID is assigned more than one ward", {
+
+    # Find patient IDs that appear in multiple different wards
+    multi_ward_patients <- unique(pids_per_ward[, .(patient_id, ward_name)])[, .N, by = patient_id][N > 1, patient_id]
+    # Keep only rows where patient_id appears in multiple different wards
+    duplicates_pids_per_ward <- pids_per_ward[patient_id %in% multi_ward_patients]
+    # Stop if duplicates pids are found
+    if (nrow(duplicates_pids_per_ward)) {
+      if (read_pids_from_file) {
+        error_message_part <- paste0("Please fix it in the file '", path_to_PID_list_file, "'.\n")
+      } else {
+        error_message_part <- "Please fix the variables 'ENCOUNTER_FILTER_PATTERN' in the toml file.\n"
+      }
+      error_message <- paste0("Invalid patient_ids: The following patient_ids are assigned more than in one ward.\n",
+                              error_message_part,
+                              etlutils::getPrintString(duplicates_pids_per_ward), "\n",
+                              "Hint: To ensure that a patient only has exactly one Encounter assigned to exactly one ward, all but one Encounter will be removed.\n",
+                              "      Only the encounters with the latest start date are left.\n",
+                              "      If there are several, then the lastUpdateDate of the Encounter is checked.\n",
+                              "      If there are still several, the first Encounter in the list is simply left.\n")
+      etlutils::catWarningMessage(error_message) # first this was an stop error but now it is a warning
+    }
+  })
+
+  etlutils::runLevel3("Create the final list_of_pids_splitted_by_ward or pids_splitted_by_ward", {
+    if (!create_single_pids_per_ward) {
+      list_of_pids_splitted_by_ward <- splitPidsPerWardByWardForUniquePidsAndEncounterStart(pids_per_ward_with_encounter_details)
+      pids_splitted_by_ward <- unlist(list_of_pids_splitted_by_ward, recursive = FALSE) # needed only for logging in the next part
+    } else {
+      pids_per_ward_with_encounter_details <- removeMultipleEncountersForPid(pids_per_ward_with_encounter_details)
+      pids_splitted_by_ward <- splitPidsPerWardByWard(pids_per_ward_with_encounter_details)
+    }
+  })
 
   if (log_result) {
-    no_wards <- !length(pids_splitted_by_ward)
-    all_wards_empty <- all(sapply(pids_splitted_by_ward, function(set) length(set) == 0))
-    if (!no_wards && !all_wards_empty) {
-      cat("Found the following patient IDs for ward(s) '", paste0(names(pids_splitted_by_ward), collapse = "', '"), "':\n", sep = "")
-      print(pids_splitted_by_ward)
-    } else {
-      searched_resource <- ifelse(read_pids_from_file, "Patient IDs", "Encounters")
-      if (no_wards) {
-        message <- paste0("No ward names and no ", searched_resource, "found ")
-      } else if (all_wards_empty) {
-        message <- paste0("No ", searched_resource, " found for ward(s) '", paste0(names(pids_splitted_by_ward), collapse = "', '"), "' ")
-      }
-      if (read_pids_from_file) {
-        message <- paste0(message, "in file '", path_to_PID_list_file, "'.\n")
+    etlutils::runLevel3("Log getPIDsSplittedByWard() result", {
+      no_wards <- !length(pids_splitted_by_ward)
+      all_wards_empty <- all(sapply(pids_splitted_by_ward, function(set) length(set) == 0))
+      if (!no_wards && !all_wards_empty) {
+        cat("Found the following patient IDs for ward(s) '", paste0(names(pids_splitted_by_ward), collapse = "', '"), "':\n", sep = "")
+        print(pids_splitted_by_ward)
       } else {
-        # current_datetime can be only a start date or a vector with an start and end date (in DEBUG mode)
-        current_datetime_display <- ifelse(length(current_datetime) == 1, current_datetime, paste0("start ", paste0(current_datetime, collapse = " to end ")))
-        message <- paste0(message, "on FHIR server for timestamp ", current_datetime_display, ".\n")
+        searched_resource <- ifelse(read_pids_from_file, "Patient IDs", "Encounters")
+        if (no_wards) {
+          message <- paste0("No ward names and no ", searched_resource, "found ")
+        } else if (all_wards_empty) {
+          message <- paste0("No ", searched_resource, " found for ward(s) '", paste0(names(pids_splitted_by_ward), collapse = "', '"), "' ")
+        }
+        if (read_pids_from_file) {
+          message <- paste0(message, "in file '", path_to_PID_list_file, "'.\n")
+        } else {
+          # current_datetime can be only a start date or a vector with an start and end date (in DEBUG mode)
+          current_datetime_display <- ifelse(length(current_datetime) == 1, current_datetime, paste0("start ", paste0(current_datetime, collapse = " to end ")))
+          message <- paste0(message, "on FHIR server for timestamp ", current_datetime_display, ".\n")
+        }
+        etlutils::catWarningMessage(message)
       }
-      etlutils::catWarningMessage(message)
-    }
+    })
   }
   return(if (exists("list_of_pids_splitted_by_ward")) list_of_pids_splitted_by_ward else pids_splitted_by_ward)
 }

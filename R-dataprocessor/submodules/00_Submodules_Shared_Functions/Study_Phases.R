@@ -20,7 +20,7 @@ extractSingleEntryLinesValue <- function(entry_lines, key) {
 extractValues <- function(list_with_string_vector, key) {
   values <- c()
   for (i in seq_along(list_with_string_vector)) {
-    lines <- list_with_string_vector[[i]][[1]]
+    lines <- list_with_string_vector[[i]]
     value <- extractSingleEntryLinesValue(lines, key)
     if (!is.na(value)) {
       values <- c(values, value)
@@ -30,77 +30,21 @@ extractValues <- function(list_with_string_vector, key) {
 }
 
 #
-# Validate the ward phase definitions from the configuration. Checks for required fields, correct formats, and logical consistency.
-#
-validateWardPhasesDefinition <- function() {
-  if (!etlutils::isDefinedAndTrue("STUDY_PHASE_IS_VALID", envir = .dataprocessor_shared_functions_env)) {
-    ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")
-    ward_names <- character(length(ward_phases))
-
-    for (i in seq_along(ward_phases)) {
-
-      entry <- ward_phases[[i]]
-      if (!is.list(entry) || length(entry) < 1L)
-        stop("Entry ", i, " is not a valid ward definition.")
-
-      lines <- entry[[1]]
-      if (!is.character(lines))
-        stop("Entry ", i, " does not contain a character vector.")
-
-      ward_name <- extractSingleEntryLinesValue(lines, "ward_name")
-      if (is.na(ward_name) || !nzchar(ward_name))
-        stop("Missing ward_name in entry ", i, ".")
-
-      ward_names[i] <- ward_name
-
-      phase_a <- extractSingleEntryLinesValue(lines, "phase_a_start")
-      if (is.na(phase_a))
-        stop("Missing phase_a_start in ward '", ward_name, "'.")
-
-      phase_a <- etlutils::parseTimestamp(phase_a, stop_on_invalid = TRUE)
-
-      phase_b <- extractSingleEntryLinesValue(lines, "phase_b_start")
-      if (!is.na(phase_b)) {
-        phase_b <- etlutils::parseTimestamp(phase_b, stop_on_invalid = TRUE)
-        if (!(phase_a < phase_b))
-          stop("phase_a_start must be earlier than phase_b_start in ward '", ward_name, "'.")
-      }
-    }
-
-    if (any(duplicated(ward_names))) {
-      dup <- ward_names[duplicated(ward_names)][1]
-      stop("Duplicate ward_name detected: '", dup, "'.")
-    }
-
-    assign("STUDY_PHASE_IS_VALID", TRUE, envir = .dataprocessor_shared_functions_env)
-  }
-
-  invisible(TRUE)
-}
-
-
-#
 # Get the study phase for a unique ward_name from defined toml parameters for a specific timestamp
 #
 getStudyPhase <- function(ward_name, date_time) {
-
   # if the ward is defined as a Phase B test ward, return "PhaseBTest" without checking the date,
   # because this is used for testing purposes and should not be affected by the date
   if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST") && ward_name %in% WARDS_PHASE_B_TEST) {
     return("PhaseBTest")
   }
 
-  # check if the ward phases are valid, this is necessary to ensure that the following code can rely on
-  # the correct format of the ward phases and that all necessary fields are present. This check is not
-  # computationally expensive and should be done before any processing of the ward phases is done.
-  validateWardPhasesDefinition()
-
   # get the index of the ward phase definition for the given ward name, return -1 if not found
   getWardPhaseIndex <- function(ward_phases, ward_name) {
     # Build regex allowing arbitrary whitespace around '='
     pattern <- paste0("ward_name\\s*=\\s*'", ward_name, "'")
     for (i in seq_along(ward_phases)) {
-      lines <- ward_phases[[i]][[1]]
+      lines <- ward_phases[[i]]
       if (any(grepl(pattern, lines, perl = TRUE))) {
         return(i)
       }
@@ -115,7 +59,7 @@ getStudyPhase <- function(ward_name, date_time) {
   phase_def_index <- getWardPhaseIndex(ward_phases, ward_name)
   if (phase_def_index != -1L) {
     phase <- "NoPhaseActive" # indicates that the ward is defined in the configuration but no phase is active for the given date_time
-    lines <- ward_phases[[phase_def_index]][[1]]
+    lines <- ward_phases[[phase_def_index]]
     phase_b_start <- etlutils::parseTimestamp(extractSingleEntryLinesValue(lines, "phase_b_start"))
     if (!is.na(phase_b_start) && date_time >= phase_b_start) {
       phase <- "PhaseB"
@@ -134,10 +78,6 @@ getStudyPhase <- function(ward_name, date_time) {
 # Check if the study has Phase B wards defined in the configuration.
 #
 isPhaseBActive <- function(timestamp =  etlutils::as.POSIXctWithTimezone(Sys.time())) {
-  # check if the ward phases are valid, this is necessary to ensure that the following code can rely on
-  # the correct format of the ward phases and that all necessary fields are present. This check is not
-  # computationally expensive and should be done before any processing of the ward phases is done.
-  validateWardPhasesDefinition()
   # get all phase_b_start values from the ward phases and check if any is before the given timestamp
   ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")
   phase_b_starts <- extractValues(ward_phases, "phase_b_start")
@@ -157,10 +97,6 @@ isPhaseBActive <- function(timestamp =  etlutils::as.POSIXctWithTimezone(Sys.tim
 # Check if the study has no or not only Phase A wards defined in the configuration.
 #
 hasPhaseBOrBTestWards <- function(timestamp =  etlutils::as.POSIXctWithTimezone(Sys.time())) {
-  # check if the ward phases are valid, this is necessary to ensure that the following code can rely on
-  # the correct format of the ward phases and that all necessary fields are present. This check is not
-  # computationally expensive and should be done before any processing of the ward phases is done.
-  validateWardPhasesDefinition()
   if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST")) {
     return(TRUE)
   }
