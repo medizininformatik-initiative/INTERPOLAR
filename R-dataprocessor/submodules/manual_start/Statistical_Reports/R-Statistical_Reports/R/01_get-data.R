@@ -537,7 +537,7 @@ getMedikationsanalyseFeData <- function(lock_id, table_name) {
     dplyr::arrange(record_id, fall_meda_id, meda_dat)
 
   if (nrow(medikationsanalyse_fe_table) == 0) {
-    stop("The medikationsanalyse_fe table is empty. Please check the data.")
+    warning("The medikationsanalyse_fe table is empty. Please check the data.")
   }
 
   return(medikationsanalyse_fe_table)
@@ -589,7 +589,7 @@ getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
     dplyr::arrange(record_id, mrp_meda_id, mrp_id)
 
   if (nrow(mrp_dokumentation_validierung_fe_table) == 0) {
-    stop("The mrp_dokumentation_validierung_fe table is empty. Please check the data.")
+    warning("The mrp_dokumentation_validierung_fe table is empty. Please check the data.")
   }
 
   return(mrp_dokumentation_validierung_fe_table)

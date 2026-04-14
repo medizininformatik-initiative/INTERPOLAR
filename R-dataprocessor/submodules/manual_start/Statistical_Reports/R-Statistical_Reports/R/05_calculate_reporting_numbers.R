@@ -164,7 +164,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
     frontend_summary_data <- frontend_summary_data |>
       dplyr::mutate(table_count_less_than_5_patients = ward_week_count_less_than_5)
   } else {
-    stop("Unsupported grouping variables for frontend summary calculation.
+    warning("Unsupported grouping variables for frontend summary calculation.
             Please use either 'ward_name' or c('ward_name', 'calendar_week').")
   }
 
