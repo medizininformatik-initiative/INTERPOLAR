@@ -199,28 +199,8 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 
 [data.import]
 #Alles Nachladen (Fallebene: Fälle über FHIR-PID, FHIR-Enc-ID, FHIR-Identifier oder Zeitraum herunterladen):
-DATA_IMPORT_RANGE_START = "2025-01-01 00:00:00"
-DATA_IMPORT_RANGE_END = "2026-01-01 00:00:00"
-
-DATA_IMPORT_PATH_TO_FHIR_PIDS = ""
-DATA_IMPORT_PATH_TO_FHIR_ENC_IDS = ""
-DATA_IMPORT_PATH_TO_FHIR_IDENTIFIERS = ""
-DATA_IMPORT_FHIR_PIDS = [
-  "patient_id_1",
-  "patient_id_2",
-  "patient_id_3"
-]
-DATA_IMPORT_FHIR_ENC_IDS = [
-  "encounter_id_1",
-  "encounter_id_2",
-  "encounter_id_3"
-]
-DATA_IMPORT_FHIR_IDENTIFIERS = [
-  #"system = 'http://www.commonidentifiersystem.de'", Braucht man das?
-  "identifier1",
-  "identifier2",
-  "identifier3"
-]
+#DATA_IMPORT_RANGE_START = "2099-01-01 00:00:00"
+#DATA_IMPORT_RANGE_END = "2099-12-31 00:00:00"
 
 
 [database]
