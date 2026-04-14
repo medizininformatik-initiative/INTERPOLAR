@@ -151,7 +151,7 @@ Ziel: lade die für das Reporting relevanten Medikationsanalyse-Daten aus der Fr
     -   `meda_id` (ID der Medikationsanalyse (= Fallidentifikator im Klinikinformationssystem (CIS) + Suffix z.B. "-1" für erste Analyse))
     -   `meda_dat` (Datum der Medikationsanalyse: wichtig für das Mapping zum Versorgungsstellenkontakt)
     -   `medikationsanalyse_complete` (Form Status der Medikationsanalyse, z.B. "Complete" für abgeschlossene Analyse, "Incomplete" für unvollständige Analyse, "Unverified" für ungültige z.B. versehentliche Anlage?)
--   stoppt das Skript wenn kein Datensatz gefunden wurde
+-   Warnung wenn kein Datensatz gefunden wurde
 
 #### `getMRPDokumentationValidierungFeData` (`v_mrpdokumentation_validierung_fe_last_version`) --\> mrp_dokumentation_validierung_fe_table
 
@@ -165,7 +165,7 @@ Ziel: lade die für das Reporting relevanten MRP-Dokumentations-Daten aus der Fr
     -   `mrp_pigrund___21` (Indikator, ob das MRP eine Kontraindikation darstellt ("Checked" = ja / "Unchecked" = nein))
     -   `mrp_dokup_hand_emp_akz` (Ergebnis der Intervention: "Arzt / Pflege informiert", "Intervention vorgeschlagen und umgesetzt", "Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation)", "Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung)", "Intervention vorgeschlagen, Umsetzung unbekannt", "Problem nicht gelöst")
     -   `mrpdokumentation_validierung_complete` (Form Status der MRP-Dokumentation, z.B. "Complete" für abgeschlossene Dokumentation, "Incomplete" für unvollständige Dokumentation, "Unverified" für ungültige z.B. versehentliche Anlage?)
--   stoppt das Skript wenn kein Datensatz gefunden wurde
+-   Warnung wenn kein Datensatz gefunden wurde
 
 ### 2. Mapping und Kuratieren der Daten unter Ableiten von Zusammenhängen
 
