@@ -49,7 +49,7 @@ for (arg in args) {
       quit(status = 0, save = "no")  # clean exit without error
     }
   } else if (!arg %in% c("--ignoreNewerDBVersion", "--ignoreWardNameMismatch")) {
-    stop("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop, --ignoreNewerDBVersion")
+    warning("Unknown argument: ", arg, "\nAllowed arguments: --resetLock, --resetlockAndStop, --ignoreNewerDBVersion")
   }
 }
 

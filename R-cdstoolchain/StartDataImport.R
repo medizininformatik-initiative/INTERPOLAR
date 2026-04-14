@@ -6,11 +6,6 @@ library(db2frontend)
 etlutils::setProcess("DataImport")
 .data_import_env <- new.env() # save Variables which should not be deleted in StartCDSToolChain$resetMemory()
 
-mustFinishPreviousDataImport <- function() {
-  # TODO: implementieren
-  return(FALSE)
-}
-
 skipPreviousDataImport <- function() {
   skip <- FALSE
   args <- commandArgs(trailingOnly = TRUE)
