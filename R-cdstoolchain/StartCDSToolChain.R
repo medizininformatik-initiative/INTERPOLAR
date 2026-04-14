@@ -175,7 +175,14 @@ tryCatch({
     if (delete_db_and_redcap && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
       etlutils::dbReset()
     }
-    cds2db::retrieve(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
+    # the dataprocessors validator ensures that there is exact 1 ward name and 1 phase_a_start defined for each ward in the PHASES_WARD definitions.
+    # Therefore, we can safely assume that the length of the vectors is the same and the order is the same, so we can use the ward names and
+    # phase_a_start values in the same order for both modules.
+    ward_names <- etlutils::extractVariablesListValues("PHASES_WARD", "ward_name", config_dataprocessor)
+    phase_a_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start", config_dataprocessor)
+    # set the ward names for the phase_a_start values to get the map from ward_name to it's phase a start date
+    names(phase_a_starts) <- ward_names
+    cds2db::retrieve(phase_a_starts, ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
   }
   if (shouldStart("db2frontend")) {
     db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
