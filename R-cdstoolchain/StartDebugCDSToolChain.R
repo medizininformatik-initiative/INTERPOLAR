@@ -8,6 +8,7 @@ if (grepl('/R-cdstoolchain', getwd())) setwd("../")
 if (!I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED) {
   stop("You must set I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE to run this script!")
 }
+# CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1 <- FALSE # NEVER SET THIS TO TRUE UNLESS YOU KNOW WHAT YOU ARE DOING! This is only for test purposes and should never be used in production or on real data!
 
 library(etlutils)
 library(cds2db)
@@ -15,11 +16,12 @@ library(dataprocessor)
 library(db2frontend)
 
 etlutils::setProcess("DebugCDSToolchain")
+.start_debug_env <- new.env() # save Variables which should not be deleted in StartCDSToolChain$resetMemory()
 
 # Reset error status
 options(error = NULL)
 
-start_full <- Sys.time()
+.start_debug_env$start_full <- Sys.time()
 
 ############################
 ### START TEST DEFINITON ###
@@ -34,7 +36,7 @@ DEBUG_TEST_INDEX <- 8
 ###
 # Set the index of the virtual machine that should be used for the debug run.
 ###
-DEBUG_VM_INDEX <- 2
+DEBUG_VM_INDEX <- 6
 
 ##########################
 ### END TEST DEFINITON ###
@@ -130,12 +132,12 @@ for (debug_day_index in seq_along(DEBUG_DATES)) {
   print(day_times[debug_day_index])
   #browser()
 }
-end_full <- Sys.time()
+.start_debug_env$end_full <- Sys.time()
 
-cat("\nDays duration:/n")
+cat("\nDays duration:\n")
 for (debug_day_index in seq_along(day_times)) {
   print(day_times[debug_day_index])
 }
 
-diff <- capture.output(print(end_full - start_full))
+diff <- capture.output(print(.start_debug_env$end_full - .start_debug_env$start_full))
 print(paste("All days took", diff))
