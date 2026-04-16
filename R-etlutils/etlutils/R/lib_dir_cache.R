@@ -70,7 +70,11 @@ hasCacheConfig <- function(process_name = getProcess(), module_name = getModuleN
 #' @export
 listCacheFiles <- function(process_name = getProcess(), module_name = getModuleName(), with_dir_names = TRUE) {
   cache_config <- getCacheConfig(process_name, module_name)
-  files <- list.files(cache_config$cache_dir, pattern = cache_config$pattern, full.names = with_dir_names)
+  if (!is.null(cache_config)) {
+    files <- list.files(cache_config$cache_dir, pattern = cache_config$pattern, full.names = with_dir_names)
+  } else {
+    files <- character(0)
+  }
   return(files)
 }
 

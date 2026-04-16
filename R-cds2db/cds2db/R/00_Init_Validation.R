@@ -101,7 +101,7 @@ validateConfig <- function() {
   if (isProcess("DataImport")) {
 
     ###
-    # Remove all DEBUG parameters from global conext if the data export is running to prevent any side effects
+    # Remove all DEBUG parameters from global context if the data export is running to prevent any side effects
     ###
     debug_parameters <- grep("^DEBUG_", ls(.GlobalEnv), value = TRUE)
     if (length(debug_parameters)) {

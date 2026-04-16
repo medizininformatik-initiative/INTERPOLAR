@@ -69,7 +69,6 @@ DEFAULT_EMPTY_BIRTHDAY_PATTERN     = ""           # pattern to identify the defa
 
 MAX_ENCOUNTER_BUNDLES              = inf # maximum number of Encounter bundles that will be loaded from the server ('inf' = all)
 #COUNT_PER_BUNDLE                   = 100 # as default or use server default ? The number of results that are mapped per FHIR request on a response page [ehemals COUNT]
-SORT                               = ""  # some Fhir server require a sort parameter per default
 IDS_AT_ONCE                        = 100 # patient / medication ids combined in one request (GET or POST) - specifies the number of ID's, which are summarized in a request (after download of Encounters)
 
 MAX_CORES                          = 0 # paralellization, number of cores used, 0: unlimited
