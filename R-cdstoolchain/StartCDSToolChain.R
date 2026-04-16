@@ -182,7 +182,7 @@ tryCatch({
     phase_a_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start", config_dataprocessor)
     # set the ward names for the phase_a_start values to get the map from ward_name to it's phase a start date
     names(phase_a_starts) <- ward_names
-    cds2db::retrieve(phase_a_starts, ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
+    cds2db::retrieve(phase_a_starts, ignore_newer_db_version = ignore_newer_db_version, validate_config = isProcess("DataImport"))
   }
   if (shouldStart("db2frontend")) {
     db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
