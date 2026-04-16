@@ -116,7 +116,7 @@ startFrontend2DB <- function(ignore_newer_db_version = FALSE, validate_config = 
 
     # Delete Redcap content (DEBUG and TESTS)
     if (delete_redcap_content) {
-      etlutils::runLevel2("DEBUG_DAY == 1 -> Delete all Redcap records", {
+      etlutils::runLevel2("TOOLCHAIN_DAY == 1 -> Delete all Redcap records", {
         deleteRedcapContent()
       })
     } else {
