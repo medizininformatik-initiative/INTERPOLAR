@@ -212,14 +212,14 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
 #'
 #' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename n_distinct
-#' @importFrom data.table isoweek year
+#' @importFrom data.table isoweek isoyear
 #' @export
 prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
   frontend_summary_prep <- frontend_table |>
     CombineWardsForAnalysis() |>
     dplyr::mutate(
       calendar_week = paste0(
-        data.table::year(fall_aufn_dat), "-",
+        data.table::isoyear(fall_aufn_dat), "-",
         sprintf("%02d", data.table::isoweek(fall_aufn_dat))
       ),
       .after = fall_aufn_dat
