@@ -31,7 +31,9 @@ options(error = NULL)
 # Set the index of the test that should be run. This is used to determine the
 # script names to load/change the RAW and REDCap data.
 ###
-DEBUG_TEST_INDEX <- 8
+DEBUG_TEST_INDEX <- 2
+
+DEBUG_TEST_FILE_SUFFIX <- "a"
 
 ###
 # Set the index of the virtual machine that should be used for the debug run.
@@ -56,7 +58,7 @@ DEBUG_REDCAP_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, redcap_port]
 # For test_index = 4 this returns file name "./R-cds2db/test/test_04_change_RAW_Data.R"
 # or "./R-cds2db/test/test_04_change_REDCap_Data.R".
 ###
-getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCap")) {
+getChangeDataFileName <- function(test_index, test_file_suffix = "", change_data_type = c("RAW", "REDCap")) {
   change_data_type <- match.arg(change_data_type)
 
   # do not overwrite the debug script name if it is already defined
@@ -70,7 +72,7 @@ getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCa
 
   # calculate the variable test_index as string with length 2 (if DEBUG_TEST_INDEX < 10 then add a leading 0)
   test_index <- if (DEBUG_TEST_INDEX < 10) paste0("0", DEBUG_TEST_INDEX) else as.character(DEBUG_TEST_INDEX)
-  change_data_file_name <- paste0("./R-cds2db/test/test_", test_index, "_change_", change_data_type, "_Data.R")
+  change_data_file_name <- paste0("./R-cds2db/test/test_", test_index, test_file_suffix, "_change_", change_data_type, "_Data.R")
   if (!file.exists(change_data_file_name)) {
     change_data_file_name <- NA
   }
@@ -82,14 +84,14 @@ getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCa
 # purposes. It contains a path to a script that is sourced after the downloaded
 # and cracking of the FHIR RAW data.
 ###
-DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "RAW")
+DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, DEBUG_TEST_FILE_SUFFIX, "RAW")
 
 ###
 # If the data that should be exported to REDCap must be changed for test or debug
 # purposes, then this variable can be used to define a path to a script that
 # is sourced when the data is prepared for REDCap export.
 ###
-DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "REDCap")
+DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "", "REDCap")
 
 # Create a vector of debug dates from now - count days in the past until now
 initDebugDates <- function(count, offset = 1) {
