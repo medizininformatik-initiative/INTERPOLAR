@@ -137,22 +137,25 @@ debugSetResourcesAddSearchParameter <- function(
 #'
 loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_descriptions) {
 
-  # Load all encounters from the database which, according to the database, have not yet ended on the
-  # ‘current’ date and determine the PIDs.
-  # Background: We want to track all cases that have ever been on a relevant station until they are completed.
-  patient_ids_db <- getActiveEncounterPIDsFromDB()
+  patient_ids <- unique(unlist(data.table::rbindlist(pids_splitted_by_ward, use.names = TRUE, fill = TRUE)[, .(patient_id)]))
 
-  if (!length(patient_ids_db)) {
-    etlutils::catWarningMessage(paste(
-      "No active patient IDs in encounter table found in database. \n",
-      "HINT: This message appears if no active encounters were written to the database during",
-      "the last run of the CDS tool chain. This should only happen if the CDS tool chain is",
-      "running for the first time."))
+  if (!isProcess("DataImport")) {
+    # Load all encounters from the database which, according to the database, have not yet ended on the
+    # ‘current’ date and determine the PIDs.
+    # Background: We want to track all cases that have ever been on a relevant station until they are completed.
+    patient_ids_db <- getActiveEncounterPIDsFromDB()
+
+    if (!length(patient_ids_db)) {
+      etlutils::catWarningMessage(paste(
+        "No active patient IDs in encounter table found in database. \n",
+        "HINT: This message appears if no active encounters were written to the database during",
+        "the last run of the CDS tool chain. This should only happen if the CDS tool chain is",
+        "running for the first time."))
+    }
+
+    # Unify and unique all patient IDs
+    patient_ids <- unique(c(patient_ids, patient_ids_db))
   }
-
-  # Unify and unique all patient IDs
-  patient_ids_fhir <- unique(unlist(data.table::rbindlist(pids_splitted_by_ward, use.names = TRUE, fill = TRUE)[, .(patient_id)]))
-  patient_ids <- unique(c(patient_ids_fhir, patient_ids_db))
 
   # This parameter should only be changed via DEBUG variables to set additional test filters for
   # the FHIR-search request.
