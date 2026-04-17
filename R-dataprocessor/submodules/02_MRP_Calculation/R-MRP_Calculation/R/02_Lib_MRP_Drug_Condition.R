@@ -747,10 +747,10 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
               "<=" = obs$converted_value <= threshold,
               rep(FALSE, nrow(obs))  # fallback for unknown operator
             )
-
             match_found <- ifelse(is.na(match_found), FALSE, match_found)
 
-            if (any(match_found)) {
+            # we must find any match and the last must be true
+            if (any(match_found) && match_found[length(match_found)]) {
               match_description <- generateMatchDescriptionReferenceCutoff(obs, match_found, loinc_mapping_table)
             }
           }
@@ -836,10 +836,10 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
                   "<=" = obs_value_converted_to_threshold_unit <= threshold,
                   rep(FALSE, nrow(obs))  # fallback for unknown operator
                 )
-
                 match_found <- ifelse(is.na(match_found), FALSE, match_found)
 
-                if (any(match_found)) {
+                # we must find any match and the last must be true
+                if (any(match_found) && match_found[length(match_found)]) {
 
                   obs <- obs[match_found][, converted_value := obs_value_converted_to_threshold_unit[match_found]]
 

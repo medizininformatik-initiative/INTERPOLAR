@@ -250,7 +250,7 @@ if (exists("TOOLCHAIN_DAY")) {
     # anderes MRP für dasselbe Medikament
     addObservation(pid, "2951-2", value = 7, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # kein MRP
     addObservation(pid, "2951-2", value = 3, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
-    addObservation(pid, "2951-2", value = 7, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # ungültiger Wert
+    addObservation(pid, "2951-2", value = "bla", unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # ungültiger Wert
 
     # Drug_Disease -> Proxy LOINC primary, < LLN
     # Line 571 -> MedicationRequest - C03DA02 + Observation - 2951-2
