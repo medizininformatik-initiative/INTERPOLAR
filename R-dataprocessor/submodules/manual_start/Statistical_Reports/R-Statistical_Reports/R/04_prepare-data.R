@@ -102,10 +102,71 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
   return(F1_prep)
 }
 #------------------------------------------------------------------------------#
+#' Combine Wards for Analysis
+#'
+#' Standardizes ward names in the front-end dataset by replacing specified
+#' groups of wards with a common reference ward for analysis purposes.
+#'
+#' @param frontend_table A data frame containing front-end data with a
+#'   `fall_station` column representing ward names.
+#'
+#' @return A data frame in which specified ward names have been replaced by
+#'   their corresponding reference ward names.
+#'
+#' @details
+#' The function dynamically identifies ward combination definitions from the
+#' global environment by searching for objects matching the pattern
+#' `"^COMBINE_WARDS_FOR_ANALYSIS_"`.
+#'
+#' Each definition is expected to contain:
+#' \itemize{
+#'   \item A reference ward (first element)
+#'   \item A set of ward names to be replaced (second element)
+#' }
+#'
+#' The reference ward is extracted and cleaned using
+#' `stringr::str_split_i()`. The additional wards are parsed by splitting
+#' and cleaning the definition string using `stringr` functions.
+#'
+#' For each definition, the function updates the `fall_station` column by
+#' replacing any occurrence of the specified wards with the corresponding
+#' reference ward.
+#'
+#' @importFrom dplyr mutate case_when
+#' @importFrom etlutils isDefinedAndNotEmpty
+#' @importFrom stringr str_split_i str_remove_all str_split
+#'
+#' @export
+CombineWardsForAnalysis <- function(frontend_table) {
+  combined_wards_definition <- ls(pattern = "^COMBINE_WARDS_FOR_ANALYSIS_", envir = .GlobalEnv)
+  frontend_table_combined_wards <- frontend_table
+  for (i in seq_along(combined_wards_definition)) {
+    ward_definition_information <- combined_wards_definition[i]
+    if (etlutils::isDefinedAndNotEmpty(ward_definition_information)) {
+      regular_ward <- get(ward_definition_information, envir = .GlobalEnv)[1] |>
+        stringr::str_split_i("'", 2)
+      additional_wards <- get(ward_definition_information, envir = .GlobalEnv)[2] |>
+        stringr::str_split_i("=", 2) |>
+        stringr::str_remove_all(" '") |>
+        stringr::str_remove_all("' ") |>
+        stringr::str_remove_all("'") |>
+        stringr::str_split(",") |>
+        unlist()
 
+      frontend_table_combined_wards <- frontend_table_combined_wards |>
+        dplyr::mutate(fall_station = dplyr::case_when(
+          fall_station %in% additional_wards ~ regular_ward,
+          TRUE ~ fall_station
+        ))
+    }
+  }
+  return(frontend_table_combined_wards)
+}
+
+#------------------------------------------------------------------------------#
 #' Prepare Front-End Summary Data for Reporting Period
 #'
-#' Filters and reduces the complete front-end dataset to the relevant summary variables for
+#' Enriches the complete front-end dataset with summary variables for
 #' reporting within a defined period. Only entries with a `fall_aufn_dat` timestamp falling
 #' within the specified `report_period_start` and `report_period_end` range are retained.
 #' To show all frontend cases, this is needed (instead of using the enc_period_start),
@@ -114,36 +175,59 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #'
 #' @param frontend_table A data frame containing merged front-end data, including medication analysis
 #'   and MRP documentation information. Must include at least `pat_id`, `record_id`, `fall_id_cis`,
-#'   `enc_id`, `fall_aufn_dat`,  relevant MRP fields and `processing_exclusion_reason`.
+#'   `actual_fall_studienphase`, `enc_id`, `fall_aufn_dat`,  relevant MRP fields and `processing_exclusion_reason`.
 #' @param report_period_start A character string representing the start of the reporting period
 #'                           (format: "YYYY-MM-DD").
 #' @param report_period_end A character string representing the end of the reporting period
 #'                          (format: "YYYY-MM-DD").
 #'
-#' @return A filtered and deduplicated data frame containing selected columns of interest
-#'   for encounters with starting date (`fall_aufn_dat`) within the reporting period.
+#' @return A data frame containing enriched front-end summary data for encounters with `fall_aufn_dat`
+#' within the specified reporting period. The dataset includes additional variables derived from the
+#' original front-end data, such as calendar week, eligibility for algorithmic MRP calculation, and various flags
+#' indicating the presence of MRP documentation, medication analysis, and processing exclusion reasons
+#' for both main and sub encounters.
 #'
 #' @details
-#' The resulting dataset includes distinct rows based on identifiers and key variables such as:
-#' - `medikationsanalyse_complete`
-#' - `mrp_dokup_hand_emp_akz`
-#' - `mrpdokumentation_validierung_complete`
+#' The resulting dataset includes additional variables derived from the original front-end data:
+#' - `calendar_week` (derived from `fall_aufn_dat`; including the year)
+#' - `Kontraindikation` (derived from `mrp_pigrund___21`)
+#' - `main_enc_id` (derived from `fall_fhir_main_enc_id`)
+#' - `ward_name` (derived from `fall_station`, optionally after combining wards for analysis)
+#' - `unverified_pat_or_sub_enc` (indicating if either the patient or the sub encounter is unverified)
 #' - `main_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
 #'                                           for the main encounter (if not already in 'not in inclusion criteria'))
 #' - `main_enc_not_in_inclusion_criteria` (indicating if the main encounter is excluded due to
 #'                                           not being in inclusion criteria)
-#' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
 #' - `sub_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
 #'                                          for the sub encounter  (if not already in 'not in inclusion criteria'))
 #' - `sub_enc_all_processing_exclusion_fe` (indicating if all entries for the sub encounters have
 #'                                         processing exclusion reasons (if not already in 'not in inclusion criteria'))
+#' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
+#' - `sub_enc_any_MRP` (indicating if any MRP documentation exists for the sub encounter)
+#' - `eligible_for_algorithmic_MRP_calculation` (indicating if the sub encounter is eligible for algorithmic MRP
+#'                                              calculation based on the time since discharge (>14 days), presence of
+#'                                              completed medication analysis and being in Phase B of the study)
+#' - `sub_enc_any_algorithmic_MRP` (indicating if any algorithmic MRP documentation exists for the sub encounter)
 #'
 #' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
 #'
-#' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename
+#' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename n_distinct
+#' @importFrom data.table isoweek isoyear
 #' @export
 prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
   frontend_summary_prep <- frontend_table |>
+    CombineWardsForAnalysis() |>
+    dplyr::mutate(
+      calendar_week = paste0(
+        data.table::isoyear(fall_aufn_dat), "-",
+        sprintf("%02d", data.table::isoweek(fall_aufn_dat))
+      ),
+      .after = fall_aufn_dat
+    ) |>
+    dplyr::mutate(unverified_pat_or_sub_enc = dplyr::if_else(
+      patient_complete == "Unverified" | fall_complete == "Unverified",
+      TRUE, FALSE, missing = FALSE
+    )) |>
     dplyr::group_by(fall_fhir_main_enc_id) |>
     dplyr::mutate(main_enc_any_processing_exclusion_fe = dplyr::if_else(any(
       !is.na(processing_exclusion_reason) &
@@ -178,6 +262,14 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       any(!is.na(meda_id) &
         medikationsanalyse_complete == "Complete"), TRUE, FALSE, missing = FALSE
     )) |>
+    dplyr::mutate(sub_enc_any_MRP = dplyr::if_else(
+      any(!is.na(mrp_id) &
+        mrpdokumentation_validierung_complete == "Complete"), TRUE, FALSE, missing = FALSE
+    )) |>
+    dplyr::mutate(sub_enc_any_algorithmic_MRP = dplyr::if_else(
+      any(!is.na(ret_id) &
+        retrolektive_mrpbewertung_complete != "Unverified"), TRUE, FALSE, missing = FALSE
+    )) |>
     dplyr::mutate(sub_enc_any_processing_exclusion_fe = dplyr::if_else(
       any(
         !is.na(processing_exclusion_reason) &
@@ -191,25 +283,27 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       ), TRUE, FALSE, missing = FALSE
     )) |>
     dplyr::ungroup() |>
-    dplyr::distinct(
-      pat_id, record_id, fall_fhir_main_enc_id,
-      fall_id_cis, fall_station, fall_aufn_dat,
-      sub_enc_any_completed_medication_analysis,
-      # enc_id, enc_status, enc_period_start
-      meda_id,
-      meda_dat, medikationsanalyse_complete, mrp_id,
-      mrp_pigrund___21, mrp_ip_klasse_01, mrp_dokup_hand_emp_akz,
-      mrpdokumentation_validierung_complete, main_enc_any_processing_exclusion_fe,
-      main_enc_not_in_inclusion_criteria, sub_enc_any_processing_exclusion_fe,
-      sub_enc_all_processing_exclusion_fe
-    ) |>
+    dplyr::mutate(overall_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
+    dplyr::group_by(fall_station) |>
+    dplyr::mutate(ward_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
+    dplyr::ungroup() |>
+    dplyr::group_by(fall_station, calendar_week) |>
+    dplyr::mutate(ward_week_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
+    dplyr::ungroup() |>
+    dplyr::mutate(eligible_for_algorithmic_MRP_calculation = dplyr::if_else(
+      ((as.POSIXct(report_period_end) - fall_ent_dat) > 14) &
+        sub_enc_any_completed_medication_analysis &
+        actual_fall_studienphase == "PhaseB",
+      TRUE, FALSE, missing = FALSE
+    ), .after = sub_enc_any_MRP) |>
     dplyr::rename(
       Kontraindikation = mrp_pigrund___21,
       main_enc_id = fall_fhir_main_enc_id,
       ward_name = fall_station
     ) |>
     dplyr::filter(fall_aufn_dat >= as.POSIXct(report_period_start)) |> # only main-encounter start date in reporting period
-    dplyr::filter(fall_aufn_dat < as.POSIXct(report_period_end))
+    dplyr::filter(fall_aufn_dat < as.POSIXct(report_period_end)) |>
+    dplyr::distinct()
 
   return(frontend_summary_prep)
 }

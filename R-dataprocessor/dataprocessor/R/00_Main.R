@@ -1,3 +1,54 @@
+#' Initializes the module context for dataprocessor.
+#'
+#' This function initializes the module context for the dataprocessor module by loading
+#' the necessary configuration parameters from a specified TOML file and setting up
+#' the module environment. It ensures that all mandatory parameters are present and
+#' can optionally validate the configuration values.
+#'
+#' @param validate_config Logical. If TRUE, validates the module configuration
+#' after initialization. Default is TRUE.
+#'
+#' @return A list containing the module configuration parameters loaded from the
+#' TOML file and initialized in the module context. This list will be used for the
+#' execution of the module and contains all necessary parameters for the ETL process.
+#'
+#' @export
+init <- function(validate_config = TRUE) {
+  # Initialize and start module if init_constants_only == FALSE
+  config <- etlutils::initModule("dataprocessor",
+                       path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
+                       mandatory_parameters = c(
+                         "PHASES_WARD",
+                         "COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
+                         "OBSERVATION_BODY_WEIGHT_SYSTEM",
+                         "OBSERVATION_BODY_WEIGHT_CODES",
+                         "OBSERVATION_BODY_HEIGHT_SYSTEM",
+                         "OBSERVATION_BODY_HEIGHT_CODES",
+                         "OBSERVATION_BMI_SYSTEM",
+                         "OBSERVATION_BMI_CODES",
+                         "INPUT_REPO_PATH",
+                         "PATH_TO_DB_CONFIG_TOML"
+                       )
+  )
+  if (validate_config) {
+    validateWardPhases()
+  }
+  return(config)
+}
+
+#' Resets the database lock.
+#'
+#' Resets the database lock, if this module has set a lock in a previous run and
+#' the lock was not reset due to an error or interruption. This allows to run
+#' the module again after fixing the error without having to wait for the lock
+#' to expire.
+#'
+#' @export
+resetLock <- function() {
+  init(validate_config = FALSE)
+  etlutils::dbResetLock()
+}
+
 #' Run submodules by sourcing all R scripts in each submodule directory, including Start.R
 #'
 #' This function iterates over the submodule directories in the package, sourcing all R scripts in the directory.
@@ -13,7 +64,7 @@ runSubmodules <- function() {
   manual_start_submodule_dirs <- list.dirs(DATAPROCESSOR_MANUAL_START_PATH, recursive = FALSE)
 
   command_line_args <- commandArgs(trailingOnly = TRUE)
-  # for debug purposes set hard our new submodule MRP_Check
+  # # for debug purposes set hard our new submodule MRP_Check
   # if (interactive()) {
   #   command_line_args <- c("mrp-check", "start-date=2025-12-01") # second parameter is irrelevant
   # }
@@ -80,31 +131,25 @@ runSubmodules <- function() {
 #' of frontend tables. If `reset_lock_only` is set to `TRUE`, the function only resets
 #' the lock and exits without executing any further logic.
 #'
-#' @param reset_lock_only Logical. If TRUE, only resets the ETL lock and exits. Default is FALSE.
 #' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
+#' @param validate_config Logical. If TRUE, validates the module configuration before starting
+#'                        the retrieval process. Default is TRUE.
 #' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-processData <- function(reset_lock_only = FALSE, ignore_newer_db_version = FALSE) {
+processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
   # Initialize and start module
-  etlutils::startModule("dataprocessor",
-                        path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
-                        init_constants_only = reset_lock_only)
-
-  if (reset_lock_only) {
-    etlutils::dbResetLock()
-    return()
-  }
-
-  # Check if the release version of the database is compatible
-  etlutils::checkVersion(ignore_newer_db_version)
+  config <- init(validate_config)
+  etlutils::startModule(config)
 
   try(etlutils::runLevel1("Run Dataprocessor", {
 
     # Reset lock from unfinished previous dataprocessor run
     etlutils::runLevel2("Reset database lock from unfinished previous run", {
       etlutils::dbResetLock()
+      # Check if the release version of the database is compatible
+      etlutils::checkVersion(ignore_newer_db_version)
     })
 
     etlutils::runLevel2("Source function script", {

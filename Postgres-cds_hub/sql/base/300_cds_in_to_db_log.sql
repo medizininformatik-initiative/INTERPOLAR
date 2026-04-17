@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 13:24:46
--- Rights definition file size        : 16590 Byte
+-- Rights definition file last update : 2026-03-16 11:41:52
+-- Rights definition file size        : 19645 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-02-02 13:32:34
+-- Create time: 2026-03-25 15:49:04
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/120_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -4164,7 +4164,14 @@ BEGIN
                                 cons_scope_code,
                                 cons_scope_display,
                                 cons_scope_text,
+                                cons_category_system,
+                                cons_category_version,
+                                cons_category_code,
+                                cons_category_display,
+                                cons_category_text,
                                 cons_datetime,
+                                cons_policy_authority,
+                                cons_policy_uri,
                                 cons_provision_type,
                                 cons_provision_period_start,
                                 cons_provision_period_end,
@@ -4245,7 +4252,14 @@ BEGIN
                                 current_record.cons_scope_code,
                                 current_record.cons_scope_display,
                                 current_record.cons_scope_text,
+                                current_record.cons_category_system,
+                                current_record.cons_category_version,
+                                current_record.cons_category_code,
+                                current_record.cons_category_display,
+                                current_record.cons_category_text,
                                 current_record.cons_datetime,
+                                current_record.cons_policy_authority,
+                                current_record.cons_policy_uri,
                                 current_record.cons_provision_type,
                                 current_record.cons_provision_period_start,
                                 current_record.cons_provision_period_end,

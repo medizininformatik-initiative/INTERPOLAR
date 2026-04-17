@@ -31,7 +31,24 @@ importRedcap2DB <- function() {
     # Aktuelle Lösung: Die Tabellen Risikofaktoren und Trigger werden nicht in das Frontend importiert.
     # Ob diese Instanzen überhaupt eine Relevanz haben, muss noch geklärt werden.
     if (!(form_name %in% c("risikofaktor", "trigger"))) {
-      data_from_redcap <- data.table::setDT(suppressWarnings(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)))
+      data_from_redcap <- tryCatch(
+        {data.table::setDT(suppressWarnings(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)))},
+        error = function(e) {
+          # fallback: In case of problems with the delimiters in REDCap, extend form names to "name,Name" and try again
+          # extract allowed values from error message
+          msg <- conditionMessage(e)
+          allowed_strings <- regmatches(msg, gregexpr("\\{([^}]*)\\}", msg))[[1]][[1]]
+          allowed_strings <- gsub("^\\{|\\}$", "", allowed_strings)
+          allowed_strings <- unlist(strsplit(allowed_strings, "','", fixed = TRUE))
+          allowed_strings <- gsub("^'|'$", "", allowed_strings)
+          # find matching entry containing form_name
+          match_val <- allowed_strings[grepl(form_name, allowed_strings, ignore.case = TRUE)]
+          if (length(match_val)) {
+            return(data.table::setDT(suppressWarnings(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = match_val))))
+          }
+          stop("Error exporting records for REDCap form name '", form_name, "': ", e$message)
+        }
+      )
 
       # Remove all columns, that start with "db_filter_" (they are only for frontend view filtering)
       data_from_redcap[, grep("^db_filter_", names(data_from_redcap), value = TRUE) := NULL]
@@ -64,8 +81,8 @@ importRedcap2DB <- function() {
         data_from_redcap[[colname]] <- etlutils::redcapUnescape(data_from_redcap[[colname]])
       }
 
-      table_filename_prefix <- if (exists("DEBUG_DAY")) paste0(DEBUG_DAY, "_") else ""
-      etlutils::writeRData(data_from_redcap, paste0(table_filename_prefix, "frontend2db_", i, "_", form_name))
+      table_filename_prefix <- if (exists("TOOLCHAIN_DAY")) paste0(TOOLCHAIN_DAY, "_") else ""
+      etlutils::writeDebugExcelFile(data_from_redcap, paste0(table_filename_prefix, "frontend2db_", i, "_", form_name))
 
       tables2Export[[form_name]] <- data_from_redcap
     }
