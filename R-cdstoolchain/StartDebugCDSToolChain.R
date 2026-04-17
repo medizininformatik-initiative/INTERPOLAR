@@ -8,16 +8,20 @@ if (grepl('/R-cdstoolchain', getwd())) setwd("../")
 if (!I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED) {
   stop("You must set I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE to run this script!")
 }
+# CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1 <- FALSE # NEVER SET THIS TO TRUE UNLESS YOU KNOW WHAT YOU ARE DOING! This is only for test purposes and should never be used in production or on real data!
 
 library(etlutils)
 library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
+etlutils::setProcess("DebugCDSToolchain")
+.start_debug_env <- new.env() # save Variables which should not be deleted in StartCDSToolChain$resetMemory()
+
 # Reset error status
 options(error = NULL)
 
-start_full <- Sys.time()
+.start_debug_env$start_full <- Sys.time()
 
 ############################
 ### START TEST DEFINITON ###
@@ -27,21 +31,24 @@ start_full <- Sys.time()
 # Set the index of the test that should be run. This is used to determine the
 # script names to load/change the RAW and REDCap data.
 ###
-DEBUG_TEST_INDEX <- 8
+DEBUG_TEST_INDEX <- 2
+
+DEBUG_TEST_FILE_SUFFIX <- "a"
 
 ###
 # Set the index of the virtual machine that should be used for the debug run.
 ###
-DEBUG_VM_INDEX <- 2
+DEBUG_VM_INDEX <- 6
 
 ##########################
 ### END TEST DEFINITON ###
 ##########################
 
 DEBUG_VM_PORTS <- data.table::data.table(
-     vm_index = c(   1,     2,     3,     4,     5,     6),
-      db_port = c(5432, 25432, 35432, 45432, 55432, 25436),
-  redcap_port = c(8082, 28082, 38082, 48082, 58082, 28087)
+                  # local,   MR, FS+AXS,    TB, FS+AXS, FS+AXS, FS+AXS,   TOP
+     vm_index = c(      0,    1,      2,     3,      4,      5,      6,     7),
+      db_port = c(   5432, 5432,  25432, 35432,  45432,  55432,  25436, 15433),
+  redcap_port = c(     80, 8082,  28082,  8091,  48082,  58082,  28087,  8083)
 )
 
 DEBUG_DB_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, db_port]
@@ -51,20 +58,21 @@ DEBUG_REDCAP_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, redcap_port]
 # For test_index = 4 this returns file name "./R-cds2db/test/test_04_change_RAW_Data.R"
 # or "./R-cds2db/test/test_04_change_REDCap_Data.R".
 ###
-getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCap")) {
+getChangeDataFileName <- function(test_index, test_file_suffix = "", change_data_type = c("RAW", "REDCap")) {
   change_data_type <- match.arg(change_data_type)
 
-  # do not overwite the debug script name if it is already defined
+  # do not overwrite the debug script name if it is already defined
   if (change_data_type == "RAW" && exists("DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME")) {
     return(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME)
   }
+
   if (change_data_type == "REDCap" && exists("DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME")) {
     return(DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME)
   }
 
   # calculate the variable test_index as string with length 2 (if DEBUG_TEST_INDEX < 10 then add a leading 0)
   test_index <- if (DEBUG_TEST_INDEX < 10) paste0("0", DEBUG_TEST_INDEX) else as.character(DEBUG_TEST_INDEX)
-  change_data_file_name <- paste0("./R-cds2db/test/test_", test_index, "_change_", change_data_type, "_Data.R")
+  change_data_file_name <- paste0("./R-cds2db/test/test_", test_index, test_file_suffix, "_change_", change_data_type, "_Data.R")
   if (!file.exists(change_data_file_name)) {
     change_data_file_name <- NA
   }
@@ -76,14 +84,14 @@ getChangeDataFileName <- function(test_index, change_data_type = c("RAW", "REDCa
 # purposes. It contains a path to a script that is sourced after the downloaded
 # and cracking of the FHIR RAW data.
 ###
-DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "RAW")
+DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, DEBUG_TEST_FILE_SUFFIX, "RAW")
 
 ###
 # If the data that should be exported to REDCap must be changed for test or debug
 # purposes, then this variable can be used to define a path to a script that
 # is sourced when the data is prepared for REDCap export.
 ###
-DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "REDCap")
+DEBUG_CHANGE_REDCAP_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, "", "REDCap")
 
 # Create a vector of debug dates from now - count days in the past until now
 initDebugDates <- function(count, offset = 1) {
@@ -116,7 +124,7 @@ day_times <- c()
 
 for (debug_day_index in seq_along(DEBUG_DATES)) {
   if (exists("DEBUG_RUN_SINGLE_DAY_ONLY") && debug_day_index != DEBUG_RUN_SINGLE_DAY_ONLY) next
-  DEBUG_DAY <- debug_day_index
+  TOOLCHAIN_DAY <- debug_day_index
 
   start_day <- Sys.time()
   source("./R-cdstoolchain/StartCDSToolChain.R")
@@ -126,12 +134,12 @@ for (debug_day_index in seq_along(DEBUG_DATES)) {
   print(day_times[debug_day_index])
   #browser()
 }
-end_full <- Sys.time()
+.start_debug_env$end_full <- Sys.time()
 
-cat("\nAll days took:")
+cat("\nDays duration:\n")
 for (debug_day_index in seq_along(day_times)) {
   print(day_times[debug_day_index])
 }
 
-diff <- capture.output(print(end_full - start_full))
+diff <- capture.output(print(.start_debug_env$end_full - .start_debug_env$start_full))
 print(paste("All days took", diff))

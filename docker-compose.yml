@@ -5,30 +5,34 @@ services:
   # FHIR Server in the services below.
   # Handle the "deploy" section with care and configure it according to your setup and needs.
   #   The "deploy" section should only be commented out if necessary.
-#  blaze-DIC:
-#    image: "samply/blaze:latest"
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 16G
-#    restart: unless-stopped
-#    environment:
-#      BASE_URL: "http://localhost:8080"
-#      LOG_LEVEL: ${BLAZE_LOG_LEVEL:-info}
-#      JAVA_TOOL_OPTIONS: ${BLAZE_JVM_ARGS:--Xmx4g}
-#      DB_BLOCK_CACHE_SIZE: ${BLAZE_BLOCK_CACHE_SIZE:-256}
-#      DB_RESOURCE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_CACHE_SIZE:-1000000}
-#      DB_RESOURCE_HANDLE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_HANDLE_CACHE_SIZE:-1000000}
-#    ports:
-#      - "127.0.0.1:8080:8080"
-#    networks:
-#      - internal
-#      - external
-#    volumes:
-#      - "blaze-data-DIC:/app/data"
+  blaze-DIC:
+    profiles:
+      - blaze-DIC
+    image: "samply/blaze:latest"
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+    restart: unless-stopped
+    environment:
+      BASE_URL: "http://localhost:8080"
+      LOG_LEVEL: ${BLAZE_LOG_LEVEL:-info}
+      JAVA_TOOL_OPTIONS: ${BLAZE_JVM_ARGS:--Xmx4g}
+      DB_BLOCK_CACHE_SIZE: ${BLAZE_BLOCK_CACHE_SIZE:-256}
+      DB_RESOURCE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_CACHE_SIZE:-1000000}
+      DB_RESOURCE_HANDLE_CACHE_SIZE: ${BLAZE_DB_RESOURCE_HANDLE_CACHE_SIZE:-1000000}
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - internal
+      - external
+    volumes:
+      - "blaze-data-DIC:/app/data"
 
   # SQL Server for redcap
   redcap_db:
+    profiles:
+      - redcap
     image: mariadb:11
     restart: unless-stopped
     environment:
@@ -51,6 +55,8 @@ services:
 
   # Frontend (redcap)
   redcap:
+    profiles:
+      - redcap
     build: ./REDCap-app/build
     #user: "www-data:www-data"
     depends_on:
@@ -68,7 +74,6 @@ services:
       - ./REDCap-app/html/redcapdocs:/var/www/html/redcapdocs
       - ./REDCap-app/build/config/php.ini:/usr/local/etc/php/conf.d/my.ini
       - ./REDCap-app/log/:/var/log/
-
 
   # Database (postgres) for CDS_HUB
   cds_hub:
@@ -103,6 +108,8 @@ services:
 
   # Web-administration of cds_hub__db (optional)
   pgadmin:
+    profiles:
+      - pgadmin
     image: elestio/pgadmin
     restart: unless-stopped
     ports:
@@ -170,7 +177,7 @@ services:
 
   top-framework:
     profiles:
-      - top
+      - top-framework
     image: ghcr.io/onto-med/top-interpolar-algorithms:1
     restart: "no"
     init: true
@@ -199,7 +206,7 @@ secrets:
     file: ./REDCap-db/.env_redcap_db.password
 
 volumes:
-    #blaze-data-DIC:
+    blaze-data-DIC:
     redcap-db-data:
     cds_hub_db-data:
     pgadmin-data:

@@ -23,7 +23,7 @@ Analog werden die Strukturen und Überführungsfunktionen für das Frontend mit 
 
 #### Übersicht über alle Module
 
-![CDS tool chain](https://github.com/medizininformatik-initiative/INTERPOLAR/assets/5671404/d8ee4fb8-c9fb-40f2-81cb-2adeda6d20b2)
+![CDS tool chain](./doc/CDS_Tool_Chain_architecture.png?raw=true)
 
 Im Folgenden werden sowohl der in der Grafik mit Zahlen markierte Datenfluss zwischen den Modulen als auch der Datenfluss innerhalb der Module beschrieben.
 

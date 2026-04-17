@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 10:00:19
--- Rights definition file size        : 16573 Byte
+-- Rights definition file last update : 2026-03-16 11:41:52
+-- Rights definition file size        : 19645 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2026-02-02 10:25:59
+-- Create time: 2026-03-25 15:51:16
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
@@ -2475,7 +2475,14 @@ SELECT res FROM pg_background_result(pg_background_launch(
     cons_scope_code,
     cons_scope_display,
     cons_scope_text,
+    cons_category_system,
+    cons_category_version,
+    cons_category_code,
+    cons_category_display,
+    cons_category_text,
     cons_datetime,
+    cons_policy_authority,
+    cons_policy_uri,
     cons_provision_type,
     cons_provision_period_start,
     cons_provision_period_end,
@@ -2554,7 +2561,14 @@ SELECT
     cons_scope_code,
     cons_scope_display,
     cons_scope_text,
+    cons_category_system,
+    cons_category_version,
+    cons_category_code,
+    cons_category_display,
+    cons_category_text,
     cons_datetime,
+    cons_policy_authority,
+    cons_policy_uri,
     cons_provision_type,
     cons_provision_period_start,
     cons_provision_period_end,
