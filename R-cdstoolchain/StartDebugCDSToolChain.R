@@ -44,15 +44,17 @@ DEBUG_VM_INDEX <- 6
 ### END TEST DEFINITON ###
 ##########################
 
-DEBUG_VM_PORTS <- data.table::data.table(
-                  # local,   MR, FS+AXS,    TB, FS+AXS, FS+AXS, FS+AXS,   TOP
-     vm_index = c(      0,    1,      2,     3,      4,      5,      6,     7),
-      db_port = c(   5432, 5432,  25432, 35432,  45432,  55432,  25436, 15433),
-  redcap_port = c(     80, 8082,  28082,  8091,  48082,  58082,  28087,  8083)
+DEBUG_VM_PORTS_AND_TOKENS <- data.table::data.table(
+                  # local,   MR,                               FS+AXS,    TB, FS+AXS, FS+AXS,                              FS+AXS,   TOP
+     vm_index  = c(      0,    1,                                   2,     3,      4,      5,                                   6,     7),
+      db_port  = c(   5432, 5432,                               25432, 35432,  45432,  55432,                               25436, 15433),
+  redcap_port  = c(     80, 8082,                               28082,  8091,  48082,  58082,                               28087,  8083),
+  redcap_token = c(     "",   "",  "5DD4ECFDC245D8FC955B13D894875F62",    "",     "",     "",  "35784E25CB814491E49EE51641966B50",    "")
 )
 
-DEBUG_DB_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, db_port]
-DEBUG_REDCAP_PORT <- DEBUG_VM_PORTS[vm_index == DEBUG_VM_INDEX, redcap_port]
+DEBUG_DB_PORT <- DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, db_port]
+DEBUG_REDCAP_PORT <- DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, redcap_port]
+DEBUG_REDCAP_TOKEN <- DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, redcap_token]
 
 ###
 # For test_index = 4 this returns file name "./R-cds2db/test/test_04_change_RAW_Data.R"
@@ -84,7 +86,8 @@ getChangeDataFileName <- function(test_index, test_file_suffix = "", change_data
 # purposes. It contains a path to a script that is sourced after the downloaded
 # and cracking of the FHIR RAW data.
 ###
-DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, DEBUG_TEST_FILE_SUFFIX, "RAW")
+debug_test_file_suffix <- if (exists("DEBUG_TEST_FILE_SUFFIX")) DEBUG_TEST_FILE_SUFFIX else ""
+DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME <- getChangeDataFileName(DEBUG_TEST_INDEX, debug_test_file_suffix, "RAW")
 
 ###
 # If the data that should be exported to REDCap must be changed for test or debug

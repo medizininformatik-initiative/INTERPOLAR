@@ -7,6 +7,15 @@ getRedcapURL <- function() {
   return(url)
 }
 
+getRedcapToken <- function() {
+  if (etlutils::isDefinedAndNotEmpty("DEBUG_REDCAP_TOKEN")) {
+    token <- DEBUG_REDCAP_TOKEN
+  } else {
+    token <- REDCAP_TOKEN
+  }
+  return(token)
+}
+
 #' Establish a Valid Connection to REDCap
 #'
 #' This function establishes a connection to a REDCap server using a specified API token
@@ -23,7 +32,7 @@ getRedcapURL <- function() {
 getRedcapConnection <- function() {
   # Attempt to connect to REDCap
   frontend_connection <- tryCatch({
-    suppressWarnings(redcapAPI::redcapConnection(url = getRedcapURL(), token = REDCAP_TOKEN))
+    suppressWarnings(redcapAPI::redcapConnection(url = getRedcapURL(), token = getRedcapToken()))
   }, error = function(e) {
     stop("Failed to establish a REDCap connection. Error: ", e$message)
   })
