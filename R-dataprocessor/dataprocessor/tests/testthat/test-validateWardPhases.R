@@ -45,11 +45,17 @@ testthat::test_that("validateWardPhases accepts plus in quoted values", {
   testthat::expect_true(validateWardPhases(timezone = "UTC"))
 })
 
+testthat::test_that("validateWardPhases accepts regex metacharacters in ward names", {
+  assign("PHASES_WARD_1", c("ward_name = 'Station (A) [1].*+'", "phase_a_start = '2026-01-11 10:00:00'"), envir = .GlobalEnv)
+  on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
+  testthat::expect_true(validateWardPhases(timezone = "UTC"))
+})
+
 # Rejects invalid keys
 testthat::test_that("validateWardPhases rejects invalid keys", {
   assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_c_start = '2026-01-11 10:00:00'"), envir = .GlobalEnv)
   on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
-  testthat::expect_error(validateWardPhases(timezone = "UTC"), "Invalid line")
+  testthat::expect_error(validateWardPhases(timezone = "UTC"), "Invalid subcondition")
 
 })
 

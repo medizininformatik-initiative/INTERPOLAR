@@ -38,8 +38,6 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
     return(invisible(TRUE))
   }
 
-  pattern <- "^\\s*(ward_name|phase_a_start|phase_b_start)\\s*=\\s*'([^']*)'\\s*$"
-
   ward_names <- character()
   getEntryName <- function(x, index) {
     x_names <- names(x)
@@ -50,33 +48,36 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
   }
 
   for (i in seq_along(ward_phases)) {
-
     entry_name <- getEntryName(ward_phases, i)
-
     entry <- ward_phases[[i]]
+
     if (!is.character(entry)) {
       stop(msg_prefix, "Entry ", entry_name, " must be a character vector.")
     }
     if (length(entry) == 0L) {
       stop(msg_prefix, "Entry ", entry_name, " must not be empty.")
     }
+  }
 
-    keys <- character()
-    values <- character()
-
-    for (line_index in seq_along(entry)) {
-      line <- entry[[line_index]]
-      parts <- strsplit(line, "(?=(?:[^']*'[^']*')*[^']*$)\\+", perl = TRUE)[[1]]
-      if (length(parts) > 1L) {
-        stop(msg_prefix, "Character '+' is not allowed in entry ", entry_name, " / line ", line_index, ": ", line)
-      }
-      if (!grepl(pattern, line, perl = TRUE)) {
-        stop(msg_prefix, "Invalid line in entry ", entry_name, " / line ", line_index, ": ", line)
-      }
-      match <- regmatches(line, regexec(pattern, line, perl = TRUE))[[1]]
-      keys <- c(keys, match[2])
-      values <- c(values, match[3])
+  parsed_records <- tryCatch(
+    etlutils::parseStructuredConfigDefinitions(
+      definitions = list(ward_phases),
+      allowed_key_pattern = "ward_name|phase_a_start|phase_b_start",
+      allow_plus = FALSE
+    ),
+    error = function(e) {
+      stop(msg_prefix, conditionMessage(e), call. = FALSE)
     }
+  )
+
+  for (i in seq_along(ward_phases)) {
+    entry_name <- getEntryName(ward_phases, i)
+    entry_records <- parsed_records[
+      vapply(parsed_records, `[[`, "", "entry_name") == entry_name
+    ]
+
+    keys <- vapply(entry_records, `[[`, "", "key")
+    values <- vapply(entry_records, `[[`, "", "value")
 
     if (sum(keys == "ward_name") != 1L) {
       stop(msg_prefix, "Entry ", entry_name, " must contain exactly one ward_name.")
