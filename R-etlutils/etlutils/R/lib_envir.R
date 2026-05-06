@@ -922,3 +922,35 @@ isProcess <- function(process_name) {
   tolower(process_name) %in% tolower(getProcess())
 }
 
+#' Register active sub-process
+#'
+#' @param sub_process_name Fully-qualified sub-process name, e.g.
+#'   `DataImport.PIDDependant`.
+#'
+#' @return The provided sub-process name
+#'
+#' @export
+setSubProcess <- function(sub_process_name) {
+  .penv[["SUB_PROCESS_NAME"]] <- unique(c(.penv[["SUB_PROCESS_NAME"]], sub_process_name))
+  sub_process_name
+}
+
+#' Get registered sub-process names
+#'
+#' @return A character vector of registered sub-process names or `NULL`.
+#'
+#' @export
+getSubProcess <- function() {
+  return(getVal("SUB_PROCESS_NAME"))
+}
+
+#' Check if sub-process is active
+#'
+#' @param sub_process_name Fully-qualified sub-process name.
+#'
+#' @return `TRUE` if the sub-process is registered, otherwise `FALSE`.
+#'
+#' @export
+isSubProcess <- function(sub_process_name) {
+  tolower(sub_process_name) %in% tolower(getSubProcess())
+}
