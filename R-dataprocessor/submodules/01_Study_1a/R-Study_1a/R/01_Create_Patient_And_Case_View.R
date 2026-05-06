@@ -16,52 +16,143 @@
 #' is found, "-" is used as fallback.
 #'
 #' @examples
-#' \dontrun{
-#' FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN <- "location_display"
-#' dt <- data.table::data.table(
+#' library(data.table)
+#'
+#' # -------------------------------
+#' # Test 1: physicaltype in Encounter + display in Location
+#' # -------------------------------
+#'
+#' FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN <- "loc_display"
+#'
+#' encounters <- data.table(
+#'   enc_location_ref = c("Location/1", "Location/2"),
 #'   enc_location_physicaltype_code = c("ro", "bd"),
-#'   enc_period_start = as.POSIXct(c("2024-01-01", "2024-01-01")),
-#'   location_display = c("R12", "B3")
+#'   enc_period_start = as.POSIXct(c("2024-01-01", "2024-01-01"))
 #' )
-#' getLocationString(dt)
-#' }
+#'
+#' locations <- data.table(
+#'   loc_id = c("1", "2"),
+#'   loc_physicaltype_code = c("ro", "bd"),
+#'   loc_display = c("R12", "B3")
+#' )
+#'
+#' getLocationString(encounters, locations)
+#' # "Zimmer: R12  Bett: B3"
+#'
+#'
+#' # -------------------------------
+#' # Test 2: physicaltype ONLY in Location
+#' # -------------------------------
+#'
+#' encounters[, enc_location_physicaltype_code := NA]
+#'
+#' getLocationString(encounters, locations)
+#' # "Zimmer: R12  Bett: B3"
+#'
+#'
+#' # -------------------------------
+#' # Test 3: mixed - physicaltype in Encounter and Location + display in Location
+#' # -------------------------------
+#'
+#' encounters <- data.table(
+#'   enc_location_ref = c("Location/1", "Location/2"),
+#'   enc_location_physicaltype_code = c("ro", NA),
+#'   enc_period_start = as.POSIXct(c("2024-01-01", "2024-01-01"))
+#' )
+#'
+#' getLocationString(encounters, locations)
+#' # "Zimmer: R12  Bett: B3"
+#'
+#'
+#' # -------------------------------
+#' # Test 4: display in Encounter
+#' # -------------------------------
+#'
+#' FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN <- "enc_location_display"
+#'
+#' encounters <- data.table(
+#'   enc_location_ref = c("Location/1", "Location/2"),
+#'   enc_location_physicaltype_code = as.character(c(NA, NA)),
+#'   enc_location_display = c("R12", "B3"),
+#'   enc_period_start = as.POSIXct(c("2024-01-01", "2024-01-01"))
+#' )
+#'
+#' getLocationString(encounters, locations)
+#' # "Zimmer: R12  Bett: B3"
+#'
+#'
+#' # -------------------------------
+#' # Test 5: no locations
+#' # -------------------------------
+#'
+#' FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN <- "enc_location_display"
+#'
+#' encounters <- data.table(
+#'   enc_location_ref = c("Location/1", "Location/2"),
+#'   enc_location_physicaltype_code = c("ro", "bd"),
+#'   enc_location_display = c("R12", "B3"),
+#'   enc_period_start = as.POSIXct(c("2024-01-01", "2024-01-01"))
+#' )
+#'
+#' locations <- data.table(
+#'   loc_id = character(),
+#'   loc_physicaltype_code = character()
+#' )
+#'
+#' getLocationString(encounters, locations)
+#' # "Zimmer: R12  Bett: B3"
 #'
 getLocationString <- function(encounters, locations) {
   room <- "-"
   bed <- "-"
-
   if (etlutils::isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN")) {
+    encounters[, enc_location_ref_physicaltype_code := NA_character_]
+    if (!is.null(locations) && nrow(locations)) {
 
-    # Filter for relevant physical types
-    encounters <- encounters[enc_location_physicaltype_code %in% c("ro", "bd")]
+      encounters[, enc_location_id := etlutils::fhirdataExtractIDs(enc_location_ref)]
 
-    if (nrow(encounters) & !all(is.na(encounters$enc_period_start))) {
+      encounters[locations,
+                 enc_location_ref_physicaltype_code := as.character(i.loc_physicaltype_code),
+                 on = .(enc_location_id = loc_id)
+      ]
+    }
+    # Row-wise Fallback
+    encounters[, effective_physicaltype :=
+                 data.table::fcoalesce(
+                   enc_location_physicaltype_code[enc_location_physicaltype_code != ""],
+                   enc_location_ref_physicaltype_code
+                 )
+    ]
+    encounters <- encounters[effective_physicaltype %in% c("ro", "bd")]
+
+    if (nrow(encounters) > 0 && !all(is.na(encounters$enc_period_start))) {
+
       room_value <- NA_character_
       bed_value <- NA_character_
-      # Keep only rows with latest period start
-      encounters <- encounters[enc_period_start %in% etlutils::getMaxDatetime(enc_period_start)]
 
-      room_encounter <- encounters[enc_location_physicaltype_code %in% "ro"]
+      encounters <- encounters[
+        enc_period_start %in% etlutils::getMaxDatetime(enc_period_start)
+      ]
+
+      room_encounter <- encounters[effective_physicaltype == "ro"]
       room_encounter <- if (nrow(room_encounter)) room_encounter[1] else NULL
-
-      bed_encounter <- encounters[enc_location_physicaltype_code %in% "bd"]
+      bed_encounter <- encounters[effective_physicaltype == "bd"]
       bed_encounter <- if (nrow(bed_encounter)) bed_encounter[1] else NULL
 
       col_name <- FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN
 
       if (startsWith(col_name, "loc_")) {
-        # Room
+
         if (!is.null(room_encounter)) {
-          room_location_ref <- room_encounter[, get("enc_location_ref")]
+          room_location_ref <- room_encounter[, enc_location_ref]
           room_location_id <- etlutils::fhirdataExtractIDs(room_location_ref)
           room_value <- tryCatch(
             locations[loc_id %in% room_location_id, get(col_name)],
             error = function(e) NA_character_
           )
         }
-        # Bed
         if (!is.null(bed_encounter)) {
-          bed_location_ref <- bed_encounter[, get("enc_location_ref")]
+          bed_location_ref <- bed_encounter[, enc_location_ref]
           bed_location_id <- etlutils::fhirdataExtractIDs(bed_location_ref)
           bed_value <- tryCatch(
             locations[loc_id %in% bed_location_id, get(col_name)],
@@ -69,22 +160,25 @@ getLocationString <- function(encounters, locations) {
           )
         }
       } else if (startsWith(col_name, "enc_")) {
-        # Room
-        if (!is.null(room_encounter) && !is.null(col_name)) {
-          room_value <- tryCatch(room_encounter[, get(col_name)], error = function(e) NA_character_)
+
+        if (!is.null(room_encounter)) {
+          room_value <- tryCatch(
+            room_encounter[, get(col_name)],
+            error = function(e) NA_character_
+          )
         }
-        # Bed
-        if (!is.null(bed_encounter) && !is.null(col_name)) {
-          bed_value <- tryCatch(bed_encounter[, get(col_name)], error = function(e) NA_character_)
+        if (!is.null(bed_encounter)) {
+          bed_value <- tryCatch(
+            bed_encounter[, get(col_name)],
+            error = function(e) NA_character_
+          )
         }
       }
       if (etlutils::isSimpleNotEmptyString(room_value)) room <- room_value
       if (etlutils::isSimpleNotEmptyString(bed_value)) bed <- bed_value
     }
   }
-
-  location_string <- sprintf("Zimmer: %s  Bett: %s", room, bed)
-  return(location_string)
+  return(sprintf("Zimmer: %s  Bett: %s", room, bed))
 }
 
 #' Extract Admission Diagnoses as a Formatted String
