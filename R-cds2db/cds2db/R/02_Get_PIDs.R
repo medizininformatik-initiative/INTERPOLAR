@@ -271,11 +271,21 @@ getEncounters <- function(table_description, current_datetime) {
         "class" = encounter_class,
         "location" = encounter_locations)
 
-      if (exists("DEBUG_ENCOUNTER_ACCEPTED_PIDS") && length(DEBUG_ENCOUNTER_ACCEPTED_PIDS) > 0) {
-        encounter_pids <- DEBUG_ENCOUNTER_ACCEPTED_PIDS
-        encounter_pids <- ifelse(grepl("/", encounter_pids), encounter_pids, paste0("Patient/", encounter_pids))
-        encounter_pids <- paste(encounter_pids, collapse = ",")
-        parameters <- c(parameters, "subject" = encounter_pids)
+      selected_encounter_pids <- NULL
+      if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_ACCEPTED_PIDS")) {
+        selected_encounter_pids <- DEBUG_ENCOUNTER_ACCEPTED_PIDS
+      } else if (etlutils::isSubProcess("DataImport.All") && etlutils::isDefinedAndNotEmpty("DATA_IMPORT_FHIR_PIDS")) {
+        selected_encounter_pids <- DATA_IMPORT_FHIR_PIDS
+      }
+
+      if (!is.null(selected_encounter_pids)) {
+        selected_encounter_pids <- ifelse(
+          grepl("/", selected_encounter_pids),
+          selected_encounter_pids,
+          paste0("Patient/", selected_encounter_pids)
+        )
+        selected_encounter_pids <- paste(selected_encounter_pids, collapse = ",")
+        parameters <- c(parameters, "subject" = selected_encounter_pids)
       }
 
       parameters <- etlutils::fhirsearchAddGlobalParams(parameters)
@@ -554,4 +564,36 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
     })
   }
   return(if (exists("list_of_pids_splitted_by_ward")) list_of_pids_splitted_by_ward else pids_splitted_by_ward)
+}
+
+#' Get existing FHIR PIDs from the database
+#'
+#' @return A named list with one data.table containing existing FHIR patient IDs.
+getDataImportPIDsFromDB <- function() {
+  etlutils::runLevel3("Get data import Patient IDs from patient table", {
+    query <- paste0(
+      "SELECT DISTINCT pat_id AS patient_id\n",
+      "FROM v_patient\n",
+      "WHERE pat_id IS NOT NULL;"
+    )
+    patient_ids <- etlutils::dbGetReadOnlyQuery(
+      query,
+      lock_id = "getDataImportPIDsFromDB()"
+    )
+
+    patient_ids <- data.table::as.data.table(patient_ids)
+    if (!nrow(patient_ids)) {
+      stop("No FHIR PIDs found in v_patient. PID-dependent data import requires PIDs that already exist in the patient table.")
+    }
+
+    patient_ids[, patient_id := etlutils::getAfterLastSlash(patient_id)]
+    pids_splitted_by_ward <- list(DataImport = unique(patient_ids))
+  })
+
+  etlutils::runLevel3("Log getDataImportPIDsFromDB() result", {
+    cat("Found the following existing patient IDs in patient table for data import:\n")
+    print(pids_splitted_by_ward)
+  })
+
+  pids_splitted_by_ward
 }
