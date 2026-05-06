@@ -196,10 +196,55 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 #################
 #DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
 
+
 [data.import]
-#Alles Nachladen (Fallebene: Fälle über FHIR-PID, FHIR-Enc-ID, FHIR-Identifier oder Zeitraum herunterladen):
+
+# Supported data import modes:
+#
+# 1. DATA_IMPORT_RANGE_START
+#    DataImport.All: reload all matching cases from this timestamp onward.
+#
+# 2. DATA_IMPORT_RANGE_START + DATA_IMPORT_RANGE_END
+#    DataImport.All: reload all matching cases between start and end.
+#
+# 3. DATA_IMPORT_FHIR_PIDS
+#    DataImport.All: reload complete cases, but only for these FHIR PIDs.
+#    DATA_IMPORT_FHIR_PIDS must not be combined with range or resource type parameters.
+#
+# 4. Non-empty DATA_IMPORT_RESOURCE_TYPES
+#    DataImport.PIDDependant: reload selected PID-dependent resource types.
+#
+# 5. DATA_IMPORT_RANGE_START (+ DATA_IMPORT_RANGE_END) + non-empty DATA_IMPORT_RESOURCE_TYPES
+#    DataImport.PIDDependant: reload selected PID-dependent resource types in a date range.
+#
+# DATA_IMPORT_RANGE_END requires DATA_IMPORT_RANGE_START.
+# Empty DATA_IMPORT_RESOURCE_TYPES is treated as not defined.
+# Consent ignores the date range because it is PID-dependent, but not case-dependent.
 #DATA_IMPORT_RANGE_START = "2099-01-01 00:00:00"
 #DATA_IMPORT_RANGE_END = "2099-12-31 00:00:00"
+
+# PID-dependent resources can be reloaded for FHIR PIDs that already exist in the database.
+# If DATA_IMPORT_RESOURCE_TYPES is non-empty, StartDataImport activates the DataImport.PIDDependant subprocess.
+# Otherwise StartDataImport activates DataImport.All, the existing cache-based import for reloading case data.
+# Allowed resource types are derived from Table_Description.xlsx via subject/reference or patient/reference.
+# Encounter is still excluded because it belongs to the case-based import.
+# PID-independent resources referenced by the selected resources are reloaded automatically if
+# they are described in Table_Description.xlsx.
+DATA_IMPORT_RESOURCE_TYPES = [
+#  "Condition",
+#  "MedicationRequest",
+#  "MedicationAdministration",
+#  "MedicationStatement",
+#  "Observation",
+#  "DiagnosticReport",
+#  "ServiceRequest",
+#  "Procedure",
+#  "Consent"
+]
+
+# Use DATA_IMPORT_FHIR_PIDS only without DATA_IMPORT_RANGE_START, DATA_IMPORT_RANGE_END
+# and DATA_IMPORT_RESOURCE_TYPES.
+DATA_IMPORT_FHIR_PIDS = []
 
 
 [database]
