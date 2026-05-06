@@ -22,3 +22,4 @@ Input-Repo/**/*.xlsx
 *- Kopie*
 Snapshots/*.sql.gz
 Snapshots/*.log
+.positai
