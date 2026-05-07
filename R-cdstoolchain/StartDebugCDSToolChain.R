@@ -45,14 +45,16 @@ DEBUG_VM_INDEX <- 6
 ##########################
 
 DEBUG_VM_PORTS_AND_TOKENS <- data.table::data.table(
-                  # local,   MR,                               FS+AXS,    TB, FS+AXS, FS+AXS,                              FS+AXS,   TOP
-     vm_index  = c(      0,    1,                                   2,     3,      4,      5,                                   6,     7),
-      db_port  = c(   5432, 5432,                               25432, 35432,  45432,  55432,                               25436, 15433),
-  redcap_port  = c(     80, 8082,                               28082,  8091,  48082,  58082,                               28087,  8083),
-  redcap_token = c(     "",   "",  "5DD4ECFDC245D8FC955B13D894875F62",    "",     "",     "",  "35784E25CB814491E49EE51641966B50",    "")
+          name = c(                             "local-VM",        "MR",                            "FS+AXS",  "TB", "FS+AXS", "FS+AXS",                            "FS+AXS", "TOP",                       "local-R-FS"),
+     vm_index  = c(                                      0,           1,                                   2,     3,        4,        5,                                   6,     7,                                  8),
+      db_port  = c(                                   5432,        5432,                               25432, 35432,    45432,    55432,                               25436, 15433,                               1543),
+  redcap_port  = c(                                     80,        8082,                               28082,  8091,    48082,    58082,                               28087,  8083,                               1082),
+  redcap_token = c(     "5DD4ECFDC245D8FC955B13D894875F62",          "",  "5DD4ECFDC245D8FC955B13D894875F62",    "",       "",       "",  "35784E25CB814491E49EE51641966B50",    "", "5DD4ECFDC245D8FC955B13D894875F62")
 )
 
+DEBUG_DB_HOST <- ifelse(DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, name] == "local-VM", "cds_hub", "127.0.0.1")
 DEBUG_DB_PORT <- DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, db_port]
+DEBUG_REDCAP_HOST <- ifelse(DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, name] == "local-VM", "redcap", "127.0.0.1")
 DEBUG_REDCAP_PORT <- DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, redcap_port]
 DEBUG_REDCAP_TOKEN <- DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, redcap_token]
 
