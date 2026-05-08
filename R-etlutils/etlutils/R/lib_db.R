@@ -170,6 +170,10 @@ dbGetPort <- function() {
   return(if (exists("DEBUG_DB_PORT")) DEBUG_DB_PORT else .lib_db_env[["DB_PORT"]])
 }
 
+dbGetHost <- function() {
+  return(if (exists("DEBUG_DB_HOST")) DEBUG_DB_HOST else .lib_db_env[["DB_HOST"]])
+}
+
 #' Get a Fresh PostgreSQL Database Connection
 #'
 #' This function establishes and returns a new PostgreSQL database connection
@@ -188,7 +192,7 @@ dbGetConnection <- function(readonly = FALSE) {
   dbLog(
     "Attempting to connect with:",
     " dbname=", .lib_db_env[["DB_NAME"]],
-    " host=", .lib_db_env[["DB_HOST"]],
+    " host=", dbGetHost(),
     " port=", dbGetPort(),
     " user=", .lib_db_env[["DB_USER"]],
     " schema=", schema_name, "\n",
@@ -198,7 +202,7 @@ dbGetConnection <- function(readonly = FALSE) {
   db_connection <- DBI::dbConnect(
     RPostgres::Postgres(),
     dbname = .lib_db_env[["DB_NAME"]],
-    host = .lib_db_env[["DB_HOST"]],
+    host = dbGetHost(),
     port = dbGetPort(),
     user = .lib_db_env[["DB_USER"]],
     password = .lib_db_env[["DB_PASSWORD"]],
@@ -225,7 +229,7 @@ dbGetAdminConnection <- function() {
   dbLog(
     "Attempting to connect with admin user:",
     " dbname=", .lib_db_env[["DB_NAME"]],
-    " host=", .lib_db_env[["DB_HOST"]],
+    " host=", dbGetHost(),
     " port=", dbGetPort(),
     " user=", .lib_db_env[["DB_ADMIN_USER"]], "\n"
   )
@@ -233,7 +237,7 @@ dbGetAdminConnection <- function() {
   admin_connection <- DBI::dbConnect(
     RPostgres::Postgres(),
     dbname = .lib_db_env[["DB_NAME"]],
-    host = .lib_db_env[["DB_HOST"]],
+    host = dbGetHost(),
     port = dbGetPort(),
     user = .lib_db_env[["DB_ADMIN_USER"]],
     password = .lib_db_env[["DB_ADMIN_PASSWORD"]],

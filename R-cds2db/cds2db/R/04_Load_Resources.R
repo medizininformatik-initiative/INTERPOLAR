@@ -122,6 +122,88 @@ debugSetResourcesAddSearchParameter <- function(
 # END: FOR DEBUG ONLY #
 #######################
 
+#' Check if a data import date range is configured.
+#'
+#' DATA_IMPORT_RANGE_END cannot be defined without DATA_IMPORT_RANGE_START, so
+#' we only test the start value.
+#'
+#' @return TRUE if DATA_IMPORT_RANGE_START is set.
+hasDataImportDateRange <- function() {
+  etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_START")
+}
+
+#' Build FHIR date search parameters for PID-dependent data import
+#'
+#' @param resource_name FHIR resource type.
+#' @param diagnostic_report_date_parameter Date search parameter for DiagnosticReport.
+#' @return A named character vector of FHIR date search parameters, or NULL.
+getDataImportFHIRDateSearchParameters <- function(resource_name, diagnostic_report_date_parameter = "date") {
+  date_search_parameters <- c(
+    Condition = "recorded-date",
+    DiagnosticReport = diagnostic_report_date_parameter,
+    MedicationAdministration = "effective-time",
+    MedicationRequest = "authoredon",
+    MedicationStatement = "effective",
+    Observation = "date",
+    Procedure = "date",
+    ServiceRequest = "authored"
+  )
+
+  date_search_parameter <- date_search_parameters[[resource_name]]
+  if (is.null(date_search_parameter)) {
+    return(NULL)
+  }
+
+  search_parameters <- c()
+  if (etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_START")) {
+    search_parameters <- c(
+      search_parameters,
+      setNames(paste0("ge", gsub(" ", "T", DATA_IMPORT_RANGE_START, fixed = TRUE)), date_search_parameter)
+    )
+  }
+  if (etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_END")) {
+    search_parameters <- c(
+      search_parameters,
+      setNames(paste0("le", gsub(" ", "T", DATA_IMPORT_RANGE_END, fixed = TRUE)), date_search_parameter)
+    )
+  }
+
+  return(search_parameters)
+}
+
+#' Add FHIR date search parameters to selected resources
+#'
+#' @param table_descriptions FHIR table descriptions keyed by resource type.
+#' @param resources_add_search_parameter Existing additional search parameters.
+#' @param diagnostic_report_date_parameter Date search parameter for DiagnosticReport.
+#' @return Updated additional search parameters.
+addDataImportFHIRDateSearchParameters <- function(table_descriptions,
+                                                  resources_add_search_parameter,
+                                                  diagnostic_report_date_parameter = "date") {
+  if (!hasDataImportDateRange()) {
+    return(resources_add_search_parameter)
+  }
+  if (is.null(resources_add_search_parameter) || all(is.na(resources_add_search_parameter))) {
+    resources_add_search_parameter <- list()
+  }
+
+  for (resource_name in names(table_descriptions)) {
+    date_search_parameters <- getDataImportFHIRDateSearchParameters(
+      resource_name,
+      diagnostic_report_date_parameter = diagnostic_report_date_parameter
+    )
+    if (is.null(date_search_parameters)) {
+      next
+    }
+    resources_add_search_parameter[[resource_name]] <- c(
+      resources_add_search_parameter[[resource_name]],
+      date_search_parameters
+    )
+  }
+
+  return(resources_add_search_parameter)
+}
+
 #' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
 #'
 #' This function takes a list of patient IDs per ward, extracts unique patient IDs,
@@ -167,10 +249,18 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
 
   # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
   resources_add_search_parameter <- debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions)
+  debug_resources_add_search_parameter <- resources_add_search_parameter
 
   #######################
   # END: FOR DEBUG ONLY #
   #######################
+
+  if (etlutils::isSubProcess("DataImport.PIDDependant")) {
+    resources_add_search_parameter <- addDataImportFHIRDateSearchParameters(
+      table_descriptions,
+      resources_add_search_parameter
+    )
+  }
 
   # Get the date for every PID when the Patient resource was written to the database the last time
   getLastPatientUpdateDate <- function(patient_ids) {
@@ -210,8 +300,13 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
     setNames(as.list(patient_ids), last_insert_dates)
   }
 
-  # Get the date for every PID when the Patient resource was written to the database the last time
-  pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
+  # Get the date for every PID when the Patient resource was written to the database the last time.
+  # In PID-dependent data import mode, the Patient resource is intentionally not downloaded.
+  if (etlutils::isSubProcess("DataImport.PIDDependant")) {
+    pids_with_last_updated <- setNames(as.list(patient_ids), rep(NA, length(patient_ids)))
+  } else {
+    pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
+  }
 
   etlutils::catList(pids_with_last_updated,
                     prefix = "Date for every PID when the Patient resource was written to the database the last time:\n",
@@ -233,6 +328,25 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   # enc_period_start if the parameter MIN_PATIENT_AGE is specified.
   pids_with_last_updated <- resource_tables_fhir$pids_with_last_updated
 
+  if (etlutils::isSubProcess("DataImport.PIDDependant") &&
+      hasDataImportDateRange() &&
+      "DiagnosticReport" %in% names(table_descriptions) &&
+      (!("DiagnosticReport" %in% names(raw_fhir_resources)) || !nrow(raw_fhir_resources[["DiagnosticReport"]]))) {
+    catInfoMessage("Info: No DiagnosticReport resources found with date search parameter. Retrying with issued.\n")
+    diagnostic_report_add_search_parameter <- addDataImportFHIRDateSearchParameters(
+      table_descriptions["DiagnosticReport"],
+      debug_resources_add_search_parameter,
+      diagnostic_report_date_parameter = "issued"
+    )
+    diagnostic_report_tables_fhir <- etlutils::fhirsearchMultipleResourcesByPID(
+      pids_with_last_updated,
+      table_descriptions["DiagnosticReport"],
+      id_param_str,
+      diagnostic_report_add_search_parameter
+    )
+    raw_fhir_resources[["DiagnosticReport"]] <- diagnostic_report_tables_fhir$raw_fhir_resources[["DiagnosticReport"]]
+  }
+
   valid_pids <- unlist(pids_with_last_updated, use.names = FALSE)
   # Iterate over each ward and filter the pids_splitted_by_ward based on valid_pids
   pids_splitted_by_ward <- lapply(pids_splitted_by_ward, function(dt) dt[patient_id %in% valid_pids])
@@ -245,8 +359,10 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
     raw_fhir_resources[[table_name]] <- raw_fhir_resources[[table_name]][, ..table_columns]
   }
 
-  # Add additional table of ward-patient ID per date
-  raw_fhir_resources[["pids_per_ward"]] <- rbindPidsSplittedByWard(pids_splitted_by_ward)
+  if (etlutils::isSubProcess("DataImport.All") || !isProcess("DataImport")) {
+    # Add additional table of ward-patient ID per date
+    raw_fhir_resources[["pids_per_ward"]] <- rbindPidsSplittedByWard(pids_splitted_by_ward)
+  }
 
   return(raw_fhir_resources)
 }
@@ -393,8 +509,9 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
     resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
   }
 
-  # If there are no new patients in the pids_per_ward table, create an empty table with the correct columns
-  if (!nrow(resource_tables[["pids_per_ward"]])) {
+  # If there are no new patients in the pids_per_ward table, create an empty table with the correct columns.
+  # PID-dependent data import reads PIDs from the patient table and must not write pids_per_ward.
+  if ((etlutils::isSubProcess("DataImport.All") || !isProcess("DataImport")) && !nrow(resource_tables[["pids_per_ward"]])) {
     resource_tables[["pids_per_ward"]] <- data.table(
       patient_id = "EMPTY_DATA",
       encounter_id = "EMPTY_DATA",

@@ -1,5 +1,5 @@
 # Activate this only if you know what you are doing!
-I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = FALSE
+I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE
 
 # change the working directory to the main directory
 if (grepl('/cdstoolchain', getwd())) setwd("../..")
@@ -8,7 +8,7 @@ if (grepl('/R-cdstoolchain', getwd())) setwd("../")
 if (!I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED) {
   stop("You must set I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE to run this script!")
 }
-# CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1 <- FALSE # NEVER SET THIS TO TRUE UNLESS YOU KNOW WHAT YOU ARE DOING! This is only for test purposes and should never be used in production or on real data!
+CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1 <- TRUE # NEVER SET THIS TO TRUE UNLESS YOU KNOW WHAT YOU ARE DOING! This is only for test purposes and should never be used in production or on real data!
 
 library(etlutils)
 library(cds2db)
@@ -31,30 +31,13 @@ options(error = NULL)
 # Set the index of the test that should be run. This is used to determine the
 # script names to load/change the RAW and REDCap data.
 ###
-DEBUG_TEST_INDEX <- 2
+DEBUG_TEST_INDEX <- 8
 
-DEBUG_TEST_FILE_SUFFIX <- "a"
-
-###
-# Set the index of the virtual machine that should be used for the debug run.
-###
-DEBUG_VM_INDEX <- 6
+DEBUG_TEST_FILE_SUFFIX <- ""
 
 ##########################
 ### END TEST DEFINITON ###
 ##########################
-
-DEBUG_VM_PORTS_AND_TOKENS <- data.table::data.table(
-                  # local,   MR,                               FS+AXS,    TB, FS+AXS, FS+AXS,                              FS+AXS,   TOP
-     vm_index  = c(      0,    1,                                   2,     3,      4,      5,                                   6,     7),
-      db_port  = c(   5432, 5432,                               25432, 35432,  45432,  55432,                               25436, 15433),
-  redcap_port  = c(     80, 8082,                               28082,  8091,  48082,  58082,                               28087,  8083),
-  redcap_token = c(     "",   "",  "5DD4ECFDC245D8FC955B13D894875F62",    "",     "",     "",  "35784E25CB814491E49EE51641966B50",    "")
-)
-
-DEBUG_DB_PORT <- DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, db_port]
-DEBUG_REDCAP_PORT <- DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, redcap_port]
-DEBUG_REDCAP_TOKEN <- DEBUG_VM_PORTS_AND_TOKENS[vm_index == DEBUG_VM_INDEX, redcap_token]
 
 ###
 # For test_index = 4 this returns file name "./R-cds2db/test/test_04_change_RAW_Data.R"

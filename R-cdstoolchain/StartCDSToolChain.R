@@ -61,7 +61,9 @@ resetMemory <- function(...) {
     "DEBUG_DATES",
     "DEBUG_MODULES_PATH_TO_CONFIG_TOML",
 
+    "DEBUG_DB_HOST",
     "DEBUG_DB_PORT",
+    "DEBUG_REDCAP_HOST",
     "DEBUG_REDCAP_PORT",
     "DEBUG_REDCAP_TOKEN",
     "DEBUG_PATH_TO_RAW_RDATA_FILES",
