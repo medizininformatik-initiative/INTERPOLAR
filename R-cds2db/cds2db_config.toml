@@ -186,16 +186,6 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 ]
 
 
-[retrieve.debug]
-
-#################
-# Sets path for debug config toml files. This referenced toml file can contain
-# additional or changed parameters and values for parameters. It can be used to
-# enable quick changes of a lot of parameters without changing this main file.
-# This mechanism is also used for running integration tests.
-#################
-#DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
-
 
 [data.import]
 
@@ -245,6 +235,17 @@ DATA_IMPORT_RESOURCE_TYPES = [
 # Use DATA_IMPORT_FHIR_PIDS only without DATA_IMPORT_RANGE_START, DATA_IMPORT_RANGE_END
 # and DATA_IMPORT_RESOURCE_TYPES.
 DATA_IMPORT_FHIR_PIDS = []
+
+
+[retrieve.debug]
+
+#################
+# Sets path for debug config toml files. This referenced toml file can contain
+# additional or changed parameters and values for parameters. It can be used to
+# enable quick changes of a lot of parameters without changing this main file.
+# This mechanism is also used for running integration tests.
+#################
+#DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
 
 
 [database]
