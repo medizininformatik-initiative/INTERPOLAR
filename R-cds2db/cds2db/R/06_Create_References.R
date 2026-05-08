@@ -17,7 +17,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
   # Initialize debug variables for specific reference recalculation scenarios
   # See debug cds2db_config_toml
   debug_invalid_refs  <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS")
-  debug_specific_refs <- etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
+  debug_specific_refs <- etlutils::isDefinedAndNotEmpty("DEBUG_RECALCULATE_REFS_FOR_RESOURCES")
 
   start_time_column_names <- list(
     observation = "obs_effectivedatetime",
@@ -32,7 +32,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
 
   if (debug_specific_refs) {
     start_time_column_names <- start_time_column_names[
-      intersect(names(start_time_column_names), DEBUG_RECALULATE_REFS_FOR_RESOURCES)
+      intersect(names(start_time_column_names), DEBUG_RECALCULATE_REFS_FOR_RESOURCES)
     ]
   }
 
