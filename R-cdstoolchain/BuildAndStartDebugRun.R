@@ -81,8 +81,43 @@ local({
   }
 })
 
+
+############################
+### START TEST DEFINITON ###
+############################
+###
+# Set the index of the virtual machine that should be used for the debug run.
+###
+DEBUG_VM_INDEX <- 9
+############################
+### END TEST DEFINITON   ###
+############################
+
+DEBUG_VM_CONFIGS <- list(
+  `0` = list(db_port = 5432,  redcap_port = 80,    redcap_token = "35784E25CB814491E49EE51641966B50"), # local-VM
+  `1` = list(db_port = 5432,  redcap_port = 8082,  redcap_token = ""),                                 # MR
+  `2` = list(db_port = 25432, redcap_port = 28082, redcap_token = "5DD4ECFDC245D8FC955B13D894875F62"), # FS+AXS
+  `3` = list(db_port = 35432, redcap_port = 8091,  redcap_token = ""),                                 # TB
+  `4` = list(db_port = 45432, redcap_port = 48082, redcap_token = ""),                                 # FS+AXS
+  `5` = list(db_port = 55432, redcap_port = 58082, redcap_token = ""),                                 # FS+AXS
+  `6` = list(db_port = 25436, redcap_port = 28087, redcap_token = "35784E25CB814491E49EE51641966B50"), # FS+AXS
+  `7` = list(db_port = 15433, redcap_port = 8083,  redcap_token = ""),                                 # TOP
+  `8` = list(db_port = 1543,  redcap_port = 1082,  redcap_token = "5DD4ECFDC245D8FC955B13D894875F62"), # local-R-FS
+  `9` = list(db_port = 55435, redcap_port = 5085,  redcap_token = "35784E25CB814491E49EE51641966B50")  # local-R-AXS
+)
+
+debug_vm_config <- DEBUG_VM_CONFIGS[[as.character(DEBUG_VM_INDEX)]]
+
+DEBUG_DB_HOST <- if (DEBUG_VM_INDEX == 0L) "cds_hub" else "127.0.0.1"
+DEBUG_DB_PORT <- debug_vm_config$db_port
+DEBUG_REDCAP_HOST <- if (DEBUG_VM_INDEX == 0L) "redcap" else "127.0.0.1"
+DEBUG_REDCAP_PORT <- debug_vm_config$redcap_port
+DEBUG_REDCAP_TOKEN <- debug_vm_config$redcap_token
+
+
 # ---- Run main script of last package in GLOBAL env ---------------------------
 #DEBUG_START_SINGLE_MODULE <- "dataprocessor" # wenn man das ausführt, dann wird nicht nochmal die Testdatei gesourct, weil das nur in cds2db passiert!
 # DEBUG_SUBMODULE_DIR <- "./R-dataprocessor/submodules/02_MRP_Calculation"
 # DEBUG_RUN_SINGLE_DAY_ONLY <- 2
-source("R-cdstoolchain/StartDebugCDSToolChain.R", local = FALSE)
+#source("R-cdstoolchain/StartDebugCDSToolChain.R", local = FALSE)
+source("R-cdstoolchain/StartDataImport.R", local = FALSE)
