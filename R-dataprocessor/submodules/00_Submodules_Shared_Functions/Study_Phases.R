@@ -41,11 +41,10 @@ getStudyPhase <- function(ward_name, date_time) {
 
   # get the index of the ward phase definition for the given ward name, return -1 if not found
   getWardPhaseIndex <- function(ward_phases, ward_name) {
-    # Build regex allowing arbitrary whitespace around '='
-    pattern <- paste0("ward_name\\s*=\\s*'", ward_name, "'")
     for (i in seq_along(ward_phases)) {
       lines <- ward_phases[[i]]
-      if (any(grepl(pattern, lines, perl = TRUE))) {
+      configured_ward_name <- extractSingleEntryLinesValue(lines, "ward_name")
+      if (identical(configured_ward_name, ward_name)) {
         return(i)
       }
     }

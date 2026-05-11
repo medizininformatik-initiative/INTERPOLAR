@@ -530,7 +530,8 @@ createFrontendTables <- function() {
 
         if (is.na(study_phase)) {
           stop("ERROR: No study phase found for ward '", ward_name, "'.\n",
-               "Please check the study phase configuration in the dataprocessor_config.toml.")
+               "  Encounter with error:\n",
+               paste(capture.output(enc_frontend_table[target_index]), collapse = "\n"))
         }
         data.table::set(enc_frontend_table, target_index, "fall_studienphase", study_phase)
 
