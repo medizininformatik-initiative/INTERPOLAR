@@ -81,6 +81,7 @@ getFrontendTableDescription <- function() {
 #'          fetches all record IDs, and deletes them using `deleteRecords()`. If no records
 #'          are found, a message is displayed instead.
 #'
+#' @export
 deleteRedcapContent <- function() {
 
   # Define REDCap API connection
