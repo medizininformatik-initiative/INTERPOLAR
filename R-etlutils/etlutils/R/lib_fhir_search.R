@@ -805,7 +805,7 @@ fhirsearchMultipleResourcesByPID <- function(pids_with_last_updated,
       } else {
         additional_search_parameter <- NULL
       }
-      if (!nchar(additional_search_parameter) == 0 || is.null(additional_search_parameter)) {
+      if (is.null(additional_search_parameter) || all(!nchar(additional_search_parameter) == 0)) {
 
         # We need to update the last_check_date of every pid on every run of the toolchain,
         # so we download all patients independently of the last_updated date.
