@@ -79,19 +79,21 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     return(resources)
   }
 
-  getAllLastViewEncounterResourcesForPIDs <- function(encounters) {
+  getAllLastViewEncounterResourcesForPIDs <- function(pids) {
+    enc_pid_colname <- etlutils::fhirdbGetPIDColumn("encounter")
+    where_clause <- paste0("WHERE ", enc_pid_colname, " IN ", etlutils::fhirdbGetQueryList(pids))
+    getAllLastViewResources("encounter", "*", where_clause)
+  }
+
+  extendEncountersWithDatabaseInformations <- function(encounters) {
     if (nrow(encounters)) {
-      pid_col_name <- etlutils::fhirdbGetPIDColumn("encounter")
-      pids <- unique(encounters[[pid_col_name]])
-      # get all Encounters from DB via the v_encounter_last_version view
-      where_clause <- paste0("WHERE ", pid_col_name, " IN ", etlutils::fhirdbGetQueryList(pids))
-      resources <- getAllLastViewResources("encounter", "*", where_clause)
-      if (nrow(resources)) {
-        common_cols <- intersect(names(encounters), names(resources))
-        #encounters_trimmed <- encounters[, ..common_cols] # Should never be necessary; in encounters, only the columns from the table description are used.
-        resources <- resources[, ..common_cols]
-        encounters <- rbind(encounters, resources, use.names = TRUE)
-        encounters <- unique(encounters)
+      enc_pid_colname <- etlutils::fhirdbGetPIDColumn("encounter")
+      pids <- unique(encounters[[enc_pid_colname]])
+      encounter_from_db <- getAllLastViewEncounterResourcesForPIDs(pids)
+      if (nrow(encounter_from_db)) {
+        common_cols <- intersect(names(encounters), names(encounter_from_db))
+        encounter_from_db <- encounter_from_db[, ..common_cols]
+        encounters <- rbind(encounters, encounter_from_db, use.names = TRUE)
       }
     }
     return(encounters)
@@ -185,15 +187,39 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
 
     # we must create the references only for new download resources
   } else {
-    etlutils::runLevel2("Create references for Encounters", {
-      # 1.) Fill the calculated reference columns for Encounters
-      # filter the resource_tables$encounter to the columns we need for reference creation
-      encounters <- resource_tables$encounter[, c(getEncounterColNamesForReferenceCalculation()), with = FALSE]
-      encounters <- getAllLastViewEncounterResourcesForPIDs(encounters)
-      encounters <- createReferencesForEncounters(encounters, common_encounter_fhir_identifier_system)
-      # fill encounter table with the calculated ref columns
-      resource_tables$encounter <- joinCalculatedRefColumsToEncounter(resource_tables$encounter, encounters)
-    })
+    if (!is.null(resource_tables$encounter)) {
+      etlutils::runLevel2("Create references for Encounters", {
+        # 1.) Fill the calculated reference columns for Encounters
+        # filter the resource_tables$encounter to the columns we need for reference creation
+        encounters <- resource_tables$encounter[, c(getEncounterColNamesForReferenceCalculation()), with = FALSE]
+        encounters <- extendEncountersWithDatabaseInformations(encounters)
+        encounters <- createReferencesForEncounters(encounters, common_encounter_fhir_identifier_system)
+        # fill encounter table with the calculated ref columns
+        resource_tables$encounter <- joinCalculatedRefColumsToEncounter(resource_tables$encounter, encounters)
+      })
+    } else {
+      etlutils::runLevel2("Get references for Encounters from DB", {
+        # If there is no encounter table in the resource_tables, then we must get all encounters
+        # for the pids from the database to create the references for the other resources.
+        # This case should only be used by process "DataImport.PIDDependant".
+        getPidsFromResourceTables <- function(resource_tables) {
+          pids <- unlist(lapply(names(resource_tables), function(resource_name) {
+            resource_table <- resource_tables[[resource_name]]
+            pid_colname <- etlutils::fhirdbGetPIDColumn(resource_name)
+            if (pid_colname %in% names(resource_table)) {
+              return(unique(resource_table[[pid_colname]]))
+            }
+            NULL
+          }), use.names = FALSE)
+          unique(pids)
+        }
+        pids <- getPidsFromResourceTables(resource_tables)
+        encounters <- getAllLastViewEncounterResourcesForPIDs(pids)
+        resource_tables$encounter <- encounters
+        remove_encounters_from_resource_tables <- TRUE
+      })
+    }
+
     etlutils::runLevel2("Create references for Encounter depending resources", {
       # 2.) Fill the ..._encounter_calculated_ref of all Encounter referencing resources using
       #     the enc_partof_calculated_ref or timestamps
@@ -216,5 +242,9 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
   # Man kann auch alle Diagnosenspalten löschen und dann auf dem table unique ausführen. So viele Zeilen, wie dann
   # übrig bleiben, muss man pro neuer Diagnosenreferenz erzeugen.
   #
+
+  if (etlutils::isDefinedAndTrue("remove_encounters_from_resource_tables")) {
+    resource_tables$encounter <- NULL
+  }
   return(resource_tables)
 }

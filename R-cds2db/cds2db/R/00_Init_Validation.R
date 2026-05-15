@@ -102,12 +102,15 @@ validateConfig <- function() {
 
     ###
     # Remove all DEBUG parameters from global context if the data export is running to prevent any side effects
+    # but not if the developers start an debug run via BuildAndStartDebugRun.R (then the parameter "DEBUG_VM_INDEX" is set)
     ###
-    debug_parameters <- grep("^DEBUG_", ls(.GlobalEnv), value = TRUE)
-    if (length(debug_parameters)) {
-      etlutils::catWarningMessage("In data import all debug parameters are ignored!")
+    if (!etlutils::isDefinedAndNotEmpty("DEBUG_VM_INDEX")) {
+      debug_parameters <- grep("^DEBUG_", ls(.GlobalEnv), value = TRUE)
+      if (length(debug_parameters)) {
+        etlutils::catWarningMessage("In data import all debug parameters are ignored!")
+      }
+      rm(list = debug_parameters, envir = .GlobalEnv)
     }
-    rm(list = debug_parameters, envir = .GlobalEnv)
 
     ###
     # Validate the date range parameters for data import
