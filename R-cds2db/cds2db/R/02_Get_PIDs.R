@@ -20,31 +20,48 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
   # corresponds to a ward, with the ward name as the key. The value for each ward is another list that
   # contains the AND-connected filter conditions (sub-conditions). Multiple groups of such conditions
   # are stored as separate elements, representing the OR-connected groups of filters for the ward.
+  parsed_filter_patterns <- etlutils::parseStructuredConfigDefinitions(
+    definitions = ward_pids_filter_patterns,
+    allowed_key_pattern = "ward_name|[A-Za-z/]+",
+    allow_plus = TRUE
+  )
   converted_filter_patterns <- list()
-  ward_index <- 1
-  for (ward_filter_patterns in ward_pids_filter_patterns) {
+  definition_names <- unique(vapply(parsed_filter_patterns, `[[`, "", "definition_name"))
+
+  for (definition_name in definition_names) {
+    definition_filter_patterns <- parsed_filter_patterns[
+      vapply(parsed_filter_patterns, `[[`, "", "definition_name") == definition_name
+    ]
     single_ward_converted_filter_patterns <- list()
-    ward_name <- paste("Station", ward_index)
-    for (filter_patterns in ward_filter_patterns) { # filter_patterns <- ward_pids_filter_patterns[[1]]
-      for (filter_pattern in filter_patterns) { # filter_pattern <- filter_patterns$value[2]
-        if (startsWith(filter_pattern, "ward_name")) {
-          ward_name <- etlutils::getBetweenQuotes(filter_pattern)
-        } else {
-          and_conditions <- list()
-          filter_pattern_conditions <- unlist(strsplit(filter_pattern, "\\+"))
-          for (condition in filter_pattern_conditions) { # condition <- filter_pattern_conditions[1]
-            condition_key_value <- unlist(strsplit(condition, "="))
-            condition_column <- trimws(condition_key_value[1])
-            condition_value <- etlutils::getBetweenQuotes(condition_key_value[2])
-            and_conditions[[condition_column]] <- condition_value
-          }
-          single_ward_converted_filter_patterns[[paste0("Condition_", length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
-        }
+    ward_name <- definition_filter_patterns[[which(
+      vapply(definition_filter_patterns, `[[`, "", "key") == "ward_name"
+    )[1]]]$value
+    condition_line_ids <- unique(vapply(definition_filter_patterns, function(filter_pattern) {
+      paste(filter_pattern$entry_name, filter_pattern$line_index, sep = "\r")
+    }, ""))
+
+    for (condition_line_id in condition_line_ids) {
+      line_filter_patterns <- definition_filter_patterns[
+        vapply(definition_filter_patterns, function(filter_pattern) {
+          paste(filter_pattern$entry_name, filter_pattern$line_index, sep = "\r") == condition_line_id
+        }, logical(1))
+      ]
+
+      if (line_filter_patterns[[1]]$key == "ward_name") {
+        next
       }
-      converted_filter_patterns[[length(converted_filter_patterns) + 1]] <- single_ward_converted_filter_patterns
-      names(converted_filter_patterns)[length(converted_filter_patterns)] <- ward_name
+
+      and_conditions <- list()
+      for (filter_pattern in line_filter_patterns) {
+        and_conditions[[filter_pattern$key]] <- filter_pattern$value
+      }
+      single_ward_converted_filter_patterns[[paste0("Condition_", length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
     }
+
+    converted_filter_patterns[[length(converted_filter_patterns) + 1]] <- single_ward_converted_filter_patterns
+    names(converted_filter_patterns)[length(converted_filter_patterns)] <- ward_name
   }
+
   converted_filter_patterns
 }
 
