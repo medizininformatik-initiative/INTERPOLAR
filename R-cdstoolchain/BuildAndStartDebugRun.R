@@ -119,6 +119,8 @@ DEBUG_REDCAP_TOKEN <- debug_vm_config$redcap_token
 #DEBUG_START_SINGLE_MODULE <- "dataprocessor" # wenn man das ausführt, dann wird nicht nochmal die Testdatei gesourct, weil das nur in cds2db passiert!
 # DEBUG_SUBMODULE_DIR <- "./R-dataprocessor/submodules/02_MRP_Calculation"
 # DEBUG_RUN_SINGLE_DAY_ONLY <- 2
-#source("R-cdstoolchain/StartDebugCDSToolChain.R", local = FALSE)
-source("R-cdstoolchain/StartDataImport.R", local = FALSE)
 #source("R-cdstoolchain/DeleteDBAndREDCap.R", local = FALSE)
+#source("R-cdstoolchain/StartDebugCDSToolChain.R", local = FALSE)
+#source("R-cdstoolchain/StartDataImport.R", local = FALSE)
+#source("R-cdstoolchain/StartCDSToolchain.R", local = FALSE)
+

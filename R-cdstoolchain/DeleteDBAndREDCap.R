@@ -34,4 +34,3 @@ if (interactive()) {
 
 end_full <- Sys.time()
 cat("DeleteDBAndREDCap took ", capture.output(print(end_full - start_full)), "\n")
-quit(status = 1, save = "no")
