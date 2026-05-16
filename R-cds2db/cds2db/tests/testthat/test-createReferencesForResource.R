@@ -296,3 +296,94 @@ testthat::test_that("createReferencesForResource keeps the legacy filtering of e
   testthat::expect_identical(current_result, legacy_result)
   testthat::expect_identical(current_result$obs_id, "missing")
 })
+
+testthat::test_that("createReferencesForResource recalculates invalid calculated refs", {
+  resource_name <- "observation"
+  ref_col_name <- getEncounterReferenceColumnName(resource_name)
+  calculated_ref_col_name <- getEncounterCalculatedReferenceColumnName(resource_name)
+  patient_ref_col_name <- etlutils::fhirdbGetColumns(resource_name, "_patient_ref")
+
+  encounters <- data.table::data.table(
+    enc_id = "main-1",
+    enc_patient_ref = "Patient/p1",
+    enc_type_code = "einrichtungskontakt",
+    enc_class_code = "IMP",
+    enc_period_start = as.POSIXct("2026-01-01 00:00:00", tz = "UTC"),
+    enc_period_end = as.POSIXct("2026-01-10 00:00:00", tz = "UTC"),
+    enc_partof_calculated_ref = NA_character_,
+    enc_main_encounter_calculated_ref = "Encounter/main-1"
+  )
+
+  resource_table <- data.table::data.table(
+    obs_id = c("existing", "invalid"),
+    obs_effectivedatetime = as.POSIXct(c(NA, NA), tz = "UTC")
+  )
+  resource_table[, (ref_col_name) := c("Encounter/main-1", "Encounter/main-1")]
+  resource_table[, (patient_ref_col_name) := c("Patient/p1", "Patient/p1")]
+  resource_table[, (calculated_ref_col_name) := c("Encounter/already-done", "invalid")]
+
+  testthat::local_mocked_bindings(
+    dbGetReadOnlyQuery = function(...) data.table::data.table(),
+    runLevel2Line = function(message, process) force(process),
+    .package = "etlutils"
+  )
+
+  current_result <- createReferencesForResource(
+    encounters = data.table::copy(encounters),
+    resource_name = resource_name,
+    resource_table = data.table::copy(resource_table),
+    start_column_names = "obs_effectivedatetime"
+  )
+
+  testthat::expect_identical(current_result$obs_id, "invalid")
+  testthat::expect_identical(
+    current_result[[calculated_ref_col_name]],
+    "Encounter/main-1"
+  )
+})
+
+testthat::test_that("createReferencesForEncounters recalculates invalid calculated refs", {
+  encounters <- data.table::data.table(
+    enc_id = c("main-1", "dept-1"),
+    enc_type_code = c("einrichtungskontakt", "abteilungskontakt"),
+    enc_patient_ref = c("Patient/p1", "Patient/p1"),
+    enc_period_start = as.POSIXct(
+      c("2026-01-01 00:00:00", "2026-01-02 00:00:00"),
+      tz = "UTC"
+    ),
+    enc_period_end = as.POSIXct(
+      c("2026-01-10 00:00:00", "2026-01-03 00:00:00"),
+      tz = "UTC"
+    ),
+    enc_identifier_system = c("system", "system"),
+    enc_identifier_value = c("case-1", "case-1"),
+    enc_class_code = c("IMP", "IMP"),
+    enc_partof_ref = c(NA_character_, "Encounter/main-1"),
+    enc_partof_calculated_ref = c(NA_character_, "invalid"),
+    enc_main_encounter_calculated_ref = c("invalid", "invalid")
+  )
+
+  testthat::local_mocked_bindings(
+    runLevel2 = function(message, process) force(process),
+    catWarningMessage = function(...) invisible(NULL),
+    .package = "etlutils"
+  )
+
+  current_result <- createReferencesForEncounters(
+    encounters = data.table::copy(encounters),
+    common_encounter_fhir_identifier_system = NA_character_
+  )
+
+  testthat::expect_identical(
+    current_result[enc_id == "main-1", unique(enc_main_encounter_calculated_ref)],
+    "Encounter/main-1"
+  )
+  testthat::expect_identical(
+    current_result[enc_id == "dept-1", unique(enc_partof_calculated_ref)],
+    "Encounter/main-1"
+  )
+  testthat::expect_identical(
+    current_result[enc_id == "dept-1", unique(enc_main_encounter_calculated_ref)],
+    "Encounter/main-1"
+  )
+})

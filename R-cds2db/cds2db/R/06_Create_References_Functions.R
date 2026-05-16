@@ -88,6 +88,9 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
     encounters[, enc_partof_calculated_ref := NA_character_]
     encounters[, enc_main_encounter_calculated_ref := NA_character_]
     #encounters[, enc_diagnosis_condition_calculated_ref := NA_character_] # currently not used
+  } else {
+    encounters[enc_partof_calculated_ref == "invalid", enc_partof_calculated_ref := NA_character_]
+    encounters[enc_main_encounter_calculated_ref == "invalid", enc_main_encounter_calculated_ref := NA_character_]
   }
 
   # split Encounters by type code
@@ -300,8 +303,9 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
 
     calculated_ref_col_name <- getEncounterCalculatedReferenceColumnName(resource_name)
     # Once the data has been retrieved from the database, we only need to calculate the cal_ref
-    # columns for the resources that have never contained a value, so all others can be removed.
+    # columns for the resources that have no valid value, so all others can be removed.
     if (calculated_ref_col_name %in% names(resource_table)) {
+      resource_table[get(calculated_ref_col_name) == "invalid", (calculated_ref_col_name) := NA_character_]
       resource_table <- resource_table[is.na(get(calculated_ref_col_name))]
     }
     if (!is.null(resource_table) && nrow(resource_table) > 0) {
