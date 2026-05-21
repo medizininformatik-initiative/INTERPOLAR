@@ -108,8 +108,7 @@ getLocationString <- function(encounters, locations) {
   if (etlutils::isDefinedAndNotEmpty("FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN")) {
     encounters[, enc_location_ref_physicaltype_code := NA_character_]
     if (!is.null(locations) && nrow(locations)) {
-
-      encounters[, enc_location_id := etlutils::fhirdataExtractIDs(enc_location_ref)]
+      encounters[, enc_location_id := etlutils::fhirdataExtractIDs(enc_location_ref, unique = FALSE)]
 
       encounters[locations,
                  enc_location_ref_physicaltype_code := as.character(i.loc_physicaltype_code),

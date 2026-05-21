@@ -317,10 +317,10 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
 #
 addMedicationIdColumn <- function(medication_resources) {
   med_ref_col_name <- colnames(medication_resources)[endsWith(colnames(medication_resources), "_medicationreference_ref")]
-  medication_resources[, med_id := vapply(
-    get(med_ref_col_name),
-    function(x) if (is.na(x) || trimws(x) == "") NA_character_ else etlutils::fhirdataExtractIDs(x, unique = FALSE),
-    character(1) # return value is always single string
+  medication_resources[, med_id := data.table::fifelse(
+    is.na(get(med_ref_col_name)) | trimws(get(med_ref_col_name)) == "",
+    NA_character_,
+    etlutils::fhirdataExtractIDs(get(med_ref_col_name), unique = FALSE)
   )]
   return(medication_resources)
 }
