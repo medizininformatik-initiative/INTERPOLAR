@@ -130,7 +130,7 @@ testPrepareRAWResources <- function(patient_ids) {
   # Filter for the first encounters for the first entry
   enc_templates <- enc_templates[grepl("-1$", enc_id)]
   # Give all encounter the same identifier system and identifier of the same medical record as value
-  enc_templates[, enc_identifier_system := "[1.1]http://www.commonidentifiersystem.de"]
+  enc_templates[, enc_identifier_system := "[1.1]http://www.hospital_xyz_case_id_system.de"]
   enc_templates[, enc_identifier_value := sub("[1]", "[1.1]", sub("-A-1$", "", enc_id), fixed = TRUE)]
   # Add encounters with type "Versorgungstellenkontakt"
   enc_templates <- testAddEncounterLevel3(enc_templates)

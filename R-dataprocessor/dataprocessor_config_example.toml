@@ -65,7 +65,7 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 #
 # It is *not* a pattern. It must be specified here as an exact string.
 #################
-COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
 
 #################
 # Only Encounters that have one of the entries specified here as a class attribute are displayed
