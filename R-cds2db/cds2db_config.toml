@@ -202,25 +202,32 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 #    DATA_IMPORT_FHIR_PIDS must not be combined with range or resource type parameters.
 #
 # 4. Non-empty DATA_IMPORT_RESOURCE_TYPES
-#    DataImport.PIDDependant: reload selected PID-dependent resource types.
+#    DataImport.ResourceTypes: reload selected resource types.
 #
 # 5. DATA_IMPORT_RANGE_START (+ DATA_IMPORT_RANGE_END) + non-empty DATA_IMPORT_RESOURCE_TYPES
-#    DataImport.PIDDependant: reload selected PID-dependent resource types in a date range.
+#    DataImport.ResourceTypes: reload selected resource types. The date range is applied
+#    only to PID-dependent resources.
 #
 # DATA_IMPORT_RANGE_END requires DATA_IMPORT_RANGE_START.
 # Empty DATA_IMPORT_RESOURCE_TYPES is treated as not defined.
-# Consent ignores the date range because it is PID-dependent, but not case-dependent.
-#DATA_IMPORT_RANGE_START = "2099-01-01 00:00:00"
-#DATA_IMPORT_RANGE_END = "2099-12-31 00:00:00"
+# Consent and PID-independent resources ignore the date range.
+DATA_IMPORT_RANGE_START = "1999-01-01 00:00:00"
+#DATA_IMPORT_RANGE_END = "2021-12-01 00:00:00"
 
-# PID-dependent resources can be reloaded for FHIR PIDs that already exist in the database.
-# If DATA_IMPORT_RESOURCE_TYPES is non-empty, StartDataImport activates the DataImport.PIDDependant subprocess.
+# DATA_IMPORT_RESOURCE_TYPES can contain PID-dependent resources or PID-independent resources
+# that are referenced by existing database resources.
+# PID-dependent resources are reloaded for FHIR PIDs that already exist in the database.
+# PID-independent resources are reloaded by reading existing database references to them.
+# If DATA_IMPORT_RESOURCE_TYPES is non-empty, StartDataImport activates the DataImport.ResourceTypes subprocess.
 # Otherwise StartDataImport activates DataImport.All, the existing cache-based import for reloading case data.
-# Allowed resource types are derived from Table_Description.xlsx via subject/reference or patient/reference.
+# Allowed resource types are derived from Table_Description.xlsx via subject/reference,
+# patient/reference, and REFERENCE_TYPES.
 # Encounter is still excluded because it belongs to the case-based import.
 # PID-independent resources referenced by the selected resources are reloaded automatically if
 # they are described in Table_Description.xlsx.
 DATA_IMPORT_RESOURCE_TYPES = [
+
+  # PID-dependent. DATA_IMPORT_RANGE_START/_END is applied only to these resources.
 #  "Condition",
 #  "MedicationRequest",
 #  "MedicationAdministration",
@@ -229,7 +236,11 @@ DATA_IMPORT_RESOURCE_TYPES = [
 #  "DiagnosticReport",
 #  "ServiceRequest",
 #  "Procedure",
-#  "Consent"
+#  "Consent",
+
+  # PID-independent (referenced). DATA_IMPORT_RANGE_START/_END is ignored.
+#  "Medication",
+#  "Location"
 ]
 
 # Use DATA_IMPORT_FHIR_PIDS only without DATA_IMPORT_RANGE_START, DATA_IMPORT_RANGE_END
