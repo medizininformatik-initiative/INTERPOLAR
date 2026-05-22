@@ -124,7 +124,7 @@ getPatientData <- function(lock_id, table_name) {
 #' This function performs the following:
 #' 1. Builds and runs a SQL query selecting the full encounter dataset from the specified table.
 #' 2. Filters out encounters that do not match the expected FHIR identifier
-#'    system for encounters (if defined as `COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM`).
+#'    system for encounters (if defined as `MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM`).
 #' 3. Filters encounters to include only those with a start date and end date within one year before
 #'    the reporting_period_start or with missing dates to keep track of potentially relevant records.
 #' 4. Filters out encounters with class codes "PRENC", "VR", or "HH" to exclude non-relevant records.
@@ -169,15 +169,15 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     stop("No encounter data downloaded from database. Please check the database.")
   }
 
-  if (etlutils::isDefinedAndNotEmpty("COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+  if (etlutils::isDefinedAndNotEmpty("MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
     encounter_table_raw <- encounter_table_raw |>
-      dplyr::filter(enc_identifier_system %in% COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM) |>
+      dplyr::filter(enc_identifier_system %in% MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM) |>
       dplyr::distinct()
   }
 
   if (nrow(encounter_table_raw) == 0) {
     stop("The downloaded and identifier-filtered encounter table is empty. Please check (if defined)
-    for the correct definition of COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM.")
+    for the correct definition of MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")
   }
 
   encounter_table <- encounter_table_raw |>

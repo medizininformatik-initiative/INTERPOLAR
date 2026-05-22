@@ -19,7 +19,7 @@ init <- function(validate_config = TRUE) {
                        path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
                        mandatory_parameters = c(
                          "PHASES_WARD",
-                         "COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
+                         "MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
                          "OBSERVATION_BODY_WEIGHT_SYSTEM",
                          "OBSERVATION_BODY_WEIGHT_CODES",
                          "OBSERVATION_BODY_HEIGHT_SYSTEM",
