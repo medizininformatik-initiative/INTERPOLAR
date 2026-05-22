@@ -8,7 +8,7 @@ etlutils::setProcess("DataImport")
 
 config_cds2db <- cds2db::init(validate_config = FALSE)
 if (etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RESOURCE_TYPES", envir = config_cds2db)) {
-  etlutils::setSubProcess("DataImport.PIDDependant")
+  etlutils::setSubProcess("DataImport.ResourceTypes")
 } else {
   etlutils::setSubProcess("DataImport.All")
 }
@@ -28,7 +28,7 @@ skipPreviousDataImport <- function() {
 
 .data_import_env$cache_files_count <- 0
 
-if (etlutils::isSubProcess("DataImport.PIDDependant")) {
+if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
   source("./R-cdstoolchain/StartCDSToolChain.R")
 } else if (etlutils::isSubProcess("DataImport.All")) {
   .data_import_env$cache_files_count <- cds2db::initCache(delete_old_cache = skipPreviousDataImport())

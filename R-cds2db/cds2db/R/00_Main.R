@@ -123,7 +123,7 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
-      if (etlutils::isSubProcess("DataImport.PIDDependant")) {
+      if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
         pids_splitted_by_ward <- getDataImportPIDsFromDB()
       } else if (etlutils::isSubProcess("DataImport.All")) {
         if (!etlutils::hasNextCacheFile()) {
@@ -145,7 +145,7 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
       # Load Table Description
       etlutils::runLevel2("Load Table Description", {
         fhir_table_descriptions <- getFhircrackrTableDescriptions()
-        if (etlutils::isSubProcess("DataImport.PIDDependant")) {
+        if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
           fhir_table_descriptions <- filterFhirTableDescriptionsForDataImport(fhir_table_descriptions)
         }
       })
@@ -165,7 +165,6 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
         }
         names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
       })
-
       if (!all_empty_fhir) {
         # Write raw tables to database
         etlutils::runLevel2("Write RAW tables to database", {
@@ -183,7 +182,7 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
             stop_if_table_not_empty = TRUE)
         })
       } else {
-        etlutils::catWarningMessage("No FHIR resources found for PID-dependent data import.")
+        etlutils::catWarningMessage("No FHIR resources found for resource type data import.")
       }
 
       # Convert Column Types in resource tables
@@ -195,7 +194,7 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
         # table which is not a resource from the FHIR server -> so we have to join and unique the
         # name set:
         all_current_run_table_names <- names(resource_tables)
-        if (etlutils::isSubProcess("DataImport.PIDDependant")) {
+        if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
           all_table_names_raw_diff <- all_current_run_table_names
         } else {
           all_resource_names <- c(names(fhir_table_descriptions[["pid_dependant"]]), names(fhir_table_descriptions[["pid_independant"]]))
