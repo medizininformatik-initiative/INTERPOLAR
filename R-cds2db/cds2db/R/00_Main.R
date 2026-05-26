@@ -100,15 +100,6 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
   just_melting <- etlutils::isDefinedAndNotEmpty("DEBUG_MELTING_CHUNK_SIZE")
 
-  if (!skip_db_operations) {
-    if (reset_lock_only) {
-      etlutils::dbResetLock()
-      return()
-    }
-    # Check if the release version of the database is compatible
-    etlutils::checkVersion(ignore_newer_db_version)
-  }
-
   try(etlutils::runLevel1("Run Retrieve", {
 
     if (!just_melting) {
@@ -117,6 +108,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
         # Reset database lock from unfinished previous cds2db run
         etlutils::runLevel2("Reset database lock from unfinished previous run", {
           etlutils::dbResetLock()
+          # Check if the release version of the database is compatible
+          etlutils::checkVersion(ignore_newer_db_version)
         })
 
         # Check if we must create references for old data (should be executed exactly once and then never again)
