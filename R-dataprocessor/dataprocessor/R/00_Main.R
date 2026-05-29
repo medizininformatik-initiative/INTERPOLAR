@@ -69,8 +69,10 @@ runSubmodules <- function() {
   #   command_line_args <- c("mrp-check", "start-date=2025-12-01") # second parameter is irrelevant
   # }
 
-  # Check if any submodule directories were specified in the command line arguments
-  if (!interactive() || length(command_line_args)) {
+  # Check if any submodule directories were specified in the command line arguments.
+  # Manual-start submodules also need the functions of the automatic submodules
+  # when they are started interactively via DEBUG_SUBMODULE_DIR.
+  if (!interactive() || length(command_line_args) || exists("DEBUG_SUBMODULE_DIR")) {
     # enable minus for underscrore in arguments and ignore case
     command_line_args <- sub("-", "_", tolower(command_line_args), fixed = TRUE)
     called_manual_start_submodule_dirs <- manual_start_submodule_dirs[
