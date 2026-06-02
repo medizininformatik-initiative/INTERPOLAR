@@ -1,5 +1,6 @@
 library(etlutils)
 library(dataprocessor)
+library(db2frontend)
 
 etlutils::setProcess("MRPRecalculation")
 
@@ -7,10 +8,38 @@ etlutils::setProcess("MRPRecalculation")
 if (grepl("/cdstoolchain$", getwd())) setwd("../..")
 if (grepl("/R-cdstoolchain$", getwd())) setwd("../")
 
-# Force the dataprocessor to execute only the dedicated manual-start module.
-DEBUG_SUBMODULE_DIR <- "./R-dataprocessor/submodules/manual_start/MRP_Recalculation"
+command_line_args <- commandArgs(trailingOnly = TRUE)
+ignore_newer_db_version <- "--ignoreNewerDBVersion" %in% command_line_args
+command_line_args <- setdiff(command_line_args, "--ignoreNewerDBVersion")
 
-status <- dataprocessor::processData()
+# Enable this block temporarily when running the script interactively.
+if (interactive()) {
+  # command_line_args <- c("start-date=2026-05-24", "end-date=2026-05-28")
+  command_line_args <- c("start-date=2026-05-24")
+}
+
+command_arguments <- etlutils::initCommandLineArguments(
+  defaults = list(
+    start_date = etlutils::as.POSIXctWithTimezone(Sys.Date()),
+    end_date = etlutils::as.POSIXctWithTimezone(Sys.Date())
+  ),
+  command_arguments = command_line_args
+)
+
+status <- dataprocessor::recalculateMRPs(
+  start_date = command_arguments$start_date,
+  end_date = command_arguments$end_date,
+  ignore_newer_db_version = ignore_newer_db_version,
+  validate_config = FALSE
+)
+
+if (status == 0) {
+  status <- db2frontend::startDB2Frontend(
+    ignore_newer_db_version = ignore_newer_db_version,
+    validate_config = FALSE
+  )
+}
+
 if (!interactive()) {
   quit(status = status, save = "no")
 }

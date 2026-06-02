@@ -1,11 +1,33 @@
-# Recalculate MRPs for a given time range and add new results to the database.
-mrpRecalculation <- function(start_date, end_date = NULL) {
+#' Recalculate retrospective MRPs additively for a selected time range
+#'
+#' Re-runs the retrospective MRP calculation for encounters in the given time
+#' range, removes already existing MRP evaluations on a domain-specific key,
+#' renumbers the remaining REDCap repeat instances, and writes only the new rows
+#' to the database.
+#'
+#' @param start_date Start date or timestamp of the encounter selection window.
+#' @param end_date Optional end date or timestamp of the encounter selection
+#'   window. If omitted, the current date is used.
+#' @param ignore_newer_db_version Logical. Passed to the standard version check.
+#' @param validate_config Logical. If `TRUE`, validates the dataprocessor
+#'   configuration before execution.
+#'
+#' @return Invisible finalize status from the dataprocessor module run.
+#' @export
+recalculateMRPs <- function(start_date,
+                            end_date = NULL,
+                            ignore_newer_db_version = FALSE,
+                            validate_config = TRUE) {
 
   start_date <- etlutils::as.POSIXctWithTimezone(start_date)
   end_date <- if (is.null(end_date)) {
     etlutils::as.POSIXctWithTimezone(Sys.Date())
   } else {
     etlutils::as.POSIXctWithTimezone(end_date)
+  }
+
+  if (start_date > end_date) {
+    stop("Parameter end_date (", end_date, ") must be greater than start_date (", start_date, ").")
   }
 
   # Normalize values that are part of the logical MRP identity so that
@@ -170,31 +192,72 @@ mrpRecalculation <- function(start_date, end_date = NULL) {
     )
   }
 
-  etlutils::runLevel2("Calculate MRPs for time range", {
-    # calculateMRPs() still returns both existing and newly rediscovered MRPs
-    # for the selected encounters. The additive behavior is applied afterwards.
-    mrp_tables <- calculateMRPs(start_date, end_date)
-    mrp_tables <- filterExistingMRPs(mrp_tables)
-    mrp_tables <- renumberNewMRPs(mrp_tables)
-  })
+  markRecalculatedMRPs <- function(mrp_tables) {
+    ret_table <- mrp_tables$retrolektive_mrpbewertung_fe
 
-  etlutils::runLevel2("Write new MRP results to database", {
-    new_mrp_count <- nrow(mrp_tables$retrolektive_mrpbewertung_fe)
-    if (new_mrp_count) {
-      etlutils::dbWriteTables(
-        tables = mrp_tables,
-        lock_id = "Write additive MRP recalculation to database",
-        stop_if_table_not_empty = FALSE
-      )
-      cat("Added ", new_mrp_count, " new MRP evaluation(s).\n", sep = "")
-    } else {
-      # A clean no-op is expected when all recalculated MRPs are already present.
-      cat("No new MRP evaluations found for the selected time range.\n")
+    if (nrow(ret_table)) {
+      recalculation_process_name <- etlutils::getProcess()
+      recalculation_timestamp <- etlutils::as.POSIXctWithTimezone(Sys.time(), format = "%Y-%m-%d %H:%M:%S")
+      ret_table[
+        ,
+        ret_additional_values := paste(
+          recalculation_process_name, recalculation_timestamp
+        )
+      ]
     }
-  })
 
-  etlutils::runLevel2("Export database content to REDCap", {
-    requireNamespace("db2frontend")
-    db2frontend::startDB2Frontend(validate_config = FALSE)
-  })
+    mrp_tables$retrolektive_mrpbewertung_fe <- ret_table
+    mrp_tables
+  }
+
+  config <- init(validate_config)
+  etlutils::startModule(config)
+  etlutils::setSubmoduleName("MRPRecalculation")
+
+  try(etlutils::runLevel1("Run additive MRP recalculation", {
+
+    etlutils::runLevel2("Reset database lock from unfinished previous run", {
+      etlutils::dbResetLock()
+      etlutils::checkVersion(ignore_newer_db_version)
+    })
+
+    etlutils::runLevel2("Source dataprocessor helper scripts", {
+      source("./R-dataprocessor/dataprocessor/R/01_Shared_Functions.R")
+      source("./R-dataprocessor/dataprocessor/R/02_Input_Files_Functions.R")
+    })
+
+    etlutils::runLevel2("Source dataprocessor submodule functions", {
+      sourceAllSubmodules()
+    })
+
+    etlutils::runLevel2("Calculate MRPs for time range", {
+      # calculateMRPs() still returns both existing and newly rediscovered MRPs
+      # for the selected encounters. The additive behavior is applied afterwards.
+      mrp_tables <- calculateMRPs(start_date, end_date)
+      mrp_tables <- filterExistingMRPs(mrp_tables)
+      mrp_tables <- renumberNewMRPs(mrp_tables)
+      mrp_tables <- markRecalculatedMRPs(mrp_tables)
+    })
+
+    etlutils::runLevel2("Write new MRP results to database", {
+      new_mrp_count <- nrow(mrp_tables$retrolektive_mrpbewertung_fe)
+      if (new_mrp_count) {
+        etlutils::dbWriteTables(
+          tables = mrp_tables,
+          lock_id = "Write additive MRP recalculation to database",
+          stop_if_table_not_empty = FALSE
+        )
+        cat("Added ", new_mrp_count, " new MRP evaluation(s).\n", sep = "")
+      } else {
+        # A clean no-op is expected when all recalculated MRPs are already present.
+        cat("No new MRP evaluations found for the selected time range.\n")
+      }
+    })
+  }))
+
+  etlutils::removeSubmoduleName()
+  etlutils::dbCloseAllConnections()
+
+  finish_message <- etlutils::generateFinishMessage()
+  invisible(etlutils::finalize(finish_message))
 }
