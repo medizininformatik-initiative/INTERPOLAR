@@ -29,7 +29,7 @@ recalculateMRPs <- function(start_date,
   if (start_date > end_date) {
     stop("Parameter end_date (", end_date, ") must be greater than start_date (", start_date, ").")
   }
-
+browser()
   # Normalize values that are part of the logical MRP identity so that
   # comparisons are stable across character, NA, and timestamp columns.
   normalizeMRPKeyColumn <- function(value) {
@@ -114,9 +114,10 @@ recalculateMRPs <- function(start_date,
     )
   }
 
-  # REDCap repeat instances are assigned per patient record. After filtering
-  # out already existing MRPs, the remaining new rows must be renumbered so
-  # they continue the existing repeat-instance sequence without collisions.
+  # ret_id values continue per medication analysis, while REDCap repeat
+  # instances continue per patient record. After deduplication, both sequences
+  # must be rebuilt from the current last-version state so the surviving new
+  # rows remain gap-free and consistent.
   renumberNewMRPs <- function(mrp_tables) {
     ret_table <- mrp_tables$retrolektive_mrpbewertung_fe
     dp_table <- mrp_tables$dp_mrp_calculations
@@ -126,38 +127,60 @@ recalculateMRPs <- function(start_date,
     }
 
     record_ids <- unique(na.omit(ret_table$record_id))
-    existing_repeat_instances <- data.table::data.table()
+    existing_ret_rows <- data.table::data.table()
     if (length(record_ids)) {
       query <- paste0(
-        "SELECT record_id, redcap_repeat_instance\n",
+        "SELECT record_id, ret_meda_id, ret_id, redcap_repeat_instance\n",
         "FROM v_retrolektive_mrpbewertung_fe_last_version\n",
         "WHERE record_id IN ", etlutils::fhirdbGetQueryList(record_ids), "\n"
       )
-      existing_repeat_instances <- etlutils::dbGetReadOnlyQuery(
+      existing_ret_rows <- etlutils::dbGetReadOnlyQuery(
         query,
-        lock_id = "MRP_Recalculation_existing_repeat_instances"
+        lock_id = "MRP_Recalculation_existing_ret_ids_and_repeat_instances"
       )
     }
 
     ret_table[, temp_old_ret_id := ret_id]
     ret_table[, temp_old_redcap_repeat_instance := redcap_repeat_instance]
+    dp_table[, temp_old_ret_id := ret_id]
+    dp_table[, temp_old_ret_redcap_repeat_instance := ret_redcap_repeat_instance]
 
-    # Rebuild repeat instances after deduplication so that REDCap receives a
-    # contiguous sequence of new repeat rows per patient record.
-    repeat_instance_map <- ret_table[
+    # Rebuild both numbering schemes after deduplication so that the written
+    # rows line up with the currently visible DB state instead of the temporary
+    # ids produced before identical old MRPs were filtered out.
+    renumber_map <- ret_table[
       ,
       {
-        existing_group <- existing_repeat_instances[record_id == .BY$record_id]
+        existing_group <- existing_ret_rows[record_id == .BY$record_id]
+
+        existing_meda_group <- existing_group[ret_meda_id == .BY$ret_meda_id]
+        ret_id_prefix <- sub("[0-9]+$", "", .SD$temp_old_ret_id[1])
+        existing_ret_suffixes <- suppressWarnings(
+          as.integer(sub(ret_id_prefix, "", existing_meda_group$ret_id, fixed = TRUE))
+        )
+        max_existing_ret_index <- suppressWarnings(max(existing_ret_suffixes, na.rm = TRUE))
+        next_ret_index <- if (length(existing_ret_suffixes) && is.finite(max_existing_ret_index)) {
+          max_existing_ret_index + 1L
+        } else {
+          1L
+        }
+
         # REDCap repeat instances must be unique per record and instrument.
         # New recalculated MRPs therefore continue counting from the highest
         # already exported instance of the same record.
-        next_repeat_instance <- if (nrow(existing_group)) {
-          max(as.integer(existing_group$redcap_repeat_instance), na.rm = TRUE) + 1L
+        max_existing_repeat_instance <- suppressWarnings(max(as.integer(existing_group$redcap_repeat_instance), na.rm = TRUE))
+        next_repeat_instance <- if (nrow(existing_group) && is.finite(max_existing_repeat_instance)) {
+          max_existing_repeat_instance + 1L
         } else {
           1L
         }
 
         current_rows <- .SD[order(redcap_repeat_instance, ret_id)]
+        current_rows[, new_ret_index := seq.int(
+          from = next_ret_index,
+          length.out = .N
+        )]
+        current_rows[, new_ret_id := paste0(ret_id_prefix, new_ret_index)]
         current_rows[, new_redcap_repeat_instance := seq.int(
           from = next_repeat_instance,
           length.out = .N
@@ -166,25 +189,39 @@ recalculateMRPs <- function(start_date,
         current_rows[, .(
           temp_old_ret_id,
           temp_old_redcap_repeat_instance,
+          new_ret_id,
           new_redcap_repeat_instance
         )]
       },
-      by = record_id
+      by = .(record_id, ret_meda_id)
     ]
 
     ret_table[
-      repeat_instance_map,
-      on = .(record_id, temp_old_ret_id, temp_old_redcap_repeat_instance),
+      renumber_map,
+      on = .(record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance),
+      ret_id := i.new_ret_id
+    ]
+
+    ret_table[
+      renumber_map,
+      on = .(record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance),
       redcap_repeat_instance := i.new_redcap_repeat_instance
     ]
 
     dp_table[
-      repeat_instance_map,
-      on = .(ret_id = temp_old_ret_id, ret_redcap_repeat_instance = temp_old_redcap_repeat_instance),
+      renumber_map,
+      on = .(temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance),
+      ret_id := i.new_ret_id
+    ]
+
+    dp_table[
+      renumber_map,
+      on = .(temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance),
       ret_redcap_repeat_instance := i.new_redcap_repeat_instance
     ]
 
     ret_table[, c("temp_old_ret_id", "temp_old_redcap_repeat_instance") := NULL]
+    dp_table[, c("temp_old_ret_id", "temp_old_ret_redcap_repeat_instance") := NULL]
 
     list(
       retrolektive_mrpbewertung_fe = ret_table,
