@@ -201,7 +201,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
       etlutils::runLevel2("Get references for Encounters from DB", {
         # If there is no encounter table in the resource_tables, then we must get all encounters
         # for the pids from the database to create the references for the other resources.
-        # This case should only be used by process "DataImport.PIDDependant".
+        # This case should only be used by process "DataImport.ResourceTypes".
         getPidsFromResourceTables <- function(resource_tables) {
           pids <- unlist(lapply(names(resource_tables), function(resource_name) {
             resource_table <- resource_tables[[resource_name]]

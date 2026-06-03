@@ -132,7 +132,7 @@ hasDataImportDateRange <- function() {
   etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_START")
 }
 
-#' Build FHIR date search parameters for PID-dependent data import
+#' Build FHIR date search parameters for PID-dependent resource type data import
 #'
 #' @param resource_name FHIR resource type.
 #' @param diagnostic_report_date_parameter Date search parameter for DiagnosticReport.
@@ -247,7 +247,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   # START: FOR DEBUG ONLY #
   #########################
 
-  # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
+  # Find additional test filters for the FHIR search request.
   resources_add_search_parameter <- debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions)
   debug_resources_add_search_parameter <- resources_add_search_parameter
 
@@ -255,7 +255,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   # END: FOR DEBUG ONLY #
   #######################
 
-  if (etlutils::isSubProcess("DataImport.PIDDependant")) {
+  if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
     resources_add_search_parameter <- addDataImportFHIRDateSearchParameters(
       table_descriptions,
       resources_add_search_parameter
@@ -301,8 +301,8 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   }
 
   # Get the date for every PID when the Patient resource was written to the database the last time.
-  # In PID-dependent data import mode, the Patient resource is intentionally not downloaded.
-  if (etlutils::isSubProcess("DataImport.PIDDependant")) {
+  # In resource type data import mode, the Patient resource is intentionally not downloaded.
+  if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
     pids_with_last_updated <- setNames(as.list(patient_ids), rep(NA, length(patient_ids)))
   } else {
     pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
@@ -328,7 +328,8 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   # enc_period_start if the parameter MIN_PATIENT_AGE is specified.
   pids_with_last_updated <- resource_tables_fhir$pids_with_last_updated
 
-  if (etlutils::isSubProcess("DataImport.PIDDependant") &&
+  # THIS EXCEPTION MUST BE GENERALIZED OR REMOVED HERE! FHIR resource names should not be used here.
+  if (etlutils::isSubProcess("DataImport.ResourceTypes") &&
       hasDataImportDateRange() &&
       "DiagnosticReport" %in% names(table_descriptions) &&
       (!("DiagnosticReport" %in% names(raw_fhir_resources)) || !nrow(raw_fhir_resources[["DiagnosticReport"]]))) {
@@ -367,6 +368,206 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   return(raw_fhir_resources)
 }
 
+#' Get normalized referenced FHIR IDs
+#'
+#' @param ids A character vector of FHIR IDs or references.
+#' @param sep Separator used for multi-value FHIR-crackr columns.
+#'
+#' @return A character vector of normalized FHIR IDs.
+getNormalizedReferencedIDs <- function(ids, sep) {
+  ids <- unique(na.omit(ids))
+  if (!length(ids)) {
+    return(character())
+  }
+
+  ids <- unlist(strsplit(ids, sep, fixed = TRUE), use.names = FALSE)
+  ids <- etlutils::fhirdataRemoveIndices(getAfterLastSlash(ids))
+  ids <- unique(ids[nchar(ids) > 0])
+  return(ids)
+}
+
+#' Merge existing and newly loaded resource tables
+#'
+#' @param existing_resources Existing resource table or NULL.
+#' @param new_resources Newly loaded resource table.
+#'
+#' @return A merged resource table without rows already present in the existing table.
+mergeResourceTables <- function(existing_resources, new_resources) {
+  if (is.null(existing_resources) || !nrow(existing_resources)) {
+    return(new_resources)
+  }
+  if (!nrow(new_resources)) {
+    return(existing_resources)
+  }
+  new_resources <- new_resources[!existing_resources, on = names(new_resources)]
+  combined_resources <- rbind(existing_resources, new_resources)
+  return(combined_resources)
+}
+
+#' Get table description rows that reference a resource type
+#'
+#' @param table_descriptions Grouped FHIR table descriptions.
+#' @param reference_type FHIR resource type used as reference target.
+#'
+#' @return A data.table with reference rows for the given resource type.
+getReferenceRowsForType <- function(table_descriptions, reference_type) {
+  whole_word_pattern <- paste0("\\b", reference_type, "\\b")
+  reference_rows <- table_descriptions$reference_types[
+    grepl(whole_word_pattern, REFERENCE_TYPES)
+  ]
+  return(reference_rows)
+}
+
+#' Check whether referenced resource download is disabled by debug configuration
+#'
+#' @param reference_type FHIR resource type used as reference target.
+#' @param resources_add_search_parameter Additional FHIR search parameters keyed by resource type.
+#'
+#' @return TRUE if the resource type has an empty debug search parameter.
+shouldSkipReferencedResourceDownload <- function(reference_type, resources_add_search_parameter) {
+  skip_download <- reference_type %in% names(resources_add_search_parameter) &&
+    nchar(resources_add_search_parameter[[reference_type]]) == 0
+  return(skip_download)
+}
+
+#' Load a referenced resource type by FHIR IDs
+#'
+#' @param table_descriptions Grouped FHIR table descriptions.
+#' @param resource_tables Current resource table list.
+#' @param reference_type FHIR resource type used as reference target.
+#' @param referenced_ids FHIR IDs to load.
+#' @param resources_add_search_parameter Additional FHIR search parameters keyed by resource type.
+#'
+#' @return An updated resource table list.
+loadReferencedResourceByIDs <- function(table_descriptions,
+                                        resource_tables,
+                                        reference_type,
+                                        referenced_ids,
+                                        resources_add_search_parameter) {
+  referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
+  if (!shouldSkipReferencedResourceDownload(reference_type, resources_add_search_parameter)) {
+    new_resources <- etlutils::fhirsearchResourcesByOwnID(
+      referenced_ids,
+      referenced_table_description,
+      additional_search_parameter = resources_add_search_parameter[[reference_type]]
+    )
+    existing_resources <- resource_tables[[reference_type]] %||% NULL
+    resource_tables[[reference_type]] <- mergeResourceTables(existing_resources, new_resources)
+  } else {
+    resource_tables <- etlutils::fhirdataCreateResourceTable(
+      referenced_table_description,
+      resource_key = reference_type,
+      resource_collection = resource_tables
+    )
+  }
+  return(resource_tables)
+}
+
+#' Print the download result for a referenced resource type
+#'
+#' @param reference_type FHIR resource type used as reference target.
+#' @param resource_tables Current resource table list.
+#' @param resources_add_search_parameter Additional FHIR search parameters keyed by resource type.
+#'
+#' @return NULL, invisibly.
+printReferencedResourceDownloadResult <- function(reference_type,
+                                                  resource_tables,
+                                                  resources_add_search_parameter) {
+  if (!is.null(resource_tables[[reference_type]]) && nrow(resource_tables[[reference_type]])) {
+    printAllTables(resource_tables[[reference_type]], reference_type)
+  } else if (shouldSkipReferencedResourceDownload(reference_type, resources_add_search_parameter)) {
+    catInfoMessage(paste(
+      "Info: No",
+      reference_type,
+      "resources downloaded because DEBUG_ADD_FHIR_SEARCH_ for the given resource is empty.\n"
+    ))
+  } else {
+    catInfoMessage(paste(
+      "Info: No",
+      reference_type,
+      "resources found for the given reference IDs.\n"
+    ))
+  }
+  return(invisible(NULL))
+}
+
+#' Load selected PID-independent data import resources from database references
+#'
+#' @param table_descriptions Grouped FHIR table descriptions.
+#' @param resource_tables Current resource table list.
+#'
+#' @return An updated resource table list including selected referenced resources.
+loadDataImportReferencedResourcesFromDB <- function(table_descriptions, resource_tables) {
+  data_import_resource_types <- table_descriptions$data_import_pid_independant_resource_types %||%
+    character()
+  if (!length(data_import_resource_types)) {
+    return(resource_tables)
+  }
+
+  getReferencedIDsFromDB <- function(reference_type, sep) {
+    reference_rows <- getReferenceRowsForType(table_descriptions, reference_type)
+    referenced_ids <- c()
+    for (i in seq_len(nrow(reference_rows))) {
+      resource_name <- reference_rows[i]$RESOURCE
+      column_name <- reference_rows[i]$COLUMN_NAME
+      query <- paste0(
+        "SELECT DISTINCT ", column_name, " AS referenced_id\n",
+        "FROM v_", tolower(resource_name), "_last_version\n",
+        "WHERE ", column_name, " IS NOT NULL\n",
+        "  AND ", column_name, " <> '';\n"
+      )
+      new_referenced_ids <- etlutils::dbGetReadOnlyQuery(
+        query,
+        lock_id = paste0("getReferencedIDsFromDB(", reference_type, ")")
+      )
+      referenced_ids <- c(referenced_ids, new_referenced_ids$referenced_id)
+    }
+
+    referenced_ids <- getNormalizedReferencedIDs(referenced_ids, sep)
+    return(referenced_ids)
+  }
+
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+
+  resources_add_search_parameter <- debugSetResourcesAddSearchParameter(
+    table_descriptions = table_descriptions$pid_independant
+  )
+
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
+  for (reference_type in data_import_resource_types) {
+    referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
+    referenced_ids <- getReferencedIDsFromDB(reference_type, referenced_table_description@sep)
+    catInfoMessage(paste0(
+      "Info: Found ",
+      length(referenced_ids),
+      " existing database reference ID",
+      etlutils::getPluralSuffix(length(referenced_ids)),
+      " for resource type ",
+      reference_type,
+      ".\n"
+    ))
+    resource_tables <- loadReferencedResourceByIDs(
+      table_descriptions,
+      resource_tables,
+      reference_type,
+      referenced_ids,
+      resources_add_search_parameter
+    )
+    printReferencedResourceDownloadResult(
+      reference_type,
+      resource_tables,
+      resources_add_search_parameter
+    )
+  }
+
+  return(resource_tables)
+}
+
 #' Load Referenced Resources by Own ID from FHIR Server
 #'
 #' This function loads FHIR resources referenced by other resources from a FHIR server. It takes
@@ -381,90 +582,138 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
 #'   patients. This list is updated with the referenced resources.
 #'
 #' @return An updated list of data.tables including the referenced resources.
-#'
 loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, resource_tables) {
   # table_descriptions$REFERENCE_TYPES can be a comma or whitespace separated list like
   # "MedicationStatement, MedicationAdministration". We need the all unique different
   # resource names in this column
-  reference_types <- unique(etlutils::extractWords(table_descriptions$reference_types$REFERENCE_TYPES))
-  for (reference_class in c("to_other_type", "to_same_type")) {
+  reference_types <- unique(etlutils::extractWords(
+    table_descriptions$reference_types$REFERENCE_TYPES
+  ))
+  reference_types <- reference_types[reference_types %in% names(table_descriptions$pid_independant)]
+
+  getLoadedIDsByResource <- function() {
+    loaded_ids_by_resource <- list()
+    for (reference_type in reference_types) {
+      resource_table <- resource_tables[[reference_type]]
+      if (is.null(resource_table) || !nrow(resource_table)) {
+        loaded_ids_by_resource[[reference_type]] <- character()
+        next
+      }
+      id_column <- etlutils::fhirdbGetIDColumn(reference_type)
+      if (!(id_column %in% names(resource_table))) {
+        loaded_ids_by_resource[[reference_type]] <- character()
+        next
+      }
+      referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
+      loaded_ids_by_resource[[reference_type]] <- getNormalizedReferencedIDs(
+        resource_table[[id_column]],
+        referenced_table_description@sep
+      )
+    }
+    return(loaded_ids_by_resource)
+  }
+
+  getReferencedIDsByResource <- function() {
+    referenced_ids_by_resource <- list()
     for (reference_type in reference_types) {
       referenced_table_description <- table_descriptions$pid_independant[[reference_type]]
-      if (!is.null(referenced_table_description)) {
-        # now extract all rows where the single reference_type is in the reference_types column as whole word
-        whole_word_pattern <- paste0("\\b", reference_type, "\\b")
-        sub_reference_type <- table_descriptions$reference_types[
-          grepl(whole_word_pattern, REFERENCE_TYPES) & (
-            (reference_class == "to_other_type" & RESOURCE != reference_type) |
-            (reference_class ==  "to_same_type" & RESOURCE == reference_type)
-          )
-        ]
-
-        # should happen only in case reference_class == "to_same_type"
-        if (!nrow(sub_reference_type )) {
+      reference_rows <- getReferenceRowsForType(table_descriptions, reference_type)
+      referenced_ids <- c()
+      for (i in seq_len(nrow(reference_rows))) {
+        resource_name <- reference_rows[i]$RESOURCE
+        column_name <- reference_rows[i]$COLUMN_NAME
+        resource_table <- resource_tables[[resource_name]]
+        if (is.null(resource_table) || !(column_name %in% names(resource_table))) {
           next
         }
-
-        referenced_ids <- c()
-        for (i in seq_len(nrow(sub_reference_type))) {
-          resource_name <- sub_reference_type[i]$RESOURCE
-          column_name <- sub_reference_type[i]$COLUMN_NAME
-          new_referenced_ids <- resource_tables[[resource_name]][[column_name]]
-          new_referenced_ids <- unique(na.omit(new_referenced_ids))
-          referenced_ids <- c(referenced_ids, new_referenced_ids)
-        }
-        table_description_sep <- referenced_table_description@sep
-        referenced_ids <- unlist(strsplit(referenced_ids, table_description_sep, fixed = TRUE))
-        referenced_ids <- getAfterLastSlash(referenced_ids)
-        referenced_ids <- unique(referenced_ids)
-
-        #########################
-        # START: FOR DEBUG ONLY #
-        #########################
-
-        # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
-        resources_add_search_parameter <- debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions$pid_independant)
-
-        #######################
-        # END: FOR DEBUG ONLY #
-        #######################
-
-        if (!(reference_type %in% names(resources_add_search_parameter)) ||
-            nchar(resources_add_search_parameter[[reference_type]]) != 0) {
-          new_resources <- etlutils::fhirsearchResourcesByOwnID(referenced_ids,
-                                                                referenced_table_description,
-                                                                additional_search_parameter = resources_add_search_parameter)
-          existing_resources <- resource_tables[[reference_type]] %||% NULL
-          if (!is.null(existing_resources) && nrow(existing_resources)) {
-            if (nrow(new_resources)) {
-              # Combine existing and new resources, ensuring no duplicates based on the resource ID column
-              # Remove all new_resources which are already in existing_resources (simple compare the whole row)
-              new_resources <- new_resources[!existing_resources, on = names(new_resources)]
-              combined_resources <- rbind(existing_resources, new_resources)
-              #combined_resources <- unique(combined_resources)
-              resource_tables[[reference_type]] <- combined_resources
-            }
-          } else {
-            resource_tables[[reference_type]] <- new_resources
-          }
-
-        } else {
-          # if there are no IDs -> create an empty table with all needed columns as character columns
-          resource_tables <- etlutils::fhirdataCreateResourceTable(
-            referenced_table_description,
-            resource_key = reference_type,
-            resource_collection = resource_tables
-          )
-        }
-        if (!is.null(resource_tables[[reference_type]]) && nrow(resource_tables[[reference_type]])) {
-          printAllTables(resource_tables[[reference_type]], reference_type)
-        } else if (reference_type %in% names(resources_add_search_parameter) &&
-                   nchar(resources_add_search_parameter[[reference_type]]) == 0) {
-          catInfoMessage(paste("Info: No", reference_type, "resources downloaded because DEBUG_ADD_FHIR_SEARCH_ for the given resource is empty.\n"))
-        } else {
-          catInfoMessage(paste("Info: No", reference_type, "resources found for the given Patient IDs.\n"))
-        }
+        referenced_ids <- c(referenced_ids, resource_table[[column_name]])
       }
+      referenced_ids_by_resource[[reference_type]] <- getNormalizedReferencedIDs(
+        referenced_ids,
+        referenced_table_description@sep
+      )
+    }
+    return(referenced_ids_by_resource)
+  }
+
+  getNewReferencedIDsByResource <- function(referenced_ids_by_resource,
+                                            loaded_ids_by_resource,
+                                            attempted_ids_by_resource) {
+    new_ids_by_resource <- list()
+    for (reference_type in names(referenced_ids_by_resource)) {
+      known_ids <- unique(c(
+        loaded_ids_by_resource[[reference_type]],
+        attempted_ids_by_resource[[reference_type]]
+      ))
+      new_ids_by_resource[[reference_type]] <- setdiff(
+        referenced_ids_by_resource[[reference_type]],
+        known_ids
+      )
+    }
+    return(new_ids_by_resource)
+  }
+
+  hasAnyIDs <- function(ids_by_resource) {
+    any(lengths(ids_by_resource) > 0)
+  }
+
+  #########################
+  # START: FOR DEBUG ONLY #
+  #########################
+
+  # Find the additional test filters for the FHIR-search request to set resources_add_search_parameter
+  resources_add_search_parameter <- debugSetResourcesAddSearchParameter(
+    table_descriptions = table_descriptions$pid_independant
+  )
+
+  #######################
+  # END: FOR DEBUG ONLY #
+  #######################
+
+  attempted_ids_by_resource <- list()
+  reference_download_iteration <- 0L
+  repeat {
+    referenced_ids_by_resource <- getReferencedIDsByResource()
+    loaded_ids_by_resource <- getLoadedIDsByResource()
+    new_ids_by_resource <- getNewReferencedIDsByResource(
+      referenced_ids_by_resource,
+      loaded_ids_by_resource,
+      attempted_ids_by_resource
+    )
+
+    if (!hasAnyIDs(new_ids_by_resource)) {
+      break
+    }
+
+    reference_download_iteration <- reference_download_iteration + 1L
+    new_id_counts <- lengths(new_ids_by_resource)
+    new_id_counts <- new_id_counts[new_id_counts > 0]
+    catInfoMessage(paste0(
+      "Info: Referenced resource download iteration ",
+      reference_download_iteration,
+      " found new IDs: ",
+      paste(paste0(names(new_id_counts), "=", new_id_counts), collapse = ", "),
+      ".\n"
+    ))
+
+    for (reference_type in names(new_ids_by_resource)) {
+      referenced_ids <- new_ids_by_resource[[reference_type]]
+      if (!length(referenced_ids)) {
+        next
+      }
+      attempted_ids_by_resource[[reference_type]] <- unique(c(
+        attempted_ids_by_resource[[reference_type]],
+        referenced_ids
+      ))
+
+      resource_tables <- loadReferencedResourceByIDs(
+        table_descriptions,
+        resource_tables,
+        reference_type,
+        referenced_ids,
+        resources_add_search_parameter
+      )
+      printReferencedResourceDownloadResult(reference_type, resource_tables, resources_add_search_parameter)
     }
   }
   return(resource_tables)
@@ -506,11 +755,12 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
     ### DEBUG END ###
   } else {
     resource_tables <- loadResourcesByPatientIDFromFHIRServer(pids_splitted_by_ward, table_descriptions$pid_dependant)
+    resource_tables <- loadDataImportReferencedResourcesFromDB(table_descriptions, resource_tables)
     resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
   }
 
   # If there are no new patients in the pids_per_ward table, create an empty table with the correct columns.
-  # PID-dependent data import reads PIDs from the patient table and must not write pids_per_ward.
+  # Resource type data import reads PIDs from the patient table and must not write pids_per_ward.
   if ((etlutils::isSubProcess("DataImport.All") || !isProcess("DataImport")) && !nrow(resource_tables[["pids_per_ward"]])) {
     resource_tables[["pids_per_ward"]] <- data.table(
       patient_id = "EMPTY_DATA",
