@@ -84,6 +84,86 @@ recalculateMRPs <- function(start_date,
       return(mrp_tables)
     }
 
+    # Determine the next ret_id suffix for the given medication analysis
+    getNextRetIndex <- function(existing_group, ret_meda_id, ret_id_prefix) {
+      existing_ret_suffixes <- suppressWarnings(
+        as.integer(sub(
+          ret_id_prefix,
+          "",
+          existing_group[ret_meda_id == ..ret_meda_id, ret_id],
+          fixed = TRUE
+        ))
+      )
+      max_existing_ret_index <- suppressWarnings(max(existing_ret_suffixes, na.rm = TRUE))
+      if (length(existing_ret_suffixes) && is.finite(max_existing_ret_index)) {
+        return(max_existing_ret_index + 1L)
+      }
+      1L
+    }
+
+    # Determine the next redcap_repeat_instance for the given patient record.
+    getNextRepeatInstance <- function(existing_group) {
+      max_existing_repeat_instance <- suppressWarnings(
+        max(as.integer(existing_group$redcap_repeat_instance), na.rm = TRUE)
+      )
+      if (nrow(existing_group) && is.finite(max_existing_repeat_instance)) {
+        return(max_existing_repeat_instance + 1L)
+      }
+      1L
+    }
+
+    # Build a mapping from old to new ret_id and redcap_repeat_instance values for the given group of rows
+    buildRenumberMap <- function(current_rows, existing_group) {
+      current_rows <- data.table::copy(current_rows)[order(redcap_repeat_instance, ret_id)]
+      ret_id_prefix <- sub("[0-9]+$", "", current_rows$temp_old_ret_id[1])
+      next_ret_index <- getNextRetIndex(existing_group, current_rows$ret_meda_id[1], ret_id_prefix)
+      next_repeat_instance <- getNextRepeatInstance(existing_group)
+
+      current_rows[, new_ret_id := paste0(
+        ret_id_prefix,
+        seq.int(from = next_ret_index, length.out = .N)
+      )]
+      current_rows[, new_redcap_repeat_instance := seq.int(
+        from = next_repeat_instance,
+        length.out = .N
+      )]
+
+      current_rows[, .(
+        temp_old_ret_id,
+        temp_old_redcap_repeat_instance,
+        new_ret_id,
+        new_redcap_repeat_instance
+      )]
+    }
+
+    applyRenumberMap <- function(ret_table, dp_table, renumber_map) {
+      ret_table[
+        renumber_map,
+        on = .(record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance),
+        ret_id := i.new_ret_id
+      ]
+
+      ret_table[
+        renumber_map,
+        on = .(record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance),
+        redcap_repeat_instance := i.new_redcap_repeat_instance
+      ]
+
+      dp_table[
+        renumber_map,
+        on = .(temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance),
+        ret_id := i.new_ret_id
+      ]
+
+      dp_table[
+        renumber_map,
+        on = .(temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance),
+        ret_redcap_repeat_instance := i.new_redcap_repeat_instance
+      ]
+
+      list(ret_table = ret_table, dp_table = dp_table)
+    }
+
     record_ids <- unique(na.omit(ret_table$record_id))
     existing_ret_rows <- data.table::data.table()
     if (length(record_ids)) {
@@ -103,80 +183,15 @@ recalculateMRPs <- function(start_date,
     dp_table[, temp_old_ret_id := ret_id]
     dp_table[, temp_old_ret_redcap_repeat_instance := ret_redcap_repeat_instance]
 
-    # Rebuild both numbering schemes after deduplication so that the written
-    # rows line up with the currently visible DB state instead of the temporary
-    # ids produced before identical old MRPs were filtered out.
     renumber_map <- ret_table[
       ,
-      {
-        existing_group <- existing_ret_rows[record_id == .BY$record_id]
-
-        existing_meda_group <- existing_group[ret_meda_id == .BY$ret_meda_id]
-        ret_id_prefix <- sub("[0-9]+$", "", .SD$temp_old_ret_id[1])
-        existing_ret_suffixes <- suppressWarnings(
-          as.integer(sub(ret_id_prefix, "", existing_meda_group$ret_id, fixed = TRUE))
-        )
-        max_existing_ret_index <- suppressWarnings(max(existing_ret_suffixes, na.rm = TRUE))
-        next_ret_index <- if (length(existing_ret_suffixes) && is.finite(max_existing_ret_index)) {
-          max_existing_ret_index + 1L
-        } else {
-          1L
-        }
-
-        # REDCap repeat instances must be unique per record and instrument.
-        # New recalculated MRPs therefore continue counting from the highest
-        # already exported instance of the same record.
-        max_existing_repeat_instance <- suppressWarnings(max(as.integer(existing_group$redcap_repeat_instance), na.rm = TRUE))
-        next_repeat_instance <- if (nrow(existing_group) && is.finite(max_existing_repeat_instance)) {
-          max_existing_repeat_instance + 1L
-        } else {
-          1L
-        }
-
-        current_rows <- .SD[order(redcap_repeat_instance, ret_id)]
-        current_rows[, new_ret_index := seq.int(
-          from = next_ret_index,
-          length.out = .N
-        )]
-        current_rows[, new_ret_id := paste0(ret_id_prefix, new_ret_index)]
-        current_rows[, new_redcap_repeat_instance := seq.int(
-          from = next_repeat_instance,
-          length.out = .N
-        )]
-
-        current_rows[, .(
-          temp_old_ret_id,
-          temp_old_redcap_repeat_instance,
-          new_ret_id,
-          new_redcap_repeat_instance
-        )]
-      },
+      buildRenumberMap(.SD, existing_ret_rows[record_id == .BY$record_id]),
       by = .(record_id, ret_meda_id)
     ]
 
-    ret_table[
-      renumber_map,
-      on = .(record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance),
-      ret_id := i.new_ret_id
-    ]
-
-    ret_table[
-      renumber_map,
-      on = .(record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance),
-      redcap_repeat_instance := i.new_redcap_repeat_instance
-    ]
-
-    dp_table[
-      renumber_map,
-      on = .(temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance),
-      ret_id := i.new_ret_id
-    ]
-
-    dp_table[
-      renumber_map,
-      on = .(temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance),
-      ret_redcap_repeat_instance := i.new_redcap_repeat_instance
-    ]
+    updated_tables <- applyRenumberMap(ret_table, dp_table, renumber_map)
+    ret_table <- updated_tables$ret_table
+    dp_table <- updated_tables$dp_table
 
     ret_table[, c("temp_old_ret_id", "temp_old_redcap_repeat_instance") := NULL]
     dp_table[, c("temp_old_ret_id", "temp_old_ret_redcap_repeat_instance") := NULL]
@@ -187,6 +202,7 @@ recalculateMRPs <- function(start_date,
     )
   }
 
+  # Add additional values to the new MRP rows in retrolektive_mrpbewertung_fe to mark them as results of this recalculation run.
   markRecalculatedMRPs <- function(mrp_tables) {
     ret_table <- mrp_tables$retrolektive_mrpbewertung_fe
 
