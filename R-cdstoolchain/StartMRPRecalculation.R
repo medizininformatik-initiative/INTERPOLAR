@@ -13,14 +13,17 @@ ignore_newer_db_version <- "--ignoreNewerDBVersion" %in% command_line_args
 command_line_args <- setdiff(command_line_args, "--ignoreNewerDBVersion")
 
 # Enable this block temporarily when running the script interactively.
-if (interactive()) {
-  # command_line_args <- c("start-date=2026-05-24", "end-date=2026-05-28")
-  command_line_args <- c("start-date=2026-05-24")
+# if (interactive()) {
+#   # command_line_args <- c("start-date=2026-05-24", "end-date=2026-05-28")
+#   command_line_args <- c("start-date=2026-05-24")
+# }
+
+if (!any(grepl("^start-date=", command_line_args))) {
+  stop("Parameter start-date must be set for MRP Recalculation, e.g. start-date=2026-05-24")
 }
 
 command_arguments <- etlutils::initCommandLineArguments(
   defaults = list(
-    start_date = etlutils::as.POSIXctWithTimezone(Sys.Date()),
     end_date = etlutils::as.POSIXctWithTimezone(Sys.Date())
   ),
   command_arguments = command_line_args
