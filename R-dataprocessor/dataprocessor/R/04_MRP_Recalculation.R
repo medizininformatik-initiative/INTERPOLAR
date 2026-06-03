@@ -50,68 +50,26 @@ recalculateMRPs <- function(start_date,
     ), .SDcols = key_cols]
   }
 
-  # Keep only genuinely new retrospective MRPs. The time-range selection may
-  # revisit encounters that already contain retrospective MRP evaluations.
-  filterExistingMRPs <- function(mrp_tables) {
-    # Recalculation should only add rows for medication analyses that have at
-    # least one newly discovered MRP. Matching dp_mrp_calculations rows are
-    # reduced afterwards to the surviving retrospective MRP ids.
-    ret_table <- mrp_tables$retrolektive_mrpbewertung_fe
-    dp_table <- mrp_tables$dp_mrp_calculations
-
-    ret_table <- ret_table[!is.na(ret_id)]
-    dp_table <- dp_table[!is.na(ret_id)]
-
-    if (!nrow(ret_table)) {
-      return(list(
-        retrolektive_mrpbewertung_fe = ret_table,
-        dp_mrp_calculations = dp_table[0]
-      ))
+  # Load existing rows for the same logical scope from the database and remove
+  # all currently prepared rows that already exist on the given key.
+  filterExistingRows <- function(current_table, key_cols, query = NULL, lock_id = NULL) {
+    if (!nrow(current_table)) {
+      return(current_table)
     }
 
-    key_cols <- c(
-      "record_id",
-      "ret_meda_id",
-      "ret_meda_dat_referenz",
-      "ret_kurzbeschr",
-      "ret_atc1",
-      "ret_ip_klasse_01",
-      "ret_ip_klasse_disease",
-      "ret_atc2"
-    )
-
-    # A recalculation run is allowed to revisit encounters that already have
-    # retrospective MRPs. The additive behavior is enforced here by removing
-    # only rows that are identical on the domain-specific MRP key.
-    meda_ids <- unique(na.omit(ret_table$ret_meda_id))
-    existing_ret_table <- data.table::data.table()
-    if (length(meda_ids)) {
-      query <- paste0(
-        "SELECT ", paste(key_cols, collapse = ", "), "\n",
-        "FROM v_retrolektive_mrpbewertung_fe\n",
-        "WHERE ret_meda_id IN ", etlutils::fhirdbGetQueryList(meda_ids), "\n"
-      )
-      existing_ret_table <- etlutils::dbGetReadOnlyQuery(
-        query,
-        lock_id = "MRP_Recalculation_existing_retrolektive_mrpbewertung"
-      )
+    existing_table <- data.table::data.table()
+    if (!is.null(query)) {
+      existing_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
     }
 
-    addMRPKey(ret_table, key_cols)
-
-    if (nrow(existing_ret_table)) {
-      addMRPKey(existing_ret_table, key_cols)
-      ret_table <- ret_table[!.mrp_recalculation_key %in% existing_ret_table$.mrp_recalculation_key]
+    addMRPKey(current_table, key_cols)
+    if (nrow(existing_table)) {
+      addMRPKey(existing_table, key_cols)
+      current_table <- current_table[!.mrp_recalculation_key %in% existing_table$.mrp_recalculation_key]
     }
+    current_table[, .mrp_recalculation_key := NULL]
 
-    new_ret_ids <- unique(ret_table$ret_id)
-    ret_table[, .mrp_recalculation_key := NULL]
-    dp_table <- dp_table[ret_id %in% new_ret_ids]
-
-    list(
-      retrolektive_mrpbewertung_fe = ret_table,
-      dp_mrp_calculations = dp_table
-    )
+    current_table
   }
 
   # ret_id values continue per medication analysis, while REDCap repeat
@@ -247,53 +205,6 @@ recalculateMRPs <- function(start_date,
     mrp_tables
   }
 
-  # Remove dp_mrp_calculations rows that are already present in the database.
-  # This final anti-join runs after ret_id / repeat-instance renumbering so the
-  # comparison uses the exact values that would otherwise be written.
-  filterExistingDPMRPCalculations <- function(mrp_tables) {
-    dp_table <- mrp_tables$dp_mrp_calculations
-
-    if (!nrow(dp_table)) {
-      return(mrp_tables)
-    }
-
-    dp_key_cols <- c(
-      "enc_id",
-      "mrp_calculation_type",
-      "meda_id",
-      "study_phase",
-      "ward_name",
-      "atc1_medreq_fhir_id",
-      "mrp_proxy_type",
-      "mrp_proxy_code",
-      "mrp_proxy_fhir_id"
-    )
-
-    existing_dp_table <- data.table::data.table()
-    meda_ids <- unique(na.omit(dp_table$meda_id))
-    if (length(meda_ids)) {
-      query <- paste0(
-        "SELECT ", paste(dp_key_cols, collapse = ", "), "\n",
-        "FROM v_dp_mrp_calculations\n",
-        "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(meda_ids), "\n"
-      )
-      existing_dp_table <- etlutils::dbGetReadOnlyQuery(
-        query,
-        lock_id = "MRP_Recalculation_existing_dp_mrp_calculations"
-      )
-    }
-
-    addMRPKey(dp_table, dp_key_cols)
-    if (nrow(existing_dp_table)) {
-      addMRPKey(existing_dp_table, dp_key_cols)
-      dp_table <- dp_table[!.mrp_recalculation_key %in% existing_dp_table$.mrp_recalculation_key]
-    }
-    dp_table[, .mrp_recalculation_key := NULL]
-
-    mrp_tables$dp_mrp_calculations <- dp_table
-    mrp_tables
-  }
-
   config <- init(validate_config)
   etlutils::startModule(config)
   etlutils::setSubmoduleName("MRPRecalculation")
@@ -318,10 +229,77 @@ recalculateMRPs <- function(start_date,
       # calculateMRPs() still returns both existing and newly rediscovered MRPs
       # for the selected encounters. The additive behavior is applied afterwards.
       mrp_tables <- calculateMRPs(start_date, end_date)
-      mrp_tables <- filterExistingMRPs(mrp_tables)
+
+      # Keep only genuinely new retrospective MRPs and the matching
+      # dp_mrp_calculations rows of those surviving MRPs.
+      ret_table <- mrp_tables$retrolektive_mrpbewertung_fe[!is.na(ret_id)]
+      dp_table <- mrp_tables$dp_mrp_calculations[!is.na(ret_id)]
+      if (!nrow(ret_table)) {
+        mrp_tables$retrolektive_mrpbewertung_fe <- ret_table
+        mrp_tables$dp_mrp_calculations <- dp_table[0]
+      } else {
+        ret_key_cols <- c(
+          "record_id",
+          "ret_meda_id",
+          "ret_meda_dat_referenz",
+          "ret_kurzbeschr",
+          "ret_atc1",
+          "ret_ip_klasse_01",
+          "ret_ip_klasse_disease",
+          "ret_atc2"
+        )
+        ret_meda_ids <- unique(na.omit(ret_table$ret_meda_id))
+        ret_query <- NULL
+        if (length(ret_meda_ids)) {
+          ret_query <- paste0(
+            "SELECT ", paste(ret_key_cols, collapse = ", "), "\n",
+            "FROM v_retrolektive_mrpbewertung_fe\n",
+            "WHERE ret_meda_id IN ", etlutils::fhirdbGetQueryList(ret_meda_ids), "\n"
+          )
+        }
+        ret_table <- filterExistingRows(
+          current_table = ret_table,
+          key_cols = ret_key_cols,
+          query = ret_query,
+          lock_id = "MRP_Recalculation_existing_retrolektive_mrpbewertung"
+        )
+        mrp_tables$retrolektive_mrpbewertung_fe <- ret_table
+        mrp_tables$dp_mrp_calculations <- dp_table[ret_id %in% unique(ret_table$ret_id)]
+      }
+
       mrp_tables <- renumberNewMRPs(mrp_tables)
       mrp_tables <- markRecalculatedMRPs(mrp_tables)
-      mrp_tables <- filterExistingDPMRPCalculations(mrp_tables)
+
+      # Remove dp_mrp_calculations rows that already exist in the database.
+      dp_table <- mrp_tables$dp_mrp_calculations
+      if (nrow(dp_table)) {
+        dp_key_cols <- c(
+          "enc_id",
+          "mrp_calculation_type",
+          "meda_id",
+          "study_phase",
+          "ward_name",
+          "atc1_medreq_fhir_id",
+          "mrp_proxy_type",
+          "mrp_proxy_code",
+          "mrp_proxy_fhir_id"
+        )
+        dp_meda_ids <- unique(na.omit(dp_table$meda_id))
+        dp_query <- NULL
+        if (length(dp_meda_ids)) {
+          dp_query <- paste0(
+            "SELECT ", paste(dp_key_cols, collapse = ", "), "\n",
+            "FROM v_dp_mrp_calculations\n",
+            "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(dp_meda_ids), "\n"
+          )
+        }
+        mrp_tables$dp_mrp_calculations <- filterExistingRows(
+          current_table = dp_table,
+          key_cols = dp_key_cols,
+          query = dp_query,
+          lock_id = "MRP_Recalculation_existing_dp_mrp_calculations"
+        )
+      }
     })
 
     etlutils::runLevel2("Write new MRP results to database", {
