@@ -29,7 +29,7 @@ recalculateMRPs <- function(start_date,
   if (start_date > end_date) {
     stop("Parameter end_date (", end_date, ") must be greater than start_date (", start_date, ").")
   }
-browser()
+
   # Normalize values that are part of the logical MRP identity so that
   # comparisons are stable across character, NA, and timestamp columns.
   normalizeMRPKeyColumn <- function(value) {
@@ -247,6 +247,53 @@ browser()
     mrp_tables
   }
 
+  # Remove dp_mrp_calculations rows that are already present in the database.
+  # This final anti-join runs after ret_id / repeat-instance renumbering so the
+  # comparison uses the exact values that would otherwise be written.
+  filterExistingDPMRPCalculations <- function(mrp_tables) {
+    dp_table <- mrp_tables$dp_mrp_calculations
+
+    if (!nrow(dp_table)) {
+      return(mrp_tables)
+    }
+
+    dp_key_cols <- c(
+      "enc_id",
+      "mrp_calculation_type",
+      "meda_id",
+      "study_phase",
+      "ward_name",
+      "atc1_medreq_fhir_id",
+      "mrp_proxy_type",
+      "mrp_proxy_code",
+      "mrp_proxy_fhir_id"
+    )
+
+    existing_dp_table <- data.table::data.table()
+    meda_ids <- unique(na.omit(dp_table$meda_id))
+    if (length(meda_ids)) {
+      query <- paste0(
+        "SELECT ", paste(dp_key_cols, collapse = ", "), "\n",
+        "FROM v_dp_mrp_calculations\n",
+        "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(meda_ids), "\n"
+      )
+      existing_dp_table <- etlutils::dbGetReadOnlyQuery(
+        query,
+        lock_id = "MRP_Recalculation_existing_dp_mrp_calculations"
+      )
+    }
+
+    addMRPKey(dp_table, dp_key_cols)
+    if (nrow(existing_dp_table)) {
+      addMRPKey(existing_dp_table, dp_key_cols)
+      dp_table <- dp_table[!.mrp_recalculation_key %in% existing_dp_table$.mrp_recalculation_key]
+    }
+    dp_table[, .mrp_recalculation_key := NULL]
+
+    mrp_tables$dp_mrp_calculations <- dp_table
+    mrp_tables
+  }
+
   config <- init(validate_config)
   etlutils::startModule(config)
   etlutils::setSubmoduleName("MRPRecalculation")
@@ -274,6 +321,7 @@ browser()
       mrp_tables <- filterExistingMRPs(mrp_tables)
       mrp_tables <- renumberNewMRPs(mrp_tables)
       mrp_tables <- markRecalculatedMRPs(mrp_tables)
+      mrp_tables <- filterExistingDPMRPCalculations(mrp_tables)
     })
 
     etlutils::runLevel2("Write new MRP results to database", {
