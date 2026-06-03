@@ -205,27 +205,17 @@ recalculateMRPs <- function(start_date,
     mrp_tables
   }
 
-  config <- init(validate_config)
-  etlutils::startModule(config)
+  startDataprocessorModule(validate_config)
   etlutils::setSubmoduleName("MRPRecalculation")
 
   try(etlutils::runLevel1("Run additive MRP recalculation", {
 
-    etlutils::runLevel2("Reset database lock from unfinished previous run", {
-      etlutils::dbResetLock()
-      etlutils::checkVersion(ignore_newer_db_version)
-    })
+    prepareDataprocessorRun(
+      ignore_newer_db_version = ignore_newer_db_version,
+      source_submodule_functions = TRUE
+    )
 
-    etlutils::runLevel2("Source dataprocessor helper scripts", {
-      source("./R-dataprocessor/dataprocessor/R/01_Shared_Functions.R")
-      source("./R-dataprocessor/dataprocessor/R/02_Input_Files_Functions.R")
-    })
-
-    etlutils::runLevel2("Source dataprocessor submodule functions", {
-      sourceAllSubmodules()
-    })
-
-    etlutils::runLevel2("Calculate MRPs for time range", {
+    etlutils::runLevel2("Recalculate MRPs for time range", {
       # calculateMRPs() still returns both existing and newly rediscovered MRPs
       # for the selected encounters. The additive behavior is applied afterwards.
       mrp_tables <- calculateMRPs(start_date, end_date)

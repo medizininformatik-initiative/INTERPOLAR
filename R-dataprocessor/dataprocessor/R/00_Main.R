@@ -126,6 +126,32 @@ runSubmodules <- function() {
   }
 }
 
+startDataprocessorModule <- function(validate_config = TRUE) {
+  config <- init(validate_config)
+  etlutils::startModule(config)
+  config
+}
+
+prepareDataprocessorRun <- function(ignore_newer_db_version = FALSE,
+                                      source_submodule_functions = FALSE) {
+
+  etlutils::runLevel2("Reset database lock from unfinished previous run", {
+    etlutils::dbResetLock()
+    etlutils::checkVersion(ignore_newer_db_version)
+  })
+
+  etlutils::runLevel2("Source dataprocessor helper scripts", {
+    source("./R-dataprocessor/dataprocessor/R/01_Shared_Functions.R")
+    source("./R-dataprocessor/dataprocessor/R/02_Input_Files_Functions.R")
+  })
+
+  if (source_submodule_functions) {
+    etlutils::runLevel2("Source dataprocessor submodule functions", {
+      sourceAllSubmodules()
+    })
+  }
+}
+
 #' Starts the Data Processor execution for this project
 #'
 #' This is the main entry point for the data processing pipeline. It initializes the
@@ -142,22 +168,11 @@ runSubmodules <- function() {
 processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
   # Initialize and start module
-  config <- init(validate_config)
-  etlutils::startModule(config)
+  startDataprocessorModule(validate_config)
 
   try(etlutils::runLevel1("Run Dataprocessor", {
 
-    # Reset lock from unfinished previous dataprocessor run
-    etlutils::runLevel2("Reset database lock from unfinished previous run", {
-      etlutils::dbResetLock()
-      # Check if the release version of the database is compatible
-      etlutils::checkVersion(ignore_newer_db_version)
-    })
-
-    etlutils::runLevel2("Source function script", {
-      source("./R-dataprocessor/dataprocessor/R/01_Shared_Functions.R")
-      source("./R-dataprocessor/dataprocessor/R/02_Input_Files_Functions.R")
-    })
+    prepareDataprocessorRun(ignore_newer_db_version)
 
     etlutils::runLevel2("Run dataprocessor submodules", {
       runSubmodules()
