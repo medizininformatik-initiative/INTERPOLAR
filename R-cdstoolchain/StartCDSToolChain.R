@@ -64,6 +64,7 @@ resetMemory <- function(...) {
     "DEBUG_VM_INDEX",
     "DEBUG_DB_HOST",
     "DEBUG_DB_PORT",
+    "DEBUG_DB_ADMIN_PASSWORD",
     "DEBUG_REDCAP_HOST",
     "DEBUG_REDCAP_PORT",
     "DEBUG_REDCAP_TOKEN",
