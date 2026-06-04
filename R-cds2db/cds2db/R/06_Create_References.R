@@ -187,7 +187,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
 
     # we must create the references only for new download resources
   } else {
-    if (!is.null(resource_tables$encounter)) {
+    if (!is.null(resource_tables$encounter) && nrow(resource_tables$encounter)) {
       etlutils::runLevel2("Create references for Encounters", {
         # 1.) Fill the calculated reference columns for Encounters
         # filter the resource_tables$encounter to the columns we need for reference creation
