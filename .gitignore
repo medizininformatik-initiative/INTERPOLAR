@@ -23,3 +23,4 @@ Input-Repo/**/*.xlsx
 Snapshots/*.sql.gz
 Snapshots/*.log
 .positai
+.agents/
