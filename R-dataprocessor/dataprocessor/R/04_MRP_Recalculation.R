@@ -85,12 +85,12 @@ recalculateMRPs <- function(start_date,
     }
 
     # Determine the next ret_id suffix for the given medication analysis
-    getNextRetIndex <- function(existing_group, ret_meda_id, ret_id_prefix) {
+    getNextRetIndex <- function(existing_group, ret_meda_id_value, ret_id_prefix) {
       existing_ret_suffixes <- suppressWarnings(
         as.integer(sub(
           ret_id_prefix,
           "",
-          existing_group[ret_meda_id == ..ret_meda_id, ret_id],
+          existing_group[ret_meda_id == ret_meda_id_value, ret_id],
           fixed = TRUE
         ))
       )
@@ -113,10 +113,10 @@ recalculateMRPs <- function(start_date,
     }
 
     # Build a mapping from old to new ret_id and redcap_repeat_instance values for the given group of rows
-    buildRenumberMap <- function(current_rows, existing_group) {
+    buildRenumberMap <- function(current_rows, existing_group, ret_meda_id_value) {
       current_rows <- data.table::copy(current_rows)[order(redcap_repeat_instance, ret_id)]
       ret_id_prefix <- sub("[0-9]+$", "", current_rows$temp_old_ret_id[1])
-      next_ret_index <- getNextRetIndex(existing_group, current_rows$ret_meda_id[1], ret_id_prefix)
+      next_ret_index <- getNextRetIndex(existing_group, ret_meda_id_value, ret_id_prefix)
       next_repeat_instance <- getNextRepeatInstance(existing_group)
 
       current_rows[, new_ret_id := paste0(
@@ -185,7 +185,7 @@ recalculateMRPs <- function(start_date,
 
     renumber_map <- ret_table[
       ,
-      buildRenumberMap(.SD, existing_ret_rows[record_id == .BY$record_id]),
+      buildRenumberMap(.SD, existing_ret_rows[record_id == .BY$record_id], .BY$ret_meda_id),
       by = .(record_id, ret_meda_id)
     ]
 
