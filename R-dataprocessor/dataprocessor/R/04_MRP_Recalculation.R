@@ -226,7 +226,7 @@ recalculateMRPs <- function(start_date,
 
   try(etlutils::runLevel1("Run additive MRP recalculation", {
 
-    prepareDataprocessorRun(
+    sourceDataprocessorSubmodules(
       ignore_newer_db_version = ignore_newer_db_version,
       source_submodule_functions = TRUE
     )

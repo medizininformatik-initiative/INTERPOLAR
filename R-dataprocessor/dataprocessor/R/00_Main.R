@@ -132,17 +132,12 @@ startDataprocessorModule <- function(validate_config = TRUE) {
   config
 }
 
-prepareDataprocessorRun <- function(ignore_newer_db_version = FALSE,
+sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
                                       source_submodule_functions = FALSE) {
 
   etlutils::runLevel2("Reset database lock from unfinished previous run", {
     etlutils::dbResetLock()
     etlutils::checkVersion(ignore_newer_db_version)
-  })
-
-  etlutils::runLevel2("Source dataprocessor helper scripts", {
-    source("./R-dataprocessor/dataprocessor/R/01_Shared_Functions.R")
-    source("./R-dataprocessor/dataprocessor/R/02_Input_Files_Functions.R")
   })
 
   if (source_submodule_functions) {
@@ -172,7 +167,7 @@ processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE)
 
   try(etlutils::runLevel1("Run Dataprocessor", {
 
-    prepareDataprocessorRun(ignore_newer_db_version)
+    sourceDataprocessorSubmodules(ignore_newer_db_version)
 
     etlutils::runLevel2("Run dataprocessor submodules", {
       runSubmodules()
