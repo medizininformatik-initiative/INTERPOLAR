@@ -19,17 +19,47 @@ parallelGetOperationSystem <- function() {
   tolower(os)
 }
 
+#' Normalize a Detected Core Count
+#'
+#' This internal helper converts detected CPU counts and configured limits to a valid integer
+#' `mc.cores` value. A `max_cores` value of `0` means all available cores minus one.
+#'
+#' @param n_cores Numeric value with the detected number of available cores.
+#' @param max_cores Numeric value with the configured maximum number of cores.
+#' @return An integer core count of at least one.
+#'
+parallelNormalizeCoreNumber <- function(n_cores, max_cores = 0) {
+  n_cores <- floor(as.numeric(n_cores)[1])
+  if (is.na(n_cores) || !is.finite(n_cores) || n_cores < 1) {
+    n_cores <- 1L
+  }
+
+  max_cores <- floor(as.numeric(max_cores)[1])
+  if (is.na(max_cores) || !is.finite(max_cores)) {
+    max_cores <- 0L
+  }
+
+  if (0 < max_cores) {
+    as.integer(max(1L, min(n_cores, max_cores)))
+  } else {
+    as.integer(max(1L, n_cores - 1L))
+  }
+}
+
 #' Get the Number of Cores Available for Parallelization
 #'
 #' This function determines the number of CPU cores available for parallelization
-#' based on the operating system.
+#' based on the operating system. If `max_cores` is `0`, one detected core is reserved for
+#' the operating system and other processes.
 #'
-#' @param os A character string representing the operating system name. If `NULL`, the function will
-#' determine the operating system automatically.
+#' @param os A character string representing the operating system name. If `NULL`, the
+#' function will determine the operating system automatically.
+#' @param max_cores Numeric value with the configured maximum number of cores. A value of
+#' `0` means all available cores minus one.
 #' @return An integer specifying the number of cores available for parallelization.
 #'
 #' @export
-parallelGetAvailableCoreNumber <- function(os = NULL) {
+parallelGetAvailableCoreNumber <- function(os = NULL, max_cores = 0) {
 
   if (is.null(os)) {
     os <- parallelGetOperationSystem()
@@ -77,5 +107,5 @@ parallelGetAvailableCoreNumber <- function(os = NULL) {
   }
 
   n_cores <- if (os %in% c("linux", "osx")) getDockerCpuLimit() else 1
-  if (0 < MAX_CORES) min(n_cores, MAX_CORES) else n_cores
+  parallelNormalizeCoreNumber(n_cores, max_cores)
 }
