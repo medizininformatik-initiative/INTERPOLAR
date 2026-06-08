@@ -101,7 +101,7 @@ DEBUG_VM_CONFIGS <- list(
   `4` = list(db_port = 45432, redcap_port = 48082, redcap_token = "",                                 db_admin_password = "2389673289479283"), # FS+AXS
   `5` = list(db_port = 55432, redcap_port = 58082, redcap_token = "",                                 db_admin_password = "2389673289479283"), # FS+AXS
   `6` = list(db_port = 25436, redcap_port = 28087, redcap_token = "35784E25CB814491E49EE51641966B50", db_admin_password = "2389673289479283"), # FS+AXS
-  `7` = list(db_port = 15433, redcap_port = 8083,  redcap_token = "",                                 db_admin_password = "999987632746324"),  # TOP
+  `7` = list(db_port = 15433, redcap_port = 8083,  redcap_token = "DBE20FDCAAECD5399C1691AD4ECF59C7", db_admin_password = "999987632746324"),  # TOP
   `8` = list(db_port = 1543,  redcap_port = 1082,  redcap_token = "5DD4ECFDC245D8FC955B13D894875F62", db_admin_password = "2389673289479283"), # local-R-FS
   `9` = list(db_port = 55435, redcap_port = 5085,  redcap_token = "35784E25CB814491E49EE51641966B50", db_admin_password = "2389673289479283")  # local-R-AXS
 )
