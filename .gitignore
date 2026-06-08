@@ -24,3 +24,5 @@ Snapshots/*.sql.gz
 Snapshots/*.log
 .positai
 .agents/
+/bin/
+/profiling/
