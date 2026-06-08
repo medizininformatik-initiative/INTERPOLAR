@@ -41,6 +41,11 @@ behavior.
 - This repository contains multiple R packages below `R-*/<package>`.
 - For new reusable R functions, use camelCase names.
 - For new local variables, use snake_case names.
+- Shared utility functions, especially in `R-etlutils/etlutils`, must not assume
+  configuration values or other state from `.GlobalEnv` or module-level globals.
+  Pass configuration explicitly as arguments instead. Existing violations of this
+  principle are known technical debt and must not be used as a precedent for new
+  code.
 - Use explicit package qualifiers in new code where practical, for example
   `data.table::setnames()` or `stringr::str_extract()`.
 - Do not add `library()` or `require()` calls inside package code unless the
