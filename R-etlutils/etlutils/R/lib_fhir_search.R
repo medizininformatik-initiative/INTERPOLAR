@@ -382,7 +382,7 @@ fhirsearchDownloadAndCrackResources <- function(
 
   # Check if ncores is NULL and set it to the maximum available cores
   if (is.null(ncores)) {
-    ncores <- parallelGetAvailableCoreNumber()
+    ncores <- parallelGetAvailableCoreNumber(max_cores = MAX_CORES)
   }
 
   bundles <- executeFHIRSearchVariation(
@@ -477,7 +477,7 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
   }
 
   os <- parallelGetOperationSystem()
-  ncores <- parallelGetAvailableCoreNumber(os)
+  ncores <- parallelGetAvailableCoreNumber(os, max_cores = MAX_CORES)
   if (1 < verbose) {
     cat(paste0(
       'OS:    ',
@@ -545,7 +545,8 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
       X        = pkg,
       FUN      = function(element) {# element <- pkg[[1]]
         if (!inherits(element, 'character')) {
-          unserialized_bundle <- try(lapply(element, fhircrackr::fhir_unserialize))
+          serialized_bundle_lists <- if (inherits(element, "fhir_bundle_list")) list(element) else element
+          unserialized_bundle <- try(lapply(serialized_bundle_lists, fhircrackr::fhir_unserialize))
           if (inherits(unserialized_bundle, 'try-error')) {
             unserialized_bundle
           } else {
@@ -625,17 +626,12 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
       tables <- c(tables, list(dt))
     }
 
-    pkg <- list(pkg[sapply(pkg, inherits, 'fhir_bundle_list')])
+    pkg <- pkg[sapply(pkg, inherits, 'fhir_bundle_list')]
 
     curr_len_recent <- bndl_lengths
-    curr_len <- min(ids_at_once, length(ids))
-    seq_ids  <- seq_len(curr_len)
-    curr_ids <- ids[seq_ids]
-    ids      <- ids[-seq_ids]
-    pkg <- c(pkg, if (0 < curr_len) list(curr_ids))
-
-    if (2 < ncores) {
-      for (nc in seq_len(ncores - 2)) {#nc <- seq_len(ncores - 1)[[1]]
+    open_slots <- ncores - length(pkg)
+    if (0 < open_slots) {
+      for (nc in seq_len(open_slots)) {#nc <- seq_len(ncores - 1)[[1]]
         curr_len <- min(ids_at_once, length(ids))
         seq_ids  <- seq_len(curr_len)
         curr_ids <- ids[seq_ids]

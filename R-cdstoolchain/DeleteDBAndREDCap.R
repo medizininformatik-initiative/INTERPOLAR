@@ -3,7 +3,8 @@ library(cds2db)
 library(dataprocessor)
 library(db2frontend)
 
-etlutils::setProcess("DeleteDBAndREDCap")
+# Don't set the process name! If it set, no process after this process can change the name.
+# etlutils::setProcess("DeleteDBAndREDCap")
 
 # chance the working directory to the main directory
 if (grepl('/cdstoolchain$', getwd())) setwd("../..")

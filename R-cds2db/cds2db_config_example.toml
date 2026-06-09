@@ -69,7 +69,7 @@ MAX_ENCOUNTER_BUNDLES              = inf # maximum number of Encounter bundles t
 SORT                               = ""  # some Fhir server require a sort parameter per default
 IDS_AT_ONCE                        = 100 # patient / medication ids combined in one request (GET or POST) - specifies the number of ID's, which are summarized in a request (after download of Encounters)
 
-MAX_CORES                          = 0 # paralellization, number of cores used, 0: unlimited
+MAX_CORES                          = 0 # paralellization, number of cores used, 0: all available cores minus one
 FORCE_DOWNLOAD_AND_CRACK_PARALLEL  = false # if TRUE: force download and crack parallel with basic method, avoid polar_download_by_ids_and_crack_parallel()
 NEXT_LINK_ENCODE                   = false # encode special chars in next_link (see polar_download_and_crack_parallel())
 

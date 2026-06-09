@@ -174,6 +174,10 @@ dbGetHost <- function() {
   return(if (exists("DEBUG_DB_HOST")) DEBUG_DB_HOST else .lib_db_env[["DB_HOST"]])
 }
 
+dbGetAdminPassword <- function() {
+  return(if (exists("DEBUG_DB_ADMIN_PASSWORD")) DEBUG_DB_ADMIN_PASSWORD else .lib_db_env[["DB_ADMIN_PASSWORD"]])
+}
+
 #' Get a Fresh PostgreSQL Database Connection
 #'
 #' This function establishes and returns a new PostgreSQL database connection
@@ -240,7 +244,7 @@ dbGetAdminConnection <- function() {
     host = dbGetHost(),
     port = dbGetPort(),
     user = .lib_db_env[["DB_ADMIN_USER"]],
-    password = .lib_db_env[["DB_ADMIN_PASSWORD"]],
+    password = dbGetAdminPassword(),
     timezone = "Europe/Berlin"
   )
 
