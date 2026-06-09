@@ -98,7 +98,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
   skip_db_operations <- etlutils::isDefinedAndTrue("FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
 
-  try(etlutils::runLevel1("Run Retrieve", {
+  retrieve_runlevel_message <- if (isProcess("DataImport")) "Run Data Import Retrieve" else "Run Retrieve"
+  try(etlutils::runLevel1(retrieve_runlevel_message, {
 
     if (!skip_db_operations) {
       # Reset database lock from unfinished previous cds2db run
