@@ -31,11 +31,9 @@ Im Folgenden werden sowohl der in der Grafik mit Zahlen markierte Datenfluss zwi
 
 ##### FHIR Patienten ID Filterung
 
-Als allererstes werden bei der Ausführung des Moduls "cds2db" die Interpolar-relevanten Patienten-IDs (Resource-IDs der Patienten auf dem FHIR-Server) mit ihrer entsprechenden Stationszugehörigkeit ermittelt. Dies kann auf 2 Weisen erfolgen:
-1. Über die Verbindung 1 in der Grafik werden die IDs anhand von Filtern, die in der zugehörigen Konfigurationsdatei für die jeweiligen Stationen definiert wurden, ermittelt. Diese Einstellungen und zugehörige Erklärungen befinden sich im Abschnitt ["[retrieve.patient_id_filtering]"](R-cds2db/cds2db_config.toml#L101).
-2. Es wird eine Textdatei mit entsprechendem Inhalt bereit gestellt. Der Pfad zur Textdatei wird im selben Abschnitt auch in der [Konfigurationsdatei](R-cds2db/cds2db_config.toml#L106) definiert. Wenn dieser Pfad aktiviert ist, ist Variante 1 automatsch deaktiviert - egal ob Filter definiert sind. Ein Beispiel für eine solche Datei findet sich unter [source_PIDs.txt](R-cds2db/source_PIDs.txt).
+Als allererstes werden bei der Ausführung des Moduls "cds2db" die Interpolar-relevanten Patienten-IDs (Resource-IDs der Patienten auf dem FHIR-Server) mit ihrer entsprechenden Stationszugehörigkeit ermittelt. Über die Verbindung 1 in der Grafik werden die IDs anhand von Filtern, die in der zugehörigen Konfigurationsdatei für die jeweiligen Stationen definiert wurden, ermittelt. Diese Einstellungen und zugehörige Erklärungen befinden sich im Abschnitt ["[retrieve.patient_id_filtering]"](R-cds2db/cds2db_config.toml#L101).
 
-*Wichtig*: Die Namen der Stationen, die am Ende im Frontend angezeigt werden, entsprechen genau den Namen der Stationen in den Filtern bzw. in der Textdatei.
+*Wichtig*: Die Namen der Stationen, die am Ende im Frontend angezeigt werden, entsprechen genau den Namen der Stationen in den Filtern.
 
 ##### Abfrage der Daten vom FHIR Server und Speicherung als RAW-Daten
 
@@ -111,6 +109,5 @@ Ein externer Prozess kann diesen Zustand setzen, um die Verarbeitung zu pausiere
 In diesem Zustand wurde die Verarbeitung vollständig durch einen Administrator unterbrochen.
 
 Mit dieser Mechanik wird sichergestellt, dass die Datenintegrität während der Verarbeitung gewährleistet bleibt, insbesondere bei parallelen Zugriffs- und Schreiboperationen.
-
 
 

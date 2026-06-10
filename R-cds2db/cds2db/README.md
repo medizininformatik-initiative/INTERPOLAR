@@ -8,7 +8,7 @@ Der genaue Ablauf kann der Beschreibung zum Datenfluss im entsprechenden [Abschn
 
 ### Extrahieren der relevanten Patientenliste
 
-Wenn der Parameter 'PATH_TO_PID_LIST_FILE' nicht gesetzt ist, werden die relevanten Patienten-IDs aus den vom FHIR-Server heruntergeladenen Encountern extrahiert. Wenn der Parameter aber gesetzt ist, werden die Patienten-IDs aus der angegebenen Datei geladen (eine PID pro Zeile).
+Die relevanten Patienten-IDs werden aus den vom FHIR-Server heruntergeladenen Encountern extrahiert.
 
 ### Laden der Table-Description
 

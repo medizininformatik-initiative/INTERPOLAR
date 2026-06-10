@@ -29,9 +29,7 @@ Die Datenbank kann für den Lese- und Schreibzugriff in R gesperrt und wieder fr
 
 ### 2.2  Laden der relevanten Patienten-IDs (PIDs)
 
-Um die relevanten PIDs verfügbar zu machen gibt es zwei Wege.
-1. Zum einen können die PIDs über eine Textdatei [source_PIDs.txt](R-cds2db/source_PIDs.txt) eingelesen werden. Hier müssen die täglich auf den Stationen befindlichen PIDs hinterlegt werden.
-2. Der andere Weg ist es die PIDs über einen Encounter-Filter zu bekommen. Hierbei können zum Beispiel Encounter mit bestimmter Location gefiltert werden. In beiden Fällen muss entsprechend die [Konfigurationsdatei](R-cds2db/cds2db_config.toml#L123-L158) angepasst werden.
+Die relevanten PIDs werden über Encounter-Filter ermittelt. Hierbei können zum Beispiel Encounter mit bestimmter Location gefiltert werden. Dafür muss entsprechend die [Konfigurationsdatei](R-cds2db/cds2db_config.toml#L123-L158) angepasst werden.
 
 Es werden per FHIR-Search alle Encounter vom FHIR-Server heruntergeladen, die zum aktuellen Datum noch nicht beendet sind. Es wird nicht unterschieden zwischen den Encounter-Typen (Einrichtungskontakt, Abteilungskontakt, Versorgungsstellenkontakt). 'Noch nicht beendet' bedeutet, dass das Startdatum der Encounter (date=ltJJJJ-MM-TT) in der Vergangenheit liegt und der Status der Encounter auf "in-progress" steht.
 Es sind weitere Filter möglich, wie z.B. lade nur Encounter, mit einer bestimmten Referenz auf eine Location oder einer bestimmten Class (z.B. "IMP"). ([Konfigurationsdatei](R-cds2db/cds2db_config.toml#L82-L122))

@@ -271,60 +271,6 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
   )
 }
 
-#' Parse and interpolate patient IDs from a file.
-#'
-#' This function reads patient IDs from a file specified by the provided path.
-#' The patient IDs are then returned as a unique, sorted list.
-#'
-#' @param path_to_files The path to the files containing patient IDs and encounters.
-#'
-#' @return A unique, sorted list of patient IDs.
-#'
-loadInitialPatientsAndEncountersFromFiles <- function(path_to_files) {
-  path_to_PID_list_file <- fhircrackr::paste_paths(path_to_files, "pids_per_ward_raw.RData")
-  path_to_encounter_file <- fhircrackr::paste_paths(path_to_files, "initial_encounters.RData")
-
-  # This should be only used for debug/tests.
-  # Parse Patient_id from text file is deactivated. The code below this hunk is deactivated.
-  # DIC should go the way of assigning the encounter/patients to the wards via the 3-stage encounter system.
-  if (TRUE || endsWith(path_to_PID_list_file, ".RData")) {
-    return(list(
-      pids_per_ward = readRDS(path_to_PID_list_file),
-      initial_encounters = readRDS(path_to_encounter_file)
-    ))
-  }
-
-  # Helper function to process the PIDs of a single ward
-  processWardPIDs <- function(single_ward_pids, ward_name, pids_per_ward) {
-    if (!is.na(ward_name) && length(single_ward_pids) > 0) {
-      single_ward_pids <- lapply(unique(single_ward_pids), convertStringToPrefixedFormat, prefix = "Patient", separator = "/")
-      pids_per_ward[[ward_name]] <- etlutils::sortListByValue(single_ward_pids)
-    }
-    return(pids_per_ward)
-  }
-
-  pids_per_ward <- list()
-  lines <- readLines(path_to_PID_list_file)
-  single_ward_pids <- list()
-  ward_name <- NA
-
-  for (line in lines) {
-    line <- trimws(sub("#.*$", "", line)) # remove comments (starts with '#')
-    if (nchar(line)) {
-      if (startsWith(line, "ward_name")) {
-        pids_per_ward <- processWardPIDs(single_ward_pids, ward_name, pids_per_ward)
-        single_ward_pids <- list()
-        ward_name <- etlutils::getBetweenQuotes(line)
-      } else {
-        single_ward_pids[[length(single_ward_pids) + 1]] <- line
-      }
-    }
-  }
-  pids_per_ward <- processWardPIDs(single_ward_pids, ward_name, pids_per_ward)
-
-  return(pids_per_ward)
-}
-
 #' Extract Patient IDs (PIDs) and Encounter IDs per Ward
 #'
 #' This function filters encounter data based on ward-specific patterns and extracts
@@ -545,9 +491,7 @@ getEncounters <- function(table_description, current_datetime) {
   return(table_enc)
 }
 
-#' Extracts the relevant patient IDs from download Encounter resources. If the file name parameter is NA then
-#' the relevant patient IDs are extracted by Encounters downloaded from the FHIR server. If the file name
-#' parameter is not NA then the patient IDs are loaded from the specified file (one PID per line).
+#' Extracts the relevant patient IDs from downloaded Encounter resources.
 #'
 #' @param create_single_pids_per_ward If TRUE then ... else ...
 #' @param wards_min_encounter_start_date a map from a ward name to the minimum encounter start date of encounters which
@@ -558,11 +502,11 @@ getEncounters <- function(table_description, current_datetime) {
 #'
 getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encounter_start_date = NULL, log_result = TRUE) {
 
-  read_pids_from_file <- exists("DEBUG_PATH_TO_RAW_RDATA_FILES")
+  read_pids_from_debug_rdata_files <- exists("DEBUG_PATH_TO_RAW_RDATA_FILES")
 
-  if (read_pids_from_file) {
-    etlutils::runLevel3(paste("Get Patient IDs by file from path ", DEBUG_PATH_TO_RAW_RDATA_FILES), {
-      file_data <- loadInitialPatientsAndEncountersFromFiles(DEBUG_PATH_TO_RAW_RDATA_FILES)
+  if (read_pids_from_debug_rdata_files) {
+    etlutils::runLevel3(paste("Get Patient IDs from debug RData files in ", DEBUG_PATH_TO_RAW_RDATA_FILES), {
+      file_data <- loadDebugInitialPatientsAndEncountersFromRDataFiles(DEBUG_PATH_TO_RAW_RDATA_FILES)
       pids_splitted_by_ward <- split(file_data$pids_per_ward[, !("ward_name"), with = FALSE], file_data$pids_per_ward$ward_name)
       encounters <- file_data$initial_encounters
     })
@@ -726,8 +670,8 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
     duplicates_pids_per_ward <- pids_per_ward[patient_id %in% multi_ward_patients]
     # Stop if duplicates pids are found
     if (nrow(duplicates_pids_per_ward)) {
-      if (read_pids_from_file) {
-        error_message_part <- paste0("Please fix it in the file '", path_to_PID_list_file, "'.\n")
+      if (read_pids_from_debug_rdata_files) {
+        error_message_part <- paste0("Please fix the debug RData files in '", DEBUG_PATH_TO_RAW_RDATA_FILES, "'.\n")
       } else {
         error_message_part <- "Please fix the variables 'ENCOUNTER_FILTER_PATTERN' in the toml file.\n"
       }
@@ -762,14 +706,14 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
         cat("Found the following patient IDs for ward(s) '", paste0(names(pids_splitted_by_ward), collapse = "', '"), "':\n", sep = "")
         print(pids_splitted_by_ward)
       } else {
-        searched_resource <- ifelse(read_pids_from_file, "Patient IDs", "Encounters")
+        searched_resource <- ifelse(read_pids_from_debug_rdata_files, "Patient IDs", "Encounters")
         if (no_wards) {
           message <- paste0("No ward names and no ", searched_resource, "found ")
         } else if (all_wards_empty) {
           message <- paste0("No ", searched_resource, " found for ward(s) '", paste0(names(pids_splitted_by_ward), collapse = "', '"), "' ")
         }
-        if (read_pids_from_file) {
-          message <- paste0(message, "in file '", path_to_PID_list_file, "'.\n")
+        if (read_pids_from_debug_rdata_files) {
+          message <- paste0(message, "in debug RData files in '", DEBUG_PATH_TO_RAW_RDATA_FILES, "'.\n")
         } else {
           # current_datetime can be only a start date or a vector with an start and end date (in DEBUG mode)
           current_datetime_display <- ifelse(length(current_datetime) == 1, current_datetime, paste0("start ", paste0(current_datetime, collapse = " to end ")))

@@ -1,3 +1,20 @@
+#' Load initial patient and encounter debug data from RData files.
+#'
+#' This function is used by debug and regression-test runs that replay previously
+#' downloaded data instead of querying the FHIR server for initial Encounters.
+#'
+#' @param path_to_files Directory containing `pids_per_ward_raw.RData` and
+#'   `initial_encounters.RData`.
+#'
+#' @return A list with `pids_per_ward` and `initial_encounters`.
+#'
+loadDebugInitialPatientsAndEncountersFromRDataFiles <- function(path_to_files) {
+  path_to_pid_list_file <- fhircrackr::paste_paths(path_to_files, "pids_per_ward_raw.RData")
+  path_to_encounter_file <- fhircrackr::paste_paths(path_to_files, "initial_encounters.RData")
+
+  return(list(pids_per_ward = readRDS(path_to_pid_list_file), initial_encounters = readRDS(path_to_encounter_file)))
+}
+
 debugAddPatientIdentifier <- function(resource_tables) {
   # Function to add a new value separated by " ~ "
   addValue <- function(value, replace_for_old_value = NA, new_value = NA, old_value_suffix = "", new_value_suffix = "") {
