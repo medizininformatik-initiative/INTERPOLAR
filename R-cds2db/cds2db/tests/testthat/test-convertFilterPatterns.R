@@ -1,8 +1,71 @@
 ############################
+### TEST convertCohortFilterPatterns ###
+############################
+
+testthat::test_that("convertCohortFilterPatterns groups conditions by cohort and resource", {
+  variable_names <- "TEST_MULTI_RESOURCE_COHORT_FILTER_PATTERN_1"
+  on.exit(rm(list = variable_names, envir = .GlobalEnv), add = TRUE)
+
+  assign(
+    variable_names,
+    c(
+      "cohort_name = 'DUP 1'",
+      "resource = 'Encounter' + location/location/reference = 'Location/location_id_1'",
+      "resource = 'Observation' + code/coding/code = '12345' + effectiveDateTime = '2025-01-01'",
+      "resource = 'Observation' + code/coding/code = '67890'"
+    ),
+    envir = .GlobalEnv
+  )
+
+  converted_filter_patterns <- convertCohortFilterPatterns("TEST_MULTI_RESOURCE_COHORT_FILTER_PATTERN")
+
+  testthat::expect_named(converted_filter_patterns, "DUP 1")
+  testthat::expect_named(converted_filter_patterns[["DUP 1"]], c("Encounter", "Observation"))
+  testthat::expect_identical(
+    converted_filter_patterns[["DUP 1"]][["Encounter"]][["Condition_1"]],
+    list("location/location/reference" = "Location/location_id_1")
+  )
+  testthat::expect_identical(
+    converted_filter_patterns[["DUP 1"]][["Observation"]][["Condition_1"]],
+    list(
+      "code/coding/code" = "12345",
+      effectiveDateTime = "2025-01-01"
+    )
+  )
+  testthat::expect_identical(
+    converted_filter_patterns[["DUP 1"]][["Observation"]][["Condition_2"]],
+    list("code/coding/code" = "67890")
+  )
+})
+
+testthat::test_that("convertCohortFilterPatterns maps legacy encounter patterns to Encounter", {
+  variable_names <- "TEST_LEGACY_ENCOUNTER_FILTER_PATTERN_1"
+  on.exit(rm(list = variable_names, envir = .GlobalEnv), add = TRUE)
+
+  assign(
+    variable_names,
+    c(
+      "ward_name = 'Station 1'",
+      "location/location/reference = 'Location/location_id_1'"
+    ),
+    envir = .GlobalEnv
+  )
+
+  converted_filter_patterns <- convertCohortFilterPatterns("TEST_LEGACY_ENCOUNTER_FILTER_PATTERN")
+
+  testthat::expect_named(converted_filter_patterns, "Station 1")
+  testthat::expect_named(converted_filter_patterns[["Station 1"]], "Encounter")
+  testthat::expect_identical(
+    converted_filter_patterns[["Station 1"]][["Encounter"]][["Condition_1"]],
+    list("location/location/reference" = "Location/location_id_1")
+  )
+})
+
+############################
 ### TEST convertFilterPatterns ###
 ############################
 
-testthat::test_that("convertFilterPatterns returns one final entry per ward", {
+testthat::test_that("convertFilterPatterns returns one final entry per legacy ward", {
   variable_names <- c(
     "TEST_ENCOUNTER_FILTER_PATTERN_1",
     "TEST_ENCOUNTER_FILTER_PATTERN_2",

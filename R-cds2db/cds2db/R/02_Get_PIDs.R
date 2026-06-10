@@ -1,41 +1,44 @@
-#' Convert configured cohort filter patterns into Encounter filter conditions
+#' Convert configured cohort filter patterns by resource
 #'
-#' Converts configured cohort filter patterns into the internal representation
-#' used by the existing Encounter PID selection. Each condition list contains
-#' AND-connected subconditions; multiple condition lists are OR-connected.
+#' Converts configured cohort filter patterns into the resource-scoped internal
+#' representation needed for generic PID selection. Each condition list contains
+#' AND-connected subconditions; multiple condition lists per resource are
+#' OR-connected.
 #'
 #' @param filter_patterns_global_variable_name_prefix Optional prefix for test or
 #'   compatibility callers. If `NULL`, the configured cohort or legacy encounter
 #'   filter family is selected automatically.
 #'
-#' @return A named list of converted Encounter filter conditions per cohort.
-convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = NULL) {
+#' @return A named list of converted filter conditions by cohort and resource.
+convertCohortFilterPatterns <- function(filter_patterns_global_variable_name_prefix = NULL) {
   if (is.null(filter_patterns_global_variable_name_prefix)) {
     configured_filter_patterns <- getConfiguredCohortFilterPatterns()
-    ward_pids_filter_patterns <- configured_filter_patterns$definitions
+    cohort_filter_patterns <- configured_filter_patterns$definitions
     source_prefix <- configured_filter_patterns$source_prefix
     legacy_patterns <- configured_filter_patterns$legacy
   } else {
-    ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
+    cohort_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
     source_prefix <- filter_patterns_global_variable_name_prefix
     legacy_patterns <- grepl("ENCOUNTER_FILTER_PATTERN", filter_patterns_global_variable_name_prefix, fixed = TRUE)
     if (legacy_patterns) {
-      ward_pids_filter_patterns <- normalizeLegacyEncounterFilterPatterns(ward_pids_filter_patterns)
+      cohort_filter_patterns <- normalizeLegacyEncounterFilterPatterns(cohort_filter_patterns)
     }
   }
 
-  if (!length(ward_pids_filter_patterns)) {
+  if (!length(cohort_filter_patterns)) {
     stop("No cohort filter patterns found with prefix ", source_prefix, " in toml file")
   }
 
-  # Initializes an empty list to store the final converted filter patterns. Each element in this list
-  # corresponds to a cohort, with the cohort name as the key. The value for each cohort is another list that
-  # contains the AND-connected filter conditions. Multiple groups are stored as separate elements, representing the OR-connected groups of filters.
   parsed_filter_patterns <- etlutils::parseStructuredConfigDefinitions(
-    definitions = ward_pids_filter_patterns,
+    definitions = cohort_filter_patterns,
     allowed_key_pattern = "cohort_name|resource|[A-Za-z/]+",
     allow_plus = TRUE
   )
+
+  getConditionLineID <- function(filter_pattern) {
+    paste(filter_pattern$entry_name, filter_pattern$line_index, sep = "\r")
+  }
+
   converted_filter_patterns <- list()
   definition_names <- unique(vapply(parsed_filter_patterns, `[[`, "", "definition_name"))
 
@@ -43,19 +46,16 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
     definition_filter_patterns <- parsed_filter_patterns[
       vapply(parsed_filter_patterns, `[[`, "", "definition_name") == definition_name
     ]
-    single_ward_converted_filter_patterns <- list()
-    ward_name <- definition_filter_patterns[[which(
+
+    cohort_name <- definition_filter_patterns[[which(
       vapply(definition_filter_patterns, `[[`, "", "key") == "cohort_name"
     )[1]]]$value
-    condition_line_ids <- unique(vapply(definition_filter_patterns, function(filter_pattern) {
-      paste(filter_pattern$entry_name, filter_pattern$line_index, sep = "\r")
-    }, ""))
+    converted_filter_patterns[[cohort_name]] <- list()
+    condition_line_ids <- unique(vapply(definition_filter_patterns, getConditionLineID, ""))
 
     for (condition_line_id in condition_line_ids) {
       line_filter_patterns <- definition_filter_patterns[
-        vapply(definition_filter_patterns, function(filter_pattern) {
-          paste(filter_pattern$entry_name, filter_pattern$line_index, sep = "\r") == condition_line_id
-        }, logical(1))
+        vapply(definition_filter_patterns, getConditionLineID, "") == condition_line_id
       ]
 
       line_keys <- vapply(line_filter_patterns, `[[`, "", "key")
@@ -64,17 +64,11 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
       }
 
       resource_filter_pattern <- line_filter_patterns[line_keys == "resource"]
-      if (length(resource_filter_pattern)) {
+      if (length(resource_filter_pattern) == 1L) {
         resource_name <- resource_filter_pattern[[1]]$value
-        if (!identical(resource_name, "Encounter")) {
-          stop(
-            "Only Encounter cohort filter resources are supported in the current PID selection implementation, but found ",
-            resource_name,
-            ".",
-            call. = FALSE
-          )
-        }
-      } else if (!legacy_patterns) {
+      } else if (legacy_patterns) {
+        resource_name <- "Encounter"
+      } else {
         stop(
           "Condition line in ",
           line_filter_patterns[[1]]$definition_name,
@@ -94,14 +88,54 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
         }
         and_conditions[[filter_pattern$key]] <- filter_pattern$value
       }
-      single_ward_converted_filter_patterns[[paste0("Condition_", length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
-    }
 
-    converted_filter_patterns[[length(converted_filter_patterns) + 1]] <- single_ward_converted_filter_patterns
-    names(converted_filter_patterns)[length(converted_filter_patterns)] <- ward_name
+      if (is.null(converted_filter_patterns[[cohort_name]][[resource_name]])) {
+        converted_filter_patterns[[cohort_name]][[resource_name]] <- list()
+      }
+      resource_condition_index <- length(converted_filter_patterns[[cohort_name]][[resource_name]]) + 1L
+      converted_filter_patterns[[cohort_name]][[resource_name]][[paste0("Condition_", resource_condition_index)]] <- and_conditions
+    }
   }
 
   converted_filter_patterns
+}
+
+#' Convert configured cohort filter patterns into Encounter filter conditions
+#'
+#' Converts configured cohort filter patterns into the internal representation
+#' used by the existing Encounter PID selection. Each condition list contains
+#' AND-connected subconditions; multiple condition lists are OR-connected.
+#'
+#' @param filter_patterns_global_variable_name_prefix Optional prefix for test or
+#'   compatibility callers. If `NULL`, the configured cohort or legacy encounter
+#'   filter family is selected automatically.
+#'
+#' @return A named list of converted Encounter filter conditions per cohort.
+convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = NULL) {
+  cohort_filter_patterns <- convertCohortFilterPatterns(filter_patterns_global_variable_name_prefix)
+  encounter_filter_patterns <- list()
+
+  for (cohort_name in names(cohort_filter_patterns)) {
+    cohort_resources <- cohort_filter_patterns[[cohort_name]]
+    unsupported_resources <- setdiff(names(cohort_resources), "Encounter")
+
+    if (length(unsupported_resources)) {
+      stop(
+        "Only Encounter cohort filter resources are supported in the current PID selection implementation, but found ",
+        paste(unsupported_resources, collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+
+    encounter_filter_patterns[[cohort_name]] <- if ("Encounter" %in% names(cohort_resources)) {
+      cohort_resources[["Encounter"]]
+    } else {
+      list()
+    }
+  }
+
+  encounter_filter_patterns
 }
 
 #' Get FHIR table description based on filter patterns.
