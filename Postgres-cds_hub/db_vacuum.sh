@@ -58,7 +58,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     -*)
-      echo "❌ Unbekannter Parameter: $1"
+      error "Unbekannter Parameter: $1"
       show_help
       exit 1
       ;;
@@ -80,7 +80,7 @@ DB_USER="cds_hub_db_admin"
 # HILFSFUNKTIONEN
 # ========================
 log() {
-  echo "✅ $*"
+  echo "  $*"
 }
 
 warn() {
@@ -102,11 +102,11 @@ elif command -v docker &> /dev/null; then
   if docker compose version &> /dev/null; then
     DOCKER_COMPOSE_CMD="docker compose"
   else
-    error "❌ Kein 'docker-compose' oder 'docker compose' gefunden."
+    error "Kein 'docker-compose' oder 'docker compose' gefunden."
     exit 1
   fi
 else
-  error "❌ Docker ist nicht installiert oder nicht im PATH."
+  error "Docker ist nicht installiert oder nicht im PATH."
   exit 1
 fi
 
@@ -115,7 +115,8 @@ log "🔧 Verwende: ${DOCKER_COMPOSE_CMD}"
 # ========================
 # LADEN DER SCHEMAS
 # ========================
-echo "🔍 Lade alle Schemata aus der Datenbank..."
+log "🔍 Lade alle Schemata aus der Datenbank..."
+
 mapfile -t SCHEMAS < <(
   docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
     SELECT nspname 
@@ -129,11 +130,11 @@ mapfile -t SCHEMAS < <(
 )
 
 if [ ${#SCHEMAS[@]} -eq 0 ]; then
-  echo "❌ Keine Benutzerschemata gefunden. Abbruch."
+  error "Keine Benutzerschemata gefunden. Abbruch."
   exit 1
 fi
 
-echo "✅ Gefunden: ${#SCHEMAS[@]} Schemata: ${SCHEMAS[*]}"
+log "✅ Gefunden: ${#SCHEMAS[@]} Schemata: ${SCHEMAS[*]}"
 
 # Zähle Tabellen
 total_tables=0
@@ -150,7 +151,7 @@ for s in "${SCHEMAS[@]}"; do
   total_tables=$((total_tables + count))
 done
 
-echo "✅ ${total_tables} Tabellen in Container '${CONTAINER}' mit den Schemata '${SCHEMAS[@]}' gefunden"
+log "✅ ${total_tables} Tabellen in Container '${CONTAINER}' mit den Schemata '${SCHEMAS[@]}' gefunden"
 
 # Frage nach Verarbeitung, nur wenn nicht im Force-Modus
 if [ "$YES_MODE" = false ]; then
@@ -158,23 +159,23 @@ if [ "$YES_MODE" = false ]; then
   read -r answer
   case ${answer:-N} in
     [JjYy]*)
-      echo "✅ Verarbeitung gestartet..."
+      log "✅ Verarbeitung gestartet..."
       ;;
     *)
-      echo "❌ Verarbeitung abgebrochen."
+      error "Verarbeitung abgebrochen."
       exit 0
       ;;
   esac
 else
-  echo "✅ Force-Modus aktiv – Verarbeitung startet automatisch."
+  log "✅ Force-Modus aktiv – Verarbeitung startet automatisch."
 fi
 
 # ========================
 # VERARBEITUNG DER TABELLEN
 # ========================
 for s in "${SCHEMAS[@]}"; do
-  echo
-  echo "📁 Processing tables from schema ${s}..."
+  log
+  log "📁 Processing tables from schema ${s}..."
 
   mapfile -t tables < <(
     docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
@@ -185,33 +186,33 @@ for s in "${SCHEMAS[@]}"; do
   )
 
   if [ ${#tables[@]} -eq 0 ]; then
-    echo "  → Keine Tabellen gefunden."
+    log "  → Keine Tabellen gefunden."
     continue
   fi
 
   for tablename in "${tables[@]}"; do
     [ -z "$tablename" ] && continue
-    echo
-    echo "➡️  Vacuuming: ${s}.${tablename}"
+    log
+    log "➡️  Vacuuming: ${s}.${tablename}"
 
     # Lade Zustand vor VACUUM
     before_output=$(docker compose exec -T -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
-        SELECT 
-        'n_live_tup' AS metric, n_live_tup::text AS value 
-        FROM pg_stat_user_tables 
-        WHERE schemaname = '${s}' AND relname = '${tablename}'
-        UNION ALL
-        SELECT 
-        'n_dead_tup', n_dead_tup::text 
-        FROM pg_stat_user_tables 
-        WHERE schemaname = '${s}' AND relname = '${tablename}'
-        UNION ALL
-        SELECT 
-        'relpages', relpages::text 
-        FROM pg_class c
-        JOIN pg_namespace n ON n.oid = c.relnamespace
-        WHERE n.nspname = '${s}' AND c.relname = '${tablename}'
-        ORDER BY metric;
+      SELECT 
+      'n_live_tup' AS metric, n_live_tup::text AS value 
+      FROM pg_stat_user_tables 
+      WHERE schemaname = '${s}' AND relname = '${tablename}'
+      UNION ALL
+      SELECT 
+      'n_dead_tup', n_dead_tup::text 
+      FROM pg_stat_user_tables 
+      WHERE schemaname = '${s}' AND relname = '${tablename}'
+      UNION ALL
+      SELECT 
+      'relpages', relpages::text 
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = '${s}' AND c.relname = '${tablename}'
+      ORDER BY metric;
     ")
 
     live_before=$(echo "$before_output" | grep "n_live_tup" | awk '{print $3}')
@@ -220,10 +221,10 @@ for s in "${SCHEMAS[@]}"; do
 
     # Zeige Before nur, wenn tote Tupel > 0 oder Force-Modus aktiv
     if [ "$dead_before" -gt 0 ] || [ "$FORCE_MODE" = true ]; then
-      echo "  → Before:"
-      echo "    Live tuples: $live_before"
-      echo "    Dead tuples: $dead_before"
-      echo "    Pages:     $pages_before"
+      log "  → Before:"
+      log "    Live tuples: $live_before"
+      log "    Dead tuples: $dead_before"
+      log "    Pages:     $pages_before"
     fi
 
     # Entscheidung: VACUUM FULL ausführen?
@@ -235,18 +236,18 @@ for s in "${SCHEMAS[@]}"; do
     fi
 
     if [ "$run_vacuum" = true ]; then
-      echo "  → Running VACUUM FULL..."
+      log "  → Running VACUUM FULL..."
       if ! docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
           VACUUM FULL ${s}.${tablename};
         " > /dev/null 2>&1; then
-        echo "❌ Fehler beim VACUUM FULL: ${s}.${tablename}"
+        error "Fehler beim VACUUM FULL: ${s}.${tablename}"
       fi
 
-      echo "  → Running ANALYZE..."
+      log "  → Running ANALYZE..."
       if ! docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
         ANALYZE ${s}.${tablename};
         " > /dev/null 2>&1; then
-      echo "❌ Fehler beim ANALYZE: ${s}.${tablename}"
+        error "Fehler beim ANALYZE: ${s}.${tablename}"
       fi
 
       # Lade Zustand nach VACUUM
@@ -274,30 +275,30 @@ for s in "${SCHEMAS[@]}"; do
       pages_after=$(echo "$after_output" | grep "relpages" | awk '{print $3}')
 
       # Zeige After nur, wenn sich etwas geändert hat oder Force-Modus
-      if [ "$dead_after" -gt 0 ] || [ "$dead_after" -lt "$dead_before" ] || [ "$pages_after" -lt "$pages_before" ] ||[ "$FORCE_MODE" = true ]; then
-        echo "    - Live tuples: ${live_after}"
-        echo "    - Dead tuples: ${dead_after}"
-        echo "    - Pages: ${pages_after}"
+      if [ "$dead_after" -gt 0 ] || [ "$dead_after" -lt "$dead_before" ] || [ "$pages_after" -lt "$pages_before" ] || [ "$FORCE_MODE" = true ]; then
+        log "    - Live tuples: ${live_after}"
+        log "    - Dead tuples: ${dead_after}"
+        log "    - Pages: ${pages_after}"
 
         live_diff=$((live_after - live_before))
         dead_diff=$((dead_after - dead_before))
         pages_diff=$((pages_after - pages_before))
 
-        echo "    - Δ Live tuples: $live_diff"
-        echo "    - Δ Dead tuples: $dead_diff"
-        echo "    - Δ Pages: $pages_diff"
+        log "    - Δ Live tuples: $live_diff"
+        log "    - Δ Dead tuples: $dead_diff"
+        log "    - Δ Pages: $pages_diff"
 
         if [ "$live_diff" -lt 0 ]; then
-          echo "    ⚠️  Warnung: Anzahl der Live-Tupel ist gesunken! (Möglicher Datenverlust?)"
+          warn "Warnung: Anzahl der Live-Tupel ist gesunken! (Möglicher Datenverlust?)"
         fi
       else
-        echo "  → After: Keine signifikante Änderung erkannt."
+        log "  → After: Keine signifikante Änderung erkannt."
       fi
     else
-      echo "  → Keine toten Tupel und kein Force-Modus → VACUUM FULL und ANALYZE übersprungen."
+      log "  → Keine toten Tupel und kein Force-Modus → VACUUM FULL und ANALYZE übersprungen."
     fi
   done
 done
 
-echo
-echo "✅ VACUUM und ANALYZE abgeschlossen."
+log
+log "✅ VACUUM und ANALYZE abgeschlossen."
