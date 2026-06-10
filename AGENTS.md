@@ -44,6 +44,20 @@ behavior.
   documentation only to point to those sources of truth.
 - For new reusable R functions, use camelCase names.
 - For new local variables, use snake_case names.
+- Before adding or renaming code, check whether script names and existing
+  variable/function names still match the responsibility of the code being
+  changed. Place new code in the script whose name best matches its purpose.
+- Add roxygen2 comments above new top-level R functions whose bodies are longer
+  than one line, even if they are internal and not exported.
+- If a helper function is only used inside one other function, define it locally
+  inside that function instead of adding a new top-level helper.
+- If a script becomes too long or a helper is shared within one package, move it
+  to an earlier, more general package script when that matches the local module
+  structure, for example `00_*`, `01_Shared_Functions.R`, or init/shared helper
+  files with lower numeric prefixes.
+- Move helpers to `R-etlutils/etlutils` only when they are genuinely
+  cross-package utilities and can be implemented without package-specific
+  configuration, globals, or module state.
 - Shared utility functions, especially in `R-etlutils/etlutils`, must not assume
   configuration values or other state from `.GlobalEnv` or module-level globals.
   Pass configuration explicitly as arguments instead. Existing violations of this

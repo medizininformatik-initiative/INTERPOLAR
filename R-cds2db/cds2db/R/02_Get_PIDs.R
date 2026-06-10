@@ -1,14 +1,14 @@
-#' Converts a filter pattern list from the toml file into an internal representation
-#' as a list of lists. Every subcondition in a sublist must be fulfilled to fulfill
-#' the whole condition represented by the sublist (AND connected). Lines of the table
-#' can be accepted by the filter if at least one of the main conditions (which consists
-#' of these subconditions) in the main list is fulfilled (OR connected).
+#' Convert configured cohort filter patterns into Encounter filter conditions
 #'
-#' @param filter_patterns_global_variable_name_prefix name of the variable in the glogbal environment which
-#' contains the filter patterns from the toml file
+#' Converts configured cohort filter patterns into the internal representation
+#' used by the existing Encounter PID selection. Each condition list contains
+#' AND-connected subconditions; multiple condition lists are OR-connected.
 #'
-#' @return the filter patterns which are converted to a list of lists
+#' @param filter_patterns_global_variable_name_prefix Optional prefix for test or
+#'   compatibility callers. If `NULL`, the configured cohort or legacy encounter
+#'   filter family is selected automatically.
 #'
+#' @return A named list of converted Encounter filter conditions per cohort.
 convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = NULL) {
   if (is.null(filter_patterns_global_variable_name_prefix)) {
     configured_filter_patterns <- getConfiguredCohortFilterPatterns()
@@ -29,9 +29,8 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
   }
 
   # Initializes an empty list to store the final converted filter patterns. Each element in this list
-  # corresponds to a ward, with the ward name as the key. The value for each ward is another list that
-  # contains the AND-connected filter conditions (sub-conditions). Multiple groups of such conditions
-  # are stored as separate elements, representing the OR-connected groups of filters for the ward.
+  # corresponds to a cohort, with the cohort name as the key. The value for each cohort is another list that
+  # contains the AND-connected filter conditions. Multiple groups are stored as separate elements, representing the OR-connected groups of filters.
   parsed_filter_patterns <- etlutils::parseStructuredConfigDefinitions(
     definitions = ward_pids_filter_patterns,
     allowed_key_pattern = "cohort_name|resource|[A-Za-z/]+",

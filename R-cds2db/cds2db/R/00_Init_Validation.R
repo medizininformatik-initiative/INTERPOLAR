@@ -77,10 +77,14 @@ validateEncounterFilterPatterns <- function(encounter_filter_patterns) {
   invisible(TRUE)
 }
 
-legacyEncounterFilterPatternPrefix <- function() "ENCOUNTER_FILTER_PATTERN"
-
-cohortFilterPatternPrefix <- function() "COHORT_FILTER_PATTERN"
-
+#' Normalize legacy encounter filter patterns to cohort filter patterns
+#'
+#' Converts legacy `ward_name` marker lines to `cohort_name` while preserving all
+#' other condition lines unchanged.
+#'
+#' @param encounter_filter_patterns A list of legacy encounter filter pattern definitions.
+#'
+#' @return A list of cohort-compatible filter pattern definitions.
 normalizeLegacyEncounterFilterPatterns <- function(encounter_filter_patterns) {
   lapply(encounter_filter_patterns, function(definition) {
     lapply(definition, function(entry) {
@@ -89,13 +93,27 @@ normalizeLegacyEncounterFilterPatterns <- function(encounter_filter_patterns) {
   })
 }
 
+#' Get configured cohort filter pattern definitions
+#'
+#' Reads the configured filter pattern family from an environment. New
+#' `COHORT_FILTER_PATTERN` definitions are preferred, while legacy
+#' `ENCOUNTER_FILTER_PATTERN` definitions are accepted only if no cohort
+#' definitions are present.
+#'
+#' @param envir Environment containing loaded module configuration values.
+#'
+#' @return A list with normalized `definitions`, the `source_prefix`, and a
+#'   logical `legacy` flag.
 getConfiguredCohortFilterPatterns <- function(envir = .GlobalEnv) {
+  cohort_filter_pattern_prefix <- "COHORT_FILTER_PATTERN"
+  legacy_filter_pattern_prefix <- "ENCOUNTER_FILTER_PATTERN"
+
   cohort_filter_patterns <- etlutils::getVariablesByPrefix(
-    cohortFilterPatternPrefix(),
+    cohort_filter_pattern_prefix,
     envir = envir
   )
   encounter_filter_patterns <- etlutils::getVariablesByPrefix(
-    legacyEncounterFilterPatternPrefix(),
+    legacy_filter_pattern_prefix,
     envir = envir
   )
 
@@ -112,7 +130,7 @@ getConfiguredCohortFilterPatterns <- function(envir = .GlobalEnv) {
   if (has_cohort_filter_patterns) {
     return(list(
       definitions = cohort_filter_patterns,
-      source_prefix = cohortFilterPatternPrefix(),
+      source_prefix = cohort_filter_pattern_prefix,
       legacy = FALSE
     ))
   }
@@ -120,17 +138,26 @@ getConfiguredCohortFilterPatterns <- function(envir = .GlobalEnv) {
   if (has_encounter_filter_patterns) {
     return(list(
       definitions = normalizeLegacyEncounterFilterPatterns(encounter_filter_patterns),
-      source_prefix = legacyEncounterFilterPatternPrefix(),
+      source_prefix = legacy_filter_pattern_prefix,
       legacy = TRUE
     ))
   }
 
-  stop(
-    "No cohort filter patterns found. Define COHORT_FILTER_PATTERN or legacy ENCOUNTER_FILTER_PATTERN in the toml file.",
-    call. = FALSE
-  )
+  stop("No cohort filter patterns found. Define COHORT_FILTER_PATTERN or legacy ENCOUNTER_FILTER_PATTERN in the toml file.", call. = FALSE)
 }
 
+#' Validate cohort filter pattern definitions
+#'
+#' Checks the formal structure of cohort filter definitions. Each definition must
+#' contain exactly one non-empty `cohort_name`. Resource-scoped condition lines
+#' can be required for new-style cohort patterns and relaxed for normalized
+#' legacy encounter patterns.
+#'
+#' @param cohort_filter_patterns A list of cohort filter pattern definitions.
+#' @param require_resource Logical. If `TRUE`, every condition line must contain
+#'   exactly one `resource` subcondition.
+#'
+#' @return Invisibly returns `TRUE` for valid definitions.
 validateCohortFilterPatterns <- function(cohort_filter_patterns, require_resource = TRUE) {
   parsed_records <- etlutils::parseStructuredConfigDefinitions(
     definitions = cohort_filter_patterns,
