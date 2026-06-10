@@ -138,6 +138,117 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
   encounter_filter_patterns
 }
 
+#' Get FHIR expression names from converted filter patterns
+#'
+#' Collects the FHIR expression names used as filter keys in a converted filter
+#' pattern list.
+#'
+#' @param filter_patterns Converted filter pattern conditions.
+#' @param ... Additional FHIR expressions to include.
+#'
+#' @return A sorted character vector of unique FHIR expressions.
+getFilterPatternFHIRExpressions <- function(filter_patterns, ...) {
+  cols_vector <- c()
+  for (cohort_conditions in filter_patterns) {
+    for (condition in cohort_conditions) {
+      cols_vector <- c(cols_vector, names(condition))
+    }
+  }
+  cols_vector <- c(cols_vector, ...)
+  sort(unique(cols_vector))
+}
+
+#' Get PID FHIR expression for a cohort filter resource
+#'
+#' Determines the FHIR expression that should be used to extract patient IDs from
+#' a resource used in cohort filtering.
+#'
+#' @param resource_name FHIR resource type.
+#' @param table_description_table Table Description rows with `RESOURCE` and
+#'   `FHIR_EXPRESSION`.
+#'
+#' @return A FHIR expression containing the patient ID/reference.
+getCohortFilterPIDExpression <- function(
+    resource_name,
+    table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION"))
+) {
+  if (tolower(resource_name) == "patient") {
+    return("id")
+  }
+
+  resource_rows <- table_description_table[tolower(RESOURCE) == tolower(resource_name)]
+  pid_expressions <- intersect(c("subject/reference", "patient/reference"), resource_rows$FHIR_EXPRESSION)
+
+  if (length(pid_expressions)) {
+    return(pid_expressions[[1]])
+  }
+
+  stop("Resource ", resource_name, " has no supported patient ID expression in Table_Description.", call. = FALSE)
+}
+
+#' Get FHIR table description for one cohort filter resource
+#'
+#' Builds a minimal `fhircrackr::fhir_table_description()` for cohort PID
+#' filtering of one resource.
+#'
+#' @param resource_name FHIR resource type.
+#' @param filter_patterns Converted filter conditions for one resource.
+#' @param table_description_table Table Description rows with `RESOURCE` and
+#'   `FHIR_EXPRESSION`.
+#'
+#' @return A `fhircrackr::fhir_table_description()` object.
+getCohortFilterTableDescription <- function(
+    resource_name,
+    filter_patterns,
+    table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION"))
+) {
+  pid_expression <- getCohortFilterPIDExpression(resource_name, table_description_table)
+  cols_vector <- getFilterPatternFHIRExpressions(filter_patterns, "id", pid_expression)
+
+  fhircrackr::fhir_table_description(
+    resource = resource_name,
+    cols = cols_vector,
+    sep = SEP,
+    brackets = NULL
+  )
+}
+
+#' Get FHIR table descriptions for cohort filter resources
+#'
+#' Builds minimal table descriptions for all resources used in converted cohort
+#' filter patterns.
+#'
+#' @param cohort_filter_patterns Converted cohort filter patterns grouped by
+#'   cohort and resource.
+#' @param table_description_table Table Description rows with `RESOURCE` and
+#'   `FHIR_EXPRESSION`.
+#'
+#' @return A named list of `fhircrackr::fhir_table_description()` objects.
+getCohortFilterTableDescriptions <- function(
+    cohort_filter_patterns,
+    table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION"))
+) {
+  resource_names <- unique(unlist(lapply(cohort_filter_patterns, names), use.names = FALSE))
+  table_descriptions <- list()
+
+  for (resource_name in resource_names) {
+    resource_filter_patterns <- lapply(cohort_filter_patterns, function(cohort_resources) {
+      resource_conditions <- cohort_resources[[resource_name]]
+      if (is.null(resource_conditions)) {
+        return(list())
+      }
+      resource_conditions
+    })
+    table_descriptions[[resource_name]] <- getCohortFilterTableDescription(
+      resource_name,
+      resource_filter_patterns,
+      table_description_table
+    )
+  }
+
+  table_descriptions
+}
+
 #' Get FHIR table description based on filter patterns.
 #'
 #' This function takes a list of filter patterns and extracts unique column names
@@ -151,14 +262,7 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
 #'   on the unique names extracted from the filter patterns, including additional columns.
 #'
 getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
-  cols_vector <- c()
-  for (ward_conditions in filter_patterns) {
-    for (condition in ward_conditions) {
-      cols_vector <- c(cols_vector, names(condition))
-    }
-  }
-  cols_vector <- c(cols_vector, ...)
-  cols_vector <- sort(unique(cols_vector))
+  cols_vector <- getFilterPatternFHIRExpressions(filter_patterns, ...)
   fhir_table_desc <- fhircrackr::fhir_table_description(
     resource = "Encounter",
     cols = cols_vector,
