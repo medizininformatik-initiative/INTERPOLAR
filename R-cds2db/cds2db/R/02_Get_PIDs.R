@@ -158,32 +158,16 @@ getFilterPatternFHIRExpressions <- function(filter_patterns, ...) {
   sort(unique(cols_vector))
 }
 
-#' Get PID FHIR expression for a cohort filter resource
+#' Get PID FHIR expression candidates for a cohort filter resource
 #'
-#' Determines the FHIR expression that should be used to extract patient IDs from
+#' Determines the FHIR expressions that may contain patient IDs or references in
 #' a resource used in cohort filtering.
 #'
 #' @param resource_name FHIR resource type.
-#' @param table_description_table Table Description rows with `RESOURCE` and
-#'   `FHIR_EXPRESSION`.
 #'
-#' @return A FHIR expression containing the patient ID/reference.
-getCohortFilterPIDExpression <- function(
-    resource_name,
-    table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION"))
-) {
-  if (tolower(resource_name) == "patient") {
-    return("id")
-  }
-
-  resource_rows <- table_description_table[tolower(RESOURCE) == tolower(resource_name)]
-  pid_expressions <- intersect(c("subject/reference", "patient/reference"), resource_rows$FHIR_EXPRESSION)
-
-  if (length(pid_expressions)) {
-    return(pid_expressions[[1]])
-  }
-
-  stop("Resource ", resource_name, " has no supported patient ID expression in Table_Description.", call. = FALSE)
+#' @return FHIR expression candidates containing patient IDs/references.
+getCohortFilterPIDExpressions <- function(resource_name) {
+  c("subject/reference", "patient/reference")
 }
 
 #' Get FHIR table description for one cohort filter resource
@@ -198,12 +182,12 @@ getCohortFilterPIDExpression <- function(
 #'
 #' @return A `fhircrackr::fhir_table_description()` object.
 getCohortFilterTableDescription <- function(
-    resource_name,
-    filter_patterns,
-    table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION"))
+  resource_name,
+  filter_patterns,
+  table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION"))
 ) {
-  pid_expression <- getCohortFilterPIDExpression(resource_name, table_description_table)
-  cols_vector <- getFilterPatternFHIRExpressions(filter_patterns, "id", pid_expression)
+  pid_expressions <- getCohortFilterPIDExpressions(resource_name)
+  cols_vector <- getFilterPatternFHIRExpressions(filter_patterns, "id", pid_expressions)
 
   fhircrackr::fhir_table_description(
     resource = resource_name,
@@ -225,8 +209,8 @@ getCohortFilterTableDescription <- function(
 #'
 #' @return A named list of `fhircrackr::fhir_table_description()` objects.
 getCohortFilterTableDescriptions <- function(
-    cohort_filter_patterns,
-    table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION"))
+  cohort_filter_patterns,
+  table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION"))
 ) {
   resource_names <- unique(unlist(lapply(cohort_filter_patterns, names), use.names = FALSE))
   table_descriptions <- list()
@@ -269,6 +253,115 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
     sep = SEP,
     brackets = NULL
   )
+}
+
+#' Extract patient IDs from cohort filter resource tables
+#'
+#' Applies converted cohort filter patterns to already cracked FHIR resource
+#' tables and extracts matching patient IDs per cohort.
+#'
+#' @param resource_tables Named list of cracked FHIR resource tables keyed by
+#'   resource type.
+#' @param cohort_filter_patterns Converted cohort filter patterns grouped by
+#'   cohort and resource.
+#' @param table_description_table Table Description rows with `RESOURCE` and
+#'   `FHIR_EXPRESSION`.
+#'
+#' @return A named list of data.tables with `patient_id`,
+#'   `source_resource_type`, `source_resource_id`, and optional `encounter_id`.
+extractPIDsSplittedByCohortFromResourceTables <- function(
+  resource_tables,
+  cohort_filter_patterns
+) {
+  addCohortPatientIDColumn <- function(resource_table, resource_name) {
+    if (!("id" %in% names(resource_table))) {
+      stop("Cohort filter resource table for ", resource_name, " is missing required column(s): id.", call. = FALSE)
+    }
+
+    if (tolower(resource_name) == "patient") {
+      resource_table[, patient_id := id]
+      return(resource_table)
+    }
+
+    if (!("subject/reference" %in% names(resource_table))) {
+      resource_table[, "subject/reference" := NA_character_]
+    }
+    if (!("patient/reference" %in% names(resource_table))) {
+      resource_table[, "patient/reference" := NA_character_]
+    }
+
+    subject_reference <- resource_table[["subject/reference"]]
+    patient_reference <- resource_table[["patient/reference"]]
+    resource_table[, patient_id := ifelse(!is.na(subject_reference) & nzchar(subject_reference), subject_reference, patient_reference)]
+    resource_table[, patient_id := etlutils::getAfterLastSlash(patient_id)]
+
+    return(resource_table)
+  }
+
+  pids_splitted_by_cohort <- list()
+  empty_cohort_table <- data.table::data.table(
+    patient_id = character(),
+    source_resource_type = character(),
+    source_resource_id = character(),
+    encounter_id = character()
+  )
+
+  for (cohort_name in names(cohort_filter_patterns)) {
+    cohort_pids <- empty_cohort_table
+
+    for (resource_name in names(cohort_filter_patterns[[cohort_name]])) {
+      if (is.null(resource_tables[[resource_name]])) {
+        next
+      }
+
+      resource_table <- data.table::as.data.table(data.table::copy(resource_tables[[resource_name]]))
+      resource_table <- addCohortPatientIDColumn(resource_table, resource_name)
+      resource_filter_patterns <- cohort_filter_patterns[[cohort_name]][[resource_name]]
+      filtered_resources <- etlutils::filterResources(resource_table, resource_filter_patterns)
+
+      if (!nrow(filtered_resources)) {
+        next
+      }
+
+      resources_without_patient_id <- filtered_resources[is.na(patient_id) | !nzchar(patient_id)]
+      if (nrow(resources_without_patient_id)) {
+        etlutils::catWarningMessage(paste0(
+          "Ignoring ",
+          nrow(resources_without_patient_id),
+          " matched ",
+          resource_name,
+          " cohort filter resource(s) without subject/reference or patient/reference."
+        ))
+        filtered_resources <- filtered_resources[!is.na(patient_id) & nzchar(patient_id)]
+      }
+      if (!nrow(filtered_resources)) {
+        next
+      }
+
+      cohort_resource_pids <- data.table::data.table(
+        patient_id = filtered_resources[["patient_id"]],
+        source_resource_type = resource_name,
+        source_resource_id = filtered_resources[["id"]]
+      )
+      if (tolower(resource_name) == "encounter") {
+        cohort_resource_pids[, encounter_id := source_resource_id]
+      }
+
+      cohort_pids <- data.table::rbindlist(
+        list(cohort_pids, cohort_resource_pids),
+        use.names = TRUE,
+        fill = TRUE
+      )
+    }
+
+    cohort_pids <- unique(cohort_pids[order(patient_id, source_resource_type, source_resource_id)])
+    if (etlutils::isDefinedAndNotEmpty("DEBUG_FILTER_PIDS_PATTERN")) {
+      cohort_pids <- cohort_pids[grepl(DEBUG_FILTER_PIDS_PATTERN, patient_id)]
+    }
+    pids_splitted_by_cohort[[cohort_name]] <- cohort_pids
+  }
+
+  return(pids_splitted_by_cohort)
 }
 
 #' Extract Patient IDs (PIDs) and Encounter IDs per Ward

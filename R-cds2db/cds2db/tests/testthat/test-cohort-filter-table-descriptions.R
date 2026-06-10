@@ -2,42 +2,25 @@
 ### TEST cohort filter table descriptions ###
 #############################################
 
-testthat::test_that("getCohortFilterPIDExpression finds subject and patient references", {
-  table_description_table <- data.table::data.table(
-    RESOURCE = c("Observation", "DeviceUseStatement", "Patient"),
-    FHIR_EXPRESSION = c("subject/reference", "patient/reference", "id")
-  )
-
+testthat::test_that("getCohortFilterPIDExpressions returns generic PID candidates", {
   testthat::expect_identical(
-    getCohortFilterPIDExpression("Observation", table_description_table),
-    "subject/reference"
+    getCohortFilterPIDExpressions("Observation"),
+    c("subject/reference", "patient/reference")
   )
   testthat::expect_identical(
-    getCohortFilterPIDExpression("DeviceUseStatement", table_description_table),
-    "patient/reference"
+    getCohortFilterPIDExpressions("DeviceUseStatement"),
+    c("subject/reference", "patient/reference")
   )
   testthat::expect_identical(
-    getCohortFilterPIDExpression("Patient", table_description_table),
-    "id"
-  )
-})
-
-testthat::test_that("getCohortFilterPIDExpression rejects resources without PID expression", {
-  table_description_table <- data.table::data.table(
-    RESOURCE = "Medication",
-    FHIR_EXPRESSION = "id"
-  )
-
-  testthat::expect_error(
-    getCohortFilterPIDExpression("Medication", table_description_table),
-    "has no supported patient ID expression"
+    getCohortFilterPIDExpressions("Patient"),
+    c("subject/reference", "patient/reference")
   )
 })
 
 testthat::test_that("getCohortFilterTableDescriptions builds one minimal description per resource", {
   table_description_table <- data.table::data.table(
-    RESOURCE = c("Encounter", "Observation"),
-    FHIR_EXPRESSION = c("subject/reference", "subject/reference")
+    RESOURCE = c("Encounter", "Observation", "Patient"),
+    FHIR_EXPRESSION = c("subject/reference", "subject/reference", "id")
   )
   cohort_filter_patterns <- list(
     "DUP 1" = list(
@@ -49,13 +32,10 @@ testthat::test_that("getCohortFilterTableDescriptions builds one minimal descrip
           "code/coding/code" = "12345",
           effectiveDateTime = "2025-01-01"
         )
-      )
+      ),
+      Patient = list(Condition_1 = list(gender = "female"))
     ),
-    "DUP 2" = list(
-      Observation = list(
-        Condition_1 = list("code/coding/code" = "67890")
-      )
-    )
+    "DUP 2" = list(Observation = list(Condition_1 = list("code/coding/code" = "67890")))
   )
 
   table_descriptions <- getCohortFilterTableDescriptions(
@@ -63,15 +43,20 @@ testthat::test_that("getCohortFilterTableDescriptions builds one minimal descrip
     table_description_table
   )
 
-  testthat::expect_named(table_descriptions, c("Encounter", "Observation"))
+  testthat::expect_named(table_descriptions, c("Encounter", "Observation", "Patient"))
   testthat::expect_identical(table_descriptions$Encounter@resource@.Data, "Encounter")
   testthat::expect_setequal(
     table_descriptions$Encounter@cols@.Data,
-    c("id", "subject/reference", "location/location/reference")
+    c("id", "subject/reference", "patient/reference", "location/location/reference")
   )
   testthat::expect_identical(table_descriptions$Observation@resource@.Data, "Observation")
   testthat::expect_setequal(
     table_descriptions$Observation@cols@.Data,
-    c("id", "subject/reference", "code/coding/code", "effectiveDateTime")
+    c("id", "subject/reference", "patient/reference", "code/coding/code", "effectiveDateTime")
+  )
+  testthat::expect_identical(table_descriptions$Patient@resource@.Data, "Patient")
+  testthat::expect_setequal(
+    table_descriptions$Patient@cols@.Data,
+    c("id", "subject/reference", "patient/reference", "gender")
   )
 })
