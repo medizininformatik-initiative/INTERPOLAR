@@ -16,13 +16,13 @@ Führt VACUUM (VERBOSE, ANALYZE) auf allen Tabellen in allen Benutzerschemata
 der PostgreSQL-Datenbank im Docker-Container aus.
 
 Optionen:
-  -f, --force             Force-Modus: Startet ohne Benutzerabfrage
+  -y, --yes               Force-Modus: Startet ohne Benutzerabfrage
   -h, --help              Zeigt diese Hilfe an
 
 Beispiel:
   $(basename "$0")
-  $(basename "$0") -f
-  $(basename "$0") -f cds_hub
+  $(basename "$0") -y
+  $(basename "$0") -y cds_hub
 
 Hinweise:
   - Der Container muss laufen und die Datenbank erreichbar sein.
@@ -36,13 +36,13 @@ EOF
 # ========================
 # PARAMETER VERARBEITEN
 # ========================
-FORCE_MODE=false
+YES_MODE=false
 CONTAINER="cds_hub"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -f|--force)
-      FORCE_MODE=true
+    -y|--yes)
+      YES_MODE=true
       shift
       ;;
     -h|--help)
@@ -62,12 +62,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Prüfe, ob -f oder -force übergeben wurde
-FORCE_MODE=false
-if [[ "$1" == "-f" || "$1" == "--force" ]]; then
-  FORCE_MODE=true
-  # Wenn -f übergeben, dann ist der Container-Name der zweite Parameter
-  # Setze CONTAINER: Wenn Parameter übergeben, nutze ihn, sonst cds_hub
+# Prüfe, ob -y oder --yes übergeben wurde
+# (wird bereits in der Schleife abgefangen, daher nur für Sicherheit)
+if [[ "$1" == "-y" || "$1" == "--yes" ]]; then
+  YES_MODE=true
+  # Wenn -y übergeben, dann ist der Container-Name der zweite Parameter
   CONTAINER=${2:-cds_hub}
 else
   # Normaler Fall: erster Parameter ist der Container-Name
@@ -79,7 +78,6 @@ fi
 # ========================
 DB_NAME="cds_hub_db"
 DB_USER="cds_hub_db_admin"
-
 
 # ========================
 # HILFSFUNKTIONEN
@@ -118,7 +116,6 @@ fi
 
 log "🔧 Verwende: ${DOCKER_COMPOSE_CMD}"
 
-
 # ========================
 # LADEN DER SCHEMAS
 # ========================
@@ -143,7 +140,7 @@ fi
 
 echo "✅ Gefunden: ${#SCHEMAS[@]} Schemata: ${SCHEMAS[*]}"
 
-#Debug: set SCHEMAS manually
+# Debug: set SCHEMAS manually
 #declare -a SCHEMAS=("cds2db_in")
 
 # Zähle Tabellen
@@ -156,7 +153,7 @@ for s in "${SCHEMAS[@]}"; do
       SELECT tablename 
       FROM pg_tables 
       WHERE schemaname = '${s}';
-    " | tr -d ' \t' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'  | grep -v '^$'
+    " | tr -d ' \t' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$'
   )
   # Zähle Tabellen
   count=${#tables[@]}
@@ -169,9 +166,8 @@ done
 # Zeige Anzahl der gefundenen Tabellen
 echo "✅ ${total_tables} Tabellen in Container '${CONTAINER}' mit den Schemata '${SCHEMAS[@]}' gefunden"
 
-
 # Frage nach Verarbeitung, nur wenn nicht im Force-Modus
-if [ "$FORCE_MODE" = false ]; then
+if [ "$YES_MODE" = false ]; then
   echo -n "Verarbeitung starten? (j/N): "
   read -r answer
   case ${answer:-N} in
@@ -186,7 +182,6 @@ if [ "$FORCE_MODE" = false ]; then
 else
   echo "✅ Force-Modus aktiv – Verarbeitung startet automatisch."
 fi
-
 
 for s in "${SCHEMAS[@]}"; do
   echo # Leere Zeile vor Schema
@@ -212,8 +207,7 @@ for s in "${SCHEMAS[@]}"; do
     echo
     echo "➡️  Vacuuming: ${s}.${tablename}"
 
-
-    #echo "  → reading before state..."
+    # reading before state..."
     before_output=$(docker compose exec -T -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
         SELECT 
         'n_live_tup' AS metric, n_live_tup::text AS value 
@@ -232,16 +226,12 @@ for s in "${SCHEMAS[@]}"; do
         WHERE n.nspname = '${s}' AND c.relname = '${tablename}'
         ORDER BY metric;
     ")
-    
+
     # Extrahiere n_live_tup und n_dead_tup
     live_before=$(echo "$before_output" | grep "n_live_tup" | awk '{print $3}')
     dead_before=$(echo "$before_output" | grep "n_dead_tup" | awk '{print $3}')
     pages_before=$(echo "$before_output" | grep "relpages" | awk '{print $3}')
 
-    # Zeige vorher
-    #echo "    - Live tuples: ${live_before}"
-    #echo "    - Dead tuples: ${dead_before}"
-    #echo "    - Pages: ${pages_before}"
     # ✅ Zeige Before nur, wenn tote Zeilen > 0
     if [ "$dead_before" -gt 0 ]; then
       echo "  → Before:"
@@ -258,15 +248,14 @@ for s in "${SCHEMAS[@]}"; do
         echo "❌ Fehler beim VACUUM FULL: ${s}.${tablename}"
     fi
 
-    # ANAYZE in eigener Transaktion
+    # ANALYZE in eigener Transaktion
     echo "  → Running ANALYZE..."
     if ! docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
            ANALYZE ${s}.${tablename};
         " > /dev/null 2>&1; then 
-        echo "❌ Fehler beim VACUUM FULL: ${s}.${tablename}"
+        echo "❌ Fehler beim ANALYZE: ${s}.${tablename}"
     fi
 
-    #echo "  → After:"
     after_output=$(docker compose exec -T -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
         SELECT 
         'n_live_tup' AS metric, n_live_tup::text AS value 
@@ -286,8 +275,6 @@ for s in "${SCHEMAS[@]}"; do
         ORDER BY metric;
     ")
 
-    #echo "$after_output"
-    #echo "$after_output" | grep "n_live_tup" | awk '{print $3}'
     # Extrahiere n_live_tup und n_dead_tup
     live_after=$(echo "$after_output" | grep "n_live_tup" | awk '{print $3}')
     dead_after=$(echo "$after_output" | grep "n_dead_tup" | awk '{print $3}')
@@ -304,19 +291,16 @@ for s in "${SCHEMAS[@]}"; do
         dead_diff=$((dead_after - dead_before))
         pages_diff=$((pages_after - pages_before))
 
-        # Zeige Differenz
         echo "    - Δ Live tuples: ${live_diff:++}${live_diff}"
         echo "    - Δ Dead tuples: ${dead_diff:++}${dead_diff}"
         echo "    - Δ Pages: ${pages_diff:++}${pages_diff}"
 
         # Optional: Warnung, wenn Daten verloren gingen
         if [ "$live_diff" -lt 0 ]; then
-        echo "    ⚠️  Warnung: Anzahl der Live-Tupel ist gesunken! (Möglicher Datenverlust?)"
+          echo "    ⚠️  Warnung: Anzahl der Live-Tupel ist gesunken! (Möglicher Datenverlust?)"
         fi
     else
         echo "  → After: Keine signifikante Änderung erkannt."
     fi
-
-
   done
 done
