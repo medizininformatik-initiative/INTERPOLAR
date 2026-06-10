@@ -283,9 +283,9 @@ for s in "${SCHEMAS[@]}"; do
         dead_diff=$((dead_after - dead_before))
         pages_diff=$((pages_after - pages_before))
 
-        echo "    - Δ Live tuples: ${live_diff:++}${live_diff}"
-        echo "    - Δ Dead tuples: ${dead_diff:++}${dead_diff}"
-        echo "    - Δ Pages: ${pages_diff:++}${pages_diff}"
+        echo "    - Δ Live tuples: $live_diff"
+        echo "    - Δ Dead tuples: $dead_diff"
+        echo "    - Δ Pages: $pages_diff"
 
         if [ "$live_diff" -lt 0 ]; then
           echo "    ⚠️  Warnung: Anzahl der Live-Tupel ist gesunken! (Möglicher Datenverlust?)"
