@@ -39,6 +39,9 @@ behavior.
 ## R Development
 
 - This repository contains multiple R packages below `R-*/<package>`.
+- Follow `CONTRIBUTING.md` for R formatting and maintainer workflow. Keep the
+  effective rules in the executable configuration and tooling files, using the
+  documentation only to point to those sources of truth.
 - For new reusable R functions, use camelCase names.
 - For new local variables, use snake_case names.
 - Shared utility functions, especially in `R-etlutils/etlutils`, must not assume

@@ -7,6 +7,8 @@ Der detaillierte Datenfluss zwischen den und innerhalb der Module ist in der Dat
 
 Der gesamte Ablauf der CDS Toolchain ist in der Datei [full_toolchain_description](full_toolchain_description) beschrieben.
 
+Hinweise fuer Entwicklung und Beitraege stehen in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Bestandteile der CDS tool chain
 
 Hier werden alle verwendeten Bestandteile bzw. CDS-Module aufgelistet. Detaillierte Beschreibungen sind in den jeweiligen Ordnern zu finden. Ein Modul ist eine eigenständige Softwarekomponente mit klar definierten Funktionalitäten. Die Module kommunizieren über Schnittstellen miteinander und sind austauschbar.
