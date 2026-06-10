@@ -1,12 +1,12 @@
 # This is used to set whether the column widths specified in the TableDefinition Excel file are to
 # be taken into account (FALSE) or ignored (TRUE) when generating the database scripts.
-IGNORE_DEFINED_COLUMN_WIDTHS = TRUE
+IGNORE_DEFINED_COLUMN_WIDTHS <- TRUE
 
 # The fhircrackr places the indices before each value in brackets, indicating where in the
 # structure of the resource a column value was located. In addition, a separator is inserted between
 # the list values (in our case length 3). The memory requirement for these indices and the separator
 # should not exceed 15 and must be added to each single_length in the RAW tables.
-RAW_DATA_FHIR_CRACKR_INDICES_STRING_WIDTH = 15
+RAW_DATA_FHIR_CRACKR_INDICES_STRING_WIDTH <- 15
 
 ######################################################
 # Static Definitions of Paths, File- and Columnnames #
@@ -20,7 +20,6 @@ getRightsDefinitionSheetName <- function() "rights_and_functions"
 getConvertDefinitionSheetName <- function() "table_description_convert_def"
 
 isContentChanged <- function(existing_file_path, new_file_content) {
-
   # Check if file exists
   if (!file.exists(existing_file_path)) return(TRUE)
 
@@ -81,7 +80,7 @@ getCommonPrefix <- function(strings) {
 extractBetweenQuotes <- function(string) {
   match <- regmatches(string, regexpr('"([^"]*)"', string))
   if (length(match) > 0) {
-    return(sub('"', '', sub('"$', '', match)))
+    return(sub('"', "", sub('"$', "", match)))
   } else {
     return(NA_character_)
   }
@@ -161,7 +160,8 @@ getRightsDefinitionColumnNames <- function() {
     "SCHEMA_2",
     "TABLE_POSTFIX_2",
     "SCHEMA_3",
-    "TABLE_POSTFIX_3")
+    "TABLE_POSTFIX_3"
+  )
 }
 
 getConvertDefinitionColumnNames <- function() {
@@ -171,7 +171,8 @@ getConvertDefinitionColumnNames <- function() {
     "SOURCE_COLUMN_NAME",
     "TARGET_COLUMN_NAME",
     "SOURCE_TYPE",
-    "TARGET_TYPE")
+    "TARGET_TYPE"
+  )
 }
 
 
@@ -302,7 +303,7 @@ createHeader <- function(script_rights_definition) {
   add("-- Rights definition file last update : ", formatTime(rights_definition_file_info$mtime))
   add("-- Rights definition file size        : ", rights_definition_file_info$size, " Byte")
   add("--")
-  add("-- Create SQL Tables in Schema \"", script_rights_definition[1]$OWNER_SCHEMA ,"\"")
+  add("-- Create SQL Tables in Schema \"", script_rights_definition[1]$OWNER_SCHEMA, "\"")
   add("-- Create time: ", formatTime(Sys.time()))
   # iterate over all columns and rows in the script_rights_definition
   col_names <- names(script_rights_definition)
@@ -351,7 +352,6 @@ createHeader <- function(script_rights_definition) {
 #'
 #' @export
 parseIFExpression <- function(expression) {
-
   # Pattern: Support multiline and embedded quotes in the result
   patternInlineIf <-
     '^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+):([a-zA-Z0-9_]+)\\s+([\'\"].*?[\'\"])\\s+(.*)%>$'
@@ -416,17 +416,19 @@ convertTemplate <- function(tables_descriptions,
         for (table_name in names(tables_descriptions)) {
           column_prefix <- getCommonPrefix(tables_descriptions[[table_name]][["COLUMN_NAME"]])
 
-          single_table_content <- convertTemplate(tables_descriptions,
-                                                  script_rights_definition,
-                                                  result_file_name_column,
-                                                  template_content,
-                                                  template_name = placeholder,
-                                                  table_name,
-                                                  column_prefix,
-                                                  column_name,
-                                                  loop_row,
-                                                  indentation,
-                                                  recursion = recursion + 1)
+          single_table_content <- convertTemplate(
+            tables_descriptions,
+            script_rights_definition,
+            result_file_name_column,
+            template_content,
+            template_name = placeholder,
+            table_name,
+            column_prefix,
+            column_name,
+            loop_row,
+            indentation,
+            recursion = recursion + 1
+          )
           if (!is.na(single_table_content)) {
             loop_content <- paste0(loop_content, single_table_content)
           }
@@ -436,23 +438,25 @@ convertTemplate <- function(tables_descriptions,
         single_table_description <- tables_descriptions[[table_name]]
         for (loop_row in seq_len(nrow(single_table_description))) {
           column_row <- single_table_description[loop_row]
-          single_loop_content <- convertTemplate(tables_descriptions,
-                                                 script_rights_definition,
-                                                 result_file_name_column,
-                                                 template_content = loop_template_content,
-                                                 template_name = template_name,
-                                                 table_name = table_name,
-                                                 column_prefix = column_prefix,
-                                                 column_name,
-                                                 loop_row,
-                                                 indentation,
-                                                 recursion = recursion + 1)
+          single_loop_content <- convertTemplate(
+            tables_descriptions,
+            script_rights_definition,
+            result_file_name_column,
+            template_content = loop_template_content,
+            template_name = template_name,
+            table_name = table_name,
+            column_prefix = column_prefix,
+            column_name,
+            loop_row,
+            indentation,
+            recursion = recursion + 1
+          )
           single_loop_content_placeholders <- extractPlaceholders(single_loop_content)
           for (sub_placeholder in single_loop_content_placeholders) {
             # parse the columns value separator. this is a special tag which defines the separator
             # between all lines, but not after the last line. (style: <%SEP = " AND"%>)
             if (grepl("^<%SEP\\s*=\\s*\".*\"\\s*%>$", sub_placeholder)) {
-              replace = if (loop_row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
+              replace <- if (loop_row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
               single_loop_content <- replace(sub_placeholder, replace, single_loop_content)
             } else {
               sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
@@ -489,17 +493,19 @@ convertTemplate <- function(tables_descriptions,
               sub_content <- replace(sub_placeholder, value, sub_content)
             }
           }
-          sub_content <- convertTemplate(tables_descriptions,
-                                         script_rights_definition,
-                                         result_file_name_column,
-                                         template_content = sub_content,
-                                         template_name,
-                                         table_name,
-                                         column_prefix,
-                                         column_name,
-                                         loop_row,
-                                         indentation,
-                                         recursion = recursion + 1)
+          sub_content <- convertTemplate(
+            tables_descriptions,
+            script_rights_definition,
+            result_file_name_column,
+            template_content = sub_content,
+            template_name,
+            table_name,
+            column_prefix,
+            column_name,
+            loop_row,
+            indentation,
+            recursion = recursion + 1
+          )
           loop_content <- paste0(loop_content, sub_content)
         }
       }
@@ -534,7 +540,7 @@ convertTemplate <- function(tables_descriptions,
         stop("Unknown source in IF expression: ", condition_arguments$source)
       }
       if (etlutils::isSimpleNA(condition_compare_value)) {
-        condition_compare_value = ""
+        condition_compare_value <- ""
       }
 
       if (xor(condition_arguments$invert, grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
@@ -547,17 +553,19 @@ convertTemplate <- function(tables_descriptions,
           template_content <- NA
           template_name <- condition_arguments$result
         }
-        condition_content <- convertTemplate(tables_descriptions,
-                                             script_rights_definition,
-                                             result_file_name_column,
-                                             template_content,
-                                             template_name,
-                                             table_name,
-                                             column_prefix,
-                                             column_name,
-                                             loop_row,
-                                             indentation,
-                                             recursion = recursion + 1)
+        condition_content <- convertTemplate(
+          tables_descriptions,
+          script_rights_definition,
+          result_file_name_column,
+          template_content,
+          template_name,
+          table_name,
+          column_prefix,
+          column_name,
+          loop_row,
+          indentation,
+          recursion = recursion + 1
+        )
 
         condition_content <- gsub("^\"|\"$", "", condition_content)
         condition_content <- gsub("\n$", "", condition_content)
@@ -614,11 +622,16 @@ loadDatabaseRightsAndConvertDefinition <- function() {
   rights_definition <- etlutils::removeTableHeader(rights_definition, rights_definition_columns)
 
   if (!etlutils::isValidTable(rights_definition)) {
-    stop(paste0("Could not find a row with the follwing entries in file '",
-                rights_definition_file_name, "' in sheet '", rights_definition_sheet_name, "':\n",
-                paste0(rights_definition_columns, collapse = ", "), "\n",
-                "Hint: If the column names are changed in the Excel file, then replace the same ",
-                "strings here in this R-script."))
+    stop(paste0(
+      "Could not find a row with the follwing entries in file '",
+      rights_definition_file_name, "' in sheet '", rights_definition_sheet_name, "':\n",
+      paste0(
+        rights_definition_columns,
+        collapse = ", "
+      ), "\n",
+      "Hint: If the column names are changed in the Excel file, then replace the same ",
+      "strings here in this R-script."
+    ))
   }
 
   rights_definition <- etlutils::dtRemoveCommentRows(rights_definition)

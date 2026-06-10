@@ -302,7 +302,8 @@ loadResourcesLastVersionByOwnIDFromDB <- function(resource_name, ids_or_refs) {
     resource_name = resource_name,
     filter_column = id_column,
     filter_column_values = ids_or_refs,
-    lock_id = paste0("loadResourcesLastVersionByOwnIDFromDB(", resource_name, ")"))
+    lock_id = paste0("loadResourcesLastVersionByOwnIDFromDB(", resource_name, ")")
+  )
 }
 
 #' Load existing record IDs from the database for given patient IDs

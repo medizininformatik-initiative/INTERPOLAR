@@ -139,25 +139,33 @@ recalculateMRPs <- function(start_date,
     applyRenumberMap <- function(ret_table, dp_table, renumber_map) {
       ret_table[
         renumber_map,
-        on = .(record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance),
+        on = .(
+          record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance
+        ),
         ret_id := i.new_ret_id
       ]
 
       ret_table[
         renumber_map,
-        on = .(record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance),
+        on = .(
+          record_id, ret_meda_id, temp_old_ret_id, temp_old_redcap_repeat_instance
+        ),
         redcap_repeat_instance := i.new_redcap_repeat_instance
       ]
 
       dp_table[
         renumber_map,
-        on = .(temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance),
+        on = .(
+          temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance
+        ),
         ret_id := i.new_ret_id
       ]
 
       dp_table[
         renumber_map,
-        on = .(temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance),
+        on = .(
+          temp_old_ret_id = temp_old_ret_id, temp_old_ret_redcap_repeat_instance = temp_old_redcap_repeat_instance
+        ),
         ret_redcap_repeat_instance := i.new_redcap_repeat_instance
       ]
 
@@ -211,9 +219,7 @@ recalculateMRPs <- function(start_date,
       recalculation_timestamp <- etlutils::as.POSIXctWithTimezone(Sys.time(), format = "%Y-%m-%d %H:%M:%S")
       ret_table[
         ,
-        ret_additional_values := paste(
-          recalculation_process_name, recalculation_timestamp
-        )
+        ret_additional_values := paste(recalculation_process_name, recalculation_timestamp)
       ]
     }
 
@@ -258,7 +264,10 @@ recalculateMRPs <- function(start_date,
         ret_query <- NULL
         if (length(ret_meda_ids)) {
           ret_query <- paste0(
-            "SELECT ", paste(ret_key_cols, collapse = ", "), "\n",
+            "SELECT ", paste(
+              ret_key_cols,
+              collapse = ", "
+            ), "\n",
             "FROM v_retrolektive_mrpbewertung_fe\n",
             "WHERE ret_meda_id IN ", etlutils::fhirdbGetQueryList(ret_meda_ids), "\n"
           )
@@ -294,7 +303,10 @@ recalculateMRPs <- function(start_date,
         dp_query <- NULL
         if (length(dp_meda_ids)) {
           dp_query <- paste0(
-            "SELECT ", paste(dp_key_cols, collapse = ", "), "\n",
+            "SELECT ", paste(
+              dp_key_cols,
+              collapse = ", "
+            ), "\n",
             "FROM v_dp_mrp_calculations\n",
             "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(dp_meda_ids), "\n"
           )

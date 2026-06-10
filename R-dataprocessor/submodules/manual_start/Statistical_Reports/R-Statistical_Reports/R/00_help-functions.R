@@ -1428,9 +1428,7 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
 
     common_encounter_fhir_identifier_system_filter_check <- encounter_table_raw_with_enc_type_system_and_code |>
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001_19") |>
-      dplyr::mutate(
-        enc_identifier_system = paste0(enc_identifier_system, "-test")
-      )
+      dplyr::mutate(enc_identifier_system = paste0(enc_identifier_system, "-test"))
     one_year_historic_data_filter_check <- encounter_table_raw_with_enc_type_system_and_code |>
       dplyr::filter(enc_patient_ref == "Patient/UKB-0001_20") |>
       dplyr::mutate(

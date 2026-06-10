@@ -31,7 +31,7 @@ test_that("extractReplacePatterns extracts all patterns and replacements after t
     RESOURCE_PREFIX = c("Header info", "Header info", "REPLACEMENT", "replace1", "replace2", "More extra info")
   )
   result <- extractReplacePatterns(table_description_collapsed)
-  expected_result <- list(pattern1 = "replace1", pattern2 = "replace2", 'Extra info' = "More extra info")
+  expected_result <- list(pattern1 = "replace1", pattern2 = "replace2", "Extra info" = "More extra info")
   expect_equal(result, expected_result)
 })
 
@@ -43,12 +43,12 @@ test_that("addEmptyRowsBeforeNewResource inserts empty rows correctly", {
   # Create a sample data.table
   # the function should insert 3 new full NA lines
   dt <- data.table(
-    RESOURCE = c('Resource1', 'Resource2','Resource3', 'Resource4'),
+    RESOURCE = c("Resource1", "Resource2", "Resource3", "Resource4"),
     VALUE = c(1, 2, 3, 4)
   )
 
   expected_result <- data.table(
-    RESOURCE = c('Resource1', NA, 'Resource2', NA, 'Resource3', NA, 'Resource4'),
+    RESOURCE = c("Resource1", NA, "Resource2", NA, "Resource3", NA, "Resource4"),
     VALUE = c(1, NA, 2, NA, 3, NA, 4)
   )
 

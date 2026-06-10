@@ -108,9 +108,9 @@ fhirdataRemoveIndices <- function(indexed_elements, brackets = c("[", "]")) {
 #'
 #' @export
 fhirdataCreateResourceTable <- function(
-    table_description,
-    resource_key = NULL,
-    resource_collection = NULL
+  table_description,
+  resource_key = NULL,
+  resource_collection = NULL
 ) {
   # Extract column names from the table description object
   column_names <- table_description@cols@names
@@ -239,13 +239,13 @@ fhirdataFilterMainAndSubEncounters <- function(main_encounter_id, all_encounters
       )
     }
     if (length(common_identifier_value) == 1 && !is.na(common_identifier_value)) {
-       common_identifier_encounters <- all_encounters[
+      common_identifier_encounters <- all_encounters[
         enc_identifier_system == common_encounter_fhir_identifier_system &
           enc_identifier_value %in% common_identifier_value
       ]
-       if (nrow(common_identifier_encounters) > 0) {
-         encounters[["common_identifier_encounters"]] <- common_identifier_encounters
-       }
+      if (nrow(common_identifier_encounters) > 0) {
+        encounters[["common_identifier_encounters"]] <- common_identifier_encounters
+      }
     }
   }
   # 5. Rbind all encounter and return them

@@ -7,8 +7,8 @@
 #' @return A named character vector of column names relevant to Drug-DrugGroup MRP definitions.
 getRelevantColumnNamesDrugDrugGroup <- function() {
   etlutils::namedVectorByValue(
-    #"SMPC",
-    #"SMPC-Stand",
+    # "SMPC",
+    # "SMPC-Stand",
     "MRP_DESCRIPTION",
     "ATC_DISPLAY",
     "ATC_PRIMARY",
@@ -20,7 +20,8 @@ getRelevantColumnNamesDrugDrugGroup <- function() {
     "ATC_INCLUSION",
     "ATC2_DISPLAY",
     "ATC2_PRIMARY",
-    "ATC2_DISPLAY_2")
+    "ATC2_DISPLAY_2"
+  )
 }
 
 #' Get Category Display Name for Drug-DrugGroup MRPs
@@ -29,7 +30,9 @@ getRelevantColumnNamesDrugDrugGroup <- function() {
 #' tagging or labeling MRPs in evaluation outputs.
 #'
 #' @return A character string: \code{"Drug-Drug"}
-getCategoryDisplayDrugDrugGroup <- function() {"Drug-Drug"}
+getCategoryDisplayDrugDrugGroup <- function() {
+  "Drug-Drug"
+}
 
 #' Clean and Expand Drug_Drug_MRP Definition Table
 #'

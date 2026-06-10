@@ -95,7 +95,9 @@ dbSetContext <- function(module_name,
 #' dbIsLog()
 #'
 #' @export
-dbIsLog <- function() {.lib_db_env[["DB_LOG"]]}
+dbIsLog <- function() {
+  .lib_db_env[["DB_LOG"]]
+}
 
 #' Get the Module Name from the Database Context
 #'
@@ -111,7 +113,9 @@ dbIsLog <- function() {.lib_db_env[["DB_LOG"]]}
 #' dbGetModuleName()
 #'
 #' @export
-dbGetModuleName <- function() {.lib_db_env[["MODULE_NAME"]]}
+dbGetModuleName <- function() {
+  .lib_db_env[["MODULE_NAME"]]
+}
 
 #' If true, the database cron job will be started by R code immediately if necessary.
 #' This should prevent unnecessary waiting times if the cron job is only started once
@@ -474,33 +478,38 @@ dbTransferDataInternal <- function() {
 #'         was successful.
 #'
 dbUnlock <- function(lock_id, readonly = FALSE) {
-  unlock_successful = FALSE
+  unlock_successful <- FALSE
   if (!is.null(lock_id)) {
     full_lock_id <- dbCreateLockID(lock_id)
     dbLog("Try to unlock database with lock_id: '", full_lock_id, "' and readonly: ", readonly)
     unlock_request <- paste0("SELECT db.data_transfer_start('", dbGetModuleName(), "', '", full_lock_id, "', ", readonly, ");")
     unlock_successful <- dbGetSingleValue(unlock_request)
     if (dbLog()) {
-      tryCatch({
-        status <- dbGetStatus()
-        cat("Current database status after lock request:", status, "\n")
-      }, error = function(error) {
-        etlutils::catErrorMessage(
-          paste0(
-            "Could not retrieve database status after unlock request.\n",
-            "Lock ID: ", full_lock_id, "\n",
-            "Readonly: ", readonly, "\n",
-            "Error:\n", conditionMessage(error), "\n"
+      tryCatch(
+        {
+          status <- dbGetStatus()
+          cat("Current database status after lock request:", status, "\n")
+        },
+        error = function(error) {
+          etlutils::catErrorMessage(
+            paste0(
+              "Could not retrieve database status after unlock request.\n",
+              "Lock ID: ", full_lock_id, "\n",
+              "Readonly: ", readonly, "\n",
+              "Error:\n", conditionMessage(error), "\n"
+            )
           )
-        )
-      })
+        }
+      )
     }
     if (!unlock_successful) {
       status <- dbGetStatus()
-      stop("Could not unlock the database for lock_id:\n",
-           full_lock_id, "\n",
-           "The current status is: " , status, "\n",
-           dbGetInfo(readonly))
+      stop(
+        "Could not unlock the database for lock_id:\n",
+        full_lock_id, "\n",
+        "The current status is: ", status, "\n",
+        dbGetInfo(readonly)
+      )
     }
     if (!readonly && dbIsRunCronJobImmediately()) {
       dbTransferDataInternal()
@@ -523,7 +532,7 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
 #' @return A logical value (`TRUE` or `FALSE`), indicating whether the
 #'         reset was successful.
 #'
-#'@export
+#' @export
 dbResetLock <- function() {
   module_name <- dbGetModuleName()
   unlock_successful <- FALSE
@@ -532,10 +541,12 @@ dbResetLock <- function() {
     unlock_successful <- dbGetSingleValue(unlock_request)
     if (!unlock_successful) {
       status <- dbGetStatus()
-      stop("Could not reset database lock for module:\n",
-           module_name, "\n",
-           "The current status is: " , status, "\n",
-           dbGetInfo())
+      stop(
+        "Could not reset database lock for module:\n",
+        module_name, "\n",
+        "The current status is: ", status, "\n",
+        dbGetInfo()
+      )
     }
   }
   if (unlock_successful) {
@@ -640,7 +651,7 @@ dbCheckColumsWidthBeforeWrite <- function(table_name, table, allow_truncate = FA
   dbLog("dbCheckColumsWidthBeforeWrite:\n", sql_query)
 
   # Retrieve column widths
-  #there is no need to check the column width for read connections
+  # there is no need to check the column width for read connections
   column_widths <- dbGetQuery(sql_query, readonly = FALSE)
   column_widths <- unique(column_widths)
 
@@ -739,7 +750,8 @@ dbAddContent <- function(table_name, table, lock_id = NULL) {
     char_cols <- names(table)[sapply(table, is.character)]
     if (length(char_cols)) {
       table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)),
-            .SDcols = char_cols]
+        .SDcols = char_cols
+      ]
     }
 
     # Lock + connection with guaranteed cleanup
@@ -783,7 +795,7 @@ dbDeleteContent <- function(table_name, lock_id = NULL) {
   # Convert table name to lowercase for PostgreSQL compatibility
   table_name <- tolower(table_name)
   # Create DELETE SQL statement
-  statement <- paste0('DELETE FROM ', table_name, ';')
+  statement <- paste0("DELETE FROM ", table_name, ";")
   # Execute the DELETE statement and get the number of affected rows
   deleted_rows <- dbExecute(statement, lock_id)
   # Log the number of deleted rows
@@ -959,9 +971,11 @@ dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
 dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id, readonly), add = TRUE)
-  dbLog("dbGetQuery:\n", query,
-        if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")),
-        dont_repeat_key = "dbGetQuery()")
+  dbLog(
+    "dbGetQuery:\n", query,
+    if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")),
+    dont_repeat_key = "dbGetQuery()"
+  )
   table <- dbWithRetry(
     db_call = function(db_connection) {
       data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
@@ -1131,8 +1145,10 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
       dbIsTableEmptyBeforeWrite(table_name)
     })]
     if (length(non_empty_tables) > 0) {
-      stop("The following tables are not empty:\n",
-           paste(non_empty_tables, collapse = "\n"))
+      stop(
+        "The following tables are not empty:\n",
+        paste(non_empty_tables, collapse = "\n")
+      )
     }
   }
 
@@ -1182,9 +1198,11 @@ dbWriteTable <- function(table, table_name = NA, lock_id = NULL, stop_if_table_n
   tables <- list(table)
   names(tables) <- table_name
   # Call the dbWriteTables function to perform the writing operation
-  dbWriteTables(tables,
-                lock_id = lock_id,
-                stop_if_table_not_empty = stop_if_table_not_empty)
+  dbWriteTables(
+    tables,
+    lock_id = lock_id,
+    stop_if_table_not_empty = stop_if_table_not_empty
+  )
 }
 
 #' Read Multiple Tables from a PostgreSQL Database
@@ -1405,8 +1423,10 @@ dbConvertToDBTypes <- function(dt, table_name) {
       } else if (db_type == "boolean") {
         dt[, (col_name) := as.logical(get(col_name))]
       } else {
-        dbLog("Unknown PostgreSQL type for column '", col_name,
-              "': ", db_type, ". No conversion applied.")
+        dbLog(
+          "Unknown PostgreSQL type for column '", col_name,
+          "': ", db_type, ". No conversion applied."
+        )
       }
     }
   }
@@ -1513,7 +1533,7 @@ dbGetInfo <- function(readonly = TRUE) {
 #' @export
 dbReset <- function(tables_with_schema = NULL) {
   con <- dbGetAdminConnection()
-  on.exit(  invisible(try(suppressWarnings(DBI::dbDisconnect(con)), silent = TRUE)), add = TRUE)
+  on.exit(invisible(try(suppressWarnings(DBI::dbDisconnect(con)), silent = TRUE)), add = TRUE)
 
   lock_id <- "Clear database"
   dbLock(lock_id)
@@ -1528,7 +1548,8 @@ dbReset <- function(tables_with_schema = NULL) {
     tables <- DBI::dbGetQuery(con, query)
   } else {
     tables <- data.table::data.table(full = tables_with_schema)[
-      , c("schemaname", "tablename") := data.table::tstrsplit(full, ".", fixed = TRUE)][, !"full"]
+      , c("schemaname", "tablename") := data.table::tstrsplit(full, ".", fixed = TRUE)
+    ][, !"full"]
   }
 
   # Clear all tables in the provided schemas
@@ -1538,12 +1559,15 @@ dbReset <- function(tables_with_schema = NULL) {
 
     truncate_statement <- paste0("TRUNCATE TABLE ", schema, ".", table_name, " RESTART IDENTITY CASCADE;")
 
-    tryCatch({
-      DBI::dbExecute(con, truncate_statement)
-    }, error = function(e) {
-      message("Error truncating table: ", schema, ".", table_name)
-      message("Error message: ", e$message)
-    })
+    tryCatch(
+      {
+        DBI::dbExecute(con, truncate_statement)
+      },
+      error = function(e) {
+        message("Error truncating table: ", schema, ".", table_name)
+        message("Error message: ", e$message)
+      }
+    )
   }
 
   # Check if tables still contain data after truncation

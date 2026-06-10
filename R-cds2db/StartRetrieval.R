@@ -5,8 +5,8 @@
 ####################################################################################
 
 # chance the working directory to the main directory
-if (grepl('/cds2db$', getwd())) setwd("../..")
-if (grepl('/R-cds2db$', getwd())) setwd("../")
+if (grepl("/cds2db$", getwd())) setwd("../..")
+if (grepl("/R-cds2db$", getwd())) setwd("../")
 
 # free memory
 rm(list = ls())

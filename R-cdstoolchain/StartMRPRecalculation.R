@@ -23,9 +23,7 @@ if (!any(grepl("^start-date=", command_line_args))) {
 }
 
 command_arguments <- etlutils::initCommandLineArguments(
-  defaults = list(
-    end_date = etlutils::as.POSIXctWithTimezone(Sys.Date())
-  ),
+  defaults = list(end_date = etlutils::as.POSIXctWithTimezone(Sys.Date())),
   command_arguments = command_line_args
 )
 

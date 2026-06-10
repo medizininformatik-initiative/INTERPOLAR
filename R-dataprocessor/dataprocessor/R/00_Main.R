@@ -15,20 +15,21 @@
 #' @export
 init <- function(validate_config = TRUE) {
   # Initialize and start module if init_constants_only == FALSE
-  config <- etlutils::initModule("dataprocessor",
-                       path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
-                       mandatory_parameters = c(
-                         "PHASES_WARD",
-                         "MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
-                         "OBSERVATION_BODY_WEIGHT_SYSTEM",
-                         "OBSERVATION_BODY_WEIGHT_CODES",
-                         "OBSERVATION_BODY_HEIGHT_SYSTEM",
-                         "OBSERVATION_BODY_HEIGHT_CODES",
-                         "OBSERVATION_BMI_SYSTEM",
-                         "OBSERVATION_BMI_CODES",
-                         "INPUT_REPO_PATH",
-                         "PATH_TO_DB_CONFIG_TOML"
-                       )
+  config <- etlutils::initModule(
+    "dataprocessor",
+    path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
+    mandatory_parameters = c(
+      "PHASES_WARD",
+      "MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
+      "OBSERVATION_BODY_WEIGHT_SYSTEM",
+      "OBSERVATION_BODY_WEIGHT_CODES",
+      "OBSERVATION_BODY_HEIGHT_SYSTEM",
+      "OBSERVATION_BODY_HEIGHT_CODES",
+      "OBSERVATION_BMI_SYSTEM",
+      "OBSERVATION_BMI_CODES",
+      "INPUT_REPO_PATH",
+      "PATH_TO_DB_CONFIG_TOML"
+    )
   )
   if (validate_config) {
     validateWardPhases()
@@ -58,7 +59,6 @@ resetLock <- function() {
 #' using its name according to the manual_start subdirectory of the submodules directory.
 #'
 runSubmodules <- function() {
-
   # Get lists of submodule directories
   submodule_dirs <- list.dirs(DATAPROCESSOR_SUBMODULES_PATH, recursive = FALSE)
   manual_start_submodule_dirs <- list.dirs(DATAPROCESSOR_MANUAL_START_PATH, recursive = FALSE)
@@ -76,7 +76,8 @@ runSubmodules <- function() {
     # enable minus for underscrore in arguments and ignore case
     command_line_args <- sub("-", "_", tolower(command_line_args), fixed = TRUE)
     called_manual_start_submodule_dirs <- manual_start_submodule_dirs[
-      tolower(basename(manual_start_submodule_dirs)) %in% command_line_args]
+      tolower(basename(manual_start_submodule_dirs)) %in% command_line_args
+    ]
     sourceAllSubmodules() # initialize all functions of all automatic submodules for a use in the now manual started submodule
   } else {
     called_manual_start_submodule_dirs <- as.character(c())
@@ -103,7 +104,6 @@ runSubmodules <- function() {
 
     # Source all R scripts in the directory
     etlutils::runLevel1(paste0("Run Dataprocessor submodule ", submodule_name), {
-
       # Load all submodule config.toml files
       submodule_config <- etlutils::initSubmoduleConstants(dir)
       # log all configuration parameters but hide value with parameter name starts with "FHIR_"
@@ -133,7 +133,7 @@ startDataprocessorModule <- function(validate_config = TRUE) {
 }
 
 sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
-                                      source_submodule_functions = FALSE) {
+                                          source_submodule_functions = FALSE) {
 
   etlutils::runLevel2("Reset database lock from unfinished previous run", {
     etlutils::dbResetLock()
@@ -161,7 +161,6 @@ sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
 #'
 #' @export
 processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
-
   # Initialize and start module
   startDataprocessorModule(validate_config)
 

@@ -44,9 +44,9 @@ extractWords <- function(input_string) {
 #' @export
 greplic <- function(pattern, x, whole_word = FALSE, perl = TRUE) {
   if (whole_word) {
-    subPatterns <- unlist(strsplit(pattern, '\\|'))
-    subPatterns <- lapply(subPatterns, function(subPattern) subPattern <- paste0('(?<!\\S)', subPattern, '(?!\\S)'))
-    pattern <- paste0(subPatterns, collapse = '|')
+    subPatterns <- unlist(strsplit(pattern, "\\|"))
+    subPatterns <- lapply(subPatterns, function(subPattern) subPattern <- paste0("(?<!\\S)", subPattern, "(?!\\S)"))
+    pattern <- paste0(subPatterns, collapse = "|")
   }
   grepl(pattern, x, ignore.case = TRUE, perl)
 }
@@ -196,7 +196,7 @@ replacePatternsInString <- function(patternsAndReplacements, string, ignore.case
 #' An empty string for count 1, 's' otherwise.
 #' @export
 getPluralSuffix <- function(counts) {
-  ifelse(counts == 1, '', 's')
+  ifelse(counts == 1, "", "s")
 }
 
 #' Count Trailing Spaces in a String

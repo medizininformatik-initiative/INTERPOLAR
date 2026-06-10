@@ -23,12 +23,12 @@ getModuleName <- function() {
 init <- function(validate_config = TRUE) {
   # Initialize and start module if init_constants_only == FALSE
   config <- etlutils::initModule(getModuleName(),
-                       path_to_toml = "./R-cds2db/cds2db_config.toml",
-                       mandatory_parameters = c(
-                         "FHIR_SERVER_ENDPOINT",
-                         "ENCOUNTER_FILTER_PATTERN",
-                         "PATH_TO_DB_CONFIG_TOML"
-                       )
+    path_to_toml = "./R-cds2db/cds2db_config.toml",
+    mandatory_parameters = c(
+      "FHIR_SERVER_ENDPOINT",
+      "ENCOUNTER_FILTER_PATTERN",
+      "PATH_TO_DB_CONFIG_TOML"
+    )
   )
   if (validate_config) {
     validateConfig()
@@ -91,7 +91,6 @@ deleteNextCacheFile <- function() {
 #'
 #' @export
 retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, validate_config = TRUE) {
-
   # Initialize and start module
   config <- init(validate_config)
   etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+|^DATA_IMPORT_FHIR_PIDS$")
@@ -172,7 +171,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
           etlutils::dbWriteTables(
             tables = resource_tables,
             lock_id = "Write RAW tables to database",
-            stop_if_table_not_empty = TRUE)
+            stop_if_table_not_empty = TRUE
+          )
         })
       } else if (etlutils::isSubProcess("DataImport.All") || !isProcess("DataImport")) {
         # Write pids_per_ward table to database
@@ -180,7 +180,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
           etlutils::dbWriteTables(
             tables = list(pids_per_ward_raw = resource_tables$pids_per_ward_raw),
             lock_id = "Write pids_per_ward table to database",
-            stop_if_table_not_empty = TRUE)
+            stop_if_table_not_empty = TRUE
+          )
         })
       } else {
         etlutils::catWarningMessage("No FHIR resources found for resource type data import.")
@@ -207,7 +208,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
         resource_tables_raw_diff <- etlutils::dbReadTables(
           table_names = all_table_names_raw_diff,
-          lock_id = "Load untyped RAW tables from database")
+          lock_id = "Load untyped RAW tables from database"
+        )
 
         all_empty_raw <- all(sapply(resource_tables_raw_diff, function(dt) nrow(dt) == 0))
         if (all_empty_raw) {
@@ -231,7 +233,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
           etlutils::dbWriteTables(
             tables = resource_tables,
             lock_id = "Write typed tables to database",
-            stop_if_table_not_empty = TRUE)
+            stop_if_table_not_empty = TRUE
+          )
         })
 
       }
@@ -245,9 +248,9 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
   # Generate finish message
   finish_message <- etlutils::generateFinishMessage()
   if (!etlutils::isErrorOccured() &&
-      (etlutils::isDefinedAndTrue("all_wards_empty") ||
-       etlutils::isDefinedAndTrue("all_empty_fhir") ||
-       etlutils::isDefinedAndTrue("all_empty_raw"))) {
+    (etlutils::isDefinedAndTrue("all_wards_empty") ||
+      etlutils::isDefinedAndTrue("all_empty_fhir") ||
+      etlutils::isDefinedAndTrue("all_empty_raw"))) {
     finish_message <- paste0(
       "\nModule '", etlutils::getModuleName(), "' finished with no errors but the result was empty (see warnings above).\n"
     )

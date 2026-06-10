@@ -14,7 +14,6 @@
 #' out of REDCap and does not return a value.
 #'
 importRedcap2DB <- function() {
-
   # Connect to REDCap
   frontend_connection <- getRedcapConnection()
 
@@ -27,12 +26,14 @@ importRedcap2DB <- function() {
   for (i in seq_along(form_names)) {
     form_name <- form_names[i]
 
-    #TODO: Die Instanzen Risikofaktoren und Trigger werden nicht korrekt aus dem REDCap exportiert.
+    # TODO: Die Instanzen Risikofaktoren und Trigger werden nicht korrekt aus dem REDCap exportiert.
     # Aktuelle Lösung: Die Tabellen Risikofaktoren und Trigger werden nicht in das Frontend importiert.
     # Ob diese Instanzen überhaupt eine Relevanz haben, muss noch geklärt werden.
     if (!(form_name %in% c("risikofaktor", "trigger"))) {
       data_from_redcap <- tryCatch(
-        {data.table::setDT(suppressWarnings(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)))},
+        {
+          data.table::setDT(suppressWarnings(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = form_name)))
+        },
         error = function(e) {
           # fallback: In case of problems with the delimiters in REDCap, extend form names to "name,Name" and try again
           # extract allowed values from error message

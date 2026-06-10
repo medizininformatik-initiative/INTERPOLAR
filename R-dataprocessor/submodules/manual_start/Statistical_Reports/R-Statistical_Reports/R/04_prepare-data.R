@@ -231,26 +231,31 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::group_by(fall_fhir_main_enc_id) |>
     dplyr::mutate(main_enc_any_processing_exclusion_fe = dplyr::if_else(any(
       !is.na(processing_exclusion_reason) &
-        stringr::str_detect(processing_exclusion_reason,
+        stringr::str_detect(
+          processing_exclusion_reason,
           pattern = "main_encounter"
         ) &
-        stringr::str_detect(processing_exclusion_reason,
+        stringr::str_detect(
+          processing_exclusion_reason,
           pattern = "not_in_inclusion_criteria",
           negate = TRUE
         )
     ), TRUE, FALSE, missing = FALSE)) |>
     dplyr::mutate(main_enc_not_in_inclusion_criteria = dplyr::if_else(
-      any(stringr::str_detect(processing_exclusion_reason,
+      any(stringr::str_detect(
+        processing_exclusion_reason,
         pattern = "not_in_inclusion_criteria"
       )), TRUE, FALSE, missing = FALSE
     )) |>
     dplyr::mutate(sub_enc_all_processing_exclusion_fe = dplyr::if_else(
       all(
         !is.na(processing_exclusion_reason) &
-          stringr::str_detect(processing_exclusion_reason,
+          stringr::str_detect(
+            processing_exclusion_reason,
             pattern = "sub_encounter"
           ) &
-          stringr::str_detect(processing_exclusion_reason,
+          stringr::str_detect(
+            processing_exclusion_reason,
             pattern = "not_in_inclusion_criteria",
             negate = TRUE
           )
@@ -273,10 +278,12 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::mutate(sub_enc_any_processing_exclusion_fe = dplyr::if_else(
       any(
         !is.na(processing_exclusion_reason) &
-          stringr::str_detect(processing_exclusion_reason,
+          stringr::str_detect(
+            processing_exclusion_reason,
             pattern = "sub_encounter"
           ) &
-          stringr::str_detect(processing_exclusion_reason,
+          stringr::str_detect(
+            processing_exclusion_reason,
             pattern = "not_in_inclusion_criteria",
             negate = TRUE
           )
@@ -355,9 +362,7 @@ addFeDataToF1data <- function(F1_data, frontend_summary_data) {
   F1_data_with_fe <- F1_data |>
     dplyr::left_join(
       frontend_summary_data |>
-        dplyr::distinct(
-          main_enc_id, main_enc_any_processing_exclusion_fe
-        ),
+        dplyr::distinct(main_enc_id, main_enc_any_processing_exclusion_fe),
       by = c("main_enc_id")
     ) |>
     dplyr::left_join(

@@ -1,6 +1,6 @@
 # change the working directory to the main directory
-if (grepl('/cdstoolchain', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain', getwd())) setwd("../")
+if (grepl("/cdstoolchain", getwd())) setwd("../..")
+if (grepl("/R-cdstoolchain", getwd())) setwd("../")
 
 # Orchestrate building, installing, and running a multi-package R project
 # Assumes working directory is the project root where relative paths work.
@@ -71,10 +71,13 @@ local({
   ensurePackages(c("withr", "roxygen2", "pkgbuild", "testthat"))
 
   start_time <- Sys.time()
-  on.exit({
-    total <- round(as.numeric(difftime(Sys.time(), start_time, units = "secs")), 1)
-    logInfo("All done in ", total, "s")
-  }, add = TRUE)
+  on.exit(
+    {
+      total <- round(as.numeric(difftime(Sys.time(), start_time, units = "secs")), 1)
+      logInfo("All done in ", total, "s")
+    },
+    add = TRUE
+  )
 
   for (pkg_dir in package_dirs) {
     buildAndInstall(pkg_dir)
@@ -121,12 +124,12 @@ DEBUG_REDCAP_TOKEN <- debug_vm_config$redcap_token
 
 
 # ---- Run main script of last package in GLOBAL env ---------------------------
-#DEBUG_START_SINGLE_MODULE <- "dataprocessor" # wenn man das ausführt, dann wird nicht nochmal die Testdatei gesourct, weil das nur in cds2db passiert!
+# DEBUG_START_SINGLE_MODULE <- "dataprocessor" # wenn man das ausführt, dann wird nicht nochmal die Testdatei gesourct, weil das nur in cds2db passiert!
 # DEBUG_SUBMODULE_DIR <- "./R-dataprocessor/submodules/02_MRP_Calculation"
 # DEBUG_RUN_SINGLE_DAY_ONLY <- 2
-#source("R-cdstoolchain/DeleteDBAndREDCap.R", local = FALSE)
-#source("R-cdstoolchain/StartDebugCDSToolChain.R", local = FALSE)
-#source("R-cdstoolchain/StartDataImport.R", local = FALSE)
-#source("R-cdstoolchain/StartCDSToolChain.R", local = FALSE)
-#source("R-cdstoolchain/StartDebugDataImport.R", local = FALSE)
-#source("R-cdstoolchain/StartMRPRecalculation.R", local = FALSE)
+# source("R-cdstoolchain/DeleteDBAndREDCap.R", local = FALSE)
+# source("R-cdstoolchain/StartDebugCDSToolChain.R", local = FALSE)
+# source("R-cdstoolchain/StartDataImport.R", local = FALSE)
+# source("R-cdstoolchain/StartCDSToolChain.R", local = FALSE)
+# source("R-cdstoolchain/StartDebugDataImport.R", local = FALSE)
+# source("R-cdstoolchain/StartMRPRecalculation.R", local = FALSE)

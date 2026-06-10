@@ -99,7 +99,6 @@ validateConfig <- function() {
   # Validate data import parameters
   ###
   if (isProcess("DataImport")) {
-
     ###
     # Remove all DEBUG parameters from global context if the data export is running to prevent any side effects
     # but not if the developers start an debug run via BuildAndStartDebugRun.R (then the parameter "DEBUG_VM_INDEX" is set)
@@ -158,8 +157,10 @@ validateConfig <- function() {
       invalid_resource_types <- setdiff(tolower(DATA_IMPORT_RESOURCE_TYPES), tolower(allowed_resource_types))
       if (length(invalid_resource_types)) {
         invalid_resource_types <- DATA_IMPORT_RESOURCE_TYPES[tolower(DATA_IMPORT_RESOURCE_TYPES) %in% invalid_resource_types]
-        stop("DATA_IMPORT_RESOURCE_TYPES contains invalid or unsupported resource types: ",
-             paste(invalid_resource_types, collapse = ", "))
+        stop(
+          "DATA_IMPORT_RESOURCE_TYPES contains invalid or unsupported resource types: ",
+          paste(invalid_resource_types, collapse = ", ")
+        )
       }
     }
 

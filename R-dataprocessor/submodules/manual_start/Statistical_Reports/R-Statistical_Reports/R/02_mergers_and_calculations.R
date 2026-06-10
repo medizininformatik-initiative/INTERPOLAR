@@ -751,7 +751,8 @@ addRecordId <- function(merged_table_with_ward, patient_fe_table) {
 #' @export
 addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table) {
   merged_table_with_fall_id_and_studienphase <- merged_table_with_record_id |>
-    dplyr::left_join(fall_fe_table,
+    dplyr::left_join(
+      fall_fe_table,
       by = c(
         "record_id" = "record_id", "main_enc_id" = "fall_fhir_enc_id",
         "pat_id" = "fall_pat_id", "ward_name" = "fall_station",
@@ -821,7 +822,8 @@ addFallIdAndStudienphase <- function(merged_table_with_record_id, fall_fe_table)
 #' @export
 mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
   frontend_table <- patient_fe_table |>
-    dplyr::left_join(fall_fe_table,
+    dplyr::left_join(
+      fall_fe_table,
       by = c(
         "pat_id" = "fall_pat_id",
         "record_id"
@@ -900,7 +902,8 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
     dplyr::left_join(
       medikationsanalyse_fe_table |>
         dplyr::distinct(),
-      by = c("record_id",
+      by = c(
+        "record_id",
         "fall_id_cis" = "fall_meda_id"
       )
     ) |>
@@ -1058,7 +1061,8 @@ addVersorgungsstellenkontaktToFeData <- function(merged_fe_pat_fall_table, FHIR_
       )
     ) |>
     dplyr::distinct() |>
-    dplyr::relocate(enc_id, enc_period_start, curated_enc_period_end,
+    dplyr::relocate(
+      enc_id, enc_period_start, curated_enc_period_end,
       .after = fall_aufn_dat
     )
   return(merged_fe_pat_fall_table_with_enc_id)
@@ -1113,7 +1117,8 @@ addMRPDokuData <- function(merged_fe_pat_fall_meda_table_with_enc_id,
     dplyr::left_join(
       mrp_dokumentation_validierung_fe_table |>
         dplyr::distinct(),
-      by = c("record_id",
+      by = c(
+        "record_id",
         "meda_id" = "mrp_meda_id"
       )
     ) |>
@@ -1191,7 +1196,8 @@ addRetrolektiveMRPBewertungData <- function(merged_fe_pat_fall_meda_table_with_e
     dplyr::inner_join(
       retrolektive_mrpbewertung_fe_table |>
         dplyr::distinct(),
-      by = c("record_id",
+      by = c(
+        "record_id",
         "meda_id" = "ret_meda_id",
         "mrp_id" = "ret_mrp_zuordnung1"
       ),
@@ -1211,7 +1217,8 @@ addRetrolektiveMRPBewertungData <- function(merged_fe_pat_fall_meda_table_with_e
       retrolektive_mrpbewertung_fe_table |>
         dplyr::filter(!ret_id %in% matching_ret_ids) |>
         dplyr::distinct(),
-      by = c("record_id",
+      by = c(
+        "record_id",
         "meda_id" = "ret_meda_id"
       ),
       na_matches = "never",

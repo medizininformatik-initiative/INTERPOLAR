@@ -243,22 +243,28 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
 
   # if needed: Print datasets for verification to outputLocal
   if (WRITE_TABLE_LOCAL) {
-    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(patient_table)),
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(patient_table)),
       pagename = "patient_table"
     )
-    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(encounter_table)),
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(encounter_table)),
       pagename = "encounter_table"
     )
-    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(pids_per_ward_table)),
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(pids_per_ward_table)),
       pagename = "pids_per_ward_table"
     )
-    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(FHIR_table_with_ward_name_and_record_id)),
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(FHIR_table_with_ward_name_and_record_id)),
       pagename = "FHIR_table_with_ward_name_and_record_id"
     )
-    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(frontend_table)),
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(frontend_table)),
       pagename = "frontend_table"
     )
-    etlutils::writeHtmlPage(list(etlutils::buildHtmlTable(frontend_summary_data)),
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(frontend_summary_data)),
       pagename = "frontend_summary_data"
     )
     # writeHtmlTable(full_analysis_set_1)
@@ -266,7 +272,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   }
 
   frontend_summary <- calculateFeSummary(frontend_summary_data)
-  frontend_summary_weekly <- calculateFeSummary(frontend_summary_data,
+  frontend_summary_weekly <- calculateFeSummary(
+    frontend_summary_data,
     grouping_variables = c("ward_name", "calendar_week")
   )
 
@@ -275,9 +282,11 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   # calculateF2(F2_data)
 
   # print report to outputGlobal
-  # writeHtmlTable(statistical_report,
+  # writeHtmlTable(
+  #   statistical_report,
   #   output_location = "global",
-  #   caption = paste0("report for period: ", REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
+  #   caption = paste0(
+  #     "report for period: ", REPORT_PERIOD_START, " to ", REPORT_PERIOD_END),
   #   footnote = c(
   #     "F1: Cumulative number of hospitalized cases on INTERPOLAR wards
   #     (>18y, initial INTERPOLAR ward contact)",
@@ -295,7 +304,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   #   )
   # )
 
-  frontend_summary_html_table <- etlutils::buildHtmlTable(frontend_summary,
+  frontend_summary_html_table <- etlutils::buildHtmlTable(
+    frontend_summary,
     filename_without_extension = paste0("frontend_summary_", format(Sys.Date(), "%Y%m%d")),
     caption = paste0(
       "Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
@@ -336,7 +346,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     )
   )
 
-  frontend_summary_weekly_html_table <- etlutils::buildHtmlTable(frontend_summary_weekly,
+  frontend_summary_weekly_html_table <- etlutils::buildHtmlTable(
+    frontend_summary_weekly,
     filename_without_extension = paste0("frontend_summary_weekly_", format(Sys.Date(), "%Y%m%d")),
     caption = paste0(
       "Weekly Front-End Summary for period: ", REPORT_PERIOD_START, " to ",

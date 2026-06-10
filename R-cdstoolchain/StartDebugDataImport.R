@@ -1,9 +1,9 @@
 # Activate this only if you know what you are doing!
-I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = FALSE
+I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED <- FALSE
 
 # change the working directory to the main directory
-if (grepl('/cdstoolchain', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain', getwd())) setwd("../")
+if (grepl("/cdstoolchain", getwd())) setwd("../..")
+if (grepl("/R-cdstoolchain", getwd())) setwd("../")
 
 if (!I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED) {
   stop("You must set I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE to run this script!")
@@ -111,7 +111,8 @@ source(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME, local = FALSE)
 countFilledRows <- function(resource_type, column_name) {
   cds2db::init(validate_config = FALSE)
   query <- paste0(
-    "SELECT COUNT(*) AS filled_rows\n",
+    "SELECT COUNT(
+      *) AS filled_rows\n",
     "FROM v_", tolower(resource_type), "_last_version\n",
     "WHERE ", column_name, " IS NOT NULL;\n"
   )
@@ -168,15 +169,16 @@ source("./R-cdstoolchain/StartDataImport.R", local = FALSE)
 improved_targets <- .start_debug_data_import_env$filled_rows_after > .start_debug_data_import_env$filled_rows_before
 
 if (all(improved_targets)) {
-  cat(
-    "\nDataImport test succeeded for all configured targets.\n"
-  )
+  cat("\nDataImport test succeeded for all configured targets.\n")
 } else {
   failed_targets <- names(improved_targets)[!improved_targets]
   cat(
     paste0(
       "\nDataImport test did not show an increase for: ",
-      paste(failed_targets, collapse = ", "),
+      paste(
+        failed_targets,
+        collapse = ", "
+      ),
       ". Check logs, selected resource type, and whether the source data actually contains the field.\n"
     )
   )

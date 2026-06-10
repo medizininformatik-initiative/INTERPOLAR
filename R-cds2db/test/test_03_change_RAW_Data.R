@@ -46,9 +46,8 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 # End Define global variables #
 ###############################
 
-#TODO: MRP-haltige Medikation und Medikationsanalsyse anlegen für beide Fälle -> prüfen, ob der Stationsname für das MRP stimmt, wenn die Medikationsanalyse immer auf dem ersten IP-Station stattfand.
+# TODO: MRP-haltige Medikation und Medikationsanalsyse anlegen für beide Fälle -> prüfen, ob der Stationsname für das MRP stimmt, wenn die Medikationsanalyse immer auf dem ersten IP-Station stattfand.
 if (exists("TOOLCHAIN_DAY")) {
-
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   # resources are a list of data tables from outside we want to change for the test
@@ -149,15 +148,15 @@ if (exists("TOOLCHAIN_DAY")) {
   # Add Medication, Conditions and Observations for all MRP types to the duplicated patients
   ##########
 
-  #UKB-0001_1 -> Drug-Disease: Drug Tag 1, Disease Tag 3
-  #UKB-0001_2 -> Drug-Drug: beide Drugs an Tag 2
-  #UKB-0001_3 -> Drug-DrugGroup: Drug Tag 1, DrugGroup Tag 2
-  #UKB-0001_4 -> Drug-Disease: Drug Tag 5, Proxy ATC Tag 3
+  # UKB-0001_1 -> Drug-Disease: Drug Tag 1, Disease Tag 3
+  # UKB-0001_2 -> Drug-Drug: beide Drugs an Tag 2
+  # UKB-0001_3 -> Drug-DrugGroup: Drug Tag 1, DrugGroup Tag 2
+  # UKB-0001_4 -> Drug-Disease: Drug Tag 5, Proxy ATC Tag 3
 
-  #UKB-0002_1 -> Drug-Disease: Drug Tag 1, Proxy LOINC with hard cutoff Tag 2
-  #UKB-0002_2 -> Drug-Disease: Drug Tag 1, Proxy LOINC with reference range Tag 2
-  #UKB-0002_3 -> Drug-Disease: Drug Tag 6, Disease Tag 7
-  #UKB-0002_4 -> -
+  # UKB-0002_1 -> Drug-Disease: Drug Tag 1, Proxy LOINC with hard cutoff Tag 2
+  # UKB-0002_2 -> Drug-Disease: Drug Tag 1, Proxy LOINC with reference range Tag 2
+  # UKB-0002_3 -> Drug-Disease: Drug Tag 6, Disease Tag 7
+  # UKB-0002_4 -> -
 
   if (isDebugDay(1)) {
     # Drug-Disease -> ATC
@@ -186,8 +185,7 @@ if (exists("TOOLCHAIN_DAY")) {
     # Drug-Disease -> ATC
     addDrugs("UKB-0001_4", "A10BA02")
   }
-  if (isDebugDay(4)) {
-  }
+  if (isDebugDay(4)) {}
   if (isDebugDay(5)) {
     # Drug-Disease -> Proxy ATC
     addDrugs("UKB-0001_4", "N07BB03")
@@ -200,8 +198,7 @@ if (exists("TOOLCHAIN_DAY")) {
     # Drug-Disease -> ICD
     addConditions("UKB-0001_1", "R10.0")
   }
-  if (isDebugDay(8)) {
-  }
+  if (isDebugDay(8)) {}
 
   duplicatePatients(10)
 
