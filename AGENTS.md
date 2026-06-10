@@ -47,6 +47,8 @@ behavior.
 - Before adding or renaming code, check whether script names and existing
   variable/function names still match the responsibility of the code being
   changed. Place new code in the script whose name best matches its purpose.
+- For test section headers in the style `### TEST ... ###`, make the surrounding
+  lines of `#` characters exactly as long as the middle header line.
 - Add roxygen2 comments above new top-level R functions whose bodies are longer
   than one line, even if they are internal and not exported.
 - If a helper function is only used inside one other function, define it locally

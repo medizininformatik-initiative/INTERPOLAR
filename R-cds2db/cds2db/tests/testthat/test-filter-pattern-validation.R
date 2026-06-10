@@ -1,6 +1,6 @@
-############################
+############################################
 ### TEST validateEncounterFilterPatterns ###
-############################
+############################################
 
 testthat::test_that("validateEncounterFilterPatterns returns TRUE for valid definitions", {
   encounter_filter_patterns <- list(
@@ -243,9 +243,9 @@ testthat::test_that("validateEncounterFilterPatterns allows capital letters in k
   testthat::expect_true(isTRUE(validateEncounterFilterPatterns(encounter_filter_patterns)))
 })
 
-############################
+#########################################
 ### TEST validateCohortFilterPatterns ###
-############################
+#########################################
 
 testthat::test_that("validateCohortFilterPatterns accepts resource-scoped cohort definitions", {
   cohort_filter_patterns <- list(

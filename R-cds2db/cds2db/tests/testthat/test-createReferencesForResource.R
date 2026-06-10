@@ -1,6 +1,6 @@
-############################
+########################################
 ### TEST createReferencesForResource ###
-############################
+########################################
 
 createReferencesForResourceLegacy <- function(encounters, resource_name, resource_table, start_column_names) {
   calculated_ref_col_name <- getEncounterCalculatedReferenceColumnName(resource_name)

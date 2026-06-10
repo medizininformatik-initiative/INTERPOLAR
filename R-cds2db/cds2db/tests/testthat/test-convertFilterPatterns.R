@@ -1,6 +1,6 @@
-############################
+########################################
 ### TEST convertCohortFilterPatterns ###
-############################
+########################################
 
 testthat::test_that("convertCohortFilterPatterns groups conditions by cohort and resource", {
   variable_names <- "TEST_MULTI_RESOURCE_COHORT_FILTER_PATTERN_1"
@@ -61,9 +61,9 @@ testthat::test_that("convertCohortFilterPatterns maps legacy encounter patterns 
   )
 })
 
-############################
+##################################
 ### TEST convertFilterPatterns ###
-############################
+##################################
 
 testthat::test_that("convertFilterPatterns returns one final entry per legacy ward", {
   variable_names <- c(
