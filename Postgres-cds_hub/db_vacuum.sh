@@ -1,6 +1,67 @@
 #!/bin/bash
 # db_vacuum.sh
 
+# PostgreSQL-Datenbank-Vacuum-Script für CDS Hub
+# Autor: Sebastian Stäubert, Henner Kruse
+# Version: 1.2
+
+# ========================
+# HILFE-AUSGABE
+# ========================
+show_help() {
+  cat << EOF
+Usage: $(basename "$0") [OPTIONS] [CONTAINER_NAME]
+
+Führt VACUUM (VERBOSE, ANALYZE) auf allen Tabellen in allen Benutzerschemata
+der PostgreSQL-Datenbank im Docker-Container aus.
+
+Optionen:
+  -f, --force             Force-Modus: Startet ohne Benutzerabfrage
+  -h, --help              Zeigt diese Hilfe an
+
+Beispiel:
+  $(basename "$0")
+  $(basename "$0") -f
+  $(basename "$0") -f cds_hub
+
+Hinweise:
+  - Der Container muss laufen und die Datenbank erreichbar sein.
+  - Benötigt: docker, docker compose, psql im Container.
+  - VACUUM wird nur auf Tabellen mit toten Tupeln angewendet (wenn möglich).
+  - Im Force-Modus wird automatisch verarbeitet.
+
+EOF
+}
+
+# ========================
+# PARAMETER VERARBEITEN
+# ========================
+FORCE_MODE=false
+CONTAINER="cds_hub"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -f|--force)
+      FORCE_MODE=true
+      shift
+      ;;
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    -*)
+      echo "❌ Unbekannter Parameter: $1"
+      show_help
+      exit 1
+      ;;
+    *)
+      # Container-Name als erster Parameter
+      CONTAINER="$1"
+      shift
+      ;;
+  esac
+done
+
 # Prüfe, ob -f oder -force übergeben wurde
 FORCE_MODE=false
 if [[ "$1" == "-f" || "$1" == "--force" ]]; then
@@ -13,10 +74,54 @@ else
   CONTAINER=${1:-cds_hub}
 fi
 
+# ========================
+# KONFIGURATION
+# ========================
 DB_NAME="cds_hub_db"
 DB_USER="cds_hub_db_admin"
 
-# ✅ Dynamische Schema-Erkennung: Alle Benutzerschemata laden
+
+# ========================
+# HILFSFUNKTIONEN
+# ========================
+log() {
+  echo "✅ $*"
+}
+
+warn() {
+  echo "⚠️  $*" >&2
+}
+
+error() {
+  echo "❌ $*" >&2
+}
+
+# ========================
+# PRÜFE, OB DOCKER COMPOSE VERFÜGBAR IST
+# ========================
+DOCKER_COMPOSE_CMD=""
+
+if command -v docker-compose &> /dev/null; then
+  DOCKER_COMPOSE_CMD="docker-compose"
+elif command -v docker &> /dev/null; then
+  # Prüfe, ob `docker compose` existiert (neuere Docker-Versionen)
+  if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+  else
+    error "❌ Kein 'docker-compose' oder 'docker compose' gefunden."
+    exit 1
+  fi
+else
+  error "❌ Docker ist nicht installiert oder nicht im PATH."
+  exit 1
+fi
+
+log "🔧 Verwende: ${DOCKER_COMPOSE_CMD}"
+
+
+# ========================
+# LADEN DER SCHEMAS
+# ========================
 echo "🔍 Lade alle Schemata aus der Datenbank..."
 mapfile -t SCHEMAS < <(
   docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
