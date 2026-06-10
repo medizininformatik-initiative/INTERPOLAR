@@ -3,3 +3,5 @@
 ^LICENSE\.md$
 ^outputLocal$
 ^outputGlobal$
+^\.positai$
+^\.claude$

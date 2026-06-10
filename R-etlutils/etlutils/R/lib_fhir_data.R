@@ -11,10 +11,10 @@
 #'
 #' @export
 fhirdataExtractIDs <- function(references, unique = TRUE) {
-  ids <- getAfterLastSlash(na.omit(references))
   if (unique) {
-    ids <- unique(ids)
+    references <- unique(na.omit(references))
   }
+  ids <- getAfterLastSlash(references)
   return(ids)
 }
 

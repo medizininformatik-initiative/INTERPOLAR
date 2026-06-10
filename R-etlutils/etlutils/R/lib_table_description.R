@@ -91,6 +91,27 @@ loadTableDescriptionFile <- function(table_description_path = NA, table_descript
   return(table_description)
 }
 
+#' Get resources with matching FHIR expressions
+#'
+#' @param table_description A data.table containing RESOURCE and FHIR_EXPRESSION columns.
+#' @param fhir_expressions Character vector of FHIR expression fragments to match.
+#'
+#' @return A character vector of resource names with matching FHIR expressions.
+#'
+#' @export
+getResourcesWithFHIRExpressions <- function(table_description, fhir_expressions) {
+  if (!all(c("RESOURCE", "FHIR_EXPRESSION") %in% names(table_description))) {
+    stop("table_description must contain RESOURCE and FHIR_EXPRESSION columns.")
+  }
+
+  expression_pattern <- paste(fhir_expressions, collapse = "|")
+  resources <- table_description[
+    !is.na(FHIR_EXPRESSION) & grepl(expression_pattern, FHIR_EXPRESSION),
+    unique(RESOURCE)
+  ]
+  return(resources)
+}
+
 #' Get Table Description Split by Table Name
 #'
 #' This function loads a table description from an Excel file, removes rows that are fully NA, and splits
