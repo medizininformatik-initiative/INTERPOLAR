@@ -9,11 +9,23 @@
 #'
 #' @return the filter patterns which are converted to a list of lists
 #'
-convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = "ENCOUNTER_FILTER_PATTERN") {
-  ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
+convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = NULL) {
+  if (is.null(filter_patterns_global_variable_name_prefix)) {
+    configured_filter_patterns <- getConfiguredCohortFilterPatterns()
+    ward_pids_filter_patterns <- configured_filter_patterns$definitions
+    source_prefix <- configured_filter_patterns$source_prefix
+    legacy_patterns <- configured_filter_patterns$legacy
+  } else {
+    ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
+    source_prefix <- filter_patterns_global_variable_name_prefix
+    legacy_patterns <- grepl("ENCOUNTER_FILTER_PATTERN", filter_patterns_global_variable_name_prefix, fixed = TRUE)
+    if (legacy_patterns) {
+      ward_pids_filter_patterns <- normalizeLegacyEncounterFilterPatterns(ward_pids_filter_patterns)
+    }
+  }
 
   if (!length(ward_pids_filter_patterns)) {
-    stop("No ward filter patterns found with prefix", filter_patterns_global_variable_name_prefix, "in toml file")
+    stop("No cohort filter patterns found with prefix ", source_prefix, " in toml file")
   }
 
   # Initializes an empty list to store the final converted filter patterns. Each element in this list
@@ -22,7 +34,7 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
   # are stored as separate elements, representing the OR-connected groups of filters for the ward.
   parsed_filter_patterns <- etlutils::parseStructuredConfigDefinitions(
     definitions = ward_pids_filter_patterns,
-    allowed_key_pattern = "ward_name|[A-Za-z/]+",
+    allowed_key_pattern = "cohort_name|resource|[A-Za-z/]+",
     allow_plus = TRUE
   )
   converted_filter_patterns <- list()
@@ -34,7 +46,7 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
     ]
     single_ward_converted_filter_patterns <- list()
     ward_name <- definition_filter_patterns[[which(
-      vapply(definition_filter_patterns, `[[`, "", "key") == "ward_name"
+      vapply(definition_filter_patterns, `[[`, "", "key") == "cohort_name"
     )[1]]]$value
     condition_line_ids <- unique(vapply(definition_filter_patterns, function(filter_pattern) {
       paste(filter_pattern$entry_name, filter_pattern$line_index, sep = "\r")
@@ -47,12 +59,40 @@ convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = 
         }, logical(1))
       ]
 
-      if (line_filter_patterns[[1]]$key == "ward_name") {
+      line_keys <- vapply(line_filter_patterns, `[[`, "", "key")
+      if (identical(line_keys, "cohort_name")) {
         next
+      }
+
+      resource_filter_pattern <- line_filter_patterns[line_keys == "resource"]
+      if (length(resource_filter_pattern)) {
+        resource_name <- resource_filter_pattern[[1]]$value
+        if (!identical(resource_name, "Encounter")) {
+          stop(
+            "Only Encounter cohort filter resources are supported in the current PID selection implementation, but found ",
+            resource_name,
+            ".",
+            call. = FALSE
+          )
+        }
+      } else if (!legacy_patterns) {
+        stop(
+          "Condition line in ",
+          line_filter_patterns[[1]]$definition_name,
+          " / ",
+          line_filter_patterns[[1]]$entry_name,
+          " / line ",
+          line_filter_patterns[[1]]$line_index,
+          " must contain exactly one resource.",
+          call. = FALSE
+        )
       }
 
       and_conditions <- list()
       for (filter_pattern in line_filter_patterns) {
+        if (filter_pattern$key == "resource") {
+          next
+        }
         and_conditions[[filter_pattern$key]] <- filter_pattern$value
       }
       single_ward_converted_filter_patterns[[paste0("Condition_", length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions

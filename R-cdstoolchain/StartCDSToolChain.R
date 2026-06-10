@@ -118,9 +118,9 @@ shouldStart <- function(module_name) {
   return(FALSE)
 }
 
-# This function checks if the ward names defined in the encounter filter patterns in config_cds2db
-# match the ward names defined in the PHASES_WARD definitions in config_dataprocessor. If there is a
-# mismatch, it throws an error with details about the mismatch.
+# This function checks if the cohort/ward names defined in the cds2db filter patterns
+# match the ward names defined in the PHASES_WARD definitions in config_dataprocessor. If
+# there is a mismatch, it throws an error with details about the mismatch.
 validateConfigs <- function() {
 
   args <- commandArgs(trailingOnly = TRUE)
@@ -129,25 +129,28 @@ validateConfigs <- function() {
     return()
   }
 
-  encounter_filter_patterns_wards <- etlutils::getVariablesByPrefix("ENCOUNTER_FILTER_PATTERN", envir = config_cds2db)
+  cds2db_filter_patterns <- etlutils::getVariablesByPrefix("COHORT_FILTER_PATTERN", envir = config_cds2db)
+  if (!length(cds2db_filter_patterns)) {
+    cds2db_filter_patterns <- etlutils::getVariablesByPrefix("ENCOUNTER_FILTER_PATTERN", envir = config_cds2db)
+  }
   phases_wards <- etlutils::getVariablesByPrefix("PHASES_WARD", envir = config_dataprocessor)
 
   getWardNames <- function(x) {
-    pattern <- "^\\s*ward_name\\s*=\\s*'([^']*)'\\s*$"
+    pattern <- "^\\s*(cohort_name|ward_name)\\s*=\\s*'([^']*)'\\s*$"
     vals <- unlist(x, use.names = FALSE)
     matches <- vals[grepl(pattern, vals)]
-    sub(pattern, "\\1", matches)
+    sub(pattern, "\\2", matches)
   }
 
-  ward_names_cds2db <- getWardNames(encounter_filter_patterns_wards)
+  ward_names_cds2db <- getWardNames(cds2db_filter_patterns)
   ward_names_dataprocessor <- getWardNames(phases_wards)
 
   # Validate that both ward name vectors contain exactly the same elements
   if (!setequal(ward_names_cds2db, ward_names_dataprocessor)) {
     stop(
       paste0(
-        "Mismatch between ward names in ENCOUNTER_FILTER_PATTERN in 'cds2db_config.toml' and PHASES_WARD definitions in 'dataprocessor_config.toml'. Please fix and restart process.",
-        "\n  Only in ENCOUNTER_FILTER_PATTERN: ",
+        "Mismatch between cohort/ward names in COHORT_FILTER_PATTERN or legacy ENCOUNTER_FILTER_PATTERN in 'cds2db_config.toml' and PHASES_WARD definitions in 'dataprocessor_config.toml'. Please fix and restart process.",
+        "\n  Only in cds2db filter patterns: ",
         paste(setdiff(ward_names_cds2db, ward_names_dataprocessor), collapse = ", "),
         "\n  Only in PHASES_WARD: ",
         paste(setdiff(ward_names_dataprocessor, ward_names_cds2db), collapse = ", "),

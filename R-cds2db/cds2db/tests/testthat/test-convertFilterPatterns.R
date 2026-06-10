@@ -73,3 +73,49 @@ testthat::test_that("convertFilterPatterns keeps plus signs inside quoted values
 
   testthat::expect_named(converted_filter_patterns, "Station 1+")
 })
+
+testthat::test_that("convertFilterPatterns converts resource-scoped cohort patterns for Encounter", {
+  variable_names <- "TEST_COHORT_FILTER_PATTERN_1"
+  on.exit(rm(list = variable_names, envir = .GlobalEnv), add = TRUE)
+
+  assign(
+    variable_names,
+    c(
+      "cohort_name = 'DUP 1'",
+      "resource = 'Encounter' + location/location/reference = 'Location/location_id_1' + id = 'AAA'",
+      "resource = 'Encounter' + location/location/reference = 'Location/location_id_2'"
+    ),
+    envir = .GlobalEnv
+  )
+
+  converted_filter_patterns <- convertFilterPatterns("TEST_COHORT_FILTER_PATTERN")
+
+  testthat::expect_named(converted_filter_patterns, "DUP 1")
+  testthat::expect_identical(
+    converted_filter_patterns[["DUP 1"]][["Condition_1"]],
+    list(
+      "location/location/reference" = "Location/location_id_1",
+      id = "AAA"
+    )
+  )
+  testthat::expect_false("resource" %in% names(converted_filter_patterns[["DUP 1"]][["Condition_1"]]))
+})
+
+testthat::test_that("convertFilterPatterns rejects non-Encounter resources until generic PID selection exists", {
+  variable_names <- "TEST_OBSERVATION_COHORT_FILTER_PATTERN_1"
+  on.exit(rm(list = variable_names, envir = .GlobalEnv), add = TRUE)
+
+  assign(
+    variable_names,
+    c(
+      "cohort_name = 'DUP 1'",
+      "resource = 'Observation' + code/coding/code = '12345'"
+    ),
+    envir = .GlobalEnv
+  )
+
+  testthat::expect_error(
+    convertFilterPatterns("TEST_OBSERVATION_COHORT_FILTER_PATTERN"),
+    "Only Encounter cohort filter resources are supported"
+  )
+})

@@ -242,3 +242,108 @@ testthat::test_that("validateEncounterFilterPatterns allows capital letters in k
 
   testthat::expect_true(isTRUE(validateEncounterFilterPatterns(encounter_filter_patterns)))
 })
+
+############################
+### TEST validateCohortFilterPatterns ###
+############################
+
+testthat::test_that("validateCohortFilterPatterns accepts resource-scoped cohort definitions", {
+  cohort_filter_patterns <- list(
+    list(
+      COHORT_FILTER_PATTERN_1 = c(
+        "cohort_name = 'DUP 1'",
+        "resource = 'Encounter' + location/location/reference = 'Location/location_id_1'",
+        "resource = 'Observation' + code/coding/code = '12345'"
+      )
+    )
+  )
+
+  testthat::expect_true(isTRUE(validateCohortFilterPatterns(cohort_filter_patterns)))
+})
+
+testthat::test_that("validateCohortFilterPatterns rejects missing resource in condition lines", {
+  cohort_filter_patterns <- list(
+    list(
+      COHORT_FILTER_PATTERN_1 = c(
+        "cohort_name = 'DUP 1'",
+        "location/location/reference = 'Location/location_id_1'"
+      )
+    )
+  )
+
+  testthat::expect_error(
+    validateCohortFilterPatterns(cohort_filter_patterns),
+    "must contain exactly one resource, but contains 0"
+  )
+})
+
+testthat::test_that("validateCohortFilterPatterns rejects duplicate cohort names", {
+  cohort_filter_patterns <- list(
+    list(
+      COHORT_FILTER_PATTERN_1 = c(
+        "cohort_name = 'DUP 1'",
+        "resource = 'Encounter' + id = '.*'"
+      )
+    ),
+    list(
+      COHORT_FILTER_PATTERN_2 = c(
+        "cohort_name = 'DUP 1'",
+        "resource = 'Encounter' + id = '.*'"
+      )
+    )
+  )
+
+  testthat::expect_error(
+    validateCohortFilterPatterns(cohort_filter_patterns),
+    "Duplicate cohort_name found: 'DUP 1'"
+  )
+})
+
+testthat::test_that("normalizeLegacyEncounterFilterPatterns converts ward_name to cohort_name", {
+  encounter_filter_patterns <- list(
+    list(
+      ENCOUNTER_FILTER_PATTERN_1 = c(
+        "ward_name = 'Station 1'",
+        "location/location/reference = 'Location/location_id_1'"
+      )
+    )
+  )
+
+  cohort_filter_patterns <- normalizeLegacyEncounterFilterPatterns(encounter_filter_patterns)
+
+  testthat::expect_identical(
+    cohort_filter_patterns[[1]][[1]][[1]],
+    "cohort_name = 'Station 1'"
+  )
+})
+
+testthat::test_that("getConfiguredCohortFilterPatterns rejects mixed cohort and encounter definitions", {
+  test_env <- new.env(parent = emptyenv())
+  assign("COHORT_FILTER_PATTERN_1", c("cohort_name = 'DUP 1'"), envir = test_env)
+  assign("ENCOUNTER_FILTER_PATTERN_1", c("ward_name = 'Station 1'"), envir = test_env)
+
+  testthat::expect_error(
+    getConfiguredCohortFilterPatterns(envir = test_env),
+    "Define either COHORT_FILTER_PATTERN or ENCOUNTER_FILTER_PATTERN, not both"
+  )
+})
+
+testthat::test_that("getConfiguredCohortFilterPatterns returns normalized legacy definitions", {
+  test_env <- new.env(parent = emptyenv())
+  assign(
+    "ENCOUNTER_FILTER_PATTERN_1",
+    c(
+      "ward_name = 'Station 1'",
+      "location/location/reference = 'Location/location_id_1'"
+    ),
+    envir = test_env
+  )
+
+  configured_filter_patterns <- getConfiguredCohortFilterPatterns(envir = test_env)
+
+  testthat::expect_true(configured_filter_patterns$legacy)
+  testthat::expect_identical(
+    configured_filter_patterns$definitions[[1]][[1]][[1]],
+    "cohort_name = 'Station 1'"
+  )
+})

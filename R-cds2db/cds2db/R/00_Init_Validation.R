@@ -77,17 +77,152 @@ validateEncounterFilterPatterns <- function(encounter_filter_patterns) {
   invisible(TRUE)
 }
 
+legacyEncounterFilterPatternPrefix <- function() "ENCOUNTER_FILTER_PATTERN"
+
+cohortFilterPatternPrefix <- function() "COHORT_FILTER_PATTERN"
+
+normalizeLegacyEncounterFilterPatterns <- function(encounter_filter_patterns) {
+  lapply(encounter_filter_patterns, function(definition) {
+    lapply(definition, function(entry) {
+      sub("^\\s*ward_name\\s*=", "cohort_name =", entry)
+    })
+  })
+}
+
+getConfiguredCohortFilterPatterns <- function(envir = .GlobalEnv) {
+  cohort_filter_patterns <- etlutils::getVariablesByPrefix(
+    cohortFilterPatternPrefix(),
+    envir = envir
+  )
+  encounter_filter_patterns <- etlutils::getVariablesByPrefix(
+    legacyEncounterFilterPatternPrefix(),
+    envir = envir
+  )
+
+  has_cohort_filter_patterns <- length(cohort_filter_patterns) > 0L
+  has_encounter_filter_patterns <- length(encounter_filter_patterns) > 0L
+
+  if (has_cohort_filter_patterns && has_encounter_filter_patterns) {
+    stop(
+      "Define either COHORT_FILTER_PATTERN or ENCOUNTER_FILTER_PATTERN, not both.",
+      call. = FALSE
+    )
+  }
+
+  if (has_cohort_filter_patterns) {
+    return(list(
+      definitions = cohort_filter_patterns,
+      source_prefix = cohortFilterPatternPrefix(),
+      legacy = FALSE
+    ))
+  }
+
+  if (has_encounter_filter_patterns) {
+    return(list(
+      definitions = normalizeLegacyEncounterFilterPatterns(encounter_filter_patterns),
+      source_prefix = legacyEncounterFilterPatternPrefix(),
+      legacy = TRUE
+    ))
+  }
+
+  stop(
+    "No cohort filter patterns found. Define COHORT_FILTER_PATTERN or legacy ENCOUNTER_FILTER_PATTERN in the toml file.",
+    call. = FALSE
+  )
+}
+
+validateCohortFilterPatterns <- function(cohort_filter_patterns, require_resource = TRUE) {
+  parsed_records <- etlutils::parseStructuredConfigDefinitions(
+    definitions = cohort_filter_patterns,
+    allowed_key_pattern = "cohort_name|resource|[A-Za-z/]+",
+    allow_plus = TRUE
+  )
+
+  if (length(parsed_records) == 0L) {
+    return(invisible(TRUE))
+  }
+
+  definition_names <- unique(vapply(parsed_records, `[[`, "", "definition_name"))
+  cohort_names <- character()
+
+  for (definition_name in definition_names) {
+    definition_records <- parsed_records[
+      vapply(parsed_records, `[[`, "", "definition_name") == definition_name
+    ]
+
+    keys <- vapply(definition_records, `[[`, "", "key")
+    cohort_name_records <- definition_records[keys == "cohort_name"]
+    cohort_name_count <- length(cohort_name_records)
+
+    if (cohort_name_count != 1L) {
+      stop("Definition ", definition_name, " must contain exactly one cohort_name, but contains ", cohort_name_count, ".", call. = FALSE)
+    }
+
+    cohort_name_record <- cohort_name_records[[1]]
+
+    if (trimws(cohort_name_record$value) == "") {
+      stop("cohort_name must not be empty in ", cohort_name_record$definition_name, " / ", cohort_name_record$entry_name, " / line ", cohort_name_record$line_index, call. = FALSE)
+    }
+
+    if (cohort_name_record$part_count_in_line > 1L) {
+      stop("cohort_name must not be combined with other subconditions using '+' in ", cohort_name_record$definition_name, " / ", cohort_name_record$entry_name, " / line ", cohort_name_record$line_index, call. = FALSE)
+    }
+
+    if (cohort_name_record$value %in% cohort_names) {
+      stop("Duplicate cohort_name found: '", cohort_name_record$value, "'.", call. = FALSE)
+    }
+
+    cohort_names <- c(cohort_names, cohort_name_record$value)
+
+    condition_line_ids <- unique(vapply(definition_records, function(record) {
+      paste(record$entry_name, record$line_index, sep = "\r")
+    }, ""))
+
+    for (condition_line_id in condition_line_ids) {
+      line_records <- definition_records[
+        vapply(definition_records, function(record) {
+          paste(record$entry_name, record$line_index, sep = "\r") == condition_line_id
+        }, logical(1))
+      ]
+
+      line_keys <- vapply(line_records, `[[`, "", "key")
+      if (identical(line_keys, "cohort_name")) {
+        next
+      }
+
+      resource_count <- sum(line_keys == "resource")
+      if (require_resource && resource_count != 1L) {
+        stop(
+          "Condition line in ",
+          line_records[[1]]$definition_name,
+          " / ",
+          line_records[[1]]$entry_name,
+          " / line ",
+          line_records[[1]]$line_index,
+          " must contain exactly one resource, but contains ",
+          resource_count,
+          ".",
+          call. = FALSE
+        )
+      }
+    }
+  }
+
+  invisible(TRUE)
+}
+
 #'
 #' Validate configuration parameters for the data import process
 #'
 validateConfig <- function() {
-  # Get the list of pattern vectors
-  encounter_filter_patterns <- etlutils::getGlobalVariablesByPrefix("ENCOUNTER_FILTER_PATTERN")
-
   ###
-  # Check the correct structure of encounter filter patterns
+  # Check the correct structure of cohort filter patterns
   ###
-  validateEncounterFilterPatterns(encounter_filter_patterns)
+  configured_filter_patterns <- getConfiguredCohortFilterPatterns()
+  validateCohortFilterPatterns(
+    configured_filter_patterns$definitions,
+    require_resource = !configured_filter_patterns$legacy
+  )
 
   if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") && length(FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS) > 1) {
     stop("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS must be defined as single string.")
