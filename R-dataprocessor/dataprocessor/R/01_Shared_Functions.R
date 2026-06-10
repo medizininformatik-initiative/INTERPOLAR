@@ -118,9 +118,21 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
   invisible(TRUE)
 }
 
-# This function constructs an error or warning message with optional additional
-# information such as related tables and database connection details. It can be
-# used to provide more context when reporting errors or warnings.
+#' Construct an error or warning message with additional context
+#'
+#' Creates a human-readable error or warning message and appends optional
+#' information about affected tables and the current database connection.
+#'
+#' @param text A character string containing the main error or warning text.
+#' @param tables Optional character vector of related table names to include
+#'   in the message.
+#' @param readonly Logical flag indicating whether the database connection
+#'   should be treated as read-only when retrieving connection details.
+#'
+#' @return A character string containing the original message plus any
+#'   additional context information.
+#'
+#' @export
 getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
   tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
   db_connection <- if (!etlutils::isSimpleNA(readonly)) etlutils::dbGetInfo(readonly) else ""
@@ -139,6 +151,7 @@ getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
 #'
 #' @return A vector containing the parsed elements from the query list string.
 #'
+#' @export
 parseQueryList <- function(list_string, split = " ") {
   splitted <- unlist(strsplit(list_string, split))
   etlutils::fhirdbGetQueryList(splitted)
@@ -181,6 +194,7 @@ getEncountersPeriodEnd <- function(encounters) {
 #'
 #' @return A character string representing the formatted SQL datetime.
 #'
+#' @export
 getObservationQueryDatetime <- function(encounters) {
   encounters_end <- getEncountersPeriodEnd(encounters)
   format(encounters_end, "%Y-%m-%d %H:%M:%S")
@@ -198,6 +212,7 @@ getObservationQueryDatetime <- function(encounters) {
 #'
 #' @return A character string representing the SQL query.
 #'
+#' @export
 getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, column_names = "*", filter = "") {
   resource_name <- tolower(resource_name)
   db_id_column <- paste0(resource_name, "_id")
@@ -280,6 +295,7 @@ loadResourcesFilteredByValuesFromDB <- function(resource_name, column_names = "*
 #'
 #' @return A data frame containing the last version of load resources.
 #'
+#' @export
 loadResourcesLastVersionByOwnIDFromDB <- function(resource_name, ids_or_refs) {
   id_column <- etlutils::fhirdbGetIDColumn(resource_name)
   loadResourcesFilteredByValuesFromDB(
