@@ -61,3 +61,35 @@ testthat::test_that("rbindPidsSplittedByWard keeps legacy ward column", {
     data.table::data.table(patient_id = "pat-1", ward_name = "Station 1")
   )
 })
+
+testthat::test_that("getPIDAssignmentTableSpec selects the legacy ward table for encounter patterns", {
+  pid_assignment_spec <- getPIDAssignmentTableSpec(list(legacy = TRUE))
+
+  testthat::expect_true(pid_assignment_spec$legacy)
+  testthat::expect_equal(pid_assignment_spec$table_name, "pids_per_ward")
+  testthat::expect_equal(pid_assignment_spec$raw_table_name, "pids_per_ward_raw")
+  testthat::expect_named(
+    pid_assignment_spec$empty_table,
+    c("patient_id", "encounter_id", "ward_name")
+  )
+  testthat::expect_equal(
+    pid_assignment_spec$bind_pids_function(list("Station 1" = data.table::data.table(patient_id = "pat-1"))),
+    data.table::data.table(patient_id = "pat-1", ward_name = "Station 1")
+  )
+})
+
+testthat::test_that("getPIDAssignmentTableSpec selects the generic cohort table for cohort patterns", {
+  pid_assignment_spec <- getPIDAssignmentTableSpec(list(legacy = FALSE))
+
+  testthat::expect_false(pid_assignment_spec$legacy)
+  testthat::expect_equal(pid_assignment_spec$table_name, "pids_per_cohort")
+  testthat::expect_equal(pid_assignment_spec$raw_table_name, "pids_per_cohort_raw")
+  testthat::expect_named(
+    pid_assignment_spec$empty_table,
+    c("patient_id", "cohort_name", "source_resource_type", "source_resource_id", "encounter_id")
+  )
+  testthat::expect_equal(
+    pid_assignment_spec$bind_pids_function(list("DUP 1" = data.table::data.table(patient_id = "pat-1"))),
+    data.table::data.table(patient_id = "pat-1", cohort_name = "DUP 1")
+  )
+})

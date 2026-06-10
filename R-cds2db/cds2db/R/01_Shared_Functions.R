@@ -124,3 +124,44 @@ rbindPidsSplittedByWard <- function(pids_splitted_by_ward) {
   data.table::setnames(pids_per_ward, "cohort_name", "ward_name")
   return(pids_per_ward)
 }
+
+#' Get PID assignment table settings for the configured filter family
+#'
+#' Chooses the legacy ward-shaped PID assignment table for
+#' `ENCOUNTER_FILTER_PATTERN` definitions and the generic cohort-shaped table
+#' for `COHORT_FILTER_PATTERN` definitions.
+#'
+#' @param configured_filter_patterns Configured cohort filter pattern metadata.
+#'
+#' @return A list with PID assignment table settings.
+getPIDAssignmentTableSpec <- function(
+  configured_filter_patterns = getConfiguredCohortFilterPatterns()
+) {
+  if (configured_filter_patterns$legacy) {
+    return(list(
+      table_name = "pids_per_ward",
+      raw_table_name = "pids_per_ward_raw",
+      bind_pids_function = rbindPidsSplittedByWard,
+      empty_table = data.table::data.table(
+        patient_id = "EMPTY_DATA",
+        encounter_id = "EMPTY_DATA",
+        ward_name = NA_character_
+      ),
+      legacy = TRUE
+    ))
+  }
+
+  return(list(
+    table_name = "pids_per_cohort",
+    raw_table_name = "pids_per_cohort_raw",
+    bind_pids_function = rbindPidsSplittedByCohort,
+    empty_table = data.table::data.table(
+      patient_id = "EMPTY_DATA",
+      cohort_name = NA_character_,
+      source_resource_type = NA_character_,
+      source_resource_id = NA_character_,
+      encounter_id = NA_character_
+    ),
+    legacy = FALSE
+  ))
+}
