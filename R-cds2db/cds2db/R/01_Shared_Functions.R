@@ -61,45 +61,66 @@ getQueryDatetime <- function(datetime = getCurrentDatetime()) {
   format(datetime, "%Y-%m-%d %H:%M:%S")
 }
 
-#' Create a data.table with ward and patient ID per date.
+#' Create a data.table with cohort and patient ID per date.
 #'
-#' This function takes a list of patient IDs per ward and constructs a data.table
-#' with columns for date_time, ward, and pid. Each row represents a unique combination
-#' of date, ward, and patient ID extracted from the provided list.
+#' This function takes a list of patient IDs per cohort and constructs a
+#' data.table with an additional cohort name column.
 #'
-#' @param pids_splitted_by_ward A list of patient IDs, where each element corresponds to a ward.
+#' @param pids_splitted_by_cohort A list of patient IDs, where each element
+#'   corresponds to a cohort.
 #'
-#' @return A data.table with columns date_time, ward, and pid, representing the date, ward,
-#'   and patient ID for each combination extracted from the provided list.
+#' @return A data.table with patient IDs and cohort names.
 #'
 #' @examples
 #' \dontrun{
 #' library(data.table)
-#' # Example: A list of patient IDs per ward
-#' pids_splitted_by_ward <- list(
-#'   Ward_A = data.table(patient_id = c("PID_A001", "PID_A002", "PID_A003")),
-#'   Ward_B = data.table(patient_id = c("PID_B001", "PID_B002")),
-#'   Ward_C = data.table(patient_id = c("PID_C001", "PID_C002", "PID_C003", "PID_C004"))
+#' # Example: A list of patient IDs per cohort
+#' pids_splitted_by_cohort <- list(
+#'   Cohort_A = data.table(patient_id = c("PID_A001", "PID_A002", "PID_A003")),
+#'   Cohort_B = data.table(patient_id = c("PID_B001", "PID_B002")),
+#'   Cohort_C = data.table(patient_id = c("PID_C001", "PID_C002", "PID_C003", "PID_C004"))
 #' )
 #'
 #' # Applying the function
-#' result_table <- rbindPidsSplittedByWard(pids_splitted_by_ward)
+#' result_table <- rbindPidsSplittedByCohort(pids_splitted_by_cohort)
 #'
 #' # Displaying the result
 #' print(result_table)
 #' }
 #'
-rbindPidsSplittedByWard <- function(pids_splitted_by_ward) {
-  # Combine all ward tables into one data.table
-  pids_per_ward <- data.table::rbindlist(
-    lapply(names(pids_splitted_by_ward), function(ward) {
-      dt <- pids_splitted_by_ward[[ward]]
+rbindPidsSplittedByCohort <- function(pids_splitted_by_cohort) {
+  pids_per_cohort <- data.table::rbindlist(
+    lapply(names(pids_splitted_by_cohort), function(cohort) {
+      dt <- pids_splitted_by_cohort[[cohort]]
       if (nrow(dt) > 0) {
-        return(dt[, ward_name := ward])  # Add ward column
+        dt <- data.table::copy(dt)
+        return(dt[, cohort_name := cohort])
       }
-      return(NULL)  # Skip empty tables
+      return(NULL)
     }),
-    use.names = TRUE, fill = TRUE
+    use.names = TRUE,
+    fill = TRUE
   )
+  if (is.null(pids_per_cohort) || !ncol(pids_per_cohort)) {
+    pids_per_cohort <- data.table::data.table(
+      patient_id = character(),
+      cohort_name = character()
+    )
+  }
+  return(pids_per_cohort)
+}
+
+#' Create a data.table with ward and patient ID per date.
+#'
+#' This compatibility wrapper keeps the legacy ward-shaped PID table while the
+#' generic cohort representation is introduced.
+#'
+#' @param pids_splitted_by_ward A list of patient IDs, where each element
+#'   corresponds to a ward.
+#'
+#' @return A data.table with patient IDs and ward names.
+rbindPidsSplittedByWard <- function(pids_splitted_by_ward) {
+  pids_per_ward <- rbindPidsSplittedByCohort(pids_splitted_by_ward)
+  data.table::setnames(pids_per_ward, "cohort_name", "ward_name")
   return(pids_per_ward)
 }
