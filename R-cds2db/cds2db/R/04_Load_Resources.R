@@ -206,22 +206,31 @@ addDataImportFHIRDateSearchParameters <- function(table_descriptions,
   return(resources_add_search_parameter)
 }
 
-#' Load FHIR resources for a given set of patient IDs and create a table of ward-patient ID per date.
+#' Load FHIR resources for a given set of patient IDs and create a PID assignment table.
 #'
-#' This function takes a list of patient IDs per ward, extracts unique patient IDs,
-#' loads FHIR resources for those patient IDs from the FHIR server using the provided
-#' `TABLE_DESCRIPTION`, and creates an additional table of ward-patient ID per date. The
-#' result is a list of data.tables, where each element contains FHIR resources for a specific
-#' patient, and the last element is a table representing the ward and patient ID per date.
+#' This function takes a list of patient IDs per cohort, extracts unique patient
+#' IDs, loads FHIR resources for those patient IDs from the FHIR server, and
+#' creates an additional PID assignment table. The defaults keep the legacy
+#' `pids_per_ward` table shape.
 #'
-#' @param pids_splitted_by_ward A list of patient IDs, where each element corresponds to a ward.
+#' @param pids_splitted_by_cohort A list of patient IDs, where each element
+#'   corresponds to a cohort.
 #' @param table_descriptions the fhircrackr table descriptions of the result tables
-#' @return A list of data.tables, each containing FHIR resources for a specific patient,
-#'   and the last element is a table representing the ward and patient ID per date.
+#' @param pid_table_name Name of the additional PID assignment table.
+#' @param bind_pids_function Function used to bind the split PID list into the
+#'   additional PID assignment table.
 #'
-loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_descriptions) {
+#' @return A list of data.tables, each containing FHIR resources for a specific patient,
+#'   plus the additional PID assignment table.
+#'
+loadResourcesByPatientIDFromFHIRServer <- function(
+  pids_splitted_by_cohort,
+  table_descriptions,
+  pid_table_name = "pids_per_ward",
+  bind_pids_function = rbindPidsSplittedByWard
+) {
 
-  patient_ids <- unique(unlist(data.table::rbindlist(pids_splitted_by_ward, use.names = TRUE, fill = TRUE)[, .(patient_id)]))
+  patient_ids <- unique(unlist(data.table::rbindlist(pids_splitted_by_cohort, use.names = TRUE, fill = TRUE)[, .(patient_id)]))
 
   if (!isProcess("DataImport")) {
     # Load all encounters from the database which, according to the database, have not yet ended on the
@@ -357,8 +366,8 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   }
 
   valid_pids <- unlist(pids_with_last_updated, use.names = FALSE)
-  # Iterate over each ward and filter the pids_splitted_by_ward based on valid_pids
-  pids_splitted_by_ward <- lapply(pids_splitted_by_ward, function(dt) dt[patient_id %in% valid_pids])
+  # Iterate over each cohort and filter the pids_splitted_by_cohort based on valid_pids
+  pids_splitted_by_cohort <- lapply(pids_splitted_by_cohort, function(dt) dt[patient_id %in% valid_pids])
 
   # Loop through each table name in the `raw_fhir_resources` list
   for (table_name in names(raw_fhir_resources)) {
@@ -369,8 +378,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   }
 
   if (etlutils::isSubProcess("DataImport.All") || !isProcess("DataImport")) {
-    # Add additional table of ward-patient ID per date
-    raw_fhir_resources[["pids_per_ward"]] <- rbindPidsSplittedByWard(pids_splitted_by_ward)
+    raw_fhir_resources[[pid_table_name]] <- bind_pids_function(pids_splitted_by_cohort)
   }
 
   return(raw_fhir_resources)
@@ -729,24 +737,31 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 
 #' Load Resources and Referenced Resources from FHIR Server
 #'
-#' This function loads resources for a given set of patient IDs per ward from a FHIR server and
-#' then loads any additional referenced resources. It uses two steps: first, loading resources
-#' directly associated with patient IDs using `loadResourcesByPatientIDFromFHIRServer`, and second,
-#' loading resources referenced by the initially loaded resources using
-#' `loadReferencedResourcesByOwnIDFromFHIRServer`. The results are then saved as RData files, with
-#' filenames derived from the resource names.
+#' This function loads resources for a given set of patient IDs per cohort from a FHIR server and
+#' then loads any additional referenced resources. The defaults keep the legacy
+#' `pids_per_ward` table shape.
 #'
-#' @param pids_splitted_by_ward A list of patient IDs, where each element corresponds to a ward and
-#'   contains patient IDs associated with that ward.
+#' @param pids_splitted_by_cohort A list of patient IDs, where each element corresponds to a cohort
+#'   and contains patient IDs associated with that cohort.
 #' @param table_descriptions A list containing two elements: `pid_dependant` and
 #'   `pid_independant`, each of which describes table structures for resources that are dependent
 #'   and independent of patient IDs, respectively.
+#' @param pid_table_name Name of the additional PID assignment table.
+#' @param bind_pids_function Function used to bind the split PID list into the
+#'   additional PID assignment table.
+#' @param empty_pid_table Placeholder table used when the additional PID table is empty.
 #'
-#' @details The function iterates through all resources loaded in both steps and saves them as
-#'   RData files using `writeRData`. The filenames are derived by converting the names of the
-#'   resources in the `resource_tables` list to lowercase.
-#'
-loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_descriptions) {
+loadResourcesFromFHIRServer <- function(
+  pids_splitted_by_cohort,
+  table_descriptions,
+  pid_table_name = "pids_per_ward",
+  bind_pids_function = rbindPidsSplittedByWard,
+  empty_pid_table = data.table::data.table(
+    patient_id = "EMPTY_DATA",
+    encounter_id = "EMPTY_DATA",
+    ward_name = NA_character_
+  )
+) {
   ### DEBUG START ###
   # Load Resources from RData files
   if (exists("DEBUG_PATH_TO_RAW_RDATA_FILES")) {
@@ -758,23 +773,23 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
         resource_tables[[res]] <- readRDS(file_path)
       }
     }
-    # Add additional table of ward-patient ID per date
-    resource_tables[["pids_per_ward"]] <- rbindPidsSplittedByWard(pids_splitted_by_ward)
+    resource_tables[[pid_table_name]] <- bind_pids_function(pids_splitted_by_cohort)
     ### DEBUG END ###
   } else {
-    resource_tables <- loadResourcesByPatientIDFromFHIRServer(pids_splitted_by_ward, table_descriptions$pid_dependant)
+    resource_tables <- loadResourcesByPatientIDFromFHIRServer(
+      pids_splitted_by_cohort,
+      table_descriptions$pid_dependant,
+      pid_table_name,
+      bind_pids_function
+    )
     resource_tables <- loadDataImportReferencedResourcesFromDB(table_descriptions, resource_tables)
     resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
   }
 
-  # If there are no new patients in the pids_per_ward table, create an empty table with the correct columns.
-  # Resource type data import reads PIDs from the patient table and must not write pids_per_ward.
-  if ((etlutils::isSubProcess("DataImport.All") || !isProcess("DataImport")) && !nrow(resource_tables[["pids_per_ward"]])) {
-    resource_tables[["pids_per_ward"]] <- data.table(
-      patient_id = "EMPTY_DATA",
-      encounter_id = "EMPTY_DATA",
-      ward_name = NA_character_
-    )
+  # If there are no new patients in the PID assignment table, create an empty table with the correct columns.
+  # Resource type data import reads PIDs from the patient table and must not write the PID assignment table.
+  if ((etlutils::isSubProcess("DataImport.All") || !isProcess("DataImport")) && !nrow(resource_tables[[pid_table_name]])) {
+    resource_tables[[pid_table_name]] <- empty_pid_table
   }
 
   #########################
