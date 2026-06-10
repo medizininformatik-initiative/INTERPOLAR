@@ -64,7 +64,7 @@ enc_level_3_id_pattern <- "-V-\\d+$"
 # Add encounters with type "Versorgungstellenkontakt"
 #
 testAddEncounterLevel3 <- function(dt_enc) {
-  pattern = "-A-(\\d+)$" # Pattern to match the end of the enc_id for duplication
+  pattern <- "-A-(\\d+)$" # Pattern to match the end of the enc_id for duplication
   colnames_pattern_servicetype <- "^enc_servicetype_" # Pattern for service type columns
 
   enc_servicetype_colnames <- getColNames(dt_enc, colnames_pattern_servicetype)
@@ -135,8 +135,10 @@ testPrepareRAWResources <- function(patient_ids) {
   # Add encounters with type "Versorgungstellenkontakt"
   enc_templates <- testAddEncounterLevel3(enc_templates)
   # Change encounter data
-  enc_templates[grepl("-(A|V)-1$", enc_id),
-                enc_partof_ref := paste0("[1.1]Encounter/", sub("^\\[[^]]+\\]", "", sub("-(A|V)-1$", "", enc_id)))]
+  enc_templates[
+    grepl("-(A|V)-1$", enc_id),
+    enc_partof_ref := paste0("[1.1]Encounter/", sub("^\\[[^]]+\\]", "", sub("-(A|V)-1$", "", enc_id)))
+  ]
   enc_templates[, enc_status := "[1]in-progress"]
   enc_templates[, enc_period_end := NA]
   enc_templates <- enc_templates[order(enc_id)]
@@ -407,8 +409,10 @@ testSetBedAndRoom <- function(dt_enc, room, bed) {
   # Get the encounter ID of the Versorgungsstellenkontakt
   enc_level_3_id <- dt_enc$enc_id[grepl(enc_level_3_id_pattern, dt_enc$enc_id)]
 
-  dt_enc[enc_id == enc_level_3_id,
-         enc_location_identifier_value := paste0("[1.1.1.1]", room, " ~ [2.1.1.1]", bed)]
+  dt_enc[
+    enc_id == enc_level_3_id,
+    enc_location_identifier_value := paste0("[1.1.1.1]", room, " ~ [2.1.1.1]", bed)
+  ]
   return(dt_enc)
 }
 
@@ -564,8 +568,10 @@ testAdmission <- function(pid, room, bed, ward_name = NULL, day_offset = -0.5) {
 
   # Update the ward information
   if (!is.null(ward_name)) {
-    testUpdateWard(enc_ids = enc_templates$enc_id,
-                   ward_names = ward_name)
+    testUpdateWard(
+      enc_ids = enc_templates$enc_id,
+      ward_names = ward_name
+    )
   }
 
   # Append the new encounter to the Encounter table
@@ -617,8 +623,10 @@ testTransferWardInternal <- function(pid, room = NULL, bed = NULL, ward_name = N
   dt_enc <- testGetResourceTable("Encounter")
   enc_level_3_rows <- transferEncounterLevel(dt_enc, pid, level = 3, room, bed, day_offset)
   # Update the ward information
-  testUpdateWard(enc_ids = enc_level_3_rows$new_enc_row[["enc_id"]],
-                 ward_names = ward_name)
+  testUpdateWard(
+    enc_ids = enc_level_3_rows$new_enc_row[["enc_id"]],
+    ward_names = ward_name
+  )
   # Merge the updated old contact and the new one into the Encounter table
   dt_enc <- data.table::rbindlist(list(enc_level_3_rows$dt_enc, enc_level_3_rows$new_enc_row), use.names = TRUE)
   testSetResourceTable("Encounter", dt_enc)
@@ -640,8 +648,10 @@ testTransferWardDepartment <- function(pid, room = NULL, bed = NULL, ward_name =
   enc_level_3_rows$new_enc_row[, enc_partof_ref := sub("-A-\\d+$", paste0("-A-", enc_level_2_row_index), enc_partof_ref)]
 
   # Step 3: If ward name is given, update mapping
-  testUpdateWard(enc_ids   = enc_level_3_rows$new_enc_row[["enc_id"]],
-                 ward_names = ward_name)
+  testUpdateWard(
+    enc_ids   = enc_level_3_rows$new_enc_row[["enc_id"]],
+    ward_names = ward_name
+  )
 
   # Step 4: Merge all into Encounter table
   dt_enc <- data.table::rbindlist(
@@ -751,13 +761,13 @@ duplicatePatients <- function(count, duplicated_start_index = 1) {
 }
 
 addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, period_type = c(
-  "start",
-  "start_and_end",
-  "start_and_end_and_timing_event",
-  "timing_event",
-  "timing_events",
-  "all_timestamps_NA"
-), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, timing_repeat_end_offset = 5, ref_codes = NULL) {
+                       "start",
+                       "start_and_end",
+                       "start_and_end_and_timing_event",
+                       "timing_event",
+                       "timing_events",
+                       "all_timestamps_NA"
+                     ), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, timing_repeat_end_offset = 5, ref_codes = NULL) {
 
   period_type <- match.arg(period_type)
 
@@ -810,17 +820,23 @@ addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, peri
     dt[, medreq_meta_lastupdated := getDebugDatesRAWDateTime(-0.1)]
 
     # calculate boundsperiod start and end and and timing event(s) and authoredon based on period_type
-    if (period_type %in% c("start",
-                           "start_and_end",
-                           "start_and_end_and_timing_event")) {
+    if (period_type %in% c(
+      "start",
+      "start_and_end",
+      "start_and_end_and_timing_event"
+    )) {
       dt[, medreq_doseinstruc_timing_repeat_boundsperiod_start := getDebugDatesRAWDateTime(day_offset, raw_index = "[1.1.1.1.1]")]
     }
-    if (period_type %in% c("start_and_end",
-                           "start_and_end_and_timing_event")) {
+    if (period_type %in% c(
+      "start_and_end",
+      "start_and_end_and_timing_event"
+    )) {
       dt[, medreq_doseinstruc_timing_repeat_boundsperiod_end := getDebugDatesRAWDateTime(day_offset + timing_repeat_end_offset, raw_index = "[1.1.1.1.1]")]
     }
-    if (period_type %in% c("start_and_end_and_timing_event",
-                           "timing_event")) {
+    if (period_type %in% c(
+      "start_and_end_and_timing_event",
+      "timing_event"
+    )) {
       dt[, medreq_doseinstruc_timing_event := getDebugDatesRAWDateTime(day_offset + 0.05, raw_index = "[1.1.1]")]
     }
     if (period_type %in% c("timing_events")) {
@@ -890,13 +906,13 @@ addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, peri
 }
 
 addDrugsWithoutMedications <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, period_type = c(
-  "start",
-  "start_and_end",
-  "start_and_end_and_timing_event",
-  "timing_event",
-  "timing_events",
-  "all_timestamps_NA"
-), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, timing_repeat_end_offset = 5) {
+                                         "start",
+                                         "start_and_end",
+                                         "start_and_end_and_timing_event",
+                                         "timing_event",
+                                         "timing_events",
+                                         "all_timestamps_NA"
+                                       ), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, timing_repeat_end_offset = 5) {
 
   period_type <- match.arg(period_type)
 
@@ -945,17 +961,23 @@ addDrugsWithoutMedications <- function(pid, codes = NULL, day_offset = -0.4, aut
     dt[, medreq_medicationcodeableconcept_code := paste0("[1.1.1]", code)]
 
     # calculate boundsperiod start and end and and timing event(s) and authoredon based on period_type
-    if (period_type %in% c("start",
-                           "start_and_end",
-                           "start_and_end_and_timing_event")) {
+    if (period_type %in% c(
+      "start",
+      "start_and_end",
+      "start_and_end_and_timing_event"
+    )) {
       dt[, medreq_doseinstruc_timing_repeat_boundsperiod_start := getDebugDatesRAWDateTime(day_offset, raw_index = "[1.1.1.1.1]")]
     }
-    if (period_type %in% c("start_and_end",
-                           "start_and_end_and_timing_event")) {
+    if (period_type %in% c(
+      "start_and_end",
+      "start_and_end_and_timing_event"
+    )) {
       dt[, medreq_doseinstruc_timing_repeat_boundsperiod_end := getDebugDatesRAWDateTime(day_offset + timing_repeat_end_offset, raw_index = "[1.1.1.1.1]")]
     }
-    if (period_type %in% c("start_and_end_and_timing_event",
-                           "timing_event")) {
+    if (period_type %in% c(
+      "start_and_end_and_timing_event",
+      "timing_event"
+    )) {
       dt[, medreq_doseinstruc_timing_event := getDebugDatesRAWDateTime(day_offset + 0.05, raw_index = "[1.1.1]")]
     }
     if (period_type %in% c("timing_events")) {
@@ -1040,14 +1062,19 @@ addObservation <- function(pid, code, day_offset = -0.5, value = NULL, unit = NU
                            referencerange_high_value = NULL, referencerange_low_code = NULL, referencerange_high_code = NULL,
                            referencerange_low_system = NULL, referencerange_high_system = NULL, referencerange_type_code = NULL,
                            encounter_id = NULL) {
-  addObservationWithRanges(pid, code, day_offset, value, unit, reference_ranges = createReferenceRange(referencerange_low_value,
-                                                                                                       referencerange_low_code,
-                                                                                                       referencerange_high_value,
-                                                                                                       referencerange_high_code,
-                                                                                                       referencerange_low_system,
-                                                                                                       referencerange_high_system,
-                                                                                                       referencerange_type_code),
-                           encounter_id = encounter_id)
+  addObservationWithRanges(
+    pid, code, day_offset, value, unit,
+    reference_ranges = createReferenceRange(
+      referencerange_low_value,
+      referencerange_low_code,
+      referencerange_high_value,
+      referencerange_high_code,
+      referencerange_low_system,
+      referencerange_high_system,
+      referencerange_type_code
+    ),
+    encounter_id = encounter_id
+  )
 }
 
 addObservationWithRanges <- function(pid, code, day_offset = -0.5, value = NULL, unit = NULL, reference_ranges = NULL, encounter_id = NULL) {
@@ -1287,16 +1314,20 @@ addREDCapMRPDokumentation <- function(dt_mrp_doku, patient_ids) {
     # set the mrp_pigrund___21 to "Checked" (Kontraindikation (MF))
     template[, mrp_pigrund___21 := "Checked"]
     # set the mrp_ip_klasse to a random value from the given options
-    template[, mrp_ip_klasse_01 := sample(c("Drug-Drug",
-                                            "Drug-Disease",
-                                            "Drug-Niereninsuffizienz"))[1]]
+    template[, mrp_ip_klasse_01 := sample(c(
+      "Drug-Drug",
+      "Drug-Disease",
+      "Drug-Niereninsuffizienz"
+    ))[1]]
     # set the mrp_dokup_hand_emp_akz to a random value from the given options
-    template[, mrp_dokup_hand_emp_akz := sample(c("Arzt / Pflege informiert",
-                                                  "Intervention vorgeschlagen und umgesetzt",
-                                                  "Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation)",
-                                                  "Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung)",
-                                                  "Intervention vorgeschlagen, Umsetzung unbekannt",
-                                                  "Problem nicht gelöst"))[1]]
+    template[, mrp_dokup_hand_emp_akz := sample(c(
+      "Arzt / Pflege informiert",
+      "Intervention vorgeschlagen und umgesetzt",
+      "Intervention vorgeschlagen, nicht umgesetzt (keine Kooperation)",
+      "Intervention vorgeschlagen, nicht umgesetzt (Nutzen-Risiko-Abwägung)",
+      "Intervention vorgeschlagen, Umsetzung unbekannt",
+      "Problem nicht gelöst"
+    ))[1]]
     # append the updated template row into the "mrpdokumentation_validierung" table
     dt_mrp_doku <- rbind(dt_mrp_doku, template, fill = TRUE)
   }

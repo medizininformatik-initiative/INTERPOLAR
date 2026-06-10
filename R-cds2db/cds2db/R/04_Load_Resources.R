@@ -33,8 +33,10 @@ getActiveEncounterPIDsFromDB <- function() {
   # Run the SQL query and return patient IDs
   patient_ids_active <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getActiveEncounterPIDsFromDB()")
 
-  print(paste0("Active patient IDs in encounter table:\n",
-               paste0(patient_ids_active$enc_patient_ref, collapse = ", ")))
+  print(paste0(
+    "Active patient IDs in encounter table:\n",
+    paste0(patient_ids_active$enc_patient_ref, collapse = ", ")
+  ))
 
   return(patient_ids_active$enc_patient_ref)
 }
@@ -87,9 +89,9 @@ adjustNames <- function(variables, prefix, valid_names) {
 # START: FOR DEBUG ONLY #
 #########################
 debugSetResourcesAddSearchParameter <- function(
-    global_debug_filter_variable_prefix = "DEBUG_ADD_FHIR_SEARCH_",
-    table_descriptions,
-    debug_general_variable = "DEBUG_ADD_FHIR_SEARCH_GENERAL"
+  global_debug_filter_variable_prefix = "DEBUG_ADD_FHIR_SEARCH_",
+  table_descriptions,
+  debug_general_variable = "DEBUG_ADD_FHIR_SEARCH_GENERAL"
 ) {
   # Get global filter variables with the specified prefix
   global_filter_variables <- etlutils::getGlobalVariablesByPrefix(global_debug_filter_variable_prefix, astype = "vector")
@@ -232,7 +234,8 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
         "No active patient IDs in encounter table found in database. \n",
         "HINT: This message appears if no active encounters were written to the database during",
         "the last run of the CDS tool chain. This should only happen if the CDS tool chain is",
-        "running for the first time."))
+        "running for the first time."
+      ))
     }
 
     # Unify and unique all patient IDs
@@ -264,15 +267,16 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
 
   # Get the date for every PID when the Patient resource was written to the database the last time
   getLastPatientUpdateDate <- function(patient_ids) {
-
     # Ensure these are IDs and not references
     patient_ids <- getAfterLastSlash(patient_ids)
 
     # Create the query for the last insert/update date for every ID
     query <- paste0(
-      "SELECT pat_id, MAX(last_check_datetime) AS last_insert_datetime\n",
+      "SELECT pat_id, MAX(
+        last_check_datetime) AS last_insert_datetime\n",
       "FROM v_patient\n",
-      "WHERE pat_id = ANY($1::text[])\n",
+      "WHERE pat_id = ANY(
+        $1::text[])\n",
       "GROUP BY pat_id;"
     )
 
@@ -308,20 +312,24 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
     pids_with_last_updated <- getLastPatientUpdateDate(patient_ids)
   }
 
-  etlutils::catList(pids_with_last_updated,
-                    prefix = "Date for every PID when the Patient resource was written to the database the last time:\n",
-                    suffix = "\n",
-                    na_replacement = "Not present in DB")
+  etlutils::catList(
+    pids_with_last_updated,
+    prefix = "Date for every PID when the Patient resource was written to the database the last time:\n",
+    suffix = "\n",
+    na_replacement = "Not present in DB"
+  )
 
   # the parameter FHIR_SEARCH_PIDS_BY_SUBJECT decides if the patient IDs are
   # passed by subject or patient in the FHIR search request
   id_param_str <- ifelse (etlutils::isDefinedAndTrue("FHIR_SEARCH_PIDS_BY_SUBJECT"), "subject", "patient")
 
   # Load all data of relevant patients from FHIR server
-  resource_tables_fhir <- etlutils::fhirsearchMultipleResourcesByPID(pids_with_last_updated,
-                                                                     table_descriptions,
-                                                                     id_param_str,
-                                                                     resources_add_search_parameter)
+  resource_tables_fhir <- etlutils::fhirsearchMultipleResourcesByPID(
+    pids_with_last_updated,
+    table_descriptions,
+    id_param_str,
+    resources_add_search_parameter
+  )
 
   raw_fhir_resources <- resource_tables_fhir$raw_fhir_resources
   # The pids_with_last_updated now only contains persons who were older than MIN_PATIENT_AGE at
@@ -330,9 +338,9 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
 
   # THIS EXCEPTION MUST BE GENERALIZED OR REMOVED HERE! FHIR resource names should not be used here.
   if (etlutils::isSubProcess("DataImport.ResourceTypes") &&
-      hasDataImportDateRange() &&
-      "DiagnosticReport" %in% names(table_descriptions) &&
-      (!("DiagnosticReport" %in% names(raw_fhir_resources)) || !nrow(raw_fhir_resources[["DiagnosticReport"]]))) {
+    hasDataImportDateRange() &&
+    "DiagnosticReport" %in% names(table_descriptions) &&
+    (!("DiagnosticReport" %in% names(raw_fhir_resources)) || !nrow(raw_fhir_resources[["DiagnosticReport"]]))) {
     catInfoMessage("Info: No DiagnosticReport resources found with date search parameter. Retrying with issued.\n")
     diagnostic_report_add_search_parameter <- addDataImportFHIRDateSearchParameters(
       table_descriptions["DiagnosticReport"],
@@ -788,9 +796,14 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
     resource_filter_patterns <- adjustNames(global_filter_variables, global_debug_filter_variable_prefix, resource_table_names)
     different_resources <- setdiff(names(resource_filter_patterns), resource_table_names)
     if (length(different_resources)) {
-      catInfoMessage(paste0("Note: The following debug filter resources are not in the resource table: ",
-                            paste(different_resources, collapse = ", "),
-                            ". Fix it in cds2db_config.toml."))
+      catInfoMessage(paste0(
+        "Note: The following debug filter resources are not in the resource table: ",
+        paste(
+          different_resources,
+          collapse = ", "
+        ),
+        ". Fix it in cds2db_config.toml."
+      ))
     }
     # Find common names between resource names and resource table names
     common_names <- intersect(names(resource_filter_patterns), resource_table_names)
@@ -818,13 +831,19 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
           if (l <= 10) {
             invalid_indices_string <- invalid_indices
           } else {
-            invalid_indices_string <- paste0(paste0(invalid_indices[1:5], collapse = ", "), " ... ",
-                                             paste0(invalid_indices[(l-5):l], collapse = ", "))
+            invalid_indices_string <- paste0(
+              paste0(
+                invalid_indices[1:5],
+                collapse = ", "
+              ), " ... ",
+              paste0(invalid_indices[(l - 5):l], collapse = ", ")
+            )
           }
           etlutils::catWarningMessage(paste0(
             "Check '", debug_parameter_name, "': The following indices in debug filter are invalid for resource ",
             name, ". The table has only ", rows_count, " rows. Invalid indices: ",
-            paste(invalid_indices_string, collapse = ", ")))
+            paste(invalid_indices_string, collapse = ", ")
+          ))
         }
         valid_indices <- setdiff(indices, invalid_indices)
         # Update the resource table with valid indices
@@ -876,7 +895,8 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
       # Determine the highest existing DUP number
       max_dup_number <- ifelse(
         nrow(dup_table) > 0,
-        max(as.integer(gsub(".*_DUP_(\\d+)$", "\\1", dup_table$obs_id)), na.rm = TRUE),
+        max(as.integer(gsub(".*_DUP_(
+          \\d+)$", "\\1", dup_table$obs_id)), na.rm = TRUE),
         0
       )
 
@@ -890,9 +910,7 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
       duplicated_table <- original_table[duplication_indices]
 
       # Generate new unique `obs_id` values for duplicated rows
-      duplicated_table[, obs_id := paste0(
-        obs_id, "_DUP_", seq_len(.N) + max_dup_number
-      )]
+      duplicated_table[, obs_id := paste0(obs_id, "_DUP_", seq_len(.N) + max_dup_number)]
 
       # Combine the original table, existing DUP rows, and newly duplicated rows
       extended_table <- rbind(table_obs, duplicated_table)

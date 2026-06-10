@@ -13,7 +13,6 @@ DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS <- 14
 # Ergebnis: Am Ende soll im Redcap nach Tag 5 die retrolektive MRP-Bewertung angelegt werden.
 
 if (exists("TOOLCHAIN_DAY")) {
-
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   # resources are a list of data tables from outside we want to change for the test
@@ -59,7 +58,7 @@ if (exists("TOOLCHAIN_DAY")) {
   })
 
   runCodeForDebugDay(1, {
-    #UKB-0001_1 -> Drug_Disease_Interaction     -> MedicationRequest - N02AA01 + Diagnosis - R10.0
+    # UKB-0001_1 -> Drug_Disease_Interaction     -> MedicationRequest - N02AA01 + Diagnosis - R10.0
     addDrugs("UKB-0001", "N02AA01")
     addConditions("UKB-0001", "R10.0")
   })

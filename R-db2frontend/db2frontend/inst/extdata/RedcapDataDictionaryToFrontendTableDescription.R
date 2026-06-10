@@ -1,6 +1,6 @@
 # Change the working directory to the main directory
-if (grepl('/db2frontend$', getwd())) setwd("../..")
-if (grepl('/R-db2frontend$', getwd())) setwd("../")
+if (grepl("/db2frontend$", getwd())) setwd("../..")
+if (grepl("/R-db2frontend$", getwd())) setwd("../")
 
 # Free memory
 rm(list = ls())
@@ -13,10 +13,14 @@ library(etlutils)
 dt <- fread("./R-db2frontend/db2frontend/inst/extdata/Frontend_DataDictionary.csv", encoding = "UTF-8")
 
 # Rename columns
-column_names <- c("Variable / Field Name", "Form Name", "Field Type", "Field Label",
-                  "Text Validation Type OR Show Slider Number", "Choices, Calculations, OR Slider Labels")
-new_names <- c("COLUMN_NAME", "TABLE_NAME", "COLUMN_TYPE", "COLUMN_DESCRIPTION",
-               "VALIDATION_TYPE", "CHOICES")
+column_names <- c(
+  "Variable / Field Name", "Form Name", "Field Type", "Field Label",
+  "Text Validation Type OR Show Slider Number", "Choices, Calculations, OR Slider Labels"
+)
+new_names <- c(
+  "COLUMN_NAME", "TABLE_NAME", "COLUMN_TYPE", "COLUMN_DESCRIPTION",
+  "VALIDATION_TYPE", "CHOICES"
+)
 setnames(dt, column_names, new_names)
 
 # Remove unnecessary columns (keep only the renamed ones)
@@ -93,7 +97,9 @@ dt[, COLUMN_TYPE := data.table::fifelse(
 
 # If COLUMN_TYPE is unspecific (varchar), check if VALIDATION_TYPE provides better information
 dt[, COLUMN_TYPE := data.table::fifelse(
-  COLUMN_TYPE == "varchar" & !is.na(VALIDATION_TYPE) & VALIDATION_TYPE %in% names(validation_mapping),
+  COLUMN_TYPE == "varchar" & !is.na(VALIDATION_TYPE) & VALIDATION_TYPE %in% names(
+    validation_mapping
+  ),
   validation_mapping[VALIDATION_TYPE],
   COLUMN_TYPE
 )]

@@ -7,8 +7,8 @@ library(db2frontend)
 # etlutils::setProcess("DeleteDBAndREDCap")
 
 # chance the working directory to the main directory
-if (grepl('/cdstoolchain$', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
+if (grepl("/cdstoolchain$", getwd())) setwd("../..")
+if (grepl("/R-cdstoolchain$", getwd())) setwd("../")
 
 
 # Reset error status

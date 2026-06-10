@@ -81,9 +81,14 @@ loadTableDescriptionFile <- function(table_description_path = NA, table_descript
   }
 
   if (!exists("table_description_without_header") || etlutils::isError(table_description_without_header)) {
-    stop("Invalid table description.\nFile: ", table_description_path, "\nSheet: ", table_description_sheet_name, "\n",
-         "Can not find row with ", paste0(FHIR_TABLE_DESCRIPTION_COLNAMES, collapse = ", "), " or ",
-         paste0(DB_TABLE_DESCRIPTION_COLNAMES, collapse = ", "), " in any colums.")
+    stop(
+      "Invalid table description.\nFile: ", table_description_path, "\nSheet: ", table_description_sheet_name, "\n",
+      "Can not find row with ", paste0(
+        FHIR_TABLE_DESCRIPTION_COLNAMES,
+        collapse = ", "
+      ), " or ",
+      paste0(DB_TABLE_DESCRIPTION_COLNAMES, collapse = ", "), " in any colums."
+    )
   }
 
   table_description <- table_description_without_header

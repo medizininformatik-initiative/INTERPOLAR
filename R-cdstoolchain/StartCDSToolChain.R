@@ -6,8 +6,8 @@ library(db2frontend)
 etlutils::setProcess("FullToolchain")
 
 # chance the working directory to the main directory
-if (grepl('/cdstoolchain$', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
+if (grepl("/cdstoolchain$", getwd())) setwd("../..")
+if (grepl("/R-cdstoolchain$", getwd())) setwd("../")
 
 
 # Reset error status
@@ -109,7 +109,7 @@ setDebugPathToConfigToml <- function(module_name) {
 shouldStart <- function(module_name) {
   if (!etlutils::isErrorOccured()) {
     if (!exists("DEBUG_START_SINGLE_MODULE") ||
-        (exists("DEBUG_START_SINGLE_MODULE") && identical(DEBUG_START_SINGLE_MODULE, module_name))) {
+      (exists("DEBUG_START_SINGLE_MODULE") && identical(DEBUG_START_SINGLE_MODULE, module_name))) {
       resetMemory()
       setDebugPathToConfigToml(module_name)
       return(TRUE)
@@ -175,59 +175,62 @@ resetMemory()
 
 delete_db_and_redcap <- etlutils::isDefinedAndTrue("CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1") && exists("TOOLCHAIN_DAY") && TOOLCHAIN_DAY == 1
 
-tryCatch({
-  args <- commandArgs(trailingOnly = TRUE)
-  ignore_newer_db_version = "--ignoreNewerDBVersion" %in% args
-  if (shouldStart("cds2db")) {
-    if (delete_db_and_redcap && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
-      etlutils::dbReset()
+tryCatch(
+  {
+    args <- commandArgs(trailingOnly = TRUE)
+    ignore_newer_db_version <- "--ignoreNewerDBVersion" %in% args
+    if (shouldStart("cds2db")) {
+      if (delete_db_and_redcap && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
+        etlutils::dbReset()
+      }
+      # the dataprocessors validator ensures that there is exact 1 ward name and 1 phase_a_start defined for each ward in the PHASES_WARD definitions.
+      # Therefore, we can safely assume that the length of the vectors is the same and the order is the same, so we can use the ward names and
+      # phase_a_start values in the same order for both modules.
+      ward_names <- etlutils::extractVariablesListValues("PHASES_WARD", "ward_name", config_dataprocessor)
+      phase_a_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start", config_dataprocessor)
+      # set the ward names for the phase_a_start values to get the map from ward_name to it's phase a start date
+      names(phase_a_starts) <- ward_names
+      cds2db::retrieve(phase_a_starts, ignore_newer_db_version = ignore_newer_db_version, validate_config = isProcess("DataImport"))
     }
-    # the dataprocessors validator ensures that there is exact 1 ward name and 1 phase_a_start defined for each ward in the PHASES_WARD definitions.
-    # Therefore, we can safely assume that the length of the vectors is the same and the order is the same, so we can use the ward names and
-    # phase_a_start values in the same order for both modules.
-    ward_names <- etlutils::extractVariablesListValues("PHASES_WARD", "ward_name", config_dataprocessor)
-    phase_a_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start", config_dataprocessor)
-    # set the ward names for the phase_a_start values to get the map from ward_name to it's phase a start date
-    names(phase_a_starts) <- ward_names
-    cds2db::retrieve(phase_a_starts, ignore_newer_db_version = ignore_newer_db_version, validate_config = isProcess("DataImport"))
-  }
-  if (shouldStart("db2frontend")) {
-    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
-  }
-  if (shouldStart("dataprocessor")) {
-    dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
-  }
-  if (shouldStart("db2frontend")) {
-    db2frontend::startDB2Frontend(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
-  }
-  if (etlutils::isErrorOccured()) {
-    stop(etlutils::getErrorMessage())
-  }
-}, error = function(e) {
-  # Split the error message into individual lines
-  error_lines <- unlist(strsplit(e$message, "\n"))
-
-  # Define the pattern for SQL column errors
-  allowed_pattern <- "column .* of relation .* does not exist"
-
-  # Check if any of the lines contain the pattern
-  if (any(grepl(allowed_pattern, error_lines))) {
-    message("Ignoring expected error: ", e$message)
-
-    # Execute `next` only if not in the last iteration of the loop
-    if (i < length(DEBUG_DATES)) {
-      next
+    if (shouldStart("db2frontend")) {
+      db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
     }
-  } else {
-    # the submodules log their errors itself -> we must check
-    # if etlutils::isErrorOccured() and if TRUE then do nothing
-    # here. Stop hard only if the error comes not from a submodule.
-    if (!etlutils::isErrorOccured()) {
-      etlutils::catErrorMessage(e$message)
-      quit(status = 1, save = "no")  # Abort with error
+    if (shouldStart("dataprocessor")) {
+      dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
+    }
+    if (shouldStart("db2frontend")) {
+      db2frontend::startDB2Frontend(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
+    }
+    if (etlutils::isErrorOccured()) {
+      stop(etlutils::getErrorMessage())
+    }
+  },
+  error = function(e) {
+    # Split the error message into individual lines
+    error_lines <- unlist(strsplit(e$message, "\n"))
+
+    # Define the pattern for SQL column errors
+    allowed_pattern <- "column .* of relation .* does not exist"
+
+    # Check if any of the lines contain the pattern
+    if (any(grepl(allowed_pattern, error_lines))) {
+      message("Ignoring expected error: ", e$message)
+
+      # Execute `next` only if not in the last iteration of the loop
+      if (i < length(DEBUG_DATES)) {
+        next
+      }
+    } else {
+      # the submodules log their errors itself -> we must check
+      # if etlutils::isErrorOccured() and if TRUE then do nothing
+      # here. Stop hard only if the error comes not from a submodule.
+      if (!etlutils::isErrorOccured()) {
+        etlutils::catErrorMessage(e$message)
+        quit(status = 1, save = "no")  # Abort with error
+      }
     }
   }
-})
+)
 
 if (!etlutils::isErrorOccured()) {
   status <- 0

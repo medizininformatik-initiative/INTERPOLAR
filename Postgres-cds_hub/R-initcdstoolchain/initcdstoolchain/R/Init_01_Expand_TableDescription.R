@@ -50,7 +50,7 @@ extractReplacePatterns <- function(table_description_collapsed) {
   patterns_start_row <- etlutils::getFirstRowWithPatterns(table_description_collapsed, c("PATTERN", "REPLACEMENT")) + 1
   # found the header line?
   if (patterns_start_row > 0) {
-    for(r in patterns_start_row:nrow(table_description_collapsed)) {
+    for (r in patterns_start_row:nrow(table_description_collapsed)) {
       pattern <- table_description_collapsed$RESOURCE[r] # patterns are in the column 'RESOURCE'
       replace <- table_description_collapsed$RESOURCE_PREFIX[r] # replaces strings are in the column 'RESOURCE_PREFIX'
       if (etlutils::isSimpleNotEmptyString(pattern)) {
@@ -79,7 +79,6 @@ extractReplacePatterns <- function(table_description_collapsed) {
 #' print(table)
 #' }
 addEmptyRowsBeforeNewResource <- function(table) {
-
   # Generate an index indicating where empty rows should be inserted
   # (before each row except the first and if 'RESOURCE' column is not NA)
   new_resource_start_rows <- which(!is.na(table$RESOURCE) & seq_len(nrow(table)) != 1)
@@ -157,7 +156,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   }
 
   getFullColumnName <- function(resource_prefix, fhir_expression) {
-    full_column_name <- gsub('/', '_', fhir_expression)
+    full_column_name <- gsub("/", "_", fhir_expression)
     full_column_name <- paste0(resource_prefix, full_column_name)
   }
 
@@ -174,7 +173,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
     if (!is.na(table$RESOURCE[row])) {
       resource <- table$RESOURCE[row]
       if (!is.na(table$RESOURCE_PREFIX[row])) {
-        resource_prefix <- paste0(table$RESOURCE_PREFIX[row], '_')
+        resource_prefix <- paste0(table$RESOURCE_PREFIX[row], "_")
       } else {
         resource_prefix <- ""
       }
@@ -217,7 +216,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
           data.table::set(new_table, replaced_row_index, "COLUMN_NAME", new_value)
         }
         if (nchar(replace_prefix_fhir_expression)) {
-          data.table::set(new_table, replaced_row_index, 'FHIR_EXPRESSION', paste(replace_prefix_fhir_expression, new_table$FHIR_EXPRESSION[replaced_row_index], sep = "/"))
+          data.table::set(new_table, replaced_row_index, "FHIR_EXPRESSION", paste(replace_prefix_fhir_expression, new_table$FHIR_EXPRESSION[replaced_row_index], sep = "/"))
         }
       }
 
@@ -283,9 +282,11 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
   # Check if files exists
   if (!file.exists(table_description_file_path) || table_description_file_path == "") {
     current_dir <- getwd()
-    stop("Error: The specified file path '", table_description_file_path,
-         "' is invalid or the file does not exist.\nCurrent working directory: '",
-         current_dir, "'")
+    stop(
+      "Error: The specified file path '", table_description_file_path,
+      "' is invalid or the file does not exist.\nCurrent working directory: '",
+      current_dir, "'"
+    )
   }
 
   tables <- etlutils::readExcelFileAsTableList(table_description_file_path)
@@ -377,8 +378,10 @@ checkResult <- function(expanded_table_description) {
     for (s in expanded_table_description$COLUMN_NAME[which(nchar(na.omit(expanded_table_description$COLUMN_NAME)) > 64)]) {
       message(paste0("\t", s))
     }
-    message(paste0("Solution: Define a replacement at the end of the table 'table_description_collapsed' in the ",
-                   "Table_Description_Definition.xlsx file to shorten these column names.\n"))
+    message(paste0(
+      "Solution: Define a replacement at the end of the table 'table_description_collapsed' in the ",
+      "Table_Description_Definition.xlsx file to shorten these column names.\n"
+    ))
     isValid <- FALSE
   }
 
@@ -393,9 +396,11 @@ checkResult <- function(expanded_table_description) {
         message("ERROR: Table ", table_name,  ": The following result column names (column 'COLUMN_NAMES') in Table_Description.xlsx are duplicated:")
         message(paste0("\t", duplicates, collapse = "\n"))
         message("Solution: Check entries in Table_Description_Definition.xlsx in column 'FHIR_EXPRESSION' for these duplicates.")
-        message(paste0("Note: An entry such as 'subject/Reference' generates the entries 'subject/reference' and ",
-                       "'subject/type', among others. If these then appear again in the list or 'subject/Reference' ",
-                       "itself appears twice, this error occurs.\n"))
+        message(paste0(
+          "Note: An entry such as 'subject/Reference' generates the entries 'subject/reference' and ",
+          "'subject/type', among others. If these then appear again in the list or 'subject/Reference' ",
+          "itself appears twice, this error occurs.\n"
+        ))
         isValid <- FALSE
       }
       resource <- expanded_table_description$RESOURCE[row]

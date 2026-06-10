@@ -7,8 +7,8 @@
 #' @return A named character vector of column names relevant to Drug-Niereninsuffizienz MRP definitions.
 getRelevantColumnNamesDrugNiereninsuffizienz <- function() {
   etlutils::namedVectorByValue(
-    #"SMPC_NAME",
-    #"SMPC_VERSION",
+    # "SMPC_NAME",
+    # "SMPC_VERSION",
     "ATC_DISPLAY",
     "ATC_PRIMARY",
     "ATC_SYSTEMIC_SY",
@@ -25,8 +25,8 @@ getRelevantColumnNamesDrugNiereninsuffizienz <- function() {
     "LOINC_UNIT",
     "LOINC_DISPLAY",
     "LOINC_CUTOFF_REFERENCE",
-    "LOINC_CUTOFF_ABSOLUTE"#,
-    #"ursprünglicher Grenzwert (hart)"
+    "LOINC_CUTOFF_ABSOLUTE" # ,
+    # "ursprünglicher Grenzwert (hart)"
   )
 }
 
@@ -36,7 +36,9 @@ getRelevantColumnNamesDrugNiereninsuffizienz <- function() {
 #' tagging or labeling MRPs in evaluation outputs.
 #'
 #' @return A character string: \code{"Drug-Niereninsuffizienz"}
-getCategoryDisplayDrugNiereninsuffizienz <- function() {"Drug-Niereninsuffizienz"}
+getCategoryDisplayDrugNiereninsuffizienz <- function() {
+  "Drug-Niereninsuffizienz"
+}
 
 #' Clean and Expand Drug_Niereninsuffizienz_MRP Definition Table
 #'
@@ -74,8 +76,14 @@ getSplittedMRPTablesDrugNiereninsuffizienz <- function(mrp_pair_list) {
   mrp_pair_list[, LOINC_VALIDITY_DAYS := if (!"LOINC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else LOINC_VALIDITY_DAYS]
 
   splitted <- list(
-    by_atc = etlutils::splitTableToList(mrp_pair_list, "ATC_FOR_CALCULATION", rm.na = TRUE),
-    by_icd = etlutils::splitTableToList(mrp_pair_list, "ICD", rm.na = TRUE),
+    by_atc = etlutils::splitTableToList(
+      mrp_pair_list, "ATC_FOR_CALCULATION",
+      rm.na = TRUE
+    ),
+    by_icd = etlutils::splitTableToList(
+      mrp_pair_list, "ICD",
+      rm.na = TRUE
+    ),
     by_loinc_proxy = etlutils::splitTableToList(mrp_pair_list, "LOINC_PRIMARY_PROXY", rm.na = TRUE)
   )
 

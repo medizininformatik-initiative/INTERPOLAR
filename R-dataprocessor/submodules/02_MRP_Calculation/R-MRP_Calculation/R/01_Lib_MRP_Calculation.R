@@ -77,16 +77,16 @@ expandAndConcatenateICDs <- function(icd_column) {
     }
     if (!grepl("+", icd, fixed = TRUE)) {
       # Handle single ICD code case
-      return(paste(etlutils::expandICDs(icd), collapse = ' '))
+      return(paste(etlutils::expandICDs(icd), collapse = " "))
 
     }
     # Handle multiple ICD codes separated by '+'
-    input_icds <- unlist(strsplit(icd, '\\+'))
+    input_icds <- unlist(strsplit(icd, "\\+"))
     icd_1 <- etlutils::expandICDs(input_icds[[1]])
     icd_2 <- etlutils::expandICDs(input_icds[[2]])
     # Create combinations and concatenate
-    combinations <- outer(icd_1, icd_2, paste, sep = '+')
-    return(trimws(paste(c(combinations), collapse = ' ')))
+    combinations <- outer(icd_1, icd_2, paste, sep = "+")
+    return(trimws(paste(c(combinations), collapse = " ")))
 
   }
   # Apply the function to the entire column
@@ -167,7 +167,7 @@ computeATCForCalculation <- function(data_table, primary_col, inclusion_col, out
     for (inclusion in inclusions) {
       if (inclusion %in% "alle") {
         raw_values <- row[secondary_cols]
-      } else if (is.na(inclusion) || !nchar(trimws(inclusion)) ||inclusion %in% "keine weiteren") {
+      } else if (is.na(inclusion) || !nchar(trimws(inclusion)) || inclusion %in% "keine weiteren") {
         raw_values <- character(0)
       } else {
         suffixes <- trimws(unlist(strsplit(inclusion, ",")))
@@ -269,8 +269,12 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
               proxy_code = atc2, # we use the original non proxy code here as "proxy" to get this value in the dp_mrp_calculations table in the proxy_code column
               proxy_type = "ATC", # same like with proxy code (even if this is not a proxy)
               proxy_fhir_id = atc2_fhir_id, # there is no fhir id for the atc codes, so we leave this empty
-              kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc, "   (", format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
-              kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (", format(atc2_start_datetime, "%Y-%m-%d %H:%M:%S"), ")"),
+              kurzbeschr_drug = paste0(matched_row$ATC_DISPLAY, " - ", atc, "   (", format(
+                start_datetime, "%Y-%m-%d %H:%M:%S"
+              ), ")"),
+              kurzbeschr_item2 = paste0(matched_row$ATC2_DISPLAY, " - ", atc2, "   (", format(
+                atc2_start_datetime, "%Y-%m-%d %H:%M:%S"
+              ), ")"),
               kurzbeschr_suffix = paste("kontraindiziert.")
             )
             result_mrps <- rbind(result_mrps, mrp_row, fill = TRUE)
@@ -351,7 +355,6 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
 #'
 #' @export
 calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resources = NULL) {
-
   # Get all Einrichtungskontakt encounters that ended at least 14 days ago
   # and do not have a retrolective MRP evaluation for Drug_Disease
 
@@ -377,8 +380,10 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
   if (length(resources)) {
     mrp_pair_lists <- getMRPPairLists()
 
-    all_encounters <- etlutils::fhirdataGetAllEncounters(encounter_ids = unique(main_encounters$enc_id),
-                                                         lock_id_extension = "CalculateMRPs()_")
+    all_encounters <- etlutils::fhirdataGetAllEncounters(
+      encounter_ids = unique(main_encounters$enc_id),
+      lock_id_extension = "CalculateMRPs()_"
+    )
 
     for (mrp_type in names(mrp_pair_lists)) {
 
@@ -519,7 +524,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                     kurzbeschr_item2
                   )
                   if ("kurzbeschr_additional" %in% names(collapsed_match) &&
-                      any(!is.na(kurzbeschr_additional))) {
+                    any(!is.na(kurzbeschr_additional))) {
                     base <- paste(base, paste(kurzbeschr_additional, collapse = "\n"), sep = " ")
                   }
                   base

@@ -6,4 +6,3 @@
 #' @importFrom etlutils setVal getVal hasVal addVal isVal isNonEmptyVal setProcess isProcess rmVal
 ## usethis namespace: end
 NULL
-

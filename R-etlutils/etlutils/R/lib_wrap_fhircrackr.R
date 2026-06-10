@@ -45,7 +45,6 @@ executeFHIRSearchVariation <- function(
   save_to_disc           = NULL,
   delay_between_bundles  = 0
 ) {
-
   # Set new timeout (e.g., 30 minutes)
   # httr::set_config(httr::timeout(getFhirSearchCurlTimeout()))
   httr::set_config(httr::config(

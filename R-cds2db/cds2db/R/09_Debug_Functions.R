@@ -1,5 +1,4 @@
 debugAddPatientIdentifier <- function(resource_tables) {
-
   # Function to add a new value separated by " ~ "
   addValue <- function(value, replace_for_old_value = NA, new_value = NA, old_value_suffix = "", new_value_suffix = "") {
     # Extrahiere den Text innerhalb der Klammern und den Rest

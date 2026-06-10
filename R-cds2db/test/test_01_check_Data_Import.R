@@ -36,8 +36,8 @@ if (exists("resource_tables")) {
   }
 
   if (etlutils::isProcess("DataImport") ||
-      etlutils::isSubProcess("DataImport.All") ||
-      etlutils::isSubProcess("DataImport.ResourceTypes")) {
+    etlutils::isSubProcess("DataImport.All") ||
+    etlutils::isSubProcess("DataImport.ResourceTypes")) {
     etlutils::catInfoMessage(
       "Info: Skip RAW column blanking during DataImport so the backfill can be reloaded.\n"
     )
@@ -65,7 +65,10 @@ if (exists("resource_tables")) {
       missing_columns <- setdiff(target$columns, names(resource_table))
       if (length(missing_columns)) {
         stop(
-          "Column(s) '", paste(missing_columns, collapse = ", "),
+          "Column(s) '", paste(
+            missing_columns,
+            collapse = ", "
+          ),
           "' not found in resource ", resource_name, "."
         )
       }
@@ -82,7 +85,10 @@ if (exists("resource_tables")) {
       resource_tables[[resource_name]] <- resource_table
 
       etlutils::catInfoMessage(paste0(
-        "Info: Set ", resource_name, "$", paste(target$columns, collapse = ", "),
+        "Info: Set ", resource_name, "$", paste(
+          target$columns,
+          collapse = ", "
+        ),
         " to NA in ", nrow(resource_table),
         " RAW row(s) to prepare the data-import backfill test.\n"
       ))

@@ -29,9 +29,7 @@ testthat::test_that("convertFilterPatterns returns one final entry per ward", {
   )
   assign(
     variable_names[3],
-    c(
-      "ward_name = 'Station 3'"
-    ),
+    c("ward_name = 'Station 3'"),
     envir = .GlobalEnv
   )
 
@@ -54,9 +52,7 @@ testthat::test_that("convertFilterPatterns returns one final entry per ward", {
   )
   testthat::expect_identical(
     converted_filter_patterns[["Station 1"]][["Condition_2"]],
-    list(
-      "location/location/reference" = "Location/location_id_1b"
-    )
+    list("location/location/reference" = "Location/location_id_1b")
   )
 })
 

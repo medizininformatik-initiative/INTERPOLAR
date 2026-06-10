@@ -18,9 +18,9 @@
 #'
 #' @export
 parseStructuredConfigDefinitions <- function(
-    definitions,
-    allowed_key_pattern,
-    allow_plus = FALSE
+  definitions,
+  allowed_key_pattern,
+  allow_plus = FALSE
 ) {
 
   getNameOrIndex <- function(x, index) {

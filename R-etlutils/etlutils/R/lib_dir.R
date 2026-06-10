@@ -210,13 +210,13 @@ readFile <- function(full_file_name_with_path) {
     # operation and throw a warning. Therefore it is recommended to call
     # setalloccol() on each data.table loaded with readRDS() or load() calls.
     rds_content <- readRDS(full_file_name_with_path)
-    if ('data.table' %in% class(rds_content)) {
+    if ("data.table" %in% class(rds_content)) {
       invisible(data.table::setalloccol(rds_content))
     }
     rds_content
   } else if (endsWith(full_file_name_with_path, ".rRata")) {
     load(fileName)
-    #} else if (endsWith(full_file_name_with_path, ".???")) {
+    # } else if (endsWith(full_file_name_with_path, ".???")) {
     # TODO
   } else {
     readFileAsString(full_file_name_with_path)
@@ -245,7 +245,7 @@ writeExcelFileInternal <- function(target = c("local", "global"), tables, filena
   if (!dir.exists(module_sub_dir)) {
     dir.create(module_sub_dir, recursive = TRUE)
   }
-  file_name <- fhircrackr::pastep(module_sub_dir, filename_without_extension, ext = '.xlsx')
+  file_name <- fhircrackr::pastep(module_sub_dir, filename_without_extension, ext = ".xlsx")
   writeExcelFile(tables, file_name, with_column_names)
 }
 
@@ -336,7 +336,8 @@ buildHtmlTable <- function(table, caption = NA, footnote = "", colnames = NULL,
   if (is.null(colnames)) {
     colnames <- colnames(table)
   }
-  tbl <- DT::datatable(table,
+  tbl <- DT::datatable(
+    table,
     caption = caption,
     escape = FALSE,
     colnames = colnames,

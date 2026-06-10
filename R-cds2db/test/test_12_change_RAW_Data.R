@@ -10,10 +10,10 @@
 #   assign(variable_name, constants[[variable_name]], envir = envir)
 # }
 # 2: In dem Skript 00_Lib_MRP_Data_Preparation, Zeile 258 auskommentieren:
-#encounters <- encounters[!(study_phase %in% "PhaseB" & enc_period_end > (getCurrentDate() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
+# encounters <- encounters[!(study_phase %in% "PhaseB" & enc_period_end > (getCurrentDate() - DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS))]
 # 3: in dataprocessor toml:
-#WARDS_PHASE_B_TEST = ["Station 1"] # Study phase A but with test calculation for retrolective MRP evaluations
-#WARDS_PHASE_B = ["Station 2"] # Study phase B with regular calculation for retrolective MRP evaluations 14 days
+# WARDS_PHASE_B_TEST = ["Station 1"] # Study phase A but with test calculation for retrolective MRP evaluations
+# WARDS_PHASE_B = ["Station 2"] # Study phase B with regular calculation for retrolective MRP evaluations 14 days
 
 #################################
 # Start Define global variables #
@@ -23,7 +23,7 @@
 DEBUG_DAYS_COUNT <- 4
 
 # Activate if only a specific debug day should be run
-#DEBUG_RUN_SINGLE_DAY_ONLY <- 2
+# DEBUG_RUN_SINGLE_DAY_ONLY <- 2
 
 # Muss auf 0 gesetzt werden, damit auch für PhaseB Patienten MRP sofort berechnet werden
 DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS <- 0
@@ -111,7 +111,7 @@ if (exists("TOOLCHAIN_DAY")) {
     assign("WARDS_PHASE_A", c("Station 3"), envir = .GlobalEnv)
     assign("WARDS_PHASE_B", c("Station 2"), envir = .GlobalEnv)
     # Patient 1 Tag 2: Versorgungsstellenkontakt auf nicht-IP-Station Zimmer Nicht-IP-Raum 1-1, Bett Nicht-IP-Bett 1-1
-    #testTransferWardInternal(pid1, "Raum 2-1", "Bett 2-1", "Station 1")
+    # testTransferWardInternal(pid1, "Raum 2-1", "Bett 2-1", "Station 1")
     testAdmission(pid2, "Raum 1-2", "Bett 1-2", "Station 1") # PhaseBTest
     testAdmission(pid3, "Raum 1-1", "Bett 1-1", "Station 2") # PhaseB
   })

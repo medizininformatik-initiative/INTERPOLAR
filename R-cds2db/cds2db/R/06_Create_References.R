@@ -13,7 +13,6 @@ mustCreateReferencesForOldData <- function() {
 }
 
 createReferences <- function(resource_tables, common_encounter_fhir_identifier_system = NULL) {
-
   # Initialize debug variables for specific reference recalculation scenarios
   # See debug cds2db_config_toml
   debug_invalid_refs  <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS")
@@ -40,9 +39,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
     # get all resources from DB via the v_encounter_last_version view
     resource_name <- tolower(resource_name)
     column_names <- paste0(column_names, collapse = ", ")
-    query <- paste0(
-      "SELECT DISTINCT ", column_names, " FROM v_", resource_name, "_last_version"
-    )
+    query <- paste0("SELECT DISTINCT ", column_names, " FROM v_", resource_name, "_last_version")
     if (!is.null(where_clause)) {
       query <- paste0(query, "\n", where_clause)
     }
@@ -164,7 +161,9 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
         writeTableWithReferencesToDB(
           resource_name,
           resource_table,
-          calculated_col_names = etlutils::fhirdbGetColumns(resource_name, "_encounter_calculated_ref"),
+          calculated_col_names = etlutils::fhirdbGetColumns(
+            resource_name, "_encounter_calculated_ref"
+          ),
           lock_id = paste("Write recalculated references for old", resource_name, "data")
         )
         resource_tables[[resource_name]] <- resource_table

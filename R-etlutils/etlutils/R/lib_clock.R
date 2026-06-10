@@ -11,13 +11,13 @@
 #'
 #' @export
 humanReadableDuration <- function(
-    time_in_secs = c(
-      0 * 24 * 3600 + 1 * 3600 + 1 * 60 + 1.001001001,
-      0 * 24 * 3600 + 1 * 3600 + 0 * 60 + 1.001001001
-    )
+  time_in_secs = c(
+    0 * 24 * 3600 + 1 * 3600 + 1 * 60 + 1.001001001,
+    0 * 24 * 3600 + 1 * 3600 + 0 * 60 + 1.001001001
+  )
 ) {
   # store current count of digits for diplaying doubles
-  digits <- getOption('digits')
+  digits <- getOption("digits")
   # set digits to 20
   options(digits = 20)
 
@@ -54,7 +54,7 @@ humanReadableDuration <- function(
     mins         = mins,
     secs         = secs,
     msecs        = msecs,
-    '\u00B5secs' = musecs,
+    "\u00B5secs" = musecs,
     nsecs        = nsecs
   )
   #    days hours mins secs msecs µsecs nsecs
@@ -67,14 +67,13 @@ humanReadableDuration <- function(
     1,
     function(row) {
       i <- 1
-      while (i <= length(row) - 1 && (is.na(row[[i]]) || row[[i]] == '0')) {
-        row[[i]] <- ''
+      while (i <= length(row) - 1 && (is.na(row[[i]]) || row[[i]] == "0")) {
+        row[[i]] <- ""
         i <- i + 1
       }
       row
     }
-  ))
-  )
+  )))
   #    days hours mins secs msecs µsecs nsecs
   # 1:          1    1    1     1     1     1
   # 2:          1    0    1     1     1     1
@@ -88,12 +87,12 @@ humanReadableDuration <- function(
   #    hours mins secs msecs µsecs nsecs
   # 1:     1    1    1     1     1     1
   # 2:     1    0    1     1     1     1
-  time_dt[, .SD, .SDcols = sapply(time_dt, function(x) any(x != ''))]
+  time_dt[, .SD, .SDcols = sapply(time_dt, function(x) any(x != ""))]
 }
 
 ###
 # STATE LEVEL CONSTANTS to mark state of a process in time table
-STATE_LEVELS <- c('OK', 'ERROR', 'RUNNING', 'UNDEFINED')
+STATE_LEVELS <- c("OK", "ERROR", "RUNNING", "UNDEFINED")
 
 #' Clock Class
 #'
@@ -105,14 +104,11 @@ STATE_LEVELS <- c('OK', 'ERROR', 'RUNNING', 'UNDEFINED')
 #' @importFrom stringr str_pad
 #' @export
 #' @rdname Clock
-Clock = setRefClass(
-  Class = 'Clock',
+Clock <- setRefClass(
+  Class = "Clock",
   # only one data table as class variable
-  fields = c(
-    .history = 'data.table'
-  ),
+  fields = c(.history = "data.table"),
   methods = list(
-
     # Constructor for Clock class.
     #
     # Initializes the clock and creates an initial entry in the history table.
@@ -120,19 +116,22 @@ Clock = setRefClass(
     #
     initialize = function() {
       # store digits for later restoring
-      digits <- getOption('digits')
+      digits <- getOption("digits")
       # set digits to 20
       options(digits = 20)
       # get current time
       now_ <- Sys.time()
       # add init row with creation time
       .history <<- data.table::data.table(
-        id       = '0',
-        msg      = 'init',
-        state    = factor('OK', levels = STATE_LEVELS),
+        id       = "0",
+        msg      = "init",
+        state    = factor(
+          "OK",
+          levels = STATE_LEVELS
+        ),
         start    = now_,
         end      = now_,
-        error    = ''
+        error    = ""
       )
       # restore digits
       options(digits = digits)
@@ -146,19 +145,22 @@ Clock = setRefClass(
     #
     reset = function() {
       # store digits for later restoring
-      digits <- getOption('digits')
+      digits <- getOption("digits")
       # set digits to 20
       options(digits = 20)
       # get current time
       now_ <- Sys.time()
       # add init row with creation time
       .history <<- data.table::data.table(
-        id       = '0',
-        msg      = 'init',
-        state    = factor('OK', levels = STATE_LEVELS),
+        id       = "0",
+        msg      = "init",
+        state    = factor(
+          "OK",
+          levels = STATE_LEVELS
+        ),
         start    = now_,
         end      = now_,
-        error    = ''
+        error    = ""
       )
       # restore digits
       options(digits = digits)
@@ -175,14 +177,14 @@ Clock = setRefClass(
     #
     # @return No return value.
     #
-    write = function(filename_without_extension, sep = '\t', ext = 'tsv', hide_errors = TRUE) {
+    write = function(filename_without_extension, sep = "\t", ext = "tsv", hide_errors = TRUE) {
       # convert extensions as "*.csv" or ".csv" or "csv" to ".csv"
       ext <- paste0(".", gsub("(^\\*\\.)|(^\\.)", "", ext))
       # complete table and store locally in h
       h <- complete()
       # write time data table to disk
       # if flag hide_errors then remove error column in table
-      utils::write.table(x = if (hide_errors) h[,-c('error')] else h, file = paste0(filename_without_extension, ext), sep = sep, row.names = FALSE)
+      utils::write.table(x = if (hide_errors) h[, -c("error")] else h, file = paste0(filename_without_extension, ext), sep = sep, row.names = FALSE)
     },
 
     # Measure process time for a specific task.
@@ -199,48 +201,48 @@ Clock = setRefClass(
     measure_process_time = function(message, process, verbose = 0) {
       # if message is a vector of length zero, set it to empty string
       if (length(message) < 1) {
-        warning(paste0('message has length ', length(message), '. Should be one.'))
+        warning(paste0("message has length ", length(message), ". Should be one."))
         message <- ""
       }
       # if message is a vector longer than 1, use only 1st element
       if (1 < length(message)) {
-        warning(paste0('message has length ', length(message), '. Only the first element will be used.'))
+        warning(paste0("message has length ", length(message), ". Only the first element will be used."))
         message <- message[[1]]
       }
       # store digits
-      digits <- getOption('digits')
+      digits <- getOption("digits")
       # set digits to 20
       options(digits = 20)
       # get nesting level by counting the running processes
-      level <- sum(.history$state == 'RUNNING')
+      level <- sum(.history$state == "RUNNING")
       # calc id
-      id <- if (level == 0) {# if no process is running
+      id <- if (level == 0) { # if no process is running
         # starts with numbers?
-        regex <- '^[0-9]+$'
+        regex <- "^[0-9]+$"
         # get latest row which id is starting with numbers
-        row <- max(grep(regex, .history[,id]))
+        row <- max(grep(regex, .history[, id]))
         # store id of that row
         cid <- .history[row, id]
         # return this id incremented and as a character
         as.character(as.numeric(cid) + 1)
-      } else {#if processes are running
-        row <- max(which(.history$state == 'RUNNING'))
+      } else { # if processes are running
+        row <- max(which(.history$state == "RUNNING"))
         # get latest running process
         coid <- .history[row, id]
         # create regex for finding inner processes
-        regex <- paste0('^', gsub('\\.', '\\\\.', coid), '\\.[0-9]+$')
+        regex <- paste0("^", gsub("\\.", "\\\\.", coid), "\\.[0-9]+$")
         # find inner process by id
         inners <- grep(regex, .history[, id])
         # set ciid to -1 for no inner processes
         # set ciid to max(inners)
         ciid <- if (0 < length(inners)) max(inners) else -1
 
-        if (ciid < 0) {# add new inner process
-          paste0(coid, '.1')
-        } else {# increment id for new inner process
-          s <- as.numeric(base::strsplit(.history[ciid, id], '\\.')[[1]])
+        if (ciid < 0) { # add new inner process
+          paste0(coid, ".1")
+        } else { # increment id for new inner process
+          s <- as.numeric(base::strsplit(.history[ciid, id], "\\.")[[1]])
           s[length(s)] <- s[length(s)] + 1
-          paste0(s, collapse = '.')
+          paste0(s, collapse = ".")
         }
       }
       # get current time
@@ -249,30 +251,33 @@ Clock = setRefClass(
       d <- data.frame(
         id       = id,
         msg      = message,
-        state    = factor('RUNNING', levels = STATE_LEVELS),
+        state    = factor(
+          "RUNNING",
+          levels = STATE_LEVELS
+        ),
         start    = now_,
         end      = as.POSIXctWithTimezone(NA),
-        error    = ''
+        error    = ""
       )
       # add new row to history table
       .history <<- rbind.data.frame(.history, d)
       # if 0 < verbose print a message
-      if (0 < verbose) cat(paste0('start    ', message, ': ', d$start, '\n'))
+      if (0 < verbose) cat(paste0("start    ", message, ": ", d$start, "\n"))
       # run process and store result in err
       err <- try(process, silent = TRUE)
       # get end time
       now_ <- Sys.time()
       # find row of current running process
-      last_row <- max(which(.history$state == 'RUNNING'))
+      last_row <- max(which(.history$state == "RUNNING"))
       # add end time, error and state to this row
-      is_error <- inherits(err, 'try-error') && !isDebugTestError(err)
-      .history[last_row, 'end'] <<- now_
-      .history[last_row, 'error'] <<- if (is_error) err else ''
-      .history[last_row, 'state'] <<- if (is_error) 'ERROR' else 'OK'
+      is_error <- inherits(err, "try-error") && !isDebugTestError(err)
+      .history[last_row, "end"] <<- now_
+      .history[last_row, "error"] <<- if (is_error) err else ""
+      .history[last_row, "state"] <<- if (is_error) "ERROR" else "OK"
       # if 0 < verbose print some messages
       if (0 < verbose) {
-        cat(paste0('finish   ', message, ': ', .history[last_row, end], '\n'))
-        cat(paste0('duration ', message, ': ', .history[last_row, end] - .history[last_row, start], 's\n'))
+        cat(paste0("finish   ", message, ": ", .history[last_row, end], "\n"))
+        cat(paste0("duration ", message, ": ", .history[last_row, end] - .history[last_row, start], "s\n"))
       }
       # restore digits
       options(digits = digits)
@@ -289,11 +294,11 @@ Clock = setRefClass(
     complete = function() {
       h <- data.table::copy(x = .history)
       h <- base::cbind(
-        h[,c('msg', 'id', 'state')],
-        h[, humanReadableDuration(time_in_secs = as.double(difftime(end, start, 'secs')))],
-        h[,c('start', 'end', 'error')]
+        h[, c("msg", "id", "state")],
+        h[, humanReadableDuration(time_in_secs = as.double(difftime(end, start, "secs")))],
+        h[, c("start", "end", "error")]
       )
-      h[,id := stringr::str_pad(string = id, width = max(nchar(id)), side = 'right', pad = ' ')]
+      h[, id := stringr::str_pad(string = id, width = max(nchar(id)), side = "right", pad = " ")]
       h[]
     },
 
@@ -321,7 +326,7 @@ Clock = setRefClass(
 #'
 #' @export
 createClock <- function(clock_variable_name = "PROCESS_CLOCK") {
-  .lib_clock_env[[clock_variable_name]] <- methods::new(Class = 'Clock')
+  .lib_clock_env[[clock_variable_name]] <- methods::new(Class = "Clock")
 }
 
 #' Get Clock Variable from Environment

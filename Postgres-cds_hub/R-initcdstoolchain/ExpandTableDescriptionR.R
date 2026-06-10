@@ -5,9 +5,9 @@
 ####################################################################################
 
 # chance the working directory to the main directory
-if (grepl('/initcdstoolchain$', getwd())) setwd("../..")
-if (grepl('/R-initcdstoolchain$', getwd())) setwd("../")
-if (grepl('/Postgres-cds_hub$', getwd())) setwd("../")
+if (grepl("/initcdstoolchain$", getwd())) setwd("../..")
+if (grepl("/R-initcdstoolchain$", getwd())) setwd("../")
+if (grepl("/Postgres-cds_hub$", getwd())) setwd("../")
 
 # free memory
 rm(list = ls())

@@ -22,16 +22,15 @@ getEncounterColNamesForReferenceCalculation <- function() {
       "_class_code",
       "_partof_ref",
       "_partof_calculated_ref",
-      "_main_encounter_calculated_ref"#,
-      #"_diagnosis_condition_ref",
-      #"_diagnosis_condition_calculated_ref"
+      "_main_encounter_calculated_ref" # ,
+      # "_diagnosis_condition_ref",
+      # "_diagnosis_condition_calculated_ref"
     ))
   )
   return(enc_col_names_for_ref_calculation)
 }
 
 createReferencesForEncounters <- function(encounters, common_encounter_fhir_identifier_system) {
-
   #
   # Find the best fitting parent encounter by timestamp and prefer inpatient encounters
   #
@@ -87,16 +86,18 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   if (!("enc_partof_calculated_ref" %in% names(encounters))) {
     encounters[, enc_partof_calculated_ref := NA_character_]
     encounters[, enc_main_encounter_calculated_ref := NA_character_]
-    #encounters[, enc_diagnosis_condition_calculated_ref := NA_character_] # currently not used
+    # encounters[, enc_diagnosis_condition_calculated_ref := NA_character_] # currently not used
   } else {
     encounters[enc_partof_calculated_ref == "invalid", enc_partof_calculated_ref := NA_character_]
     encounters[enc_main_encounter_calculated_ref == "invalid", enc_main_encounter_calculated_ref := NA_character_]
   }
 
   # split Encounters by type code
-  encounters_by_type <- list(einrichtungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[1]]],
-                             abteilungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[2]]],
-                             versorgungsstellenkontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[3]]])
+  encounters_by_type <- list(
+    einrichtungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[1]]],
+    abteilungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[2]]],
+    versorgungsstellenkontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[3]]]
+  )
 
   # cat warning message if there are no encounters of at least one type
   for (type_index in 1:3) {
@@ -197,8 +198,10 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   # update the encounters table in the list
   encounters <- data.table::rbindlist(encounters_by_type)
   # fill all abteilungskontakt and versorgungstellenkontakt Encounters NA partof refs with "invalid"
-  encounters[is.na(enc_partof_calculated_ref) & (enc_type_code %in% ENCOUNTER_TYPES[2:3]),
-             enc_partof_calculated_ref := "invalid"]
+  encounters[
+    is.na(enc_partof_calculated_ref) & (enc_type_code %in% ENCOUNTER_TYPES[2:3]),
+    enc_partof_calculated_ref := "invalid"
+  ]
 
   # Start: create enc_main_encounter_calculated_ref
 

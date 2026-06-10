@@ -8,8 +8,8 @@
 getRelevantColumnNamesDrugDrug <- function() {
   etlutils::namedVectorByValue(
     "ATC_DISPLAY",
-    #"SMPC_NAME",
-    #"SMPC_VERSION",
+    # "SMPC_NAME",
+    # "SMPC_VERSION",
     "ATC_PRIMARY",
     "ATC_SYSTEMIC_SY",
     "ATC_DERMATIKA_D",
@@ -17,7 +17,7 @@ getRelevantColumnNamesDrugDrug <- function() {
     "ATC_INHALANDA_I",
     "ATC_SONSTIGE_SO",
     "ATC_INCLUSION",
-    #"DRUG_DRUG_KI",
+    # "DRUG_DRUG_KI",
     "ATC2_DISPLAY",
     "ATC2_PRIMARY",
     "ATC2_SYSTEMIC_SY",
@@ -25,7 +25,8 @@ getRelevantColumnNamesDrugDrug <- function() {
     "ATC2_OPHTHALMIKA_O",
     "ATC2_INHALANDA_I",
     "ATC2_SONSTIGE_SO",
-    "ATC2_INCLUSION")
+    "ATC2_INCLUSION"
+  )
 }
 
 #' Get Category Display Name for Drug-Drug MRPs
@@ -34,7 +35,9 @@ getRelevantColumnNamesDrugDrug <- function() {
 #' tagging or labeling MRPs in evaluation outputs.
 #'
 #' @return A character string: \code{"Drug-Drug"}
-getCategoryDisplayDrugDrug <- function() {"Drug-Drug"}
+getCategoryDisplayDrugDrug <- function() {
+  "Drug-Drug"
+}
 
 #' Clean and Expand Drug_Drug_MRP Definition Table
 #'
@@ -48,7 +51,6 @@ getCategoryDisplayDrugDrug <- function() {"Drug-Drug"}
 #'
 #' @export
 processExcelContentDrugDrug <- function(drug_drug_mrp_definition, mrp_type) {
-
   # Remove not nesessary columns
   mrp_columnnames <- getRelevantColumnNames(mrp_type)
   drug_drug_mrp_definition <- drug_drug_mrp_definition[,  ..mrp_columnnames]

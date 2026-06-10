@@ -234,9 +234,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       medication_analyses_complete = dplyr::n_distinct(
-        dplyr::if_else(
-          medikationsanalyse_complete == "Complete", meda_id, NA
-        )[valid_for_counting],
+        dplyr::if_else(medikationsanalyse_complete == "Complete", meda_id, NA)[valid_for_counting],
         na.rm = TRUE
       ),
       encounters_with_any_completed_mrp = dplyr::n_distinct(
@@ -445,7 +443,9 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       medication_analyses_complete = dplyr::n_distinct(
-        dplyr::if_else(medikationsanalyse_complete == "Complete", meda_id, NA)[valid_for_overall_counting],
+        dplyr::if_else(
+          medikationsanalyse_complete == "Complete", meda_id, NA
+        )[valid_for_overall_counting],
         na.rm = TRUE
       ),
       encounters_with_any_completed_mrp = dplyr::n_distinct(
@@ -660,8 +660,10 @@ calculateFeAddOnToF1 <- function(F1, statistical_report_data_F1_with_fe) {
     calculateFeSummary(grouping_variables = c("ward_name", "calendar_week"))
 
   report_with_fe <- F1 |>
-    dplyr::left_join(report_with_fe_prep,
-      by = c("ward_name",
+    dplyr::left_join(
+      report_with_fe_prep,
+      by = c(
+        "ward_name",
         "calendar_week",
         "F1_patients" = "patients",
         "F1_encounters" = "encounters"

@@ -1,4 +1,8 @@
+if (file.exists("tools/styler-style.R")) {
+  source("tools/styler-style.R")
+}
+
 options(
-  styler.addins_style_transformer = "styler::tidyverse_style(indent_by = 2L, strict = FALSE)",
+  styler.addins_style_transformer = "interpolarStylerStyle()",
   styler.save_after_styling = TRUE
 )

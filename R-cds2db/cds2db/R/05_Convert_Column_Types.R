@@ -28,7 +28,7 @@ joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, co
       if (length(dt[[column_name]][i])) {
         # Check if the cell starts with sep
         if (grepl("^\\[", dt[[column_name]][i])) {
-          #split the string by sep
+          # split the string by sep
           split_string <- strsplit(dt[[column_name]][i], sep, fixed = TRUE)[[1]]
           # Initialize the index vector and previous index
           indices <- c()
@@ -42,9 +42,19 @@ joinMultiValuesInCrackedFHIRData <- function(dt, column_names, sep, brackets, co
             }
           }
           # Remove brackets for all subsequent elements except the first occurrence an collapse values
-          result <- paste(ifelse(seq_along(split_string) %in% indices, split_string,
-                                 gsub(paste0("^\\", brackets[1], ".*\\", brackets[2]), "",
-                                      split_string, perl = TRUE)), collapse = " ")
+          result <- paste(
+            ifelse(
+              seq_along(split_string) %in% indices,
+              split_string,
+              gsub(
+                paste0("^\\", brackets[1], ".*\\", brackets[2]),
+                "",
+                split_string,
+                perl = TRUE
+              )
+            ),
+            collapse = " "
+          )
           # Replace the original cell value with the modified result
           dt[[column_name]][i] <- result
         }
@@ -148,7 +158,7 @@ meltCrackedFHIRData <- function(resource_tables, fhir_table_descriptions) {
         sep <- fhir_table_description@sep
         time0 <- Sys.time()
         resource_tables[[i]] <- fhircrackr::fhir_melt_all(resource_tables[[i]], brackets, sep, column_name_separator = "/")
-        duration <- difftime(Sys.time(), time0, units = 'secs')
+        duration <- difftime(Sys.time(), time0, units = "secs")
         nrow_after_melt <- nrow(resource_tables[[i]])
         print(paste("Resource table", resource_name, nrow_before_melt, "rows to", nrow_after_melt, "rows in", duration, "seconds."))
       }
@@ -214,7 +224,7 @@ convertTypes <- function(resource_tables, fhir_table_descriptions, resource_tabl
 
   # the following commented codeline adds a second name to all patient names. So you can
   # 'test' the follwing join function
-  #resource_tables$patient[, `name/given` := paste0(`name/given`, SEP, "[1.2]Ernst-August")]
+  # resource_tables$patient[, `name/given` := paste0(`name/given`, SEP, "[1.2]Ernst-August")]
   etlutils::runLevel3("Join string multi entries in cracked FHIR data", {
     resource_tables <- joinUnmeltableMultiEntries(resource_tables, fhir_table_descriptions)
   })
@@ -233,7 +243,6 @@ convertTypes <- function(resource_tables, fhir_table_descriptions, resource_tabl
   convertType(resource_tables, "boolean", etlutils::convertBooleanFormat)
 
   for (i in seq_along(resource_tables)) {
-
     # rename the id column from the raw tables from tablename_id to tablename_raw_id
     tablename <- tolower(names(resource_tables)[i])
     pattern <- paste0("^", tablename, "_id$")
