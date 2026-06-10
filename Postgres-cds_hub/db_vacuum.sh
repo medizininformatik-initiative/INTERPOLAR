@@ -237,7 +237,7 @@ for s in "${SCHEMAS[@]}"; do
     if [ "$run_vacuum" = true ]; then
       echo "  → Running VACUUM FULL..."
       if ! docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
-            VACUUM FULL ${s}.${tablename};
+          VACUUM FULL ${s}.${tablename};
         " > /dev/null 2>&1; then
         echo "❌ Fehler beim VACUUM FULL: ${s}.${tablename}"
       fi
@@ -274,7 +274,7 @@ for s in "${SCHEMAS[@]}"; do
       pages_after=$(echo "$after_output" | grep "relpages" | awk '{print $3}')
 
       # Zeige After nur, wenn sich etwas geändert hat oder Force-Modus
-      if [ "$dead_after" -gt 0 ] || [ "$pages_after" -lt "$pages_before" ] || [ "$FORCE_MODE" = true ]; then
+      if [ "$dead_after" -gt 0 ] || [ "$dead_after" -lt "$dead_before" ] || [ "$pages_after" -lt "$pages_before" ] ||[ "$FORCE_MODE" = true ]; then
         echo "    - Live tuples: ${live_after}"
         echo "    - Dead tuples: ${dead_after}"
         echo "    - Pages: ${pages_after}"
