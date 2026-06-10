@@ -233,6 +233,84 @@ getCohortFilterTableDescriptions <- function(
   table_descriptions
 }
 
+#' Get a FHIR search request for one cohort filter resource
+#'
+#' Builds the generic FHIR search request used to download resources referenced
+#' by `COHORT_FILTER_PATTERN`.
+#'
+#' @param resource_name FHIR resource type.
+#' @param additional_search_parameter Optional additional FHIR search parameters.
+#'
+#' @return A `fhircrackr::fhir_url()` request.
+getCohortFilterResourceRequest <- function(resource_name, additional_search_parameter = NULL) {
+  fhircrackr::fhir_url(
+    url = FHIR_SERVER_ENDPOINT,
+    resource = resource_name,
+    parameters = etlutils::fhirsearchCombineParams(
+      existing_params = etlutils::fhirsearchAddGlobalParams(c()),
+      new_params = additional_search_parameter
+    )
+  )
+}
+
+#' Load cohort filter resources from the FHIR server
+#'
+#' Downloads and cracks the minimal resource tables needed for cohort PID
+#' selection.
+#'
+#' @param table_descriptions Named list of cohort filter table descriptions.
+#' @param resources_add_search_parameter Additional FHIR search parameters keyed
+#'   by resource type.
+#' @param download_function Function used to download and crack one resource.
+#' @param refresh_token_function Function used to refresh the FHIR token.
+#'
+#' @return A named list of cracked resource tables keyed by resource type.
+loadCohortFilterResourceTablesFromFHIRServer <- function(
+  table_descriptions,
+  resources_add_search_parameter = debugSetResourcesAddSearchParameter(table_descriptions = table_descriptions),
+  download_function = etlutils::fhirsearchDownloadAndCrackResources,
+  refresh_token_function = etlutils::fhirsearchRefreshToken
+) {
+  shouldSkipResourceDownload <- function(resource_name) {
+    resource_name %in% names(resources_add_search_parameter) &&
+      nchar(resources_add_search_parameter[[resource_name]]) == 0
+  }
+
+  refresh_token_function()
+
+  resource_tables <- list()
+  for (resource_name in names(table_descriptions)) {
+    table_description <- table_descriptions[[resource_name]]
+
+    if (shouldSkipResourceDownload(resource_name)) {
+      resource_tables[[resource_name]] <- etlutils::fhirdataCreateResourceTable(table_description)
+      next
+    }
+
+    request <- getCohortFilterResourceRequest(
+      resource_name,
+      resources_add_search_parameter[[resource_name]]
+    )
+    resource_table <- download_function(
+      request = request,
+      table_description = table_description,
+      max_bundles = MAX_ENCOUNTER_BUNDLES,
+      log_errors = paste0(tolower(resource_name), "_cohort_filter_error.xml")
+    )
+
+    if (etlutils::isSimpleNA(resource_table) || !nrow(resource_table)) {
+      resource_table <- etlutils::fhirdataCreateResourceTable(table_description)
+    } else {
+      resource_table <- data.table::as.data.table(resource_table)
+      names(resource_table) <- table_description@cols@.Data
+    }
+
+    resource_tables[[resource_name]] <- resource_table
+  }
+
+  return(resource_tables)
+}
+
 #' Get FHIR table description based on filter patterns.
 #'
 #' This function takes a list of filter patterns and extracts unique column names
@@ -359,6 +437,55 @@ extractPIDsSplittedByCohortFromResourceTables <- function(
       cohort_pids <- cohort_pids[grepl(DEBUG_FILTER_PIDS_PATTERN, patient_id)]
     }
     pids_splitted_by_cohort[[cohort_name]] <- cohort_pids
+  }
+
+  return(pids_splitted_by_cohort)
+}
+
+#' Get patient IDs split by cohort
+#'
+#' Downloads the resources referenced in `COHORT_FILTER_PATTERN`, applies the
+#' configured filters, and extracts matching patient IDs per cohort.
+#'
+#' @param log_result logical indicating that the result should be logged via
+#'   `cat`. Default is TRUE.
+#' @param load_resource_tables_function Function used to load the cohort filter
+#'   resource tables.
+#'
+#' @return A named list of data.tables with cohort patient IDs.
+getPIDsSplittedByCohort <- function(
+  log_result = TRUE,
+  load_resource_tables_function = loadCohortFilterResourceTablesFromFHIRServer
+) {
+  etlutils::runLevel3("Get Patient IDs by cohort filter resources from FHIR Server", {
+    cohort_filter_patterns <- convertCohortFilterPatterns()
+    table_descriptions <- getCohortFilterTableDescriptions(cohort_filter_patterns)
+    resource_tables <- load_resource_tables_function(table_descriptions)
+
+    etlutils::runLevel3Line("Split resources to cohorts", {
+      pids_splitted_by_cohort <- extractPIDsSplittedByCohortFromResourceTables(
+        resource_tables,
+        cohort_filter_patterns
+      )
+    })
+  })
+
+  if (log_result) {
+    etlutils::runLevel3("Log getPIDsSplittedByCohort() result", {
+      no_cohorts <- !length(pids_splitted_by_cohort)
+      all_cohorts_empty <- all(sapply(pids_splitted_by_cohort, function(set) length(set) == 0))
+      if (!no_cohorts && !all_cohorts_empty) {
+        cat("Found the following patient IDs for cohort(s) '", paste0(names(pids_splitted_by_cohort), collapse = "', '"), "':\n", sep = "")
+        print(pids_splitted_by_cohort)
+      } else {
+        if (no_cohorts) {
+          message <- "No cohort names and no cohort filter resources found on FHIR server.\n"
+        } else if (all_cohorts_empty) {
+          message <- paste0("No cohort filter resources found for cohort(s) '", paste0(names(pids_splitted_by_cohort), collapse = "', '"), "' on FHIR server.\n")
+        }
+        etlutils::catWarningMessage(message)
+      }
+    })
   }
 
   return(pids_splitted_by_cohort)
