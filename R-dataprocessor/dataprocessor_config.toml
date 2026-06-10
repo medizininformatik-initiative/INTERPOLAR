@@ -124,14 +124,12 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 # Filter for the medical case ID
 # ------------------------------
 # The following filter targets Encounter.indentifier.system.
-# It is used for 2 things:
-# 1.) If not all Encounter resources of the 3 levels are linked to each other via partOf relationships, they must at least have a common identifier (all absolutely the same), as specified in the Implementation Guide.
-# They can all be found here using this common identifier.
-# 2.) This identifier should correspond to the ID of the hospital case and is displayed in the frontend as "Case ID".
+# This identifier should correspond to the ID of the hospital case and is displayed in the frontend as "Case ID".
+# This identifier must be assigned to Encounters of type "Einrichtungskontakt".
 #
 # It is *not* a pattern. It must be specified here as an exact string.
 #################
-COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+#MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = "http://www.hospital_xyz_case_id_system.de"
 
 #################
 # Only Encounters that have one of the entries specified here as a class attribute are displayed

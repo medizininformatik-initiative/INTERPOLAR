@@ -9,6 +9,7 @@
 #'
 #' @return A data.table containing the processed and expanded MRP definition.
 #'
+#' @export
 getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
 
   #path to the directory containing the MRP Excel files.

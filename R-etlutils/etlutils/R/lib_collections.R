@@ -278,7 +278,7 @@ catList <- function(input_list, prefix = "", suffix = "", hide_value_pattern = "
         } else {
           value <- getPrintString(value) # Assuming `getPrintString` is defined
         }
-      } else if (hide_value && !is.null(value) && !is.na(value) && nzchar(as.character(value))) {
+      } else if (hide_value && !is.null(value) && any(!is.na(value)) && any(nzchar(as.character(value)))) {
         # Handle non-empty, non-list values
         value <- paste("<Not empty", typeof(value), "value>")
       }
