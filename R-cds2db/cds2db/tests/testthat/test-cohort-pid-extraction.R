@@ -73,6 +73,57 @@ testthat::test_that("extractPIDsSplittedByCohortFromResourceTables ignores match
   testthat::expect_equal(nrow(pids_splitted_by_cohort[["DUP 1"]]), 0)
 })
 
+testthat::test_that("extractPIDsSplittedByCohortFromResourceTables rejects overlapping cohort PIDs by default", {
+  cohort_filter_patterns <- list(
+    "DUP 1" = list(Observation = list(Condition_1 = list("code/coding/code" = "12345"))),
+    "DUP 2" = list(Observation = list(Condition_1 = list("code/coding/code" = "12345")))
+  )
+  resource_tables <- list(
+    Observation = data.table::data.table(
+      id = "obs-1",
+      "subject/reference" = "Patient/pat-1",
+      "patient/reference" = NA_character_,
+      "code/coding/code" = "12345"
+    )
+  )
+
+  testthat::expect_error(
+    extractPIDsSplittedByCohortFromResourceTables(resource_tables, cohort_filter_patterns),
+    "assigned to multiple cohorts"
+  )
+})
+
+testthat::test_that("extractPIDsSplittedByCohortFromResourceTables allows overlapping cohort PIDs", {
+  cohort_filter_patterns <- list(
+    "DUP 1" = list(Observation = list(Condition_1 = list("code/coding/code" = "12345"))),
+    "DUP 2" = list(Observation = list(Condition_1 = list("code/coding/code" = "12345")))
+  )
+  resource_tables <- list(
+    Observation = data.table::data.table(
+      id = "obs-1",
+      "subject/reference" = "Patient/pat-1",
+      "patient/reference" = NA_character_,
+      "code/coding/code" = "12345"
+    )
+  )
+
+  pids_splitted_by_cohort <- extractPIDsSplittedByCohortFromResourceTables(
+    resource_tables,
+    cohort_filter_patterns,
+    allow_patients_in_multiple_cohorts = TRUE
+  )
+
+  testthat::expect_equal(nrow(pids_splitted_by_cohort[["DUP 1"]]), 1)
+  testthat::expect_equal(nrow(pids_splitted_by_cohort[["DUP 2"]]), 1)
+  testthat::expect_equal(
+    rbindPidsSplittedByCohort(pids_splitted_by_cohort)[, .(patient_id, cohort_name)],
+    data.table::data.table(
+      patient_id = c("pat-1", "pat-1"),
+      cohort_name = c("DUP 1", "DUP 2")
+    )
+  )
+})
+
 testthat::test_that("extractPIDsSplittedByCohortFromResourceTables reports missing id columns", {
   cohort_filter_patterns <- list(
     "DUP 1" = list(Observation = list(Condition_1 = list("code/coding/code" = "12345")))

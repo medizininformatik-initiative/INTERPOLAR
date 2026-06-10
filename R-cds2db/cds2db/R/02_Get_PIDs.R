@@ -342,14 +342,15 @@ getTableDescriptionColumnsFromFilterPatterns <- function(filter_patterns, ...) {
 #'   resource type.
 #' @param cohort_filter_patterns Converted cohort filter patterns grouped by
 #'   cohort and resource.
-#' @param table_description_table Table Description rows with `RESOURCE` and
-#'   `FHIR_EXPRESSION`.
+#' @param allow_patients_in_multiple_cohorts Logical. If `FALSE`, the same
+#'   patient ID must not occur in multiple cohorts.
 #'
 #' @return A named list of data.tables with `patient_id`,
 #'   `source_resource_type`, `source_resource_id`, and optional `encounter_id`.
 extractPIDsSplittedByCohortFromResourceTables <- function(
   resource_tables,
-  cohort_filter_patterns
+  cohort_filter_patterns,
+  allow_patients_in_multiple_cohorts = etlutils::isDefinedAndTrue("ALLOW_PATIENTS_IN_MULTIPLE_COHORTS")
 ) {
   addCohortPatientIDColumn <- function(resource_table, resource_name) {
     if (!("id" %in% names(resource_table))) {
@@ -374,6 +375,33 @@ extractPIDsSplittedByCohortFromResourceTables <- function(
     resource_table[, patient_id := etlutils::getAfterLastSlash(patient_id)]
 
     return(resource_table)
+  }
+
+  validatePatientCohortOverlap <- function(pids_splitted_by_cohort) {
+    pids_per_cohort <- rbindPidsSplittedByCohort(pids_splitted_by_cohort)
+    if (!nrow(pids_per_cohort)) {
+      return(invisible(TRUE))
+    }
+
+    patient_cohort_counts <- unique(pids_per_cohort[, .(patient_id, cohort_name)])[, .N, by = patient_id]
+    overlapping_patient_ids <- patient_cohort_counts[N > 1L, patient_id]
+    if (!length(overlapping_patient_ids)) {
+      return(invisible(TRUE))
+    }
+
+    overlapping_patients <- unique(
+      pids_per_cohort[patient_id %in% overlapping_patient_ids, .(patient_id, cohort_name)]
+    )[order(patient_id, cohort_name)]
+    overlap_messages <- overlapping_patients[, .(
+      cohorts = paste(cohort_name, collapse = ", ")
+    ), by = patient_id]
+    stop(
+      "The following patient ID(s) are assigned to multiple cohorts, but ",
+      "ALLOW_PATIENTS_IN_MULTIPLE_COHORTS is not TRUE: ",
+      paste(paste0(overlap_messages$patient_id, " (", overlap_messages$cohorts, ")"), collapse = "; "),
+      ".",
+      call. = FALSE
+    )
   }
 
   pids_splitted_by_cohort <- list()
@@ -439,6 +467,10 @@ extractPIDsSplittedByCohortFromResourceTables <- function(
     pids_splitted_by_cohort[[cohort_name]] <- cohort_pids
   }
 
+  if (!allow_patients_in_multiple_cohorts) {
+    validatePatientCohortOverlap(pids_splitted_by_cohort)
+  }
+
   return(pids_splitted_by_cohort)
 }
 
@@ -451,11 +483,14 @@ extractPIDsSplittedByCohortFromResourceTables <- function(
 #'   `cat`. Default is TRUE.
 #' @param load_resource_tables_function Function used to load the cohort filter
 #'   resource tables.
+#' @param allow_patients_in_multiple_cohorts Logical. If `FALSE`, the same
+#'   patient ID must not occur in multiple cohorts.
 #'
 #' @return A named list of data.tables with cohort patient IDs.
 getPIDsSplittedByCohort <- function(
   log_result = TRUE,
-  load_resource_tables_function = loadCohortFilterResourceTablesFromFHIRServer
+  load_resource_tables_function = loadCohortFilterResourceTablesFromFHIRServer,
+  allow_patients_in_multiple_cohorts = etlutils::isDefinedAndTrue("ALLOW_PATIENTS_IN_MULTIPLE_COHORTS")
 ) {
   etlutils::runLevel3("Get Patient IDs by cohort filter resources from FHIR Server", {
     cohort_filter_patterns <- convertCohortFilterPatterns()
@@ -465,7 +500,8 @@ getPIDsSplittedByCohort <- function(
     etlutils::runLevel3Line("Split resources to cohorts", {
       pids_splitted_by_cohort <- extractPIDsSplittedByCohortFromResourceTables(
         resource_tables,
-        cohort_filter_patterns
+        cohort_filter_patterns,
+        allow_patients_in_multiple_cohorts
       )
     })
   })

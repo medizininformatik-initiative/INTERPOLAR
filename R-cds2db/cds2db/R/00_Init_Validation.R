@@ -251,6 +251,15 @@ validateConfig <- function() {
     require_resource = !configured_filter_patterns$legacy
   )
 
+  if (exists("ALLOW_PATIENTS_IN_MULTIPLE_COHORTS")) {
+    if (!is.logical(ALLOW_PATIENTS_IN_MULTIPLE_COHORTS) || length(ALLOW_PATIENTS_IN_MULTIPLE_COHORTS) != 1L || is.na(ALLOW_PATIENTS_IN_MULTIPLE_COHORTS)) {
+      stop("ALLOW_PATIENTS_IN_MULTIPLE_COHORTS must be defined as a single logical value.")
+    }
+    if (configured_filter_patterns$legacy && isTRUE(ALLOW_PATIENTS_IN_MULTIPLE_COHORTS)) {
+      stop("ALLOW_PATIENTS_IN_MULTIPLE_COHORTS cannot be TRUE with legacy ENCOUNTER_FILTER_PATTERN definitions. Ward assignments are always exclusive.")
+    }
+  }
+
   if (exists("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS") && length(FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS) > 1) {
     stop("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS must be defined as single string.")
   }

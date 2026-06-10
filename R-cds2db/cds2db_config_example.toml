@@ -147,6 +147,11 @@ FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 # exactly the names assigned here are also displayed there as ward names. The ward names from the
 # FHIR location reference in Encounters are ignored!
 #################
+# In generic COHORT_FILTER_PATTERN mode, patients can optionally be allowed to occur in multiple
+# cohorts. Legacy ENCOUNTER_FILTER_PATTERN ward assignments are always exclusive and cannot use
+# this switch with TRUE.
+#ALLOW_PATIENTS_IN_MULTIPLE_COHORTS = false
+
 COHORT_FILTER_PATTERN_1 = [
   "cohort_name = 'Station 1'",
   "resource = 'Encounter' + location/location/reference = 'Location/location_id_1'"

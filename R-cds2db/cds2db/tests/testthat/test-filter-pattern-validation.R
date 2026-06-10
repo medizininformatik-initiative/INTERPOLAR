@@ -347,3 +347,28 @@ testthat::test_that("getConfiguredCohortFilterPatterns returns normalized legacy
     "cohort_name = 'Station 1'"
   )
 })
+
+testthat::test_that("validateConfig rejects overlapping patients switch for legacy encounter patterns", {
+  variable_names <- c(
+    "PROCESS",
+    "ENCOUNTER_FILTER_PATTERN_1",
+    "ALLOW_PATIENTS_IN_MULTIPLE_COHORTS"
+  )
+  on.exit(rm(list = variable_names, envir = .GlobalEnv), add = TRUE)
+
+  assign("PROCESS", "CDSToolChain", envir = .GlobalEnv)
+  assign(
+    "ENCOUNTER_FILTER_PATTERN_1",
+    c(
+      "ward_name = 'Station 1'",
+      "id = '.*'"
+    ),
+    envir = .GlobalEnv
+  )
+  assign("ALLOW_PATIENTS_IN_MULTIPLE_COHORTS", TRUE, envir = .GlobalEnv)
+
+  testthat::expect_error(
+    validateConfig(),
+    "cannot be TRUE with legacy ENCOUNTER_FILTER_PATTERN"
+  )
+})
