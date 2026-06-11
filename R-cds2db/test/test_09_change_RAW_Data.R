@@ -166,7 +166,6 @@ if (exists("TOOLCHAIN_DAY")) {
     # pid <- "UKB-0001_10"
     # addDrugs(pid, "N06AX22", day_offset = -0.3, period_type = "timing_events")
     # addDrugs(pid, "J01MA02", period_type = "all_timestamps_NA")
-
   })
 
   # Update the resource_tables list with the modified data tables

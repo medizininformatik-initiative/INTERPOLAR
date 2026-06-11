@@ -134,7 +134,6 @@ addEmptyRowsBeforeNewResource <- function(table) {
 #' \code{\link[etlutils]{isSimpleNotEmptyString}}, \code{\link[etlutils]{getAfterLastSlash}},
 #' \code{\link[etlutils]{getBeforeLastSlash}}, \code{\link[etlutils]{replacePatternsInString}}
 expandTableDescriptionInternal <- function(table_description_collapsed, expansion_tables) {
-
   table <- data.table::copy(table_description_collapsed)
 
   replace_patterns <- extractReplacePatterns(table)
@@ -169,7 +168,6 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   row <- 1
   last_row_index <- nrow(table)
   while (row <= last_row_index) {
-
     if (!is.na(table$RESOURCE[row])) {
       resource <- table$RESOURCE[row]
       if (!is.na(table$RESOURCE_PREFIX[row])) {
@@ -239,7 +237,6 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       reference_prefix <- getResourceAbbreviation(table_description_collapsed, reference_type)
       new_table[row, REFERENCE_ID_COLUMN_NAME := paste0(reference_prefix, "_id")]
     }
-
   }
 
   # set the column 'COLUMN_NAME' directly in front of column 'FHIR_EXPRESSION'
@@ -250,7 +247,6 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   table[, COLUMN_NAME := tolower(COLUMN_NAME)]
   # add empty row after every last entry of a resource (and before a new resource starts)
   table <- addEmptyRowsBeforeNewResource(table)
-
 }
 
 #' Expand Table Description from an Excel File

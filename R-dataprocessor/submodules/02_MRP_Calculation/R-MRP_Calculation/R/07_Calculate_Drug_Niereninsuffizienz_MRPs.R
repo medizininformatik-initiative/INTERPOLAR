@@ -50,7 +50,6 @@ getCategoryDisplayDrugNiereninsuffizienz <- function() {
 #'
 #' @return A cleaned and expanded data.table containing the MRP definition table.
 processExcelContentDrugNiereninsuffizienz <- function(drug_niereninsuffizienz_mrp_definition, mrp_type) {
-
   drug_niereninsuffizienz_mrp_definition <- processExcelContentDrugCondition(drug_niereninsuffizienz_mrp_definition, mrp_type)
 
   return(drug_niereninsuffizienz_mrp_definition)
@@ -72,7 +71,6 @@ processExcelContentDrugNiereninsuffizienz <- function(drug_niereninsuffizienz_mr
 #' }
 #'
 getSplittedMRPTablesDrugNiereninsuffizienz <- function(mrp_pair_list) {
-
   mrp_pair_list[, LOINC_VALIDITY_DAYS := if (!"LOINC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else LOINC_VALIDITY_DAYS]
 
   splitted <- list(

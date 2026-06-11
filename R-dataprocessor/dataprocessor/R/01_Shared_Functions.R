@@ -30,7 +30,6 @@
 #'
 #' @export
 validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
-
   msg_prefix <- "dataprocessor_config.toml: "
 
   ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")

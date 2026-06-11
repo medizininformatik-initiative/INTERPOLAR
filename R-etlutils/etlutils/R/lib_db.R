@@ -436,7 +436,6 @@ dbLock <- function(lock_id) {
 
     # decrease the recursive call counter 'db_lock_depth'
     .lib_db_env[[lock_id]] <- .lib_db_env[[lock_id]] - 1
-
   }
 }
 
@@ -694,7 +693,6 @@ dbCheckColumsWidthBeforeWrite <- function(table_name, table, allow_truncate = FA
   if (STOP) {
     stop("Some columns exceed their maximum allowed length (see error messages above).")
   }
-
 }
 
 dbGetReadOnlyColumns <- function(table_name) {

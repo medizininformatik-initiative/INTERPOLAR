@@ -14,7 +14,6 @@
 #' into REDCap and does not return a value.
 #'
 importDB2Redcap <- function() {
-
   tryRedcap <- function(redcap_process) {
     tryCatch(
       {
@@ -122,7 +121,6 @@ importDB2Redcap <- function() {
     data_to_import <- list()
     # Iterate over tables and columns to fetch and send data
     for (i in seq_along(table_names)) {
-
       table_name <- table_names[i]
 
       db_generated_id_col_name <- paste0(table_name, "_fe_id")
@@ -196,9 +194,7 @@ importDB2Redcap <- function() {
   })
 
   etlutils::runLevel2Line("Update data access groups", {
-
     if (exists("record_ids_with_data_access_group") && nrow(record_ids_with_data_access_group)) {
-
       ward_names <- unique(record_ids_with_data_access_group$fall_station)
 
       # Get all data access groups from Redcap
@@ -237,6 +233,5 @@ importDB2Redcap <- function() {
       # Set the data access groups in Redcap
       suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group))
     })
-
   })
 }

@@ -48,7 +48,6 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 
 
 if (exists("TOOLCHAIN_DAY")) {
-
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   testSetResourceTables(resource_tables)
 

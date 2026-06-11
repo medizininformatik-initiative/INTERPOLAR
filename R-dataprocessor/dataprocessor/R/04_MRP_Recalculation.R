@@ -18,7 +18,6 @@ recalculateMRPs <- function(start_date,
                             end_date = NULL,
                             ignore_newer_db_version = FALSE,
                             validate_config = TRUE) {
-
   start_date <- etlutils::as.POSIXctWithTimezone(start_date)
   end_date <- if (is.null(end_date)) {
     etlutils::as.POSIXctWithTimezone(Sys.Date())
@@ -231,7 +230,6 @@ recalculateMRPs <- function(start_date,
   etlutils::setSubmoduleName("MRPRecalculation")
 
   try(etlutils::runLevel1("Run additive MRP recalculation", {
-
     sourceDataprocessorSubmodules(
       ignore_newer_db_version = ignore_newer_db_version,
       source_submodule_functions = TRUE

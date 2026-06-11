@@ -57,7 +57,6 @@ getCategoryDisplayDrugDisease <- function() {
 #'
 #' @export
 processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type) {
-
   drug_disease_mrp_definition <- processExcelContentDrugCondition(drug_disease_mrp_definition, mrp_type)
 
   return(drug_disease_mrp_definition)

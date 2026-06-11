@@ -218,7 +218,6 @@ fhirsearchResourcesByIDs <- function(
   parameters   = fhirsearchAddGlobalParams(c()),
   verbose      = 0
 ) {
-
   fhirsearchResourcesByIDs_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
     collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS - MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE) {
@@ -428,7 +427,6 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
   additional_search_parameter = NA,
   verbose = VERBOSE
 ) {
-
   WAIT_TIMES <- 2**(0:7)
   max_trials <- length(WAIT_TIMES)
 
@@ -516,7 +514,6 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
   resource_name <- table_description@resource
   # if there elements in pkg and at least one of them has a positive length
   while (0 < length(pkg) && any(0 < sapply(pkg, length))) {
-
     requests <- sapply(pkg, is.character)
     bndl_lengths <- if (0 < sum(requests)) {
       sum(sapply(pkg[requests], length))
@@ -695,7 +692,6 @@ fhirsearchResourcesByOwnID <- function(ids, table_description, last_updated = NA
   } else {
     # if there are no IDs -> create an empty table with all needed columns as character columns
     resource_table <- fhirdataCreateResourceTable(table_description)
-
   }
   return(resource_table)
 }
@@ -851,7 +847,6 @@ fhirsearchMultipleResourcesByPID <- function(pids_with_last_updated,
 
     # At this point, both Encounter and Patient resources have been loaded
     if (consider_patient_age && resource_name == "Encounter") {
-
       table_enc <- raw_fhir_resources[["Encounter"]][, c("enc_patient_ref", "enc_period_start")]
       table_pat <- raw_fhir_resources[["Patient"]][, c("pat_id", "pat_birthdate")]
       table_enc <- fhircrackr::fhir_rm_indices(table_enc, index_brackets)
@@ -878,7 +873,6 @@ fhirsearchMultipleResourcesByPID <- function(pids_with_last_updated,
 
       filtered_pids <- lapply(pids_with_last_updated, function(x) x[x %in% min_age_pat_ids])
       pids_with_last_updated <- Filter(function(x) length(x) > 0, filtered_pids)
-
     }
 
     resource_table <- raw_fhir_resources[[resource_name]]

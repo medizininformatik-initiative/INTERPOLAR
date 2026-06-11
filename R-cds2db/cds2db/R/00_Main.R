@@ -99,7 +99,6 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
   retrieve_runlevel_message <- if (isProcess("DataImport")) "Run Data Import Retrieve" else "Run Retrieve"
   try(etlutils::runLevel1(retrieve_runlevel_message, {
-
     if (!skip_db_operations) {
       # Reset database lock from unfinished previous cds2db run
       etlutils::runLevel2("Reset database lock from unfinished previous run", {
@@ -109,7 +108,6 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
       })
       # Check if we must create references for old data (should be executed exactly once and then never again)
       etlutils::runLevel2("Create references for old data", {
-
         debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALCULATE_REFS_FOR_RESOURCES")
 
         if (mustCreateReferencesForOldData() || debug_active) {
@@ -219,7 +217,6 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
       })
 
       if (!all_empty_raw) {
-
         etlutils::runLevel2("Convert RAW tables to typed tables", {
           fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
           resource_tables <- convertTypes(resource_tables_raw_diff, fhir_table_descriptions)
@@ -236,10 +233,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
             stop_if_table_not_empty = TRUE
           )
         })
-
       }
     }
-
   }))
 
   # Reset lock and close all database connections. Do not surround this with runLevelX!
@@ -247,10 +242,12 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
   # Generate finish message
   finish_message <- etlutils::generateFinishMessage()
-  if (!etlutils::isErrorOccured() &&
-    (etlutils::isDefinedAndTrue("all_wards_empty") ||
-      etlutils::isDefinedAndTrue("all_empty_fhir") ||
-      etlutils::isDefinedAndTrue("all_empty_raw"))) {
+  if (
+    !etlutils::isErrorOccured() &&
+      (etlutils::isDefinedAndTrue("all_wards_empty") ||
+        etlutils::isDefinedAndTrue("all_empty_fhir") ||
+        etlutils::isDefinedAndTrue("all_empty_raw"))
+  ) {
     finish_message <- paste0(
       "\nModule '", etlutils::getModuleName(), "' finished with no errors but the result was empty (see warnings above).\n"
     )
@@ -260,5 +257,4 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
   finish_message <- etlutils::appendDebugWarning(finish_message)
 
   return(etlutils::finalize(finish_message))
-
 }

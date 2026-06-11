@@ -210,7 +210,6 @@ if (exists("TOOLCHAIN_DAY")) {
     # 15:  0 |  0 |  1 | invalid Obs - non convertible unit
     pid <- addDrugs("UKB-0001_15", "C03DA02")
     addObs(pid, list(ref_range_inv))
-
   })
 
   # Update the resource_tables list with the modified data tables
