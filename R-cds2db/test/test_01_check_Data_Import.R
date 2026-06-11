@@ -35,9 +35,11 @@ if (exists("resource_tables")) {
     normalized_targets
   }
 
-  if (etlutils::isProcess("DataImport") ||
+  if (
+    etlutils::isProcess("DataImport") ||
     etlutils::isSubProcess("DataImport.All") ||
-    etlutils::isSubProcess("DataImport.ResourceTypes")) {
+    etlutils::isSubProcess("DataImport.ResourceTypes")
+  ) {
     etlutils::catInfoMessage(
       "Info: Skip RAW column blanking during DataImport so the backfill can be reloaded.\n"
     )

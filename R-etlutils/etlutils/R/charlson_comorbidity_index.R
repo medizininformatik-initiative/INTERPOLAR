@@ -127,7 +127,6 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
   # Function to print the defined ICD codes list.
   # @param as_R_code If TRUE (default), the list is printed in R syntax; if FALSE, in a more human-readable format.
   printCodes <- function(as_R_code = TRUE) {
-
     getSubCodeListString <- function(mainCodesList, subCodeList, name, indentation, subCodeListIndex) {
       code <- unlist(subCodeList)
       indentation <- c(rep(" ", times = indentation))
@@ -249,7 +248,6 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
 
 
     subCodesListIndex <- subCodesListIndex + 1
-
   }
 
   # for all rows with a diagnosis but without a cci score (from a high or relevant low risk diagnosis) -> set the cci score to 0

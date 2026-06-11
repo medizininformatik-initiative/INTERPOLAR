@@ -78,7 +78,6 @@ expandAndConcatenateICDs <- function(icd_column) {
     if (!grepl("+", icd, fixed = TRUE)) {
       # Handle single ICD code case
       return(paste(etlutils::expandICDs(icd), collapse = " "))
-
     }
     # Handle multiple ICD codes separated by '+'
     input_icds <- unlist(strsplit(icd, "\\+"))
@@ -87,7 +86,6 @@ expandAndConcatenateICDs <- function(icd_column) {
     # Create combinations and concatenate
     combinations <- outer(icd_1, icd_2, paste, sep = "+")
     return(trimws(paste(c(combinations), collapse = " ")))
-
   }
   # Apply the function to the entire column
   sapply(icd_column, processICD)
@@ -152,7 +150,6 @@ matchATCCodes <- function(active_atcs, mrp_table_list_by_atc) {
 #' Ergebnis-Spalte \code{output_col} enthalten sein sollen.
 #'
 computeATCForCalculation <- function(data_table, primary_col, inclusion_col, output_col, secondary_cols) {
-
   if (!(inclusion_col %in% names(data_table)) || !any(secondary_cols %in% names(data_table))) {
     data_table[, (output_col) := data_table[[primary_col]]]
     return(NULL)
@@ -254,7 +251,6 @@ matchATCCodePairs <- function(active_atcs, mrp_table_list_by_atc) {
 
           # There is no existing mrp in the result table with the same atc codes
           if (!length(duplicate_idx)) {
-
             mrp_index <- if (nrow(result_mrps) == 0) {
               1
             } else {
@@ -386,9 +382,7 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
     )
 
     for (mrp_type in names(mrp_pair_lists)) {
-
       etlutils::runLevel3(paste0("Calculate ", mrp_type, " MRPs"), {
-
         mrp_pair_list <- mrp_pair_lists[[mrp_type]]
         mrp_pair_list_processed_content_hash <- mrp_pair_list$processed_content_hash
         mrp_pair_list <- mrp_pair_list$processed_content
@@ -523,8 +517,10 @@ calculateMRPs <- function(start_date = NULL, end_date = NULL, return_used_resour
                     kurzbeschr_suffix, "\n",
                     kurzbeschr_item2
                   )
-                  if ("kurzbeschr_additional" %in% names(collapsed_match) &&
-                    any(!is.na(kurzbeschr_additional))) {
+                  if (
+                    "kurzbeschr_additional" %in% names(collapsed_match) &&
+                    any(!is.na(kurzbeschr_additional))
+                  ) {
                     base <- paste(base, paste(kurzbeschr_additional, collapse = "\n"), sep = " ")
                   }
                   base

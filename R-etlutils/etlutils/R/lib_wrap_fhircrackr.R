@@ -54,7 +54,6 @@ executeFHIRSearchVariation <- function(
   ))
 
   result <- if (!is.null(FHIR_TOKEN) && FHIR_TOKEN != "") {
-
     fhircrackr::fhir_search(
       request                = request,
       body                   = body,
@@ -66,7 +65,6 @@ executeFHIRSearchVariation <- function(
       delay_between_bundles  = delay_between_bundles
     )
   } else if (!is.null(FHIR_SERVER_USER) && !is.null(FHIR_SERVER_PASS) && FHIR_SERVER_USER != "" && FHIR_SERVER_PASS != "") {
-
     fhircrackr::fhir_search(
       request                = request,
       body                   = body,
@@ -79,7 +77,6 @@ executeFHIRSearchVariation <- function(
       delay_between_bundles  = delay_between_bundles
     )
   } else {
-
     fhircrackr::fhir_search(
       request                = request,
       body                   = body,

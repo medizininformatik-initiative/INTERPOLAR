@@ -689,7 +689,6 @@ testDischarge <- function(pid) {
 }
 
 duplicatePatients <- function(count, duplicated_start_index = 1) {
-
   addPatientIdIndex <- function(old_id, index, resource_table, resource_name) {
     new_id <- paste0(old_id, "_", index)
     id_column <- etlutils::fhirdbGetIDColumn(resource_name)
@@ -768,7 +767,6 @@ addDrugs <- function(pid, codes = NULL, day_offset = -0.4, authoredon = NA, peri
                        "timing_events",
                        "all_timestamps_NA"
                      ), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, timing_repeat_end_offset = 5, ref_codes = NULL) {
-
   period_type <- match.arg(period_type)
 
   # Load template tables from environment
@@ -913,7 +911,6 @@ addDrugsWithoutMedications <- function(pid, codes = NULL, day_offset = -0.4, aut
                                          "timing_events",
                                          "all_timestamps_NA"
                                        ), encounter_id = NULL, timing_events_count = 3, timing_events_day_offset = 2, timing_repeat_end_offset = 5) {
-
   period_type <- match.arg(period_type)
 
   # Load template tables from environment
@@ -1041,7 +1038,6 @@ createReferenceRange <- function(referencerange_low_value = NULL, referencerange
                                  referencerange_high_value = NULL, referencerange_high_code = NULL,
                                  referencerange_type_code = NULL,
                                  referencerange_low_system = NULL, referencerange_high_system = NULL) {
-
   if (!etlutils::isSimpleNAorNULL(referencerange_low_value) || !etlutils::isSimpleNAorNULL(referencerange_high_value)) {
     reference_range <- etlutils::namedListByParam(
       referencerange_low_value,
@@ -1155,7 +1151,6 @@ addObservationWithRanges <- function(pid, code, day_offset = -0.5, value = NULL,
       low_systems  <- addValue(low_systems, prefix, range$referencerange_low_system)
       high_systems <- addValue(high_systems, prefix, range$referencerange_high_system)
       type_codes   <- addValue(type_codes, prefix2, range$referencerange_type_code)
-
     }
     pasteRAW <- function(vec) {
       raw <- paste0(vec, collapse = " ~ ")

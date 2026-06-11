@@ -266,7 +266,6 @@ if (exists("TOOLCHAIN_DAY")) {
     addObservation(pid, "2951-2", value = 7, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # kein MRP
     addObservation(pid, "2951-2", value = 3, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
     addObservation(pid, "2951-2", value = 7, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # kein MRP
-
   })
 
   # Update the resource_tables list with the modified data tables

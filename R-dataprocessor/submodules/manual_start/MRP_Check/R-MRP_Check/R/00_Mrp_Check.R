@@ -1,5 +1,4 @@
 mrpCheck <- function(start_date, end_date) {
-
   anonymizeTimestampsByPatient <- function(
     dt,
     patient_id_col = "FHIR Patient ID",
@@ -186,8 +185,7 @@ mrpCheck <- function(start_date, end_date) {
     )
 
     query <- paste0(
-      "SELECT MIN(
-        enc_period_start) AS min_enc_period_start\n",
+      "SELECT MIN(enc_period_start) AS min_enc_period_start\n",
       "FROM v_encounter_last_version\n",
       "WHERE enc_period_start BETWEEN '", start_date, "' AND '", end_date, "';"
     )
@@ -233,5 +231,4 @@ mrpCheck <- function(start_date, end_date) {
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {
     etlutils::writeExcelFileGlobal(list("MRP Check" = result), "MRP_Check_Result_global")
   })
-
 }

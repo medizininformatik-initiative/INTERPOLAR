@@ -113,7 +113,6 @@ extractBetweenQuotes <- function(string) {
 #'
 #' @export
 removePlaceholderLines <- function(input_string, placeholder) {
-
   placeholder_escaped <- etlutils::getEscaped(placeholder)
 
   # Check if input_string ends with a newline
@@ -282,7 +281,6 @@ replace <- function(original, replacement, string) {
 #####################################
 
 createHeader <- function(script_rights_definition) {
-
   add <- function(...) {
     header <<- paste0(header, paste0(...), "\n")
   }
@@ -391,7 +389,6 @@ convertTemplate <- function(tables_descriptions,
                             loop_row = 1,
                             indentation = "",
                             recursion = 0) {
-
   rights_first_row <- script_rights_definition[1]
   # Load SQL template
   content <- ifelse (is.na(template_content), getTemplateContent(template_name), template_content)
@@ -582,7 +579,6 @@ convertTemplate <- function(tables_descriptions,
   }
 
   if (recursion == 0) {
-
     placeholders <- extractPlaceholders(content)
     if (length(placeholders)) {
       warning("There are unreplaced placeholders in the file ", file_name, ":\n", placeholders)
@@ -593,7 +589,6 @@ convertTemplate <- function(tables_descriptions,
     } else {
       cat(" skipped\n")
     }
-
   }
   # Write the modified content to the file
   return(content)
@@ -604,7 +599,6 @@ convertTemplate <- function(tables_descriptions,
 ########
 
 loadDatabaseRightsAndConvertDefinition <- function() {
-
   rights_definition_file_name <- getRightsDefinitionFileName()
   rights_and_convert_definition <- etlutils::readExcelFileAsTableList(rights_definition_file_name)
 
@@ -689,5 +683,4 @@ createDatabaseScriptsFromTemplates <- function() {
       }
     }
   }
-
 }

@@ -98,7 +98,6 @@ runSubmodules <- function() {
 
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
-
     submodule_name <- basename(dir)
     etlutils::setSubmoduleName(submodule_name)
 
@@ -118,11 +117,9 @@ runSubmodules <- function() {
       if (file.exists(start_script)) {
         source(start_script)
       }
-
     })
 
     etlutils::removeSubmoduleName()
-
   }
 }
 
@@ -134,7 +131,6 @@ startDataprocessorModule <- function(validate_config = TRUE) {
 
 sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
                                           source_submodule_functions = FALSE) {
-
   etlutils::runLevel2("Reset database lock from unfinished previous run", {
     etlutils::dbResetLock()
     etlutils::checkVersion(ignore_newer_db_version)
@@ -165,13 +161,11 @@ processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE)
   startDataprocessorModule(validate_config)
 
   try(etlutils::runLevel1("Run Dataprocessor", {
-
     sourceDataprocessorSubmodules(ignore_newer_db_version)
 
     etlutils::runLevel2("Run dataprocessor submodules", {
       runSubmodules()
     })
-
   }))
 
   # Reset lock and close all database connections. Do not surround this with runLevelX!
@@ -181,5 +175,4 @@ processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE)
   finish_message <- etlutils::generateFinishMessage()
 
   return(etlutils::finalize(finish_message))
-
 }

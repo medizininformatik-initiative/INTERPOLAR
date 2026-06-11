@@ -220,7 +220,6 @@ addDataImportFHIRDateSearchParameters <- function(table_descriptions,
 #'   and the last element is a table representing the ward and patient ID per date.
 #'
 loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_descriptions) {
-
   patient_ids <- unique(unlist(data.table::rbindlist(pids_splitted_by_ward, use.names = TRUE, fill = TRUE)[, .(patient_id)]))
 
   if (!isProcess("DataImport")) {
@@ -272,11 +271,9 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
 
     # Create the query for the last insert/update date for every ID
     query <- paste0(
-      "SELECT pat_id, MAX(
-        last_check_datetime) AS last_insert_datetime\n",
+      "SELECT pat_id, MAX(last_check_datetime) AS last_insert_datetime\n",
       "FROM v_patient\n",
-      "WHERE pat_id = ANY(
-        $1::text[])\n",
+      "WHERE pat_id = ANY($1::text[])\n",
       "GROUP BY pat_id;"
     )
 
@@ -321,7 +318,7 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
 
   # the parameter FHIR_SEARCH_PIDS_BY_SUBJECT decides if the patient IDs are
   # passed by subject or patient in the FHIR search request
-  id_param_str <- ifelse (etlutils::isDefinedAndTrue("FHIR_SEARCH_PIDS_BY_SUBJECT"), "subject", "patient")
+  id_param_str <- ifelse(etlutils::isDefinedAndTrue("FHIR_SEARCH_PIDS_BY_SUBJECT"), "subject", "patient")
 
   # Load all data of relevant patients from FHIR server
   resource_tables_fhir <- etlutils::fhirsearchMultipleResourcesByPID(
@@ -337,10 +334,12 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   pids_with_last_updated <- resource_tables_fhir$pids_with_last_updated
 
   # THIS EXCEPTION MUST BE GENERALIZED OR REMOVED HERE! FHIR resource names should not be used here.
-  if (etlutils::isSubProcess("DataImport.ResourceTypes") &&
+  if (
+    etlutils::isSubProcess("DataImport.ResourceTypes") &&
     hasDataImportDateRange() &&
     "DiagnosticReport" %in% names(table_descriptions) &&
-    (!("DiagnosticReport" %in% names(raw_fhir_resources)) || !nrow(raw_fhir_resources[["DiagnosticReport"]]))) {
+    (!("DiagnosticReport" %in% names(raw_fhir_resources)) || !nrow(raw_fhir_resources[["DiagnosticReport"]]))
+  ) {
     catInfoMessage("Info: No DiagnosticReport resources found with date search parameter. Retrying with issued.\n")
     diagnostic_report_add_search_parameter <- addDataImportFHIRDateSearchParameters(
       table_descriptions["DiagnosticReport"],

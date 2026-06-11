@@ -114,7 +114,6 @@ startModule <- function(config, hide_value_pattern = "") {
 #' @return This function does not return a value. It saves log data as a side effect.
 #'
 storeFinishData <- function(finish_message, error_message) {
-
   module_log <- data.table::data.table(
     module_name = as.character(dbGetModuleName()),
     message = as.character(finish_message),

@@ -23,5 +23,4 @@ if (exists("TOOLCHAIN_DAY")) {
   } else if (TOOLCHAIN_DAY == 3) {
     # ...
   }
-
 }

@@ -35,7 +35,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   # Find the best fitting parent encounter by timestamp and prefer inpatient encounters
   #
   findParentEncounter <- function(child_row, candidate_parent_encounters) {
-
     child_start <- child_row$enc_period_start
     child_end <- child_row$enc_period_end
     # filter candidates that enclose the child encounter
@@ -46,7 +45,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
         (is.na(child_end) | is.na(enc_period_end) | enc_period_end >= child_end)
     ]
     if (nrow(candidate_parent_encounters) > 1) {
-
       getParentCandidates <- function(candidate_parent_encounters, enc_class) {
         new_candidate_parent_encounters <- candidate_parent_encounters[enc_class_code == enc_class]
         if (nrow(new_candidate_parent_encounters) >= 1) {
@@ -112,7 +110,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   }
 
   etlutils::runLevel2("Fill the enc_partof_calculated_ref column level by level (direct copy)", {
-
     etlutils::runLevel2("... from existing part_of references", {
       for (i in 2:3) { # for each level except the first (einrichtungskontakt)
         encounters_of_lvl <- encounters_by_type[[i]]
@@ -174,7 +171,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
               patient_ref <- encounters_of_lvl$enc_patient_ref[enc_index]
               candidate_parent_encounters <- parent_encounters_of_lvl[enc_patient_ref == patient_ref]
               if (nrow(candidate_parent_encounters)) {
-
                 parent_encounter <- findParentEncounter(
                   child_row = encounters_of_lvl[enc_index],
                   candidate_parent_encounters = candidate_parent_encounters
@@ -303,7 +299,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
 
 createReferencesForResource <- function(encounters, resource_name, resource_table, start_column_names) {
   etlutils::runLevel2Line(paste0("Create Encounter References for ", resource_name), {
-
     calculated_ref_col_name <- getEncounterCalculatedReferenceColumnName(resource_name)
     # Once the data has been retrieved from the database, we only need to calculate the cal_ref
     # columns for the resources that have no valid value, so all others can be removed.

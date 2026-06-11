@@ -149,7 +149,6 @@ getEncountersWithTimeRangeFromDB <- function(start_time, end_time) {
 # Load Einrichtungskontakt Encounters without retrolective MRP evaluation
 #
 getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
-
   encounters_per_mrp_type <- list()
   #
   # 1.) Get all Einrichtungskontakt encounters that ended before now and do not
@@ -172,8 +171,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
       "    SELECT enc_id FROM v_dp_mrp_calculations\n",
       "    WHERE mrp_calculation_type = '", mrp_type, "' AND study_phase = 'PhaseB'\n",
       "    GROUP BY enc_id\n",
-      "    HAVING COUNT(
-        meda_id) = 0\n",
+      "    HAVING COUNT(meda_id) = 0\n",
       "  )\n",
       ")"
     )
@@ -469,7 +467,6 @@ getMedicationStatementsFromDB <- function(patient_references) {
 # Medication (filtered by Medications with ATC)
 #
 getATCMedicationsFromDB <- function(medication_request, medication_administrations, medication_statements) {
-
   medication_ids <- etlutils::fhirdataExtractIDs(unique(c(
     medication_request$medreq_medicationreference_ref,
     medication_administrations$medadm_medicationreference_ref,
@@ -663,7 +660,6 @@ getConditionsFromDB <- function(patient_references) {
 # Extract ATC code of referenced Medication. If not exists then remove the resource.
 #
 appendATCColumns <- function(medication_resources, medications) {
-
   system_col <- grep("_medicationcodeableconcept_system$", names(medication_resources), value = TRUE)
   medication_resource_prefix <- sub("_medicationcodeableconcept_system$", "", system_col)
   code_col <- paste0(medication_resource_prefix, "_medicationcodeableconcept_code")
@@ -770,7 +766,6 @@ appendATCColumns <- function(medication_resources, medications) {
 #########################################
 
 getResourcesForMRPCalculation <- function(main_encounters) {
-
   if (!nrow(main_encounters)) {
     etlutils::catWarningMessage(paste0(
       "No Einrichtungskontakt encounters found that ended at least ",

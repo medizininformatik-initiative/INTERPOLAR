@@ -22,7 +22,6 @@ parseStructuredConfigDefinitions <- function(
   allowed_key_pattern,
   allow_plus = FALSE
 ) {
-
   getNameOrIndex <- function(x, index) {
     x_names <- names(x)
     if (is.null(x_names) || length(x_names) < index || is.na(x_names[index]) || x_names[index] == "") {
