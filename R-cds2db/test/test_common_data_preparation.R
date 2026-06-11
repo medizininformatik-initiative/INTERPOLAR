@@ -141,6 +141,10 @@ testPrepareRAWResources <- function(patient_ids) {
   ]
   enc_templates[, enc_status := "[1]in-progress"]
   enc_templates[, enc_period_end := NA]
+  diagnosis_columns <- getColNames(enc_templates, "^enc_diagnosis_")
+  if (length(diagnosis_columns)) {
+    enc_templates[, (diagnosis_columns) := NA_character_]
+  }
   enc_templates <- enc_templates[order(enc_id)]
 
   # Add template for MedicationRequest table
@@ -702,7 +706,14 @@ duplicatePatients <- function(count, duplicated_start_index = 1) {
     enc_ref_column <- if (resource_name == "pids_per_ward") "encounter_id" else etlutils::fhirdbGetEncIDColumn(resource_name)
 
     # Unique if id_column and any reference columns are the same
-    columns_to_replace <- unique(c(id_column, identifier_column, pid_ref_column, enc_ref_column, "enc_partof_ref"))
+    columns_to_replace <- unique(c(
+      id_column,
+      identifier_column,
+      pid_ref_column,
+      enc_ref_column,
+      "enc_partof_ref",
+      "enc_diagnosis_condition_ref"
+    ))
 
     for (col in columns_to_replace) {
       if (col %in% names(resource_table)) {
@@ -715,9 +726,9 @@ duplicatePatients <- function(count, duplicated_start_index = 1) {
             perl = TRUE
           )]
         } else if (endsWith(col, "_ref")) {
-          resource_table[, (col) := sub(
-            paste0("(^\\[[^]]+\\][^/]+/)", old_id),
-            paste0("\\1", new_id),
+          resource_table[, (col) := gsub(
+            paste0("(^| ~ )(\\[[^]]+\\][^/]+/)", old_id),
+            paste0("\\1\\2", new_id),
             get(col)
           )]
         } else {
