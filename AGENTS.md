@@ -81,6 +81,15 @@ behavior.
   verification command before running broad checks.
 - Report which checks were run. If a check could not be run, report why.
 
+## Git Workflow
+
+- Create ticket-related branches through the GitHub issue development workflow
+  (`gh issue develop <ticket-number> --base develop --checkout --name <branch>`)
+  so GitHub links the branch to the issue.
+- Include `refs #<ticket-number>` in commit messages for ticket-related work,
+  and push branches with that ticket reference preserved in the committed
+  history.
+
 ## Repository Metadata
 
 - Keep personal agent preferences out of version control. Local-only notes can
