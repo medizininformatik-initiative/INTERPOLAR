@@ -12,8 +12,63 @@ RAW_DATA_FHIR_CRACKR_INDICES_STRING_WIDTH <- 15
 # Static Definitions of Paths, File- and Columnnames #
 ######################################################
 
-getDBScriptsTargetDir <- function() "./Postgres-cds_hub/sql/"
-getTemplateDir <- function() paste0(getDBScriptsTargetDir(), "template/")
+ensureTrailingSlash <- function(path) {
+  if (!endsWith(path, "/")) path <- paste0(path, "/")
+  path
+}
+
+findProjectRoot <- function(start_dir = getwd()) {
+  current_dir <- normalizePath(start_dir, mustWork = TRUE)
+  marker <- file.path("Postgres-cds_hub", "sql", "template", "User_Schema_Rights_Definition.xlsx")
+  repeat {
+    if (file.exists(file.path(current_dir, marker))) {
+      return(current_dir)
+    }
+    parent_dir <- dirname(current_dir)
+    if (identical(parent_dir, current_dir)) {
+      stop(
+        "Could not find project root containing '", marker, "'. ",
+        "Set INTERPOLAR_PROJECT_ROOT explicitly."
+      )
+    }
+    current_dir <- parent_dir
+  }
+}
+
+getProjectRoot <- function() {
+  configured_root <- Sys.getenv("INTERPOLAR_PROJECT_ROOT", unset = "")
+  if (nzchar(configured_root)) {
+    return(normalizePath(configured_root, mustWork = TRUE))
+  }
+  findProjectRoot()
+}
+
+getDBScriptsSourceDir <- function() {
+  configured_dir <- Sys.getenv("INTERPOLAR_DB_SQL_SOURCE_DIR", unset = "")
+  if (nzchar(configured_dir)) {
+    return(ensureTrailingSlash(normalizePath(configured_dir, mustWork = TRUE)))
+  }
+  ensureTrailingSlash(file.path(getProjectRoot(), "Postgres-cds_hub", "sql"))
+}
+
+getDBScriptsTargetDir <- function() {
+  configured_dir <- Sys.getenv("INTERPOLAR_DB_SQL_TARGET_DIR", unset = "")
+  if (nzchar(configured_dir)) {
+    return(ensureTrailingSlash(normalizePath(configured_dir, mustWork = FALSE)))
+  }
+  getDBScriptsSourceDir()
+}
+
+getProjectRelativePath <- function(path) {
+  normalized_path <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  project_root <- ensureTrailingSlash(normalizePath(getProjectRoot(), winslash = "/", mustWork = TRUE))
+  if (startsWith(normalized_path, project_root)) {
+    return(substring(normalized_path, nchar(project_root) + 1))
+  }
+  normalized_path
+}
+
+getTemplateDir <- function() paste0(getDBScriptsSourceDir(), "template/")
 getRightsDefinitionDirName <- function() getTemplateDir()
 getRightsDefinitionFileName <- function() paste0(getRightsDefinitionDirName(), "User_Schema_Rights_Definition.xlsx")
 getRightsDefinitionSheetName <- function() "rights_and_functions"
@@ -48,6 +103,7 @@ isContentChanged <- function(existing_file_path, new_file_content) {
 writeResultFile <- function(scriptname, content) {
   content <- gsub("\r\n", "\n", content, fixed = TRUE)
   path <- paste0(getDBScriptsTargetDir(), scriptname)
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   changed <- isContentChanged(path, content)
   if (changed) {
     writeLines(content, path, useBytes = TRUE, sep = "\n")
@@ -198,6 +254,13 @@ extractPlaceholders <- function(input_string) {
   return(sorted_placeholders)
 }
 
+resolveProjectPath <- function(path) {
+  if (etlutils::isSimpleNA(path) || grepl("^(/|[A-Za-z]:[/\\\\])", path)) {
+    return(path)
+  }
+  file.path(getProjectRoot(), path)
+}
+
 extractPlaceholderName <- function(placeholder) {
   # Regular expression to match the pattern and capture the content inside the placeholder
   pattern <- "^<%(.*)%>$"
@@ -285,24 +348,16 @@ createHeader <- function(script_rights_definition) {
     header <<- paste0(header, paste0(...), "\n")
   }
 
-  formatTime <- function(timestamp) {
-    format(timestamp, "%Y-%m-%d %H:%M:%S")
-  }
-
   rights_definition_file_name <- getRightsDefinitionFileName()
-  rights_definition_file_info <- file.info(rights_definition_file_name)
 
   header <- ""
   add("-- ########################################################################################################")
   add("--")
   add("-- This file is generated. Changes should only be made by regenerating the file.")
   add("--")
-  add("-- Rights definition file             : ", rights_definition_file_name)
-  add("-- Rights definition file last update : ", formatTime(rights_definition_file_info$mtime))
-  add("-- Rights definition file size        : ", rights_definition_file_info$size, " Byte")
+  add("-- Rights definition file: ", getProjectRelativePath(rights_definition_file_name))
   add("--")
   add("-- Create SQL Tables in Schema \"", script_rights_definition[1]$OWNER_SCHEMA, "\"")
-  add("-- Create time: ", formatTime(Sys.time()))
   # iterate over all columns and rows in the script_rights_definition
   col_names <- names(script_rights_definition)
   for (col_name in col_names) {
@@ -352,7 +407,7 @@ createHeader <- function(script_rights_definition) {
 parseIFExpression <- function(expression) {
   # Pattern: Support multiline and embedded quotes in the result
   patternInlineIf <-
-    '^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+):([a-zA-Z0-9_]+)\\s+([\'\"].*?[\'\"])\\s+(.*)%>$'
+    '^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+):([a-zA-Z0-9_]+)\\s+([\'\"][\\s\\S]*?[\'\"])\\s+([\\s\\S]*)%>$'
 
   # Extract the parts of the expression
   matches <- regmatches(expression, regexec(patternInlineIf, expression, perl = TRUE))
@@ -669,6 +724,7 @@ createDatabaseScriptsFromTemplates <- function() {
     } else { # remove the worksheet name from the path
       table_description_path <- sub("\\[.*\\]$", "", table_description_path_with_sheet_name)
     }
+    table_description_path <- resolveProjectPath(table_description_path)
     table_description_convert_definition <- rights_and_convert_definition$convert_definition[[table_description_path_with_sheet_name]]
     table_description <- getConvertedTableDescriptionSplittedByTableName(table_description_path, table_description_sheet_name, table_description_convert_definition)
     rights_definition <- full_rights_definition[[i]]
