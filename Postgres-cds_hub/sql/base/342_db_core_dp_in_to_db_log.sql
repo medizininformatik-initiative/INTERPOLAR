@@ -2,20 +2,17 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 13:24:46
--- Rights definition file size        : 16590 Byte
+-- Rights definition file: Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-02-02 13:40:37
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/341_cre_table_dataproc_core_log.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db_log_user
 -- OWNER_SCHEMA:  db_log
 -- TAGS:  INT_ID
--- TABLE_PREFIX:  
--- TABLE_POSTFIX:  
+-- TABLE_PREFIX:
+-- TABLE_POSTFIX:
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
 -- GRANT_TARGET_USER (2):  db_user
@@ -23,19 +20,22 @@
 -- COPY_FUNC_TEMPLATE:  template_copy_function.sql
 -- COPY_FUNC_NAME:  copy_core_dp_in_to_db_log
 -- SCHEMA_2:  db2dataprocessor_in
--- TABLE_POSTFIX_2:  
--- SCHEMA_3:  
--- TABLE_POSTFIX_3:  
+-- TABLE_POSTFIX_2:
+-- SCHEMA_3:
+-- TABLE_POSTFIX_3:
 -- ########################################################################################################
-
-DO
-$$
+DO $$
 BEGIN
     IF EXISTS ( -- do migration
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
-    ) THEN
---------------------------------------------------------------------
-EXECUTE $f$
+        SELECT
+            1
+        FROM
+            db_config.db_parameter
+        WHERE
+            parameter_name = 'current_migration_flag'
+            AND parameter_value = '1') THEN
+        --------------------------------------------------------------------
+        EXECUTE $f$
 ------------------------------
 CREATE OR REPLACE FUNCTION db.copy_core_dp_in_to_db_log()
 RETURNS TEXT
@@ -95,8 +95,8 @@ BEGIN
         err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
         SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
-    	-- Number of data records then status have to be set
-    	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
+	-- Number of data records then status have to be set
+	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
 
         err_section:='HEAD-20';    err_schema:='db_config';    err_table:='db_process_control';
         -- Set current executed function and total number of records
@@ -191,7 +191,7 @@ BEGIN
                             ;
 
                             err_section:='input_data_files-37';    err_schema:='db2dataprocessor_in';    err_table:='input_data_files';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='input_data_files-30';    err_schema:='db2dataprocessor_in';    err_table:='input_data_files';
@@ -334,7 +334,7 @@ BEGIN
                             ;
 
                             err_section:='input_data_files_processed_content-37';    err_schema:='db2dataprocessor_in';    err_table:='input_data_files_processed_content';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='input_data_files_processed_content-30';    err_schema:='db2dataprocessor_in';    err_table:='input_data_files_processed_content';
@@ -469,8 +469,8 @@ END;
 $inner$ LANGUAGE plpgsql;
 -----------------------------
 $f$;
---------------------------------------------------------------------
-    END IF; -- do migration
+    --------------------------------------------------------------------
+END IF;
+    -- do migration
 END
 $$;
-

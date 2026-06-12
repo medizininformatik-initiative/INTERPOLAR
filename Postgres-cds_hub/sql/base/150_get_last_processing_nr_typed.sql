@@ -2,20 +2,17 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 13:24:46
--- Rights definition file size        : 16590 Byte
+-- Rights definition file: Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2026-02-02 13:35:15
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  cds2db_user
 -- OWNER_SCHEMA:  cds2db_in
 -- TAGS:  TYPED
--- TABLE_PREFIX:  
--- TABLE_POSTFIX:  
+-- TABLE_PREFIX:
+-- TABLE_POSTFIX:
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  cds2db_user
 -- GRANT_TARGET_USER (2):  db_user
@@ -23,20 +20,23 @@
 -- COPY_FUNC_TEMPLATE:  template_get_last_pnr_typed.sql
 -- COPY_FUNC_NAME:  get_last_processing_nr_typed
 -- SCHEMA_2:  db_log
--- TABLE_POSTFIX_2:  
--- SCHEMA_3:  
--- TABLE_POSTFIX_3:  
+-- TABLE_POSTFIX_2:
+-- SCHEMA_3:
+-- TABLE_POSTFIX_3:
 -- ########################################################################################################
-
-DO
-$$
+DO $$
 BEGIN
     IF EXISTS ( -- do migration
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
-    ) THEN
---------------------------------------------------------------------
-------------------------------
-EXECUTE $f$
+        SELECT
+            1
+        FROM
+            db_config.db_parameter
+        WHERE
+            parameter_name = 'current_migration_flag'
+            AND parameter_value = '1') THEN
+        --------------------------------------------------------------------
+        ------------------------------
+        EXECUTE $f$
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.get_last_processing_nr_typed()
 RETURNS TEXT
@@ -86,8 +86,8 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql;
 $f$;
---------------------------------------------------------------------
-    END IF; -- do migration
+    --------------------------------------------------------------------
+END IF;
+    -- do migration
 END
 $$;
-

@@ -2,19 +2,16 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-23 15:20:49
--- Rights definition file size        : 19645 Byte
+-- Rights definition file: Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-04-02 14:59:47
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  base/430_cre_table_frontend_log.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db_log_user
 -- OWNER_SCHEMA:  db_log
 -- TAGS:  INT_ID FE_RC_ID
--- TABLE_PREFIX:  
+-- TABLE_PREFIX:
 -- TABLE_POSTFIX:  _fe
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
@@ -24,18 +21,21 @@
 -- COPY_FUNC_NAME:  copy_fe_fe_in_to_db_log
 -- SCHEMA_2:  db2frontend_in
 -- TABLE_POSTFIX_2:  _fe
--- SCHEMA_3:  
--- TABLE_POSTFIX_3:  
+-- SCHEMA_3:
+-- TABLE_POSTFIX_3:
 -- ########################################################################################################
-
-DO
-$$
+DO $$
 BEGIN
     IF EXISTS ( -- do migration
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
-    ) THEN
---------------------------------------------------------------------
-EXECUTE $f$
+        SELECT
+            1
+        FROM
+            db_config.db_parameter
+        WHERE
+            parameter_name = 'current_migration_flag'
+            AND parameter_value = '1') THEN
+        --------------------------------------------------------------------
+        EXECUTE $f$
 ------------------------------
 CREATE OR REPLACE FUNCTION db.copy_fe_fe_in_to_db_log()
 RETURNS TEXT
@@ -100,8 +100,8 @@ BEGIN
         err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
         SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
-    	-- Number of data records then status have to be set
-    	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
+	-- Number of data records then status have to be set
+	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
 
         err_section:='HEAD-20';    err_schema:='db_config';    err_table:='db_process_control';
         -- Set current executed function and total number of records
@@ -216,7 +216,7 @@ BEGIN
                             ;
 
                             err_section:='patient_fe-37';    err_schema:='db2frontend_in';    err_table:='patient_fe';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='patient_fe-30';    err_schema:='db2frontend_in';    err_table:='patient_fe';
@@ -401,7 +401,7 @@ BEGIN
                             ;
 
                             err_section:='fall_fe-37';    err_schema:='db2frontend_in';    err_table:='fall_fe';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='fall_fe-30';    err_schema:='db2frontend_in';    err_table:='fall_fe';
@@ -600,7 +600,7 @@ BEGIN
                             ;
 
                             err_section:='medikationsanalyse_fe-37';    err_schema:='db2frontend_in';    err_table:='medikationsanalyse_fe';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='medikationsanalyse_fe-30';    err_schema:='db2frontend_in';    err_table:='medikationsanalyse_fe';
@@ -909,7 +909,7 @@ BEGIN
                             ;
 
                             err_section:='mrpdokumentation_validierung_fe-37';    err_schema:='db2frontend_in';    err_table:='mrpdokumentation_validierung_fe';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='mrpdokumentation_validierung_fe-30';    err_schema:='db2frontend_in';    err_table:='mrpdokumentation_validierung_fe';
@@ -1264,7 +1264,7 @@ BEGIN
                             ;
 
                             err_section:='retrolektive_mrpbewertung_fe-37';    err_schema:='db2frontend_in';    err_table:='retrolektive_mrpbewertung_fe';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='retrolektive_mrpbewertung_fe-30';    err_schema:='db2frontend_in';    err_table:='retrolektive_mrpbewertung_fe';
@@ -1439,7 +1439,7 @@ BEGIN
                             ;
 
                             err_section:='risikofaktor_fe-37';    err_schema:='db2frontend_in';    err_table:='risikofaktor_fe';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='risikofaktor_fe-30';    err_schema:='db2frontend_in';    err_table:='risikofaktor_fe';
@@ -1632,7 +1632,7 @@ BEGIN
                             ;
 
                             err_section:='trigger_fe-37';    err_schema:='db2frontend_in';    err_table:='trigger_fe';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='trigger_fe-30';    err_schema:='db2frontend_in';    err_table:='trigger_fe';
@@ -1767,8 +1767,8 @@ END;
 $inner$ LANGUAGE plpgsql;
 -----------------------------
 $f$;
---------------------------------------------------------------------
-    END IF; -- do migration
+    --------------------------------------------------------------------
+END IF;
+    -- do migration
 END
 $$;
-
