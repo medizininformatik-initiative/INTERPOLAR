@@ -14,7 +14,8 @@ ENV NCPUS=1
 RUN apt-get update && apt-get install -y -q \
         apt-utils \
         vim less \
-        wget curl
+        wget curl \
+        perl
 
 # etlutils
 
@@ -44,11 +45,24 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS htmlwidgets htmltools DT jsonlite
 
 WORKDIR /src
 
+COPY tools/install-pgformatter.sh tools/install-pgformatter.sh
+
+RUN tools/install-pgformatter.sh
+
 COPY R-etlutils R-etlutils
 
 RUN R CMD build R-etlutils/etlutils
 
 RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-etlutils/etlutils
+
+
+# initcdstoolchain
+
+COPY Postgres-cds_hub/R-initcdstoolchain Postgres-cds_hub/R-initcdstoolchain
+
+RUN R CMD build Postgres-cds_hub/R-initcdstoolchain/initcdstoolchain
+
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source Postgres-cds_hub/R-initcdstoolchain/initcdstoolchain
 
 
 # cds2db
