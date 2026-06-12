@@ -103,6 +103,44 @@ test_that("convertTemplate expands multiline IF results with nested placeholders
   expect_identical(result, "SELECT patient\nFROM db.patient")
 })
 
+test_that("isContentChanged ignores volatile generated header lines", {
+  existing_file <- tempfile(fileext = ".sql")
+  writeLines(
+    c(
+      "-- This file is generated",
+      "-- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx",
+      "-- Rights definition file last update : 2026-06-12 09:00:00",
+      "-- Rights definition file size        : 12345 Byte",
+      "-- Create time: 2026-06-12 09:00:01",
+      "SELECT 1;"
+    ),
+    existing_file
+  )
+
+  new_content <- paste(
+    c(
+      "-- This file is generated",
+      "-- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx",
+      "-- Rights definition file last update : 2026-06-12 10:00:00",
+      "-- Rights definition file size        : 12399 Byte",
+      "-- Create time: 2026-06-12 10:00:01",
+      "SELECT 1;"
+    ),
+    collapse = "\n"
+  )
+
+  expect_false(isContentChanged(existing_file, new_content))
+})
+
+test_that("isContentChanged treats blank line formatting as content", {
+  existing_file <- tempfile(fileext = ".sql")
+  writeLines(c("SELECT 1;", "", "SELECT 2;"), existing_file)
+
+  new_content <- paste(c("SELECT 1;", "SELECT 2;"), collapse = "\n")
+
+  expect_true(isContentChanged(existing_file, new_content))
+})
+
 test_that("database script generation writes all scripts defined in the rights matrix", {
   testthat::skip_if_not(
     identical(tolower(Sys.getenv("RUN_DB_SQL_GOLDEN_TESTS", unset = "false")), "true"),

@@ -84,8 +84,12 @@ isContentChanged <- function(existing_file_path, new_file_content) {
   # Split new content into lines
   new_lines <- strsplit(new_file_content, "\n", fixed = TRUE)[[1]]
 
-  # Define patterns of lines to ignore (last pattern is for empty lines)
-  drop_patterns <- c("Rights definition", "Create time", "^\\s*$")
+  # Define volatile generated header lines to ignore.
+  drop_patterns <- c(
+    "^-- Rights definition file last update :",
+    "^-- Rights definition file size        :",
+    "^-- Create time:"
+  )
 
   # Function to remove lines containing any of the drop patterns
   cleanLines <- function(lines) {
@@ -349,15 +353,19 @@ createHeader <- function(script_rights_definition) {
   }
 
   rights_definition_file_name <- getRightsDefinitionFileName()
+  rights_definition_file_info <- file.info(rights_definition_file_name)
 
   header <- ""
   add("-- ########################################################################################################")
   add("--")
   add("-- This file is generated. Changes should only be made by regenerating the file.")
   add("--")
-  add("-- Rights definition file: ", getProjectRelativePath(rights_definition_file_name))
+  add("-- Rights definition file             : ", getProjectRelativePath(rights_definition_file_name))
+  add("-- Rights definition file last update : ", format(rights_definition_file_info$mtime, "%Y-%m-%d %H:%M:%S"))
+  add("-- Rights definition file size        : ", rights_definition_file_info$size, " Byte")
   add("--")
   add("-- Create SQL Tables in Schema \"", script_rights_definition[1]$OWNER_SCHEMA, "\"")
+  add("-- Create time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
   # iterate over all columns and rows in the script_rights_definition
   col_names <- names(script_rights_definition)
   for (col_name in col_names) {

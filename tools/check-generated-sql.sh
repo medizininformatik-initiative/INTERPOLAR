@@ -13,9 +13,18 @@ INTERPOLAR_GENERATOR_R_LIB_DIR="${tmp_dir}/r-lib" \
 
 compare_file() {
   local relative_path="$1"
+
   diff -u \
-    "${repo_root}/Postgres-cds_hub/sql/${relative_path}" \
-    "${generated_sql_dir}/${relative_path}"
+    <(normalize_generated_sql "${repo_root}/Postgres-cds_hub/sql/${relative_path}") \
+    <(normalize_generated_sql "${generated_sql_dir}/${relative_path}")
+}
+
+normalize_generated_sql() {
+  sed \
+    -e '/^-- Create time:/d' \
+    -e '/^-- Rights definition file last update :/d' \
+    -e '/^-- Rights definition file size        :/d' \
+    "$1"
 }
 
 compare_file "start.sql"
