@@ -343,6 +343,15 @@ replace <- function(original, replacement, string) {
   gsub(original, replacement, string, fixed = TRUE)
 }
 
+normalizeTemplateValue <- function(value) {
+  if (etlutils::isSimpleNA(value)) {
+    return("")
+  }
+  value <- as.character(value)
+  value <- gsub("[\r\n]+", " ", value)
+  gsub("[[:space:]]+", " ", trimws(value))
+}
+
 #####################################
 # Crate Generated SQL Script Header #
 #####################################
@@ -526,7 +535,7 @@ convertTemplate <- function(tables_descriptions,
                   # missing values in the current column row are replaced by the value in the first row
                   stop(paste0("Missing value in column '", sub_placeholder_name, "' in table '", table_name, "' in row ", loop_row, "."))
                 }
-                single_loop_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_loop_content)
+                single_loop_content <- replace(sub_placeholder, normalizeTemplateValue(replace_value), single_loop_content)
               }
             }
           }
@@ -550,7 +559,7 @@ convertTemplate <- function(tables_descriptions,
               value <- rights_row[[sub_placeholder_name]]
               # missing values in the current rights row are replaced by the value in the first row
               if (is.na(value)) value <- rights_first_row[[sub_placeholder_name]]
-              sub_content <- replace(sub_placeholder, value, sub_content)
+              sub_content <- replace(sub_placeholder, normalizeTemplateValue(value), sub_content)
             }
           }
           sub_content <- convertTemplate(
@@ -636,7 +645,7 @@ convertTemplate <- function(tables_descriptions,
     } else {
       placeholder_name <- extractPlaceholderName(placeholder)
       if (placeholder_name %in% names(rights_first_row)) {
-        content <- replace(placeholder, rights_first_row[[placeholder_name]], content)
+        content <- replace(placeholder, normalizeTemplateValue(rights_first_row[[placeholder_name]]), content)
       }
     }
   }

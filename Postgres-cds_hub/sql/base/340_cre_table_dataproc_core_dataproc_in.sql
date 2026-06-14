@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-06-11 17:22:24
+-- Rights definition file last update : 2026-06-14 22:07:46
 -- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2026-06-12 11:40:35
+-- Create time: 2026-06-14 22:44:47
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/340_cre_table_dataproc_core_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -168,7 +168,7 @@ END IF;
             AND column_name = 'file_name') THEN
         ALTER TABLE db2dataprocessor_in.input_data_files
             ADD file_name varchar;
-    -- table file name (varchar)
+    -- column (file_name)
 END IF;
     -- column (file_name)
     IF NOT EXISTS ( -- column not exists (content_hash)
@@ -182,7 +182,7 @@ END IF;
             AND column_name = 'content_hash') THEN
         ALTER TABLE db2dataprocessor_in.input_data_files
             ADD content_hash varchar;
-    -- hashed table content (varchar)
+    -- column (content_hash)
 END IF;
     -- column (content_hash)
     IF NOT EXISTS ( -- column not exists (content)
@@ -196,7 +196,7 @@ END IF;
             AND column_name = 'content') THEN
         ALTER TABLE db2dataprocessor_in.input_data_files
             ADD content varchar;
-    -- table content (varchar)
+    -- column (content)
 END IF;
     -- column (content)
     IF NOT EXISTS ( -- column not exists (processed_content_hash)
@@ -210,7 +210,7 @@ END IF;
             AND column_name = 'processed_content_hash') THEN
         ALTER TABLE db2dataprocessor_in.input_data_files
             ADD processed_content_hash varchar;
-    -- optional – hashed processed table content (varchar)
+    -- column (processed_content_hash)
 END IF;
     -- column (processed_content_hash)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -256,11 +256,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db2dataprocessor_in.input_data_files
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (file_name), '#NULL#') || '|||' || -- hash from: table file name (file_name)
-        COALESCE(db.to_char_immutable (content_hash), '#NULL#') || '|||' || -- hash from: hashed table content (content_hash)
-        COALESCE(db.to_char_immutable (content), '#NULL#') || '|||' || -- hash from: table content (content)
-        COALESCE(db.to_char_immutable (processed_content_hash), '#NULL#') || '|||' || -- hash from: optional – hashed processed table content (processed_content_hash)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (file_name), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (content_hash), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (content), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (processed_content_hash), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -290,11 +286,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.input_data_files
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (file_name), '#NULL#') || '|||' || -- hash from: table file name (file_name)
-                COALESCE(db.to_char_immutable (content_hash), '#NULL#') || '|||' || -- hash from: hashed table content (content_hash)
-                COALESCE(db.to_char_immutable (content), '#NULL#') || '|||' || -- hash from: table content (content)
-                COALESCE(db.to_char_immutable (processed_content_hash), '#NULL#') || '|||' || -- hash from: optional – hashed processed table content (processed_content_hash)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (file_name), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (content_hash), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (content), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (processed_content_hash), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column
@@ -439,7 +431,7 @@ END IF;
             AND column_name = 'processed_content_hash') THEN
         ALTER TABLE db2dataprocessor_in.input_data_files_processed_content
             ADD processed_content_hash varchar;
-    -- hashed processed table content (varchar)
+    -- column (processed_content_hash)
 END IF;
     -- column (processed_content_hash)
     IF NOT EXISTS ( -- column not exists (processed_content)
@@ -453,7 +445,7 @@ END IF;
             AND column_name = 'processed_content') THEN
         ALTER TABLE db2dataprocessor_in.input_data_files_processed_content
             ADD processed_content varchar;
-    -- processed table content (varchar)
+    -- column (processed_content)
 END IF;
     -- column (processed_content)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -497,9 +489,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db2dataprocessor_in.input_data_files_processed_content
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (processed_content_hash), '#NULL#') || '|||' || -- hash from: hashed processed table content (processed_content_hash)
-        COALESCE(db.to_char_immutable (processed_content), '#NULL#') || '|||' || -- hash from: processed table content (processed_content)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (processed_content_hash), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (processed_content), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -529,9 +519,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.input_data_files_processed_content
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (processed_content_hash), '#NULL#') || '|||' || -- hash from: hashed processed table content (processed_content_hash)
-                COALESCE(db.to_char_immutable (processed_content), '#NULL#') || '|||' || -- hash from: processed table content (processed_content)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (processed_content_hash), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (processed_content), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column

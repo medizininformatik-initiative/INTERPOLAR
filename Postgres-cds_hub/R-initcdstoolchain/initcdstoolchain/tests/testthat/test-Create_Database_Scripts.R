@@ -103,6 +103,94 @@ test_that("convertTemplate expands multiline IF results with nested placeholders
   expect_identical(result, "SELECT patient\nFROM db.patient")
 })
 
+test_that("convertTemplate normalizes multiline table values before replacement", {
+  tables <- list(
+    medikationsanalyse = data.table::data.table(
+      TABLE_NAME = "medikationsanalyse",
+      COLUMN_NAME = "fall_meda_id",
+      COLUMN_DESCRIPTION = paste(
+        "Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall",
+        "(Fall-ID Encounter-Identifier (KIS))",
+        sep = "\n"
+      ),
+      COLUMN_TYPE = "varchar",
+      TAGS = ""
+    )
+  )
+  rights <- data.table::data.table(
+    SCRIPTNAME = "test.sql",
+    TEMPLATE = "test",
+    OWNER_SCHEMA = "db2dataprocessor_in",
+    OWNER_USER = "db_user",
+    TAGS = "",
+    TABLE_PREFIX = "",
+    TABLE_POSTFIX = "_fe",
+    RIGHTS = "SELECT",
+    GRANT_TARGET_USER = "db_user"
+  )
+  template <- "<%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES_HASH%>"
+
+  result <- convertTemplate(
+    tables,
+    rights,
+    template_content = template,
+    table_name = "medikationsanalyse",
+    column_prefix = "meda",
+    loop_row = 1,
+    recursion = 1
+  )
+
+  expect_no_match(result, "\n\\(Fall-ID Encounter-Identifier", perl = TRUE)
+  expect_no_match(result, "Dynamische SQL-Abfrage", fixed = TRUE)
+  expect_match(result, "COALESCE(db.to_char_immutable(fall_meda_id), '#NULL#')", fixed = TRUE)
+})
+
+test_that("create table column templates do not inline free-text descriptions", {
+  tables <- list(
+    medikationsanalyse = data.table::data.table(
+      TABLE_NAME = "medikationsanalyse",
+      COLUMN_NAME = "fall_meda_id",
+      COLUMN_DESCRIPTION = paste(
+        "Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall",
+        "(Fall-ID Encounter-Identifier (KIS))",
+        sep = "\n"
+      ),
+      COLUMN_TYPE = "varchar",
+      TAGS = ""
+    )
+  )
+  rights <- data.table::data.table(
+    SCRIPTNAME = "test.sql",
+    TEMPLATE = "test",
+    OWNER_SCHEMA = "db2dataprocessor_in",
+    OWNER_USER = "db_user",
+    TAGS = "",
+    TABLE_PREFIX = "",
+    TABLE_POSTFIX = "_fe",
+    RIGHTS = "SELECT",
+    GRANT_TARGET_USER = "db_user"
+  )
+  template <- "<%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_TABLES%>"
+
+  result <- convertTemplate(
+    tables,
+    rights,
+    template_content = template,
+    table_name = "medikationsanalyse",
+    column_prefix = "meda",
+    loop_row = 1,
+    recursion = 1
+  )
+
+  expect_no_match(result, "Dynamische SQL-Abfrage", fixed = TRUE)
+  expect_match(
+    result,
+    "ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe ADD fall_meda_id varchar;",
+    fixed = TRUE
+  )
+  expect_match(result, "-- column (fall_meda_id)", fixed = TRUE)
+})
+
 test_that("isContentChanged ignores volatile generated header lines", {
   existing_file <- tempfile(fileext = ".sql")
   writeLines(

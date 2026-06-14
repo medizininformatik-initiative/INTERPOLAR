@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-06-11 17:22:24
+-- Rights definition file last update : 2026-06-14 22:07:46
 -- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_in"
--- Create time: 2026-06-12 11:40:05
+-- Create time: 2026-06-14 22:44:17
 -- TABLE_DESCRIPTION:  ./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx[frontend_table_description]
 -- SCRIPTNAME:  base/400_cre_table_typ_dataproc_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -168,7 +168,7 @@ END IF;
             AND column_name = 'record_id') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD record_id varchar;
-    -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
+    -- column (record_id)
 END IF;
     -- column (record_id)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instrument)
@@ -182,7 +182,7 @@ END IF;
             AND column_name = 'redcap_repeat_instrument') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD redcap_repeat_instrument varchar;
-    -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
+    -- column (redcap_repeat_instrument)
 END IF;
     -- column (redcap_repeat_instrument)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instance)
@@ -196,7 +196,7 @@ END IF;
             AND column_name = 'redcap_repeat_instance') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD redcap_repeat_instance varchar;
-    -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
+    -- column (redcap_repeat_instance)
 END IF;
     -- column (redcap_repeat_instance)
     IF NOT EXISTS ( -- column not exists (redcap_data_access_group)
@@ -210,7 +210,7 @@ END IF;
             AND column_name = 'redcap_data_access_group') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD redcap_data_access_group varchar;
-    -- Function as dataset filter by stations (varchar)
+    -- column (redcap_data_access_group)
 END IF;
     -- column (redcap_data_access_group)
     IF NOT EXISTS ( -- column not exists (projekt_versionsnummer)
@@ -224,7 +224,7 @@ END IF;
             AND column_name = 'projekt_versionsnummer') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD projekt_versionsnummer varchar;
-    -- Versionsnummer zum Matching von REDCap-Projektversion mit weiteren Versionselementen der Toolchain (varchar)
+    -- column (projekt_versionsnummer)
 END IF;
     -- column (projekt_versionsnummer)
     IF NOT EXISTS ( -- column not exists (pat_id)
@@ -238,7 +238,7 @@ END IF;
             AND column_name = 'pat_id') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD pat_id varchar;
-    -- Patient-identifier (FHIR) (varchar)
+    -- column (pat_id)
 END IF;
     -- column (pat_id)
     IF NOT EXISTS ( -- column not exists (pat_cis_pid)
@@ -252,7 +252,7 @@ END IF;
             AND column_name = 'pat_cis_pid') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD pat_cis_pid varchar;
-    -- Patient-identifier (KIS) (varchar)
+    -- column (pat_cis_pid)
 END IF;
     -- column (pat_cis_pid)
     IF NOT EXISTS ( -- column not exists (pat_name)
@@ -266,7 +266,7 @@ END IF;
             AND column_name = 'pat_name') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD pat_name varchar;
-    -- Patientenname (varchar)
+    -- column (pat_name)
 END IF;
     -- column (pat_name)
     IF NOT EXISTS ( -- column not exists (pat_vorname)
@@ -280,7 +280,7 @@ END IF;
             AND column_name = 'pat_vorname') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD pat_vorname varchar;
-    -- Patientenvorname (varchar)
+    -- column (pat_vorname)
 END IF;
     -- column (pat_vorname)
     IF NOT EXISTS ( -- column not exists (pat_gebdat)
@@ -294,7 +294,7 @@ END IF;
             AND column_name = 'pat_gebdat') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD pat_gebdat date;
-    -- Geburtsdatum (date)
+    -- column (pat_gebdat)
 END IF;
     -- column (pat_gebdat)
     IF NOT EXISTS ( -- column not exists (pat_aktuell_alter)
@@ -308,7 +308,7 @@ END IF;
             AND column_name = 'pat_aktuell_alter') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD pat_aktuell_alter double precision;
-    -- aktuelles Patientenalter (Jahre) (double precision)
+    -- column (pat_aktuell_alter)
 END IF;
     -- column (pat_aktuell_alter)
     IF NOT EXISTS ( -- column not exists (pat_geschlecht)
@@ -322,7 +322,7 @@ END IF;
             AND column_name = 'pat_geschlecht') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD pat_geschlecht varchar;
-    -- Geschlecht (varchar)
+    -- column (pat_geschlecht)
 END IF;
     -- column (pat_geschlecht)
     IF NOT EXISTS ( -- column not exists (pat_additional_values)
@@ -336,7 +336,7 @@ END IF;
             AND column_name = 'pat_additional_values') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD pat_additional_values varchar;
-    -- Reserviertes Feld für zusätzliche Werte (varchar)
+    -- column (pat_additional_values)
 END IF;
     -- column (pat_additional_values)
     IF NOT EXISTS ( -- column not exists (patient_complete)
@@ -350,7 +350,7 @@ END IF;
             AND column_name = 'patient_complete') THEN
         ALTER TABLE db2dataprocessor_in.patient_fe
             ADD patient_complete varchar;
-    -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+    -- column (patient_complete)
 END IF;
     -- column (patient_complete)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -406,21 +406,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db2dataprocessor_in.patient_fe
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-        COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-        COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-        COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-        COALESCE(db.to_char_immutable (projekt_versionsnummer), '#NULL#') || '|||' || -- hash from: Versionsnummer zum Matching von REDCap-Projektversion mit weiteren Versionselementen der Toolchain (projekt_versionsnummer)
-        COALESCE(db.to_char_immutable (pat_id), '#NULL#') || '|||' || -- hash from: Patient-identifier (FHIR) (pat_id)
-        COALESCE(db.to_char_immutable (pat_cis_pid), '#NULL#') || '|||' || -- hash from: Patient-identifier (KIS) (pat_cis_pid)
-        COALESCE(db.to_char_immutable (pat_name), '#NULL#') || '|||' || -- hash from: Patientenname (pat_name)
-        COALESCE(db.to_char_immutable (pat_vorname), '#NULL#') || '|||' || -- hash from: Patientenvorname (pat_vorname)
-        COALESCE(db.to_char_immutable (pat_gebdat), '#NULL#') || '|||' || -- hash from: Geburtsdatum (pat_gebdat)
-        COALESCE(db.to_char_immutable (pat_aktuell_alter), '#NULL#') || '|||' || -- hash from: aktuelles Patientenalter (Jahre) (pat_aktuell_alter)
-        COALESCE(db.to_char_immutable (pat_geschlecht), '#NULL#') || '|||' || -- hash from: Geschlecht (pat_geschlecht)
-        COALESCE(db.to_char_immutable (pat_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (pat_additional_values)
-        COALESCE(db.to_char_immutable (patient_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (patient_complete)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (projekt_versionsnummer), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_cis_pid), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_name), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_vorname), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_gebdat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_aktuell_alter), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_geschlecht), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (patient_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -450,21 +436,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.patient_fe
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-                COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-                COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-                COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-                COALESCE(db.to_char_immutable (projekt_versionsnummer), '#NULL#') || '|||' || -- hash from: Versionsnummer zum Matching von REDCap-Projektversion mit weiteren Versionselementen der Toolchain (projekt_versionsnummer)
-                COALESCE(db.to_char_immutable (pat_id), '#NULL#') || '|||' || -- hash from: Patient-identifier (FHIR) (pat_id)
-                COALESCE(db.to_char_immutable (pat_cis_pid), '#NULL#') || '|||' || -- hash from: Patient-identifier (KIS) (pat_cis_pid)
-                COALESCE(db.to_char_immutable (pat_name), '#NULL#') || '|||' || -- hash from: Patientenname (pat_name)
-                COALESCE(db.to_char_immutable (pat_vorname), '#NULL#') || '|||' || -- hash from: Patientenvorname (pat_vorname)
-                COALESCE(db.to_char_immutable (pat_gebdat), '#NULL#') || '|||' || -- hash from: Geburtsdatum (pat_gebdat)
-                COALESCE(db.to_char_immutable (pat_aktuell_alter), '#NULL#') || '|||' || -- hash from: aktuelles Patientenalter (Jahre) (pat_aktuell_alter)
-                COALESCE(db.to_char_immutable (pat_geschlecht), '#NULL#') || '|||' || -- hash from: Geschlecht (pat_geschlecht)
-                COALESCE(db.to_char_immutable (pat_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (pat_additional_values)
-                COALESCE(db.to_char_immutable (patient_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (patient_complete)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (projekt_versionsnummer), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_cis_pid), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_name), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_vorname), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_gebdat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_aktuell_alter), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_geschlecht), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (pat_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (patient_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column
@@ -609,7 +581,7 @@ END IF;
             AND column_name = 'record_id') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD record_id varchar;
-    -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
+    -- column (record_id)
 END IF;
     -- column (record_id)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instrument)
@@ -623,7 +595,7 @@ END IF;
             AND column_name = 'redcap_repeat_instrument') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD redcap_repeat_instrument varchar;
-    -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
+    -- column (redcap_repeat_instrument)
 END IF;
     -- column (redcap_repeat_instrument)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instance)
@@ -637,7 +609,7 @@ END IF;
             AND column_name = 'redcap_repeat_instance') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD redcap_repeat_instance varchar;
-    -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
+    -- column (redcap_repeat_instance)
 END IF;
     -- column (redcap_repeat_instance)
     IF NOT EXISTS ( -- column not exists (redcap_data_access_group)
@@ -651,7 +623,7 @@ END IF;
             AND column_name = 'redcap_data_access_group') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD redcap_data_access_group varchar;
-    -- Function as dataset filter by stations (varchar)
+    -- column (redcap_data_access_group)
 END IF;
     -- column (redcap_data_access_group)
     IF NOT EXISTS ( -- column not exists (db_filter_8)
@@ -665,7 +637,7 @@ END IF;
             AND column_name = 'db_filter_8') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD db_filter_8 double precision;
-    -- Dashboard Filter 8 (double precision)
+    -- column (db_filter_8)
 END IF;
     -- column (db_filter_8)
     IF NOT EXISTS ( -- column not exists (fall_fhir_enc_id)
@@ -679,7 +651,7 @@ END IF;
             AND column_name = 'fall_fhir_enc_id') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_fhir_enc_id varchar;
-    -- verstecktes Feld für FHIR-ID des Encounters (varchar)
+    -- column (fall_fhir_enc_id)
 END IF;
     -- column (fall_fhir_enc_id)
     IF NOT EXISTS ( -- column not exists (patient_id_fk)
@@ -693,7 +665,7 @@ END IF;
             AND column_name = 'patient_id_fk') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD patient_id_fk int;
-    -- verstecktes Feld für patient_id_fk (int)
+    -- column (patient_id_fk)
 END IF;
     -- column (patient_id_fk)
     IF NOT EXISTS ( -- column not exists (fall_pat_id)
@@ -707,7 +679,7 @@ END IF;
             AND column_name = 'fall_pat_id') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_pat_id varchar;
-    -- verstecktes Feld für fall_pat_id (varchar)
+    -- column (fall_pat_id)
 END IF;
     -- column (fall_pat_id)
     IF NOT EXISTS ( -- column not exists (fall_id)
@@ -721,7 +693,7 @@ END IF;
             AND column_name = 'fall_id') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_id varchar;
-    -- Fall-ID Encounter-Identifier (KIS) (varchar)
+    -- column (fall_id)
 END IF;
     -- column (fall_id)
     IF NOT EXISTS ( -- column not exists (fall_studienphase)
@@ -735,7 +707,7 @@ END IF;
             AND column_name = 'fall_studienphase') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_studienphase varchar;
-    -- Studienphase (varchar)
+    -- column (fall_studienphase)
 END IF;
     -- column (fall_studienphase)
     IF NOT EXISTS ( -- column not exists (fall_station)
@@ -749,7 +721,7 @@ END IF;
             AND column_name = 'fall_station') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_station varchar;
-    -- Station (varchar)
+    -- column (fall_station)
 END IF;
     -- column (fall_station)
     IF NOT EXISTS ( -- column not exists (fall_aufn_dat)
@@ -763,7 +735,7 @@ END IF;
             AND column_name = 'fall_aufn_dat') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_aufn_dat timestamp;
-    -- Aufnahmedatum (timestamp)
+    -- column (fall_aufn_dat)
 END IF;
     -- column (fall_aufn_dat)
     IF NOT EXISTS ( -- column not exists (fall_zimmernr)
@@ -777,7 +749,7 @@ END IF;
             AND column_name = 'fall_zimmernr') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_zimmernr varchar;
-    -- Zimmer-Nr. (varchar)
+    -- column (fall_zimmernr)
 END IF;
     -- column (fall_zimmernr)
     IF NOT EXISTS ( -- column not exists (fall_aufn_diag)
@@ -791,7 +763,7 @@ END IF;
             AND column_name = 'fall_aufn_diag') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_aufn_diag varchar;
-    -- Diagnose(n) bei Aufnahme (varchar)
+    -- column (fall_aufn_diag)
 END IF;
     -- column (fall_aufn_diag)
     IF NOT EXISTS ( -- column not exists (fall_gewicht_aktuell)
@@ -805,7 +777,7 @@ END IF;
             AND column_name = 'fall_gewicht_aktuell') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_gewicht_aktuell double precision;
-    -- aktuelles Gewicht (double precision)
+    -- column (fall_gewicht_aktuell)
 END IF;
     -- column (fall_gewicht_aktuell)
     IF NOT EXISTS ( -- column not exists (fall_gewicht_aktl_einheit)
@@ -819,7 +791,7 @@ END IF;
             AND column_name = 'fall_gewicht_aktl_einheit') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_gewicht_aktl_einheit varchar;
-    -- aktuelles Gewicht: Einheit (varchar)
+    -- column (fall_gewicht_aktl_einheit)
 END IF;
     -- column (fall_gewicht_aktl_einheit)
     IF NOT EXISTS ( -- column not exists (fall_groesse)
@@ -833,7 +805,7 @@ END IF;
             AND column_name = 'fall_groesse') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_groesse double precision;
-    -- Größe (double precision)
+    -- column (fall_groesse)
 END IF;
     -- column (fall_groesse)
     IF NOT EXISTS ( -- column not exists (fall_groesse_einheit)
@@ -847,7 +819,7 @@ END IF;
             AND column_name = 'fall_groesse_einheit') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_groesse_einheit varchar;
-    -- Größe: Einheit (varchar)
+    -- column (fall_groesse_einheit)
 END IF;
     -- column (fall_groesse_einheit)
     IF NOT EXISTS ( -- column not exists (fall_bmi)
@@ -861,7 +833,7 @@ END IF;
             AND column_name = 'fall_bmi') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_bmi double precision;
-    -- BMI (double precision)
+    -- column (fall_bmi)
 END IF;
     -- column (fall_bmi)
     IF NOT EXISTS ( -- column not exists (fall_status)
@@ -875,7 +847,7 @@ END IF;
             AND column_name = 'fall_status') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_status varchar;
-    -- Fallstatus (varchar)
+    -- column (fall_status)
 END IF;
     -- column (fall_status)
     IF NOT EXISTS ( -- column not exists (fall_ent_dat)
@@ -889,7 +861,7 @@ END IF;
             AND column_name = 'fall_ent_dat') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_ent_dat timestamp;
-    -- Entlassdatum (timestamp)
+    -- column (fall_ent_dat)
 END IF;
     -- column (fall_ent_dat)
     IF NOT EXISTS ( -- column not exists (fall_additional_values)
@@ -903,7 +875,7 @@ END IF;
             AND column_name = 'fall_additional_values') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_additional_values varchar;
-    -- Reserviertes Feld für zusätzliche Werte (varchar)
+    -- column (fall_additional_values)
 END IF;
     -- column (fall_additional_values)
     IF NOT EXISTS ( -- column not exists (fall_complete)
@@ -917,7 +889,7 @@ END IF;
             AND column_name = 'fall_complete') THEN
         ALTER TABLE db2dataprocessor_in.fall_fe
             ADD fall_complete varchar;
-    -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+    -- column (fall_complete)
 END IF;
     -- column (fall_complete)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -982,30 +954,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db2dataprocessor_in.fall_fe
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-        COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-        COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-        COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-        COALESCE(db.to_char_immutable (db_filter_8), '#NULL#') || '|||' || -- hash from: Dashboard Filter 8 (db_filter_8)
-        COALESCE(db.to_char_immutable (fall_fhir_enc_id), '#NULL#') || '|||' || -- hash from: verstecktes Feld für FHIR-ID des Encounters (fall_fhir_enc_id)
-        COALESCE(db.to_char_immutable (patient_id_fk), '#NULL#') || '|||' || -- hash from: verstecktes Feld für patient_id_fk (patient_id_fk)
-        COALESCE(db.to_char_immutable (fall_pat_id), '#NULL#') || '|||' || -- hash from: verstecktes Feld für fall_pat_id (fall_pat_id)
-        COALESCE(db.to_char_immutable (fall_id), '#NULL#') || '|||' || -- hash from: Fall-ID Encounter-Identifier (KIS) (fall_id)
-        COALESCE(db.to_char_immutable (fall_studienphase), '#NULL#') || '|||' || -- hash from: Studienphase (fall_studienphase)
-        COALESCE(db.to_char_immutable (fall_station), '#NULL#') || '|||' || -- hash from: Station (fall_station)
-        COALESCE(db.to_char_immutable (fall_aufn_dat), '#NULL#') || '|||' || -- hash from: Aufnahmedatum (fall_aufn_dat)
-        COALESCE(db.to_char_immutable (fall_zimmernr), '#NULL#') || '|||' || -- hash from: Zimmer-Nr. (fall_zimmernr)
-        COALESCE(db.to_char_immutable (fall_aufn_diag), '#NULL#') || '|||' || -- hash from: Diagnose(n) bei Aufnahme (fall_aufn_diag)
-        COALESCE(db.to_char_immutable (fall_gewicht_aktuell), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht (fall_gewicht_aktuell)
-        COALESCE(db.to_char_immutable (fall_gewicht_aktl_einheit), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht: Einheit (fall_gewicht_aktl_einheit)
-        COALESCE(db.to_char_immutable (fall_groesse), '#NULL#') || '|||' || -- hash from: Größe (fall_groesse)
-        COALESCE(db.to_char_immutable (fall_groesse_einheit), '#NULL#') || '|||' || -- hash from: Größe: Einheit (fall_groesse_einheit)
-        COALESCE(db.to_char_immutable (fall_bmi), '#NULL#') || '|||' || -- hash from: BMI (fall_bmi)
-        COALESCE(db.to_char_immutable (fall_status), '#NULL#') || '|||' || -- hash from: Fallstatus (fall_status)
-        COALESCE(db.to_char_immutable (fall_ent_dat), '#NULL#') || '|||' || -- hash from: Entlassdatum (fall_ent_dat)
-        COALESCE(db.to_char_immutable (fall_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (fall_additional_values)
-        COALESCE(db.to_char_immutable (fall_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (fall_complete)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (db_filter_8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_fhir_enc_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (patient_id_fk), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_pat_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_studienphase), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_station), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_aufn_dat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_zimmernr), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_aufn_diag), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_gewicht_aktuell), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_gewicht_aktl_einheit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_groesse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_groesse_einheit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_bmi), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_status), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_ent_dat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -1035,30 +984,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.fall_fe
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-                COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-                COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-                COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-                COALESCE(db.to_char_immutable (db_filter_8), '#NULL#') || '|||' || -- hash from: Dashboard Filter 8 (db_filter_8)
-                COALESCE(db.to_char_immutable (fall_fhir_enc_id), '#NULL#') || '|||' || -- hash from: verstecktes Feld für FHIR-ID des Encounters (fall_fhir_enc_id)
-                COALESCE(db.to_char_immutable (patient_id_fk), '#NULL#') || '|||' || -- hash from: verstecktes Feld für patient_id_fk (patient_id_fk)
-                COALESCE(db.to_char_immutable (fall_pat_id), '#NULL#') || '|||' || -- hash from: verstecktes Feld für fall_pat_id (fall_pat_id)
-                COALESCE(db.to_char_immutable (fall_id), '#NULL#') || '|||' || -- hash from: Fall-ID Encounter-Identifier (KIS) (fall_id)
-                COALESCE(db.to_char_immutable (fall_studienphase), '#NULL#') || '|||' || -- hash from: Studienphase (fall_studienphase)
-                COALESCE(db.to_char_immutable (fall_station), '#NULL#') || '|||' || -- hash from: Station (fall_station)
-                COALESCE(db.to_char_immutable (fall_aufn_dat), '#NULL#') || '|||' || -- hash from: Aufnahmedatum (fall_aufn_dat)
-                COALESCE(db.to_char_immutable (fall_zimmernr), '#NULL#') || '|||' || -- hash from: Zimmer-Nr. (fall_zimmernr)
-                COALESCE(db.to_char_immutable (fall_aufn_diag), '#NULL#') || '|||' || -- hash from: Diagnose(n) bei Aufnahme (fall_aufn_diag)
-                COALESCE(db.to_char_immutable (fall_gewicht_aktuell), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht (fall_gewicht_aktuell)
-                COALESCE(db.to_char_immutable (fall_gewicht_aktl_einheit), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht: Einheit (fall_gewicht_aktl_einheit)
-                COALESCE(db.to_char_immutable (fall_groesse), '#NULL#') || '|||' || -- hash from: Größe (fall_groesse)
-                COALESCE(db.to_char_immutable (fall_groesse_einheit), '#NULL#') || '|||' || -- hash from: Größe: Einheit (fall_groesse_einheit)
-                COALESCE(db.to_char_immutable (fall_bmi), '#NULL#') || '|||' || -- hash from: BMI (fall_bmi)
-                COALESCE(db.to_char_immutable (fall_status), '#NULL#') || '|||' || -- hash from: Fallstatus (fall_status)
-                COALESCE(db.to_char_immutable (fall_ent_dat), '#NULL#') || '|||' || -- hash from: Entlassdatum (fall_ent_dat)
-                COALESCE(db.to_char_immutable (fall_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (fall_additional_values)
-                COALESCE(db.to_char_immutable (fall_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (fall_complete)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (db_filter_8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_fhir_enc_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (patient_id_fk), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_pat_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_studienphase), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_station), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_aufn_dat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_zimmernr), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_aufn_diag), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_gewicht_aktuell), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_gewicht_aktl_einheit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_groesse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_groesse_einheit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_bmi), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_status), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_ent_dat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column
@@ -1203,7 +1129,7 @@ END IF;
             AND column_name = 'record_id') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD record_id varchar;
-    -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
+    -- column (record_id)
 END IF;
     -- column (record_id)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instrument)
@@ -1217,7 +1143,7 @@ END IF;
             AND column_name = 'redcap_repeat_instrument') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD redcap_repeat_instrument varchar;
-    -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
+    -- column (redcap_repeat_instrument)
 END IF;
     -- column (redcap_repeat_instrument)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instance)
@@ -1231,7 +1157,7 @@ END IF;
             AND column_name = 'redcap_repeat_instance') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD redcap_repeat_instance varchar;
-    -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
+    -- column (redcap_repeat_instance)
 END IF;
     -- column (redcap_repeat_instance)
     IF NOT EXISTS ( -- column not exists (redcap_data_access_group)
@@ -1245,7 +1171,7 @@ END IF;
             AND column_name = 'redcap_data_access_group') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD redcap_data_access_group varchar;
-    -- Function as dataset filter by stations (varchar)
+    -- column (redcap_data_access_group)
 END IF;
     -- column (redcap_data_access_group)
     IF NOT EXISTS ( -- column not exists (db_filter_5)
@@ -1259,7 +1185,7 @@ END IF;
             AND column_name = 'db_filter_5') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD db_filter_5 double precision;
-    -- Dashboard Filter 5 (double precision)
+    -- column (db_filter_5)
 END IF;
     -- column (db_filter_5)
     IF NOT EXISTS ( -- column not exists (db_filter_7)
@@ -1273,7 +1199,7 @@ END IF;
             AND column_name = 'db_filter_7') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD db_filter_7 double precision;
-    -- Dashboard Filter 7 (double precision)
+    -- column (db_filter_7)
 END IF;
     -- column (db_filter_7)
     IF NOT EXISTS ( -- column not exists (meda_anlage)
@@ -1287,7 +1213,7 @@ END IF;
             AND column_name = 'meda_anlage') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_anlage varchar;
-    -- Formular angelegt von (varchar)
+    -- column (meda_anlage)
 END IF;
     -- column (meda_anlage)
     IF NOT EXISTS ( -- column not exists (meda_edit)
@@ -1301,7 +1227,7 @@ END IF;
             AND column_name = 'meda_edit') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_edit varchar;
-    -- Formular zuletzt bearbeitet von (varchar)
+    -- column (meda_edit)
 END IF;
     -- column (meda_edit)
     IF NOT EXISTS ( -- column not exists (fall_meda_id)
@@ -1315,8 +1241,7 @@ END IF;
             AND column_name = 'fall_meda_id') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD fall_meda_id varchar;
-    -- 1 Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall (Fall-ID Encounter-Identifier (KIS)) Auswahlfeld falls die aktuell dokumentierte Medikationsanalyse sich nicht auf die letzte Instanz des Falls bezieht.
-    (varchar)
+    -- column (fall_meda_id)
 END IF;
     -- column (fall_meda_id)
     IF NOT EXISTS ( -- column not exists (meda_id)
@@ -1330,7 +1255,7 @@ END IF;
             AND column_name = 'meda_id') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_id varchar;
-    -- ID Medikationsanalyse (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse aggregiert (varchar)
+    -- column (meda_id)
 END IF;
     -- column (meda_id)
     IF NOT EXISTS ( -- column not exists (meda_typ)
@@ -1344,7 +1269,7 @@ END IF;
             AND column_name = 'meda_typ') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_typ varchar;
-    -- Typ der Medikationsanalyse (MA) (varchar)
+    -- column (meda_typ)
 END IF;
     -- column (meda_typ)
     IF NOT EXISTS ( -- column not exists (meda_dat)
@@ -1358,7 +1283,7 @@ END IF;
             AND column_name = 'meda_dat') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_dat timestamp;
-    -- Datum der Medikationsanalyse (timestamp)
+    -- column (meda_dat)
 END IF;
     -- column (meda_dat)
     IF NOT EXISTS ( -- column not exists (meda_gewicht_aktuell)
@@ -1372,7 +1297,7 @@ END IF;
             AND column_name = 'meda_gewicht_aktuell') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_gewicht_aktuell double precision;
-    -- aktuelles Gewicht (double precision)
+    -- column (meda_gewicht_aktuell)
 END IF;
     -- column (meda_gewicht_aktuell)
     IF NOT EXISTS ( -- column not exists (meda_gewicht_aktl_einheit)
@@ -1386,7 +1311,7 @@ END IF;
             AND column_name = 'meda_gewicht_aktl_einheit') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_gewicht_aktl_einheit varchar;
-    -- aktuelles Gewicht: Einheit (varchar)
+    -- column (meda_gewicht_aktl_einheit)
 END IF;
     -- column (meda_gewicht_aktl_einheit)
     IF NOT EXISTS ( -- column not exists (meda_groesse)
@@ -1400,7 +1325,7 @@ END IF;
             AND column_name = 'meda_groesse') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_groesse double precision;
-    -- Größe (double precision)
+    -- column (meda_groesse)
 END IF;
     -- column (meda_groesse)
     IF NOT EXISTS ( -- column not exists (meda_groesse_einheit)
@@ -1414,7 +1339,7 @@ END IF;
             AND column_name = 'meda_groesse_einheit') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_groesse_einheit varchar;
-    -- Größe: Einheit (varchar)
+    -- column (meda_groesse_einheit)
 END IF;
     -- column (meda_groesse_einheit)
     IF NOT EXISTS ( -- column not exists (meda_bmi)
@@ -1428,7 +1353,7 @@ END IF;
             AND column_name = 'meda_bmi') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_bmi double precision;
-    -- BMI (double precision)
+    -- column (meda_bmi)
 END IF;
     -- column (meda_bmi)
     IF NOT EXISTS ( -- column not exists (meda_nieren_insuf_chron)
@@ -1442,7 +1367,7 @@ END IF;
             AND column_name = 'meda_nieren_insuf_chron') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_nieren_insuf_chron varchar;
-    -- Chronische Niereninsuffizienz (varchar)
+    -- column (meda_nieren_insuf_chron)
 END IF;
     -- column (meda_nieren_insuf_chron)
     IF NOT EXISTS ( -- column not exists (meda_nieren_insuf_ausmass)
@@ -1456,7 +1381,7 @@ END IF;
             AND column_name = 'meda_nieren_insuf_ausmass') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_nieren_insuf_ausmass varchar;
-    -- aktuelles Ausmaß (varchar)
+    -- column (meda_nieren_insuf_ausmass)
 END IF;
     -- column (meda_nieren_insuf_ausmass)
     IF NOT EXISTS ( -- column not exists (meda_nieren_insuf_dialysev)
@@ -1470,7 +1395,7 @@ END IF;
             AND column_name = 'meda_nieren_insuf_dialysev') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_nieren_insuf_dialysev varchar;
-    -- Nierenersatzverfahren (varchar)
+    -- column (meda_nieren_insuf_dialysev)
 END IF;
     -- column (meda_nieren_insuf_dialysev)
     IF NOT EXISTS ( -- column not exists (meda_leber_insuf)
@@ -1484,7 +1409,7 @@ END IF;
             AND column_name = 'meda_leber_insuf') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_leber_insuf varchar;
-    -- Leberinsuffizienz (varchar)
+    -- column (meda_leber_insuf)
 END IF;
     -- column (meda_leber_insuf)
     IF NOT EXISTS ( -- column not exists (meda_leber_insuf_ausmass)
@@ -1498,7 +1423,7 @@ END IF;
             AND column_name = 'meda_leber_insuf_ausmass') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_leber_insuf_ausmass varchar;
-    -- aktuelles Ausmaß (varchar)
+    -- column (meda_leber_insuf_ausmass)
 END IF;
     -- column (meda_leber_insuf_ausmass)
     IF NOT EXISTS ( -- column not exists (meda_schwanger_mo)
@@ -1512,7 +1437,7 @@ END IF;
             AND column_name = 'meda_schwanger_mo') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_schwanger_mo varchar;
-    -- Schwangerschaftsmonat (varchar)
+    -- column (meda_schwanger_mo)
 END IF;
     -- column (meda_schwanger_mo)
     IF NOT EXISTS ( -- column not exists (meda_ma_thueberw)
@@ -1526,7 +1451,7 @@ END IF;
             AND column_name = 'meda_ma_thueberw') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_ma_thueberw varchar;
-    -- Wiedervorlage Medikationsanalyse in 24-48h (varchar)
+    -- column (meda_ma_thueberw)
 END IF;
     -- column (meda_ma_thueberw)
     IF NOT EXISTS ( -- column not exists (meda_mrp_detekt)
@@ -1540,7 +1465,7 @@ END IF;
             AND column_name = 'meda_mrp_detekt') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_mrp_detekt varchar;
-    -- MRP detektiert? (varchar)
+    -- column (meda_mrp_detekt)
 END IF;
     -- column (meda_mrp_detekt)
     IF NOT EXISTS ( -- column not exists (meda_aufwand_zeit)
@@ -1554,7 +1479,7 @@ END IF;
             AND column_name = 'meda_aufwand_zeit') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_aufwand_zeit varchar;
-    -- Zeitaufwand Medikationsanalyse (varchar)
+    -- column (meda_aufwand_zeit)
 END IF;
     -- column (meda_aufwand_zeit)
     IF NOT EXISTS ( -- column not exists (meda_aufwand_zeit_and)
@@ -1568,7 +1493,7 @@ END IF;
             AND column_name = 'meda_aufwand_zeit_and') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_aufwand_zeit_and int;
-    -- genaue Dauer in Minuten (int)
+    -- column (meda_aufwand_zeit_and)
 END IF;
     -- column (meda_aufwand_zeit_and)
     IF NOT EXISTS ( -- column not exists (meda_notiz)
@@ -1582,7 +1507,7 @@ END IF;
             AND column_name = 'meda_notiz') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_notiz varchar;
-    -- Notizfeld (varchar)
+    -- column (meda_notiz)
 END IF;
     -- column (meda_notiz)
     IF NOT EXISTS ( -- column not exists (meda_additional_values)
@@ -1596,7 +1521,7 @@ END IF;
             AND column_name = 'meda_additional_values') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD meda_additional_values varchar;
-    -- Reserviertes Feld für zusätzliche Werte (varchar)
+    -- column (meda_additional_values)
 END IF;
     -- column (meda_additional_values)
     IF NOT EXISTS ( -- column not exists (medikationsanalyse_complete)
@@ -1610,7 +1535,7 @@ END IF;
             AND column_name = 'medikationsanalyse_complete') THEN
         ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
             ADD medikationsanalyse_complete varchar;
-    -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+    -- column (medikationsanalyse_complete)
 END IF;
     -- column (medikationsanalyse_complete)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -1682,37 +1607,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-        COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-        COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-        COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-        COALESCE(db.to_char_immutable (db_filter_5), '#NULL#') || '|||' || -- hash from: Dashboard Filter 5 (db_filter_5)
-        COALESCE(db.to_char_immutable (db_filter_7), '#NULL#') || '|||' || -- hash from: Dashboard Filter 7 (db_filter_7)
-        COALESCE(db.to_char_immutable (meda_anlage), '#NULL#') || '|||' || -- hash from: Formular angelegt von (meda_anlage)
-        COALESCE(db.to_char_immutable (meda_edit), '#NULL#') || '|||' || -- hash from: Formular zuletzt bearbeitet von (meda_edit)
-        COALESCE(db.to_char_immutable (fall_meda_id), '#NULL#') || '|||' || -- hash from: 1 Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall (Fall-ID Encounter-Identifier (KIS)) Auswahlfeld falls die aktuell dokumentierte Medikationsanalyse sich nicht auf die letzte Instanz des Falls bezieht.
-        (fall_meda_id) COALESCE(db.to_char_immutable (meda_id), '#NULL#') || '|||' || -- hash from: ID Medikationsanalyse (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse aggregiert (meda_id)
-        COALESCE(db.to_char_immutable (meda_typ), '#NULL#') || '|||' || -- hash from: Typ der Medikationsanalyse (MA) (meda_typ)
-        COALESCE(db.to_char_immutable (meda_dat), '#NULL#') || '|||' || -- hash from: Datum der Medikationsanalyse (meda_dat)
-        COALESCE(db.to_char_immutable (meda_gewicht_aktuell), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht (meda_gewicht_aktuell)
-        COALESCE(db.to_char_immutable (meda_gewicht_aktl_einheit), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht: Einheit (meda_gewicht_aktl_einheit)
-        COALESCE(db.to_char_immutable (meda_groesse), '#NULL#') || '|||' || -- hash from: Größe (meda_groesse)
-        COALESCE(db.to_char_immutable (meda_groesse_einheit), '#NULL#') || '|||' || -- hash from: Größe: Einheit (meda_groesse_einheit)
-        COALESCE(db.to_char_immutable (meda_bmi), '#NULL#') || '|||' || -- hash from: BMI (meda_bmi)
-        COALESCE(db.to_char_immutable (meda_nieren_insuf_chron), '#NULL#') || '|||' || -- hash from: Chronische Niereninsuffizienz (meda_nieren_insuf_chron)
-        COALESCE(db.to_char_immutable (meda_nieren_insuf_ausmass), '#NULL#') || '|||' || -- hash from: aktuelles Ausmaß (meda_nieren_insuf_ausmass)
-        COALESCE(db.to_char_immutable (meda_nieren_insuf_dialysev), '#NULL#') || '|||' || -- hash from: Nierenersatzverfahren (meda_nieren_insuf_dialysev)
-        COALESCE(db.to_char_immutable (meda_leber_insuf), '#NULL#') || '|||' || -- hash from: Leberinsuffizienz (meda_leber_insuf)
-        COALESCE(db.to_char_immutable (meda_leber_insuf_ausmass), '#NULL#') || '|||' || -- hash from: aktuelles Ausmaß (meda_leber_insuf_ausmass)
-        COALESCE(db.to_char_immutable (meda_schwanger_mo), '#NULL#') || '|||' || -- hash from: Schwangerschaftsmonat (meda_schwanger_mo)
-        COALESCE(db.to_char_immutable (meda_ma_thueberw), '#NULL#') || '|||' || -- hash from: Wiedervorlage Medikationsanalyse in 24-48h (meda_ma_thueberw)
-        COALESCE(db.to_char_immutable (meda_mrp_detekt), '#NULL#') || '|||' || -- hash from: MRP detektiert? (meda_mrp_detekt)
-        COALESCE(db.to_char_immutable (meda_aufwand_zeit), '#NULL#') || '|||' || -- hash from: Zeitaufwand Medikationsanalyse (meda_aufwand_zeit)
-        COALESCE(db.to_char_immutable (meda_aufwand_zeit_and), '#NULL#') || '|||' || -- hash from: genaue Dauer in Minuten (meda_aufwand_zeit_and)
-        COALESCE(db.to_char_immutable (meda_notiz), '#NULL#') || '|||' || -- hash from: Notizfeld (meda_notiz)
-        COALESCE(db.to_char_immutable (meda_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (meda_additional_values)
-        COALESCE(db.to_char_immutable (medikationsanalyse_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (medikationsanalyse_complete)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (db_filter_5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (db_filter_7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_anlage), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_edit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_typ), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_dat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_gewicht_aktuell), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_gewicht_aktl_einheit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_groesse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_groesse_einheit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_bmi), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_nieren_insuf_chron), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_nieren_insuf_ausmass), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_nieren_insuf_dialysev), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_leber_insuf), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_leber_insuf_ausmass), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_schwanger_mo), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_ma_thueberw), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_mrp_detekt), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_aufwand_zeit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_aufwand_zeit_and), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_notiz), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (medikationsanalyse_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -1742,37 +1637,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.medikationsanalyse_fe
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-                COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-                COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-                COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-                COALESCE(db.to_char_immutable (db_filter_5), '#NULL#') || '|||' || -- hash from: Dashboard Filter 5 (db_filter_5)
-                COALESCE(db.to_char_immutable (db_filter_7), '#NULL#') || '|||' || -- hash from: Dashboard Filter 7 (db_filter_7)
-                COALESCE(db.to_char_immutable (meda_anlage), '#NULL#') || '|||' || -- hash from: Formular angelegt von (meda_anlage)
-                COALESCE(db.to_char_immutable (meda_edit), '#NULL#') || '|||' || -- hash from: Formular zuletzt bearbeitet von (meda_edit)
-                COALESCE(db.to_char_immutable (fall_meda_id), '#NULL#') || '|||' || -- hash from: 1 Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu Fall (Fall-ID Encounter-Identifier (KIS)) Auswahlfeld falls die aktuell dokumentierte Medikationsanalyse sich nicht auf die letzte Instanz des Falls bezieht.
-                (fall_meda_id) COALESCE(db.to_char_immutable (meda_id), '#NULL#') || '|||' || -- hash from: ID Medikationsanalyse (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse aggregiert (meda_id)
-                COALESCE(db.to_char_immutable (meda_typ), '#NULL#') || '|||' || -- hash from: Typ der Medikationsanalyse (MA) (meda_typ)
-                COALESCE(db.to_char_immutable (meda_dat), '#NULL#') || '|||' || -- hash from: Datum der Medikationsanalyse (meda_dat)
-                COALESCE(db.to_char_immutable (meda_gewicht_aktuell), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht (meda_gewicht_aktuell)
-                COALESCE(db.to_char_immutable (meda_gewicht_aktl_einheit), '#NULL#') || '|||' || -- hash from: aktuelles Gewicht: Einheit (meda_gewicht_aktl_einheit)
-                COALESCE(db.to_char_immutable (meda_groesse), '#NULL#') || '|||' || -- hash from: Größe (meda_groesse)
-                COALESCE(db.to_char_immutable (meda_groesse_einheit), '#NULL#') || '|||' || -- hash from: Größe: Einheit (meda_groesse_einheit)
-                COALESCE(db.to_char_immutable (meda_bmi), '#NULL#') || '|||' || -- hash from: BMI (meda_bmi)
-                COALESCE(db.to_char_immutable (meda_nieren_insuf_chron), '#NULL#') || '|||' || -- hash from: Chronische Niereninsuffizienz (meda_nieren_insuf_chron)
-                COALESCE(db.to_char_immutable (meda_nieren_insuf_ausmass), '#NULL#') || '|||' || -- hash from: aktuelles Ausmaß (meda_nieren_insuf_ausmass)
-                COALESCE(db.to_char_immutable (meda_nieren_insuf_dialysev), '#NULL#') || '|||' || -- hash from: Nierenersatzverfahren (meda_nieren_insuf_dialysev)
-                COALESCE(db.to_char_immutable (meda_leber_insuf), '#NULL#') || '|||' || -- hash from: Leberinsuffizienz (meda_leber_insuf)
-                COALESCE(db.to_char_immutable (meda_leber_insuf_ausmass), '#NULL#') || '|||' || -- hash from: aktuelles Ausmaß (meda_leber_insuf_ausmass)
-                COALESCE(db.to_char_immutable (meda_schwanger_mo), '#NULL#') || '|||' || -- hash from: Schwangerschaftsmonat (meda_schwanger_mo)
-                COALESCE(db.to_char_immutable (meda_ma_thueberw), '#NULL#') || '|||' || -- hash from: Wiedervorlage Medikationsanalyse in 24-48h (meda_ma_thueberw)
-                COALESCE(db.to_char_immutable (meda_mrp_detekt), '#NULL#') || '|||' || -- hash from: MRP detektiert? (meda_mrp_detekt)
-                COALESCE(db.to_char_immutable (meda_aufwand_zeit), '#NULL#') || '|||' || -- hash from: Zeitaufwand Medikationsanalyse (meda_aufwand_zeit)
-                COALESCE(db.to_char_immutable (meda_aufwand_zeit_and), '#NULL#') || '|||' || -- hash from: genaue Dauer in Minuten (meda_aufwand_zeit_and)
-                COALESCE(db.to_char_immutable (meda_notiz), '#NULL#') || '|||' || -- hash from: Notizfeld (meda_notiz)
-                COALESCE(db.to_char_immutable (meda_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (meda_additional_values)
-                COALESCE(db.to_char_immutable (medikationsanalyse_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (medikationsanalyse_complete)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (db_filter_5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (db_filter_7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_anlage), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_edit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (fall_meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_typ), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_dat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_gewicht_aktuell), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_gewicht_aktl_einheit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_groesse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_groesse_einheit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_bmi), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_nieren_insuf_chron), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_nieren_insuf_ausmass), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_nieren_insuf_dialysev), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_leber_insuf), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_leber_insuf_ausmass), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_schwanger_mo), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_ma_thueberw), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_mrp_detekt), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_aufwand_zeit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_aufwand_zeit_and), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_notiz), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (medikationsanalyse_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column
@@ -1917,7 +1782,7 @@ END IF;
             AND column_name = 'record_id') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD record_id varchar;
-    -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
+    -- column (record_id)
 END IF;
     -- column (record_id)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instrument)
@@ -1931,7 +1796,7 @@ END IF;
             AND column_name = 'redcap_repeat_instrument') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD redcap_repeat_instrument varchar;
-    -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
+    -- column (redcap_repeat_instrument)
 END IF;
     -- column (redcap_repeat_instrument)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instance)
@@ -1945,7 +1810,7 @@ END IF;
             AND column_name = 'redcap_repeat_instance') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD redcap_repeat_instance varchar;
-    -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
+    -- column (redcap_repeat_instance)
 END IF;
     -- column (redcap_repeat_instance)
     IF NOT EXISTS ( -- column not exists (redcap_data_access_group)
@@ -1959,7 +1824,7 @@ END IF;
             AND column_name = 'redcap_data_access_group') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD redcap_data_access_group varchar;
-    -- Function as dataset filter by stations (varchar)
+    -- column (redcap_data_access_group)
 END IF;
     -- column (redcap_data_access_group)
     IF NOT EXISTS ( -- column not exists (db_filter_6)
@@ -1973,7 +1838,7 @@ END IF;
             AND column_name = 'db_filter_6') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD db_filter_6 double precision;
-    -- Dashboard Filter 6 (double precision)
+    -- column (db_filter_6)
 END IF;
     -- column (db_filter_6)
     IF NOT EXISTS ( -- column not exists (mrp_anlage)
@@ -1987,7 +1852,7 @@ END IF;
             AND column_name = 'mrp_anlage') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_anlage varchar;
-    -- Formular angelegt von (varchar)
+    -- column (mrp_anlage)
 END IF;
     -- column (mrp_anlage)
     IF NOT EXISTS ( -- column not exists (mrp_edit)
@@ -2001,7 +1866,7 @@ END IF;
             AND column_name = 'mrp_edit') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_edit varchar;
-    -- Formular zuletzt bearbeitet von (varchar)
+    -- column (mrp_edit)
 END IF;
     -- column (mrp_edit)
     IF NOT EXISTS ( -- column not exists (mrp_meda_id)
@@ -2015,8 +1880,7 @@ END IF;
             AND column_name = 'mrp_meda_id') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_meda_id varchar;
-    -- 2 Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu MRP
-    Auswahlfeld falls die aktuell dokumentiertes MRP sich nicht auf die letzte Instanz der Medikationsanalyse bezieht. (varchar)
+    -- column (mrp_meda_id)
 END IF;
     -- column (mrp_meda_id)
     IF NOT EXISTS ( -- column not exists (mrp_id)
@@ -2030,7 +1894,7 @@ END IF;
             AND column_name = 'mrp_id') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_id varchar;
-    -- MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (varchar)
+    -- column (mrp_id)
 END IF;
     -- column (mrp_id)
     IF NOT EXISTS ( -- column not exists (mrp_entd_dat)
@@ -2044,7 +1908,7 @@ END IF;
             AND column_name = 'mrp_entd_dat') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_entd_dat timestamp;
-    -- Datum des MRP (timestamp)
+    -- column (mrp_entd_dat)
 END IF;
     -- column (mrp_entd_dat)
     IF NOT EXISTS ( -- column not exists (mrp_entd_algorithmisch)
@@ -2058,7 +1922,7 @@ END IF;
             AND column_name = 'mrp_entd_algorithmisch') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_entd_algorithmisch varchar;
-    -- MRP vom INTERPOLAR-Algorithmus entdeckt? (varchar)
+    -- column (mrp_entd_algorithmisch)
 END IF;
     -- column (mrp_entd_algorithmisch)
     IF NOT EXISTS ( -- column not exists (mrp_kurzbeschr)
@@ -2072,7 +1936,7 @@ END IF;
             AND column_name = 'mrp_kurzbeschr') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_kurzbeschr varchar;
-    -- Kurzbeschreibung des MRPs* (varchar)
+    -- column (mrp_kurzbeschr)
 END IF;
     -- column (mrp_kurzbeschr)
     IF NOT EXISTS ( -- column not exists (mrp_hinweisgeber)
@@ -2086,7 +1950,7 @@ END IF;
             AND column_name = 'mrp_hinweisgeber') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_hinweisgeber varchar;
-    -- Hinweisgeber auf das MRP (varchar)
+    -- column (mrp_hinweisgeber)
 END IF;
     -- column (mrp_hinweisgeber)
     IF NOT EXISTS ( -- column not exists (mrp_hinweisgeber_oth)
@@ -2100,7 +1964,7 @@ END IF;
             AND column_name = 'mrp_hinweisgeber_oth') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_hinweisgeber_oth varchar;
-    -- Anderer Hinweisgeber (varchar)
+    -- column (mrp_hinweisgeber_oth)
 END IF;
     -- column (mrp_hinweisgeber_oth)
     IF NOT EXISTS ( -- column not exists (mrp_wirkstoff)
@@ -2114,7 +1978,7 @@ END IF;
             AND column_name = 'mrp_wirkstoff') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_wirkstoff varchar;
-    -- Wirkstoff betroffen? (varchar)
+    -- column (mrp_wirkstoff)
 END IF;
     -- column (mrp_wirkstoff)
     IF NOT EXISTS ( -- column not exists (mrp_atc1)
@@ -2128,7 +1992,7 @@ END IF;
             AND column_name = 'mrp_atc1') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc1 varchar;
-    -- 1. Medikament ATC / Name: (varchar)
+    -- column (mrp_atc1)
 END IF;
     -- column (mrp_atc1)
     IF NOT EXISTS ( -- column not exists (mrp_atc2)
@@ -2142,7 +2006,7 @@ END IF;
             AND column_name = 'mrp_atc2') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc2 varchar;
-    -- 2. Medikament ATC / Name (varchar)
+    -- column (mrp_atc2)
 END IF;
     -- column (mrp_atc2)
     IF NOT EXISTS ( -- column not exists (mrp_atc3)
@@ -2156,7 +2020,7 @@ END IF;
             AND column_name = 'mrp_atc3') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc3 varchar;
-    -- 3. Medikament ATC / Name (varchar)
+    -- column (mrp_atc3)
 END IF;
     -- column (mrp_atc3)
     IF NOT EXISTS ( -- column not exists (mrp_atc4)
@@ -2170,7 +2034,7 @@ END IF;
             AND column_name = 'mrp_atc4') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc4 varchar;
-    -- 4. Medikament ATC / Name (varchar)
+    -- column (mrp_atc4)
 END IF;
     -- column (mrp_atc4)
     IF NOT EXISTS ( -- column not exists (mrp_atc5)
@@ -2184,7 +2048,7 @@ END IF;
             AND column_name = 'mrp_atc5') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc5 varchar;
-    -- 5. Medikament ATC / Name (varchar)
+    -- column (mrp_atc5)
 END IF;
     -- column (mrp_atc5)
     IF NOT EXISTS ( -- column not exists (mrp_atc1_2026)
@@ -2198,7 +2062,7 @@ END IF;
             AND column_name = 'mrp_atc1_2026') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc1_2026 varchar;
-    -- 1. Medikament ATC / Name*: (varchar)
+    -- column (mrp_atc1_2026)
 END IF;
     -- column (mrp_atc1_2026)
     IF NOT EXISTS ( -- column not exists (mrp_atc2_2026)
@@ -2212,7 +2076,7 @@ END IF;
             AND column_name = 'mrp_atc2_2026') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc2_2026 varchar;
-    -- 2. Medikament ATC / Name: (varchar)
+    -- column (mrp_atc2_2026)
 END IF;
     -- column (mrp_atc2_2026)
     IF NOT EXISTS ( -- column not exists (mrp_atc3_2026)
@@ -2226,7 +2090,7 @@ END IF;
             AND column_name = 'mrp_atc3_2026') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc3_2026 varchar;
-    -- 3. Medikament ATC / Name: (varchar)
+    -- column (mrp_atc3_2026)
 END IF;
     -- column (mrp_atc3_2026)
     IF NOT EXISTS ( -- column not exists (mrp_atc4_2026)
@@ -2240,7 +2104,7 @@ END IF;
             AND column_name = 'mrp_atc4_2026') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc4_2026 varchar;
-    -- 4. Medikament ATC / Name: (varchar)
+    -- column (mrp_atc4_2026)
 END IF;
     -- column (mrp_atc4_2026)
     IF NOT EXISTS ( -- column not exists (mrp_atc5_2026)
@@ -2254,7 +2118,7 @@ END IF;
             AND column_name = 'mrp_atc5_2026') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_atc5_2026 varchar;
-    -- 5. Medikament ATC / Name: (varchar)
+    -- column (mrp_atc5_2026)
 END IF;
     -- column (mrp_atc5_2026)
     IF NOT EXISTS ( -- column not exists (mrp_med_prod)
@@ -2268,7 +2132,7 @@ END IF;
             AND column_name = 'mrp_med_prod') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_med_prod varchar;
-    -- Medizinprodukt betroffen? (varchar)
+    -- column (mrp_med_prod)
 END IF;
     -- column (mrp_med_prod)
     IF NOT EXISTS ( -- column not exists (mrp_med_prod_sonst)
@@ -2282,7 +2146,7 @@ END IF;
             AND column_name = 'mrp_med_prod_sonst') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_med_prod_sonst varchar;
-    -- Bezeichnung Präparat (varchar)
+    -- column (mrp_med_prod_sonst)
 END IF;
     -- column (mrp_med_prod_sonst)
     IF NOT EXISTS ( -- column not exists (mrp_dokup_fehler)
@@ -2296,8 +2160,7 @@ END IF;
             AND column_name = 'mrp_dokup_fehler') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_dokup_fehler varchar;
-    -- Frage / Fehlerbeschreibung
-    (varchar)
+    -- column (mrp_dokup_fehler)
 END IF;
     -- column (mrp_dokup_fehler)
     IF NOT EXISTS ( -- column not exists (mrp_dokup_intervention)
@@ -2311,7 +2174,7 @@ END IF;
             AND column_name = 'mrp_dokup_intervention') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_dokup_intervention varchar;
-    -- Intervention / Vorschlag zur Fehlervermeldung (varchar)
+    -- column (mrp_dokup_intervention)
 END IF;
     -- column (mrp_dokup_intervention)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___1)
@@ -2325,7 +2188,7 @@ END IF;
             AND column_name = 'mrp_pigrund___1') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___1 varchar;
-    -- 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (varchar)
+    -- column (mrp_pigrund___1)
 END IF;
     -- column (mrp_pigrund___1)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___2)
@@ -2339,7 +2202,7 @@ END IF;
             AND column_name = 'mrp_pigrund___2') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___2 varchar;
-    -- 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (varchar)
+    -- column (mrp_pigrund___2)
 END IF;
     -- column (mrp_pigrund___2)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___3)
@@ -2353,7 +2216,7 @@ END IF;
             AND column_name = 'mrp_pigrund___3') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___3 varchar;
-    -- 3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF) (varchar)
+    -- column (mrp_pigrund___3)
 END IF;
     -- column (mrp_pigrund___3)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___4)
@@ -2367,7 +2230,7 @@ END IF;
             AND column_name = 'mrp_pigrund___4') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___4 varchar;
-    -- 4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF) (varchar)
+    -- column (mrp_pigrund___4)
 END IF;
     -- column (mrp_pigrund___4)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___5)
@@ -2381,7 +2244,7 @@ END IF;
             AND column_name = 'mrp_pigrund___5') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___5 varchar;
-    -- 5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF) (varchar)
+    -- column (mrp_pigrund___5)
 END IF;
     -- column (mrp_pigrund___5)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___6)
@@ -2395,7 +2258,7 @@ END IF;
             AND column_name = 'mrp_pigrund___6') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___6 varchar;
-    -- 6 - AM: Übertragungsfehler (MF) (varchar)
+    -- column (mrp_pigrund___6)
 END IF;
     -- column (mrp_pigrund___6)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___7)
@@ -2409,7 +2272,7 @@ END IF;
             AND column_name = 'mrp_pigrund___7') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___7 varchar;
-    -- 7 - AM: Substitution aut idem/aut simile (MF) (varchar)
+    -- column (mrp_pigrund___7)
 END IF;
     -- column (mrp_pigrund___7)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___8)
@@ -2423,7 +2286,7 @@ END IF;
             AND column_name = 'mrp_pigrund___8') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___8 varchar;
-    -- 8 - AM: (Klare) Indikation - aber kein Medikament angeordnet (MF) (varchar)
+    -- column (mrp_pigrund___8)
 END IF;
     -- column (mrp_pigrund___8)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___9)
@@ -2437,7 +2300,7 @@ END IF;
             AND column_name = 'mrp_pigrund___9') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___9 varchar;
-    -- 9 - AM: Stellfehler (MF) (varchar)
+    -- column (mrp_pigrund___9)
 END IF;
     -- column (mrp_pigrund___9)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___10)
@@ -2451,7 +2314,7 @@ END IF;
             AND column_name = 'mrp_pigrund___10') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___10 varchar;
-    -- 10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF) (varchar)
+    -- column (mrp_pigrund___10)
 END IF;
     -- column (mrp_pigrund___10)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___11)
@@ -2465,7 +2328,7 @@ END IF;
             AND column_name = 'mrp_pigrund___11') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___11 varchar;
-    -- 11 - AM: Doppelverordnung (MF) (varchar)
+    -- column (mrp_pigrund___11)
 END IF;
     -- column (mrp_pigrund___11)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___12)
@@ -2479,7 +2342,7 @@ END IF;
             AND column_name = 'mrp_pigrund___12') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___12 varchar;
-    -- 12 - ANW: Applikation (Dauer) (MF) (varchar)
+    -- column (mrp_pigrund___12)
 END IF;
     -- column (mrp_pigrund___12)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___13)
@@ -2493,7 +2356,7 @@ END IF;
             AND column_name = 'mrp_pigrund___13') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___13 varchar;
-    -- 13 - ANW: Inkompatibilität oder falsche Zubereitung (MF) (varchar)
+    -- column (mrp_pigrund___13)
 END IF;
     -- column (mrp_pigrund___13)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___14)
@@ -2507,7 +2370,7 @@ END IF;
             AND column_name = 'mrp_pigrund___14') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___14 varchar;
-    -- 14 - ANW: Applikation (Art) (MF) (varchar)
+    -- column (mrp_pigrund___14)
 END IF;
     -- column (mrp_pigrund___14)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___15)
@@ -2521,7 +2384,7 @@ END IF;
             AND column_name = 'mrp_pigrund___15') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___15 varchar;
-    -- 15 - ANW: Anfrage zur Administration/Kompatibilität (varchar)
+    -- column (mrp_pigrund___15)
 END IF;
     -- column (mrp_pigrund___15)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___16)
@@ -2535,7 +2398,7 @@ END IF;
             AND column_name = 'mrp_pigrund___16') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___16 varchar;
-    -- 16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF) (varchar)
+    -- column (mrp_pigrund___16)
 END IF;
     -- column (mrp_pigrund___16)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___17)
@@ -2549,7 +2412,7 @@ END IF;
             AND column_name = 'mrp_pigrund___17') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___17 varchar;
-    -- 17 - D: (Fehlerhafte) Dosis (MF) (varchar)
+    -- column (mrp_pigrund___17)
 END IF;
     -- column (mrp_pigrund___17)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___18)
@@ -2563,7 +2426,7 @@ END IF;
             AND column_name = 'mrp_pigrund___18') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___18 varchar;
-    -- 18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF) (varchar)
+    -- column (mrp_pigrund___18)
 END IF;
     -- column (mrp_pigrund___18)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___19)
@@ -2577,7 +2440,7 @@ END IF;
             AND column_name = 'mrp_pigrund___19') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___19 varchar;
-    -- 19 - D: (Fehlerhaftes) Dosisinterval (MF) (varchar)
+    -- column (mrp_pigrund___19)
 END IF;
     -- column (mrp_pigrund___19)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___20)
@@ -2591,7 +2454,7 @@ END IF;
             AND column_name = 'mrp_pigrund___20') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___20 varchar;
-    -- 20 - Interaktion (MF) (varchar)
+    -- column (mrp_pigrund___20)
 END IF;
     -- column (mrp_pigrund___20)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___21)
@@ -2605,7 +2468,7 @@ END IF;
             AND column_name = 'mrp_pigrund___21') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___21 varchar;
-    -- 21 - Kontraindikation (MF) (varchar)
+    -- column (mrp_pigrund___21)
 END IF;
     -- column (mrp_pigrund___21)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___22)
@@ -2619,7 +2482,7 @@ END IF;
             AND column_name = 'mrp_pigrund___22') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___22 varchar;
-    -- 22 - Nebenwirkungen (varchar)
+    -- column (mrp_pigrund___22)
 END IF;
     -- column (mrp_pigrund___22)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___23)
@@ -2633,7 +2496,7 @@ END IF;
             AND column_name = 'mrp_pigrund___23') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___23 varchar;
-    -- 23 - S: Beratung/Auswahl eines Arzneistoffs (varchar)
+    -- column (mrp_pigrund___23)
 END IF;
     -- column (mrp_pigrund___23)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___24)
@@ -2647,7 +2510,7 @@ END IF;
             AND column_name = 'mrp_pigrund___24') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___24 varchar;
-    -- 24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs (varchar)
+    -- column (mrp_pigrund___24)
 END IF;
     -- column (mrp_pigrund___24)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___25)
@@ -2661,7 +2524,7 @@ END IF;
             AND column_name = 'mrp_pigrund___25') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___25 varchar;
-    -- 25 - S: Beschaffung/Kosten (varchar)
+    -- column (mrp_pigrund___25)
 END IF;
     -- column (mrp_pigrund___25)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___26)
@@ -2675,7 +2538,7 @@ END IF;
             AND column_name = 'mrp_pigrund___26') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___26 varchar;
-    -- 26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (varchar)
+    -- column (mrp_pigrund___26)
 END IF;
     -- column (mrp_pigrund___26)
     IF NOT EXISTS ( -- column not exists (mrp_pigrund___27)
@@ -2689,7 +2552,7 @@ END IF;
             AND column_name = 'mrp_pigrund___27') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_pigrund___27 varchar;
-    -- 27 - S: Schulung/Beratung eines Patienten (varchar)
+    -- column (mrp_pigrund___27)
 END IF;
     -- column (mrp_pigrund___27)
     IF NOT EXISTS ( -- column not exists (mrp_ip_klasse)
@@ -2703,7 +2566,7 @@ END IF;
             AND column_name = 'mrp_ip_klasse') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_ip_klasse varchar;
-    -- MRP-Klasse (INTERPOLAR) (varchar)
+    -- column (mrp_ip_klasse)
 END IF;
     -- column (mrp_ip_klasse)
     IF NOT EXISTS ( -- column not exists (mrp_ip_klasse_01)
@@ -2717,7 +2580,7 @@ END IF;
             AND column_name = 'mrp_ip_klasse_01') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_ip_klasse_01 varchar;
-    -- MRP-Klasse (INTERPOLAR) (varchar)
+    -- column (mrp_ip_klasse_01)
 END IF;
     -- column (mrp_ip_klasse_01)
     IF NOT EXISTS ( -- column not exists (mrp_ip_klasse_disease)
@@ -2731,7 +2594,7 @@ END IF;
             AND column_name = 'mrp_ip_klasse_disease') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_ip_klasse_disease varchar;
-    -- Disease (varchar)
+    -- column (mrp_ip_klasse_disease)
 END IF;
     -- column (mrp_ip_klasse_disease)
     IF NOT EXISTS ( -- column not exists (mrp_ip_klasse_labor)
@@ -2745,7 +2608,7 @@ END IF;
             AND column_name = 'mrp_ip_klasse_labor') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_ip_klasse_labor varchar;
-    -- Labor (varchar)
+    -- column (mrp_ip_klasse_labor)
 END IF;
     -- column (mrp_ip_klasse_labor)
     IF NOT EXISTS ( -- column not exists (mrp_ip_klasse_nieren_insuf)
@@ -2759,7 +2622,7 @@ END IF;
             AND column_name = 'mrp_ip_klasse_nieren_insuf') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_ip_klasse_nieren_insuf varchar;
-    -- Grad der Nierenfunktionseinschränkung (varchar)
+    -- column (mrp_ip_klasse_nieren_insuf)
 END IF;
     -- column (mrp_ip_klasse_nieren_insuf)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___1)
@@ -2773,7 +2636,7 @@ END IF;
             AND column_name = 'mrp_massn_am___1') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___1 varchar;
-    -- 1 - Anweisung für die Applikation geben (varchar)
+    -- column (mrp_massn_am___1)
 END IF;
     -- column (mrp_massn_am___1)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___2)
@@ -2787,7 +2650,7 @@ END IF;
             AND column_name = 'mrp_massn_am___2') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___2 varchar;
-    -- 2 - Arzneimittel ändern (varchar)
+    -- column (mrp_massn_am___2)
 END IF;
     -- column (mrp_massn_am___2)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___3)
@@ -2801,7 +2664,7 @@ END IF;
             AND column_name = 'mrp_massn_am___3') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___3 varchar;
-    -- 3 - Arzneimittel stoppen/pausieren (varchar)
+    -- column (mrp_massn_am___3)
 END IF;
     -- column (mrp_massn_am___3)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___4)
@@ -2815,7 +2678,7 @@ END IF;
             AND column_name = 'mrp_massn_am___4') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___4 varchar;
-    -- 4 - Arzneimittel neu ansetzen (varchar)
+    -- column (mrp_massn_am___4)
 END IF;
     -- column (mrp_massn_am___4)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___5)
@@ -2829,7 +2692,7 @@ END IF;
             AND column_name = 'mrp_massn_am___5') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___5 varchar;
-    -- 5 - Dosierung ändern (varchar)
+    -- column (mrp_massn_am___5)
 END IF;
     -- column (mrp_massn_am___5)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___6)
@@ -2843,7 +2706,7 @@ END IF;
             AND column_name = 'mrp_massn_am___6') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___6 varchar;
-    -- 6 - Formulierung ändern (varchar)
+    -- column (mrp_massn_am___6)
 END IF;
     -- column (mrp_massn_am___6)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___7)
@@ -2857,7 +2720,7 @@ END IF;
             AND column_name = 'mrp_massn_am___7') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___7 varchar;
-    -- 7 - Hilfe bei Beschaffung (varchar)
+    -- column (mrp_massn_am___7)
 END IF;
     -- column (mrp_massn_am___7)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___8)
@@ -2871,7 +2734,7 @@ END IF;
             AND column_name = 'mrp_massn_am___8') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___8 varchar;
-    -- 8 - Information an Arzt/Pflege (varchar)
+    -- column (mrp_massn_am___8)
 END IF;
     -- column (mrp_massn_am___8)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___9)
@@ -2885,7 +2748,7 @@ END IF;
             AND column_name = 'mrp_massn_am___9') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___9 varchar;
-    -- 9 - Information an Patient (varchar)
+    -- column (mrp_massn_am___9)
 END IF;
     -- column (mrp_massn_am___9)
     IF NOT EXISTS ( -- column not exists (mrp_massn_am___10)
@@ -2899,7 +2762,7 @@ END IF;
             AND column_name = 'mrp_massn_am___10') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_am___10 varchar;
-    -- 10 - TDM oder Laborkontrolle emfohlen (varchar)
+    -- column (mrp_massn_am___10)
 END IF;
     -- column (mrp_massn_am___10)
     IF NOT EXISTS ( -- column not exists (mrp_massn_orga___1)
@@ -2913,7 +2776,7 @@ END IF;
             AND column_name = 'mrp_massn_orga___1') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_orga___1 varchar;
-    -- 1 - Aushändigung einer Information/eines Medikationsplans (varchar)
+    -- column (mrp_massn_orga___1)
 END IF;
     -- column (mrp_massn_orga___1)
     IF NOT EXISTS ( -- column not exists (mrp_massn_orga___2)
@@ -2927,7 +2790,7 @@ END IF;
             AND column_name = 'mrp_massn_orga___2') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_orga___2 varchar;
-    -- 2 - CIRS-/AMK-Meldung (varchar)
+    -- column (mrp_massn_orga___2)
 END IF;
     -- column (mrp_massn_orga___2)
     IF NOT EXISTS ( -- column not exists (mrp_massn_orga___3)
@@ -2941,7 +2804,7 @@ END IF;
             AND column_name = 'mrp_massn_orga___3') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_orga___3 varchar;
-    -- 3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (varchar)
+    -- column (mrp_massn_orga___3)
 END IF;
     -- column (mrp_massn_orga___3)
     IF NOT EXISTS ( -- column not exists (mrp_massn_orga___4)
@@ -2955,7 +2818,7 @@ END IF;
             AND column_name = 'mrp_massn_orga___4') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_orga___4 varchar;
-    -- 4 - Etablierung einer Doppelkontrolle (varchar)
+    -- column (mrp_massn_orga___4)
 END IF;
     -- column (mrp_massn_orga___4)
     IF NOT EXISTS ( -- column not exists (mrp_massn_orga___5)
@@ -2969,7 +2832,7 @@ END IF;
             AND column_name = 'mrp_massn_orga___5') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_orga___5 varchar;
-    -- 5 - Lieferantenwechsel (varchar)
+    -- column (mrp_massn_orga___5)
 END IF;
     -- column (mrp_massn_orga___5)
     IF NOT EXISTS ( -- column not exists (mrp_massn_orga___6)
@@ -2983,7 +2846,7 @@ END IF;
             AND column_name = 'mrp_massn_orga___6') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_orga___6 varchar;
-    -- 6 - Optimierung der internen und externene Kommunikation (varchar)
+    -- column (mrp_massn_orga___6)
 END IF;
     -- column (mrp_massn_orga___6)
     IF NOT EXISTS ( -- column not exists (mrp_massn_orga___7)
@@ -2997,7 +2860,7 @@ END IF;
             AND column_name = 'mrp_massn_orga___7') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_orga___7 varchar;
-    -- 7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)
+    -- column (mrp_massn_orga___7)
 END IF;
     -- column (mrp_massn_orga___7)
     IF NOT EXISTS ( -- column not exists (mrp_massn_orga___8)
@@ -3011,7 +2874,7 @@ END IF;
             AND column_name = 'mrp_massn_orga___8') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_massn_orga___8 varchar;
-    -- 8 - Sensibilisierung/Schulung (varchar)
+    -- column (mrp_massn_orga___8)
 END IF;
     -- column (mrp_massn_orga___8)
     IF NOT EXISTS ( -- column not exists (mrp_notiz)
@@ -3025,7 +2888,7 @@ END IF;
             AND column_name = 'mrp_notiz') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_notiz varchar;
-    -- Notiz (varchar)
+    -- column (mrp_notiz)
 END IF;
     -- column (mrp_notiz)
     IF NOT EXISTS ( -- column not exists (mrp_dokup_hand_emp_akz)
@@ -3039,7 +2902,7 @@ END IF;
             AND column_name = 'mrp_dokup_hand_emp_akz') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_dokup_hand_emp_akz varchar;
-    -- Handlungsempfehlung akzeptiert? (varchar)
+    -- column (mrp_dokup_hand_emp_akz)
 END IF;
     -- column (mrp_dokup_hand_emp_akz)
     IF NOT EXISTS ( -- column not exists (mrp_merp)
@@ -3053,7 +2916,7 @@ END IF;
             AND column_name = 'mrp_merp') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_merp varchar;
-    -- NCC MERP Score (varchar)
+    -- column (mrp_merp)
 END IF;
     -- column (mrp_merp)
     IF NOT EXISTS ( -- column not exists (mrp_merp_info___1)
@@ -3067,7 +2930,7 @@ END IF;
             AND column_name = 'mrp_merp_info___1') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_merp_info___1 varchar;
-    -- 1 - NCC MERP Index anzeigen (varchar)
+    -- column (mrp_merp_info___1)
 END IF;
     -- column (mrp_merp_info___1)
     IF NOT EXISTS ( -- column not exists (mrp_additional_values)
@@ -3081,7 +2944,7 @@ END IF;
             AND column_name = 'mrp_additional_values') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrp_additional_values varchar;
-    -- Reserviertes Feld für zusätzliche Werte (varchar)
+    -- column (mrp_additional_values)
 END IF;
     -- column (mrp_additional_values)
     IF NOT EXISTS ( -- column not exists (mrpdokumentation_validierung_complete)
@@ -3095,7 +2958,7 @@ END IF;
             AND column_name = 'mrpdokumentation_validierung_complete') THEN
         ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
             ADD mrpdokumentation_validierung_complete varchar;
-    -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+    -- column (mrpdokumentation_validierung_complete)
 END IF;
     -- column (mrpdokumentation_validierung_complete)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -3222,92 +3085,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-        COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-        COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-        COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-        COALESCE(db.to_char_immutable (db_filter_6), '#NULL#') || '|||' || -- hash from: Dashboard Filter 6 (db_filter_6)
-        COALESCE(db.to_char_immutable (mrp_anlage), '#NULL#') || '|||' || -- hash from: Formular angelegt von (mrp_anlage)
-        COALESCE(db.to_char_immutable (mrp_edit), '#NULL#') || '|||' || -- hash from: Formular zuletzt bearbeitet von (mrp_edit)
-        COALESCE(db.to_char_immutable (mrp_meda_id), '#NULL#') || '|||' || -- hash from: 2 Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu MRP
-        Auswahlfeld falls die aktuell dokumentiertes MRP sich nicht auf die letzte Instanz der Medikationsanalyse bezieht. (mrp_meda_id) COALESCE(db.to_char_immutable (mrp_id), '#NULL#') || '|||' || -- hash from: MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (mrp_id)
-        COALESCE(db.to_char_immutable (mrp_entd_dat), '#NULL#') || '|||' || -- hash from: Datum des MRP (mrp_entd_dat)
-        COALESCE(db.to_char_immutable (mrp_entd_algorithmisch), '#NULL#') || '|||' || -- hash from: MRP vom INTERPOLAR-Algorithmus entdeckt? (mrp_entd_algorithmisch)
-        COALESCE(db.to_char_immutable (mrp_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs* (mrp_kurzbeschr)
-        COALESCE(db.to_char_immutable (mrp_hinweisgeber), '#NULL#') || '|||' || -- hash from: Hinweisgeber auf das MRP (mrp_hinweisgeber)
-        COALESCE(db.to_char_immutable (mrp_hinweisgeber_oth), '#NULL#') || '|||' || -- hash from: Anderer Hinweisgeber (mrp_hinweisgeber_oth)
-        COALESCE(db.to_char_immutable (mrp_wirkstoff), '#NULL#') || '|||' || -- hash from: Wirkstoff betroffen? (mrp_wirkstoff)
-        COALESCE(db.to_char_immutable (mrp_atc1), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name: (mrp_atc1)
-        COALESCE(db.to_char_immutable (mrp_atc2), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name (mrp_atc2)
-        COALESCE(db.to_char_immutable (mrp_atc3), '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name (mrp_atc3)
-        COALESCE(db.to_char_immutable (mrp_atc4), '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name (mrp_atc4)
-        COALESCE(db.to_char_immutable (mrp_atc5), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name (mrp_atc5)
-        COALESCE(db.to_char_immutable (mrp_atc1_2026), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name*: (mrp_atc1_2026)
-        COALESCE(db.to_char_immutable (mrp_atc2_2026), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name: (mrp_atc2_2026)
-        COALESCE(db.to_char_immutable (mrp_atc3_2026), '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name: (mrp_atc3_2026)
-        COALESCE(db.to_char_immutable (mrp_atc4_2026), '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name: (mrp_atc4_2026)
-        COALESCE(db.to_char_immutable (mrp_atc5_2026), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name: (mrp_atc5_2026)
-        COALESCE(db.to_char_immutable (mrp_med_prod), '#NULL#') || '|||' || -- hash from: Medizinprodukt betroffen? (mrp_med_prod)
-        COALESCE(db.to_char_immutable (mrp_med_prod_sonst), '#NULL#') || '|||' || -- hash from: Bezeichnung Präparat (mrp_med_prod_sonst)
-        COALESCE(db.to_char_immutable (mrp_dokup_fehler), '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung
-        (mrp_dokup_fehler) COALESCE(db.to_char_immutable (mrp_dokup_intervention), '#NULL#') || '|||' || -- hash from: Intervention / Vorschlag zur Fehlervermeldung (mrp_dokup_intervention)
-        COALESCE(db.to_char_immutable (mrp_pigrund___1), '#NULL#') || '|||' || -- hash from: 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (mrp_pigrund___1)
-        COALESCE(db.to_char_immutable (mrp_pigrund___2), '#NULL#') || '|||' || -- hash from: 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (mrp_pigrund___2)
-        COALESCE(db.to_char_immutable (mrp_pigrund___3), '#NULL#') || '|||' || -- hash from: 3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF) (mrp_pigrund___3)
-        COALESCE(db.to_char_immutable (mrp_pigrund___4), '#NULL#') || '|||' || -- hash from: 4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF) (mrp_pigrund___4)
-        COALESCE(db.to_char_immutable (mrp_pigrund___5), '#NULL#') || '|||' || -- hash from: 5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF) (mrp_pigrund___5)
-        COALESCE(db.to_char_immutable (mrp_pigrund___6), '#NULL#') || '|||' || -- hash from: 6 - AM: Übertragungsfehler (MF) (mrp_pigrund___6)
-        COALESCE(db.to_char_immutable (mrp_pigrund___7), '#NULL#') || '|||' || -- hash from: 7 - AM: Substitution aut idem/aut simile (MF) (mrp_pigrund___7)
-        COALESCE(db.to_char_immutable (mrp_pigrund___8), '#NULL#') || '|||' || -- hash from: 8 - AM: (Klare) Indikation - aber kein Medikament angeordnet (MF) (mrp_pigrund___8)
-        COALESCE(db.to_char_immutable (mrp_pigrund___9), '#NULL#') || '|||' || -- hash from: 9 - AM: Stellfehler (MF) (mrp_pigrund___9)
-        COALESCE(db.to_char_immutable (mrp_pigrund___10), '#NULL#') || '|||' || -- hash from: 10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF) (mrp_pigrund___10)
-        COALESCE(db.to_char_immutable (mrp_pigrund___11), '#NULL#') || '|||' || -- hash from: 11 - AM: Doppelverordnung (MF) (mrp_pigrund___11)
-        COALESCE(db.to_char_immutable (mrp_pigrund___12), '#NULL#') || '|||' || -- hash from: 12 - ANW: Applikation (Dauer) (MF) (mrp_pigrund___12)
-        COALESCE(db.to_char_immutable (mrp_pigrund___13), '#NULL#') || '|||' || -- hash from: 13 - ANW: Inkompatibilität oder falsche Zubereitung (MF) (mrp_pigrund___13)
-        COALESCE(db.to_char_immutable (mrp_pigrund___14), '#NULL#') || '|||' || -- hash from: 14 - ANW: Applikation (Art) (MF) (mrp_pigrund___14)
-        COALESCE(db.to_char_immutable (mrp_pigrund___15), '#NULL#') || '|||' || -- hash from: 15 - ANW: Anfrage zur Administration/Kompatibilität (mrp_pigrund___15)
-        COALESCE(db.to_char_immutable (mrp_pigrund___16), '#NULL#') || '|||' || -- hash from: 16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF) (mrp_pigrund___16)
-        COALESCE(db.to_char_immutable (mrp_pigrund___17), '#NULL#') || '|||' || -- hash from: 17 - D: (Fehlerhafte) Dosis (MF) (mrp_pigrund___17)
-        COALESCE(db.to_char_immutable (mrp_pigrund___18), '#NULL#') || '|||' || -- hash from: 18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF) (mrp_pigrund___18)
-        COALESCE(db.to_char_immutable (mrp_pigrund___19), '#NULL#') || '|||' || -- hash from: 19 - D: (Fehlerhaftes) Dosisinterval (MF) (mrp_pigrund___19)
-        COALESCE(db.to_char_immutable (mrp_pigrund___20), '#NULL#') || '|||' || -- hash from: 20 - Interaktion (MF) (mrp_pigrund___20)
-        COALESCE(db.to_char_immutable (mrp_pigrund___21), '#NULL#') || '|||' || -- hash from: 21 - Kontraindikation (MF) (mrp_pigrund___21)
-        COALESCE(db.to_char_immutable (mrp_pigrund___22), '#NULL#') || '|||' || -- hash from: 22 - Nebenwirkungen (mrp_pigrund___22)
-        COALESCE(db.to_char_immutable (mrp_pigrund___23), '#NULL#') || '|||' || -- hash from: 23 - S: Beratung/Auswahl eines Arzneistoffs (mrp_pigrund___23)
-        COALESCE(db.to_char_immutable (mrp_pigrund___24), '#NULL#') || '|||' || -- hash from: 24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs (mrp_pigrund___24)
-        COALESCE(db.to_char_immutable (mrp_pigrund___25), '#NULL#') || '|||' || -- hash from: 25 - S: Beschaffung/Kosten (mrp_pigrund___25)
-        COALESCE(db.to_char_immutable (mrp_pigrund___26), '#NULL#') || '|||' || -- hash from: 26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (mrp_pigrund___26)
-        COALESCE(db.to_char_immutable (mrp_pigrund___27), '#NULL#') || '|||' || -- hash from: 27 - S: Schulung/Beratung eines Patienten (mrp_pigrund___27)
-        COALESCE(db.to_char_immutable (mrp_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (mrp_ip_klasse)
-        COALESCE(db.to_char_immutable (mrp_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (mrp_ip_klasse_01)
-        COALESCE(db.to_char_immutable (mrp_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (mrp_ip_klasse_disease)
-        COALESCE(db.to_char_immutable (mrp_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (mrp_ip_klasse_labor)
-        COALESCE(db.to_char_immutable (mrp_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (mrp_ip_klasse_nieren_insuf)
-        COALESCE(db.to_char_immutable (mrp_massn_am___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (mrp_massn_am___1)
-        COALESCE(db.to_char_immutable (mrp_massn_am___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (mrp_massn_am___2)
-        COALESCE(db.to_char_immutable (mrp_massn_am___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (mrp_massn_am___3)
-        COALESCE(db.to_char_immutable (mrp_massn_am___4), '#NULL#') || '|||' || -- hash from: 4 - Arzneimittel neu ansetzen (mrp_massn_am___4)
-        COALESCE(db.to_char_immutable (mrp_massn_am___5), '#NULL#') || '|||' || -- hash from: 5 - Dosierung ändern (mrp_massn_am___5)
-        COALESCE(db.to_char_immutable (mrp_massn_am___6), '#NULL#') || '|||' || -- hash from: 6 - Formulierung ändern (mrp_massn_am___6)
-        COALESCE(db.to_char_immutable (mrp_massn_am___7), '#NULL#') || '|||' || -- hash from: 7 - Hilfe bei Beschaffung (mrp_massn_am___7)
-        COALESCE(db.to_char_immutable (mrp_massn_am___8), '#NULL#') || '|||' || -- hash from: 8 - Information an Arzt/Pflege (mrp_massn_am___8)
-        COALESCE(db.to_char_immutable (mrp_massn_am___9), '#NULL#') || '|||' || -- hash from: 9 - Information an Patient (mrp_massn_am___9)
-        COALESCE(db.to_char_immutable (mrp_massn_am___10), '#NULL#') || '|||' || -- hash from: 10 - TDM oder Laborkontrolle emfohlen (mrp_massn_am___10)
-        COALESCE(db.to_char_immutable (mrp_massn_orga___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (mrp_massn_orga___1)
-        COALESCE(db.to_char_immutable (mrp_massn_orga___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (mrp_massn_orga___2)
-        COALESCE(db.to_char_immutable (mrp_massn_orga___3), '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (mrp_massn_orga___3)
-        COALESCE(db.to_char_immutable (mrp_massn_orga___4), '#NULL#') || '|||' || -- hash from: 4 - Etablierung einer Doppelkontrolle (mrp_massn_orga___4)
-        COALESCE(db.to_char_immutable (mrp_massn_orga___5), '#NULL#') || '|||' || -- hash from: 5 - Lieferantenwechsel (mrp_massn_orga___5)
-        COALESCE(db.to_char_immutable (mrp_massn_orga___6), '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation (mrp_massn_orga___6)
-        COALESCE(db.to_char_immutable (mrp_massn_orga___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (mrp_massn_orga___7)
-        COALESCE(db.to_char_immutable (mrp_massn_orga___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (mrp_massn_orga___8)
-        COALESCE(db.to_char_immutable (mrp_notiz), '#NULL#') || '|||' || -- hash from: Notiz (mrp_notiz)
-        COALESCE(db.to_char_immutable (mrp_dokup_hand_emp_akz), '#NULL#') || '|||' || -- hash from: Handlungsempfehlung akzeptiert? (mrp_dokup_hand_emp_akz)
-        COALESCE(db.to_char_immutable (mrp_merp), '#NULL#') || '|||' || -- hash from: NCC MERP Score (mrp_merp)
-        COALESCE(db.to_char_immutable (mrp_merp_info___1), '#NULL#') || '|||' || -- hash from: 1 - NCC MERP Index anzeigen (mrp_merp_info___1)
-        COALESCE(db.to_char_immutable (mrp_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (mrp_additional_values)
-        COALESCE(db.to_char_immutable (mrpdokumentation_validierung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (mrpdokumentation_validierung_complete)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (db_filter_6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_anlage), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_edit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_entd_dat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_entd_algorithmisch), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_kurzbeschr), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_hinweisgeber), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_hinweisgeber_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_wirkstoff), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc1_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc2_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc3_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc4_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc5_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_med_prod), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_med_prod_sonst), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_dokup_fehler), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_dokup_intervention), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___9), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___10), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___11), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___12), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___13), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___14), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___15), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___16), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___17), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___18), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___19), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___20), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___21), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___22), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___23), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___24), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___25), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___26), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___27), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse_01), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse_disease), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse_labor), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse_nieren_insuf), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___9), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___10), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_notiz), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_dokup_hand_emp_akz), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_merp), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_merp_info___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrpdokumentation_validierung_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -3337,92 +3115,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.mrpdokumentation_validierung_fe
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-                COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-                COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-                COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-                COALESCE(db.to_char_immutable (db_filter_6), '#NULL#') || '|||' || -- hash from: Dashboard Filter 6 (db_filter_6)
-                COALESCE(db.to_char_immutable (mrp_anlage), '#NULL#') || '|||' || -- hash from: Formular angelegt von (mrp_anlage)
-                COALESCE(db.to_char_immutable (mrp_edit), '#NULL#') || '|||' || -- hash from: Formular zuletzt bearbeitet von (mrp_edit)
-                COALESCE(db.to_char_immutable (mrp_meda_id), '#NULL#') || '|||' || -- hash from: 2 Dynamische SQL-Abfrage zur Zuordnung Medikationsanalyse zu MRP
-                Auswahlfeld falls die aktuell dokumentiertes MRP sich nicht auf die letzte Instanz der Medikationsanalyse bezieht. (mrp_meda_id) COALESCE(db.to_char_immutable (mrp_id), '#NULL#') || '|||' || -- hash from: MRP-ID (REDCap) Fall-ID Encounter-Identifier (KIS) mit Instanz der aktuellen Medikationsanalyse und der Instanz des aktuellen MRP aggregiert (mrp_id)
-                COALESCE(db.to_char_immutable (mrp_entd_dat), '#NULL#') || '|||' || -- hash from: Datum des MRP (mrp_entd_dat)
-                COALESCE(db.to_char_immutable (mrp_entd_algorithmisch), '#NULL#') || '|||' || -- hash from: MRP vom INTERPOLAR-Algorithmus entdeckt? (mrp_entd_algorithmisch)
-                COALESCE(db.to_char_immutable (mrp_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs* (mrp_kurzbeschr)
-                COALESCE(db.to_char_immutable (mrp_hinweisgeber), '#NULL#') || '|||' || -- hash from: Hinweisgeber auf das MRP (mrp_hinweisgeber)
-                COALESCE(db.to_char_immutable (mrp_hinweisgeber_oth), '#NULL#') || '|||' || -- hash from: Anderer Hinweisgeber (mrp_hinweisgeber_oth)
-                COALESCE(db.to_char_immutable (mrp_wirkstoff), '#NULL#') || '|||' || -- hash from: Wirkstoff betroffen? (mrp_wirkstoff)
-                COALESCE(db.to_char_immutable (mrp_atc1), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name: (mrp_atc1)
-                COALESCE(db.to_char_immutable (mrp_atc2), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name (mrp_atc2)
-                COALESCE(db.to_char_immutable (mrp_atc3), '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name (mrp_atc3)
-                COALESCE(db.to_char_immutable (mrp_atc4), '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name (mrp_atc4)
-                COALESCE(db.to_char_immutable (mrp_atc5), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name (mrp_atc5)
-                COALESCE(db.to_char_immutable (mrp_atc1_2026), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name*: (mrp_atc1_2026)
-                COALESCE(db.to_char_immutable (mrp_atc2_2026), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name: (mrp_atc2_2026)
-                COALESCE(db.to_char_immutable (mrp_atc3_2026), '#NULL#') || '|||' || -- hash from: 3. Medikament ATC / Name: (mrp_atc3_2026)
-                COALESCE(db.to_char_immutable (mrp_atc4_2026), '#NULL#') || '|||' || -- hash from: 4. Medikament ATC / Name: (mrp_atc4_2026)
-                COALESCE(db.to_char_immutable (mrp_atc5_2026), '#NULL#') || '|||' || -- hash from: 5. Medikament ATC / Name: (mrp_atc5_2026)
-                COALESCE(db.to_char_immutable (mrp_med_prod), '#NULL#') || '|||' || -- hash from: Medizinprodukt betroffen? (mrp_med_prod)
-                COALESCE(db.to_char_immutable (mrp_med_prod_sonst), '#NULL#') || '|||' || -- hash from: Bezeichnung Präparat (mrp_med_prod_sonst)
-                COALESCE(db.to_char_immutable (mrp_dokup_fehler), '#NULL#') || '|||' || -- hash from: Frage / Fehlerbeschreibung
-                (mrp_dokup_fehler) COALESCE(db.to_char_immutable (mrp_dokup_intervention), '#NULL#') || '|||' || -- hash from: Intervention / Vorschlag zur Fehlervermeldung (mrp_dokup_intervention)
-                COALESCE(db.to_char_immutable (mrp_pigrund___1), '#NULL#') || '|||' || -- hash from: 1 - AM: (Klare) Indikation nicht (mehr) gegeben (MF) (mrp_pigrund___1)
-                COALESCE(db.to_char_immutable (mrp_pigrund___2), '#NULL#') || '|||' || -- hash from: 2 - AM: Verordnung/Dokumentation unvollständig/fehlerhaft (MF) (mrp_pigrund___2)
-                COALESCE(db.to_char_immutable (mrp_pigrund___3), '#NULL#') || '|||' || -- hash from: 3 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel für die Indikation (MF) (mrp_pigrund___3)
-                COALESCE(db.to_char_immutable (mrp_pigrund___4), '#NULL#') || '|||' || -- hash from: 4 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittel bezüglich Kosten (MF) (mrp_pigrund___4)
-                COALESCE(db.to_char_immutable (mrp_pigrund___5), '#NULL#') || '|||' || -- hash from: 5 - AM: Ungeeignetes/nicht am besten geeignetes Arzneimittelform für die Indikation (MF) (mrp_pigrund___5)
-                COALESCE(db.to_char_immutable (mrp_pigrund___6), '#NULL#') || '|||' || -- hash from: 6 - AM: Übertragungsfehler (MF) (mrp_pigrund___6)
-                COALESCE(db.to_char_immutable (mrp_pigrund___7), '#NULL#') || '|||' || -- hash from: 7 - AM: Substitution aut idem/aut simile (MF) (mrp_pigrund___7)
-                COALESCE(db.to_char_immutable (mrp_pigrund___8), '#NULL#') || '|||' || -- hash from: 8 - AM: (Klare) Indikation - aber kein Medikament angeordnet (MF) (mrp_pigrund___8)
-                COALESCE(db.to_char_immutable (mrp_pigrund___9), '#NULL#') || '|||' || -- hash from: 9 - AM: Stellfehler (MF) (mrp_pigrund___9)
-                COALESCE(db.to_char_immutable (mrp_pigrund___10), '#NULL#') || '|||' || -- hash from: 10 - AM: Arzneimittelallergie oder anamnestische Faktoren nicht berücksichtigt (MF) (mrp_pigrund___10)
-                COALESCE(db.to_char_immutable (mrp_pigrund___11), '#NULL#') || '|||' || -- hash from: 11 - AM: Doppelverordnung (MF) (mrp_pigrund___11)
-                COALESCE(db.to_char_immutable (mrp_pigrund___12), '#NULL#') || '|||' || -- hash from: 12 - ANW: Applikation (Dauer) (MF) (mrp_pigrund___12)
-                COALESCE(db.to_char_immutable (mrp_pigrund___13), '#NULL#') || '|||' || -- hash from: 13 - ANW: Inkompatibilität oder falsche Zubereitung (MF) (mrp_pigrund___13)
-                COALESCE(db.to_char_immutable (mrp_pigrund___14), '#NULL#') || '|||' || -- hash from: 14 - ANW: Applikation (Art) (MF) (mrp_pigrund___14)
-                COALESCE(db.to_char_immutable (mrp_pigrund___15), '#NULL#') || '|||' || -- hash from: 15 - ANW: Anfrage zur Administration/Kompatibilität (mrp_pigrund___15)
-                COALESCE(db.to_char_immutable (mrp_pigrund___16), '#NULL#') || '|||' || -- hash from: 16 - D: Kein TDM oder Laborkontrolle durchgeführt oder nicht beachtet (MF) (mrp_pigrund___16)
-                COALESCE(db.to_char_immutable (mrp_pigrund___17), '#NULL#') || '|||' || -- hash from: 17 - D: (Fehlerhafte) Dosis (MF) (mrp_pigrund___17)
-                COALESCE(db.to_char_immutable (mrp_pigrund___18), '#NULL#') || '|||' || -- hash from: 18 - D: (Fehlende) Dosisanpassung (Organfunktion) (MF) (mrp_pigrund___18)
-                COALESCE(db.to_char_immutable (mrp_pigrund___19), '#NULL#') || '|||' || -- hash from: 19 - D: (Fehlerhaftes) Dosisinterval (MF) (mrp_pigrund___19)
-                COALESCE(db.to_char_immutable (mrp_pigrund___20), '#NULL#') || '|||' || -- hash from: 20 - Interaktion (MF) (mrp_pigrund___20)
-                COALESCE(db.to_char_immutable (mrp_pigrund___21), '#NULL#') || '|||' || -- hash from: 21 - Kontraindikation (MF) (mrp_pigrund___21)
-                COALESCE(db.to_char_immutable (mrp_pigrund___22), '#NULL#') || '|||' || -- hash from: 22 - Nebenwirkungen (mrp_pigrund___22)
-                COALESCE(db.to_char_immutable (mrp_pigrund___23), '#NULL#') || '|||' || -- hash from: 23 - S: Beratung/Auswahl eines Arzneistoffs (mrp_pigrund___23)
-                COALESCE(db.to_char_immutable (mrp_pigrund___24), '#NULL#') || '|||' || -- hash from: 24 - S: Beratung/Auswahl zur Dosierung eines Arzneistoffs (mrp_pigrund___24)
-                COALESCE(db.to_char_immutable (mrp_pigrund___25), '#NULL#') || '|||' || -- hash from: 25 - S: Beschaffung/Kosten (mrp_pigrund___25)
-                COALESCE(db.to_char_immutable (mrp_pigrund___26), '#NULL#') || '|||' || -- hash from: 26 - S: Keine Pause von AM - die prä-OP pausiert werden müssen (MF) (mrp_pigrund___26)
-                COALESCE(db.to_char_immutable (mrp_pigrund___27), '#NULL#') || '|||' || -- hash from: 27 - S: Schulung/Beratung eines Patienten (mrp_pigrund___27)
-                COALESCE(db.to_char_immutable (mrp_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (mrp_ip_klasse)
-                COALESCE(db.to_char_immutable (mrp_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (mrp_ip_klasse_01)
-                COALESCE(db.to_char_immutable (mrp_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (mrp_ip_klasse_disease)
-                COALESCE(db.to_char_immutable (mrp_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (mrp_ip_klasse_labor)
-                COALESCE(db.to_char_immutable (mrp_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (mrp_ip_klasse_nieren_insuf)
-                COALESCE(db.to_char_immutable (mrp_massn_am___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (mrp_massn_am___1)
-                COALESCE(db.to_char_immutable (mrp_massn_am___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (mrp_massn_am___2)
-                COALESCE(db.to_char_immutable (mrp_massn_am___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (mrp_massn_am___3)
-                COALESCE(db.to_char_immutable (mrp_massn_am___4), '#NULL#') || '|||' || -- hash from: 4 - Arzneimittel neu ansetzen (mrp_massn_am___4)
-                COALESCE(db.to_char_immutable (mrp_massn_am___5), '#NULL#') || '|||' || -- hash from: 5 - Dosierung ändern (mrp_massn_am___5)
-                COALESCE(db.to_char_immutable (mrp_massn_am___6), '#NULL#') || '|||' || -- hash from: 6 - Formulierung ändern (mrp_massn_am___6)
-                COALESCE(db.to_char_immutable (mrp_massn_am___7), '#NULL#') || '|||' || -- hash from: 7 - Hilfe bei Beschaffung (mrp_massn_am___7)
-                COALESCE(db.to_char_immutable (mrp_massn_am___8), '#NULL#') || '|||' || -- hash from: 8 - Information an Arzt/Pflege (mrp_massn_am___8)
-                COALESCE(db.to_char_immutable (mrp_massn_am___9), '#NULL#') || '|||' || -- hash from: 9 - Information an Patient (mrp_massn_am___9)
-                COALESCE(db.to_char_immutable (mrp_massn_am___10), '#NULL#') || '|||' || -- hash from: 10 - TDM oder Laborkontrolle emfohlen (mrp_massn_am___10)
-                COALESCE(db.to_char_immutable (mrp_massn_orga___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (mrp_massn_orga___1)
-                COALESCE(db.to_char_immutable (mrp_massn_orga___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (mrp_massn_orga___2)
-                COALESCE(db.to_char_immutable (mrp_massn_orga___3), '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (mrp_massn_orga___3)
-                COALESCE(db.to_char_immutable (mrp_massn_orga___4), '#NULL#') || '|||' || -- hash from: 4 - Etablierung einer Doppelkontrolle (mrp_massn_orga___4)
-                COALESCE(db.to_char_immutable (mrp_massn_orga___5), '#NULL#') || '|||' || -- hash from: 5 - Lieferantenwechsel (mrp_massn_orga___5)
-                COALESCE(db.to_char_immutable (mrp_massn_orga___6), '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation (mrp_massn_orga___6)
-                COALESCE(db.to_char_immutable (mrp_massn_orga___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (mrp_massn_orga___7)
-                COALESCE(db.to_char_immutable (mrp_massn_orga___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (mrp_massn_orga___8)
-                COALESCE(db.to_char_immutable (mrp_notiz), '#NULL#') || '|||' || -- hash from: Notiz (mrp_notiz)
-                COALESCE(db.to_char_immutable (mrp_dokup_hand_emp_akz), '#NULL#') || '|||' || -- hash from: Handlungsempfehlung akzeptiert? (mrp_dokup_hand_emp_akz)
-                COALESCE(db.to_char_immutable (mrp_merp), '#NULL#') || '|||' || -- hash from: NCC MERP Score (mrp_merp)
-                COALESCE(db.to_char_immutable (mrp_merp_info___1), '#NULL#') || '|||' || -- hash from: 1 - NCC MERP Index anzeigen (mrp_merp_info___1)
-                COALESCE(db.to_char_immutable (mrp_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (mrp_additional_values)
-                COALESCE(db.to_char_immutable (mrpdokumentation_validierung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (mrpdokumentation_validierung_complete)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (db_filter_6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_anlage), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_edit), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_entd_dat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_entd_algorithmisch), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_kurzbeschr), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_hinweisgeber), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_hinweisgeber_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_wirkstoff), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc1_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc2_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc3_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc4_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_atc5_2026), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_med_prod), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_med_prod_sonst), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_dokup_fehler), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_dokup_intervention), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___9), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___10), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___11), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___12), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___13), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___14), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___15), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___16), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___17), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___18), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___19), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___20), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___21), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___22), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___23), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___24), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___25), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___26), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_pigrund___27), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse_01), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse_disease), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse_labor), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_ip_klasse_nieren_insuf), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___9), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_am___10), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_massn_orga___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_notiz), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_dokup_hand_emp_akz), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_merp), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_merp_info___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrpdokumentation_validierung_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column
@@ -3567,7 +3260,7 @@ END IF;
             AND column_name = 'record_id') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD record_id varchar;
-    -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
+    -- column (record_id)
 END IF;
     -- column (record_id)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instrument)
@@ -3581,7 +3274,7 @@ END IF;
             AND column_name = 'redcap_repeat_instrument') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD redcap_repeat_instrument varchar;
-    -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
+    -- column (redcap_repeat_instrument)
 END IF;
     -- column (redcap_repeat_instrument)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instance)
@@ -3595,7 +3288,7 @@ END IF;
             AND column_name = 'redcap_repeat_instance') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD redcap_repeat_instance varchar;
-    -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
+    -- column (redcap_repeat_instance)
 END IF;
     -- column (redcap_repeat_instance)
     IF NOT EXISTS ( -- column not exists (redcap_data_access_group)
@@ -3609,7 +3302,7 @@ END IF;
             AND column_name = 'redcap_data_access_group') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD redcap_data_access_group varchar;
-    -- Function as dataset filter by stations (varchar)
+    -- column (redcap_data_access_group)
 END IF;
     -- column (redcap_data_access_group)
     IF NOT EXISTS ( -- column not exists (ret_bewerter1)
@@ -3623,7 +3316,7 @@ END IF;
             AND column_name = 'ret_bewerter1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_bewerter1 varchar;
-    -- 1. Bewertung von (varchar)
+    -- column (ret_bewerter1)
 END IF;
     -- column (ret_bewerter1)
     IF NOT EXISTS ( -- column not exists (ret_id)
@@ -3637,7 +3330,7 @@ END IF;
             AND column_name = 'ret_id') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_id varchar;
-    -- Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (varchar)
+    -- column (ret_id)
 END IF;
     -- column (ret_id)
     IF NOT EXISTS ( -- column not exists (ret_meda_id)
@@ -3651,7 +3344,7 @@ END IF;
             AND column_name = 'ret_meda_id') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_meda_id varchar;
-    -- Zuordnung Meda -> rMRP (varchar)
+    -- column (ret_meda_id)
 END IF;
     -- column (ret_meda_id)
     IF NOT EXISTS ( -- column not exists (ret_meda_dat_referenz)
@@ -3665,7 +3358,7 @@ END IF;
             AND column_name = 'ret_meda_dat_referenz') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_meda_dat_referenz timestamp;
-    -- Referenzdatum der Medikationsanalyse (timestamp)
+    -- column (ret_meda_dat_referenz)
 END IF;
     -- column (ret_meda_dat_referenz)
     IF NOT EXISTS ( -- column not exists (ret_meda_dat1)
@@ -3679,7 +3372,7 @@ END IF;
             AND column_name = 'ret_meda_dat1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_meda_dat1 timestamp;
-    -- Datum der retrolektiven Bewertung* (timestamp)
+    -- column (ret_meda_dat1)
 END IF;
     -- column (ret_meda_dat1)
     IF NOT EXISTS ( -- column not exists (ret_kurzbeschr)
@@ -3693,7 +3386,7 @@ END IF;
             AND column_name = 'ret_kurzbeschr') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_kurzbeschr varchar;
-    -- Kurzbeschreibung des MRPs (varchar)
+    -- column (ret_kurzbeschr)
 END IF;
     -- column (ret_kurzbeschr)
     IF NOT EXISTS ( -- column not exists (ret_ip_klasse)
@@ -3707,7 +3400,7 @@ END IF;
             AND column_name = 'ret_ip_klasse') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_ip_klasse varchar;
-    -- MRP-Klasse (INTERPOLAR) (varchar)
+    -- column (ret_ip_klasse)
 END IF;
     -- column (ret_ip_klasse)
     IF NOT EXISTS ( -- column not exists (ret_ip_klasse_01)
@@ -3721,7 +3414,7 @@ END IF;
             AND column_name = 'ret_ip_klasse_01') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_ip_klasse_01 varchar;
-    -- MRP-Klasse (INTERPOLAR) (varchar)
+    -- column (ret_ip_klasse_01)
 END IF;
     -- column (ret_ip_klasse_01)
     IF NOT EXISTS ( -- column not exists (ret_atc1)
@@ -3735,7 +3428,7 @@ END IF;
             AND column_name = 'ret_atc1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_atc1 varchar;
-    -- 1. Medikament ATC / Name: (varchar)
+    -- column (ret_atc1)
 END IF;
     -- column (ret_atc1)
     IF NOT EXISTS ( -- column not exists (ret_atc2)
@@ -3749,7 +3442,7 @@ END IF;
             AND column_name = 'ret_atc2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_atc2 varchar;
-    -- 2. Medikament ATC / Name (varchar)
+    -- column (ret_atc2)
 END IF;
     -- column (ret_atc2)
     IF NOT EXISTS ( -- column not exists (ret_ip_klasse_disease)
@@ -3763,7 +3456,7 @@ END IF;
             AND column_name = 'ret_ip_klasse_disease') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_ip_klasse_disease varchar;
-    -- Disease (varchar)
+    -- column (ret_ip_klasse_disease)
 END IF;
     -- column (ret_ip_klasse_disease)
     IF NOT EXISTS ( -- column not exists (ret_ip_klasse_labor)
@@ -3777,7 +3470,7 @@ END IF;
             AND column_name = 'ret_ip_klasse_labor') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_ip_klasse_labor varchar;
-    -- Labor (varchar)
+    -- column (ret_ip_klasse_labor)
 END IF;
     -- column (ret_ip_klasse_labor)
     IF NOT EXISTS ( -- column not exists (ret_ip_klasse_nieren_insuf)
@@ -3791,7 +3484,7 @@ END IF;
             AND column_name = 'ret_ip_klasse_nieren_insuf') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_ip_klasse_nieren_insuf varchar;
-    -- Grad der Nierenfunktionseinschränkung (varchar)
+    -- column (ret_ip_klasse_nieren_insuf)
 END IF;
     -- column (ret_ip_klasse_nieren_insuf)
     IF NOT EXISTS ( -- column not exists (ret_gewissheit1)
@@ -3805,7 +3498,7 @@ END IF;
             AND column_name = 'ret_gewissheit1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewissheit1 varchar;
-    -- Bewertung des detektierten MRP* (varchar)
+    -- column (ret_gewissheit1)
 END IF;
     -- column (ret_gewissheit1)
     IF NOT EXISTS ( -- column not exists (ret_mrp_zuordnung1)
@@ -3819,7 +3512,7 @@ END IF;
             AND column_name = 'ret_mrp_zuordnung1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_mrp_zuordnung1 varchar;
-    -- Zuordnung zu manuellem MRP (varchar)
+    -- column (ret_mrp_zuordnung1)
 END IF;
     -- column (ret_mrp_zuordnung1)
     IF NOT EXISTS ( -- column not exists (ret_gewissheit1_oth)
@@ -3833,7 +3526,7 @@ END IF;
             AND column_name = 'ret_gewissheit1_oth') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewissheit1_oth varchar;
-    -- Weitere Informationen (varchar)
+    -- column (ret_gewissheit1_oth)
 END IF;
     -- column (ret_gewissheit1_oth)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund1_abl)
@@ -3847,7 +3540,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund1_abl') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund1_abl varchar;
-    -- Grund für nicht Bestätigung (varchar)
+    -- column (ret_gewiss_grund1_abl)
 END IF;
     -- column (ret_gewiss_grund1_abl)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund1_abl_01)
@@ -3861,7 +3554,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund1_abl_01') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund1_abl_01 varchar;
-    -- Grund für nicht Bestätigung (varchar)
+    -- column (ret_gewiss_grund1_abl_01)
 END IF;
     -- column (ret_gewiss_grund1_abl_01)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger1_falsch___1)
@@ -3875,7 +3568,7 @@ END IF;
             AND column_name = 'ret_gewiss_trigger1_falsch___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_trigger1_falsch___1 varchar;
-    -- 1 - ret_atc1 (varchar)
+    -- column (ret_gewiss_trigger1_falsch___1)
 END IF;
     -- column (ret_gewiss_trigger1_falsch___1)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger1_falsch___2)
@@ -3889,7 +3582,7 @@ END IF;
             AND column_name = 'ret_gewiss_trigger1_falsch___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_trigger1_falsch___2 varchar;
-    -- 2 - ret_atc2 (varchar)
+    -- column (ret_gewiss_trigger1_falsch___2)
 END IF;
     -- column (ret_gewiss_trigger1_falsch___2)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger1_falsch___3)
@@ -3903,7 +3596,7 @@ END IF;
             AND column_name = 'ret_gewiss_trigger1_falsch___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_trigger1_falsch___3 varchar;
-    -- 3 - ret_ip_klasse_disease (varchar)
+    -- column (ret_gewiss_trigger1_falsch___3)
 END IF;
     -- column (ret_gewiss_trigger1_falsch___3)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger1_falsch___4)
@@ -3917,7 +3610,7 @@ END IF;
             AND column_name = 'ret_gewiss_trigger1_falsch___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_trigger1_falsch___4 varchar;
-    -- 4 - ret_ip_klasse_nieren_insuf (varchar)
+    -- column (ret_gewiss_trigger1_falsch___4)
 END IF;
     -- column (ret_gewiss_trigger1_falsch___4)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1___1)
@@ -3931,7 +3624,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_1___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_1___1 varchar;
-    -- 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)
+    -- column (ret_gewiss_datengrundl1_1___1)
 END IF;
     -- column (ret_gewiss_datengrundl1_1___1)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1___2)
@@ -3945,7 +3638,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_1___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_1___2 varchar;
-    -- 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)
+    -- column (ret_gewiss_datengrundl1_1___2)
 END IF;
     -- column (ret_gewiss_datengrundl1_1___2)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1___3)
@@ -3959,7 +3652,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_1___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_1___3 varchar;
-    -- 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)
+    -- column (ret_gewiss_datengrundl1_1___3)
 END IF;
     -- column (ret_gewiss_datengrundl1_1___3)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1___4)
@@ -3973,7 +3666,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_1___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_1___4 varchar;
-    -- 4 - Anderer Fehler (bitte näher erläutern) (varchar)
+    -- column (ret_gewiss_datengrundl1_1___4)
 END IF;
     -- column (ret_gewiss_datengrundl1_1___4)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2___1)
@@ -3987,7 +3680,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_2___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_2___1 varchar;
-    -- 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)
+    -- column (ret_gewiss_datengrundl1_2___1)
 END IF;
     -- column (ret_gewiss_datengrundl1_2___1)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2___2)
@@ -4001,7 +3694,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_2___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_2___2 varchar;
-    -- 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)
+    -- column (ret_gewiss_datengrundl1_2___2)
 END IF;
     -- column (ret_gewiss_datengrundl1_2___2)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2___3)
@@ -4015,7 +3708,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_2___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_2___3 varchar;
-    -- 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)
+    -- column (ret_gewiss_datengrundl1_2___3)
 END IF;
     -- column (ret_gewiss_datengrundl1_2___3)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2___4)
@@ -4029,7 +3722,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_2___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_2___4 varchar;
-    -- 4 - Anderer Fehler (bitte näher erläutern) (varchar)
+    -- column (ret_gewiss_datengrundl1_2___4)
 END IF;
     -- column (ret_gewiss_datengrundl1_2___4)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_1_oth)
@@ -4043,7 +3736,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_1_oth') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_1_oth varchar;
-    -- Kommentar (1. Trigger) (varchar)
+    -- column (ret_gewiss_datengrundl1_1_oth)
 END IF;
     -- column (ret_gewiss_datengrundl1_1_oth)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl1_2_oth)
@@ -4057,7 +3750,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl1_2_oth') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl1_2_oth varchar;
-    -- Kommentar (2. Trigger) (varchar)
+    -- column (ret_gewiss_datengrundl1_2_oth)
 END IF;
     -- column (ret_gewiss_datengrundl1_2_oth)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_mrpkonzept1)
@@ -4071,7 +3764,7 @@ END IF;
             AND column_name = 'ret_gewiss_mrpkonzept1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_mrpkonzept1 varchar;
-    -- WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (varchar)
+    -- column (ret_gewiss_mrpkonzept1)
 END IF;
     -- column (ret_gewiss_mrpkonzept1)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_sonst1)
@@ -4085,7 +3778,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund_abl_sonst1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund_abl_sonst1 varchar;
-    -- Bitte näher beschreiben (varchar)
+    -- column (ret_gewiss_grund_abl_sonst1)
 END IF;
     -- column (ret_gewiss_grund_abl_sonst1)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_klin1)
@@ -4099,7 +3792,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund_abl_klin1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund_abl_klin1 varchar;
-    -- WARUM ist das MRP nicht klinisch relevant? (varchar)
+    -- column (ret_gewiss_grund_abl_klin1)
 END IF;
     -- column (ret_gewiss_grund_abl_klin1)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_klin1_neg___1)
@@ -4113,7 +3806,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund_abl_klin1_neg___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund_abl_klin1_neg___1 varchar;
-    -- 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)
+    -- column (ret_gewiss_grund_abl_klin1_neg___1)
 END IF;
     -- column (ret_gewiss_grund_abl_klin1_neg___1)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___1)
@@ -4127,7 +3820,7 @@ END IF;
             AND column_name = 'ret_massn_am1___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___1 varchar;
-    -- 1 - Anweisung für die Applikation geben (varchar)
+    -- column (ret_massn_am1___1)
 END IF;
     -- column (ret_massn_am1___1)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___2)
@@ -4141,7 +3834,7 @@ END IF;
             AND column_name = 'ret_massn_am1___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___2 varchar;
-    -- 2 - Arzneimittel ändern (varchar)
+    -- column (ret_massn_am1___2)
 END IF;
     -- column (ret_massn_am1___2)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___3)
@@ -4155,7 +3848,7 @@ END IF;
             AND column_name = 'ret_massn_am1___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___3 varchar;
-    -- 3 - Arzneimittel stoppen/pausieren (varchar)
+    -- column (ret_massn_am1___3)
 END IF;
     -- column (ret_massn_am1___3)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___4)
@@ -4169,7 +3862,7 @@ END IF;
             AND column_name = 'ret_massn_am1___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___4 varchar;
-    -- 4 - Arzneimittel neu ansetzen (varchar)
+    -- column (ret_massn_am1___4)
 END IF;
     -- column (ret_massn_am1___4)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___5)
@@ -4183,7 +3876,7 @@ END IF;
             AND column_name = 'ret_massn_am1___5') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___5 varchar;
-    -- 5 - Dosierung ändern (varchar)
+    -- column (ret_massn_am1___5)
 END IF;
     -- column (ret_massn_am1___5)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___6)
@@ -4197,7 +3890,7 @@ END IF;
             AND column_name = 'ret_massn_am1___6') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___6 varchar;
-    -- 6 - Formulierung ändern (varchar)
+    -- column (ret_massn_am1___6)
 END IF;
     -- column (ret_massn_am1___6)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___7)
@@ -4211,7 +3904,7 @@ END IF;
             AND column_name = 'ret_massn_am1___7') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___7 varchar;
-    -- 7 - Hilfe bei Beschaffung (varchar)
+    -- column (ret_massn_am1___7)
 END IF;
     -- column (ret_massn_am1___7)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___8)
@@ -4225,7 +3918,7 @@ END IF;
             AND column_name = 'ret_massn_am1___8') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___8 varchar;
-    -- 8 - Information an Arzt/Pflege (varchar)
+    -- column (ret_massn_am1___8)
 END IF;
     -- column (ret_massn_am1___8)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___9)
@@ -4239,7 +3932,7 @@ END IF;
             AND column_name = 'ret_massn_am1___9') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___9 varchar;
-    -- 9 - Information an Patient (varchar)
+    -- column (ret_massn_am1___9)
 END IF;
     -- column (ret_massn_am1___9)
     IF NOT EXISTS ( -- column not exists (ret_massn_am1___10)
@@ -4253,7 +3946,7 @@ END IF;
             AND column_name = 'ret_massn_am1___10') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am1___10 varchar;
-    -- 10 - TDM oder Laborkontrolle emfohlen (varchar)
+    -- column (ret_massn_am1___10)
 END IF;
     -- column (ret_massn_am1___10)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga1___1)
@@ -4267,7 +3960,7 @@ END IF;
             AND column_name = 'ret_massn_orga1___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga1___1 varchar;
-    -- 1 - Aushändigung einer Information/eines Medikationsplans (varchar)
+    -- column (ret_massn_orga1___1)
 END IF;
     -- column (ret_massn_orga1___1)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga1___2)
@@ -4281,7 +3974,7 @@ END IF;
             AND column_name = 'ret_massn_orga1___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga1___2 varchar;
-    -- 2 - CIRS-/AMK-Meldung (varchar)
+    -- column (ret_massn_orga1___2)
 END IF;
     -- column (ret_massn_orga1___2)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga1___3)
@@ -4295,7 +3988,7 @@ END IF;
             AND column_name = 'ret_massn_orga1___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga1___3 varchar;
-    -- 3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (varchar)
+    -- column (ret_massn_orga1___3)
 END IF;
     -- column (ret_massn_orga1___3)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga1___4)
@@ -4309,7 +4002,7 @@ END IF;
             AND column_name = 'ret_massn_orga1___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga1___4 varchar;
-    -- 4 - Etablierung einer Doppelkontrolle (varchar)
+    -- column (ret_massn_orga1___4)
 END IF;
     -- column (ret_massn_orga1___4)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga1___5)
@@ -4323,7 +4016,7 @@ END IF;
             AND column_name = 'ret_massn_orga1___5') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga1___5 varchar;
-    -- 5 - Lieferantenwechsel (varchar)
+    -- column (ret_massn_orga1___5)
 END IF;
     -- column (ret_massn_orga1___5)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga1___6)
@@ -4337,7 +4030,7 @@ END IF;
             AND column_name = 'ret_massn_orga1___6') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga1___6 varchar;
-    -- 6 - Optimierung der internen und externene Kommunikation (varchar)
+    -- column (ret_massn_orga1___6)
 END IF;
     -- column (ret_massn_orga1___6)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga1___7)
@@ -4351,7 +4044,7 @@ END IF;
             AND column_name = 'ret_massn_orga1___7') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga1___7 varchar;
-    -- 7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)
+    -- column (ret_massn_orga1___7)
 END IF;
     -- column (ret_massn_orga1___7)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga1___8)
@@ -4365,7 +4058,7 @@ END IF;
             AND column_name = 'ret_massn_orga1___8') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga1___8 varchar;
-    -- 8 - Sensibilisierung/Schulung (varchar)
+    -- column (ret_massn_orga1___8)
 END IF;
     -- column (ret_massn_orga1___8)
     IF NOT EXISTS ( -- column not exists (ret_notiz1)
@@ -4379,7 +4072,7 @@ END IF;
             AND column_name = 'ret_notiz1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_notiz1 varchar;
-    -- Notiz (varchar)
+    -- column (ret_notiz1)
 END IF;
     -- column (ret_notiz1)
     IF NOT EXISTS ( -- column not exists (ret_meda_dat2)
@@ -4393,7 +4086,7 @@ END IF;
             AND column_name = 'ret_meda_dat2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_meda_dat2 timestamp;
-    -- Datum der retrolektiven Betrachtung* (timestamp)
+    -- column (ret_meda_dat2)
 END IF;
     -- column (ret_meda_dat2)
     IF NOT EXISTS ( -- column not exists (ret_2ndbewertung___1)
@@ -4407,7 +4100,7 @@ END IF;
             AND column_name = 'ret_2ndbewertung___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_2ndbewertung___1 varchar;
-    -- 1 - 2nd Look / Zweite MRP-Bewertung durchführen (varchar)
+    -- column (ret_2ndbewertung___1)
 END IF;
     -- column (ret_2ndbewertung___1)
     IF NOT EXISTS ( -- column not exists (ret_bewerter2)
@@ -4421,7 +4114,7 @@ END IF;
             AND column_name = 'ret_bewerter2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_bewerter2 varchar;
-    -- 2. Bewertung von (varchar)
+    -- column (ret_bewerter2)
 END IF;
     -- column (ret_bewerter2)
     IF NOT EXISTS ( -- column not exists (ret_bewerter3)
@@ -4435,7 +4128,7 @@ END IF;
             AND column_name = 'ret_bewerter3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_bewerter3 varchar;
-    --  (varchar)
+    -- column (ret_bewerter3)
 END IF;
     -- column (ret_bewerter3)
     IF NOT EXISTS ( -- column not exists (ret_bewerter2_pipeline)
@@ -4449,7 +4142,7 @@ END IF;
             AND column_name = 'ret_bewerter2_pipeline') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_bewerter2_pipeline varchar;
-    --  (varchar)
+    -- column (ret_bewerter2_pipeline)
 END IF;
     -- column (ret_bewerter2_pipeline)
     IF NOT EXISTS ( -- column not exists (ret_gewissheit2)
@@ -4463,7 +4156,7 @@ END IF;
             AND column_name = 'ret_gewissheit2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewissheit2 varchar;
-    -- Bewertung des detektierten MRP* (varchar)
+    -- column (ret_gewissheit2)
 END IF;
     -- column (ret_gewissheit2)
     IF NOT EXISTS ( -- column not exists (ret_mrp_zuordnung2)
@@ -4477,7 +4170,7 @@ END IF;
             AND column_name = 'ret_mrp_zuordnung2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_mrp_zuordnung2 varchar;
-    -- Zuordnung zu manuellem MRP (varchar)
+    -- column (ret_mrp_zuordnung2)
 END IF;
     -- column (ret_mrp_zuordnung2)
     IF NOT EXISTS ( -- column not exists (ret_gewissheit2_oth)
@@ -4491,7 +4184,7 @@ END IF;
             AND column_name = 'ret_gewissheit2_oth') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewissheit2_oth varchar;
-    -- Weitere Informationen (varchar)
+    -- column (ret_gewissheit2_oth)
 END IF;
     -- column (ret_gewissheit2_oth)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund2_abl)
@@ -4505,7 +4198,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund2_abl') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund2_abl varchar;
-    -- Grund für nicht Bestätigung (varchar)
+    -- column (ret_gewiss_grund2_abl)
 END IF;
     -- column (ret_gewiss_grund2_abl)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund2_abl_01)
@@ -4519,7 +4212,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund2_abl_01') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund2_abl_01 varchar;
-    -- Grund für nicht Bestätigung (varchar)
+    -- column (ret_gewiss_grund2_abl_01)
 END IF;
     -- column (ret_gewiss_grund2_abl_01)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_sonst2)
@@ -4533,7 +4226,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund_abl_sonst2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund_abl_sonst2 varchar;
-    -- Bitte näher beschreiben (varchar)
+    -- column (ret_gewiss_grund_abl_sonst2)
 END IF;
     -- column (ret_gewiss_grund_abl_sonst2)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger2_falsch___1)
@@ -4547,7 +4240,7 @@ END IF;
             AND column_name = 'ret_gewiss_trigger2_falsch___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_trigger2_falsch___1 varchar;
-    -- 1 - ret_atc1 (varchar)
+    -- column (ret_gewiss_trigger2_falsch___1)
 END IF;
     -- column (ret_gewiss_trigger2_falsch___1)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger2_falsch___2)
@@ -4561,7 +4254,7 @@ END IF;
             AND column_name = 'ret_gewiss_trigger2_falsch___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_trigger2_falsch___2 varchar;
-    -- 2 - ret_atc2 (varchar)
+    -- column (ret_gewiss_trigger2_falsch___2)
 END IF;
     -- column (ret_gewiss_trigger2_falsch___2)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger2_falsch___3)
@@ -4575,7 +4268,7 @@ END IF;
             AND column_name = 'ret_gewiss_trigger2_falsch___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_trigger2_falsch___3 varchar;
-    -- 3 - ret_ip_klasse_disease (varchar)
+    -- column (ret_gewiss_trigger2_falsch___3)
 END IF;
     -- column (ret_gewiss_trigger2_falsch___3)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_trigger2_falsch___4)
@@ -4589,7 +4282,7 @@ END IF;
             AND column_name = 'ret_gewiss_trigger2_falsch___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_trigger2_falsch___4 varchar;
-    -- 4 - ret_ip_klasse_nieren_insuf (varchar)
+    -- column (ret_gewiss_trigger2_falsch___4)
 END IF;
     -- column (ret_gewiss_trigger2_falsch___4)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1___1)
@@ -4603,7 +4296,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_1___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_1___1 varchar;
-    -- 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)
+    -- column (ret_gewiss_datengrundl2_1___1)
 END IF;
     -- column (ret_gewiss_datengrundl2_1___1)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1___2)
@@ -4617,7 +4310,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_1___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_1___2 varchar;
-    -- 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)
+    -- column (ret_gewiss_datengrundl2_1___2)
 END IF;
     -- column (ret_gewiss_datengrundl2_1___2)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1___3)
@@ -4631,7 +4324,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_1___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_1___3 varchar;
-    -- 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)
+    -- column (ret_gewiss_datengrundl2_1___3)
 END IF;
     -- column (ret_gewiss_datengrundl2_1___3)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1___4)
@@ -4645,7 +4338,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_1___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_1___4 varchar;
-    -- 4 - Anderer Fehler (bitte näher erläutern) (varchar)
+    -- column (ret_gewiss_datengrundl2_1___4)
 END IF;
     -- column (ret_gewiss_datengrundl2_1___4)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2___1)
@@ -4659,7 +4352,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_2___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_2___1 varchar;
-    -- 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (varchar)
+    -- column (ret_gewiss_datengrundl2_2___1)
 END IF;
     -- column (ret_gewiss_datengrundl2_2___1)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2___2)
@@ -4673,7 +4366,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_2___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_2___2 varchar;
-    -- 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (varchar)
+    -- column (ret_gewiss_datengrundl2_2___2)
 END IF;
     -- column (ret_gewiss_datengrundl2_2___2)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2___3)
@@ -4687,7 +4380,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_2___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_2___3 varchar;
-    -- 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (varchar)
+    -- column (ret_gewiss_datengrundl2_2___3)
 END IF;
     -- column (ret_gewiss_datengrundl2_2___3)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2___4)
@@ -4701,7 +4394,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_2___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_2___4 varchar;
-    -- 4 - Anderer Fehler (bitte näher erläutern) (varchar)
+    -- column (ret_gewiss_datengrundl2_2___4)
 END IF;
     -- column (ret_gewiss_datengrundl2_2___4)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_1_oth)
@@ -4715,7 +4408,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_1_oth') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_1_oth varchar;
-    -- Kommentar (1. Trigger) (varchar)
+    -- column (ret_gewiss_datengrundl2_1_oth)
 END IF;
     -- column (ret_gewiss_datengrundl2_1_oth)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_datengrundl2_2_oth)
@@ -4729,7 +4422,7 @@ END IF;
             AND column_name = 'ret_gewiss_datengrundl2_2_oth') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_datengrundl2_2_oth varchar;
-    -- Kommentar (2. Trigger) (varchar)
+    -- column (ret_gewiss_datengrundl2_2_oth)
 END IF;
     -- column (ret_gewiss_datengrundl2_2_oth)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_mrpkonzept2)
@@ -4743,7 +4436,7 @@ END IF;
             AND column_name = 'ret_gewiss_mrpkonzept2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_mrpkonzept2 varchar;
-    -- WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (varchar)
+    -- column (ret_gewiss_mrpkonzept2)
 END IF;
     -- column (ret_gewiss_mrpkonzept2)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_klin2)
@@ -4757,7 +4450,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund_abl_klin2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund_abl_klin2 varchar;
-    -- WARUM ist das MRP nicht klinisch relevant? (varchar)
+    -- column (ret_gewiss_grund_abl_klin2)
 END IF;
     -- column (ret_gewiss_grund_abl_klin2)
     IF NOT EXISTS ( -- column not exists (ret_gewiss_grund_abl_klin2_neg___1)
@@ -4771,7 +4464,7 @@ END IF;
             AND column_name = 'ret_gewiss_grund_abl_klin2_neg___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_gewiss_grund_abl_klin2_neg___1 varchar;
-    -- 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (varchar)
+    -- column (ret_gewiss_grund_abl_klin2_neg___1)
 END IF;
     -- column (ret_gewiss_grund_abl_klin2_neg___1)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___1)
@@ -4785,7 +4478,7 @@ END IF;
             AND column_name = 'ret_massn_am2___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___1 varchar;
-    -- 1 - Anweisung für die Applikation geben (varchar)
+    -- column (ret_massn_am2___1)
 END IF;
     -- column (ret_massn_am2___1)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___2)
@@ -4799,7 +4492,7 @@ END IF;
             AND column_name = 'ret_massn_am2___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___2 varchar;
-    -- 2 - Arzneimittel ändern (varchar)
+    -- column (ret_massn_am2___2)
 END IF;
     -- column (ret_massn_am2___2)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___3)
@@ -4813,7 +4506,7 @@ END IF;
             AND column_name = 'ret_massn_am2___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___3 varchar;
-    -- 3 - Arzneimittel stoppen/pausieren (varchar)
+    -- column (ret_massn_am2___3)
 END IF;
     -- column (ret_massn_am2___3)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___4)
@@ -4827,7 +4520,7 @@ END IF;
             AND column_name = 'ret_massn_am2___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___4 varchar;
-    -- 4 - Arzneimittel neu ansetzen (varchar)
+    -- column (ret_massn_am2___4)
 END IF;
     -- column (ret_massn_am2___4)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___5)
@@ -4841,7 +4534,7 @@ END IF;
             AND column_name = 'ret_massn_am2___5') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___5 varchar;
-    -- 5 - Dosierung ändern (varchar)
+    -- column (ret_massn_am2___5)
 END IF;
     -- column (ret_massn_am2___5)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___6)
@@ -4855,7 +4548,7 @@ END IF;
             AND column_name = 'ret_massn_am2___6') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___6 varchar;
-    -- 6 - Formulierung ändern (varchar)
+    -- column (ret_massn_am2___6)
 END IF;
     -- column (ret_massn_am2___6)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___7)
@@ -4869,7 +4562,7 @@ END IF;
             AND column_name = 'ret_massn_am2___7') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___7 varchar;
-    -- 7 - Hilfe bei Beschaffung (varchar)
+    -- column (ret_massn_am2___7)
 END IF;
     -- column (ret_massn_am2___7)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___8)
@@ -4883,7 +4576,7 @@ END IF;
             AND column_name = 'ret_massn_am2___8') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___8 varchar;
-    -- 8 - Information an Arzt/Pflege (varchar)
+    -- column (ret_massn_am2___8)
 END IF;
     -- column (ret_massn_am2___8)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___9)
@@ -4897,7 +4590,7 @@ END IF;
             AND column_name = 'ret_massn_am2___9') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___9 varchar;
-    -- 9 - Information an Patient (varchar)
+    -- column (ret_massn_am2___9)
 END IF;
     -- column (ret_massn_am2___9)
     IF NOT EXISTS ( -- column not exists (ret_massn_am2___10)
@@ -4911,7 +4604,7 @@ END IF;
             AND column_name = 'ret_massn_am2___10') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_am2___10 varchar;
-    -- 10 - TDM oder Laborkontrolle emfohlen (varchar)
+    -- column (ret_massn_am2___10)
 END IF;
     -- column (ret_massn_am2___10)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga2___1)
@@ -4925,7 +4618,7 @@ END IF;
             AND column_name = 'ret_massn_orga2___1') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga2___1 varchar;
-    -- 1 - Aushändigung einer Information/eines Medikationsplans (varchar)
+    -- column (ret_massn_orga2___1)
 END IF;
     -- column (ret_massn_orga2___1)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga2___2)
@@ -4939,7 +4632,7 @@ END IF;
             AND column_name = 'ret_massn_orga2___2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga2___2 varchar;
-    -- 2 - CIRS-/AMK-Meldung (varchar)
+    -- column (ret_massn_orga2___2)
 END IF;
     -- column (ret_massn_orga2___2)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga2___3)
@@ -4953,7 +4646,7 @@ END IF;
             AND column_name = 'ret_massn_orga2___3') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga2___3 varchar;
-    -- 3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (varchar)
+    -- column (ret_massn_orga2___3)
 END IF;
     -- column (ret_massn_orga2___3)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga2___4)
@@ -4967,7 +4660,7 @@ END IF;
             AND column_name = 'ret_massn_orga2___4') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga2___4 varchar;
-    -- 4 - Etablierung einer Doppelkontrolle (varchar)
+    -- column (ret_massn_orga2___4)
 END IF;
     -- column (ret_massn_orga2___4)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga2___5)
@@ -4981,7 +4674,7 @@ END IF;
             AND column_name = 'ret_massn_orga2___5') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga2___5 varchar;
-    -- 5 - Lieferantenwechsel (varchar)
+    -- column (ret_massn_orga2___5)
 END IF;
     -- column (ret_massn_orga2___5)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga2___6)
@@ -4995,7 +4688,7 @@ END IF;
             AND column_name = 'ret_massn_orga2___6') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga2___6 varchar;
-    -- 6 - Optimierung der internen und externene Kommunikation (varchar)
+    -- column (ret_massn_orga2___6)
 END IF;
     -- column (ret_massn_orga2___6)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga2___7)
@@ -5009,7 +4702,7 @@ END IF;
             AND column_name = 'ret_massn_orga2___7') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga2___7 varchar;
-    -- 7 - Prozessoptimierung/Etablierung einer SOP/VA (varchar)
+    -- column (ret_massn_orga2___7)
 END IF;
     -- column (ret_massn_orga2___7)
     IF NOT EXISTS ( -- column not exists (ret_massn_orga2___8)
@@ -5023,7 +4716,7 @@ END IF;
             AND column_name = 'ret_massn_orga2___8') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_massn_orga2___8 varchar;
-    -- 8 - Sensibilisierung/Schulung (varchar)
+    -- column (ret_massn_orga2___8)
 END IF;
     -- column (ret_massn_orga2___8)
     IF NOT EXISTS ( -- column not exists (ret_notiz2)
@@ -5037,7 +4730,7 @@ END IF;
             AND column_name = 'ret_notiz2') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_notiz2 varchar;
-    -- Notiz (varchar)
+    -- column (ret_notiz2)
 END IF;
     -- column (ret_notiz2)
     IF NOT EXISTS ( -- column not exists (ret_additional_values)
@@ -5051,7 +4744,7 @@ END IF;
             AND column_name = 'ret_additional_values') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD ret_additional_values varchar;
-    -- Reserviertes Feld für zusätzliche Werte (varchar)
+    -- column (ret_additional_values)
 END IF;
     -- column (ret_additional_values)
     IF NOT EXISTS ( -- column not exists (retrolektive_mrpbewertung_complete)
@@ -5065,7 +4758,7 @@ END IF;
             AND column_name = 'retrolektive_mrpbewertung_complete') THEN
         ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
             ADD retrolektive_mrpbewertung_complete varchar;
-    -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+    -- column (retrolektive_mrpbewertung_complete)
 END IF;
     -- column (retrolektive_mrpbewertung_complete)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -5215,115 +4908,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-        COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-        COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-        COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-        COALESCE(db.to_char_immutable (ret_bewerter1), '#NULL#') || '|||' || -- hash from: 1. Bewertung von (ret_bewerter1)
-        COALESCE(db.to_char_immutable (ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (ret_id)
-        COALESCE(db.to_char_immutable (ret_meda_id), '#NULL#') || '|||' || -- hash from: Zuordnung Meda -> rMRP (ret_meda_id)
-        COALESCE(db.to_char_immutable (ret_meda_dat_referenz), '#NULL#') || '|||' || -- hash from: Referenzdatum der Medikationsanalyse (ret_meda_dat_referenz)
-        COALESCE(db.to_char_immutable (ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Bewertung* (ret_meda_dat1)
-        COALESCE(db.to_char_immutable (ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
-        COALESCE(db.to_char_immutable (ret_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse)
-        COALESCE(db.to_char_immutable (ret_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse_01)
-        COALESCE(db.to_char_immutable (ret_atc1), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name: (ret_atc1)
-        COALESCE(db.to_char_immutable (ret_atc2), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name (ret_atc2)
-        COALESCE(db.to_char_immutable (ret_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (ret_ip_klasse_disease)
-        COALESCE(db.to_char_immutable (ret_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (ret_ip_klasse_labor)
-        COALESCE(db.to_char_immutable (ret_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (ret_ip_klasse_nieren_insuf)
-        COALESCE(db.to_char_immutable (ret_gewissheit1), '#NULL#') || '|||' || -- hash from: Bewertung des detektierten MRP* (ret_gewissheit1)
-        COALESCE(db.to_char_immutable (ret_mrp_zuordnung1), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung1)
-        COALESCE(db.to_char_immutable (ret_gewissheit1_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit1_oth)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund1_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund1_abl_01), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl_01)
-        COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger1_falsch___1)
-        COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger1_falsch___2)
-        COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger1_falsch___3)
-        COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___4), '#NULL#') || '|||' || -- hash from: 4 - ret_ip_klasse_nieren_insuf (ret_gewiss_trigger1_falsch___4)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl1_1___1)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl1_1___2)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl1_1___3)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_1___4)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl1_2___1)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl1_2___2)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl1_2___3)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_2___4)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl1_1_oth)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl1_2_oth)
-        COALESCE(db.to_char_immutable (ret_gewiss_mrpkonzept1), '#NULL#') || '|||' || -- hash from: WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (ret_gewiss_mrpkonzept1)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst1)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin1)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin1_neg___1)
-        COALESCE(db.to_char_immutable (ret_massn_am1___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am1___1)
-        COALESCE(db.to_char_immutable (ret_massn_am1___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am1___2)
-        COALESCE(db.to_char_immutable (ret_massn_am1___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (ret_massn_am1___3)
-        COALESCE(db.to_char_immutable (ret_massn_am1___4), '#NULL#') || '|||' || -- hash from: 4 - Arzneimittel neu ansetzen (ret_massn_am1___4)
-        COALESCE(db.to_char_immutable (ret_massn_am1___5), '#NULL#') || '|||' || -- hash from: 5 - Dosierung ändern (ret_massn_am1___5)
-        COALESCE(db.to_char_immutable (ret_massn_am1___6), '#NULL#') || '|||' || -- hash from: 6 - Formulierung ändern (ret_massn_am1___6)
-        COALESCE(db.to_char_immutable (ret_massn_am1___7), '#NULL#') || '|||' || -- hash from: 7 - Hilfe bei Beschaffung (ret_massn_am1___7)
-        COALESCE(db.to_char_immutable (ret_massn_am1___8), '#NULL#') || '|||' || -- hash from: 8 - Information an Arzt/Pflege (ret_massn_am1___8)
-        COALESCE(db.to_char_immutable (ret_massn_am1___9), '#NULL#') || '|||' || -- hash from: 9 - Information an Patient (ret_massn_am1___9)
-        COALESCE(db.to_char_immutable (ret_massn_am1___10), '#NULL#') || '|||' || -- hash from: 10 - TDM oder Laborkontrolle emfohlen (ret_massn_am1___10)
-        COALESCE(db.to_char_immutable (ret_massn_orga1___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (ret_massn_orga1___1)
-        COALESCE(db.to_char_immutable (ret_massn_orga1___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (ret_massn_orga1___2)
-        COALESCE(db.to_char_immutable (ret_massn_orga1___3), '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (ret_massn_orga1___3)
-        COALESCE(db.to_char_immutable (ret_massn_orga1___4), '#NULL#') || '|||' || -- hash from: 4 - Etablierung einer Doppelkontrolle (ret_massn_orga1___4)
-        COALESCE(db.to_char_immutable (ret_massn_orga1___5), '#NULL#') || '|||' || -- hash from: 5 - Lieferantenwechsel (ret_massn_orga1___5)
-        COALESCE(db.to_char_immutable (ret_massn_orga1___6), '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation (ret_massn_orga1___6)
-        COALESCE(db.to_char_immutable (ret_massn_orga1___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (ret_massn_orga1___7)
-        COALESCE(db.to_char_immutable (ret_massn_orga1___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga1___8)
-        COALESCE(db.to_char_immutable (ret_notiz1), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz1)
-        COALESCE(db.to_char_immutable (ret_meda_dat2), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat2)
-        COALESCE(db.to_char_immutable (ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look / Zweite MRP-Bewertung durchführen (ret_2ndbewertung___1)
-        COALESCE(db.to_char_immutable (ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter2)
-        COALESCE(db.to_char_immutable (ret_bewerter3), '#NULL#') || '|||' || -- hash from:  (ret_bewerter3)
-        COALESCE(db.to_char_immutable (ret_bewerter2_pipeline), '#NULL#') || '|||' || -- hash from:  (ret_bewerter2_pipeline)
-        COALESCE(db.to_char_immutable (ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Bewertung des detektierten MRP* (ret_gewissheit2)
-        COALESCE(db.to_char_immutable (ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
-        COALESCE(db.to_char_immutable (ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund2_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund2_abl_01), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl_01)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst2)
-        COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger2_falsch___1)
-        COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger2_falsch___2)
-        COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger2_falsch___3)
-        COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___4), '#NULL#') || '|||' || -- hash from: 4 - ret_ip_klasse_nieren_insuf (ret_gewiss_trigger2_falsch___4)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl2_1___1)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl2_1___2)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl2_1___3)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_1___4)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl2_2___1)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl2_2___2)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl2_2___3)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_2___4)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl2_1_oth)
-        COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl2_2_oth)
-        COALESCE(db.to_char_immutable (ret_gewiss_mrpkonzept2), '#NULL#') || '|||' || -- hash from: WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (ret_gewiss_mrpkonzept2)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin2)
-        COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin2_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin2_neg___1)
-        COALESCE(db.to_char_immutable (ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am2___1)
-        COALESCE(db.to_char_immutable (ret_massn_am2___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am2___2)
-        COALESCE(db.to_char_immutable (ret_massn_am2___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (ret_massn_am2___3)
-        COALESCE(db.to_char_immutable (ret_massn_am2___4), '#NULL#') || '|||' || -- hash from: 4 - Arzneimittel neu ansetzen (ret_massn_am2___4)
-        COALESCE(db.to_char_immutable (ret_massn_am2___5), '#NULL#') || '|||' || -- hash from: 5 - Dosierung ändern (ret_massn_am2___5)
-        COALESCE(db.to_char_immutable (ret_massn_am2___6), '#NULL#') || '|||' || -- hash from: 6 - Formulierung ändern (ret_massn_am2___6)
-        COALESCE(db.to_char_immutable (ret_massn_am2___7), '#NULL#') || '|||' || -- hash from: 7 - Hilfe bei Beschaffung (ret_massn_am2___7)
-        COALESCE(db.to_char_immutable (ret_massn_am2___8), '#NULL#') || '|||' || -- hash from: 8 - Information an Arzt/Pflege (ret_massn_am2___8)
-        COALESCE(db.to_char_immutable (ret_massn_am2___9), '#NULL#') || '|||' || -- hash from: 9 - Information an Patient (ret_massn_am2___9)
-        COALESCE(db.to_char_immutable (ret_massn_am2___10), '#NULL#') || '|||' || -- hash from: 10 - TDM oder Laborkontrolle emfohlen (ret_massn_am2___10)
-        COALESCE(db.to_char_immutable (ret_massn_orga2___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (ret_massn_orga2___1)
-        COALESCE(db.to_char_immutable (ret_massn_orga2___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (ret_massn_orga2___2)
-        COALESCE(db.to_char_immutable (ret_massn_orga2___3), '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (ret_massn_orga2___3)
-        COALESCE(db.to_char_immutable (ret_massn_orga2___4), '#NULL#') || '|||' || -- hash from: 4 - Etablierung einer Doppelkontrolle (ret_massn_orga2___4)
-        COALESCE(db.to_char_immutable (ret_massn_orga2___5), '#NULL#') || '|||' || -- hash from: 5 - Lieferantenwechsel (ret_massn_orga2___5)
-        COALESCE(db.to_char_immutable (ret_massn_orga2___6), '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation (ret_massn_orga2___6)
-        COALESCE(db.to_char_immutable (ret_massn_orga2___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (ret_massn_orga2___7)
-        COALESCE(db.to_char_immutable (ret_massn_orga2___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga2___8)
-        COALESCE(db.to_char_immutable (ret_notiz2), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz2)
-        COALESCE(db.to_char_immutable (ret_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (ret_additional_values)
-        COALESCE(db.to_char_immutable (retrolektive_mrpbewertung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (retrolektive_mrpbewertung_complete)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_bewerter1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_meda_dat_referenz), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_meda_dat1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_kurzbeschr), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse_01), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_atc1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_atc2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse_disease), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse_labor), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse_nieren_insuf), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewissheit1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_mrp_zuordnung1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewissheit1_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund1_abl), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund1_abl_01), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_mrpkonzept1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___9), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___10), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_notiz1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_meda_dat2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_2ndbewertung___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_bewerter2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_bewerter3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_bewerter2_pipeline), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewissheit2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_mrp_zuordnung2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewissheit2_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund2_abl), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund2_abl_01), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_mrpkonzept2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin2_neg___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___9), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___10), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_notiz2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (retrolektive_mrpbewertung_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -5353,115 +4938,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.retrolektive_mrpbewertung_fe
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-                COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-                COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-                COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-                COALESCE(db.to_char_immutable (ret_bewerter1), '#NULL#') || '|||' || -- hash from: 1. Bewertung von (ret_bewerter1)
-                COALESCE(db.to_char_immutable (ret_id), '#NULL#') || '|||' || -- hash from: Retrolektive MRP-ID (REDCap) Hier wird die vom Datenprozessor MEDA-ID-r-Instanz aggregiert. (ret_id)
-                COALESCE(db.to_char_immutable (ret_meda_id), '#NULL#') || '|||' || -- hash from: Zuordnung Meda -> rMRP (ret_meda_id)
-                COALESCE(db.to_char_immutable (ret_meda_dat_referenz), '#NULL#') || '|||' || -- hash from: Referenzdatum der Medikationsanalyse (ret_meda_dat_referenz)
-                COALESCE(db.to_char_immutable (ret_meda_dat1), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Bewertung* (ret_meda_dat1)
-                COALESCE(db.to_char_immutable (ret_kurzbeschr), '#NULL#') || '|||' || -- hash from: Kurzbeschreibung des MRPs (ret_kurzbeschr)
-                COALESCE(db.to_char_immutable (ret_ip_klasse), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse)
-                COALESCE(db.to_char_immutable (ret_ip_klasse_01), '#NULL#') || '|||' || -- hash from: MRP-Klasse (INTERPOLAR) (ret_ip_klasse_01)
-                COALESCE(db.to_char_immutable (ret_atc1), '#NULL#') || '|||' || -- hash from: 1. Medikament ATC / Name: (ret_atc1)
-                COALESCE(db.to_char_immutable (ret_atc2), '#NULL#') || '|||' || -- hash from: 2. Medikament ATC / Name (ret_atc2)
-                COALESCE(db.to_char_immutable (ret_ip_klasse_disease), '#NULL#') || '|||' || -- hash from: Disease (ret_ip_klasse_disease)
-                COALESCE(db.to_char_immutable (ret_ip_klasse_labor), '#NULL#') || '|||' || -- hash from: Labor (ret_ip_klasse_labor)
-                COALESCE(db.to_char_immutable (ret_ip_klasse_nieren_insuf), '#NULL#') || '|||' || -- hash from: Grad der Nierenfunktionseinschränkung (ret_ip_klasse_nieren_insuf)
-                COALESCE(db.to_char_immutable (ret_gewissheit1), '#NULL#') || '|||' || -- hash from: Bewertung des detektierten MRP* (ret_gewissheit1)
-                COALESCE(db.to_char_immutable (ret_mrp_zuordnung1), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung1)
-                COALESCE(db.to_char_immutable (ret_gewissheit1_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit1_oth)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund1_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund1_abl_01), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund1_abl_01)
-                COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger1_falsch___1)
-                COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger1_falsch___2)
-                COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger1_falsch___3)
-                COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___4), '#NULL#') || '|||' || -- hash from: 4 - ret_ip_klasse_nieren_insuf (ret_gewiss_trigger1_falsch___4)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl1_1___1)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl1_1___2)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl1_1___3)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_1___4)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl1_2___1)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl1_2___2)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl1_2___3)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl1_2___4)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl1_1_oth)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl1_2_oth)
-                COALESCE(db.to_char_immutable (ret_gewiss_mrpkonzept1), '#NULL#') || '|||' || -- hash from: WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (ret_gewiss_mrpkonzept1)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst1)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin1)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin1_neg___1)
-                COALESCE(db.to_char_immutable (ret_massn_am1___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am1___1)
-                COALESCE(db.to_char_immutable (ret_massn_am1___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am1___2)
-                COALESCE(db.to_char_immutable (ret_massn_am1___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (ret_massn_am1___3)
-                COALESCE(db.to_char_immutable (ret_massn_am1___4), '#NULL#') || '|||' || -- hash from: 4 - Arzneimittel neu ansetzen (ret_massn_am1___4)
-                COALESCE(db.to_char_immutable (ret_massn_am1___5), '#NULL#') || '|||' || -- hash from: 5 - Dosierung ändern (ret_massn_am1___5)
-                COALESCE(db.to_char_immutable (ret_massn_am1___6), '#NULL#') || '|||' || -- hash from: 6 - Formulierung ändern (ret_massn_am1___6)
-                COALESCE(db.to_char_immutable (ret_massn_am1___7), '#NULL#') || '|||' || -- hash from: 7 - Hilfe bei Beschaffung (ret_massn_am1___7)
-                COALESCE(db.to_char_immutable (ret_massn_am1___8), '#NULL#') || '|||' || -- hash from: 8 - Information an Arzt/Pflege (ret_massn_am1___8)
-                COALESCE(db.to_char_immutable (ret_massn_am1___9), '#NULL#') || '|||' || -- hash from: 9 - Information an Patient (ret_massn_am1___9)
-                COALESCE(db.to_char_immutable (ret_massn_am1___10), '#NULL#') || '|||' || -- hash from: 10 - TDM oder Laborkontrolle emfohlen (ret_massn_am1___10)
-                COALESCE(db.to_char_immutable (ret_massn_orga1___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (ret_massn_orga1___1)
-                COALESCE(db.to_char_immutable (ret_massn_orga1___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (ret_massn_orga1___2)
-                COALESCE(db.to_char_immutable (ret_massn_orga1___3), '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (ret_massn_orga1___3)
-                COALESCE(db.to_char_immutable (ret_massn_orga1___4), '#NULL#') || '|||' || -- hash from: 4 - Etablierung einer Doppelkontrolle (ret_massn_orga1___4)
-                COALESCE(db.to_char_immutable (ret_massn_orga1___5), '#NULL#') || '|||' || -- hash from: 5 - Lieferantenwechsel (ret_massn_orga1___5)
-                COALESCE(db.to_char_immutable (ret_massn_orga1___6), '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation (ret_massn_orga1___6)
-                COALESCE(db.to_char_immutable (ret_massn_orga1___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (ret_massn_orga1___7)
-                COALESCE(db.to_char_immutable (ret_massn_orga1___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga1___8)
-                COALESCE(db.to_char_immutable (ret_notiz1), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz1)
-                COALESCE(db.to_char_immutable (ret_meda_dat2), '#NULL#') || '|||' || -- hash from: Datum der retrolektiven Betrachtung* (ret_meda_dat2)
-                COALESCE(db.to_char_immutable (ret_2ndbewertung___1), '#NULL#') || '|||' || -- hash from: 1 - 2nd Look / Zweite MRP-Bewertung durchführen (ret_2ndbewertung___1)
-                COALESCE(db.to_char_immutable (ret_bewerter2), '#NULL#') || '|||' || -- hash from: 2. Bewertung von (ret_bewerter2)
-                COALESCE(db.to_char_immutable (ret_bewerter3), '#NULL#') || '|||' || -- hash from:  (ret_bewerter3)
-                COALESCE(db.to_char_immutable (ret_bewerter2_pipeline), '#NULL#') || '|||' || -- hash from:  (ret_bewerter2_pipeline)
-                COALESCE(db.to_char_immutable (ret_gewissheit2), '#NULL#') || '|||' || -- hash from: Bewertung des detektierten MRP* (ret_gewissheit2)
-                COALESCE(db.to_char_immutable (ret_mrp_zuordnung2), '#NULL#') || '|||' || -- hash from: Zuordnung zu manuellem MRP (ret_mrp_zuordnung2)
-                COALESCE(db.to_char_immutable (ret_gewissheit2_oth), '#NULL#') || '|||' || -- hash from: Weitere Informationen (ret_gewissheit2_oth)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund2_abl), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund2_abl_01), '#NULL#') || '|||' || -- hash from: Grund für nicht Bestätigung (ret_gewiss_grund2_abl_01)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || -- hash from: Bitte näher beschreiben (ret_gewiss_grund_abl_sonst2)
-                COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___1), '#NULL#') || '|||' || -- hash from: 1 - ret_atc1 (ret_gewiss_trigger2_falsch___1)
-                COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___2), '#NULL#') || '|||' || -- hash from: 2 - ret_atc2 (ret_gewiss_trigger2_falsch___2)
-                COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___3), '#NULL#') || '|||' || -- hash from: 3 - ret_ip_klasse_disease (ret_gewiss_trigger2_falsch___3)
-                COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___4), '#NULL#') || '|||' || -- hash from: 4 - ret_ip_klasse_nieren_insuf (ret_gewiss_trigger2_falsch___4)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl2_1___1)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl2_1___2)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl2_1___3)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_1___4)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___1), '#NULL#') || '|||' || -- hash from: 1 - Der Indikator (bzw. alle Indikatoren - falls mehrere) liegt nicht wie in der Kurzbeschreibung angezeigt im EMR vor (ret_gewiss_datengrundl2_2___1)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___2), '#NULL#') || '|||' || -- hash from: 2 - Indikator/Indikatoren zum Zeitpunkt der Medikationsanalyse nicht gültig (z.B. pausiert - inaktiv - Fehldiagnose) (ret_gewiss_datengrundl2_2___2)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___3), '#NULL#') || '|||' || -- hash from: 3 - Zusätzliche Informationen nicht berücksichtigt (z.B. aus Briefen - sonstigen Systemen) (ret_gewiss_datengrundl2_2___3)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___4), '#NULL#') || '|||' || -- hash from: 4 - Anderer Fehler (bitte näher erläutern) (ret_gewiss_datengrundl2_2___4)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1_oth), '#NULL#') || '|||' || -- hash from: Kommentar (1. Trigger) (ret_gewiss_datengrundl2_1_oth)
-                COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2_oth), '#NULL#') || '|||' || -- hash from: Kommentar (2. Trigger) (ret_gewiss_datengrundl2_2_oth)
-                COALESCE(db.to_char_immutable (ret_gewiss_mrpkonzept2), '#NULL#') || '|||' || -- hash from: WELCHE Indikatoren sind zu unspezifisch für den MRP-Trigger und warum? (ret_gewiss_mrpkonzept2)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || -- hash from: WARUM ist das MRP nicht klinisch relevant? (ret_gewiss_grund_abl_klin2)
-                COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin2_neg___1), '#NULL#') || '|||' || -- hash from: 1 - Dieses MRP halte ich FÜR KEINEN Patienten auf dieser Station für KLINISCH RELEVANT (ret_gewiss_grund_abl_klin2_neg___1)
-                COALESCE(db.to_char_immutable (ret_massn_am2___1), '#NULL#') || '|||' || -- hash from: 1 - Anweisung für die Applikation geben (ret_massn_am2___1)
-                COALESCE(db.to_char_immutable (ret_massn_am2___2), '#NULL#') || '|||' || -- hash from: 2 - Arzneimittel ändern (ret_massn_am2___2)
-                COALESCE(db.to_char_immutable (ret_massn_am2___3), '#NULL#') || '|||' || -- hash from: 3 - Arzneimittel stoppen/pausieren (ret_massn_am2___3)
-                COALESCE(db.to_char_immutable (ret_massn_am2___4), '#NULL#') || '|||' || -- hash from: 4 - Arzneimittel neu ansetzen (ret_massn_am2___4)
-                COALESCE(db.to_char_immutable (ret_massn_am2___5), '#NULL#') || '|||' || -- hash from: 5 - Dosierung ändern (ret_massn_am2___5)
-                COALESCE(db.to_char_immutable (ret_massn_am2___6), '#NULL#') || '|||' || -- hash from: 6 - Formulierung ändern (ret_massn_am2___6)
-                COALESCE(db.to_char_immutable (ret_massn_am2___7), '#NULL#') || '|||' || -- hash from: 7 - Hilfe bei Beschaffung (ret_massn_am2___7)
-                COALESCE(db.to_char_immutable (ret_massn_am2___8), '#NULL#') || '|||' || -- hash from: 8 - Information an Arzt/Pflege (ret_massn_am2___8)
-                COALESCE(db.to_char_immutable (ret_massn_am2___9), '#NULL#') || '|||' || -- hash from: 9 - Information an Patient (ret_massn_am2___9)
-                COALESCE(db.to_char_immutable (ret_massn_am2___10), '#NULL#') || '|||' || -- hash from: 10 - TDM oder Laborkontrolle emfohlen (ret_massn_am2___10)
-                COALESCE(db.to_char_immutable (ret_massn_orga2___1), '#NULL#') || '|||' || -- hash from: 1 - Aushändigung einer Information/eines Medikationsplans (ret_massn_orga2___1)
-                COALESCE(db.to_char_immutable (ret_massn_orga2___2), '#NULL#') || '|||' || -- hash from: 2 - CIRS-/AMK-Meldung (ret_massn_orga2___2)
-                COALESCE(db.to_char_immutable (ret_massn_orga2___3), '#NULL#') || '|||' || -- hash from: 3 - Einbindung anderer Berufsgruppen z.B. des Stationsapothekers (ret_massn_orga2___3)
-                COALESCE(db.to_char_immutable (ret_massn_orga2___4), '#NULL#') || '|||' || -- hash from: 4 - Etablierung einer Doppelkontrolle (ret_massn_orga2___4)
-                COALESCE(db.to_char_immutable (ret_massn_orga2___5), '#NULL#') || '|||' || -- hash from: 5 - Lieferantenwechsel (ret_massn_orga2___5)
-                COALESCE(db.to_char_immutable (ret_massn_orga2___6), '#NULL#') || '|||' || -- hash from: 6 - Optimierung der internen und externene Kommunikation (ret_massn_orga2___6)
-                COALESCE(db.to_char_immutable (ret_massn_orga2___7), '#NULL#') || '|||' || -- hash from: 7 - Prozessoptimierung/Etablierung einer SOP/VA (ret_massn_orga2___7)
-                COALESCE(db.to_char_immutable (ret_massn_orga2___8), '#NULL#') || '|||' || -- hash from: 8 - Sensibilisierung/Schulung (ret_massn_orga2___8)
-                COALESCE(db.to_char_immutable (ret_notiz2), '#NULL#') || '|||' || -- hash from: Notiz (ret_notiz2)
-                COALESCE(db.to_char_immutable (ret_additional_values), '#NULL#') || '|||' || -- hash from: Reserviertes Feld für zusätzliche Werte (ret_additional_values)
-                COALESCE(db.to_char_immutable (retrolektive_mrpbewertung_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (retrolektive_mrpbewertung_complete)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_bewerter1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_meda_dat_referenz), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_meda_dat1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_kurzbeschr), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse_01), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_atc1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_atc2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse_disease), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse_labor), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_ip_klasse_nieren_insuf), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewissheit1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_mrp_zuordnung1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewissheit1_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund1_abl), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund1_abl_01), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger1_falsch___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_1_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl1_2_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_mrpkonzept1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_sonst1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin1_neg___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___9), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am1___10), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga1___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_notiz1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_meda_dat2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_2ndbewertung___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_bewerter2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_bewerter3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_bewerter2_pipeline), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewissheit2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_mrp_zuordnung2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewissheit2_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund2_abl), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund2_abl_01), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_sonst2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_trigger2_falsch___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_1_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_datengrundl2_2_oth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_mrpkonzept2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_gewiss_grund_abl_klin2_neg___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___9), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_am2___10), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___1), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___3), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___4), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___5), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___6), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___7), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_massn_orga2___8), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_notiz2), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_additional_values), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (retrolektive_mrpbewertung_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column
@@ -5606,7 +5083,7 @@ END IF;
             AND column_name = 'record_id') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD record_id varchar;
-    -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
+    -- column (record_id)
 END IF;
     -- column (record_id)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instrument)
@@ -5620,7 +5097,7 @@ END IF;
             AND column_name = 'redcap_repeat_instrument') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD redcap_repeat_instrument varchar;
-    -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
+    -- column (redcap_repeat_instrument)
 END IF;
     -- column (redcap_repeat_instrument)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instance)
@@ -5634,7 +5111,7 @@ END IF;
             AND column_name = 'redcap_repeat_instance') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD redcap_repeat_instance varchar;
-    -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
+    -- column (redcap_repeat_instance)
 END IF;
     -- column (redcap_repeat_instance)
     IF NOT EXISTS ( -- column not exists (redcap_data_access_group)
@@ -5648,7 +5125,7 @@ END IF;
             AND column_name = 'redcap_data_access_group') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD redcap_data_access_group varchar;
-    -- Function as dataset filter by stations (varchar)
+    -- column (redcap_data_access_group)
 END IF;
     -- column (redcap_data_access_group)
     IF NOT EXISTS ( -- column not exists (rskfk_gerhemmer)
@@ -5662,7 +5139,7 @@ END IF;
             AND column_name = 'rskfk_gerhemmer') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_gerhemmer int;
-    -- Ger.hemmer (int)
+    -- column (rskfk_gerhemmer)
 END IF;
     -- column (rskfk_gerhemmer)
     IF NOT EXISTS ( -- column not exists (rskfk_tah)
@@ -5676,7 +5153,7 @@ END IF;
             AND column_name = 'rskfk_tah') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_tah int;
-    -- TAH (int)
+    -- column (rskfk_tah)
 END IF;
     -- column (rskfk_tah)
     IF NOT EXISTS ( -- column not exists (rskfk_immunsupp)
@@ -5690,7 +5167,7 @@ END IF;
             AND column_name = 'rskfk_immunsupp') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_immunsupp int;
-    -- Immunsupp. (int)
+    -- column (rskfk_immunsupp)
 END IF;
     -- column (rskfk_immunsupp)
     IF NOT EXISTS ( -- column not exists (rskfk_tumorth)
@@ -5704,7 +5181,7 @@ END IF;
             AND column_name = 'rskfk_tumorth') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_tumorth int;
-    -- Tumorth. (int)
+    -- column (rskfk_tumorth)
 END IF;
     -- column (rskfk_tumorth)
     IF NOT EXISTS ( -- column not exists (rskfk_opiat)
@@ -5718,7 +5195,7 @@ END IF;
             AND column_name = 'rskfk_opiat') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_opiat int;
-    -- Opiat (int)
+    -- column (rskfk_opiat)
 END IF;
     -- column (rskfk_opiat)
     IF NOT EXISTS ( -- column not exists (rskfk_atcn)
@@ -5732,7 +5209,7 @@ END IF;
             AND column_name = 'rskfk_atcn') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_atcn int;
-    -- ATC N (int)
+    -- column (rskfk_atcn)
 END IF;
     -- column (rskfk_atcn)
     IF NOT EXISTS ( -- column not exists (rskfk_ait)
@@ -5746,7 +5223,7 @@ END IF;
             AND column_name = 'rskfk_ait') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_ait int;
-    -- AIT (int)
+    -- column (rskfk_ait)
 END IF;
     -- column (rskfk_ait)
     IF NOT EXISTS ( -- column not exists (rskfk_anzam)
@@ -5760,7 +5237,7 @@ END IF;
             AND column_name = 'rskfk_anzam') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_anzam int;
-    -- Anz AM (int)
+    -- column (rskfk_anzam)
 END IF;
     -- column (rskfk_anzam)
     IF NOT EXISTS ( -- column not exists (rskfk_priscus)
@@ -5774,7 +5251,7 @@ END IF;
             AND column_name = 'rskfk_priscus') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_priscus int;
-    -- PRISCUS (int)
+    -- column (rskfk_priscus)
 END IF;
     -- column (rskfk_priscus)
     IF NOT EXISTS ( -- column not exists (rskfk_qtc)
@@ -5788,7 +5265,7 @@ END IF;
             AND column_name = 'rskfk_qtc') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_qtc int;
-    -- QTc (int)
+    -- column (rskfk_qtc)
 END IF;
     -- column (rskfk_qtc)
     IF NOT EXISTS ( -- column not exists (rskfk_meld)
@@ -5802,7 +5279,7 @@ END IF;
             AND column_name = 'rskfk_meld') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_meld int;
-    -- MELD (int)
+    -- column (rskfk_meld)
 END IF;
     -- column (rskfk_meld)
     IF NOT EXISTS ( -- column not exists (rskfk_dialyse)
@@ -5816,7 +5293,7 @@ END IF;
             AND column_name = 'rskfk_dialyse') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_dialyse int;
-    -- Dialyse (int)
+    -- column (rskfk_dialyse)
 END IF;
     -- column (rskfk_dialyse)
     IF NOT EXISTS ( -- column not exists (rskfk_entern)
@@ -5830,7 +5307,7 @@ END IF;
             AND column_name = 'rskfk_entern') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD rskfk_entern int;
-    -- ent. Ern. (int)
+    -- column (rskfk_entern)
 END IF;
     -- column (rskfk_entern)
     IF NOT EXISTS ( -- column not exists (risikofaktor_complete)
@@ -5844,7 +5321,7 @@ END IF;
             AND column_name = 'risikofaktor_complete') THEN
         ALTER TABLE db2dataprocessor_in.risikofaktor_fe
             ADD risikofaktor_complete varchar;
-    -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+    -- column (risikofaktor_complete)
 END IF;
     -- column (risikofaktor_complete)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -5904,25 +5381,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db2dataprocessor_in.risikofaktor_fe
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-        COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-        COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-        COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-        COALESCE(db.to_char_immutable (rskfk_gerhemmer), '#NULL#') || '|||' || -- hash from: Ger.hemmer (rskfk_gerhemmer)
-        COALESCE(db.to_char_immutable (rskfk_tah), '#NULL#') || '|||' || -- hash from: TAH (rskfk_tah)
-        COALESCE(db.to_char_immutable (rskfk_immunsupp), '#NULL#') || '|||' || -- hash from: Immunsupp. (rskfk_immunsupp)
-        COALESCE(db.to_char_immutable (rskfk_tumorth), '#NULL#') || '|||' || -- hash from: Tumorth. (rskfk_tumorth)
-        COALESCE(db.to_char_immutable (rskfk_opiat), '#NULL#') || '|||' || -- hash from: Opiat (rskfk_opiat)
-        COALESCE(db.to_char_immutable (rskfk_atcn), '#NULL#') || '|||' || -- hash from: ATC N (rskfk_atcn)
-        COALESCE(db.to_char_immutable (rskfk_ait), '#NULL#') || '|||' || -- hash from: AIT (rskfk_ait)
-        COALESCE(db.to_char_immutable (rskfk_anzam), '#NULL#') || '|||' || -- hash from: Anz AM (rskfk_anzam)
-        COALESCE(db.to_char_immutable (rskfk_priscus), '#NULL#') || '|||' || -- hash from: PRISCUS (rskfk_priscus)
-        COALESCE(db.to_char_immutable (rskfk_qtc), '#NULL#') || '|||' || -- hash from: QTc (rskfk_qtc)
-        COALESCE(db.to_char_immutable (rskfk_meld), '#NULL#') || '|||' || -- hash from: MELD (rskfk_meld)
-        COALESCE(db.to_char_immutable (rskfk_dialyse), '#NULL#') || '|||' || -- hash from: Dialyse (rskfk_dialyse)
-        COALESCE(db.to_char_immutable (rskfk_entern), '#NULL#') || '|||' || -- hash from: ent. Ern. (rskfk_entern)
-        COALESCE(db.to_char_immutable (risikofaktor_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (risikofaktor_complete)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_gerhemmer), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_tah), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_immunsupp), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_tumorth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_opiat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_atcn), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_ait), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_anzam), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_priscus), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_qtc), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_meld), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_dialyse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_entern), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (risikofaktor_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -5952,25 +5411,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.risikofaktor_fe
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-                COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-                COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-                COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-                COALESCE(db.to_char_immutable (rskfk_gerhemmer), '#NULL#') || '|||' || -- hash from: Ger.hemmer (rskfk_gerhemmer)
-                COALESCE(db.to_char_immutable (rskfk_tah), '#NULL#') || '|||' || -- hash from: TAH (rskfk_tah)
-                COALESCE(db.to_char_immutable (rskfk_immunsupp), '#NULL#') || '|||' || -- hash from: Immunsupp. (rskfk_immunsupp)
-                COALESCE(db.to_char_immutable (rskfk_tumorth), '#NULL#') || '|||' || -- hash from: Tumorth. (rskfk_tumorth)
-                COALESCE(db.to_char_immutable (rskfk_opiat), '#NULL#') || '|||' || -- hash from: Opiat (rskfk_opiat)
-                COALESCE(db.to_char_immutable (rskfk_atcn), '#NULL#') || '|||' || -- hash from: ATC N (rskfk_atcn)
-                COALESCE(db.to_char_immutable (rskfk_ait), '#NULL#') || '|||' || -- hash from: AIT (rskfk_ait)
-                COALESCE(db.to_char_immutable (rskfk_anzam), '#NULL#') || '|||' || -- hash from: Anz AM (rskfk_anzam)
-                COALESCE(db.to_char_immutable (rskfk_priscus), '#NULL#') || '|||' || -- hash from: PRISCUS (rskfk_priscus)
-                COALESCE(db.to_char_immutable (rskfk_qtc), '#NULL#') || '|||' || -- hash from: QTc (rskfk_qtc)
-                COALESCE(db.to_char_immutable (rskfk_meld), '#NULL#') || '|||' || -- hash from: MELD (rskfk_meld)
-                COALESCE(db.to_char_immutable (rskfk_dialyse), '#NULL#') || '|||' || -- hash from: Dialyse (rskfk_dialyse)
-                COALESCE(db.to_char_immutable (rskfk_entern), '#NULL#') || '|||' || -- hash from: ent. Ern. (rskfk_entern)
-                COALESCE(db.to_char_immutable (risikofaktor_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (risikofaktor_complete)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_gerhemmer), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_tah), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_immunsupp), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_tumorth), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_opiat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_atcn), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_ait), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_anzam), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_priscus), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_qtc), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_meld), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_dialyse), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (rskfk_entern), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (risikofaktor_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column
@@ -6115,7 +5556,7 @@ END IF;
             AND column_name = 'record_id') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD record_id varchar;
-    -- Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (varchar)
+    -- column (record_id)
 END IF;
     -- column (record_id)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instrument)
@@ -6129,7 +5570,7 @@ END IF;
             AND column_name = 'redcap_repeat_instrument') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD redcap_repeat_instrument varchar;
-    -- Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (varchar)
+    -- column (redcap_repeat_instrument)
 END IF;
     -- column (redcap_repeat_instrument)
     IF NOT EXISTS ( -- column not exists (redcap_repeat_instance)
@@ -6143,7 +5584,7 @@ END IF;
             AND column_name = 'redcap_repeat_instance') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD redcap_repeat_instance varchar;
-    -- Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (varchar)
+    -- column (redcap_repeat_instance)
 END IF;
     -- column (redcap_repeat_instance)
     IF NOT EXISTS ( -- column not exists (redcap_data_access_group)
@@ -6157,7 +5598,7 @@ END IF;
             AND column_name = 'redcap_data_access_group') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD redcap_data_access_group varchar;
-    -- Function as dataset filter by stations (varchar)
+    -- column (redcap_data_access_group)
 END IF;
     -- column (redcap_data_access_group)
     IF NOT EXISTS ( -- column not exists (trg_ast)
@@ -6171,7 +5612,7 @@ END IF;
             AND column_name = 'trg_ast') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_ast int;
-    -- AST↑ (int)
+    -- column (trg_ast)
 END IF;
     -- column (trg_ast)
     IF NOT EXISTS ( -- column not exists (trg_alt)
@@ -6185,7 +5626,7 @@ END IF;
             AND column_name = 'trg_alt') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_alt int;
-    -- ALT↑ (int)
+    -- column (trg_alt)
 END IF;
     -- column (trg_alt)
     IF NOT EXISTS ( -- column not exists (trg_crp)
@@ -6199,7 +5640,7 @@ END IF;
             AND column_name = 'trg_crp') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_crp int;
-    -- CRP↑ (int)
+    -- column (trg_crp)
 END IF;
     -- column (trg_crp)
     IF NOT EXISTS ( -- column not exists (trg_leuk_penie)
@@ -6213,7 +5654,7 @@ END IF;
             AND column_name = 'trg_leuk_penie') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_leuk_penie int;
-    -- Leuko↓ (int)
+    -- column (trg_leuk_penie)
 END IF;
     -- column (trg_leuk_penie)
     IF NOT EXISTS ( -- column not exists (trg_leuk_ose)
@@ -6227,7 +5668,7 @@ END IF;
             AND column_name = 'trg_leuk_ose') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_leuk_ose int;
-    -- Leuko↑ (int)
+    -- column (trg_leuk_ose)
 END IF;
     -- column (trg_leuk_ose)
     IF NOT EXISTS ( -- column not exists (trg_thrmb_penie)
@@ -6241,7 +5682,7 @@ END IF;
             AND column_name = 'trg_thrmb_penie') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_thrmb_penie int;
-    -- Thrombo↓ (int)
+    -- column (trg_thrmb_penie)
 END IF;
     -- column (trg_thrmb_penie)
     IF NOT EXISTS ( -- column not exists (trg_aptt)
@@ -6255,7 +5696,7 @@ END IF;
             AND column_name = 'trg_aptt') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_aptt int;
-    -- aPTT (int)
+    -- column (trg_aptt)
 END IF;
     -- column (trg_aptt)
     IF NOT EXISTS ( -- column not exists (trg_hyp_haem)
@@ -6269,7 +5710,7 @@ END IF;
             AND column_name = 'trg_hyp_haem') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_hyp_haem int;
-    -- Hb↓ (int)
+    -- column (trg_hyp_haem)
 END IF;
     -- column (trg_hyp_haem)
     IF NOT EXISTS ( -- column not exists (trg_hypo_glyk)
@@ -6283,7 +5724,7 @@ END IF;
             AND column_name = 'trg_hypo_glyk') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_hypo_glyk int;
-    -- Glc↓ (int)
+    -- column (trg_hypo_glyk)
 END IF;
     -- column (trg_hypo_glyk)
     IF NOT EXISTS ( -- column not exists (trg_hyper_glyk)
@@ -6297,7 +5738,7 @@ END IF;
             AND column_name = 'trg_hyper_glyk') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_hyper_glyk int;
-    -- Glc↑ (int)
+    -- column (trg_hyper_glyk)
 END IF;
     -- column (trg_hyper_glyk)
     IF NOT EXISTS ( -- column not exists (trg_hyper_bilirbnm)
@@ -6311,7 +5752,7 @@ END IF;
             AND column_name = 'trg_hyper_bilirbnm') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_hyper_bilirbnm int;
-    -- Bili↑ (int)
+    -- column (trg_hyper_bilirbnm)
 END IF;
     -- column (trg_hyper_bilirbnm)
     IF NOT EXISTS ( -- column not exists (trg_ck)
@@ -6325,7 +5766,7 @@ END IF;
             AND column_name = 'trg_ck') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_ck int;
-    -- CK↑ (int)
+    -- column (trg_ck)
 END IF;
     -- column (trg_ck)
     IF NOT EXISTS ( -- column not exists (trg_hypo_serablmn)
@@ -6339,7 +5780,7 @@ END IF;
             AND column_name = 'trg_hypo_serablmn') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_hypo_serablmn int;
-    -- Alb↓ (int)
+    -- column (trg_hypo_serablmn)
 END IF;
     -- column (trg_hypo_serablmn)
     IF NOT EXISTS ( -- column not exists (trg_hypo_nat)
@@ -6353,7 +5794,7 @@ END IF;
             AND column_name = 'trg_hypo_nat') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_hypo_nat int;
-    -- Na+↓ (int)
+    -- column (trg_hypo_nat)
 END IF;
     -- column (trg_hypo_nat)
     IF NOT EXISTS ( -- column not exists (trg_hyper_nat)
@@ -6367,7 +5808,7 @@ END IF;
             AND column_name = 'trg_hyper_nat') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_hyper_nat int;
-    -- Na+↑ (int)
+    -- column (trg_hyper_nat)
 END IF;
     -- column (trg_hyper_nat)
     IF NOT EXISTS ( -- column not exists (trg_hyper_kal)
@@ -6381,7 +5822,7 @@ END IF;
             AND column_name = 'trg_hyper_kal') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_hyper_kal int;
-    -- K+↑ (int)
+    -- column (trg_hyper_kal)
 END IF;
     -- column (trg_hyper_kal)
     IF NOT EXISTS ( -- column not exists (trg_hypo_kal)
@@ -6395,7 +5836,7 @@ END IF;
             AND column_name = 'trg_hypo_kal') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_hypo_kal int;
-    -- K+↓ (int)
+    -- column (trg_hypo_kal)
 END IF;
     -- column (trg_hypo_kal)
     IF NOT EXISTS ( -- column not exists (trg_inr_ern)
@@ -6409,7 +5850,7 @@ END IF;
             AND column_name = 'trg_inr_ern') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_inr_ern int;
-    -- INR Antikoag↓ (int)
+    -- column (trg_inr_ern)
 END IF;
     -- column (trg_inr_ern)
     IF NOT EXISTS ( -- column not exists (trg_inr_erh)
@@ -6423,7 +5864,7 @@ END IF;
             AND column_name = 'trg_inr_erh') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_inr_erh int;
-    -- INR ↑ (int)
+    -- column (trg_inr_erh)
 END IF;
     -- column (trg_inr_erh)
     IF NOT EXISTS ( -- column not exists (trg_inr_erh_antikoa)
@@ -6437,7 +5878,7 @@ END IF;
             AND column_name = 'trg_inr_erh_antikoa') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_inr_erh_antikoa int;
-    -- INR Antikoag↑ (int)
+    -- column (trg_inr_erh_antikoa)
 END IF;
     -- column (trg_inr_erh_antikoa)
     IF NOT EXISTS ( -- column not exists (trg_krea)
@@ -6451,7 +5892,7 @@ END IF;
             AND column_name = 'trg_krea') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_krea int;
-    -- Krea↑ (int)
+    -- column (trg_krea)
 END IF;
     -- column (trg_krea)
     IF NOT EXISTS ( -- column not exists (trg_egfr)
@@ -6465,7 +5906,7 @@ END IF;
             AND column_name = 'trg_egfr') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trg_egfr int;
-    -- eGFR<30 (int)
+    -- column (trg_egfr)
 END IF;
     -- column (trg_egfr)
     IF NOT EXISTS ( -- column not exists (trigger_complete)
@@ -6479,7 +5920,7 @@ END IF;
             AND column_name = 'trigger_complete') THEN
         ALTER TABLE db2dataprocessor_in.trigger_fe
             ADD trigger_complete varchar;
-    -- Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (varchar)
+    -- column (trigger_complete)
 END IF;
     -- column (trigger_complete)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -6548,34 +5989,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db2dataprocessor_in.trigger_fe
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-        COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-        COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-        COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-        COALESCE(db.to_char_immutable (trg_ast), '#NULL#') || '|||' || -- hash from: AST↑ (trg_ast)
-        COALESCE(db.to_char_immutable (trg_alt), '#NULL#') || '|||' || -- hash from: ALT↑ (trg_alt)
-        COALESCE(db.to_char_immutable (trg_crp), '#NULL#') || '|||' || -- hash from: CRP↑ (trg_crp)
-        COALESCE(db.to_char_immutable (trg_leuk_penie), '#NULL#') || '|||' || -- hash from: Leuko↓ (trg_leuk_penie)
-        COALESCE(db.to_char_immutable (trg_leuk_ose), '#NULL#') || '|||' || -- hash from: Leuko↑ (trg_leuk_ose)
-        COALESCE(db.to_char_immutable (trg_thrmb_penie), '#NULL#') || '|||' || -- hash from: Thrombo↓ (trg_thrmb_penie)
-        COALESCE(db.to_char_immutable (trg_aptt), '#NULL#') || '|||' || -- hash from: aPTT (trg_aptt)
-        COALESCE(db.to_char_immutable (trg_hyp_haem), '#NULL#') || '|||' || -- hash from: Hb↓ (trg_hyp_haem)
-        COALESCE(db.to_char_immutable (trg_hypo_glyk), '#NULL#') || '|||' || -- hash from: Glc↓ (trg_hypo_glyk)
-        COALESCE(db.to_char_immutable (trg_hyper_glyk), '#NULL#') || '|||' || -- hash from: Glc↑ (trg_hyper_glyk)
-        COALESCE(db.to_char_immutable (trg_hyper_bilirbnm), '#NULL#') || '|||' || -- hash from: Bili↑ (trg_hyper_bilirbnm)
-        COALESCE(db.to_char_immutable (trg_ck), '#NULL#') || '|||' || -- hash from: CK↑ (trg_ck)
-        COALESCE(db.to_char_immutable (trg_hypo_serablmn), '#NULL#') || '|||' || -- hash from: Alb↓ (trg_hypo_serablmn)
-        COALESCE(db.to_char_immutable (trg_hypo_nat), '#NULL#') || '|||' || -- hash from: Na+↓ (trg_hypo_nat)
-        COALESCE(db.to_char_immutable (trg_hyper_nat), '#NULL#') || '|||' || -- hash from: Na+↑ (trg_hyper_nat)
-        COALESCE(db.to_char_immutable (trg_hyper_kal), '#NULL#') || '|||' || -- hash from: K+↑ (trg_hyper_kal)
-        COALESCE(db.to_char_immutable (trg_hypo_kal), '#NULL#') || '|||' || -- hash from: K+↓ (trg_hypo_kal)
-        COALESCE(db.to_char_immutable (trg_inr_ern), '#NULL#') || '|||' || -- hash from: INR Antikoag↓ (trg_inr_ern)
-        COALESCE(db.to_char_immutable (trg_inr_erh), '#NULL#') || '|||' || -- hash from: INR ↑ (trg_inr_erh)
-        COALESCE(db.to_char_immutable (trg_inr_erh_antikoa), '#NULL#') || '|||' || -- hash from: INR Antikoag↑ (trg_inr_erh_antikoa)
-        COALESCE(db.to_char_immutable (trg_krea), '#NULL#') || '|||' || -- hash from: Krea↑ (trg_krea)
-        COALESCE(db.to_char_immutable (trg_egfr), '#NULL#') || '|||' || -- hash from: eGFR<30 (trg_egfr)
-        COALESCE(db.to_char_immutable (trigger_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (trigger_complete)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_ast), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_alt), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_crp), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_leuk_penie), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_leuk_ose), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_thrmb_penie), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_aptt), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyp_haem), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hypo_glyk), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyper_glyk), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyper_bilirbnm), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_ck), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hypo_serablmn), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hypo_nat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyper_nat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyper_kal), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hypo_kal), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_inr_ern), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_inr_erh), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_inr_erh_antikoa), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_krea), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_egfr), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trigger_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -6605,34 +6019,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db2dataprocessor_in.trigger_fe
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || -- hash from: Record ID RedCap - predefined with the database internal ID of the patient - used in all instances of the patient in RedCap (record_id)
-                COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instrument: MRP-Dokumentation / -Validation (redcap_repeat_instrument)
-                COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: Frontend internal dataset management - Instance of the instrument - Numeric: 1…n (redcap_repeat_instance)
-                COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || -- hash from: Function as dataset filter by stations (redcap_data_access_group)
-                COALESCE(db.to_char_immutable (trg_ast), '#NULL#') || '|||' || -- hash from: AST↑ (trg_ast)
-                COALESCE(db.to_char_immutable (trg_alt), '#NULL#') || '|||' || -- hash from: ALT↑ (trg_alt)
-                COALESCE(db.to_char_immutable (trg_crp), '#NULL#') || '|||' || -- hash from: CRP↑ (trg_crp)
-                COALESCE(db.to_char_immutable (trg_leuk_penie), '#NULL#') || '|||' || -- hash from: Leuko↓ (trg_leuk_penie)
-                COALESCE(db.to_char_immutable (trg_leuk_ose), '#NULL#') || '|||' || -- hash from: Leuko↑ (trg_leuk_ose)
-                COALESCE(db.to_char_immutable (trg_thrmb_penie), '#NULL#') || '|||' || -- hash from: Thrombo↓ (trg_thrmb_penie)
-                COALESCE(db.to_char_immutable (trg_aptt), '#NULL#') || '|||' || -- hash from: aPTT (trg_aptt)
-                COALESCE(db.to_char_immutable (trg_hyp_haem), '#NULL#') || '|||' || -- hash from: Hb↓ (trg_hyp_haem)
-                COALESCE(db.to_char_immutable (trg_hypo_glyk), '#NULL#') || '|||' || -- hash from: Glc↓ (trg_hypo_glyk)
-                COALESCE(db.to_char_immutable (trg_hyper_glyk), '#NULL#') || '|||' || -- hash from: Glc↑ (trg_hyper_glyk)
-                COALESCE(db.to_char_immutable (trg_hyper_bilirbnm), '#NULL#') || '|||' || -- hash from: Bili↑ (trg_hyper_bilirbnm)
-                COALESCE(db.to_char_immutable (trg_ck), '#NULL#') || '|||' || -- hash from: CK↑ (trg_ck)
-                COALESCE(db.to_char_immutable (trg_hypo_serablmn), '#NULL#') || '|||' || -- hash from: Alb↓ (trg_hypo_serablmn)
-                COALESCE(db.to_char_immutable (trg_hypo_nat), '#NULL#') || '|||' || -- hash from: Na+↓ (trg_hypo_nat)
-                COALESCE(db.to_char_immutable (trg_hyper_nat), '#NULL#') || '|||' || -- hash from: Na+↑ (trg_hyper_nat)
-                COALESCE(db.to_char_immutable (trg_hyper_kal), '#NULL#') || '|||' || -- hash from: K+↑ (trg_hyper_kal)
-                COALESCE(db.to_char_immutable (trg_hypo_kal), '#NULL#') || '|||' || -- hash from: K+↓ (trg_hypo_kal)
-                COALESCE(db.to_char_immutable (trg_inr_ern), '#NULL#') || '|||' || -- hash from: INR Antikoag↓ (trg_inr_ern)
-                COALESCE(db.to_char_immutable (trg_inr_erh), '#NULL#') || '|||' || -- hash from: INR ↑ (trg_inr_erh)
-                COALESCE(db.to_char_immutable (trg_inr_erh_antikoa), '#NULL#') || '|||' || -- hash from: INR Antikoag↑ (trg_inr_erh_antikoa)
-                COALESCE(db.to_char_immutable (trg_krea), '#NULL#') || '|||' || -- hash from: Krea↑ (trg_krea)
-                COALESCE(db.to_char_immutable (trg_egfr), '#NULL#') || '|||' || -- hash from: eGFR<30 (trg_egfr)
-                COALESCE(db.to_char_immutable (trigger_complete), '#NULL#') || '|||' || -- hash from: Frontend Complete-Status - 0, Incomplete | 1, Unverified | 2, Complete (trigger_complete)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (record_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instrument), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (redcap_data_access_group), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_ast), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_alt), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_crp), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_leuk_penie), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_leuk_ose), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_thrmb_penie), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_aptt), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyp_haem), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hypo_glyk), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyper_glyk), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyper_bilirbnm), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_ck), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hypo_serablmn), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hypo_nat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyper_nat), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hyper_kal), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_hypo_kal), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_inr_ern), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_inr_erh), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_inr_erh_antikoa), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_krea), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trg_egfr), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (trigger_complete), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column

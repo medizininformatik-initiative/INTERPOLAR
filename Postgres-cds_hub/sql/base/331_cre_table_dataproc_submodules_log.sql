@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-06-11 17:22:24
+-- Rights definition file last update : 2026-06-14 22:07:46
 -- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-06-12 11:40:34
+-- Create time: 2026-06-14 22:44:47
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/331_cre_table_dataproc_submodules_log.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -166,7 +166,7 @@ END IF;
             AND column_name = 'enc_id') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD enc_id varchar;
-    -- FHIR ID of the associated institution contact (varchar)
+    -- column (enc_id)
 END IF;
     -- column (enc_id)
     IF NOT EXISTS ( -- column not exists (mrp_calculation_type)
@@ -180,7 +180,7 @@ END IF;
             AND column_name = 'mrp_calculation_type') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD mrp_calculation_type varchar;
-    -- Type of MRP (name of the submodule which has calculated the MRP e.g. “Drug_Disease”, “Drug_Drug”, “Drug_DrugGoup”, “Drug_Kidney”) (varchar)
+    -- column (mrp_calculation_type)
 END IF;
     -- column (mrp_calculation_type)
     IF NOT EXISTS ( -- column not exists (meda_id)
@@ -194,7 +194,7 @@ END IF;
             AND column_name = 'meda_id') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD meda_id varchar;
-    -- optional - Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (varchar)
+    -- column (meda_id)
 END IF;
     -- column (meda_id)
     IF NOT EXISTS ( -- column not exists (ward_name)
@@ -208,7 +208,7 @@ END IF;
             AND column_name = 'ward_name') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD ward_name varchar;
-    -- Name of the ward where the patient was during the medication analysis or the very first relevant ward (varchar)
+    -- column (ward_name)
 END IF;
     -- column (ward_name)
     IF NOT EXISTS ( -- column not exists (study_phase)
@@ -222,7 +222,7 @@ END IF;
             AND column_name = 'study_phase') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD study_phase varchar;
-    -- Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (varchar)
+    -- column (study_phase)
 END IF;
     -- column (study_phase)
     IF NOT EXISTS ( -- column not exists (ret_id)
@@ -236,7 +236,7 @@ END IF;
             AND column_name = 'ret_id') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD ret_id varchar;
-    -- optional – Redcap ID of the generated retrolective_mrpbewertung_fe (varchar)
+    -- column (ret_id)
 END IF;
     -- column (ret_id)
     IF NOT EXISTS ( -- column not exists (ret_redcap_repeat_instance)
@@ -250,7 +250,7 @@ END IF;
             AND column_name = 'ret_redcap_repeat_instance') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD ret_redcap_repeat_instance varchar;
-    -- optional – Redcap repeat instance id (varchar)
+    -- column (ret_redcap_repeat_instance)
 END IF;
     -- column (ret_redcap_repeat_instance)
     IF NOT EXISTS ( -- column not exists (atc1_medreq_fhir_id)
@@ -264,7 +264,7 @@ END IF;
             AND column_name = 'atc1_medreq_fhir_id') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD atc1_medreq_fhir_id varchar;
-    -- optional – FHIR ID of ATC1 (varchar)
+    -- column (atc1_medreq_fhir_id)
 END IF;
     -- column (atc1_medreq_fhir_id)
     IF NOT EXISTS ( -- column not exists (mrp_proxy_type)
@@ -278,7 +278,7 @@ END IF;
             AND column_name = 'mrp_proxy_type') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD mrp_proxy_type varchar;
-    -- optional – ICD, ATC, OPS, LOINC (varchar)
+    -- column (mrp_proxy_type)
 END IF;
     -- column (mrp_proxy_type)
     IF NOT EXISTS ( -- column not exists (mrp_proxy_code)
@@ -292,7 +292,7 @@ END IF;
             AND column_name = 'mrp_proxy_code') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD mrp_proxy_code varchar;
-    -- optional – Code of the proxy (varchar)
+    -- column (mrp_proxy_code)
 END IF;
     -- column (mrp_proxy_code)
     IF NOT EXISTS ( -- column not exists (mrp_proxy_fhir_id)
@@ -306,7 +306,7 @@ END IF;
             AND column_name = 'mrp_proxy_fhir_id') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD mrp_proxy_fhir_id varchar;
-    -- optional – FHIR ID of the proxy (varchar)
+    -- column (mrp_proxy_fhir_id)
 END IF;
     -- column (mrp_proxy_fhir_id)
     IF NOT EXISTS ( -- column not exists (input_file_processed_content_hash)
@@ -320,7 +320,7 @@ END IF;
             AND column_name = 'input_file_processed_content_hash') THEN
         ALTER TABLE db_log.dp_mrp_calculations
             ADD input_file_processed_content_hash varchar;
-    -- Processed content hash from input_data_files_processed_content of the MRP list (varchar)
+    -- column (input_file_processed_content_hash)
 END IF;
     -- column (input_file_processed_content_hash)
     -- Hash column for comparison on data-bearing columns -------------------------------------------
@@ -374,19 +374,7 @@ END IF;
                         DROP COLUMN hash_index_col;
     -- Creating the hash column
     ALTER TABLE db_log.dp_mrp_calculations
-        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (enc_id), '#NULL#') || '|||' || -- hash from: FHIR ID of the associated institution contact (enc_id)
-        COALESCE(db.to_char_immutable (mrp_calculation_type), '#NULL#') || '|||' || -- hash from: Type of MRP (name of the submodule which has calculated the MRP e.g. “Drug_Disease”, “Drug_Drug”, “Drug_DrugGoup”, “Drug_Kidney”) (mrp_calculation_type)
-        COALESCE(db.to_char_immutable (meda_id), '#NULL#') || '|||' || -- hash from: optional - Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (meda_id)
-        COALESCE(db.to_char_immutable (ward_name), '#NULL#') || '|||' || -- hash from: Name of the ward where the patient was during the medication analysis or the very first relevant ward (ward_name)
-        COALESCE(db.to_char_immutable (study_phase), '#NULL#') || '|||' || -- hash from: Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (study_phase)
-        COALESCE(db.to_char_immutable (ret_id), '#NULL#') || '|||' || -- hash from: optional – Redcap ID of the generated retrolective_mrpbewertung_fe (ret_id)
-        COALESCE(db.to_char_immutable (ret_redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: optional – Redcap repeat instance id (ret_redcap_repeat_instance)
-        COALESCE(db.to_char_immutable (atc1_medreq_fhir_id), '#NULL#') || '|||' || -- hash from: optional – FHIR ID of ATC1 (atc1_medreq_fhir_id)
-        COALESCE(db.to_char_immutable (mrp_proxy_type), '#NULL#') || '|||' || -- hash from: optional – ICD, ATC, OPS, LOINC (mrp_proxy_type)
-        COALESCE(db.to_char_immutable (mrp_proxy_code), '#NULL#') || '|||' || -- hash from: optional – Code of the proxy (mrp_proxy_code)
-        COALESCE(db.to_char_immutable (mrp_proxy_fhir_id), '#NULL#') || '|||' || -- hash from: optional – FHIR ID of the proxy (mrp_proxy_fhir_id)
-        COALESCE(db.to_char_immutable (input_file_processed_content_hash), '#NULL#') || '|||' || -- hash from: Processed content hash from input_data_files_processed_content of the MRP list (input_file_processed_content_hash)
-        '#')) STORED;
+        ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (enc_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_calculation_type), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ward_name), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (study_phase), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (atc1_medreq_fhir_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_proxy_type), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_proxy_code), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_proxy_fhir_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (input_file_processed_content_hash), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- currend hash definition
@@ -416,19 +404,7 @@ END IF;
                     a.s = b.s) THEN
             -- Creating the hash column
             ALTER TABLE db_log.dp_mrp_calculations
-                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (enc_id), '#NULL#') || '|||' || -- hash from: FHIR ID of the associated institution contact (enc_id)
-                COALESCE(db.to_char_immutable (mrp_calculation_type), '#NULL#') || '|||' || -- hash from: Type of MRP (name of the submodule which has calculated the MRP e.g. “Drug_Disease”, “Drug_Drug”, “Drug_DrugGoup”, “Drug_Kidney”) (mrp_calculation_type)
-                COALESCE(db.to_char_immutable (meda_id), '#NULL#') || '|||' || -- hash from: optional - Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (meda_id)
-                COALESCE(db.to_char_immutable (ward_name), '#NULL#') || '|||' || -- hash from: Name of the ward where the patient was during the medication analysis or the very first relevant ward (ward_name)
-                COALESCE(db.to_char_immutable (study_phase), '#NULL#') || '|||' || -- hash from: Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (study_phase)
-                COALESCE(db.to_char_immutable (ret_id), '#NULL#') || '|||' || -- hash from: optional – Redcap ID of the generated retrolective_mrpbewertung_fe (ret_id)
-                COALESCE(db.to_char_immutable (ret_redcap_repeat_instance), '#NULL#') || '|||' || -- hash from: optional – Redcap repeat instance id (ret_redcap_repeat_instance)
-                COALESCE(db.to_char_immutable (atc1_medreq_fhir_id), '#NULL#') || '|||' || -- hash from: optional – FHIR ID of ATC1 (atc1_medreq_fhir_id)
-                COALESCE(db.to_char_immutable (mrp_proxy_type), '#NULL#') || '|||' || -- hash from: optional – ICD, ATC, OPS, LOINC (mrp_proxy_type)
-                COALESCE(db.to_char_immutable (mrp_proxy_code), '#NULL#') || '|||' || -- hash from: optional – Code of the proxy (mrp_proxy_code)
-                COALESCE(db.to_char_immutable (mrp_proxy_fhir_id), '#NULL#') || '|||' || -- hash from: optional – FHIR ID of the proxy (mrp_proxy_fhir_id)
-                COALESCE(db.to_char_immutable (input_file_processed_content_hash), '#NULL#') || '|||' || -- hash from: Processed content hash from input_data_files_processed_content of the MRP list (input_file_processed_content_hash)
-                '#')) STORED;
+                ADD hash_index_col text GENERATED ALWAYS AS (md5(COALESCE(db.to_char_immutable (enc_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_calculation_type), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (meda_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ward_name), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (study_phase), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (ret_redcap_repeat_instance), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (atc1_medreq_fhir_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_proxy_type), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_proxy_code), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (mrp_proxy_fhir_id), '#NULL#') || '|||' || COALESCE(db.to_char_immutable (input_file_processed_content_hash), '#NULL#') || '|||' || '#')) STORED;
         -- Column for hash value for comparing FHIR data - collion check in second step hash_index_col
 END IF;
         -- column

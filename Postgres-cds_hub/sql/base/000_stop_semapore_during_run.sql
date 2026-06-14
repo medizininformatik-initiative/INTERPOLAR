@@ -33,6 +33,14 @@ END IF;
 END IF;
     -- Ende der äußeren IF-Bedingung
     -- initialize the current migration flag -----------------------------------------------------------
+    IF EXISTS (
+        SELECT
+            1
+        FROM
+            information_schema.tables
+        WHERE
+            table_schema = 'db_config'
+            AND table_name = 'db_parameter') THEN
     IF NOT EXISTS (
         SELECT
             1
@@ -49,6 +57,7 @@ ELSE
         parameter_value = -1
     WHERE
         parameter_name = 'current_migration_flag';
+END IF;
 END IF;
 END
 $$;
