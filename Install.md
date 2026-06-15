@@ -24,16 +24,11 @@ title: Installationsanleitung
     falls erforderlich, z.B. um self-signed Zertifikate einzubinden. Führen Sie
     anschließend Docker Compose aus, falls Sie es noch nicht ausgeführt haben: \
     ```docker compose up``` \
-    Vor dem Start der CDS_HUB-Datenbank erzeugt der Service `cds_hub_sql_generator`
-    ein Installationsverzeichnis unter `Postgres-cds_hub/generated/sql/`. Die
-    lesbaren SQL-Skripte bleiben zusätzlich unter `Postgres-cds_hub/sql/`
-    versioniert; die CI prüft, dass die generierten Skripte zu Templates und
-    Tabellendefinitionen passen. Änderungen an SQL-Templates oder
-    Tabellenbeschreibungen werden beim nächsten Start des Generators aus dem
-    Arbeitsverzeichnis gelesen. Falls Sie Änderungen z.B. an Dockerfiles oder am
+    Die CDS_HUB-Datenbank verwendet die versionierten SQL-Skripte unter
+    `Postgres-cds_hub/sql/`. Falls Sie Änderungen z.B. an Dockerfiles oder am
     R-Code vorgenommen haben, nutzen Sie bitte den `--build` Parameter, um die
     erneute Erstellung der Docker Images zu erzwingen. Der Build-Vorgang kann
-    mehrere Minuten in Anspruch nehmen.: \
+    mehrere Minuten in Anspruch nehmen: \
     ```docker compose up --build```
   1. Datenbank einrichten (Neuinstallation) oder anpassen (Migration). Dieser Schritt muss manuell über den folgenden Befehl erfolgen:
      ```cmd

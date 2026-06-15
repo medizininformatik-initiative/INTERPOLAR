@@ -88,9 +88,8 @@ Rechte, die im Generierungsprozess benötigt wird (siehe
 [User_Schema_Rights_Definition.xlsx](sql/template/User_Schema_Rights_Definition.xlsx))
 sowie die eigentlichen Templates im selben Ordner. Durch das R-Script
 [Init_02_Create_Database_Scripts.R](https://github.com/medizininformatik-initiative/INTERPOLAR/blob/main/Postgres-cds_hub/R-initcdstoolchain/initcdstoolchain/R/Init_02_Create_Database_Scripts.R)
-wird der generierte Teil der SQL-Skripte erzeugt. Im Docker-Setup erledigt dies
-der Service `cds_hub_sql_generator` und legt zusätzlich das
-Installationsverzeichnis unter `Postgres-cds_hub/generated/sql/` an.
+wird der generierte Teil der SQL-Skripte erzeugt. Im Docker-Setup werden die
+versionierten SQL-Skripte unter `Postgres-cds_hub/sql/` verwendet.
 
 Bei der Initalisierung bzw. Migratin (start.sql) der Datenbank ist darauf zu achten das alle Skripte fehlerfrei ausgeführt werden, um die Funktionalität zu gewährleisten.
 

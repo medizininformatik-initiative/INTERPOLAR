@@ -131,10 +131,10 @@ ist.
 
 ## Docker-Setup
 
-Beim Start über Docker Compose erzeugt der Service `cds_hub_sql_generator` ein
-Installationsverzeichnis unter `Postgres-cds_hub/generated/sql/`. Dieses
-Verzeichnis ist ein lokales Laufzeitartefakt und wird nicht versioniert.
+Beim Start über Docker Compose verwendet die CDS_HUB-Datenbank die versionierten
+SQL-Dateien unter `Postgres-cds_hub/sql/`. Es wird beim Start kein zusätzlicher
+Generatorlauf ausgeführt.
 
-Die versionierten SQL-Dateien unter `Postgres-cds_hub/sql/` bleiben die direkt
-einsehbare Fassung für Review und Historie. Die CI stellt sicher, dass die
-generierten Dateien nicht vom Generatoroutput abweichen.
+Die versionierten SQL-Dateien bleiben damit die einzige direkt verwendete
+Installationsfassung für Review, Historie und Docker-Betrieb. Die CI stellt
+sicher, dass die generierten Dateien nicht vom Generatoroutput abweichen.

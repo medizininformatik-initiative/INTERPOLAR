@@ -76,27 +76,9 @@ services:
       - ./REDCap-app/log/:/var/log/
 
   # Database (postgres) for CDS_HUB
-  cds_hub_sql_generator:
-    build:
-      context: ./
-      dockerfile: Dockerfile_R
-    working_dir: /src
-    restart: "no"
-    environment:
-      TZ: Europe/Berlin
-      INTERPOLAR_PROJECT_ROOT: /src
-      INTERPOLAR_DB_SQL_TARGET_DIR: /src/Postgres-cds_hub/generated/sql
-      INTERPOLAR_GENERATOR_SKIP_INSTALL: "true"
-    volumes:
-      - ./:/src
-    command: ["bash", "Postgres-cds_hub/generate-sql.sh"]
-
   cds_hub:
     build: ./Postgres-cds_hub/build
     restart: unless-stopped
-    depends_on:
-      cds_hub_sql_generator:
-        condition: service_completed_successfully
     #    healthcheck:
     # test: [ "CMD-SHELL", "pg_isready -U postgres -d cds_hub" ]
     # interval: 10s
@@ -120,9 +102,9 @@ services:
       - cds_hub_db-data:/var/lib/postgresql/data
       - ./Postgres-cds_hub/postgresql.conf:/etc/postgresql.conf
       # Zur automatischen Initialisierung die nachfolgende Zeile einkommentieren, siehe Hinweise unter https://medizininformatik-initiative.github.io/INTERPOLAR/Install
-      - ./Postgres-cds_hub/generated/sql/init/:/docker-entrypoint-initdb.d/
+      - ./Postgres-cds_hub/sql/init/:/docker-entrypoint-initdb.d/
       # Script zum Anlegen der für INTERPOLAR benötigten Rollen per docker-entrypoint, d.h. beim initialen Ausführen von "docker compose up"
-      - ./Postgres-cds_hub/generated/sql/:/cds_hub-initdb.d/
+      - ./Postgres-cds_hub/sql/:/cds_hub-initdb.d/
 
   # Web-administration of cds_hub__db (optional)
   pgadmin:
