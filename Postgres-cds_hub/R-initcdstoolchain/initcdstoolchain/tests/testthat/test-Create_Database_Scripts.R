@@ -103,6 +103,49 @@ test_that("convertTemplate expands multiline IF results with nested placeholders
   expect_identical(result, "SELECT patient\nFROM db.patient")
 })
 
+test_that("convertTemplate removes multiline IF blocks when condition is false", {
+  tables <- list(
+    patient = data.table::data.table(
+      TABLE_NAME = "patient",
+      COLUMN_NAME = "pat_id",
+      COLUMN_DESCRIPTION = "id",
+      COLUMN_TYPE = "varchar",
+      TAGS = "skip"
+    )
+  )
+  rights <- data.table::data.table(
+    SCRIPTNAME = "test.sql",
+    TEMPLATE = "test",
+    OWNER_SCHEMA = "db",
+    OWNER_USER = "db_user",
+    TAGS = "",
+    TABLE_PREFIX = "",
+    TABLE_POSTFIX = "",
+    RIGHTS = "SELECT",
+    GRANT_TARGET_USER = "db_user"
+  )
+  template <- paste0(
+    "before\n",
+    "<%IF TABLE_DESCRIPTION:TAGS \"keep\" \"",
+    "SELECT <%TABLE_NAME%>\n",
+    "FROM <%OWNER_SCHEMA%>.<%TABLE_NAME%>",
+    "\"%>\n",
+    "after"
+  )
+
+  result <- convertTemplate(
+    tables,
+    rights,
+    template_content = template,
+    table_name = "patient",
+    column_prefix = "pat",
+    loop_row = 1,
+    recursion = 1
+  )
+
+  expect_identical(result, "before\nafter")
+})
+
 test_that("convertTemplate normalizes multiline table values before replacement", {
   tables <- list(
     medikationsanalyse = data.table::data.table(

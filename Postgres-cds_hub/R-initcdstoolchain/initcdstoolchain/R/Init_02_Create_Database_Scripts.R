@@ -175,6 +175,10 @@ extractBetweenQuotes <- function(string) {
 removePlaceholderLines <- function(input_string, placeholder) {
   placeholder_escaped <- etlutils::getEscaped(placeholder)
 
+  # Remove multiline placeholders first when the placeholder occupies full lines.
+  multiline_placeholder_pattern <- paste0("(?m)^[ \t]*", placeholder_escaped, "[ \t]*(\\r?\\n)?")
+  input_string <- gsub(multiline_placeholder_pattern, "", input_string, perl = TRUE)
+
   # Check if input_string ends with a newline
   ends_with_newline <- grepl("\n$", input_string)
 
