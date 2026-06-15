@@ -88,6 +88,7 @@ resetMemory <- function(...) {
     "start_day",
     "debug_day_index",
     "delete_db_and_redcap",
+    "ignore_newer_db_version",
 
     # Module configurations
     "config_cds2db",
