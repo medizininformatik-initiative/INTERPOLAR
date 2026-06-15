@@ -19,6 +19,17 @@ Solche Dateien sollen nicht direkt geändert werden. Die fachliche Änderung erf
 an den Quellen, also an Templates, Excel-Definitionen oder Generator-Code. Danach
 werden die SQL-Dateien neu erzeugt und mitcommitted.
 
+## Kurzablauf für SQL-Änderungen
+
+- Manuelle SQL-Datei geändert: SQL-Datei committen und pushen. Wenn der
+  Format-Check fehlschlägt, den GitHub-Workflow **Format SQL** auf dem eigenen
+  Branch starten.
+- Template, Excel-Definition oder Generator geändert: Generator ausführen,
+  `Postgres-cds_hub/generated/sql/` nach `Postgres-cds_hub/sql/` übernehmen und
+  Quellen plus erzeugte SQL-Dateien gemeinsam committen.
+- Migration und Docker verwenden immer den committed Stand unter
+  `Postgres-cds_hub/sql/`, nicht das lokale `generated/sql/`-Verzeichnis.
+
 ## Welche Dateien werden manuell geändert?
 
 Manuell gepflegte SQL-Dateien sind insbesondere:
@@ -67,10 +78,20 @@ einfachen Texteditor, ist das der empfohlene Weg:
 1. SQL-Datei bearbeiten.
 2. Änderungen committen und pushen.
 3. In GitHub den Branch bzw. Pull Request öffnen.
-4. Falls der Format-Check fehlschlägt, in GitHub **Actions** öffnen.
-5. Den Workflow **Format SQL** auswählen.
-6. **Run workflow** anklicken und den eigenen Branch auswählen.
-7. Warten, bis der Workflow den Formatierungs-Commit in den Branch gepusht hat.
+4. Wenn der Check **SQL checks / sql-format** fehlschlägt, in GitHub
+   **Actions** öffnen.
+5. Links den Workflow **Format SQL** auswählen.
+6. **Run workflow** anklicken.
+7. Unter **Use workflow from** den eigenen Branch auswählen.
+8. **Run workflow** bestätigen.
+9. Warten, bis der Workflow fertig ist. Er pushed einen Formatierungs-Commit auf
+   denselben Branch.
+10. Danach den Pull Request erneut prüfen; die SQL-Checks laufen durch den neuen
+    Commit automatisch noch einmal.
+
+Der Workflow muss nur gestartet werden, wenn SQL-Formatierung fehlt oder lokal
+kein `pg_format` verfügbar ist. Bei reinen Template-/Excel-Änderungen ersetzt er
+keinen Generatorlauf.
 
 Lokal kann die Formatierung der manuell gepflegten SQL-Dateien ebenfalls
 ausgeführt werden, wenn `pg_format` installiert ist:
