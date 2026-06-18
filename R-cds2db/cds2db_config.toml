@@ -210,7 +210,9 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 #
 # DATA_IMPORT_RANGE_END requires DATA_IMPORT_RANGE_START.
 # Empty DATA_IMPORT_RESOURCE_TYPES is treated as not defined.
-# Consent and PID-independent resources ignore the date range.
+# The date range is not applied to Consent because all consent records for
+# the selected patients are loaded. Referenced PID-independent resources
+# are loaded by ID and are therefore not date-filtered.
 DATA_IMPORT_RANGE_START = "1999-01-01 00:00:00"
 #DATA_IMPORT_RANGE_END = "2021-12-01 00:00:00"
 

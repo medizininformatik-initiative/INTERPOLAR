@@ -151,10 +151,10 @@ getDataImportFHIRDateSearchParameters <- function(resource_name, diagnostic_repo
     ServiceRequest = "authored"
   )
 
-  date_search_parameter <- date_search_parameters[[resource_name]]
-  if (is.null(date_search_parameter)) {
+  if (!(resource_name %in% names(date_search_parameters))) {
     return(NULL)
   }
+  date_search_parameter <- date_search_parameters[[resource_name]]
 
   search_parameters <- c()
   if (etlutils::isDefinedAndNotEmpty("DATA_IMPORT_RANGE_START")) {
