@@ -121,6 +121,10 @@ bash Postgres-cds_hub/generate-sql.sh
 cp -R Postgres-cds_hub/generated/sql/. Postgres-cds_hub/sql/
 ```
 
+Der Generator übernimmt bei unverändertem SQL-Inhalt die bestehenden Header der
+versionierten Datei. Reine Änderungen an volatilen Header-Metadaten wie
+`Create time` erzeugen dadurch beim Kopieren keine Git-Diffs.
+
 Danach sollten die Änderungen an Templates, Excel-Dateien und den erzeugten
 SQL-Dateien gemeinsam committed werden.
 

@@ -31,6 +31,52 @@ copy_manual_base_sql() {
   done
 }
 
+normalize_generated_sql() {
+  sed \
+    -e '/^-- Create time:/d' \
+    -e '/^-- Rights definition file last update :/d' \
+    -e '/^-- Rights definition file size        :/d' \
+    "$1"
+}
+
+preserve_header_only_unchanged_file() {
+  local source_file="$1"
+  local generated_file="$2"
+
+  [ -f "$source_file" ] || return 0
+  [ -f "$generated_file" ] || return 0
+
+  if cmp -s "$source_file" "$generated_file"; then
+    return 0
+  fi
+
+  if diff -q \
+    <(normalize_generated_sql "$source_file") \
+    <(normalize_generated_sql "$generated_file") >/dev/null; then
+    cp "$source_file" "$generated_file"
+  fi
+}
+
+preserve_header_only_unchanged_generated_sql() {
+  local source_dir="$1"
+  local generated_dir="$2"
+
+  while IFS= read -r -d '' generated_file; do
+    local relative_path="${generated_file#${generated_dir}/}"
+    preserve_header_only_unchanged_file \
+      "${source_dir}/${relative_path}" \
+      "$generated_file"
+  done < <(
+    find "$generated_dir" -type f -name '*.sql' -print0 |
+      while IFS= read -r -d '' sql_file; do
+        if head -n 5 "$sql_file" | grep -q "This file is generated"; then
+          printf '%s\0' "$sql_file"
+        fi
+      done |
+      sort -z
+  )
+}
+
 rm -rf "$tmp_sql_dir"
 mkdir -p "$tmp_sql_dir"
 
@@ -58,5 +104,7 @@ if command -v pg_format >/dev/null 2>&1; then
 else
   echo "Generated SQL was not formatted because pg_format is not installed." >&2
 fi
+
+preserve_header_only_unchanged_generated_sql "$source_sql_dir" "$target_sql_dir"
 
 echo "Generated CDS-HUB SQL scripts in ${target_sql_dir}"
