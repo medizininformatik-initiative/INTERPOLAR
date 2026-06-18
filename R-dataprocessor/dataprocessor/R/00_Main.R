@@ -18,9 +18,16 @@ init <- function(validate_config = TRUE) {
   config <- etlutils::initModule(
     "dataprocessor",
     path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
+    defaults = list(
+      VERBOSE = 10,
+      MAX_DIR_COUNT = 5,
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = ".*",
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ".*",
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*",
+      MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+    ),
     mandatory_parameters = c(
       "PHASES_WARD",
-      "MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
       "OBSERVATION_BODY_WEIGHT_SYSTEM",
       "OBSERVATION_BODY_WEIGHT_CODES",
       "OBSERVATION_BODY_HEIGHT_SYSTEM",
