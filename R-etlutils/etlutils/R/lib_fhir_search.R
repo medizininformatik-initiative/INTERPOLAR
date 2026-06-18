@@ -199,6 +199,20 @@ fhirsearchAddGlobalParams <- function(parameters = NULL) {
   parameters
 }
 
+getFhirSearchMaxGetRequestLength <- function() {
+  max_length <- if (isDefinedAndNotEmpty("MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS", envir = .GlobalEnv)) {
+    as.integer(get("MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS", envir = .GlobalEnv))
+  } else {
+    2083L
+  }
+  reserve <- if (isDefinedAndNotEmpty("MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE", envir = .GlobalEnv)) {
+    as.integer(get("MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE", envir = .GlobalEnv))
+  } else {
+    300L
+  }
+  max_length - reserve
+}
+
 #' Get FHIR Resources by IDs
 #'
 #' This function retrieves FHIR resources from a server based on a list of resource IDs.
@@ -223,7 +237,7 @@ fhirsearchResourcesByIDs <- function(
 ) {
   fhirsearchResourcesByIDs_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
-    collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS - MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE) {
+    collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = getFhirSearchMaxGetRequestLength()) {
       if (length(ids) < 1) { # if there are no more ids to stringify
         warning(paste0("The length of ids is zero. So no single id is added to the list."))
         list(str = "", n = 0) # return pair of an empty string and number of added ids
