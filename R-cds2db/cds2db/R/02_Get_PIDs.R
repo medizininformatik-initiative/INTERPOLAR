@@ -322,7 +322,6 @@ getEncounters <- function(table_description, current_datetime) {
       table_enc <- etlutils::fhirsearchDownloadAndCrackResources(
         request = request_encounter,
         table_description = table_description,
-        max_bundles = MAX_ENCOUNTER_BUNDLES,
         log_errors  = "enc_error.xml"
       )
 

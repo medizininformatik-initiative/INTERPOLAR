@@ -213,6 +213,27 @@ getFhirSearchMaxGetRequestLength <- function() {
   max_length - reserve
 }
 
+getFhirSearchMaxEncounterBundles <- function() {
+  if (isDefinedAndNotEmpty("MAX_ENCOUNTER_BUNDLES", envir = .GlobalEnv)) {
+    return(get("MAX_ENCOUNTER_BUNDLES", envir = .GlobalEnv))
+  }
+  Inf
+}
+
+getFhirSearchIdsAtOnce <- function() {
+  if (isDefinedAndNotEmpty("IDS_AT_ONCE", envir = .GlobalEnv)) {
+    return(as.integer(get("IDS_AT_ONCE", envir = .GlobalEnv)))
+  }
+  100L
+}
+
+getFhirSearchMaxCores <- function() {
+  if (isDefinedAndNotEmpty("MAX_CORES", envir = .GlobalEnv)) {
+    return(as.integer(get("MAX_CORES", envir = .GlobalEnv)))
+  }
+  0L
+}
+
 #' Get FHIR Resources by IDs
 #'
 #' This function retrieves FHIR resources from a server based on a list of resource IDs.
@@ -385,7 +406,7 @@ fhirsearchResourcesByIDs <- function(
 #' @export
 fhirsearchDownloadAndCrackResources <- function(
   request,
-  max_bundles,
+  max_bundles = getFhirSearchMaxEncounterBundles(),
   table_description,
   verbose     = VERBOSE,
   ncores = NULL,
@@ -393,7 +414,7 @@ fhirsearchDownloadAndCrackResources <- function(
 ) {
   # Check if ncores is NULL and set it to the maximum available cores
   if (is.null(ncores)) {
-    ncores <- parallelGetAvailableCoreNumber(max_cores = MAX_CORES)
+    ncores <- parallelGetAvailableCoreNumber(max_cores = getFhirSearchMaxCores())
   }
 
   bundles <- executeFHIRSearchVariation(
@@ -438,7 +459,7 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
   resource,
   ids,
   table_description,
-  ids_at_once       = IDS_AT_ONCE,
+  ids_at_once       = getFhirSearchIdsAtOnce(),
   id_param_str,
   last_updated = NA,
   additional_search_parameter = NA,
@@ -487,7 +508,7 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
   }
 
   os <- parallelGetOperationSystem()
-  ncores <- parallelGetAvailableCoreNumber(os, max_cores = MAX_CORES)
+  ncores <- parallelGetAvailableCoreNumber(os, max_cores = getFhirSearchMaxCores())
   if (1 < verbose) {
     cat(paste0(
       "OS:    ",
@@ -503,7 +524,7 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
       "\n"
     ))
   }
-  mb <- MAX_ENCOUNTER_BUNDLES # for later restoring
+  mb <- getFhirSearchMaxEncounterBundles() # for later restoring
   MAX_ENCOUNTER_BUNDLES <<- Inf
   run <- 0
   tables <- list()

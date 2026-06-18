@@ -38,7 +38,7 @@ getFhirSearchCurlTimeout <- function() {
 executeFHIRSearchVariation <- function(
   request                = fhircrackr::fhir_current_request(),
   body                   = NULL,
-  max_bundles            = MAX_ENCOUNTER_BUNDLES,
+  max_bundles            = getFhirSearchMaxEncounterBundles(),
   verbose                = VERBOSE,
   max_attempts           = 5,
   log_errors             = NULL,
