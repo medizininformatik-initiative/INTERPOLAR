@@ -1,0 +1,45 @@
+VIEW_SCHEMA = "db2dataprocessor_out"
+VIEW_PREFIX = "v_"
+VIEW_POSTFIX = "_last_version"
+OUTPUT_FILENAME = "Database_Quality_Analysis"
+COUNT_BATCH_SIZE = 100
+INCLUDE_VALUE_DATETIME_COLUMNS = true
+
+# Views matching these regular expressions are included automatically.
+INCLUDED_VIEW_PATTERNS = [
+  "^v_[a-z0-9_]+_last_version$",
+  "^v_[a-z0-9_]+_fe_last_version$"
+]
+
+EXCLUDED_VIEW_PATTERNS = [
+  "_raw_"
+]
+
+# Additional views that do not follow the last-version naming convention.
+ADDITIONAL_VIEWS = [
+  "v_pids_per_ward"
+]
+
+# Technical columns that should not appear in the report.
+TECHNICAL_COLUMNS = [
+  "raw_already_processed",
+  "hash_index_col",
+  "id",
+  "last_version_date",
+  "input_datetime",
+  "last_check_datetime",
+  "current_dataset_status",
+  "input_processing_nr",
+  "last_processing_nr"
+]
+
+# Table-specific grouping overrides. Format:
+# table_name|resource_id_column|pid_column|case_id_column
+#
+# table_name is the normalized table name without view prefix/postfix, for example
+# observation, patient_fe, fall_fe, or pids_per_ward.
+GROUPING_OVERRIDES = [
+  "pids_per_ward|encounter_id|patient_id|encounter_id",
+  "patient_fe|pat_id|record_id|",
+  "fall_fe|fall_id|record_id|fall_id"
+]

@@ -11,6 +11,9 @@ BEGIN
 -- sources are the plain typed data tables with a table name without any pre oder postfix -> SIMPLE_TABLE_NAME
 <%LOOP_TABS_SUB_cre_view_frontend_last_version_TABLES%>
 
+--SQL Column Comments for Views in Schema <%OWNER_SCHEMA%>
+<%LOOP_TABS_SUB_cre_view_frontend_last_version_COMMENTS%>
+
 --------------------------------------------------------------------
     END IF; -- do migration
 END

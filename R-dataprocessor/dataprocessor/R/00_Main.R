@@ -81,7 +81,7 @@ runSubmodules <- function() {
   # when they are started interactively via DEBUG_SUBMODULE_DIR.
   if (!interactive() || length(command_line_args) || exists("DEBUG_SUBMODULE_DIR")) {
     # enable minus for underscrore in arguments and ignore case
-    command_line_args <- sub("-", "_", tolower(command_line_args), fixed = TRUE)
+    command_line_args <- gsub("-", "_", tolower(command_line_args), fixed = TRUE)
     called_manual_start_submodule_dirs <- manual_start_submodule_dirs[
       tolower(basename(manual_start_submodule_dirs)) %in% command_line_args
     ]

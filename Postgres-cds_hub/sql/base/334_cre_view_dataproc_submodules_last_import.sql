@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-06-11 17:22:24
+-- Rights definition file last update : 2026-06-18 14:50:31
 -- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2026-06-12 11:40:35
+-- Create time: 2026-06-18 16:06:35
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/334_cre_view_dataproc_submodules_last_import.sql
 -- TEMPLATE:  template_cre_view_last_import.sql
@@ -76,6 +76,20 @@ BEGIN
 END IF;
         -- do migration
 END $innerview$;
+    --SQL Column Comments for Views in Schema db2dataprocessor_out
+    -------- COMMENTS db2dataprocessor_out.v_dp_mrp_calculations_last_import ------------
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.enc_id IS 'FHIR ID of the associated institution contact (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.mrp_calculation_type IS 'Type of MRP (name of the submodule which has calculated the MRP e.g. “Drug_Disease”, “Drug_Drug”, “Drug_DrugGoup”, “Drug_Kidney”) (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.meda_id IS 'optional - Redcap ID of the medication_analysis_fe (empty if no MedAna exists for this Encounter) (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.ward_name IS 'Name of the ward where the patient was during the medication analysis or the very first relevant ward (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.study_phase IS 'Study phase („PhaseA“, „PhaseBTest“ or „PhaseB“); must be filled if there was any contact with a observed ward in his medical case (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.ret_id IS 'optional – Redcap ID of the generated retrolective_mrpbewertung_fe (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.ret_redcap_repeat_instance IS 'optional – Redcap repeat instance id (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.atc1_medreq_fhir_id IS 'optional – FHIR ID of ATC1 (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.mrp_proxy_type IS 'optional – ICD, ATC, OPS, LOINC (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.mrp_proxy_code IS 'optional – Code of the proxy (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.mrp_proxy_fhir_id IS 'optional – FHIR ID of the proxy (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_dp_mrp_calculations_last_import.input_file_processed_content_hash IS 'Processed content hash from input_data_files_processed_content of the MRP list (varchar)';
     --SQL Role for Views in Schema db2dataprocessor_out
     GRANT SELECT ON TABLE db2dataprocessor_out.v_dp_mrp_calculations_last_import TO db2dataprocessor_user;
     GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;
