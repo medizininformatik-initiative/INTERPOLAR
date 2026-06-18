@@ -53,23 +53,26 @@ executeFHIRSearchVariation <- function(
     low_speed_time = getFhirSearchCurlTimeout()
   ))
 
-  result <- if (!is.null(FHIR_TOKEN) && FHIR_TOKEN != "") {
+  result <- if (isDefinedAndNotEmpty("FHIR_TOKEN", envir = .GlobalEnv)) {
     fhircrackr::fhir_search(
       request                = request,
       body                   = body,
-      token                  = FHIR_TOKEN,
+      token                  = get("FHIR_TOKEN", envir = .GlobalEnv),
       max_bundles            = max_bundles,
       verbose                = verbose,
       log_errors             = if (!is.null(log_errors)) combineLoggingPaths(log_errors),
       save_to_disc           = if (!is.null(save_to_disc)) combineBundlePaths(save_to_disc),
       delay_between_bundles  = delay_between_bundles
     )
-  } else if (!is.null(FHIR_SERVER_USER) && !is.null(FHIR_SERVER_PASS) && FHIR_SERVER_USER != "" && FHIR_SERVER_PASS != "") {
+  } else if (
+    isDefinedAndNotEmpty("FHIR_SERVER_USER", envir = .GlobalEnv) &&
+      isDefinedAndNotEmpty("FHIR_SERVER_PASS", envir = .GlobalEnv)
+  ) {
     fhircrackr::fhir_search(
       request                = request,
       body                   = body,
-      username               = FHIR_SERVER_USER,
-      password               = FHIR_SERVER_PASS,
+      username               = get("FHIR_SERVER_USER", envir = .GlobalEnv),
+      password               = get("FHIR_SERVER_PASS", envir = .GlobalEnv),
       max_bundles            = max_bundles,
       verbose                = verbose,
       log_errors             = if (!is.null(log_errors)) combineLoggingPaths(log_errors),

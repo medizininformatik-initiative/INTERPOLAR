@@ -4,34 +4,37 @@
 #'
 #' @export
 fhirsearchRefreshToken <- function() {
-  # Refresh FHIR-Server authentication Token
-  #
-  # This function refreshes the FHIR-Server authentication token by making a request to the specified token refresh URL.
-  #
-  # @return A character string representing the refreshed FHIR-Server authentication token.
-  #
+  if (!isDefinedAndNotEmpty("FHIR_TOKEN", envir = .GlobalEnv)) {
+    return(invisible(FALSE))
+  }
+
+  refresh_parameters <- c(
+    "FHIR_TOKEN_REFRESH_URL",
+    "FHIR_TOKEN_REFRESH_USER",
+    "FHIR_TOKEN_REFRESH_PASSWORD"
+  )
+  if (!all(vapply(refresh_parameters, isDefinedAndNotEmpty, logical(1), envir = .GlobalEnv))) {
+    return(invisible(FALSE))
+  }
+
   fhirsearchRefreshTokenInternal <- function() {
-    if (FHIR_TOKEN_REFRESH_URL == "" || FHIR_TOKEN_REFRESH_USER == "" || FHIR_TOKEN_REFRESH_PASSWORD == "") {
-      return ("")
-    }
-    # Token call
     response <- httr::GET(
-      url = FHIR_TOKEN_REFRESH_URL,
+      url = get("FHIR_TOKEN_REFRESH_URL", envir = .GlobalEnv),
       httr::authenticate(
-        user = FHIR_TOKEN_REFRESH_USER,
-        password = FHIR_TOKEN_REFRESH_PASSWORD
+        user = get("FHIR_TOKEN_REFRESH_USER", envir = .GlobalEnv),
+        password = get("FHIR_TOKEN_REFRESH_PASSWORD", envir = .GlobalEnv)
       )
     )
-    # Token as payload
     httr::content(response, as = "text")
   }
 
-  # refresh token, if defined
-  if (FHIR_TOKEN != "") {
-    runLevel3IgnoreError("Refresh FHIR_TOKEN", {
-      FHIR_TOKEN <- fhirsearchRefreshTokenInternal()
-    })
-  }
+  runLevel3IgnoreError("Refresh FHIR_TOKEN", {
+    refreshed_token <- fhirsearchRefreshTokenInternal()
+    if (length(refreshed_token) && nzchar(refreshed_token)) {
+      assign("FHIR_TOKEN", refreshed_token, envir = .GlobalEnv)
+    }
+  })
+  invisible(TRUE)
 }
 
 #' Log Request Details to a File
