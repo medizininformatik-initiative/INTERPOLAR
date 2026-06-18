@@ -100,6 +100,13 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
   return(newName)
 }
 
+getMaxDirCount <- function() {
+  if (isDefinedAndNotEmpty("MAX_DIR_COUNT", envir = .GlobalEnv)) {
+    return(as.integer(get("MAX_DIR_COUNT", envir = .GlobalEnv)))
+  }
+  5L
+}
+
 #'
 #' This function is used by the framework itself
 #'
@@ -109,8 +116,9 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
 #' @export
 createDIRS <- function(module_name, showWarnings = FALSE) {
   module_dirs <- getModuleDirNames(module_name)
-  module_dirs$last_global_dir <- renameWithCreationTimeIfDirExists(module_dirs$global_dir, MAX_DIR_COUNT)
-  module_dirs$last_local_dir <- renameWithCreationTimeIfDirExists(module_dirs$local_dir, MAX_DIR_COUNT)
+  max_dir_count <- getMaxDirCount()
+  module_dirs$last_global_dir <- renameWithCreationTimeIfDirExists(module_dirs$global_dir, max_dir_count)
+  module_dirs$last_local_dir <- renameWithCreationTimeIfDirExists(module_dirs$local_dir, max_dir_count)
   for (dir_name in module_dirs$global_results_dir_names) {
     dir.create(paste0(module_dirs$global_dir, "/", dir_name), recursive = TRUE, showWarnings = showWarnings)
   }

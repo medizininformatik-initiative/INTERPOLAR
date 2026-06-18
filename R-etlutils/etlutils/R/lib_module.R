@@ -62,7 +62,11 @@ initModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = N
   config <- initModuleConstants(
     module_name = module_name,
     db_schema_base_name = db_schema_base_name,
-    path_to_toml = path_to_toml
+    path_to_toml = path_to_toml,
+    defaults = c(
+      VERBOSE = 10,
+      MAX_DIR_COUNT = 5
+    )
   )
   # Check for mandatory parameters
   checkMandatoryParameters(mandatory_parameters)
