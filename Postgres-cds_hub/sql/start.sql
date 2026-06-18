@@ -2,31 +2,30 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-03 12:19:40
--- Rights definition file size        : 16836 Byte
+-- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2026-06-11 17:22:24
+-- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "NA"
--- Create time: 2026-02-03 12:31:58
+-- Create time: 2026-06-12 11:40:05
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  start.sql
 -- TEMPLATE:  template_start.sql
--- OWNER_USER:  
--- OWNER_SCHEMA:  
--- TAGS:  
--- TABLE_PREFIX:  
--- TABLE_POSTFIX:  
--- RIGHTS:  
--- GRANT_TARGET_USER:  
--- COPY_FUNC_SCRIPTNAME:  
--- COPY_FUNC_TEMPLATE:  
--- COPY_FUNC_NAME:  
--- SCHEMA_2:  
--- TABLE_POSTFIX_2:  
--- SCHEMA_3:  
--- TABLE_POSTFIX_3:  
+-- OWNER_USER:
+-- OWNER_SCHEMA:
+-- TAGS:
+-- TABLE_PREFIX:
+-- TABLE_POSTFIX:
+-- RIGHTS:
+-- GRANT_TARGET_USER:
+-- COPY_FUNC_SCRIPTNAME:
+-- COPY_FUNC_TEMPLATE:
+-- COPY_FUNC_NAME:
+-- SCHEMA_2:
+-- TABLE_POSTFIX_2:
+-- SCHEMA_3:
+-- TABLE_POSTFIX_3:
 -- ########################################################################################################
-
 ----------------------------------------------------------------------------
 \i ./base/000_stop_semapore_during_run.sql
 ------------------------------------------------------
@@ -86,4 +85,3 @@
 ------------------------------------------------------
 \i ./base/999_start_semapore_after_run.sql
 ----------------------------------------------------------------------------
-
