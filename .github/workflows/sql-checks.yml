@@ -76,4 +76,10 @@ jobs:
         run: docker build -t interpolar-r -f Dockerfile_R .
 
       - name: Check generated SQL is committed
-        run: docker run --rm -e INTERPOLAR_GENERATOR_SKIP_INSTALL=true -v "${PWD}:/src" -w /src interpolar-r bash tools/check-generated-sql.sh
+        run: |
+          docker run --rm \
+            -e INTERPOLAR_GENERATOR_SKIP_INSTALL=true \
+            -v "${PWD}:/src" \
+            -w /src \
+            interpolar-r \
+            bash -lc 'apt-get update && apt-get install -y perl && tools/install-pgformatter.sh && bash tools/check-generated-sql.sh'

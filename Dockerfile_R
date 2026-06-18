@@ -14,8 +14,7 @@ ENV NCPUS=1
 RUN apt-get update && apt-get install -y -q \
         apt-utils \
         vim less \
-        wget curl \
-        perl
+        wget curl
 
 # etlutils
 
@@ -44,10 +43,6 @@ RUN apt-get update && apt-get install -y pandoc libuv1-dev
 RUN /rocker_scripts/bin/install2.r -n $NCPUS htmlwidgets htmltools DT jsonlite
 
 WORKDIR /src
-
-COPY tools/install-pgformatter.sh tools/install-pgformatter.sh
-
-RUN tools/install-pgformatter.sh
 
 COPY R-etlutils R-etlutils
 
