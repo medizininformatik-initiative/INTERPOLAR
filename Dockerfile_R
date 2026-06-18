@@ -51,15 +51,6 @@ RUN R CMD build R-etlutils/etlutils
 RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-etlutils/etlutils
 
 
-# initcdstoolchain
-
-COPY Postgres-cds_hub/R-initcdstoolchain Postgres-cds_hub/R-initcdstoolchain
-
-RUN R CMD build Postgres-cds_hub/R-initcdstoolchain/initcdstoolchain
-
-RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source Postgres-cds_hub/R-initcdstoolchain/initcdstoolchain
-
-
 # cds2db
 
 COPY R-cds2db R-cds2db

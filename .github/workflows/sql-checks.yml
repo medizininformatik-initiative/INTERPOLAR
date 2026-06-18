@@ -78,7 +78,6 @@ jobs:
       - name: Check generated SQL is committed
         run: |
           docker run --rm \
-            -e INTERPOLAR_GENERATOR_SKIP_INSTALL=true \
             -v "${PWD}:/src" \
             -w /src \
             interpolar-r \

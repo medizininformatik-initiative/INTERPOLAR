@@ -40,7 +40,6 @@ while IFS= read -r changed_file; do
   fi
 
   case "$changed_file" in
-    Dockerfile_R | \
     Postgres-cds_hub/generate-sql.sh | \
     Postgres-cds_hub/R-initcdstoolchain/* | \
     Postgres-cds_hub/R-initcdstoolchain/** | \

@@ -7,7 +7,6 @@ source_sql_dir="${INTERPOLAR_DB_SQL_SOURCE_DIR:-${repo_root}/Postgres-cds_hub/sq
 target_sql_dir="${INTERPOLAR_DB_SQL_TARGET_DIR:-${repo_root}/Postgres-cds_hub/generated/sql}"
 tmp_sql_dir="${target_sql_dir}.tmp"
 r_lib_dir="${INTERPOLAR_GENERATOR_R_LIB_DIR:-${repo_root}/Postgres-cds_hub/generated/r-lib}"
-skip_generator_install="${INTERPOLAR_GENERATOR_SKIP_INSTALL:-false}"
 
 copy_sql_dir_if_exists() {
   local source_dir="$1"
@@ -39,23 +38,16 @@ copy_sql_dir_if_exists "${source_sql_dir}/init" "${tmp_sql_dir}/init"
 copy_sql_dir_if_exists "${source_sql_dir}/recalculations" "${tmp_sql_dir}/recalculations"
 copy_manual_base_sql "${source_sql_dir}/base" "${tmp_sql_dir}/base"
 
-if [ "$skip_generator_install" = "true" ]; then
-  INTERPOLAR_PROJECT_ROOT="$repo_root" \
-  INTERPOLAR_DB_SQL_SOURCE_DIR="$source_sql_dir" \
-  INTERPOLAR_DB_SQL_TARGET_DIR="$tmp_sql_dir" \
-    Rscript "${repo_root}/Postgres-cds_hub/R-initcdstoolchain/CreateDatabaseScripts.R"
-else
-  mkdir -p "$r_lib_dir"
-  R_LIBS_USER="$r_lib_dir" \
-    R CMD INSTALL --preclean --no-multiarch --with-keep.source \
-    "${repo_root}/Postgres-cds_hub/R-initcdstoolchain/initcdstoolchain"
+mkdir -p "$r_lib_dir"
+R_LIBS_USER="$r_lib_dir" \
+  R CMD INSTALL --preclean --no-multiarch --with-keep.source \
+  "${repo_root}/Postgres-cds_hub/R-initcdstoolchain/initcdstoolchain"
 
-  INTERPOLAR_PROJECT_ROOT="$repo_root" \
-  INTERPOLAR_DB_SQL_SOURCE_DIR="$source_sql_dir" \
-  INTERPOLAR_DB_SQL_TARGET_DIR="$tmp_sql_dir" \
-  R_LIBS_USER="$r_lib_dir" \
-    Rscript "${repo_root}/Postgres-cds_hub/R-initcdstoolchain/CreateDatabaseScripts.R"
-fi
+INTERPOLAR_PROJECT_ROOT="$repo_root" \
+INTERPOLAR_DB_SQL_SOURCE_DIR="$source_sql_dir" \
+INTERPOLAR_DB_SQL_TARGET_DIR="$tmp_sql_dir" \
+R_LIBS_USER="$r_lib_dir" \
+  Rscript "${repo_root}/Postgres-cds_hub/R-initcdstoolchain/CreateDatabaseScripts.R"
 
 rm -rf "$target_sql_dir"
 mkdir -p "$(dirname "$target_sql_dir")"
