@@ -24,6 +24,11 @@ init <- function(validate_config = TRUE) {
   # Initialize and start module if init_constants_only == FALSE
   config <- etlutils::initModule(getModuleName(),
     path_to_toml = "./R-cds2db/cds2db_config.toml",
+    defaults = list(
+      VERBOSE = 10,
+      MAX_DIR_COUNT = 5,
+      COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+    ),
     mandatory_parameters = c(
       "FHIR_SERVER_ENDPOINT",
       "ENCOUNTER_FILTER_PATTERN",

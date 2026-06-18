@@ -55,18 +55,17 @@ getGitInfo <- function(git_dir = ".git") {
 #' @param mandatory_parameters (Optional) A character vector containing the names
 #' of mandatory parameters. If these parameters are not found in the configuration
 #' file, an error is thrown.
+#' @param defaults (Optional) A named list containing default values for
+#' configuration parameters that may be omitted from the TOML file.
 #'
 #' @export
-initModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = NA, mandatory_parameters = c()) {
+initModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = NA, mandatory_parameters = c(), defaults = list()) {
   # Init module constants
   config <- initModuleConstants(
     module_name = module_name,
     db_schema_base_name = db_schema_base_name,
     path_to_toml = path_to_toml,
-    defaults = c(
-      VERBOSE = 10,
-      MAX_DIR_COUNT = 5
-    )
+    defaults = defaults
   )
   # Check for mandatory parameters
   checkMandatoryParameters(mandatory_parameters)

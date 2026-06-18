@@ -50,7 +50,7 @@ initConstants <- function(path_to_toml, defaults = c(), envir = .GlobalEnv) {
   for (i in seq_along(defaults)) {
     variable_name <- names(defaults)[i]
     if (!exists(variable_name, envir = envir)) {
-      assign(variable_name, defaults[i], envir = envir)
+      assign(variable_name, defaults[[i]], envir = envir)
     }
   }
 

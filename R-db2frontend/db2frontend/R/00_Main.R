@@ -3,6 +3,10 @@ initInternal <- function(module_name, validate_config = TRUE) {
     module_name,
     db_schema_base_name = "db2frontend",
     path_to_toml = "./R-db2frontend/db2frontend_config.toml",
+    defaults = list(
+      VERBOSE = 10,
+      MAX_DIR_COUNT = 5
+    ),
     mandatory_parameters = c(
       "REDCAP_URL",
       "REDCAP_TOKEN",
