@@ -164,6 +164,61 @@ selectPseudonymizationCandidates <- function(candidates) {
   candidates[!duplicated(candidates[["row_index"]]), ]
 }
 
+withTableDescriptionContext <- function(rule_table, table_description) {
+  if (nrow(rule_table) == 0) {
+    rule_table[["RESOURCE"]] <- character()
+    rule_table[["COLUMN_NAME"]] <- character()
+    rule_table[["FHIR_EXPRESSION"]] <- character()
+    return(rule_table)
+  }
+
+  resource <- table_description[["RESOURCE"]]
+  context <- data.table::data.table(
+    row_index = seq_len(nrow(table_description)),
+    RESOURCE = resource,
+    COLUMN_NAME = table_description[["COLUMN_NAME"]],
+    FHIR_EXPRESSION = table_description[["FHIR_EXPRESSION"]]
+  )
+  etlutils::fillNAWithLastRowValue(context, "RESOURCE")
+  merge(context, rule_table, by = "row_index", all.y = TRUE, sort = FALSE)
+}
+
+getRuleSummary <- function(table_description) {
+  rule <- table_description[[PSEUDONYMIZATION_RULE_COLNAME]]
+  rule[is.na(rule) | !nzchar(rule)] <- "<empty/default redact>"
+  summary <- as.data.frame(table(rule), stringsAsFactors = FALSE)
+  names(summary) <- c(PSEUDONYMIZATION_RULE_COLNAME, "N")
+  data.table::as.data.table(summary[order(summary[[PSEUDONYMIZATION_RULE_COLNAME]]), ])
+}
+
+#' Build a FHIR Pseudonymization Rule Report
+#'
+#' Builds review tables from a FHIR table description previously processed with
+#' `setFhirPseudonymizationRules()`.
+#'
+#' @param table_description Table description returned by
+#' `setFhirPseudonymizationRules()`.
+#'
+#' @return A named list with `summary`, `selected_rules`, `conflicts`, and
+#' `candidates`.
+#' @export
+getFhirPseudonymizationRuleReport <- function(table_description) {
+  candidates <- attr(table_description, "pseudonymization_candidates")
+  selected <- attr(table_description, "pseudonymization_selected")
+  conflicts <- attr(table_description, "pseudonymization_conflicts")
+
+  if (is.null(candidates) || is.null(selected) || is.null(conflicts)) {
+    stop("table_description must be processed with setFhirPseudonymizationRules() first.")
+  }
+
+  list(
+    summary = getRuleSummary(table_description),
+    selected_rules = withTableDescriptionContext(selected, table_description),
+    conflicts = withTableDescriptionContext(conflicts, table_description),
+    candidates = withTableDescriptionContext(candidates, table_description)
+  )
+}
+
 #' Add Pseudonymization Rules to a FHIR Table Description
 #'
 #' Adds a `PSEUDONYMIZATION_RULE` column to an expanded FHIR table description.
@@ -247,13 +302,16 @@ setFhirPseudonymizationRules <- function(table_description, yaml_path) {
 #' @param yaml_path Path to the FHIR pseudonymizer YAML file.
 #' @param output_path Path of the generated xlsx file.
 #' @param sheet_name Name of the table-description sheet.
+#' @param report_output_path Optional path for a review workbook with rule
+#' summary, selected matches, conflicts, and all candidates.
 #'
 #' @return Invisibly returns the generated table description.
 #' @export
 generateFhirPseudonymizationTableDescription <- function(table_description_path,
                                                          yaml_path,
                                                          output_path,
-                                                         sheet_name = "table_description") {
+                                                         sheet_name = "table_description",
+                                                         report_output_path = NA) {
   table_description <- etlutils::loadTableDescriptionFile(table_description_path, sheet_name)
   table_description <- setFhirPseudonymizationRules(table_description, yaml_path)
 
@@ -281,6 +339,11 @@ generateFhirPseudonymizationTableDescription <- function(table_description_path,
     output_path,
     with_column_names = FALSE
   )
+
+  if (!is.na(report_output_path)) {
+    report <- getFhirPseudonymizationRuleReport(table_description)
+    etlutils::writeExcelFile(report, report_output_path, with_column_names = TRUE)
+  }
 
   invisible(table_description)
 }

@@ -70,3 +70,34 @@ test_that("specific resource rules win over broad node type rules", {
   expect_equal(result$PSEUDONYMIZATION_RULE, "generalize(postalCode2)")
   expect_equal(nrow(attr(result, "pseudonymization_conflicts")), 1)
 })
+
+test_that("rule report includes summary and contextual conflicts", {
+  yaml_file <- tempfile(fileext = ".yaml")
+  writeLines(c(
+    "---",
+    "fhirVersion: R4",
+    "fhirPathRules:",
+    "  - path: Patient.address.postalCode",
+    "    method: generalize",
+    "    cases:",
+    "      \"$this\": \"$this.toString().substring(0,2)\"",
+    "  - path: nodesByType('Address')",
+    "    method: redact"
+  ), yaml_file)
+
+  table_description <- data.table::data.table(
+    RESOURCE = "Patient",
+    COLUMN_NAME = "pat_address_postalcode",
+    FHIR_EXPRESSION = "address/postalCode",
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+
+  result <- setFhirPseudonymizationRules(table_description, yaml_file)
+  report <- getFhirPseudonymizationRuleReport(result)
+
+  expect_named(report, c("summary", "selected_rules", "conflicts", "candidates"))
+  expect_equal(report$conflicts$RESOURCE, "Patient")
+  expect_equal(report$conflicts$COLUMN_NAME, "pat_address_postalcode")
+  expect_equal(report$summary$N, 1)
+})
