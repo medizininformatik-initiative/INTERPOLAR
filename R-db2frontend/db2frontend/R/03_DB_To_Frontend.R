@@ -29,7 +29,8 @@ importDB2Redcap <- function() {
     table_names <- names(tables)
     for (i in seq_along(table_names)) {
       table_filename_prefix <- if (exists("TOOLCHAIN_DAY")) paste0("TOOLCHAIN_DAY_", TOOLCHAIN_DAY, "_") else ""
-      etlutils::writeDebugExcelFile(data_from_db, paste0(table_filename_prefix, "db2frontend_", table_names[i], suffix))
+      table_name <- table_names[i]
+      etlutils::writeDebugExcelFile(tables[[table_name]], paste0(table_filename_prefix, "db2frontend_", table_name, suffix))
     }
   }
 
@@ -233,6 +234,7 @@ importDB2Redcap <- function() {
 
     etlutils::runLevel2Line("Write data to Redcap", {
       # Set the data access groups in Redcap
+      etlutils::writeDebugExcelFile(record_ids_with_data_access_group, "db2frontend_record_ids_with_data_access_group")
       suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group))
     })
 
