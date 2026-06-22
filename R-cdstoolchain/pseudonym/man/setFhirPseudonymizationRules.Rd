@@ -4,17 +4,22 @@
 \alias{setFhirPseudonymizationRules}
 \title{Add Pseudonymization Rules to a FHIR Table Description}
 \usage{
-setFhirPseudonymizationRules(table_description, yaml_path)
+setFhirPseudonymizationRules(
+  table_description,
+  yaml_path = getDefaultFhirPseudonymizationYamlPath()
+)
 }
 \arguments{
 \item{table_description}{Expanded FHIR table description as a data.table.}
 
-\item{yaml_path}{Path to a FHIR pseudonymizer YAML file.}
+\item{yaml_path}{Path to a FHIR pseudonymizer YAML file. Defaults to the
+packaged DIMP-DUP base YAML.}
 }
 \value{
 The table description with a \code{PSEUDONYMIZATION_RULE} column. Match
 details are attached as attributes \code{pseudonymization_candidates},
-\code{pseudonymization_selected}, and \code{pseudonymization_conflicts}.
+\code{pseudonymization_selected}, \code{pseudonymization_conflicts}, and
+\code{pseudonymization_yaml_rule_matches}.
 }
 \description{
 Adds a \code{PSEUDONYMIZATION_RULE} column to an expanded FHIR table description.

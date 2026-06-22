@@ -96,8 +96,58 @@ test_that("rule report includes summary and contextual conflicts", {
   result <- setFhirPseudonymizationRules(table_description, yaml_file)
   report <- getFhirPseudonymizationRuleReport(result)
 
-  expect_named(report, c("summary", "selected_rules", "conflicts", "candidates"))
+  expect_named(report, c(
+    "summary",
+    "yaml_rules",
+    "unmatched_table_rows",
+    "selected_rules",
+    "conflicts",
+    "candidates"
+  ))
   expect_equal(report$conflicts$RESOURCE, "Patient")
   expect_equal(report$conflicts$COLUMN_NAME, "pat_address_postalcode")
   expect_equal(report$summary$N, 1)
+})
+
+test_that("rule report includes YAML match counts and unmatched table rows", {
+  yaml_file <- tempfile(fileext = ".yaml")
+  writeLines(c(
+    "---",
+    "fhirVersion: R4",
+    "fhirPathRules:",
+    "  - path: Patient.id",
+    "    method: cryptoHash",
+    "  - path: Patient.birthDate",
+    "    method: keep"
+  ), yaml_file)
+
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA),
+    COLUMN_NAME = c("pat_id", "pat_gender"),
+    FHIR_EXPRESSION = c("id", "gender"),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+
+  result <- setFhirPseudonymizationRules(table_description, yaml_file)
+  report <- getFhirPseudonymizationRuleReport(result)
+
+  expect_equal(report$yaml_rules$matched_rows, c(1L, 0L))
+  expect_equal(report$unmatched_table_rows$COLUMN_NAME, "pat_gender")
+  expect_equal(report$unmatched_table_rows$RESOURCE, "Patient")
+})
+
+test_that("setFhirPseudonymizationRules uses the packaged YAML by default", {
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA),
+    COLUMN_NAME = c("pat_id", "pat_birthdate"),
+    FHIR_EXPRESSION = c("id", "birthDate"),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+
+  result <- setFhirPseudonymizationRules(table_description)
+
+  expect_equal(result$PSEUDONYMIZATION_RULE, c("cryptoHash", "generalize(YYYY-MM)"))
+  expect_true(nrow(attr(result, "pseudonymization_yaml_rule_matches")) > 0)
 })

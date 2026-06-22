@@ -1,5 +1,5 @@
-Package: snapshotpseudonymizer
-Title: Build Pseudonymization Rules for INTERPOLAR Snapshots
+Package: pseudonym
+Title: Build Pseudonymization Metadata for INTERPOLAR
 Version: 0.0.1
 Authors@R: 
     c(person(given = "Alexander",
@@ -9,8 +9,8 @@ Authors@R:
              comment = c(ORCID = "0000-0001-5151-7665")))
 Author: Alexander Struebing [aut, cre]
 Maintainer: Alexander Struebing <alexander.struebing@imise.uni-leipzig.de>
-Description: Helper functions for compiling FHIR pseudonymizer rules into
-    table-description based snapshot pseudonymization metadata.
+Description: Helper functions for compiling and reviewing pseudonymization
+    metadata for INTERPOLAR table descriptions.
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
