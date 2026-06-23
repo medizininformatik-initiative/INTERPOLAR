@@ -52,23 +52,48 @@ importDB2Redcap <- function() {
   }
 
   importRecordsToRedcap <- function(table_name, import_data, overwriteBehavior = "normal") {
-    prepared_data <- prepareRedcapImport(table_name, import_data)
+    prepared_data <- data.table::as.data.table(prepareRedcapImport(table_name, import_data))
+    redcap_import_batch_size <- 1000L
+
+    normalizeImportResult <- function(import_result) {
+      if (is.data.frame(import_result)) {
+        return(data.table::as.data.table(import_result))
+      }
+
+      import_result <- as.character(import_result)
+      import_result <- import_result[nzchar(import_result)]
+
+      if (any(grepl("<[^>]+>|Fatal error|Allowed memory size|\"error\"", import_result))) {
+        stop(paste(import_result, collapse = "\n"), call. = FALSE)
+      }
+
+      csv_response <- grepl("[\r\n]", import_result)
+      if (any(csv_response)) {
+        return(data.table::rbindlist(lapply(import_result, function(response) {
+          data.table::as.data.table(utils::read.csv(
+            text = response,
+            stringsAsFactors = FALSE,
+            check.names = FALSE
+          ))
+        }), use.names = TRUE, fill = TRUE))
+      }
+
+      data.table::data.table(import_result = import_result)
+    }
+
     import_result <- redcapAPI::importRecords(
       rcon = frontend_connection,
       data = prepared_data,
       overwriteBehavior = overwriteBehavior,
-      returnContent = "ids"
+      returnContent = "ids",
+      batch.size = if (nrow(prepared_data) > redcap_import_batch_size) redcap_import_batch_size else -1L
     )
+    import_result <- normalizeImportResult(import_result)
 
-    import_count <- if (is.data.frame(import_result)) nrow(import_result) else length(import_result)
+    import_count <- nrow(import_result)
     message("REDCap import for table '", table_name, "' returned ", import_count, " record id(s).")
 
-    import_result_log <- if (is.data.frame(import_result)) {
-      import_result
-    } else {
-      data.table::data.table(import_result = as.character(import_result))
-    }
-    etlutils::writeDebugExcelFile(import_result_log, paste0("db2frontend_", table_name, "_redcap_import_result"))
+    etlutils::writeDebugExcelFile(import_result, paste0("db2frontend_", table_name, "_redcap_import_result"))
     return(import_result)
   }
 
