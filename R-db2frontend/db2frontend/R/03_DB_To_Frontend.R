@@ -34,8 +34,6 @@ importDB2Redcap <- function() {
     }
   }
 
-  redcap_import_field_names <- NULL
-
   moveRecordIdToFirstColumn <- function(import_data) {
     if ("record_id" %in% names(import_data)) {
       return(import_data[, c("record_id", setdiff(names(import_data), "record_id")), with = FALSE])
@@ -44,35 +42,13 @@ importDB2Redcap <- function() {
   }
 
   prepareRedcapImport <- function(table_name, import_data) {
-    if (is.null(redcap_import_field_names)) {
-      redcap_import_field_names <<- getRedcapFieldNames(frontend_connection)
-    }
-
     import_data <- moveRecordIdToFirstColumn(import_data)
 
-    system_fields <- c(
-      "redcap_event_name",
-      "redcap_data_access_group",
-      "redcap_repeat_instrument",
-      "redcap_repeat_instance",
-      "redcap_survey_identifier"
-    )
-    cast_fields <- intersect(names(import_data), redcap_import_field_names)
-    cast_fields <- setdiff(cast_fields, c(system_fields, grep("_complete$", cast_fields, value = TRUE)))
-
-    prepared_data <- redcapAPI::castForImport(
-      data = import_data,
-      rcon = frontend_connection,
-      fields = cast_fields
-    )
-
-    invalid_data <- redcapAPI::reviewInvalidRecords(prepared_data, quiet = TRUE)
-    if (!is.null(invalid_data) && nrow(invalid_data)) {
-      etlutils::writeDebugExcelFile(invalid_data, paste0("db2frontend_", table_name, "_invalid_for_redcap_import"))
-      warning("Invalid values while preparing REDCap import for table '", table_name, "'.", call. = FALSE)
-    }
-
-    return(prepared_data)
+    # Keep the historic import semantics: db2frontend hands raw values to REDCap and lets
+    # importRecords() perform only its own import checks. In particular, dynamic REDCap SQL
+    # fields must not be pre-cast because castForImport() can turn valid pipeline IDs into NA.
+    attr(import_data, "castForImport") <- TRUE
+    return(import_data)
   }
 
   importRecordsToRedcap <- function(table_name, import_data, overwriteBehavior = "normal") {
