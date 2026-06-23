@@ -1,6 +1,20 @@
 # Environment for saving everything but the connections
 .lib_db_env <- new.env()
 
+#' Initialize a module database context
+#'
+#' Loads the database connection settings for one module into the internal
+#' `etlutils` database environment. Unlike [initModuleConstants()], this does
+#' not assign module configuration values to `.GlobalEnv`.
+#'
+#' @param module_name Character. Base name used to select the module-specific
+#' database user and schemas from the database configuration.
+#' @param path_to_db_toml Character. Path to the database configuration TOML.
+#' @param log Logical. Whether database operations should be logged.
+#'
+#' @return No return value, called for its side effect.
+#'
+#' @export
 dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
   constants <- initConstants(path_to_db_toml, envir = .lib_db_env)
   module_name_upper <- toupper(module_name)
