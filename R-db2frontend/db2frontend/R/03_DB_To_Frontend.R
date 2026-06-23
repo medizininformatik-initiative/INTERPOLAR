@@ -34,6 +34,68 @@ importDB2Redcap <- function() {
     }
   }
 
+  redcap_import_field_names <- NULL
+
+  moveRecordIdToFirstColumn <- function(import_data) {
+    if ("record_id" %in% names(import_data)) {
+      return(import_data[, c("record_id", setdiff(names(import_data), "record_id")), with = FALSE])
+    }
+    return(import_data)
+  }
+
+  prepareRedcapImport <- function(table_name, import_data) {
+    if (is.null(redcap_import_field_names)) {
+      redcap_import_field_names <<- getRedcapFieldNames(frontend_connection)
+    }
+
+    import_data <- moveRecordIdToFirstColumn(import_data)
+
+    system_fields <- c(
+      "redcap_event_name",
+      "redcap_data_access_group",
+      "redcap_repeat_instrument",
+      "redcap_repeat_instance",
+      "redcap_survey_identifier"
+    )
+    cast_fields <- intersect(names(import_data), redcap_import_field_names)
+    cast_fields <- setdiff(cast_fields, c(system_fields, grep("_complete$", cast_fields, value = TRUE)))
+
+    prepared_data <- redcapAPI::castForImport(
+      data = import_data,
+      rcon = frontend_connection,
+      fields = cast_fields
+    )
+
+    invalid_data <- redcapAPI::reviewInvalidRecords(prepared_data, quiet = TRUE)
+    if (!is.null(invalid_data) && nrow(invalid_data)) {
+      etlutils::writeDebugExcelFile(invalid_data, paste0("db2frontend_", table_name, "_invalid_for_redcap_import"))
+      warning("Invalid values while preparing REDCap import for table '", table_name, "'.", call. = FALSE)
+    }
+
+    return(prepared_data)
+  }
+
+  importRecordsToRedcap <- function(table_name, import_data, overwriteBehavior = "normal") {
+    prepared_data <- prepareRedcapImport(table_name, import_data)
+    import_result <- redcapAPI::importRecords(
+      rcon = frontend_connection,
+      data = prepared_data,
+      overwriteBehavior = overwriteBehavior,
+      returnContent = "ids"
+    )
+
+    import_count <- if (is.data.frame(import_result)) nrow(import_result) else length(import_result)
+    message("REDCap import for table '", table_name, "' returned ", import_count, " record id(s).")
+
+    import_result_log <- if (is.data.frame(import_result)) {
+      import_result
+    } else {
+      data.table::data.table(import_result = as.character(import_result))
+    }
+    etlutils::writeDebugExcelFile(import_result_log, paste0("db2frontend_", table_name, "_redcap_import_result"))
+    return(import_result)
+  }
+
   etlutils::runLevel2Line("Update frontend data from DB", {
 
     # Connect to REDCap
@@ -88,14 +150,7 @@ importDB2Redcap <- function() {
           mrp_instances[, retrolektive_mrpbewertung_complete := "Unverified"]
 
           # Import the cleared instances back to REDCap
-          return_count <- suppressWarnings(
-            redcapAPI::importRecords(
-              rcon = frontend_connection,
-              data = mrp_instances,
-              overwriteBehavior = "overwrite",
-              returnContent = "count"
-            )
-          )
+          return_ids <- importRecordsToRedcap("retrolektive_mrpbewertung_cleared", mrp_instances, overwriteBehavior = "overwrite")
         }
       }
     }
@@ -190,7 +245,7 @@ importDB2Redcap <- function() {
   etlutils::runLevel2Line("Import data into frontend", {
     # Import data into REDCap
     for (table_name in names(data_to_import)) {
-      tryRedcap(function() suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]])))
+      tryRedcap(function() importRecordsToRedcap(table_name, data_to_import[[table_name]]))
     }
   })
 
@@ -235,7 +290,7 @@ importDB2Redcap <- function() {
     etlutils::runLevel2Line("Write data to Redcap", {
       # Set the data access groups in Redcap
       etlutils::writeDebugExcelFile(record_ids_with_data_access_group, "db2frontend_record_ids_with_data_access_group")
-      suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group))
+      importRecordsToRedcap("record_ids_with_data_access_group", record_ids_with_data_access_group)
     })
 
   })

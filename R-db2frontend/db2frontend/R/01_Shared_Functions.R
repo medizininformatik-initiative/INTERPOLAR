@@ -102,45 +102,26 @@ deleteRedcapContent <- function() {
   }
 }
 
-#' Get all actual field names from REDCap records, including *_complete fields
+#' Get all importable REDCap field names, including *_complete fields
 #'
 #' @param rcon A REDCap connection object from redcapAPI
 #'
-#' @return A character vector of all field names present in actual REDCap records
+#' @return A character vector of REDCap field names used for imports
 #'
 getRedcapFieldNames <- function(rcon) {
 
-  # Export data to retrieve full field structure, if no data found empty data frame is returned
-  # Is this case warning messages are suppressed
-  data_sample <- suppressWarnings(redcapAPI::exportRecords(
-    rcon = rcon,
-    rawOrLabel = "raw",
-    exportSurveyFields = TRUE,
-    exportDataAccessGroups = TRUE,
-    includeRepeatHeaders = TRUE
-  ))
+  field_names <- redcapAPI::exportFieldNames(rcon)$export_field_name
+  metadata <- redcapAPI::exportMetaData(rcon)
+  calc_field_names <- metadata$field_name[metadata$field_type == "calc"]
+  field_names <- setdiff(field_names, calc_field_names)
 
-  # Convert to data.table
-  data_sample <- data.table::as.data.table(data_sample)
+  instruments <- redcapAPI::exportInstruments(rcon)$instrument_name
 
-  # Define required columns
-  required_cols <- c("redcap_repeat_instrument",
-                     "redcap_repeat_instance",
-                     "redcap_data_access_group")
-
-  # Add one "_complete" column per instrument
-  instruments <- suppressWarnings(redcapAPI::exportInstruments(rcon))
-  complete_cols <- paste0(instruments$instrument_name, "_complete")
-
-  # Combine all required columns
-  all_required_cols <- c(required_cols, complete_cols)
-
-  # Add any missing columns to data_sample
-  for (col in all_required_cols) {
-    if (!col %in% names(data_sample)) {
-      data_sample[ , (col) := character()]
-    }
-  }
-
-  return(names(data_sample))
+  return(unique(c(
+    field_names,
+    "redcap_repeat_instrument",
+    "redcap_repeat_instance",
+    "redcap_data_access_group",
+    paste0(instruments, "_complete")
+  )))
 }
