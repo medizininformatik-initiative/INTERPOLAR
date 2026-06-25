@@ -261,6 +261,16 @@ DATA_IMPORT_FHIR_PIDS = []
 #DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
 
 
+[toolchain]
+
+#################
+# If true, a normal full toolchain start checks for cases from interrupted
+# previous runs. Missing cases are recovered once before the current run starts.
+# Set this to false to skip the additional recovery run.
+#################
+RECOVER_INCOMPLETE_TOOLCHAIN_RUNS = true
+
+
 [database]
 
 PATH_TO_DB_CONFIG_TOML = "./cds_hub_db_config.toml"

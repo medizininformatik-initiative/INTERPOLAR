@@ -79,6 +79,7 @@ resetMemory <- function(...) {
     "DEBUG_DATA_IMPORT_RUN_ONLY_CDS2DB",
 
     "CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1",
+    "RECOVER_INCOMPLETE_TOOLCHAIN_RUNS",
 
     "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS",
 
@@ -217,7 +218,8 @@ tryCatch(
     args <- commandArgs(trailingOnly = TRUE)
     ignore_newer_db_version <- "--ignoreNewerDBVersion" %in% args
 
-    recovery_enabled <- !etlutils::isProcess("DataImport") &&
+    recovery_enabled <- !etlutils::isDefinedAndFalse("RECOVER_INCOMPLETE_TOOLCHAIN_RUNS") &&
+      !etlutils::isProcess("DataImport") &&
       !delete_db_and_redcap &&
       !exists("DEBUG_START_SINGLE_MODULE")
     if (recovery_enabled) {

@@ -122,6 +122,21 @@ FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 #################
 #FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS = "&_summary=count"
 
+#################
+# We need this parameter only to calculate missing partOf relationships in Encounter.
+#
+# The following filter targets Encounter.identifier.system.
+# If not all Encounter resources of the 3 levels are linked to each other via
+# partOf relationships, they must at least have a common identifier (all
+# absolutely the same), as specified in the Implementation Guide.
+# They can all be found here using this common identifier.
+#
+# It is *not* a pattern. It must be specified here as an exact string.
+# If there is not such an identifier (system) in your data, leave this parameter empty.
+# But it must be defined in any case!
+#################
+COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+
 
 [retrieve.patient_id_filtering]
 
@@ -170,6 +185,16 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 # This mechanism is also used for running integration tests.
 #################
 #DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
+
+
+[toolchain]
+
+#################
+# If true, a normal full toolchain start checks for cases from interrupted
+# previous runs. Missing cases are recovered once before the current run starts.
+# Set this to false to skip the additional recovery run.
+#################
+RECOVER_INCOMPLETE_TOOLCHAIN_RUNS = true
 
 
 [database]

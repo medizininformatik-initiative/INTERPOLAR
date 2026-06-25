@@ -151,6 +151,9 @@ fhirdbGetQueryList <- function(collection, remove_ref_type = FALSE, return_NA_if
 fhirdbGetIncompleteCasesPidsPerWard <- function() {
   on.exit(dbCloseAllConnections(), add = TRUE)
 
+  # Find historical pids_per_ward entries whose main encounter has not reached
+  # fall_fe yet. Return at most one missing encounter per patient so the next
+  # full toolchain start can recover unfinished work without looping.
   query <- paste0(
     "WITH incomplete_candidates AS (\n",
     "  SELECT DISTINCT\n",
