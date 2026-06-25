@@ -39,7 +39,10 @@ TECHNICAL_COLUMNS = [
 # table_name is the normalized table name without view prefix/postfix, for example
 # observation, patient_fe, fall_fe, or pids_per_ward.
 GROUPING_OVERRIDES = [
+  "patient|pat_id|pat_id|",
+  "fall_fe|fall_fhir_enc_id|record_id|fall_id",
   "pids_per_ward|encounter_id|patient_id|encounter_id",
-  "patient_fe|pat_id|record_id|",
-  "fall_fe|fall_id|record_id|fall_id"
+  "risikofaktor_fe|record_id|record_id|",
+  "trigger_fe|record_id|record_id|",
+  "medikationsanalyse_fe|meda_id|record_id|fall_meda_id"
 ]

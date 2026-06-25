@@ -6,7 +6,7 @@ test_that("database quality analysis metadata is normalized from view columns", 
     excluded_view_patterns = "_raw_",
     additional_views = "v_pids_per_ward",
     technical_columns = c("input_datetime", "last_version_date", "id"),
-    grouping_overrides = parseDatabaseQualityAnalysisGroupingOverrides(character()),
+    grouping_overrides = parseGroupingOverrides(character()),
     count_batch_size = 100
   )
 
@@ -39,7 +39,7 @@ test_that("database quality analysis metadata is normalized from view columns", 
     column_description = c("primary", "raw", "id (varchar)", "technical", "technical", "technical", "raw", "", "")
   )
 
-  result <- normalizeDatabaseQualityAnalysisMetadata(metadata, config)
+  result <- normalizeMetadata(metadata, config)
 
   expect_equal(result$TABLE_NAME, c("observation", "pids_per_ward"))
   expect_equal(result$TABLE_FAMILY, c("FHIR", "Other"))
@@ -48,7 +48,7 @@ test_that("database quality analysis metadata is normalized from view columns", 
 })
 
 test_that("database quality analysis column descriptions remove only trailing type suffixes", {
-  result <- normalizeDatabaseQualityAnalysisColumnDescription(c(
+  result <- normalizeColumnDescription(c(
     "Observation.component (FHIR) (varchar)",
     "effectiveDateTime (timestamp)",
     "value (double precision)",
@@ -66,7 +66,7 @@ test_that("database quality analysis column descriptions remove only trailing ty
 })
 
 test_that("database quality analysis grouping overrides are parsed", {
-  result <- parseDatabaseQualityAnalysisGroupingOverrides(c(
+  result <- parseGroupingOverrides(c(
     "patient_fe|pat_id|record_id|",
     "fall_fe|fall_id|record_id|fall_id"
   ))
@@ -89,7 +89,7 @@ test_that("database quality analysis config can skip datetime columns by command
   )
 
   results <- lapply(command_arguments, function(arguments) {
-    getDatabaseQualityAnalysisConfig(envir = envir, command_arguments = arguments)
+    getConfig(envir = envir, command_arguments = arguments)
   })
 
   expect_true(all(vapply(results, function(result) {
@@ -98,22 +98,142 @@ test_that("database quality analysis config can skip datetime columns by command
 })
 
 test_that("database quality analysis grouping columns are inferred by convention", {
-  config <- list(grouping_overrides = parseDatabaseQualityAnalysisGroupingOverrides(character()))
+  config <- list(grouping_overrides = parseGroupingOverrides(character()))
   table_metadata <- data.table::data.table(
     TABLE_NAME = "observation",
     COLUMN_NAME = c(
       "obs_id",
       "obs_patient_ref",
-      "obs_encounter_calculated_ref",
+      "obs_encounter_ref",
       "obs_value"
     )
   )
 
-  result <- inferDatabaseQualityAnalysisGroupingColumns(table_metadata, config)
+  result <- inferGroupingColumns(table_metadata, config)
 
   expect_equal(result[["resource_id"]], "obs_id")
   expect_equal(result[["pid"]], "obs_patient_ref")
-  expect_equal(result[["case_id"]], "obs_encounter_calculated_ref")
+  expect_equal(result[["case_id"]], "obs_encounter_ref")
+})
+
+test_that("database quality analysis grouping columns use override for FHIR patient", {
+  config <- list(grouping_overrides = parseGroupingOverrides("patient|pat_id|pat_id|"))
+  table_metadata <- data.table::data.table(
+    TABLE_NAME = "patient",
+    COLUMN_NAME = c(
+      "pat_id",
+      "pat_birthdate"
+    )
+  )
+
+  result <- inferGroupingColumns(table_metadata, config)
+
+  expect_equal(result[["resource_id"]], "pat_id")
+  expect_equal(result[["pid"]], "pat_id")
+  expect_true(is.na(result[["case_id"]]))
+})
+
+test_that("database quality analysis grouping columns allow FHIR tables without PID", {
+  config <- list(grouping_overrides = parseGroupingOverrides(character()))
+  table_metadata <- data.table::data.table(
+    TABLE_NAME = "location",
+    COLUMN_NAME = c(
+      "loc_id",
+      "loc_name"
+    )
+  )
+
+  result <- inferGroupingColumns(table_metadata, config)
+
+  expect_equal(result[["resource_id"]], "loc_id")
+  expect_true(is.na(result[["pid"]]))
+  expect_true(is.na(result[["case_id"]]))
+})
+
+test_that("database quality analysis grouping columns infer frontend IDs by convention", {
+  config <- list(grouping_overrides = parseGroupingOverrides(character()))
+  table_metadata <- data.table::data.table(
+    TABLE_NAME = "mrpdokumentation_validierung_fe",
+    COLUMN_NAME = c(
+      "record_id",
+      "mrp_id",
+      "mrp_score"
+    )
+  )
+
+  result <- inferGroupingColumns(table_metadata, config)
+
+  expect_equal(result[["resource_id"]], "mrp_id")
+  expect_equal(result[["pid"]], "record_id")
+  expect_true(is.na(result[["case_id"]]))
+})
+
+test_that("database quality analysis grouping columns use override for frontend case IDs", {
+  config <- list(grouping_overrides = parseGroupingOverrides("fall_fe|fall_id|record_id|fall_id"))
+  table_metadata <- data.table::data.table(
+    TABLE_NAME = "fall_fe",
+    COLUMN_NAME = c(
+      "record_id",
+      "fall_id",
+      "fall_status"
+    )
+  )
+
+  result <- inferGroupingColumns(table_metadata, config)
+
+  expect_equal(result[["resource_id"]], "fall_id")
+  expect_equal(result[["pid"]], "record_id")
+  expect_equal(result[["case_id"]], "fall_id")
+})
+
+test_that("database quality analysis grouping columns infer frontend patient IDs by convention", {
+  config <- list(grouping_overrides = parseGroupingOverrides(character()))
+  table_metadata <- data.table::data.table(
+    TABLE_NAME = "patient_fe",
+    COLUMN_NAME = c(
+      "record_id",
+      "pat_id",
+      "pat_birth_date"
+    )
+  )
+
+  result <- inferGroupingColumns(table_metadata, config)
+
+  expect_equal(result[["resource_id"]], "pat_id")
+  expect_equal(result[["pid"]], "record_id")
+  expect_true(is.na(result[["case_id"]]))
+})
+
+test_that("database quality analysis grouping columns require frontend PID convention", {
+  config <- list(grouping_overrides = parseGroupingOverrides(character()))
+  table_metadata <- data.table::data.table(
+    TABLE_NAME = "patient_fe",
+    COLUMN_NAME = c(
+      "pat_id",
+      "pat_birth_date"
+    )
+  )
+
+  expect_error(
+    inferGroupingColumns(table_metadata, config),
+    "Could not infer pid grouping column for table patient_fe"
+  )
+})
+
+test_that("database quality analysis grouping columns validate override columns", {
+  config <- list(grouping_overrides = parseGroupingOverrides("patient_fe|missing_id|record_id|"))
+  table_metadata <- data.table::data.table(
+    TABLE_NAME = "patient_fe",
+    COLUMN_NAME = c(
+      "record_id",
+      "pat_id"
+    )
+  )
+
+  expect_error(
+    inferGroupingColumns(table_metadata, config),
+    "Configured grouping column 'missing_id' for resource_id does not exist in table patient_fe"
+  )
 })
 
 test_that("database quality analysis count query uses non-empty values and quoted identifiers", {
@@ -125,7 +245,7 @@ test_that("database quality analysis count query uses non-empty values and quote
   )
   grouping_columns <- c(resource_id = "obs_id", pid = "obs_patient_ref", case_id = NA_character_)
 
-  result <- buildDatabaseQualityAnalysisCountQuery(
+  result <- buildCountQuery(
     table_metadata,
     grouping_columns,
     data_columns = c("obs_value")
@@ -146,7 +266,7 @@ test_that("database quality analysis count query avoids text casts for non-text 
   )
   grouping_columns <- c(resource_id = "obs_id", pid = NA_character_, case_id = NA_character_)
 
-  result <- buildDatabaseQualityAnalysisCountQuery(
+  result <- buildCountQuery(
     table_metadata,
     grouping_columns,
     data_columns = c("obs_value_quantity", "obs_effective_datetime")
@@ -162,7 +282,7 @@ test_that("database quality analysis count query avoids text casts for non-text 
 test_that("database quality analysis counts are mapped back to normalized result rows", {
   config <- list(
     count_batch_size = 100,
-    grouping_overrides = parseDatabaseQualityAnalysisGroupingOverrides(character()),
+    grouping_overrides = parseGroupingOverrides(character()),
     view_prefix = "v_",
     value_import_datetime_column = "input_datetime",
     include_value_datetime_columns = TRUE
@@ -181,7 +301,7 @@ test_that("database quality analysis counts are mapped back to normalized result
     data.table::as.data.table(as.list(stats::setNames(seq_along(aliases), aliases)))
   }
 
-  result <- calculateDatabaseQualityAnalysisCounts(metadata, config, query_fun = query_fun)
+  result <- calculateCounts(metadata, config, query_fun = query_fun)
 
   expect_equal(names(result)[1:9], c(
     "TABLE_NAME",
@@ -207,7 +327,7 @@ test_that("database quality analysis counts are mapped back to normalized result
 test_that("database quality analysis counts can skip value datetime columns", {
   config <- list(
     count_batch_size = 100,
-    grouping_overrides = parseDatabaseQualityAnalysisGroupingOverrides(character()),
+    grouping_overrides = parseGroupingOverrides(character()),
     view_prefix = "v_",
     value_import_datetime_column = "input_datetime",
     include_value_datetime_columns = FALSE
@@ -233,7 +353,7 @@ test_that("database quality analysis counts can skip value datetime columns", {
     data.table::as.data.table(as.list(stats::setNames(seq_along(aliases), aliases)))
   }
 
-  result <- calculateDatabaseQualityAnalysisCounts(
+  result <- calculateCounts(
     metadata,
     config,
     query_fun = query_fun,
@@ -269,7 +389,7 @@ test_that("database quality analysis date range query uses historical views with
     )
   )
 
-  result <- buildDatabaseQualityAnalysisValueDateRangeQuery(
+  result <- buildValueDateRangeQuery(
     table_metadata,
     history_metadata,
     config,
@@ -303,7 +423,7 @@ test_that("database quality analysis metadata sheet contains neutral run metadat
     count_batch_size = 100,
     include_value_datetime_columns = FALSE,
     value_import_datetime_column = "input_datetime",
-    grouping_overrides = parseDatabaseQualityAnalysisGroupingOverrides(c("patient_fe|pat_id|record_id|"))
+    grouping_overrides = parseGroupingOverrides(c("patient_fe|pat_id|record_id|"))
   )
   result <- data.table::data.table(
     TABLE_FAMILY = c("FHIR", "Frontend"),
@@ -321,7 +441,7 @@ test_that("database quality analysis metadata sheet contains neutral run metadat
     server_encoding = "UTF8"
   )
 
-  sheet <- createDatabaseQualityAnalysisMetadataSheet(
+  sheet <- createMetadataSheet(
     result,
     source_metadata,
     config,
@@ -359,7 +479,7 @@ test_that("database quality analysis excel sheets only contain report columns", 
     check.names = FALSE
   )
 
-  sheets <- splitDatabaseQualityAnalysisResultForExcel(result)
+  sheets <- splitResultForExcel(result)
 
   expect_named(sheets, "FHIR")
   expect_equal(names(sheets$FHIR), c(
@@ -395,7 +515,7 @@ test_that("database quality analysis excel sheets hide FHIR-only meta dates for 
     check.names = FALSE
   )
 
-  sheets <- splitDatabaseQualityAnalysisResultForExcel(result)
+  sheets <- splitResultForExcel(result)
 
   expect_true(all(c(
     "first value meta last updated",
@@ -433,7 +553,7 @@ test_that("database quality analysis excel sheets leave zero counts empty", {
     check.names = FALSE
   )
 
-  sheets <- splitDatabaseQualityAnalysisResultForExcel(result)
+  sheets <- splitResultForExcel(result)
 
   expect_true(is.na(sheets$FHIR[["count per resource_id"]][[1]]))
   expect_equal(sheets$FHIR[["count per PID"]][[1]], 1L)
@@ -456,7 +576,7 @@ test_that("database quality analysis excel sheets visually group table rows", {
     check.names = FALSE
   )
 
-  formatted_sheet <- formatDatabaseQualityAnalysisSheetForExcel(sheet)
+  formatted_sheet <- formatSheetForExcel(sheet)
 
   expect_equal(formatted_sheet$TABLE_NAME, c("condition", NA_character_, NA_character_, "observation", NA_character_))
   expect_equal(formatted_sheet$COLUMN_NAME, c("con_id", "con_code", NA_character_, "obs_id", NA_character_))
@@ -506,7 +626,7 @@ test_that("database quality analysis excel writer uses readable column widths", 
     )
   )
 
-  file_name <- writeDatabaseQualityAnalysisExcelFile(
+  file_name <- writeExcelFile(
     sheets,
     "Database_Quality_Analysis_Test",
     timestamp = as.POSIXct("2026-06-19 08:00:02", tz = "UTC")
