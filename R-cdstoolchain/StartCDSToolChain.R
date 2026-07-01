@@ -226,9 +226,16 @@ tryCatch(
       etlutils::dbInitModuleContext(
         module_name = "dataprocessor",
         path_to_db_toml = config_dataprocessor[["PATH_TO_DB_CONFIG_TOML"]],
-        log = FALSE
+        log = TRUE
       )
       recovery_pids <- etlutils::fhirdbGetIncompleteCasesPidsPerWard()
+      # Normalize legacy/raw query results to the ward-based structure expected by cds2db.
+      if (data.table::is.data.table(recovery_pids)) {
+        recovery_pids <- split(
+          recovery_pids[, c("patient_id", "encounter_id"), with = FALSE],
+          recovery_pids[["ward_name"]]
+        )
+      }
       if (length(recovery_pids)) {
         # Run at most one recovery pass per start. Additional missing cases for the
         # same patient are picked up by a later regular toolchain start.
