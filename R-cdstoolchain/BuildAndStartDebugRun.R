@@ -34,6 +34,26 @@ logInfo <- function(...) {
   cat(paste0("[", format(Sys.time(), "%H:%M:%S"), "] ", paste0(...), "\n"))
 }
 
+install_from_rscript <- function(tarball) {
+
+  rscript <- file.path(R.home("bin"), "Rscript")
+
+  ncpus <- max(1L, parallel::detectCores(logical = TRUE) - 1L)
+
+  script <- tempfile(fileext = ".R")
+
+  writeLines(
+    sprintf(
+      "install.packages(%s, repos = NULL, type = 'source', Ncpus = %d)",
+      shQuote(normalizePath(tarball, winslash = "/")),
+      ncpus
+    ),
+    script
+  )
+
+  system2(rscript, script)
+}
+
 buildAndInstall <- function(pkg_dir) {
   # Build source tarball and install it (like R CMD INSTALL)
   withr::with_dir(pkg_dir, {
@@ -57,12 +77,11 @@ buildAndInstall <- function(pkg_dir) {
     tarball <- pkgbuild::build(path = ".", dest_path = tempdir(), binary = FALSE)
 
     logInfo("  • Installing from ", basename(tarball))
-    install.packages(
-      tarball,
-      repos = NULL,
-      type = "source",
-      Ncpus = max(1L, parallel::detectCores(logical = TRUE) - 1L)
-    )
+
+    cat("Tarball:", tarball, "\n")
+    cat("Exists :", file.exists(tarball), "\n")
+
+    install_from_rscript(tarball)
   })
 }
 
