@@ -379,6 +379,10 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
   read_pids_from_file <- exists("DEBUG_PATH_TO_RAW_RDATA_FILES")
 
   if (read_pids_from_file) {
+    path_to_PID_list_file <- fhircrackr::paste_paths(
+      DEBUG_PATH_TO_RAW_RDATA_FILES,
+      "pids_per_ward_raw.RData"
+    )
     etlutils::runLevel3(paste("Get Patient IDs by file from path ", DEBUG_PATH_TO_RAW_RDATA_FILES), {
       file_data <- loadInitialPatientsAndEncountersFromFiles(DEBUG_PATH_TO_RAW_RDATA_FILES)
       pids_splitted_by_ward <- split(file_data$pids_per_ward[, !("ward_name"), with = FALSE], file_data$pids_per_ward$ward_name)
