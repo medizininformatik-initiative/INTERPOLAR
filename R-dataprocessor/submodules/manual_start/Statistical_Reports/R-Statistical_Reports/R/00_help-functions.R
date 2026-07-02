@@ -396,6 +396,7 @@ PivotWiderTwoSystems <- function(data, system1, codes1, system2, codes2, var_cod
     # Pivot wider
     dplyr::select(-dplyr::all_of(c(var_code, var_system))) |>
     dplyr::group_by(dplyr::across(-dplyr::all_of(c(var_new_system_1, var_new_system_2)))) |>
+    # TODO: make proper test for multiple values situation --------------
     dplyr::summarise(
       !!var_new_system_1 := {
         vals <- stats::na.omit(.data[[var_new_system_1]])
@@ -1343,6 +1344,7 @@ CheckMissingFallIdInFallFe <- function(fall_fe_table) {
 # DEBUG Section ----------------------------------------------------------
 
 DEBUG_TEST_REPORTING_WARNINGS <- FALSE
+# DEBUG_TEST_REPORTING_WARNINGS <- TRUE
 
 if (DEBUG_TEST_REPORTING_WARNINGS) {
   createPatientDataWarningsSituations <- function(patient_table) {

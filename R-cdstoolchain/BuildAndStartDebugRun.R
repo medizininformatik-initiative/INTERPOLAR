@@ -35,7 +35,6 @@ logInfo <- function(...) {
 }
 
 install_from_rscript <- function(tarball) {
-
   rscript <- file.path(R.home("bin"), "Rscript")
 
   ncpus <- max(1L, parallel::detectCores(logical = TRUE) - 1L)
