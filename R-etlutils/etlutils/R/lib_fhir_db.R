@@ -136,6 +136,30 @@ fhirdbGetQueryList <- function(collection, remove_ref_type = FALSE, return_NA_if
   paste0("(", paste0("'", collection, "'", collapse = ", "), ")")
 }
 
+#' Split Incomplete Cases by Ward
+#'
+#' This function takes a data frame of incomplete cases and splits them into a
+#' named list by ward. Each element of the list is a data table containing unique
+#' patient_id and encounter_id pairs for that ward.
+#'
+#' @param incomplete_cases A data frame containing incomplete cases with columns:
+#'   ward_name, patient_id, and encounter_id.
+#'
+fhirdbSplitIncompleteCasesByWard <- function(incomplete_cases) {
+  incomplete_cases <- data.table::as.data.table(incomplete_cases)
+  if (!nrow(incomplete_cases)) {
+    return(list())
+  }
+
+  # Convert the query result into the named ward list expected by cds2db and
+  # remove duplicate patient/encounter pairs within each ward.
+  pids_splitted_by_ward <- split(
+    incomplete_cases[, .(patient_id, encounter_id)],
+    incomplete_cases$ward_name
+  )
+  lapply(pids_splitted_by_ward, unique)
+}
+
 #' Get cases from interrupted toolchain runs
 #'
 #' Finds cases that occurred in a historical `pids_per_ward` import but have no
@@ -196,17 +220,4 @@ fhirdbGetIncompleteCasesPidsPerWard <- function() {
   )
 
   fhirdbSplitIncompleteCasesByWard(incomplete_cases)
-}
-
-fhirdbSplitIncompleteCasesByWard <- function(incomplete_cases) {
-  incomplete_cases <- data.table::as.data.table(incomplete_cases)
-  if (!nrow(incomplete_cases)) {
-    return(list())
-  }
-
-  pids_splitted_by_ward <- split(
-    incomplete_cases[, .(patient_id, encounter_id)],
-    incomplete_cases$ward_name
-  )
-  lapply(pids_splitted_by_ward, unique)
 }
