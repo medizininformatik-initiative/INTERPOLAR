@@ -86,10 +86,10 @@
 createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
                                     REPORT_PERIOD_END = as.character(Sys.Date()),
                                     WRITE_TABLE_LOCAL = FALSE) {
-  # TEST ANFANG--------------------------------------------------------------------
+  # CONFIG LOCAL ANFANG--------------------------------------------------------------------
   # WRITE_TABLE_LOCAL <- TRUE
   # REPORT_PERIOD_END <- "2026-03-27"
-  # TEST ENDE---------------------------------------------------------------------
+  # CONFIG LOCAL ENDE---------------------------------------------------------------------
 
   if (!interactive()) {
     named_args <- parseNamedArgs()

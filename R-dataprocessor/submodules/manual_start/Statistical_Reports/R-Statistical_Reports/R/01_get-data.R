@@ -481,7 +481,7 @@ getFallFeData <- function(lock_id, table_name) {
 
   if (
     any(is.na(fall_fe_table$actual_fall_studienphase)) ||
-      any(fall_fe_table$actual_fall_studienphase == "PhaseBTest")
+    any(fall_fe_table$actual_fall_studienphase == "PhaseBTest")
   ) {
     warning("The study phase from fall_fe contains NA or PhaseBTest values. These will be replaced with 'PhaseA'.
             For manual check compare fall_studienphase and actual_fall_studienphase in frontend_table in outpulLocal.")
