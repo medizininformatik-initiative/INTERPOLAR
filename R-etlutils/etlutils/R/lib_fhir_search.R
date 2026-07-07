@@ -4,34 +4,37 @@
 #'
 #' @export
 fhirsearchRefreshToken <- function() {
-  # Refresh FHIR-Server authentication Token
-  #
-  # This function refreshes the FHIR-Server authentication token by making a request to the specified token refresh URL.
-  #
-  # @return A character string representing the refreshed FHIR-Server authentication token.
-  #
+  if (!isDefinedAndNotEmpty("FHIR_TOKEN", envir = .GlobalEnv)) {
+    return(invisible(FALSE))
+  }
+
+  refresh_parameters <- c(
+    "FHIR_TOKEN_REFRESH_URL",
+    "FHIR_TOKEN_REFRESH_USER",
+    "FHIR_TOKEN_REFRESH_PASSWORD"
+  )
+  if (!all(vapply(refresh_parameters, isDefinedAndNotEmpty, logical(1), envir = .GlobalEnv))) {
+    return(invisible(FALSE))
+  }
+
   fhirsearchRefreshTokenInternal <- function() {
-    if (FHIR_TOKEN_REFRESH_URL == "" || FHIR_TOKEN_REFRESH_USER == "" || FHIR_TOKEN_REFRESH_PASSWORD == "") {
-      return ("")
-    }
-    # Token call
     response <- httr::GET(
-      url = FHIR_TOKEN_REFRESH_URL,
+      url = get("FHIR_TOKEN_REFRESH_URL", envir = .GlobalEnv),
       httr::authenticate(
-        user = FHIR_TOKEN_REFRESH_USER,
-        password = FHIR_TOKEN_REFRESH_PASSWORD
+        user = get("FHIR_TOKEN_REFRESH_USER", envir = .GlobalEnv),
+        password = get("FHIR_TOKEN_REFRESH_PASSWORD", envir = .GlobalEnv)
       )
     )
-    # Token as payload
     httr::content(response, as = "text")
   }
 
-  # refresh token, if defined
-  if (FHIR_TOKEN != "") {
-    runLevel3IgnoreError("Refresh FHIR_TOKEN", {
-      FHIR_TOKEN <- fhirsearchRefreshTokenInternal()
-    })
-  }
+  runLevel3IgnoreError("Refresh FHIR_TOKEN", {
+    refreshed_token <- fhirsearchRefreshTokenInternal()
+    if (length(refreshed_token) && nzchar(refreshed_token)) {
+      assign("FHIR_TOKEN", refreshed_token, envir = .GlobalEnv)
+    }
+  })
+  invisible(TRUE)
 }
 
 #' Log Request Details to a File
@@ -196,6 +199,41 @@ fhirsearchAddGlobalParams <- function(parameters = NULL) {
   parameters
 }
 
+getFhirSearchMaxGetRequestLength <- function() {
+  max_length <- if (isDefinedAndNotEmpty("MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS", envir = .GlobalEnv)) {
+    as.integer(get("MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS", envir = .GlobalEnv))
+  } else {
+    2083L
+  }
+  reserve <- if (isDefinedAndNotEmpty("MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE", envir = .GlobalEnv)) {
+    as.integer(get("MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE", envir = .GlobalEnv))
+  } else {
+    300L
+  }
+  max_length - reserve
+}
+
+getFhirSearchMaxEncounterBundles <- function() {
+  if (isDefinedAndNotEmpty("MAX_ENCOUNTER_BUNDLES", envir = .GlobalEnv)) {
+    return(get("MAX_ENCOUNTER_BUNDLES", envir = .GlobalEnv))
+  }
+  Inf
+}
+
+getFhirSearchIdsAtOnce <- function() {
+  if (isDefinedAndNotEmpty("IDS_AT_ONCE", envir = .GlobalEnv)) {
+    return(as.integer(get("IDS_AT_ONCE", envir = .GlobalEnv)))
+  }
+  100L
+}
+
+getFhirSearchMaxCores <- function() {
+  if (isDefinedAndNotEmpty("MAX_CORES", envir = .GlobalEnv)) {
+    return(as.integer(get("MAX_CORES", envir = .GlobalEnv)))
+  }
+  0L
+}
+
 #' Get FHIR Resources by IDs
 #'
 #' This function retrieves FHIR resources from a server based on a list of resource IDs.
@@ -218,10 +256,9 @@ fhirsearchResourcesByIDs <- function(
   parameters   = fhirsearchAddGlobalParams(c()),
   verbose      = 0
 ) {
-
   fhirsearchResourcesByIDs_get <- function(endpoint, resource, ids, parameters = NULL, verbose = 1) {
     # create a string of max_len of given maximal max_ids ids
-    collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS - MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE) {
+    collect_ids_for_request <- function(ids, max_ids = length(ids), max_len = getFhirSearchMaxGetRequestLength()) {
       if (length(ids) < 1) { # if there are no more ids to stringify
         warning(paste0("The length of ids is zero. So no single id is added to the list."))
         list(str = "", n = 0) # return pair of an empty string and number of added ids
@@ -369,7 +406,7 @@ fhirsearchResourcesByIDs <- function(
 #' @export
 fhirsearchDownloadAndCrackResources <- function(
   request,
-  max_bundles,
+  max_bundles = getFhirSearchMaxEncounterBundles(),
   table_description,
   verbose     = VERBOSE,
   ncores = NULL,
@@ -377,7 +414,7 @@ fhirsearchDownloadAndCrackResources <- function(
 ) {
   # Check if ncores is NULL and set it to the maximum available cores
   if (is.null(ncores)) {
-    ncores <- parallelGetAvailableCoreNumber(max_cores = MAX_CORES)
+    ncores <- parallelGetAvailableCoreNumber(max_cores = getFhirSearchMaxCores())
   }
 
   bundles <- executeFHIRSearchVariation(
@@ -422,13 +459,12 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
   resource,
   ids,
   table_description,
-  ids_at_once       = IDS_AT_ONCE,
+  ids_at_once       = getFhirSearchIdsAtOnce(),
   id_param_str,
   last_updated = NA,
   additional_search_parameter = NA,
   verbose = VERBOSE
 ) {
-
   WAIT_TIMES <- 2**(0:7)
   max_trials <- length(WAIT_TIMES)
 
@@ -472,7 +508,7 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
   }
 
   os <- parallelGetOperationSystem()
-  ncores <- parallelGetAvailableCoreNumber(os, max_cores = MAX_CORES)
+  ncores <- parallelGetAvailableCoreNumber(os, max_cores = getFhirSearchMaxCores())
   if (1 < verbose) {
     cat(paste0(
       "OS:    ",
@@ -488,7 +524,7 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
       "\n"
     ))
   }
-  mb <- MAX_ENCOUNTER_BUNDLES # for later restoring
+  mb <- getFhirSearchMaxEncounterBundles() # for later restoring
   MAX_ENCOUNTER_BUNDLES <<- Inf
   run <- 0
   tables <- list()
@@ -516,7 +552,6 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
   resource_name <- table_description@resource
   # if there elements in pkg and at least one of them has a positive length
   while (0 < length(pkg) && any(0 < sapply(pkg, length))) {
-
     requests <- sapply(pkg, is.character)
     bndl_lengths <- if (0 < sum(requests)) {
       sum(sapply(pkg[requests], length))
@@ -695,7 +730,6 @@ fhirsearchResourcesByOwnID <- function(ids, table_description, last_updated = NA
   } else {
     # if there are no IDs -> create an empty table with all needed columns as character columns
     resource_table <- fhirdataCreateResourceTable(table_description)
-
   }
   return(resource_table)
 }
@@ -851,7 +885,6 @@ fhirsearchMultipleResourcesByPID <- function(pids_with_last_updated,
 
     # At this point, both Encounter and Patient resources have been loaded
     if (consider_patient_age && resource_name == "Encounter") {
-
       table_enc <- raw_fhir_resources[["Encounter"]][, c("enc_patient_ref", "enc_period_start")]
       table_pat <- raw_fhir_resources[["Patient"]][, c("pat_id", "pat_birthdate")]
       table_enc <- fhircrackr::fhir_rm_indices(table_enc, index_brackets)
@@ -878,7 +911,6 @@ fhirsearchMultipleResourcesByPID <- function(pids_with_last_updated,
 
       filtered_pids <- lapply(pids_with_last_updated, function(x) x[x %in% min_age_pat_ids])
       pids_with_last_updated <- Filter(function(x) length(x) > 0, filtered_pids)
-
     }
 
     resource_table <- raw_fhir_resources[[resource_name]]

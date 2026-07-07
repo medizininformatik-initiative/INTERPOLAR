@@ -230,7 +230,6 @@ if (exists("TOOLCHAIN_DAY")) {
     pid <- addDrugs("UKB-0001_23", "M04AA51")
     addConditions(pid, "N18.5")
     addObservation(pid, "62238-1", value = 19, unit = "ml/min")
-
   })
 
   # Update the resource_tables list with the modified data tables

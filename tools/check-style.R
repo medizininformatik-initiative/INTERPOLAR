@@ -5,7 +5,7 @@ if (!identical(diff_result, 0L)) {
   stop(
     paste(
       "R code is not formatted.",
-      "Run `Rscript tools/style.R`, review the diff, and commit the changes."
+      "Run `Rscript tools/style-full.R`, review the diff, and commit the changes."
     ),
     call. = FALSE
   )

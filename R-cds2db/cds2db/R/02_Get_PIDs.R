@@ -159,7 +159,6 @@ loadInitialPatientsAndEncountersFromFiles <- function(path_to_files) {
 #' @return A named list where each element is a data.table with `pid` and `encounter_id` for a specific ward.
 #'
 extractPIDsSplittedByWard <- function(encounters, all_wards_filter_patterns) {
-
   pids_splitted_by_ward <- list()
 
   for (i in seq_along(all_wards_filter_patterns)) {
@@ -214,7 +213,6 @@ extractPIDsSplittedByWard <- function(encounters, all_wards_filter_patterns) {
 #' saved as RData files.
 #'
 getEncounters <- function(table_description, current_datetime) {
-
   runLevel3("Get Enconters", {
     # Refresh token, if defined
     etlutils::fhirsearchRefreshToken()
@@ -324,7 +322,6 @@ getEncounters <- function(table_description, current_datetime) {
       table_enc <- etlutils::fhirsearchDownloadAndCrackResources(
         request = request_encounter,
         table_description = table_description,
-        max_bundles = MAX_ENCOUNTER_BUNDLES,
         log_errors  = "enc_error.xml"
       )
 
@@ -334,7 +331,6 @@ getEncounters <- function(table_description, current_datetime) {
           etlutils::formatStringStyle(request_encounter[[1]], fg = 2, underline = TRUE)
         )
       }
-
     })
 
     runLevel3Line("Validate encounter subject reference", {
@@ -380,7 +376,6 @@ getEncounters <- function(table_description, current_datetime) {
 #' @return the relevant patient IDs per ward
 #'
 getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encounter_start_date = NULL, log_result = TRUE) {
-
   read_pids_from_file <- exists("DEBUG_PATH_TO_RAW_RDATA_FILES")
 
   if (read_pids_from_file) {

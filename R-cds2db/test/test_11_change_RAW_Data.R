@@ -182,7 +182,6 @@ if (exists("TOOLCHAIN_DAY")) {
     # ATC und mehrere Diagnosen mit mehreren Zeilen in der nach ICD gesplitteten Drug Disease Liste
     pid <- addDrugs("UKB-0001_12", "L01XX05")
     addConditions(pid, c("D69.58", "D69.61"))
-
   })
 
   # Update the resource_tables list with the modified data tables

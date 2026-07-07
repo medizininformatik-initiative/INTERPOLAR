@@ -88,6 +88,7 @@ resetMemory <- function(...) {
     "start_day",
     "debug_day_index",
     "delete_db_and_redcap",
+    "ignore_newer_db_version",
 
     # Module configurations
     "config_cds2db",
@@ -108,8 +109,10 @@ setDebugPathToConfigToml <- function(module_name) {
 
 shouldStart <- function(module_name) {
   if (!etlutils::isErrorOccured()) {
-    if (!exists("DEBUG_START_SINGLE_MODULE") ||
-      (exists("DEBUG_START_SINGLE_MODULE") && identical(DEBUG_START_SINGLE_MODULE, module_name))) {
+    if (
+      !exists("DEBUG_START_SINGLE_MODULE") ||
+      (exists("DEBUG_START_SINGLE_MODULE") && identical(DEBUG_START_SINGLE_MODULE, module_name))
+    ) {
       resetMemory()
       setDebugPathToConfigToml(module_name)
       return(TRUE)
@@ -122,7 +125,6 @@ shouldStart <- function(module_name) {
 # match the ward names defined in the PHASES_WARD definitions in config_dataprocessor. If there is a
 # mismatch, it throws an error with details about the mismatch.
 validateConfigs <- function() {
-
   args <- commandArgs(trailingOnly = TRUE)
   if ("--ignoreWardNameMismatch" %in% args) {
     etlutils::catWarningMessage("Ignoring ward name mismatch between config_cds2db and config_dataprocessor due to --ignoreWardNameMismatch argument.")

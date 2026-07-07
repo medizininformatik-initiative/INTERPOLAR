@@ -30,7 +30,6 @@ if (interactive()) {
   # delete REDCap
   config_db2frontend <- db2frontend::initFrontend2DB()
   db2frontend::deleteRedcapContent()
-
 }
 
 end_full <- Sys.time()

@@ -25,14 +25,32 @@ Before each commit that touches R code, format the affected R code with the
 repository formatter:
 
 ```sh
-Rscript tools/style.R
+Rscript tools/style-changed.R
 ```
+
+Use `Rscript tools/style-full.R` when you intentionally want to re-run the
+formatter across the complete configured R scope.
+`tools/style-changed.R` includes R files changed against `origin/develop` and
+R files currently changed in the working tree or index.
+
+`tools/style-full.R` can be started from the repository root or from a
+subdirectory. It temporarily switches to the repository root and restores the
+previous working directory afterwards.
+
+For faster RStudio workflows, use `tools/style-current-file.R` for the active
+saved editor file or `tools/style-current-package.R` for the active package
+project. Both wrappers use the same formatter functions as the full repository
+run and restore the previous working directory afterwards.
 
 The formatter uses:
 
 - `.editorconfig` for editor and whitespace rules
 - `tools/styler-style.R` for the `styler` style definition
-- `tools/style.R` as the executable repository formatting command
+- `tools/style.R` for the shared formatter implementation
+- `tools/style-changed.R` for formatting changed R files only
+- `tools/style-full.R` for formatting the complete configured R scope
+- `tools/style-current-file.R` and `tools/style-current-package.R` for smaller
+  RStudio-triggered formatting runs
 
 The formatting covers the repository's R project areas, including the R code
 under `Postgres-cds_hub/R-initcdstoolchain`.
@@ -52,7 +70,7 @@ use the style definition configured in this repository. A dedicated keyboard
 shortcut for the styler addin, for example for the active file, is recommended.
 
 Saving normally in RStudio does not replace the formatting run. Before committing,
-`Rscript tools/style.R` remains the required check.
+`Rscript tools/style-changed.R` remains the expected local formatting run.
 
 ### Checking Style Locally
 

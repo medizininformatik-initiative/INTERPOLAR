@@ -240,7 +240,6 @@ if (exists("TOOLCHAIN_DAY")) {
     # Add Drug in MedicationRequests without Medication
     pid <- addDrugsWithoutMedications("UKB-0001_24", c("J02AC01", "A04AA01"))
     addDrugs(pid, c("J04AB02", "J05AP52"))
-
   })
 
   # Update the resource_tables list with the modified data tables

@@ -111,8 +111,7 @@ source(DEBUG_CHANGE_RAW_DATA_SCRIPT_NAME, local = FALSE)
 countFilledRows <- function(resource_type, column_name) {
   cds2db::init(validate_config = FALSE)
   query <- paste0(
-    "SELECT COUNT(
-      *) AS filled_rows\n",
+    "SELECT COUNT(*) AS filled_rows\n",
     "FROM v_", tolower(resource_type), "_last_version\n",
     "WHERE ", column_name, " IS NOT NULL;\n"
   )

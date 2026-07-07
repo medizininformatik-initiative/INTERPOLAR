@@ -3,6 +3,10 @@ initInternal <- function(module_name, validate_config = TRUE) {
     module_name,
     db_schema_base_name = "db2frontend",
     path_to_toml = "./R-db2frontend/db2frontend_config.toml",
+    defaults = list(
+      VERBOSE = 10,
+      MAX_DIR_COUNT = 5
+    ),
     mandatory_parameters = c(
       "REDCAP_URL",
       "REDCAP_TOKEN",
@@ -134,7 +138,6 @@ startFrontend2DB <- function(ignore_newer_db_version = FALSE, validate_config = 
   finish_message <- etlutils::generateFinishMessage()
 
   etlutils::finalize(finish_message)
-
 }
 
 
@@ -169,7 +172,6 @@ startDB2Frontend <- function(ignore_newer_db_version = FALSE, validate_config = 
     etlutils::runLevel2("Run Import Data from Database to Frontend", {
       importDB2Redcap()
     })
-
   }))
 
   # Reset lock and close all database connections. Do not surround this with runLevelX!
@@ -179,5 +181,4 @@ startDB2Frontend <- function(ignore_newer_db_version = FALSE, validate_config = 
   finish_message <- etlutils::generateFinishMessage()
 
   return(etlutils::finalize(finish_message))
-
 }

@@ -18,9 +18,16 @@ init <- function(validate_config = TRUE) {
   config <- etlutils::initModule(
     "dataprocessor",
     path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
+    defaults = list(
+      VERBOSE = 10,
+      MAX_DIR_COUNT = 5,
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = ".*",
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ".*",
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*",
+      MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+    ),
     mandatory_parameters = c(
       "PHASES_WARD",
-      "MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
       "OBSERVATION_BODY_WEIGHT_SYSTEM",
       "OBSERVATION_BODY_WEIGHT_CODES",
       "OBSERVATION_BODY_HEIGHT_SYSTEM",
@@ -98,7 +105,6 @@ runSubmodules <- function() {
 
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
-
     submodule_name <- basename(dir)
     etlutils::setSubmoduleName(submodule_name)
 
@@ -118,11 +124,9 @@ runSubmodules <- function() {
       if (file.exists(start_script)) {
         source(start_script)
       }
-
     })
 
     etlutils::removeSubmoduleName()
-
   }
 }
 
@@ -134,7 +138,6 @@ startDataprocessorModule <- function(validate_config = TRUE) {
 
 sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
                                           source_submodule_functions = FALSE) {
-
   etlutils::runLevel2("Reset database lock from unfinished previous run", {
     etlutils::dbResetLock()
     etlutils::checkVersion(ignore_newer_db_version)
@@ -165,13 +168,11 @@ processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE)
   startDataprocessorModule(validate_config)
 
   try(etlutils::runLevel1("Run Dataprocessor", {
-
     sourceDataprocessorSubmodules(ignore_newer_db_version)
 
     etlutils::runLevel2("Run dataprocessor submodules", {
       runSubmodules()
     })
-
   }))
 
   # Reset lock and close all database connections. Do not surround this with runLevelX!
@@ -181,5 +182,4 @@ processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE)
   finish_message <- etlutils::generateFinishMessage()
 
   return(etlutils::finalize(finish_message))
-
 }

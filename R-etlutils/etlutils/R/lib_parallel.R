@@ -60,7 +60,6 @@ parallelNormalizeCoreNumber <- function(n_cores, max_cores = 0) {
 #'
 #' @export
 parallelGetAvailableCoreNumber <- function(os = NULL, max_cores = 0) {
-
   if (is.null(os)) {
     os <- parallelGetOperationSystem()
   }

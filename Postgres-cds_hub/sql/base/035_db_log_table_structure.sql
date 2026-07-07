@@ -1,146 +1,227 @@
 -- Script is not automatically generated
 -- Table "log_table_structure" in schema "db_config" - Dokumentation der umgesetzen Änderung der Datenbankstrucktur
 ----------------------------------------------------
-DO
-$$
+DO $$
 BEGIN
-
-IF NOT EXISTS ( -- Zieltabele existiert nicht
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_schema = 'db_config' AND table_name = 'log_table_structure'
-    ) THEN
-
-    CREATE TABLE IF NOT EXISTS db_config.log_table_structure (
-      id SERIAL PRIMARY KEY,
-      object_type VARCHAR, -- TABLE, VIEW, FUNCTION, TRIGGER
-      schema_name VARCHAR, -- Schemaname
-      table_name VARCHAR, -- Tabellen- / View- / Funktions- oder Triggername
-      column_name VARCHAR, -- Spaltenbezeichnung (Tabelle) bzw. Triggereigenschaften
-      data_type VARCHAR,
-      is_nullable VARCHAR,
-      column_default VARCHAR,
-      definition VARCHAR, -- SQL Definition von View, Funktionen bzw. Trigger
-      status VARCHAR, -- A -Aktuell  / H - Historie für Wiederkehrende Änderungen im zeitlichen Verlauf 
-      version_info VARCHAR, -- Dokumentation der Release-Version und des Datums
-      input_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- Time at which the data record is inserted
-      last_change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
-    );
-END IF; -- Zieltabele
-
-----------------------------------------------------
--- Index
-IF EXISTS (
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name = 'current_migration_flag' AND parameter_value='1'
-    ) THEN
-------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------
-        IF EXISTS ( -- Zielspalte existiert
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'status'
-        ) THEN
-            IF EXISTS ( -- INDEX vorhanden
-                SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_status'
-            ) THEN -- aktuellen Stand überprüfen
-                IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                    SELECT 1 FROM pg_indexes
-                    WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                    AND schemaname = 'db_config' AND tablename = 'log_table_structure' AND indexname='idx_db_log_table_structure_status'
-            AND indexdef != 'CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status)'
-                ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-                    ALTER INDEX db_config.idx_db_log_table_structure_status RENAME TO del_db_log_table_structure_status;
-            DROP INDEX IF EXISTS db_config.del_db_log_table_structure_status;
-            CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
-                END IF; -- aktueller Stand
-        ELSE -- (einfach) Neu Anlegen
-            CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
-            END IF; -- Index vorhanden
-        END IF; -- Zielspalte
-
-------------------------------------------------------------------------------------------------
-        IF EXISTS ( -- Zielspalte existiert
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'object_type'
-        ) THEN
-            IF EXISTS ( -- INDEX vorhanden
-                SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_object_type'
-            ) THEN -- aktuellen Stand überprüfen
-                IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                    SELECT 1 FROM pg_indexes
-                    WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                    AND schemaname = 'db_config' AND tablename = 'log_table_structure' AND indexname='idx_db_log_table_structure_object_type'
-            AND indexdef != 'CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type)'
-                ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-                    ALTER INDEX db_config.idx_db_log_table_structure_object_type RENAME TO del_db_log_table_structure_object_type;
-            DROP INDEX IF EXISTS db_config.del_db_log_table_structure_object_typ;
-            CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type);
-                END IF; -- aktueller Stand
-        ELSE -- (einfach) Neu Anlegen
-            CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type);
-            END IF; -- Index vorhanden
-        END IF; -- Zielspalte
-    
-------------------------------------------------------------------------------------------------
-        IF EXISTS ( -- Zielspalte existiert
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'schema_name'
-        ) THEN
-            IF EXISTS ( -- INDEX vorhanden
-                SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_data'
-            ) THEN -- aktuellen Stand überprüfen
-                IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                    SELECT 1 FROM pg_indexes
-                    WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                    AND schemaname = 'db_config' AND tablename = 'log_table_structure' AND indexname='idx_db_log_table_structure_data'
-            AND indexdef != 'CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name)'
-                ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-                    ALTER INDEX db_config.idx_db_log_table_structure_data RENAME TO del_db_log_table_structure_data;
-            DROP INDEX IF EXISTS db_config.del_db_log_table_structure_data;
-            CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name);
-                END IF; -- aktueller Stand
-        ELSE -- (einfach) Neu Anlegen
-            CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name);
-            END IF; -- Index vorhanden
-        END IF; -- Zielspalte
-    
-------------------------------------------------------------------------------------------------
-        IF EXISTS ( -- Zielspalte existiert
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_schema = 'db_config' AND table_name = 'log_table_structure' AND column_name = 'definition'
-        ) THEN
-            IF EXISTS ( -- INDEX vorhanden
-                SELECT 1 FROM pg_indexes where indexname='idx_db_log_table_structure_definition'
-            ) THEN -- aktuellen Stand überprüfen
-                IF EXISTS ( -- INDEX nicht auf akuellen Stand
-                    SELECT 1 FROM pg_indexes
-                    WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
-                    AND schemaname = 'db_config' AND tablename = 'log_table_structure' AND indexname='idx_db_log_table_structure_definition'
-            AND indexdef != 'CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text))'
-                ) THEN -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
-                    ALTER INDEX db_config.idx_db_log_table_structure_definition RENAME TO del_db_log_table_structure_definition;
-            DROP INDEX IF EXISTS db_config.del_db_log_table_structure_definition;
-            CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text));
-                END IF; -- aktueller Stand
-        ELSE -- (einfach) Neu Anlegen
-            CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text));
-            END IF; -- Index vorhanden
-        END IF; -- Zielspalte
-------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------
-
-----------------------------------------------------
--- Berechtigungen
-GRANT INSERT ON db_config.log_table_structure TO db_user;
-GRANT SELECT ON db_config.log_table_structure TO db_user;
-GRANT UPDATE ON db_config.log_table_structure TO db_user;
-
--- Erstelle die Funktion zur Extraktion der Struktur
-----------------------------------------------------
-------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------
-EXECUTE $f$
+    IF NOT EXISTS ( -- Zieltabele existiert nicht
+        SELECT
+            1
+        FROM
+            information_schema.columns
+        WHERE
+            table_schema = 'db_config'
+            AND table_name = 'log_table_structure') THEN
+        CREATE TABLE IF NOT EXISTS db_config.log_table_structure (
+            id serial PRIMARY KEY,
+            object_type varchar, -- TABLE, VIEW, FUNCTION, TRIGGER
+            schema_name varchar, -- Schemaname
+            table_name varchar, -- Tabellen- / View- / Funktions- oder Triggername
+            column_name varchar, -- Spaltenbezeichnung (Tabelle) bzw. Triggereigenschaften
+            data_type varchar,
+            is_nullable varchar,
+            column_default varchar,
+            definition varchar, -- SQL Definition von View, Funktionen bzw. Trigger
+            status varchar, -- A -Aktuell  / H - Historie für Wiederkehrende Änderungen im zeitlichen Verlauf
+            version_info varchar, -- Dokumentation der Release-Version und des Datums
+            input_datetime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Time at which the data record is inserted
+            last_change_timestamp timestamp DEFAULT CURRENT_TIMESTAMP -- Timestamp of last change
+        );
+END IF;
+    -- Zieltabele
+    ----------------------------------------------------
+    -- Index
+    IF EXISTS (
+        SELECT
+            1
+        FROM
+            db_config.db_parameter
+        WHERE
+            parameter_name = 'current_migration_flag'
+            AND parameter_value = '1') THEN
+    ------------------------------------------------------------------------------------------------
+    ------------------------------------------------------------------------------------------------
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT
+            1
+        FROM
+            information_schema.columns
+        WHERE
+            table_schema = 'db_config'
+            AND table_name = 'log_table_structure'
+            AND column_name = 'status') THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT
+                1
+            FROM
+                pg_indexes
+            WHERE
+                indexname = 'idx_db_log_table_structure_status') THEN
+            -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT
+                    1
+                FROM
+                    pg_indexes
+                WHERE
+                    schemaname NOT IN ('pg_catalog', 'information_schema')
+                    AND schemaname = 'db_config'
+                    AND tablename = 'log_table_structure'
+                    AND indexname = 'idx_db_log_table_structure_status'
+                    AND indexdef != 'CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status)') THEN
+                -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db_config.idx_db_log_table_structure_status RENAME TO del_db_log_table_structure_status;
+    DROP INDEX IF EXISTS db_config.del_db_log_table_structure_status;
+    CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
+END IF;
+    -- aktueller Stand
+ELSE
+    -- (einfach) Neu Anlegen
+    CREATE INDEX idx_db_log_table_structure_status ON db_config.log_table_structure USING btree (status);
+END IF;
+    -- Index vorhanden
+END IF;
+    -- Zielspalte
+    ------------------------------------------------------------------------------------------------
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT
+            1
+        FROM
+            information_schema.columns
+        WHERE
+            table_schema = 'db_config'
+            AND table_name = 'log_table_structure'
+            AND column_name = 'object_type') THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT
+                1
+            FROM
+                pg_indexes
+            WHERE
+                indexname = 'idx_db_log_table_structure_object_type') THEN
+            -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT
+                    1
+                FROM
+                    pg_indexes
+                WHERE
+                    schemaname NOT IN ('pg_catalog', 'information_schema')
+                    AND schemaname = 'db_config'
+                    AND tablename = 'log_table_structure'
+                    AND indexname = 'idx_db_log_table_structure_object_type'
+                    AND indexdef != 'CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type)') THEN
+                -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db_config.idx_db_log_table_structure_object_type RENAME TO del_db_log_table_structure_object_type;
+    DROP INDEX IF EXISTS db_config.del_db_log_table_structure_object_typ;
+    CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type);
+END IF;
+    -- aktueller Stand
+ELSE
+    -- (einfach) Neu Anlegen
+    CREATE INDEX idx_db_log_table_structure_object_type ON db_config.log_table_structure USING btree (object_type);
+END IF;
+    -- Index vorhanden
+END IF;
+    -- Zielspalte
+    ------------------------------------------------------------------------------------------------
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT
+            1
+        FROM
+            information_schema.columns
+        WHERE
+            table_schema = 'db_config'
+            AND table_name = 'log_table_structure'
+            AND column_name = 'schema_name') THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT
+                1
+            FROM
+                pg_indexes
+            WHERE
+                indexname = 'idx_db_log_table_structure_data') THEN
+            -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT
+                    1
+                FROM
+                    pg_indexes
+                WHERE
+                    schemaname NOT IN ('pg_catalog', 'information_schema')
+                    AND schemaname = 'db_config'
+                    AND tablename = 'log_table_structure'
+                    AND indexname = 'idx_db_log_table_structure_data'
+                    AND indexdef != 'CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name)') THEN
+                -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db_config.idx_db_log_table_structure_data RENAME TO del_db_log_table_structure_data;
+    DROP INDEX IF EXISTS db_config.del_db_log_table_structure_data;
+    CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name);
+END IF;
+    -- aktueller Stand
+ELSE
+    -- (einfach) Neu Anlegen
+    CREATE INDEX idx_db_log_table_structure_data ON db_config.log_table_structure USING btree (schema_name, table_name, column_name);
+END IF;
+    -- Index vorhanden
+END IF;
+    -- Zielspalte
+    ------------------------------------------------------------------------------------------------
+    IF EXISTS ( -- Zielspalte existiert
+        SELECT
+            1
+        FROM
+            information_schema.columns
+        WHERE
+            table_schema = 'db_config'
+            AND table_name = 'log_table_structure'
+            AND column_name = 'definition') THEN
+        IF EXISTS ( -- INDEX vorhanden
+            SELECT
+                1
+            FROM
+                pg_indexes
+            WHERE
+                indexname = 'idx_db_log_table_structure_definition') THEN
+            -- aktuellen Stand überprüfen
+            IF EXISTS ( -- INDEX nicht auf akuellen Stand
+                SELECT
+                    1
+                FROM
+                    pg_indexes
+                WHERE
+                    schemaname NOT IN ('pg_catalog', 'information_schema')
+                    AND schemaname = 'db_config'
+                    AND tablename = 'log_table_structure'
+                    AND indexname = 'idx_db_log_table_structure_definition'
+                    AND indexdef != 'CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text))') THEN
+                -- Index entspricht nicht aktuellen Stand - deshalb Index löschen und neu anlegen
+                ALTER INDEX db_config.idx_db_log_table_structure_definition RENAME TO del_db_log_table_structure_definition;
+    DROP INDEX IF EXISTS db_config.del_db_log_table_structure_definition;
+    CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text));
+END IF;
+    -- aktueller Stand
+ELSE
+    -- (einfach) Neu Anlegen
+    CREATE INDEX idx_db_log_table_structure_definition ON db_config.log_table_structure USING btree (md5((definition)::text));
+END IF;
+    -- Index vorhanden
+END IF;
+    -- Zielspalte
+    ------------------------------------------------------------------------------------------------
+    ------------------------------------------------------------------------------------------------
+    ----------------------------------------------------
+    -- Berechtigungen
+    GRANT INSERT ON db_config.log_table_structure TO db_user;
+    GRANT SELECT ON db_config.log_table_structure TO db_user;
+    GRANT UPDATE ON db_config.log_table_structure TO db_user;
+    -- Erstelle die Funktion zur Extraktion der Struktur
+    ----------------------------------------------------
+    ------------------------------------------------------------------------------------------------
+    ------------------------------------------------------------------------------------------------
+    EXECUTE $f$
 -----------------
 CREATE OR REPLACE FUNCTION db.log_table_view_structure()
-RETURNS VOID 
+RETURNS VOID
 SECURITY DEFINER
 AS $inner$
 DECLARE
@@ -154,7 +235,7 @@ BEGIN
     -- TABLE Nicht vorhandene Einträge hinzfügen
     err_section:='log_table_view_structure-01';    err_schema:='db_config';    err_table:='TABLE';
     INSERT INTO db_config.log_table_structure (object_type, schema_name, table_name, column_name, data_type, is_nullable, column_default, status, version_info, input_datetime, last_change_timestamp)
-    (SELECT 
+    (SELECT
         'TABLE' AS object_type,
         c.table_schema AS schema_name,
         c.table_name AS table_name,
@@ -189,7 +270,7 @@ BEGIN
             )
     AND l.object_type='TABLE' AND status='A'
     ;
-    
+
     -- TABLE Alle aktuellen Einträge das last_change_timestamp neu setzen
     err_section:='log_table_view_structure-03';    err_schema:='db_config';    err_table:='TABLE';
     UPDATE db_config.log_table_structure SET last_change_timestamp=CURRENT_TIMESTAMP WHERE status='A' AND object_type='TABLE';
@@ -231,7 +312,7 @@ BEGIN
     )
     AND status='A' AND object_type='VIEW'
     ;
-    
+
     -- VIEW Alle aktuellen Einträge das last_change_timestamp neu setzen
     err_section:='log_table_view_structure-07';    err_schema:='db_config';    err_table:='VIEW';
     UPDATE db_config.log_table_structure SET last_change_timestamp=CURRENT_TIMESTAMP WHERE status='A' AND object_type='VIEW';
@@ -241,7 +322,7 @@ BEGIN
     err_section:='log_table_view_structure-10';    err_schema:='db_config';    err_table:='FUNCTION';
     INSERT INTO db_config.log_table_structure (object_type, schema_name, table_name, definition, status, version_info, input_datetime, last_change_timestamp)
     (SELECT * FROM
-        (SELECT 
+        (SELECT
            'FUNCTION' AS object_type,
            n.nspname AS schema_name,
            p.proname AS table_name,
@@ -273,7 +354,7 @@ BEGIN
            )
     AND status='A' AND object_type='FUNCTION'
     ;
-    
+
     -- FUNCTION Alle aktuellen Einträge das last_change_timestamp neu setzen
     err_section:='log_table_view_structure-12';    err_schema:='db_config';    err_table:='FUNCTION';
     UPDATE db_config.log_table_structure SET last_change_timestamp=CURRENT_TIMESTAMP WHERE status='A' AND object_type='FUNCTION';
@@ -282,7 +363,7 @@ BEGIN
     -- TRIGGER Nicht vorhandene Einträge hinzfügen
     err_section:='log_table_view_structure-15';    err_schema:='db_config';    err_table:='TRIGGER';
     INSERT INTO db_config.log_table_structure (object_type, schema_name, table_name, column_name, definition, status, version_info, input_datetime, last_change_timestamp)
-    (SELECT 
+    (SELECT
         'TRIGGER' AS object_type,
         c.trigger_schema AS schema_name,
         c.trigger_name AS table_name,
@@ -313,7 +394,7 @@ BEGIN
             )
     AND l.object_type='TRIGGER' AND status='A'
     ;
-    
+
     -- TABLE Alle aktuellen Einträge das last_change_timestamp neu setzen
     err_section:='log_table_view_structure-17';    err_schema:='db_config';    err_table:='TRIGGER';
     UPDATE db_config.log_table_structure SET last_change_timestamp=CURRENT_TIMESTAMP WHERE status='A' AND object_type='TRIGGER';
@@ -323,7 +404,7 @@ BEGIN
     err_section:='log_table_view_structure-20';    err_schema:='db_config';    err_table:='INDEX';
     INSERT INTO db_config.log_table_structure (object_type, schema_name, table_name, column_name, definition, data_type, status, version_info, input_datetime, last_change_timestamp)
     (SELECT * FROM (
-        SELECT 
+        SELECT
             'INDEX' AS object_type, n.nspname AS schema_name, t.relname AS table_name, c.relname AS column_name,
             pg_get_indexdef(i.indexrelid) AS definition, 'unique:'||i.indisunique||' primary:'||i.indisprimary||' index_type:'||a.amname AS data_type,
             'A' AS status,
@@ -354,7 +435,7 @@ BEGIN
     WHERE COALESCE(l.schema_name,'#')||'#'||COALESCE(l.table_name,'#')||'#'||COALESCE(l.column_name,'#')||'#'||COALESCE(md5(l.definition))||'#'||COALESCE(l.data_type,'#')
     NOT IN (SELECT COALESCE(c.schema_name,'#')||'#'||COALESCE(c.table_name,'#')||'#'||COALESCE(c.column_name,'#')||'#'||COALESCE(md5(c.definition))||'#'||COALESCE(c.data_type,'#')
             FROM (
-                SELECT 
+                SELECT
                     'INDEX' AS object_type, n.nspname AS schema_name, t.relname AS table_name, c.relname AS column_name,
                     pg_get_indexdef(i.indexrelid) AS definition, 'unique:'||i.indisunique||' primary:'||i.indisprimary||' index_type:'||a.amname AS data_type,
                     'A' AS status,
@@ -373,7 +454,7 @@ BEGIN
             )
     AND l.object_type='INDEX' AND status='A'
     ;
-    
+
     -- INDEX Alle aktuellen Einträge das last_change_timestamp neu setzen
     err_section:='log_table_view_structure-22';    err_schema:='db_config';    err_table:='INDEX';
     UPDATE db_config.log_table_structure SET last_change_timestamp=CURRENT_TIMESTAMP WHERE status='A' AND object_type='INDEX';
@@ -397,15 +478,15 @@ END;
 $inner$ LANGUAGE plpgsql; -- db.log_table_view_structure
 -----------------
 $f$;
-------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------
-
-----------------------------------------------------
--- First execution/update only when migration is executed
-PERFORM db.log_table_view_structure(); -- initiales Ausführen
-----------------------------------------------------
-
-    END IF; -- current migration
+    ------------------------------------------------------------------------------------------------
+    ------------------------------------------------------------------------------------------------
+    ----------------------------------------------------
+    -- First execution/update only when migration is executed
+    PERFORM
+        db.log_table_view_structure ();
+    -- initiales Ausführen
+    ----------------------------------------------------
+END IF;
+    -- current migration
 END
 $$;
-

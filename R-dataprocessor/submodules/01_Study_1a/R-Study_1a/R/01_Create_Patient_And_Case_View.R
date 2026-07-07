@@ -124,7 +124,6 @@ getLocationString <- function(encounters, locations) {
     encounters <- encounters[effective_physicaltype %in% c("ro", "bd")]
 
     if (nrow(encounters) > 0 && !all(is.na(encounters$enc_period_start))) {
-
       room_value <- NA_character_
       bed_value <- NA_character_
 
@@ -140,7 +139,6 @@ getLocationString <- function(encounters, locations) {
       col_name <- FRONTEND_DISPLAYED_ROOM_AND_BED_COLUMN
 
       if (startsWith(col_name, "loc_")) {
-
         if (!is.null(room_encounter)) {
           room_location_ref <- room_encounter[, enc_location_ref]
           room_location_id <- etlutils::fhirdataExtractIDs(room_location_ref)
@@ -158,7 +156,6 @@ getLocationString <- function(encounters, locations) {
           )
         }
       } else if (startsWith(col_name, "enc_")) {
-
         if (!is.null(room_encounter)) {
           room_value <- tryCatch(
             room_encounter[, get(col_name)],
@@ -226,7 +223,6 @@ getAdmissionDiagnoses <- function(encounter, conditions) {
 }
 
 getObservations <- function(encounters, query_datetime, obs_codes, obs_system, obs_by_pid = FALSE) {
-
   obs_codes <- parseQueryList(obs_codes)
   # Query template to get desired Observations from DB
   query_template <- paste0(
@@ -375,7 +371,6 @@ createFrontendTables <- function() {
   # based on the provided patient IDs per ward. It retrieves patient information from
   # the database and constructs the frontend table.
   createPatientFrontendTable <- function(patients, existing_record_ids) {
-
     pids <- unique(patients$pat_id)
     pids_count <- length(pids)
 
@@ -394,7 +389,6 @@ createFrontendTables <- function() {
 
     # Iterate over each unique patient ID to populate the frontend table
     for (i in seq_len(pids_count)) {
-
       patient <- patients[pat_id %in% pids[i]]
 
       # Get an existing record_id for the patient from the database patient_fe
@@ -524,7 +518,6 @@ createFrontendTables <- function() {
     enc_studyphase_at_admission <- etlutils::dbGetReadOnlyQuery(query, lock_id = "createEncounterFrontendTable()[3]")
 
     for (pid_index in seq_len(nrow(unique_pid_ward))) {
-
       pid <- unique_pid_ward$patient_id[pid_index]
       pid_ref <- etlutils::fhirdataGetPatientReference(pid)
       pid_main_encounters <- main_encounters[enc_patient_ref %in% pid_ref]
@@ -680,7 +673,6 @@ createFrontendTables <- function() {
               obs_weight$obs_valuequantity_unit
             )
           )
-
         }
         obs_height <- observations_height[obs_patient_ref %in% pid_ref]
         if (nrow(obs_height)) {
@@ -722,7 +714,6 @@ createFrontendTables <- function() {
         }
         data.table::set(enc_frontend_table, target_index, "redcap_repeat_instance", enc_redcap_repeat_instance)
       }
-
     }
     return(enc_frontend_table)
   }
@@ -776,8 +767,10 @@ createFrontendTables <- function() {
   getUniquePatientsRowWithNameIfExists <- function(patient_rows_from_database_for_single_pat_id) {
     pat_rows <- patient_rows_from_database_for_single_pat_id
     # Check if the column 'pat_name_use' exists and contains any "official" entries
-    if ("pat_name_use" %in% names(pat_rows) &&
-      any(pat_rows$pat_name_use %in% "official", na.rm = TRUE)) {
+    if (
+      "pat_name_use" %in% names(pat_rows) &&
+      any(pat_rows$pat_name_use %in% "official", na.rm = TRUE)
+    ) {
       # Filter rows where name is "official" and there is a non-empty, non-NA given name
       official_rows <- pat_rows[pat_name_use %in% "official" & pat_name_given != "" & !is.na(pat_name_given)]
       # If such official rows exist, return the one with the smallest patient_id
@@ -814,5 +807,4 @@ createFrontendTables <- function() {
     lock_id = "createFrontendTables()",
     stop_if_table_not_empty = TRUE
   )
-
 }

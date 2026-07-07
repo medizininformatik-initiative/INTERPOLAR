@@ -110,7 +110,6 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
 
   # if the resources are null that indicates that we must create all references for old data
   if (is.null(resource_tables)) {
-
     writeTableWithReferencesToDB <- function(resource_name, resource_table, calculated_col_names, lock_id) {
       id_col_name <- etlutils::fhirdbGetIDColumn(resource_name)
 

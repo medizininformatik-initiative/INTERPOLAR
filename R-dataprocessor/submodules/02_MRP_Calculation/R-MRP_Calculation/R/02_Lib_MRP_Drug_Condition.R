@@ -110,7 +110,6 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
 
   # Function to check if validity days match any patient Condition
   patientValidityDayMatches <- function(validity_days, patient_conditions, meda_datetime) {
-
     condition_start <- patient_conditions$start_datetime
     isresult <- FALSE
     if (!is.na(validity_days)) {
@@ -683,7 +682,6 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
 #' @return A character string describing the match if the cutoff was met, otherwise `NA_character_`.
 #'
 matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mapping_table) {
-
   data.table::setorder(observation_resources, "start_datetime")
   match_description <- NA_character_
   cutoff_reference <- trimws(match_proxy_row$LOINC_CUTOFF_REFERENCE)
@@ -736,7 +734,6 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
         )
 
         if (nrow(obs)) {
-
           obs <- filterObservations(
             obs = obs,
             reference_value_col = reference_value_col,
@@ -795,7 +792,6 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
         obs <- data.table::fsetdiff(observation_resources, invalid_obs)
 
         if (nrow(obs)) {
-
           mapping_rows <- loinc_mapping_table[LOINC %in% obs$code]
           mapping_row  <- unique(mapping_rows[, c("LOINC_PRIMARY", "UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
           if (nrow(mapping_row) == 1) { # no row would be an error and more than one row would be ambiguous
@@ -847,7 +843,6 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
 
               # we must find any match and the last must be true
               if (any(match_found) && match_found[length(match_found)]) {
-
                 obs <- obs[match_found][, converted_value := obs_value_converted_to_threshold_unit[match_found]]
 
                 match_description <- generateMatchDescriptionAbsoluteCutoff(
@@ -955,7 +950,6 @@ matchICDProxies <- function(
   loinc_mapping_table = NULL,
   loinc_matching_function = NULL
 ) {
-
   all_matches <- list()
 
   matchProxy <- function(proxy_type, all_items, splitted_proxy_table) {
@@ -1023,7 +1017,6 @@ matchICDProxies <- function(
           # Select all items where the code matches any of the relevant secondary codes
           resources_with_proxy <- all_items[code %in% relevant_secondary_codes]
           if (nrow(resources_with_proxy)) {
-
             for (i in seq_len(nrow(match_proxy_rows))) {
               match_proxy_row <- match_proxy_rows[i]
               proxy_validity_days <- match_proxy_row[["ICD_PROXY_VALIDITY_DAYS"]]
@@ -1111,8 +1104,10 @@ matchICDProxies <- function(
     return(matched_rows)
   }
 
-  if (!is.null(medication_resources) &&
-    !is.null(drug_condition_mrp_tables_by_atc_proxy)) {
+  if (
+    !is.null(medication_resources) &&
+    !is.null(drug_condition_mrp_tables_by_atc_proxy)
+  ) {
     #  Combine all medication rows
     all_medications <- rbind(
       medication_resources$medication_requests[, .(
@@ -1135,8 +1130,10 @@ matchICDProxies <- function(
     all_matches[["ATC"]] <- atc_matches
   }
 
-  if (!is.null(procedure_resources) &&
-    !is.null(drug_condition_mrp_tables_by_ops_proxy)) {
+  if (
+    !is.null(procedure_resources) &&
+    !is.null(drug_condition_mrp_tables_by_ops_proxy)
+  ) {
     #  Combine all procedures rows
     all_procedures <- procedure_resources[, .(fhir_id = proc_id, code = proc_code_code, display = proc_code_display, start_datetime, end_datetime)]
     # OPS-Proxy-Matching
@@ -1148,10 +1145,12 @@ matchICDProxies <- function(
     all_matches[["OPS"]] <- ops_matches
   }
 
-  if (!is.null(observation_resources) &&
+  if (
+    !is.null(observation_resources) &&
     !is.null(drug_condition_mrp_tables_by_loinc_proxy) &&
     !is.null(loinc_matching_function) &&
-    !is.null(loinc_mapping_table)) {
+    !is.null(loinc_mapping_table)
+  ) {
     #  Combine all observation rows
     all_observations <- observation_resources[, .(
       fhir_id = obs_id,

@@ -2,39 +2,42 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-03-16 11:41:52
--- Rights definition file size        : 19645 Byte
+-- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2026-06-11 17:22:24
+-- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "cds2db_out"
--- Create time: 2026-03-25 15:51:16
+-- Create time: 2026-06-12 11:40:05
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/250_adding_historical_raw_records.sql
 -- TEMPLATE:  template_adding_historical_records.sql
 -- OWNER_USER:  cds2db_user
 -- OWNER_SCHEMA:  cds2db_out
--- TAGS:  
+-- TAGS:
 -- TABLE_PREFIX:  v_
 -- TABLE_POSTFIX:  _raw_last_version
--- RIGHTS:  
+-- RIGHTS:
 -- GRANT_TARGET_USER:  cds2db_user
--- COPY_FUNC_SCRIPTNAME:  
--- COPY_FUNC_TEMPLATE:  
--- COPY_FUNC_NAME:  
+-- COPY_FUNC_SCRIPTNAME:
+-- COPY_FUNC_TEMPLATE:
+-- COPY_FUNC_NAME:
 -- SCHEMA_2:  cds2db_in
 -- TABLE_POSTFIX_2:  _raw
--- SCHEMA_3:  
--- TABLE_POSTFIX_3:  
+-- SCHEMA_3:
+-- TABLE_POSTFIX_3:
 -- ########################################################################################################
-
-DO
-$$
+DO $$
 BEGIN
     IF EXISTS ( -- do migration
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
-    ) THEN
---------------------------------------------------------------------
-EXECUTE $f$
+        SELECT
+            1
+        FROM
+            db_config.db_parameter
+        WHERE
+            parameter_name = 'current_migration_flag'
+            AND parameter_value = '1') THEN
+        --------------------------------------------------------------------
+        EXECUTE $f$
 --------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION db.add_hist_raw_records()
@@ -2669,8 +2672,8 @@ SELECT
 END;
 $inner$ LANGUAGE plpgsql;
 $f$;
---------------------------------------------------------------------
-    END IF; -- do migration
+    --------------------------------------------------------------------
+END IF;
+    -- do migration
 END
 $$;
-
