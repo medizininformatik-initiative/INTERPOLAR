@@ -19,7 +19,7 @@ init <- function(validate_config = TRUE) {
                        path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
                        mandatory_parameters = c(
                          "PHASES_WARD",
-                         "COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
+                         "MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
                          "OBSERVATION_BODY_WEIGHT_SYSTEM",
                          "OBSERVATION_BODY_WEIGHT_CODES",
                          "OBSERVATION_BODY_HEIGHT_SYSTEM",
@@ -31,7 +31,7 @@ init <- function(validate_config = TRUE) {
                        )
   )
   if (validate_config) {
-    # TODO: add validation
+    validateWardPhases()
   }
   return(config)
 }
@@ -69,8 +69,10 @@ runSubmodules <- function() {
   #   command_line_args <- c("mrp-check", "start-date=2025-12-01") # second parameter is irrelevant
   # }
 
-  # Check if any submodule directories were specified in the command line arguments
-  if (!interactive() || length(command_line_args)) {
+  # Check if any submodule directories were specified in the command line arguments.
+  # Manual-start submodules also need the functions of the automatic submodules
+  # when they are started interactively via DEBUG_SUBMODULE_DIR.
+  if (!interactive() || length(command_line_args) || exists("DEBUG_SUBMODULE_DIR")) {
     # enable minus for underscrore in arguments and ignore case
     command_line_args <- sub("-", "_", tolower(command_line_args), fixed = TRUE)
     called_manual_start_submodule_dirs <- manual_start_submodule_dirs[
@@ -124,6 +126,27 @@ runSubmodules <- function() {
   }
 }
 
+startDataprocessorModule <- function(validate_config = TRUE) {
+  config <- init(validate_config)
+  etlutils::startModule(config)
+  config
+}
+
+sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
+                                      source_submodule_functions = FALSE) {
+
+  etlutils::runLevel2("Reset database lock from unfinished previous run", {
+    etlutils::dbResetLock()
+    etlutils::checkVersion(ignore_newer_db_version)
+  })
+
+  if (source_submodule_functions) {
+    etlutils::runLevel2("Source dataprocessor submodule functions", {
+      sourceAllSubmodules()
+    })
+  }
+}
+
 #' Starts the Data Processor execution for this project
 #'
 #' This is the main entry point for the data processing pipeline. It initializes the
@@ -140,22 +163,11 @@ runSubmodules <- function() {
 processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
   # Initialize and start module
-  config <- init(validate_config)
-  etlutils::startModule(config)
+  startDataprocessorModule(validate_config)
 
   try(etlutils::runLevel1("Run Dataprocessor", {
 
-    # Reset lock from unfinished previous dataprocessor run
-    etlutils::runLevel2("Reset database lock from unfinished previous run", {
-      etlutils::dbResetLock()
-      # Check if the release version of the database is compatible
-      etlutils::checkVersion(ignore_newer_db_version)
-    })
-
-    etlutils::runLevel2("Source function script", {
-      source("./R-dataprocessor/dataprocessor/R/01_Shared_Functions.R")
-      source("./R-dataprocessor/dataprocessor/R/02_Input_Files_Functions.R")
-    })
+    sourceDataprocessorSubmodules(ignore_newer_db_version)
 
     etlutils::runLevel2("Run dataprocessor submodules", {
       runSubmodules()

@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.5.2
+FROM rocker/r-ver:4.6.0
 
 # Select cran mirror
 
@@ -39,7 +39,7 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS digest
 RUN /rocker_scripts/bin/install2.r -n $NCPUS units
 
 # Install R packages for interactive HTML tables
-RUN apt-get update && apt-get install -y pandoc
+RUN apt-get update && apt-get install -y pandoc libuv1-dev
 RUN /rocker_scripts/bin/install2.r -n $NCPUS htmlwidgets htmltools DT jsonlite
 
 WORKDIR /src

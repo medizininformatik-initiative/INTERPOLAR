@@ -88,6 +88,9 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
     encounters[, enc_partof_calculated_ref := NA_character_]
     encounters[, enc_main_encounter_calculated_ref := NA_character_]
     #encounters[, enc_diagnosis_condition_calculated_ref := NA_character_] # currently not used
+  } else {
+    encounters[enc_partof_calculated_ref == "invalid", enc_partof_calculated_ref := NA_character_]
+    encounters[enc_main_encounter_calculated_ref == "invalid", enc_main_encounter_calculated_ref := NA_character_]
   }
 
   # split Encounters by type code
@@ -300,8 +303,9 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
 
     calculated_ref_col_name <- getEncounterCalculatedReferenceColumnName(resource_name)
     # Once the data has been retrieved from the database, we only need to calculate the cal_ref
-    # columns for the resources that have never contained a value, so all others can be removed.
+    # columns for the resources that have no valid value, so all others can be removed.
     if (calculated_ref_col_name %in% names(resource_table)) {
+      resource_table[get(calculated_ref_col_name) == "invalid", (calculated_ref_col_name) := NA_character_]
       resource_table <- resource_table[is.na(get(calculated_ref_col_name))]
     }
     if (!is.null(resource_table) && nrow(resource_table) > 0) {
@@ -326,91 +330,168 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
         return(resource_table)
       }
 
-      for (row_index in seq_len(nrow(resource_table))) {
-        resource_encounter_ref <- resource_table[row_index, get(ref_col_name)]
-        # first try to get the reference from the existing encounter reference column (if it exists)
-        if (!is.na(resource_encounter_ref)) {
-          resource_encounter_id <- etlutils::fhirdataExtractIDs(resource_encounter_ref)
-          encounter_resource <- encounters[enc_id == resource_encounter_id]
-          if (nrow(encounter_resource)) {
-            encounter_row <- encounter_resource[
-              !is.na(enc_main_encounter_calculated_ref) &
-                trimws(enc_main_encounter_calculated_ref) != "invalid"
-            ][seq_len(min(.N, 1))]
+      resource_row_id_col_name <- "resource_row_id_for_reference_join"
+      resource_encounter_id_col_name <- "resource_encounter_id_for_reference_join"
+      resource_table[, (resource_row_id_col_name) := .I]
+      resource_table[, (resource_encounter_id_col_name) := NA_character_]
+      resource_refs_with_value <- !is.na(resource_table[[ref_col_name]])
+      resource_table[
+        resource_refs_with_value,
+        (resource_encounter_id_col_name) :=
+          etlutils::fhirdataExtractIDs(get(ref_col_name), unique = FALSE)
+      ]
 
-            if (nrow(encounter_row)) {
-              encounter_ref <- encounter_row$enc_main_encounter_calculated_ref
-              resource_table <- resource_table[row_index, (calculated_ref_col_name) := encounter_ref]
-            }
+      encounter_main_ref_map <- encounters[
+        !is.na(enc_main_encounter_calculated_ref) &
+          trimws(enc_main_encounter_calculated_ref) != "invalid",
+        .(enc_main_encounter_calculated_ref = enc_main_encounter_calculated_ref[1]),
+        by = enc_id
+      ]
+
+      # First try to get the reference from the existing encounter reference column.
+      resource_table[
+        encounter_main_ref_map,
+        on = stats::setNames("enc_id", resource_encounter_id_col_name),
+        (calculated_ref_col_name) := i.enc_main_encounter_calculated_ref
+      ]
+
+      first_encounter_by_id <- encounters[!duplicated(enc_id)]
+      partof_ref_by_id <- stats::setNames(
+        first_encounter_by_id$enc_partof_calculated_ref,
+        first_encounter_by_id$enc_id
+      )
+
+      resolveMainEncounterIDFromPartOf <- function(encounter_id) {
+        parent_encounter_id <- NA_character_
+        while (!is.na(encounter_id) && encounter_id %in% names(partof_ref_by_id)) {
+          partof_ref <- partof_ref_by_id[[encounter_id]]
+          if (is.na(partof_ref)) {
+            parent_encounter_id <- encounter_id
+            break
           }
-        }
-
-        # the encounter of the calculated reference must be an einrichtungskontakt -> trace back via partOf
-        if (is.na(resource_table[row_index, get(calculated_ref_col_name)])) {
-          resource_encounter_ref <- resource_table[row_index, get(ref_col_name)]
-          # first try to get the reference from the existing encounter reference column (if it exists)
-          if (!is.na(resource_encounter_ref)) {
-            resource_encounter_id <- etlutils::fhirdataExtractIDs(resource_encounter_ref)
-            encounter_resource <- encounters[enc_id == resource_encounter_id]
-
+          encounter_id <- etlutils::fhirdataExtractIDs(partof_ref)
+          if (identical(encounter_id, "invalid")) {
             parent_encounter_id <- NA_character_
-            while (nrow(encounter_resource)) {
-              # we just take the very first because all should have the same values in the columns we are interested in
-              encounter_resource <- encounter_resource[1]
-              partof_ref <- encounter_resource$enc_partof_calculated_ref
-              if (is.na(partof_ref)) {
-                parent_encounter_id <- encounter_resource$enc_id
-                break
-              }
-              parent_encounter_id <- etlutils::fhirdataExtractIDs(partof_ref)
-              if (identical(parent_encounter_id, "invalid")) {
-                parent_encounter_id <- NA_character_
-                break
-              }
-              encounter_resource <- encounters[enc_id == parent_encounter_id]
-            }
-            if (!is.na(parent_encounter_id)) {
-              encounter_ref <- etlutils::fhirdataGetEncounterReference(parent_encounter_id)
-              resource_table[row_index, (calculated_ref_col_name) := encounter_ref]
-            }
+            break
           }
         }
+        parent_encounter_id
+      }
 
-        # get the reference from the timestamps
-        if (is.na(resource_table[row_index, get(calculated_ref_col_name)])) {
-          patient_ref_col_name <- etlutils::fhirdbGetColumns(resource_name, "_patient_ref")
-          patient_ref <- resource_table[row_index, get(patient_ref_col_name)]
-          candidate_encounters <- encounters[enc_patient_ref == patient_ref & enc_type_code == ENCOUNTER_TYPES[[1]] & enc_class_code %in% c("IMP", "SS")]
-          if (nrow(candidate_encounters)) {
-            # find the best fitting encounter by timestamp
-            for (start_column_name in start_column_names) {
-              resource_start_time <- resource_table[row_index, get(start_column_name)]
-              if (!is.na(resource_start_time)) {
-                # filter candidates that enclose the resource timestamp
-                candidate_encounters_filtered <- candidate_encounters[
-                  enc_period_start <= resource_start_time & (is.na(enc_period_end) | enc_period_end >= resource_start_time)
-                ]
-                if (nrow(candidate_encounters_filtered)) {
-                  # If multiple candidates remain, take the one with the closest start time (no side-effect column)
-                  time_diff <- abs(as.numeric(difftime(
-                    candidate_encounters_filtered$enc_period_start,
-                    resource_start_time,
-                    units = "secs"
-                  )))
-                  idx <- which.min(time_diff)
-                  best_fit_encounter <- candidate_encounters_filtered[idx]
-                  resource_table[row_index, (calculated_ref_col_name) := paste0("Encounter/", best_fit_encounter$enc_id)]
-                  break  # Exit the for loop over start_column_names
-                }
-              }
-            }
+      unresolved_encounter_ids <- unique(resource_table[
+        is.na(get(calculated_ref_col_name)) &
+          !is.na(get(resource_encounter_id_col_name)),
+        get(resource_encounter_id_col_name)
+      ])
+      if (length(unresolved_encounter_ids)) {
+        partof_ref_map <- data.table::data.table(
+          resource_encounter_id_for_reference_join = unresolved_encounter_ids,
+          parent_encounter_id = vapply(
+            unresolved_encounter_ids,
+            resolveMainEncounterIDFromPartOf,
+            FUN.VALUE = character(1)
+          )
+        )
+        partof_ref_map <- partof_ref_map[
+          !is.na(parent_encounter_id),
+          .(
+            resource_encounter_id_for_reference_join,
+            encounter_ref = etlutils::fhirdataGetEncounterReference(parent_encounter_id)
+          )
+        ]
+
+        # If no valid main encounter reference was available, trace back via partOf.
+        resource_table[
+          partof_ref_map,
+          on = resource_encounter_id_col_name,
+          (calculated_ref_col_name) :=
+            data.table::fcoalesce(get(calculated_ref_col_name), i.encounter_ref)
+        ]
+      }
+
+      patient_ref_col_name <- etlutils::fhirdbGetColumns(resource_name, "_patient_ref")
+      timestamp_candidate_encounters <- encounters[
+        enc_type_code == ENCOUNTER_TYPES[[1]] &
+          enc_class_code %in% c("IMP", "SS")
+      ]
+
+      # Get the reference from timestamps. The start columns are tried in order, and a
+      # later start column is only considered if the previous ones did not find a match.
+      if (nrow(timestamp_candidate_encounters)) {
+        timestamp_candidate_encounters[, encounter_order_for_reference_join := .I]
+        timestamp_candidate_encounters <- timestamp_candidate_encounters[
+          ,
+          .(
+            enc_id,
+            enc_patient_ref,
+            enc_period_start,
+            enc_period_end,
+            encounter_order_for_reference_join
+          )
+        ]
+
+        for (start_column_name in start_column_names) {
+          unresolved_resources <- resource_table[
+            is.na(get(calculated_ref_col_name)) &
+              !is.na(get(start_column_name)),
+            .(
+              resource_row_id_for_reference_join = get(resource_row_id_col_name),
+              resource_patient_ref_for_reference_join = get(patient_ref_col_name),
+              resource_start_time_for_reference_join = get(start_column_name)
+            )
+          ]
+
+          if (!nrow(unresolved_resources)) {
+            next
           }
-        }
-        # if the reference is still NA -> mark it as invalid
-        if (is.na(resource_table[row_index, get(calculated_ref_col_name)])) {
-          resource_table[row_index, (calculated_ref_col_name) := "invalid"]
+
+          timestamp_matches <- timestamp_candidate_encounters[
+            unresolved_resources,
+            on = .(enc_patient_ref = resource_patient_ref_for_reference_join),
+            allow.cartesian = TRUE,
+            nomatch = 0
+          ][
+            enc_period_start <= resource_start_time_for_reference_join &
+              (is.na(enc_period_end) | enc_period_end >= resource_start_time_for_reference_join)
+          ]
+
+          if (!nrow(timestamp_matches)) {
+            next
+          }
+
+          data.table::setorder(
+            timestamp_matches,
+            resource_row_id_for_reference_join,
+            -enc_period_start,
+            encounter_order_for_reference_join
+          )
+          timestamp_matches <- timestamp_matches[
+            ,
+            .SD[1],
+            by = resource_row_id_for_reference_join
+          ][
+            ,
+            .(
+              resource_row_id_for_reference_join,
+              encounter_ref = paste0("Encounter/", enc_id)
+            )
+          ]
+
+          resource_table[
+            timestamp_matches,
+            on = resource_row_id_col_name,
+            (calculated_ref_col_name) :=
+              data.table::fcoalesce(get(calculated_ref_col_name), i.encounter_ref)
+          ]
         }
       }
+
+      # If the reference is still NA, mark it as invalid.
+      resource_table[
+        is.na(get(calculated_ref_col_name)),
+        (calculated_ref_col_name) := "invalid"
+      ]
+      resource_table[, c(resource_row_id_col_name, resource_encounter_id_col_name) := NULL]
     }
   })
   return(resource_table)

@@ -47,7 +47,7 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 ###############################
 
 #TODO: MRP-haltige Medikation und Medikationsanalsyse anlegen für beide Fälle -> prüfen, ob der Stationsname für das MRP stimmt, wenn die Medikationsanalyse immer auf dem ersten IP-Station stattfand.
-if (exists("DEBUG_DAY")) {
+if (exists("TOOLCHAIN_DAY")) {
 
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
@@ -58,10 +58,7 @@ if (exists("DEBUG_DAY")) {
   pid2 <- "UKB-0002"
   pats <- c(pid1, pid2) # present at day 1
 
-  if (DEBUG_DAY == 1) {
-    # clear database on Day 1
-    etlutils::dbReset()
-  } else {
+  if (TOOLCHAIN_DAY > 1) {
     # Load all encounters from the database which, according to the database,
     # have not yet ended on the 'current' date and determine the PIDs.
     # Background: We want to track all cases that have ever been on a relevant
@@ -86,7 +83,7 @@ if (exists("DEBUG_DAY")) {
   # Show the current state of the resources
   # dt_enc <- testGetResourceTable("Encounter")
   # pids_per_wards <- testGetResourceTable("pids_per_ward")
-  current_debug_day <- DEBUG_DAY
+  current_debug_day <- TOOLCHAIN_DAY
 
   ##########
   # Generate Admission, Transfer and Discharge events for two patients #

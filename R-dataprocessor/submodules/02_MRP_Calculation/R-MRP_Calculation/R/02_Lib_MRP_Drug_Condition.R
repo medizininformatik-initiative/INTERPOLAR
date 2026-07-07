@@ -279,7 +279,7 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
 
         # Add start_datetime of the matched ATC code
         new_row <- unique(merge(new_row, match_atc_codes[, .(atc_code, start_datetime)],
-                         by = "atc_code", all.x = TRUE))
+                                by = "atc_code", all.x = TRUE))
 
         new_row[, icd_display := {
           displays <- relevant_conditions[con_code_code %in% icd_code, con_code_display]
@@ -677,12 +677,11 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
   data.table::setorder(observation_resources, "start_datetime")
   match_description <- NA_character_
   cutoff_reference <- trimws(match_proxy_row$LOINC_CUTOFF_REFERENCE)
-  if (!is.na(cutoff_reference) && cutoff_reference != "") {
+  pattern <- "^([<>]=?)\\s*(\\d*\\.?\\d*)\\*?\\s*(ULN|LLN)$"
+  if (!is.na(cutoff_reference) && cutoff_reference != "" && grepl(pattern, cutoff_reference)) {
     # Parse the cutoff string into its components: operator, multiplier, and ULN/LLN
     # Possible cutoff formats: "> ULN", "< LLN", ">= 3*ULN", "<= 2*LLN"
     parseCutoffReference <- function(cutoff) {
-      # Result are the parts in the round brackets
-      pattern <- "^([<>]=?)\\s*(\\d*\\.?\\d*)\\*?\\s*(ULN|LLN)$"
       matches <- regexec(pattern, cutoff)
       parts <- regmatches(cutoff, matches)[[1]]
 
@@ -747,110 +746,110 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
               "<=" = obs$converted_value <= threshold,
               rep(FALSE, nrow(obs))  # fallback for unknown operator
             )
-
             match_found <- ifelse(is.na(match_found), FALSE, match_found)
 
-            if (any(match_found)) {
+            # we must find any match and the last must be true
+            if (any(match_found) && match_found[length(match_found)]) {
               match_description <- generateMatchDescriptionReferenceCutoff(obs, match_found, loinc_mapping_table)
             }
           }
         }
       }
-    } else {
-      # try cutoff absolute value via columns LOINC_CUTOFF_ABSOLUTE and LOINC_UNIT with a lookup via LOINC_PRIMARY_PROXY
-      # in loinc_mapping_table and conversion of the unit if necessary
-      cutoff_absolute <- trimws(match_proxy_row$LOINC_CUTOFF_ABSOLUTE)
-      if (!is.na(cutoff_absolute) && cutoff_absolute != "") {
-        # Parse the cutoff string into its components: operator and number
-        # Possible cutoff formats: "> 3", "< 3", ">= 3,5", "< 2,8"
-        parseCutoffAbsolute <- function(cutoff) {
-          # Pattern allows comma or dot in the number
-          pattern <- "^([<>]=?)\\s*(\\d+(?:[.,]\\d+)?)"
-          matches <- regexec(pattern, cutoff)
-          parts <- regmatches(cutoff, matches)[[1]]
+    }
+  } else {
+    # try cutoff absolute value via columns LOINC_CUTOFF_ABSOLUTE and LOINC_UNIT with a lookup via LOINC_PRIMARY_PROXY
+    # in loinc_mapping_table and conversion of the unit if necessary
+    cutoff_absolute <- trimws(match_proxy_row$LOINC_CUTOFF_ABSOLUTE)
+    # Pattern allows comma or dot in the number
+    pattern <- "^([<>]=?)\\s*(\\d+(?:[.,]\\d+)?)"
+    if (!is.na(cutoff_absolute) && cutoff_absolute != "" && grepl(pattern, cutoff_absolute)) {
+      # Parse the cutoff string into its components: operator and number
+      # Possible cutoff formats: "> 3", "< 3", ">= 3,5", "< 2,8"
+      parseCutoffAbsolute <- function(cutoff) {
+        matches <- regexec(pattern, cutoff)
+        parts <- regmatches(cutoff, matches)[[1]]
 
-          # 1 = full string, 2 = operator, 3 = threshold
-          if (length(parts) == 3) {
-            operator <- parts[2]
-            # Replace comma with dot before conversion
-            threshold <- as.numeric(sub(",", ".", parts[3], fixed = TRUE))
-            list(operator = operator, threshold = threshold)
-          }
+        # 1 = full string, 2 = operator, 3 = threshold
+        if (length(parts) == 3) {
+          operator <- parts[2]
+          # Replace comma with dot before conversion
+          threshold <- as.numeric(sub(",", ".", parts[3], fixed = TRUE))
+          list(operator = operator, threshold = threshold)
         }
+      }
 
-        # Get parsed cutoff components
-        cutoff <- parseCutoffAbsolute(cutoff_absolute)
-        if (!is.null(cutoff) && !any(is.na(cutoff))) {
+      # Get parsed cutoff components
+      cutoff <- parseCutoffAbsolute(cutoff_absolute)
+      if (!is.null(cutoff) && !any(is.na(cutoff))) {
 
-          # Split observation_resources in valid and invalid ones
-          invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !etlutils::isValidUnit(unit)]
-          obs <- data.table::fsetdiff(observation_resources, invalid_obs)
+        # Split observation_resources in valid and invalid ones
+        invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !etlutils::isValidUnit(unit)]
+        obs <- data.table::fsetdiff(observation_resources, invalid_obs)
 
-          if (nrow(obs)) {
+        if (nrow(obs)) {
 
-            mapping_rows <- loinc_mapping_table[LOINC %in% obs$code]
-            mapping_row  <- unique(mapping_rows[, c("LOINC_PRIMARY", "UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
-            if (nrow(mapping_row) == 1) { # no row would be an error and more than one row would be ambiguous
+          mapping_rows <- loinc_mapping_table[LOINC %in% obs$code]
+          mapping_row  <- unique(mapping_rows[, c("LOINC_PRIMARY", "UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
+          if (nrow(mapping_row) == 1) { # no row would be an error and more than one row would be ambiguous
 
-              # conversion_factor must be NA if it is not a number or 1
-              conversion_factor <- suppressWarnings(as.numeric(mapping_row$CONVERSION_FACTOR))
-              if (conversion_factor %in% 1) conversion_factor <- NA_real_
-              # there must be a valid unit if the conversion_factor is a valid number != 1
-              conversion_unit <- if (is.na(conversion_factor)) NA else mapping_row$CONVERSION_UNIT
+            # conversion_factor must be NA if it is not a number or 1
+            conversion_factor <- suppressWarnings(as.numeric(mapping_row$CONVERSION_FACTOR))
+            if (conversion_factor %in% 1) conversion_factor <- NA_real_
+            # there must be a valid unit if the conversion_factor is a valid number != 1
+            conversion_unit <- if (is.na(conversion_factor)) NA else mapping_row$CONVERSION_UNIT
 
-              obs_value_converted_to_threshold_unit <- c()
-              for (i in seq_len(nrow(obs))) {
-                obs_row <- obs[i]
-                obs_value_converted_to_threshold_unit[i] <- etlutils::convertLabUnits(
-                  measured_value = obs_row$value,
-                  measured_unit = obs_row$unit,
-                  target_unit = mapping_row$UNIT,
-                  conversion_factor = conversion_factor,
-                  conversion_unit = conversion_unit,
-                  additional_error_message = paste0(" for LOINC code ", obs_row$code)
-                )
-                if (is.na(obs_value_converted_to_threshold_unit[i])) {
-                  # store this observation as invalid
-                  if (nrow(invalid_obs)) {
-                    invalid_obs <- rbind(invalid_obs, obs_row)
-                  } else {
-                    invalid_obs <- obs_row
-                  }
+            obs_value_converted_to_threshold_unit <- c()
+            for (i in seq_len(nrow(obs))) {
+              obs_row <- obs[i]
+              obs_value_converted_to_threshold_unit[i] <- etlutils::convertLabUnits(
+                measured_value = obs_row$value,
+                measured_unit = obs_row$unit,
+                target_unit = mapping_row$UNIT,
+                conversion_factor = conversion_factor,
+                conversion_unit = conversion_unit,
+                additional_error_message = paste0(" for LOINC code ", obs_row$code)
+              )
+              if (is.na(obs_value_converted_to_threshold_unit[i])) {
+                # store this observation as invalid
+                if (nrow(invalid_obs)) {
+                  invalid_obs <- rbind(invalid_obs, obs_row)
+                } else {
+                  invalid_obs <- obs_row
                 }
               }
+            }
 
-              obs_value_converted_to_threshold_unit <- obs_value_converted_to_threshold_unit[!is.na(obs_value_converted_to_threshold_unit)]
-              obs <- data.table::fsetdiff(obs, invalid_obs)
-              catInvalidObservationsWarning(invalid_obs)
+            obs_value_converted_to_threshold_unit <- obs_value_converted_to_threshold_unit[!is.na(obs_value_converted_to_threshold_unit)]
+            obs <- data.table::fsetdiff(obs, invalid_obs)
+            catInvalidObservationsWarning(invalid_obs)
 
-              if (nrow(obs)) {
-                # get the threshold
-                threshold <- cutoff$threshold
+            if (nrow(obs)) {
+              # get the threshold
+              threshold <- cutoff$threshold
 
-                # Vectorized comparison of lab values to threshold using specified operator
-                match_found <- switch(
-                  cutoff$operator,
-                  ">"  = obs_value_converted_to_threshold_unit >  threshold,
-                  ">=" = obs_value_converted_to_threshold_unit >= threshold,
-                  "<"  = obs_value_converted_to_threshold_unit <  threshold,
-                  "<=" = obs_value_converted_to_threshold_unit <= threshold,
-                  rep(FALSE, nrow(obs))  # fallback for unknown operator
+              # Vectorized comparison of lab values to threshold using specified operator
+              match_found <- switch(
+                cutoff$operator,
+                ">"  = obs_value_converted_to_threshold_unit >  threshold,
+                ">=" = obs_value_converted_to_threshold_unit >= threshold,
+                "<"  = obs_value_converted_to_threshold_unit <  threshold,
+                "<=" = obs_value_converted_to_threshold_unit <= threshold,
+                rep(FALSE, nrow(obs))  # fallback for unknown operator
+              )
+              match_found <- ifelse(is.na(match_found), FALSE, match_found)
+
+              # we must find any match and the last must be true
+              if (any(match_found) && match_found[length(match_found)]) {
+
+                obs <- obs[match_found][, converted_value := obs_value_converted_to_threshold_unit[match_found]]
+
+                match_description <- generateMatchDescriptionAbsoluteCutoff(
+                  obs = obs,
+                  loinc_mapping_table = loinc_mapping_table,
+                  primary_loinc = mapping_row$LOINC_PRIMARY,
+                  cutoff_absolute = cutoff_absolute,
+                  cutoff_unit = mapping_row$UNIT
                 )
-
-                match_found <- ifelse(is.na(match_found), FALSE, match_found)
-
-                if (any(match_found)) {
-
-                  obs <- obs[match_found][, converted_value := obs_value_converted_to_threshold_unit[match_found]]
-
-                  match_description <- generateMatchDescriptionAbsoluteCutoff(
-                    obs = obs,
-                    loinc_mapping_table = loinc_mapping_table,
-                    primary_loinc = mapping_row$LOINC_PRIMARY,
-                    cutoff_absolute = cutoff_absolute,
-                    cutoff_unit = mapping_row$UNIT
-                  )
-                }
               }
             }
           }

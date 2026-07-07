@@ -6,7 +6,8 @@ RUN apt-get update && \
 RUN apt-get update && \
 	apt-get -y install build-essential git postgresql-server-dev-17 libkrb5-dev
 
-RUN git clone https://github.com/vibhorkum/pg_background.git /usr/src/pg_background
+RUN git clone --branch v1.9.3 --depth 1 \
+    https://github.com/vibhorkum/pg_background.git /usr/src/pg_background
 
 WORKDIR /usr/src/pg_background
 

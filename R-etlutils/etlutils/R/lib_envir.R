@@ -119,14 +119,6 @@ initModuleConstants <- function(module_name, db_schema_base_name = NULL, path_to
     constants <- addConstants(DEBUG_PATH_TO_CONFIG_TOML, constants, envir)
   }
 
-  # Initialize the project timestamp if not already set
-  if (!exists("MODULE_TIME_STAMP", envir = envir)) {
-    project_time_stamp <- ""
-    if (isDefinedAndTrue("USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX", envir = envir)) {
-      project_time_stamp <- format(Sys.time(), "-%Y-%m%d-%H%M%S")
-    }
-    assign("MODULE_TIME_STAMP", project_time_stamp, envir = envir)
-  }
   # Initialize the database context if the database TOML path is provided
   path_to_db_toml <- constants[["PATH_TO_DB_CONFIG_TOML"]]
   if (!is.null(path_to_db_toml)) {
@@ -215,6 +207,43 @@ initSubmoduleConstants <- function(path_to_toml, defaults = c(), envir = .Global
   return(constants)
 }
 
+#' Get Variables by Prefix
+#'
+#' Retrieves variables from a given environment whose names start with a specified prefix.
+#' The result can be returned either as a named list or as a flattened named vector.
+#'
+#' @param prefix Character string defining the prefix that variable names must start with.
+#' @param astype Character string specifying the return type. Either "list" (default)
+#' or "vector". If "vector" is chosen, the result is flattened via unlist().
+#' @param envir Environment from which variables should be retrieved. Defaults to .GlobalEnv.
+#'
+#' @return A named list or named vector containing the matched variables and their values.
+#'
+#' @export
+getVariablesByPrefix <- function(prefix, astype = c("list", "vector"), envir = .GlobalEnv) {
+  astype <- match.arg(astype)
+  vars <- if (is.environment(envir)) {
+    ls(envir)
+  } else {
+    names(envir)
+  }
+  matching_vars <- grep(paste0("^", prefix), vars, value = TRUE)
+  result_list <- setNames(
+    lapply(matching_vars, function(var_name) {
+      if (is.environment(envir)) {
+        get(var_name, envir = envir)
+      } else {
+        envir[[var_name]]
+      }
+    }),
+    matching_vars
+  )
+  if (astype %in% "vector") {
+    return(unlist(result_list))
+  }
+  return(result_list)
+}
+
 #' Get Global Variables by Prefix
 #'
 #' This function retrieves all global variables from the environment that match a given prefix and returns them as either a list or a vector.
@@ -234,18 +263,69 @@ initSubmoduleConstants <- function(path_to_toml, defaults = c(), envir = .Global
 #'
 #' @export
 getGlobalVariablesByPrefix <- function(prefix, astype = c("list", "vector")) {
-  astype <- match.arg(astype)
-  global_vars <- ls(globalenv()) # Get all global variables
-  matching_vars <- grep(paste0("^", prefix), global_vars, value = TRUE) # Match variables with the prefix
-  result_list <- lapply(matching_vars, function(var_name) {
-    var_value <- get(var_name, envir = globalenv()) # Get the variable value
-    setNames(list(var_value), var_name) # Create a named list element
-  })
-  # Return as vector if specified
-  if (astype %in% "vector") {
-    return(unlist(result_list))
+  getVariablesByPrefix(prefix, astype, envir = .GlobalEnv)
+}
+
+#' Extract value for a given key from key-value lines
+#'
+#' Extracts the first matching value for a specified key from a character vector
+#' of lines. Each line is expected to follow the format `key = 'value'`. If the
+#' key is not found, `NA_character_` is returned.
+#'
+#' @param key_value_line A character vector containing lines with key-value pairs.
+#' @param key A character string specifying the key whose value should be extracted.
+#'
+#' @return A character string containing the extracted value, or `NA_character_`
+#'   if the key is not found.
+#'
+#' @examples
+#' lines <- c(
+#'   "ward_name = 'Station 1'",
+#'   "phase_a_start = '2026-01-01'"
+#' )
+#' extractValuesForKey(lines, "ward_name")
+#'
+#' extractValuesForKey(lines, "phase_b_start")
+#'
+#' @export
+extractValuesForKey <- function(key_value_line, key) {
+  pattern <- paste0("^\\s*", key, "\\s*=\\s*'([^']*)'\\s*$")
+  for (line in key_value_line) {
+    m <- regexec(pattern, line, perl = TRUE)
+    reg <- regmatches(line, m)[[1]]
+    if (length(reg) == 2L) return(reg[2])
   }
-  return(result_list) # Default return as list
+  NA_character_
+}
+
+#' Extract values for a given key from variables matching a prefix
+#'
+#' Retrieves variables from a given environment whose names start with a
+#' specified prefix and extracts the value for a given key from each variable.
+#' Each variable is expected to be a character vector containing lines in the
+#' format `key = 'value'`.
+#'
+#' @param prefix A character string defining the prefix that variable names
+#'   must start with.
+#' @param key A character string specifying the key whose value should be
+#'   extracted from each variable.
+#' @param envir An environment or named list from which variables should be
+#'   retrieved. Defaults to `.GlobalEnv`.
+#'
+#' @return A named character vector containing the extracted values. The names
+#'   correspond to the variable names. If a key is not found in a variable,
+#'   `NA_character_` is returned for that entry.
+#'
+#' @examples
+#' TEST_VAR1 <- c("ward_name = 'Station 1'")
+#' TEST_VAR2 <- c("ward_name = 'Station 2'")
+#' extractVariablesListValues("TEST_", "ward_name")
+#'
+#' @export
+extractVariablesListValues <- function(prefix, key, envir = .GlobalEnv) {
+  global_vars <- getVariablesByPrefix(prefix, "list", envir)
+  values <- sapply(global_vars, function(lines) extractValuesForKey(lines, key))
+  return(values)
 }
 
 #' Get the value of a variable by name or a default value if the variable is missing.
@@ -317,13 +397,16 @@ isDefinedAndFalse <- function(variable_name, envir = parent.frame()) {
 
 #' Check if a Variable is Defined and Not Empty
 #'
-#' This function checks if a given variable is defined in the specified environment and whether its
-#' value is neither an empty string (i.e., `""`) nor an empty vector (i.e., `character(0)` or `numeric(0)`).
+#' This function checks if a given variable is defined in the specified environment or named list
+#' and whether its value is neither an empty string (i.e., `""`) nor an empty vector (i.e.,
+#' `character(0)` or `numeric(0)`).
 #'
 #' @param variable_name The name of the variable to check, provided as a string.
-#' @param envir The environment in which to check for the variable. Defaults to the current environment.
+#' @param envir The environment or named list in which to check for the variable. Defaults to the
+#'   current environment.
 #'
-#' @return TRUE if the variable is defined and contains at least one non-empty value, otherwise FALSE.
+#' @return TRUE if the variable is defined and contains at least one non-empty value, otherwise
+#'   FALSE.
 #'
 #' @examples
 #' var1 <- "some text"
@@ -338,11 +421,14 @@ isDefinedAndFalse <- function(variable_name, envir = parent.frame()) {
 #'
 #' @export
 isDefinedAndNotEmpty <- function(variable_name, envir = parent.frame()) {
-  if (!exists(variable_name, envir = envir)) {
-    return(FALSE)
+  if (is.environment(envir)) {
+    if (!exists(variable_name, envir = envir)) return(FALSE)
+    val <- get(variable_name, envir = envir)
+  } else {
+    if (!variable_name %in% names(envir)) return(FALSE)
+    val <- envir[[variable_name]]
   }
-  val <- get(variable_name, envir = envir)
-  return(length(val) > 0 && any(nzchar(val)))
+  return(length(val) > 0 && (!is.character(val) || any(nzchar(val))))
 }
 
 #' Check for the existence of mandatory parameters
@@ -611,13 +697,13 @@ initCommandLineArguments <- function(argument2global_variable_name = c(),
 #' @export
 compareVersionsSemver <- function(version_a, version_b) {
   # split versions into numeric components
-  parse_version <- function(version) {
+  parseVersion <- function(version) {
     parts <- strsplit(version, "\\.", fixed = FALSE)[[1]]
     as.integer(parts)
   }
 
-  a <- parse_version(version_a)
-  b <- parse_version(version_b)
+  a <- parseVersion(version_a)
+  b <- parseVersion(version_b)
 
   # compare component-wise up to the longest version
   max_len <- max(length(a), length(b))
@@ -697,4 +783,182 @@ checkVersion <- function(ignore_newer_db_version) {
     }
     .lib_envir_env[["VERSION_ALREADY_CHECKED"]] <- TRUE
   }
+}
+
+###---###---###---##
+# TOOL_CHAIN_STATE #
+###---###---###---##
+
+# Environment for saving process states
+.penv <- new.env()
+
+#' Set value in process environment
+#'
+#' @param name Name of the variable.
+#' @param value Value to store.
+#'
+#' @return None.
+#'
+#' @export
+setVal <- function(name, value) {
+  .penv[[name]] <- value
+}
+
+#' Get value from process environment
+#'
+#' @param name Name of the variable.
+#'
+#' @return The stored value or `NULL` if it does not exist.
+#'
+#' @export
+getVal <- function(name) {
+  .penv[[name]]
+}
+
+#' Check if value exists in process environment
+#'
+#' @param name Name of the variable.
+#'
+#' @return `TRUE` if the value exists, otherwise `FALSE`.
+#'
+#' @export
+hasVal <- function(name) {
+  exists(name, envir = .penv, inherits = FALSE)
+}
+
+#' Add value to existing entry
+#'
+#' @param name Name of the variable.
+#' @param value Value to append.
+#'
+#' @return None.
+#'
+#' @export
+addVal <- function(name, value) {
+  old_value <- getVal(name)
+  .penv[[name]] <- c(old_value, value)
+}
+
+#' Check if value is TRUE
+#'
+#' @param name Name of the variable.
+#'
+#' @return `TRUE` if the stored value is `TRUE`, otherwise `FALSE`.
+#'
+#' @export
+isVal <- function(name) {
+  isTRUE(getVal(name))
+}
+
+#' Check if value is non-empty
+#'
+#' @param name Name of the variable.
+#'
+#' @return `TRUE` if the stored value exists and is not empty, otherwise `FALSE`.
+#'
+#' @export
+isNonEmptyVal <- function(name) {
+  if (!hasVal(name)) return(FALSE)
+  val <- getVal(name)
+  if (is.null(val) || length(val) == 0) return(FALSE)
+  if (is.character(val)) return(any(nzchar(val)))
+  if (all(is.na(val))) return(FALSE)
+  return(TRUE)
+}
+
+#' Remove value from process environment
+#'
+#' @param name Name of the variable.
+#'
+#' @return None.
+#'
+#' @export
+rmVal <- function(name) {
+  if (exists(name, envir = .penv, inherits = FALSE)) {
+    rm(list = name, envir = .penv)
+  }
+}
+
+#' Remove all values matching a pattern
+#'
+#' @param pattern Regular expression used to match variable names.
+#'
+#' @return `TRUE` if any values were removed, otherwise `FALSE`.
+#'
+#' @export
+rmAll <- function(pattern) {
+  vars <- ls(.penv, pattern = pattern)
+  if (!length(vars)) {
+    return(FALSE)
+  }
+  rm(list = vars, envir = .penv)
+  return(TRUE)
+}
+
+#' Register active process
+#'
+#' @param process_name Name of the process.
+#'
+#' @return The provided process name
+#'
+#' @export
+setProcess <- function(process_name) {
+  if (is.null(.penv[["PROCESS_NAME"]])) {
+    .penv[["PROCESS_NAME"]] <- process_name
+  }
+  process_name
+}
+
+#' Get name of the first registered process
+#'
+#' @return The name of the first registered process or `NULL` if no process
+#'   has been registered.
+#'
+#' @export
+getProcess <- function() {
+  return(getVal("PROCESS_NAME"))
+}
+
+#' Check if process is active
+#'
+#' @param process_name Name of the process.
+#'
+#' @return `TRUE` if the process is registered, otherwise `FALSE`.
+#'
+#' @export
+isProcess <- function(process_name) {
+  tolower(process_name) %in% tolower(getProcess())
+}
+
+#' Register active sub-process
+#'
+#' @param sub_process_name Fully-qualified sub-process name, e.g.
+#'   `DataImport.PIDDependant`.
+#'
+#' @return The provided sub-process name
+#'
+#' @export
+setSubProcess <- function(sub_process_name) {
+  .penv[["SUB_PROCESS_NAME"]] <- unique(c(.penv[["SUB_PROCESS_NAME"]], sub_process_name))
+  sub_process_name
+}
+
+#' Get registered sub-process names
+#'
+#' @return A character vector of registered sub-process names or `NULL`.
+#'
+#' @export
+getSubProcess <- function() {
+  return(getVal("SUB_PROCESS_NAME"))
+}
+
+#' Check if sub-process is active
+#'
+#' @param sub_process_name Fully-qualified sub-process name.
+#'
+#' @return `TRUE` if the sub-process is registered, otherwise `FALSE`.
+#'
+#' @export
+isSubProcess <- function(sub_process_name) {
+  tolower(sub_process_name) %in% tolower(getSubProcess())
 }

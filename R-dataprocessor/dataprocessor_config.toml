@@ -21,16 +21,6 @@
 VERBOSE               = 10 # Retrieval / analysis verbose level
 
 #################
-# Set true if every sourcing of the 00_Main file should create result
-# directories in the otuputGlobal and otuputLocal directores with a timestamp
-# suffix. If false then every run will write in the same subdirectory without
-# a timestamp. The default behaviour should write in subdirectories with only
-# the project name (false) or in or in a subdirectory with the project name
-# and the suffix '_timestamp'. (true)
-#################
-USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
-
-#################
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 #################
 MAX_DIR_COUNT = 5
@@ -64,6 +54,7 @@ MAX_DIR_COUNT = 5
 # the phase A never ends and phase B never starts. If phase_b_start is specified,
 # then phase A ends one second before the start of phase B.
 # The ward_name must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS in the cds2db_config.toml.
+# The defined ward names are also used to restrict reporting and analysis to INTERPOLAR wards.
 #################
 PHASES_WARD_1 = [
   "ward_name = 'Station 1'",
@@ -82,6 +73,25 @@ PHASES_WARD_3 = [
   "phase_a_start = '2026-01-11 10:00'"#, # same as 2026-01-11 10:00:00
   #"phase_b_start = '2026-04-21 10:00:00'"
 ]
+
+#################
+# Optionally indicate wards that were previously defined as separate wards but should belong to
+# one regular INTERPOLAR ward for reporting and analysis. This could be the case if patients from one
+# INTERPOLAR ward where temporarily treated on another ward due to, e.g., renovation work.
+# The ward names must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS in the cds2db_config.toml.
+# The definition pattern is as follows: The regular ward is specified in the first line and the
+# additional ward(s) which should be replaced are specified in the second line.
+# Multiple additional wards are separated by commas.
+# Patients captured in the additional ward(s) are counted for the regular ward for reporting and analysis.
+#################
+#COMBINE_WARDS_FOR_ANALYSIS_1 = [
+#  "regular_ward     = 'Station 1'",
+#  "additional_wards = 'Station 2','Station 3'"
+#]
+#COMBINE_WARDS_FOR_ANALYSIS_2 = [
+#  "regular_ward     = 'Station A'",
+#  "additional_wards = 'Station B'"
+#]
 
 #################
 # Filter for the displayable PID
@@ -114,14 +124,12 @@ FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*"
 # Filter for the medical case ID
 # ------------------------------
 # The following filter targets Encounter.indentifier.system.
-# It is used for 2 things:
-# 1.) If not all Encounter resources of the 3 levels are linked to each other via partOf relationships, they must at least have a common identifier (all absolutely the same), as specified in the Implementation Guide.
-# They can all be found here using this common identifier.
-# 2.) This identifier should correspond to the ID of the hospital case and is displayed in the frontend as "Case ID".
+# This identifier should correspond to the ID of the hospital case and is displayed in the frontend as "Case ID".
+# This identifier must be assigned to Encounters of type "Einrichtungskontakt".
 #
 # It is *not* a pattern. It must be specified here as an exact string.
 #################
-COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+#MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = "http://www.hospital_xyz_case_id_system.de"
 
 #################
 # Only Encounters that have one of the entries specified here as a class attribute are displayed

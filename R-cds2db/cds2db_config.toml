@@ -21,15 +21,6 @@
 VERBOSE               = 10 # Retrieval / analysis verbose level
 
 #################
-# Set true if every sourcing of the 00_Main file should create result directories in the
-# otuputGlobal and otuputLocal directories with a timestamp suffix. If false then every run will
-# write in the same subdirectory without a timestamp.
-# The default behavior should write in subdirectories with only the project name (false) or in or
-# in a subdirectory with the project name and the suffix '_timestamp'.
-#################
-USE_TIMESTAMP_AS_RESULT_DIR_SUFFIX = false
-
-#################
 # Maximum of saved cds2db result folders in outputLocal and outputGlobal
 #################
 MAX_DIR_COUNT = 5
@@ -78,10 +69,9 @@ DEFAULT_EMPTY_BIRTHDAY_PATTERN     = ""           # pattern to identify the defa
 
 MAX_ENCOUNTER_BUNDLES              = inf # maximum number of Encounter bundles that will be loaded from the server ('inf' = all)
 #COUNT_PER_BUNDLE                   = 100 # as default or use server default ? The number of results that are mapped per FHIR request on a response page [ehemals COUNT]
-SORT                               = ""  # some Fhir server require a sort parameter per default
 IDS_AT_ONCE                        = 100 # patient / medication ids combined in one request (GET or POST) - specifies the number of ID's, which are summarized in a request (after download of Encounters)
 
-MAX_CORES                          = 0 # paralellization, number of cores used, 0: unlimited
+MAX_CORES                          = 0 # paralellization, number of cores used, 0: all available cores minus one
 FORCE_DOWNLOAD_AND_CRACK_PARALLEL  = false # if TRUE: force download and crack parallel with basic method, avoid polar_download_by_ids_and_crack_parallel()
 NEXT_LINK_ENCODE                   = false # encode special chars in next_link (see polar_download_and_crack_parallel())
 
@@ -149,6 +139,14 @@ FHIR_SEARCH_ENCOUNTER_CLASS = "IMP,SS"
 #################
 #COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
 
+#################
+# Activate this parameter to test which FHIR search request for Encounter is sent to the FHIR server.
+# This will only output the request, but not execute the entire 'cds2db' module.
+# Use this to see the result of the above debug parameters or, without the debug parameters, the
+# first FHIR search request for Encounter.
+#################
+#FHIR_SEARCH_ENCOUNTER_REQUEST_TEST = true
+
 
 [retrieve.patient_id_filtering]
 
@@ -186,6 +184,68 @@ ENCOUNTER_FILTER_PATTERN_3 = [
   "ward_name = 'Station 3'",
   "location/location/reference = 'Location/location_id_3'"
 ]
+
+
+
+[data.import]
+
+# Supported data import modes:
+#
+# 1. DATA_IMPORT_RANGE_START
+#    DataImport.All: reload all matching cases from this timestamp onward.
+#
+# 2. DATA_IMPORT_RANGE_START + DATA_IMPORT_RANGE_END
+#    DataImport.All: reload all matching cases between start and end.
+#
+# 3. DATA_IMPORT_FHIR_PIDS
+#    DataImport.All: reload complete cases, but only for these FHIR PIDs.
+#    DATA_IMPORT_FHIR_PIDS must not be combined with range or resource type parameters.
+#
+# 4. Non-empty DATA_IMPORT_RESOURCE_TYPES
+#    DataImport.ResourceTypes: reload selected resource types.
+#
+# 5. DATA_IMPORT_RANGE_START (+ DATA_IMPORT_RANGE_END) + non-empty DATA_IMPORT_RESOURCE_TYPES
+#    DataImport.ResourceTypes: reload selected resource types. The date range is applied
+#    only to PID-dependent resources.
+#
+# DATA_IMPORT_RANGE_END requires DATA_IMPORT_RANGE_START.
+# Empty DATA_IMPORT_RESOURCE_TYPES is treated as not defined.
+# Consent and PID-independent resources ignore the date range.
+DATA_IMPORT_RANGE_START = "1999-01-01 00:00:00"
+#DATA_IMPORT_RANGE_END = "2021-12-01 00:00:00"
+
+# DATA_IMPORT_RESOURCE_TYPES can contain PID-dependent resources or PID-independent resources
+# that are referenced by existing database resources.
+# PID-dependent resources are reloaded for FHIR PIDs that already exist in the database.
+# PID-independent resources are reloaded by reading existing database references to them.
+# If DATA_IMPORT_RESOURCE_TYPES is non-empty, StartDataImport activates the DataImport.ResourceTypes subprocess.
+# Otherwise StartDataImport activates DataImport.All, the existing cache-based import for reloading case data.
+# Allowed resource types are derived from Table_Description.xlsx via subject/reference,
+# patient/reference, and REFERENCE_TYPES.
+# Encounter is still excluded because it belongs to the case-based import.
+# PID-independent resources referenced by the selected resources are reloaded automatically if
+# they are described in Table_Description.xlsx.
+DATA_IMPORT_RESOURCE_TYPES = [
+
+  # PID-dependent. DATA_IMPORT_RANGE_START/_END is applied only to these resources.
+#  "Condition",
+#  "MedicationRequest",
+#  "MedicationAdministration",
+#  "MedicationStatement",
+#  "Observation",
+#  "DiagnosticReport",
+#  "ServiceRequest",
+#  "Procedure",
+#  "Consent",
+
+  # PID-independent (referenced). DATA_IMPORT_RANGE_START/_END is ignored.
+#  "Medication",
+#  "Location"
+]
+
+# Use DATA_IMPORT_FHIR_PIDS only without DATA_IMPORT_RANGE_START, DATA_IMPORT_RANGE_END
+# and DATA_IMPORT_RESOURCE_TYPES.
+DATA_IMPORT_FHIR_PIDS = []
 
 
 [retrieve.debug]

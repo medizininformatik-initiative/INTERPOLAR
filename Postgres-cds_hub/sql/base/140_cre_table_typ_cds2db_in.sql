@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 13:24:46
--- Rights definition file size        : 16590 Byte
+-- Rights definition file last update : 2026-03-16 11:41:52
+-- Rights definition file size        : 19645 Byte
 --
 -- Create SQL Tables in Schema "cds2db_in"
--- Create time: 2026-02-02 13:32:42
+-- Create time: 2026-03-25 15:49:08
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/140_cre_table_typ_cds2db_in.sql
 -- TEMPLATE:  template_cre_table.sql
@@ -12138,11 +12138,53 @@ BEGIN
             ALTER TABLE cds2db_in.consent ADD cons_scope_text varchar;   -- scope/text (varchar)
         END IF; -- column (cons_scope_text)
 
+        IF NOT EXISTS ( -- column not exists (cons_category_system)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_category_system'
+        ) THEN
+            ALTER TABLE cds2db_in.consent ADD cons_category_system varchar;   -- category/coding/system (varchar)
+        END IF; -- column (cons_category_system)
+
+        IF NOT EXISTS ( -- column not exists (cons_category_version)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_category_version'
+        ) THEN
+            ALTER TABLE cds2db_in.consent ADD cons_category_version varchar;   -- category/coding/version (varchar)
+        END IF; -- column (cons_category_version)
+
+        IF NOT EXISTS ( -- column not exists (cons_category_code)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_category_code'
+        ) THEN
+            ALTER TABLE cds2db_in.consent ADD cons_category_code varchar;   -- category/coding/code (varchar)
+        END IF; -- column (cons_category_code)
+
+        IF NOT EXISTS ( -- column not exists (cons_category_display)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_category_display'
+        ) THEN
+            ALTER TABLE cds2db_in.consent ADD cons_category_display varchar;   -- category/coding/display (varchar)
+        END IF; -- column (cons_category_display)
+
+        IF NOT EXISTS ( -- column not exists (cons_category_text)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_category_text'
+        ) THEN
+            ALTER TABLE cds2db_in.consent ADD cons_category_text varchar;   -- category/text (varchar)
+        END IF; -- column (cons_category_text)
+
         IF NOT EXISTS ( -- column not exists (cons_datetime)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_datetime'
         ) THEN
             ALTER TABLE cds2db_in.consent ADD cons_datetime timestamp;   -- dateTime (timestamp)
         END IF; -- column (cons_datetime)
+
+        IF NOT EXISTS ( -- column not exists (cons_policy_authority)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_policy_authority'
+        ) THEN
+            ALTER TABLE cds2db_in.consent ADD cons_policy_authority varchar;   -- policy/authority (varchar)
+        END IF; -- column (cons_policy_authority)
+
+        IF NOT EXISTS ( -- column not exists (cons_policy_uri)
+            SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_policy_uri'
+        ) THEN
+            ALTER TABLE cds2db_in.consent ADD cons_policy_uri varchar;   -- policy/uri (varchar)
+        END IF; -- column (cons_policy_uri)
 
         IF NOT EXISTS ( -- column not exists (cons_provision_type)
             SELECT 1 FROM information_schema.columns WHERE table_schema = 'cds2db_in' AND table_name = 'consent' AND column_name = 'cons_provision_type'
@@ -12484,7 +12526,14 @@ BEGIN
           COALESCE(db.to_char_immutable(cons_scope_code), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_scope_display), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_scope_text), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_category_system), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_category_version), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_category_code), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_category_display), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_category_text), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_datetime), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_policy_authority), ''#NULL#'') || ''|||'' ||
+          COALESCE(db.to_char_immutable(cons_policy_uri), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_type), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_period_start), ''#NULL#'') || ''|||'' ||
           COALESCE(db.to_char_immutable(cons_provision_period_end), ''#NULL#'') || ''|||'' ||
@@ -12564,7 +12613,14 @@ BEGIN
           COALESCE(db.to_char_immutable(cons_scope_code), '#NULL#') || '|||' || -- hash from: scope/coding/code (cons_scope_code)
           COALESCE(db.to_char_immutable(cons_scope_display), '#NULL#') || '|||' || -- hash from: scope/coding/display (cons_scope_display)
           COALESCE(db.to_char_immutable(cons_scope_text), '#NULL#') || '|||' || -- hash from: scope/text (cons_scope_text)
+          COALESCE(db.to_char_immutable(cons_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (cons_category_system)
+          COALESCE(db.to_char_immutable(cons_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (cons_category_version)
+          COALESCE(db.to_char_immutable(cons_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (cons_category_code)
+          COALESCE(db.to_char_immutable(cons_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (cons_category_display)
+          COALESCE(db.to_char_immutable(cons_category_text), '#NULL#') || '|||' || -- hash from: category/text (cons_category_text)
           COALESCE(db.to_char_immutable(cons_datetime), '#NULL#') || '|||' || -- hash from: dateTime (cons_datetime)
+          COALESCE(db.to_char_immutable(cons_policy_authority), '#NULL#') || '|||' || -- hash from: policy/authority (cons_policy_authority)
+          COALESCE(db.to_char_immutable(cons_policy_uri), '#NULL#') || '|||' || -- hash from: policy/uri (cons_policy_uri)
           COALESCE(db.to_char_immutable(cons_provision_type), '#NULL#') || '|||' || -- hash from: provision/type (cons_provision_type)
           COALESCE(db.to_char_immutable(cons_provision_period_start), '#NULL#') || '|||' || -- hash from: provision/period/start (cons_provision_period_start)
           COALESCE(db.to_char_immutable(cons_provision_period_end), '#NULL#') || '|||' || -- hash from: provision/period/end (cons_provision_period_end)
@@ -12650,7 +12706,14 @@ BEGIN
           COALESCE(db.to_char_immutable(cons_scope_code), '#NULL#') || '|||' || -- hash from: scope/coding/code (cons_scope_code)
           COALESCE(db.to_char_immutable(cons_scope_display), '#NULL#') || '|||' || -- hash from: scope/coding/display (cons_scope_display)
           COALESCE(db.to_char_immutable(cons_scope_text), '#NULL#') || '|||' || -- hash from: scope/text (cons_scope_text)
+          COALESCE(db.to_char_immutable(cons_category_system), '#NULL#') || '|||' || -- hash from: category/coding/system (cons_category_system)
+          COALESCE(db.to_char_immutable(cons_category_version), '#NULL#') || '|||' || -- hash from: category/coding/version (cons_category_version)
+          COALESCE(db.to_char_immutable(cons_category_code), '#NULL#') || '|||' || -- hash from: category/coding/code (cons_category_code)
+          COALESCE(db.to_char_immutable(cons_category_display), '#NULL#') || '|||' || -- hash from: category/coding/display (cons_category_display)
+          COALESCE(db.to_char_immutable(cons_category_text), '#NULL#') || '|||' || -- hash from: category/text (cons_category_text)
           COALESCE(db.to_char_immutable(cons_datetime), '#NULL#') || '|||' || -- hash from: dateTime (cons_datetime)
+          COALESCE(db.to_char_immutable(cons_policy_authority), '#NULL#') || '|||' || -- hash from: policy/authority (cons_policy_authority)
+          COALESCE(db.to_char_immutable(cons_policy_uri), '#NULL#') || '|||' || -- hash from: policy/uri (cons_policy_uri)
           COALESCE(db.to_char_immutable(cons_provision_type), '#NULL#') || '|||' || -- hash from: provision/type (cons_provision_type)
           COALESCE(db.to_char_immutable(cons_provision_period_start), '#NULL#') || '|||' || -- hash from: provision/period/start (cons_provision_period_start)
           COALESCE(db.to_char_immutable(cons_provision_period_end), '#NULL#') || '|||' || -- hash from: provision/period/end (cons_provision_period_end)
@@ -14728,7 +14791,14 @@ COMMENT ON COLUMN cds2db_in.consent.cons_scope_version IS 'scope/coding/version 
 COMMENT ON COLUMN cds2db_in.consent.cons_scope_code IS 'scope/coding/code (varchar)';
 COMMENT ON COLUMN cds2db_in.consent.cons_scope_display IS 'scope/coding/display (varchar)';
 COMMENT ON COLUMN cds2db_in.consent.cons_scope_text IS 'scope/text (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_category_system IS 'category/coding/system (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_category_version IS 'category/coding/version (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_category_code IS 'category/coding/code (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_category_display IS 'category/coding/display (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_category_text IS 'category/text (varchar)';
 COMMENT ON COLUMN cds2db_in.consent.cons_datetime IS 'dateTime (timestamp)';
+COMMENT ON COLUMN cds2db_in.consent.cons_policy_authority IS 'policy/authority (varchar)';
+COMMENT ON COLUMN cds2db_in.consent.cons_policy_uri IS 'policy/uri (varchar)';
 COMMENT ON COLUMN cds2db_in.consent.cons_provision_type IS 'provision/type (varchar)';
 COMMENT ON COLUMN cds2db_in.consent.cons_provision_period_start IS 'provision/period/start (timestamp)';
 COMMENT ON COLUMN cds2db_in.consent.cons_provision_period_end IS 'provision/period/end (timestamp)';

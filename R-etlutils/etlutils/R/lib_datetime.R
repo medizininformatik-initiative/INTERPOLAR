@@ -1,21 +1,32 @@
 #' Convert Input to POSIXct with a Specified Timezone
 #'
-#' A wrapper around `as.POSIXct` that allows specifying a default or custom timezone and an optional input format.
+#' A thin wrapper around `as.POSIXct` that applies a default timezone and optionally a specific input
+#' format. If `format` is not provided, the format is inferred by `as.POSIXct`.
 #'
-#' @param x A character vector, numeric vector, or Date object that can be converted to a `POSIXct` object.
-#' @param tz A character string specifying the timezone to set. Defaults to the global variable `global_timezone`.
-#' @param format An optional character string specifying the input format for `x`. Defaults to `NULL`, allowing `as.POSIXct` to infer the format automatically.
-#' @return A `POSIXct` object with the specified timezone applied.
-#' @details
-#' This function simplifies the conversion of various input types to `POSIXct` while allowing for an explicitly defined timezone.
-#' If `format` is provided, it will be used to parse the input; otherwise, the function will attempt to infer the format.
+#' @param x A character vector, numeric vector, or `Date` object that can be converted to a `POSIXct`
+#' object.
+#' @param tz A character string specifying the timezone to set. Defaults to the global variable
+#' `GLOBAL_TIMEZONE`.
+#' @param format An optional character string specifying the input format for `x`. If `NULL`, the
+#' format will be inferred automatically.
 #'
-#' The timezone `tz` defaults to the globally defined variable `global_timezone`, which must be set before calling this function.
+#' @return A `POSIXct` vector with the specified timezone applied.
 #'
 #' @examples
 #' GLOBAL_TIMEZONE <- "Europe/Berlin"
-#' as.POSIXctWithTimezone("1949-12-31 UTC")
-#' as.POSIXct("1949-12-31 CET", tz = "UTC")
+#'
+#' # Parse without specifying a format
+#' as.POSIXctWithTimezone("1949-12-31", tz = GLOBAL_TIMEZONE)
+#'
+#' # Parse with explicit format
+#' as.POSIXctWithTimezone(
+#'   "1949-12-31 12:30:45",
+#'   tz = GLOBAL_TIMEZONE,
+#'   format = "%Y-%m-%d %H:%M:%S"
+#' )
+#'
+#' # Parse a Date object
+#' as.POSIXctWithTimezone(as.Date("1949-12-31"), tz = GLOBAL_TIMEZONE)
 #'
 #' @export
 as.POSIXctWithTimezone <- function(x, tz = GLOBAL_TIMEZONE, format = NULL) {
@@ -24,6 +35,136 @@ as.POSIXctWithTimezone <- function(x, tz = GLOBAL_TIMEZONE, format = NULL) {
   } else {
     as.POSIXct(x, tz = tz, format = format)
   }
+}
+
+#' Check Whether a Value is a Valid Timestamp String
+#'
+#' Validates whether character input matches one of the supported timestamp formats. Supported
+#' formats are `"YYYY-MM-DD"`, `"YYYY-MM-DD HH:MM"` and `"YYYY-MM-DD HH:MM:SS"`.
+#'
+#' The function is vectorized and returns a logical vector indicating for each element whether it
+#' matches the expected timestamp pattern. Non-character inputs always return `FALSE`.
+#'
+#' @param x A vector to validate. Only character values can be valid timestamps.
+#'
+#' @return A logical vector of the same length as `x`. Each element is `TRUE` if the corresponding
+#' value matches one of the supported timestamp formats and `FALSE` otherwise.
+#'
+#' @examples
+#' # Valid timestamps
+#' isValidTimestampString("1949-12-31")
+#' isValidTimestampString("1949-12-31 12:30")
+#' isValidTimestampString("1949-12-31 12:30:45")
+#'
+#' # Vectorized usage
+#' isValidTimestampString(c(
+#'   "1949-12-31",
+#'   "1949-12-31 12:30",
+#'   "1949-12-31 12:30:45",
+#'   "31.12.1949"
+#' ))
+#'
+#' # Non-character input
+#' isValidTimestampString(1:3)
+#'
+#' @export
+isValidTimestampString <- function(x) {
+  # Return FALSE for non-character inputs
+  if (!is.character(x)) {
+    return(rep(FALSE, length(x)))
+  }
+
+  # Check whether strings match the allowed timestamp formats
+  grepl("^\\d{4}-\\d{2}-\\d{2}( \\d{2}:\\d{2}(:\\d{2})?)?$", x, perl = TRUE)
+}
+
+#' Parse Timestamp Values to POSIXct
+#'
+#' Parses timestamp strings with a strictly defined format and converts them to `POSIXct`.
+#' Accepted string formats are `"YYYY-MM-DD"`, `"YYYY-MM-DD HH:MM"` and
+#' `"YYYY-MM-DD HH:MM:SS"`.
+#'
+#' If the time component is incomplete, missing parts are filled automatically. A date-only string
+#' will be interpreted as midnight (`00:00:00`), and a timestamp without seconds will have seconds
+#' set to `"00"`.
+#'
+#' Character inputs that do not match the expected pattern return `NA`. If `stop_on_invalid` is
+#' `TRUE`, the function throws an error instead when encountering non-missing invalid timestamps.
+#' Non-character inputs are passed directly to `as.POSIXct`.
+#'
+#' @param x A vector containing timestamp values. Character values must match one of the supported
+#' formats.
+#' @param timezone A character string specifying the timezone for the resulting `POSIXct` values.
+#' Defaults to the global variable `GLOBAL_TIMEZONE`.
+#' @param stop_on_invalid Logical flag indicating whether the function should throw an error when
+#' encountering non-missing invalid timestamp strings. Defaults to `FALSE`.
+#'
+#' @return A `POSIXct` vector representing the parsed timestamps.
+#'
+#' @examples
+#' GLOBAL_TIMEZONE <- "Europe/Berlin"
+#'
+#' # Date only
+#' parseTimestamp("1949-12-31")
+#'
+#' # Without seconds
+#' parseTimestamp("1949-12-31 12:30")
+#'
+#' # Full timestamp
+#' parseTimestamp("1949-12-31 12:30:45")
+#'
+#' # Vectorized usage
+#' parseTimestamp(c(
+#'   "1949-12-31",
+#'   "1949-12-31 12:30",
+#'   "1949-12-31 12:30:45"
+#' ))
+#'
+#' # Invalid input returns NA
+#' parseTimestamp("31.12.1949")
+#'
+#' # Throw an error for invalid input
+#' # parseTimestamp("31.12.1949", stop_on_invalid = TRUE)
+#'
+#' @export
+parseTimestamp <- function(x, timezone = GLOBAL_TIMEZONE, stop_on_invalid = FALSE) {
+  # Handle non-character inputs using as.POSIXct directly
+  if (!is.character(x)) {
+    return(as.POSIXct(x, tz = timezone))
+  }
+
+  # Identify valid timestamp patterns
+  valid_pattern <- isValidTimestampString(x)
+
+  # Stop if requested and invalid non-missing inputs exist
+  if (stop_on_invalid) {
+    invalid_input <- !valid_pattern & !is.na(x)
+    if (any(invalid_input)) {
+      stop("Invalid timestamp format: ", paste(x[invalid_input], collapse = ", "))
+    }
+  }
+
+  # Preallocate result vector
+  result <- rep(as.POSIXct(NA, tz = timezone), length(x))
+
+  # Work only on valid inputs
+  valid_x <- x[valid_pattern]
+
+  # Normalize to full timestamp
+  date_only <- nchar(valid_x) == 10L
+  minute_only <- nchar(valid_x) == 16L
+
+  valid_x[date_only] <- paste0(valid_x[date_only], " 00:00:00")
+  valid_x[minute_only] <- paste0(valid_x[minute_only], ":00")
+
+  # Parse normalized timestamps
+  result[valid_pattern] <- as.POSIXct(
+    valid_x,
+    tz = timezone,
+    format = "%Y-%m-%d %H:%M:%S"
+  )
+
+  result
 }
 
 #' Convert Input to Date with a Specified Timezone

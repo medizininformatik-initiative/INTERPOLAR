@@ -245,8 +245,8 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
 
   # TODO: Diese Funktion an die "richtige" Stelle verschieben
   getCurrentDate <- function() {
-    if (exists("DEBUG_DAY")) {
-      datetime <- DEBUG_DATES[DEBUG_DAY]
+    if (exists("DEBUG_DATES")) {
+      datetime <- DEBUG_DATES[TOOLCHAIN_DAY]
       return(etlutils::as.DateWithTimezone(datetime))
     }
     return(etlutils::as.DateWithTimezone(Sys.Date()))
@@ -317,10 +317,10 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
 #
 addMedicationIdColumn <- function(medication_resources) {
   med_ref_col_name <- colnames(medication_resources)[endsWith(colnames(medication_resources), "_medicationreference_ref")]
-  medication_resources[, med_id := vapply(
-    get(med_ref_col_name),
-    function(x) if (is.na(x) || trimws(x) == "") NA_character_ else etlutils::fhirdataExtractIDs(x, unique = FALSE),
-    character(1) # return value is always single string
+  medication_resources[, med_id := data.table::fifelse(
+    is.na(get(med_ref_col_name)) | trimws(get(med_ref_col_name)) == "",
+    NA_character_,
+    etlutils::fhirdataExtractIDs(get(med_ref_col_name), unique = FALSE)
   )]
   return(medication_resources)
 }
@@ -888,13 +888,14 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
 
   # remove all medication requests where calculated start_datetime is before medreq_authoredon
   medication_requests <- medication_requests[
-    start_datetime >= medreq_authoredon & (is.na(end_datetime) | end_datetime >= start_datetime)
+    start_datetime >= medreq_authoredon & end_datetime >= start_datetime
   ]
   # ensure medication start is not before encounter start
   active_requests <- medication_requests[
     medreq_authoredon >= enc_period_start &
       start_datetime >= enc_period_start &
-      medreq_authoredon <= meda_datetime
+      medreq_authoredon <= meda_datetime &
+      end_datetime >= meda_datetime # Remove finished medication requests where end_datetime is before meda_datetime
   ]
 
   # keep only relevant columns and aggregate to get the overall start and end datetime per atc_code

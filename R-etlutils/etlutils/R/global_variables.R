@@ -5,6 +5,6 @@ utils::globalVariables(c("FHIR_SERVER_ENDPOINT", "MAX_CORES", "MAX_ENCOUNTER_BUN
                          "FHIR_TOKEN_REFRESH_USER", "MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS",
                          "MAX_CHARACTER_LENGTH_FOR_GET_REQUESTS_RESERVE", "SORT", "IDS_AT_ONCE"))
 # global variables for directory
-utils::globalVariables(c("MODULE_NAME", "MODULE_DIRS", "MODULE_TIME_STAMP"))
+utils::globalVariables(c("MODULE_NAME", "MODULE_DIRS"))
 # global variables for logging
 utils::globalVariables(c("VERBOSE", "DEBUG"))

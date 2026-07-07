@@ -22,18 +22,10 @@
 # If this parameter is activated, only those whose subject ID is in this list are found in the initial
 # encounter request.
 #################
-DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004", "UKB-0005",
-                                 "UKB-0006", "UKB-0007", "UKB-0008", "UKB-0009", "UKB-0010",
-                                 "UKB-0011", "UKB-0012", "UKB-0013", "UKB-0014", "UKB-0015"
-                                 ]
-
-#################
-# Activate this parameter to test which FHIR search request for Encounter is sent to the FHIR server.
-# This will only output the request, but not execute the entire 'cds2db' module.
-# Use this to see the result of the above debug parameters or, without the debug parameters, the
-# first FHIR search request for Encounter.
-#################
-#DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST = true
+#DEBUG_ENCOUNTER_ACCEPTED_PIDS = ["UKB-0001", "UKB-0002", "UKB-0003", "UKB-0004", "UKB-0005",
+#                                 "UKB-0006", "UKB-0007", "UKB-0008", "UKB-0009", "UKB-0010",
+#                                 "UKB-0011", "UKB-0012", "UKB-0013", "UKB-0014", "UKB-0015"
+#                                 ]
 
 [retrieve.debug.all_resource.fhir_search]
 
@@ -145,10 +137,10 @@ DEBUG_SKIP_MELTING_RESOURCES = [
 #################
 # If this parameter is activated, only the resources listed
 # here are recalculated. If this list is empty or this parameter is deactivated, all resources are recalculated.
-# ATTENTION: If this parameter is set to true, the module cd2db will end with error-message after recalculation step.
+# ATTENTION: If this parameter is set, the module cd2db will end with error-message after recalculation step.
 # So this parameter is just for recalculation of references of specific resources
 #################
-#DEBUG_RECALULATE_REFS_FOR_RESOURCES = [
+#DEBUG_RECALCULATE_REFS_FOR_RESOURCES = [
   #"observation",
   #"procedure",
   #"medicationadministration",

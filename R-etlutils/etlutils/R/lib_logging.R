@@ -50,6 +50,12 @@ endLogging <- function() {
   }
 
   log_filename <- .lib_logging_env[["log_filename"]]
+  # Nested module calls may already have closed and unset the active log target.
+  # In that case there is nothing left to flush here.
+  if (!isSimpleNotEmptyString(log_filename)) {
+    closeAllConnections()
+    return(invisible(NULL))
+  }
   log_file <- .lib_logging_env[[log_filename]]
   if (!is.null(log_file)) {
     close(log_file)

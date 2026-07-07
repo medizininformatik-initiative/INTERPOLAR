@@ -1,16 +1,17 @@
 initInternal <- function(module_name, validate_config = TRUE) {
-  etlutils::initModule(module_name,
-                       db_schema_base_name = "db2frontend",
-                       path_to_toml = "./R-db2frontend/db2frontend_config.toml",
-                       mandatory_parameters = c(
-                         "REDCAP_URL",
-                         "REDCAP_TOKEN",
-                         "PATH_TO_DB_CONFIG_TOML"
-                       )
+  config <- etlutils::initModule(module_name,
+                                 db_schema_base_name = "db2frontend",
+                                 path_to_toml = "./R-db2frontend/db2frontend_config.toml",
+                                 mandatory_parameters = c(
+                                   "REDCAP_URL",
+                                   "REDCAP_TOKEN",
+                                   "PATH_TO_DB_CONFIG_TOML"
+                                 )
   )
   if (validate_config) {
     # TODO: add validation for common parameters of frontend2db and db2frontend
   }
+  return(config)
 }
 
 #' Initializes the module context for frontend2db.
@@ -95,10 +96,11 @@ resetLockDB2Frontend <- function() {
 #' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
 #' @param validate_config Logical. If TRUE, validates the module configuration before starting
 #'                        the retrieval process. Default is TRUE.
+#' @param delete_redcap_content If TRUE and the process name is "DebugCDSToolchain" then REDCap will be deleted
 #' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-startFrontend2DB <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
+startFrontend2DB <- function(ignore_newer_db_version = FALSE, validate_config = TRUE, delete_redcap_content = FALSE) {
   # Initialize and start module
   config <- initFrontend2DB(validate_config)
   etlutils::startModule(config, hide_value_pattern = "^REDCAP_")
@@ -113,8 +115,8 @@ startFrontend2DB <- function(ignore_newer_db_version = FALSE, validate_config = 
     })
 
     # Delete Redcap content (DEBUG and TESTS)
-    if (exists("DEBUG_DAY") && DEBUG_DAY == 1 && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_REDCAP_DATA")) {
-      etlutils::runLevel2("DEBUG_DAY == 1 -> Delete all Redcap records", {
+    if (delete_redcap_content) {
+      etlutils::runLevel2("TOOLCHAIN_DAY == 1 -> Delete all Redcap records", {
         deleteRedcapContent()
       })
     } else {
@@ -123,7 +125,6 @@ startFrontend2DB <- function(ignore_newer_db_version = FALSE, validate_config = 
         importRedcap2DB()
       })
     }
-
   }))
 
   # Reset lock and close all database connections. Do not surround this with runLevelX!

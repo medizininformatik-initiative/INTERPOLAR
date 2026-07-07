@@ -40,7 +40,7 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 ###############################
 
 
-if (exists("DEBUG_DAY")) {
+if (exists("TOOLCHAIN_DAY")) {
 
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
@@ -50,10 +50,7 @@ if (exists("DEBUG_DAY")) {
   pid1 <- "UKB-0001"
   pats <- pid1 # present at day 1
 
-  if (DEBUG_DAY == 1) {
-    # clear database on Day 1
-    etlutils::dbReset()
-  } else {
+  if (TOOLCHAIN_DAY > 1) {
     if (exists("DEBUG_RUN_SINGLE_DAY_ONLY")) {
       etlutils::dbReset(c("db_log.dp_mrp_calculations", "db_log.retrolektive_mrpbewertung_fe"))
     }
@@ -81,7 +78,7 @@ if (exists("DEBUG_DAY")) {
   # Show the current state of the resources
   # dt_enc <- testGetResourceTable("Encounter")
   # pids_per_wards <- testGetResourceTable("pids_per_ward")
-  current_debug_day <- DEBUG_DAY
+  current_debug_day <- TOOLCHAIN_DAY
 
   runCodeForDebugDay(1, {
     # Patient 1 Tag 1: Versorgungsstellenkontakt auf Station 1 Zimmer 1-1, Bett 1-1
@@ -92,7 +89,26 @@ if (exists("DEBUG_DAY")) {
     testDischarge(pid1)
   })
 
-  duplicatePatients(12)
+  duplicatePatients(30)
+
+  # create some patients with encounters starting one week and year earlier
+  week_earlier_patients <- paste0("UKB-0001_", 21:25)
+  for (pid in week_earlier_patients) {
+    testChangeDataForPIDEncounter(
+      pid,
+      "enc_period_start",
+      getDebugDatesRAWDateTime(-7, 1)
+    )
+  }
+  year_earlier_patients <- paste0("UKB-0001_", 26:30)
+
+  for (pid in year_earlier_patients) {
+    testChangeDataForPIDEncounter(
+      pid,
+      "enc_period_start",
+      getDebugDatesRAWDateTime(-365, 1)
+    )
+  }
 
   runCodeForDebugDay(1, {
 

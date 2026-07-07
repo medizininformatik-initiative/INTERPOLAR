@@ -2,7 +2,7 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @import data.table
-#' @import etlutils
+#' @importFrom data.table :=
+#' @importFrom etlutils setVal getVal hasVal addVal isVal isNonEmptyVal setProcess isProcess rmVal
 ## usethis namespace: end
 NULL

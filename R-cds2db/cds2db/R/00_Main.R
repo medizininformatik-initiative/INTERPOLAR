@@ -1,3 +1,10 @@
+#' Gets the name of the module.
+#'
+#' @export
+getModuleName <- function() {
+  return("cds2db")
+}
+
 #' Initializes the module context for cds2db.
 #'
 #' This function initializes the module context for the cds2db module by loading
@@ -15,7 +22,7 @@
 #' @export
 init <- function(validate_config = TRUE) {
   # Initialize and start module if init_constants_only == FALSE
-  config <- etlutils::initModule("cds2db",
+  config <- etlutils::initModule(getModuleName(),
                        path_to_toml = "./R-cds2db/cds2db_config.toml",
                        mandatory_parameters = c(
                          "FHIR_SERVER_ENDPOINT",
@@ -24,7 +31,7 @@ init <- function(validate_config = TRUE) {
                        )
   )
   if (validate_config) {
-    # TODO: add validation
+    validateConfig()
   }
   return(config)
 }
@@ -42,27 +49,57 @@ resetLock <- function() {
   etlutils::dbResetLock()
 }
 
+#' Initializes the a cache for the current process
+#'
+#' @param delete_old_cache If TRUE existing cache files with the same base name will be deleted
+#'
+#' @return The number of files in this cache
+#'
+#' @export
+initCache <- function(delete_old_cache) {
+  etlutils::registerCache(files_base_name = etlutils::getProcess(), module_name = getModuleName())
+  if (delete_old_cache) {
+    etlutils::deleteAllCacheFiles(module_name = getModuleName())
+  }
+  return(etlutils::getCacheFilesCount(module_name = getModuleName()))
+}
+
+#' Deletes the next cache file
+#'
+#' @return The number of files in this cache
+#'
+#' @export
+deleteNextCacheFile <- function() {
+  etlutils::deleteNextCacheFile(module_name = getModuleName())
+  return(etlutils::getCacheFilesCount(module_name = getModuleName()))
+}
+
 #' Starts the ETL retrieval process from FHIR to the database
 #'
 #' This is the main entry point for the ETL process. It initializes the module,
 #' validates mandatory parameters, and starts the data retrieval workflow from
 #' the FHIR API to the database.
 #'
+#' @param phase_a_starts A named list of timestamps indicating the start of phase A for each
+#' ward. The names of the list should correspond to the ward names. This is used to determine
+#' which encounters belong to phase A and which do not, based on their start time and the ward
+#' they took place in.
 #' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
 #' @param validate_config Logical. If TRUE, validates the module configuration before starting
 #'                        the retrieval process. Default is TRUE.
 #' than the release version. Default is FALSE and will stop if the database version is newer.
 #'
 #' @export
-retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
+retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
   # Initialize and start module
   config <- init(validate_config)
-  etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+")
+  etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+|^DATA_IMPORT_FHIR_PIDS$")
 
-  skip_db_operations <- etlutils::isDefinedAndTrue("DEBUG_FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
+  skip_db_operations <- etlutils::isDefinedAndTrue("FHIR_SEARCH_ENCOUNTER_REQUEST_TEST")
 
-  try(etlutils::runLevel1("Run Retrieve", {
+  retrieve_runlevel_message <- if (isProcess("DataImport")) "Run Data Import Retrieve" else "Run Retrieve"
+  try(etlutils::runLevel1(retrieve_runlevel_message, {
 
     if (!skip_db_operations) {
       # Reset database lock from unfinished previous cds2db run
@@ -74,7 +111,7 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
       # Check if we must create references for old data (should be executed exactly once and then never again)
       etlutils::runLevel2("Create references for old data", {
 
-        debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALULATE_REFS_FOR_RESOURCES")
+        debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALCULATE_REFS_FOR_RESOURCES")
 
         if (mustCreateReferencesForOldData() || debug_active) {
           createReferences(NULL, COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM)
@@ -87,7 +124,21 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
-      pids_splitted_by_ward <- getPIDsSplittedByWard()
+      if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
+        pids_splitted_by_ward <- getDataImportPIDsFromDB()
+      } else if (etlutils::isSubProcess("DataImport.All")) {
+        if (!etlutils::hasNextCacheFile()) {
+          # This writes the list of pids_splitted_by_ward into the cache. Same
+          # PIDs are present in multiple different cache files)
+          list_of_pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = FALSE, wards_min_encounter_start_date = phase_a_starts)
+          etlutils::writeCacheFiles(list_of_pids_splitted_by_ward)
+        }
+        pids_splitted_by_ward <- etlutils::readNextCacheFile()
+      } else {
+        # Get a single pids_splitted_by_ward without using the cache and
+        # ensuring that every PID is present at most 1 time.
+        pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = TRUE, wards_min_encounter_start_date = phase_a_starts)
+      }
       all_wards_empty <- !length(unlist(pids_splitted_by_ward))
     })
 
@@ -95,6 +146,9 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
       # Load Table Description
       etlutils::runLevel2("Load Table Description", {
         fhir_table_descriptions <- getFhircrackrTableDescriptions()
+        if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
+          fhir_table_descriptions <- filterFhirTableDescriptionsForDataImport(fhir_table_descriptions)
+        }
       })
 
       # Download and crack resources by Patient IDs per ward
@@ -112,7 +166,6 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
         }
         names(resource_tables) <- tolower(paste0(names(resource_tables), "_raw"))
       })
-
       if (!all_empty_fhir) {
         # Write raw tables to database
         etlutils::runLevel2("Write RAW tables to database", {
@@ -121,7 +174,7 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
             lock_id = "Write RAW tables to database",
             stop_if_table_not_empty = TRUE)
         })
-      } else {
+      } else if (etlutils::isSubProcess("DataImport.All") || !isProcess("DataImport")) {
         # Write pids_per_ward table to database
         etlutils::runLevel2("Write pids_per_ward table to database", {
           etlutils::dbWriteTables(
@@ -129,6 +182,8 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
             lock_id = "Write pids_per_ward table to database",
             stop_if_table_not_empty = TRUE)
         })
+      } else {
+        etlutils::catWarningMessage("No FHIR resources found for resource type data import.")
       }
 
       # Convert Column Types in resource tables
@@ -139,11 +194,15 @@ retrieve <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
         # and type them. And the second point is that the resource_tables contains the pids_per_ward
         # table which is not a resource from the FHIR server -> so we have to join and unique the
         # name set:
-        all_resource_names <- c(names(fhir_table_descriptions[["pid_dependant"]]), names(fhir_table_descriptions[["pid_independant"]]))
-        # add "_raw" prefix to the resource table names to match the identical names from the raw tables
-        all_resource_raw_table_names <- paste0(tolower(all_resource_names), "_raw")
         all_current_run_table_names <- names(resource_tables)
-        all_table_names_raw_diff <- unique(c(all_current_run_table_names, all_resource_raw_table_names))
+        if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
+          all_table_names_raw_diff <- all_current_run_table_names
+        } else {
+          all_resource_names <- c(names(fhir_table_descriptions[["pid_dependant"]]), names(fhir_table_descriptions[["pid_independant"]]))
+          # add "_raw" prefix to the resource table names to match the identical names from the raw tables
+          all_resource_raw_table_names <- paste0(tolower(all_resource_names), "_raw")
+          all_table_names_raw_diff <- unique(c(all_current_run_table_names, all_resource_raw_table_names))
+        }
         all_table_names_raw_diff <- paste0("v_", all_table_names_raw_diff, "_diff")
 
         resource_tables_raw_diff <- etlutils::dbReadTables(

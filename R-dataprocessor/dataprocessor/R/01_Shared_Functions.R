@@ -1,6 +1,138 @@
-# This function constructs an error or warning message with optional additional
-# information such as related tables and database connection details. It can be
-# used to provide more context when reporting errors or warnings.
+#' Validate ward phase definitions
+#'
+#' Validates ward phase definitions loaded from global variables with the prefix
+#' `PHASES_WARD`. Each definition must contain exactly one non-empty
+#' `ward_name`, exactly one `phase_a_start`, and at most one `phase_b_start`.
+#' The function also checks that all timestamps have a valid format and that
+#' `phase_b_start`, if present, is later than `phase_a_start`.
+#'
+#' @param timezone A character string defining the timezone used for parsing
+#'   phase timestamps.
+#'
+#' @return Invisibly returns `TRUE` if all ward phase definitions are valid.
+#'   Otherwise, the function stops with an error describing the first invalid
+#'   definition found.
+#'
+#' @examples
+#' PHASES_WARD_1 <- c(
+#'   "ward_name = 'Station 1'",
+#'   "phase_a_start = '2026-01-11 10:00:00'",
+#'   "phase_b_start = '2026-01-21 10:00:00'"
+#' )
+#'
+#' PHASES_WARD_2 <- c(
+#'   "ward_name = 'Station 2'",
+#'   "phase_a_start = '2026-01-11'",
+#'   "phase_b_start = '2026-01-12'"
+#' )
+#'
+#' validateWardPhases(timezone = "UTC")
+#'
+#' @export
+validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
+
+  msg_prefix <- "dataprocessor_config.toml: "
+
+  ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")
+  if (!is.list(ward_phases) || length(ward_phases) == 0L) {
+    return(invisible(TRUE))
+  }
+
+  ward_names <- character()
+  getEntryName <- function(x, index) {
+    x_names <- names(x)
+    if (is.null(x_names) || length(x_names) < index || is.na(x_names[index]) || x_names[index] == "") {
+      return(paste0("[[", index, "]]"))
+    }
+    x_names[index]
+  }
+
+  for (i in seq_along(ward_phases)) {
+    entry_name <- getEntryName(ward_phases, i)
+    entry <- ward_phases[[i]]
+
+    if (!is.character(entry)) {
+      stop(msg_prefix, "Entry ", entry_name, " must be a character vector.")
+    }
+    if (length(entry) == 0L) {
+      stop(msg_prefix, "Entry ", entry_name, " must not be empty.")
+    }
+  }
+
+  parsed_records <- tryCatch(
+    etlutils::parseStructuredConfigDefinitions(
+      definitions = list(ward_phases),
+      allowed_key_pattern = "ward_name|phase_a_start|phase_b_start",
+      allow_plus = FALSE
+    ),
+    error = function(e) {
+      stop(msg_prefix, conditionMessage(e), call. = FALSE)
+    }
+  )
+
+  for (i in seq_along(ward_phases)) {
+    entry_name <- getEntryName(ward_phases, i)
+    entry_records <- parsed_records[
+      vapply(parsed_records, `[[`, "", "entry_name") == entry_name
+    ]
+
+    keys <- vapply(entry_records, `[[`, "", "key")
+    values <- vapply(entry_records, `[[`, "", "value")
+
+    if (sum(keys == "ward_name") != 1L) {
+      stop(msg_prefix, "Entry ", entry_name, " must contain exactly one ward_name.")
+    }
+    if (sum(keys == "phase_a_start") != 1L) {
+      stop(msg_prefix, "Entry ", entry_name, " must contain exactly one phase_a_start.")
+    }
+    if (sum(keys == "phase_b_start") > 1L) {
+      stop(msg_prefix, "Entry ", entry_name, " must contain at most one phase_b_start.")
+    }
+
+    ward_name <- values[keys == "ward_name"]
+    if (trimws(ward_name) == "") {
+      stop(msg_prefix, "ward_name must not be empty in entry ", entry_name, ".")
+    }
+    if (ward_name %in% ward_names) {
+      stop(msg_prefix, "Duplicate ward_name found: '", ward_name, "'.")
+    }
+
+    phase_a_raw <- values[keys == "phase_a_start"]
+    phase_a <- etlutils::parseTimestamp(phase_a_raw, timezone = timezone)
+
+    if (is.na(phase_a)) {
+      stop(msg_prefix, "phase_a_start is not a valid timestamp in entry ", entry_name, ": ", phase_a_raw)
+    }
+    if (any(keys == "phase_b_start")) {
+      phase_b_raw <- values[keys == "phase_b_start"]
+      phase_b <- etlutils::parseTimestamp(phase_b_raw, timezone = timezone)
+      if (is.na(phase_b)) {
+        stop(msg_prefix, "phase_b_start is not a valid timestamp in entry ", entry_name, ": ", phase_b_raw)
+      }
+      if (!(phase_a < phase_b)) {
+        stop(msg_prefix, "phase_a_start must be earlier than phase_b_start in entry ", entry_name, ".")
+      }
+    }
+    ward_names <- c(ward_names, ward_name)
+  }
+  invisible(TRUE)
+}
+
+#' Construct an error or warning message with additional context
+#'
+#' Creates a human-readable error or warning message and appends optional
+#' information about affected tables and the current database connection.
+#'
+#' @param text A character string containing the main error or warning text.
+#' @param tables Optional character vector of related table names to include
+#'   in the message.
+#' @param readonly Logical flag indicating whether the database connection
+#'   should be treated as read-only when retrieving connection details.
+#'
+#' @return A character string containing the original message plus any
+#'   additional context information.
+#'
+#' @export
 getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
   tables <- if (!etlutils::isSimpleNA(tables)) paste0(" Table(s): ", paste0(tables, collapse = ", "), ";") else ""
   db_connection <- if (!etlutils::isSimpleNA(readonly)) etlutils::dbGetInfo(readonly) else ""
@@ -19,12 +151,13 @@ getErrorOrWarningMessage <- function(text, tables = NA, readonly = TRUE) {
 #'
 #' @return A vector containing the parsed elements from the query list string.
 #'
+#' @export
 parseQueryList <- function(list_string, split = " ") {
   splitted <- unlist(strsplit(list_string, split))
   etlutils::fhirdbGetQueryList(splitted)
 }
 
-#' Get the most relevant current datetime
+#' Get the end datetime of the given encounters
 #'
 #' This function retrieves the latest encounter end datetime from the `encounters` table.
 #' If no valid end datetime is available, it defaults to the current system time (`Sys.time()`).
@@ -40,7 +173,7 @@ parseQueryList <- function(list_string, split = " ") {
 #' @return A `POSIXct` object representing the most recent encounter end datetime
 #'         or the current system time if no valid datetime is found.
 #'
-getCurrentDatetime <- function(encounters) {
+getEncountersPeriodEnd <- function(encounters) {
   encounters_end <- na.omit(encounters$enc_period_end)
   sys_time <- Sys.time()
   datetime <- if (length(encounters_end)) etlutils::getMaxDatetime(encounters_end) - 1 else sys_time
@@ -53,7 +186,7 @@ getCurrentDatetime <- function(encounters) {
 
 #' Format datetime for SQL queries for Observations.
 #'
-#' This function formats the datetime returned by `getCurrentDatetime()` into an SQL-compatible
+#' This function formats the datetime returned by `getEncountersEndDatetime()` into an SQL-compatible
 #' timestamp string in the format `"YYYY-MM-DD HH:MM:SS"`.
 #'
 #' @param encounters A `data.table` or `data.frame` containing encounter records.
@@ -61,8 +194,10 @@ getCurrentDatetime <- function(encounters) {
 #'
 #' @return A character string representing the formatted SQL datetime.
 #'
+#' @export
 getObservationQueryDatetime <- function(encounters) {
-  format(getCurrentDatetime(encounters), "%Y-%m-%d %H:%M:%S")
+  encounters_end <- getEncountersPeriodEnd(encounters)
+  format(encounters_end, "%Y-%m-%d %H:%M:%S")
 }
 
 #' Load Resources Last Version From Database Query
@@ -77,6 +212,7 @@ getObservationQueryDatetime <- function(encounters) {
 #'
 #' @return A character string representing the SQL query.
 #'
+#' @export
 getQueryToLoadResourcesLastVersionFromDB <- function(resource_name, column_names = "*", filter = "") {
   resource_name <- tolower(resource_name)
   db_id_column <- paste0(resource_name, "_id")
@@ -159,6 +295,7 @@ loadResourcesFilteredByValuesFromDB <- function(resource_name, column_names = "*
 #'
 #' @return A data frame containing the last version of load resources.
 #'
+#' @export
 loadResourcesLastVersionByOwnIDFromDB <- function(resource_name, ids_or_refs) {
   id_column <- etlutils::fhirdbGetIDColumn(resource_name)
   loadResourcesFilteredByValuesFromDB(

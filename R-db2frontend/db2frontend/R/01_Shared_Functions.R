@@ -1,10 +1,20 @@
 getRedcapURL <- function() {
   if (exists("DEBUG_REDCAP_PORT")) {
-    url <- paste0("http://127.0.0.1:", DEBUG_REDCAP_PORT, "/redcap/api/")
+    redcap_host <- if (exists("DEBUG_REDCAP_HOST")) DEBUG_REDCAP_HOST else "127.0.0.1"
+    url <- paste0("http://", redcap_host, ":", DEBUG_REDCAP_PORT, "/redcap/api/")
   } else {
     url <- REDCAP_URL
   }
   return(url)
+}
+
+getRedcapToken <- function() {
+  if (etlutils::isDefinedAndNotEmpty("DEBUG_REDCAP_TOKEN")) {
+    token <- DEBUG_REDCAP_TOKEN
+  } else {
+    token <- REDCAP_TOKEN
+  }
+  return(token)
 }
 
 #' Establish a Valid Connection to REDCap
@@ -23,7 +33,7 @@ getRedcapURL <- function() {
 getRedcapConnection <- function() {
   # Attempt to connect to REDCap
   frontend_connection <- tryCatch({
-    suppressWarnings(redcapAPI::redcapConnection(url = getRedcapURL(), token = REDCAP_TOKEN))
+    suppressWarnings(redcapAPI::redcapConnection(url = getRedcapURL(), token = getRedcapToken()))
   }, error = function(e) {
     stop("Failed to establish a REDCap connection. Error: ", e$message)
   })
@@ -71,6 +81,7 @@ getFrontendTableDescription <- function() {
 #'          fetches all record IDs, and deletes them using `deleteRecords()`. If no records
 #'          are found, a message is displayed instead.
 #'
+#' @export
 deleteRedcapContent <- function() {
 
   # Define REDCap API connection
