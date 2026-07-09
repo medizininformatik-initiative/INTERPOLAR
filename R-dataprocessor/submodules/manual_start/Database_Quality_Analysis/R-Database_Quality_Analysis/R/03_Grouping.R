@@ -106,15 +106,29 @@ inferGroupingColumns <- function(table_metadata, config) {
   if (!is.na(grouping$case_id)) {
     grouping$case_id <- validateGroupingColumn(table_name, columns, grouping$case_id, "case_id")
   } else {
+    case_id_candidates <- paste0(grouping_prefix, "_encounter_ref")
+    if (identical(table_name, "encounter")) {
+      case_id_candidates <- c("enc_main_encounter_calculated_ref", case_id_candidates)
+    }
     grouping$case_id <- optionalGroupingColumn(
       table_name,
       columns,
-      paste0(grouping_prefix, "_encounter_ref"),
+      case_id_candidates,
       "case_id"
     )
   }
 
-  unlist(grouping, use.names = TRUE)
+  grouping <- unlist(grouping, use.names = TRUE)
+  if (identical(table_name, "encounter") &&
+      all(c("enc_type_system", "enc_type_code", "enc_class_system", "enc_class_code") %in% columns)) {
+    encounter_type_grouping <- stats::setNames(
+      rep(grouping[["resource_id"]], length(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_TYPE_GROUPINGS)),
+      names(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_TYPE_GROUPINGS)
+    )
+    grouping <- c(grouping, encounter_type_grouping)
+  }
+
+  grouping
 }
 
 addGroupingRoles <- function(result, grouping_columns) {
@@ -124,9 +138,19 @@ addGroupingRoles <- function(result, grouping_columns) {
     if (is.na(grouping_column) || !grouping_column %in% result$COLUMN_NAME) {
       next
     }
-    count_column <- DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
+    count_column <- c(
+      DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS,
+      DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS
+    )[[grouping_name]]
+    role_columns <- grouping_column
+    if (grouping_name %in% names(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_TYPE_GROUPINGS)) {
+      role_columns <- intersect(
+        c(grouping_column, "enc_type_system", "enc_type_code", "enc_class_system", "enc_class_code"),
+        result$COLUMN_NAME
+      )
+    }
     result[
-      COLUMN_NAME == grouping_column,
+      COLUMN_NAME %in% role_columns,
       (DATABASE_QUALITY_ANALYSIS_GROUPING_ROLE_COLUMN) := data.table::fifelse(
         is.na(get(DATABASE_QUALITY_ANALYSIS_GROUPING_ROLE_COLUMN)),
         count_column,

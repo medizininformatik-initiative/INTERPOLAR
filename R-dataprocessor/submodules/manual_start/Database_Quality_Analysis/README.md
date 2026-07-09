@@ -44,6 +44,21 @@ The normalized output columns are:
 - `last value import datetime`
 - `first value meta last updated`
 - `last value meta last updated`
+- `count per Einrichtungskontakt`
+- `count per Einrichtungskontakt class IMP`
+- `count per Einrichtungskontakt class SS`
+- `count per Einrichtungskontakt class AMB`
+- `count per Einrichtungskontakt class Andere`
+- `count per Abteilungskontakt`
+- `count per Abteilungskontakt class IMP`
+- `count per Abteilungskontakt class SS`
+- `count per Abteilungskontakt class AMB`
+- `count per Abteilungskontakt class Andere`
+- `count per Versorgungsstellenkontakt`
+- `count per Versorgungsstellenkontakt class IMP`
+- `count per Versorgungsstellenkontakt class SS`
+- `count per Versorgungsstellenkontakt class AMB`
+- `count per Versorgungsstellenkontakt class Andere`
 
 The datetime columns are optional because they require additional reads from the
 historical views without the `_last_version` suffix. Use
@@ -71,6 +86,15 @@ Database-internal columns such as processing metadata, `*_raw_id`,
 last-version helper columns, and the physical table primary key
 `<table_name>_id` are excluded from the report. Raw last-version views are
 excluded by default.
+
+For the `encounter` table in the FHIR sheet, additional count columns at the end
+distinguish the CDS encounter hierarchy levels by `enc_type_system` and
+`enc_type_code`. They also split each hierarchy level by `enc_class_system`
+and `enc_class_code` into `AMB`, `IMP`, `SS`, and `Andere`.
+
+Configured REDCap checkbox groups are counted as available only when at least
+one checkbox option in the group is `Checked`. `Unchecked` values alone are not
+counted as available data for these groups.
 
 ## Development
 
