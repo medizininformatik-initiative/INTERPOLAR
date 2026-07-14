@@ -12,7 +12,7 @@ getFhirPseudonymizationRuleReport(table_description)
 }
 \value{
 A named list with \code{summary}, \code{yaml_rules}, \code{unmatched_table_rows},
-\code{selected_rules}, \code{conflicts}, and \code{candidates}.
+\code{selected_rules}, \code{overridden_rules}, \code{conflicts}, and \code{candidates}.
 }
 \description{
 Builds review tables from a FHIR table description previously processed with

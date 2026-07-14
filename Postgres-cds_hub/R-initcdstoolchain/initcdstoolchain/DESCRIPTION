@@ -26,5 +26,6 @@ Imports:
     methods,
     etlutils,
     openxlsx,
-    pseudonym
+    pseudonym,
+    zip
 Config/roxygen2/version: 8.0.0

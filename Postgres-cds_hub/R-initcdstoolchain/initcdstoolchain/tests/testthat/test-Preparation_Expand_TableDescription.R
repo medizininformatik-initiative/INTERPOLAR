@@ -58,6 +58,49 @@ test_that("addEmptyRowsBeforeNewResource inserts empty rows correctly", {
   expect_true(identical(result, expected_result))
 })
 
+test_that("expandTableDescriptionInternal retains nested FHIR node type provenance", {
+  table_description_collapsed <- data.table(
+    RESOURCE = c("Condition", "Observation"),
+    RESOURCE_PREFIX = c("con", "obs"),
+    FHIR_EXPRESSION = c("abatementAge/Age", "referenceRange/age/Range"),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+  expansion_tables <- list(
+    Age = data.table(
+      FHIR_EXPRESSION = c("value", "unit"),
+      FHIR_TYPE = c("decimal", NA_character_)
+    ),
+    Range = data.table(
+      FHIR_EXPRESSION = c("low/SimpleQuantity", "high/SimpleQuantity"),
+      FHIR_TYPE = NA_character_
+    ),
+    SimpleQuantity = data.table(
+      FHIR_EXPRESSION = c("value", "unit"),
+      FHIR_TYPE = c("decimal", NA_character_)
+    )
+  )
+
+  result <- expandTableDescriptionInternal(table_description_collapsed, expansion_tables)
+
+  expect_equal(
+    result[COLUMN_NAME == "con_abatementage_value", FHIR_NODE_TYPE_PATHS],
+    "Age=abatementAge"
+  )
+  expect_equal(
+    result[COLUMN_NAME == "obs_referencerange_age_low_value", FHIR_NODE_TYPE_PATHS],
+    "Range=referenceRange/age|SimpleQuantity=referenceRange/age/low"
+  )
+  expect_equal(
+    getExpandedFhirNodePath(
+      "",
+      "Identifier",
+      data.table(FHIR_EXPRESSION = c("identifier/system", "identifier/value"))
+    ),
+    "identifier"
+  )
+})
+
 test_that("addPseudonymizationRulesToTableDescription adds default YAML rules", {
   table_description <- data.table(
     RESOURCE = c("Patient", NA),
@@ -77,7 +120,10 @@ test_that("addPseudonymizationRulesToTableDescription adds default YAML rules", 
     "FHIR_TYPE",
     "PSEUDONYMIZATION_RULE"
   ))
-  expect_equal(result$PSEUDONYMIZATION_RULE, c("cryptoHash", "generalize(YYYY-MM)"))
+  expect_equal(
+    result$PSEUDONYMIZATION_RULE,
+    c("cryptoHash", "generalize(format = \"YYYY-MM\")")
+  )
 })
 
 test_that("setTableDescriptionColumnWidths stores readable widths", {
@@ -117,4 +163,100 @@ test_that("setTableDescriptionColumnWidths stores readable widths", {
       )
     )
   }
+})
+
+test_that("setTableDescriptionColumnWidths fits the longest first rule line", {
+  table_description_file_name <- tempfile(fileext = ".xlsx")
+  first_rule <- paste0(strrep("x", 40), ";")
+  table_description <- data.table(
+    RESOURCE = "Patient",
+    COLUMN_NAME = "pat_id",
+    FHIR_EXPRESSION = "id",
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_,
+    FHIR_ID_COLUMN_NAME = NA_character_,
+    REFERENCE_ID_COLUMN_NAME = NA_character_,
+    PSEUDONYMIZATION_RULE = paste(first_rule, "keep")
+  )
+  etlutils::writeExcelFile(
+    list("table_description" = table_description),
+    table_description_file_name,
+    with_column_names = TRUE
+  )
+
+  setTableDescriptionColumnWidths(table_description_file_name)
+
+  sheet_xml <- paste(
+    readLines(unz(table_description_file_name, "xl/worksheets/sheet1.xml"), warn = FALSE),
+    collapse = ""
+  )
+  expect_match(sheet_xml, '<col min="8" max="8" width="43\\.71"')
+})
+
+test_that("splitPseudonymizationRuleChain only splits top-level rule separators", {
+  rule <- paste0(
+    "pseudonymize(domain = \"a\"; type.coding.code == \"VN\"); ",
+    "keepIf(system == \"x\")"
+  )
+
+  expect_equal(
+    splitPseudonymizationRuleChain(rule),
+    paste0(
+      "pseudonymize(domain = \"a\"; type.coding.code == \"VN\");",
+      intToUtf8(10),
+      "keepIf(system == \"x\")"
+    )
+  )
+})
+
+test_that("formatTableDescriptionPseudonymizationRules writes hard line breaks and row heights", {
+  table_description_file_name <- tempfile(fileext = ".xlsx")
+  table_description <- data.table(
+    RESOURCE = c("Patient", NA),
+    COLUMN_NAME = c("pat_identifier_value", "pat_identifier_value_short"),
+    FHIR_EXPRESSION = c("identifier/value", "identifier/value"),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_,
+    FHIR_ID_COLUMN_NAME = NA_character_,
+    REFERENCE_ID_COLUMN_NAME = NA_character_,
+    PSEUDONYMIZATION_RULE = c(
+      paste0(
+        "pseudonymize(domain = \"a\"; type.coding.code == \"VN\"); ",
+        "keepIf(system == \"x\")"
+      ),
+      "pseudonymize(domain = \"a\"; type.coding.code == \"VN\")"
+    )
+  )
+  etlutils::writeExcelFile(
+    list("table_description" = table_description),
+    table_description_file_name,
+    with_column_names = TRUE
+  )
+
+  formatTableDescriptionPseudonymizationRules(table_description_file_name)
+
+  shared_strings_connection <- unz(table_description_file_name, "xl/sharedStrings.xml", open = "rb")
+  shared_strings_xml <- rawToChar(readBin(
+    shared_strings_connection,
+    what = "raw",
+    n = 1e6
+  ))
+  close(shared_strings_connection)
+  sheet_xml <- readLines(
+    unz(table_description_file_name, "xl/worksheets/sheet1.xml"),
+    warn = FALSE
+  )
+  sheet_xml <- paste(sheet_xml, collapse = "")
+  styles_xml <- readLines(
+    unz(table_description_file_name, "xl/styles.xml"),
+    warn = FALSE
+  )
+  styles_xml <- paste(styles_xml, collapse = "")
+
+  expect_match(shared_strings_xml, paste0("VN&quot;\\);", intToUtf8(10), "keepIf"))
+  expect_match(sheet_xml, "<row r=\"2\" ht=\"32\" customHeight=\"1\"")
+  expect_match(sheet_xml, '<c r="A2" s="[1-9][0-9]*"')
+  expect_no_match(sheet_xml, "<row r=\"3\" ht=")
+  expect_match(styles_xml, "vertical=\"top\"")
+  expect_match(styles_xml, "wrapText=\"1\"")
 })

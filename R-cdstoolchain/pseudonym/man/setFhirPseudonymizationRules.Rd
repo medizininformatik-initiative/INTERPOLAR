@@ -23,7 +23,7 @@ details are attached as attributes \code{pseudonymization_candidates},
 }
 \description{
 Adds a \code{PSEUDONYMIZATION_RULE} column to an expanded FHIR table description.
-Rules are derived from a FHIR pseudonymizer YAML file. Explicit YAML \code{redact}
-matches are written as \code{redact}; rows without any match remain empty, which
-is interpreted as redact by the later DB pseudonymization process.
+Rules are derived from a FHIR pseudonymizer YAML file. Rows without any match
+remain empty, which is interpreted as keep by the later DB pseudonymization
+process.
 }
