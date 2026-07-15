@@ -385,3 +385,67 @@ test_that("pseudonym mapping validation rejects duplicate keys", {
     "duplicate KEY"
   )
 })
+
+test_that("pseudonymizeTables emits only described tables and columns by default", {
+  tables <- list(
+    patient = data.table::data.table(
+      id = c("p1", "p2"),
+      gender = c("female", "male"),
+      extra_admin_column = c("x", "y")
+    ),
+    cron_job = data.table::data.table(
+      id = "internal"
+    )
+  )
+  rules <- data.table::data.table(
+    TABLE_OR_RESOURCE = "patient",
+    COLUMN_NAME = c("id", "gender", "missing_in_source"),
+    PSEUDONYMIZATION_RULE = c("cryptoHash", "keep", "keep")
+  )
+
+  result <- pseudonymizeTables(
+    tables,
+    rules,
+    salt = "test-salt",
+    log_steps = FALSE
+  )
+
+  expect_named(result$tables, "patient")
+  expect_named(result$tables$patient, c("id", "gender"))
+  expect_false(identical(result$tables$patient$id, tables$patient$id))
+  expect_equal(result$tables$patient$gender, tables$patient$gender)
+  expect_equal(
+    result$summary[result$summary$TABLE_NAME == "cron_job", "STATUS", drop = TRUE],
+    "skipped_no_rules"
+  )
+  expect_equal(
+    result$summary[result$summary$TABLE_NAME == "patient", "MISSING_COLUMNS", drop = TRUE],
+    "missing_in_source"
+  )
+})
+
+test_that("pseudonymizeTables can keep unmatched columns when requested", {
+  tables <- list(
+    observation = data.table::data.table(
+      id = "o1",
+      value = "visible",
+      source_only = "kept for debugging"
+    )
+  )
+  rules <- data.table::data.table(
+    TABLE_NAME = "observation",
+    COLUMN_NAME = c("id", "value"),
+    PSEUDONYMIZATION_RULE = c("cryptoHash", "keep")
+  )
+
+  result <- pseudonymizeTables(
+    tables,
+    rules,
+    salt = "test-salt",
+    keep_unmatched_columns = TRUE,
+    log_steps = FALSE
+  )
+
+  expect_named(result$tables$observation, c("id", "value", "source_only"))
+  expect_equal(result$tables$observation$source_only, "kept for debugging")
+})

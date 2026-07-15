@@ -111,6 +111,9 @@ getRuleCondition <- function(parsed_rule) {
 }
 
 getTableDescriptionTableColumn <- function(table_description) {
+  if ("TABLE_OR_RESOURCE" %in% names(table_description)) {
+    return("TABLE_OR_RESOURCE")
+  }
   if ("TABLE_NAME" %in% names(table_description)) {
     return("TABLE_NAME")
   }
@@ -600,4 +603,173 @@ pseudonymizeTable <- function(table, table_description, table_name = NULL, salt 
 
   assertNoMissingPseudonymMappingValues(mapping_context)
   table
+}
+
+runPseudonymizationLogStep <- function(level = 2L, message, process, log_steps = TRUE) {
+  process_clock <- try(etlutils::getClock(), silent = TRUE)
+  logging_available <- exists("VERBOSE", envir = .GlobalEnv) &&
+    !inherits(process_clock, "try-error") &&
+    !is.null(process_clock)
+  if (!isTRUE(log_steps) || !logging_available) {
+    return(force(process))
+  }
+  if (level == 3L) {
+    return(etlutils::runLevel3Line(message, {
+      force(process)
+    }))
+  }
+  etlutils::runLevel2(message, {
+    force(process)
+  })
+}
+
+normalizePseudonymizationRulesForTables <- function(rules) {
+  rules <- data.table::as.data.table(data.table::copy(rules))
+  if (!"TABLE_OR_RESOURCE" %in% names(rules)) {
+    table_column <- getTableDescriptionTableColumn(rules)
+    rules[["TABLE_OR_RESOURCE"]] <- rules[[table_column]]
+    etlutils::fillNAWithLastRowValue(rules, "TABLE_OR_RESOURCE")
+  }
+  rules <- rules[
+    !is.na(rules[["TABLE_OR_RESOURCE"]]) &
+      nzchar(rules[["TABLE_OR_RESOURCE"]]) &
+      !is.na(rules[["COLUMN_NAME"]]) &
+      nzchar(rules[["COLUMN_NAME"]]),
+  ]
+  rules
+}
+
+getPseudonymizationRulesForTable <- function(rules, table_name) {
+  rules <- normalizePseudonymizationRulesForTables(rules)
+  rules[tolower(rules[["TABLE_OR_RESOURCE"]]) == tolower(table_name), ]
+}
+
+pseudonymizeTableForSnapshot <- function(
+    table,
+    rules,
+    table_name,
+    salt,
+    input_repo_path,
+    keep_unmatched_columns) {
+  table_rules <- getPseudonymizationRulesForTable(rules, table_name)
+  described_columns <- unique(table_rules[["COLUMN_NAME"]])
+  available_columns <- described_columns[described_columns %in% names(table)]
+  missing_columns <- described_columns[!(described_columns %in% names(table))]
+
+  table_to_pseudonymize <- data.table::as.data.table(data.table::copy(table))
+  if (!isTRUE(keep_unmatched_columns)) {
+    table_to_pseudonymize <- table_to_pseudonymize[, available_columns, drop = FALSE]
+  }
+
+  result <- pseudonymizeTable(
+    table_to_pseudonymize,
+    table_rules,
+    table_name = table_name,
+    salt = salt,
+    input_repo_path = input_repo_path
+  )
+
+  list(
+    table = result,
+    summary = data.table::data.table(
+      TABLE_NAME = table_name,
+      INPUT_ROWS = nrow(table),
+      OUTPUT_ROWS = nrow(result),
+      INPUT_COLUMNS = length(names(table)),
+      DESCRIBED_COLUMNS = length(described_columns),
+      OUTPUT_COLUMNS = length(names(result)),
+      MISSING_COLUMNS = paste(missing_columns, collapse = ", "),
+      STATUS = "pseudonymized"
+    )
+  )
+}
+
+#' Pseudonymize a Named List of Tables Using Loaded Rule Sources
+#'
+#' This is the snapshot-oriented table-level wrapper around
+#' `pseudonymizeTable()`. Only tables with loaded pseudonymization rules are
+#' emitted. By default, columns not described in the rule sources are omitted
+#' from the output tables.
+#'
+#' @param tables Named list of data.frames or data.tables.
+#' @param rules Rules loaded by `loadPseudonymizationRules()` or equivalent
+#'   table-description data.
+#' @param salt Salt used for `cryptoHash` and `pseudonymize(...)` rules.
+#' @param input_repo_path TOML-configured input repository directory used for
+#'   `pseudonym(sheet = ...)` mapping rules.
+#' @param keep_unmatched_columns If `TRUE`, source columns without a loaded rule
+#'   are kept. The default `FALSE` is intended for snapshot creation.
+#' @param log_steps If `TRUE` and module logging is initialized, wrap the process
+#'   in the existing `etlutils::runLevel...` logging.
+#'
+#' @return A list with `tables`, a named list of pseudonymized tables, and
+#'   `summary`, a data.table describing processed and skipped tables.
+#' @export
+pseudonymizeTables <- function(
+    tables,
+    rules,
+    salt = NULL,
+    input_repo_path = NULL,
+    keep_unmatched_columns = FALSE,
+    log_steps = TRUE) {
+  if (is.null(names(tables)) || any(!nzchar(names(tables)))) {
+    stop("tables must be a named list.")
+  }
+
+  rules <- normalizePseudonymizationRulesForTables(rules)
+  described_tables <- unique(rules[["TABLE_OR_RESOURCE"]])
+  input_table_names <- names(tables)
+  tables_to_process <- input_table_names[tolower(input_table_names) %in% tolower(described_tables)]
+  skipped_tables <- input_table_names[!(tolower(input_table_names) %in% tolower(described_tables))]
+
+  result_tables <- list()
+  summary <- data.table::data.table(
+    TABLE_NAME = character(),
+    INPUT_ROWS = integer(),
+    OUTPUT_ROWS = integer(),
+    INPUT_COLUMNS = integer(),
+    DESCRIBED_COLUMNS = integer(),
+    OUTPUT_COLUMNS = integer(),
+    MISSING_COLUMNS = character(),
+    STATUS = character()
+  )
+
+  runPseudonymizationLogStep(2L, "Pseudonymize snapshot tables", {
+    for (table_name in tables_to_process) {
+      table_result <- runPseudonymizationLogStep(
+        3L,
+        paste0("Pseudonymize table ", table_name),
+        pseudonymizeTableForSnapshot(
+          tables[[table_name]],
+          rules,
+          table_name,
+          salt,
+          input_repo_path,
+          keep_unmatched_columns
+        ),
+        log_steps = log_steps
+      )
+      result_tables[[table_name]] <- table_result$table
+      summary <- data.table::rbindlist(list(summary, table_result$summary), fill = TRUE)
+    }
+  }, log_steps = log_steps)
+
+  if (length(skipped_tables) > 0) {
+    skipped_summary <- data.table::data.table(
+      TABLE_NAME = skipped_tables,
+      INPUT_ROWS = vapply(tables[skipped_tables], nrow, integer(1)),
+      OUTPUT_ROWS = 0L,
+      INPUT_COLUMNS = vapply(tables[skipped_tables], function(table) length(names(table)), integer(1)),
+      DESCRIBED_COLUMNS = 0L,
+      OUTPUT_COLUMNS = 0L,
+      MISSING_COLUMNS = "",
+      STATUS = "skipped_no_rules"
+    )
+    summary <- data.table::rbindlist(list(summary, skipped_summary), fill = TRUE)
+  }
+
+  list(
+    tables = result_tables,
+    summary = summary
+  )
 }
