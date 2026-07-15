@@ -12,6 +12,9 @@ stripRuleQuotes <- function(value) {
 }
 
 DEFAULT_CRYPTO_HASH_MAX_LENGTH <- 32L
+PSEUDONYM_MAPPING_FILE_NAME <- "pseudo_mapping.xlsx"
+PSEUDONYM_MAPPING_KEY_COLNAME <- "KEY"
+PSEUDONYM_MAPPING_VALUE_COLNAME <- "PSEUDONYM"
 
 splitRuleList <- function(rule) {
   chars <- strsplit(rule, "", fixed = TRUE)[[1]]
@@ -95,6 +98,10 @@ getRuleCondition <- function(parsed_rule) {
   }
 
   conditions <- parsed_rule$arguments[!grepl("^[A-Za-z]+\\s*=", parsed_rule$arguments)]
+  if (parsed_rule$action == "pseudonym" && length(conditions) > 0 &&
+      grepl("^\".*\"$", conditions[1])) {
+    conditions <- conditions[-1]
+  }
   conditions <- conditions[!grepl("^\\d+$", conditions)]
   conditions <- conditions[nzchar(conditions)]
   if (length(conditions) == 0) {
@@ -181,6 +188,145 @@ pseudonymizationHash <- function(values, salt, namespace, max_length = NA_intege
   if (!is.na(max_length)) {
     result[has_value] <- substr(result[has_value], 1, max_length)
   }
+  result
+}
+
+getPseudonymMappingFilePath <- function(input_repo_path) {
+  if (is.null(input_repo_path) || is.na(input_repo_path) || !nzchar(input_repo_path)) {
+    stop(
+      "input_repo_path must be provided for pseudonym(sheet = ...) rules."
+    )
+  }
+  file.path(input_repo_path, PSEUDONYM_MAPPING_FILE_NAME)
+}
+
+loadPseudonymMappingSheet <- function(input_repo_path, sheet_name) {
+  mapping_file_path <- getPseudonymMappingFilePath(input_repo_path)
+  if (!file.exists(mapping_file_path)) {
+    stop("Pseudonym mapping file not found: ", mapping_file_path)
+  }
+
+  mapping_sheets <- etlutils::readExcelFileAsTableList(mapping_file_path)
+  if (!sheet_name %in% names(mapping_sheets)) {
+    stop(
+      "Pseudonym mapping sheet not found: ", sheet_name,
+      " in ", mapping_file_path
+    )
+  }
+
+  mapping <- data.table::as.data.table(mapping_sheets[[sheet_name]])
+  required_columns <- c(PSEUDONYM_MAPPING_KEY_COLNAME, PSEUDONYM_MAPPING_VALUE_COLNAME)
+  mapping <- etlutils::removeTableHeader(mapping, required_columns)
+  mapping <- as.data.frame(mapping, stringsAsFactors = FALSE)
+  if (!all(required_columns %in% names(mapping))) {
+    stop(
+      "Pseudonym mapping sheet must contain columns: ",
+      paste(required_columns, collapse = ", "),
+      ". Sheet: ", sheet_name
+    )
+  }
+
+  mapping <- mapping[
+    !(is.na(mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]]) &
+        is.na(mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]])),
+    ,
+    drop = FALSE
+  ]
+  empty_key_rows <- is.na(mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]]) |
+    !nzchar(trimws(as.character(mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]])))
+  empty_value_rows <- is.na(mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]]) |
+    !nzchar(trimws(as.character(mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]])))
+  if (any(empty_key_rows | empty_value_rows)) {
+    stop(
+      "Pseudonym mapping sheet contains empty KEY or PSEUDONYM values. Sheet: ",
+      sheet_name
+    )
+  }
+
+  mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]] <-
+    as.character(mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]])
+  mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]] <-
+    as.character(mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]])
+
+  duplicated_keys <- unique(mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]][
+    duplicated(mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]]) |
+      duplicated(mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]], fromLast = TRUE)
+  ])
+  if (length(duplicated_keys) > 0) {
+    stop(
+      "Pseudonym mapping sheet contains duplicate KEY values. Sheet: ",
+      sheet_name,
+      ". Duplicate keys: ",
+      paste(duplicated_keys, collapse = ", ")
+    )
+  }
+
+  data.table::as.data.table(mapping[, required_columns, drop = FALSE])
+}
+
+getPseudonymMappingSheet <- function(mapping_context, sheet_name) {
+  if (is.null(mapping_context)) {
+    stop("mapping_context must be provided for pseudonym(sheet = ...) rules.")
+  }
+  if (is.null(mapping_context$cache[[sheet_name]])) {
+    mapping_context$cache[[sheet_name]] <- loadPseudonymMappingSheet(
+      mapping_context$input_repo_path,
+      sheet_name
+    )
+  }
+  mapping_context$cache[[sheet_name]]
+}
+
+recordMissingPseudonymMappingValues <- function(mapping_context, sheet_name, column_name, values) {
+  if (is.null(mapping_context) || length(values) == 0) {
+    return(invisible())
+  }
+  mapping_context$missing[[length(mapping_context$missing) + 1L]] <- data.table::data.table(
+    SHEET_NAME = sheet_name,
+    COLUMN_NAME = column_name,
+    KEY = sort(unique(as.character(values)))
+  )
+}
+
+assertNoMissingPseudonymMappingValues <- function(mapping_context) {
+  if (is.null(mapping_context) || length(mapping_context$missing) == 0) {
+    return(invisible())
+  }
+  missing_values <- data.table::rbindlist(mapping_context$missing)
+  missing_values <- unique(missing_values)
+  data.table::setorder(missing_values, SHEET_NAME, COLUMN_NAME, KEY)
+  details <- paste(
+    apply(missing_values, 1, function(row) {
+      paste0(
+        "sheet=", row[["SHEET_NAME"]],
+        ", column=", row[["COLUMN_NAME"]],
+        ", key=", row[["KEY"]]
+      )
+    }),
+    collapse = "\n"
+  )
+  stop(
+    "Missing pseudonym mapping values in ",
+    PSEUDONYM_MAPPING_FILE_NAME,
+    ":\n",
+    details
+  )
+}
+
+applyPseudonymMapping <- function(values, sheet_name, column_name, mapping_context) {
+  mapping <- getPseudonymMappingSheet(mapping_context, sheet_name)
+  values_chr <- as.character(values)
+  result <- rep(NA_character_, length(values_chr))
+  has_value <- !is.na(values_chr)
+  match_index <- match(values_chr[has_value], mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]])
+  missing_values <- values_chr[has_value][is.na(match_index)]
+  recordMissingPseudonymMappingValues(
+    mapping_context,
+    sheet_name,
+    column_name,
+    missing_values
+  )
+  result[has_value] <- mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]][match_index]
   result
 }
 
@@ -282,7 +428,7 @@ evaluateRuleCondition <- function(condition, table, table_description, fhir_expr
   ))
 }
 
-applyPseudonymizationRuleToVector <- function(values, rule, salt = NULL) {
+applyPseudonymizationRuleToVector <- function(values, rule, salt = NULL, column_name = NA_character_, mapping_context = NULL) {
   rule <- normalizePseudonymizationRule(rule)
   parsed_rule <- parsePseudonymizationRuleCall(rule)
   action <- parsed_rule$action
@@ -312,6 +458,16 @@ applyPseudonymizationRuleToVector <- function(values, rule, salt = NULL) {
       domain <- "pseudonymize"
     }
     return(pseudonymizationHash(values, salt, paste0("pseudonymize:", domain)))
+  }
+  if (action == "pseudonym") {
+    sheet_name <- getRuleArgument(parsed_rule, "sheet")
+    if (is.na(sheet_name) || !nzchar(sheet_name)) {
+      sheet_name <- stripRuleQuotes(parsed_rule$arguments[1])
+    }
+    if (is.na(sheet_name) || !nzchar(sheet_name)) {
+      stop("pseudonym(...) rules require a sheet argument.")
+    }
+    return(applyPseudonymMapping(values, sheet_name, column_name, mapping_context))
   }
   if (action == "generalize") {
     format <- getRuleArgument(parsed_rule, "format")
@@ -352,7 +508,7 @@ applyPseudonymizationRuleToVector <- function(values, rule, salt = NULL) {
   stop("Unsupported PSEUDONYMIZATION_RULE: ", rule)
 }
 
-applyRuleListToColumn <- function(table, source_table, column_name, fhir_expression, rule, table_description, salt) {
+applyRuleListToColumn <- function(table, source_table, column_name, fhir_expression, rule, table_description, salt, mapping_context = NULL) {
   rule <- normalizePseudonymizationRule(rule)
   rule_list <- trimws(splitRuleList(rule))
   rule_list <- rule_list[nzchar(rule_list)]
@@ -373,7 +529,13 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
     }
     rows <- evaluateRuleCondition(condition, source_table, table_description, fhir_expression) & !matched_rows
     if (any(rows)) {
-      result[rows] <- applyPseudonymizationRuleToVector(table[[column_name]][rows], single_rule, salt)
+      result[rows] <- applyPseudonymizationRuleToVector(
+        table[[column_name]][rows],
+        single_rule,
+        salt,
+        column_name = column_name,
+        mapping_context = mapping_context
+      )
       matched_rows[rows] <- TRUE
     }
     if (!has_condition) {
@@ -399,13 +561,21 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
 #' @param table_name Optional table/resource name used to filter
 #' `table_description` before applying the rules.
 #' @param salt Salt used for `cryptoHash` and `pseudonymize(...)` rules.
+#' @param input_repo_path Path to the TOML-configured input repository directory
+#'   for the pseudonymization run. If `pseudonym(sheet = ...)` rules are used,
+#'   `<input_repo_path>/pseudo_mapping.xlsx` is read and the `sheet` argument
+#'   selects the mapping sheet.
 #'
 #' @return A pseudonymized copy of `table`.
 #' @export
-pseudonymizeTable <- function(table, table_description, table_name = NULL, salt = NULL) {
+pseudonymizeTable <- function(table, table_description, table_name = NULL, salt = NULL, input_repo_path = NULL) {
   table <- data.table::as.data.table(data.table::copy(table))
   source_table <- data.table::copy(table)
   column_rules <- getPseudonymizationColumnRules(table_description, table_name)
+  mapping_context <- new.env(parent = emptyenv())
+  mapping_context$input_repo_path <- input_repo_path
+  mapping_context$cache <- new.env(parent = emptyenv())
+  mapping_context$missing <- list()
 
   for (column_name in names(table)) {
     rule_row <- column_rules[column_rules[["COLUMN_NAME"]] == column_name, ]
@@ -423,9 +593,11 @@ pseudonymizeTable <- function(table, table_description, table_name = NULL, salt 
       fhir_expression,
       rule,
       column_rules,
-      salt
+      salt,
+      mapping_context = mapping_context
     )
   }
 
+  assertNoMissingPseudonymMappingValues(mapping_context)
   table
 }
