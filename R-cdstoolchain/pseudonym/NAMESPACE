@@ -3,6 +3,7 @@
 export(getFhirPseudonymizationRuleReport)
 export(getPseudonymizationRuleReviewReport)
 export(loadPseudonymizationRules)
+export(pseudonymizeSnapshotTables)
 export(pseudonymizeTable)
 export(pseudonymizeTables)
 export(setFhirPseudonymizationRules)
