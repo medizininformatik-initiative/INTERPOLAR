@@ -1,10 +1,55 @@
 DEFAULT_SNAPSHOT_EXTENSION_SHEET <- "snapshot_extensions"
+DEFAULT_FHIR_TABLE_DESCRIPTION_PATH <- "R-cds2db/cds2db/inst/extdata/Table_Description.xlsx"
+DEFAULT_DATAPROCESSOR_TABLE_DESCRIPTION_PATH <-
+  "R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx"
+DEFAULT_FRONTEND_TABLE_DESCRIPTION_PATH <-
+  "R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx"
+DEFAULT_FHIR_TABLE_DESCRIPTION_DEFINITION_PATH <-
+  "R-cds2db/cds2db/inst/extdata/Table_Description_Definition.xlsx"
 
 emptyRuleSourceSpec <- function() {
   data.table::data.table(
     SOURCE = character(),
     PATH = character(),
     SHEET_NAME = character()
+  )
+}
+
+#' Get Default INTERPOLAR Snapshot Pseudonymization Rule Sources
+#'
+#' The defaults collect the rule-bearing table descriptions that are currently
+#' relevant for a pseudonymized snapshot: FHIR/CDS tables, Dataprocessor
+#' submodule tables, frontend tables, and snapshot-only extensions.
+#'
+#' @param project_root Repository root used to resolve the default relative
+#'   paths.
+#'
+#' @return A list with `table_descriptions` and `snapshot_extensions` source
+#'   specifications suitable for `loadPseudonymizationRules()` and
+#'   `pseudonymizeSnapshotTables()`.
+#' @export
+getDefaultSnapshotPseudonymizationRuleSources <- function(project_root = ".") {
+  table_descriptions <- data.table::data.table(
+    SOURCE = c("fhir", "dataprocessor_submodules", "frontend"),
+    PATH = file.path(
+      project_root,
+      c(
+        DEFAULT_FHIR_TABLE_DESCRIPTION_PATH,
+        DEFAULT_DATAPROCESSOR_TABLE_DESCRIPTION_PATH,
+        DEFAULT_FRONTEND_TABLE_DESCRIPTION_PATH
+      )
+    ),
+    SHEET_NAME = c("table_description", "table_description", "frontend_table_description")
+  )
+  snapshot_extensions <- data.table::data.table(
+    SOURCE = "snapshot_extensions",
+    PATH = file.path(project_root, DEFAULT_FHIR_TABLE_DESCRIPTION_DEFINITION_PATH),
+    SHEET_NAME = DEFAULT_SNAPSHOT_EXTENSION_SHEET
+  )
+
+  list(
+    table_descriptions = table_descriptions,
+    snapshot_extensions = snapshot_extensions
   )
 }
 

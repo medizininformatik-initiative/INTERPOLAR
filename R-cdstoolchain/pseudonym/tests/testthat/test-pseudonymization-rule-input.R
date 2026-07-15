@@ -13,6 +13,22 @@ writeRuleInputTestWorkbook <- function(table, sheet_name) {
   file
 }
 
+findRepositoryRootForPseudonymTests <- function() {
+  path <- normalizePath(getwd(), mustWork = TRUE)
+  marker <- file.path(DEFAULT_FHIR_TABLE_DESCRIPTION_PATH)
+
+  repeat {
+    if (file.exists(file.path(path, marker))) {
+      return(path)
+    }
+    parent <- dirname(path)
+    if (identical(parent, path)) {
+      stop("Could not find INTERPOLAR repository root for pseudonym tests.")
+    }
+    path <- parent
+  }
+}
+
 test_that("loadPseudonymizationRules loads table descriptions and snapshot extensions", {
   table_description_file <- writeRuleInputTestWorkbook(
     data.table::data.table(
@@ -92,6 +108,38 @@ test_that("loadPseudonymizationRules keeps snapshot-only TODO markers visible", 
   expect_equal(rules$SOURCE_TYPE, "snapshot_extension")
   expect_equal(rules$PSEUDONYMIZATION_RULE, "### TODO: NEW COLUMN ###")
   expect_false(rules$IMPLICIT_KEEP)
+})
+
+test_that("default snapshot rule sources name all current rule workbooks", {
+  sources <- getDefaultSnapshotPseudonymizationRuleSources(project_root = "/repo")
+
+  expect_equal(
+    sources$table_descriptions$SOURCE,
+    c("fhir", "dataprocessor_submodules", "frontend")
+  )
+  expect_equal(
+    sources$table_descriptions$SHEET_NAME,
+    c("table_description", "table_description", "frontend_table_description")
+  )
+  expect_equal(sources$snapshot_extensions$SHEET_NAME, "snapshot_extensions")
+  expect_true(any(grepl("Frontend_Table_Description.xlsx$", sources$table_descriptions$PATH)))
+})
+
+test_that("default snapshot rule sources can load current repository files", {
+  sources <- getDefaultSnapshotPseudonymizationRuleSources(
+    project_root = findRepositoryRootForPseudonymTests()
+  )
+
+  rules <- loadPseudonymizationRules(
+    table_descriptions = sources$table_descriptions,
+    snapshot_extensions = sources$snapshot_extensions
+  )
+
+  expect_true(nrow(rules) > 0)
+  expect_setequal(
+    unique(rules$SOURCE),
+    c("fhir", "dataprocessor_submodules", "frontend", "snapshot_extensions")
+  )
 })
 
 test_that("rule review report flags todo implicit keep unsupported and duplicates", {
