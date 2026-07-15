@@ -23,9 +23,10 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 
 The report is written to
 `outputGlobal/dataprocessor/reports/Database_Quality_Analysis_<analysis-start>.xlsx`
-with separate sheets for FHIR, Frontend, optional other tables, and run
-metadata. The timestamp uses the analysis start time and contains no spaces,
-for example `Database_Quality_Analysis_2026-06-19_08-00-02.xlsx`.
+with separate sheets for FHIR, Frontend, optional other tables, optional
+resource detail sheets, and run metadata. The timestamp uses the analysis start
+time and contains no spaces, for example
+`Database_Quality_Analysis_2026-06-19_08-00-02.xlsx`.
 
 Progress is written to the console. When the submodule is started through
 `StartDataProcessor.R`, the existing dataprocessor logging captures these
@@ -44,26 +45,22 @@ The normalized output columns are:
 - `last value import datetime`
 - `first value meta last updated`
 - `last value meta last updated`
-- `count per Einrichtungskontakt`
-- `count per Einrichtungskontakt class IMP`
-- `count per Einrichtungskontakt class SS`
-- `count per Einrichtungskontakt class AMB`
-- `count per Einrichtungskontakt class Andere`
-- `count per Abteilungskontakt`
-- `count per Abteilungskontakt class IMP`
-- `count per Abteilungskontakt class SS`
-- `count per Abteilungskontakt class AMB`
-- `count per Abteilungskontakt class Andere`
-- `count per Versorgungsstellenkontakt`
-- `count per Versorgungsstellenkontakt class IMP`
-- `count per Versorgungsstellenkontakt class SS`
-- `count per Versorgungsstellenkontakt class AMB`
-- `count per Versorgungsstellenkontakt class Andere`
 
 The datetime columns are optional because they require additional reads from the
 historical views without the `_last_version` suffix. Use
 `--skip-value-datetime-columns` for a faster report that only counts current
 last-version availability.
+
+When the FHIR `encounter` table contains the required Kontaktart and class
+columns, the report also contains a `FHIR Encounter` detail sheet. It contains
+three encounter blocks for `Einrichtungskontakt`, `Abteilungskontakt`, and
+`Versorgungsstellenkontakt`. Each block uses the same columns as the normalized
+FHIR sheet and adds these class count columns at the end:
+
+- `count class IMP`
+- `count class SS`
+- `count class AMB`
+- `count class Andere`
 
 The `Metadata` sheet contains neutral run metadata such as analysis start/end,
 duration, report row counts, source view/column counts, and non-site-specific
@@ -82,15 +79,21 @@ Grouping columns are resolved from table-specific overrides first. Missing
 grouping columns are then inferred by convention from the available columns. If
 no grouping column can be resolved for a count, that count remains `NA`.
 
+Optional resource detail sheets are enabled through `RESOURCE_DETAIL_SHEETS`.
+The sheet-specific settings use `RESOURCE_DETAIL_<ID>_*` keys and define the
+sheet name, table name, block column, block values, split column, and split
+values. The order of the configured block values is preserved in the Excel
+sheet.
+
 Database-internal columns such as processing metadata, `*_raw_id`,
 last-version helper columns, and the physical table primary key
 `<table_name>_id` are excluded from the report. Raw last-version views are
 excluded by default.
 
-For the `encounter` table in the FHIR sheet, additional count columns at the end
-distinguish the CDS encounter hierarchy levels by `enc_type_system` and
-`enc_type_code`. They also split each hierarchy level by `enc_class_system`
-and `enc_class_code` into `AMB`, `IMP`, `SS`, and `Andere`.
+The `FHIR Encounter` detail sheet distinguishes the CDS encounter hierarchy
+levels by `enc_type_system` and `enc_type_code`. It splits each hierarchy level
+by `enc_class_system` and `enc_class_code` into `AMB`, `IMP`, `SS`, and
+`Andere`. Empty class codes are not counted as `Andere`.
 
 Configured REDCap checkbox groups are counted as available only when at least
 one checkbox option in the group is `Checked`. `Unchecked` values alone are not

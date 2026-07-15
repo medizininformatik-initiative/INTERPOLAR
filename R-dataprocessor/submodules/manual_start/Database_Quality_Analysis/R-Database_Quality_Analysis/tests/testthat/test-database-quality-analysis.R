@@ -1,3 +1,35 @@
+getTestResourceDetailSheets <- function() {
+  detail_values <- list(
+    RESOURCE_DETAIL_ENCOUNTER_SHEET_NAME = "FHIR Encounter",
+    RESOURCE_DETAIL_ENCOUNTER_TABLE_NAME = "encounter",
+    RESOURCE_DETAIL_ENCOUNTER_BLOCK_SYSTEM_COLUMN = "enc_type_system",
+    RESOURCE_DETAIL_ENCOUNTER_BLOCK_SYSTEM = "http://fhir.de/CodeSystem/Kontaktebene",
+    RESOURCE_DETAIL_ENCOUNTER_BLOCK_VALUE_COLUMN = "enc_type_code",
+    RESOURCE_DETAIL_ENCOUNTER_BLOCK_VALUES = c(
+      "Einrichtungskontakt=einrichtungskontakt",
+      "Abteilungskontakt=abteilungskontakt",
+      "Versorgungsstellenkontakt=versorgungsstellenkontakt"
+    ),
+    RESOURCE_DETAIL_ENCOUNTER_SPLIT_SYSTEM_COLUMN = "enc_class_system",
+    RESOURCE_DETAIL_ENCOUNTER_SPLIT_SYSTEM = "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+    RESOURCE_DETAIL_ENCOUNTER_SPLIT_VALUE_COLUMN = "enc_class_code",
+    RESOURCE_DETAIL_ENCOUNTER_SPLIT_VALUES = c(
+      "count class IMP=IMP",
+      "count class SS=SS",
+      "count class AMB=AMB",
+      "count class Andere=OTHER"
+    )
+  )
+  get_config_value <- function(name, default) {
+    if (is.null(detail_values[[name]])) {
+      return(default)
+    }
+    detail_values[[name]]
+  }
+
+  parseResourceDetailSheets("ENCOUNTER", get_config_value)
+}
+
 test_that("database quality analysis metadata is normalized from view columns", {
   config <- list(
     view_prefix = "v_",
@@ -76,6 +108,30 @@ test_that("database quality analysis grouping overrides are parsed", {
   expect_equal(result$pid, c("record_id", "record_id"))
   expect_true(is.na(result[TABLE_NAME == "patient_fe", case_id]))
   expect_equal(result[TABLE_NAME == "fall_fe", case_id], "fall_id")
+})
+
+test_that("database quality analysis resource detail sheets are parsed", {
+  result <- getTestResourceDetailSheets()
+  detail_config <- result$encounter
+
+  expect_equal(detail_config$sheet_name, "FHIR Encounter")
+  expect_equal(names(detail_config$block_values), c(
+    "Einrichtungskontakt",
+    "Abteilungskontakt",
+    "Versorgungsstellenkontakt"
+  ))
+  expect_equal(unname(detail_config$block_values), c(
+    "einrichtungskontakt",
+    "abteilungskontakt",
+    "versorgungsstellenkontakt"
+  ))
+  expect_equal(unname(detail_config$split_count_columns), c(
+    "count class IMP",
+    "count class SS",
+    "count class AMB",
+    "count class Andere"
+  ))
+  expect_equal(unname(detail_config$split_values), c("IMP", "SS", "AMB", "OTHER"))
 })
 
 test_that("database quality analysis config can skip datetime columns by command-line flags", {
@@ -186,7 +242,7 @@ test_that("database quality analysis grouping columns use override for frontend 
   expect_equal(result[["case_id"]], "fall_id")
 })
 
-test_that("database quality analysis grouping columns add encounter hierarchy counts", {
+test_that("database quality analysis grouping columns infer encounter hierarchy columns", {
   config <- list(grouping_overrides = parseGroupingOverrides(character()))
   table_metadata <- data.table::data.table(
     TABLE_NAME = "encounter",
@@ -207,41 +263,14 @@ test_that("database quality analysis grouping columns add encounter hierarchy co
   expect_equal(result[["resource_id"]], "enc_id")
   expect_equal(result[["pid"]], "enc_patient_ref")
   expect_equal(result[["case_id"]], "enc_main_encounter_calculated_ref")
-  expect_equal(result[["encounter_einrichtungskontakt"]], "enc_id")
-  expect_equal(result[["encounter_abteilungskontakt"]], "enc_id")
-  expect_equal(result[["encounter_versorgungsstellenkontakt"]], "enc_id")
-  expect_equal(result[["encounter_einrichtungskontakt_amb"]], "enc_id")
-  expect_equal(result[["encounter_versorgungsstellenkontakt_other"]], "enc_id")
 
   report_rows <- data.table::data.table(
     COLUMN_NAME = c("enc_id", "enc_type_system", "enc_type_code", "enc_class_system", "enc_class_code", "enc_status")
   )
   report_rows <- addGroupingRoles(report_rows, result)
-  expect_match(
-    report_rows[COLUMN_NAME == "enc_id", USED_AS_GROUPING_FOR],
-    "count per Einrichtungskontakt",
-    fixed = TRUE
-  )
-  expect_match(
-    report_rows[COLUMN_NAME == "enc_type_system", USED_AS_GROUPING_FOR],
-    "count per Abteilungskontakt",
-    fixed = TRUE
-  )
-  expect_match(
-    report_rows[COLUMN_NAME == "enc_type_code", USED_AS_GROUPING_FOR],
-    "count per Versorgungsstellenkontakt",
-    fixed = TRUE
-  )
-  expect_match(
-    report_rows[COLUMN_NAME == "enc_class_system", USED_AS_GROUPING_FOR],
-    "count per Einrichtungskontakt class AMB",
-    fixed = TRUE
-  )
-  expect_match(
-    report_rows[COLUMN_NAME == "enc_class_code", USED_AS_GROUPING_FOR],
-    "count per Einrichtungskontakt class AMB",
-    fixed = TRUE
-  )
+  expect_equal(report_rows[COLUMN_NAME == "enc_id", USED_AS_GROUPING_FOR], "count per resource_id")
+  expect_true(is.na(report_rows[COLUMN_NAME == "enc_type_system", USED_AS_GROUPING_FOR]))
+  expect_true(is.na(report_rows[COLUMN_NAME == "enc_class_code", USED_AS_GROUPING_FOR]))
 })
 
 test_that("database quality analysis grouping columns infer frontend patient IDs by convention", {
@@ -357,7 +386,7 @@ test_that("database quality analysis count query avoids text casts for non-text 
   expect_match(result$query, '"obs_id"::text <> \'\'', fixed = TRUE)
 })
 
-test_that("database quality analysis count query filters encounter hierarchy counts", {
+test_that("database quality analysis resource detail query filters block and split counts", {
   table_metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
     VIEW_NAME = "v_encounter_last_version",
@@ -374,27 +403,23 @@ test_that("database quality analysis count query filters encounter hierarchy cou
     ),
     DATA_TYPE = "character varying"
   )
-  encounter_grouping_columns <- stats::setNames(
-    rep("enc_id", length(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS)),
-    names(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS)
-  )
   grouping_columns <- c(
     resource_id = "enc_id",
     pid = "enc_patient_ref",
-    case_id = "enc_main_encounter_calculated_ref",
-    encounter_grouping_columns
+    case_id = "enc_main_encounter_calculated_ref"
   )
 
-  result <- buildCountQuery(
+  detail_config <- getTestResourceDetailSheets()$encounter
+  result <- buildResourceDetailCountQuery(
     table_metadata,
     grouping_columns,
-    data_columns = c("enc_status")
+    data_columns = c("enc_status"),
+    detail_config = detail_config,
+    block_value = "einrichtungskontakt"
   )
 
   expect_match(result$query, '"enc_type_system" = \'http://fhir.de/CodeSystem/Kontaktebene\'', fixed = TRUE)
   expect_match(result$query, '"enc_type_code" = \'einrichtungskontakt\'', fixed = TRUE)
-  expect_match(result$query, '"enc_type_code" = \'abteilungskontakt\'', fixed = TRUE)
-  expect_match(result$query, '"enc_type_code" = \'versorgungsstellenkontakt\'', fixed = TRUE)
   expect_match(result$query, '"enc_class_system" = \'http://terminology.hl7.org/CodeSystem/v3-ActCode\'', fixed = TRUE)
   expect_match(result$query, '"enc_class_code" = \'AMB\'', fixed = TRUE)
   expect_match(result$query, '"enc_class_code" = \'IMP\'', fixed = TRUE)
@@ -402,10 +427,67 @@ test_that("database quality analysis count query filters encounter hierarchy cou
   expect_match(result$query, '"enc_class_code" IS NOT NULL', fixed = TRUE)
   expect_match(result$query, '"enc_class_code"::text <> \'\'', fixed = TRUE)
   expect_match(result$query, '"enc_class_code" NOT IN (\'AMB\', \'IMP\', \'SS\')', fixed = TRUE)
+  expect_match(result$query, '"enc_main_encounter_calculated_ref"::text <> \'invalid\'', fixed = TRUE)
   expect_equal(result$alias_map$count_column, c(
     unname(DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS),
-    unname(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS)
+    unname(detail_config$split_count_columns)
   ))
+})
+
+test_that("database quality analysis creates resource detail sheet blocks", {
+  config <- list(grouping_overrides = parseGroupingOverrides(character()))
+  metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = "v_encounter_last_version",
+    TABLE_NAME = "encounter",
+    TABLE_FAMILY = "FHIR",
+    COLUMN_NAME = c(
+      "enc_id",
+      "enc_patient_ref",
+      "enc_main_encounter_calculated_ref",
+      "enc_type_system",
+      "enc_type_code",
+      "enc_class_system",
+      "enc_class_code",
+      "enc_status"
+    ),
+    COLUMN_DESCRIPTION = c("id", "patient", "case", "type system", "type code", "class system", "class code", "status"),
+    ORDINAL_POSITION = 1:8,
+    DATA_TYPE = "character varying"
+  )
+  result <- data.table::data.table(
+    TABLE_NAME = "encounter",
+    COLUMN_NAME = metadata$COLUMN_NAME,
+    COLUMN_DESCRIPTION = metadata$COLUMN_DESCRIPTION,
+    USED_AS_GROUPING_FOR = NA_character_,
+    "count per resource_id" = NA_integer_,
+    "count per PID" = NA_integer_,
+    "count per Fall-Id" = NA_integer_,
+    TABLE_FAMILY = "FHIR",
+    ORDINAL_POSITION = metadata$ORDINAL_POSITION,
+    check.names = FALSE
+  )
+  query_fun <- function(query, lock_id = NULL) {
+    aliases <- unique(regmatches(query, gregexpr("count_[0-9]+", query))[[1]])
+    data.table::as.data.table(as.list(stats::setNames(seq_along(aliases), aliases)))
+  }
+
+  detail_config <- getTestResourceDetailSheets()$encounter
+  sheet <- createResourceDetailSheet(metadata, result, config, detail_config, query_fun = query_fun)
+
+  expect_equal(unique(sheet$TABLE_NAME), paste(
+    "encounter",
+    names(detail_config$block_values),
+    sep = " - "
+  ))
+  expect_equal(nrow(sheet), 3L * nrow(metadata))
+  expect_equal(
+    tail(names(sheet), length(detail_config$split_count_columns)),
+    unname(detail_config$split_count_columns)
+  )
+  expect_true(all(unname(DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS) %in% names(sheet)))
+  expect_false(any(grepl("count per Einrichtungskontakt", names(sheet), fixed = TRUE)))
+  expect_false(is.na(sheet[TABLE_NAME == "encounter - Einrichtungskontakt" & COLUMN_NAME == "enc_status", "count class IMP"][[1]]))
 })
 
 test_that("database quality analysis count query treats configured frontend checkboxes as checked groups", {
@@ -433,6 +515,11 @@ test_that("database quality analysis count query treats configured frontend chec
   expect_match(result$query, '"mrp_pigrund___1" = \'Checked\'', fixed = TRUE)
   expect_match(result$query, '"mrp_pigrund___2" = \'Checked\'', fixed = TRUE)
   expect_match(result$query, '"mrp_pigrund___3" = \'Checked\'', fixed = TRUE)
+  expect_match(
+    result$query,
+    '("mrp_pigrund___1" = \'Checked\' OR "mrp_pigrund___2" = \'Checked\' OR "mrp_pigrund___3" = \'Checked\')',
+    fixed = TRUE
+  )
   expect_false(grepl('"mrp_pigrund___1"::text <> \'\'', result$query, fixed = TRUE))
 })
 
@@ -473,7 +560,6 @@ test_that("database quality analysis counts are mapped back to normalized result
     "first value meta last updated",
     "last value meta last updated"
   ))
-  expect_equal(names(result)[12:26], unname(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS))
   expect_equal(result[COLUMN_NAME == "obs_id", USED_AS_GROUPING_FOR], "count per resource_id")
   expect_equal(result[COLUMN_NAME == "obs_patient_ref", USED_AS_GROUPING_FOR], "count per PID")
   expect_true(all(is.na(result[["count per Fall-Id"]])))
@@ -694,21 +780,6 @@ test_that("database quality analysis excel sheets only contain report columns", 
     "last value import datetime" = as.POSIXct(NA),
     "first value meta last updated" = as.POSIXct(NA),
     "last value meta last updated" = as.POSIXct(NA),
-    "count per Einrichtungskontakt" = NA_integer_,
-    "count per Einrichtungskontakt class IMP" = NA_integer_,
-    "count per Einrichtungskontakt class SS" = NA_integer_,
-    "count per Einrichtungskontakt class AMB" = NA_integer_,
-    "count per Einrichtungskontakt class Andere" = NA_integer_,
-    "count per Abteilungskontakt" = NA_integer_,
-    "count per Abteilungskontakt class IMP" = NA_integer_,
-    "count per Abteilungskontakt class SS" = NA_integer_,
-    "count per Abteilungskontakt class AMB" = NA_integer_,
-    "count per Abteilungskontakt class Andere" = NA_integer_,
-    "count per Versorgungsstellenkontakt" = NA_integer_,
-    "count per Versorgungsstellenkontakt class IMP" = NA_integer_,
-    "count per Versorgungsstellenkontakt class SS" = NA_integer_,
-    "count per Versorgungsstellenkontakt class AMB" = NA_integer_,
-    "count per Versorgungsstellenkontakt class Andere" = NA_integer_,
     TABLE_FAMILY = "FHIR",
     ORDINAL_POSITION = 1L,
     check.names = FALSE
@@ -728,8 +799,7 @@ test_that("database quality analysis excel sheets only contain report columns", 
     "first value import datetime",
     "last value import datetime",
     "first value meta last updated",
-    "last value meta last updated",
-    unname(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS)
+    "last value meta last updated"
   ))
 })
 
@@ -746,21 +816,6 @@ test_that("database quality analysis excel sheets hide FHIR-only meta dates for 
     "last value import datetime" = as.POSIXct(NA),
     "first value meta last updated" = as.POSIXct(NA),
     "last value meta last updated" = as.POSIXct(NA),
-    "count per Einrichtungskontakt" = NA_integer_,
-    "count per Einrichtungskontakt class IMP" = NA_integer_,
-    "count per Einrichtungskontakt class SS" = NA_integer_,
-    "count per Einrichtungskontakt class AMB" = NA_integer_,
-    "count per Einrichtungskontakt class Andere" = NA_integer_,
-    "count per Abteilungskontakt" = NA_integer_,
-    "count per Abteilungskontakt class IMP" = NA_integer_,
-    "count per Abteilungskontakt class SS" = NA_integer_,
-    "count per Abteilungskontakt class AMB" = NA_integer_,
-    "count per Abteilungskontakt class Andere" = NA_integer_,
-    "count per Versorgungsstellenkontakt" = NA_integer_,
-    "count per Versorgungsstellenkontakt class IMP" = NA_integer_,
-    "count per Versorgungsstellenkontakt class SS" = NA_integer_,
-    "count per Versorgungsstellenkontakt class AMB" = NA_integer_,
-    "count per Versorgungsstellenkontakt class Andere" = NA_integer_,
     TABLE_FAMILY = c("FHIR", "Frontend", "Other"),
     ORDINAL_POSITION = 1L,
     check.names = FALSE
@@ -780,8 +835,6 @@ test_that("database quality analysis excel sheets hide FHIR-only meta dates for 
     "first value meta last updated",
     "last value meta last updated"
   ) %in% names(sheets$Other)))
-  expect_false(any(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS %in% names(sheets$Frontend)))
-  expect_false(any(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS %in% names(sheets$Other)))
   expect_true(all(c(
     "first value import datetime",
     "last value import datetime"
@@ -833,6 +886,11 @@ test_that("database quality analysis excel sheets visually group table rows", {
 
   expect_equal(formatted_sheet$TABLE_NAME, c("condition", NA_character_, NA_character_, "observation", NA_character_))
   expect_equal(formatted_sheet$COLUMN_NAME, c("con_id", "con_code", NA_character_, "obs_id", NA_character_))
+
+  sheet[, TABLE_NAME := c("observation", "observation", "condition")]
+  formatted_sheet <- formatSheetForExcel(sheet)
+
+  expect_equal(formatted_sheet$TABLE_NAME, c("observation", NA_character_, NA_character_, "condition", NA_character_))
 })
 
 test_that("database quality analysis excel writer uses readable column widths", {
