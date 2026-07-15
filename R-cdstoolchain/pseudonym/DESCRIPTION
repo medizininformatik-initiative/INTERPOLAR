@@ -19,6 +19,7 @@ Suggests:
 Config/testthat/edition: 3
 Imports:
     data.table,
+    DBI,
     digest,
     etlutils,
     yaml

@@ -29,6 +29,8 @@ summarizePseudonymizationReviewProblems <- function(review_report) {
 #'   normal table-description files.
 #' @param snapshot_extensions Optional character vector or data.frame/data.table
 #'   with snapshot-extension files.
+#' @param rules Optional preloaded rules. If supplied, `table_descriptions` and
+#'   `snapshot_extensions` are not loaded again.
 #' @param salt Salt used for `cryptoHash` and `pseudonymize(...)` rules.
 #' @param input_repo_path TOML-configured input repository directory used for
 #'   `pseudonym(sheet = ...)` mapping rules.
@@ -48,6 +50,7 @@ pseudonymizeSnapshotTables <- function(
     tables,
     table_descriptions,
     snapshot_extensions = NULL,
+    rules = NULL,
     salt = NULL,
     input_repo_path = NULL,
     fail_on_review_problems = TRUE,
@@ -58,10 +61,14 @@ pseudonymizeSnapshotTables <- function(
   result <- list()
 
   runPseudonymizationLogStep(2L, "Load pseudonymization rules", {
-    result[["rules"]] <- loadPseudonymizationRules(
-      table_descriptions = table_descriptions,
-      snapshot_extensions = snapshot_extensions
-    )
+    if (is.null(rules)) {
+      result[["rules"]] <- loadPseudonymizationRules(
+        table_descriptions = table_descriptions,
+        snapshot_extensions = snapshot_extensions
+      )
+    } else {
+      result[["rules"]] <- data.table::as.data.table(data.table::copy(rules))
+    }
   }, log_steps = log_steps)
 
   runPseudonymizationLogStep(2L, "Review pseudonymization rules", {

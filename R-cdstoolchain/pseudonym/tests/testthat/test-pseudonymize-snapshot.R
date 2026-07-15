@@ -83,3 +83,35 @@ test_that("pseudonymizeSnapshotTables can abort on blocking review problems", {
     "blocking problems"
   )
 })
+
+test_that("pseudonymizeSnapshotTables can use preloaded rules", {
+  rules <- data.table::data.table(
+    SOURCE = "manual",
+    SOURCE_TYPE = "table_description",
+    SOURCE_FILE = "manual.xlsx",
+    SOURCE_SHEET = "table_description",
+    TABLE_NAME = "patient",
+    RESOURCE = NA_character_,
+    TABLE_OR_RESOURCE = "patient",
+    COLUMN_NAME = c("id", "gender"),
+    COLUMN_DESCRIPTION = c("Patient id", "Gender"),
+    COLUMN_TYPE = c("varchar", "varchar"),
+    FHIR_EXPRESSION = NA_character_,
+    PSEUDONYMIZATION_RULE_RAW = c("cryptoHash", "keep"),
+    PSEUDONYMIZATION_RULE = c("cryptoHash", "keep"),
+    IMPLICIT_KEEP = c(FALSE, FALSE)
+  )
+
+  result <- pseudonymizeSnapshotTables(
+    tables = list(patient = data.table::data.table(id = "p1", gender = "female")),
+    table_descriptions = NULL,
+    rules = rules,
+    salt = "test-salt",
+    write_review_report = FALSE,
+    log_steps = FALSE
+  )
+
+  expect_named(result$tables, "patient")
+  expect_false(identical(result$tables$patient$id, "p1"))
+  expect_equal(result$tables$patient$gender, "female")
+})
