@@ -210,3 +210,322 @@ loadPseudonymizationRules <- function(
 
   data.table::rbindlist(list(table_rules, extension_rules), fill = TRUE)
 }
+
+emptyRuleReviewTable <- function(extra_columns = character()) {
+  columns <- c(
+    "SOURCE",
+    "SOURCE_TYPE",
+    "SOURCE_FILE",
+    "SOURCE_SHEET",
+    "TABLE_OR_RESOURCE",
+    "COLUMN_NAME",
+    "PSEUDONYMIZATION_RULE",
+    extra_columns
+  )
+  result <- data.table::data.table()
+  for (column in columns) {
+    result[[column]] <- character()
+  }
+  result
+}
+
+getRuleReviewBaseColumns <- function(rules) {
+  columns <- c(
+    "SOURCE",
+    "SOURCE_TYPE",
+    "SOURCE_FILE",
+    "SOURCE_SHEET",
+    "TABLE_OR_RESOURCE",
+    "COLUMN_NAME",
+    "PSEUDONYMIZATION_RULE"
+  )
+  rules <- data.table::as.data.table(data.table::copy(rules))
+  for (column in columns) {
+    if (!column %in% names(rules)) {
+      rules[[column]] <- NA_character_
+    }
+  }
+  data.table::as.data.table(as.data.frame(rules)[, columns, drop = FALSE])
+}
+
+getRulePartReview <- function(rules) {
+  if (nrow(rules) == 0) {
+    return(emptyRuleReviewTable(c("RULE_PART", "ACTION", "ERROR")))
+  }
+
+  rows <- list()
+  for (i in seq_len(nrow(rules))) {
+    rule_parts <- splitRuleList(rules[["PSEUDONYMIZATION_RULE"]][i])
+    rule_parts <- trimws(rule_parts)
+    rule_parts <- rule_parts[nzchar(rule_parts)]
+    for (rule_part in rule_parts) {
+      parsed_rule <- tryCatch(
+        parsePseudonymizationRuleCall(rule_part),
+        error = function(error) error
+      )
+      action <- NA_character_
+      error_message <- NA_character_
+      if (inherits(parsed_rule, "error")) {
+        error_message <- conditionMessage(parsed_rule)
+      } else {
+        action <- parsed_rule$action
+      }
+      rows[[length(rows) + 1L]] <- data.table::as.data.table(cbind(
+        getRuleReviewBaseColumns(rules[i, ]),
+        data.table::data.table(
+          RULE_PART = rule_part,
+          ACTION = action,
+          ERROR = error_message
+        )
+      ))
+    }
+  }
+
+  data.table::rbindlist(rows, fill = TRUE)
+}
+
+getUnsupportedRuleParts <- function(rule_parts) {
+  supported_actions <- c(
+    "keep",
+    "redact",
+    "cryptoHash",
+    "pseudonymize",
+    "pseudonym",
+    "generalize",
+    "keepIf",
+    "redactIf"
+  )
+  is_unsupported <- is.na(rule_parts[["ACTION"]]) |
+    !(rule_parts[["ACTION"]] %in% supported_actions) |
+    grepl("^###\\s*TODO", rule_parts[["RULE_PART"]])
+  is_unsupported[is.na(is_unsupported)] <- TRUE
+  unsupported <- rule_parts[which(is_unsupported), ]
+  if (nrow(unsupported) == 0) {
+    return(emptyRuleReviewTable(c("RULE_PART", "ACTION", "ERROR")))
+  }
+  unsupported
+}
+
+getDuplicateRuleColumns <- function(rules) {
+  if (nrow(rules) == 0) {
+    return(data.table::data.table(
+      SOURCE = character(),
+      SOURCE_TYPE = character(),
+      SOURCE_FILE = character(),
+      SOURCE_SHEET = character(),
+      TABLE_OR_RESOURCE = character(),
+      COLUMN_NAME = character(),
+      N = integer()
+    ))
+  }
+
+  group_columns <- c(
+    "SOURCE",
+    "SOURCE_TYPE",
+    "SOURCE_FILE",
+    "SOURCE_SHEET",
+    "TABLE_OR_RESOURCE",
+    "COLUMN_NAME"
+  )
+  duplicates <- stats::aggregate(
+    x = list(N = rep(1L, nrow(rules))),
+    by = as.data.frame(rules)[, group_columns, drop = FALSE],
+    FUN = sum
+  )
+  duplicates <- data.table::as.data.table(duplicates[duplicates$N > 1, , drop = FALSE])
+  data.table::setorder(
+    duplicates,
+    SOURCE_TYPE,
+    SOURCE,
+    TABLE_OR_RESOURCE,
+    COLUMN_NAME
+  )
+  duplicates
+}
+
+getPseudonymMappingRuleSheets <- function(rule_parts) {
+  is_pseudonym_rule <- rule_parts[["ACTION"]] == "pseudonym"
+  is_pseudonym_rule[is.na(is_pseudonym_rule)] <- FALSE
+  pseudonym_rules <- rule_parts[which(is_pseudonym_rule), ]
+  if (nrow(pseudonym_rules) == 0) {
+    return(emptyRuleReviewTable(c("RULE_PART", "SHEET_NAME", "MAPPING_STATUS", "ERROR")))
+  }
+
+  result <- data.table::copy(pseudonym_rules)
+  result[["SHEET_NAME"]] <- NA_character_
+  result[["MAPPING_STATUS"]] <- NA_character_
+  result[["ERROR"]] <- NA_character_
+  for (i in seq_len(nrow(result))) {
+    parsed_rule <- parsePseudonymizationRuleCall(result[["RULE_PART"]][i])
+    sheet_name <- getRuleArgument(parsed_rule, "sheet")
+    if (is.na(sheet_name) || !nzchar(sheet_name)) {
+      sheet_name <- stripRuleQuotes(parsed_rule$arguments[1])
+    }
+    if (is.na(sheet_name) || !nzchar(sheet_name)) {
+      result[["MAPPING_STATUS"]][i] <- "invalid_rule"
+      result[["ERROR"]][i] <- "pseudonym(...) rules require a sheet argument."
+    } else {
+      result[["SHEET_NAME"]][i] <- sheet_name
+    }
+  }
+  result
+}
+
+validatePseudonymMappingRuleSheets <- function(mapping_rules, input_repo_path) {
+  if (nrow(mapping_rules) == 0) {
+    return(mapping_rules)
+  }
+
+  needs_mapping <- !is.na(mapping_rules[["SHEET_NAME"]]) &
+    nzchar(mapping_rules[["SHEET_NAME"]])
+  if (!any(needs_mapping)) {
+    return(mapping_rules)
+  }
+
+  if (is.null(input_repo_path) || is.na(input_repo_path) || !nzchar(input_repo_path)) {
+    mapping_rules[["MAPPING_STATUS"]][needs_mapping] <- "missing_input_repo_path"
+    mapping_rules[["ERROR"]][needs_mapping] <-
+      "input_repo_path is required to validate pseudonym(sheet = ...) rules."
+    return(mapping_rules)
+  }
+
+  mapping_file_path <- file.path(input_repo_path, PSEUDONYM_MAPPING_FILE_NAME)
+  if (!file.exists(mapping_file_path)) {
+    mapping_rules[["MAPPING_STATUS"]][needs_mapping] <- "missing_file"
+    mapping_rules[["ERROR"]][needs_mapping] <-
+      paste("Pseudonym mapping file not found:", mapping_file_path)
+    return(mapping_rules)
+  }
+
+  for (sheet_name in unique(mapping_rules[["SHEET_NAME"]][needs_mapping])) {
+    validation <- tryCatch(
+      {
+        loadPseudonymMappingSheet(input_repo_path, sheet_name)
+        list(status = "ok", error = NA_character_)
+      },
+      error = function(error) {
+        list(status = "invalid_sheet", error = conditionMessage(error))
+      }
+    )
+    rows <- mapping_rules[["SHEET_NAME"]] == sheet_name
+    rows[is.na(rows)] <- FALSE
+    mapping_rules[["MAPPING_STATUS"]][rows] <- validation$status
+    mapping_rules[["ERROR"]][rows] <- validation$error
+  }
+
+  mapping_rules
+}
+
+#' Review loaded pseudonymization rules before building a snapshot.
+#'
+#' The report is intentionally metadata-focused. It checks loaded table
+#' descriptions and snapshot extensions for unresolved TODO markers, implicit
+#' `keep` rules, unsupported rule actions, duplicate column definitions, and
+#' mapping-rule references to `pseudo_mapping.xlsx`. Missing concrete mapping
+#' keys are collected later while applying the rules to actual data.
+#'
+#' @param rules A data.table returned by `loadPseudonymizationRules()`.
+#' @param input_repo_path Optional TOML-configured input repository directory
+#'   used to validate `pseudonym(sheet = ...)` mapping rules.
+#'
+#' @return A named list of data.tables: `summary`, `todo_rules`,
+#'   `implicit_keep_rules`, `unsupported_rules`, `duplicate_columns`, and
+#'   `mapping_rules`.
+#'
+#' @export
+getPseudonymizationRuleReviewReport <- function(rules, input_repo_path = NULL) {
+  rules <- data.table::as.data.table(data.table::copy(rules))
+  if (!PSEUDONYMIZATION_RULE_COLNAME %in% names(rules)) {
+    stop("rules must contain PSEUDONYMIZATION_RULE.")
+  }
+  if (!"IMPLICIT_KEEP" %in% names(rules)) {
+    rules[["IMPLICIT_KEEP"]] <- FALSE
+  }
+  if (!"PSEUDONYMIZATION_RULE_RAW" %in% names(rules)) {
+    rules[["PSEUDONYMIZATION_RULE_RAW"]] <- rules[[PSEUDONYMIZATION_RULE_COLNAME]]
+  }
+  rules[["HAS_TODO_RULE"]] <-
+    grepl("^###\\s*TODO", rules[[PSEUDONYMIZATION_RULE_COLNAME]]) |
+      grepl("TODO", rules[["PSEUDONYMIZATION_RULE_RAW"]])
+  rules[["HAS_TODO_RULE"]][is.na(rules[["HAS_TODO_RULE"]])] <- FALSE
+  rules[["HAS_MAPPING_RULE"]] <-
+    grepl("\\bpseudonym\\s*\\(", rules[[PSEUDONYMIZATION_RULE_COLNAME]])
+  rules[["HAS_MAPPING_RULE"]][is.na(rules[["HAS_MAPPING_RULE"]])] <- FALSE
+
+  rule_parts <- getRulePartReview(rules)
+  todo_rules <- rules[which(rules[["HAS_TODO_RULE"]] == TRUE), ]
+  if (nrow(todo_rules) == 0) {
+    todo_rules <- emptyRuleReviewTable()
+  } else {
+    todo_rules <- getRuleReviewBaseColumns(todo_rules)
+  }
+  implicit_keep_rules <- rules[which(rules[["IMPLICIT_KEEP"]] == TRUE), ]
+  if (nrow(implicit_keep_rules) == 0) {
+    implicit_keep_rules <- emptyRuleReviewTable()
+  } else {
+    implicit_keep_rules <- getRuleReviewBaseColumns(implicit_keep_rules)
+  }
+
+  unsupported_rules <- getUnsupportedRuleParts(rule_parts)
+  mapping_rules <- validatePseudonymMappingRuleSheets(
+    getPseudonymMappingRuleSheets(rule_parts),
+    input_repo_path
+  )
+
+  summary <- stats::aggregate(
+    x = list(
+      N = rep(1L, nrow(rules)),
+      IMPLICIT_KEEP_N = as.integer(rules[["IMPLICIT_KEEP"]] == TRUE),
+      TODO_N = as.integer(rules[["HAS_TODO_RULE"]] == TRUE),
+      MAPPING_RULE_N = as.integer(rules[["HAS_MAPPING_RULE"]] == TRUE)
+    ),
+    by = as.data.frame(rules)[, c("SOURCE", "SOURCE_TYPE"), drop = FALSE],
+    FUN = sum
+  )
+  summary <- data.table::as.data.table(summary)
+  if (nrow(unsupported_rules) == 0) {
+    unsupported_counts <- data.table::data.table(
+      SOURCE = character(),
+      SOURCE_TYPE = character(),
+      UNSUPPORTED_RULE_N = integer()
+    )
+  } else {
+    unsupported_counts <- stats::aggregate(
+      x = list(UNSUPPORTED_RULE_N = rep(1L, nrow(unsupported_rules))),
+      by = as.data.frame(unsupported_rules)[, c("SOURCE", "SOURCE_TYPE"), drop = FALSE],
+      FUN = sum
+    )
+    unsupported_counts <- data.table::as.data.table(unsupported_counts)
+  }
+  mapping_problem_rows <- is.na(mapping_rules[["MAPPING_STATUS"]]) |
+    mapping_rules[["MAPPING_STATUS"]] != "ok"
+  mapping_problem_rules <- mapping_rules[which(mapping_problem_rows), ]
+  if (nrow(mapping_problem_rules) == 0) {
+    mapping_problem_counts <- data.table::data.table(
+      SOURCE = character(),
+      SOURCE_TYPE = character(),
+      MAPPING_PROBLEM_N = integer()
+    )
+  } else {
+    mapping_problem_counts <- stats::aggregate(
+      x = list(MAPPING_PROBLEM_N = rep(1L, nrow(mapping_problem_rules))),
+      by = as.data.frame(mapping_problem_rules)[, c("SOURCE", "SOURCE_TYPE"), drop = FALSE],
+      FUN = sum
+    )
+    mapping_problem_counts <- data.table::as.data.table(mapping_problem_counts)
+  }
+  summary <- merge(summary, unsupported_counts, by = c("SOURCE", "SOURCE_TYPE"), all.x = TRUE)
+  summary <- merge(summary, mapping_problem_counts, by = c("SOURCE", "SOURCE_TYPE"), all.x = TRUE)
+  summary[["UNSUPPORTED_RULE_N"]][is.na(summary[["UNSUPPORTED_RULE_N"]])] <- 0L
+  summary[["MAPPING_PROBLEM_N"]][is.na(summary[["MAPPING_PROBLEM_N"]])] <- 0L
+  data.table::setorder(summary, SOURCE_TYPE, SOURCE)
+
+  list(
+    summary = summary,
+    todo_rules = todo_rules,
+    implicit_keep_rules = implicit_keep_rules,
+    unsupported_rules = unsupported_rules,
+    duplicate_columns = getDuplicateRuleColumns(rules),
+    mapping_rules = mapping_rules
+  )
+}
