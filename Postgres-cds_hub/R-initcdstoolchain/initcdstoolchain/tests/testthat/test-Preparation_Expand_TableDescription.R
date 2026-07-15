@@ -126,6 +126,53 @@ test_that("addPseudonymizationRulesToTableDescription adds default YAML rules", 
   )
 })
 
+test_that("expandTableDescriptionFromFile preserves snapshot extension sheets", {
+  table_description_file_name <- tempfile(fileext = ".xlsx")
+  table_description_collapsed <- data.table(
+    RESOURCE = c("Patient", "Observation"),
+    RESOURCE_PREFIX = c("pat", "obs"),
+    FHIR_EXPRESSION = c("id", "id"),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+  snapshot_extensions <- data.table(
+    V1 = c("Hint", "Snapshot-only columns", NA, "TABLE_NAME", "observation"),
+    V2 = c(NA, NA, NA, "COLUMN_NAME", "primary_loinc_code"),
+    V3 = c(NA, NA, NA, "COLUMN_DESCRIPTION", "Primary LOINC Code"),
+    V4 = c(NA, NA, NA, "COLUMN_TYPE", "varchar"),
+    V5 = c(NA, NA, NA, "PSEUDONYMIZATION_RULE", "keep")
+  )
+  workbook <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(workbook, "table_description_collapsed")
+  openxlsx::writeData(
+    workbook,
+    "table_description_collapsed",
+    table_description_collapsed,
+    colNames = TRUE
+  )
+  openxlsx::addWorksheet(workbook, "snapshot_extensions")
+  openxlsx::writeData(
+    workbook,
+    "snapshot_extensions",
+    snapshot_extensions,
+    colNames = FALSE
+  )
+  openxlsx::saveWorkbook(workbook, table_description_file_name, overwrite = TRUE)
+
+  with_mocked_bindings(
+    system.file = function(..., package = NULL) table_description_file_name,
+    {
+      result <- expandTableDescriptionFromFile("Table_Description_Definition.xlsx")
+    },
+    .package = "base"
+  )
+
+  additional_output_sheets <- attr(result, "additional_output_sheets")
+  expect_named(additional_output_sheets, "snapshot_extensions")
+  expect_equal(additional_output_sheets$snapshot_extensions[4, 1], "TABLE_NAME")
+  expect_equal(additional_output_sheets$snapshot_extensions[5, 2], "primary_loinc_code")
+})
+
 test_that("setTableDescriptionColumnWidths stores readable widths", {
   table_description_file_name <- tempfile(fileext = ".xlsx")
   table_description <- data.table(

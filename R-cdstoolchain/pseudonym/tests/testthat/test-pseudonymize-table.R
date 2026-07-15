@@ -21,8 +21,8 @@ test_that("pseudonymizeTable applies keep redact hash and generalize rules", {
 
   expect_false(identical(result$pat_id[1], source_table$pat_id[1]))
   expect_equal(result$pat_id[1], pseudonymizeTable(
-    source_table[1, .(pat_id)],
-    table_description[1],
+    data.table::data.table(pat_id = source_table$pat_id[1]),
+    table_description[1, ],
     "Patient",
     salt = "test-salt"
   )$pat_id)

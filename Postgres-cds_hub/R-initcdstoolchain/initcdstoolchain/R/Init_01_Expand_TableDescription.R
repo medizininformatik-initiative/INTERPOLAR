@@ -96,6 +96,7 @@ addEmptyRowsBeforeNewResource <- function(table) {
 }
 
 FHIR_NODE_TYPE_PATHS_COLNAME <- "FHIR_NODE_TYPE_PATHS"
+SNAPSHOT_EXTENSION_SHEET_NAMES <- c("snapshot_extensions")
 
 appendFhirNodeTypePath <- function(existing_paths, node_type, node_path) {
   entry <- paste0(node_type, "=", node_path)
@@ -325,12 +326,25 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
   }
 
   tables <- etlutils::readExcelFileAsTableList(table_description_file_path)
+  additional_output_sheets <- list()
+  for (sheet_name in intersect(names(tables), SNAPSHOT_EXTENSION_SHEET_NAMES)) {
+    additional_output_sheets[[sheet_name]] <- openxlsx::read.xlsx(
+      table_description_file_path,
+      sheet = sheet_name,
+      colNames = FALSE,
+      skipEmptyRows = FALSE,
+      skipEmptyCols = FALSE
+    )
+  }
 
   # extract the collapsed table description
   table_description_collapsed <- tables[["table_description_collapsed"]]
   # delete the extracted collapsed table description from tables list
   tables[["table_description_collapsed"]] <- NULL
-  expandTableDescriptionInternal(table_description_collapsed, tables)
+  tables[SNAPSHOT_EXTENSION_SHEET_NAMES] <- NULL
+  expanded_table_description <- expandTableDescriptionInternal(table_description_collapsed, tables)
+  attr(expanded_table_description, "additional_output_sheets") <- additional_output_sheets
+  expanded_table_description
 }
 
 addPseudonymizationRulesToTableDescription <- function(expanded_table_description) {
@@ -554,6 +568,7 @@ formatTableDescriptionPseudonymizationRules <- function(table_description_file_n
 #' @seealso \code{\link{expandTableDescriptionFromFile}}
 expandTableDescription <- function() {
   expanded_table_description <- expandTableDescriptionFromFile("Table_Description_Definition.xlsx")
+  additional_output_sheets <- attr(expanded_table_description, "additional_output_sheets")
   if (checkResult(expanded_table_description)) {
     message("All result columns could be transformed or expanded.")
     expanded_table_description <- addPseudonymizationRulesToTableDescription(
@@ -580,8 +595,12 @@ expandTableDescription <- function() {
     )
 
     table_description_file_name <- "./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx"
-    etlutils::writeExcelFile(
+    output_sheets <- c(
       list("table_description" = expanded_table_description),
+      additional_output_sheets
+    )
+    etlutils::writeExcelFile(
+      output_sheets,
       table_description_file_name,
       with_column_names = FALSE
     )
