@@ -170,3 +170,80 @@ test_that("rule review report reports missing mapping input path", {
   expect_match(report$mapping_rules$ERROR, "input_repo_path")
   expect_equal(report$summary$MAPPING_PROBLEM_N, 1L)
 })
+
+test_that("rule review report can be written as Excel workbook", {
+  rules <- data.table::data.table(
+    SOURCE = "frontend",
+    SOURCE_TYPE = "table_description",
+    SOURCE_FILE = "Frontend_Table_Description.xlsx",
+    SOURCE_SHEET = "frontend_table_description",
+    TABLE_OR_RESOURCE = "frontend",
+    COLUMN_NAME = "meda_anlage",
+    PSEUDONYMIZATION_RULE_RAW = 'pseudonym("frontend_users")',
+    PSEUDONYMIZATION_RULE = 'pseudonym("frontend_users")',
+    IMPLICIT_KEEP = FALSE
+  )
+  file_name <- tempfile(fileext = ".xlsx")
+
+  report <- writePseudonymizationRuleReviewReport(rules, file_name)
+  workbook <- etlutils::readExcelFileAsTableList(file_name)
+
+  expect_true(file.exists(file_name))
+  expect_setequal(
+    names(workbook),
+    c(
+      "summary",
+      "todo_rules",
+      "implicit_keep_rules",
+      "unsupported_rules",
+      "duplicate_columns",
+      "mapping_rules"
+    )
+  )
+  expect_equal(report$summary$MAPPING_PROBLEM_N, 1L)
+  expect_equal(workbook$mapping_rules$MAPPING_STATUS, "missing_input_repo_path")
+})
+
+test_that("rule review report defaults to outputLocal reports directory", {
+  rules <- data.table::data.table(
+    SOURCE = "frontend",
+    SOURCE_TYPE = "table_description",
+    SOURCE_FILE = "Frontend_Table_Description.xlsx",
+    SOURCE_SHEET = "frontend_table_description",
+    TABLE_OR_RESOURCE = "frontend",
+    COLUMN_NAME = "meda_anlage",
+    PSEUDONYMIZATION_RULE_RAW = "keep",
+    PSEUDONYMIZATION_RULE = "keep",
+    IMPLICIT_KEEP = FALSE
+  )
+  old_module_dirs <- if (exists("MODULE_DIRS", envir = .GlobalEnv)) {
+    get("MODULE_DIRS", envir = .GlobalEnv)
+  } else {
+    NULL
+  }
+  test_output_dir <- tempfile("outputLocal-")
+  assign(
+    "MODULE_DIRS",
+    list(local_dir = file.path(test_output_dir, "pseudonym")),
+    envir = .GlobalEnv
+  )
+  on.exit({
+    if (is.null(old_module_dirs)) {
+      rm("MODULE_DIRS", envir = .GlobalEnv)
+    } else {
+      assign("MODULE_DIRS", old_module_dirs, envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
+  writePseudonymizationRuleReviewReport(
+    rules,
+    filename_without_extension = "review_test"
+  )
+
+  expect_true(file.exists(file.path(
+    test_output_dir,
+    "pseudonym",
+    "reports",
+    "review_test.xlsx"
+  )))
+})

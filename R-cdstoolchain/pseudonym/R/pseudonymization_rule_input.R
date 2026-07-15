@@ -529,3 +529,47 @@ getPseudonymizationRuleReviewReport <- function(rules, input_repo_path = NULL) {
     mapping_rules = mapping_rules
   )
 }
+
+#' Write a pseudonymization rule review report to an Excel workbook.
+#'
+#' @param rules A data.table returned by `loadPseudonymizationRules()`.
+#' @param file_name Optional output `.xlsx` file path. If `NA`, the report is
+#'   written to `outputLocal/<MODULE>/reports` via `etlutils::writeExcelFileLocal()`.
+#' @param input_repo_path Optional TOML-configured input repository directory
+#'   used to validate `pseudonym(sheet = ...)` mapping rules.
+#' @param filename_without_extension File name used for the default
+#'   `outputLocal/<MODULE>/reports` output.
+#'
+#' @return The report returned by `getPseudonymizationRuleReviewReport()`,
+#'   invisibly.
+#'
+#' @export
+writePseudonymizationRuleReviewReport <- function(
+    rules,
+    file_name = NA,
+    input_repo_path = NULL,
+    filename_without_extension = "pseudonymization_rule_review") {
+  report <- getPseudonymizationRuleReviewReport(
+    rules,
+    input_repo_path = input_repo_path
+  )
+  if (is.na(file_name)) {
+    etlutils::writeExcelFileLocal(
+      report,
+      filename_without_extension = filename_without_extension,
+      with_column_names = TRUE,
+      subdir = "reports"
+    )
+  } else {
+    output_dir <- dirname(file_name)
+    if (!dir.exists(output_dir)) {
+      dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+    }
+    etlutils::writeExcelFile(
+      report,
+      file_name,
+      with_column_names = TRUE
+    )
+  }
+  invisible(report)
+}
