@@ -4,7 +4,13 @@
 \alias{pseudonymizeTable}
 \title{Pseudonymize a Table Using Table Description Rules}
 \usage{
-pseudonymizeTable(table, table_description, table_name = NULL, salt = NULL)
+pseudonymizeTable(
+  table,
+  table_description,
+  table_name = NULL,
+  salt = NULL,
+  input_repo_path = NULL
+)
 }
 \arguments{
 \item{table}{A \code{data.table} or \code{data.frame} containing the source data.}
@@ -17,6 +23,11 @@ group rows by table.}
 \code{table_description} before applying the rules.}
 
 \item{salt}{Salt used for \code{cryptoHash} and \code{pseudonymize(...)} rules.}
+
+\item{input_repo_path}{Path to the TOML-configured input repository directory
+for the pseudonymization run. If \code{pseudonym(sheet = ...)} rules are used,
+\verb{<input_repo_path>/pseudo_mapping.xlsx} is read and the \code{sheet} argument
+selects the mapping sheet.}
 }
 \value{
 A pseudonymized copy of \code{table}.
