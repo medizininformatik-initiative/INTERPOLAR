@@ -4,63 +4,6 @@ DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS <- c(
   case_id = "count per Fall-Id"
 )
 
-DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS <- c(
-  encounter_einrichtungskontakt = "count per Einrichtungskontakt",
-  encounter_einrichtungskontakt_imp = "count per Einrichtungskontakt class IMP",
-  encounter_einrichtungskontakt_ss = "count per Einrichtungskontakt class SS",
-  encounter_einrichtungskontakt_amb = "count per Einrichtungskontakt class AMB",
-  encounter_einrichtungskontakt_other = "count per Einrichtungskontakt class Andere",
-  encounter_abteilungskontakt = "count per Abteilungskontakt",
-  encounter_abteilungskontakt_imp = "count per Abteilungskontakt class IMP",
-  encounter_abteilungskontakt_ss = "count per Abteilungskontakt class SS",
-  encounter_abteilungskontakt_amb = "count per Abteilungskontakt class AMB",
-  encounter_abteilungskontakt_other = "count per Abteilungskontakt class Andere",
-  encounter_versorgungsstellenkontakt = "count per Versorgungsstellenkontakt",
-  encounter_versorgungsstellenkontakt_imp = "count per Versorgungsstellenkontakt class IMP",
-  encounter_versorgungsstellenkontakt_ss = "count per Versorgungsstellenkontakt class SS",
-  encounter_versorgungsstellenkontakt_amb = "count per Versorgungsstellenkontakt class AMB",
-  encounter_versorgungsstellenkontakt_other = "count per Versorgungsstellenkontakt class Andere"
-)
-
-DATABASE_QUALITY_ANALYSIS_ENCOUNTER_TYPE_SYSTEM <- "http://fhir.de/CodeSystem/Kontaktebene"
-DATABASE_QUALITY_ANALYSIS_ENCOUNTER_CLASS_SYSTEM <- "http://terminology.hl7.org/CodeSystem/v3-ActCode"
-
-DATABASE_QUALITY_ANALYSIS_ENCOUNTER_TYPE_GROUPINGS <- c(
-  encounter_einrichtungskontakt = "einrichtungskontakt",
-  encounter_einrichtungskontakt_imp = "einrichtungskontakt",
-  encounter_einrichtungskontakt_ss = "einrichtungskontakt",
-  encounter_einrichtungskontakt_amb = "einrichtungskontakt",
-  encounter_einrichtungskontakt_other = "einrichtungskontakt",
-  encounter_abteilungskontakt = "abteilungskontakt",
-  encounter_abteilungskontakt_imp = "abteilungskontakt",
-  encounter_abteilungskontakt_ss = "abteilungskontakt",
-  encounter_abteilungskontakt_amb = "abteilungskontakt",
-  encounter_abteilungskontakt_other = "abteilungskontakt",
-  encounter_versorgungsstellenkontakt = "versorgungsstellenkontakt",
-  encounter_versorgungsstellenkontakt_imp = "versorgungsstellenkontakt",
-  encounter_versorgungsstellenkontakt_ss = "versorgungsstellenkontakt",
-  encounter_versorgungsstellenkontakt_amb = "versorgungsstellenkontakt",
-  encounter_versorgungsstellenkontakt_other = "versorgungsstellenkontakt"
-)
-
-DATABASE_QUALITY_ANALYSIS_ENCOUNTER_CLASS_GROUPINGS <- c(
-  encounter_einrichtungskontakt = NA_character_,
-  encounter_einrichtungskontakt_imp = "IMP",
-  encounter_einrichtungskontakt_ss = "SS",
-  encounter_einrichtungskontakt_amb = "AMB",
-  encounter_einrichtungskontakt_other = "OTHER",
-  encounter_abteilungskontakt = NA_character_,
-  encounter_abteilungskontakt_imp = "IMP",
-  encounter_abteilungskontakt_ss = "SS",
-  encounter_abteilungskontakt_amb = "AMB",
-  encounter_abteilungskontakt_other = "OTHER",
-  encounter_versorgungsstellenkontakt = NA_character_,
-  encounter_versorgungsstellenkontakt_imp = "IMP",
-  encounter_versorgungsstellenkontakt_ss = "SS",
-  encounter_versorgungsstellenkontakt_amb = "AMB",
-  encounter_versorgungsstellenkontakt_other = "OTHER"
-)
-
 DATABASE_QUALITY_ANALYSIS_CHECKED_VALUE <- "Checked"
 
 DATABASE_QUALITY_ANALYSIS_FRONTEND_CHECKBOX_GROUPS <- list(

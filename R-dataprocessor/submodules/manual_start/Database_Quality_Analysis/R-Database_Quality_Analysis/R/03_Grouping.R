@@ -118,17 +118,7 @@ inferGroupingColumns <- function(table_metadata, config) {
     )
   }
 
-  grouping <- unlist(grouping, use.names = TRUE)
-  if (identical(table_name, "encounter") &&
-      all(c("enc_type_system", "enc_type_code", "enc_class_system", "enc_class_code") %in% columns)) {
-    encounter_type_grouping <- stats::setNames(
-      rep(grouping[["resource_id"]], length(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_TYPE_GROUPINGS)),
-      names(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_TYPE_GROUPINGS)
-    )
-    grouping <- c(grouping, encounter_type_grouping)
-  }
-
-  grouping
+  unlist(grouping, use.names = TRUE)
 }
 
 addGroupingRoles <- function(result, grouping_columns) {
@@ -138,17 +128,8 @@ addGroupingRoles <- function(result, grouping_columns) {
     if (is.na(grouping_column) || !grouping_column %in% result$COLUMN_NAME) {
       next
     }
-    count_column <- c(
-      DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS,
-      DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS
-    )[[grouping_name]]
+    count_column <- DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
     role_columns <- grouping_column
-    if (grouping_name %in% names(DATABASE_QUALITY_ANALYSIS_ENCOUNTER_TYPE_GROUPINGS)) {
-      role_columns <- intersect(
-        c(grouping_column, "enc_type_system", "enc_type_code", "enc_class_system", "enc_class_code"),
-        result$COLUMN_NAME
-      )
-    }
     result[
       COLUMN_NAME %in% role_columns,
       (DATABASE_QUALITY_ANALYSIS_GROUPING_ROLE_COLUMN) := data.table::fifelse(

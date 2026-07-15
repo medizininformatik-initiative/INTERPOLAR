@@ -46,3 +46,34 @@ GROUPING_OVERRIDES = [
   "trigger_fe|record_id|record_id|",
   "medikationsanalyse_fe|meda_id|record_id|fall_meda_id"
 ]
+
+# Optional resource detail sheets.
+RESOURCE_DETAIL_SHEETS = [
+  "ENCOUNTER"
+]
+
+RESOURCE_DETAIL_ENCOUNTER_SHEET_NAME = "FHIR Encounter"
+RESOURCE_DETAIL_ENCOUNTER_TABLE_NAME = "encounter"
+
+RESOURCE_DETAIL_ENCOUNTER_BLOCK_SYSTEM_COLUMN = "enc_type_system"
+RESOURCE_DETAIL_ENCOUNTER_BLOCK_SYSTEM = "http://fhir.de/CodeSystem/Kontaktebene"
+RESOURCE_DETAIL_ENCOUNTER_BLOCK_VALUE_COLUMN = "enc_type_code"
+RESOURCE_DETAIL_ENCOUNTER_BLOCK_VALUES = [
+  "Einrichtungskontakt=einrichtungskontakt",
+  "Abteilungskontakt=abteilungskontakt",
+  "Versorgungsstellenkontakt=versorgungsstellenkontakt"
+]
+
+RESOURCE_DETAIL_ENCOUNTER_SPLIT_SYSTEM_COLUMN = "enc_class_system"
+RESOURCE_DETAIL_ENCOUNTER_SPLIT_SYSTEM = "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+RESOURCE_DETAIL_ENCOUNTER_SPLIT_VALUE_COLUMN = "enc_class_code"
+
+# The left side is the report column, the right side is the value to filter for.
+# The special value OTHER counts non-empty values outside the explicitly
+# configured values.
+RESOURCE_DETAIL_ENCOUNTER_SPLIT_VALUES = [
+  "count class IMP=IMP",
+  "count class SS=SS",
+  "count class AMB=AMB",
+  "count class Andere=OTHER"
+]

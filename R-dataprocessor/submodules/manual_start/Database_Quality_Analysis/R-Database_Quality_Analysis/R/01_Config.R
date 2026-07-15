@@ -84,7 +84,11 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
         "last_processing_nr"
       )
     ),
-    grouping_overrides = parseGroupingOverrides(getConfigValue("GROUPING_OVERRIDES", character()))
+    grouping_overrides = parseGroupingOverrides(getConfigValue("GROUPING_OVERRIDES", character())),
+    resource_detail_sheets = parseResourceDetailSheets(
+      getConfigValue("RESOURCE_DETAIL_SHEETS", character()),
+      getConfigValue
+    )
   )
 }
 
@@ -123,5 +127,76 @@ parseGroupingOverrides <- function(overrides) {
     )
   }))
   result[result == ""] <- NA_character_
+  result
+}
+
+parseNameValuePairs <- function(value, entry_name) {
+  if (length(value) > 1L) {
+    pairs <- value
+  } else {
+    pairs <- strsplit(value, ";", fixed = TRUE)[[1]]
+  }
+  pairs <- pairs[nzchar(pairs)]
+  pair_parts <- strsplit(pairs, "=", fixed = TRUE)
+  invalid_pairs <- vapply(pair_parts, length, integer(1)) != 2L
+  if (any(invalid_pairs)) {
+    stop(
+      "Invalid ",
+      entry_name,
+      " entry. Expected semicolon-separated name=value pairs.",
+      call. = FALSE
+    )
+  }
+
+  result <- vapply(pair_parts, function(pair) pair[[2]], character(1))
+  names(result) <- vapply(pair_parts, function(pair) pair[[1]], character(1))
+  result
+}
+
+parseResourceDetailSheets <- function(detail_sheet_ids, get_config_value) {
+  if (!length(detail_sheet_ids)) {
+    return(list())
+  }
+
+  result <- lapply(detail_sheet_ids, function(detail_sheet_id) {
+    key_prefix <- paste0("RESOURCE_DETAIL_", detail_sheet_id, "_")
+    get_detail_value <- function(name) {
+      value <- get_config_value(paste0(key_prefix, name), NULL)
+      if (is.null(value)) {
+        stop(
+          "Missing ",
+          key_prefix,
+          name,
+          " for RESOURCE_DETAIL_SHEETS entry ",
+          detail_sheet_id,
+          ".",
+          call. = FALSE
+        )
+      }
+      value
+    }
+
+    split_values <- parseNameValuePairs(
+      get_detail_value("SPLIT_VALUES"),
+      paste0(key_prefix, "SPLIT_VALUES")
+    )
+    list(
+      sheet_name = get_detail_value("SHEET_NAME"),
+      table_name = get_detail_value("TABLE_NAME"),
+      block_system_column = get_detail_value("BLOCK_SYSTEM_COLUMN"),
+      block_system = get_detail_value("BLOCK_SYSTEM"),
+      block_value_column = get_detail_value("BLOCK_VALUE_COLUMN"),
+      block_values = parseNameValuePairs(
+        get_detail_value("BLOCK_VALUES"),
+        paste0(key_prefix, "BLOCK_VALUES")
+      ),
+      split_system_column = get_detail_value("SPLIT_SYSTEM_COLUMN"),
+      split_system = get_detail_value("SPLIT_SYSTEM"),
+      split_value_column = get_detail_value("SPLIT_VALUE_COLUMN"),
+      split_values = split_values,
+      split_count_columns = stats::setNames(names(split_values), names(split_values))
+    )
+  })
+  names(result) <- vapply(result, function(detail_config) detail_config$table_name, character(1))
   result
 }

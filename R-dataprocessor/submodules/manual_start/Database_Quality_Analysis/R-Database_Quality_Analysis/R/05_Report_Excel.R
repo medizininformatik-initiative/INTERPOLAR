@@ -12,9 +12,6 @@ calculateCounts <- function(
   for (count_column in DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS) {
     result[, (count_column) := NA_integer_]
   }
-  for (count_column in DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS) {
-    result[, (count_column) := NA_integer_]
-  }
 
   table_names <- unique(metadata$TABLE_NAME)
   for (table_index in seq_along(table_names)) {
@@ -120,7 +117,6 @@ calculateCounts <- function(
     DATABASE_QUALITY_ANALYSIS_GROUPING_ROLE_COLUMN,
     DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS,
     intersect(DATABASE_QUALITY_ANALYSIS_VALUE_DATETIME_COLUMNS, names(result)),
-    DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS,
     "TABLE_FAMILY",
     "ORDINAL_POSITION"
   ))
@@ -217,10 +213,7 @@ splitResultForExcel <- function(result) {
   output_columns <- setdiff(names(result), c("TABLE_FAMILY", "ORDINAL_POSITION"))
   non_fhir_output_columns <- setdiff(
     output_columns,
-    c(
-      DATABASE_QUALITY_ANALYSIS_VALUE_DATETIME_COLUMNS[c("first_meta_last_updated", "last_meta_last_updated")],
-      DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS
-    )
+    DATABASE_QUALITY_ANALYSIS_VALUE_DATETIME_COLUMNS[c("first_meta_last_updated", "last_meta_last_updated")]
   )
   sheets <- list(
     FHIR = result[TABLE_FAMILY == "FHIR", ..output_columns],
@@ -228,7 +221,7 @@ splitResultForExcel <- function(result) {
     Other = result[TABLE_FAMILY == "Other", ..non_fhir_output_columns]
   )
   sheets <- lapply(sheets, function(sheet) {
-    for (count_column in c(DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS, DATABASE_QUALITY_ANALYSIS_ENCOUNTER_COUNT_COLUMNS)) {
+    for (count_column in DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS) {
       if (!count_column %in% names(sheet)) {
         next
       }
@@ -256,7 +249,8 @@ formatSheetForExcel <- function(sheet) {
       names(sheet)
     )
   )
-  formatted_tables <- lapply(split(sheet, sheet$TABLE_NAME), function(table_rows) {
+  formatted_tables <- lapply(unique(sheet$TABLE_NAME), function(table_name) {
+    table_rows <- sheet[TABLE_NAME == table_name]
     table_rows[-1, TABLE_NAME := NA_character_]
     data.table::rbindlist(list(table_rows, blank_row), use.names = TRUE)
   })
@@ -353,7 +347,10 @@ createReport <- function(config = getConfig()) {
     paste(paste(result_rows_by_family$TABLE_FAMILY, result_rows_by_family$N, sep = "="), collapse = ", "),
     "."
   )
-  sheets <- splitResultForExcel(result)
+  sheets <- c(
+    splitResultForExcel(result),
+    createResourceDetailSheets(metadata, result, config)
+  )
   sheets$Metadata <- createMetadataSheet(
     result,
     metadata,
