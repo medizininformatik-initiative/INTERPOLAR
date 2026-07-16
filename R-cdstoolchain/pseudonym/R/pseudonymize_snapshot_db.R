@@ -20,7 +20,24 @@ snapshotQualifiedName <- function(connection, name, schema = NULL) {
   as.character(DBI::dbQuoteIdentifier(connection, name))
 }
 
-#' Build Source View Plan for Snapshot Pseudonymization
+snapshotEnsureSchema <- function(connection, schema) {
+  if (!is.null(schema) && !is.na(schema) && nzchar(schema)) {
+    quoted_schema <- as.character(DBI::dbQuoteIdentifier(connection, schema))
+    statement <- paste0("CREATE SCHEMA IF NOT EXISTS ", quoted_schema)
+    DBI::dbExecute(connection, statement)
+  }
+}
+
+snapshotRelationExists <- function(connection, name, schema = NULL) {
+  relation <- if (!is.null(schema) && !is.na(schema) && nzchar(schema)) {
+    DBI::Id(schema = schema, table = name)
+  } else {
+    name
+  }
+  DBI::dbExistsTable(connection, relation)
+}
+
+#' Build Source Relation Plan for Snapshot Pseudonymization
 #'
 #' This derives the database read plan from loaded pseudonymization rules. Only
 #' normal table-description sources define input tables; snapshot-extension
@@ -28,38 +45,104 @@ snapshotQualifiedName <- function(connection, name, schema = NULL) {
 #' do not create additional source relations.
 #'
 #' @param rules Rules loaded by `loadPseudonymizationRules()`.
-#' @param source_view_prefix Prefix used for the source view names.
-#' @param source_view_suffix Suffix used for the source view names.
+#' @param source_view_prefix Prefix used for source view names.
+#' @param last_version_suffix Suffix used for last-version source views and
+#'   materialized target tables.
 #' @param tables Optional character vector limiting the tables to read.
 #'
-#' @return A data.table with `TABLE_NAME` and `SOURCE_RELATION`.
+#' @return A data.table with one row for each materialized source relation.
 #' @export
 getSnapshotSourceViewPlan <- function(
     rules,
     source_view_prefix = "v_",
-    source_view_suffix = "_last_version",
+    last_version_suffix = "_last_version",
     tables = NULL) {
   table_names <- snapshotRuleTables(rules)
   if (!is.null(tables)) {
     table_names <- table_names[tolower(table_names) %in% tolower(tables)]
   }
-  data.table::data.table(
-    TABLE_NAME = table_names,
-    SOURCE_RELATION = paste0(source_view_prefix, table_names, source_view_suffix)
+  plan <- data.table::rbindlist(list(
+    data.table::data.table(
+      BASE_TABLE_NAME = table_names,
+      MATERIALIZED_TABLE_NAME = table_names,
+      SOURCE_RELATION = paste0(source_view_prefix, table_names),
+      TARGET_VIEW_NAME = paste0(source_view_prefix, table_names),
+      SNAPSHOT_RELATION_TYPE = "all"
+    ),
+    data.table::data.table(
+      BASE_TABLE_NAME = table_names,
+      MATERIALIZED_TABLE_NAME = paste0(table_names, last_version_suffix),
+      SOURCE_RELATION = paste0(source_view_prefix, table_names, last_version_suffix),
+      TARGET_VIEW_NAME = paste0(source_view_prefix, table_names, last_version_suffix),
+      SNAPSHOT_RELATION_TYPE = "last_version"
+    )
+  ))
+  plan[
+    ,
+    c(
+      "BASE_TABLE_NAME",
+      "MATERIALIZED_TABLE_NAME",
+      "SOURCE_RELATION",
+      "TARGET_VIEW_NAME",
+      "SNAPSHOT_RELATION_TYPE"
+    ),
+    with = FALSE
+  ]
+}
+
+pseudonymizeSnapshotMaterializedTables <- function(
+    tables,
+    materialization_plan,
+    rules,
+    salt,
+    input_repo_path,
+    keep_unmatched_columns,
+    log_steps) {
+  result_tables <- list()
+  summary <- data.table::data.table()
+
+  for (i in seq_len(nrow(materialization_plan))) {
+    materialized_table_name <- materialization_plan[["MATERIALIZED_TABLE_NAME"]][i]
+    base_table_name <- materialization_plan[["BASE_TABLE_NAME"]][i]
+    table_result <- runPseudonymizationLogStep(
+      3L,
+      paste0("Pseudonymize table ", materialized_table_name),
+      pseudonymizeTableForSnapshot(
+        tables[[materialized_table_name]],
+        rules,
+        base_table_name,
+        salt,
+        input_repo_path,
+        keep_unmatched_columns
+      ),
+      log_steps = log_steps
+    )
+    table_result[["summary"]][["TABLE_NAME"]] <- materialized_table_name
+    table_result[["summary"]][["BASE_TABLE_NAME"]] <- base_table_name
+    table_result[["summary"]][["SNAPSHOT_RELATION_TYPE"]] <-
+      materialization_plan[["SNAPSHOT_RELATION_TYPE"]][i]
+    result_tables[[materialized_table_name]] <- table_result[["table"]]
+    summary <- data.table::rbindlist(list(summary, table_result[["summary"]]), fill = TRUE)
+  }
+
+  list(
+    tables = result_tables,
+    summary = summary
   )
 }
 
 #' Read Snapshot Source Tables from a Database Connection
 #'
 #' Reads all source views from a DBI connection according to
-#' `getSnapshotSourceViewPlan()`. The default relation naming convention is
-#' `v_<table>_last_version`, matching the analysis-facing last-version views.
+#' `getSnapshotSourceViewPlan()`. The default source relations are
+#' `v_<table>` and `v_<table>_last_version`.
 #'
 #' @param connection Source DBI connection.
 #' @param rules Rules loaded by `loadPseudonymizationRules()`.
 #' @param source_schema Optional schema containing the source views.
 #' @param source_view_prefix Prefix used for the source view names.
-#' @param source_view_suffix Suffix used for the source view names.
+#' @param last_version_suffix Suffix used for last-version source views and
+#'   materialized target tables.
 #' @param tables Optional character vector limiting the tables to read.
 #'
 #' @return A named list of data.tables.
@@ -69,22 +152,24 @@ readSnapshotSourceTables <- function(
     rules,
     source_schema = NULL,
     source_view_prefix = "v_",
-    source_view_suffix = "_last_version",
+    last_version_suffix = "_last_version",
     tables = NULL) {
   plan <- getSnapshotSourceViewPlan(
     rules = rules,
     source_view_prefix = source_view_prefix,
-    source_view_suffix = source_view_suffix,
+    last_version_suffix = last_version_suffix,
     tables = tables
   )
 
   result <- vector("list", nrow(plan))
-  names(result) <- plan[["TABLE_NAME"]]
+  names(result) <- plan[["MATERIALIZED_TABLE_NAME"]]
   for (i in seq_len(nrow(plan))) {
     relation <- snapshotQualifiedName(connection, plan[["SOURCE_RELATION"]][i], source_schema)
     query <- paste0("SELECT * FROM ", relation)
-    result[[plan[["TABLE_NAME"]][i]]] <- data.table::as.data.table(DBI::dbGetQuery(connection, query))
+    result[[plan[["MATERIALIZED_TABLE_NAME"]][i]]] <-
+      data.table::as.data.table(DBI::dbGetQuery(connection, query))
   }
+  attr(result, "materialization_plan") <- plan
 
   result
 }
@@ -106,12 +191,13 @@ readSnapshotSourceTables <- function(
 writeSnapshotTargetTables <- function(
     connection,
     tables,
-    target_schema = NULL,
-    overwrite = TRUE,
+    target_schema = "db_log",
+    overwrite = FALSE,
     temporary = FALSE) {
   if (is.null(names(tables)) || any(!nzchar(names(tables)))) {
     stop("tables must be a named list.")
   }
+  snapshotEnsureSchema(connection, target_schema)
 
   summary <- data.table::data.table(
     TABLE_NAME = character(),
@@ -121,6 +207,9 @@ writeSnapshotTargetTables <- function(
   )
 
   for (table_name in names(tables)) {
+    if (!isTRUE(overwrite) && snapshotRelationExists(connection, table_name, target_schema)) {
+      stop("Target table already exists: ", snapshotQualifiedName(connection, table_name, target_schema))
+    }
     target <- if (!is.null(target_schema) && !is.na(target_schema) && nzchar(target_schema)) {
       DBI::Id(schema = target_schema, table = table_name)
     } else {
@@ -147,13 +236,68 @@ writeSnapshotTargetTables <- function(
   summary
 }
 
+#' Create Passthrough Views for Pseudonymized Snapshot Tables
+#'
+#' Creates `db2dataprocessor_out.v_<table>` style views that directly select
+#' from the materialized pseudonymized tables in `db_log`.
+#'
+#' @param connection Target DBI connection.
+#' @param materialization_plan Plan returned by `getSnapshotSourceViewPlan()`.
+#' @param table_schema Schema containing materialized pseudonymized tables.
+#' @param view_schema Schema containing passthrough views.
+#' @param replace If `TRUE`, existing views are replaced.
+#'
+#' @return A data.table with one row per created view.
+#' @export
+createSnapshotPassthroughViews <- function(
+    connection,
+    materialization_plan,
+    table_schema = "db_log",
+    view_schema = "db2dataprocessor_out",
+    replace = FALSE) {
+  snapshotEnsureSchema(connection, view_schema)
+
+  summary <- data.table::data.table(
+    VIEW_NAME = character(),
+    SOURCE_TABLE = character(),
+    STATUS = character()
+  )
+
+  for (i in seq_len(nrow(materialization_plan))) {
+    view_name <- materialization_plan[["TARGET_VIEW_NAME"]][i]
+    source_table <- materialization_plan[["MATERIALIZED_TABLE_NAME"]][i]
+    if (!isTRUE(replace) && snapshotRelationExists(connection, view_name, view_schema)) {
+      stop("Target view already exists: ", snapshotQualifiedName(connection, view_name, view_schema))
+    }
+    statement <- paste0(
+      "CREATE ",
+      if (isTRUE(replace)) "OR REPLACE " else "",
+      "VIEW ",
+      snapshotQualifiedName(connection, view_name, view_schema),
+      " AS SELECT * FROM ",
+      snapshotQualifiedName(connection, source_table, table_schema)
+    )
+    DBI::dbExecute(connection, statement)
+    summary <- data.table::rbindlist(list(
+      summary,
+      data.table::data.table(
+        VIEW_NAME = view_name,
+        SOURCE_TABLE = source_table,
+        STATUS = "created"
+      )
+    ))
+  }
+
+  summary
+}
+
 #' Pseudonymize a Snapshot from Source DB to Target DB Connections
 #'
 #' This is the DBI-based entry point for the snapshot pseudonymization core. It
-#' loads rule sources, reads the matching last-version source views, runs
-#' `pseudonymizeSnapshotTables()`, and writes the resulting tables to the target
-#' connection. Opening the source/target databases from site-specific TOML files
-#' remains a caller responsibility.
+#' loads rule sources, reads `v_<table>` and `v_<table>_last_version` from the
+#' source connection, materializes pseudonymized tables in `db_log`, and creates
+#' passthrough views in `db2dataprocessor_out`. Opening the source/target
+#' databases from site-specific TOML files remains a caller responsibility.
 #'
 #' @param source_connection Source DBI connection.
 #' @param target_connection Target DBI connection.
@@ -166,10 +310,12 @@ writeSnapshotTargetTables <- function(
 #' @param salt Salt used for `cryptoHash` and `pseudonymize(...)` rules.
 #' @param input_repo_path TOML-configured input repository directory used for
 #'   `pseudonym(sheet = ...)` mapping rules.
-#' @param source_schema Optional schema containing source last-version views.
-#' @param target_schema Optional target schema.
+#' @param source_schema Optional schema containing source views.
+#' @param target_table_schema Target schema for materialized pseudonymized tables.
+#' @param target_view_schema Target schema for passthrough analysis views.
 #' @param source_view_prefix Prefix used for source view names.
-#' @param source_view_suffix Suffix used for source view names.
+#' @param last_version_suffix Suffix used for last-version source views and
+#'   materialized target tables.
 #' @param tables Optional character vector limiting tables to read.
 #' @param enrich_tables Optional function called with the named source-table
 #'   list before pseudonymization. It must return a named table list.
@@ -177,7 +323,8 @@ writeSnapshotTargetTables <- function(
 #' @param write_review_report Passed to `pseudonymizeSnapshotTables()`.
 #' @param review_report_file Passed to `pseudonymizeSnapshotTables()`.
 #' @param keep_unmatched_columns Passed to `pseudonymizeSnapshotTables()`.
-#' @param overwrite Passed to `writeSnapshotTargetTables()`.
+#' @param overwrite_tables Passed to `writeSnapshotTargetTables()`.
+#' @param replace_views Passed to `createSnapshotPassthroughViews()`.
 #' @param temporary Passed to `writeSnapshotTargetTables()`.
 #' @param log_steps If `TRUE` and module logging is initialized, wrap major
 #'   steps in the existing `etlutils::runLevel...` logging.
@@ -193,16 +340,18 @@ pseudonymizeSnapshotDatabase <- function(
     salt = NULL,
     input_repo_path = NULL,
     source_schema = NULL,
-    target_schema = NULL,
+    target_table_schema = "db_log",
+    target_view_schema = "db2dataprocessor_out",
     source_view_prefix = "v_",
-    source_view_suffix = "_last_version",
+    last_version_suffix = "_last_version",
     tables = NULL,
     enrich_tables = NULL,
     fail_on_review_problems = TRUE,
     write_review_report = TRUE,
     review_report_file = NA,
     keep_unmatched_columns = FALSE,
-    overwrite = TRUE,
+    overwrite_tables = FALSE,
+    replace_views = FALSE,
     temporary = FALSE,
     log_steps = TRUE) {
   if (is.null(table_descriptions)) {
@@ -225,7 +374,7 @@ pseudonymizeSnapshotDatabase <- function(
       rules = result[["rules"]],
       source_schema = source_schema,
       source_view_prefix = source_view_prefix,
-      source_view_suffix = source_view_suffix,
+      last_version_suffix = last_version_suffix,
       tables = tables
     )
   }, log_steps = log_steps)
@@ -236,17 +385,40 @@ pseudonymizeSnapshotDatabase <- function(
     }, log_steps = log_steps)
   }
 
-  result[["pseudonymization"]] <- pseudonymizeSnapshotTables(
-    tables = result[["source_tables"]],
-    table_descriptions = table_descriptions,
-    snapshot_extensions = snapshot_extensions,
-    rules = result[["rules"]],
-    salt = salt,
-    input_repo_path = input_repo_path,
-    fail_on_review_problems = fail_on_review_problems,
-    write_review_report = write_review_report,
-    review_report_file = review_report_file,
-    keep_unmatched_columns = keep_unmatched_columns,
+  runPseudonymizationLogStep(2L, "Review pseudonymization rules", {
+    result[["review_report"]] <- getPseudonymizationRuleReviewReport(
+      result[["rules"]],
+      input_repo_path = input_repo_path
+    )
+    if (isTRUE(write_review_report)) {
+      writePseudonymizationRuleReviewReport(
+        result[["rules"]],
+        file_name = review_report_file,
+        input_repo_path = input_repo_path
+      )
+    }
+    if (isTRUE(fail_on_review_problems) &&
+        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])) {
+      stop(
+        "Pseudonymization rule review contains blocking problems:\n",
+        paste(summarizePseudonymizationReviewProblems(result[["review_report"]]), collapse = "\n")
+      )
+    }
+  }, log_steps = log_steps)
+
+  materialization_plan <- attr(result[["source_tables"]], "materialization_plan")
+  result[["pseudonymization"]] <- runPseudonymizationLogStep(
+    2L,
+    "Pseudonymize snapshot tables",
+    pseudonymizeSnapshotMaterializedTables(
+      tables = result[["source_tables"]],
+      materialization_plan = materialization_plan,
+      rules = result[["rules"]],
+      salt = salt,
+      input_repo_path = input_repo_path,
+      keep_unmatched_columns = keep_unmatched_columns,
+      log_steps = log_steps
+    ),
     log_steps = log_steps
   )
 
@@ -254,9 +426,19 @@ pseudonymizeSnapshotDatabase <- function(
     result[["write_summary"]] <- writeSnapshotTargetTables(
       target_connection,
       result[["pseudonymization"]][["tables"]],
-      target_schema = target_schema,
-      overwrite = overwrite,
+      target_schema = target_table_schema,
+      overwrite = overwrite_tables,
       temporary = temporary
+    )
+  }, log_steps = log_steps)
+
+  runPseudonymizationLogStep(2L, "Create snapshot passthrough views", {
+    result[["view_summary"]] <- createSnapshotPassthroughViews(
+      target_connection,
+      materialization_plan = materialization_plan,
+      table_schema = target_table_schema,
+      view_schema = target_view_schema,
+      replace = replace_views
     )
   }, log_steps = log_steps)
 

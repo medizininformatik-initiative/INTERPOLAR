@@ -6,8 +6,16 @@ test_that("getSnapshotSourceViewPlan uses described table sources only", {
 
   plan <- getSnapshotSourceViewPlan(rules)
 
-  expect_equal(plan$TABLE_NAME, c("patient", "observation"))
-  expect_equal(plan$SOURCE_RELATION, c("v_patient_last_version", "v_observation_last_version"))
+  expect_equal(plan$BASE_TABLE_NAME, c("patient", "observation", "patient", "observation"))
+  expect_equal(
+    plan$MATERIALIZED_TABLE_NAME,
+    c("patient", "observation", "patient_last_version", "observation_last_version")
+  )
+  expect_equal(
+    plan$SOURCE_RELATION,
+    c("v_patient", "v_observation", "v_patient_last_version", "v_observation_last_version")
+  )
+  expect_equal(plan$TARGET_VIEW_NAME, plan$SOURCE_RELATION)
 })
 
 test_that("getSnapshotSourceViewPlan can limit tables", {
@@ -18,6 +26,7 @@ test_that("getSnapshotSourceViewPlan can limit tables", {
 
   plan <- getSnapshotSourceViewPlan(rules, tables = c("Observation", "unknown"))
 
-  expect_equal(plan$TABLE_NAME, "observation")
-  expect_equal(plan$SOURCE_RELATION, "v_observation_last_version")
+  expect_equal(plan$BASE_TABLE_NAME, c("observation", "observation"))
+  expect_equal(plan$MATERIALIZED_TABLE_NAME, c("observation", "observation_last_version"))
+  expect_equal(plan$SOURCE_RELATION, c("v_observation", "v_observation_last_version"))
 })
