@@ -103,10 +103,11 @@ tryCatch(
       review_report_file = command_arguments[["review_report_file"]],
       keep_unmatched_columns = FALSE,
       enrich_tables = function(tables) {
-        pseudonym::enrichSnapshotObservationTables(
+        tables <- pseudonym::enrichSnapshotObservationTables(
           tables,
           input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]]
         )
+        pseudonym::enrichSnapshotMedicationReferenceTables(tables)
       },
       overwrite_tables = FALSE,
       replace_views = FALSE,

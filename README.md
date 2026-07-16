@@ -144,6 +144,11 @@ Pseudonymisierungslauf außerdem die Snapshot-Spalten `value_in_reference_unit`,
 Dataprocessor konfigurierten Input-Repo-Datei
 `LOINC_Mapping/LOINC_Mapping_content/LOINC_Mapping_Table_processed.xlsx`
 abgeleitet.
+Für `medicationrequest`, `medicationadministration` und `medicationstatement`
+werden zusätzlich die Code-/System-Paare der referenzierten `Medication`
+materialisiert. Wenn eine referenzierte `Medication` mehrere unterschiedliche
+Code-/System-Paare hat, wird die referenzierende Zeile entsprechend mehrfach
+ausgegeben.
 
 Der Pseudonymisierungslauf schreibt zusätzlich einen Review-Report unter
 `outputLocal/snapshot_pseudonymization*/reports/pseudonymization_rule_review.xlsx`.
