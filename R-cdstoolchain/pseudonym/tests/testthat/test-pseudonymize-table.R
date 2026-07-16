@@ -17,14 +17,13 @@ test_that("pseudonymizeTable applies keep redact hash and generalize rules", {
     )
   )
 
-  result <- pseudonymizeTable(source_table, table_description, "Patient", salt = "test-salt")
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
 
   expect_false(identical(result$pat_id[1], source_table$pat_id[1]))
   expect_equal(result$pat_id[1], pseudonymizeTable(
     data.table::data.table(pat_id = source_table$pat_id[1]),
     table_description[1, ],
-    "Patient",
-    salt = "test-salt"
+    "Patient"
   )$pat_id)
   expect_equal(result$pat_birthdate, as.Date(c("1980-05-01", "1975-12-01", NA)))
   expect_equal(result$pat_gender, source_table$pat_gender)
@@ -56,7 +55,7 @@ test_that("conditional rules use first match and redact unmatched rows", {
     )
   )
 
-  result <- pseudonymizeTable(source_table, table_description, "Encounter", salt = "test-salt")
+  result <- pseudonymizeTable(source_table, table_description, "Encounter")
 
   expect_false(identical(result$identifier_value[1], source_table$identifier_value[1]))
   expect_true(is.na(result$identifier_value[2]))
@@ -88,7 +87,7 @@ test_that("conditional rules tolerate Excel escaped line breaks", {
     )
   )
 
-  result <- pseudonymizeTable(source_table, table_description, "target", salt = "test-salt")
+  result <- pseudonymizeTable(source_table, table_description, "target")
 
   expect_false(identical(result$identifier_value[1], source_table$identifier_value[1]))
   expect_equal(result$identifier_value[2], source_table$identifier_value[2])
@@ -99,7 +98,7 @@ test_that("conditional rules tolerate Excel escaped line breaks", {
     table_description$PSEUDONYMIZATION_RULE,
     fixed = TRUE
   )
-  result <- pseudonymizeTable(source_table, table_description, "target", salt = "test-salt")
+  result <- pseudonymizeTable(source_table, table_description, "target")
 
   expect_false(identical(result$identifier_value[1], source_table$identifier_value[1]))
   expect_equal(result$identifier_value[2], source_table$identifier_value[2])
@@ -129,7 +128,7 @@ test_that("conditional rules honor explicit keep and redact fallbacks", {
     )
   )
 
-  result <- pseudonymizeTable(source_table, table_description, "Patient", salt = "test-salt")
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
 
   expect_true(is.na(result$identifier_value[1]))
   expect_equal(result$identifier_value[2], source_table$identifier_value[2])
@@ -138,10 +137,30 @@ test_that("conditional rules honor explicit keep and redact fallbacks", {
     "keepIf(type.coding.system == \"https://example.test\" & ",
     "type.coding.code == \"GKV\"); redact"
   )
-  result <- pseudonymizeTable(source_table, table_description, "Patient", salt = "test-salt")
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
 
   expect_equal(result$identifier_value[1], source_table$identifier_value[1])
   expect_true(is.na(result$identifier_value[2]))
+})
+
+test_that("conditional rules treat NA conditions as not matched", {
+  source_table <- data.table::data.table(
+    identifier_type_system = NA_character_,
+    identifier_value = "record-1"
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA),
+    COLUMN_NAME = c("identifier_type_system", "identifier_value"),
+    FHIR_EXPRESSION = c("identifier/type/coding/system", "identifier/value"),
+    PSEUDONYMIZATION_RULE = c(
+      NA_character_,
+      "keepIf(type.coding.system == \"https://example.test\"); redact"
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_true(is.na(result$identifier_value[1]))
 })
 
 test_that("cryptoHash maxLength truncates generated hashes", {
@@ -152,12 +171,12 @@ test_that("cryptoHash maxLength truncates generated hashes", {
     PSEUDONYMIZATION_RULE = "cryptoHash(maxLength = 8)"
   )
 
-  result <- pseudonymizeTable(source_table, table_description, "target", salt = "test-salt")
+  result <- pseudonymizeTable(source_table, table_description, "target")
 
   expect_equal(nchar(result$id), 8L)
 
   table_description$PSEUDONYMIZATION_RULE <- "cryptoHash(8)"
-  result <- pseudonymizeTable(source_table, table_description, "target", salt = "test-salt")
+  result <- pseudonymizeTable(source_table, table_description, "target")
 
   expect_equal(nchar(result$id), 8L)
 })
@@ -170,9 +189,64 @@ test_that("cryptoHash defaults to maxLength 32", {
     PSEUDONYMIZATION_RULE = "cryptoHash"
   )
 
-  result <- pseudonymizeTable(source_table, table_description, "target", salt = "test-salt")
+  result <- pseudonymizeTable(source_table, table_description, "target")
 
   expect_equal(nchar(result$id), 32L)
+})
+
+test_that("hashing rules preserve relative FHIR reference prefixes", {
+  source_table <- data.table::data.table(
+    enc_id = "enc-1",
+    subject_ref = "Encounter/enc-1",
+    calculated_ref = "Patient/pat-1"
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "target",
+    COLUMN_NAME = c("enc_id", "subject_ref", "calculated_ref"),
+    FHIR_EXPRESSION = c("id", "subject/reference", "calculated_ref"),
+    PSEUDONYMIZATION_RULE = c(
+      "cryptoHash",
+      "cryptoHash",
+      "pseudonymize(domain = \"patient-reference\")"
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "target")
+  expected_enc_id <- pseudonymizeTable(
+    data.table::data.table(enc_id = "enc-1"),
+    table_description[1, ],
+    "target"
+  )$enc_id
+  expected_patient_ref_id <- pseudonymizeTable(
+    data.table::data.table(calculated_ref = "pat-1"),
+    data.table::data.table(
+      TABLE_NAME = "target",
+      COLUMN_NAME = "calculated_ref",
+      FHIR_EXPRESSION = "id",
+      PSEUDONYMIZATION_RULE = "pseudonymize(domain = \"patient-reference\")"
+    ),
+    "target"
+  )$calculated_ref
+
+  expect_equal(result$enc_id, expected_enc_id)
+  expect_equal(result$subject_ref, paste0("Encounter/", expected_enc_id))
+  expect_equal(result$calculated_ref, paste0("Patient/", expected_patient_ref_id))
+})
+
+test_that("pseudonymize rules execute as cryptoHash aliases", {
+  source_table <- data.table::data.table(
+    id_crypto = "abc",
+    id_pseudonymize = "abc"
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "target",
+    COLUMN_NAME = c("id_crypto", "id_pseudonymize"),
+    PSEUDONYMIZATION_RULE = c("cryptoHash", "pseudonymize(domain = \"ignored-domain\")")
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_equal(result$id_pseudonymize, result$id_crypto)
 })
 
 test_that("empty rules default to keep and explicit table filtering is respected", {
@@ -189,7 +263,7 @@ test_that("empty rules default to keep and explicit table filtering is respected
   expect_equal(result$value, "visible")
 })
 
-test_that("hashing rules require an explicit salt", {
+test_that("hashing rules are deterministic without salt", {
   source_table <- data.table::data.table(id = "abc")
   table_description <- data.table::data.table(
     TABLE_NAME = "target",
@@ -197,9 +271,11 @@ test_that("hashing rules require an explicit salt", {
     PSEUDONYMIZATION_RULE = "cryptoHash"
   )
 
-  expect_error(
-    pseudonymizeTable(source_table, table_description, "target"),
-    "salt must be provided"
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_equal(
+    result$id,
+    substr(digest::digest("abc", algo = "sha256", serialize = FALSE), 1, 32)
   )
 })
 
@@ -406,7 +482,6 @@ test_that("pseudonymizeTables emits only described tables and columns by default
   result <- pseudonymizeTables(
     tables,
     rules,
-    salt = "test-salt",
     log_steps = FALSE
   )
 
@@ -415,11 +490,11 @@ test_that("pseudonymizeTables emits only described tables and columns by default
   expect_false(identical(result$tables$patient$id, tables$patient$id))
   expect_equal(result$tables$patient$gender, tables$patient$gender)
   expect_equal(
-    result$summary[result$summary$TABLE_NAME == "cron_job", "STATUS", drop = TRUE],
+    result$summary[result$summary$TABLE_NAME == "cron_job", ][["STATUS"]],
     "skipped_no_rules"
   )
   expect_equal(
-    result$summary[result$summary$TABLE_NAME == "patient", "MISSING_COLUMNS", drop = TRUE],
+    result$summary[result$summary$TABLE_NAME == "patient", ][["MISSING_COLUMNS"]],
     "missing_in_source"
   )
 })
@@ -441,7 +516,6 @@ test_that("pseudonymizeTables can keep unmatched columns when requested", {
   result <- pseudonymizeTables(
     tables,
     rules,
-    salt = "test-salt",
     keep_unmatched_columns = TRUE,
     log_steps = FALSE
   )

@@ -1,4 +1,8 @@
 snapshotRuleTables <- function(rules) {
+  snapshotRuleTablePlan(rules)[["DB_TABLE_NAME"]]
+}
+
+snapshotRuleTablePlan <- function(rules) {
   rules <- data.table::as.data.table(rules)
   if (!"TABLE_OR_RESOURCE" %in% names(rules)) {
     stop("rules must contain TABLE_OR_RESOURCE.")
@@ -6,11 +10,28 @@ snapshotRuleTables <- function(rules) {
   if (!"SOURCE_TYPE" %in% names(rules)) {
     rules[["SOURCE_TYPE"]] <- "table_description"
   }
-  unique(stats::na.omit(rules[
-    rules[["SOURCE_TYPE"]] == "table_description",
-    "TABLE_OR_RESOURCE",
-    drop = TRUE
-  ]))
+  if (!"SOURCE" %in% names(rules)) {
+    rules[["SOURCE"]] <- NA_character_
+  }
+  table_rows <- rules[rules[["SOURCE_TYPE"]] == "table_description", ]
+  result <- unique(data.table::data.table(
+    RULE_TABLE_NAME = tolower(table_rows[["TABLE_OR_RESOURCE"]]),
+    RULE_SOURCE = table_rows[["SOURCE"]]
+  ))
+  result <- result[
+    !is.na(result[["RULE_TABLE_NAME"]]) & nzchar(result[["RULE_TABLE_NAME"]]),
+    ,
+    drop = FALSE
+  ]
+  is_frontend_source <- !is.na(result[["RULE_SOURCE"]]) &
+    result[["RULE_SOURCE"]] == "frontend" &
+    !endsWith(result[["RULE_TABLE_NAME"]], "_fe")
+  result[["DB_TABLE_NAME"]] <- data.table::fifelse(
+    is_frontend_source,
+    paste0(result[["RULE_TABLE_NAME"]], "_fe"),
+    result[["RULE_TABLE_NAME"]]
+  )
+  unique(result[, c("RULE_TABLE_NAME", "RULE_SOURCE", "DB_TABLE_NAME"), with = FALSE])
 }
 
 snapshotQualifiedName <- function(connection, name, schema = NULL) {
@@ -57,23 +78,40 @@ getSnapshotSourceViewPlan <- function(
     source_view_prefix = "v_",
     last_version_suffix = "_last_version",
     tables = NULL) {
-  table_names <- snapshotRuleTables(rules)
+  table_plan <- snapshotRuleTablePlan(rules)
   if (!is.null(tables)) {
-    table_names <- table_names[tolower(table_names) %in% tolower(tables)]
+    table_plan <- table_plan[
+      tolower(table_plan[["DB_TABLE_NAME"]]) %in% tolower(tables) |
+        tolower(table_plan[["RULE_TABLE_NAME"]]) %in% tolower(tables),
+      ,
+      drop = FALSE
+    ]
   }
   plan <- data.table::rbindlist(list(
     data.table::data.table(
-      BASE_TABLE_NAME = table_names,
-      MATERIALIZED_TABLE_NAME = table_names,
-      SOURCE_RELATION = paste0(source_view_prefix, table_names),
-      TARGET_VIEW_NAME = paste0(source_view_prefix, table_names),
+      BASE_TABLE_NAME = table_plan[["DB_TABLE_NAME"]],
+      RULE_TABLE_NAME = table_plan[["RULE_TABLE_NAME"]],
+      RULE_SOURCE = table_plan[["RULE_SOURCE"]],
+      MATERIALIZED_TABLE_NAME = table_plan[["DB_TABLE_NAME"]],
+      SOURCE_RELATION = paste0(source_view_prefix, table_plan[["DB_TABLE_NAME"]]),
+      TARGET_VIEW_NAME = paste0(source_view_prefix, table_plan[["DB_TABLE_NAME"]]),
       SNAPSHOT_RELATION_TYPE = "all"
     ),
     data.table::data.table(
-      BASE_TABLE_NAME = table_names,
-      MATERIALIZED_TABLE_NAME = paste0(table_names, last_version_suffix),
-      SOURCE_RELATION = paste0(source_view_prefix, table_names, last_version_suffix),
-      TARGET_VIEW_NAME = paste0(source_view_prefix, table_names, last_version_suffix),
+      BASE_TABLE_NAME = table_plan[["DB_TABLE_NAME"]],
+      RULE_TABLE_NAME = table_plan[["RULE_TABLE_NAME"]],
+      RULE_SOURCE = table_plan[["RULE_SOURCE"]],
+      MATERIALIZED_TABLE_NAME = paste0(table_plan[["DB_TABLE_NAME"]], last_version_suffix),
+      SOURCE_RELATION = paste0(
+        source_view_prefix,
+        table_plan[["DB_TABLE_NAME"]],
+        last_version_suffix
+      ),
+      TARGET_VIEW_NAME = paste0(
+        source_view_prefix,
+        table_plan[["DB_TABLE_NAME"]],
+        last_version_suffix
+      ),
       SNAPSHOT_RELATION_TYPE = "last_version"
     )
   ))
@@ -81,6 +119,8 @@ getSnapshotSourceViewPlan <- function(
     ,
     c(
       "BASE_TABLE_NAME",
+      "RULE_TABLE_NAME",
+      "RULE_SOURCE",
       "MATERIALIZED_TABLE_NAME",
       "SOURCE_RELATION",
       "TARGET_VIEW_NAME",
@@ -94,7 +134,6 @@ pseudonymizeSnapshotMaterializedTables <- function(
     tables,
     materialization_plan,
     rules,
-    salt,
     input_repo_path,
     keep_unmatched_columns,
     log_steps) {
@@ -104,14 +143,16 @@ pseudonymizeSnapshotMaterializedTables <- function(
   for (i in seq_len(nrow(materialization_plan))) {
     materialized_table_name <- materialization_plan[["MATERIALIZED_TABLE_NAME"]][i]
     base_table_name <- materialization_plan[["BASE_TABLE_NAME"]][i]
+    rule_table_name <- materialization_plan[["RULE_TABLE_NAME"]][i]
+    rule_source <- materialization_plan[["RULE_SOURCE"]][i]
     table_result <- runPseudonymizationLogStep(
       3L,
       paste0("Pseudonymize table ", materialized_table_name),
       pseudonymizeTableForSnapshot(
         tables[[materialized_table_name]],
         rules,
-        base_table_name,
-        salt,
+        rule_table_name,
+        rule_source,
         input_repo_path,
         keep_unmatched_columns
       ),
@@ -119,6 +160,8 @@ pseudonymizeSnapshotMaterializedTables <- function(
     )
     table_result[["summary"]][["TABLE_NAME"]] <- materialized_table_name
     table_result[["summary"]][["BASE_TABLE_NAME"]] <- base_table_name
+    table_result[["summary"]][["RULE_TABLE_NAME"]] <- rule_table_name
+    table_result[["summary"]][["RULE_SOURCE"]] <- rule_source
     table_result[["summary"]][["SNAPSHOT_RELATION_TYPE"]] <-
       materialization_plan[["SNAPSHOT_RELATION_TYPE"]][i]
     result_tables[[materialized_table_name]] <- table_result[["table"]]
@@ -161,15 +204,22 @@ readSnapshotSourceTables <- function(
     tables = tables
   )
 
-  result <- vector("list", nrow(plan))
-  names(result) <- plan[["MATERIALIZED_TABLE_NAME"]]
+  result <- list()
+  existing_plan_rows <- rep(FALSE, nrow(plan))
   for (i in seq_len(nrow(plan))) {
+    if (!snapshotRelationExists(connection, plan[["SOURCE_RELATION"]][i], source_schema)) {
+      if (identical(plan[["SNAPSHOT_RELATION_TYPE"]][i], "last_version")) {
+        next
+      }
+      stop("Required source relation does not exist: ", plan[["SOURCE_RELATION"]][i])
+    }
     relation <- snapshotQualifiedName(connection, plan[["SOURCE_RELATION"]][i], source_schema)
     query <- paste0("SELECT * FROM ", relation)
     result[[plan[["MATERIALIZED_TABLE_NAME"]][i]]] <-
       data.table::as.data.table(DBI::dbGetQuery(connection, query))
+    existing_plan_rows[i] <- TRUE
   }
-  attr(result, "materialization_plan") <- plan
+  attr(result, "materialization_plan") <- plan[existing_plan_rows, , drop = FALSE]
 
   result
 }
@@ -307,7 +357,6 @@ createSnapshotPassthroughViews <- function(
 #'   specification. Ignored when `table_descriptions` is `NULL` and defaults are
 #'   used.
 #' @param project_root Repository root used for default rule sources.
-#' @param salt Salt used for `cryptoHash` and `pseudonymize(...)` rules.
 #' @param input_repo_path TOML-configured input repository directory used for
 #'   `pseudonym(sheet = ...)` mapping rules.
 #' @param source_schema Optional schema containing source views.
@@ -337,7 +386,6 @@ pseudonymizeSnapshotDatabase <- function(
     table_descriptions = NULL,
     snapshot_extensions = NULL,
     project_root = ".",
-    salt = NULL,
     input_repo_path = NULL,
     source_schema = NULL,
     target_table_schema = "db_log",
@@ -414,7 +462,6 @@ pseudonymizeSnapshotDatabase <- function(
       tables = result[["source_tables"]],
       materialization_plan = materialization_plan,
       rules = result[["rules"]],
-      salt = salt,
       input_repo_path = input_repo_path,
       keep_unmatched_columns = keep_unmatched_columns,
       log_steps = log_steps

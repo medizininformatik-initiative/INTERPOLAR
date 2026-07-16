@@ -41,7 +41,6 @@ test_that("pseudonymizeSnapshotTables loads rules reviews and pseudonymizes tabl
       PATH = table_description_file,
       SHEET_NAME = "table_description"
     ),
-    salt = "test-salt",
     fail_on_review_problems = TRUE,
     write_review_report = TRUE,
     review_report_file = report_file,
@@ -54,7 +53,7 @@ test_that("pseudonymizeSnapshotTables loads rules reviews and pseudonymizes tabl
   expect_false(identical(result$tables$patient$id, tables$patient$id))
   expect_equal(result$tables$patient$gender, tables$patient$gender)
   expect_equal(
-    result$summary[result$summary$TABLE_NAME == "internal", "STATUS", drop = TRUE],
+    result$summary[result$summary$TABLE_NAME == "internal", ][["STATUS"]],
     "skipped_no_rules"
   )
   expect_equal(nrow(result$review_report$unsupported_rules), 0L)
@@ -76,7 +75,6 @@ test_that("pseudonymizeSnapshotTables can abort on blocking review problems", {
     pseudonymizeSnapshotTables(
       tables = list(patient = data.table::data.table(id = "p1")),
       table_descriptions = table_description_file,
-      salt = "test-salt",
       write_review_report = FALSE,
       log_steps = FALSE
     ),
@@ -106,7 +104,6 @@ test_that("pseudonymizeSnapshotTables can use preloaded rules", {
     tables = list(patient = data.table::data.table(id = "p1", gender = "female")),
     table_descriptions = NULL,
     rules = rules,
-    salt = "test-salt",
     write_review_report = FALSE,
     log_steps = FALSE
   )

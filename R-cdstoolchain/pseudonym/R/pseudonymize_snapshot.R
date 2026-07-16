@@ -31,7 +31,6 @@ summarizePseudonymizationReviewProblems <- function(review_report) {
 #'   with snapshot-extension files.
 #' @param rules Optional preloaded rules. If supplied, `table_descriptions` and
 #'   `snapshot_extensions` are not loaded again.
-#' @param salt Salt used for `cryptoHash` and `pseudonymize(...)` rules.
 #' @param input_repo_path TOML-configured input repository directory used for
 #'   `pseudonym(sheet = ...)` mapping rules.
 #' @param fail_on_review_problems If `TRUE`, abort when the review report
@@ -51,7 +50,6 @@ pseudonymizeSnapshotTables <- function(
     table_descriptions,
     snapshot_extensions = NULL,
     rules = NULL,
-    salt = NULL,
     input_repo_path = NULL,
     fail_on_review_problems = TRUE,
     write_review_report = TRUE,
@@ -95,7 +93,6 @@ pseudonymizeSnapshotTables <- function(
   table_result <- pseudonymizeTables(
     tables = tables,
     rules = result[["rules"]],
-    salt = salt,
     input_repo_path = input_repo_path,
     keep_unmatched_columns = keep_unmatched_columns,
     log_steps = log_steps

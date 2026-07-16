@@ -169,11 +169,7 @@ getPseudonymizationColumnRules <- function(table_description, table_name = NULL)
   table_description
 }
 
-pseudonymizationHash <- function(values, salt, namespace, max_length = NA_integer_) {
-  if (is.null(salt) || is.na(salt) || !nzchar(salt)) {
-    stop("salt must be provided for cryptoHash and pseudonymize rules.")
-  }
-
+pseudonymizationHash <- function(values, max_length = NA_integer_) {
   values_chr <- as.character(values)
   result <- rep(NA_character_, length(values_chr))
   has_value <- !is.na(values_chr)
@@ -181,7 +177,7 @@ pseudonymizationHash <- function(values, salt, namespace, max_length = NA_intege
     values_chr[has_value],
     function(value) {
       digest::digest(
-        paste(namespace, salt, value, sep = "\n"),
+        value,
         algo = "sha256",
         serialize = FALSE
       )
@@ -191,6 +187,38 @@ pseudonymizationHash <- function(values, salt, namespace, max_length = NA_intege
   if (!is.na(max_length)) {
     result[has_value] <- substr(result[has_value], 1, max_length)
   }
+  result
+}
+
+isFhirReferenceExpression <- function(fhir_expression) {
+  expression <- as.character(fhir_expression)
+  if (is.na(expression) || !nzchar(expression)) {
+    return(FALSE)
+  }
+  grepl("(^|/)reference$|(^|/)calculated_ref$|(^|/)calculated/ref$", expression)
+}
+
+pseudonymizationHashReference <- function(values, max_length = NA_integer_) {
+  values_chr <- as.character(values)
+  result <- rep(NA_character_, length(values_chr))
+  has_value <- !is.na(values_chr)
+  if (!any(has_value)) {
+    return(result)
+  }
+
+  relative_reference_match <- regexec("^([A-Za-z][A-Za-z0-9]*/)(.+)$", values_chr[has_value])
+  reference_parts <- regmatches(values_chr[has_value], relative_reference_match)
+  result[has_value] <- vapply(seq_along(reference_parts), function(i) {
+    parts <- reference_parts[[i]]
+    value <- values_chr[has_value][i]
+    if (length(parts) < 3) {
+      return(pseudonymizationHash(value, max_length = max_length))
+    }
+    paste0(
+      parts[2],
+      pseudonymizationHash(parts[3], max_length = max_length)
+    )
+  }, character(1))
   result
 }
 
@@ -431,7 +459,25 @@ evaluateRuleCondition <- function(condition, table, table_description, fhir_expr
   ))
 }
 
-applyPseudonymizationRuleToVector <- function(values, rule, salt = NULL, column_name = NA_character_, mapping_context = NULL) {
+applyHashRuleToVector <- function(
+    values,
+    max_length = NA_integer_,
+    fhir_expression = NA_character_) {
+  if (isFhirReferenceExpression(fhir_expression)) {
+    return(pseudonymizationHashReference(
+      values,
+      max_length = max_length
+    ))
+  }
+  pseudonymizationHash(values, max_length = max_length)
+}
+
+applyPseudonymizationRuleToVector <- function(
+    values,
+    rule,
+    column_name = NA_character_,
+    mapping_context = NULL,
+    fhir_expression = NA_character_) {
   rule <- normalizePseudonymizationRule(rule)
   parsed_rule <- parsePseudonymizationRuleCall(rule)
   action <- parsed_rule$action
@@ -453,14 +499,26 @@ applyPseudonymizationRuleToVector <- function(values, rule, salt = NULL, column_
     if (is.na(max_length)) {
       max_length <- DEFAULT_CRYPTO_HASH_MAX_LENGTH
     }
-    return(pseudonymizationHash(values, salt, "cryptoHash", max_length = max_length))
+    return(applyHashRuleToVector(
+      values,
+      max_length = max_length,
+      fhir_expression = fhir_expression
+    ))
   }
   if (action == "pseudonymize") {
-    domain <- getRuleArgument(parsed_rule, "domain")
-    if (is.na(domain) || !nzchar(domain)) {
-      domain <- "pseudonymize"
+    max_length <- suppressWarnings(as.integer(getRuleArgument(parsed_rule, "maxLength")))
+    if (is.na(max_length) && length(parsed_rule$arguments) > 0 &&
+        grepl("^\\d+$", parsed_rule$arguments[1])) {
+      max_length <- as.integer(parsed_rule$arguments[1])
     }
-    return(pseudonymizationHash(values, salt, paste0("pseudonymize:", domain)))
+    if (is.na(max_length)) {
+      max_length <- DEFAULT_CRYPTO_HASH_MAX_LENGTH
+    }
+    return(applyHashRuleToVector(
+      values,
+      max_length = max_length,
+      fhir_expression = fhir_expression
+    ))
   }
   if (action == "pseudonym") {
     sheet_name <- getRuleArgument(parsed_rule, "sheet")
@@ -511,7 +569,7 @@ applyPseudonymizationRuleToVector <- function(values, rule, salt = NULL, column_
   stop("Unsupported PSEUDONYMIZATION_RULE: ", rule)
 }
 
-applyRuleListToColumn <- function(table, source_table, column_name, fhir_expression, rule, table_description, salt, mapping_context = NULL) {
+applyRuleListToColumn <- function(table, source_table, column_name, fhir_expression, rule, table_description, mapping_context = NULL) {
   rule <- normalizePseudonymizationRule(rule)
   rule_list <- trimws(splitRuleList(rule))
   rule_list <- rule_list[nzchar(rule_list)]
@@ -531,13 +589,14 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
       has_conditional_rule <- TRUE
     }
     rows <- evaluateRuleCondition(condition, source_table, table_description, fhir_expression) & !matched_rows
+    rows[is.na(rows)] <- FALSE
     if (any(rows)) {
       result[rows] <- applyPseudonymizationRuleToVector(
         table[[column_name]][rows],
         single_rule,
-        salt,
         column_name = column_name,
-        mapping_context = mapping_context
+        mapping_context = mapping_context,
+        fhir_expression = fhir_expression
       )
       matched_rows[rows] <- TRUE
     }
@@ -556,6 +615,9 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
 #'
 #' Applies `PSEUDONYMIZATION_RULE` values from a table description to one
 #' `data.table`. Empty or missing rules are treated as `keep`.
+#' `pseudonymize(...)` is executed as an alias of `cryptoHash`; the optional
+#' `domain` argument remains a readable table-description annotation but does
+#' not change the generated hash.
 #'
 #' @param table A `data.table` or `data.frame` containing the source data.
 #' @param table_description Table description containing `COLUMN_NAME` and
@@ -563,7 +625,6 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
 #' group rows by table.
 #' @param table_name Optional table/resource name used to filter
 #' `table_description` before applying the rules.
-#' @param salt Salt used for `cryptoHash` and `pseudonymize(...)` rules.
 #' @param input_repo_path Path to the TOML-configured input repository directory
 #'   for the pseudonymization run. If `pseudonym(sheet = ...)` rules are used,
 #'   `<input_repo_path>/pseudo_mapping.xlsx` is read and the `sheet` argument
@@ -571,7 +632,7 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
 #'
 #' @return A pseudonymized copy of `table`.
 #' @export
-pseudonymizeTable <- function(table, table_description, table_name = NULL, salt = NULL, input_repo_path = NULL) {
+pseudonymizeTable <- function(table, table_description, table_name = NULL, input_repo_path = NULL) {
   table <- data.table::as.data.table(data.table::copy(table))
   source_table <- data.table::copy(table)
   column_rules <- getPseudonymizationColumnRules(table_description, table_name)
@@ -596,7 +657,6 @@ pseudonymizeTable <- function(table, table_description, table_name = NULL, salt 
       fhir_expression,
       rule,
       column_rules,
-      salt,
       mapping_context = mapping_context
     )
   }
@@ -639,19 +699,23 @@ normalizePseudonymizationRulesForTables <- function(rules) {
   rules
 }
 
-getPseudonymizationRulesForTable <- function(rules, table_name) {
+getPseudonymizationRulesForTable <- function(rules, table_name, source = NULL) {
   rules <- normalizePseudonymizationRulesForTables(rules)
-  rules[tolower(rules[["TABLE_OR_RESOURCE"]]) == tolower(table_name), ]
+  table_rules <- rules[tolower(rules[["TABLE_OR_RESOURCE"]]) == tolower(table_name), ]
+  if (!is.null(source) && !is.na(source) && nzchar(source) && "SOURCE" %in% names(table_rules)) {
+    table_rules <- table_rules[table_rules[["SOURCE"]] == source, ]
+  }
+  table_rules
 }
 
 pseudonymizeTableForSnapshot <- function(
     table,
     rules,
     table_name,
-    salt,
+    rule_source = NULL,
     input_repo_path,
     keep_unmatched_columns) {
-  table_rules <- getPseudonymizationRulesForTable(rules, table_name)
+  table_rules <- getPseudonymizationRulesForTable(rules, table_name, source = rule_source)
   described_columns <- unique(table_rules[["COLUMN_NAME"]])
   available_columns <- described_columns[described_columns %in% names(table)]
   missing_columns <- described_columns[!(described_columns %in% names(table))]
@@ -665,7 +729,6 @@ pseudonymizeTableForSnapshot <- function(
     table_to_pseudonymize,
     table_rules,
     table_name = table_name,
-    salt = salt,
     input_repo_path = input_repo_path
   )
 
@@ -694,7 +757,6 @@ pseudonymizeTableForSnapshot <- function(
 #' @param tables Named list of data.frames or data.tables.
 #' @param rules Rules loaded by `loadPseudonymizationRules()` or equivalent
 #'   table-description data.
-#' @param salt Salt used for `cryptoHash` and `pseudonymize(...)` rules.
 #' @param input_repo_path TOML-configured input repository directory used for
 #'   `pseudonym(sheet = ...)` mapping rules.
 #' @param keep_unmatched_columns If `TRUE`, source columns without a loaded rule
@@ -708,7 +770,6 @@ pseudonymizeTableForSnapshot <- function(
 pseudonymizeTables <- function(
     tables,
     rules,
-    salt = NULL,
     input_repo_path = NULL,
     keep_unmatched_columns = FALSE,
     log_steps = TRUE) {
@@ -743,9 +804,9 @@ pseudonymizeTables <- function(
           tables[[table_name]],
           rules,
           table_name,
-          salt,
-          input_repo_path,
-          keep_unmatched_columns
+          rule_source = NULL,
+          input_repo_path = input_repo_path,
+          keep_unmatched_columns = keep_unmatched_columns
         ),
         log_steps = log_steps
       )

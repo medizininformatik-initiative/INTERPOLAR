@@ -66,24 +66,24 @@ test_that("loadPseudonymizationRules loads table descriptions and snapshot exten
 
   expect_equal(nrow(rules), 3)
   expect_equal(
-    rules[rules$COLUMN_NAME == "obs_id", "SOURCE_TYPE", drop = TRUE],
+    rules[rules$COLUMN_NAME == "obs_id", ][["SOURCE_TYPE"]],
     "table_description"
   )
   expect_equal(
-    rules[rules$COLUMN_NAME == "obs_id", "PSEUDONYMIZATION_RULE", drop = TRUE],
+    rules[rules$COLUMN_NAME == "obs_id", ][["PSEUDONYMIZATION_RULE"]],
     "cryptoHash"
   )
   expect_equal(
-    rules[rules$COLUMN_NAME == "obs_value", "TABLE_OR_RESOURCE", drop = TRUE],
+    rules[rules$COLUMN_NAME == "obs_value", ][["TABLE_OR_RESOURCE"]],
     "observation"
   )
   expect_equal(
-    rules[rules$COLUMN_NAME == "obs_value", "PSEUDONYMIZATION_RULE", drop = TRUE],
+    rules[rules$COLUMN_NAME == "obs_value", ][["PSEUDONYMIZATION_RULE"]],
     "keep"
   )
-  expect_true(rules[rules$COLUMN_NAME == "obs_value", "IMPLICIT_KEEP", drop = TRUE])
+  expect_true(rules[rules$COLUMN_NAME == "obs_value", ][["IMPLICIT_KEEP"]])
   expect_equal(
-    rules[rules$COLUMN_NAME == "value_ref_unit", "SOURCE_TYPE", drop = TRUE],
+    rules[rules$COLUMN_NAME == "value_ref_unit", ][["SOURCE_TYPE"]],
     "snapshot_extension"
   )
 })
