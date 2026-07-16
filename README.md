@@ -155,6 +155,11 @@ Der Pseudonymisierungslauf schreibt zusätzlich einen Review-Report unter
 Dieser Report ist ein Kontroll- und Freigabeartefakt für das DIZ. Er wird nicht
 in den Snapshot-Dump aufgenommen und ist nicht Bestandteil der auswertbaren
 Read-only-DB.
+Zusätzlich wird
+`outputLocal/snapshot_pseudonymization*/reports/snapshot_enrichment_review.xlsx`
+geschrieben. Dieser Report enthält aktuell Medication-Referenzen, für die bei
+der Snapshot-Anreicherung kein Code-/System-Paar in der referenzierten
+`Medication` gefunden wurde.
 ```cmd
 ./ip-snapshot.sh create snap01 --with-pseudonymized
 ```

@@ -341,6 +341,29 @@ createSnapshotPassthroughViews <- function(
   summary
 }
 
+writeSnapshotEnrichmentReviewReport <- function(report, file_name = NA) {
+  report_tables <- list(unmatched_medication_references = report)
+  if (is.na(file_name)) {
+    etlutils::writeExcelFileLocal(
+      report_tables,
+      filename_without_extension = "snapshot_enrichment_review",
+      with_column_names = TRUE,
+      subdir = "reports"
+    )
+  } else {
+    output_dir <- dirname(file_name)
+    if (!dir.exists(output_dir)) {
+      dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+    }
+    etlutils::writeExcelFile(
+      report_tables,
+      file_name,
+      with_column_names = TRUE
+    )
+  }
+  invisible(report)
+}
+
 #' Pseudonymize a Snapshot from Source DB to Target DB Connections
 #'
 #' This is the DBI-based entry point for the snapshot pseudonymization core. It
@@ -371,6 +394,9 @@ createSnapshotPassthroughViews <- function(
 #' @param fail_on_review_problems Passed to `pseudonymizeSnapshotTables()`.
 #' @param write_review_report Passed to `pseudonymizeSnapshotTables()`.
 #' @param review_report_file Passed to `pseudonymizeSnapshotTables()`.
+#' @param enrichment_review_report_file Optional explicit enrichment review
+#'   report path. If `NA`, the report is written to
+#'   `outputLocal/<MODULE>/reports`.
 #' @param keep_unmatched_columns Passed to `pseudonymizeSnapshotTables()`.
 #' @param overwrite_tables Passed to `writeSnapshotTargetTables()`.
 #' @param replace_views Passed to `createSnapshotPassthroughViews()`.
@@ -397,6 +423,7 @@ pseudonymizeSnapshotDatabase <- function(
     fail_on_review_problems = TRUE,
     write_review_report = TRUE,
     review_report_file = NA,
+    enrichment_review_report_file = NA,
     keep_unmatched_columns = FALSE,
     overwrite_tables = FALSE,
     replace_views = FALSE,
@@ -432,6 +459,18 @@ pseudonymizeSnapshotDatabase <- function(
       result[["source_tables"]] <- enrich_tables(result[["source_tables"]])
     }, log_steps = log_steps)
   }
+
+  runPseudonymizationLogStep(2L, "Review snapshot enrichment", {
+    result[["enrichment_review_report"]] <- list(
+      unmatched_medication_references = getSnapshotMedicationReferenceReview(result[["source_tables"]])
+    )
+    if (isTRUE(write_review_report)) {
+      writeSnapshotEnrichmentReviewReport(
+        result[["enrichment_review_report"]][["unmatched_medication_references"]],
+        file_name = enrichment_review_report_file
+      )
+    }
+  }, log_steps = log_steps)
 
   runPseudonymizationLogStep(2L, "Review pseudonymization rules", {
     result[["review_report"]] <- getPseudonymizationRuleReviewReport(

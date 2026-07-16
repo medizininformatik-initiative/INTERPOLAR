@@ -102,3 +102,44 @@ test_that("enrichSnapshotMedicationReferenceTables keeps empty reference tables"
   expect_true("medreq_medication_system" %in% names(result$medicationrequest))
   expect_true("medreq_medication_code" %in% names(result$medicationrequest))
 })
+
+test_that("getSnapshotMedicationReferenceReview reports unmatched medication references", {
+  medication <- data.table::data.table(
+    med_id = "med-1",
+    med_code_system = "http://atc",
+    med_code_code = "A01"
+  )
+  tables <- list(
+    medication = medication,
+    medication_last_version = medication,
+    medicationrequest = data.table::data.table(
+      medreq_id = c("req-1", "req-2", "req-3", "req-4"),
+      medreq_medicationreference_ref = c(
+        "Medication/med-1",
+        "Medication/missing-1",
+        "Medication/missing-1",
+        NA_character_
+      )
+    ),
+    medicationrequest_last_version = data.table::data.table(
+      medreq_id = "req-lv-1",
+      medreq_medicationreference_ref = "Medication/missing-lv"
+    )
+  )
+
+  report <- getSnapshotMedicationReferenceReview(tables)
+
+  expect_equal(nrow(report), 2)
+  expect_equal(
+    report[report$TABLE_NAME == "medicationrequest", "REFERENCE_VALUE"][[1]],
+    "Medication/missing-1"
+  )
+  expect_equal(
+    report[report$TABLE_NAME == "medicationrequest", "N"][[1]],
+    2L
+  )
+  expect_equal(
+    report[report$TABLE_NAME == "medicationrequest_last_version", "MEDICATION_ID"][[1]],
+    "missing-lv"
+  )
+})
