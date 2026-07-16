@@ -126,17 +126,24 @@ Zusätzlich kann direkt ein pseudonymisierter Auswertungs-Snapshot erzeugt werde
 Dieser enthält nur die Schemata `db_log` und `db2dataprocessor_out`.
 In `db_log` liegen die pseudonymisierten Tabellen materialisiert, in
 `db2dataprocessor_out` liegen durchgereichte Views wie `v_<table>` und
-`v_<table>_last_version`. Für die Pseudonymisierung muss vorher ein Salt gesetzt
-werden.
+`v_<table>_last_version`.
+
+Die Regeln `cryptoHash` und `pseudonymize(...)` werden in der DB-Ausführung
+beide als deterministischer SHA-256-Hash ohne Salt umgesetzt. Derselbe
+Originalwert ergibt dadurch immer denselben Hash. `pseudonymize(...)` dient in
+der Table Description nur als fachlich lesbare Regelnotation; ein eventueller
+`domain = ...`-Parameter verändert den erzeugten Hash nicht. Der
+dataportal-FHIR-Pseudonymizer nutzt dagegen projektbezogene CryptoHash-Keys für
+höhere DUP-Anforderungen.
+Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten und nur der
+ID-Anteil nach dem Slash wird gehasht.
 ```cmd
-export IP_PSEUDONYMIZATION_SALT=<secret>
 ./ip-snapshot.sh create snap01 --with-pseudonymized
 ```
 
 Ein pseudonymisierter Snapshot kann auch nachträglich aus einem vorhandenen
 Snapshot-Dump erzeugt werden.
 ```cmd
-export IP_PSEUDONYMIZATION_SALT=<secret>
 ./ip-snapshot.sh pseudonymize snap01_20251002
 ```
 

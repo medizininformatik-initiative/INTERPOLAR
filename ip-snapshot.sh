@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -o pipefail
 #====================================================================
 #  script‑name : ip-snapshot.sh
 #  Zweck      : Erzeugt oder löscht eine Datei, deren Name als
@@ -77,18 +78,52 @@ file_path="${DIR}/${file}"
 # Name der Snapshot Datenbank
 db_name="ip_${name}"
 
-toml_value() {
-    local key="$1"
+toml_file_value() {
+    local file_path="$1"
+    local key="$2"
     awk -F '=' -v key="$key" '
         $1 ~ "^[[:space:]]*" key "[[:space:]]*$" {
             value=$2
             sub(/#.*/, "", value)
             gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+            if (value ~ /^\[/) {
+                sub(/^\[/, "", value)
+                sub(/\]$/, "", value)
+                split(value, value_parts, ",")
+                value=value_parts[1]
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+            }
             gsub(/^"|"$/, "", value)
             print value
             exit
         }
-    ' cds_hub_db_config.toml
+    ' "${file_path}"
+}
+
+toml_value() {
+    local key="$1"
+    toml_file_value cds_hub_db_config.toml "${key}"
+}
+
+container_input_repo_mount_args() {
+    local input_repo_path
+    local host_path
+    local container_path
+    input_repo_path="$(toml_file_value R-dataprocessor/dataprocessor_config.toml INPUT_REPO_PATH)"
+    if [[ -z "${input_repo_path}" ]]; then
+        return
+    fi
+    if [[ "${input_repo_path}" = /* ]]; then
+        host_path="${input_repo_path}"
+        container_path="${input_repo_path}"
+    else
+        host_path="${PWD}/${input_repo_path#./}"
+        container_path="/src/${input_repo_path#./}"
+    fi
+    if [[ -d "${host_path}" ]]; then
+        printf '%s\n' "-v"
+        printf '%s\n' "${host_path}:${container_path}:ro"
+    fi
 }
 
 database_exists() {
@@ -134,7 +169,7 @@ prepare_pseudonymized_target_database() {
     dataprocessor_user="$(toml_value DB_DATAPROCESSOR_USER)"
 
     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
-        "CREATE DATABASE ${target_database_name} WITH OWNER=cds_hub_db_admin;"
+        "CREATE DATABASE ${target_database_name} WITH OWNER=${dataprocessor_user};"
     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d "${target_database_name}" -c \
         "CREATE SCHEMA db_log AUTHORIZATION ${dataprocessor_user};
          CREATE SCHEMA db2dataprocessor_out AUTHORIZATION ${dataprocessor_user};"
@@ -152,10 +187,6 @@ create_pseudonymized_snapshot() {
         echo "Fehler: Snapshot \"${source_file_path}\" existiert nicht."
         exit 1
     fi
-    if [[ -z "${IP_PSEUDONYMIZATION_SALT:-}" ]]; then
-        echo "Fehler: IP_PSEUDONYMIZATION_SALT muss für die Pseudonymisierung gesetzt sein." >&2
-        exit 1
-    fi
     ask_before_overwrite_file "${pseudonymized_file_path}"
 
     if database_exists "${source_build_db}" ; then
@@ -171,7 +202,7 @@ create_pseudonymized_snapshot() {
     echo "Erzeuge temporäre Source-Datenbank '${source_build_db}'..."
     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
         "CREATE DATABASE ${source_build_db} WITH OWNER=cds_hub_db_admin;"
-    if zcat "${source_file_path}" | docker compose exec -T cds_hub psql -d "${source_build_db}" cds_hub_db_admin ; then
+    if gzip -cd "${source_file_path}" | docker compose exec -T cds_hub psql -d "${source_build_db}" cds_hub_db_admin ; then
         echo "Temporäre Source-Datenbank '${source_build_db}' eingespielt."
     else
         echo "Fehler: Einspielen der temporären Source-Datenbank '${source_build_db}' fehlgeschlagen."
@@ -188,7 +219,11 @@ create_pseudonymized_snapshot() {
     fi
 
     echo "Starte Pseudonymisierung von '${source_build_db}' nach '${target_build_db}'..."
-    if docker compose run --rm --no-deps -e IP_PSEUDONYMIZATION_SALT r-env \
+    local input_repo_mount_args=()
+    while IFS= read -r mount_arg; do
+        input_repo_mount_args+=("${mount_arg}")
+    done < <(container_input_repo_mount_args)
+    if docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
         source-db="${source_build_db}" \
         target-db="${target_build_db}" ; then
@@ -357,7 +392,7 @@ case "$action" in
         if [[ -e "${file_path}" ]]; then
             echo "Hinweis: Snapshot Datei \"${file_path}\" existiert."
 
-            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep ${db_name} ; then
+            if database_exists "${db_name}" ; then
                 echo "Fehler: Snapshot Datenbank '${db_name}' existiert bereits."
                 exit 1
             fi
@@ -374,7 +409,7 @@ case "$action" in
             fi
 
             # Snapshot-Datei in zuvor angelegte Snapshot-Datenbank einspielen
-            if zcat ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin >> ${logfile} 2>&1 ; then
+            if gzip -cd ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin >> ${logfile} 2>&1 ; then
                 echo "Snapshot Datenbank '${db_name}' eingespielt."
                 if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "ALTER DATABASE ${db_name} SET default_transaction_read_only=on ;" >> ${logfile} 2>&1 ; then
                     echo "Snapshot Datenbank '${db_name}' in 'read-only' Modus gesetzt."
@@ -397,7 +432,7 @@ case "$action" in
         #if [[ -e "${file_path}" ]]; then
         #    echo "Hinweis: Snapshot \"${file_path}\" existiert."
 
-            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres --list |grep ${db_name} ; then
+            if database_exists "${db_name}" ; then
                 echo "Snapshot Datenbank '${db_name}' existiert."
                 
                 # ------------------------------------------------------------

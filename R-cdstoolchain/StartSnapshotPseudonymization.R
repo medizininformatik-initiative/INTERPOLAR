@@ -35,17 +35,6 @@ if (length(missing_arguments) > 0) {
   )
 }
 
-salt <- command_arguments[["salt"]]
-if (is.null(salt) || is.na(salt) || !nzchar(salt)) {
-  salt <- Sys.getenv("IP_PSEUDONYMIZATION_SALT", unset = "")
-}
-if (!nzchar(salt)) {
-  stop(
-    "Missing pseudonymization salt. Pass salt=<secret> or set ",
-    "IP_PSEUDONYMIZATION_SALT in the environment."
-  )
-}
-
 dataprocessor_config <- etlutils::initModule(
   "snapshot_pseudonymization",
   db_schema_base_name = "dataprocessor",
@@ -101,11 +90,10 @@ tryCatch(
       password = dbConfigValue("target_db_password", dbConfigValue("db_dataprocessor_password"))
     )
 
-    pseudonym::pseudonymizeSnapshotDatabase(
+    pseudonymization_result <- pseudonym::pseudonymizeSnapshotDatabase(
       source_connection = source_connection,
       target_connection = target_connection,
       project_root = command_arguments[["project_root"]],
-      salt = salt,
       input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
       source_schema = command_arguments[["source_schema"]],
       target_table_schema = command_arguments[["target_table_schema"]],
@@ -118,6 +106,7 @@ tryCatch(
       replace_views = FALSE,
       log_steps = TRUE
     )
+    invisible(pseudonymization_result)
   },
   error = function(error) {
     status <<- 1L
