@@ -326,7 +326,7 @@ case "$action" in
 
         # Snapshot erstellen
         SECONDS=0;
-        if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table='*.*_raw*' --compress=gzip > $file_date_path; then
+        if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table=db_config.v_cron_jobs --exclude-table='*.*_raw*' --compress=gzip > $file_date_path; then
             echo "Datei \"${file_date_path}\" wurde angelegt."
             ls -ho ${file_date_path}
         else
