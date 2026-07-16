@@ -6,7 +6,8 @@
 #
 #  Aufruf:
 #      ./ip-snapshot.sh list
-#      ./ip-snapshot.sh create  <name>
+#      ./ip-snapshot.sh create  <name> [--with-pseudonymized]
+#      ./ip-snapshot.sh pseudonymize  <name_date>
 #      ./ip-snapshot.sh delete  <name_date>
 #      ./ip-snapshot.sh activate  <name_date>
 #      ./ip-snapshot.sh deactivate  <name_date>
@@ -22,15 +23,21 @@ Usage: ${0##*/} <action> <name>
 
   <action>   \"list\"        – listet alle Snapshots auf
              \"create\"      – legt einen Snapshot <name>.sql.gz an
+             \"pseudonymize\" – erzeugt einen pseudonymisierten Snapshot <name_date>_pseud.sql.gz
              \"delete\"      – löscht einen Snapshot <name_date>.sql.gz
              \"activate\"    – aktiviert einen Snapshot <name_date>.sql.gz, d.h. es wird eine Datenbank für diesen Snapshot angelegt.
              \"deactivate\"  – deaktiviert einen Snapshot <name_date>.sql.gz, d.h. die Datenbank für diesen Snapshot wird gelöscht.
 
   <name>     beliebiger String (ohne Pfad‑Komponenten), <name> | <name_date>
+  --with-pseudonymized
+             nur bei \"create\": erzeugt direkt zusätzlich <name_date>_pseud.sql.gz
 
 Beispiele:
   $0 list                            → listet alle .sql.gz-Dateien (ohne Endung) im Ordner Snapshots auf
   $0 create  snapshot                → erzeugt  snapshot_<Datum>.sql.gz
+  $0 create  snapshot --with-pseudonymized
+                                      → erzeugt  snapshot_<Datum>.sql.gz und snapshot_<Datum>_pseud.sql.gz
+  $0 pseudonymize  snapshot_20250929 → erzeugt  snapshot_20250929_pseud.sql.gz
   $0 delete  snapshot_20250929       → löscht   snapshot_20250929.sql.gz
   $0 activate  snapshot_20250929     → erstellt eine Datenbank 'snapshot_20250929'
   $0 deactivate  snapshot_20250929   → löscht die Datenbank 'snapshot_20250929'
@@ -47,12 +54,17 @@ EOF
 
 action=$1
 name=$2
+option=$3
 DIR=Snapshots
 
+if [[ -z "$action" ]]; then
+    print_usage
+    exit 1
+fi
 
-# Nur einfache Dateinamen zulassen (keine Pfade, keine Leerzeichen)
-if [[ "$name" =~ [[:space:]/\$ ]]; then
-    echo "Fehler: Der Name darf keine Leerzeichen oder Pfad‑Zeichen enthalten." >&2
+# Nur einfache Dateinamen/DB-Namen zulassen, weil der Name auch in SQL-DB-Namen verwendet wird.
+if [[ "$action" =~ ^(create|pseudonymize|delete|activate|deactivate)$ && ! "$name" =~ ^[A-Za-z0-9_]+$ ]]; then
+    echo "Fehler: Der Name darf nur Buchstaben, Zahlen und Unterstriche enthalten." >&2
     exit 2
 fi
 
@@ -64,6 +76,150 @@ file_path="${DIR}/${file}"
 
 # Name der Snapshot Datenbank
 db_name="ip_${name}"
+
+toml_value() {
+    local key="$1"
+    awk -F '=' -v key="$key" '
+        $1 ~ "^[[:space:]]*" key "[[:space:]]*$" {
+            value=$2
+            sub(/#.*/, "", value)
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+            gsub(/^"|"$/, "", value)
+            print value
+            exit
+        }
+    ' cds_hub_db_config.toml
+}
+
+database_exists() {
+    local database_name="$1"
+    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -tAc \
+        "SELECT 1 FROM pg_database WHERE datname = '${database_name}';" | grep -q 1
+}
+
+drop_database_if_exists() {
+    local database_name="$1"
+    if database_exists "${database_name}" ; then
+        docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+            "DROP DATABASE ${database_name} WITH (FORCE);"
+    fi
+}
+
+ask_before_overwrite_file() {
+    local target_file="$1"
+    if [[ -e "$target_file" ]]; then
+        echo "Hinweis: Datei \"$target_file\" existiert bereits!"
+        while true; do
+            read -rp "Soll die Datei \"$target_file\" wirklich überschrieben werden? [y/N] " answer
+            case "$answer" in
+                [Yy]* )
+                    echo "Datei \"$target_file\" wird überschrieben..."
+                    break
+                    ;;
+                [Nn]*|"" )
+                    echo "Vorgang abgebrochen."
+                    exit 1
+                    ;;
+                * )
+                    echo "Bitte mit 'y' (ja) oder 'n' (nein) antworten."
+                    ;;
+            esac
+        done
+    fi
+}
+
+prepare_pseudonymized_target_database() {
+    local target_database_name="$1"
+    local dataprocessor_user
+    dataprocessor_user="$(toml_value DB_DATAPROCESSOR_USER)"
+
+    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+        "CREATE DATABASE ${target_database_name} WITH OWNER=cds_hub_db_admin;"
+    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d "${target_database_name}" -c \
+        "CREATE SCHEMA db_log AUTHORIZATION ${dataprocessor_user};
+         CREATE SCHEMA db2dataprocessor_out AUTHORIZATION ${dataprocessor_user};"
+}
+
+create_pseudonymized_snapshot() {
+    local snapshot_name="$1"
+    local source_file_path="${DIR}/${snapshot_name}.sql.gz"
+    local pseudonymized_snapshot_name="${snapshot_name}_pseud"
+    local pseudonymized_file_path="${DIR}/${pseudonymized_snapshot_name}.sql.gz"
+    local source_build_db="ip_${snapshot_name}_build"
+    local target_build_db="ip_${pseudonymized_snapshot_name}_build"
+
+    if [[ ! -f "${source_file_path}" ]]; then
+        echo "Fehler: Snapshot \"${source_file_path}\" existiert nicht."
+        exit 1
+    fi
+    if [[ -z "${IP_PSEUDONYMIZATION_SALT:-}" ]]; then
+        echo "Fehler: IP_PSEUDONYMIZATION_SALT muss für die Pseudonymisierung gesetzt sein." >&2
+        exit 1
+    fi
+    ask_before_overwrite_file "${pseudonymized_file_path}"
+
+    if database_exists "${source_build_db}" ; then
+        echo "Fehler: Temporäre Source-Datenbank '${source_build_db}' existiert bereits."
+        exit 1
+    fi
+    if database_exists "${target_build_db}" ; then
+        echo "Fehler: Temporäre Ziel-Datenbank '${target_build_db}' existiert bereits."
+        exit 1
+    fi
+
+    SECONDS=0
+    echo "Erzeuge temporäre Source-Datenbank '${source_build_db}'..."
+    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+        "CREATE DATABASE ${source_build_db} WITH OWNER=cds_hub_db_admin;"
+    if zcat "${source_file_path}" | docker compose exec -T cds_hub psql -d "${source_build_db}" cds_hub_db_admin ; then
+        echo "Temporäre Source-Datenbank '${source_build_db}' eingespielt."
+    else
+        echo "Fehler: Einspielen der temporären Source-Datenbank '${source_build_db}' fehlgeschlagen."
+        drop_database_if_exists "${source_build_db}"
+        exit 1
+    fi
+
+    echo "Erzeuge leere temporäre Ziel-Datenbank '${target_build_db}'..."
+    if ! prepare_pseudonymized_target_database "${target_build_db}" ; then
+        echo "Fehler: Anlegen der temporären Ziel-Datenbank '${target_build_db}' fehlgeschlagen."
+        drop_database_if_exists "${source_build_db}"
+        drop_database_if_exists "${target_build_db}"
+        exit 1
+    fi
+
+    echo "Starte Pseudonymisierung von '${source_build_db}' nach '${target_build_db}'..."
+    if docker compose run --rm --no-deps -e IP_PSEUDONYMIZATION_SALT r-env \
+        Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
+        source-db="${source_build_db}" \
+        target-db="${target_build_db}" ; then
+        echo "Pseudonymisierung abgeschlossen."
+    else
+        echo "Fehler: Pseudonymisierung fehlgeschlagen."
+        drop_database_if_exists "${source_build_db}"
+        drop_database_if_exists "${target_build_db}"
+        exit 1
+    fi
+
+    echo "Erzeuge pseudonymisierten Snapshot '${pseudonymized_file_path}'..."
+    if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
+        --format=plain --compress=gzip > "${pseudonymized_file_path}" ; then
+        echo "Datei \"${pseudonymized_file_path}\" wurde angelegt."
+        ls -ho "${pseudonymized_file_path}"
+    else
+        echo "Fehler: Beim Erstellen des pseudonymisierten Snapshots ist ein Fehler aufgetreten."
+        if [[ -e "${pseudonymized_file_path}" && ! -s "${pseudonymized_file_path}" ]]; then
+            echo "Datei ${pseudonymized_file_path} existiert, ist jedoch leer -> cleanup."
+            rm -f "${pseudonymized_file_path}"
+        fi
+        drop_database_if_exists "${source_build_db}"
+        drop_database_if_exists "${target_build_db}"
+        exit 1
+    fi
+
+    drop_database_if_exists "${source_build_db}"
+    drop_database_if_exists "${target_build_db}"
+    printf "Dauer Pseudonymisierung: %s s\n" "$SECONDS"
+}
 
 
 # ---------- Aktionen ----------
@@ -89,8 +245,13 @@ case "$action" in
         ;;
 
     create)
+        if [[ -n "${option}" && "${option}" != "--with-pseudonymized" ]]; then
+            echo "Fehler: unbekannte Option \"${option}\". Erlaubt ist nur \"--with-pseudonymized\"." >&2
+            exit 3
+        fi
         # Ziel‑Datei mit Datum
         file_date="${name}_$(date +%Y%m%d).sql.gz"
+        snapshot_name_date="${name}_$(date +%Y%m%d)"
         # Vollständiger Pfad zur Datei mit Datum
         file_date_path="${DIR}/${file_date}"
 
@@ -143,6 +304,14 @@ case "$action" in
             exit 1
         fi
         printf "Dauer: %s s\n" "$SECONDS";
+
+        if [[ "${option}" == "--with-pseudonymized" ]]; then
+            create_pseudonymized_snapshot "${snapshot_name_date}"
+        fi
+        ;;
+
+    pseudonymize)
+        create_pseudonymized_snapshot "${name}"
         ;;
 
     delete)

@@ -122,9 +122,32 @@ Beim Erstellen (_create_) wird ein Dump der _cds_hb_db_ Datenbank gemacht und im
 ./ip-snapshot.sh create snap01
 ```
 
+Zusätzlich kann direkt ein pseudonymisierter Auswertungs-Snapshot erzeugt werden.
+Dieser enthält nur die Schemata `db_log` und `db2dataprocessor_out`.
+In `db_log` liegen die pseudonymisierten Tabellen materialisiert, in
+`db2dataprocessor_out` liegen durchgereichte Views wie `v_<table>` und
+`v_<table>_last_version`. Für die Pseudonymisierung muss vorher ein Salt gesetzt
+werden.
+```cmd
+export IP_PSEUDONYMIZATION_SALT=<secret>
+./ip-snapshot.sh create snap01 --with-pseudonymized
+```
+
+Ein pseudonymisierter Snapshot kann auch nachträglich aus einem vorhandenen
+Snapshot-Dump erzeugt werden.
+```cmd
+export IP_PSEUDONYMIZATION_SALT=<secret>
+./ip-snapshot.sh pseudonymize snap01_20251002
+```
+
 Erstellte Snapshots können aktiviert (_activate_), d.h. in eine Snapshot Datenbank geladen werden.
 ```cmd
 ./ip-snapshot.sh activate snap01_20251002
+```
+
+Pseudonymisierte Snapshots werden gleichartig aktiviert.
+```cmd
+./ip-snapshot.sh activate snap01_20251002_pseud
 ```
 
 Beim De-Aktivieren (_deactivate_) wird diese Datenbank wieder gelöscht.
