@@ -347,8 +347,23 @@ createReport <- function(config = getConfig()) {
     paste(paste(result_rows_by_family$TABLE_FAMILY, result_rows_by_family$N, sep = "="), collapse = ", "),
     "."
   )
+  sheets <- splitResultForExcel(result)
+  interpolar_case_sheets <- createInterpolarCaseSheets(
+    metadata,
+    result,
+    config,
+    history_metadata = history_metadata
+  )
+  if (length(interpolar_case_sheets)) {
+    fhir_sheet_position <- match("FHIR", names(sheets))
+    sheets <- append(
+      sheets,
+      interpolar_case_sheets,
+      after = if (is.na(fhir_sheet_position)) length(sheets) else fhir_sheet_position
+    )
+  }
   sheets <- c(
-    splitResultForExcel(result),
+    sheets,
     createResourceDetailSheets(metadata, result, config)
   )
   sheets$Metadata <- createMetadataSheet(

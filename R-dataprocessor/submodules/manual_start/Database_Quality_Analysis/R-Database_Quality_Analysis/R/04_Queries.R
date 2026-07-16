@@ -56,7 +56,20 @@ getValueAvailableCondition <- function(column_name, table_metadata, data_types) 
   paste(conditions, collapse = " AND ")
 }
 
-buildCountQuery <- function(table_metadata, grouping_columns, data_columns) {
+getOptionalWhereClause <- function(row_filter_condition) {
+  if (is.na(row_filter_condition) || !nzchar(row_filter_condition)) {
+    return("")
+  }
+
+  paste0("\nWHERE ", row_filter_condition)
+}
+
+buildCountQuery <- function(
+  table_metadata,
+  grouping_columns,
+  data_columns,
+  row_filter_condition = NA_character_
+) {
   table_ref <- quoteTable(
     table_metadata$VIEW_SCHEMA[[1]],
     table_metadata$VIEW_NAME[[1]]
@@ -123,13 +136,20 @@ buildCountQuery <- function(table_metadata, grouping_columns, data_columns) {
       "SELECT\n  ",
       paste(select_parts, collapse = ",\n  "),
       "\nFROM ",
-      table_ref
+      table_ref,
+      getOptionalWhereClause(row_filter_condition)
     ),
     alias_map = alias_map
   )
 }
 
-buildValueDateRangeQuery <- function(table_metadata, history_metadata, config, data_columns) {
+buildValueDateRangeQuery <- function(
+  table_metadata,
+  history_metadata,
+  config,
+  data_columns,
+  row_filter_condition = NA_character_
+) {
   if (is.null(history_metadata) || !nrow(history_metadata)) {
     return(list(query = NA_character_, alias_map = data.table::data.table()))
   }
@@ -171,7 +191,7 @@ buildValueDateRangeQuery <- function(table_metadata, history_metadata, config, d
 
   for (column_index in seq_along(data_columns)) {
     column_name <- data_columns[[column_index]]
-    filled_condition <- getValueAvailableCondition(column_name, history_table_metadata, data_types)
+    column_filled_condition <- getValueAvailableCondition(column_name, history_table_metadata, data_types)
     for (source_index in seq_len(nrow(date_sources))) {
       date_source <- date_sources[source_index]
       first_alias <- paste0("first_value_datetime_", column_index, "_", date_source$source_name)
@@ -179,8 +199,8 @@ buildValueDateRangeQuery <- function(table_metadata, history_metadata, config, d
       quoted_datetime_column <- quoteIdentifier(date_source$column_name)
       select_parts <- c(
         select_parts,
-        paste0("MIN(CASE WHEN ", filled_condition, " THEN ", quoted_datetime_column, " END) AS ", quoteIdentifier(first_alias)),
-        paste0("MAX(CASE WHEN ", filled_condition, " THEN ", quoted_datetime_column, " END) AS ", quoteIdentifier(last_alias))
+        paste0("MIN(CASE WHEN ", column_filled_condition, " THEN ", quoted_datetime_column, " END) AS ", quoteIdentifier(first_alias)),
+        paste0("MAX(CASE WHEN ", column_filled_condition, " THEN ", quoted_datetime_column, " END) AS ", quoteIdentifier(last_alias))
       )
       alias_map <- rbind(
         alias_map,
@@ -195,5 +215,14 @@ buildValueDateRangeQuery <- function(table_metadata, history_metadata, config, d
     }
   }
 
-  list(query = paste0("SELECT\n  ", paste(select_parts, collapse = ",\n  "), "\nFROM ", table_ref), alias_map = alias_map)
+  list(
+    query = paste0(
+      "SELECT\n  ",
+      paste(select_parts, collapse = ",\n  "),
+      "\nFROM ",
+      table_ref,
+      getOptionalWhereClause(row_filter_condition)
+    ),
+    alias_map = alias_map
+  )
 }

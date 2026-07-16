@@ -344,6 +344,30 @@ test_that("database quality analysis count query uses non-empty values and quote
   expect_equal(result$alias_map$count_column, c("count per resource_id", "count per PID"))
 })
 
+test_that("database quality analysis count query applies optional row filters", {
+  table_metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = "v_observation_last_version",
+    COLUMN_NAME = c("obs_id", "obs_patient_ref", "obs_value"),
+    DATA_TYPE = c("character varying", "character varying", "character varying")
+  )
+  grouping_columns <- c(resource_id = "obs_id", pid = "obs_patient_ref", case_id = NA_character_)
+
+  result <- buildCountQuery(
+    table_metadata,
+    grouping_columns,
+    data_columns = c("obs_value"),
+    row_filter_condition = '"obs_encounter_calculated_ref" IN (SELECT "enc_id" FROM "encounter")'
+  )
+
+  expect_match(
+    result$query,
+    'WHERE "obs_encounter_calculated_ref" IN (SELECT "enc_id" FROM "encounter")',
+    fixed = TRUE
+  )
+  expect_match(result$query, 'CASE WHEN "obs_value" IS NOT NULL', fixed = TRUE)
+})
+
 test_that("database quality analysis count query ignores invalid calculated refs", {
   table_metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
@@ -362,6 +386,257 @@ test_that("database quality analysis count query ignores invalid calculated refs
   expect_match(result$query, '"obs_encounter_calculated_ref" IS NOT NULL', fixed = TRUE)
   expect_match(result$query, '"obs_encounter_calculated_ref"::text <> \'\'', fixed = TRUE)
   expect_match(result$query, '"obs_encounter_calculated_ref"::text <> \'invalid\'', fixed = TRUE)
+})
+
+test_that("database quality analysis INTERPOLAR filter uses calculated encounter refs", {
+  metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = c(
+      rep("v_encounter_last_version", 2),
+      rep("v_pids_per_ward", 1),
+      rep("v_observation_last_version", 3),
+      rep("v_patient_last_version", 2)
+    ),
+    TABLE_NAME = c(
+      rep("encounter", 2),
+      "pids_per_ward",
+      rep("observation", 3),
+      rep("patient", 2)
+    ),
+    TABLE_FAMILY = c(rep("FHIR", 2), "Other", rep("FHIR", 3), rep("FHIR", 2)),
+    COLUMN_NAME = c(
+      "enc_id",
+      "enc_main_encounter_calculated_ref",
+      "encounter_id",
+      "obs_id",
+      "obs_patient_ref",
+      "obs_encounter_calculated_ref",
+      "pat_id",
+      "pat_birth_date"
+    ),
+    COLUMN_DESCRIPTION = NA_character_,
+    ORDINAL_POSITION = c(1:2, 1, 1:3, 1:2),
+    DATA_TYPE = "character varying"
+  )
+  config <- list(grouping_overrides = parseGroupingOverrides(character()))
+  observation_metadata <- getTableMetadata(metadata, "observation")
+  observation_grouping <- inferGroupingColumns(observation_metadata, config)
+  patient_metadata <- getTableMetadata(metadata, "patient")
+  patient_grouping <- inferGroupingColumns(patient_metadata, config)
+  main_encounter_subquery <- getInterpolarMainEncounterSubquery(metadata)
+
+  observation_filter <- getInterpolarCaseFilterCondition(
+    observation_metadata,
+    observation_grouping,
+    main_encounter_subquery
+  )
+  patient_filter <- getInterpolarCaseFilterCondition(
+    patient_metadata,
+    patient_grouping,
+    main_encounter_subquery
+  )
+
+  expect_match(main_encounter_subquery, 'FROM "db2dataprocessor_out"."v_encounter_last_version"', fixed = TRUE)
+  expect_match(main_encounter_subquery, 'JOIN "db2dataprocessor_out"."v_pids_per_ward"', fixed = TRUE)
+  expect_match(observation_filter, '"obs_encounter_calculated_ref" IS NOT NULL', fixed = TRUE)
+  expect_match(observation_filter, '"obs_encounter_calculated_ref"::text <> \'invalid\'', fixed = TRUE)
+  expect_match(observation_filter, '"obs_encounter_calculated_ref" IN', fixed = TRUE)
+  expect_true(is.na(patient_filter))
+})
+
+test_that("database quality analysis creates INTERPOLAR sheet for encounter-related FHIR tables", {
+  metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = c(
+      rep("v_encounter_last_version", 3),
+      "v_pids_per_ward",
+      rep("v_observation_last_version", 4),
+      rep("v_patient_last_version", 2)
+    ),
+    TABLE_NAME = c(
+      rep("encounter", 3),
+      "pids_per_ward",
+      rep("observation", 4),
+      rep("patient", 2)
+    ),
+    TABLE_FAMILY = c(rep("FHIR", 3), "Other", rep("FHIR", 4), rep("FHIR", 2)),
+    COLUMN_NAME = c(
+      "enc_id",
+      "enc_patient_ref",
+      "enc_main_encounter_calculated_ref",
+      "encounter_id",
+      "obs_id",
+      "obs_patient_ref",
+      "obs_encounter_calculated_ref",
+      "obs_value",
+      "pat_id",
+      "pat_birth_date"
+    ),
+    COLUMN_DESCRIPTION = c(
+      "id",
+      "patient",
+      "case",
+      "case",
+      "id",
+      "patient",
+      "case",
+      "value",
+      "id",
+      "birth date"
+    ),
+    ORDINAL_POSITION = c(1:3, 1, 1:4, 1:2),
+    DATA_TYPE = "character varying"
+  )
+  result <- data.table::data.table(
+    TABLE_NAME = metadata[TABLE_FAMILY == "FHIR", TABLE_NAME],
+    COLUMN_NAME = metadata[TABLE_FAMILY == "FHIR", COLUMN_NAME],
+    COLUMN_DESCRIPTION = metadata[TABLE_FAMILY == "FHIR", COLUMN_DESCRIPTION],
+    USED_AS_GROUPING_FOR = NA_character_,
+    "count per resource_id" = 99L,
+    "count per PID" = 99L,
+    "count per Fall-Id" = 99L,
+    TABLE_FAMILY = "FHIR",
+    ORDINAL_POSITION = metadata[TABLE_FAMILY == "FHIR", ORDINAL_POSITION],
+    check.names = FALSE
+  )
+  config <- list(
+    count_batch_size = 100,
+    grouping_overrides = parseGroupingOverrides(character())
+  )
+  query_state <- new.env(parent = emptyenv())
+  query_state$seen_queries <- character()
+  query_fun <- function(query, lock_id = NULL) {
+    query_state$seen_queries <- c(query_state$seen_queries, query)
+    aliases <- unique(regmatches(query, gregexpr("count_[0-9]+", query))[[1]])
+    data.table::as.data.table(as.list(stats::setNames(rep(1L, length(aliases)), aliases)))
+  }
+
+  sheet <- createInterpolarCaseSheet(metadata, result, config, query_fun = query_fun)
+
+  expect_equal(unique(sheet$TABLE_NAME), c("encounter", "observation"))
+  expect_false("patient" %in% sheet$TABLE_NAME)
+  expect_equal(sheet[TABLE_NAME == "observation" & COLUMN_NAME == "obs_value", "count per resource_id"][[1]], 1L)
+  expect_true(any(grepl('"obs_encounter_calculated_ref" IN', query_state$seen_queries, fixed = TRUE)))
+  expect_true(any(grepl('"enc_main_encounter_calculated_ref" IN', query_state$seen_queries, fixed = TRUE)))
+})
+
+test_that("database quality analysis INTERPOLAR sheet fills value datetime columns", {
+  metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = c(
+      rep("v_encounter_last_version", 3),
+      "v_pids_per_ward",
+      rep("v_observation_last_version", 4)
+    ),
+    TABLE_NAME = c(
+      rep("encounter", 3),
+      "pids_per_ward",
+      rep("observation", 4)
+    ),
+    TABLE_FAMILY = c(rep("FHIR", 3), "Other", rep("FHIR", 4)),
+    COLUMN_NAME = c(
+      "enc_id",
+      "enc_patient_ref",
+      "enc_main_encounter_calculated_ref",
+      "encounter_id",
+      "obs_id",
+      "obs_patient_ref",
+      "obs_encounter_calculated_ref",
+      "obs_value"
+    ),
+    COLUMN_DESCRIPTION = c("id", "patient", "case", "case", "id", "patient", "case", "value"),
+    ORDINAL_POSITION = c(1:3, 1, 1:4),
+    DATA_TYPE = "character varying"
+  )
+  history_metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = "v_observation",
+    COLUMN_NAME = c(
+      "obs_id",
+      "obs_patient_ref",
+      "obs_encounter_calculated_ref",
+      "obs_value",
+      "input_datetime",
+      "obs_meta_lastupdated"
+    ),
+    DATA_TYPE = c(
+      rep("character varying", 4),
+      "timestamp without time zone",
+      "timestamp without time zone"
+    )
+  )
+  result <- data.table::data.table(
+    TABLE_NAME = metadata[TABLE_FAMILY == "FHIR", TABLE_NAME],
+    COLUMN_NAME = metadata[TABLE_FAMILY == "FHIR", COLUMN_NAME],
+    COLUMN_DESCRIPTION = metadata[TABLE_FAMILY == "FHIR", COLUMN_DESCRIPTION],
+    USED_AS_GROUPING_FOR = NA_character_,
+    "count per resource_id" = NA_integer_,
+    "count per PID" = NA_integer_,
+    "count per Fall-Id" = NA_integer_,
+    "first value import datetime" = as.POSIXct(NA),
+    "last value import datetime" = as.POSIXct(NA),
+    "first value meta last updated" = as.POSIXct(NA),
+    "last value meta last updated" = as.POSIXct(NA),
+    TABLE_FAMILY = "FHIR",
+    ORDINAL_POSITION = metadata[TABLE_FAMILY == "FHIR", ORDINAL_POSITION],
+    check.names = FALSE
+  )
+  config <- list(
+    count_batch_size = 100,
+    grouping_overrides = parseGroupingOverrides(character()),
+    include_value_datetime_columns = TRUE,
+    view_prefix = "v_",
+    value_import_datetime_column = "input_datetime"
+  )
+  query_fun <- function(query, lock_id = NULL) {
+    count_aliases <- unique(regmatches(query, gregexpr("count_[0-9]+", query))[[1]])
+    if (length(count_aliases)) {
+      return(data.table::as.data.table(as.list(stats::setNames(
+        rep(1L, length(count_aliases)),
+        count_aliases
+      ))))
+    }
+
+    first_aliases <- unique(regmatches(query, gregexpr("first_value_datetime_[a-z0-9_]+", query))[[1]])
+    last_aliases <- unique(regmatches(query, gregexpr("last_value_datetime_[a-z0-9_]+", query))[[1]])
+    datetime_values <- c(
+      stats::setNames(
+        rep(as.POSIXct("2026-01-01 00:00:00", tz = "UTC"), length(first_aliases)),
+        first_aliases
+      ),
+      stats::setNames(
+        rep(as.POSIXct("2026-01-02 00:00:00", tz = "UTC"), length(last_aliases)),
+        last_aliases
+      )
+    )
+    data.table::as.data.table(as.list(datetime_values))
+  }
+
+  sheet <- createInterpolarCaseSheet(
+    metadata,
+    result,
+    config,
+    history_metadata = history_metadata,
+    query_fun = query_fun
+  )
+
+  value_row <- sheet[TABLE_NAME == "observation" & COLUMN_NAME == "obs_value"]
+  expect_equal(
+    as.numeric(value_row[["first value import datetime"]][[1]]),
+    as.numeric(as.POSIXct("2026-01-01 00:00:00", tz = "UTC"))
+  )
+  expect_equal(
+    as.numeric(value_row[["last value import datetime"]][[1]]),
+    as.numeric(as.POSIXct("2026-01-02 00:00:00", tz = "UTC"))
+  )
+  expect_equal(
+    as.numeric(value_row[["first value meta last updated"]][[1]]),
+    as.numeric(as.POSIXct("2026-01-01 00:00:00", tz = "UTC"))
+  )
+  expect_equal(
+    as.numeric(value_row[["last value meta last updated"]][[1]]),
+    as.numeric(as.POSIXct("2026-01-02 00:00:00", tz = "UTC"))
+  )
 })
 
 test_that("database quality analysis count query avoids text casts for non-text columns", {
