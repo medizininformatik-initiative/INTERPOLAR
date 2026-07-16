@@ -137,6 +137,12 @@ dataportal-FHIR-Pseudonymizer nutzt dagegen projektbezogene CryptoHash-Keys für
 höhere DUP-Anforderungen.
 Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten und nur der
 ID-Anteil nach dem Slash wird gehasht.
+
+Der Pseudonymisierungslauf schreibt zusätzlich einen Review-Report unter
+`outputLocal/snapshot_pseudonymization*/reports/pseudonymization_rule_review.xlsx`.
+Dieser Report ist ein Kontroll- und Freigabeartefakt für das DIZ. Er wird nicht
+in den Snapshot-Dump aufgenommen und ist nicht Bestandteil der auswertbaren
+Read-only-DB.
 ```cmd
 ./ip-snapshot.sh create snap01 --with-pseudonymized
 ```
