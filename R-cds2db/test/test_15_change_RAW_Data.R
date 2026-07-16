@@ -1,24 +1,23 @@
-# Recovery test for interrupted toolchain runs (issue #813)
-# First Start Day 1 and after that Start Day 2. The first day simulates an interrupted run of the toolchain, where only
-# cds2db is run and dataprocessor is not. The second day starts the complete toolchain, which must first process the
-# historical pids_per_ward data before processing the new data.
+# Datenverfuegbarkeit: Ein Patient mit einem INTERPOLAR-Fall und einem Nicht-INTERPOLAR-Fall.
 #
-# Day 1:
-#   - create one patient and case
-#   - run only cds2db, simulating an interruption before dataprocessor
-#   - pids_per_ward is present, but fall_fe is not
+# Tag 1:
+#   - UKB-0001 hat zuerst einen Fall auf Station 1 (INTERPOLAR/IP).
+#   - Danach wird derselbe Patient in einem neuen Fall auf Station 3 aufgenommen
+#     (nicht INTERPOLAR/IP).
+#   - Beide Faelle enthalten fallbezogene FHIR-Ressourcen.
+#   - Am Ende bleibt nur der Station-1-Fall in pids_per_ward sichtbar.
 #
-# Day 2:
-#   - start the complete toolchain
-#   - the recovery pass must process the historical pids_per_ward first
-#   - the regular toolchain pass follows afterwards
+# Erwartung fuer die Database Quality Analysis:
+#   - FHIR enthaelt beide Faelle.
+#   - FHIR INTERPOLAR enthaelt nur Ressourcen des Station-1-Falls.
+#   - Ressourcen des Station-3-Falls duerfen trotz gleicher Patient-ID nicht
+#     im FHIR-INTERPOLAR-Sheet mitgezaehlt werden.
 
-DEBUG_DAYS_COUNT <- 2
+#################################
+# Start Define global variables #
+#################################
 
-# Activate if only a specific debug day should be run
-if (!exists("DEBUG_RUN_SINGLE_DAY_ONLY")) {
-  DEBUG_RUN_SINGLE_DAY_ONLY <- 2
-}
+DEBUG_DAYS_COUNT <- 1
 
 DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
   cds2db = "./R-cds2db/test/test_cds2db_config.toml",
@@ -28,23 +27,73 @@ DEBUG_MODULES_PATH_TO_CONFIG_TOML <- c(
 
 DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 
+###############################
+# End Define global variables #
+###############################
+
+
 if (exists("TOOLCHAIN_DAY")) {
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   testSetResourceTables(resource_tables)
 
-  pid <- "UKB-0001"
-  testPrepareRAWResources(namedListByValue(pid))
+  pid1 <- "UKB-0001"
+  pats <- namedListByValue(pid1)
+
+  testPrepareRAWResources(pats)
   testRemoveMultipleDiagnoses()
-  testAdmission(pid, "Raum 1-1", "Bett 1-1", "Station 1")
 
   runCodeForDebugDay(1, {
-    assign("DEBUG_START_SINGLE_MODULE", "cds2db", envir = .GlobalEnv)
-  })
+    # Fall 1: INTERPOLAR-relevanter Fall auf Station 1.
+    interpolar_enc_ids <- testAdmission(
+      pid1,
+      room = "Raum IP",
+      bed = "Bett IP",
+      ward_name = "Station 1",
+      day_offset = -0.9
+    )
+    addObservation(
+      pid1,
+      code = "14933-1",
+      day_offset = -0.85,
+      value = 1000,
+      unit = "umol/L",
+      encounter_id = interpolar_enc_ids[[3]]
+    )
+    addDrugs(
+      pid1,
+      codes = "M04AA01",
+      day_offset = -0.84,
+      encounter_id = interpolar_enc_ids[[3]]
+    )
+    testDischarge(pid1)
 
-  runCodeForDebugDay(2, {
-    if (exists("DEBUG_START_SINGLE_MODULE", envir = .GlobalEnv)) {
-      rm("DEBUG_START_SINGLE_MODULE", envir = .GlobalEnv)
-    }
+    # Fall 2: Nicht-INTERPOLAR-Fall desselben Patienten auf Station 3.
+    non_interpolar_enc_ids <- testAdmission(
+      pid1,
+      room = "Raum Nicht-IP",
+      bed = "Bett Nicht-IP",
+      ward_name = "Station 3",
+      day_offset = -0.7
+    )
+    addObservation(
+      pid1,
+      code = "14933-3",
+      day_offset = -0.65,
+      value = 2000,
+      unit = "umol/L",
+      encounter_id = non_interpolar_enc_ids[[3]]
+    )
+    addDrugs(
+      pid1,
+      codes = "M04AA03",
+      day_offset = -0.64,
+      encounter_id = non_interpolar_enc_ids[[3]]
+    )
+    testDischarge(pid1)
+
+    # Die DQA soll nur den IP-Fall als INTERPOLAR-Fall erkennen. Das ist bewusst
+    # nach der zweiten Entlassung gesetzt, weil testDischarge pids_per_ward leert.
+    testUpdateWard(interpolar_enc_ids[[3]], "Station 1")
   })
 
   resource_tables <- testGetResourceTables()
