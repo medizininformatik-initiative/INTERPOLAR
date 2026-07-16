@@ -8,7 +8,6 @@ pseudonymizeTable(
   table,
   table_description,
   table_name = NULL,
-  salt = NULL,
   input_repo_path = NULL
 )
 }
@@ -22,8 +21,6 @@ group rows by table.}
 \item{table_name}{Optional table/resource name used to filter
 \code{table_description} before applying the rules.}
 
-\item{salt}{Salt used for \code{cryptoHash} and \code{pseudonymize(...)} rules.}
-
 \item{input_repo_path}{Path to the TOML-configured input repository directory
 for the pseudonymization run. If \code{pseudonym(sheet = ...)} rules are used,
 \verb{<input_repo_path>/pseudo_mapping.xlsx} is read and the \code{sheet} argument
@@ -35,4 +32,7 @@ A pseudonymized copy of \code{table}.
 \description{
 Applies \code{PSEUDONYMIZATION_RULE} values from a table description to one
 \code{data.table}. Empty or missing rules are treated as \code{keep}.
+\code{pseudonymize(...)} is executed as an alias of \code{cryptoHash}; the optional
+\code{domain} argument remains a readable table-description annotation but does
+not change the generated hash.
 }

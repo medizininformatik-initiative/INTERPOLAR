@@ -703,7 +703,11 @@ getPseudonymizationRulesForTable <- function(rules, table_name, source = NULL) {
   rules <- normalizePseudonymizationRulesForTables(rules)
   table_rules <- rules[tolower(rules[["TABLE_OR_RESOURCE"]]) == tolower(table_name), ]
   if (!is.null(source) && !is.na(source) && nzchar(source) && "SOURCE" %in% names(table_rules)) {
-    table_rules <- table_rules[table_rules[["SOURCE"]] == source, ]
+    is_snapshot_extension <- "SOURCE_TYPE" %in% names(table_rules) &
+      table_rules[["SOURCE_TYPE"]] == "snapshot_extension"
+    source_matches <- table_rules[["SOURCE"]] == source
+    source_matches[is.na(source_matches)] <- FALSE
+    table_rules <- table_rules[source_matches | is_snapshot_extension, ]
   }
   table_rules
 }

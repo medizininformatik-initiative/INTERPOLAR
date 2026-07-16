@@ -138,6 +138,13 @@ höhere DUP-Anforderungen.
 Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten und nur der
 ID-Anteil nach dem Slash wird gehasht.
 
+Für `observation` und `observation_last_version` ergänzt der
+Pseudonymisierungslauf außerdem die Snapshot-Spalten `value_in_reference_unit`,
+`reference_unit` und `primary_loinc_code`. Die Werte werden aus der im
+Dataprocessor konfigurierten Input-Repo-Datei
+`LOINC_Mapping/LOINC_Mapping_content/LOINC_Mapping_Table_processed.xlsx`
+abgeleitet.
+
 Der Pseudonymisierungslauf schreibt zusätzlich einen Review-Report unter
 `outputLocal/snapshot_pseudonymization*/reports/pseudonymization_rule_review.xlsx`.
 Dieser Report ist ein Kontroll- und Freigabeartefakt für das DIZ. Er wird nicht
