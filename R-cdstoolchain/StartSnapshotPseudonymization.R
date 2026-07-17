@@ -103,6 +103,7 @@ tryCatch(
       review_report_file = command_arguments[["review_report_file"]],
       keep_unmatched_columns = FALSE,
       enrich_tables = function(tables) {
+        tables <- pseudonym::enrichSnapshotCaseMetricTables(tables)
         pseudonym::enrichSnapshotMedicationReferenceTables(tables)
       },
       overwrite_tables = FALSE,

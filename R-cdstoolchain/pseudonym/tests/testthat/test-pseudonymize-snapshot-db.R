@@ -73,3 +73,30 @@ test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension column
   expect_equal(names(result$table), c("medreq_id", "medreq_medication_code"))
   expect_equal(result$table$medreq_medication_code, "A01")
 })
+
+test_that("postprocessPseudonymizedSnapshotTables removes hash columns and duplicate rows", {
+  result <- list(
+    tables = list(
+      fall_fe = data.table::data.table(
+        record_id = c("1", "1", "2"),
+        value = c("same", "same", "other"),
+        content_hash = c("a", "b", "c")
+      )
+    ),
+    summary = data.table::data.table(
+      TABLE_NAME = "fall_fe",
+      OUTPUT_ROWS = 3L,
+      OUTPUT_COLUMNS = 3L
+    )
+  )
+
+  postprocessed <- postprocessPseudonymizedSnapshotTables(result)
+
+  expect_equal(names(postprocessed$tables$fall_fe), c("record_id", "value"))
+  expect_equal(nrow(postprocessed$tables$fall_fe), 2L)
+  expect_equal(postprocessed$summary$HASH_COLUMNS_REMOVED, "content_hash")
+  expect_equal(postprocessed$summary$HASH_COLUMN_COUNT, 1L)
+  expect_equal(postprocessed$summary$DUPLICATE_ROWS_REMOVED, 1L)
+  expect_equal(postprocessed$summary$OUTPUT_ROWS, 2L)
+  expect_equal(postprocessed$summary$OUTPUT_COLUMNS, 2L)
+})

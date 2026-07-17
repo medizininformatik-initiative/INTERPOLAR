@@ -144,6 +144,16 @@ materialisiert. Wenn eine referenzierte `Medication` mehrere unterschiedliche
 Code-/System-Paare hat, wird die referenzierende Zeile entsprechend mehrfach
 ausgegeben.
 
+Für `fall_fe` werden zusätzlich `fall_age_at_admission` und `fall_bmi`
+materialisiert. Für `encounter` wird `enc_age_at_admission` materialisiert.
+Das Alter wird in abgeschlossenen Jahren berechnet. BMI wird aus Gewicht und
+Größe berechnet, wenn die Einheiten eindeutig nach kg und m umgerechnet werden
+können.
+
+Vor dem Schreiben des pseudonymisierten Snapshots werden alte Hash-Spalten
+entfernt. Danach werden pro Tabelle redundante Zeilen entfernt, die nach
+Pseudonymisierung und Hash-Spalten-Entfernung vollständig identisch sind.
+
 Der Pseudonymisierungslauf schreibt zusätzlich einen Review-Report unter
 `outputLocal/snapshot_pseudonymization*/reports/pseudonymization_rule_review.xlsx`.
 Dieser Report ist ein Kontroll- und Freigabeartefakt für das DIZ. Er wird nicht

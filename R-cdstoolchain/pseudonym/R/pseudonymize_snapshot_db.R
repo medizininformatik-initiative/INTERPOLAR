@@ -174,6 +174,95 @@ pseudonymizeSnapshotMaterializedTables <- function(
   )
 }
 
+getSnapshotHashColumnNames <- function(table) {
+  names(table)[grepl("hash", names(table), ignore.case = TRUE)]
+}
+
+setSummaryValue <- function(summary, row_index, column_name, value) {
+  if (!column_name %in% names(summary)) {
+    if (is.integer(value)) {
+      summary[[column_name]] <- rep(NA_integer_, nrow(summary))
+    } else if (is.numeric(value)) {
+      summary[[column_name]] <- rep(NA_real_, nrow(summary))
+    } else {
+      summary[[column_name]] <- rep(NA_character_, nrow(summary))
+    }
+  }
+  summary[row_index, column_name] <- value
+  summary
+}
+
+postprocessPseudonymizedSnapshotTables <- function(pseudonymization_result) {
+  summary <- as.data.frame(
+    data.table::copy(pseudonymization_result[["summary"]]),
+    stringsAsFactors = FALSE
+  )
+
+  for (table_name in names(pseudonymization_result[["tables"]])) {
+    table <- data.table::as.data.table(data.table::copy(
+      pseudonymization_result[["tables"]][[table_name]]
+    ))
+    hash_columns <- getSnapshotHashColumnNames(table)
+    if (length(hash_columns) > 0) {
+      table <- table[, setdiff(names(table), hash_columns), with = FALSE]
+    }
+
+    rows_before_deduplication <- nrow(table)
+    table <- unique(table)
+    rows_after_deduplication <- nrow(table)
+
+    pseudonymization_result[["tables"]][[table_name]] <- table
+    row_index <- which(summary[["TABLE_NAME"]] == table_name)
+    if (length(row_index) == 1) {
+      summary <- setSummaryValue(
+        summary,
+        row_index,
+        "HASH_COLUMNS_REMOVED",
+        paste(hash_columns, collapse = ", ")
+      )
+      summary <- setSummaryValue(
+        summary,
+        row_index,
+        "HASH_COLUMN_COUNT",
+        length(hash_columns)
+      )
+      summary <- setSummaryValue(
+        summary,
+        row_index,
+        "ROWS_BEFORE_DEDUPLICATION",
+        rows_before_deduplication
+      )
+      summary <- setSummaryValue(
+        summary,
+        row_index,
+        "ROWS_AFTER_DEDUPLICATION",
+        rows_after_deduplication
+      )
+      summary <- setSummaryValue(
+        summary,
+        row_index,
+        "DUPLICATE_ROWS_REMOVED",
+        rows_before_deduplication - rows_after_deduplication
+      )
+      summary <- setSummaryValue(
+        summary,
+        row_index,
+        "OUTPUT_ROWS",
+        rows_after_deduplication
+      )
+      summary <- setSummaryValue(
+        summary,
+        row_index,
+        "OUTPUT_COLUMNS",
+        length(names(table))
+      )
+    }
+  }
+
+  pseudonymization_result[["summary"]] <- data.table::as.data.table(summary)
+  pseudonymization_result
+}
+
 #' Read Snapshot Source Tables from a Database Connection
 #'
 #' Reads all source views from a DBI connection according to
@@ -507,6 +596,12 @@ pseudonymizeSnapshotDatabase <- function(
     ),
     log_steps = log_steps
   )
+
+  runPseudonymizationLogStep(2L, "Postprocess pseudonymized snapshot tables", {
+    result[["pseudonymization"]] <- postprocessPseudonymizedSnapshotTables(
+      result[["pseudonymization"]]
+    )
+  }, log_steps = log_steps)
 
   runPseudonymizationLogStep(2L, "Write pseudonymized snapshot tables", {
     result[["write_summary"]] <- writeSnapshotTargetTables(
