@@ -52,24 +52,24 @@ test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension column
   rules <- data.table::data.table(
     SOURCE = c("fhir", "snapshot_extensions"),
     SOURCE_TYPE = c("table_description", "snapshot_extension"),
-    TABLE_OR_RESOURCE = c("observation", "observation"),
-    COLUMN_NAME = c("obs_id", "value_in_reference_unit"),
+    TABLE_OR_RESOURCE = c("medicationrequest", "medicationrequest"),
+    COLUMN_NAME = c("medreq_id", "medreq_medication_code"),
     PSEUDONYMIZATION_RULE = c("keep", "keep")
   )
-  observation <- data.table::data.table(
-    obs_id = "obs-1",
-    value_in_reference_unit = 1000
+  medicationrequest <- data.table::data.table(
+    medreq_id = "req-1",
+    medreq_medication_code = "A01"
   )
 
   result <- pseudonymizeTableForSnapshot(
-    observation,
+    medicationrequest,
     rules,
-    table_name = "observation",
+    table_name = "medicationrequest",
     rule_source = "fhir",
     input_repo_path = NULL,
     keep_unmatched_columns = FALSE
   )
 
-  expect_equal(names(result$table), c("obs_id", "value_in_reference_unit"))
-  expect_equal(result$table$value_in_reference_unit, 1000)
+  expect_equal(names(result$table), c("medreq_id", "medreq_medication_code"))
+  expect_equal(result$table$medreq_medication_code, "A01")
 })

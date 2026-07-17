@@ -2,7 +2,6 @@
 
 export(createSnapshotPassthroughViews)
 export(enrichSnapshotMedicationReferenceTables)
-export(enrichSnapshotObservationTables)
 export(getDefaultSnapshotPseudonymizationRuleSources)
 export(getFhirPseudonymizationRuleReport)
 export(getPseudonymizationRuleReviewReport)

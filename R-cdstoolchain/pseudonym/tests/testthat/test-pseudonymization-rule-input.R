@@ -42,10 +42,10 @@ test_that("loadPseudonymizationRules loads table descriptions and snapshot exten
   )
   extension_file <- writeRuleInputTestWorkbook(
     data.table::data.table(
-      TABLE_NAME = "observation",
-      COLUMN_NAME = "value_ref_unit",
-      COLUMN_DESCRIPTION = "Wert in Referenzeinheit",
-      COLUMN_TYPE = "double precision",
+      TABLE_NAME = "medicationrequest",
+      COLUMN_NAME = "medreq_medication_code",
+      COLUMN_DESCRIPTION = "Code der referenzierten Medication",
+      COLUMN_TYPE = "varchar",
       PSEUDONYMIZATION_RULE = "keep"
     ),
     "snapshot_extensions"
@@ -83,7 +83,7 @@ test_that("loadPseudonymizationRules loads table descriptions and snapshot exten
   )
   expect_true(rules[rules$COLUMN_NAME == "obs_value", ][["IMPLICIT_KEEP"]])
   expect_equal(
-    rules[rules$COLUMN_NAME == "value_ref_unit", ][["SOURCE_TYPE"]],
+    rules[rules$COLUMN_NAME == "medreq_medication_code", ][["SOURCE_TYPE"]],
     "snapshot_extension"
   )
 })
@@ -91,9 +91,9 @@ test_that("loadPseudonymizationRules loads table descriptions and snapshot exten
 test_that("loadPseudonymizationRules keeps snapshot-only TODO markers visible", {
   extension_file <- writeRuleInputTestWorkbook(
     data.table::data.table(
-      TABLE_NAME = "observation",
-      COLUMN_NAME = "primary_loinc_code",
-      COLUMN_DESCRIPTION = "Primary LOINC",
+      TABLE_NAME = "medicationrequest",
+      COLUMN_NAME = "medreq_medication_code",
+      COLUMN_DESCRIPTION = "Code der referenzierten Medication",
       COLUMN_TYPE = "varchar",
       PSEUDONYMIZATION_RULE = "### TODO: NEW COLUMN ###"
     ),
