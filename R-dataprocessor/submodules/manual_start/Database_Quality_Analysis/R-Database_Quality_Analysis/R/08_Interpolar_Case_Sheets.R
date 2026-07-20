@@ -57,6 +57,80 @@ getInterpolarMainEncounterSubquery <- function(metadata) {
   )
 }
 
+getInterpolarPatientSubquery <- function(metadata) {
+  encounter_metadata <- getTableMetadata(metadata, "encounter")
+  pids_per_ward_metadata <- getTableMetadata(metadata, "pids_per_ward")
+  if (!nrow(encounter_metadata) || !nrow(pids_per_ward_metadata)) {
+    return(NA_character_)
+  }
+
+  required_encounter_columns <- c(
+    "enc_id",
+    "enc_patient_ref",
+    "enc_main_encounter_calculated_ref"
+  )
+  if (
+    !all(required_encounter_columns %in% encounter_metadata$COLUMN_NAME) ||
+    !"encounter_id" %in% pids_per_ward_metadata$COLUMN_NAME
+  ) {
+    return(NA_character_)
+  }
+
+  encounter_alias <- "interpolar_enc"
+  ward_alias <- "interpolar_ward"
+  patient_column <- quoteQualifiedIdentifier(encounter_alias, "enc_patient_ref")
+  main_encounter_column <- quoteQualifiedIdentifier(
+    encounter_alias,
+    "enc_main_encounter_calculated_ref"
+  )
+  patient_condition <- paste(
+    patient_column,
+    "IS NOT NULL AND",
+    patient_column,
+    "::text <> '' AND",
+    patient_column,
+    "::text <>",
+    quoteSqlString("invalid")
+  )
+  main_encounter_condition <- paste(
+    main_encounter_column,
+    "IS NOT NULL AND",
+    main_encounter_column,
+    "::text <> '' AND",
+    main_encounter_column,
+    "::text <>",
+    quoteSqlString("invalid")
+  )
+  from_join_clause <- paste0(
+    "\n    FROM ",
+    quoteTable(encounter_metadata$VIEW_SCHEMA[[1]], encounter_metadata$VIEW_NAME[[1]]),
+    " ",
+    quoteIdentifier(encounter_alias),
+    "\n    JOIN ",
+    quoteTable(pids_per_ward_metadata$VIEW_SCHEMA[[1]], pids_per_ward_metadata$VIEW_NAME[[1]]),
+    " ",
+    quoteIdentifier(ward_alias),
+    "\n      ON ",
+    quoteQualifiedIdentifier(encounter_alias, "enc_id"),
+    " = ",
+    quoteQualifiedIdentifier(ward_alias, "encounter_id"),
+    "\n   WHERE ",
+    patient_condition,
+    " AND ",
+    main_encounter_condition
+  )
+
+  paste0(
+    "SELECT DISTINCT ",
+    patient_column,
+    from_join_clause,
+    "\n  UNION\n  SELECT DISTINCT regexp_replace(",
+    patient_column,
+    "::text, '^.*Patient/', '')",
+    from_join_clause
+  )
+}
+
 getInterpolarEncounterCalculatedRefColumn <- function(table_metadata, grouping_columns) {
   table_name <- table_metadata$TABLE_NAME[[1]]
   if (!identical(table_metadata$TABLE_FAMILY[[1]], "FHIR")) {
@@ -104,8 +178,52 @@ getInterpolarCaseFilterCondition <- function(table_metadata, grouping_columns, m
   )
 }
 
+getInterpolarPatientFilterCondition <- function(table_metadata, grouping_columns, patient_subquery) {
+  if (is.na(patient_subquery) || is.na(grouping_columns[["pid"]])) {
+    return(NA_character_)
+  }
+
+  patient_column <- grouping_columns[["pid"]]
+  data_types <- stats::setNames(
+    if ("DATA_TYPE" %in% names(table_metadata)) table_metadata$DATA_TYPE else rep(NA_character_, nrow(table_metadata)),
+    table_metadata$COLUMN_NAME
+  )
+  paste0(
+    getValueAvailableCondition(patient_column, table_metadata, data_types),
+    " AND ",
+    quoteIdentifier(patient_column),
+    " IN (\n    ",
+    patient_subquery,
+    "\n  )"
+  )
+}
+
+getInterpolarFilterCondition <- function(
+  table_metadata,
+  grouping_columns,
+  main_encounter_subquery,
+  patient_subquery
+) {
+  reference_scope <- getResourceReferenceScope(grouping_columns, table_metadata)
+  if (identical(reference_scope, "case_dependent")) {
+    return(getInterpolarCaseFilterCondition(
+      table_metadata,
+      grouping_columns,
+      main_encounter_subquery
+    ))
+  }
+  if (identical(reference_scope, "patient_dependent")) {
+    return(getInterpolarPatientFilterCondition(
+      table_metadata,
+      grouping_columns,
+      patient_subquery
+    ))
+  }
+  NA_character_
+}
+
 initializeInterpolarCaseSheet <- function(result, table_names) {
-  output_columns <- setdiff(names(result), c("TABLE_FAMILY", "ORDINAL_POSITION"))
+  output_columns <- setdiff(names(result), c("TABLE_FAMILY", "RESOURCE_REFERENCE_SCOPE", "ORDINAL_POSITION"))
   sheet <- data.table::copy(result[TABLE_NAME %in% table_names])
   if (!nrow(sheet)) {
     return(sheet[, ..output_columns])
@@ -133,6 +251,7 @@ createInterpolarCaseSheet <- function(
   query_fun = etlutils::dbGetReadOnlyQuery
 ) {
   main_encounter_subquery <- getInterpolarMainEncounterSubquery(metadata)
+  patient_subquery <- getInterpolarPatientSubquery(metadata)
   if (is.na(main_encounter_subquery)) {
     logProgress(
       "Skipping ",
@@ -164,10 +283,11 @@ createInterpolarCaseSheet <- function(
       next
     }
 
-    row_filter_condition <- getInterpolarCaseFilterCondition(
+    row_filter_condition <- getInterpolarFilterCondition(
       table_metadata,
       grouping_columns,
-      main_encounter_subquery
+      main_encounter_subquery,
+      patient_subquery
     )
     if (is.na(row_filter_condition)) {
       next

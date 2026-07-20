@@ -68,6 +68,45 @@ getGroupingPrefix <- function(resource_id_column) {
   sub("_id$", "", resource_id_column)
 }
 
+getResourceReferenceScope <- function(grouping_columns, table_metadata = NULL) {
+  if (!is.na(grouping_columns[["case_id"]])) {
+    return("case_dependent")
+  }
+  if (!is.null(table_metadata)) {
+    grouping_prefix <- getGroupingPrefix(grouping_columns[["resource_id"]])
+    calculated_ref_column <- paste0(grouping_prefix, "_encounter_calculated_ref")
+    if (calculated_ref_column %in% table_metadata$COLUMN_NAME) {
+      return("case_dependent")
+    }
+  }
+  if (!is.na(grouping_columns[["pid"]])) {
+    return("patient_dependent")
+  }
+  "case_patient_independent"
+}
+
+getResourceReferenceScopeOrder <- function(reference_scope) {
+  match(
+    reference_scope,
+    c("patient_dependent", "case_dependent", "case_patient_independent"),
+    nomatch = 4L
+  )
+}
+
+orderByResourceReferenceScope <- function(result) {
+  if (!"RESOURCE_REFERENCE_SCOPE" %in% names(result)) {
+    return(result[order(TABLE_FAMILY, TABLE_NAME, ORDINAL_POSITION)])
+  }
+  result[
+    order(
+      TABLE_FAMILY,
+      getResourceReferenceScopeOrder(RESOURCE_REFERENCE_SCOPE),
+      TABLE_NAME,
+      ORDINAL_POSITION
+    )
+  ]
+}
+
 inferGroupingColumns <- function(table_metadata, config) {
   table_name <- table_metadata$TABLE_NAME[[1]]
   columns <- table_metadata$COLUMN_NAME

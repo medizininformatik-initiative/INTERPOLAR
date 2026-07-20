@@ -5,6 +5,7 @@ calculateCounts <- function(
   history_metadata = NULL
 ) {
   result <- unique(metadata[, .(TABLE_FAMILY, TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, ORDINAL_POSITION)])
+  result[, RESOURCE_REFERENCE_SCOPE := NA_character_]
   result[, (DATABASE_QUALITY_ANALYSIS_GROUPING_ROLE_COLUMN) := NA_character_]
   if (isTRUE(config$include_value_datetime_columns)) {
     result[, (DATABASE_QUALITY_ANALYSIS_VALUE_DATETIME_COLUMNS) := as.POSIXct(NA)]
@@ -19,6 +20,10 @@ calculateCounts <- function(
     table_name <- table_names[[table_index]]
     table_metadata <- metadata[TABLE_NAME == table_name][order(ORDINAL_POSITION)]
     grouping_columns <- inferGroupingColumns(table_metadata, config)
+    result[
+      TABLE_NAME == table_name,
+      RESOURCE_REFERENCE_SCOPE := getResourceReferenceScope(grouping_columns, table_metadata)
+    ]
     table_result <- result[TABLE_NAME == table_name]
     table_result <- addGroupingRoles(table_result, grouping_columns)
     result[TABLE_NAME == table_name, (DATABASE_QUALITY_ANALYSIS_GROUPING_ROLE_COLUMN) :=
@@ -118,9 +123,10 @@ calculateCounts <- function(
     DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS,
     intersect(DATABASE_QUALITY_ANALYSIS_VALUE_DATETIME_COLUMNS, names(result)),
     "TABLE_FAMILY",
+    "RESOURCE_REFERENCE_SCOPE",
     "ORDINAL_POSITION"
   ))
-  result[order(TABLE_FAMILY, TABLE_NAME, ORDINAL_POSITION)]
+  orderByResourceReferenceScope(result)
 }
 
 formatRunTimestamp <- function(timestamp) {
@@ -210,7 +216,7 @@ createMetadataSheet <- function(
 }
 
 splitResultForExcel <- function(result) {
-  output_columns <- setdiff(names(result), c("TABLE_FAMILY", "ORDINAL_POSITION"))
+  output_columns <- setdiff(names(result), c("TABLE_FAMILY", "RESOURCE_REFERENCE_SCOPE", "ORDINAL_POSITION"))
   non_fhir_output_columns <- setdiff(
     output_columns,
     DATABASE_QUALITY_ANALYSIS_VALUE_DATETIME_COLUMNS[c("first_meta_last_updated", "last_meta_last_updated")]

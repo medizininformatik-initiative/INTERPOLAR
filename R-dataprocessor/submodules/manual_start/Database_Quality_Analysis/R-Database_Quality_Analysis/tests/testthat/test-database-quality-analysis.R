@@ -242,6 +242,21 @@ test_that("database quality analysis grouping columns use override for frontend 
   expect_equal(result[["case_id"]], "fall_id")
 })
 
+test_that("database quality analysis resource reference scopes are inferred from grouping columns", {
+  expect_equal(
+    getResourceReferenceScope(c(resource_id = "pat_id", pid = "pat_id", case_id = NA_character_)),
+    "patient_dependent"
+  )
+  expect_equal(
+    getResourceReferenceScope(c(resource_id = "obs_id", pid = "obs_patient_ref", case_id = "obs_encounter_ref")),
+    "case_dependent"
+  )
+  expect_equal(
+    getResourceReferenceScope(c(resource_id = "loc_id", pid = NA_character_, case_id = NA_character_)),
+    "case_patient_independent"
+  )
+})
+
 test_that("database quality analysis grouping columns infer encounter hierarchy columns", {
   config <- list(grouping_overrides = parseGroupingOverrides(character()))
   table_metadata <- data.table::data.table(
@@ -496,12 +511,14 @@ test_that("database quality analysis creates INTERPOLAR sheet for encounter-rela
     "count per PID" = 99L,
     "count per Fall-Id" = 99L,
     TABLE_FAMILY = "FHIR",
+    RESOURCE_REFERENCE_SCOPE = c(rep("case_dependent", 3), rep("case_dependent", 4), rep("patient_dependent", 2)),
     ORDINAL_POSITION = metadata[TABLE_FAMILY == "FHIR", ORDINAL_POSITION],
     check.names = FALSE
   )
+  result <- orderByResourceReferenceScope(result)
   config <- list(
     count_batch_size = 100,
-    grouping_overrides = parseGroupingOverrides(character())
+    grouping_overrides = parseGroupingOverrides("patient|pat_id|pat_id|")
   )
   query_state <- new.env(parent = emptyenv())
   query_state$seen_queries <- character()
@@ -513,11 +530,13 @@ test_that("database quality analysis creates INTERPOLAR sheet for encounter-rela
 
   sheet <- createInterpolarCaseSheet(metadata, result, config, query_fun = query_fun)
 
-  expect_equal(unique(sheet$TABLE_NAME), c("encounter", "observation"))
-  expect_false("patient" %in% sheet$TABLE_NAME)
+  expect_equal(unique(sheet$TABLE_NAME), c("patient", "encounter", "observation"))
+  expect_true("patient" %in% sheet$TABLE_NAME)
   expect_equal(sheet[TABLE_NAME == "observation" & COLUMN_NAME == "obs_value", "count per resource_id"][[1]], 1L)
   expect_true(any(grepl('"obs_encounter_calculated_ref" IN', query_state$seen_queries, fixed = TRUE)))
   expect_true(any(grepl('"enc_main_encounter_calculated_ref" IN', query_state$seen_queries, fixed = TRUE)))
+  expect_true(any(grepl('"pat_id" IN', query_state$seen_queries, fixed = TRUE)))
+  expect_true(any(grepl("regexp_replace", query_state$seen_queries, fixed = TRUE)))
 })
 
 test_that("database quality analysis INTERPOLAR sheet fills value datetime columns", {
@@ -839,6 +858,46 @@ test_that("database quality analysis counts are mapped back to normalized result
   expect_equal(result[COLUMN_NAME == "obs_patient_ref", USED_AS_GROUPING_FOR], "count per PID")
   expect_true(all(is.na(result[["count per Fall-Id"]])))
   expect_equal(result[COLUMN_NAME == "obs_value", "count per resource_id"][[1]], 5L)
+})
+
+test_that("database quality analysis FHIR rows are sorted by reference scope", {
+  config <- list(
+    count_batch_size = 100,
+    grouping_overrides = parseGroupingOverrides("patient|pat_id|pat_id|"),
+    view_prefix = "v_",
+    value_import_datetime_column = "input_datetime",
+    include_value_datetime_columns = FALSE
+  )
+  metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = c(
+      rep("v_location_last_version", 2),
+      rep("v_observation_last_version", 3),
+      rep("v_patient_last_version", 2)
+    ),
+    TABLE_NAME = c(rep("location", 2), rep("observation", 3), rep("patient", 2)),
+    TABLE_FAMILY = "FHIR",
+    COLUMN_NAME = c(
+      "loc_id",
+      "loc_name",
+      "obs_id",
+      "obs_patient_ref",
+      "obs_encounter_ref",
+      "pat_id",
+      "pat_birth_date"
+    ),
+    COLUMN_DESCRIPTION = NA_character_,
+    ORDINAL_POSITION = c(1:2, 1:3, 1:2),
+    DATA_TYPE = "character varying"
+  )
+  query_fun <- function(query, lock_id = NULL) {
+    aliases <- unique(regmatches(query, gregexpr("count_[0-9]+", query))[[1]])
+    data.table::as.data.table(as.list(stats::setNames(rep(1L, length(aliases)), aliases)))
+  }
+
+  result <- calculateCounts(metadata, config, query_fun = query_fun)
+
+  expect_equal(unique(result$TABLE_NAME), c("patient", "observation", "location"))
 })
 
 test_that("database quality analysis counts can skip value datetime columns", {
