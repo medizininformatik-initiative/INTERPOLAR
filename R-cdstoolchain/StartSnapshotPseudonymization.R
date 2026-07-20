@@ -104,6 +104,10 @@ tryCatch(
       keep_unmatched_columns = TRUE,
       enrich_tables = function(tables) {
         tables <- pseudonym::enrichSnapshotCaseMetricTables(tables)
+        tables <- pseudonym::enrichSnapshotObservationTables(
+          tables,
+          input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]]
+        )
         pseudonym::enrichSnapshotMedicationReferenceTables(tables)
       },
       overwrite_tables = FALSE,

@@ -50,28 +50,37 @@ test_that("getSnapshotSourceViewPlan maps frontend rule names to frontend DB tab
 
 test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension columns", {
   rules <- data.table::data.table(
-    SOURCE = c("fhir", "snapshot_extensions"),
-    SOURCE_TYPE = c("table_description", "snapshot_extension"),
-    TABLE_OR_RESOURCE = c("medicationrequest", "medicationrequest"),
-    COLUMN_NAME = c("medreq_id", "medreq_medication_code"),
-    PSEUDONYMIZATION_RULE = c("keep", "keep")
+    SOURCE = c("fhir", rep("snapshot_extensions", 3)),
+    SOURCE_TYPE = c("table_description", rep("snapshot_extension", 3)),
+    TABLE_OR_RESOURCE = rep("observation", 4),
+    COLUMN_NAME = c(
+      "obs_id",
+      "value_in_reference_unit",
+      "reference_unit",
+      "primary_loinc_code"
+    ),
+    PSEUDONYMIZATION_RULE = "keep"
   )
-  medicationrequest <- data.table::data.table(
-    medreq_id = "req-1",
-    medreq_medication_code = "A01"
+  observation <- data.table::data.table(
+    obs_id = "obs-1",
+    value_in_reference_unit = 1000,
+    reference_unit = "umol/L",
+    primary_loinc_code = "9999-9"
   )
 
   result <- pseudonymizeTableForSnapshot(
-    medicationrequest,
+    observation,
     rules,
-    table_name = "medicationrequest",
+    table_name = "observation",
     rule_source = "fhir",
     input_repo_path = NULL,
     keep_unmatched_columns = FALSE
   )
 
-  expect_equal(names(result$table), c("medreq_id", "medreq_medication_code"))
-  expect_equal(result$table$medreq_medication_code, "A01")
+  expect_equal(names(result$table), names(observation))
+  expect_equal(result$table$value_in_reference_unit, 1000)
+  expect_equal(result$table$reference_unit, "umol/L")
+  expect_equal(result$table$primary_loinc_code, "9999-9")
 })
 
 test_that("pseudonymizeTableForSnapshot keeps unmatched source columns by default", {
