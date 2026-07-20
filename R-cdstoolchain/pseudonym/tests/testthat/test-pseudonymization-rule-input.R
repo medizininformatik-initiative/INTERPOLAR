@@ -275,13 +275,16 @@ test_that("rule review report defaults to outputLocal reports directory", {
     list(local_dir = file.path(test_output_dir, "pseudonym")),
     envir = .GlobalEnv
   )
-  on.exit({
-    if (is.null(old_module_dirs)) {
-      rm("MODULE_DIRS", envir = .GlobalEnv)
-    } else {
-      assign("MODULE_DIRS", old_module_dirs, envir = .GlobalEnv)
-    }
-  }, add = TRUE)
+  on.exit(
+    {
+      if (is.null(old_module_dirs)) {
+        rm("MODULE_DIRS", envir = .GlobalEnv)
+      } else {
+        assign("MODULE_DIRS", old_module_dirs, envir = .GlobalEnv)
+      }
+    },
+    add = TRUE
+  )
 
   writePseudonymizationRuleReviewReport(
     rules,

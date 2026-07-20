@@ -47,49 +47,59 @@ summarizePseudonymizationReviewProblems <- function(review_report) {
 #' @return A list with `tables`, `summary`, `rules`, and `review_report`.
 #' @export
 pseudonymizeSnapshotTables <- function(
-    tables,
-    table_descriptions,
-    snapshot_extensions = NULL,
-    rules = NULL,
-    input_repo_path = NULL,
-    fail_on_review_problems = TRUE,
-    write_review_report = TRUE,
-    review_report_file = NA,
-    keep_unmatched_columns = TRUE,
-    log_steps = TRUE) {
+  tables,
+  table_descriptions,
+  snapshot_extensions = NULL,
+  rules = NULL,
+  input_repo_path = NULL,
+  fail_on_review_problems = TRUE,
+  write_review_report = TRUE,
+  review_report_file = NA,
+  keep_unmatched_columns = TRUE,
+  log_steps = TRUE) {
   result <- list()
 
-  runPseudonymizationLogStep(2L, "Load pseudonymization rules", {
-    if (is.null(rules)) {
-      result[["rules"]] <- loadPseudonymizationRules(
-        table_descriptions = table_descriptions,
-        snapshot_extensions = snapshot_extensions
-      )
-    } else {
-      result[["rules"]] <- data.table::as.data.table(data.table::copy(rules))
-    }
-  }, log_steps = log_steps)
+  runPseudonymizationLogStep(2L,
+    "Load pseudonymization rules",
+    {
+      if (is.null(rules)) {
+        result[["rules"]] <- loadPseudonymizationRules(
+          table_descriptions = table_descriptions,
+          snapshot_extensions = snapshot_extensions
+        )
+      } else {
+        result[["rules"]] <- data.table::as.data.table(data.table::copy(rules))
+      }
+    },
+    log_steps = log_steps
+  )
 
-  runPseudonymizationLogStep(2L, "Review pseudonymization rules", {
-    result[["review_report"]] <- getPseudonymizationRuleReviewReport(
-      result[["rules"]],
-      input_repo_path = input_repo_path
-    )
-    if (isTRUE(write_review_report)) {
-      writePseudonymizationRuleReviewReport(
+  runPseudonymizationLogStep(2L,
+    "Review pseudonymization rules",
+    {
+      result[["review_report"]] <- getPseudonymizationRuleReviewReport(
         result[["rules"]],
-        file_name = review_report_file,
         input_repo_path = input_repo_path
       )
-    }
-    if (isTRUE(fail_on_review_problems) &&
-        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])) {
-      stop(
-        "Pseudonymization rule review contains blocking problems:\n",
-        paste(summarizePseudonymizationReviewProblems(result[["review_report"]]), collapse = "\n")
-      )
-    }
-  }, log_steps = log_steps)
+      if (isTRUE(write_review_report)) {
+        writePseudonymizationRuleReviewReport(
+          result[["rules"]],
+          file_name = review_report_file,
+          input_repo_path = input_repo_path
+        )
+      }
+      if (
+        isTRUE(fail_on_review_problems) &&
+        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
+      ) {
+        stop(
+          "Pseudonymization rule review contains blocking problems:\n",
+          paste(summarizePseudonymizationReviewProblems(result[["review_report"]]), collapse = "\n")
+        )
+      }
+    },
+    log_steps = log_steps
+  )
 
   table_result <- pseudonymizeTables(
     tables = tables,

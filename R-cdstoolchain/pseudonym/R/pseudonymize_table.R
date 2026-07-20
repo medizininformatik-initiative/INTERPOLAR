@@ -98,8 +98,10 @@ getRuleCondition <- function(parsed_rule) {
   }
 
   conditions <- parsed_rule$arguments[!grepl("^[A-Za-z]+\\s*=", parsed_rule$arguments)]
-  if (parsed_rule$action == "pseudonym" && length(conditions) > 0 &&
-      grepl("^\".*\"$", conditions[1])) {
+  if (
+    parsed_rule$action == "pseudonym" && length(conditions) > 0 &&
+    grepl("^\".*\"$", conditions[1])
+  ) {
     conditions <- conditions[-1]
   }
   conditions <- conditions[!grepl("^\\d+$", conditions)]
@@ -224,9 +226,7 @@ pseudonymizationHashReference <- function(values, max_length = NA_integer_) {
 
 getPseudonymMappingFilePath <- function(input_repo_path) {
   if (is.null(input_repo_path) || is.na(input_repo_path) || !nzchar(input_repo_path)) {
-    stop(
-      "input_repo_path must be provided for pseudonym(sheet = ...) rules."
-    )
+    stop("input_repo_path must be provided for pseudonym(sheet = ...) rules.")
   }
   file.path(input_repo_path, PSEUDONYM_MAPPING_FILE_NAME)
 }
@@ -259,8 +259,7 @@ loadPseudonymMappingSheet <- function(input_repo_path, sheet_name) {
 
   mapping <- mapping[
     !(is.na(mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]]) &
-        is.na(mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]])),
-    ,
+      is.na(mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]])), ,
     drop = FALSE
   ]
   empty_key_rows <- is.na(mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]]) |
@@ -460,9 +459,9 @@ evaluateRuleCondition <- function(condition, table, table_description, fhir_expr
 }
 
 applyHashRuleToVector <- function(
-    values,
-    max_length = NA_integer_,
-    fhir_expression = NA_character_) {
+  values,
+  max_length = NA_integer_,
+  fhir_expression = NA_character_) {
   if (isFhirReferenceExpression(fhir_expression)) {
     return(pseudonymizationHashReference(
       values,
@@ -473,11 +472,11 @@ applyHashRuleToVector <- function(
 }
 
 applyPseudonymizationRuleToVector <- function(
-    values,
-    rule,
-    column_name = NA_character_,
-    mapping_context = NULL,
-    fhir_expression = NA_character_) {
+  values,
+  rule,
+  column_name = NA_character_,
+  mapping_context = NULL,
+  fhir_expression = NA_character_) {
   rule <- normalizePseudonymizationRule(rule)
   parsed_rule <- parsePseudonymizationRuleCall(rule)
   action <- parsed_rule$action
@@ -492,8 +491,10 @@ applyPseudonymizationRuleToVector <- function(
   }
   if (action == "cryptoHash") {
     max_length <- suppressWarnings(as.integer(getRuleArgument(parsed_rule, "maxLength")))
-    if (is.na(max_length) && length(parsed_rule$arguments) > 0 &&
-        grepl("^\\d+$", parsed_rule$arguments[1])) {
+    if (
+      is.na(max_length) && length(parsed_rule$arguments) > 0 &&
+      grepl("^\\d+$", parsed_rule$arguments[1])
+    ) {
       max_length <- as.integer(parsed_rule$arguments[1])
     }
     if (is.na(max_length)) {
@@ -507,8 +508,10 @@ applyPseudonymizationRuleToVector <- function(
   }
   if (action == "pseudonymize") {
     max_length <- suppressWarnings(as.integer(getRuleArgument(parsed_rule, "maxLength")))
-    if (is.na(max_length) && length(parsed_rule$arguments) > 0 &&
-        grepl("^\\d+$", parsed_rule$arguments[1])) {
+    if (
+      is.na(max_length) && length(parsed_rule$arguments) > 0 &&
+      grepl("^\\d+$", parsed_rule$arguments[1])
+    ) {
       max_length <- as.integer(parsed_rule$arguments[1])
     }
     if (is.na(max_length)) {
@@ -713,12 +716,12 @@ getPseudonymizationRulesForTable <- function(rules, table_name, source = NULL) {
 }
 
 pseudonymizeTableForSnapshot <- function(
-    table,
-    rules,
-    table_name,
-    rule_source = NULL,
-    input_repo_path,
-    keep_unmatched_columns) {
+  table,
+  rules,
+  table_name,
+  rule_source = NULL,
+  input_repo_path,
+  keep_unmatched_columns) {
   table_rules <- getPseudonymizationRulesForTable(rules, table_name, source = rule_source)
   described_columns <- unique(table_rules[["COLUMN_NAME"]])
   available_columns <- described_columns[described_columns %in% names(table)]
@@ -773,11 +776,11 @@ pseudonymizeTableForSnapshot <- function(
 #'   `summary`, a data.table describing processed and skipped tables.
 #' @export
 pseudonymizeTables <- function(
-    tables,
-    rules,
-    input_repo_path = NULL,
-    keep_unmatched_columns = TRUE,
-    log_steps = TRUE) {
+  tables,
+  rules,
+  input_repo_path = NULL,
+  keep_unmatched_columns = TRUE,
+  log_steps = TRUE) {
   if (is.null(names(tables)) || any(!nzchar(names(tables)))) {
     stop("tables must be a named list.")
   }
@@ -800,25 +803,29 @@ pseudonymizeTables <- function(
     STATUS = character()
   )
 
-  runPseudonymizationLogStep(2L, "Pseudonymize snapshot tables", {
-    for (table_name in tables_to_process) {
-      table_result <- runPseudonymizationLogStep(
-        3L,
-        paste0("Pseudonymize table ", table_name),
-        pseudonymizeTableForSnapshot(
-          tables[[table_name]],
-          rules,
-          table_name,
-          rule_source = NULL,
-          input_repo_path = input_repo_path,
-          keep_unmatched_columns = keep_unmatched_columns
-        ),
-        log_steps = log_steps
-      )
-      result_tables[[table_name]] <- table_result$table
-      summary <- data.table::rbindlist(list(summary, table_result$summary), fill = TRUE)
-    }
-  }, log_steps = log_steps)
+  runPseudonymizationLogStep(2L,
+    "Pseudonymize snapshot tables",
+    {
+      for (table_name in tables_to_process) {
+        table_result <- runPseudonymizationLogStep(
+          3L,
+          paste0("Pseudonymize table ", table_name),
+          pseudonymizeTableForSnapshot(
+            tables[[table_name]],
+            rules,
+            table_name,
+            rule_source = NULL,
+            input_repo_path = input_repo_path,
+            keep_unmatched_columns = keep_unmatched_columns
+          ),
+          log_steps = log_steps
+        )
+        result_tables[[table_name]] <- table_result$table
+        summary <- data.table::rbindlist(list(summary, table_result$summary), fill = TRUE)
+      }
+    },
+    log_steps = log_steps
+  )
 
   if (length(skipped_tables) > 0) {
     skipped_summary <- data.table::data.table(

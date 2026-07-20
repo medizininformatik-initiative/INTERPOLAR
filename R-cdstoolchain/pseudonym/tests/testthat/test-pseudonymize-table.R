@@ -469,9 +469,7 @@ test_that("pseudonymizeTables keeps unmatched columns by default", {
       gender = c("female", "male"),
       extra_admin_column = c("x", "y")
     ),
-    cron_job = data.table::data.table(
-      id = "internal"
-    )
+    cron_job = data.table::data.table(id = "internal")
   )
   rules <- data.table::data.table(
     TABLE_OR_RESOURCE = "patient",

@@ -238,10 +238,10 @@ loadPseudonymizationRuleSources <- function(sources, source_type, default_sheet_
 #'
 #' @export
 loadPseudonymizationRules <- function(
-    table_descriptions,
-    snapshot_extensions = NULL,
-    default_table_description_sheet = "table_description",
-    default_snapshot_extension_sheet = DEFAULT_SNAPSHOT_EXTENSION_SHEET) {
+  table_descriptions,
+  snapshot_extensions = NULL,
+  default_table_description_sheet = "table_description",
+  default_snapshot_extension_sheet = DEFAULT_SNAPSHOT_EXTENSION_SHEET) {
   table_rules <- loadPseudonymizationRuleSources(
     table_descriptions,
     source_type = "table_description",
@@ -590,10 +590,10 @@ getPseudonymizationRuleReviewReport <- function(rules, input_repo_path = NULL) {
 #'
 #' @export
 writePseudonymizationRuleReviewReport <- function(
-    rules,
-    file_name = NA,
-    input_repo_path = NULL,
-    filename_without_extension = "pseudonymization_rule_review") {
+  rules,
+  file_name = NA,
+  input_repo_path = NULL,
+  filename_without_extension = "pseudonymization_rule_review") {
   report <- getPseudonymizationRuleReviewReport(
     rules,
     input_repo_path = input_repo_path

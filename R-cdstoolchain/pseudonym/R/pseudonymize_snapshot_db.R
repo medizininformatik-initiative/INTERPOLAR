@@ -19,8 +19,7 @@ snapshotRuleTablePlan <- function(rules) {
     RULE_SOURCE = table_rows[["SOURCE"]]
   ))
   result <- result[
-    !is.na(result[["RULE_TABLE_NAME"]]) & nzchar(result[["RULE_TABLE_NAME"]]),
-    ,
+    !is.na(result[["RULE_TABLE_NAME"]]) & nzchar(result[["RULE_TABLE_NAME"]]), ,
     drop = FALSE
   ]
   is_frontend_source <- !is.na(result[["RULE_SOURCE"]]) &
@@ -74,16 +73,15 @@ snapshotRelationExists <- function(connection, name, schema = NULL) {
 #' @return A data.table with one row for each materialized source relation.
 #' @export
 getSnapshotSourceViewPlan <- function(
-    rules,
-    source_view_prefix = "v_",
-    last_version_suffix = "_last_version",
-    tables = NULL) {
+  rules,
+  source_view_prefix = "v_",
+  last_version_suffix = "_last_version",
+  tables = NULL) {
   table_plan <- snapshotRuleTablePlan(rules)
   if (!is.null(tables)) {
     table_plan <- table_plan[
       tolower(table_plan[["DB_TABLE_NAME"]]) %in% tolower(tables) |
-        tolower(table_plan[["RULE_TABLE_NAME"]]) %in% tolower(tables),
-      ,
+        tolower(table_plan[["RULE_TABLE_NAME"]]) %in% tolower(tables), ,
       drop = FALSE
     ]
   }
@@ -131,12 +129,12 @@ getSnapshotSourceViewPlan <- function(
 }
 
 pseudonymizeSnapshotMaterializedTables <- function(
-    tables,
-    materialization_plan,
-    rules,
-    input_repo_path,
-    keep_unmatched_columns,
-    log_steps) {
+  tables,
+  materialization_plan,
+  rules,
+  input_repo_path,
+  keep_unmatched_columns,
+  log_steps) {
   result_tables <- list()
   summary <- data.table::data.table()
 
@@ -248,12 +246,12 @@ postprocessPseudonymizedSnapshotTables <- function(pseudonymization_result) {
 #' @return A named list of data.tables.
 #' @export
 readSnapshotSourceTables <- function(
-    connection,
-    rules,
-    source_schema = NULL,
-    source_view_prefix = "v_",
-    last_version_suffix = "_last_version",
-    tables = NULL) {
+  connection,
+  rules,
+  source_schema = NULL,
+  source_view_prefix = "v_",
+  last_version_suffix = "_last_version",
+  tables = NULL) {
   plan <- getSnapshotSourceViewPlan(
     rules = rules,
     source_view_prefix = source_view_prefix,
@@ -296,11 +294,11 @@ readSnapshotSourceTables <- function(
 #' @return A data.table with one row per written table.
 #' @export
 writeSnapshotTargetTables <- function(
-    connection,
-    tables,
-    target_schema = "db_log",
-    overwrite = FALSE,
-    temporary = FALSE) {
+  connection,
+  tables,
+  target_schema = "db_log",
+  overwrite = FALSE,
+  temporary = FALSE) {
   if (is.null(names(tables)) || any(!nzchar(names(tables)))) {
     stop("tables must be a named list.")
   }
@@ -357,11 +355,11 @@ writeSnapshotTargetTables <- function(
 #' @return A data.table with one row per created view.
 #' @export
 createSnapshotPassthroughViews <- function(
-    connection,
-    materialization_plan,
-    table_schema = "db_log",
-    view_schema = "db2dataprocessor_out",
-    replace = FALSE) {
+  connection,
+  materialization_plan,
+  table_schema = "db_log",
+  view_schema = "db2dataprocessor_out",
+  replace = FALSE) {
   snapshotEnsureSchema(connection, view_schema)
 
   summary <- data.table::data.table(
@@ -491,29 +489,29 @@ writeSnapshotPostprocessingReport <- function(summary, file_name = NA) {
 #' @return A list with source tables, pseudonymization result, and write summary.
 #' @export
 pseudonymizeSnapshotDatabase <- function(
-    source_connection,
-    target_connection,
-    table_descriptions = NULL,
-    snapshot_extensions = NULL,
-    project_root = ".",
-    input_repo_path = NULL,
-    source_schema = NULL,
-    target_table_schema = "db_log",
-    target_view_schema = "db2dataprocessor_out",
-    source_view_prefix = "v_",
-    last_version_suffix = "_last_version",
-    tables = NULL,
-    enrich_tables = NULL,
-    fail_on_review_problems = TRUE,
-    write_review_report = TRUE,
-    review_report_file = NA,
-    enrichment_review_report_file = NA,
-    postprocessing_report_file = NA,
-    keep_unmatched_columns = TRUE,
-    overwrite_tables = FALSE,
-    replace_views = FALSE,
-    temporary = FALSE,
-    log_steps = TRUE) {
+  source_connection,
+  target_connection,
+  table_descriptions = NULL,
+  snapshot_extensions = NULL,
+  project_root = ".",
+  input_repo_path = NULL,
+  source_schema = NULL,
+  target_table_schema = "db_log",
+  target_view_schema = "db2dataprocessor_out",
+  source_view_prefix = "v_",
+  last_version_suffix = "_last_version",
+  tables = NULL,
+  enrich_tables = NULL,
+  fail_on_review_problems = TRUE,
+  write_review_report = TRUE,
+  review_report_file = NA,
+  enrichment_review_report_file = NA,
+  postprocessing_report_file = NA,
+  keep_unmatched_columns = TRUE,
+  overwrite_tables = FALSE,
+  replace_views = FALSE,
+  temporary = FALSE,
+  log_steps = TRUE) {
   if (is.null(table_descriptions)) {
     rule_sources <- getDefaultSnapshotPseudonymizationRuleSources(project_root = project_root)
     table_descriptions <- rule_sources[["table_descriptions"]]
@@ -521,62 +519,84 @@ pseudonymizeSnapshotDatabase <- function(
   }
 
   result <- list()
-  runPseudonymizationLogStep(2L, "Load pseudonymization rules for snapshot DB", {
-    result[["rules"]] <- loadPseudonymizationRules(
-      table_descriptions = table_descriptions,
-      snapshot_extensions = snapshot_extensions
-    )
-  }, log_steps = log_steps)
+  runPseudonymizationLogStep(2L,
+    "Load pseudonymization rules for snapshot DB",
+    {
+      result[["rules"]] <- loadPseudonymizationRules(
+        table_descriptions = table_descriptions,
+        snapshot_extensions = snapshot_extensions
+      )
+    },
+    log_steps = log_steps
+  )
 
-  runPseudonymizationLogStep(2L, "Read snapshot source tables", {
-    result[["source_tables"]] <- readSnapshotSourceTables(
-      source_connection,
-      rules = result[["rules"]],
-      source_schema = source_schema,
-      source_view_prefix = source_view_prefix,
-      last_version_suffix = last_version_suffix,
-      tables = tables
-    )
-  }, log_steps = log_steps)
+  runPseudonymizationLogStep(2L,
+    "Read snapshot source tables",
+    {
+      result[["source_tables"]] <- readSnapshotSourceTables(
+        source_connection,
+        rules = result[["rules"]],
+        source_schema = source_schema,
+        source_view_prefix = source_view_prefix,
+        last_version_suffix = last_version_suffix,
+        tables = tables
+      )
+    },
+    log_steps = log_steps
+  )
 
   if (!is.null(enrich_tables)) {
-    runPseudonymizationLogStep(2L, "Enrich snapshot source tables", {
-      result[["source_tables"]] <- enrich_tables(result[["source_tables"]])
-    }, log_steps = log_steps)
+    runPseudonymizationLogStep(2L,
+      "Enrich snapshot source tables",
+      {
+        result[["source_tables"]] <- enrich_tables(result[["source_tables"]])
+      },
+      log_steps = log_steps
+    )
   }
 
-  runPseudonymizationLogStep(2L, "Review snapshot enrichment", {
-    result[["enrichment_review_report"]] <- list(
-      unmatched_medication_references = getSnapshotMedicationReferenceReview(result[["source_tables"]])
-    )
-    if (isTRUE(write_review_report)) {
-      writeSnapshotEnrichmentReviewReport(
-        result[["enrichment_review_report"]][["unmatched_medication_references"]],
-        file_name = enrichment_review_report_file
+  runPseudonymizationLogStep(2L,
+    "Review snapshot enrichment",
+    {
+      result[["enrichment_review_report"]] <- list(
+        unmatched_medication_references = getSnapshotMedicationReferenceReview(result[["source_tables"]])
       )
-    }
-  }, log_steps = log_steps)
+      if (isTRUE(write_review_report)) {
+        writeSnapshotEnrichmentReviewReport(
+          result[["enrichment_review_report"]][["unmatched_medication_references"]],
+          file_name = enrichment_review_report_file
+        )
+      }
+    },
+    log_steps = log_steps
+  )
 
-  runPseudonymizationLogStep(2L, "Review pseudonymization rules", {
-    result[["review_report"]] <- getPseudonymizationRuleReviewReport(
-      result[["rules"]],
-      input_repo_path = input_repo_path
-    )
-    if (isTRUE(write_review_report)) {
-      writePseudonymizationRuleReviewReport(
+  runPseudonymizationLogStep(2L,
+    "Review pseudonymization rules",
+    {
+      result[["review_report"]] <- getPseudonymizationRuleReviewReport(
         result[["rules"]],
-        file_name = review_report_file,
         input_repo_path = input_repo_path
       )
-    }
-    if (isTRUE(fail_on_review_problems) &&
-        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])) {
-      stop(
-        "Pseudonymization rule review contains blocking problems:\n",
-        paste(summarizePseudonymizationReviewProblems(result[["review_report"]]), collapse = "\n")
-      )
-    }
-  }, log_steps = log_steps)
+      if (isTRUE(write_review_report)) {
+        writePseudonymizationRuleReviewReport(
+          result[["rules"]],
+          file_name = review_report_file,
+          input_repo_path = input_repo_path
+        )
+      }
+      if (
+        isTRUE(fail_on_review_problems) &&
+        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
+      ) {
+        stop(
+          "Pseudonymization rule review contains blocking problems:\n",
+          paste(summarizePseudonymizationReviewProblems(result[["review_report"]]), collapse = "\n")
+        )
+      }
+    },
+    log_steps = log_steps
+  )
 
   materialization_plan <- attr(result[["source_tables"]], "materialization_plan")
   result[["pseudonymization"]] <- runPseudonymizationLogStep(
@@ -593,38 +613,50 @@ pseudonymizeSnapshotDatabase <- function(
     log_steps = log_steps
   )
 
-  runPseudonymizationLogStep(2L, "Postprocess pseudonymized snapshot tables", {
-    result[["pseudonymization"]] <- postprocessPseudonymizedSnapshotTables(
-      result[["pseudonymization"]]
-    )
-    result[["postprocessing_report"]] <- result[["pseudonymization"]][["summary"]]
-    if (isTRUE(write_review_report)) {
-      writeSnapshotPostprocessingReport(
-        result[["postprocessing_report"]],
-        file_name = postprocessing_report_file
+  runPseudonymizationLogStep(2L,
+    "Postprocess pseudonymized snapshot tables",
+    {
+      result[["pseudonymization"]] <- postprocessPseudonymizedSnapshotTables(
+        result[["pseudonymization"]]
       )
-    }
-  }, log_steps = log_steps)
+      result[["postprocessing_report"]] <- result[["pseudonymization"]][["summary"]]
+      if (isTRUE(write_review_report)) {
+        writeSnapshotPostprocessingReport(
+          result[["postprocessing_report"]],
+          file_name = postprocessing_report_file
+        )
+      }
+    },
+    log_steps = log_steps
+  )
 
-  runPseudonymizationLogStep(2L, "Write pseudonymized snapshot tables", {
-    result[["write_summary"]] <- writeSnapshotTargetTables(
-      target_connection,
-      result[["pseudonymization"]][["tables"]],
-      target_schema = target_table_schema,
-      overwrite = overwrite_tables,
-      temporary = temporary
-    )
-  }, log_steps = log_steps)
+  runPseudonymizationLogStep(2L,
+    "Write pseudonymized snapshot tables",
+    {
+      result[["write_summary"]] <- writeSnapshotTargetTables(
+        target_connection,
+        result[["pseudonymization"]][["tables"]],
+        target_schema = target_table_schema,
+        overwrite = overwrite_tables,
+        temporary = temporary
+      )
+    },
+    log_steps = log_steps
+  )
 
-  runPseudonymizationLogStep(2L, "Create snapshot passthrough views", {
-    result[["view_summary"]] <- createSnapshotPassthroughViews(
-      target_connection,
-      materialization_plan = materialization_plan,
-      table_schema = target_table_schema,
-      view_schema = target_view_schema,
-      replace = replace_views
-    )
-  }, log_steps = log_steps)
+  runPseudonymizationLogStep(2L,
+    "Create snapshot passthrough views",
+    {
+      result[["view_summary"]] <- createSnapshotPassthroughViews(
+        target_connection,
+        materialization_plan = materialization_plan,
+        table_schema = target_table_schema,
+        view_schema = target_view_schema,
+        replace = replace_views
+      )
+    },
+    log_steps = log_steps
+  )
 
   result
 }

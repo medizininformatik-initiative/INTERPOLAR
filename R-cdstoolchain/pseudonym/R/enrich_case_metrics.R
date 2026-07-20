@@ -147,10 +147,12 @@ enrichSnapshotEncounterTable <- function(encounter, patient) {
   if (!"enc_age_at_admission" %in% names(encounter)) {
     encounter[["enc_age_at_admission"]] <- NA_integer_
   }
-  if (nrow(encounter) == 0 ||
-      is.null(patient) ||
-      !"enc_patient_ref" %in% names(encounter) ||
-      !"enc_period_start" %in% names(encounter)) {
+  if (
+    nrow(encounter) == 0 ||
+    is.null(patient) ||
+    !"enc_patient_ref" %in% names(encounter) ||
+    !"enc_period_start" %in% names(encounter)
+  ) {
     return(encounter)
   }
 

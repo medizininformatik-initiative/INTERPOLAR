@@ -48,8 +48,7 @@ getMedicationCodeMap <- function(medication) {
       !is.na(medication_codes[["med_code_system"]]) &
       nzchar(medication_codes[["med_code_system"]]) &
       !is.na(medication_codes[["med_code_code"]]) &
-      nzchar(medication_codes[["med_code_code"]]),
-    ,
+      nzchar(medication_codes[["med_code_code"]]), ,
     drop = FALSE
   ]
   split(medication_codes, medication_codes[["med_id"]], drop = TRUE)

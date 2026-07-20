@@ -173,8 +173,10 @@ ruleTextFromYamlRule <- function(rule, condition = NA_character_) {
   if (method == "cryptoHash") {
     max_length <- rule$truncateToMaxLength
     args <- character()
-    if (!is.null(max_length) && !is.na(max_length) && nzchar(as.character(max_length)) &&
-        as.integer(max_length) != 32L) {
+    if (
+      !is.null(max_length) && !is.na(max_length) && nzchar(as.character(max_length)) &&
+      as.integer(max_length) != 32L
+    ) {
       args <- c(args, paste0("maxLength = ", as.integer(max_length)))
     }
     if (has_condition) {
@@ -531,15 +533,13 @@ selectPseudonymizationCandidates <- function(candidates) {
       rule_text <- row_candidates[["pseudonymization_rule"]]
       conditional <- row_candidates[
         grepl("If\\(", rule_text) |
-          grepl("; .+\\)", rule_text),
-        ,
+          grepl("; .+\\)", rule_text), ,
         drop = FALSE
       ]
       if (nrow(conditional) > 0) {
         selected <- conditional[order(as.vector(conditional[["rule_index"]])), , drop = FALSE]
         positive <- selected[
-          !isConditionalRedactRule(selected[["pseudonymization_rule"]]),
-          ,
+          !isConditionalRedactRule(selected[["pseudonymization_rule"]]), ,
           drop = FALSE
         ]
         if (nrow(positive) == 0) {
@@ -654,8 +654,10 @@ getFhirPseudonymizationRuleReport <- function(table_description) {
 
   overridden <- attr(table_description, "pseudonymization_overridden")
 
-  if (is.null(candidates) || is.null(selected) || is.null(overridden) || is.null(conflicts) ||
-      is.null(yaml_rule_matches)) {
+  if (
+    is.null(candidates) || is.null(selected) || is.null(overridden) || is.null(conflicts) ||
+    is.null(yaml_rule_matches)
+  ) {
     stop("table_description must be processed with setFhirPseudonymizationRules() first.")
   }
 
@@ -707,8 +709,8 @@ extractFhirPathRulesFromYaml <- function(yaml_config) {
 #' `pseudonymization_yaml_rule_matches`.
 #' @export
 setFhirPseudonymizationRules <- function(
-    table_description,
-    yaml_path = getDefaultFhirPseudonymizationYamlPath()) {
+  table_description,
+  yaml_path = getDefaultFhirPseudonymizationYamlPath()) {
   table_description <- data.table::as.data.table(data.table::copy(table_description))
   if (!all(c("RESOURCE", "COLUMN_NAME", "FHIR_EXPRESSION") %in% names(table_description))) {
     stop("table_description must contain RESOURCE, COLUMN_NAME, and FHIR_EXPRESSION columns.")

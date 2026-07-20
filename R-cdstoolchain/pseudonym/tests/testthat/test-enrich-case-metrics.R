@@ -54,12 +54,8 @@ test_that("enrichSnapshotCaseMetricTables adds encounter age for normal and last
 
 test_that("enrichSnapshotCaseMetricTables keeps empty metrics when inputs are missing", {
   tables <- list(
-    fall_fe = data.table::data.table(
-      fall_id = "fall-1"
-    ),
-    encounter = data.table::data.table(
-      enc_id = "enc-1"
-    )
+    fall_fe = data.table::data.table(fall_id = "fall-1"),
+    encounter = data.table::data.table(enc_id = "enc-1")
   )
 
   result <- enrichSnapshotCaseMetricTables(tables)
