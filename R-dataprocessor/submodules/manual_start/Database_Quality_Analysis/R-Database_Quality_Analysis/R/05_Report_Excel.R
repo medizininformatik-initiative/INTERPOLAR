@@ -370,7 +370,8 @@ createReport <- function(config = getConfig()) {
   }
   sheets <- c(
     sheets,
-    createResourceDetailSheets(metadata, result, config)
+    createResourceDetailSheets(metadata, result, config),
+    createInterpolarResourceDetailSheets(metadata, result, config)
   )
   sheets$Metadata <- createMetadataSheet(
     result,

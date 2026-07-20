@@ -55,7 +55,8 @@ buildResourceDetailCountQuery <- function(
   grouping_columns,
   data_columns,
   detail_config,
-  block_value
+  block_value,
+  row_filter_condition = NA_character_
 ) {
   table_ref <- quoteTable(
     table_metadata$VIEW_SCHEMA[[1]],
@@ -158,7 +159,8 @@ buildResourceDetailCountQuery <- function(
       "SELECT\n  ",
       paste(select_parts, collapse = ",\n  "),
       "\nFROM ",
-      table_ref
+      table_ref,
+      getOptionalWhereClause(row_filter_condition)
     ),
     alias_map = alias_map
   )
@@ -169,7 +171,8 @@ createResourceDetailSheet <- function(
   result,
   config,
   detail_config,
-  query_fun = etlutils::dbGetReadOnlyQuery
+  query_fun = etlutils::dbGetReadOnlyQuery,
+  row_filter_condition = NA_character_
 ) {
   table_metadata <- metadata[TABLE_NAME == detail_config$table_name][order(ORDINAL_POSITION)]
   if (!nrow(table_metadata)) {
@@ -202,7 +205,7 @@ createResourceDetailSheet <- function(
     return(NULL)
   }
 
-  output_columns <- setdiff(names(base_rows), c("TABLE_FAMILY", "ORDINAL_POSITION"))
+  output_columns <- setdiff(names(base_rows), c("TABLE_FAMILY", "RESOURCE_REFERENCE_SCOPE", "ORDINAL_POSITION"))
   base_rows <- base_rows[, ..output_columns]
   for (count_column in detail_config$split_count_columns) {
     base_rows[, (count_column) := NA_integer_]
@@ -219,7 +222,8 @@ createResourceDetailSheet <- function(
       grouping_columns,
       data_columns,
       detail_config,
-      block_value
+      block_value,
+      row_filter_condition = row_filter_condition
     )
     if (!is.na(count_query$query)) {
       count_result <- query_fun(

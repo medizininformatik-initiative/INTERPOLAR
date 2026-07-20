@@ -378,6 +378,88 @@ createInterpolarCaseSheet <- function(
   sheet
 }
 
+createInterpolarResourceDetailSheet <- function(
+  metadata,
+  result,
+  config,
+  detail_config,
+  query_fun = etlutils::dbGetReadOnlyQuery
+) {
+  main_encounter_subquery <- getInterpolarMainEncounterSubquery(metadata)
+  patient_subquery <- getInterpolarPatientSubquery(metadata)
+  if (is.na(main_encounter_subquery)) {
+    return(NULL)
+  }
+
+  table_metadata <- getTableMetadata(metadata, detail_config$table_name)
+  if (!nrow(table_metadata)) {
+    return(NULL)
+  }
+
+  grouping_columns <- tryCatch(
+    inferGroupingColumns(table_metadata, config),
+    error = function(error) {
+      logProgress(
+        "Skipping ",
+        detail_config$sheet_name,
+        " INTERPOLAR detail sheet: ",
+        conditionMessage(error)
+      )
+      NULL
+    }
+  )
+  if (is.null(grouping_columns)) {
+    return(NULL)
+  }
+
+  row_filter_condition <- getInterpolarFilterCondition(
+    table_metadata,
+    grouping_columns,
+    main_encounter_subquery,
+    patient_subquery
+  )
+  if (is.na(row_filter_condition)) {
+    return(NULL)
+  }
+
+  createResourceDetailSheet(
+    metadata,
+    result,
+    config,
+    detail_config,
+    query_fun = query_fun,
+    row_filter_condition = row_filter_condition
+  )
+}
+
+createInterpolarResourceDetailSheets <- function(
+  metadata,
+  result,
+  config,
+  query_fun = etlutils::dbGetReadOnlyQuery
+) {
+  sheets <- list()
+  resource_detail_sheets <- config$resource_detail_sheets
+  if (is.null(resource_detail_sheets) || !length(resource_detail_sheets)) {
+    return(sheets)
+  }
+
+  for (detail_config in resource_detail_sheets) {
+    detail_sheet <- createInterpolarResourceDetailSheet(
+      metadata,
+      result,
+      config,
+      detail_config,
+      query_fun = query_fun
+    )
+    if (!is.null(detail_sheet) && nrow(detail_sheet)) {
+      sheets[[paste(detail_config$sheet_name, "INTERPOLAR")]] <- detail_sheet
+    }
+  }
+
+  sheets
+}
+
 createInterpolarCaseSheets <- function(
   metadata,
   result,

@@ -728,6 +728,45 @@ test_that("database quality analysis resource detail query filters block and spl
   ))
 })
 
+test_that("database quality analysis resource detail query applies optional row filters", {
+  table_metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = "v_encounter_last_version",
+    TABLE_NAME = "encounter",
+    COLUMN_NAME = c(
+      "enc_id",
+      "enc_patient_ref",
+      "enc_main_encounter_calculated_ref",
+      "enc_type_system",
+      "enc_type_code",
+      "enc_class_system",
+      "enc_class_code",
+      "enc_status"
+    ),
+    DATA_TYPE = "character varying"
+  )
+  grouping_columns <- c(
+    resource_id = "enc_id",
+    pid = "enc_patient_ref",
+    case_id = "enc_main_encounter_calculated_ref"
+  )
+
+  result <- buildResourceDetailCountQuery(
+    table_metadata,
+    grouping_columns,
+    data_columns = c("enc_status"),
+    detail_config = getTestResourceDetailSheets()$encounter,
+    block_value = "einrichtungskontakt",
+    row_filter_condition = "enc_main_encounter_calculated_ref IN (SELECT enc_id FROM ip_cases)"
+  )
+
+  expect_match(
+    result$query,
+    "WHERE enc_main_encounter_calculated_ref IN (SELECT enc_id FROM ip_cases)",
+    fixed = TRUE
+  )
+})
+
 test_that("database quality analysis creates resource detail sheet blocks", {
   config <- list(grouping_overrides = parseGroupingOverrides(character()))
   metadata <- data.table::data.table(
@@ -782,6 +821,72 @@ test_that("database quality analysis creates resource detail sheet blocks", {
   expect_true(all(unname(DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS) %in% names(sheet)))
   expect_false(any(grepl("count per Einrichtungskontakt", names(sheet), fixed = TRUE)))
   expect_false(is.na(sheet[TABLE_NAME == "encounter - Einrichtungskontakt" & COLUMN_NAME == "enc_status", "count class IMP"][[1]]))
+})
+
+test_that("database quality analysis creates INTERPOLAR resource detail sheets", {
+  config <- list(
+    grouping_overrides = parseGroupingOverrides(character()),
+    resource_detail_sheets = getTestResourceDetailSheets()
+  )
+  metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = c(rep("v_encounter_last_version", 8), "v_pids_per_ward"),
+    TABLE_NAME = c(rep("encounter", 8), "pids_per_ward"),
+    TABLE_FAMILY = c(rep("FHIR", 8), "Other"),
+    COLUMN_NAME = c(
+      "enc_id",
+      "enc_patient_ref",
+      "enc_main_encounter_calculated_ref",
+      "enc_type_system",
+      "enc_type_code",
+      "enc_class_system",
+      "enc_class_code",
+      "enc_status",
+      "encounter_id"
+    ),
+    COLUMN_DESCRIPTION = c(
+      "id",
+      "patient",
+      "case",
+      "type system",
+      "type code",
+      "class system",
+      "class code",
+      "status",
+      "case"
+    ),
+    ORDINAL_POSITION = c(1:8, 1),
+    DATA_TYPE = "character varying"
+  )
+  result <- data.table::data.table(
+    TABLE_NAME = "encounter",
+    COLUMN_NAME = metadata[TABLE_NAME == "encounter", COLUMN_NAME],
+    COLUMN_DESCRIPTION = metadata[TABLE_NAME == "encounter", COLUMN_DESCRIPTION],
+    USED_AS_GROUPING_FOR = NA_character_,
+    "count per resource_id" = NA_integer_,
+    "count per PID" = NA_integer_,
+    "count per Fall-Id" = NA_integer_,
+    TABLE_FAMILY = "FHIR",
+    RESOURCE_REFERENCE_SCOPE = "case_dependent",
+    ORDINAL_POSITION = metadata[TABLE_NAME == "encounter", ORDINAL_POSITION],
+    check.names = FALSE
+  )
+  query_state <- new.env(parent = emptyenv())
+  query_state$seen_queries <- character()
+  query_fun <- function(query, lock_id = NULL) {
+    query_state$seen_queries <- c(query_state$seen_queries, query)
+    aliases <- unique(regmatches(query, gregexpr("count_[0-9]+", query))[[1]])
+    data.table::as.data.table(as.list(stats::setNames(rep(1L, length(aliases)), aliases)))
+  }
+
+  sheets <- createInterpolarResourceDetailSheets(metadata, result, config, query_fun = query_fun)
+
+  expect_equal(names(sheets), "FHIR Encounter INTERPOLAR")
+  expect_equal(
+    unique(sheets[["FHIR Encounter INTERPOLAR"]]$TABLE_NAME),
+    paste("encounter", names(config$resource_detail_sheets$encounter$block_values), sep = " - ")
+  )
+  expect_true(any(grepl('"enc_main_encounter_calculated_ref" IN', query_state$seen_queries, fixed = TRUE)))
 })
 
 test_that("database quality analysis count query treats configured frontend checkboxes as checked groups", {
