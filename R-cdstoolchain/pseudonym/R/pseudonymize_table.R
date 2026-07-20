@@ -755,8 +755,8 @@ pseudonymizeTableForSnapshot <- function(
 #'
 #' This is the snapshot-oriented table-level wrapper around
 #' `pseudonymizeTable()`. Only tables with loaded pseudonymization rules are
-#' emitted. By default, columns not described in the rule sources are omitted
-#' from the output tables.
+#' emitted. By default, columns not described in the rule sources are kept
+#' unchanged in the output tables.
 #'
 #' @param tables Named list of data.frames or data.tables.
 #' @param rules Rules loaded by `loadPseudonymizationRules()` or equivalent
@@ -764,7 +764,8 @@ pseudonymizeTableForSnapshot <- function(
 #' @param input_repo_path TOML-configured input repository directory used for
 #'   `pseudonym(sheet = ...)` mapping rules.
 #' @param keep_unmatched_columns If `TRUE`, source columns without a loaded rule
-#'   are kept. The default `FALSE` is intended for snapshot creation.
+#'   are kept unchanged. The default `TRUE` is intended for snapshot creation,
+#'   so original snapshot columns are not removed.
 #' @param log_steps If `TRUE` and module logging is initialized, wrap the process
 #'   in the existing `etlutils::runLevel...` logging.
 #'
@@ -775,7 +776,7 @@ pseudonymizeTables <- function(
     tables,
     rules,
     input_repo_path = NULL,
-    keep_unmatched_columns = FALSE,
+    keep_unmatched_columns = TRUE,
     log_steps = TRUE) {
   if (is.null(names(tables)) || any(!nzchar(names(tables)))) {
     stop("tables must be a named list.")

@@ -114,67 +114,44 @@ Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der h
 
 ## Datenbank Snapshot
 
-Zur Erstellung, Löschung, Aktivierung, De-Aktivierung und Auflistung von Snapshots kann das Bash-Script ```ip_snapshot.sh``` verwenden. 
-Das Script muss direkt im Hauptverzeichnis ausgeführt werden.
+Zur Erstellung, Löschung, Aktivierung, De-Aktivierung, Pseudonymisierung und Auflistung von Snapshots wird das Bash-Script `ip-snapshot.sh` verwendet. Das Script muss direkt im Hauptverzeichnis ausgeführt werden. Snapshot-Dateinamen dürfen keine Pfadangaben enthalten und werden im Verzeichnis `Snapshots` als `.sql.gz` abgelegt.
 
-Beim Erstellen (_create_) wird ein Dump der _cds_hb_db_ Datenbank gemacht und im Verzeichnis _Snapshots_ gespeichert. 
+Beim Erstellen (_create_) wird ein Dump der `cds_hub_db` Datenbank erzeugt und unter `Snapshots/<name>_<Datum>.sql.gz` gespeichert.
 ```cmd
 ./ip-snapshot.sh create snap01
 ```
 
-Zusätzlich kann direkt ein pseudonymisierter Auswertungs-Snapshot erzeugt werden.
-Dieser enthält nur die Schemata `db_log` und `db2dataprocessor_out`.
-In `db_log` liegen die pseudonymisierten Tabellen materialisiert, in
-`db2dataprocessor_out` liegen durchgereichte Views wie `v_<table>` und
-`v_<table>_last_version`.
-
-Die Regeln `cryptoHash` und `pseudonymize(...)` werden in der DB-Ausführung
-beide als deterministischer SHA-256-Hash ohne Salt umgesetzt. Derselbe
-Originalwert ergibt dadurch immer denselben Hash. `pseudonymize(...)` dient in
-der Table Description nur als fachlich lesbare Regelnotation; ein eventueller
-`domain = ...`-Parameter verändert den erzeugten Hash nicht. Der
-dataportal-FHIR-Pseudonymizer nutzt dagegen projektbezogene CryptoHash-Keys für
-höhere DUP-Anforderungen.
-Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten und nur der
-ID-Anteil nach dem Slash wird gehasht.
-
-Für `medicationrequest`, `medicationadministration` und `medicationstatement`
-werden zusätzlich die Code-/System-Paare der referenzierten `Medication`
-materialisiert. Wenn eine referenzierte `Medication` mehrere unterschiedliche
-Code-/System-Paare hat, wird die referenzierende Zeile entsprechend mehrfach
-ausgegeben.
-
-Für `fall_fe` werden zusätzlich `fall_age_at_admission` und `fall_bmi`
-materialisiert. Für `encounter` wird `enc_age_at_admission` materialisiert.
-Das Alter wird in abgeschlossenen Jahren berechnet. BMI wird aus Gewicht und
-Größe berechnet, wenn die Einheiten eindeutig nach kg und m umgerechnet werden
-können.
-
-Vor dem Schreiben des pseudonymisierten Snapshots werden alte Hash-Spalten
-entfernt. Danach werden pro Tabelle redundante Zeilen entfernt, die nach
-Pseudonymisierung und Hash-Spalten-Entfernung vollständig identisch sind.
-
-Der Pseudonymisierungslauf schreibt zusätzlich einen Review-Report unter
-`outputLocal/snapshot_pseudonymization*/reports/pseudonymization_rule_review.xlsx`.
-Dieser Report ist ein Kontroll- und Freigabeartefakt für das DIZ. Er wird nicht
-in den Snapshot-Dump aufgenommen und ist nicht Bestandteil der auswertbaren
-Read-only-DB.
-Zusätzlich wird
-`outputLocal/snapshot_pseudonymization*/reports/snapshot_enrichment_review.xlsx`
-geschrieben. Dieser Report enthält aktuell Medication-Referenzen, für die bei
-der Snapshot-Anreicherung kein Code-/System-Paar in der referenzierten
-`Medication` gefunden wurde.
+Zusätzlich kann direkt beim Erstellen ein pseudonymisierter Auswertungs-Snapshot erzeugt werden.
 ```cmd
 ./ip-snapshot.sh create snap01 --with-pseudonymized
 ```
 
-Ein pseudonymisierter Snapshot kann auch nachträglich aus einem vorhandenen
-Snapshot-Dump erzeugt werden.
+Ein pseudonymisierter Snapshot kann auch nachträglich aus einem vorhandenen Snapshot-Dump erzeugt werden. Der Name wird ohne Dateiendung angegeben. Aus `Snapshots/snap01_20251002.sql.gz` wird dadurch `Snapshots/snap01_20251002_pseud.sql.gz`.
 ```cmd
 ./ip-snapshot.sh pseudonymize snap01_20251002
 ```
 
-Erstellte Snapshots können aktiviert (_activate_), d.h. in eine Snapshot Datenbank geladen werden.
+Falls die pseudonymisierte Snapshot-Datei bereits existiert, fragt das Script vor dem Überschreiben nach. Für lokale Tests nach Codeänderungen muss vor dem Pseudonymisierungslauf das R-Image neu gebaut werden, da der Lauf das im Container installierte R-Paket verwendet.
+```cmd
+docker compose build r-env
+./ip-snapshot.sh pseudonymize snap01_20251002
+```
+
+Der pseudonymisierte Snapshot enthält nur die für Auswertungen relevanten Schemata `db_log` und `db2dataprocessor_out`. In `db_log` liegen die pseudonymisierten Tabellen materialisiert, in `db2dataprocessor_out` liegen durchgereichte Views wie `v_<table>` und `v_<table>_last_version`. Tabellen werden nur aufgenommen, wenn sie über die Pseudonymisierungsquellen bzw. Table Descriptions für den Snapshot ausgewählt sind. Innerhalb dieser Tabellen bleiben alle Spalten der Original-Snapshot-Tabellen erhalten. Spalten ohne Pseudonymisierungsregel werden unverändert übernommen; es werden keine technischen Originalspalten wie `hash_index_col`, RAW-Referenzen oder Einfügezeitpunkte entfernt und es werden keine redundanten Zeilen per `unique()` zusammengefasst.
+
+Die Pseudonymisierungsregeln stammen aus den Table-Description-Dateien und den Snapshot-Erweiterungen. Die Regeln `cryptoHash` und `pseudonymize(...)` werden in der DB-Ausführung beide als deterministischer SHA-256-Hash ohne Salt umgesetzt. Derselbe Originalwert ergibt dadurch immer denselben Hash. `pseudonymize(...)` dient in der Table Description als fachlich lesbare Regelnotation; ein eventueller `domain = ...`-Parameter verändert den erzeugten Hash nicht. Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten und nur der ID-Anteil nach dem Slash wird gehasht.
+
+Vor der Pseudonymisierung werden einige Snapshot-spezifische Auswertungsspalten ergänzt. Für `fall_fe` und `fall_fe_last_version` wird `fall_age_at_admission` ergänzt. Für `encounter` und `encounter_last_version` wird `enc_age_at_admission` ergänzt. Neu ergänzte Altersspalten werden an das Ende der jeweiligen Tabelle angehängt. `fall_bmi` wird in `fall_fe` und `fall_fe_last_version` befüllt, sofern Gewicht und Größe mit eindeutig unterstützten Einheiten vorliegen; da diese Spalte bereits im Original-Tabellenlayout existiert, wird sie nicht ans Tabellenende verschoben. Das Alter wird in abgeschlossenen Jahren berechnet. BMI unterstützt Gewicht in `kg`, `g`, `mg` und Größe in `m`, `cm`, `mm`.
+
+Für `medicationrequest`, `medicationadministration` und `medicationstatement` werden zusätzlich die Code-/System-Paare der referenzierten `Medication` materialisiert. Wenn eine referenzierte `Medication` mehrere unterschiedliche Code-/System-Paare hat, wird die referenzierende Zeile entsprechend mehrfach ausgegeben. Referenzen ohne gefundenes Code-/System-Paar bleiben erhalten und werden im Enrichment-Review ausgewiesen.
+
+Der Pseudonymisierungslauf schreibt Kontroll-Reports unter `outputLocal/snapshot_pseudonymization*/reports`. Diese Reports sind Kontroll- und Freigabeartefakte für das DIZ. Sie werden nicht in den Snapshot-Dump aufgenommen und sind nicht Bestandteil der auswertbaren Read-only-DB.
+
+- `pseudonymization_rule_review.xlsx`: Review der geladenen Pseudonymisierungsregeln, TODOs, impliziten Keep-Regeln, nicht unterstützten Regeln, doppelten Spalten und Mapping-Regeln.
+- `snapshot_enrichment_review.xlsx`: aktuell Medication-Referenzen, für die bei der Snapshot-Anreicherung kein Code-/System-Paar in der referenzierten `Medication` gefunden wurde.
+- `snapshot_postprocessing_report.xlsx`: technische Zusammenfassung nach der Pseudonymisierung, u.a. Zeilen-/Spaltenzahlen; aktuell werden keine Originalspalten und keine Zeilen entfernt.
+
+Erstellte Snapshots können aktiviert (_activate_), d.h. in eine Snapshot-Datenbank geladen werden. Die aktivierte Datenbank erhält den Namen `ip_<snapshot_name>` und wird nach dem Einspielen in den Read-only-Modus gesetzt.
 ```cmd
 ./ip-snapshot.sh activate snap01_20251002
 ```
@@ -184,18 +161,28 @@ Pseudonymisierte Snapshots werden gleichartig aktiviert.
 ./ip-snapshot.sh activate snap01_20251002_pseud
 ```
 
-Beim De-Aktivieren (_deactivate_) wird diese Datenbank wieder gelöscht.
+Falls eine Snapshot-Datenbank mit diesem Namen bereits existiert, muss sie vor dem erneuten Aktivieren deaktiviert werden.
+```cmd
+./ip-snapshot.sh deactivate snap01_20251002_pseud
+./ip-snapshot.sh activate snap01_20251002_pseud
+```
+
+Beim Deaktivieren (_deactivate_) wird die aktivierte Snapshot-Datenbank gelöscht. Die Snapshot-Datei bleibt erhalten.
 ```cmd
 ./ip-snapshot.sh deactivate snap01_20251002
 ```
 
-Erstellte sowie aktivierte Snapshots können mit _list_ angezeit werden.
+Beim Löschen (_delete_) wird die Snapshot-Datei gelöscht; falls eine gleichnamige Snapshot-Datenbank existiert, wird sie ebenfalls entfernt.
+```cmd
+./ip-snapshot.sh delete snap01_20251002
+```
 
+Erstellte sowie aktivierte Snapshots können mit _list_ angezeigt werden.
 ```cmd
 ./ip-snapshot.sh list
 ```
 
-Eine ausführliche Beschreibung liefert der Aufruf von ```./ip-snapshot.sh``` ohne Paramter.
+Eine ausführliche Beschreibung liefert der Aufruf von `./ip-snapshot.sh` ohne Parameter.
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)

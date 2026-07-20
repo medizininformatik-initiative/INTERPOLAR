@@ -49,9 +49,10 @@ test_that("pseudonymizeSnapshotTables loads rules reviews and pseudonymizes tabl
 
   expect_true(file.exists(report_file))
   expect_named(result$tables, "patient")
-  expect_named(result$tables$patient, c("id", "gender"))
+  expect_named(result$tables$patient, c("id", "gender", "source_only"))
   expect_false(identical(result$tables$patient$id, tables$patient$id))
   expect_equal(result$tables$patient$gender, tables$patient$gender)
+  expect_equal(result$tables$patient$source_only, tables$patient$source_only)
   expect_equal(
     result$summary[result$summary$TABLE_NAME == "internal", ][["STATUS"]],
     "skipped_no_rules"

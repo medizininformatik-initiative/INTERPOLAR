@@ -21,6 +21,10 @@ test_that("enrichSnapshotCaseMetricTables adds fall age and BMI", {
 
   expect_equal(result$fall_fe$fall_age_at_admission, 43L)
   expect_equal(result$fall_fe$fall_bmi, 80 / 1.8^2)
+  expect_equal(
+    tail(names(result$fall_fe), 2),
+    c("fall_age_at_admission", "fall_bmi")
+  )
 })
 
 test_that("enrichSnapshotCaseMetricTables adds encounter age for normal and last-version tables", {
@@ -44,6 +48,8 @@ test_that("enrichSnapshotCaseMetricTables adds encounter age for normal and last
 
   expect_equal(result$encounter$enc_age_at_admission, 49L)
   expect_equal(result$encounter_last_version$enc_age_at_admission, 49L)
+  expect_equal(tail(names(result$encounter), 1), "enc_age_at_admission")
+  expect_equal(tail(names(result$encounter_last_version), 1), "enc_age_at_admission")
 })
 
 test_that("enrichSnapshotCaseMetricTables keeps empty metrics when inputs are missing", {

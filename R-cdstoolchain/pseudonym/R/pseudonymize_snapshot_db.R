@@ -174,10 +174,6 @@ pseudonymizeSnapshotMaterializedTables <- function(
   )
 }
 
-getSnapshotHashColumnNames <- function(table) {
-  names(table)[grepl("hash", names(table), ignore.case = TRUE)]
-}
-
 setSummaryValue <- function(summary, row_index, column_name, value) {
   if (!column_name %in% names(summary)) {
     if (is.integer(value)) {
@@ -202,53 +198,25 @@ postprocessPseudonymizedSnapshotTables <- function(pseudonymization_result) {
     table <- data.table::as.data.table(data.table::copy(
       pseudonymization_result[["tables"]][[table_name]]
     ))
-    hash_columns <- getSnapshotHashColumnNames(table)
-    if (length(hash_columns) > 0) {
-      table <- table[, setdiff(names(table), hash_columns), with = FALSE]
-    }
-
-    rows_before_deduplication <- nrow(table)
-    table <- unique(table)
-    rows_after_deduplication <- nrow(table)
-
-    pseudonymization_result[["tables"]][[table_name]] <- table
     row_index <- which(summary[["TABLE_NAME"]] == table_name)
     if (length(row_index) == 1) {
       summary <- setSummaryValue(
         summary,
         row_index,
-        "HASH_COLUMNS_REMOVED",
-        paste(hash_columns, collapse = ", ")
-      )
-      summary <- setSummaryValue(
-        summary,
-        row_index,
-        "HASH_COLUMN_COUNT",
-        length(hash_columns)
-      )
-      summary <- setSummaryValue(
-        summary,
-        row_index,
-        "ROWS_BEFORE_DEDUPLICATION",
-        rows_before_deduplication
-      )
-      summary <- setSummaryValue(
-        summary,
-        row_index,
-        "ROWS_AFTER_DEDUPLICATION",
-        rows_after_deduplication
+        "ORIGINAL_COLUMNS_REMOVED",
+        0L
       )
       summary <- setSummaryValue(
         summary,
         row_index,
         "DUPLICATE_ROWS_REMOVED",
-        rows_before_deduplication - rows_after_deduplication
+        0L
       )
       summary <- setSummaryValue(
         summary,
         row_index,
-        "OUTPUT_ROWS",
-        rows_after_deduplication
+        "POSTPROCESSING_ACTION",
+        "none"
       )
       summary <- setSummaryValue(
         summary,
@@ -453,6 +421,29 @@ writeSnapshotEnrichmentReviewReport <- function(report, file_name = NA) {
   invisible(report)
 }
 
+writeSnapshotPostprocessingReport <- function(summary, file_name = NA) {
+  report_tables <- list(snapshot_postprocessing_summary = summary)
+  if (is.na(file_name)) {
+    etlutils::writeExcelFileLocal(
+      report_tables,
+      filename_without_extension = "snapshot_postprocessing_report",
+      with_column_names = TRUE,
+      subdir = "reports"
+    )
+  } else {
+    output_dir <- dirname(file_name)
+    if (!dir.exists(output_dir)) {
+      dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+    }
+    etlutils::writeExcelFile(
+      report_tables,
+      file_name,
+      with_column_names = TRUE
+    )
+  }
+  invisible(summary)
+}
+
 #' Pseudonymize a Snapshot from Source DB to Target DB Connections
 #'
 #' This is the DBI-based entry point for the snapshot pseudonymization core. It
@@ -486,7 +477,11 @@ writeSnapshotEnrichmentReviewReport <- function(report, file_name = NA) {
 #' @param enrichment_review_report_file Optional explicit enrichment review
 #'   report path. If `NA`, the report is written to
 #'   `outputLocal/<MODULE>/reports`.
-#' @param keep_unmatched_columns Passed to `pseudonymizeSnapshotTables()`.
+#' @param postprocessing_report_file Optional explicit snapshot postprocessing
+#'   report path. If `NA`, the report is written to
+#'   `outputLocal/<MODULE>/reports`.
+#' @param keep_unmatched_columns Passed to `pseudonymizeSnapshotTables()`. The
+#'   default keeps original source columns without a loaded rule unchanged.
 #' @param overwrite_tables Passed to `writeSnapshotTargetTables()`.
 #' @param replace_views Passed to `createSnapshotPassthroughViews()`.
 #' @param temporary Passed to `writeSnapshotTargetTables()`.
@@ -513,7 +508,8 @@ pseudonymizeSnapshotDatabase <- function(
     write_review_report = TRUE,
     review_report_file = NA,
     enrichment_review_report_file = NA,
-    keep_unmatched_columns = FALSE,
+    postprocessing_report_file = NA,
+    keep_unmatched_columns = TRUE,
     overwrite_tables = FALSE,
     replace_views = FALSE,
     temporary = FALSE,
@@ -601,6 +597,13 @@ pseudonymizeSnapshotDatabase <- function(
     result[["pseudonymization"]] <- postprocessPseudonymizedSnapshotTables(
       result[["pseudonymization"]]
     )
+    result[["postprocessing_report"]] <- result[["pseudonymization"]][["summary"]]
+    if (isTRUE(write_review_report)) {
+      writeSnapshotPostprocessingReport(
+        result[["postprocessing_report"]],
+        file_name = postprocessing_report_file
+      )
+    }
   }, log_steps = log_steps)
 
   runPseudonymizationLogStep(2L, "Write pseudonymized snapshot tables", {

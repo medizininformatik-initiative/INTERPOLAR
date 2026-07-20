@@ -39,7 +39,8 @@ summarizePseudonymizationReviewProblems <- function(review_report) {
 #' @param write_review_report If `TRUE`, write the review workbook.
 #' @param review_report_file Optional explicit report path. If `NA`, the report
 #'   is written to `outputLocal/<MODULE>/reports`.
-#' @param keep_unmatched_columns Passed to `pseudonymizeTables()`.
+#' @param keep_unmatched_columns Passed to `pseudonymizeTables()`. The default
+#'   keeps original source columns without a loaded rule unchanged.
 #' @param log_steps If `TRUE` and module logging is initialized, wrap the
 #'   process in the existing `etlutils::runLevel...` logging.
 #'
@@ -54,7 +55,7 @@ pseudonymizeSnapshotTables <- function(
     fail_on_review_problems = TRUE,
     write_review_report = TRUE,
     review_report_file = NA,
-    keep_unmatched_columns = FALSE,
+    keep_unmatched_columns = TRUE,
     log_steps = TRUE) {
   result <- list()
 

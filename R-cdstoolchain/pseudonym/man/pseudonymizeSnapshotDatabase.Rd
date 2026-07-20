@@ -22,7 +22,8 @@ pseudonymizeSnapshotDatabase(
   write_review_report = TRUE,
   review_report_file = NA,
   enrichment_review_report_file = NA,
-  keep_unmatched_columns = FALSE,
+  postprocessing_report_file = NA,
+  keep_unmatched_columns = TRUE,
   overwrite_tables = FALSE,
   replace_views = FALSE,
   temporary = FALSE,
@@ -72,7 +73,12 @@ list before pseudonymization. It must return a named table list.}
 report path. If \code{NA}, the report is written to
 \verb{outputLocal/<MODULE>/reports}.}
 
-\item{keep_unmatched_columns}{Passed to \code{pseudonymizeSnapshotTables()}.}
+\item{postprocessing_report_file}{Optional explicit snapshot postprocessing
+report path. If \code{NA}, the report is written to
+\verb{outputLocal/<MODULE>/reports}.}
+
+\item{keep_unmatched_columns}{Passed to \code{pseudonymizeSnapshotTables()}. The
+default keeps original source columns without a loaded rule unchanged.}
 
 \item{overwrite_tables}{Passed to \code{writeSnapshotTargetTables()}.}
 

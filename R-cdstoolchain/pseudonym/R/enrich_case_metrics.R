@@ -48,19 +48,6 @@ calculateBmi <- function(weight_values, weight_units, height_values, height_unit
   result
 }
 
-relocateColumnAfter <- function(table, column_name, after_column) {
-  if (!column_name %in% names(table) || !after_column %in% names(table)) {
-    return(table)
-  }
-  new_order <- names(table)[names(table) != column_name]
-  after_index <- match(after_column, new_order)
-  data.table::setcolorder(
-    table,
-    append(new_order, column_name, after = after_index)
-  )
-  table
-}
-
 getPatientFrontendBirthdateMap <- function(patient_fe) {
   patient_fe <- data.table::as.data.table(data.table::copy(patient_fe))
   result <- data.table::data.table(
@@ -136,8 +123,7 @@ enrichSnapshotFallTable <- function(fall_fe, patient_fe) {
     )
   }
 
-  fall_fe <- relocateColumnAfter(fall_fe, "fall_age_at_admission", "fall_aufn_dat")
-  relocateColumnAfter(fall_fe, "fall_bmi", "fall_groesse_einheit")
+  fall_fe
 }
 
 getPatientBirthdateMap <- function(patient) {
@@ -178,7 +164,7 @@ enrichSnapshotEncounterTable <- function(encounter, patient) {
     encounter[["enc_period_start"]],
     birthdates
   )
-  relocateColumnAfter(encounter, "enc_age_at_admission", "enc_period_start")
+  encounter
 }
 
 #' Enrich Snapshot Case Tables with Age and BMI

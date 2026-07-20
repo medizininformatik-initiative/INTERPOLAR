@@ -462,7 +462,7 @@ test_that("pseudonym mapping validation rejects duplicate keys", {
   )
 })
 
-test_that("pseudonymizeTables emits only described tables and columns by default", {
+test_that("pseudonymizeTables keeps unmatched columns by default", {
   tables <- list(
     patient = data.table::data.table(
       id = c("p1", "p2"),
@@ -486,9 +486,10 @@ test_that("pseudonymizeTables emits only described tables and columns by default
   )
 
   expect_named(result$tables, "patient")
-  expect_named(result$tables$patient, c("id", "gender"))
+  expect_named(result$tables$patient, c("id", "gender", "extra_admin_column"))
   expect_false(identical(result$tables$patient$id, tables$patient$id))
   expect_equal(result$tables$patient$gender, tables$patient$gender)
+  expect_equal(result$tables$patient$extra_admin_column, tables$patient$extra_admin_column)
   expect_equal(
     result$summary[result$summary$TABLE_NAME == "cron_job", ][["STATUS"]],
     "skipped_no_rules"
@@ -499,7 +500,7 @@ test_that("pseudonymizeTables emits only described tables and columns by default
   )
 })
 
-test_that("pseudonymizeTables can keep unmatched columns when requested", {
+test_that("pseudonymizeTables can omit unmatched columns when requested", {
   tables <- list(
     observation = data.table::data.table(
       id = "o1",
@@ -516,10 +517,9 @@ test_that("pseudonymizeTables can keep unmatched columns when requested", {
   result <- pseudonymizeTables(
     tables,
     rules,
-    keep_unmatched_columns = TRUE,
+    keep_unmatched_columns = FALSE,
     log_steps = FALSE
   )
 
-  expect_named(result$tables$observation, c("id", "value", "source_only"))
-  expect_equal(result$tables$observation$source_only, "kept for debugging")
+  expect_named(result$tables$observation, c("id", "value"))
 })

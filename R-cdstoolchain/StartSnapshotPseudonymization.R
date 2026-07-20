@@ -101,7 +101,7 @@ tryCatch(
       fail_on_review_problems = TRUE,
       write_review_report = TRUE,
       review_report_file = command_arguments[["review_report_file"]],
-      keep_unmatched_columns = FALSE,
+      keep_unmatched_columns = TRUE,
       enrich_tables = function(tables) {
         tables <- pseudonym::enrichSnapshotCaseMetricTables(tables)
         pseudonym::enrichSnapshotMedicationReferenceTables(tables)
