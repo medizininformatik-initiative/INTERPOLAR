@@ -6,9 +6,9 @@
 #'
 #' This helper function preprocesses a unit string for consistent handling. It
 #' removes a trailing segment of the form `"/{...}"` at the end of the string
-#' (e.g., `"mg/{dL}" -> "mg"`), replaces caret symbols (`^`) with asterisks (`*`)
-#' (e.g., `"10^9 / L" -> "10*9/L"`), and removes all whitespace.
-#' Note: The replacement of `^` with `*` reflects a textual normalization and
+#' (e.g., `"mg/{dL}" -> "mg"`), replaces asterisks (`*`) with caret symbols (`^`)
+#' (e.g., `"10*9 / L" -> "10^9/L"`), and removes all whitespace.
+#' Note: The replacement of `*` with `^` reflects a textual normalization and
 #' does not implement a full UCUM/UDUNITS conversion.
 #'
 #' @param unit Character. A unit string to be cleaned and normalized.
@@ -70,7 +70,14 @@ asUnit <- function(unit) {
 #' @examples
 #' isValidUnit("mmol/L")                 # TRUE
 #' isValidUnit(c("mmol/L", "foobar"))    # TRUE FALSE
-#' isValidUnit(c("10^9/L", "10*9/L"))    # TRUE FALSE
+#' isValidUnit(c("10^9/L", "10*9/L"))    # TRUE TRUE
+#' isValidUnit(c("ng/L", "mU/L"))        # TRUE FALSE
+#'
+#' isValidUnit(c("mU/L", "mIU/L"))       # FALSE  FALSE
+#' isValidUnit(c("U/L", "IU/L"))         # FALSE  FALSE
+#' isValidUnit(c("uU/mL", "uIU/mL"))     # FALSE  FALSE
+#' isValidUnit(c("uIU/mL", "uIU/mL"))    # FALSE  FALSE
+#' isValidUnit("m[iU]/L")                # FALSE
 #'
 #' @export
 isValidUnit <- function(u) {
@@ -80,6 +87,50 @@ isValidUnit <- function(u) {
     ok <- suppressWarnings(try(units::as_units(x), silent = TRUE))
     !inherits(ok, "try-error")
   }, logical(1))
+}
+
+parseSimpleInternationalUnitQuotient <- function(unit) {
+  unit <- cleanUnit(unit)
+  unit <- gsub("\u00b5", "u", unit, fixed = TRUE)
+  matches <- regexec("^([mu]?)(U|IU|\\[IU\\]|\\[iU\\])/(L|dL|mL)$", unit)
+  parts <- regmatches(unit, matches)[[1]]
+  if (length(parts) != 4) {
+    return(NULL)
+  }
+
+  numerator_prefix_factor <- stats::setNames(
+    c(1, 1e-3, 1e-6),
+    c("", "m", "u")
+  )
+  denominator_factor_in_liter <- c(
+    "L" = 1,
+    "dL" = 1e-1,
+    "mL" = 1e-3
+  )
+
+  numerator_prefix_index <- match(parts[2], names(numerator_prefix_factor))
+  denominator_index <- match(parts[4], names(denominator_factor_in_liter))
+
+  list(
+    atom = "IU",
+    factor = numerator_prefix_factor[[numerator_prefix_index]] /
+      denominator_factor_in_liter[[denominator_index]]
+  )
+}
+
+convertSimpleInternationalUnitQuotient <- function(measured_value, measured_unit, target_unit) {
+  measured_unit <- parseSimpleInternationalUnitQuotient(measured_unit)
+  target_unit <- parseSimpleInternationalUnitQuotient(target_unit)
+  if (is.null(measured_unit) || is.null(target_unit) || measured_unit$atom != target_unit$atom) {
+    return(NA_real_)
+  }
+
+  measured_value * measured_unit$factor / target_unit$factor
+}
+
+isMissingUnit <- function(unit) {
+  etlutils::isSimpleNAorNULL(unit) ||
+    (is.character(unit) && length(unit) == 1 && !nzchar(trimws(unit)))
 }
 
 #' Convert laboratory values into SI units
@@ -172,18 +223,37 @@ convertLabUnits <- function(measured_value,
   units::units_options(set_units_mode = "standard")
   # Initialize result
   result <- NA
+  measured_unit_raw <- measured_unit
+  target_unit_raw <- target_unit
+  target_unit_missing <- isMissingUnit(target_unit_raw)
   tryCatch(
     {
       measured_unit <- asUnit(measured_unit)
       target_unit <- asUnit(target_unit)
 
+      # there is no conversion unit (and factor) -> no conversion needed
+      # -> return the original value
+      if (target_unit_missing) {
+        return(measured_value)
+      }
+
       # the provided FHIR unit is invalid -> the full Observations is invald
       if (is.na(measured_unit)) {
-        return(NA)
+        result <- convertSimpleInternationalUnitQuotient(
+          measured_value = measured_value,
+          measured_unit = measured_unit_raw,
+          target_unit = target_unit_raw
+        )
+        return(result)
       }
-      # there is no conversion unit (and factor) -> no conversion needed -> return the original value
+
       if (is.na(target_unit)) {
-        return(measured_value)
+        result <- convertSimpleInternationalUnitQuotient(
+          measured_value = measured_value,
+          measured_unit = measured_unit_raw,
+          target_unit = target_unit_raw
+        )
+        return(result)
       }
 
       measured_unit_factor <- units::drop_units(measured_unit)
@@ -200,7 +270,10 @@ convertLabUnits <- function(measured_value,
         result <- suppressWarnings(units::set_units(u_measured, u_target))
         result <- units::drop_units(result)
         result <- result * measured_unit_factor / target_unit_factor
-      } else if (!etlutils::isSimpleNAorNULL(conversion_factor) && !etlutils::isSimpleNAorNULL(conversion_unit)) {
+      } else if (
+        !etlutils::isSimpleNAorNULL(conversion_factor) &&
+          !etlutils::isSimpleNAorNULL(conversion_unit)
+      ) {
         # Create unit object for conversion unit
         u_conversion <- suppressWarnings(units::set_units(1, conversion_unit))
 
@@ -216,6 +289,17 @@ convertLabUnits <- function(measured_value,
           result <- suppressWarnings(units::set_units(converted_value, u_target))
           result <- units::drop_units(result)
         }
+      }
+      if (all(is.na(result))) {
+        # UCUM uses bracketed international units such as m[IU]/L, while the R
+        # units package delegates parsing to UDUNITS and does not recognize this
+        # laboratory notation. Keep this fallback deliberately narrow: only
+        # simple U/IU quotients over liter units are converted by prefix math.
+        result <- convertSimpleInternationalUnitQuotient(
+          measured_value = measured_value,
+          measured_unit = measured_unit_raw,
+          target_unit = target_unit_raw
+        )
       }
     },
     error = function(e) {
