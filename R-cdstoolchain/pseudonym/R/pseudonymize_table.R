@@ -792,7 +792,7 @@ pseudonymizeTables <- function(
   skipped_tables <- input_table_names[!(tolower(input_table_names) %in% tolower(described_tables))]
 
   result_tables <- list()
-  summary <- data.table::data.table(
+  summary_template <- data.table::data.table(
     TABLE_NAME = character(),
     INPUT_ROWS = integer(),
     OUTPUT_ROWS = integer(),
@@ -802,6 +802,7 @@ pseudonymizeTables <- function(
     MISSING_COLUMNS = character(),
     STATUS = character()
   )
+  summary_rows <- list()
 
   runPseudonymizationLogStep(2L,
     "Pseudonymize snapshot tables",
@@ -821,7 +822,7 @@ pseudonymizeTables <- function(
           log_steps = log_steps
         )
         result_tables[[table_name]] <- table_result$table
-        summary <- data.table::rbindlist(list(summary, table_result$summary), fill = TRUE)
+        summary_rows[[length(summary_rows) + 1L]] <- table_result$summary
       }
     },
     log_steps = log_steps
@@ -838,7 +839,12 @@ pseudonymizeTables <- function(
       MISSING_COLUMNS = "",
       STATUS = "skipped_no_rules"
     )
-    summary <- data.table::rbindlist(list(summary, skipped_summary), fill = TRUE)
+    summary_rows[[length(summary_rows) + 1L]] <- skipped_summary
+  }
+  summary <- if (length(summary_rows) > 0) {
+    data.table::rbindlist(summary_rows, fill = TRUE)
+  } else {
+    summary_template
   }
 
   list(

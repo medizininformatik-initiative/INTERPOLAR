@@ -57,11 +57,12 @@ asUnit <- function(unit) {
   return(if (inherits(ok, "try-error")) NA else ok)
 }
 
-#' Check if unit strings are valid for the `units` package (vectorized)
+#' Check if unit strings are supported for lab unit conversion (vectorized)
 #'
 #' This helper function tests whether each element of a given character vector
-#' can be parsed by the `units` package. It returns a logical vector of the same
-#' length: `TRUE` for valid unit strings, `FALSE` otherwise.
+#' can be parsed by the `units` package or by a narrow INTERPOLAR fallback for
+#' international-unit quotients such as `"mU/L"`. It returns a logical vector of
+#' the same length: `TRUE` for supported unit strings, `FALSE` otherwise.
 #'
 #' @param u Character vector. Unit strings (e.g., `"mmol/L"`, `"mg/dL"`).
 #'
@@ -71,21 +72,14 @@ asUnit <- function(unit) {
 #' isValidUnit("mmol/L")                 # TRUE
 #' isValidUnit(c("mmol/L", "foobar"))    # TRUE FALSE
 #' isValidUnit(c("10^9/L", "10*9/L"))    # TRUE TRUE
-#' isValidUnit(c("ng/L", "mU/L"))        # TRUE FALSE
-#'
-#' isValidUnit(c("mU/L", "mIU/L"))       # FALSE  FALSE
-#' isValidUnit(c("U/L", "IU/L"))         # FALSE  FALSE
-#' isValidUnit(c("uU/mL", "uIU/mL"))     # FALSE  FALSE
-#' isValidUnit(c("uIU/mL", "uIU/mL"))    # FALSE  FALSE
-#' isValidUnit("m[iU]/L")                # FALSE
+#' isValidUnit(c("ng/L", "mU/L"))        # TRUE TRUE
+#' isValidUnit(c("U/L", "uU/mL"))        # TRUE TRUE
+#' isValidUnit("m[iU]/L")                # TRUE
 #'
 #' @export
 isValidUnit <- function(u) {
-  u <- as.character(u)
-  u <- cleanUnit(u)
   vapply(u, function(x) {
-    ok <- suppressWarnings(try(units::as_units(x), silent = TRUE))
-    !inherits(ok, "try-error")
+    !is.null(parseConvertibleUnit(x))
   }, logical(1))
 }
 
@@ -126,6 +120,20 @@ convertSimpleInternationalUnitQuotient <- function(measured_value, measured_unit
   }
 
   measured_value * measured_unit$factor / target_unit$factor
+}
+
+parseConvertibleUnit <- function(unit) {
+  parsed_units <- asUnit(unit)
+  if (!is.na(parsed_units)) {
+    return(list(type = "units", value = parsed_units))
+  }
+
+  parsed_iu_quotient <- parseSimpleInternationalUnitQuotient(unit)
+  if (!is.null(parsed_iu_quotient)) {
+    return(list(type = "simple_international_unit_quotient", value = parsed_iu_quotient))
+  }
+
+  NULL
 }
 
 isMissingUnit <- function(unit) {
@@ -228,42 +236,39 @@ convertLabUnits <- function(measured_value,
   target_unit_missing <- isMissingUnit(target_unit_raw)
   tryCatch(
     {
-      measured_unit <- asUnit(measured_unit)
-      target_unit <- asUnit(target_unit)
-
       # there is no conversion unit (and factor) -> no conversion needed
       # -> return the original value
       if (target_unit_missing) {
         return(measured_value)
       }
 
+      measured_unit <- parseConvertibleUnit(measured_unit_raw)
+      target_unit <- parseConvertibleUnit(target_unit_raw)
+
       # the provided FHIR unit is invalid -> the full Observations is invald
-      if (is.na(measured_unit)) {
-        result <- convertSimpleInternationalUnitQuotient(
-          measured_value = measured_value,
-          measured_unit = measured_unit_raw,
-          target_unit = target_unit_raw
-        )
+      if (is.null(measured_unit) || is.null(target_unit)) {
+        return(NA)
+      }
+
+      if (
+        measured_unit$type == "simple_international_unit_quotient" ||
+          target_unit$type == "simple_international_unit_quotient"
+      ) {
+        if (measured_unit$type == target_unit$type &&
+          measured_unit$value$atom == target_unit$value$atom) {
+          result <- measured_value * measured_unit$value$factor / target_unit$value$factor
+        }
         return(result)
       }
 
-      if (is.na(target_unit)) {
-        result <- convertSimpleInternationalUnitQuotient(
-          measured_value = measured_value,
-          measured_unit = measured_unit_raw,
-          target_unit = target_unit_raw
-        )
-        return(result)
-      }
-
-      measured_unit_factor <- units::drop_units(measured_unit)
-      target_unit_factor <- units::drop_units(target_unit)
+      measured_unit_factor <- units::drop_units(measured_unit$value)
+      target_unit_factor <- units::drop_units(target_unit$value)
 
       # Create unit object for measured value
-      u_measured <- suppressWarnings(units::set_units(measured_value, measured_unit))
+      u_measured <- suppressWarnings(units::set_units(measured_value, measured_unit$value))
 
       # Create unit object for target unit
-      u_target <- suppressWarnings(units::set_units(1, target_unit))
+      u_target <- suppressWarnings(units::set_units(1, target_unit$value))
 
       # Case 1: Units are directly convertible
       if (units::ud_are_convertible(units(u_measured), units(u_target))) {
@@ -291,15 +296,7 @@ convertLabUnits <- function(measured_value,
         }
       }
       if (all(is.na(result))) {
-        # UCUM uses bracketed international units such as m[IU]/L, while the R
-        # units package delegates parsing to UDUNITS and does not recognize this
-        # laboratory notation. Keep this fallback deliberately narrow: only
-        # simple U/IU quotients over liter units are converted by prefix math.
-        result <- convertSimpleInternationalUnitQuotient(
-          measured_value = measured_value,
-          measured_unit = measured_unit_raw,
-          target_unit = target_unit_raw
-        )
+        result <- NA
       }
     },
     error = function(e) {

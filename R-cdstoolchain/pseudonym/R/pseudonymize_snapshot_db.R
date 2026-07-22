@@ -136,7 +136,7 @@ pseudonymizeSnapshotMaterializedTables <- function(
   keep_unmatched_columns,
   log_steps) {
   result_tables <- list()
-  summary <- data.table::data.table()
+  summary_rows <- list()
 
   for (i in seq_len(nrow(materialization_plan))) {
     materialized_table_name <- materialization_plan[["MATERIALIZED_TABLE_NAME"]][i]
@@ -163,12 +163,16 @@ pseudonymizeSnapshotMaterializedTables <- function(
     table_result[["summary"]][["SNAPSHOT_RELATION_TYPE"]] <-
       materialization_plan[["SNAPSHOT_RELATION_TYPE"]][i]
     result_tables[[materialized_table_name]] <- table_result[["table"]]
-    summary <- data.table::rbindlist(list(summary, table_result[["summary"]]), fill = TRUE)
+    summary_rows[[length(summary_rows) + 1L]] <- table_result[["summary"]]
   }
 
   list(
     tables = result_tables,
-    summary = summary
+    summary = if (length(summary_rows) > 0) {
+      data.table::rbindlist(summary_rows, fill = TRUE)
+    } else {
+      data.table::data.table()
+    }
   )
 }
 
@@ -311,6 +315,7 @@ writeSnapshotTargetTables <- function(
     STATUS = character()
   )
 
+  summary_rows <- list()
   for (table_name in names(tables)) {
     if (!isTRUE(overwrite) && snapshotRelationExists(connection, table_name, target_schema)) {
       stop("Target table already exists: ", snapshotQualifiedName(connection, table_name, target_schema))
@@ -327,17 +332,17 @@ writeSnapshotTargetTables <- function(
       overwrite = overwrite,
       temporary = temporary
     )
-    summary <- data.table::rbindlist(list(
-      summary,
-      data.table::data.table(
-        TABLE_NAME = table_name,
-        ROWS = nrow(tables[[table_name]]),
-        COLUMNS = length(names(tables[[table_name]])),
-        STATUS = "written"
-      )
-    ))
+    summary_rows[[length(summary_rows) + 1L]] <- data.table::data.table(
+      TABLE_NAME = table_name,
+      ROWS = nrow(tables[[table_name]]),
+      COLUMNS = length(names(tables[[table_name]])),
+      STATUS = "written"
+    )
   }
 
+  if (length(summary_rows) > 0) {
+    summary <- data.table::rbindlist(summary_rows)
+  }
   summary
 }
 
@@ -368,6 +373,7 @@ createSnapshotPassthroughViews <- function(
     STATUS = character()
   )
 
+  summary_rows <- list()
   for (i in seq_len(nrow(materialization_plan))) {
     view_name <- materialization_plan[["TARGET_VIEW_NAME"]][i]
     source_table <- materialization_plan[["MATERIALIZED_TABLE_NAME"]][i]
@@ -383,27 +389,30 @@ createSnapshotPassthroughViews <- function(
       snapshotQualifiedName(connection, source_table, table_schema)
     )
     DBI::dbExecute(connection, statement)
-    summary <- data.table::rbindlist(list(
-      summary,
-      data.table::data.table(
-        VIEW_NAME = view_name,
-        SOURCE_TABLE = source_table,
-        STATUS = "created"
-      )
-    ))
+    summary_rows[[length(summary_rows) + 1L]] <- data.table::data.table(
+      VIEW_NAME = view_name,
+      SOURCE_TABLE = source_table,
+      STATUS = "created"
+    )
   }
 
+  if (length(summary_rows) > 0) {
+    summary <- data.table::rbindlist(summary_rows)
+  }
   summary
 }
 
-writeSnapshotEnrichmentReviewReport <- function(report, file_name = NA) {
-  report_tables <- list(unmatched_medication_references = report)
+writePseudonymizationReportWorkbook <- function(
+  report_tables,
+  file_name = NA,
+  filename_without_extension,
+  subdir = "reports") {
   if (is.na(file_name)) {
     etlutils::writeExcelFileLocal(
       report_tables,
-      filename_without_extension = "snapshot_enrichment_review",
+      filename_without_extension = filename_without_extension,
       with_column_names = TRUE,
-      subdir = "reports"
+      subdir = subdir
     )
   } else {
     output_dir <- dirname(file_name)
@@ -416,29 +425,25 @@ writeSnapshotEnrichmentReviewReport <- function(report, file_name = NA) {
       with_column_names = TRUE
     )
   }
+}
+
+writeSnapshotEnrichmentReviewReport <- function(report, file_name = NA) {
+  report_tables <- list(unmatched_medication_references = report)
+  writePseudonymizationReportWorkbook(
+    report_tables,
+    file_name = file_name,
+    filename_without_extension = "snapshot_enrichment_review"
+  )
   invisible(report)
 }
 
 writeSnapshotPostprocessingReport <- function(summary, file_name = NA) {
   report_tables <- list(snapshot_postprocessing_summary = summary)
-  if (is.na(file_name)) {
-    etlutils::writeExcelFileLocal(
-      report_tables,
-      filename_without_extension = "snapshot_postprocessing_report",
-      with_column_names = TRUE,
-      subdir = "reports"
-    )
-  } else {
-    output_dir <- dirname(file_name)
-    if (!dir.exists(output_dir)) {
-      dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-    }
-    etlutils::writeExcelFile(
-      report_tables,
-      file_name,
-      with_column_names = TRUE
-    )
-  }
+  writePseudonymizationReportWorkbook(
+    report_tables,
+    file_name = file_name,
+    filename_without_extension = "snapshot_postprocessing_report"
+  )
   invisible(summary)
 }
 

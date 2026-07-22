@@ -27,8 +27,14 @@ test_that("convertLabUnits keeps the international unit fallback narrow", {
   expect_equal(etlutils::convertLabUnits(1, "mU/L", ""), 1)
 })
 
-test_that("isValidUnit remains tied to units package validation", {
-  expect_false(etlutils::isValidUnit("mU/L"))
-  expect_false(etlutils::isValidUnit("m[IU]/L"))
+test_that("isValidUnit accepts units supported by convertLabUnits", {
+  expect_true(etlutils::isValidUnit("mU/L"))
+  expect_true(etlutils::isValidUnit("U/L"))
+  expect_true(etlutils::isValidUnit("uU/mL"))
+  expect_true(etlutils::isValidUnit("m[IU]/L"))
+  expect_true(etlutils::isValidUnit("m[iU]/L"))
+  expect_true(etlutils::isValidUnit("\u00b5U/mL"))
   expect_true(etlutils::isValidUnit("mmol/L"))
+  expect_false(etlutils::isValidUnit("foo"))
+  expect_false(etlutils::isValidUnit("mM/"))
 })

@@ -598,23 +598,10 @@ writePseudonymizationRuleReviewReport <- function(
     rules,
     input_repo_path = input_repo_path
   )
-  if (is.na(file_name)) {
-    etlutils::writeExcelFileLocal(
-      report,
-      filename_without_extension = filename_without_extension,
-      with_column_names = TRUE,
-      subdir = "reports"
-    )
-  } else {
-    output_dir <- dirname(file_name)
-    if (!dir.exists(output_dir)) {
-      dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-    }
-    etlutils::writeExcelFile(
-      report,
-      file_name,
-      with_column_names = TRUE
-    )
-  }
+  writePseudonymizationReportWorkbook(
+    report,
+    file_name = file_name,
+    filename_without_extension = filename_without_extension
+  )
   invisible(report)
 }

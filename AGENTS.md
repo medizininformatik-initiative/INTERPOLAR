@@ -49,6 +49,14 @@ behavior.
   suitable.
 - In progress updates or final summaries for non-trivial code changes, mention
   which existing helpers or local patterns were reused.
+- Keep new code reasonably DRY without hiding simple domain logic behind
+  over-generic helpers. Repeated technical mechanics such as report writing,
+  path handling, validation scaffolding, or summary accumulation should be
+  factored into small, well-named helpers when that improves readability.
+- Before opening or updating a pull request, explicitly review the changed code
+  for avoidable duplication, oversized files, misplaced logic, and missing
+  comments around non-obvious behavior. Do not refactor merely for symmetry when
+  the repetition is clearer and unlikely to change together.
 
 ## Table Description And Excel Handling
 
