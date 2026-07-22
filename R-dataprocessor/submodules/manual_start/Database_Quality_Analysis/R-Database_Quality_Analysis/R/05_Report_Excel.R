@@ -466,11 +466,19 @@ createReport <- function(config = getConfig()) {
     config$output_filename,
     timestamp = analysis_start_time
   )
+  unique_values <- createUniqueValuesReport(metadata, config = config)
+  unique_values_file <- writeUniqueValuesFile(
+    unique_values,
+    config$output_filename,
+    timestamp = analysis_start_time
+  )
   logProgress(
     "Finished report in ",
     formatDuration(analysis_start_time),
-    ". Output: ",
-    output_file
+    ". Outputs: ",
+    output_file,
+    ", ",
+    unique_values_file
   )
 
   invisible(result)

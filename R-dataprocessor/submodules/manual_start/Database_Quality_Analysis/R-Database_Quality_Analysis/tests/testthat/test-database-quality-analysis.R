@@ -377,6 +377,136 @@ test_that("database quality analysis count query uses non-empty values and quote
   expect_equal(result$alias_map$count_column, c("count per resource_id", "count per PID"))
 })
 
+test_that("database quality analysis unique value query batches database values", {
+  table_metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = "v_observation_last_version",
+    TABLE_FAMILY = "FHIR",
+    TABLE_NAME = "observation",
+    COLUMN_NAME = c("obs_id", "obs_code_code"),
+    COLUMN_DESCRIPTION = c("id", "code"),
+    ORDINAL_POSITION = 1:2,
+    DATA_TYPE = "character varying"
+  )
+
+  result <- buildUniqueValuesQuery(table_metadata, c("obs_id", "obs_code_code"))
+
+  expect_match(result, "SELECT DISTINCT", fixed = TRUE)
+  expect_match(result, "'FHIR' AS \"TABLE_FAMILY\"", fixed = TRUE)
+  expect_match(result, "'observation' AS \"TABLE_NAME\"", fixed = TRUE)
+  expect_match(result, "CROSS JOIN LATERAL", fixed = TRUE)
+  expect_match(result, "('obs_id', \"source_row\".\"obs_id\"::text)", fixed = TRUE)
+  expect_match(result, "('obs_code_code', \"source_row\".\"obs_code_code\"::text)", fixed = TRUE)
+  expect_match(result, "FROM \"db2dataprocessor_out\".\"v_observation_last_version\"", fixed = TRUE)
+  expect_match(result, "WHERE \"unique_values\".\"value\" IS NOT NULL", fixed = TRUE)
+  expect_match(result, "ORDER BY \"unique_values\".\"column_name\" ASC, \"unique_values\".\"value\" ASC", fixed = TRUE)
+  expect_false(grepl("COUNT", result, fixed = TRUE))
+  expect_false(grepl("GROUP BY", result, fixed = TRUE))
+})
+
+test_that("database quality analysis unique value query handles missing descriptions", {
+  table_metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = "v_observation_last_version",
+    TABLE_FAMILY = "FHIR",
+    TABLE_NAME = "observation",
+    COLUMN_NAME = "obs_value",
+    COLUMN_DESCRIPTION = NA_character_,
+    ORDINAL_POSITION = 1L,
+    DATA_TYPE = "character varying"
+  )
+
+  result <- buildUniqueValuesQuery(table_metadata, "obs_value")
+
+  expect_match(result, "('obs_value', \"source_row\".\"obs_value\"::text)", fixed = TRUE)
+})
+
+test_that("database quality analysis creates unique value report", {
+  metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = rep("v_observation_last_version", 2),
+    TABLE_FAMILY = "FHIR",
+    TABLE_NAME = "observation",
+    COLUMN_NAME = c("obs_id", "obs_code_code"),
+    COLUMN_DESCRIPTION = c("id", "code"),
+    ORDINAL_POSITION = 1:2,
+    DATA_TYPE = "character varying"
+  )
+  query_state <- new.env(parent = emptyenv())
+  query_state$seen_queries <- character()
+  query_fun <- function(query, lock_id = NULL) {
+    query_state$seen_queries <- c(query_state$seen_queries, query)
+    if (grepl("'obs_id'", query, fixed = TRUE)) {
+      return(data.table::data.table(
+        TABLE_FAMILY = "FHIR",
+        TABLE_NAME = "observation",
+        COLUMN_NAME = "obs_id",
+        VALUE = c("obs-1", "obs-2")
+      ))
+    }
+    data.table::data.table(
+      TABLE_FAMILY = "FHIR",
+      TABLE_NAME = "observation",
+      COLUMN_NAME = "obs_code_code",
+      VALUE = c("14933-1", "value; with semicolon", "value with 'quote'")
+    )
+  }
+
+  result <- createUniqueValuesReport(
+    metadata,
+    config = list(count_batch_size = 1),
+    query_fun = query_fun
+  )
+
+  expect_equal(names(result), c("TABLE_FAMILY", "TABLE_NAME", "COLUMN_NAME", "VALUES"))
+  expect_equal(nrow(result), 2L)
+  expect_equal(result$COLUMN_NAME, c("obs_code_code", "obs_id"))
+  expect_equal(
+    result[COLUMN_NAME == "obs_id", VALUES],
+    paste(c("'obs-1'", "'obs-2'"), collapse = "\n")
+  )
+  expect_equal(
+    result[COLUMN_NAME == "obs_code_code", VALUES],
+    paste(c("'14933-1'", "'value with ''quote'''", "'value; with semicolon'"), collapse = "\n")
+  )
+  expect_false("COUNT" %in% names(result))
+  expect_false("VALUE" %in% names(result))
+  expect_length(query_state$seen_queries, 2L)
+})
+
+test_that("database quality analysis unique value report uses only FHIR metadata", {
+  metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = c("v_observation_last_version", "v_patient_fe_last_version", "v_pids_per_ward"),
+    TABLE_FAMILY = c("FHIR", "Frontend", "Other"),
+    TABLE_NAME = c("observation", "patient_fe", "pids_per_ward"),
+    COLUMN_NAME = c("obs_id", "pat_id", "patientid"),
+    COLUMN_DESCRIPTION = NA_character_,
+    ORDINAL_POSITION = 1L,
+    DATA_TYPE = "character varying"
+  )
+  query_state <- new.env(parent = emptyenv())
+  query_state$seen_queries <- character()
+  query_fun <- function(query, lock_id = NULL) {
+    query_state$seen_queries <- c(query_state$seen_queries, query)
+    data.table::data.table(
+      TABLE_FAMILY = "FHIR",
+      TABLE_NAME = "observation",
+      COLUMN_NAME = "obs_id",
+      VALUE = "obs-1"
+    )
+  }
+
+  result <- createUniqueValuesReport(metadata, query_fun = query_fun)
+
+  expect_equal(result$TABLE_FAMILY, "FHIR")
+  expect_equal(result$TABLE_NAME, "observation")
+  expect_length(query_state$seen_queries, 1L)
+  expect_match(query_state$seen_queries[[1]], "v_observation_last_version", fixed = TRUE)
+  expect_false(grepl("patient_fe", query_state$seen_queries[[1]], fixed = TRUE))
+  expect_false(grepl("pids_per_ward", query_state$seen_queries[[1]], fixed = TRUE))
+})
+
 test_that("database quality analysis count query applies optional row filters", {
   table_metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
@@ -1497,4 +1627,55 @@ test_that("database quality analysis excel writer uses readable column widths", 
   )
   expect_equal(openxlsx::getSheetNames(file_name), c("FHIR", "Metadata"))
   expect_match(sheet_xml, "customWidth=\"1\"", fixed = TRUE)
+})
+
+test_that("database quality analysis unique value writer creates csv files", {
+  old_module_dirs <- if (exists("MODULE_DIRS", envir = .GlobalEnv, inherits = FALSE)) {
+    get("MODULE_DIRS", envir = .GlobalEnv)
+  } else {
+    NULL
+  }
+  on.exit(
+    {
+      if (is.null(old_module_dirs)) {
+        rm("MODULE_DIRS", envir = .GlobalEnv)
+      } else {
+        assign("MODULE_DIRS", old_module_dirs, envir = .GlobalEnv)
+      }
+    },
+    add = TRUE
+  )
+  assign(
+    "MODULE_DIRS",
+    data.frame(local_dir = tempdir(), global_dir = tempdir()),
+    envir = .GlobalEnv
+  )
+
+  unique_values <- data.table::data.table(
+    TABLE_FAMILY = "FHIR",
+    TABLE_NAME = "observation",
+    COLUMN_NAME = "obs_code_code",
+    VALUES = paste(c("'14933-1'", "'value; with semicolon'"), collapse = "\n"),
+    check.names = FALSE
+  )
+
+  file_name <- writeUniqueValuesFile(
+    unique_values,
+    "Database_Quality_Analysis_Test",
+    timestamp = as.POSIXct("2026-06-19 08:00:02", tz = "UTC")
+  )
+
+  expect_true(file.exists(file_name))
+  expect_match(
+    basename(file_name),
+    "Database_Quality_Analysis_Test_Unique_Values_2026-06-19_08-00-02.csv",
+    fixed = TRUE
+  )
+  written_values <- data.table::fread(file_name, sep = ",", keepLeadingZeros = TRUE)
+  expect_equal(
+    written_values$VALUES,
+    paste(c("'14933-1'", "'value; with semicolon'"), collapse = "\n")
+  )
+  expect_false("COUNT" %in% names(written_values))
+  expect_false("VALUE" %in% names(written_values))
 })
