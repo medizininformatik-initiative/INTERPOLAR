@@ -262,8 +262,12 @@ case "$action" in
     list)
         echo "Liste alle Snapshots im Verzeichnis '${DIR}' auf:"
         if find "${DIR}" -maxdepth 1 -type f -name '*.sql.gz' -print -quit | grep -q . ; then
-            #ls -lisa Snapshots/*.sql.gz;
-            find "${DIR}" -type f -name '*.sql.gz' -printf '%f\t%kKB\n' | sed 's/\.sql\.gz\t/\t/'
+            find "${DIR}" -maxdepth 1 -type f -name '*.sql.gz' -print | sort | while IFS= read -r snapshot_file; do
+                snapshot_base="${snapshot_file##*/}"
+                snapshot_name="${snapshot_base%.sql.gz}"
+                snapshot_size_kb="$(du -k "${snapshot_file}" | awk '{print $1}')"
+                printf '%s\t%sKB\n' "${snapshot_name}" "${snapshot_size_kb}"
+            done
         else
             echo "Keine Snapshots im Verzeichnis ${DIR} vorhanden."
         fi
