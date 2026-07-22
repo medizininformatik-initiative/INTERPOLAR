@@ -1,3 +1,18 @@
+test_that("convertLabUnits keeps existing units package conversions unchanged", {
+  expect_equal(etlutils::convertLabUnits(1, "mmol/L", "umol/L"), 1000)
+  expect_equal(etlutils::convertLabUnits(1, "mg/dL", "mg/L"), 10)
+  expect_equal(etlutils::convertLabUnits(1, "10*9/L", "10^9/L"), 1)
+  expect_true(etlutils::isValidUnit("10*9/L"))
+  expect_true(etlutils::isValidUnit("10^9/L"))
+})
+
+test_that("convertLabUnits keeps legacy missing and invalid unit behavior", {
+  expect_equal(etlutils::convertLabUnits(7, "mg/L", NA), 7)
+  expect_equal(etlutils::convertLabUnits(7, "mg/L", ""), 7)
+  expect_true(is.na(etlutils::convertLabUnits(7, "foo", "mg/L")))
+  expect_false(etlutils::isValidUnit("foo"))
+})
+
 test_that("convertLabUnits converts simple international unit quotients", {
   expect_equal(etlutils::convertLabUnits(1, "mU/L", "U/L"), 0.001)
   expect_equal(etlutils::convertLabUnits(1, "U/L", "mU/L"), 1000)
