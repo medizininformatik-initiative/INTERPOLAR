@@ -8,7 +8,7 @@ set -o pipefail
 #  Aufruf:
 #      ./ip-snapshot.sh list
 #      ./ip-snapshot.sh create  <name> [--with-pseudonymized]
-#      ./ip-snapshot.sh pseudonymize  <name_date>
+#      ./ip-snapshot.sh pseudonymize  <name_date> [--keep-temp-on-error]
 #      ./ip-snapshot.sh delete  <name_date>
 #      ./ip-snapshot.sh activate  <name_date>
 #      ./ip-snapshot.sh deactivate  <name_date>
@@ -32,6 +32,9 @@ Usage: ${0##*/} <action> <name>
   <name>     beliebiger String (ohne Pfad‑Komponenten), <name> | <name_date>
   --with-pseudonymized
              nur bei \"create\": erzeugt direkt zusätzlich <name_date>_pseud.sql.gz
+  --keep-temp-on-error
+             nur bei \"pseudonymize\" oder \"create --with-pseudonymized\":
+             temporäre Build-Datenbanken bei Fehlern zur Diagnose behalten
 
 Beispiele:
   $0 list                            → listet alle .sql.gz-Dateien (ohne Endung) im Ordner Snapshots auf
@@ -39,6 +42,8 @@ Beispiele:
   $0 create  snapshot --with-pseudonymized
                                       → erzeugt  snapshot_<Datum>.sql.gz und snapshot_<Datum>_pseud.sql.gz
   $0 pseudonymize  snapshot_20250929 → erzeugt  snapshot_20250929_pseud.sql.gz
+  $0 pseudonymize  snapshot_20250929 --keep-temp-on-error
+                                      → behält ip_snapshot_20250929_build und ip_snapshot_20250929_pseud_build bei Fehlern
   $0 delete  snapshot_20250929       → löscht   snapshot_20250929.sql.gz
   $0 activate  snapshot_20250929     → erstellt eine Datenbank 'snapshot_20250929'
   $0 deactivate  snapshot_20250929   → löscht die Datenbank 'snapshot_20250929'
@@ -56,6 +61,7 @@ EOF
 action=$1
 name=$2
 option=$3
+option2=$4
 DIR=Snapshots
 
 if [[ -z "$action" ]]; then
@@ -177,6 +183,7 @@ prepare_pseudonymized_target_database() {
 
 create_pseudonymized_snapshot() {
     local snapshot_name="$1"
+    local keep_temp_on_error="${2:-false}"
     local source_file_path="${DIR}/${snapshot_name}.sql.gz"
     local pseudonymized_snapshot_name="${snapshot_name}_pseud"
     local pseudonymized_file_path="${DIR}/${pseudonymized_snapshot_name}.sql.gz"
@@ -206,15 +213,19 @@ create_pseudonymized_snapshot() {
         echo "Temporäre Source-Datenbank '${source_build_db}' eingespielt."
     else
         echo "Fehler: Einspielen der temporären Source-Datenbank '${source_build_db}' fehlgeschlagen."
-        drop_database_if_exists "${source_build_db}"
+        if [[ "${keep_temp_on_error}" != "true" ]]; then
+            drop_database_if_exists "${source_build_db}"
+        fi
         exit 1
     fi
 
     echo "Erzeuge leere temporäre Ziel-Datenbank '${target_build_db}'..."
     if ! prepare_pseudonymized_target_database "${target_build_db}" ; then
         echo "Fehler: Anlegen der temporären Ziel-Datenbank '${target_build_db}' fehlgeschlagen."
-        drop_database_if_exists "${source_build_db}"
-        drop_database_if_exists "${target_build_db}"
+        if [[ "${keep_temp_on_error}" != "true" ]]; then
+            drop_database_if_exists "${source_build_db}"
+            drop_database_if_exists "${target_build_db}"
+        fi
         exit 1
     fi
 
@@ -230,8 +241,14 @@ create_pseudonymized_snapshot() {
         echo "Pseudonymisierung abgeschlossen."
     else
         echo "Fehler: Pseudonymisierung fehlgeschlagen."
-        drop_database_if_exists "${source_build_db}"
-        drop_database_if_exists "${target_build_db}"
+        if [[ "${keep_temp_on_error}" == "true" ]]; then
+            echo "Temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
+            echo "  ${source_build_db}"
+            echo "  ${target_build_db}"
+        else
+            drop_database_if_exists "${source_build_db}"
+            drop_database_if_exists "${target_build_db}"
+        fi
         exit 1
     fi
 
@@ -246,8 +263,14 @@ create_pseudonymized_snapshot() {
             echo "Datei ${pseudonymized_file_path} existiert, ist jedoch leer -> cleanup."
             rm -f "${pseudonymized_file_path}"
         fi
-        drop_database_if_exists "${source_build_db}"
-        drop_database_if_exists "${target_build_db}"
+        if [[ "${keep_temp_on_error}" == "true" ]]; then
+            echo "Temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
+            echo "  ${source_build_db}"
+            echo "  ${target_build_db}"
+        else
+            drop_database_if_exists "${source_build_db}"
+            drop_database_if_exists "${target_build_db}"
+        fi
         exit 1
     fi
 
@@ -286,6 +309,10 @@ case "$action" in
     create)
         if [[ -n "${option}" && "${option}" != "--with-pseudonymized" ]]; then
             echo "Fehler: unbekannte Option \"${option}\". Erlaubt ist nur \"--with-pseudonymized\"." >&2
+            exit 3
+        fi
+        if [[ -n "${option2}" && "${option2}" != "--keep-temp-on-error" ]]; then
+            echo "Fehler: unbekannte Option \"${option2}\". Erlaubt ist nur \"--keep-temp-on-error\"." >&2
             exit 3
         fi
         # Ziel‑Datei mit Datum
@@ -345,12 +372,24 @@ case "$action" in
         printf "Dauer: %s s\n" "$SECONDS";
 
         if [[ "${option}" == "--with-pseudonymized" ]]; then
-            create_pseudonymized_snapshot "${snapshot_name_date}"
+            keep_temp_on_error=false
+            if [[ "${option2}" == "--keep-temp-on-error" ]]; then
+                keep_temp_on_error=true
+            fi
+            create_pseudonymized_snapshot "${snapshot_name_date}" "${keep_temp_on_error}"
         fi
         ;;
 
     pseudonymize)
-        create_pseudonymized_snapshot "${name}"
+        if [[ -n "${option}" && "${option}" != "--keep-temp-on-error" ]]; then
+            echo "Fehler: unbekannte Option \"${option}\". Erlaubt ist nur \"--keep-temp-on-error\"." >&2
+            exit 3
+        fi
+        keep_temp_on_error=false
+        if [[ "${option}" == "--keep-temp-on-error" ]]; then
+            keep_temp_on_error=true
+        fi
+        create_pseudonymized_snapshot "${name}" "${keep_temp_on_error}"
         ;;
 
     delete)
