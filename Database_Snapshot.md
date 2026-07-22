@@ -1,6 +1,6 @@
 # Datenbank Snapshot
 
-Zur Erstellung, Löschung, Aktivierung, De-Aktivierung, Pseudonymisierung und Auflistung von Snapshots wird das Bash-Script `ip-snapshot.sh` verwendet. Das Script muss direkt im Hauptverzeichnis ausgeführt werden. Snapshot-Dateinamen dürfen keine Pfadangaben enthalten und werden im Verzeichnis `Snapshots` als `.sql.gz` abgelegt.
+Zur Erstellung, Löschung, Aktivierung, De-Aktivierung, Pseudonymisierung und Auflistung von Snapshots wird das Bash-Script `ip-snapshot.sh` verwendet. Das Script muss direkt im Hauptverzeichnis ausgeführt werden. Snapshot-Namen dürfen nur Buchstaben, Zahlen und Unterstriche und keine Pfadangaben enthalten. Die Dateien werden im Verzeichnis `Snapshots` als `.sql.gz` abgelegt.
 
 Beim Erstellen (_create_) wird ein Dump der `cds_hub_db` Datenbank erzeugt und unter `Snapshots/<name>_<Datum>.sql.gz` gespeichert.
 ```cmd
@@ -17,6 +17,14 @@ Ein pseudonymisierter Snapshot kann auch nachträglich aus einem vorhandenen Sna
 ./ip-snapshot.sh pseudonymize snap01_20251002
 ```
 
+Mit `--chunk-size <Zeilen>` lässt sich festlegen, wie viele Zeilen pro Verarbeitungsschritt aus einer Tabelle gelesen werden. Der Standardwert ist 25.000. Kleinere Werte reduzieren den maximalen R-Speicherbedarf, erzeugen aber mehr Verarbeitungsschritte und können die Laufzeit erhöhen. Der Parameter ist bei `pseudonymize` und bei `create --with-pseudonymized` verfügbar.
+```cmd
+./ip-snapshot.sh pseudonymize snap01_20251002 --chunk-size 10000
+./ip-snapshot.sh create snap01 --with-pseudonymized --chunk-size 10000
+```
+
+Wenn die Pseudonymisierung fehlschlägt, bleiben die temporär wiederhergestellte Source-Datenbank und die teilweise erzeugte pseudonymisierte Ziel-Datenbank zur Diagnose erhalten. Die ursprüngliche Snapshot-Datei wird bei einem Fehler nicht gelöscht. Vor einem erneuten Lauf müssen die behaltenen Build-Datenbanken geprüft und manuell entfernt werden, da das Script vorhandene Build-Datenbanken nicht überschreibt. Nach einem erfolgreichen Lauf werden die temporären Build-Datenbanken automatisch gelöscht.
+
 Falls die pseudonymisierte Snapshot-Datei bereits existiert, fragt das Script vor dem Überschreiben nach. Für lokale Tests nach Codeänderungen muss vor dem Pseudonymisierungslauf das R-Image neu gebaut werden, da der Lauf das im Container installierte R-Paket verwendet.
 ```cmd
 docker compose build r-env
@@ -25,7 +33,7 @@ docker compose build r-env
 
 Der pseudonymisierte Snapshot enthält nur die für Auswertungen relevanten Schemata `db_log` und `db2dataprocessor_out`. In `db_log` liegen die pseudonymisierten Tabellen materialisiert, in `db2dataprocessor_out` liegen durchgereichte Views wie `v_<table>` und `v_<table>_last_version`. Tabellen werden nur aufgenommen, wenn sie über die Pseudonymisierungsquellen bzw. Table Descriptions für den Snapshot ausgewählt sind. Innerhalb dieser Tabellen bleiben alle Spalten der Original-Snapshot-Tabellen erhalten. Spalten ohne Pseudonymisierungsregel werden unverändert übernommen; es werden keine technischen Originalspalten wie `hash_index_col`, RAW-Referenzen oder Einfügezeitpunkte entfernt und es werden keine redundanten Zeilen per `unique()` zusammengefasst.
 
-Die Tabellen werden nacheinander und innerhalb einer Tabelle in Blöcken von standardmäßig 25.000 Zeilen verarbeitet. Ein Block wird angereichert, pseudonymisiert und unmittelbar in die Zieldatenbank geschrieben, bevor der nächste Block gelesen wird. Dadurch hängt der R-Speicherbedarf nicht mehr von der Größe des gesamten Snapshots oder einer einzelnen großen Tabelle ab. Die Kontrollsummen und Enrichment-Reports werden über alle Blöcke hinweg zusammengeführt. Ein abgebrochener Lauf wird weiterhin vollständig neu gestartet; ein blockweises Wiederaufsetzen ist derzeit nicht vorgesehen.
+Die Tabellen werden nacheinander und innerhalb einer Tabelle in Blöcken der konfigurierten Größe verarbeitet. Ein Block wird angereichert, pseudonymisiert und unmittelbar in die Zieldatenbank geschrieben, bevor der nächste Block gelesen wird. Dadurch hängt der R-Speicherbedarf nicht mehr von der Größe des gesamten Snapshots oder einer einzelnen großen Tabelle ab. Die Kontrollsummen und Enrichment-Reports werden über alle Blöcke hinweg zusammengeführt. Ein abgebrochener Lauf wird weiterhin vollständig neu gestartet; ein blockweises Wiederaufsetzen ist derzeit nicht vorgesehen.
 
 Die Pseudonymisierungsregeln stammen aus den Table-Description-Dateien und den Snapshot-Erweiterungen. Die Regeln `cryptoHash` und `pseudonymize(...)` werden in der DB-Ausführung beide als deterministischer SHA-256-Hash ohne Salt umgesetzt. Derselbe Originalwert ergibt dadurch immer denselben Hash. `pseudonymize(...)` dient in der Table Description als fachlich lesbare Regelnotation; ein eventueller `domain = ...`-Parameter verändert den erzeugten Hash nicht. Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten und nur der ID-Anteil nach dem Slash wird gehasht.
 
