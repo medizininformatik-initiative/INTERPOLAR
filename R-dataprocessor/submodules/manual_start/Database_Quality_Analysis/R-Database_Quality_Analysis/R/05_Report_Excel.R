@@ -129,6 +129,84 @@ calculateCounts <- function(
   orderByResourceReferenceScope(result)
 }
 
+getSheetDescription <- function(sheet_name, config = list()) {
+  filtered_scope_label <- getFilteredScopeLabel(config)
+  filtered_scope_fhir_sheet_name <- getFilteredScopeSheetName("FHIR", config)
+  filtered_scope_detail_sheet_suffix <- getFilteredScopeDetailSheetSuffix(config)
+
+  if (identical(sheet_name, "FHIR")) {
+    return(list(
+      description = "FHIR resource availability counts from last-version views.",
+      filter_scope = "All FHIR rows included in the configured views.",
+      count_logic = "Counts filled values per resource ID, patient ID and case ID."
+    ))
+  }
+  if (identical(sheet_name, filtered_scope_fhir_sheet_name)) {
+    return(list(
+      description = paste("FHIR resource availability counts restricted to the", filtered_scope_label, "scope."),
+      filter_scope = paste(
+        "Patient-dependent resources are filtered to patients in the configured scope;",
+        "case-dependent resources are filtered to cases in the configured scope;",
+        "case- and patient-independent resources are excluded."
+      ),
+      count_logic = "Same count columns as FHIR, calculated after applying the filtered scope."
+    ))
+  }
+  if (identical(sheet_name, "Frontend")) {
+    return(list(
+      description = "Frontend table availability counts from last-version views.",
+      filter_scope = "All configured frontend rows included.",
+      count_logic = "Counts filled values per resource ID, patient ID and case ID where available."
+    ))
+  }
+  if (identical(sheet_name, "Other")) {
+    return(list(
+      description = "Additional configured views outside FHIR and Frontend.",
+      filter_scope = "All rows from the configured additional views.",
+      count_logic = "Counts filled values using configured or inferred grouping columns."
+    ))
+  }
+  if (identical(sheet_name, "Metadata")) {
+    return(list(
+      description = "Technical metadata for the database quality analysis run.",
+      filter_scope = "Not a data availability sheet.",
+      count_logic = "Contains runtime, configuration and source metadata values."
+    ))
+  }
+  if (nzchar(filtered_scope_detail_sheet_suffix) && endsWith(sheet_name, paste0(" ", filtered_scope_detail_sheet_suffix))) {
+    return(list(
+      description = paste("Resource detail sheet restricted to the", filtered_scope_label, "scope."),
+      filter_scope = "Rows are filtered with the same filtered scope logic as the filtered FHIR sheet.",
+      count_logic = "Uses the configured resource detail row groups and count groups after filtering."
+    ))
+  }
+  return(list(
+    description = "Configured resource detail sheet.",
+    filter_scope = "All rows from the configured resource detail view.",
+    count_logic = "Uses configured resource detail row groups and count groups."
+  ))
+}
+
+createSheetDescriptionSheet <- function(sheet_names, config = list()) {
+  rows <- lapply(sheet_names, function(sheet_name) {
+    description <- getSheetDescription(sheet_name, config)
+    data.table::data.table(
+      SHEET_NAME = sheet_name,
+      DESCRIPTION = description$description,
+      FILTER_SCOPE = description$filter_scope,
+      COUNT_LOGIC = description$count_logic
+    )
+  })
+  data.table::rbindlist(rows, use.names = TRUE)
+}
+
+prependSheetDescriptionSheet <- function(sheets, config = list()) {
+  c(
+    "Sheet Description" = list(createSheetDescriptionSheet(c(names(sheets), "Metadata"), config)),
+    sheets
+  )
+}
+
 formatRunTimestamp <- function(timestamp) {
   format(timestamp, "%Y-%m-%d %H:%M:%S UTC", tz = "UTC")
 }
@@ -354,25 +432,26 @@ createReport <- function(config = getConfig()) {
     "."
   )
   sheets <- splitResultForExcel(result)
-  interpolar_case_sheets <- createInterpolarCaseSheets(
+  filtered_scope_fhir_sheets <- createFilteredScopeFhirSheets(
     metadata,
     result,
     config,
     history_metadata = history_metadata
   )
-  if (length(interpolar_case_sheets)) {
+  if (length(filtered_scope_fhir_sheets)) {
     fhir_sheet_position <- match("FHIR", names(sheets))
     sheets <- append(
       sheets,
-      interpolar_case_sheets,
+      filtered_scope_fhir_sheets,
       after = if (is.na(fhir_sheet_position)) length(sheets) else fhir_sheet_position
     )
   }
   sheets <- c(
     sheets,
     createResourceDetailSheets(metadata, result, config),
-    createInterpolarResourceDetailSheets(metadata, result, config)
+    createFilteredScopeResourceDetailSheets(metadata, result, config)
   )
+  sheets <- prependSheetDescriptionSheet(sheets, config)
   sheets$Metadata <- createMetadataSheet(
     result,
     metadata,

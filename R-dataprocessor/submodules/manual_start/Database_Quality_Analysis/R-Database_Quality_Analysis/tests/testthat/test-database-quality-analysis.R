@@ -1,19 +1,19 @@
 getTestResourceDetailSheets <- function() {
   detail_values <- list(
-    RESOURCE_DETAIL_ENCOUNTER_SHEET_NAME = "FHIR Encounter",
-    RESOURCE_DETAIL_ENCOUNTER_TABLE_NAME = "encounter",
-    RESOURCE_DETAIL_ENCOUNTER_BLOCK_SYSTEM_COLUMN = "enc_type_system",
-    RESOURCE_DETAIL_ENCOUNTER_BLOCK_SYSTEM = "http://fhir.de/CodeSystem/Kontaktebene",
-    RESOURCE_DETAIL_ENCOUNTER_BLOCK_VALUE_COLUMN = "enc_type_code",
-    RESOURCE_DETAIL_ENCOUNTER_BLOCK_VALUES = c(
+    RESOURCE_DETAIL_SHEET_NAMES = "FHIR Encounter",
+    RESOURCE_DETAIL_TABLE_NAMES = "encounter",
+    RESOURCE_DETAIL_ROW_GROUP_SYSTEM_COLUMNS = "enc_type_system",
+    RESOURCE_DETAIL_ROW_GROUP_SYSTEMS = "http://fhir.de/CodeSystem/Kontaktebene",
+    RESOURCE_DETAIL_ROW_GROUP_VALUE_COLUMNS = "enc_type_code",
+    RESOURCE_DETAIL_ROW_GROUP_VALUES = c(
       "Einrichtungskontakt=einrichtungskontakt",
       "Abteilungskontakt=abteilungskontakt",
       "Versorgungsstellenkontakt=versorgungsstellenkontakt"
     ),
-    RESOURCE_DETAIL_ENCOUNTER_SPLIT_SYSTEM_COLUMN = "enc_class_system",
-    RESOURCE_DETAIL_ENCOUNTER_SPLIT_SYSTEM = "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-    RESOURCE_DETAIL_ENCOUNTER_SPLIT_VALUE_COLUMN = "enc_class_code",
-    RESOURCE_DETAIL_ENCOUNTER_SPLIT_VALUES = c(
+    RESOURCE_DETAIL_COUNT_GROUP_SYSTEM_COLUMNS = "enc_class_system",
+    RESOURCE_DETAIL_COUNT_GROUP_SYSTEMS = "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+    RESOURCE_DETAIL_COUNT_GROUP_VALUE_COLUMNS = "enc_class_code",
+    RESOURCE_DETAIL_COUNT_GROUP_VALUES = c(
       "count class IMP=IMP",
       "count class SS=SS",
       "count class AMB=AMB",
@@ -27,7 +27,7 @@ getTestResourceDetailSheets <- function() {
     detail_values[[name]]
   }
 
-  parseResourceDetailSheets("ENCOUNTER", get_config_value)
+  parseResourceDetailSheets(get_config_value)
 }
 
 test_that("database quality analysis metadata is normalized from view columns", {
@@ -115,24 +115,42 @@ test_that("database quality analysis resource detail sheets are parsed", {
   detail_config <- result$encounter
 
   expect_equal(detail_config$sheet_name, "FHIR Encounter")
-  expect_equal(names(detail_config$block_values), c(
+  expect_equal(names(detail_config$row_group_values), c(
     "Einrichtungskontakt",
     "Abteilungskontakt",
     "Versorgungsstellenkontakt"
   ))
-  expect_equal(unname(detail_config$block_values), c(
+  expect_equal(unname(detail_config$row_group_values), c(
     "einrichtungskontakt",
     "abteilungskontakt",
     "versorgungsstellenkontakt"
   ))
-  expect_equal(unname(detail_config$split_count_columns), c(
+  expect_equal(unname(detail_config$count_group_count_columns), c(
     "count class IMP",
     "count class SS",
     "count class AMB",
     "count class Andere"
   ))
-  expect_equal(unname(detail_config$split_values), c("IMP", "SS", "AMB", "OTHER"))
+  expect_equal(unname(detail_config$count_group_values), c("IMP", "SS", "AMB", "OTHER"))
 })
+
+test_that("database quality analysis config controls filtered scope sheets", {
+  envir <- new.env(parent = emptyenv())
+  assign("FILTERED_SCOPE_SHEET_NAMES", c("FHIR", "FHIR Encounter"), envir = envir)
+  assign("FILTERED_SCOPE_DETAIL_SHEET_SUFFIX", "IP", envir = envir)
+
+  config <- getConfig(envir = envir)
+
+  expect_true(isFilteredScopeSheetsEnabled(config))
+  expect_equal(getFilteredScopeSheetNames(config), c("FHIR", "FHIR Encounter"))
+  expect_true(isFilteredScopeSheetConfigured("FHIR", config))
+  expect_true(isFilteredScopeSheetConfigured("FHIR Encounter", config))
+  expect_false(isFilteredScopeSheetConfigured("Other", config))
+  expect_equal(getFilteredScopeLabel(config), "IP")
+  expect_equal(getFilteredScopeSheetName("FHIR", config), "FHIR IP")
+  expect_equal(getFilteredScopeSheetName("FHIR Encounter", config), "FHIR Encounter IP")
+})
+
 
 test_that("database quality analysis config can skip datetime columns by command-line flags", {
   envir <- new.env(parent = emptyenv())
@@ -403,7 +421,20 @@ test_that("database quality analysis count query ignores invalid calculated refs
   expect_match(result$query, '"obs_encounter_calculated_ref"::text <> \'invalid\'', fixed = TRUE)
 })
 
-test_that("database quality analysis INTERPOLAR filter uses calculated encounter refs", {
+test_that("database quality analysis filtered case sheets can be disabled", {
+  config <- list(filtered_scope_sheet_names = character())
+
+  expect_equal(
+    createFilteredScopeFhirSheets(data.table::data.table(), data.table::data.table(), config),
+    list()
+  )
+  expect_equal(
+    createFilteredScopeResourceDetailSheets(data.table::data.table(), data.table::data.table(), config),
+    list()
+  )
+})
+
+test_that("database quality analysis filtered scope filter uses calculated encounter refs", {
   metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
     VIEW_NAME = c(
@@ -438,14 +469,14 @@ test_that("database quality analysis INTERPOLAR filter uses calculated encounter
   observation_grouping <- inferGroupingColumns(observation_metadata, config)
   patient_metadata <- getTableMetadata(metadata, "patient")
   patient_grouping <- inferGroupingColumns(patient_metadata, config)
-  main_encounter_subquery <- getInterpolarMainEncounterSubquery(metadata)
+  main_encounter_subquery <- getFilteredScopeMainEncounterSubquery(metadata)
 
-  observation_filter <- getInterpolarCaseFilterCondition(
+  observation_filter <- getFilteredScopeCaseFilterCondition(
     observation_metadata,
     observation_grouping,
     main_encounter_subquery
   )
-  patient_filter <- getInterpolarCaseFilterCondition(
+  patient_filter <- getFilteredScopeCaseFilterCondition(
     patient_metadata,
     patient_grouping,
     main_encounter_subquery
@@ -459,7 +490,7 @@ test_that("database quality analysis INTERPOLAR filter uses calculated encounter
   expect_true(is.na(patient_filter))
 })
 
-test_that("database quality analysis creates INTERPOLAR sheet for encounter-related FHIR tables", {
+test_that("database quality analysis creates filtered scope sheet for encounter-related FHIR tables", {
   metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
     VIEW_NAME = c(
@@ -518,6 +549,7 @@ test_that("database quality analysis creates INTERPOLAR sheet for encounter-rela
   result <- orderByResourceReferenceScope(result)
   config <- list(
     count_batch_size = 100,
+    filtered_scope_sheet_names = "FHIR",
     grouping_overrides = parseGroupingOverrides("patient|pat_id|pat_id|")
   )
   query_state <- new.env(parent = emptyenv())
@@ -528,7 +560,7 @@ test_that("database quality analysis creates INTERPOLAR sheet for encounter-rela
     data.table::as.data.table(as.list(stats::setNames(rep(1L, length(aliases)), aliases)))
   }
 
-  sheet <- createInterpolarCaseSheet(metadata, result, config, query_fun = query_fun)
+  sheet <- createFilteredScopeFhirSheet(metadata, result, config, query_fun = query_fun)
 
   expect_equal(unique(sheet$TABLE_NAME), c("patient", "encounter", "observation"))
   expect_true("patient" %in% sheet$TABLE_NAME)
@@ -539,7 +571,7 @@ test_that("database quality analysis creates INTERPOLAR sheet for encounter-rela
   expect_true(any(grepl("regexp_replace", query_state$seen_queries, fixed = TRUE)))
 })
 
-test_that("database quality analysis INTERPOLAR sheet fills value datetime columns", {
+test_that("database quality analysis filtered scope sheet fills value datetime columns", {
   metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
     VIEW_NAME = c(
@@ -602,6 +634,7 @@ test_that("database quality analysis INTERPOLAR sheet fills value datetime colum
   )
   config <- list(
     count_batch_size = 100,
+    filtered_scope_sheet_names = "FHIR",
     grouping_overrides = parseGroupingOverrides(character()),
     include_value_datetime_columns = TRUE,
     view_prefix = "v_",
@@ -631,7 +664,7 @@ test_that("database quality analysis INTERPOLAR sheet fills value datetime colum
     data.table::as.data.table(as.list(datetime_values))
   }
 
-  sheet <- createInterpolarCaseSheet(
+  sheet <- createFilteredScopeFhirSheet(
     metadata,
     result,
     config,
@@ -709,7 +742,7 @@ test_that("database quality analysis resource detail query filters block and spl
     grouping_columns,
     data_columns = c("enc_status"),
     detail_config = detail_config,
-    block_value = "einrichtungskontakt"
+    row_group_value = "einrichtungskontakt"
   )
 
   expect_match(result$query, '"enc_type_system" = \'http://fhir.de/CodeSystem/Kontaktebene\'', fixed = TRUE)
@@ -724,7 +757,7 @@ test_that("database quality analysis resource detail query filters block and spl
   expect_match(result$query, '"enc_main_encounter_calculated_ref"::text <> \'invalid\'', fixed = TRUE)
   expect_equal(result$alias_map$count_column, c(
     unname(DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS),
-    unname(detail_config$split_count_columns)
+    unname(detail_config$count_group_count_columns)
   ))
 })
 
@@ -756,7 +789,7 @@ test_that("database quality analysis resource detail query applies optional row 
     grouping_columns,
     data_columns = c("enc_status"),
     detail_config = getTestResourceDetailSheets()$encounter,
-    block_value = "einrichtungskontakt",
+    row_group_value = "einrichtungskontakt",
     row_filter_condition = "enc_main_encounter_calculated_ref IN (SELECT enc_id FROM ip_cases)"
   )
 
@@ -810,21 +843,23 @@ test_that("database quality analysis creates resource detail sheet blocks", {
 
   expect_equal(unique(sheet$TABLE_NAME), paste(
     "encounter",
-    names(detail_config$block_values),
+    names(detail_config$row_group_values),
     sep = " - "
   ))
   expect_equal(nrow(sheet), 3L * nrow(metadata))
   expect_equal(
-    tail(names(sheet), length(detail_config$split_count_columns)),
-    unname(detail_config$split_count_columns)
+    tail(names(sheet), length(detail_config$count_group_count_columns)),
+    unname(detail_config$count_group_count_columns)
   )
   expect_true(all(unname(DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS) %in% names(sheet)))
   expect_false(any(grepl("count per Einrichtungskontakt", names(sheet), fixed = TRUE)))
   expect_false(is.na(sheet[TABLE_NAME == "encounter - Einrichtungskontakt" & COLUMN_NAME == "enc_status", "count class IMP"][[1]]))
 })
 
-test_that("database quality analysis creates INTERPOLAR resource detail sheets", {
+test_that("database quality analysis creates filtered scope resource detail sheets", {
   config <- list(
+    filtered_scope_sheet_names = "FHIR Encounter",
+    filtered_scope_detail_sheet_suffix = "IP",
     grouping_overrides = parseGroupingOverrides(character()),
     resource_detail_sheets = getTestResourceDetailSheets()
   )
@@ -879,12 +914,12 @@ test_that("database quality analysis creates INTERPOLAR resource detail sheets",
     data.table::as.data.table(as.list(stats::setNames(rep(1L, length(aliases)), aliases)))
   }
 
-  sheets <- createInterpolarResourceDetailSheets(metadata, result, config, query_fun = query_fun)
+  sheets <- createFilteredScopeResourceDetailSheets(metadata, result, config, query_fun = query_fun)
 
-  expect_equal(names(sheets), "FHIR Encounter INTERPOLAR")
+  expect_equal(names(sheets), "FHIR Encounter IP")
   expect_equal(
-    unique(sheets[["FHIR Encounter INTERPOLAR"]]$TABLE_NAME),
-    paste("encounter", names(config$resource_detail_sheets$encounter$block_values), sep = " - ")
+    unique(sheets[["FHIR Encounter IP"]]$TABLE_NAME),
+    paste("encounter", names(config$resource_detail_sheets$encounter$row_group_values), sep = " - ")
   )
   expect_true(any(grepl('"enc_main_encounter_calculated_ref" IN', query_state$seen_queries, fixed = TRUE)))
 })
@@ -1155,6 +1190,70 @@ test_that("database quality analysis date range query treats configured frontend
   expect_match(result$query, '"ret_massn_am1___1" = \'Checked\'', fixed = TRUE)
   expect_match(result$query, '"ret_massn_am1___2" = \'Checked\'', fixed = TRUE)
   expect_false(grepl('"ret_massn_am1___1"::text <> \'\'', result$query, fixed = TRUE))
+})
+
+test_that("database quality analysis sheet description explains generated sheets", {
+  config <- list(
+    filtered_scope_sheet_names = c("FHIR", "FHIR Encounter"),
+    filtered_scope_detail_sheet_suffix = "IP"
+  )
+  sheet <- createSheetDescriptionSheet(c(
+    "FHIR",
+    "FHIR IP",
+    "FHIR Encounter",
+    "FHIR Encounter IP",
+    "Frontend",
+    "Other",
+    "Metadata"
+  ), config)
+
+  expect_equal(names(sheet), c("SHEET_NAME", "DESCRIPTION", "FILTER_SCOPE", "COUNT_LOGIC"))
+  expect_equal(sheet$SHEET_NAME, c(
+    "FHIR",
+    "FHIR IP",
+    "FHIR Encounter",
+    "FHIR Encounter IP",
+    "Frontend",
+    "Other",
+    "Metadata"
+  ))
+  expect_true(all(nzchar(sheet$DESCRIPTION)))
+  expect_match(
+    sheet[SHEET_NAME == "FHIR IP", FILTER_SCOPE],
+    "Patient-dependent resources",
+    fixed = TRUE
+  )
+  expect_match(
+    sheet[SHEET_NAME == "FHIR Encounter IP", FILTER_SCOPE],
+    "filtered scope",
+    fixed = TRUE
+  )
+  expect_equal(sheet[SHEET_NAME == "Metadata", COUNT_LOGIC], "Contains runtime, configuration and source metadata values.")
+
+  custom_config <- list(
+    filtered_scope_sheet_names = c("FHIR", "FHIR Encounter"),
+    filtered_scope_detail_sheet_suffix = "IP"
+  )
+  custom_sheet <- createSheetDescriptionSheet(c("FHIR IP", "FHIR Encounter IP"), custom_config)
+
+  expect_match(custom_sheet[SHEET_NAME == "FHIR IP", DESCRIPTION], "IP scope", fixed = TRUE)
+  expect_match(custom_sheet[SHEET_NAME == "FHIR Encounter IP", DESCRIPTION], "IP scope", fixed = TRUE)
+})
+
+test_that("database quality analysis sheet description is prepended", {
+  sheets <- list(
+    FHIR = data.table::data.table(TABLE_NAME = "patient"),
+    "FHIR IP" = data.table::data.table(TABLE_NAME = "patient")
+  )
+  config <- list(
+    filtered_scope_sheet_names = "FHIR",
+    filtered_scope_detail_sheet_suffix = "IP"
+  )
+
+  result <- prependSheetDescriptionSheet(sheets, config)
+
+  expect_equal(names(result), c("Sheet Description", "FHIR", "FHIR IP"))
+  expect_equal(result[["Sheet Description"]]$SHEET_NAME, c("FHIR", "FHIR IP", "Metadata"))
 })
 
 test_that("database quality analysis metadata sheet contains neutral run metadata", {

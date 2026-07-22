@@ -1,5 +1,3 @@
-DATABASE_QUALITY_ANALYSIS_INTERPOLAR_SHEET_NAME <- "FHIR INTERPOLAR"
-
 quoteQualifiedIdentifier <- function(alias, identifier) {
   paste(quoteIdentifier(alias), quoteIdentifier(identifier), sep = ".")
 }
@@ -8,7 +6,7 @@ getTableMetadata <- function(metadata, table_name) {
   metadata[TABLE_NAME == table_name][order(ORDINAL_POSITION)]
 }
 
-getInterpolarMainEncounterSubquery <- function(metadata) {
+getFilteredScopeMainEncounterSubquery <- function(metadata) {
   encounter_metadata <- getTableMetadata(metadata, "encounter")
   pids_per_ward_metadata <- getTableMetadata(metadata, "pids_per_ward")
   if (!nrow(encounter_metadata) || !nrow(pids_per_ward_metadata)) {
@@ -16,13 +14,15 @@ getInterpolarMainEncounterSubquery <- function(metadata) {
   }
 
   required_encounter_columns <- c("enc_id", "enc_main_encounter_calculated_ref")
-  if (!all(required_encounter_columns %in% encounter_metadata$COLUMN_NAME) ||
-      !"encounter_id" %in% pids_per_ward_metadata$COLUMN_NAME) {
+  if (
+    !all(required_encounter_columns %in% encounter_metadata$COLUMN_NAME) ||
+    !"encounter_id" %in% pids_per_ward_metadata$COLUMN_NAME
+  ) {
     return(NA_character_)
   }
 
-  encounter_alias <- "interpolar_enc"
-  ward_alias <- "interpolar_ward"
+  encounter_alias <- "filtered_scope_enc"
+  ward_alias <- "filtered_scope_ward"
   main_encounter_column <- quoteQualifiedIdentifier(
     encounter_alias,
     "enc_main_encounter_calculated_ref"
@@ -57,7 +57,7 @@ getInterpolarMainEncounterSubquery <- function(metadata) {
   )
 }
 
-getInterpolarPatientSubquery <- function(metadata) {
+getFilteredScopePatientSubquery <- function(metadata) {
   encounter_metadata <- getTableMetadata(metadata, "encounter")
   pids_per_ward_metadata <- getTableMetadata(metadata, "pids_per_ward")
   if (!nrow(encounter_metadata) || !nrow(pids_per_ward_metadata)) {
@@ -76,8 +76,8 @@ getInterpolarPatientSubquery <- function(metadata) {
     return(NA_character_)
   }
 
-  encounter_alias <- "interpolar_enc"
-  ward_alias <- "interpolar_ward"
+  encounter_alias <- "filtered_scope_enc"
+  ward_alias <- "filtered_scope_ward"
   patient_column <- quoteQualifiedIdentifier(encounter_alias, "enc_patient_ref")
   main_encounter_column <- quoteQualifiedIdentifier(
     encounter_alias,
@@ -131,7 +131,7 @@ getInterpolarPatientSubquery <- function(metadata) {
   )
 }
 
-getInterpolarEncounterCalculatedRefColumn <- function(table_metadata, grouping_columns) {
+getFilteredScopeEncounterCalculatedRefColumn <- function(table_metadata, grouping_columns) {
   table_name <- table_metadata$TABLE_NAME[[1]]
   if (!identical(table_metadata$TABLE_FAMILY[[1]], "FHIR")) {
     return(NA_character_)
@@ -154,12 +154,12 @@ getInterpolarEncounterCalculatedRefColumn <- function(table_metadata, grouping_c
   NA_character_
 }
 
-getInterpolarCaseFilterCondition <- function(table_metadata, grouping_columns, main_encounter_subquery) {
+getFilteredScopeCaseFilterCondition <- function(table_metadata, grouping_columns, main_encounter_subquery) {
   if (is.na(main_encounter_subquery)) {
     return(NA_character_)
   }
 
-  encounter_column <- getInterpolarEncounterCalculatedRefColumn(table_metadata, grouping_columns)
+  encounter_column <- getFilteredScopeEncounterCalculatedRefColumn(table_metadata, grouping_columns)
   if (is.na(encounter_column)) {
     return(NA_character_)
   }
@@ -178,7 +178,7 @@ getInterpolarCaseFilterCondition <- function(table_metadata, grouping_columns, m
   )
 }
 
-getInterpolarPatientFilterCondition <- function(table_metadata, grouping_columns, patient_subquery) {
+getFilteredScopePatientFilterCondition <- function(table_metadata, grouping_columns, patient_subquery) {
   if (is.na(patient_subquery) || is.na(grouping_columns[["pid"]])) {
     return(NA_character_)
   }
@@ -198,7 +198,7 @@ getInterpolarPatientFilterCondition <- function(table_metadata, grouping_columns
   )
 }
 
-getInterpolarFilterCondition <- function(
+getFilteredScopeFilterCondition <- function(
   table_metadata,
   grouping_columns,
   main_encounter_subquery,
@@ -206,14 +206,14 @@ getInterpolarFilterCondition <- function(
 ) {
   reference_scope <- getResourceReferenceScope(grouping_columns, table_metadata)
   if (identical(reference_scope, "case_dependent")) {
-    return(getInterpolarCaseFilterCondition(
+    return(getFilteredScopeCaseFilterCondition(
       table_metadata,
       grouping_columns,
       main_encounter_subquery
     ))
   }
   if (identical(reference_scope, "patient_dependent")) {
-    return(getInterpolarPatientFilterCondition(
+    return(getFilteredScopePatientFilterCondition(
       table_metadata,
       grouping_columns,
       patient_subquery
@@ -222,7 +222,7 @@ getInterpolarFilterCondition <- function(
   NA_character_
 }
 
-initializeInterpolarCaseSheet <- function(result, table_names) {
+initializeFilteredScopeSheet <- function(result, table_names) {
   output_columns <- setdiff(names(result), c("TABLE_FAMILY", "RESOURCE_REFERENCE_SCOPE", "ORDINAL_POSITION"))
   sheet <- data.table::copy(result[TABLE_NAME %in% table_names])
   if (!nrow(sheet)) {
@@ -243,19 +243,23 @@ initializeInterpolarCaseSheet <- function(result, table_names) {
   sheet[, ..output_columns]
 }
 
-createInterpolarCaseSheet <- function(
+createFilteredScopeFhirSheet <- function(
   metadata,
   result,
   config,
   history_metadata = NULL,
   query_fun = etlutils::dbGetReadOnlyQuery
 ) {
-  main_encounter_subquery <- getInterpolarMainEncounterSubquery(metadata)
-  patient_subquery <- getInterpolarPatientSubquery(metadata)
+  if (!isFilteredScopeSheetConfigured("FHIR", config)) {
+    return(NULL)
+  }
+
+  main_encounter_subquery <- getFilteredScopeMainEncounterSubquery(metadata)
+  patient_subquery <- getFilteredScopePatientSubquery(metadata)
   if (is.na(main_encounter_subquery)) {
     logProgress(
       "Skipping ",
-      DATABASE_QUALITY_ANALYSIS_INTERPOLAR_SHEET_NAME,
+      getFilteredScopeSheetName("FHIR", config),
       " sheet because pids_per_ward or encounter metadata is incomplete."
     )
     return(NULL)
@@ -272,7 +276,7 @@ createInterpolarCaseSheet <- function(
           "Skipping ",
           table_name,
           " for ",
-          DATABASE_QUALITY_ANALYSIS_INTERPOLAR_SHEET_NAME,
+          getFilteredScopeSheetName("FHIR", config),
           " sheet: ",
           conditionMessage(error)
         )
@@ -283,7 +287,7 @@ createInterpolarCaseSheet <- function(
       next
     }
 
-    row_filter_condition <- getInterpolarFilterCondition(
+    row_filter_condition <- getFilteredScopeFilterCondition(
       table_metadata,
       grouping_columns,
       main_encounter_subquery,
@@ -304,7 +308,7 @@ createInterpolarCaseSheet <- function(
     return(NULL)
   }
 
-  sheet <- initializeInterpolarCaseSheet(result, names(table_configs))
+  sheet <- initializeFilteredScopeSheet(result, names(table_configs))
   for (table_name in names(table_configs)) {
     table_config <- table_configs[[table_name]]
     data_columns <- table_config$table_metadata$COLUMN_NAME
@@ -322,7 +326,12 @@ createInterpolarCaseSheet <- function(
 
       count_result <- query_fun(
         count_query$query,
-        lock_id = paste0("calculate database quality analysis INTERPOLAR counts for ", table_name)
+        lock_id = paste0(
+          "calculate database quality analysis ",
+          getFilteredScopeLabel(config),
+          " counts for ",
+          table_name
+        )
       )
       for (row_index in seq_len(nrow(count_query$alias_map))) {
         alias_row <- count_query$alias_map[row_index]
@@ -344,7 +353,9 @@ createInterpolarCaseSheet <- function(
           date_range_result <- query_fun(
             date_range_query$query,
             lock_id = paste0(
-              "calculate database quality analysis INTERPOLAR value date ranges for ",
+              "calculate database quality analysis ",
+              getFilteredScopeLabel(config),
+              " value date ranges for ",
               table_name
             )
           )
@@ -378,15 +389,19 @@ createInterpolarCaseSheet <- function(
   sheet
 }
 
-createInterpolarResourceDetailSheet <- function(
+createFilteredScopeResourceDetailSheet <- function(
   metadata,
   result,
   config,
   detail_config,
   query_fun = etlutils::dbGetReadOnlyQuery
 ) {
-  main_encounter_subquery <- getInterpolarMainEncounterSubquery(metadata)
-  patient_subquery <- getInterpolarPatientSubquery(metadata)
+  if (!isFilteredScopeSheetConfigured(detail_config$sheet_name, config)) {
+    return(NULL)
+  }
+
+  main_encounter_subquery <- getFilteredScopeMainEncounterSubquery(metadata)
+  patient_subquery <- getFilteredScopePatientSubquery(metadata)
   if (is.na(main_encounter_subquery)) {
     return(NULL)
   }
@@ -402,7 +417,9 @@ createInterpolarResourceDetailSheet <- function(
       logProgress(
         "Skipping ",
         detail_config$sheet_name,
-        " INTERPOLAR detail sheet: ",
+        " ",
+        getFilteredScopeLabel(config),
+        " detail sheet: ",
         conditionMessage(error)
       )
       NULL
@@ -412,7 +429,7 @@ createInterpolarResourceDetailSheet <- function(
     return(NULL)
   }
 
-  row_filter_condition <- getInterpolarFilterCondition(
+  row_filter_condition <- getFilteredScopeFilterCondition(
     table_metadata,
     grouping_columns,
     main_encounter_subquery,
@@ -432,7 +449,7 @@ createInterpolarResourceDetailSheet <- function(
   )
 }
 
-createInterpolarResourceDetailSheets <- function(
+createFilteredScopeResourceDetailSheets <- function(
   metadata,
   result,
   config,
@@ -445,7 +462,7 @@ createInterpolarResourceDetailSheets <- function(
   }
 
   for (detail_config in resource_detail_sheets) {
-    detail_sheet <- createInterpolarResourceDetailSheet(
+    detail_sheet <- createFilteredScopeResourceDetailSheet(
       metadata,
       result,
       config,
@@ -453,21 +470,21 @@ createInterpolarResourceDetailSheets <- function(
       query_fun = query_fun
     )
     if (!is.null(detail_sheet) && nrow(detail_sheet)) {
-      sheets[[paste(detail_config$sheet_name, "INTERPOLAR")]] <- detail_sheet
+      sheets[[getFilteredScopeSheetName(detail_config$sheet_name, config)]] <- detail_sheet
     }
   }
 
   sheets
 }
 
-createInterpolarCaseSheets <- function(
+createFilteredScopeFhirSheets <- function(
   metadata,
   result,
   config,
   history_metadata = NULL,
   query_fun = etlutils::dbGetReadOnlyQuery
 ) {
-  sheet <- createInterpolarCaseSheet(
+  sheet <- createFilteredScopeFhirSheet(
     metadata,
     result,
     config,
@@ -478,5 +495,5 @@ createInterpolarCaseSheets <- function(
     return(list())
   }
 
-  stats::setNames(list(sheet), DATABASE_QUALITY_ANALYSIS_INTERPOLAR_SHEET_NAME)
+  stats::setNames(list(sheet), getFilteredScopeSheetName("FHIR", config))
 }
