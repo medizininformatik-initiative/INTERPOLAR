@@ -90,12 +90,20 @@ deleteNextCacheFile <- function() {
 #' which encounters belong to phase A and which do not, based on their start time and the ward
 #' they took place in.
 #' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
+#' than the release version. Default is FALSE and will stop if the database is newer.
 #' @param validate_config Logical. If TRUE, validates the module configuration before starting
 #'                        the retrieval process. Default is TRUE.
-#' than the release version. Default is FALSE and will stop if the database version is newer.
+#' @param pids_splitted_by_ward Optional named list of data tables with `patient_id` and
+#' `encounter_id` columns. If supplied, these cases are processed instead of retrieving the
+#' current cases from the FHIR server.
 #'
 #' @export
-retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, validate_config = TRUE) {
+retrieve <- function(
+  phase_a_starts = NULL,
+  ignore_newer_db_version = FALSE,
+  validate_config = TRUE,
+  pids_splitted_by_ward = NULL
+) {
   # Initialize and start module
   config <- init(validate_config)
   etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+|^DATA_IMPORT_FHIR_PIDS$")
@@ -126,7 +134,10 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
-      if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
+      if (!is.null(pids_splitted_by_ward)) {
+        cat("Use supplied Patient and Encounter IDs for recovery run:\n")
+        print(pids_splitted_by_ward)
+      } else if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
         pids_splitted_by_ward <- getDataImportPIDsFromDB()
       } else if (etlutils::isSubProcess("DataImport.All")) {
         if (!etlutils::hasNextCacheFile()) {

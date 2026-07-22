@@ -135,3 +135,89 @@ fhirdbGetQueryList <- function(collection, remove_ref_type = FALSE, return_NA_if
   }
   paste0("(", paste0("'", collection, "'", collapse = ", "), ")")
 }
+
+#' Split Incomplete Cases by Ward
+#'
+#' This function takes a data frame of incomplete cases and splits them into a
+#' named list by ward. Each element of the list is a data table containing unique
+#' patient_id and encounter_id pairs for that ward.
+#'
+#' @param incomplete_cases A data frame containing incomplete cases with columns:
+#'   ward_name, patient_id, and encounter_id.
+#'
+fhirdbSplitIncompleteCasesByWard <- function(incomplete_cases) {
+  incomplete_cases <- data.table::as.data.table(incomplete_cases)
+  if (!nrow(incomplete_cases)) {
+    return(list())
+  }
+
+  # Convert the query result into the named ward list expected by cds2db and
+  # remove duplicate patient/encounter pairs within each ward.
+  pids_splitted_by_ward <- split(
+    incomplete_cases[, .(patient_id, encounter_id)],
+    incomplete_cases$ward_name
+  )
+  lapply(pids_splitted_by_ward, unique)
+}
+
+#' Get cases from interrupted toolchain runs
+#'
+#' Finds cases that occurred in a historical `pids_per_ward` import but have no
+#' corresponding entry in `fall_fe`. The current database context must provide
+#' the views `v_pids_per_ward`, `v_encounter_last_version`, and `v_fall_fe`.
+#' At most one case per patient is returned so that processing can handle the
+#' result. Further cases for the same patient can be recovered by a later run.
+#'
+#' @return A named list by ward. Each element is a data table with `patient_id`
+#' and `encounter_id` columns. An empty list is returned if no cases are missing.
+#'
+#' @export
+fhirdbGetIncompleteCasesPidsPerWard <- function() {
+  on.exit(dbCloseAllConnections(), add = TRUE)
+
+  # Find historical pids_per_ward entries whose main encounter has not reached
+  # fall_fe yet. Return at most one missing encounter per patient so the next
+  # full toolchain start can recover unfinished work without looping.
+  query <- paste0(
+    "WITH incomplete_candidates AS (\n",
+    "  SELECT DISTINCT\n",
+    "    ppw.ward_name,\n",
+    "    ppw.patient_id,\n",
+    "    ppw.encounter_id,\n",
+    "    COALESCE(\n",
+    "      NULLIF(regexp_replace(enc.enc_main_encounter_calculated_ref, '^.*/', ''), 'invalid'),\n",
+    "      enc.enc_id\n",
+    "    ) AS main_encounter_id,\n",
+    "    enc.enc_period_start,\n",
+    "    enc.enc_meta_lastupdated\n",
+    "  FROM v_pids_per_ward ppw\n",
+    "  INNER JOIN v_encounter_last_version enc\n",
+    "    ON enc.enc_id = ppw.encounter_id\n",
+    ")\n",
+    "SELECT DISTINCT ON (candidate.patient_id)\n",
+    "  candidate.ward_name,\n",
+    "  candidate.patient_id,\n",
+    "  candidate.encounter_id\n",
+    "FROM incomplete_candidates candidate\n",
+    "WHERE candidate.ward_name IS NOT NULL\n",
+    "  AND candidate.patient_id IS NOT NULL\n",
+    "  AND candidate.encounter_id IS NOT NULL\n",
+    "  AND NOT EXISTS (\n",
+    "    SELECT 1\n",
+    "    FROM v_fall_fe fall\n",
+    "    WHERE fall.fall_fhir_enc_id = candidate.main_encounter_id\n",
+    "  )\n",
+    "ORDER BY\n",
+    "  candidate.patient_id,\n",
+    "  candidate.enc_period_start DESC NULLS LAST,\n",
+    "  candidate.enc_meta_lastupdated DESC NULLS LAST,\n",
+    "  candidate.encounter_id;"
+  )
+
+  incomplete_cases <- dbGetReadOnlyQuery(
+    query,
+    lock_id = "fhirdbGetIncompleteCasesPidsPerWard()"
+  )
+
+  fhirdbSplitIncompleteCasesByWard(incomplete_cases)
+}
