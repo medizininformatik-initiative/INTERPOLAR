@@ -36,6 +36,39 @@ behavior.
   Prefer documented example files such as `*_config_example.toml` when adding
   reusable configuration guidance.
 
+## Existing Code First
+
+- Before adding new helper functions, scripts, generators, or workflow code,
+  explicitly search for existing implementations in the repository.
+- Prefer existing helper APIs from local packages such as `etlutils`, `cds2db`,
+  `dataprocessor`, `db2frontend`, and `initcdstoolchain` over new local helpers.
+- For Table Description, Excel, DB schema generation, config loading, logging,
+  path handling, and `data.table` transformations, inspect existing functions
+  first and reuse or extend them where practical.
+- If adding a new helper anyway, briefly justify why existing code is not
+  suitable.
+- In progress updates or final summaries for non-trivial code changes, mention
+  which existing helpers or local patterns were reused.
+- Keep new code reasonably DRY without hiding simple domain logic behind
+  over-generic helpers. Repeated technical mechanics such as report writing,
+  path handling, validation scaffolding, or summary accumulation should be
+  factored into small, well-named helpers when that improves readability.
+- Before opening or updating a pull request, explicitly review the changed code
+  for avoidable duplication, oversized files, misplaced logic, and missing
+  comments around non-obvious behavior. Do not refactor merely for symmetry when
+  the repetition is clearer and unlikely to change together.
+
+## Table Description And Excel Handling
+
+- For Table Description files, use the existing `etlutils` and
+  `initcdstoolchain` helpers for reading headers, writing generated Excel files,
+  expanding table descriptions, splitting by table/resource, and filling
+  repeated table/resource names.
+- Do not add ad hoc Excel/Table-Description parsing or fill-down logic before
+  checking for existing helpers such as `loadTableDescriptionFile()`,
+  `readExcelFileAsTableList()`, `removeTableHeader()`, `addTextHeaderToTable()`,
+  `writeExcelFile()`, and `fillNAWithLastRowValue()`.
+
 ## R Development
 
 - This repository contains multiple R packages below `R-*/<package>`.

@@ -336,9 +336,10 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
 #' The function is called for its side effect — printing a warning message
 #' to the console.
 catInvalidObservationsWarning <- function(invalid_obs) {
+  invalid_obs <- data.table::as.data.table(invalid_obs)
   if (nrow(invalid_obs)) {
     # --- Create unique identifier for each (code, value, unit) combination ---
-    invalid_obs_unique <- unique(invalid_obs[, .(code, value, unit)])
+    invalid_obs_unique <- unique(invalid_obs[, c("code", "value", "unit"), with = FALSE])
 
     # --- Build message details ---
     details <- character(nrow(invalid_obs_unique))
@@ -391,106 +392,114 @@ catInvalidObservationsWarning <- function(invalid_obs) {
 #' # invalid_obs <- data.table()
 #' # obs_filtered <- filterObservations(obs, "reference_range_high_value", invalid_obs)
 filterObservations <- function(obs, reference_value_col, invalid_obs) {
+  obs <- data.table::as.data.table(obs)
+  invalid_obs <- data.table::as.data.table(invalid_obs)
+  row_id_column <- ".filter_observation_row_id"
+  obs[[row_id_column]] <- seq_len(nrow(obs))
+
   # Derive the corresponding unit and system columns from the reference value column
   reference_unit_col   <- sub("_value$", "_code", reference_value_col)
   reference_system_col <- sub("_value$", "_system", reference_value_col)
 
   # Identify columns that define unique observations, excluding reference columns
   non_ref_cols <- setdiff(names(obs), grep("^reference_", names(obs), value = TRUE))
+  non_ref_cols <- setdiff(non_ref_cols, row_id_column)
 
   # Step 1: Filter observations based on reference_range_type and unit convertibility
-  valid_obs <- obs[
-    ,
-    {
-      # --- Helper function to test whether a unit can be converted ---
-      isConvertibleUnit <- function(unit_from, unit_to) {
-        # Missing reference unit counts as convertible
-        if (is.na(unit_to)) return(TRUE)
-        !is.na(etlutils::convertLabUnits(1, unit_from, unit_to))
-      }
-      # --- 1.1: Try to use rows where reference_range_type == "normal" ---
-      preferred <- .SD[reference_range_type == "normal"]
-      # --- 1.2: If no "normal" rows exist, try those with missing type ---
-      if (!nrow(preferred)) {
-        preferred <- .SD[is.na(reference_range_type)]
-      }
-      # --- 1.3: If neither "normal" nor NA exists → mark as invalid ---
-      if (!nrow(preferred)) {
-        NULL
-      } else {
-        # Determine which rows have convertible or missing reference units
-        # preferred[, is_convertible := mapply(isConvertibleUnit, unit, get(reference_unit_col))]
-        #
-        # convertible <- preferred[is_convertible == TRUE]
-        convertible <- preferred[
-          mapply(isConvertibleUnit, unit, get(reference_unit_col))
-        ]
-        # --- 1.1.2: If no convertible rows exist → mark as invalid ---
-        if (!nrow(convertible)) {
-          NULL
-        } else {
-          # --- 1.1.1: Keep the first convertible row ---
-          convertible[1]
-        }
-      }
-    },
-    by = non_ref_cols
-  ]
+  isConvertibleUnit <- function(unit_from, unit_to) {
+    # Missing reference unit counts as convertible
+    if (is.na(unit_to)) return(TRUE)
+    !is.na(etlutils::convertLabUnits(1, unit_from, unit_to))
+  }
+  valid_obs_rows <- lapply(split(obs, by = non_ref_cols, keep.by = TRUE), function(group_rows) {
+    group_rows <- data.table::as.data.table(group_rows)
+    preferred <- data.table::as.data.table(
+      as.data.frame(group_rows)[which(group_rows[["reference_range_type"]] == "normal"), , drop = FALSE]
+    )
+    if (!nrow(preferred)) {
+      preferred <- data.table::as.data.table(
+        as.data.frame(group_rows)[which(is.na(group_rows[["reference_range_type"]])), , drop = FALSE]
+      )
+    }
+    if (!nrow(preferred)) {
+      return(NULL)
+    }
+
+    convertible_rows <- vapply(
+      preferred[[reference_unit_col]],
+      function(unit_to) isConvertibleUnit(group_rows[["unit"]][1], unit_to),
+      logical(1)
+    )
+    convertible <- data.table::as.data.table(
+      as.data.frame(preferred)[which(convertible_rows), , drop = FALSE]
+    )
+    if (!nrow(convertible)) {
+      return(NULL)
+    }
+    convertible[1, ]
+  })
+  valid_obs <- data.table::rbindlist(valid_obs_rows, fill = TRUE)
 
   if (nrow(valid_obs)) {
-    # Sort column order before fsetdiff
-    data.table::setcolorder(obs, sort(names(obs)))
-    data.table::setcolorder(valid_obs, sort(names(valid_obs)))
-    # Invalid observations are those that were dropped
-    invalid_obs <- data.table::fsetdiff(obs, valid_obs)
-    obs <- valid_obs
+    obs_frame <- as.data.frame(obs)
+    valid_obs_frame <- as.data.frame(valid_obs)
+    invalid_obs <- data.table::as.data.table(
+      obs_frame[!obs_frame[[row_id_column]] %in% valid_obs_frame[[row_id_column]], , drop = FALSE]
+    )
+    valid_obs_frame[[row_id_column]] <- NULL
+    invalid_obs[[row_id_column]] <- NULL
 
     # Step 2: Split observations into convertible and non-convertible
-    obs_to_convert_unit <- obs[!is.na(get(reference_unit_col)) & !is.na(unit)]
-    obs_no_convert_unit <- obs[is.na(get(reference_unit_col)) | is.na(unit)]
-    obs_no_convert_unit[, converted_value := value]  # Non-convertible → value unchanged
-    obs_to_convert_unit[, converted_value := NA_real_]  # Initialize converted values
-    obs_no_convert_unit[, converted_unit := unit]  # Non-convertible → value unchanged
-    obs_to_convert_unit[, converted_unit := NA_real_]  # Initialize converted values
+    rows_with_conversion_unit <- !is.na(valid_obs_frame[[reference_unit_col]]) &
+      !is.na(valid_obs_frame[["unit"]])
+    obs_to_convert_unit <- valid_obs_frame[rows_with_conversion_unit, , drop = FALSE]
+    obs_no_convert_unit <- valid_obs_frame[!rows_with_conversion_unit, , drop = FALSE]
+    obs_no_convert_unit[["converted_value"]] <- obs_no_convert_unit[["value"]]
+    obs_to_convert_unit[["converted_value"]] <- rep(NA_real_, nrow(obs_to_convert_unit))
+    obs_no_convert_unit[["converted_unit"]] <- obs_no_convert_unit[["unit"]]
+    obs_to_convert_unit[["converted_unit"]] <- rep(NA_character_, nrow(obs_to_convert_unit))
 
     # Step 3: Perform unit conversion row by row
     invalid_idx <- c()
     for (i in seq_len(nrow(obs_to_convert_unit))) {
-      unit_from <- obs_to_convert_unit$unit[i]
+      unit_from <- obs_to_convert_unit[["unit"]][i]
       unit_target <- obs_to_convert_unit[[reference_unit_col]][i]
-      obs_row <- obs_to_convert_unit[i]
 
       # Attempt conversion
       converted_val <- etlutils::convertLabUnits(
-        measured_value = obs_row$value,
+        measured_value = obs_to_convert_unit[["value"]][i],
         measured_unit = unit_from,
         target_unit = unit_target,
-        additional_error_message = paste0(" for LOINC code ", obs_row$code)
+        additional_error_message = paste0(" for LOINC code ", obs_to_convert_unit[["code"]][i])
       )
       if (is.na(converted_val)) {
+        obs_row <- data.table::as.data.table(obs_to_convert_unit[i, , drop = FALSE])
         invalid_obs <- if (nrow(invalid_obs) > 0) rbind(invalid_obs, obs_row, fill = TRUE) else obs_row
         invalid_idx <- c(invalid_idx, i)
       } else {
-        obs_to_convert_unit$converted_value[i] <- converted_val
-        obs_to_convert_unit$converted_unit[i] <- unit_target
+        obs_to_convert_unit[["converted_value"]][i] <- converted_val
+        obs_to_convert_unit[["converted_unit"]][i] <- unit_target
       }
     }
     # Remove invalid observations after the loop
     if (length(invalid_idx) > 0) {
-      obs_to_convert_unit <- obs_to_convert_unit[-invalid_idx]
+      rows_to_keep <- setdiff(seq_len(nrow(obs_to_convert_unit)), invalid_idx)
+      obs_to_convert_unit <- obs_to_convert_unit[rows_to_keep, , drop = FALSE]
     }
 
     # Step 4: Warn for observations whose units were converted
-    changed_rows <- obs_to_convert_unit[
-      !is.na(converted_value) & !is.na(value) & converted_value != value
-    ]
+    changed_row_index <- !is.na(obs_to_convert_unit[["converted_value"]]) &
+      !is.na(obs_to_convert_unit[["value"]]) &
+      obs_to_convert_unit[["converted_value"]] != obs_to_convert_unit[["value"]]
+    changed_rows <- obs_to_convert_unit[changed_row_index, , drop = FALSE]
     if (nrow(changed_rows)) {
       details <- character(nrow(changed_rows))
       for (i in seq_len(nrow(changed_rows))) {
         details[i] <- paste0(
-          "  code=", changed_rows$code[i],
-          ", value=", changed_rows$value[i], " ", changed_rows$unit[i],
-          " changed to ", changed_rows$converted_value[i], " ", changed_rows[[reference_unit_col]][i]
+          "  code=", changed_rows[["code"]][i],
+          ", value=", changed_rows[["value"]][i], " ", changed_rows[["unit"]][i],
+          " changed to ", changed_rows[["converted_value"]][i], " ",
+          changed_rows[[reference_unit_col]][i]
         )
       }
       etlutils::catWarningMessage(
@@ -501,9 +510,16 @@ filterObservations <- function(obs, reference_value_col, invalid_obs) {
       )
     }
     # Step 5: Combine converted and non-converted observations
-    obs <- rbind(obs_to_convert_unit, obs_no_convert_unit)
+    obs <- data.table::rbindlist(
+      list(
+        data.table::as.data.table(obs_to_convert_unit),
+        data.table::as.data.table(obs_no_convert_unit)
+      ),
+      fill = TRUE
+    )
   } else {
     invalid_obs <- obs
+    invalid_obs[[row_id_column]] <- NULL
     obs <- data.table::data.table()
   }
 

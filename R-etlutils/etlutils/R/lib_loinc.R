@@ -6,9 +6,9 @@
 #'
 #' This helper function preprocesses a unit string for consistent handling. It
 #' removes a trailing segment of the form `"/{...}"` at the end of the string
-#' (e.g., `"mg/{dL}" -> "mg"`), replaces caret symbols (`^`) with asterisks (`*`)
-#' (e.g., `"10^9 / L" -> "10*9/L"`), and removes all whitespace.
-#' Note: The replacement of `^` with `*` reflects a textual normalization and
+#' (e.g., `"mg/{dL}" -> "mg"`), replaces asterisks (`*`) with caret symbols (`^`)
+#' (e.g., `"10*9 / L" -> "10^9/L"`), and removes all whitespace.
+#' Note: The replacement of `*` with `^` reflects a textual normalization and
 #' does not implement a full UCUM/UDUNITS conversion.
 #'
 #' @param unit Character. A unit string to be cleaned and normalized.
@@ -57,11 +57,12 @@ asUnit <- function(unit) {
   return(if (inherits(ok, "try-error")) NA else ok)
 }
 
-#' Check if unit strings are valid for the `units` package (vectorized)
+#' Check if unit strings are supported for lab unit conversion (vectorized)
 #'
 #' This helper function tests whether each element of a given character vector
-#' can be parsed by the `units` package. It returns a logical vector of the same
-#' length: `TRUE` for valid unit strings, `FALSE` otherwise.
+#' can be parsed by the `units` package or by a narrow INTERPOLAR fallback for
+#' international-unit quotients such as `"mU/L"`. It returns a logical vector of
+#' the same length: `TRUE` for supported unit strings, `FALSE` otherwise.
 #'
 #' @param u Character vector. Unit strings (e.g., `"mmol/L"`, `"mg/dL"`).
 #'
@@ -70,16 +71,74 @@ asUnit <- function(unit) {
 #' @examples
 #' isValidUnit("mmol/L")                 # TRUE
 #' isValidUnit(c("mmol/L", "foobar"))    # TRUE FALSE
-#' isValidUnit(c("10^9/L", "10*9/L"))    # TRUE FALSE
+#' isValidUnit(c("10^9/L", "10*9/L"))    # TRUE TRUE
+#' isValidUnit(c("ng/L", "mU/L"))        # TRUE TRUE
+#' isValidUnit(c("U/L", "uU/mL"))        # TRUE TRUE
+#' isValidUnit("m[iU]/L")                # TRUE
 #'
 #' @export
 isValidUnit <- function(u) {
-  u <- as.character(u)
-  u <- cleanUnit(u)
   vapply(u, function(x) {
-    ok <- suppressWarnings(try(units::as_units(x), silent = TRUE))
-    !inherits(ok, "try-error")
+    !is.null(parseConvertibleUnit(x))
   }, logical(1))
+}
+
+parseSimpleInternationalUnitQuotient <- function(unit) {
+  unit <- cleanUnit(unit)
+  unit <- gsub("\u00b5", "u", unit, fixed = TRUE)
+  matches <- regexec("^([mu]?)(U|IU|\\[IU\\]|\\[iU\\])/(L|dL|mL)$", unit)
+  parts <- regmatches(unit, matches)[[1]]
+  if (length(parts) != 4) {
+    return(NULL)
+  }
+
+  numerator_prefix_factor <- stats::setNames(
+    c(1, 1e-3, 1e-6),
+    c("", "m", "u")
+  )
+  denominator_factor_in_liter <- c(
+    "L" = 1,
+    "dL" = 1e-1,
+    "mL" = 1e-3
+  )
+
+  numerator_prefix_index <- match(parts[2], names(numerator_prefix_factor))
+  denominator_index <- match(parts[4], names(denominator_factor_in_liter))
+
+  list(
+    atom = "IU",
+    factor = numerator_prefix_factor[[numerator_prefix_index]] /
+      denominator_factor_in_liter[[denominator_index]]
+  )
+}
+
+convertSimpleInternationalUnitQuotient <- function(measured_value, measured_unit, target_unit) {
+  measured_unit <- parseSimpleInternationalUnitQuotient(measured_unit)
+  target_unit <- parseSimpleInternationalUnitQuotient(target_unit)
+  if (is.null(measured_unit) || is.null(target_unit) || measured_unit$atom != target_unit$atom) {
+    return(NA_real_)
+  }
+
+  measured_value * measured_unit$factor / target_unit$factor
+}
+
+parseConvertibleUnit <- function(unit) {
+  parsed_units <- asUnit(unit)
+  if (!is.na(parsed_units)) {
+    return(list(type = "units", value = parsed_units))
+  }
+
+  parsed_iu_quotient <- parseSimpleInternationalUnitQuotient(unit)
+  if (!is.null(parsed_iu_quotient)) {
+    return(list(type = "simple_international_unit_quotient", value = parsed_iu_quotient))
+  }
+
+  NULL
+}
+
+isMissingUnit <- function(unit) {
+  etlutils::isSimpleNAorNULL(unit) ||
+    (is.character(unit) && length(unit) == 1 && !nzchar(trimws(unit)))
 }
 
 #' Convert laboratory values into SI units
@@ -172,35 +231,56 @@ convertLabUnits <- function(measured_value,
   units::units_options(set_units_mode = "standard")
   # Initialize result
   result <- NA
+  measured_unit_raw <- measured_unit
+  target_unit_raw <- target_unit
+  target_unit_missing <- isMissingUnit(target_unit_raw)
   tryCatch(
     {
-      measured_unit <- asUnit(measured_unit)
-      target_unit <- asUnit(target_unit)
-
-      # the provided FHIR unit is invalid -> the full Observations is invald
-      if (is.na(measured_unit)) {
-        return(NA)
-      }
-      # there is no conversion unit (and factor) -> no conversion needed -> return the original value
-      if (is.na(target_unit)) {
+      # there is no conversion unit (and factor) -> no conversion needed
+      # -> return the original value
+      if (target_unit_missing) {
         return(measured_value)
       }
 
-      measured_unit_factor <- units::drop_units(measured_unit)
-      target_unit_factor <- units::drop_units(target_unit)
+      measured_unit <- parseConvertibleUnit(measured_unit_raw)
+      target_unit <- parseConvertibleUnit(target_unit_raw)
+
+      # the provided FHIR unit is invalid -> the full Observations is invald
+      if (is.null(measured_unit) || is.null(target_unit)) {
+        return(NA)
+      }
+
+      if (
+        measured_unit$type == "simple_international_unit_quotient" ||
+        target_unit$type == "simple_international_unit_quotient"
+      ) {
+        if (
+          measured_unit$type == target_unit$type &&
+          measured_unit$value$atom == target_unit$value$atom
+        ) {
+          result <- measured_value * measured_unit$value$factor / target_unit$value$factor
+        }
+        return(result)
+      }
+
+      measured_unit_factor <- units::drop_units(measured_unit$value)
+      target_unit_factor <- units::drop_units(target_unit$value)
 
       # Create unit object for measured value
-      u_measured <- suppressWarnings(units::set_units(measured_value, measured_unit))
+      u_measured <- suppressWarnings(units::set_units(measured_value, measured_unit$value))
 
       # Create unit object for target unit
-      u_target <- suppressWarnings(units::set_units(1, target_unit))
+      u_target <- suppressWarnings(units::set_units(1, target_unit$value))
 
       # Case 1: Units are directly convertible
       if (units::ud_are_convertible(units(u_measured), units(u_target))) {
         result <- suppressWarnings(units::set_units(u_measured, u_target))
         result <- units::drop_units(result)
         result <- result * measured_unit_factor / target_unit_factor
-      } else if (!etlutils::isSimpleNAorNULL(conversion_factor) && !etlutils::isSimpleNAorNULL(conversion_unit)) {
+      } else if (
+        !etlutils::isSimpleNAorNULL(conversion_factor) &&
+          !etlutils::isSimpleNAorNULL(conversion_unit)
+      ) {
         # Create unit object for conversion unit
         u_conversion <- suppressWarnings(units::set_units(1, conversion_unit))
 
@@ -216,6 +296,9 @@ convertLabUnits <- function(measured_value,
           result <- suppressWarnings(units::set_units(converted_value, u_target))
           result <- units::drop_units(result)
         }
+      }
+      if (all(is.na(result))) {
+        result <- NA
       }
     },
     error = function(e) {
