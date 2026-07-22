@@ -266,6 +266,8 @@ DATA_IMPORT_FHIR_PIDS = []
 #################
 # If true, a normal full toolchain start checks for cases from interrupted
 # previous runs. Missing cases are recovered once before the current run starts.
+# The process finds cases that occurred in database table `pids_per_ward` (entered in module `cds2db) 
+# but have no corresponding entry in `fall_fe` (entered in `module db2frontend`).
 # Set this to false to skip the additional recovery run.
 #################
 RECOVER_INCOMPLETE_TOOLCHAIN_RUNS = true
