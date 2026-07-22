@@ -252,10 +252,12 @@ convertLabUnits <- function(measured_value,
 
       if (
         measured_unit$type == "simple_international_unit_quotient" ||
-          target_unit$type == "simple_international_unit_quotient"
+        target_unit$type == "simple_international_unit_quotient"
       ) {
-        if (measured_unit$type == target_unit$type &&
-          measured_unit$value$atom == target_unit$value$atom) {
+        if (
+          measured_unit$type == target_unit$type &&
+          measured_unit$value$atom == target_unit$value$atom
+        ) {
           result <- measured_value * measured_unit$value$factor / target_unit$value$factor
         }
         return(result)
