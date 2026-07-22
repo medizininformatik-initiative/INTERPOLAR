@@ -85,11 +85,44 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
       )
     ),
     grouping_overrides = parseGroupingOverrides(getConfigValue("GROUPING_OVERRIDES", character())),
-    resource_detail_sheets = parseResourceDetailSheets(
-      getConfigValue("RESOURCE_DETAIL_SHEETS", character()),
-      getConfigValue
-    )
+    filtered_scope_sheet_names = getConfigValue("FILTERED_SCOPE_SHEET_NAMES", character()),
+    filtered_scope_detail_sheet_suffix = getConfigValue("FILTERED_SCOPE_DETAIL_SHEET_SUFFIX", "FILTERED"),
+    resource_detail_sheets = parseResourceDetailSheets(getConfigValue)
   )
+}
+
+getFilteredScopeSheetNames <- function(config) {
+  if (!is.null(config$filtered_scope_sheet_names)) {
+    return(config$filtered_scope_sheet_names[nzchar(config$filtered_scope_sheet_names)])
+  }
+  character()
+}
+
+isFilteredScopeSheetsEnabled <- function(config) {
+  length(getFilteredScopeSheetNames(config)) > 0L
+}
+
+isFilteredScopeSheetConfigured <- function(sheet_name, config) {
+  sheet_name %in% getFilteredScopeSheetNames(config)
+}
+
+getFilteredScopeDetailSheetSuffix <- function(config) {
+  if (!is.null(config$filtered_scope_detail_sheet_suffix)) {
+    return(config$filtered_scope_detail_sheet_suffix)
+  }
+  "FILTERED"
+}
+
+getFilteredScopeLabel <- function(config) {
+  getFilteredScopeDetailSheetSuffix(config)
+}
+
+getFilteredScopeSheetName <- function(sheet_name, config) {
+  suffix <- getFilteredScopeDetailSheetSuffix(config)
+  if (!nzchar(suffix)) {
+    return(sheet_name)
+  }
+  paste(sheet_name, suffix)
 }
 
 parseGroupingOverrides <- function(overrides) {
@@ -143,7 +176,7 @@ parseNameValuePairs <- function(value, entry_name) {
     stop(
       "Invalid ",
       entry_name,
-      " entry. Expected semicolon-separated name=value pairs.",
+      " entry. Expected name=value pairs.",
       call. = FALSE
     )
   }
@@ -153,50 +186,96 @@ parseNameValuePairs <- function(value, entry_name) {
   result
 }
 
-parseResourceDetailSheets <- function(detail_sheet_ids, get_config_value) {
-  if (!length(detail_sheet_ids)) {
+parseResourceDetailSheets <- function(get_config_value) {
+  sheet_names <- get_config_value("RESOURCE_DETAIL_SHEET_NAMES", character())
+  if (!length(sheet_names)) {
     return(list())
   }
 
-  result <- lapply(detail_sheet_ids, function(detail_sheet_id) {
-    key_prefix <- paste0("RESOURCE_DETAIL_", detail_sheet_id, "_")
-    get_detail_value <- function(name) {
-      value <- get_config_value(paste0(key_prefix, name), NULL)
-      if (is.null(value)) {
-        stop(
-          "Missing ",
-          key_prefix,
-          name,
-          " for RESOURCE_DETAIL_SHEETS entry ",
-          detail_sheet_id,
-          ".",
-          call. = FALSE
-        )
-      }
-      value
-    }
+  parseResourceDetailSheetFields(sheet_names, get_config_value)
+}
 
-    split_values <- parseNameValuePairs(
-      get_detail_value("SPLIT_VALUES"),
-      paste0(key_prefix, "SPLIT_VALUES")
+parseResourceDetailSheetFields <- function(sheet_names, get_config_value) {
+  # Resource detail sheets use the same grouping mechanism on two nested levels:
+  # row_group creates the repeated row/table groups, and count_group creates
+  # additional count columns inside each row group. For one detail sheet, the
+  # group values can be configured as readable TOML lists of name=value entries.
+  scalar_field_names <- c(
+    "TABLE_NAMES",
+    "ROW_GROUP_SYSTEM_COLUMNS",
+    "ROW_GROUP_SYSTEMS",
+    "ROW_GROUP_VALUE_COLUMNS",
+    "COUNT_GROUP_SYSTEM_COLUMNS",
+    "COUNT_GROUP_SYSTEMS",
+    "COUNT_GROUP_VALUE_COLUMNS"
+  )
+  fields <- stats::setNames(lapply(scalar_field_names, function(field_name) {
+    value <- get_config_value(paste0("RESOURCE_DETAIL_", field_name), NULL)
+    if (is.null(value)) {
+      stop("Missing RESOURCE_DETAIL_", field_name, ".", call. = FALSE)
+    }
+    if (length(value) != length(sheet_names)) {
+      stop(
+        "RESOURCE_DETAIL_",
+        field_name,
+        " must have the same length as RESOURCE_DETAIL_SHEET_NAMES.",
+        call. = FALSE
+      )
+    }
+    value
+  }), scalar_field_names)
+  fields$ROW_GROUP_VALUES <- getResourceDetailGroupValueFields(
+    "ROW_GROUP_VALUES",
+    sheet_names,
+    get_config_value
+  )
+  fields$COUNT_GROUP_VALUES <- getResourceDetailGroupValueFields(
+    "COUNT_GROUP_VALUES",
+    sheet_names,
+    get_config_value
+  )
+
+  result <- lapply(seq_along(sheet_names), function(sheet_index) {
+    count_group_values <- parseNameValuePairs(
+      fields$COUNT_GROUP_VALUES[[sheet_index]],
+      "RESOURCE_DETAIL_COUNT_GROUP_VALUES"
     )
     list(
-      sheet_name = get_detail_value("SHEET_NAME"),
-      table_name = get_detail_value("TABLE_NAME"),
-      block_system_column = get_detail_value("BLOCK_SYSTEM_COLUMN"),
-      block_system = get_detail_value("BLOCK_SYSTEM"),
-      block_value_column = get_detail_value("BLOCK_VALUE_COLUMN"),
-      block_values = parseNameValuePairs(
-        get_detail_value("BLOCK_VALUES"),
-        paste0(key_prefix, "BLOCK_VALUES")
+      sheet_name = sheet_names[[sheet_index]],
+      table_name = fields$TABLE_NAMES[[sheet_index]],
+      row_group_system_column = fields$ROW_GROUP_SYSTEM_COLUMNS[[sheet_index]],
+      row_group_system = fields$ROW_GROUP_SYSTEMS[[sheet_index]],
+      row_group_value_column = fields$ROW_GROUP_VALUE_COLUMNS[[sheet_index]],
+      row_group_values = parseNameValuePairs(
+        fields$ROW_GROUP_VALUES[[sheet_index]],
+        "RESOURCE_DETAIL_ROW_GROUP_VALUES"
       ),
-      split_system_column = get_detail_value("SPLIT_SYSTEM_COLUMN"),
-      split_system = get_detail_value("SPLIT_SYSTEM"),
-      split_value_column = get_detail_value("SPLIT_VALUE_COLUMN"),
-      split_values = split_values,
-      split_count_columns = stats::setNames(names(split_values), names(split_values))
+      count_group_system_column = fields$COUNT_GROUP_SYSTEM_COLUMNS[[sheet_index]],
+      count_group_system = fields$COUNT_GROUP_SYSTEMS[[sheet_index]],
+      count_group_value_column = fields$COUNT_GROUP_VALUE_COLUMNS[[sheet_index]],
+      count_group_values = count_group_values,
+      count_group_count_columns = stats::setNames(names(count_group_values), names(count_group_values))
     )
   })
   names(result) <- vapply(result, function(detail_config) detail_config$table_name, character(1))
   result
+}
+
+getResourceDetailGroupValueFields <- function(field_name, sheet_names, get_config_value) {
+  value <- get_config_value(paste0("RESOURCE_DETAIL_", field_name), NULL)
+  if (is.null(value)) {
+    stop("Missing RESOURCE_DETAIL_", field_name, ".", call. = FALSE)
+  }
+  if (length(sheet_names) == 1L) {
+    return(list(value))
+  }
+  if (length(value) != length(sheet_names)) {
+    stop(
+      "RESOURCE_DETAIL_",
+      field_name,
+      " must have the same length as RESOURCE_DETAIL_SHEET_NAMES.",
+      call. = FALSE
+    )
+  }
+  as.list(value)
 }

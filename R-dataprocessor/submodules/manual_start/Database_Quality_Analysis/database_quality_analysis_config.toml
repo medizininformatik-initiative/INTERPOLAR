@@ -47,33 +47,36 @@ GROUPING_OVERRIDES = [
   "medikationsanalyse_fe|meda_id|record_id|fall_meda_id"
 ]
 
-# Optional resource detail sheets.
-RESOURCE_DETAIL_SHEETS = [
-  "ENCOUNTER"
-]
+# Optional resource detail sheets. The entries belong together by position: the
+# first sheet name uses the first table name, row group, and count group settings.
+# ROW_GROUP_VALUES defines the repeated table blocks. COUNT_GROUP_VALUES defines
+# the additional count columns inside each table block. The special count group
+# value OTHER counts non-empty values outside the explicitly configured values.
+RESOURCE_DETAIL_SHEET_NAMES = "FHIR Encounter"
+RESOURCE_DETAIL_TABLE_NAMES = "encounter"
 
-RESOURCE_DETAIL_ENCOUNTER_SHEET_NAME = "FHIR Encounter"
-RESOURCE_DETAIL_ENCOUNTER_TABLE_NAME = "encounter"
-
-RESOURCE_DETAIL_ENCOUNTER_BLOCK_SYSTEM_COLUMN = "enc_type_system"
-RESOURCE_DETAIL_ENCOUNTER_BLOCK_SYSTEM = "http://fhir.de/CodeSystem/Kontaktebene"
-RESOURCE_DETAIL_ENCOUNTER_BLOCK_VALUE_COLUMN = "enc_type_code"
-RESOURCE_DETAIL_ENCOUNTER_BLOCK_VALUES = [
+RESOURCE_DETAIL_ROW_GROUP_SYSTEM_COLUMNS = "enc_type_system"
+RESOURCE_DETAIL_ROW_GROUP_SYSTEMS = "http://fhir.de/CodeSystem/Kontaktebene"
+RESOURCE_DETAIL_ROW_GROUP_VALUE_COLUMNS = "enc_type_code"
+RESOURCE_DETAIL_ROW_GROUP_VALUES = [
   "Einrichtungskontakt=einrichtungskontakt",
   "Abteilungskontakt=abteilungskontakt",
   "Versorgungsstellenkontakt=versorgungsstellenkontakt"
 ]
 
-RESOURCE_DETAIL_ENCOUNTER_SPLIT_SYSTEM_COLUMN = "enc_class_system"
-RESOURCE_DETAIL_ENCOUNTER_SPLIT_SYSTEM = "http://terminology.hl7.org/CodeSystem/v3-ActCode"
-RESOURCE_DETAIL_ENCOUNTER_SPLIT_VALUE_COLUMN = "enc_class_code"
-
-# The left side is the report column, the right side is the value to filter for.
-# The special value OTHER counts non-empty values outside the explicitly
-# configured values.
-RESOURCE_DETAIL_ENCOUNTER_SPLIT_VALUES = [
+RESOURCE_DETAIL_COUNT_GROUP_SYSTEM_COLUMNS = "enc_class_system"
+RESOURCE_DETAIL_COUNT_GROUP_SYSTEMS = "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+RESOURCE_DETAIL_COUNT_GROUP_VALUE_COLUMNS = "enc_class_code"
+RESOURCE_DETAIL_COUNT_GROUP_VALUES = [
   "count class IMP=IMP",
   "count class SS=SS",
   "count class AMB=AMB",
   "count class Andere=OTHER"
 ]
+
+# Optional filtered-scope sheets. These settings create additional versions of
+# the listed sheets for a configured row scope, for example only patients/cases
+# identified through pids_per_ward. Leave FILTERED_SCOPE_SHEET_NAMES empty or
+# undefined to keep only the unfiltered sheets.
+FILTERED_SCOPE_SHEET_NAMES = ["FHIR", "FHIR Encounter"]
+FILTERED_SCOPE_DETAIL_SHEET_SUFFIX = "INTERPOLAR"

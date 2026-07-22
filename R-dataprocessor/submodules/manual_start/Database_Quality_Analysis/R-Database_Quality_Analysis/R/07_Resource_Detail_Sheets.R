@@ -1,52 +1,54 @@
-getDetailBlockCondition <- function(detail_config, block_value) {
+# Build the condition for the outer row group. Each row group becomes one repeated table block in the detail sheet.
+getDetailRowGroupCondition <- function(detail_config, row_group_value) {
   paste(
-    quoteIdentifier(detail_config$block_system_column),
+    quoteIdentifier(detail_config$row_group_system_column),
     "=",
-    quoteSqlString(detail_config$block_system),
+    quoteSqlString(detail_config$row_group_system),
     "AND",
-    quoteIdentifier(detail_config$block_value_column),
+    quoteIdentifier(detail_config$row_group_value_column),
     "=",
-    quoteSqlString(block_value)
+    quoteSqlString(row_group_value)
   )
 }
 
-getDetailSplitCondition <- function(detail_config, split_value) {
-  split_system_condition <- paste(
-    quoteIdentifier(detail_config$split_system_column),
+# Build the condition for the inner count group. Each count group becomes one additional count column in every row group.
+getDetailCountGroupCondition <- function(detail_config, count_group_value) {
+  count_group_system_condition <- paste(
+    quoteIdentifier(detail_config$count_group_system_column),
     "=",
-    quoteSqlString(detail_config$split_system)
+    quoteSqlString(detail_config$count_group_system)
   )
 
-  if (identical(split_value, "OTHER")) {
-    explicit_values <- sort(detail_config$split_values[detail_config$split_values != "OTHER"])
-    split_value_condition <- paste0(
+  if (identical(count_group_value, "OTHER")) {
+    explicit_values <- sort(detail_config$count_group_values[detail_config$count_group_values != "OTHER"])
+    count_group_value_condition <- paste0(
       "(",
-      quoteIdentifier(detail_config$split_value_column),
+      quoteIdentifier(detail_config$count_group_value_column),
       " IS NOT NULL AND ",
-      quoteIdentifier(detail_config$split_value_column),
+      quoteIdentifier(detail_config$count_group_value_column),
       "::text <> '' AND ",
-      quoteIdentifier(detail_config$split_value_column),
+      quoteIdentifier(detail_config$count_group_value_column),
       " NOT IN (",
       paste(quoteSqlString(unname(explicit_values)), collapse = ", "),
       "))"
     )
   } else {
-    split_value_condition <- paste(
-      quoteIdentifier(detail_config$split_value_column),
+    count_group_value_condition <- paste(
+      quoteIdentifier(detail_config$count_group_value_column),
       "=",
-      quoteSqlString(split_value)
+      quoteSqlString(count_group_value)
     )
   }
 
-  paste(split_system_condition, "AND", split_value_condition)
+  paste(count_group_system_condition, "AND", count_group_value_condition)
 }
 
 getRequiredDetailColumns <- function(detail_config) {
   unique(c(
-    detail_config$block_system_column,
-    detail_config$block_value_column,
-    detail_config$split_system_column,
-    detail_config$split_value_column
+    detail_config$row_group_system_column,
+    detail_config$row_group_value_column,
+    detail_config$count_group_system_column,
+    detail_config$count_group_value_column
   ))
 }
 
@@ -55,7 +57,7 @@ buildResourceDetailCountQuery <- function(
   grouping_columns,
   data_columns,
   detail_config,
-  block_value,
+  row_group_value,
   row_filter_condition = NA_character_
 ) {
   table_ref <- quoteTable(
@@ -66,7 +68,7 @@ buildResourceDetailCountQuery <- function(
     if ("DATA_TYPE" %in% names(table_metadata)) table_metadata$DATA_TYPE else rep(NA_character_, nrow(table_metadata)),
     table_metadata$COLUMN_NAME
   )
-  block_condition <- getDetailBlockCondition(detail_config, block_value)
+  row_group_condition <- getDetailRowGroupCondition(detail_config, row_group_value)
   select_parts <- character()
   alias_map <- data.table::data.table(
     alias = character(),
@@ -91,7 +93,7 @@ buildResourceDetailCountQuery <- function(
       conditions <- c(
         filled_condition,
         grouping_filled_condition,
-        block_condition
+        row_group_condition
       )
       conditions <- conditions[!is.na(conditions)]
       select_parts <- c(select_parts, paste0(
@@ -112,7 +114,7 @@ buildResourceDetailCountQuery <- function(
       )
       alias_index <- alias_index + 1L
     }
-    for (split_name in names(detail_config$split_values)) {
+    for (count_group_name in names(detail_config$count_group_values)) {
       grouping_column <- grouping_columns[["resource_id"]]
       if (is.na(grouping_column) || !grouping_column %in% table_metadata$COLUMN_NAME) {
         next
@@ -126,8 +128,8 @@ buildResourceDetailCountQuery <- function(
       conditions <- c(
         filled_condition,
         grouping_filled_condition,
-        block_condition,
-        getDetailSplitCondition(detail_config, detail_config$split_values[[split_name]])
+        row_group_condition,
+        getDetailCountGroupCondition(detail_config, detail_config$count_group_values[[count_group_name]])
       )
       conditions <- conditions[!is.na(conditions)]
       select_parts <- c(select_parts, paste0(
@@ -143,7 +145,7 @@ buildResourceDetailCountQuery <- function(
         data.table::data.table(
           alias = alias,
           COLUMN_NAME = column_name,
-          count_column = detail_config$split_count_columns[[split_name]]
+          count_column = detail_config$count_group_count_columns[[count_group_name]]
         )
       )
       alias_index <- alias_index + 1L
@@ -207,22 +209,22 @@ createResourceDetailSheet <- function(
 
   output_columns <- setdiff(names(base_rows), c("TABLE_FAMILY", "RESOURCE_REFERENCE_SCOPE", "ORDINAL_POSITION"))
   base_rows <- base_rows[, ..output_columns]
-  for (count_column in detail_config$split_count_columns) {
+  for (count_column in detail_config$count_group_count_columns) {
     base_rows[, (count_column) := NA_integer_]
   }
 
   data_columns <- table_metadata$COLUMN_NAME
   sheets <- list()
-  for (block_label in names(detail_config$block_values)) {
-    block_value <- detail_config$block_values[[block_label]]
-    block_rows <- data.table::copy(base_rows)
-    block_rows[, TABLE_NAME := paste(detail_config$table_name, block_label, sep = " - ")]
+  for (row_group_label in names(detail_config$row_group_values)) {
+    row_group_value <- detail_config$row_group_values[[row_group_label]]
+    row_group_rows <- data.table::copy(base_rows)
+    row_group_rows[, TABLE_NAME := paste(detail_config$table_name, row_group_label, sep = " - ")]
     count_query <- buildResourceDetailCountQuery(
       table_metadata,
       grouping_columns,
       data_columns,
       detail_config,
-      block_value,
+      row_group_value,
       row_filter_condition = row_filter_condition
     )
     if (!is.na(count_query$query)) {
@@ -232,22 +234,22 @@ createResourceDetailSheet <- function(
           "calculate database quality analysis ",
           detail_config$table_name,
           " detail counts for ",
-          block_value
+          row_group_value
         )
       )
       for (row_index in seq_len(nrow(count_query$alias_map))) {
         alias_row <- count_query$alias_map[row_index]
-        block_rows[
+        row_group_rows[
           COLUMN_NAME == alias_row$COLUMN_NAME,
           (alias_row$count_column) := as.integer(count_result[[alias_row$alias]][[1]])
         ]
       }
     }
-    sheets[[block_label]] <- block_rows
+    sheets[[row_group_label]] <- row_group_rows
   }
 
   sheet <- data.table::rbindlist(sheets, use.names = TRUE)
-  for (count_column in c(DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS, detail_config$split_count_columns)) {
+  for (count_column in c(DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS, detail_config$count_group_count_columns)) {
     data.table::set(
       sheet,
       i = which(!is.na(sheet[[count_column]]) & sheet[[count_column]] == 0L),

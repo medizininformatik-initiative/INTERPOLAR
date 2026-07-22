@@ -79,11 +79,21 @@ Grouping columns are resolved from table-specific overrides first. Missing
 grouping columns are then inferred by convention from the available columns. If
 no grouping column can be resolved for a count, that count remains `NA`.
 
-Optional resource detail sheets are enabled through `RESOURCE_DETAIL_SHEETS`.
-The sheet-specific settings use `RESOURCE_DETAIL_<ID>_*` keys and define the
-sheet name, table name, block column, block values, split column, and split
-values. The order of the configured block values is preserved in the Excel
-sheet.
+Optional resource detail sheets are configured through `RESOURCE_DETAIL_*`
+settings. For one detail sheet, each setting can be a single string. For multiple
+detail sheets, use lists of the same length; entries belong together by position.
+The row group defines the repeated table blocks in the sheet. The count group
+defines the additional count columns inside each row group. For one detail
+sheet, `ROW_GROUP_VALUES` and `COUNT_GROUP_VALUES` can be readable TOML lists
+of `name=value` entries. For multiple detail sheets, use lists with one
+semicolon-separated `name=value` string per detail sheet. The order of the
+configured row group values is preserved in the Excel sheet.
+
+Filtered-scope sheets are controlled through `FILTERED_SCOPE_SHEET_NAMES`.
+The values name the unfiltered source sheets that should get a filtered variant,
+for example `["FHIR", "FHIR Encounter"]`.
+`FILTERED_SCOPE_DETAIL_SHEET_SUFFIX` is appended to each source sheet name, so
+those examples become `FHIR INTERPOLAR` and `FHIR Encounter INTERPOLAR`.
 
 Database-internal columns such as processing metadata, `*_raw_id`,
 last-version helper columns, and the physical table primary key
