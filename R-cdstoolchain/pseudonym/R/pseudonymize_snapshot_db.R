@@ -622,7 +622,7 @@ pseudonymizeSnapshotDatabase <- function(
       }
       if (
         isTRUE(fail_on_review_problems) &&
-          pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
+        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
       ) {
         stop(
           "Pseudonymization rule review contains blocking problems:\n",
