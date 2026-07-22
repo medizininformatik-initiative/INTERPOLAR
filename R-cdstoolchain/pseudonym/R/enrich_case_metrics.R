@@ -126,6 +126,40 @@ enrichSnapshotFallTable <- function(fall_fe, patient_fe) {
   fall_fe
 }
 
+enrichSnapshotFallChunk <- function(fall_fe, birthdates = NULL) {
+  fall_fe <- data.table::as.data.table(data.table::copy(fall_fe))
+  if (!"fall_age_at_admission" %in% names(fall_fe)) {
+    fall_fe[["fall_age_at_admission"]] <- NA_integer_
+  }
+  if (!"fall_bmi" %in% names(fall_fe)) {
+    fall_fe[["fall_bmi"]] <- NA_real_
+  }
+
+  if (!is.null(birthdates) && "fall_aufn_dat" %in% names(fall_fe)) {
+    fall_fe[["fall_age_at_admission"]] <- calculateCompletedYears(
+      fall_fe[["fall_aufn_dat"]],
+      birthdates
+    )
+  }
+
+  bmi_columns <- c(
+    "fall_gewicht_aktuell",
+    "fall_gewicht_aktl_einheit",
+    "fall_groesse",
+    "fall_groesse_einheit"
+  )
+  if (all(bmi_columns %in% names(fall_fe))) {
+    fall_fe[["fall_bmi"]] <- calculateBmi(
+      fall_fe[["fall_gewicht_aktuell"]],
+      fall_fe[["fall_gewicht_aktl_einheit"]],
+      fall_fe[["fall_groesse"]],
+      fall_fe[["fall_groesse_einheit"]]
+    )
+  }
+
+  fall_fe
+}
+
 getPatientBirthdateMap <- function(patient) {
   patient <- data.table::as.data.table(data.table::copy(patient))
   if (!all(c("pat_id", "pat_birthdate") %in% names(patient))) {
@@ -166,6 +200,20 @@ enrichSnapshotEncounterTable <- function(encounter, patient) {
     encounter[["enc_period_start"]],
     birthdates
   )
+  encounter
+}
+
+enrichSnapshotEncounterChunk <- function(encounter, birthdates = NULL) {
+  encounter <- data.table::as.data.table(data.table::copy(encounter))
+  if (!"enc_age_at_admission" %in% names(encounter)) {
+    encounter[["enc_age_at_admission"]] <- NA_integer_
+  }
+  if (!is.null(birthdates) && "enc_period_start" %in% names(encounter)) {
+    encounter[["enc_age_at_admission"]] <- calculateCompletedYears(
+      encounter[["enc_period_start"]],
+      birthdates
+    )
+  }
   encounter
 }
 

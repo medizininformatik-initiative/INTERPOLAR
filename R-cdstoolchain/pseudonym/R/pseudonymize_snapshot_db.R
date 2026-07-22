@@ -457,7 +457,11 @@ writePseudonymizationReportWorkbook <- function(
 }
 
 writeSnapshotEnrichmentReviewReport <- function(report, file_name = NA) {
-  report_tables <- list(unmatched_medication_references = report)
+  report_tables <- if (data.table::is.data.table(report)) {
+    list(unmatched_medication_references = report)
+  } else {
+    report
+  }
   writePseudonymizationReportWorkbook(
     report_tables,
     file_name = file_name,
@@ -501,8 +505,11 @@ writeSnapshotPostprocessingReport <- function(summary, file_name = NA) {
 #' @param last_version_suffix Suffix used for last-version source views and
 #'   materialized target tables.
 #' @param tables Optional character vector limiting tables to read.
-#' @param enrich_tables Optional function called with the named source-table
-#'   list before pseudonymization. It must return a named table list.
+#' @param enrich_tables Deprecated. Snapshot DB enrichment is built into the
+#'   streaming pipeline. Custom whole-snapshot enrichment is incompatible with
+#'   bounded-memory processing.
+#' @param chunk_size Maximum number of source rows held in memory at once for
+#'   each materialized relation.
 #' @param fail_on_review_problems Passed to `pseudonymizeSnapshotTables()`.
 #' @param write_review_report Passed to `pseudonymizeSnapshotTables()`.
 #' @param review_report_file Passed to `pseudonymizeSnapshotTables()`.
@@ -520,7 +527,9 @@ writeSnapshotPostprocessingReport <- function(summary, file_name = NA) {
 #' @param log_steps If `TRUE` and module logging is initialized, wrap major
 #'   steps in the existing `etlutils::runLevel...` logging.
 #'
-#' @return A list with source tables, pseudonymization result, and write summary.
+#' @return A list with rules, reports, the materialization plan, and write and
+#'   view summaries. Full source and target tables are not returned because the
+#'   database pipeline processes them incrementally.
 #' @export
 pseudonymizeSnapshotDatabase <- function(
   source_connection,
@@ -536,6 +545,7 @@ pseudonymizeSnapshotDatabase <- function(
   last_version_suffix = "_last_version",
   tables = NULL,
   enrich_tables = NULL,
+  chunk_size = DEFAULT_SNAPSHOT_CHUNK_SIZE,
   fail_on_review_problems = TRUE,
   write_review_report = TRUE,
   review_report_file = NA,
@@ -547,6 +557,13 @@ pseudonymizeSnapshotDatabase <- function(
   temporary = FALSE,
   log_steps = TRUE
 ) {
+  if (!is.null(enrich_tables)) {
+    stop(
+      "enrich_tables is not supported by bounded-memory snapshot processing. ",
+      "Snapshot DB enrichments are applied automatically per chunk."
+    )
+  }
+  chunk_size <- validateSnapshotChunkSize(chunk_size)
   if (is.null(table_descriptions)) {
     rule_sources <- getDefaultSnapshotPseudonymizationRuleSources(project_root = project_root)
     table_descriptions <- rule_sources[["table_descriptions"]]
@@ -561,47 +578,6 @@ pseudonymizeSnapshotDatabase <- function(
         table_descriptions = table_descriptions,
         snapshot_extensions = snapshot_extensions
       )
-    },
-    log_steps = log_steps
-  )
-
-  runPseudonymizationLogStep(2L,
-    "Read snapshot source tables",
-    {
-      result[["source_tables"]] <- readSnapshotSourceTables(
-        source_connection,
-        rules = result[["rules"]],
-        source_schema = source_schema,
-        source_view_prefix = source_view_prefix,
-        last_version_suffix = last_version_suffix,
-        tables = tables
-      )
-    },
-    log_steps = log_steps
-  )
-
-  if (!is.null(enrich_tables)) {
-    runPseudonymizationLogStep(2L,
-      "Enrich snapshot source tables",
-      {
-        result[["source_tables"]] <- enrich_tables(result[["source_tables"]])
-      },
-      log_steps = log_steps
-    )
-  }
-
-  runPseudonymizationLogStep(2L,
-    "Review snapshot enrichment",
-    {
-      result[["enrichment_review_report"]] <- list(
-        unmatched_medication_references = getSnapshotMedicationReferenceReview(result[["source_tables"]])
-      )
-      if (isTRUE(write_review_report)) {
-        writeSnapshotEnrichmentReviewReport(
-          result[["enrichment_review_report"]][["unmatched_medication_references"]],
-          file_name = enrichment_review_report_file
-        )
-      }
     },
     log_steps = log_steps
   )
@@ -633,58 +609,84 @@ pseudonymizeSnapshotDatabase <- function(
     log_steps = log_steps
   )
 
-  materialization_plan <- attr(result[["source_tables"]], "materialization_plan")
-  result[["pseudonymization"]] <- runPseudonymizationLogStep(
-    2L,
-    "Pseudonymize snapshot tables",
-    pseudonymizeSnapshotMaterializedTables(
-      tables = result[["source_tables"]],
-      materialization_plan = materialization_plan,
-      rules = result[["rules"]],
-      input_repo_path = input_repo_path,
-      keep_unmatched_columns = keep_unmatched_columns,
-      log_steps = log_steps
-    ),
+  runPseudonymizationLogStep(2L,
+    "Plan snapshot source relations",
+    {
+      result[["materialization_plan"]] <- getExistingSnapshotMaterializationPlan(
+        source_connection,
+        rules = result[["rules"]],
+        source_schema = source_schema,
+        source_view_prefix = source_view_prefix,
+        last_version_suffix = last_version_suffix,
+        tables = tables
+      )
+    },
     log_steps = log_steps
   )
 
+  snapshotEnsureSchema(target_connection, target_table_schema)
+  streaming_context <- newSnapshotStreamingContext(input_repo_path)
+  summary_rows <- list()
+  write_summary_rows <- list()
   runPseudonymizationLogStep(2L,
-    "Postprocess pseudonymized snapshot tables",
+    "Stream and pseudonymize snapshot tables",
     {
-      result[["pseudonymization"]] <- postprocessPseudonymizedSnapshotTables(
-        result[["pseudonymization"]]
-      )
-      result[["postprocessing_report"]] <- result[["pseudonymization"]][["summary"]]
-      if (isTRUE(write_review_report)) {
-        writeSnapshotPostprocessingReport(
-          result[["postprocessing_report"]],
-          file_name = postprocessing_report_file
+      for (i in seq_len(nrow(result[["materialization_plan"]]))) {
+        relation_result <- streamSnapshotMaterializedTable(
+          source_connection = source_connection,
+          target_connection = target_connection,
+          plan_row = result[["materialization_plan"]][i, ],
+          rules = result[["rules"]],
+          input_repo_path = input_repo_path,
+          source_schema = source_schema,
+          target_table_schema = target_table_schema,
+          source_view_prefix = source_view_prefix,
+          last_version_suffix = last_version_suffix,
+          chunk_size = chunk_size,
+          keep_unmatched_columns = keep_unmatched_columns,
+          overwrite_tables = overwrite_tables,
+          temporary = temporary,
+          streaming_context = streaming_context,
+          log_steps = log_steps
         )
+        summary_rows[[length(summary_rows) + 1L]] <- relation_result[["summary"]]
+        write_summary_rows[[length(write_summary_rows) + 1L]] <-
+          relation_result[["write_summary"]]
       }
     },
     log_steps = log_steps
   )
 
-  runPseudonymizationLogStep(2L,
-    "Write pseudonymized snapshot tables",
-    {
-      result[["write_summary"]] <- writeSnapshotTargetTables(
-        target_connection,
-        result[["pseudonymization"]][["tables"]],
-        target_schema = target_table_schema,
-        overwrite = overwrite_tables,
-        temporary = temporary
-      )
-    },
-    log_steps = log_steps
+  result[["pseudonymization"]] <- list(summary = data.table::rbindlist(summary_rows, fill = TRUE))
+  result[["postprocessing_report"]] <- result[["pseudonymization"]][["summary"]]
+  result[["write_summary"]] <- data.table::rbindlist(write_summary_rows, fill = TRUE)
+  result[["enrichment_review_report"]] <- finalizeBoundedMedicationReferenceReview(
+    streaming_context$medication_review
   )
+
+  if (isTRUE(write_review_report)) {
+    runPseudonymizationLogStep(2L,
+      "Write snapshot processing reports",
+      {
+        writeSnapshotEnrichmentReviewReport(
+          result[["enrichment_review_report"]],
+          file_name = enrichment_review_report_file
+        )
+        writeSnapshotPostprocessingReport(
+          result[["postprocessing_report"]],
+          file_name = postprocessing_report_file
+        )
+      },
+      log_steps = log_steps
+    )
+  }
 
   runPseudonymizationLogStep(2L,
     "Create snapshot passthrough views",
     {
       result[["view_summary"]] <- createSnapshotPassthroughViews(
         target_connection,
-        materialization_plan = materialization_plan,
+        materialization_plan = result[["materialization_plan"]],
         table_schema = target_table_schema,
         view_schema = target_view_schema,
         replace = replace_views

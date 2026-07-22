@@ -153,3 +153,23 @@ test_that("writeSnapshotPostprocessingReport writes an xlsx report", {
   expect_true(file.exists(file_name))
   expect_equal(result, summary)
 })
+
+test_that("writeSnapshotEnrichmentReviewReport writes bounded report sheets", {
+  file_name <- tempfile(fileext = ".xlsx")
+  report <- list(
+    summary = data.table::data.table(
+      TABLE_NAME = "medicationrequest",
+      UNMATCHED_ROWS = 5
+    ),
+    unmatched_reference_examples = data.table::data.table(
+      TABLE_NAME = "medicationrequest",
+      MEDICATION_ID = "missing"
+    )
+  )
+
+  result <- writeSnapshotEnrichmentReviewReport(report, file_name = file_name)
+
+  expect_true(file.exists(file_name))
+  expect_equal(names(etlutils::readExcelFileAsTableList(file_name)), names(report))
+  expect_equal(result, report)
+})

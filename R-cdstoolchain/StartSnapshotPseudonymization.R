@@ -17,6 +17,7 @@ command_arguments <- etlutils::initCommandLineArguments(
     source_schema = "db2dataprocessor_out",
     target_table_schema = "db_log",
     target_view_schema = "db2dataprocessor_out",
+    chunk_size = NULL,
     review_report_file = NA_character_
   )
 )
@@ -98,18 +99,11 @@ tryCatch(
       source_schema = command_arguments[["source_schema"]],
       target_table_schema = command_arguments[["target_table_schema"]],
       target_view_schema = command_arguments[["target_view_schema"]],
+      chunk_size = command_arguments[["chunk_size"]],
       fail_on_review_problems = TRUE,
       write_review_report = TRUE,
       review_report_file = command_arguments[["review_report_file"]],
       keep_unmatched_columns = TRUE,
-      enrich_tables = function(tables) {
-        tables <- pseudonym::enrichSnapshotCaseMetricTables(tables)
-        tables <- pseudonym::enrichSnapshotObservationTables(
-          tables,
-          input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]]
-        )
-        pseudonym::enrichSnapshotMedicationReferenceTables(tables)
-      },
       overwrite_tables = FALSE,
       replace_views = FALSE,
       log_steps = TRUE

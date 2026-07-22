@@ -307,6 +307,14 @@ getPseudonymMappingSheet <- function(mapping_context, sheet_name) {
   mapping_context$cache[[sheet_name]]
 }
 
+newPseudonymMappingContext <- function(input_repo_path) {
+  mapping_context <- new.env(parent = emptyenv())
+  mapping_context$input_repo_path <- input_repo_path
+  mapping_context$cache <- new.env(parent = emptyenv())
+  mapping_context$missing <- list()
+  mapping_context
+}
+
 recordMissingPseudonymMappingValues <- function(mapping_context, sheet_name, column_name, values) {
   if (is.null(mapping_context) || length(values) == 0) {
     return(invisible())
@@ -632,17 +640,25 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
 #'   for the pseudonymization run. If `pseudonym(sheet = ...)` rules are used,
 #'   `<input_repo_path>/pseudo_mapping.xlsx` is read and the `sheet` argument
 #'   selects the mapping sheet.
+#' @param mapping_context Optional reusable pseudonym-mapping cache. This is
+#'   primarily used by incremental snapshot processing so mapping sheets are
+#'   loaded once across chunks.
 #'
 #' @return A pseudonymized copy of `table`.
 #' @export
-pseudonymizeTable <- function(table, table_description, table_name = NULL, input_repo_path = NULL) {
+pseudonymizeTable <- function(
+  table,
+  table_description,
+  table_name = NULL,
+  input_repo_path = NULL,
+  mapping_context = NULL
+) {
   table <- data.table::as.data.table(data.table::copy(table))
   source_table <- data.table::copy(table)
   column_rules <- getPseudonymizationColumnRules(table_description, table_name)
-  mapping_context <- new.env(parent = emptyenv())
-  mapping_context$input_repo_path <- input_repo_path
-  mapping_context$cache <- new.env(parent = emptyenv())
-  mapping_context$missing <- list()
+  if (is.null(mapping_context)) {
+    mapping_context <- newPseudonymMappingContext(input_repo_path)
+  }
 
   for (column_name in names(table)) {
     rule_row <- column_rules[column_rules[["COLUMN_NAME"]] == column_name, ]
@@ -721,7 +737,8 @@ pseudonymizeTableForSnapshot <- function(
   table_name,
   rule_source = NULL,
   input_repo_path,
-  keep_unmatched_columns) {
+  keep_unmatched_columns,
+  mapping_context = NULL) {
   table_rules <- getPseudonymizationRulesForTable(rules, table_name, source = rule_source)
   described_columns <- unique(table_rules[["COLUMN_NAME"]])
   available_columns <- described_columns[described_columns %in% names(table)]
@@ -736,7 +753,8 @@ pseudonymizeTableForSnapshot <- function(
     table_to_pseudonymize,
     table_rules,
     table_name = table_name,
-    input_repo_path = input_repo_path
+    input_repo_path = input_repo_path,
+    mapping_context = mapping_context
   )
 
   list(
