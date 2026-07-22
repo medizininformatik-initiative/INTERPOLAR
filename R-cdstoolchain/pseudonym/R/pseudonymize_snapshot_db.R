@@ -76,7 +76,8 @@ getSnapshotSourceViewPlan <- function(
   rules,
   source_view_prefix = "v_",
   last_version_suffix = "_last_version",
-  tables = NULL) {
+  tables = NULL
+) {
   table_plan <- snapshotRuleTablePlan(rules)
   if (!is.null(tables)) {
     table_plan <- table_plan[
@@ -134,7 +135,8 @@ pseudonymizeSnapshotMaterializedTables <- function(
   rules,
   input_repo_path,
   keep_unmatched_columns,
-  log_steps) {
+  log_steps
+) {
   result_tables <- list()
   summary_rows <- list()
 
@@ -255,7 +257,8 @@ readSnapshotSourceTables <- function(
   source_schema = NULL,
   source_view_prefix = "v_",
   last_version_suffix = "_last_version",
-  tables = NULL) {
+  tables = NULL
+) {
   plan <- getSnapshotSourceViewPlan(
     rules = rules,
     source_view_prefix = source_view_prefix,
@@ -266,16 +269,39 @@ readSnapshotSourceTables <- function(
   result <- list()
   existing_plan_rows <- rep(FALSE, nrow(plan))
   for (i in seq_len(nrow(plan))) {
-    if (!snapshotRelationExists(connection, plan[["SOURCE_RELATION"]][i], source_schema)) {
-      if (identical(plan[["SNAPSHOT_RELATION_TYPE"]][i], "last_version")) {
+    source_relation_name <- plan[["SOURCE_RELATION"]][i]
+    materialized_table_name <- plan[["MATERIALIZED_TABLE_NAME"]][i]
+    relation_type <- plan[["SNAPSHOT_RELATION_TYPE"]][i]
+    if (!snapshotRelationExists(connection, source_relation_name, source_schema)) {
+      if (identical(relation_type, "last_version")) {
         next
       }
-      stop("Required source relation does not exist: ", plan[["SOURCE_RELATION"]][i])
+      stop("Required source relation does not exist: ", source_relation_name)
     }
-    relation <- snapshotQualifiedName(connection, plan[["SOURCE_RELATION"]][i], source_schema)
+    relation <- snapshotQualifiedName(connection, source_relation_name, source_schema)
     query <- paste0("SELECT * FROM ", relation)
-    result[[plan[["MATERIALIZED_TABLE_NAME"]][i]]] <-
-      data.table::as.data.table(DBI::dbGetQuery(connection, query))
+    message(
+      "Reading snapshot source relation ", relation,
+      " as ", materialized_table_name,
+      " (", relation_type, ")"
+    )
+    table_data <- tryCatch(
+      data.table::as.data.table(DBI::dbGetQuery(connection, query)),
+      error = function(error) {
+        stop(
+          "Failed to read snapshot source relation ", relation,
+          " as ", materialized_table_name,
+          ": ", conditionMessage(error),
+          call. = FALSE
+        )
+      }
+    )
+    message(
+      "Read snapshot source relation ", relation,
+      " as ", materialized_table_name,
+      ": ", nrow(table_data), " rows, ", length(names(table_data)), " columns"
+    )
+    result[[materialized_table_name]] <- table_data
     existing_plan_rows[i] <- TRUE
   }
   attr(result, "materialization_plan") <- plan[existing_plan_rows, , drop = FALSE]
@@ -302,7 +328,8 @@ writeSnapshotTargetTables <- function(
   tables,
   target_schema = "db_log",
   overwrite = FALSE,
-  temporary = FALSE) {
+  temporary = FALSE
+) {
   if (is.null(names(tables)) || any(!nzchar(names(tables)))) {
     stop("tables must be a named list.")
   }
@@ -364,7 +391,8 @@ createSnapshotPassthroughViews <- function(
   materialization_plan,
   table_schema = "db_log",
   view_schema = "db2dataprocessor_out",
-  replace = FALSE) {
+  replace = FALSE
+) {
   snapshotEnsureSchema(connection, view_schema)
 
   summary <- data.table::data.table(
@@ -406,7 +434,8 @@ writePseudonymizationReportWorkbook <- function(
   report_tables,
   file_name = NA,
   filename_without_extension,
-  subdir = "reports") {
+  subdir = "reports"
+) {
   if (is.na(file_name)) {
     etlutils::writeExcelFileLocal(
       report_tables,
@@ -516,7 +545,8 @@ pseudonymizeSnapshotDatabase <- function(
   overwrite_tables = FALSE,
   replace_views = FALSE,
   temporary = FALSE,
-  log_steps = TRUE) {
+  log_steps = TRUE
+) {
   if (is.null(table_descriptions)) {
     rule_sources <- getDefaultSnapshotPseudonymizationRuleSources(project_root = project_root)
     table_descriptions <- rule_sources[["table_descriptions"]]
@@ -592,7 +622,7 @@ pseudonymizeSnapshotDatabase <- function(
       }
       if (
         isTRUE(fail_on_review_problems) &&
-        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
+          pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
       ) {
         stop(
           "Pseudonymization rule review contains blocking problems:\n",
