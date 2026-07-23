@@ -377,7 +377,7 @@ test_that("database quality analysis count query uses non-empty values and quote
   expect_equal(result$alias_map$count_column, c("count per resource_id", "count per PID"))
 })
 
-test_that("database quality analysis unique value query batches database values", {
+test_that("database quality analysis text value summary query counts values", {
   table_metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
     VIEW_NAME = "v_observation_last_version",
@@ -389,92 +389,123 @@ test_that("database quality analysis unique value query batches database values"
     DATA_TYPE = "character varying"
   )
 
-  result <- buildUniqueValuesQuery(table_metadata, c("obs_id", "obs_code_code"))
+  result <- buildTextValueSummaryQuery(table_metadata, c("obs_id", "obs_code_code"))
 
-  expect_match(result, "SELECT DISTINCT", fixed = TRUE)
+  expect_match(result, "COUNT(*)::integer AS \"COUNT\"", fixed = TRUE)
   expect_match(result, "'FHIR' AS \"TABLE_FAMILY\"", fixed = TRUE)
   expect_match(result, "'observation' AS \"TABLE_NAME\"", fixed = TRUE)
   expect_match(result, "CROSS JOIN LATERAL", fixed = TRUE)
-  expect_match(result, "('obs_id', \"source_row\".\"obs_id\"::text)", fixed = TRUE)
-  expect_match(result, "('obs_code_code', \"source_row\".\"obs_code_code\"::text)", fixed = TRUE)
+  expect_match(result, "('obs_id', CASE WHEN \"source_row\".\"obs_id\" IS NULL", fixed = TRUE)
+  expect_match(result, "('obs_code_code', CASE WHEN \"source_row\".\"obs_code_code\" IS NULL", fixed = TRUE)
   expect_match(result, "FROM \"db2dataprocessor_out\".\"v_observation_last_version\"", fixed = TRUE)
-  expect_match(result, "WHERE \"unique_values\".\"value\" IS NOT NULL", fixed = TRUE)
-  expect_match(result, "ORDER BY \"unique_values\".\"column_name\" ASC, \"unique_values\".\"value\" ASC", fixed = TRUE)
-  expect_false(grepl("COUNT", result, fixed = TRUE))
-  expect_false(grepl("GROUP BY", result, fixed = TRUE))
+  expect_match(result, "GROUP BY \"value_summary\".\"column_name\", \"value_summary\".\"value\"", fixed = TRUE)
 })
 
-test_that("database quality analysis unique value query handles missing descriptions", {
+test_that("database quality analysis statistic value summary query batches aggregates", {
   table_metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
     VIEW_NAME = "v_observation_last_version",
     TABLE_FAMILY = "FHIR",
     TABLE_NAME = "observation",
-    COLUMN_NAME = "obs_value",
-    COLUMN_DESCRIPTION = NA_character_,
-    ORDINAL_POSITION = 1L,
-    DATA_TYPE = "character varying"
+    COLUMN_NAME = c("obs_value_quantity", "obs_effective_datetime"),
+    COLUMN_DESCRIPTION = c("value", "effective"),
+    ORDINAL_POSITION = 1:2,
+    DATA_TYPE = c("double precision", "timestamp without time zone")
   )
 
-  result <- buildUniqueValuesQuery(table_metadata, "obs_value")
+  numeric_result <- buildStatisticValueSummaryQuery(
+    table_metadata,
+    "obs_value_quantity",
+    "numeric"
+  )
+  datetime_result <- buildStatisticValueSummaryQuery(
+    table_metadata,
+    "obs_effective_datetime",
+    "datetime"
+  )
 
-  expect_match(result, "('obs_value', \"source_row\".\"obs_value\"::text)", fixed = TRUE)
+  expect_match(numeric_result$query, "MIN(\"source_row\".\"obs_value_quantity\"::double precision)", fixed = TRUE)
+  expect_match(numeric_result$query, "PERCENTILE_CONT(0.5) WITHIN GROUP", fixed = TRUE)
+  expect_match(numeric_result$query, "STDDEV_SAMP", fixed = TRUE)
+  expect_match(numeric_result$query, "COUNT(*) FILTER (WHERE NOT (\"source_row\".\"obs_value_quantity\" IS NOT NULL))::integer", fixed = TRUE)
+  expect_equal(unique(numeric_result$alias_map$COLUMN_NAME), "obs_value_quantity")
+  expect_equal(numeric_result$alias_map$result_column, c("MIN", "MAX", "AVG", "SE", "MEDIAN", "Q1", "Q3", "EMPTY"))
+
+  expect_match(datetime_result$query, "EXTRACT(EPOCH FROM \"source_row\".\"obs_effective_datetime\")", fixed = TRUE)
+  expect_match(datetime_result$query, "'epoch'::timestamp", fixed = TRUE)
+  expect_match(datetime_result$query, "PERCENTILE_CONT(0.75) WITHIN GROUP", fixed = TRUE)
 })
 
-test_that("database quality analysis creates unique value report", {
+test_that("database quality analysis creates value summary reports", {
   metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
-    VIEW_NAME = rep("v_observation_last_version", 2),
+    VIEW_NAME = "v_observation_last_version",
     TABLE_FAMILY = "FHIR",
     TABLE_NAME = "observation",
-    COLUMN_NAME = c("obs_id", "obs_code_code"),
-    COLUMN_DESCRIPTION = c("id", "code"),
-    ORDINAL_POSITION = 1:2,
-    DATA_TYPE = "character varying"
+    COLUMN_NAME = c("obs_code_code", "obs_value_quantity", "obs_effective_datetime"),
+    COLUMN_DESCRIPTION = c("code", "value", "effective"),
+    ORDINAL_POSITION = 1:3,
+    DATA_TYPE = c("character varying", "double precision", "timestamp without time zone")
   )
   query_state <- new.env(parent = emptyenv())
   query_state$seen_queries <- character()
   query_fun <- function(query, lock_id = NULL) {
     query_state$seen_queries <- c(query_state$seen_queries, query)
-    if (grepl("'obs_id'", query, fixed = TRUE)) {
+    if (grepl("CROSS JOIN LATERAL", query, fixed = TRUE)) {
       return(data.table::data.table(
         TABLE_FAMILY = "FHIR",
         TABLE_NAME = "observation",
-        COLUMN_NAME = "obs_id",
-        VALUE = c("obs-1", "obs-2")
+        COLUMN_NAME = "obs_code_code",
+        VALUE = c("AMB", "IMP", "rare-a", "rare-b", NA_character_),
+        COUNT = c(20L, 10L, 2L, 3L, 4L)
       ))
     }
-    data.table::data.table(
-      TABLE_FAMILY = "FHIR",
-      TABLE_NAME = "observation",
-      COLUMN_NAME = "obs_code_code",
-      VALUE = c("14933-1", "value; with semicolon", "value with 'quote'")
-    )
+    aliases <- unique(regmatches(query, gregexpr("value_summary_[0-9]+", query))[[1]])
+    if (grepl("EXTRACT(EPOCH", query, fixed = TRUE)) {
+      values <- c(
+        as.POSIXct("2026-01-01 08:00:00", tz = "UTC"),
+        as.POSIXct("2026-01-03 08:00:00", tz = "UTC"),
+        as.POSIXct("2026-01-02 08:00:00", tz = "UTC"),
+        3600,
+        as.POSIXct("2026-01-02 08:00:00", tz = "UTC"),
+        as.POSIXct("2026-01-01 20:00:00", tz = "UTC"),
+        as.POSIXct("2026-01-02 20:00:00", tz = "UTC"),
+        1L
+      )
+      return(data.table::as.data.table(as.list(stats::setNames(values[seq_along(aliases)], aliases))))
+    }
+    values <- c(1, 9, 5, 0.5, 5, 3, 7, 2)
+    data.table::as.data.table(as.list(stats::setNames(values[seq_along(aliases)], aliases)))
   }
 
-  result <- createUniqueValuesReport(
+  result <- createValueSummaryReports(
     metadata,
-    config = list(count_batch_size = 1),
+    config = list(count_batch_size = 2),
     query_fun = query_fun
   )
 
-  expect_equal(names(result), c("TABLE_FAMILY", "TABLE_NAME", "COLUMN_NAME", "VALUES"))
-  expect_equal(nrow(result), 2L)
-  expect_equal(result$COLUMN_NAME, c("obs_code_code", "obs_id"))
+  expect_equal(names(result), "observation")
+  observation <- result$observation
+  expect_equal(names(observation), DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_COLUMNS)
+  expect_equal(observation$COLUMN_NAME, c("obs_code_code", "obs_value_quantity", "obs_effective_datetime"))
+  expect_equal(observation[COLUMN_NAME == "obs_code_code", VALUE_TYPE], "text")
   expect_equal(
-    result[COLUMN_NAME == "obs_id", VALUES],
-    paste(c("'obs-1'", "'obs-2'"), collapse = "\n")
+    observation[COLUMN_NAME == "obs_code_code", VALUE_COUNTS],
+    "'AMB': 20; 'IMP': 10; Other (count < 5): 5"
   )
-  expect_equal(
-    result[COLUMN_NAME == "obs_code_code", VALUES],
-    paste(c("'14933-1'", "'value with ''quote'''", "'value; with semicolon'"), collapse = "\n")
-  )
-  expect_false("COUNT" %in% names(result))
-  expect_false("VALUE" %in% names(result))
-  expect_length(query_state$seen_queries, 2L)
+  expect_equal(observation[COLUMN_NAME == "obs_code_code", EMPTY], 4L)
+  expect_equal(observation[COLUMN_NAME == "obs_value_quantity", VALUE_TYPE], "numeric")
+  expect_equal(observation[COLUMN_NAME == "obs_value_quantity", MIN], "1")
+  expect_equal(observation[COLUMN_NAME == "obs_value_quantity", Q3], "7")
+  expect_equal(observation[COLUMN_NAME == "obs_value_quantity", EMPTY], 2L)
+  expect_equal(observation[COLUMN_NAME == "obs_effective_datetime", VALUE_TYPE], "datetime")
+  expect_equal(observation[COLUMN_NAME == "obs_effective_datetime", MIN], "2026-01-01 08:00:00")
+  expect_equal(observation[COLUMN_NAME == "obs_effective_datetime", SE], 3600)
+  expect_equal(observation[COLUMN_NAME == "obs_effective_datetime", EMPTY], 1L)
+  expect_length(query_state$seen_queries, 3L)
 })
 
-test_that("database quality analysis unique value report uses only FHIR metadata", {
+test_that("database quality analysis value summary reports use only FHIR metadata", {
   metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
     VIEW_NAME = c("v_observation_last_version", "v_patient_fe_last_version", "v_pids_per_ward"),
@@ -490,17 +521,17 @@ test_that("database quality analysis unique value report uses only FHIR metadata
   query_fun <- function(query, lock_id = NULL) {
     query_state$seen_queries <- c(query_state$seen_queries, query)
     data.table::data.table(
-      TABLE_FAMILY = "FHIR",
-      TABLE_NAME = "observation",
       COLUMN_NAME = "obs_id",
-      VALUE = "obs-1"
+      VALUE = "obs-1",
+      COUNT = 1L
     )
   }
 
-  result <- createUniqueValuesReport(metadata, query_fun = query_fun)
+  result <- createValueSummaryReports(metadata, query_fun = query_fun)
 
-  expect_equal(result$TABLE_FAMILY, "FHIR")
-  expect_equal(result$TABLE_NAME, "observation")
+  expect_equal(names(result), "observation")
+  expect_false("TABLE_FAMILY" %in% names(result$observation))
+  expect_false("TABLE_NAME" %in% names(result$observation))
   expect_length(query_state$seen_queries, 1L)
   expect_match(query_state$seen_queries[[1]], "v_observation_last_version", fixed = TRUE)
   expect_false(grepl("patient_fe", query_state$seen_queries[[1]], fixed = TRUE))
@@ -1629,7 +1660,7 @@ test_that("database quality analysis excel writer uses readable column widths", 
   expect_match(sheet_xml, "customWidth=\"1\"", fixed = TRUE)
 })
 
-test_that("database quality analysis unique value writer creates csv files", {
+test_that("database quality analysis value summary writer creates zip archive", {
   old_module_dirs <- if (exists("MODULE_DIRS", envir = .GlobalEnv, inherits = FALSE)) {
     get("MODULE_DIRS", envir = .GlobalEnv)
   } else {
@@ -1651,16 +1682,26 @@ test_that("database quality analysis unique value writer creates csv files", {
     envir = .GlobalEnv
   )
 
-  unique_values <- data.table::data.table(
-    TABLE_FAMILY = "FHIR",
-    TABLE_NAME = "observation",
-    COLUMN_NAME = "obs_code_code",
-    VALUES = paste(c("'14933-1'", "'value; with semicolon'"), collapse = "\n"),
-    check.names = FALSE
+  value_summaries <- list(
+    observation = data.table::data.table(
+      COLUMN_NAME = "obs_code_code",
+      DATA_TYPE = "character varying",
+      VALUE_TYPE = "text",
+      VALUE_COUNTS = "'AMB': 20; 'IMP': 10",
+      MIN = NA_character_,
+      MAX = NA_character_,
+      AVG = NA_character_,
+      SE = NA_real_,
+      MEDIAN = NA_character_,
+      Q1 = NA_character_,
+      Q3 = NA_character_,
+      EMPTY = 4L,
+      check.names = FALSE
+    )
   )
 
-  file_name <- writeUniqueValuesFile(
-    unique_values,
+  file_name <- writeValueSummaryArchive(
+    value_summaries,
     "Database_Quality_Analysis_Test",
     timestamp = as.POSIXct("2026-06-19 08:00:02", tz = "UTC")
   )
@@ -1668,14 +1709,71 @@ test_that("database quality analysis unique value writer creates csv files", {
   expect_true(file.exists(file_name))
   expect_match(
     basename(file_name),
-    "Database_Quality_Analysis_Test_Unique_Values_2026-06-19_08-00-02.csv",
+    "Database_Quality_Analysis_Test_Value_Summary_2026-06-19_08-00-02.zip",
     fixed = TRUE
   )
-  written_values <- data.table::fread(file_name, sep = ",", keepLeadingZeros = TRUE)
-  expect_equal(
-    written_values$VALUES,
-    paste(c("'14933-1'", "'value; with semicolon'"), collapse = "\n")
+  archive_files <- utils::unzip(file_name, list = TRUE)
+  expect_equal(archive_files$Name, "observation.csv")
+  extract_dir <- tempfile("value-summary-unzip-")
+  dir.create(extract_dir)
+  utils::unzip(file_name, exdir = extract_dir)
+  written_values <- data.table::fread(file.path(extract_dir, "observation.csv"), sep = ",")
+  expect_equal(written_values$VALUE_COUNTS, "'AMB': 20; 'IMP': 10")
+  expect_equal(written_values$EMPTY, 4L)
+})
+
+test_that("database quality analysis value summary writer handles relative output dirs", {
+  old_module_dirs <- if (exists("MODULE_DIRS", envir = .GlobalEnv, inherits = FALSE)) {
+    get("MODULE_DIRS", envir = .GlobalEnv)
+  } else {
+    NULL
+  }
+  old_wd <- getwd()
+  relative_root <- tempfile("value-summary-relative-root-")
+  dir.create(relative_root)
+  on.exit(
+    {
+      setwd(old_wd)
+      if (is.null(old_module_dirs)) {
+        rm("MODULE_DIRS", envir = .GlobalEnv)
+      } else {
+        assign("MODULE_DIRS", old_module_dirs, envir = .GlobalEnv)
+      }
+    },
+    add = TRUE
   )
-  expect_false("COUNT" %in% names(written_values))
-  expect_false("VALUE" %in% names(written_values))
+  setwd(relative_root)
+  assign(
+    "MODULE_DIRS",
+    data.frame(local_dir = "outputLocal/dataprocessor", global_dir = "outputGlobal/dataprocessor"),
+    envir = .GlobalEnv
+  )
+
+  value_summaries <- list(
+    observation = data.table::data.table(
+      COLUMN_NAME = "obs_code_code",
+      DATA_TYPE = "character varying",
+      VALUE_TYPE = "text",
+      VALUE_COUNTS = "'AMB': 20",
+      MIN = NA_character_,
+      MAX = NA_character_,
+      AVG = NA_character_,
+      SE = NA_real_,
+      MEDIAN = NA_character_,
+      Q1 = NA_character_,
+      Q3 = NA_character_,
+      EMPTY = 0L,
+      check.names = FALSE
+    )
+  )
+
+  file_name <- writeValueSummaryArchive(
+    value_summaries,
+    "Database_Quality_Analysis_Test",
+    timestamp = as.POSIXct("2026-06-19 08:00:02", tz = "UTC")
+  )
+
+  expect_true(file.exists(file_name))
+  expect_true(grepl(normalizePath(relative_root, mustWork = TRUE), file_name, fixed = TRUE))
+  expect_equal(utils::unzip(file_name, list = TRUE)$Name, "observation.csv")
 })

@@ -466,19 +466,23 @@ createReport <- function(config = getConfig()) {
     config$output_filename,
     timestamp = analysis_start_time
   )
-  unique_values <- createUniqueValuesReport(metadata, config = config)
-  unique_values_file <- writeUniqueValuesFile(
-    unique_values,
+  logProgress("Calculating database quality analysis value summary.")
+  value_summaries <- createValueSummaryReports(metadata, config = config)
+  value_summary_file <- writeValueSummaryArchive(
+    value_summaries,
     config$output_filename,
     timestamp = analysis_start_time
   )
+  if (!file.exists(value_summary_file)) {
+    stop("Value summary archive was not created: ", value_summary_file, call. = FALSE)
+  }
   logProgress(
     "Finished report in ",
     formatDuration(analysis_start_time),
     ". Outputs: ",
     output_file,
     ", ",
-    unique_values_file
+    value_summary_file
   )
 
   invisible(result)
