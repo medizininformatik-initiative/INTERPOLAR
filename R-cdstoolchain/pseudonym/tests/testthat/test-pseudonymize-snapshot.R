@@ -83,6 +83,50 @@ test_that("pseudonymizeSnapshotTables can abort on blocking review problems", {
   )
 })
 
+test_that("blocking mapping review error reports deduplicated details and workbook path", {
+  rule_n <- 8L
+  rules <- data.table::data.table(
+    SOURCE = "frontend",
+    SOURCE_TYPE = "table_description",
+    SOURCE_FILE = "Frontend_Table_Description.xlsx",
+    SOURCE_SHEET = "frontend_table_description",
+    TABLE_NAME = "frontend",
+    RESOURCE = NA_character_,
+    TABLE_OR_RESOURCE = "frontend",
+    COLUMN_NAME = paste0("user_column_", seq_len(rule_n)),
+    COLUMN_DESCRIPTION = "Frontend user",
+    COLUMN_TYPE = "varchar",
+    FHIR_EXPRESSION = NA_character_,
+    PSEUDONYMIZATION_RULE_RAW = 'pseudonym(sheet = "frontend_users")',
+    PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "frontend_users")',
+    IMPLICIT_KEEP = FALSE
+  )
+  report_file <- tempfile(fileext = ".xlsx")
+
+  error <- tryCatch(
+    pseudonymizeSnapshotTables(
+      tables = list(frontend = data.table::data.table(user_column_1 = "Name 1")),
+      table_descriptions = NULL,
+      rules = rules,
+      input_repo_path = NULL,
+      write_review_report = TRUE,
+      review_report_file = report_file,
+      log_steps = FALSE
+    ),
+    error = identity
+  )
+  message <- conditionMessage(error)
+
+  expect_s3_class(error, "error")
+  expect_true(file.exists(report_file))
+  expect_match(message, 'sheet "frontend_users"', fixed = TRUE)
+  expect_match(message, "missing_input_repo_path", fixed = TRUE)
+  expect_match(message, "8 affected rule(s)", fixed = TRUE)
+  expect_match(message, "Copy the pseudo_mapping.xlsx template", fixed = TRUE)
+  expect_match(message, "original frontend user names", fixed = TRUE)
+  expect_match(message, report_file, fixed = TRUE)
+})
+
 test_that("pseudonymizeSnapshotTables can use preloaded rules", {
   rules <- data.table::data.table(
     SOURCE = "manual",

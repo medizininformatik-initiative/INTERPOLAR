@@ -601,8 +601,11 @@ pseudonymizeSnapshotDatabase <- function(
         pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
       ) {
         stop(
-          "Pseudonymization rule review contains blocking problems:\n",
-          paste(summarizePseudonymizationReviewProblems(result[["review_report"]]), collapse = "\n")
+          getPseudonymizationReviewErrorMessage(
+            result[["review_report"]],
+            write_review_report,
+            review_report_file
+          )
         )
       }
     },

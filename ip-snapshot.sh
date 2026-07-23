@@ -237,8 +237,21 @@ create_pseudonymized_snapshot() {
         echo "Fehler: Snapshot \"${source_file_path}\" existiert nicht."
         exit 1
     fi
-    ask_before_overwrite_file "${pseudonymized_file_path}"
 
+    local input_repo_mount_args=()
+    while IFS= read -r mount_arg; do
+        input_repo_mount_args+=("${mount_arg}")
+    done < <(container_input_repo_mount_args)
+    echo "Prüfe Pseudonymisierungsregeln und Mapping-Dateien..."
+    if ! docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
+        Rscript R-cdstoolchain/StartSnapshotPseudonymizationPreflight.R ; then
+        echo "Fehler: Vorprüfung der Pseudonymisierung fehlgeschlagen."
+        echo "Der Snapshot wurde nicht eingespielt und es wurden keine Build-Datenbanken angelegt."
+        exit 1
+    fi
+    echo "Vorprüfung der Pseudonymisierung abgeschlossen."
+
+    ask_before_overwrite_file "${pseudonymized_file_path}"
     if database_exists "${source_build_db}" ; then
         echo "Fehler: Temporäre Source-Datenbank '${source_build_db}' existiert bereits."
         exit 1
@@ -271,10 +284,6 @@ create_pseudonymized_snapshot() {
     fi
 
     echo "Starte Pseudonymisierung von '${source_build_db}' nach '${target_build_db}'..."
-    local input_repo_mount_args=()
-    while IFS= read -r mount_arg; do
-        input_repo_mount_args+=("${mount_arg}")
-    done < <(container_input_repo_mount_args)
     if docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
         source-db="${source_build_db}" \
