@@ -252,26 +252,39 @@ create_pseudonymized_snapshot() {
     echo "Vorprüfung der Pseudonymisierung abgeschlossen."
 
     ask_before_overwrite_file "${pseudonymized_file_path}"
+    local source_build_db_exists=false
     if database_exists "${source_build_db}" ; then
-        echo "Fehler: Temporäre Source-Datenbank '${source_build_db}' existiert bereits."
-        exit 1
+        source_build_db_exists=true
+    fi
+
+    if [[ "${source_build_db_exists}" == "true" ]]; then
+        echo "Verwende bereits vollständig eingespielte Source-Datenbank '${source_build_db}'."
     fi
     if database_exists "${target_build_db}" ; then
-        echo "Fehler: Temporäre Ziel-Datenbank '${target_build_db}' existiert bereits."
-        exit 1
+        echo "Entferne unvollständige Ziel-Datenbank '${target_build_db}' für den Neustart..."
+        if ! drop_database_if_exists "${target_build_db}" ; then
+            echo "Fehler: Temporäre Ziel-Datenbank '${target_build_db}' konnte nicht entfernt werden."
+            exit 1
+        fi
     fi
 
     SECONDS=0
-    echo "Erzeuge temporäre Source-Datenbank '${source_build_db}'..."
-    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
-        "CREATE DATABASE ${source_build_db} WITH OWNER=cds_hub_db_admin;"
-    if gzip -cd "${source_file_path}" | docker compose exec -T cds_hub psql -d "${source_build_db}" cds_hub_db_admin ; then
-        echo "Temporäre Source-Datenbank '${source_build_db}' eingespielt."
-    else
-        echo "Fehler: Einspielen der temporären Source-Datenbank '${source_build_db}' fehlgeschlagen."
-        echo "Temporäre Source-Datenbank bleibt zur Diagnose erhalten:"
-        echo "  ${source_build_db}"
-        exit 1
+    if [[ "${source_build_db_exists}" != "true" ]]; then
+        echo "Erzeuge temporäre Source-Datenbank '${source_build_db}'..."
+        docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+            "CREATE DATABASE ${source_build_db} WITH OWNER=cds_hub_db_admin;"
+        if gzip -cd "${source_file_path}" | docker compose exec -T cds_hub \
+            psql -d "${source_build_db}" cds_hub_db_admin ; then
+            echo "Temporäre Source-Datenbank '${source_build_db}' eingespielt."
+        else
+            echo "Fehler: Einspielen der temporären Source-Datenbank '${source_build_db}' fehlgeschlagen."
+            echo "Entferne die unvollständig eingespielte Source-Datenbank..."
+            if ! drop_database_if_exists "${source_build_db}" ; then
+                echo "Fehler: Unvollständige Source-Datenbank '${source_build_db}' konnte nicht entfernt werden."
+                echo "Bitte vor einem erneuten Lauf manuell entfernen."
+            fi
+            exit 1
+        fi
     fi
 
     echo "Erzeuge leere temporäre Ziel-Datenbank '${target_build_db}'..."

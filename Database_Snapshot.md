@@ -159,13 +159,23 @@ der Tabellenverarbeitung erkannt werden.
 
 Schlägt die Verarbeitung nach dem Einspielen fehl, bleiben die temporäre
 Source-Datenbank und die teilweise erzeugte Ziel-Datenbank zur Diagnose
-erhalten. Die ursprüngliche Snapshot-Datei wird nicht gelöscht. Vor einem neuen
-Lauf müssen die Build-Datenbanken geprüft und manuell entfernt werden. Nach
-einem erfolgreichen Lauf löscht das Script beide Build-Datenbanken automatisch.
+erhalten. Die ursprüngliche Snapshot-Datei wird nicht gelöscht.
 
-Ein abgebrochener Lauf wird vollständig neu gestartet. Ein Wiederaufsetzen ab
-dem letzten Chunk ist derzeit nicht vorgesehen. Existiert die pseudonymisierte
-Snapshot-Datei bereits, fragt das Script vor dem Überschreiben nach.
+Ist beim nächsten Lauf die Source-Datenbank bereits vorhanden, verwendet das
+Script sie erneut. Das gilt unabhängig davon, ob zusätzlich eine unvollständige
+Ziel-Datenbank vorhanden ist. Die Ziel-Datenbank wird immer gelöscht und neu
+angelegt. Der große Snapshot-Dump muss dadurch nicht erneut eingespielt werden.
+
+Schlägt bereits das Einspielen des Snapshot-Dumps fehl, entfernt das Script die
+unvollständige Source-Datenbank. Dadurch wird sie beim nächsten Lauf nicht
+versehentlich wiederverwendet. Eine Ziel-Datenbank ohne Source-Datenbank wird
+ebenfalls automatisch entfernt; anschließend wird der Dump neu eingespielt.
+
+Nach einem erfolgreichen Lauf löscht das Script beide Build-Datenbanken
+automatisch. Die Pseudonymisierung der Tabellen beginnt bei einem neuen Lauf
+weiterhin von vorne. Ein Wiederaufsetzen ab dem letzten Chunk ist derzeit nicht
+vorgesehen. Existiert die pseudonymisierte Snapshot-Datei bereits, fragt das
+Script vor dem Überschreiben nach.
 
 ## Technische Details
 
