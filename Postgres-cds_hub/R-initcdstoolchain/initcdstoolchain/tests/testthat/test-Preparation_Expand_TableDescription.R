@@ -126,7 +126,7 @@ test_that("addPseudonymizationRulesToTableDescription adds default YAML rules", 
   )
 })
 
-test_that("expandTableDescriptionFromFile preserves snapshot extension sheets", {
+test_that("expandTableDescriptionFromFile handles table and snapshot extensions", {
   table_description_file_name <- tempfile(fileext = ".xlsx")
   table_description_collapsed <- data.table(
     RESOURCE = c("Patient", "Observation"),
@@ -135,7 +135,14 @@ test_that("expandTableDescriptionFromFile preserves snapshot extension sheets", 
     REFERENCE_TYPES = NA_character_,
     FHIR_TYPE = NA_character_
   )
-  snapshot_extensions <- data.table(
+  table_description_extension <- data.table(
+    V1 = c("Hint", "Additional tables", NA, "TABLE_NAME", "pids_per_ward", NA),
+    V2 = c(NA, NA, NA, "COLUMN_NAME", "ward_name", "patient_id"),
+    V3 = c(NA, NA, NA, "COLUMN_DESCRIPTION", "Station name", "Patient ID"),
+    V4 = c(NA, NA, NA, "COLUMN_TYPE", "varchar", "varchar"),
+    V5 = c(NA, NA, NA, "PSEUDONYMIZATION_RULE", "keep", "cryptoHash")
+  )
+  snapshot_extension <- data.table(
     V1 = c("Hint", "Snapshot-only columns", NA, "TABLE_NAME", "observation"),
     V2 = c(NA, NA, NA, "COLUMN_NAME", "primary_loinc_code"),
     V3 = c(NA, NA, NA, "COLUMN_DESCRIPTION", "Primary LOINC Code"),
@@ -150,11 +157,18 @@ test_that("expandTableDescriptionFromFile preserves snapshot extension sheets", 
     table_description_collapsed,
     colNames = TRUE
   )
-  openxlsx::addWorksheet(workbook, "snapshot_extensions")
+  openxlsx::addWorksheet(workbook, "table_description_extension")
   openxlsx::writeData(
     workbook,
-    "snapshot_extensions",
-    snapshot_extensions,
+    "table_description_extension",
+    table_description_extension,
+    colNames = FALSE
+  )
+  openxlsx::addWorksheet(workbook, "snapshot_extension")
+  openxlsx::writeData(
+    workbook,
+    "snapshot_extension",
+    snapshot_extension,
     colNames = FALSE
   )
   openxlsx::saveWorkbook(workbook, table_description_file_name, overwrite = TRUE)
@@ -164,13 +178,65 @@ test_that("expandTableDescriptionFromFile preserves snapshot extension sheets", 
     {
       result <- expandTableDescriptionFromFile("Table_Description_Definition.xlsx")
     },
-    .package = "base"
+    .package = "initcdstoolchain"
   )
 
   additional_output_sheets <- attr(result, "additional_output_sheets")
-  expect_named(additional_output_sheets, "snapshot_extensions")
-  expect_equal(additional_output_sheets$snapshot_extensions[4, 1], "TABLE_NAME")
-  expect_equal(additional_output_sheets$snapshot_extensions[5, 2], "primary_loinc_code")
+  expect_named(additional_output_sheets, "snapshot_extension")
+  expect_equal(additional_output_sheets$snapshot_extension[4, 1], "TABLE_NAME")
+  expect_equal(additional_output_sheets$snapshot_extension[5, 2], "primary_loinc_code")
+
+  extension <- attr(result, "table_description_extension")
+  expect_equal(extension$RESOURCE, c("pids_per_ward", NA_character_))
+  expect_equal(extension$COLUMN_NAME, c("ward_name", "patient_id"))
+  expect_equal(extension$FHIR_EXPRESSION, c("Station name", "Patient ID"))
+  expect_equal(extension$FHIR_TYPE, c("varchar", "varchar"))
+  expect_equal(extension$PSEUDONYMIZATION_RULE, c("keep", "cryptoHash"))
+})
+
+test_that("expandTableDescriptionFromFile allows missing extension sheets", {
+  table_description_file_name <- tempfile(fileext = ".xlsx")
+  workbook <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(workbook, "table_description_collapsed")
+  openxlsx::writeData(
+    workbook,
+    "table_description_collapsed",
+    data.table(
+      RESOURCE = c("Patient", "Observation"),
+      RESOURCE_PREFIX = c("pat", "obs"),
+      FHIR_EXPRESSION = c("id", "id"),
+      REFERENCE_TYPES = c(NA_character_, NA_character_),
+      FHIR_TYPE = c(NA_character_, NA_character_)
+    ),
+    colNames = TRUE
+  )
+  openxlsx::saveWorkbook(workbook, table_description_file_name, overwrite = TRUE)
+
+  with_mocked_bindings(
+    system.file = function(..., package = NULL) table_description_file_name,
+    {
+      result <- expandTableDescriptionFromFile("Table_Description_Definition.xlsx")
+    },
+    .package = "initcdstoolchain"
+  )
+
+  expect_length(attr(result, "additional_output_sheets"), 0L)
+  extension <- attr(result, "table_description_extension")
+  expect_s3_class(extension, "data.table")
+  expect_equal(nrow(extension), 0L)
+  expect_named(
+    extension,
+    c(
+      "RESOURCE",
+      "COLUMN_NAME",
+      "FHIR_EXPRESSION",
+      "REFERENCE_TYPES",
+      "FHIR_TYPE",
+      "FHIR_ID_COLUMN_NAME",
+      "REFERENCE_ID_COLUMN_NAME",
+      "PSEUDONYMIZATION_RULE"
+    )
+  )
 })
 
 test_that("setTableDescriptionColumnWidths stores readable widths", {

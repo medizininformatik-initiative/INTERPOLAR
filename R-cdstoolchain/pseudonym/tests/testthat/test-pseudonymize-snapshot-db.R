@@ -50,7 +50,7 @@ test_that("getSnapshotSourceViewPlan maps frontend rule names to frontend DB tab
 
 test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension columns", {
   rules <- data.table::data.table(
-    SOURCE = c("fhir", rep("snapshot_extensions", 3)),
+    SOURCE = c("fhir", rep("snapshot_extension", 3)),
     SOURCE_TYPE = c("table_description", rep("snapshot_extension", 3)),
     TABLE_OR_RESOURCE = rep("observation", 4),
     COLUMN_NAME = c(

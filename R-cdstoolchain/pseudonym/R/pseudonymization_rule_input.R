@@ -1,11 +1,9 @@
-DEFAULT_SNAPSHOT_EXTENSION_SHEET <- "snapshot_extensions"
+DEFAULT_SNAPSHOT_EXTENSION_SHEET <- "snapshot_extension"
 DEFAULT_FHIR_TABLE_DESCRIPTION_PATH <- "R-cds2db/cds2db/inst/extdata/Table_Description.xlsx"
 DEFAULT_DATAPROCESSOR_TABLE_DESCRIPTION_PATH <-
   "R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx"
 DEFAULT_FRONTEND_TABLE_DESCRIPTION_PATH <-
   "R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx"
-DEFAULT_FHIR_TABLE_DESCRIPTION_DEFINITION_PATH <-
-  "R-cds2db/cds2db/inst/extdata/Table_Description_Definition.xlsx"
 
 emptyRuleSourceSpec <- function() {
   data.table::data.table(
@@ -29,6 +27,10 @@ emptyRuleSourceSpec <- function() {
 #'   `pseudonymizeSnapshotTables()`.
 #' @export
 getDefaultSnapshotPseudonymizationRuleSources <- function(project_root = ".") {
+  snapshot_extension_path <- file.path(
+    project_root,
+    DEFAULT_FHIR_TABLE_DESCRIPTION_PATH
+  )
   table_descriptions <- data.table::data.table(
     SOURCE = c("fhir", "dataprocessor_submodules", "frontend"),
     PATH = file.path(
@@ -41,11 +43,19 @@ getDefaultSnapshotPseudonymizationRuleSources <- function(project_root = ".") {
     ),
     SHEET_NAME = c("table_description", "table_description", "frontend_table_description")
   )
-  snapshot_extensions <- data.table::data.table(
-    SOURCE = "snapshot_extensions",
-    PATH = file.path(project_root, DEFAULT_FHIR_TABLE_DESCRIPTION_DEFINITION_PATH),
-    SHEET_NAME = DEFAULT_SNAPSHOT_EXTENSION_SHEET
-  )
+  # Preserve the existing missing-file error. Only an absent optional sheet in
+  # an otherwise readable workbook removes the default extension source.
+  include_snapshot_extension_source <- !file.exists(snapshot_extension_path) ||
+    DEFAULT_SNAPSHOT_EXTENSION_SHEET %in% openxlsx::getSheetNames(snapshot_extension_path)
+  snapshot_extensions <- if (include_snapshot_extension_source) {
+    data.table::data.table(
+      SOURCE = "snapshot_extension",
+      PATH = snapshot_extension_path,
+      SHEET_NAME = DEFAULT_SNAPSHOT_EXTENSION_SHEET
+    )
+  } else {
+    emptyRuleSourceSpec()
+  }
 
   list(
     table_descriptions = table_descriptions,

@@ -126,16 +126,29 @@ enrichSnapshotFallTable <- function(fall_fe, patient_fe) {
   fall_fe
 }
 
-enrichSnapshotFallChunk <- function(fall_fe, birthdates = NULL) {
+enrichSnapshotFallChunk <- function(
+  fall_fe,
+  birthdates = NULL,
+  enrichment_columns = c("fall_age_at_admission", "fall_bmi"),
+  source_columns = names(fall_fe)
+) {
   fall_fe <- data.table::as.data.table(data.table::copy(fall_fe))
-  if (!"fall_age_at_admission" %in% names(fall_fe)) {
+  if (
+    "fall_age_at_admission" %in% enrichment_columns &&
+    !"fall_age_at_admission" %in% names(fall_fe)
+  ) {
     fall_fe[["fall_age_at_admission"]] <- NA_integer_
   }
-  if (!"fall_bmi" %in% names(fall_fe)) {
+  if ("fall_bmi" %in% enrichment_columns && !"fall_bmi" %in% names(fall_fe)) {
     fall_fe[["fall_bmi"]] <- NA_real_
   }
 
-  if (!is.null(birthdates) && "fall_aufn_dat" %in% names(fall_fe)) {
+  if (
+    "fall_age_at_admission" %in% enrichment_columns &&
+    "fall_aufn_dat" %in% source_columns &&
+    !is.null(birthdates) &&
+    "fall_aufn_dat" %in% names(fall_fe)
+  ) {
     fall_fe[["fall_age_at_admission"]] <- calculateCompletedYears(
       fall_fe[["fall_aufn_dat"]],
       birthdates
@@ -148,7 +161,11 @@ enrichSnapshotFallChunk <- function(fall_fe, birthdates = NULL) {
     "fall_groesse",
     "fall_groesse_einheit"
   )
-  if (all(bmi_columns %in% names(fall_fe))) {
+  if (
+    "fall_bmi" %in% enrichment_columns &&
+    all(bmi_columns %in% source_columns) &&
+    all(bmi_columns %in% names(fall_fe))
+  ) {
     fall_fe[["fall_bmi"]] <- calculateBmi(
       fall_fe[["fall_gewicht_aktuell"]],
       fall_fe[["fall_gewicht_aktl_einheit"]],
@@ -203,12 +220,25 @@ enrichSnapshotEncounterTable <- function(encounter, patient) {
   encounter
 }
 
-enrichSnapshotEncounterChunk <- function(encounter, birthdates = NULL) {
+enrichSnapshotEncounterChunk <- function(
+  encounter,
+  birthdates = NULL,
+  enrichment_columns = "enc_age_at_admission",
+  source_columns = names(encounter)
+) {
   encounter <- data.table::as.data.table(data.table::copy(encounter))
-  if (!"enc_age_at_admission" %in% names(encounter)) {
+  if (
+    "enc_age_at_admission" %in% enrichment_columns &&
+    !"enc_age_at_admission" %in% names(encounter)
+  ) {
     encounter[["enc_age_at_admission"]] <- NA_integer_
   }
-  if (!is.null(birthdates) && "enc_period_start" %in% names(encounter)) {
+  if (
+    "enc_age_at_admission" %in% enrichment_columns &&
+    "enc_period_start" %in% source_columns &&
+    !is.null(birthdates) &&
+    "enc_period_start" %in% names(encounter)
+  ) {
     encounter[["enc_age_at_admission"]] <- calculateCompletedYears(
       encounter[["enc_period_start"]],
       birthdates

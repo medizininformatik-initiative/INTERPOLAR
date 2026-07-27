@@ -10,6 +10,14 @@ SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS <- c(
   "primary_loinc_code"
 )
 
+SNAPSHOT_OBSERVATION_SOURCE_COLUMNS <- c(
+  "obs_code_system",
+  "obs_code_code",
+  "obs_valuequantity_value",
+  "obs_valuequantity_code",
+  "obs_valuequantity_unit"
+)
+
 loadSnapshotLoincMapping <- function(input_repo_path) {
   if (is.null(input_repo_path) || is.na(input_repo_path) || !nzchar(input_repo_path)) {
     stop("input_repo_path must be provided for observation LOINC enrichment.")
@@ -78,27 +86,35 @@ normalizeConversionFactor <- function(conversion_factor) {
   conversion_factor
 }
 
-enrichObservationWithLoincMapping <- function(observation, loinc_mapping) {
+enrichObservationWithLoincMapping <- function(
+  observation,
+  loinc_mapping,
+  enrichment_columns = SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
+  source_columns = names(observation)
+) {
   observation <- as.data.frame(data.table::copy(observation), stringsAsFactors = FALSE)
+  enrichment_columns <- intersect(
+    enrichment_columns,
+    SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS
+  )
+  if (length(enrichment_columns) == 0) {
+    return(data.table::as.data.table(observation))
+  }
   for (column_name in SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS) {
     if (!column_name %in% names(observation)) {
       observation[[column_name]] <- NA
     }
   }
 
-  required_columns <- c(
-    "obs_code_system",
-    "obs_code_code",
-    "obs_valuequantity_value",
-    "obs_valuequantity_code",
-    "obs_valuequantity_unit"
-  )
-  missing_columns <- setdiff(required_columns, names(observation))
-  if (length(missing_columns) > 0) {
-    stop(
-      "Observation table is missing required columns for LOINC enrichment: ",
-      paste(missing_columns, collapse = ", ")
-    )
+  if (
+    !all(SNAPSHOT_OBSERVATION_SOURCE_COLUMNS %in% source_columns) ||
+    !all(SNAPSHOT_OBSERVATION_SOURCE_COLUMNS %in% names(observation))
+  ) {
+    observation[setdiff(
+      SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
+      enrichment_columns
+    )] <- NULL
+    return(data.table::as.data.table(observation))
   }
 
   mapping <- as.data.frame(data.table::copy(loinc_mapping), stringsAsFactors = FALSE)
@@ -161,6 +177,11 @@ enrichObservationWithLoincMapping <- function(observation, loinc_mapping) {
 
   observation[[row_id_column]] <- NULL
   observation[[source_unit_column]] <- NULL
+  unused_enrichment_columns <- setdiff(
+    SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
+    enrichment_columns
+  )
+  observation[unused_enrichment_columns] <- NULL
   data.table::as.data.table(observation)
 }
 

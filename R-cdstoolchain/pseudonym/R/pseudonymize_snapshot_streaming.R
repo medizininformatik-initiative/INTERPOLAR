@@ -44,7 +44,8 @@ buildSnapshotMedicationSourceQuery <- function(
   source_relation,
   source_fields,
   medication_relation,
-  spec
+  spec,
+  enrichment_columns = c(spec[["system_column"]], spec[["code_column"]])
 ) {
   source_alias <- "snapshot_source"
   medication_alias <- "medication_codes"
@@ -58,14 +59,27 @@ buildSnapshotMedicationSourceQuery <- function(
     exclude = c(system_column, code_column)
   )
   quoted_reference <- snapshotQuotedColumn(connection, reference_column, source_alias)
-  quoted_system_target <- snapshotQuotedColumn(connection, system_column)
-  quoted_code_target <- snapshotQuotedColumn(connection, code_column)
   quoted_med_id <- snapshotQuotedColumn(connection, "med_id")
   quoted_med_system <- snapshotQuotedColumn(connection, "med_code_system")
   quoted_med_code <- snapshotQuotedColumn(connection, "med_code_code")
   normalized_reference <- paste0(
     "regexp_replace(regexp_replace(", quoted_reference,
     "::text, '^\\[[^]]+\\]', ''), '^Medication/', '')"
+  )
+
+  enrichment_select <- c(
+    if (system_column %in% enrichment_columns) {
+      paste0(
+        medication_alias, ".medication_system AS ",
+        snapshotQuotedColumn(connection, system_column)
+      )
+    },
+    if (code_column %in% enrichment_columns) {
+      paste0(
+        medication_alias, ".medication_code AS ",
+        snapshotQuotedColumn(connection, code_column)
+      )
+    }
   )
 
   paste0(
@@ -76,9 +90,7 @@ buildSnapshotMedicationSourceQuery <- function(
     "WHERE NULLIF(", quoted_med_id, "::text, '') IS NOT NULL ",
     "AND NULLIF(", quoted_med_system, "::text, '') IS NOT NULL ",
     "AND NULLIF(", quoted_med_code, "::text, '') IS NOT NULL)",
-    " SELECT ", source_columns, ", ",
-    medication_alias, ".medication_system AS ", quoted_system_target, ", ",
-    medication_alias, ".medication_code AS ", quoted_code_target,
+    " SELECT ", source_columns, ", ", paste(enrichment_select, collapse = ", "),
     " FROM ", source_relation, " ", source_alias,
     " LEFT JOIN ", medication_alias,
     " ON ", medication_alias, ".medication_id = ", normalized_reference
@@ -150,7 +162,8 @@ getSnapshotStreamingSourceQuery <- function(
   plan_row,
   source_schema,
   source_view_prefix,
-  last_version_suffix
+  last_version_suffix,
+  described_columns = NULL
 ) {
   source_relation_name <- plan_row[["SOURCE_RELATION"]]
   source_relation <- snapshotQualifiedName(
@@ -166,8 +179,33 @@ getSnapshotStreamingSourceQuery <- function(
   base_table_name <- plan_row[["BASE_TABLE_NAME"]]
   dependency_suffix <- snapshotDependencySuffix(plan_row, last_version_suffix)
   medication_spec <- getMedicationReferenceSpec(base_table_name)
+  if (is.null(described_columns)) {
+    described_columns <- c(
+      source_fields,
+      if (identical(base_table_name, "fall_fe")) {
+        c("fall_age_at_admission", "fall_bmi")
+      },
+      if (identical(base_table_name, "encounter")) {
+        "enc_age_at_admission"
+      },
+      if (identical(base_table_name, "observation")) {
+        SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS
+      },
+      if (!is.null(medication_spec)) {
+        c(medication_spec[["system_column"]], medication_spec[["code_column"]])
+      }
+    )
+  }
 
-  if (!is.null(medication_spec)) {
+  medication_enrichment_columns <- if (!is.null(medication_spec)) {
+    intersect(
+      c(medication_spec[["system_column"]], medication_spec[["code_column"]]),
+      described_columns
+    )
+  } else {
+    character()
+  }
+  if (!is.null(medication_spec) && length(medication_enrichment_columns) > 0) {
     medication_relation_name <- paste0(
       source_view_prefix,
       "medication",
@@ -176,6 +214,7 @@ getSnapshotStreamingSourceQuery <- function(
     required_source_fields <- medication_spec[["reference_column"]]
     required_medication_fields <- c("med_id", "med_code_system", "med_code_code")
     if (
+      required_source_fields %in% described_columns &&
       required_source_fields %in% source_fields &&
       snapshotRelationExists(connection, medication_relation_name, source_schema)
     ) {
@@ -195,7 +234,8 @@ getSnapshotStreamingSourceQuery <- function(
               medication_relation_name,
               source_schema
             ),
-            medication_spec
+            medication_spec,
+            medication_enrichment_columns
           ),
           medication_spec = medication_spec
         ))
@@ -203,15 +243,22 @@ getSnapshotStreamingSourceQuery <- function(
     }
   }
 
-  if (identical(base_table_name, "fall_fe")) {
+  if (
+    identical(base_table_name, "fall_fe") &&
+    "fall_age_at_admission" %in% described_columns
+  ) {
     patient_relation_name <- paste0(
       source_view_prefix,
       "patient_fe",
       dependency_suffix
     )
-    source_key_columns <- intersect(c("patient_id_fk", "fall_pat_id"), source_fields)
+    source_key_columns <- intersect(
+      intersect(c("patient_id_fk", "fall_pat_id"), source_fields),
+      described_columns
+    )
     if (
-      length(source_key_columns) > 0 &&
+      length(intersect(source_key_columns, described_columns)) > 0 &&
+      "fall_aufn_dat" %in% described_columns &&
       "fall_aufn_dat" %in% source_fields &&
       snapshotRelationExists(connection, patient_relation_name, source_schema)
     ) {
@@ -242,9 +289,13 @@ getSnapshotStreamingSourceQuery <- function(
     }
   }
 
-  if (identical(base_table_name, "encounter")) {
+  if (
+    identical(base_table_name, "encounter") &&
+    "enc_age_at_admission" %in% described_columns
+  ) {
     patient_relation_name <- paste0(source_view_prefix, "patient", dependency_suffix)
     if (
+      all(c("enc_patient_ref", "enc_period_start") %in% described_columns) &&
       all(c("enc_patient_ref", "enc_period_start") %in% source_fields) &&
       snapshotRelationExists(connection, patient_relation_name, source_schema)
     ) {
@@ -292,7 +343,12 @@ newSnapshotStreamingContext <- function(input_repo_path) {
   context
 }
 
-enrichSnapshotStreamingChunk <- function(table, base_table_name, context) {
+enrichSnapshotStreamingChunk <- function(
+  table,
+  base_table_name,
+  context,
+  described_columns = names(table)
+) {
   table <- data.table::as.data.table(table)
   birthdates <- NULL
   if (SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(table)) {
@@ -301,16 +357,59 @@ enrichSnapshotStreamingChunk <- function(table, base_table_name, context) {
   }
 
   if (identical(base_table_name, "fall_fe")) {
-    return(enrichSnapshotFallChunk(table, birthdates))
+    enrichment_columns <- intersect(
+      c("fall_age_at_admission", "fall_bmi"),
+      described_columns
+    )
+    return(enrichSnapshotFallChunk(
+      table,
+      birthdates,
+      enrichment_columns,
+      described_columns
+    ))
   }
   if (identical(base_table_name, "encounter")) {
-    return(enrichSnapshotEncounterChunk(table, birthdates))
+    enrichment_columns <- intersect("enc_age_at_admission", described_columns)
+    return(enrichSnapshotEncounterChunk(
+      table,
+      birthdates,
+      enrichment_columns,
+      described_columns
+    ))
   }
   if (identical(base_table_name, "observation")) {
-    if (is.null(context$loinc_mapping)) {
+    enrichment_columns <- intersect(
+      SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
+      described_columns
+    )
+    has_source_columns <- all(
+      SNAPSHOT_OBSERVATION_SOURCE_COLUMNS %in% described_columns
+    ) && all(SNAPSHOT_OBSERVATION_SOURCE_COLUMNS %in% names(table))
+    if (
+      length(enrichment_columns) > 0 &&
+      has_source_columns &&
+      is.null(context$loinc_mapping)
+    ) {
       context$loinc_mapping <- loadSnapshotLoincMapping(context$input_repo_path)
     }
-    return(enrichObservationWithLoincMapping(table, context$loinc_mapping))
+    return(enrichObservationWithLoincMapping(
+      table,
+      context$loinc_mapping,
+      enrichment_columns,
+      described_columns
+    ))
+  }
+  medication_spec <- getMedicationReferenceSpec(base_table_name)
+  if (!is.null(medication_spec)) {
+    enrichment_columns <- intersect(
+      c(medication_spec[["system_column"]], medication_spec[["code_column"]]),
+      described_columns
+    )
+    for (column_name in enrichment_columns) {
+      if (!column_name %in% names(table)) {
+        table[[column_name]] <- NA_character_
+      }
+    }
   }
   table
 }
@@ -395,6 +494,12 @@ streamSnapshotMaterializedTable <- function(
   base_table_name <- plan_row[["BASE_TABLE_NAME"]]
   rule_table_name <- plan_row[["RULE_TABLE_NAME"]]
   rule_source <- plan_row[["RULE_SOURCE"]]
+  table_rules <- getPseudonymizationRulesForTable(
+    rules,
+    rule_table_name,
+    source = rule_source
+  )
+  described_columns <- unique(table_rules[["COLUMN_NAME"]])
   if (
     !isTRUE(overwrite_tables) &&
     snapshotRelationExists(target_connection, materialized_table_name, target_table_schema)
@@ -414,7 +519,8 @@ streamSnapshotMaterializedTable <- function(
     plan_row,
     source_schema,
     source_view_prefix,
-    last_version_suffix
+    last_version_suffix,
+    described_columns
   )
   message(
     "Streaming snapshot source relation ",
@@ -457,7 +563,12 @@ streamSnapshotMaterializedTable <- function(
     },
     has_completed = function() DBI::dbHasCompleted(source_result),
     enrich_chunk = function(chunk) {
-      enrichSnapshotStreamingChunk(chunk, base_table_name, streaming_context)
+      enrichSnapshotStreamingChunk(
+        chunk,
+        base_table_name,
+        streaming_context,
+        described_columns
+      )
     },
     pseudonymize_chunk = function(chunk, chunk_number) {
       runPseudonymizationLogStep(
