@@ -87,9 +87,9 @@ Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwen
 
 ## Verwendung
 
-Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) ausgeführt werden, siehe Hinweise unter [Discussions #750](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/750). Der folgende Aufruf führt die CDS Tool Chain komplett aus:
+Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) ausgeführt werden, siehe Hinweise unter [Discussions #750](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/750). Der folgende Aufruf führt die CDS Tool Chain komplett aus und startet anschließend bei erfolgreichem Lauf `VACUUM (ANALYZE)` für die CDS_HUB-Datenbank:
 ```console
-docker compose run --rm --no-deps r-env Rscript R-cdstoolchain/StartCDSToolChain.R
+R-cdstoolchain/StartCDSToolChainWithVacuum.sh
 ```
 **Hinweis:** Um eine sinnvolles Intervall für die zeitgesteuerte Ausführung der CDS Tool Chain zu wählen, sollten die initialen Aufrufe (z.B. die ersten 3 Tage der Verwendung) manuell erfolgen, um die typischen Laufzeiten am Standort zu ermitteln. Der initiale Lauf dauert länger, spätere Läufe entsprechend kürzer, da nur noch Änderungen verarbeitet werden. Es wird empfohlen die CDS Tool Chain in der Projektlaufzeit mehrfach täglich auszuführen, mind. jedoch einmal am Tag. Bei der Wahl des Ausführungsintervals sollte darauf geachtet werden, dass ein typischer Durchlauf innerhalb des Intervalls erfolgen kann. Wird z.B. ermittelt, dass ein Lauf mit den typischen Änderungen bei den Patientendaten auf den INTERPOLAR-Stationen ca. 1h dauert, kann die CDS Tool Chain via cron 2-stündlich laufen.
 
@@ -114,31 +114,57 @@ Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der h
 
 ## Datenbank Snapshot
 
-Zur Erstellung, Löschung, Aktivierung, De-Aktivierung und Auflistung von Snapshots kann das Bash-Script ```ip_snapshot.sh``` verwenden. 
-Das Script muss direkt im Hauptverzeichnis ausgeführt werden.
+Zur Erstellung, Löschung, Aktivierung, De-Aktivierung, Pseudonymisierung und Auflistung von Snapshots wird das Bash-Script `ip-snapshot.sh` verwendet. Das Script muss direkt im Hauptverzeichnis ausgeführt werden. Snapshot-Dateinamen dürfen keine Pfadangaben enthalten und werden im Verzeichnis `Snapshots` als `.sql.gz` abgelegt.
 
-Beim Erstellen (_create_) wird ein Dump der _cds_hb_db_ Datenbank gemacht und im Verzeichnis _Snapshots_ gespeichert. 
+Eine ausführliche Beschreibung von Inhalt, Pseudonymisierung, Anreicherung und Reports steht in [Database_Snapshot.md](Database_Snapshot.md).
+
+Vor lokalen Tests nach Codeänderungen muss das R-Image neu gebaut werden, da die Pseudonymisierung das im Container installierte R-Paket verwendet.
+```cmd
+docker compose build r-env
+```
+
+Mit _create_ wird ein Dump der `cds_hub_db` Datenbank erzeugt und unter `Snapshots/<name>_<Datum>.sql.gz` gespeichert.
 ```cmd
 ./ip-snapshot.sh create snap01
 ```
 
-Erstellte Snapshots können aktiviert (_activate_), d.h. in eine Snapshot Datenbank geladen werden.
+Mit _create --with-pseudonymized_ wird zusätzlich direkt ein pseudonymisierter Auswertungs-Snapshot erzeugt.
+```cmd
+./ip-snapshot.sh create snap01 --with-pseudonymized
+```
+
+Mit _pseudonymize_ wird nachträglich aus einem vorhandenen Snapshot-Dump ein pseudonymisierter Snapshot erzeugt. Der Name wird ohne Dateiendung angegeben. Aus `Snapshots/snap01_20251002.sql.gz` wird dadurch `Snapshots/snap01_20251002_pseud.sql.gz`.
+```cmd
+./ip-snapshot.sh pseudonymize snap01_20251002
+```
+
+Mit _activate_ wird ein Snapshot-Dump in eine Snapshot-Datenbank geladen. Die aktivierte Datenbank erhält den Namen `ip_<snapshot_name>` und wird nach dem Einspielen in den Read-only-Modus gesetzt.
 ```cmd
 ./ip-snapshot.sh activate snap01_20251002
 ```
 
-Beim De-Aktivieren (_deactivate_) wird diese Datenbank wieder gelöscht.
+Pseudonymisierte Snapshots werden gleichartig aktiviert.
 ```cmd
-./ip-snapshot.sh deactivate snap01_20251002
+./ip-snapshot.sh activate snap01_20251002_pseud
 ```
 
-Erstellte sowie aktivierte Snapshots können mit _list_ angezeit werden.
+Mit _deactivate_ wird nur die aus einer Snapshot-Datei geladene Datenbank gelöscht. Die Snapshot-Datei selbst bleibt erhalten. Falls eine Snapshot-Datenbank bereits existiert, muss sie vor dem erneuten Aktivieren deaktiviert werden.
+```cmd
+./ip-snapshot.sh deactivate snap01_20251002_pseud
+./ip-snapshot.sh activate snap01_20251002_pseud
+```
 
+Mit _delete_ wird die Snapshot-Datei gelöscht; falls eine gleichnamige Snapshot-Datenbank existiert, wird sie ebenfalls entfernt.
+```cmd
+./ip-snapshot.sh delete snap01_20251002
+```
+
+Mit _list_ werden Snapshot-Dateien und aktivierte Snapshot-Datenbanken angezeigt.
 ```cmd
 ./ip-snapshot.sh list
 ```
 
-Eine ausführliche Beschreibung liefert der Aufruf von ```./ip-snapshot.sh``` ohne Paramter.
+Eine ausführliche Beschreibung liefert der Aufruf von `./ip-snapshot.sh` ohne Parameter.
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)

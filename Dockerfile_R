@@ -62,7 +62,7 @@ RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-cds2db/cds2db
 
 # db2frontend
 
-RUN apt-get install -y libsodium-dev libsecret-1-0
+RUN apt-get update && apt-get install -y libsodium-dev libsecret-1-0
 
 RUN /rocker_scripts/bin/install2.r -n $NCPUS redcapAPI
 RUN /rocker_scripts/bin/install2.r -n $NCPUS dplyr
@@ -85,6 +85,10 @@ RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-dataprocessor/d
 # R-cdstoolchain
 
 COPY R-cdstoolchain R-cdstoolchain
+
+RUN R CMD build R-cdstoolchain/pseudonym
+
+RUN R CMD INSTALL --preclean --no-multiarch --with-keep.source R-cdstoolchain/pseudonym
 
 
 # cleanup

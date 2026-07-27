@@ -379,6 +379,10 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
   read_pids_from_file <- exists("DEBUG_PATH_TO_RAW_RDATA_FILES")
 
   if (read_pids_from_file) {
+    path_to_PID_list_file <- fhircrackr::paste_paths(
+      DEBUG_PATH_TO_RAW_RDATA_FILES,
+      "pids_per_ward_raw.RData"
+    )
     etlutils::runLevel3(paste("Get Patient IDs by file from path ", DEBUG_PATH_TO_RAW_RDATA_FILES), {
       file_data <- loadInitialPatientsAndEncountersFromFiles(DEBUG_PATH_TO_RAW_RDATA_FILES)
       pids_splitted_by_ward <- split(file_data$pids_per_ward[, !("ward_name"), with = FALSE], file_data$pids_per_ward$ward_name)
@@ -472,6 +476,14 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
     return(dt) # return the filtered pids_per_ward_with_encounter_details
   }
 
+  addCaseSequenceNumberPerPatient <- function(pids_per_ward_with_encounter_details) {
+    # Sort by patient_id and encounter start time
+    data.table::setorder(pids_per_ward_with_encounter_details, patient_id, `period/start`)
+    # Add sequence number per patient (1st case, 2nd case, ...)
+    pids_per_ward_with_encounter_details[, case_sequence := seq_len(.N), by = patient_id]
+    return(pids_per_ward_with_encounter_details)
+  }
+
   splitPidsPerWardByWard <- function(pids_per_ward_with_encounter_details) {
     # Re-split into station-wise list
     pids_splitted_by_ward <- split(pids_per_ward_with_encounter_details[, .(patient_id, encounter_id, ward_name)], by = "ward_name")
@@ -481,32 +493,24 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
   }
 
   splitPidsPerWardByWardForUniquePidsAndEncounterStart <- function(pids_per_ward_with_encounter_details) {
-    # Sort by patient and start time
-    data.table::setorder(pids_per_ward_with_encounter_details, `period/start`, patient_id)
+    # Add case sequence numbers per patient (based on chronological order of encounters)
+    pids_per_ward_with_encounter_details <- addCaseSequenceNumberPerPatient(pids_per_ward_with_encounter_details)
+
+    # Sort by case sequence to process cases in order
+    data.table::setorder(pids_per_ward_with_encounter_details, case_sequence, patient_id, `period/start`)
 
     list_of_pids_splitted_by_wards <- list()
-    single_pids_per_ward <- pids_per_ward_with_encounter_details[0]
 
-    row_count <- nrow(pids_per_ward_with_encounter_details)
+    # Iterate over each case sequence number and create batches
+    max_sequence <- pids_per_ward_with_encounter_details[, max(case_sequence)]
 
-    for (i in seq_len(row_count)) {
-      row <- pids_per_ward_with_encounter_details[i]
+    for (seq_num in seq_len(max_sequence)) {
+      # Get all cases with this sequence number (ensures max. 1 case per patient per batch)
+      cases_for_sequence <- pids_per_ward_with_encounter_details[case_sequence == seq_num]
 
-      # Set to TRUE when the same patient already exists in the current subset
-      # with an earlier encounter start.
-      contains_row <- single_pids_per_ward[patient_id == row[["patient_id"]] & `period/start` < row[["period/start"]], .N] > 0
-
-      if (contains_row) {
-        single_pids_per_ward <- removeMultipleEncountersForPid(single_pids_per_ward)
-        single_pids_splitted_by_ward <- splitPidsPerWardByWard(single_pids_per_ward)
-        list_of_pids_splitted_by_wards[[length(list_of_pids_splitted_by_wards) + 1]] <- single_pids_splitted_by_ward
-        single_pids_per_ward <- pids_per_ward_with_encounter_details[0]
-      }
-
-      single_pids_per_ward <- data.table::rbindlist(list(single_pids_per_ward, row), use.names = TRUE)
-
-      if (i == row_count) {
-        single_pids_splitted_by_ward <- splitPidsPerWardByWard(single_pids_per_ward)
+      if (nrow(cases_for_sequence) > 0) {
+        # Split by ward and add to list of batches
+        single_pids_splitted_by_ward <- splitPidsPerWardByWard(cases_for_sequence)
         list_of_pids_splitted_by_wards[[length(list_of_pids_splitted_by_wards) + 1]] <- single_pids_splitted_by_ward
       }
     }
