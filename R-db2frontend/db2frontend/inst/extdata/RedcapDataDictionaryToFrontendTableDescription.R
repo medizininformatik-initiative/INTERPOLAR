@@ -9,6 +9,60 @@ library(data.table)
 library(openxlsx)
 library(etlutils)
 
+table_description_file_name <- "./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx"
+pseudonymization_rule_colname <- "PSEUDONYMIZATION_RULE"
+new_pseudonymization_rule_marker <- "### TODO: NEW COLUMN ###"
+
+normalizePseudonymizationRule <- function(rule) {
+  rule <- gsub("[“”]", "\"", rule)
+  rule <- gsub("[‘’]", "'", rule)
+  rule
+}
+
+loadExistingPseudonymizationRules <- function(table_description_file_name) {
+  if (!file.exists(table_description_file_name)) {
+    return(data.table(
+      TABLE_NAME = character(),
+      COLUMN_NAME = character(),
+      PSEUDONYMIZATION_RULE = character()
+    ))
+  }
+
+  table_description <- etlutils::loadTableDescriptionFile(
+    table_description_file_name,
+    "frontend_table_description"
+  )
+
+  if (!pseudonymization_rule_colname %in% names(table_description)) {
+    return(data.table(
+      TABLE_NAME = character(),
+      COLUMN_NAME = character(),
+      PSEUDONYMIZATION_RULE = character()
+    ))
+  }
+
+  table_description[TABLE_NAME == "", TABLE_NAME := NA_character_]
+  table_description <- etlutils::fillNAWithLastRowValue(
+    table_description,
+    columns = "TABLE_NAME"
+  )
+  table_description[
+    is.na(TABLE_NAME) | TABLE_NAME == "" | is.na(COLUMN_NAME) | COLUMN_NAME == "",
+    (pseudonymization_rule_colname) := NA_character_
+  ]
+  rules <- table_description[
+    !is.na(TABLE_NAME) & TABLE_NAME != "" &
+      !is.na(COLUMN_NAME) & COLUMN_NAME != "",
+    .(
+      TABLE_NAME,
+      COLUMN_NAME,
+      PSEUDONYMIZATION_RULE = get(pseudonymization_rule_colname)
+    )
+  ]
+  rules[, PSEUDONYMIZATION_RULE := normalizePseudonymizationRule(PSEUDONYMIZATION_RULE)]
+  unique(rules, by = c("TABLE_NAME", "COLUMN_NAME"))
+}
+
 # Load the CSV file as a data.table
 dt <- fread("./R-db2frontend/db2frontend/inst/extdata/Frontend_DataDictionary.csv", encoding = "UTF-8")
 
@@ -145,6 +199,27 @@ for (tbl in names(dt_list)) {
 
 # Combine all tables back into one data.table
 dt <- rbindlist(dt_list, fill = TRUE)
+dt <- etlutils::fillNAWithLastRowValue(dt, columns = "TABLE_NAME")
+
+# Preserve manually maintained pseudonymization rules from the previous
+# Frontend_Table_Description.xlsx. Newly generated columns are marked visibly
+# for manual review.
+existing_pseudonymization_rules <- loadExistingPseudonymizationRules(table_description_file_name)
+dt[, row_order := .I]
+dt <- merge(
+  dt,
+  existing_pseudonymization_rules,
+  by = c("TABLE_NAME", "COLUMN_NAME"),
+  all.x = TRUE,
+  sort = FALSE
+)
+data.table::setorder(dt, row_order)
+dt[, row_order := NULL]
+dt[
+  is.na(PSEUDONYMIZATION_RULE) |
+    PSEUDONYMIZATION_RULE == "",
+  PSEUDONYMIZATION_RULE := new_pseudonymization_rule_marker
+]
 
 # Ensure TABLE_NAME only appears in the first row of each table, replace NA with empty strings
 dt[, TABLE_NAME := data.table::fifelse(duplicated(TABLE_NAME), "", TABLE_NAME)]
@@ -153,7 +228,7 @@ dt[, TABLE_NAME := data.table::fifelse(duplicated(TABLE_NAME), "", TABLE_NAME)]
 dt[is.na(TABLE_NAME), TABLE_NAME := ""]
 
 # Keep only relevant columns and ensure correct order
-dt <- dt[, .(TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_TYPE)]
+dt <- dt[, .(TABLE_NAME, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_TYPE, PSEUDONYMIZATION_RULE)]
 
 # Remove line breaks and trim COLUMN_DESCRIPTION
 dt[, COLUMN_DESCRIPTION := gsub("[\r\n]+", " ", COLUMN_DESCRIPTION)]
@@ -175,6 +250,5 @@ header <- c(
 expanded_table_description <- etlutils::addTextHeaderToTable(dt, header, insert_column_names_below_header = TRUE)
 
 # Save the final data.table as an Excel file
-table_description_file_name <- "./R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx"
 etlutils::writeExcelFile(list("frontend_table_description" = expanded_table_description), table_description_file_name, with_column_names = FALSE)
 message("Frontend Table Description is written to ", normalizePath(table_description_file_name))

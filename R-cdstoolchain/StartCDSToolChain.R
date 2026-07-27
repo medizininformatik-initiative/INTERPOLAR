@@ -79,6 +79,7 @@ resetMemory <- function(...) {
     "DEBUG_DATA_IMPORT_RUN_ONLY_CDS2DB",
 
     "CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1",
+    "RECOVER_INCOMPLETE_TOOLCHAIN_RUNS",
 
     "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS",
 
@@ -177,34 +178,74 @@ resetMemory()
 
 delete_db_and_redcap <- etlutils::isDefinedAndTrue("CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1") && exists("TOOLCHAIN_DAY") && TOOLCHAIN_DAY == 1
 
+runToolchain <- function(pids_splitted_by_ward = NULL) {
+  force(pids_splitted_by_ward)
+
+  if (shouldStart("cds2db")) {
+    if (delete_db_and_redcap && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
+      etlutils::dbReset()
+    }
+    # the dataprocessors validator ensures that there is exact 1 ward name and 1 phase_a_start defined for each ward in the PHASES_WARD definitions.
+    # Therefore, we can safely assume that the length of the vectors is the same and the order is the same, so we can use the ward names and
+    # phase_a_start values in the same order for both modules.
+    ward_names <- etlutils::extractVariablesListValues("PHASES_WARD", "ward_name", config_dataprocessor)
+    phase_a_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start", config_dataprocessor)
+    # set the ward names for the phase_a_start values to get the map from ward_name to it's phase a start date
+    names(phase_a_starts) <- ward_names
+    cds2db::retrieve(
+      phase_a_starts,
+      ignore_newer_db_version = ignore_newer_db_version,
+      validate_config = isProcess("DataImport"),
+      pids_splitted_by_ward = pids_splitted_by_ward
+    )
+  }
+  if (shouldStart("db2frontend")) {
+    db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
+  }
+  if (shouldStart("dataprocessor")) {
+    dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
+  }
+  if (shouldStart("db2frontend")) {
+    db2frontend::startDB2Frontend(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
+  }
+  if (etlutils::isErrorOccured()) {
+    stop(etlutils::getErrorMessage())
+  }
+}
+
 tryCatch(
   {
     args <- commandArgs(trailingOnly = TRUE)
     ignore_newer_db_version <- "--ignoreNewerDBVersion" %in% args
-    if (shouldStart("cds2db")) {
-      if (delete_db_and_redcap && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
-        etlutils::dbReset()
+
+    recovery_enabled <- !etlutils::isDefinedAndFalse("RECOVER_INCOMPLETE_TOOLCHAIN_RUNS") &&
+      !etlutils::isProcess("DataImport") &&
+      !delete_db_and_redcap &&
+      !exists("DEBUG_START_SINGLE_MODULE")
+    if (recovery_enabled) {
+      etlutils::dbInitModuleContext(
+        module_name = "dataprocessor",
+        path_to_db_toml = config_dataprocessor[["PATH_TO_DB_CONFIG_TOML"]],
+        log = TRUE
+      )
+      recovery_pids <- etlutils::fhirdbGetIncompleteCasesPidsPerWard()
+      # Normalize legacy/raw query results to the ward-based structure expected by cds2db.
+      if (data.table::is.data.table(recovery_pids)) {
+        recovery_pids <- split(
+          recovery_pids[, c("patient_id", "encounter_id"), with = FALSE],
+          recovery_pids[["ward_name"]]
+        )
       }
-      # the dataprocessors validator ensures that there is exact 1 ward name and 1 phase_a_start defined for each ward in the PHASES_WARD definitions.
-      # Therefore, we can safely assume that the length of the vectors is the same and the order is the same, so we can use the ward names and
-      # phase_a_start values in the same order for both modules.
-      ward_names <- etlutils::extractVariablesListValues("PHASES_WARD", "ward_name", config_dataprocessor)
-      phase_a_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start", config_dataprocessor)
-      # set the ward names for the phase_a_start values to get the map from ward_name to it's phase a start date
-      names(phase_a_starts) <- ward_names
-      cds2db::retrieve(phase_a_starts, ignore_newer_db_version = ignore_newer_db_version, validate_config = isProcess("DataImport"))
+      if (length(recovery_pids)) {
+        # Run at most one recovery pass per start. Additional missing cases for the
+        # same patient are picked up by a later regular toolchain start.
+        cat("Recover incomplete cases from a previous toolchain run.\n")
+        runToolchain(recovery_pids)
+      }
     }
-    if (shouldStart("db2frontend")) {
-      db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
-    }
-    if (shouldStart("dataprocessor")) {
-      dataprocessor::processData(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
-    }
-    if (shouldStart("db2frontend")) {
-      db2frontend::startDB2Frontend(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE)
-    }
-    if (etlutils::isErrorOccured()) {
-      stop(etlutils::getErrorMessage())
+
+    if (!etlutils::isErrorOccured()) {
+      runToolchain()
     }
   },
   error = function(e) {
