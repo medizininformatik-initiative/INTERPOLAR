@@ -351,20 +351,56 @@ assertNoMissingPseudonymMappingValues <- function(mapping_context) {
   )
 }
 
+splitPseudonymMappingValues <- function(values) {
+  values_chr <- as.character(values)
+  values_chr <- values_chr[!is.na(values_chr)]
+  unlist(
+    strsplit(values_chr, "\r\n|\r|\n", perl = TRUE),
+    use.names = FALSE
+  )
+}
+
 applyPseudonymMapping <- function(values, sheet_name, column_name, mapping_context) {
   mapping <- getPseudonymMappingSheet(mapping_context, sheet_name)
   values_chr <- as.character(values)
   result <- rep(NA_character_, length(values_chr))
   has_value <- !is.na(values_chr)
-  match_index <- match(values_chr[has_value], mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]])
-  missing_values <- values_chr[has_value][is.na(match_index)]
+  value_parts <- lapply(
+    values_chr[has_value],
+    splitPseudonymMappingValues
+  )
+  match_indices <- lapply(
+    value_parts,
+    match,
+    table = mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]]
+  )
+  missing_values <- unlist(
+    Map(
+      function(parts, match_index) parts[is.na(match_index)],
+      value_parts,
+      match_indices
+    ),
+    use.names = FALSE
+  )
   recordMissingPseudonymMappingValues(
     mapping_context,
     sheet_name,
     column_name,
     missing_values
   )
-  result[has_value] <- mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]][match_index]
+  result[has_value] <- vapply(
+    match_indices,
+    function(match_index) {
+      if (anyNA(match_index)) {
+        return(NA_character_)
+      }
+      paste(
+        mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]][match_index],
+        collapse = "\n"
+      )
+    },
+    character(1)
+  )
   result
 }
 

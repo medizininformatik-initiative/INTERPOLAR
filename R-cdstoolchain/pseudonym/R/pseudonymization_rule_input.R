@@ -471,6 +471,22 @@ validatePseudonymMappingRuleSheets <- function(mapping_rules, input_repo_path) {
   mapping_rules
 }
 
+setPseudonymMappingRulesNotChecked <- function(mapping_rules) {
+  if (nrow(mapping_rules) == 0) {
+    return(mapping_rules)
+  }
+  has_sheet <- !is.na(mapping_rules[["SHEET_NAME"]]) &
+    nzchar(mapping_rules[["SHEET_NAME"]])
+  mapping_rules[["MAPPING_STATUS"]][has_sheet] <- "not_checked"
+  mapping_rules[["ERROR"]][has_sheet] <-
+    "Mapping workbook validation is deferred until the snapshot database is available."
+  mapping_rules
+}
+
+isPseudonymMappingStatusProblem <- function(status) {
+  is.na(status) | !(status %in% c("ok", "not_checked"))
+}
+
 #' Review loaded pseudonymization rules before building a snapshot.
 #'
 #' The report is intentionally metadata-focused. It checks loaded table
@@ -482,13 +498,19 @@ validatePseudonymMappingRuleSheets <- function(mapping_rules, input_repo_path) {
 #' @param rules A data.table returned by `loadPseudonymizationRules()`.
 #' @param input_repo_path Optional TOML-configured input repository directory
 #'   used to validate `pseudonym(sheet = ...)` mapping rules.
+#' @param validate_mapping_files If `FALSE`, validate mapping-rule syntax but
+#'   defer workbook and sheet validation until the snapshot database is
+#'   available.
 #'
 #' @return A named list of data.tables: `summary`, `todo_rules`,
 #'   `implicit_keep_rules`, `unsupported_rules`, `duplicate_columns`, and
 #'   `mapping_rules`.
 #'
 #' @export
-getPseudonymizationRuleReviewReport <- function(rules, input_repo_path = NULL) {
+getPseudonymizationRuleReviewReport <- function(
+  rules,
+  input_repo_path = NULL,
+  validate_mapping_files = TRUE) {
   rules <- data.table::as.data.table(data.table::copy(rules))
   if (!PSEUDONYMIZATION_RULE_COLNAME %in% names(rules)) {
     stop("rules must contain PSEUDONYMIZATION_RULE.")
@@ -522,10 +544,12 @@ getPseudonymizationRuleReviewReport <- function(rules, input_repo_path = NULL) {
   }
 
   unsupported_rules <- getUnsupportedRuleParts(rule_parts)
-  mapping_rules <- validatePseudonymMappingRuleSheets(
-    getPseudonymMappingRuleSheets(rule_parts),
-    input_repo_path
-  )
+  mapping_rules <- getPseudonymMappingRuleSheets(rule_parts)
+  mapping_rules <- if (isTRUE(validate_mapping_files)) {
+    validatePseudonymMappingRuleSheets(mapping_rules, input_repo_path)
+  } else {
+    setPseudonymMappingRulesNotChecked(mapping_rules)
+  }
 
   summary <- stats::aggregate(
     x = list(
@@ -552,8 +576,7 @@ getPseudonymizationRuleReviewReport <- function(rules, input_repo_path = NULL) {
     )
     unsupported_counts <- data.table::as.data.table(unsupported_counts)
   }
-  mapping_problem_rows <- is.na(mapping_rules[["MAPPING_STATUS"]]) |
-    mapping_rules[["MAPPING_STATUS"]] != "ok"
+  mapping_problem_rows <- isPseudonymMappingStatusProblem(mapping_rules[["MAPPING_STATUS"]])
   mapping_problem_rules <- mapping_rules[which(mapping_problem_rows), ]
   if (nrow(mapping_problem_rules) == 0) {
     mapping_problem_counts <- data.table::data.table(
@@ -592,6 +615,8 @@ getPseudonymizationRuleReviewReport <- function(rules, input_repo_path = NULL) {
 #'   written to `outputLocal/<MODULE>/reports` via `etlutils::writeExcelFileLocal()`.
 #' @param input_repo_path Optional TOML-configured input repository directory
 #'   used to validate `pseudonym(sheet = ...)` mapping rules.
+#' @param validate_mapping_files Passed to
+#'   `getPseudonymizationRuleReviewReport()`.
 #' @param filename_without_extension File name used for the default
 #'   `outputLocal/<MODULE>/reports` output.
 #'
@@ -603,10 +628,12 @@ writePseudonymizationRuleReviewReport <- function(
   rules,
   file_name = NA,
   input_repo_path = NULL,
+  validate_mapping_files = TRUE,
   filename_without_extension = "pseudonymization_rule_review") {
   report <- getPseudonymizationRuleReviewReport(
     rules,
-    input_repo_path = input_repo_path
+    input_repo_path = input_repo_path,
+    validate_mapping_files = validate_mapping_files
   )
   writePseudonymizationReportWorkbook(
     report,

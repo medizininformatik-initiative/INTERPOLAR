@@ -44,6 +44,7 @@ tryCatch(
       table_descriptions = rule_sources[["table_descriptions"]],
       snapshot_extensions = rule_sources[["snapshot_extensions"]],
       input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
+      validate_mapping_files = FALSE,
       fail_on_review_problems = TRUE,
       write_review_report = TRUE,
       review_report_file = command_arguments[["review_report_file"]],

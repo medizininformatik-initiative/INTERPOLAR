@@ -171,7 +171,7 @@ container_input_repo_mount_args() {
     fi
     if [[ -d "${host_path}" ]]; then
         printf '%s\n' "-v"
-        printf '%s\n' "${host_path}:${container_path}:ro"
+        printf '%s\n' "${host_path}:${container_path}"
     fi
 }
 

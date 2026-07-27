@@ -583,26 +583,28 @@ pseudonymizeSnapshotDatabase <- function(
   )
 
   runPseudonymizationLogStep(2L,
-    "Review pseudonymization rules",
+    "Review static pseudonymization rules",
     {
-      result[["review_report"]] <- getPseudonymizationRuleReviewReport(
+      result[["static_review_report"]] <- getPseudonymizationRuleReviewReport(
         result[["rules"]],
-        input_repo_path = input_repo_path
+        input_repo_path = input_repo_path,
+        validate_mapping_files = FALSE
       )
       if (isTRUE(write_review_report)) {
         writePseudonymizationRuleReviewReport(
           result[["rules"]],
           file_name = review_report_file,
-          input_repo_path = input_repo_path
+          input_repo_path = input_repo_path,
+          validate_mapping_files = FALSE
         )
       }
       if (
         isTRUE(fail_on_review_problems) &&
-        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
+        pseudonymizationReviewHasBlockingProblems(result[["static_review_report"]])
       ) {
         stop(
           getPseudonymizationReviewErrorMessage(
-            result[["review_report"]],
+            result[["static_review_report"]],
             write_review_report,
             review_report_file
           )
@@ -623,6 +625,52 @@ pseudonymizeSnapshotDatabase <- function(
         last_version_suffix = last_version_suffix,
         tables = tables
       )
+    },
+    log_steps = log_steps
+  )
+
+  runPseudonymizationLogStep(2L,
+    "Prepare and validate pseudonym mapping workbook",
+    {
+      result[["mapping_coverage"]] <- ensurePseudonymMappingCoverage(
+        connection = source_connection,
+        rules = result[["rules"]],
+        materialization_plan = result[["materialization_plan"]],
+        input_repo_path = input_repo_path,
+        source_schema = source_schema
+      )
+    },
+    log_steps = log_steps
+  )
+
+  runPseudonymizationLogStep(2L,
+    "Validate pseudonym mapping workbook",
+    {
+      result[["review_report"]] <- getPseudonymizationRuleReviewReport(
+        result[["rules"]],
+        input_repo_path = input_repo_path,
+        validate_mapping_files = TRUE
+      )
+      if (isTRUE(write_review_report)) {
+        writePseudonymizationRuleReviewReport(
+          result[["rules"]],
+          file_name = review_report_file,
+          input_repo_path = input_repo_path,
+          validate_mapping_files = TRUE
+        )
+      }
+      if (
+        isTRUE(fail_on_review_problems) &&
+        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
+      ) {
+        stop(
+          getPseudonymizationReviewErrorMessage(
+            result[["review_report"]],
+            write_review_report,
+            review_report_file
+          )
+        )
+      }
     },
     log_steps = log_steps
   )

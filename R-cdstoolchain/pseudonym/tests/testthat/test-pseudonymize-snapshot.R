@@ -122,7 +122,7 @@ test_that("blocking mapping review error reports deduplicated details and workbo
   expect_match(message, 'sheet "frontend_users"', fixed = TRUE)
   expect_match(message, "missing_input_repo_path", fixed = TRUE)
   expect_match(message, "8 affected rule(s)", fixed = TRUE)
-  expect_match(message, "Copy the pseudo_mapping.xlsx template", fixed = TRUE)
+  expect_match(message, "mapping workbook is generated", fixed = TRUE)
   expect_match(message, "original frontend user names", fixed = TRUE)
   expect_match(message, report_file, fixed = TRUE)
 })

@@ -2,7 +2,7 @@ pseudonymizationReviewHasBlockingProblems <- function(review_report) {
   nrow(review_report[["todo_rules"]]) > 0 ||
     nrow(review_report[["unsupported_rules"]]) > 0 ||
     nrow(review_report[["duplicate_columns"]]) > 0 ||
-    any(review_report[["mapping_rules"]][["MAPPING_STATUS"]] != "ok", na.rm = TRUE)
+    any(isPseudonymMappingStatusProblem(review_report[["mapping_rules"]][["MAPPING_STATUS"]]))
 }
 
 summarizePseudonymizationReviewProblems <- function(review_report) {
@@ -12,15 +12,14 @@ summarizePseudonymizationReviewProblems <- function(review_report) {
     paste0("Duplicate columns: ", nrow(review_report[["duplicate_columns"]])),
     paste0(
       "Mapping problems: ",
-      sum(review_report[["mapping_rules"]][["MAPPING_STATUS"]] != "ok", na.rm = TRUE)
+      sum(isPseudonymMappingStatusProblem(review_report[["mapping_rules"]][["MAPPING_STATUS"]]))
     )
   )
 }
 
 summarizePseudonymizationMappingProblemDetails <- function(review_report, detail_limit = 10L) {
   mapping_rules <- review_report[["mapping_rules"]]
-  problem_rows <- is.na(mapping_rules[["MAPPING_STATUS"]]) |
-    mapping_rules[["MAPPING_STATUS"]] != "ok"
+  problem_rows <- isPseudonymMappingStatusProblem(mapping_rules[["MAPPING_STATUS"]])
   mapping_problems <- mapping_rules[which(problem_rows), ]
   if (nrow(mapping_problems) == 0) {
     return(character())
@@ -84,8 +83,7 @@ summarizePseudonymizationMappingProblemDetails <- function(review_report, detail
 
 pseudonymizationMappingProblemAction <- function(review_report) {
   mapping_rules <- review_report[["mapping_rules"]]
-  problem_rows <- is.na(mapping_rules[["MAPPING_STATUS"]]) |
-    mapping_rules[["MAPPING_STATUS"]] != "ok"
+  problem_rows <- isPseudonymMappingStatusProblem(mapping_rules[["MAPPING_STATUS"]])
   mapping_problems <- mapping_rules[which(problem_rows), ]
   if (nrow(mapping_problems) == 0) {
     return(character())
@@ -94,9 +92,8 @@ pseudonymizationMappingProblemAction <- function(review_report) {
   result <- c(
     "Required action for mapping problems:",
     paste0(
-      "- Copy the pseudo_mapping.xlsx template from the project root to the ",
-      "INPUT_REPO_PATH configured in R-dataprocessor/dataprocessor_config.toml, ",
-      "if the file is missing."
+      "- The mapping workbook is generated as pseudo_mapping.xlsx in the ",
+      "INPUT_REPO_PATH configured in R-dataprocessor/dataprocessor_config.toml."
     ),
     paste0(
       "- Fill every referenced sheet with KEY and PSEUDONYM values. ",
@@ -167,6 +164,8 @@ getPseudonymizationReviewErrorMessage <- function(
 #'   `snapshot_extensions` are not loaded again.
 #' @param input_repo_path TOML-configured input repository directory used for
 #'   `pseudonym(sheet = ...)` mapping rules.
+#' @param validate_mapping_files If `FALSE`, defer mapping workbook validation
+#'   until a snapshot database is available.
 #' @param fail_on_review_problems If `TRUE`, abort when the review report
 #'   contains TODO rules, unsupported rules, duplicate columns, or mapping
 #'   validation problems.
@@ -186,6 +185,7 @@ pseudonymizeSnapshotTables <- function(
   snapshot_extensions = NULL,
   rules = NULL,
   input_repo_path = NULL,
+  validate_mapping_files = TRUE,
   fail_on_review_problems = TRUE,
   write_review_report = TRUE,
   review_report_file = NA,
@@ -213,13 +213,15 @@ pseudonymizeSnapshotTables <- function(
     {
       result[["review_report"]] <- getPseudonymizationRuleReviewReport(
         result[["rules"]],
-        input_repo_path = input_repo_path
+        input_repo_path = input_repo_path,
+        validate_mapping_files = validate_mapping_files
       )
       if (isTRUE(write_review_report)) {
         writePseudonymizationRuleReviewReport(
           result[["rules"]],
           file_name = review_report_file,
-          input_repo_path = input_repo_path
+          input_repo_path = input_repo_path,
+          validate_mapping_files = validate_mapping_files
         )
       }
       if (

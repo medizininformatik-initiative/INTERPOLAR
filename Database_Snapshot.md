@@ -24,13 +24,12 @@ Für die Pseudonymisierung gelten zusätzlich folgende Voraussetzungen:
 
 - `INPUT_REPO_PATH` muss in
   `R-dataprocessor/dataprocessor_config.toml` korrekt konfiguriert und für den
-  Container erreichbar sein.
-- Das Template `pseudo_mapping.xlsx` aus dem Projekt-Hauptverzeichnis muss als
-  befüllte Datei `pseudo_mapping.xlsx` im konfigurierten `INPUT_REPO_PATH`
-  liegen. Für den aktuellen Regelsatz muss insbesondere das Sheet
-  `frontend_users` die Spalten `KEY` und `PSEUDONYM` enthalten. `KEY` enthält
-  die ursprünglichen Frontend-Benutzernamen, `PSEUDONYM` die gewünschten
-  Ersatzwerte.
+  Container erreichbar sein. Das Verzeichnis muss für die automatische
+  Aktualisierung von `pseudo_mapping.xlsx` schreibbar sein.
+- Die Datei `pseudo_mapping.xlsx` wird bei Bedarf automatisch im konfigurierten
+  `INPUT_REPO_PATH` erzeugt und mit den in der Snapshot-Datenbank vorkommenden
+  Originalwerten vorausgefüllt. Die gewünschten Pseudonyme müssen anschließend
+  manuell in der Spalte `PSEUDONYM` ergänzt werden.
 - Die LOINC-Mapping-Datei muss unter
   `LOINC_Mapping/LOINC_Mapping_content/LOINC_Mapping_Table_processed.xlsx`
   innerhalb des `INPUT_REPO_PATH` verfügbar sein.
@@ -136,26 +135,36 @@ Vor jeder Pseudonymisierung prüft das Script:
 - TODO-Regeln,
 - nicht unterstützte Regeln,
 - doppelte Spaltendefinitionen,
-- die konfigurierte `INPUT_REPO_PATH`,
-- die Datei `pseudo_mapping.xlsx`,
-- benötigte Sheets und Pflichtspalten,
-- leere Mappingwerte und
-- doppelte `KEY`-Werte.
+- die konfigurierte `INPUT_REPO_PATH` und
+- die Syntax der benötigten Mapping-Regeln.
 
 Beim separaten Pseudonymisieren erfolgt diese Prüfung vor dem Einspielen des
 Snapshot-Dumps. Bei `create --with-pseudonymized` wird zuerst der normale
 Snapshot erstellt; die Vorprüfung erfolgt anschließend vor dem Einspielen für
 die Pseudonymisierung.
 
-Schlägt die Vorprüfung fehl, werden keine Build-Datenbanken angelegt. Die
-Fehlermeldung beschreibt die notwendige Korrektur. Alle Details stehen unter:
+Schlägt diese statische Vorprüfung fehl, werden keine Build-Datenbanken
+angelegt. Die Fehlermeldung beschreibt die notwendige Korrektur. Alle Details
+stehen unter:
 
 ```text
 outputLocal/snapshot_pseudonymization_preflight*/reports/pseudonymization_rule_review.xlsx
 ```
 
-Fehlende Mapping-Keys aus den tatsächlichen Snapshot-Daten können erst während
-der Tabellenverarbeitung erkannt werden.
+Nach dem Einspielen der Source-Datenbank und vor der eigentlichen
+Pseudonymisierung prüft das Script alle Regeln der Form
+`pseudonym(sheet = "...")` gegen die tatsächlichen Daten. Dazu liest es pro
+betroffener Spalte die unterschiedlichen Werte mit `DISTINCT`.
+
+Fehlt `pseudo_mapping.xlsx`, ein benötigtes Sheet oder ein konkreter `KEY`,
+ergänzt das Script die Datei im `INPUT_REPO_PATH`. Die Keys werden innerhalb
+jedes Sheets alphabetisch sortiert. Neue `PSEUDONYM`-Zellen bleiben leer.
+Anschließend bricht der Lauf ab und nennt den Dateipfad sowie die betroffenen
+Sheets. Nach dem manuellen Ausfüllen kann der Befehl erneut gestartet werden;
+die bereits eingespielte Source-Datenbank wird wiederverwendet.
+
+Vorhandene Pseudonyme bleiben beim Ergänzen und Sortieren erhalten. Leere
+Pseudonyme und doppelte oder leere Keys blockieren die Pseudonymisierung.
 
 Schlägt die Verarbeitung nach dem Einspielen fehl, bleiben die temporäre
 Source-Datenbank und die teilweise erzeugte Ziel-Datenbank zur Diagnose
@@ -217,9 +226,9 @@ Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten; nur der
 ID-Anteil hinter dem Schrägstrich wird gehasht.
 
 Mapping-Regeln der Form `pseudonym(sheet = "Sheetname")` lesen das angegebene
-Sheet aus `pseudo_mapping.xlsx`. Jedes verwendete Sheet benötigt die Spalten
-`KEY` und `PSEUDONYM`. Beide Werte dürfen Leerzeichen enthalten, aber nicht leer
-sein. Doppelte Keys sind nicht erlaubt.
+Sheet aus `INPUT_REPO_PATH/pseudo_mapping.xlsx`. Jedes verwendete Sheet enthält
+die Spalten `KEY` und `PSEUDONYM`. Beide Werte dürfen Leerzeichen enthalten,
+aber nicht leer sein. Doppelte Keys sind nicht erlaubt.
 
 ### Fachliche Anreicherungen
 

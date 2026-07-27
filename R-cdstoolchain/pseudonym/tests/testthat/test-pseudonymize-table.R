@@ -345,6 +345,42 @@ test_that("pseudonym rules use fixed Excel mapping file and sheet argument", {
   expect_equal(result$redcap_data_access_group, c("ward 001", "ICU WEST", NA))
 })
 
+test_that("pseudonym rules map newline-separated values individually", {
+  input_repo_path <- tempfile("input-repo-")
+  writePseudonymMappingWorkbook(
+    input_repo_path,
+    "ward_mapping",
+    data.table::data.table(
+      KEY = c("Allgemeinchirurgie", "Pneumologie"),
+      PSEUDONYM = c("ward 001", "ward 002")
+    )
+  )
+  source_table <- data.table::data.table(
+    ward = c(
+      "Allgemeinchirurgie",
+      "Allgemeinchirurgie\nPneumologie",
+      "Pneumologie\r\nAllgemeinchirurgie"
+    )
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "frontend",
+    COLUMN_NAME = "ward",
+    PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "ward_mapping")'
+  )
+
+  result <- pseudonymizeTable(
+    source_table,
+    table_description,
+    "frontend",
+    input_repo_path = input_repo_path
+  )
+
+  expect_equal(
+    result$ward,
+    c("ward 001", "ward 001\nward 002", "ward 002\nward 001")
+  )
+})
+
 test_that("pseudonym mapping sheets may contain a comment block above the table", {
   input_repo_path <- tempfile("input-repo-")
   writeCommentedPseudonymMappingWorkbook(
