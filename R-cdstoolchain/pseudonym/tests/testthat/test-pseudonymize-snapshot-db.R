@@ -73,8 +73,7 @@ test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension column
     rules,
     table_name = "observation",
     rule_source = "fhir",
-    input_repo_path = NULL,
-    keep_unmatched_columns = FALSE
+    input_repo_path = NULL
   )
 
   expect_equal(names(result$table), names(observation))
@@ -83,7 +82,7 @@ test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension column
   expect_equal(result$table$primary_loinc_code, "9999-9")
 })
 
-test_that("pseudonymizeTableForSnapshot keeps unmatched source columns by default", {
+test_that("pseudonymizeTableForSnapshot keeps unmatched source columns", {
   rules <- data.table::data.table(
     SOURCE = "fhir",
     SOURCE_TYPE = "table_description",
@@ -102,42 +101,13 @@ test_that("pseudonymizeTableForSnapshot keeps unmatched source columns by defaul
     rules,
     table_name = "patient",
     rule_source = "fhir",
-    input_repo_path = NULL,
-    keep_unmatched_columns = TRUE
+    input_repo_path = NULL
   )
 
   expect_equal(names(result$table), names(patient))
   expect_equal(result$table$pat_raw_id, 17L)
   expect_equal(result$table$pat_insert_datetime, "2026-07-20 10:00:00")
   expect_false(identical(result$table$pat_id, patient$pat_id))
-})
-
-test_that("postprocessPseudonymizedSnapshotTables keeps original columns and rows", {
-  result <- list(
-    tables = list(
-      fall_fe = data.table::data.table(
-        record_id = c("1", "1", "2"),
-        value = c("same", "same", "other"),
-        hash_index_col = c("a", "b", "c"),
-        content_hash = c("kept", "kept", "also-kept")
-      )
-    ),
-    summary = data.table::data.table(
-      TABLE_NAME = "fall_fe",
-      OUTPUT_ROWS = 3L,
-      OUTPUT_COLUMNS = 4L
-    )
-  )
-
-  postprocessed <- postprocessPseudonymizedSnapshotTables(result)
-
-  expect_equal(names(postprocessed$tables$fall_fe), names(result$tables$fall_fe))
-  expect_equal(nrow(postprocessed$tables$fall_fe), 3L)
-  expect_equal(postprocessed$summary$ORIGINAL_COLUMNS_REMOVED, 0L)
-  expect_equal(postprocessed$summary$DUPLICATE_ROWS_REMOVED, 0L)
-  expect_equal(postprocessed$summary$POSTPROCESSING_ACTION, "none")
-  expect_equal(postprocessed$summary$OUTPUT_ROWS, 3L)
-  expect_equal(postprocessed$summary$OUTPUT_COLUMNS, 4L)
 })
 
 test_that("writeSnapshotPostprocessingReport writes an xlsx report", {

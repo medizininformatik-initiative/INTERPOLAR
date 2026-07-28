@@ -24,8 +24,7 @@ emptyRuleSourceSpec <- function() {
 #'
 #' @return A list with `table_descriptions` and `snapshot_extensions` source
 #'   specifications suitable for `loadPseudonymizationRules()` and
-#'   `pseudonymizeSnapshotTables()`.
-#' @export
+#'   `pseudonymizeSnapshotDatabase()`.
 getDefaultSnapshotPseudonymizationRuleSources <- function(project_root = ".") {
   snapshot_extension_path <- file.path(
     project_root,
@@ -246,12 +245,12 @@ loadPseudonymizationRuleSources <- function(sources, source_type, default_sheet_
 #'   column metadata, raw and normalized `PSEUDONYMIZATION_RULE`, and
 #'   `SOURCE_TYPE` set to `table_description` or `snapshot_extension`.
 #'
-#' @export
 loadPseudonymizationRules <- function(
   table_descriptions,
   snapshot_extensions = NULL,
   default_table_description_sheet = "table_description",
-  default_snapshot_extension_sheet = DEFAULT_SNAPSHOT_EXTENSION_SHEET) {
+  default_snapshot_extension_sheet = DEFAULT_SNAPSHOT_EXTENSION_SHEET
+) {
   table_rules <- loadPseudonymizationRuleSources(
     table_descriptions,
     source_type = "table_description",
@@ -506,11 +505,11 @@ isPseudonymMappingStatusProblem <- function(status) {
 #'   `implicit_keep_rules`, `unsupported_rules`, `duplicate_columns`, and
 #'   `mapping_rules`.
 #'
-#' @export
 getPseudonymizationRuleReviewReport <- function(
   rules,
   input_repo_path = NULL,
-  validate_mapping_files = TRUE) {
+  validate_mapping_files = TRUE
+) {
   rules <- data.table::as.data.table(data.table::copy(rules))
   if (!PSEUDONYMIZATION_RULE_COLNAME %in% names(rules)) {
     stop("rules must contain PSEUDONYMIZATION_RULE.")
@@ -623,13 +622,13 @@ getPseudonymizationRuleReviewReport <- function(
 #' @return The report returned by `getPseudonymizationRuleReviewReport()`,
 #'   invisibly.
 #'
-#' @export
 writePseudonymizationRuleReviewReport <- function(
   rules,
   file_name = NA,
   input_repo_path = NULL,
   validate_mapping_files = TRUE,
-  filename_without_extension = "pseudonymization_rule_review") {
+  filename_without_extension = "pseudonymization_rule_review"
+) {
   report <- getPseudonymizationRuleReviewReport(
     rules,
     input_repo_path = input_repo_path,

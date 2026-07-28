@@ -22,7 +22,8 @@ mappingCoverageTestPlan <- function() {
   data.table::data.table(
     SOURCE_RELATION = c("v_pids_per_ward", "v_pids_per_ward_last_version"),
     RULE_TABLE_NAME = "pids_per_ward",
-    RULE_SOURCE = "fhir"
+    RULE_SOURCE = "fhir",
+    SNAPSHOT_RELATION_TYPE = c("all", "last_version")
   )
 }
 
@@ -52,19 +53,18 @@ test_that("mapping coverage includes frontend user columns before chunking", {
       "v_medikationsanalyse_fe_last_version"
     ),
     RULE_TABLE_NAME = "medikationsanalyse",
-    RULE_SOURCE = "frontend"
+    RULE_SOURCE = "frontend",
+    SNAPSHOT_RELATION_TYPE = c("all", "last_version")
   )
 
   requests <- getPseudonymMappingCoverageRequests(rules, plan)
 
-  expect_equal(nrow(requests), 4L)
+  expect_equal(nrow(requests), 2L)
   expect_setequal(
     paste(requests$SOURCE_RELATION, requests$COLUMN_NAME),
     c(
       "v_medikationsanalyse_fe meda_anlage",
-      "v_medikationsanalyse_fe meda_edit",
-      "v_medikationsanalyse_fe_last_version meda_anlage",
-      "v_medikationsanalyse_fe_last_version meda_edit"
+      "v_medikationsanalyse_fe meda_edit"
     )
   )
   expect_true(all(requests$SHEET_NAME == "frontend_users"))
@@ -82,7 +82,7 @@ test_that("mapping coverage creates sheets with sorted distinct database keys", 
     values <- list(
       v_pids_per_ward = list(
         ward_name = c("Ward Z", "ward a", "Ward Z\nWard B"),
-        patient_id = c("Patient 2", "Patient 1")
+        patient_id = c("Patient 2", "Patient 1", "Patient 3")
       ),
       v_pids_per_ward_last_version = list(
         ward_name = c("Ward B\r\nward a", "ward a"),

@@ -163,7 +163,7 @@ getSnapshotStreamingSourceQuery <- function(
   source_schema,
   source_view_prefix,
   last_version_suffix,
-  described_columns = NULL
+  described_columns
 ) {
   source_relation_name <- plan_row[["SOURCE_RELATION"]]
   source_relation <- snapshotQualifiedName(
@@ -179,24 +179,6 @@ getSnapshotStreamingSourceQuery <- function(
   base_table_name <- plan_row[["BASE_TABLE_NAME"]]
   dependency_suffix <- snapshotDependencySuffix(plan_row, last_version_suffix)
   medication_spec <- getMedicationReferenceSpec(base_table_name)
-  if (is.null(described_columns)) {
-    described_columns <- c(
-      source_fields,
-      if (identical(base_table_name, "fall_fe")) {
-        c("fall_age_at_admission", "fall_bmi")
-      },
-      if (identical(base_table_name, "encounter")) {
-        "enc_age_at_admission"
-      },
-      if (identical(base_table_name, "observation")) {
-        SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS
-      },
-      if (!is.null(medication_spec)) {
-        c(medication_spec[["system_column"]], medication_spec[["code_column"]])
-      }
-    )
-  }
-
   medication_enrichment_columns <- if (!is.null(medication_spec)) {
     intersect(
       c(medication_spec[["system_column"]], medication_spec[["code_column"]]),
@@ -257,7 +239,7 @@ getSnapshotStreamingSourceQuery <- function(
       described_columns
     )
     if (
-      length(intersect(source_key_columns, described_columns)) > 0 &&
+      length(source_key_columns) > 0 &&
       "fall_aufn_dat" %in% described_columns &&
       "fall_aufn_dat" %in% source_fields &&
       snapshotRelationExists(connection, patient_relation_name, source_schema)
@@ -483,9 +465,6 @@ streamSnapshotMaterializedTable <- function(
   source_view_prefix,
   last_version_suffix,
   chunk_size,
-  keep_unmatched_columns,
-  overwrite_tables,
-  temporary,
   streaming_context,
   log_steps
 ) {
@@ -500,10 +479,11 @@ streamSnapshotMaterializedTable <- function(
     source = rule_source
   )
   described_columns <- unique(table_rules[["COLUMN_NAME"]])
-  if (
-    !isTRUE(overwrite_tables) &&
-    snapshotRelationExists(target_connection, materialized_table_name, target_table_schema)
-  ) {
+  if (snapshotRelationExists(
+    target_connection,
+    materialized_table_name,
+    target_table_schema
+  )) {
     stop(
       "Target table already exists: ",
       snapshotQualifiedName(
@@ -580,7 +560,6 @@ streamSnapshotMaterializedTable <- function(
           rule_table_name,
           rule_source,
           input_repo_path,
-          keep_unmatched_columns,
           mapping_context = streaming_context$mapping_context
         ),
         log_steps = log_steps
@@ -592,8 +571,8 @@ streamSnapshotMaterializedTable <- function(
           target_connection,
           target,
           output,
-          overwrite = overwrite_tables,
-          temporary = temporary
+          overwrite = FALSE,
+          temporary = FALSE
         )
       } else if (nrow(output) > 0) {
         DBI::dbAppendTable(target_connection, target, output)

@@ -148,107 +148,90 @@ getPseudonymizationReviewErrorMessage <- function(
   )
 }
 
-#' Pseudonymize Snapshot Tables from Rule Source Specifications
+reviewPseudonymizationRules <- function(
+  rules,
+  input_repo_path,
+  validate_mapping_files,
+  fail_on_review_problems,
+  write_review_report,
+  review_report_file
+) {
+  review_report <- getPseudonymizationRuleReviewReport(
+    rules,
+    input_repo_path = input_repo_path,
+    validate_mapping_files = validate_mapping_files
+  )
+  if (isTRUE(write_review_report)) {
+    writePseudonymizationRuleReviewReport(
+      rules,
+      file_name = review_report_file,
+      input_repo_path = input_repo_path,
+      validate_mapping_files = validate_mapping_files
+    )
+  }
+  if (
+    isTRUE(fail_on_review_problems) &&
+    pseudonymizationReviewHasBlockingProblems(review_report)
+  ) {
+    stop(
+      getPseudonymizationReviewErrorMessage(
+        review_report,
+        write_review_report,
+        review_report_file
+      )
+    )
+  }
+  review_report
+}
+
+#' Check Snapshot Pseudonymization Prerequisites
 #'
-#' This function is the DB-neutral orchestration core for snapshot
-#' pseudonymization. It loads all rule sources, creates a review report, can
-#' write that report to `outputLocal/<MODULE>/reports`, optionally aborts on
-#' blocking review problems, and pseudonymizes the provided tables.
+#' Loads the default snapshot pseudonymization rules, writes their static review
+#' report, and aborts on blocking rule problems. Data-dependent mapping coverage
+#' is checked later by the database pseudonymization run.
 #'
-#' @param tables Named list of source tables.
-#' @param table_descriptions Character vector or data.frame/data.table with
-#'   normal table-description files.
-#' @param snapshot_extensions Optional character vector or data.frame/data.table
-#'   with snapshot-extension files.
-#' @param rules Optional preloaded rules. If supplied, `table_descriptions` and
-#'   `snapshot_extensions` are not loaded again.
-#' @param input_repo_path TOML-configured input repository directory used for
-#'   `pseudonym(sheet = ...)` mapping rules.
-#' @param validate_mapping_files If `FALSE`, defer mapping workbook validation
-#'   until a snapshot database is available.
-#' @param fail_on_review_problems If `TRUE`, abort when the review report
-#'   contains TODO rules, unsupported rules, duplicate columns, or mapping
-#'   validation problems.
-#' @param write_review_report If `TRUE`, write the review workbook.
+#' @param project_root Repository root used to resolve rule sources.
+#' @param input_repo_path TOML-configured input repository directory.
 #' @param review_report_file Optional explicit report path. If `NA`, the report
 #'   is written to `outputLocal/<MODULE>/reports`.
-#' @param keep_unmatched_columns Passed to `pseudonymizeTables()`. The default
-#'   keeps original source columns without a loaded rule unchanged.
 #' @param log_steps If `TRUE` and module logging is initialized, wrap the
 #'   process in the existing `etlutils::runLevel...` logging.
 #'
-#' @return A list with `tables`, `summary`, `rules`, and `review_report`.
+#' @return A list containing the loaded `rules` and their `review_report`.
 #' @export
-pseudonymizeSnapshotTables <- function(
-  tables,
-  table_descriptions,
-  snapshot_extensions = NULL,
-  rules = NULL,
+preflightSnapshotPseudonymization <- function(
+  project_root = ".",
   input_repo_path = NULL,
-  validate_mapping_files = TRUE,
-  fail_on_review_problems = TRUE,
-  write_review_report = TRUE,
   review_report_file = NA,
-  keep_unmatched_columns = TRUE,
-  log_steps = TRUE) {
+  log_steps = TRUE
+) {
+  rule_sources <- getDefaultSnapshotPseudonymizationRuleSources(project_root)
   result <- list()
 
   runPseudonymizationLogStep(2L,
     "Load pseudonymization rules",
     {
-      if (is.null(rules)) {
-        result[["rules"]] <- loadPseudonymizationRules(
-          table_descriptions = table_descriptions,
-          snapshot_extensions = snapshot_extensions
-        )
-      } else {
-        result[["rules"]] <- data.table::as.data.table(data.table::copy(rules))
-      }
+      result[["rules"]] <- loadPseudonymizationRules(
+        table_descriptions = rule_sources[["table_descriptions"]],
+        snapshot_extensions = rule_sources[["snapshot_extensions"]]
+      )
     },
     log_steps = log_steps
   )
-
   runPseudonymizationLogStep(2L,
     "Review pseudonymization rules",
     {
-      result[["review_report"]] <- getPseudonymizationRuleReviewReport(
+      result[["review_report"]] <- reviewPseudonymizationRules(
         result[["rules"]],
         input_repo_path = input_repo_path,
-        validate_mapping_files = validate_mapping_files
+        validate_mapping_files = FALSE,
+        fail_on_review_problems = TRUE,
+        write_review_report = TRUE,
+        review_report_file = review_report_file
       )
-      if (isTRUE(write_review_report)) {
-        writePseudonymizationRuleReviewReport(
-          result[["rules"]],
-          file_name = review_report_file,
-          input_repo_path = input_repo_path,
-          validate_mapping_files = validate_mapping_files
-        )
-      }
-      if (
-        isTRUE(fail_on_review_problems) &&
-        pseudonymizationReviewHasBlockingProblems(result[["review_report"]])
-      ) {
-        stop(
-          getPseudonymizationReviewErrorMessage(
-            result[["review_report"]],
-            write_review_report,
-            review_report_file
-          )
-        )
-      }
     },
     log_steps = log_steps
   )
-
-  table_result <- pseudonymizeTables(
-    tables = tables,
-    rules = result[["rules"]],
-    input_repo_path = input_repo_path,
-    keep_unmatched_columns = keep_unmatched_columns,
-    log_steps = log_steps
-  )
-  result[["tables"]] <- table_result[["tables"]]
-  result[["summary"]] <- table_result[["summary"]]
 
   result
 }

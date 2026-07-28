@@ -294,11 +294,32 @@ test_that("observation enrichment keeps only described target columns", {
   expect_false("reference_unit" %in% names(result))
 })
 
+test_that("observation enrichment converts value groups without changing row order", {
+  observation <- data.table::data.table(
+    obs_id = c("first", "second", "third"),
+    obs_code_system = "http://loinc.org",
+    obs_code_code = c("mass", "amount", "mass"),
+    obs_valuequantity_value = c(2, 3, 4),
+    obs_valuequantity_code = c("mg", "mmol/L", "mg"),
+    obs_valuequantity_unit = c("mg", "mmol/L", "mg")
+  )
+  mapping <- data.table::data.table(
+    LOINC = c("mass", "amount"),
+    LOINC_PRIMARY = c("mass", "amount"),
+    UNIT = c("g", "umol/L"),
+    CONVERSION_FACTOR = NA_real_,
+    CONVERSION_UNIT = NA_character_
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+
+  expect_equal(result$obs_id, observation$obs_id)
+  expect_equal(result$value_in_reference_unit, c(0.002, 3000, 0.004))
+})
+
 test_that("medication enrichment only creates described targets", {
   context <- newSnapshotStreamingContext(NULL)
-  medication_request <- data.table::data.table(
-    medreq_medicationreference_ref = "Medication/med-1"
-  )
+  medication_request <- data.table::data.table(medreq_medicationreference_ref = "Medication/med-1")
 
   without_target <- enrichSnapshotStreamingChunk(
     medication_request,

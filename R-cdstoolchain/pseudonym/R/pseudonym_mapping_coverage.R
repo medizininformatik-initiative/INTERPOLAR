@@ -37,6 +37,7 @@ getPseudonymMappingCoverageRequests <- function(rules, materialization_plan) {
     with = FALSE
   ])
   plan <- data.table::as.data.table(data.table::copy(materialization_plan))
+  plan <- plan[plan[["SNAPSHOT_RELATION_TYPE"]] == "all", ]
   requests <- merge(
     plan[
       ,
@@ -88,17 +89,18 @@ readDistinctPseudonymMappingValues <- function(
     add = TRUE
   )
 
-  values <- character()
+  value_chunks <- list()
   repeat {
     chunk <- DBI::dbFetch(result, n = fetch_size)
     if (nrow(chunk) > 0) {
-      values <- c(values, as.character(chunk[["mapping_value"]]))
+      value_chunks[[length(value_chunks) + 1L]] <-
+        as.character(chunk[["mapping_value"]])
     }
     if (DBI::dbHasCompleted(result)) {
       break
     }
   }
-  unique(values)
+  unique(unlist(value_chunks, use.names = FALSE))
 }
 
 sortPseudonymMappingKeys <- function(keys) {
@@ -280,18 +282,16 @@ ensurePseudonymMappingCoverage <- function(
       data.table::data.table(KEY = character(), PSEUDONYM = character())
     }
     sheet_requests <- requests[requests[["SHEET_NAME"]] == sheet_name, ]
-    database_keys <- character()
+    database_key_sets <- vector("list", nrow(sheet_requests))
     for (request_index in seq_len(nrow(sheet_requests))) {
-      database_keys <- c(
-        database_keys,
-        distinct_value_reader(
-          connection = connection,
-          source_relation = sheet_requests[["SOURCE_RELATION"]][request_index],
-          column_name = sheet_requests[["COLUMN_NAME"]][request_index],
-          source_schema = source_schema
-        )
+      database_key_sets[[request_index]] <- distinct_value_reader(
+        connection = connection,
+        source_relation = sheet_requests[["SOURCE_RELATION"]][request_index],
+        column_name = sheet_requests[["COLUMN_NAME"]][request_index],
+        source_schema = source_schema
       )
     }
+    database_keys <- unlist(database_key_sets, use.names = FALSE)
     database_keys <- sortPseudonymMappingKeys(splitPseudonymMappingValues(database_keys))
     if (any(!nzchar(database_keys))) {
       stop(

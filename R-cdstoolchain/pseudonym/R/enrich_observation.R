@@ -92,13 +92,13 @@ enrichObservationWithLoincMapping <- function(
   enrichment_columns = SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
   source_columns = names(observation)
 ) {
-  observation <- as.data.frame(data.table::copy(observation), stringsAsFactors = FALSE)
+  observation <- data.table::copy(data.table::as.data.table(observation))
   enrichment_columns <- intersect(
     enrichment_columns,
     SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS
   )
   if (length(enrichment_columns) == 0) {
-    return(data.table::as.data.table(observation))
+    return(observation)
   }
   for (column_name in SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS) {
     if (!column_name %in% names(observation)) {
@@ -114,10 +114,10 @@ enrichObservationWithLoincMapping <- function(
       SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
       enrichment_columns
     )] <- NULL
-    return(data.table::as.data.table(observation))
+    return(observation)
   }
 
-  mapping <- as.data.frame(data.table::copy(loinc_mapping), stringsAsFactors = FALSE)
+  mapping <- data.table::copy(data.table::as.data.table(loinc_mapping))
   mapping_column_names <- c(
     "LOINC",
     "LOINC_PRIMARY",
@@ -125,13 +125,13 @@ enrichObservationWithLoincMapping <- function(
     "CONVERSION_FACTOR",
     "CONVERSION_UNIT"
   )
-  names(mapping)[match(mapping_column_names, names(mapping))] <- c(
+  data.table::setnames(mapping, mapping_column_names, c(
     "obs_code_code",
     "primary_loinc_code",
     "reference_unit",
     "conversion_factor",
     "conversion_unit"
-  )
+  ))
   mapping[["conversion_factor"]] <- normalizeConversionFactor(mapping[["conversion_factor"]])
   mapping[["conversion_unit"]][is.na(mapping[["conversion_factor"]])] <- NA_character_
 
@@ -140,77 +140,77 @@ enrichObservationWithLoincMapping <- function(
   observation[["primary_loinc_code"]] <- as.character(observation[["primary_loinc_code"]])
   row_id_column <- ".snapshot_pseudonym_row_id"
   source_unit_column <- ".snapshot_pseudonym_source_unit"
-  observation[[row_id_column]] <- seq_len(nrow(observation))
-  observation[[source_unit_column]] <- getObservationValueUnit(observation)
-
-  observation_rows <- observation[
+  candidate_row_indices <- which(
     observation[["obs_code_system"]] == "http://loinc.org" &
-      !is.na(observation[["obs_valuequantity_value"]]), ,
-    drop = FALSE
-  ]
-  mapping_by_loinc <- match(observation_rows[["obs_code_code"]], mapping[["obs_code_code"]])
-  matched_rows <- which(!is.na(mapping_by_loinc))
+      !is.na(observation[["obs_valuequantity_value"]])
+  )
+  candidate_mapping_rows <- match(
+    observation[["obs_code_code"]][candidate_row_indices],
+    mapping[["obs_code_code"]]
+  )
+  matched_candidate_indices <- which(!is.na(candidate_mapping_rows))
 
-  if (length(matched_rows) > 0) {
-    matched_mapping_rows <- mapping_by_loinc[matched_rows]
-    converted_values <- vapply(seq_along(matched_rows), function(i) {
-      etlutils::convertLabUnits(
-        measured_value = observation_rows[["obs_valuequantity_value"]][matched_rows[i]],
-        measured_unit = observation_rows[[source_unit_column]][matched_rows[i]],
-        target_unit = mapping[["reference_unit"]][matched_mapping_rows[i]],
-        conversion_factor = mapping[["conversion_factor"]][matched_mapping_rows[i]],
-        conversion_unit = mapping[["conversion_unit"]][matched_mapping_rows[i]],
+  if (length(matched_candidate_indices) > 0) {
+    matched_row_indices <- candidate_row_indices[matched_candidate_indices]
+    matched_rows <- observation[matched_row_indices, ]
+    matched_rows[[row_id_column]] <- matched_row_indices
+    matched_rows[[source_unit_column]] <- getObservationValueUnit(matched_rows)
+    matched_mapping_rows <- candidate_mapping_rows[matched_candidate_indices]
+    matched_rows[[".snapshot_pseudonym_target_unit"]] <-
+      mapping[["reference_unit"]][matched_mapping_rows]
+    matched_rows[[".snapshot_pseudonym_primary_loinc"]] <-
+      mapping[["primary_loinc_code"]][matched_mapping_rows]
+    matched_rows[[".snapshot_pseudonym_conversion_factor"]] <-
+      mapping[["conversion_factor"]][matched_mapping_rows]
+    matched_rows[[".snapshot_pseudonym_conversion_unit"]] <-
+      mapping[["conversion_unit"]][matched_mapping_rows]
+    conversion_factor_column <- ".snapshot_pseudonym_conversion_factor"
+    conversion_unit_column <- ".snapshot_pseudonym_conversion_unit"
+    conversion_group_columns <- c(
+      "obs_code_code",
+      source_unit_column
+    )
+    data.table::setorderv(matched_rows, conversion_group_columns, na.last = TRUE)
+    conversion_group_ids <- data.table::rleidv(
+      matched_rows,
+      conversion_group_columns
+    )
+    group_starts <- which(!duplicated(conversion_group_ids))
+    group_ends <- c(group_starts[-1L] - 1L, nrow(matched_rows))
+    converted_values <- rep(NA_real_, nrow(matched_rows))
+    for (group_index in seq_along(group_starts)) {
+      group_rows <- seq.int(group_starts[group_index], group_ends[group_index])
+      first_group_row <- group_rows[1L]
+      group_conversion_factor <-
+        matched_rows[[conversion_factor_column]][first_group_row]
+      group_conversion_unit <-
+        matched_rows[[conversion_unit_column]][first_group_row]
+      converted_values[group_rows] <- etlutils::convertLabUnits(
+        measured_value = matched_rows[["obs_valuequantity_value"]][group_rows],
+        measured_unit = matched_rows[[source_unit_column]][first_group_row],
+        target_unit = matched_rows[[".snapshot_pseudonym_target_unit"]][first_group_row],
+        conversion_factor = group_conversion_factor,
+        conversion_unit = group_conversion_unit,
         additional_error_message = paste0(
           " for LOINC code ",
-          observation_rows[["obs_code_code"]][matched_rows[i]]
+          matched_rows[["obs_code_code"]][first_group_row]
         )
       )
-    }, numeric(1))
+    }
 
-    enriched_row_ids <- observation_rows[[row_id_column]][matched_rows]
-    observation[["value_in_reference_unit"]][enriched_row_ids] <- converted_values
+    enriched_row_ids <- matched_rows[[row_id_column]]
+    observation[["value_in_reference_unit"]][enriched_row_ids] <-
+      converted_values
     observation[["reference_unit"]][enriched_row_ids] <-
-      mapping[["reference_unit"]][matched_mapping_rows]
+      matched_rows[[".snapshot_pseudonym_target_unit"]]
     observation[["primary_loinc_code"]][enriched_row_ids] <-
-      mapping[["primary_loinc_code"]][matched_mapping_rows]
+      matched_rows[[".snapshot_pseudonym_primary_loinc"]]
   }
 
-  observation[[row_id_column]] <- NULL
-  observation[[source_unit_column]] <- NULL
   unused_enrichment_columns <- setdiff(
     SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
     enrichment_columns
   )
   observation[unused_enrichment_columns] <- NULL
-  data.table::as.data.table(observation)
-}
-
-#' Enrich Snapshot Observation Tables with Primary LOINC Reference Values
-#'
-#' Adds snapshot-specific observation columns from the configured LOINC mapping:
-#' `value_in_reference_unit`, `reference_unit`, and `primary_loinc_code`.
-#'
-#' @param tables Named list of snapshot source tables.
-#' @param input_repo_path TOML-configured input repository directory.
-#'
-#' @return The table list with enriched `observation` tables.
-#' @export
-enrichSnapshotObservationTables <- function(tables, input_repo_path) {
-  if (is.null(tables[["observation"]]) && is.null(tables[["observation_last_version"]])) {
-    return(tables)
-  }
-
-  loinc_mapping <- loadSnapshotLoincMapping(input_repo_path)
-  observation_table_names <- intersect(
-    c("observation", "observation_last_version"),
-    names(tables)
-  )
-  for (table_name in observation_table_names) {
-    tables[[table_name]] <- enrichObservationWithLoincMapping(
-      tables[[table_name]],
-      loinc_mapping
-    )
-  }
-
-  tables
+  observation
 }

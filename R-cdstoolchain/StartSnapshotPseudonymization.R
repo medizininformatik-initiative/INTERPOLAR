@@ -1,7 +1,6 @@
 library(DBI)
 library(RPostgres)
 library(etlutils)
-library(pseudonym)
 
 etlutils::setProcess("SnapshotPseudonymization")
 
@@ -100,12 +99,7 @@ tryCatch(
       target_table_schema = command_arguments[["target_table_schema"]],
       target_view_schema = command_arguments[["target_view_schema"]],
       chunk_size = command_arguments[["chunk_size"]],
-      fail_on_review_problems = TRUE,
-      write_review_report = TRUE,
       review_report_file = command_arguments[["review_report_file"]],
-      keep_unmatched_columns = TRUE,
-      overwrite_tables = FALSE,
-      replace_views = FALSE,
       log_steps = TRUE
     )
     invisible(pseudonymization_result)

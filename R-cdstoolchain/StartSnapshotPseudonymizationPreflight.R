@@ -1,5 +1,4 @@
 library(etlutils)
-library(pseudonym)
 
 etlutils::setProcess("SnapshotPseudonymizationPreflight")
 
@@ -36,19 +35,10 @@ etlutils::startModule(dataprocessor_config, hide_value_pattern = "TOKEN|PASSWORD
 status <- 0L
 tryCatch(
   {
-    rule_sources <- pseudonym::getDefaultSnapshotPseudonymizationRuleSources(
-      project_root = command_arguments[["project_root"]]
-    )
-    pseudonym::pseudonymizeSnapshotTables(
-      tables = list(preflight_placeholder = data.frame()),
-      table_descriptions = rule_sources[["table_descriptions"]],
-      snapshot_extensions = rule_sources[["snapshot_extensions"]],
+    pseudonym::preflightSnapshotPseudonymization(
+      project_root = command_arguments[["project_root"]],
       input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
-      validate_mapping_files = FALSE,
-      fail_on_review_problems = TRUE,
-      write_review_report = TRUE,
       review_report_file = command_arguments[["review_report_file"]],
-      keep_unmatched_columns = TRUE,
       log_steps = FALSE
     )
   },

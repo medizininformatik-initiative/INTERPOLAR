@@ -645,7 +645,6 @@ getRuleSummary <- function(table_description) {
 #'
 #' @return A named list with `summary`, `yaml_rules`, `unmatched_table_rows`,
 #' `selected_rules`, `overridden_rules`, `conflicts`, and `candidates`.
-#' @export
 getFhirPseudonymizationRuleReport <- function(table_description) {
   candidates <- attr(table_description, "pseudonymization_candidates")
   selected <- attr(table_description, "pseudonymization_selected")

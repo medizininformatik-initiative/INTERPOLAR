@@ -225,6 +225,10 @@ Regelnotation. Ein `domain = ...`-Parameter verändert den erzeugten Hash nicht.
 Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten; nur der
 ID-Anteil hinter dem Schrägstrich wird gehasht.
 
+Die Regel `redact` entfernt den ursprünglichen Wert vollständig. Das Ergebnis
+ist `NA` in R und wird als `NULL` in PostgreSQL gespeichert. Es wird kein
+Platzhaltertext wie `redacted` eingetragen.
+
 Mapping-Regeln der Form `pseudonym(sheet = "Sheetname")` lesen das angegebene
 Sheet aus `INPUT_REPO_PATH/pseudo_mapping.xlsx`. Jedes verwendete Sheet enthält
 die Spalten `KEY` und `PSEUDONYM`. Beide Werte dürfen Leerzeichen enthalten,
