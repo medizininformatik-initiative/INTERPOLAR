@@ -204,11 +204,24 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
 
   # Unique enc_ids (FHIR-cracked table can have duplicates per enc_id)
   ids <- unique(encounters$enc_id)
+  first_encounter_by_id <- encounters[!duplicated(enc_id)]
+  first_encounter_by_id <- first_encounter_by_id[!is.na(enc_id) & nzchar(enc_id)]
+  parent_id_by_id <- stats::setNames(
+    etlutils::fhirdataExtractIDs(
+      first_encounter_by_id$enc_partof_calculated_ref,
+      unique = FALSE
+    ),
+    first_encounter_by_id$enc_id
+  )
+  parent_id_env <- list2env(as.list(parent_id_by_id), parent = emptyenv())
   # Memoization to avoid repeated walks
   resolve_cache <- new.env(parent = emptyenv())
 
   # Resolve top-most encounter (max depth = 3), return "Encounter/<id>" or "invalid"
   resolveMainRef <- function(id) {
+    if (is.na(id) || !nzchar(id)) {
+      return("invalid")
+    }
     # Return cached if present
     if (exists(id, envir = resolve_cache, inherits = FALSE)) {
       return(get(id, envir = resolve_cache, inherits = FALSE))
@@ -217,21 +230,23 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
     main_id <- NA_character_
 
     for (hop in 1:3) {
-      current_row <- encounters[enc_id == walk_id]
-      if (nrow(current_row) == 0L) {  # unknown id
+      if (!exists(walk_id, envir = parent_id_env, inherits = FALSE)) {
         main_id <- NA_character_
         break
       }
-      current_row <- current_row[1]  # take any row for this enc_id
-      partof_ref <- current_row$enc_partof_calculated_ref
+      parent_id <- get(walk_id, envir = parent_id_env, inherits = FALSE)
       # Reached top-level (no parent)
-      if (is.na(partof_ref)) {
+      if (is.na(parent_id)) {
         main_id <- walk_id
         break
       }
       # Go to parent; abort on "invalid" or empty
-      parent_id <- etlutils::fhirdataExtractIDs(partof_ref)
-      if (identical(parent_id, "invalid") || length(parent_id) == 0L || is.na(parent_id)) {
+      if (
+        identical(parent_id, "invalid") ||
+          length(parent_id) == 0L ||
+          is.na(parent_id) ||
+          !nzchar(parent_id)
+      ) {
         main_id <- NA_character_
         break
       }

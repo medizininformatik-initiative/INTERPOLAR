@@ -81,8 +81,12 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
 
   getAllLastViewEncounterResourcesForPIDs <- function(pids) {
     enc_pid_colname <- etlutils::fhirdbGetPIDColumn("encounter")
-    where_clause <- paste0("WHERE ", enc_pid_colname, " IN ", etlutils::fhirdbGetQueryList(pids))
-    getAllLastViewResources("encounter", "*", where_clause)
+    col_names <- getEncounterColNamesForReferenceCalculation()
+    where_clause <- paste0(
+      "WHERE ", enc_pid_colname, " IN ", etlutils::fhirdbGetQueryList(pids), "\n",
+      "AND ", col_names["type_code_col_name"], " IN ", etlutils::fhirdbGetQueryList(ENCOUNTER_TYPES)
+    )
+    getAllLastViewResources("encounter", col_names, where_clause)
   }
 
   extendEncountersWithDatabaseInformations <- function(encounters) {
@@ -94,6 +98,7 @@ createReferences <- function(resource_tables, common_encounter_fhir_identifier_s
         common_cols <- intersect(names(encounters), names(encounter_from_db))
         encounter_from_db <- encounter_from_db[, ..common_cols]
         encounters <- rbind(encounters, encounter_from_db, use.names = TRUE)
+        encounters <- unique(encounters)
       }
     }
     return(encounters)
