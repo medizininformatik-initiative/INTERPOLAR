@@ -206,14 +206,12 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   ids <- unique(encounters$enc_id)
   first_encounter_by_id <- encounters[!duplicated(enc_id)]
   first_encounter_by_id <- first_encounter_by_id[!is.na(enc_id) & nzchar(enc_id)]
-  parent_id_by_id <- stats::setNames(
-    etlutils::fhirdataExtractIDs(
-      first_encounter_by_id$enc_partof_calculated_ref,
-      unique = FALSE
-    ),
-    first_encounter_by_id$enc_id
-  )
-  parent_id_env <- list2env(as.list(parent_id_by_id), parent = emptyenv())
+  parent_id_list <- as.list(etlutils::fhirdataExtractIDs(
+    first_encounter_by_id$enc_partof_calculated_ref,
+    unique = FALSE
+  ))
+  names(parent_id_list) <- first_encounter_by_id$enc_id
+  parent_id_env <- list2env(parent_id_list, parent = emptyenv())
   # Memoization to avoid repeated walks
   resolve_cache <- new.env(parent = emptyenv())
 
