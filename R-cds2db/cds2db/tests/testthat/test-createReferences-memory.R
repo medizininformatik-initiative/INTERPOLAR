@@ -83,3 +83,38 @@ testthat::test_that("createReferencesForEncounters resolves duplicated encounter
     "Encounter/main-1"
   )
 })
+
+testthat::test_that("joinCalculatedRefColumsToEncounter uses one last reference row per encounter", {
+  full_encounters <- data.table::data.table(
+    enc_id = rep(c("main-1", "main-2"), each = 100L),
+    flattened_value = seq_len(200L)
+  )
+  calculated_encounters <- data.table::data.table(
+    enc_id = rep(c("main-1", "main-2"), each = 100L),
+    enc_partof_calculated_ref = paste0("Encounter/parent-", seq_len(200L)),
+    enc_main_encounter_calculated_ref = paste0("Encounter/main-", seq_len(200L))
+  )
+
+  result <- joinCalculatedRefColumsToEncounter(
+    fullEncTable = data.table::copy(full_encounters),
+    encTableWithCalculatedRefs = calculated_encounters
+  )
+
+  testthat::expect_equal(nrow(result), nrow(full_encounters))
+  testthat::expect_identical(
+    unique(result[enc_id == "main-1", enc_partof_calculated_ref]),
+    "Encounter/parent-100"
+  )
+  testthat::expect_identical(
+    unique(result[enc_id == "main-1", enc_main_encounter_calculated_ref]),
+    "Encounter/main-100"
+  )
+  testthat::expect_identical(
+    unique(result[enc_id == "main-2", enc_partof_calculated_ref]),
+    "Encounter/parent-200"
+  )
+  testthat::expect_identical(
+    unique(result[enc_id == "main-2", enc_main_encounter_calculated_ref]),
+    "Encounter/main-200"
+  )
+})

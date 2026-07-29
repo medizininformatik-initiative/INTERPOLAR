@@ -517,9 +517,15 @@ joinCalculatedRefColumsToEncounter <- function(fullEncTable, encTableWithCalcula
   # get calculated ref columns by grep("_calculated_ref", ...)
   calculated_col_names <- grep("_calculated_ref$", names(encTableWithCalculatedRefs), value = TRUE)
   enc_id_col_name <- etlutils::fhirdbGetIDColumn("encounter")
+  # Keep the previous last-match behavior without joining every combination of duplicated rows.
+  calculated_refs_by_id <- encTableWithCalculatedRefs[
+    !duplicated(get(enc_id_col_name), fromLast = TRUE),
+    c(enc_id_col_name, calculated_col_names),
+    with = FALSE
+  ]
 
   fullEncTable[
-    encTableWithCalculatedRefs,
+    calculated_refs_by_id,
     on = enc_id_col_name,
     (calculated_col_names) := mget(paste0("i.", calculated_col_names))
   ]
