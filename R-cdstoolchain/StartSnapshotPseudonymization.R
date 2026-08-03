@@ -102,6 +102,34 @@ tryCatch(
       review_report_file = command_arguments[["review_report_file"]],
       log_steps = TRUE
     )
+    report_dir <- file.path(
+      get("MODULE_DIRS", envir = .GlobalEnv)[["local_dir"]],
+      "reports"
+    )
+    issue_report <- pseudonymization_result[["issue_report"]]
+    medication_issue_summary <- issue_report[["medication_issue_summary"]]
+    age_issue_summary <- issue_report[["age_issue_summary"]]
+    issue_count <- sum(
+      medication_issue_summary[["UNMATCHED_ROWS"]],
+      age_issue_summary[["AFFECTED_ROWS"]],
+      na.rm = TRUE
+    )
+    issue_report_file <- file.path(
+      report_dir,
+      "snapshot_pseudonymization_issues.xlsx"
+    )
+    if (issue_count > 0) {
+      message(
+        "\nWARNING: ", issue_count,
+        " pseudonymization issues were detected.",
+        "\nISSUE REPORT: ", issue_report_file
+      )
+    } else {
+      message(
+        "\nNo pseudonymization issues were detected.",
+        "\nISSUE REPORT: ", issue_report_file
+      )
+    }
     invisible(pseudonymization_result)
   },
   error = function(error) {

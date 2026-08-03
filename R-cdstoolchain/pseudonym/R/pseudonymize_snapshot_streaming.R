@@ -1,5 +1,7 @@
 SNAPSHOT_STREAMING_BIRTHDATE_COLUMN <- ".snapshot_pseudonym_birthdate"
+SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN <- ".snapshot_pseudonym_patient_key"
 SNAPSHOT_MEDICATION_REVIEW_DETAIL_LIMIT <- 1000L
+SNAPSHOT_AGE_REVIEW_DETAIL_LIMIT <- 1000L
 DEFAULT_SNAPSHOT_CHUNK_SIZE <- 25000L
 
 snapshotRelationId <- function(name, schema = NULL) {
@@ -304,7 +306,10 @@ buildSnapshotBirthdateMapQuery <- function(
     connection,
     source_fields,
     source_alias,
-    exclude = SNAPSHOT_STREAMING_BIRTHDATE_COLUMN
+    exclude = c(
+      SNAPSHOT_STREAMING_BIRTHDATE_COLUMN,
+      SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN
+    )
   )
   patient_birthdate <- snapshotQuotedColumn(connection, patient_birthdate_column)
   patient_key_queries <- vapply(patient_key_columns, function(column_name) {
@@ -333,6 +338,10 @@ buildSnapshotBirthdateMapQuery <- function(
     connection,
     SNAPSHOT_STREAMING_BIRTHDATE_COLUMN
   )
+  hidden_patient_key <- snapshotQuotedColumn(
+    connection,
+    SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN
+  )
 
   paste0(
     "WITH ", birthdate_alias, " AS (",
@@ -341,7 +350,8 @@ buildSnapshotBirthdateMapQuery <- function(
     ") patient_birthdate_candidates WHERE patient_key IS NOT NULL ",
     "GROUP BY patient_key)",
     " SELECT ", source_columns, ", ", birthdate_alias, ".birthdate AS ",
-    hidden_birthdate,
+    hidden_birthdate, ", ", birthdate_alias, ".patient_key AS ",
+    hidden_patient_key,
     " FROM ", source_relation, " ", source_alias,
     " LEFT JOIN ", birthdate_alias,
     " ON ", birthdate_alias, ".patient_key = ", source_key
@@ -673,6 +683,7 @@ newSnapshotStreamingContext <- function(
   context$medication_review <- newBoundedMedicationReferenceReview(
     SNAPSHOT_MEDICATION_REVIEW_DETAIL_LIMIT
   )
+  context$age_review <- newBoundedAgeCalculationReview(SNAPSHOT_AGE_REVIEW_DETAIL_LIMIT)
   context
 }
 
@@ -686,7 +697,6 @@ enrichSnapshotStreamingChunk <- function(
   birthdates <- NULL
   if (SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(table)) {
     birthdates <- table[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]]
-    table[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]] <- NULL
   }
 
   if (identical(base_table_name, "fall_fe")) {
@@ -948,23 +958,56 @@ streamSnapshotMaterializedTable <- function(
       }
     },
     review_chunk = function(chunk) {
-      if (is.null(query_info[["medication_spec"]])) {
-        return(emptyMedicationReferenceReport())
+      medication_review <- if (is.null(query_info[["medication_spec"]])) {
+        emptyMedicationReferenceReport()
+      } else {
+        getUnmatchedMedicationReferencesFromEnrichedTable(
+          chunk,
+          materialized_table_name,
+          query_info[["medication_spec"]]
+        )
       }
-      getUnmatchedMedicationReferencesFromEnrichedTable(
-        chunk,
-        materialized_table_name,
-        query_info[["medication_spec"]]
+      age_review <- if (base_table_name %in% c("fall_fe", "encounter")) {
+        birthdates <- if (SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(chunk)) {
+          chunk[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]]
+        } else {
+          rep(as.Date(NA), nrow(chunk))
+        }
+        matched_patient_keys <- if (
+          SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN %in% names(chunk)
+        ) {
+          chunk[[SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN]]
+        } else {
+          rep(NA_character_, nrow(chunk))
+        }
+        getAgeCalculationReview(
+          chunk,
+          materialized_table_name,
+          base_table_name,
+          birthdates,
+          matched_patient_keys
+        )
+      } else {
+        emptyAgeCalculationReview()
+      }
+      list(
+        medication = medication_review,
+        age = age_review
       )
     },
     write_review_chunk = function(review) {
       recordBoundedMedicationReferenceReview(
         streaming_context$medication_review,
-        review
+        review[["medication"]]
+      )
+      recordBoundedAgeCalculationReview(
+        streaming_context$age_review,
+        review[["age"]]
       )
     },
     chunk_size = chunk_size,
-    table_name = materialized_table_name
+    table_name = materialized_table_name,
+    strip_review_columns = stripSnapshotStreamingReviewColumns
   )
   summary <- stream_result[["summary"]]
 

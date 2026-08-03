@@ -281,6 +281,7 @@ test_that("birthdate source query supports fallback patient keys", {
   expect_match(query, "GROUP BY patient_key", fixed = TRUE)
   expect_match(query, "COALESCE(", fixed = TRUE)
   expect_match(query, SNAPSHOT_STREAMING_BIRTHDATE_COLUMN, fixed = TRUE)
+  expect_match(query, SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN, fixed = TRUE)
 })
 
 test_that("source query omits enrichment joins not enabled by table description", {
@@ -312,7 +313,7 @@ test_that("source query omits enrichment joins not enabled by table description"
   expect_false(grepl("patient_birthdates", query_info$query, fixed = TRUE))
 })
 
-test_that("streaming case enrichment removes its lookup column", {
+test_that("streaming case enrichment keeps lookup columns until review", {
   context <- newSnapshotStreamingContext(NULL)
   fall <- data.table::data.table(
     fall_aufn_dat = as.Date("2026-07-22"),
@@ -322,6 +323,7 @@ test_that("streaming case enrichment removes its lookup column", {
     fall_groesse_einheit = "m"
   )
   fall[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]] <- as.Date("1986-07-22")
+  fall[[SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN]] <- "patient-1"
 
   result <- enrichSnapshotStreamingChunk(
     fall,
@@ -336,7 +338,11 @@ test_that("streaming case enrichment removes its lookup column", {
 
   expect_equal(result$fall_age_at_admission, 40L)
   expect_equal(result$fall_bmi, 20)
-  expect_false(SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(result))
+  expect_equal(
+    result[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]],
+    as.Date("1986-07-22")
+  )
+  expect_equal(result[[SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN]], "patient-1")
 })
 
 test_that("streaming enrichment only creates columns described by table description", {
@@ -359,7 +365,7 @@ test_that("streaming enrichment only creates columns described by table descript
 
   expect_equal(result$fall_age_at_admission, 40L)
   expect_false("fall_bmi" %in% names(result))
-  expect_false(SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(result))
+  expect_true(SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(result))
 })
 
 test_that("missing described source columns leave enrichment targets empty", {
