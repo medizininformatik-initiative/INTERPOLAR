@@ -1,3 +1,6 @@
+#' Apply count query results
+#'
+#' Writes count query aliases back into the corresponding report rows.
 applyCountQueryResult <- function(result, table_name, count_query, count_result) {
   for (row_index in seq_len(nrow(count_query$alias_map))) {
     alias_row <- count_query$alias_map[row_index]
@@ -9,6 +12,9 @@ applyCountQueryResult <- function(result, table_name, count_query, count_result)
   invisible(result)
 }
 
+#' Apply value date range query results
+#'
+#' Writes first and last value timestamps back into the corresponding report rows.
 applyDateRangeQueryResult <- function(result, table_name, date_range_query, date_range_result) {
   for (row_index in seq_len(nrow(date_range_query$alias_map))) {
     alias_row <- date_range_query$alias_map[row_index]
@@ -24,6 +30,9 @@ applyDateRangeQueryResult <- function(result, table_name, date_range_query, date
   invisible(result)
 }
 
+#' Fill count and date range columns
+#'
+#' Runs the batched count and optional date-range queries for one table batch.
 fillCountAndDateRangeColumns <- function(
   result,
   table_name,
@@ -77,6 +86,9 @@ fillCountAndDateRangeColumns <- function(
   invisible(result)
 }
 
+#' Calculate availability counts
+#'
+#' Builds the main availability result table for all configured metadata rows.
 calculateCounts <- function(
   metadata,
   config,
@@ -177,6 +189,9 @@ calculateCounts <- function(
   ))
   orderByResourceReferenceScope(result)
 }
+#' Describe a report sheet
+#'
+#' Returns human-readable metadata used by the sheet description workbook tab.
 getSheetDescription <- function(sheet_name, config = list()) {
   filtered_scope_label <- getFilteredScopeLabel(config)
   filtered_scope_fhir_sheet_name <- getFilteredScopeSheetName("FHIR", config)
@@ -235,6 +250,9 @@ getSheetDescription <- function(sheet_name, config = list()) {
   ))
 }
 
+#' Create the sheet description table
+#'
+#' Builds the workbook sheet that explains the generated report sheets.
 createSheetDescriptionSheet <- function(sheet_names, config = list()) {
   rows <- lapply(sheet_names, function(sheet_name) {
     description <- getSheetDescription(sheet_name, config)
@@ -248,6 +266,9 @@ createSheetDescriptionSheet <- function(sheet_names, config = list()) {
   data.table::rbindlist(rows, use.names = TRUE)
 }
 
+#' Prepend the sheet description tab
+#'
+#' Places the sheet description table before all generated report sheets.
 prependSheetDescriptionSheet <- function(sheets, config = list()) {
   c(
     "Sheet Description" = list(createSheetDescriptionSheet(c(names(sheets), "Metadata"), config)),
@@ -255,14 +276,23 @@ prependSheetDescriptionSheet <- function(sheets, config = list()) {
   )
 }
 
+#' Format a run timestamp
+#'
+#' Formats a timestamp for display in the metadata sheet.
 formatRunTimestamp <- function(timestamp) {
   format(timestamp, "%Y-%m-%d %H:%M:%S UTC", tz = "UTC")
 }
 
+#' Format a timestamp for filenames
+#'
+#' Formats a timestamp for generated report file names.
 formatFilenameTimestamp <- function(timestamp) {
   format(timestamp, "%Y-%m-%d_%H-%M-%S")
 }
 
+#' Collapse a config value for display
+#'
+#' Formats scalar and vector config values for the metadata sheet.
 collapseConfigValue <- function(value) {
   if (length(value) == 0L) {
     return("")
@@ -270,6 +300,9 @@ collapseConfigValue <- function(value) {
   paste(value, collapse = "; ")
 }
 
+#' Create the metadata sheet
+#'
+#' Builds technical run metadata for the generated Excel workbook.
 createMetadataSheet <- function(
   result,
   source_metadata,
@@ -341,6 +374,9 @@ createMetadataSheet <- function(
   data.table::rbindlist(rows, use.names = TRUE)
 }
 
+#' Split the availability result into sheets
+#'
+#' Separates the combined result table into FHIR, Frontend and Other sheets.
 splitResultForExcel <- function(result) {
   output_columns <- setdiff(names(result), c("TABLE_FAMILY", "RESOURCE_REFERENCE_SCOPE", "ORDINAL_POSITION"))
   non_fhir_output_columns <- setdiff(
@@ -369,6 +405,9 @@ splitResultForExcel <- function(result) {
   sheets[vapply(sheets, nrow, integer(1)) > 0L]
 }
 
+#' Format a sheet for Excel output
+#'
+#' Converts date-time columns to character values for stable Excel writing.
 formatSheetForExcel <- function(sheet) {
   sheet <- data.table::as.data.table(data.table::copy(sheet))
   if (!nrow(sheet)) {
@@ -389,6 +428,9 @@ formatSheetForExcel <- function(sheet) {
   data.table::rbindlist(formatted_tables, use.names = TRUE)
 }
 
+#' Write the Excel report
+#'
+#' Writes all report sheets to the configured output workbook.
 writeExcelFile <- function(
   sheets,
   filename_without_extension,
@@ -449,6 +491,9 @@ writeExcelFile <- function(
   invisible(file_name)
 }
 
+#' Create the database quality analysis report
+#'
+#' Orchestrates metadata loading, count calculation and report file creation.
 createReport <- function(config = getConfig()) {
   analysis_start_time <- Sys.time()
   logProgress(

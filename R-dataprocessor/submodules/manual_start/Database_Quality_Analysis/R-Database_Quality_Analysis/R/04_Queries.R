@@ -1,3 +1,6 @@
+#' Quote a SQL identifier
+#'
+#' Escapes and double-quotes a schema, table, column or alias identifier.
 quoteIdentifier <- function(identifier) {
   if (is.na(identifier) || !nzchar(identifier)) {
     stop("Identifier must not be empty.")
@@ -5,10 +8,16 @@ quoteIdentifier <- function(identifier) {
   paste0('"', gsub('"', '""', identifier, fixed = TRUE), '"')
 }
 
+#' Quote a qualified SQL identifier
+#'
+#' Quotes an alias and identifier and joins them with a dot.
 quoteQualifiedIdentifier <- function(alias, identifier) {
   paste(quoteIdentifier(alias), quoteIdentifier(identifier), sep = ".")
 }
 
+#' Quote a SQL table reference
+#'
+#' Quotes a schema and table name and joins them as a qualified table reference.
 quoteTable <- function(schema, table_name) {
   paste(
     quoteIdentifier(schema),
@@ -17,10 +26,16 @@ quoteTable <- function(schema, table_name) {
   )
 }
 
+#' Build a generic filled-value condition
+#'
+#' Builds the default non-empty condition when no data type is known.
 getFilledCondition <- function(column_name) {
   getColumnFilledCondition(column_name, NA_character_)
 }
 
+#' Check whether a database type is textual
+#'
+#' Returns TRUE for text-like database types and unknown types.
 isTextType <- function(data_type) {
   if (is.na(data_type) || !nzchar(data_type)) {
     return(TRUE)
@@ -28,6 +43,9 @@ isTextType <- function(data_type) {
   data_type %in% c("character", "character varying", "text")
 }
 
+#' Build a filled-value condition for a column
+#'
+#' Builds a non-null condition and excludes empty strings for text columns.
 getColumnFilledCondition <- function(column_name, data_type) {
   quoted_column <- quoteIdentifier(column_name)
   not_null_condition <- paste(quoted_column, "IS NOT NULL")
@@ -42,6 +60,9 @@ getColumnFilledCondition <- function(column_name, data_type) {
   paste(conditions, collapse = " AND ")
 }
 
+#' Map column names to data types
+#'
+#' Builds a named vector of data types from table metadata.
 getMetadataDataTypes <- function(table_metadata) {
   stats::setNames(
     if ("DATA_TYPE" %in% names(table_metadata)) {
@@ -53,6 +74,9 @@ getMetadataDataTypes <- function(table_metadata) {
   )
 }
 
+#' Build a SELECT query
+#'
+#' Combines select expressions, a table reference and an optional WHERE clause.
 buildSelectQuery <- function(select_parts, table_ref, row_filter_condition = NA_character_) {
   paste0(
     "SELECT\n  ",
@@ -63,6 +87,9 @@ buildSelectQuery <- function(select_parts, table_ref, row_filter_condition = NA_
   )
 }
 
+#' Build a distinct count expression
+#'
+#' Builds a conditional COUNT DISTINCT expression for one grouping column.
 buildDistinctCountExpression <- function(conditions, grouping_column, alias) {
   conditions <- conditions[!is.na(conditions)]
   paste0(
@@ -75,10 +102,16 @@ buildDistinctCountExpression <- function(conditions, grouping_column, alias) {
   )
 }
 
+#' Quote a SQL string literal
+#'
+#' Escapes single quotes and wraps the value as a SQL string literal.
 quoteSqlString <- function(value) {
   paste0("'", gsub("'", "''", value, fixed = TRUE), "'")
 }
 
+#' Build the availability condition for a value column
+#'
+#' Combines default filled-value logic with project-specific availability rules.
 getValueAvailableCondition <- function(column_name, table_metadata, data_types) {
   override_condition <- getProjectAvailabilityOverrideCondition(column_name, table_metadata)
   if (!is.na(override_condition)) {
@@ -93,6 +126,9 @@ getValueAvailableCondition <- function(column_name, table_metadata, data_types) 
   paste(conditions, collapse = " AND ")
 }
 
+#' Build an optional WHERE clause
+#'
+#' Returns an empty string or a WHERE clause for an additional row filter.
 getOptionalWhereClause <- function(row_filter_condition) {
   if (is.na(row_filter_condition) || !nzchar(row_filter_condition)) {
     return("")
@@ -101,6 +137,9 @@ getOptionalWhereClause <- function(row_filter_condition) {
   paste0("\nWHERE ", row_filter_condition)
 }
 
+#' Create an empty count alias map
+#'
+#' Returns the expected alias-map columns for count queries with no expressions.
 getEmptyCountAliasMap <- function() {
   data.table::data.table(
     alias = character(),
@@ -109,6 +148,9 @@ getEmptyCountAliasMap <- function() {
   )
 }
 
+#' Build configured count groups
+#'
+#' Converts grouping columns into count group rows used by count query builders.
 buildConfiguredCountGroups <- function(grouping_columns, extra_condition = NA_character_) {
   count_group_rows <- lapply(names(grouping_columns), function(grouping_name) {
     count_column <- DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
@@ -134,6 +176,9 @@ buildConfiguredCountGroups <- function(grouping_columns, extra_condition = NA_ch
   data.table::rbindlist(count_group_rows, use.names = TRUE)
 }
 
+#' Build an availability count query
+#'
+#' Builds one batched query for value availability counts across count groups.
 buildAvailabilityCountQuery <- function(
   table_metadata,
   data_columns,
@@ -202,6 +247,9 @@ buildAvailabilityCountQuery <- function(
   )
 }
 
+#' Build the standard availability count query
+#'
+#' Builds availability counts for the configured resource, patient and case groups.
 buildCountQuery <- function(
   table_metadata,
   grouping_columns,
@@ -215,6 +263,9 @@ buildCountQuery <- function(
     row_filter_condition = row_filter_condition
   )
 }
+#' Build a value date range query
+#'
+#' Builds min and max timestamp expressions for filled values in history views.
 buildValueDateRangeQuery <- function(
   table_metadata,
   history_metadata,

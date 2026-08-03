@@ -1,3 +1,6 @@
+#' Validate a grouping column
+#'
+#' Ensures a configured grouping column exists in the table metadata.
 validateGroupingColumn <- function(table_name, columns, column_name, grouping_name) {
   if (is.na(column_name)) {
     return(NA_character_)
@@ -17,6 +20,9 @@ validateGroupingColumn <- function(table_name, columns, column_name, grouping_na
   column_name
 }
 
+#' Require a grouping column from candidates
+#'
+#' Selects the first available candidate or stops with a descriptive error.
 requireGroupingColumn <- function(table_name, columns, candidates, grouping_name) {
   present <- candidates[candidates %in% columns]
   if (!length(present)) {
@@ -44,6 +50,9 @@ requireGroupingColumn <- function(table_name, columns, candidates, grouping_name
   present[[1]]
 }
 
+#' Select an optional grouping column
+#'
+#' Returns the first available grouping candidate or NA when none exists.
 optionalGroupingColumn <- function(table_name, columns, candidates, grouping_name) {
   present <- candidates[candidates %in% columns]
   if (!length(present)) {
@@ -64,10 +73,16 @@ optionalGroupingColumn <- function(table_name, columns, candidates, grouping_nam
   present[[1]]
 }
 
+#' Derive a resource grouping prefix
+#'
+#' Removes the resource id suffix to infer related patient or encounter columns.
 getGroupingPrefix <- function(resource_id_column) {
   sub("_id$", "", resource_id_column)
 }
 
+#' Classify the resource reference scope
+#'
+#' Classifies resources as case-, patient- or case/patient-independent.
 getResourceReferenceScope <- function(grouping_columns, table_metadata = NULL) {
   if (!is.na(grouping_columns[["case_id"]])) {
     return("case_dependent")
@@ -85,6 +100,9 @@ getResourceReferenceScope <- function(grouping_columns, table_metadata = NULL) {
   "case_patient_independent"
 }
 
+#' Get the sorting order for a reference scope
+#'
+#' Returns the configured report order for resource reference scope classes.
 getResourceReferenceScopeOrder <- function(reference_scope) {
   match(
     reference_scope,
@@ -93,6 +111,9 @@ getResourceReferenceScopeOrder <- function(reference_scope) {
   )
 }
 
+#' Sort report rows by reference scope
+#'
+#' Orders report rows by resource scope, table name and original column order.
 orderByResourceReferenceScope <- function(result) {
   if (!"RESOURCE_REFERENCE_SCOPE" %in% names(result)) {
     return(result[order(TABLE_FAMILY, TABLE_NAME, ORDINAL_POSITION)])
@@ -107,6 +128,9 @@ orderByResourceReferenceScope <- function(result) {
   ]
 }
 
+#' Infer grouping columns for a table
+#'
+#' Resolves resource, patient and case grouping columns from metadata and overrides.
 inferGroupingColumns <- function(table_metadata, config) {
   table_name <- table_metadata$TABLE_NAME[[1]]
   columns <- table_metadata$COLUMN_NAME
@@ -160,6 +184,9 @@ inferGroupingColumns <- function(table_metadata, config) {
   unlist(grouping, use.names = TRUE)
 }
 
+#' Mark columns used for grouping
+#'
+#' Adds a display label for columns that are used as report grouping dimensions.
 addGroupingRoles <- function(result, grouping_columns) {
   result[, (DATABASE_QUALITY_ANALYSIS_GROUPING_ROLE_COLUMN) := NA_character_]
   for (grouping_name in names(grouping_columns)) {

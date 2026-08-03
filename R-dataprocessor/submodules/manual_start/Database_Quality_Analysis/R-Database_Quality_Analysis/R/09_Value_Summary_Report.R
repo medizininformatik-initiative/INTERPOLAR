@@ -16,6 +16,9 @@ DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_COLUMNS <- c(
   "EMPTY"
 )
 
+#' Classify a column for value summary output
+#'
+#' Maps database data types to text, numeric or datetime summary handling.
 getValueSummaryType <- function(data_type) {
   data_type <- tolower(data_type)
   if (grepl("timestamp|date|time", data_type)) {
@@ -27,12 +30,18 @@ getValueSummaryType <- function(data_type) {
   "text"
 }
 
+#' Format a text value count
+#'
+#' Formats one text value and its count for compact display.
 formatValueCountLabel <- function(value) {
   value <- gsub("\r\n|\r|\n", "\\n", value)
   value <- gsub("'", "''", value, fixed = TRUE)
   paste0("'", value, "'")
 }
 
+#' Format text value counts
+#'
+#' Formats frequent text values and suppresses rare values below the threshold.
 formatValueCounts <- function(values, counts, min_count = DATABASE_QUALITY_ANALYSIS_TEXT_VALUE_MIN_COUNT) {
   common_indexes <- which(counts >= min_count)
   rare_count <- sum(counts[counts < min_count], na.rm = TRUE)
@@ -48,6 +57,9 @@ formatValueCounts <- function(values, counts, min_count = DATABASE_QUALITY_ANALY
   paste(parts, collapse = "; ")
 }
 
+#' Create an empty value summary table
+#'
+#' Returns an empty value summary table with the expected output columns.
 createEmptyValueSummaryRows <- function() {
   data.table::data.table(
     COLUMN_NAME = character(),
@@ -66,6 +78,9 @@ createEmptyValueSummaryRows <- function() {
   )
 }
 
+#' Format a value summary output value
+#'
+#' Converts values to stable character output for CSV writing.
 formatValueSummaryOutputValue <- function(value) {
   if (inherits(value, "POSIXt")) {
     return(format(value, "%Y-%m-%d %H:%M:%S", tz = "UTC", usetz = FALSE))
@@ -73,6 +88,9 @@ formatValueSummaryOutputValue <- function(value) {
   as.character(value)
 }
 
+#' Normalize value summary column classes
+#'
+#' Ensures value summary rows have stable column types before binding.
 normalizeValueSummaryColumnClasses <- function(rows) {
   character_columns <- c("MIN", "MAX", "AVG", "MEDIAN", "Q1", "Q3")
   for (column_name in intersect(character_columns, names(rows))) {
@@ -93,6 +111,9 @@ normalizeValueSummaryColumnClasses <- function(rows) {
   rows
 }
 
+#' Get value summary suppression patterns
+#'
+#' Returns configured regex patterns for columns whose values should be suppressed.
 getValueSummarySuppressedColumnPatterns <- function(config) {
   patterns <- config$value_summary_suppressed_column_patterns
   if (is.null(patterns)) {
@@ -101,6 +122,9 @@ getValueSummarySuppressedColumnPatterns <- function(config) {
   patterns[nzchar(patterns)]
 }
 
+#' Check whether value details should be suppressed
+#'
+#' Tests a column name against the configured value suppression patterns.
 shouldSuppressValueSummaryValues <- function(column_name, config) {
   patterns <- getValueSummarySuppressedColumnPatterns(config)
   if (!length(patterns)) {
@@ -109,6 +133,9 @@ shouldSuppressValueSummaryValues <- function(column_name, config) {
   any(vapply(patterns, grepl, logical(1), x = column_name))
 }
 
+#' Find the resource ID column for value summaries
+#'
+#' Returns the configured or inferred resource ID column used for distinct counts.
 getValueSummaryResourceIdColumn <- function(table_metadata, config) {
   grouping_columns <- tryCatch(
     inferGroupingColumns(table_metadata, config),
@@ -138,6 +165,9 @@ getValueSummaryResourceIdColumn <- function(table_metadata, config) {
   resource_id_column
 }
 
+#' Create one value summary row
+#'
+#' Creates an initialized output row for one table column and value type.
 createValueSummaryRow <- function(table_metadata, column_name, value_type) {
   column_metadata <- table_metadata[COLUMN_NAME == column_name][1]
   data.table::data.table(
@@ -157,6 +187,9 @@ createValueSummaryRow <- function(table_metadata, column_name, value_type) {
   )
 }
 
+#' Build the text value summary query
+#'
+#' Builds a resource-based text value count query for one table batch.
 buildTextValueSummaryQuery <- function(table_metadata, data_columns, resource_id_column) {
   missing_columns <- setdiff(data_columns, table_metadata$COLUMN_NAME)
   if (length(missing_columns)) {
@@ -292,10 +325,16 @@ buildTextValueSummaryQuery <- function(table_metadata, data_columns, resource_id
   )
 }
 
+#' Build a filtered aggregate expression
+#'
+#' Wraps a SQL aggregate expression in a FILTER clause.
 getFilteredAggregate <- function(aggregate_expression, filled_condition) {
   paste0("(", aggregate_expression, " FILTER (WHERE ", filled_condition, "))")
 }
 
+#' Build statistic summary expressions
+#'
+#' Creates SQL expressions for numeric or datetime distribution statistics.
 getStatisticSummaryExpressions <- function(column_ref, value_type, filled_condition) {
   if (identical(value_type, "datetime")) {
     numeric_expression <- paste0("EXTRACT(EPOCH FROM ", column_ref, ")::double precision")
@@ -362,6 +401,9 @@ getStatisticSummaryExpressions <- function(column_ref, value_type, filled_condit
   )
 }
 
+#' Build a value summary aggregate query
+#'
+#' Builds a batched aggregate query and alias map for statistic-like summaries.
 buildValueSummaryAggregateQuery <- function(
   table_metadata,
   data_columns,
@@ -424,6 +466,9 @@ buildValueSummaryAggregateQuery <- function(
   )
 }
 
+#' Build statistic value summary query
+#'
+#' Builds min, max, average, standard error and quantile summaries.
 buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_type, resource_id_column) {
   buildValueSummaryAggregateQuery(
     table_metadata,
@@ -453,6 +498,9 @@ buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_
   )
 }
 
+#' Build suppressed value summary query
+#'
+#' Builds distinct-value and empty counts without exposing individual values.
 buildSuppressedValueSummaryQuery <- function(table_metadata, data_columns, resource_id_column) {
   buildValueSummaryAggregateQuery(
     table_metadata,
@@ -488,6 +536,9 @@ buildSuppressedValueSummaryQuery <- function(table_metadata, data_columns, resou
   )
 }
 
+#' Summarise suppressed value summary results
+#'
+#' Converts suppressed aggregate query results into value summary rows.
 summariseSuppressedValueSummary <- function(summary_result, alias_map, table_metadata, data_columns) {
   rows <- lapply(data_columns, function(column_name) {
     column_metadata <- table_metadata[COLUMN_NAME == column_name][1]
@@ -504,6 +555,9 @@ summariseSuppressedValueSummary <- function(summary_result, alias_map, table_met
   data.table::rbindlist(rows, use.names = TRUE)
 }
 
+#' Summarise text value counts
+#'
+#' Combines text value count query output into one row per source column.
 summariseTextValueCounts <- function(counts, table_metadata, data_columns) {
   rows <- lapply(data_columns, function(column_name) {
     column_counts <- counts[COLUMN_NAME == column_name]
@@ -525,6 +579,9 @@ summariseTextValueCounts <- function(counts, table_metadata, data_columns) {
   data.table::rbindlist(rows, use.names = TRUE)
 }
 
+#' Summarise statistic value results
+#'
+#' Converts statistic aggregate query results into value summary rows.
 summariseStatisticValues <- function(summary_result, alias_map, table_metadata, data_columns, value_type) {
   rows <- lapply(data_columns, function(column_name) {
     row <- createValueSummaryRow(table_metadata, column_name, value_type)
@@ -541,6 +598,9 @@ summariseStatisticValues <- function(summary_result, alias_map, table_metadata, 
   data.table::rbindlist(rows, use.names = TRUE)
 }
 
+#' Create value summary reports
+#'
+#' Creates one CSV-ready value summary table per FHIR resource.
 createValueSummaryReports <- function(
   metadata,
   config = list(count_batch_size = 100),
@@ -709,6 +769,9 @@ createValueSummaryReports <- function(
   result
 }
 
+#' Sanitize a value summary file name
+#'
+#' Converts a resource name into a safe CSV file name.
 sanitizeValueSummaryFileName <- function(value) {
   value <- gsub("[^A-Za-z0-9_.-]+", "_", value)
   value <- gsub("_+", "_", value)
@@ -719,6 +782,9 @@ sanitizeValueSummaryFileName <- function(value) {
   value
 }
 
+#' Write the value summary archive
+#'
+#' Writes all value summary CSV files into one ZIP archive.
 writeValueSummaryArchive <- function(
   value_summaries,
   filename_without_extension,

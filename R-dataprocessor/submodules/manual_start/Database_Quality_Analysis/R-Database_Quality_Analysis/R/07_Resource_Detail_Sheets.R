@@ -1,4 +1,6 @@
-# Build the condition for the outer row group. Each row group becomes one repeated table block in the detail sheet.
+#' Build a resource detail row-group condition
+#'
+#' Builds the SQL condition for one repeated row group in a detail sheet.
 getDetailRowGroupCondition <- function(detail_config, row_group_value) {
   paste(
     quoteIdentifier(detail_config$row_group_system_column),
@@ -11,7 +13,9 @@ getDetailRowGroupCondition <- function(detail_config, row_group_value) {
   )
 }
 
-# Build the condition for the inner count group. Each count group becomes one additional count column in every row group.
+#' Build a resource detail count-group condition
+#'
+#' Builds the SQL condition for one nested count group in a detail sheet.
 getDetailCountGroupCondition <- function(detail_config, count_group_value) {
   count_group_system_condition <- paste(
     quoteIdentifier(detail_config$count_group_system_column),
@@ -43,6 +47,9 @@ getDetailCountGroupCondition <- function(detail_config, count_group_value) {
   paste(count_group_system_condition, "AND", count_group_value_condition)
 }
 
+#' Get required resource detail columns
+#'
+#' Returns all metadata columns needed to create a configured detail sheet.
 getRequiredDetailColumns <- function(detail_config) {
   unique(c(
     detail_config$row_group_system_column,
@@ -52,6 +59,9 @@ getRequiredDetailColumns <- function(detail_config) {
   ))
 }
 
+#' Build a resource detail count query
+#'
+#' Builds availability counts for one configured resource detail row group.
 buildResourceDetailCountQuery <- function(
   table_metadata,
   grouping_columns,
@@ -94,6 +104,9 @@ buildResourceDetailCountQuery <- function(
     row_filter_condition = row_filter_condition
   )
 }
+#' Create a resource detail sheet
+#'
+#' Creates one sheet with repeated row groups and configured count groups.
 createResourceDetailSheet <- function(
   metadata,
   result,
@@ -186,6 +199,9 @@ createResourceDetailSheet <- function(
   sheet
 }
 
+#' Create configured resource detail sheets
+#'
+#' Builds all configured resource detail sheets that have available metadata.
 createResourceDetailSheets <- function(
   metadata,
   result,

@@ -1,3 +1,6 @@
+#' Get frontend checkbox group columns
+#'
+#' Returns the configured checkbox columns that belong to a frontend field.
 getFrontendCheckboxGroupColumns <- function(table_name, column_name, available_columns) {
   if (is.na(table_name)) {
     return(character())
@@ -15,6 +18,9 @@ getFrontendCheckboxGroupColumns <- function(table_name, column_name, available_c
   character()
 }
 
+#' Build a checked-value condition
+#'
+#' Builds the SQL condition that treats a frontend checkbox value as checked.
 getCheckedCondition <- function(column_name) {
   paste(
     quoteIdentifier(column_name),
@@ -23,6 +29,9 @@ getCheckedCondition <- function(column_name) {
   )
 }
 
+#' Build availability for calculated references
+#'
+#' Treats calculated reference columns as available only when they are not invalid.
 getCalculatedRefAvailableCondition <- function(column_name) {
   paste0(
     quoteIdentifier(column_name),
@@ -31,6 +40,9 @@ getCalculatedRefAvailableCondition <- function(column_name) {
   )
 }
 
+#' Get project-specific availability override
+#'
+#' Returns special availability logic for columns that need custom counting.
 getProjectAvailabilityOverrideCondition <- function(column_name, table_metadata) {
   table_name <- if ("TABLE_NAME" %in% names(table_metadata)) {
     table_metadata$TABLE_NAME[[1]]
@@ -56,6 +68,9 @@ getProjectAvailabilityOverrideCondition <- function(column_name, table_metadata)
   NA_character_
 }
 
+#' Get additional availability conditions
+#'
+#' Returns optional extra conditions that are added to the default value check.
 getProjectAvailabilityAdditionalCondition <- function(column_name) {
   if (endsWith(column_name, "_calculated_ref")) {
     return(getCalculatedRefAvailableCondition(column_name))

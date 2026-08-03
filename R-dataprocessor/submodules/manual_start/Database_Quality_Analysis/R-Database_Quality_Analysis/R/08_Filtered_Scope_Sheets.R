@@ -1,7 +1,13 @@
+#' Get metadata for one table
+#'
+#' Returns one table metadata block ordered by ordinal column position.
 getTableMetadata <- function(metadata, table_name) {
   metadata[TABLE_NAME == table_name][order(ORDINAL_POSITION)]
 }
 
+#' Get filtered-scope encounter metadata
+#'
+#' Loads and validates encounter and pids_per_ward metadata needed for scoped filters.
 getFilteredScopeEncounterWardMetadata <- function(metadata, required_encounter_columns) {
   encounter_metadata <- getTableMetadata(metadata, "encounter")
   pids_per_ward_metadata <- getTableMetadata(metadata, "pids_per_ward")
@@ -21,6 +27,9 @@ getFilteredScopeEncounterWardMetadata <- function(metadata, required_encounter_c
   )
 }
 
+#' Build a non-empty and non-invalid condition
+#'
+#' Builds a qualified SQL condition that excludes NULL, empty and invalid values.
 getInvalidAwareQualifiedCondition <- function(qualified_column) {
   paste(
     qualified_column,
@@ -33,6 +42,9 @@ getInvalidAwareQualifiedCondition <- function(qualified_column) {
   )
 }
 
+#' Build the filtered-scope ward join
+#'
+#' Builds the encounter to pids_per_ward join used by filtered-scope subqueries.
 getFilteredScopeEncounterWardJoinClause <- function(
   encounter_metadata,
   pids_per_ward_metadata,
@@ -55,6 +67,9 @@ getFilteredScopeEncounterWardJoinClause <- function(
   )
 }
 
+#' Build the filtered-scope case subquery
+#'
+#' Selects main encounter IDs that belong to the configured filtered scope.
 getFilteredScopeMainEncounterSubquery <- function(metadata) {
   scope_metadata <- getFilteredScopeEncounterWardMetadata(
     metadata,
@@ -84,6 +99,9 @@ getFilteredScopeMainEncounterSubquery <- function(metadata) {
     getInvalidAwareQualifiedCondition(main_encounter_column)
   )
 }
+#' Build the filtered-scope patient subquery
+#'
+#' Selects patient references and plain patient IDs belonging to the filtered scope.
 getFilteredScopePatientSubquery <- function(metadata) {
   scope_metadata <- getFilteredScopeEncounterWardMetadata(
     metadata,
@@ -123,6 +141,9 @@ getFilteredScopePatientSubquery <- function(metadata) {
     from_join_clause
   )
 }
+#' Find the encounter reference column for scoped filtering
+#'
+#' Resolves the calculated encounter reference column for case-dependent resources.
 getFilteredScopeEncounterCalculatedRefColumn <- function(table_metadata, grouping_columns) {
   table_name <- table_metadata$TABLE_NAME[[1]]
   if (!identical(table_metadata$TABLE_FAMILY[[1]], "FHIR")) {
@@ -146,6 +167,9 @@ getFilteredScopeEncounterCalculatedRefColumn <- function(table_metadata, groupin
   NA_character_
 }
 
+#' Build a case-dependent filtered-scope condition
+#'
+#' Filters rows to cases whose main encounter belongs to the filtered scope.
 getFilteredScopeCaseFilterCondition <- function(table_metadata, grouping_columns, main_encounter_subquery) {
   if (is.na(main_encounter_subquery)) {
     return(NA_character_)
@@ -167,6 +191,9 @@ getFilteredScopeCaseFilterCondition <- function(table_metadata, grouping_columns
   )
 }
 
+#' Build a patient-dependent filtered-scope condition
+#'
+#' Filters rows to patients that have at least one case in the filtered scope.
 getFilteredScopePatientFilterCondition <- function(table_metadata, grouping_columns, patient_subquery) {
   if (is.na(patient_subquery) || is.na(grouping_columns[["pid"]])) {
     return(NA_character_)
@@ -184,6 +211,9 @@ getFilteredScopePatientFilterCondition <- function(table_metadata, grouping_colu
   )
 }
 
+#' Build the filtered-scope condition for a resource
+#'
+#' Selects the case or patient filter based on the resource reference scope.
 getFilteredScopeFilterCondition <- function(
   table_metadata,
   grouping_columns,
@@ -208,6 +238,9 @@ getFilteredScopeFilterCondition <- function(
   NA_character_
 }
 
+#' Initialize a filtered-scope availability sheet
+#'
+#' Copies base report rows and clears calculated values before scoped counting.
 initializeFilteredScopeSheet <- function(result, table_names) {
   output_columns <- setdiff(names(result), c("TABLE_FAMILY", "RESOURCE_REFERENCE_SCOPE", "ORDINAL_POSITION"))
   sheet <- data.table::copy(result[TABLE_NAME %in% table_names])
@@ -229,6 +262,9 @@ initializeFilteredScopeSheet <- function(result, table_names) {
   sheet[, ..output_columns]
 }
 
+#' Create the filtered-scope FHIR sheet
+#'
+#' Builds a FHIR availability sheet restricted to the configured filtered scope.
 createFilteredScopeFhirSheet <- function(
   metadata,
   result,
@@ -329,6 +365,9 @@ createFilteredScopeFhirSheet <- function(
   sheet
 }
 
+#' Create a filtered-scope resource detail sheet
+#'
+#' Creates one resource detail sheet after applying the filtered-scope row filter.
 createFilteredScopeResourceDetailSheet <- function(
   metadata,
   result,
@@ -389,6 +428,9 @@ createFilteredScopeResourceDetailSheet <- function(
   )
 }
 
+#' Create filtered-scope resource detail sheets
+#'
+#' Builds filtered variants for all configured resource detail sheets.
 createFilteredScopeResourceDetailSheets <- function(
   metadata,
   result,
@@ -417,6 +459,9 @@ createFilteredScopeResourceDetailSheets <- function(
   sheets
 }
 
+#' Create configured filtered-scope FHIR sheets
+#'
+#' Returns the filtered FHIR sheet when it is configured and contains rows.
 createFilteredScopeFhirSheets <- function(
   metadata,
   result,

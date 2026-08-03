@@ -1,9 +1,15 @@
+#' Normalize a command-line argument name
+#'
+#' Converts command-line option names to lower snake case config keys.
 normalizeArgumentName <- function(argument_name) {
   argument_name <- sub("^-+", "", argument_name)
   argument_name <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", argument_name)
   tolower(gsub("-", "_", argument_name, fixed = TRUE))
 }
 
+#' Get command-line arguments
+#'
+#' Returns explicit arguments or the trailing arguments from the current R process.
 getCommandArguments <- function(command_arguments = NULL) {
   if (is.null(command_arguments)) {
     return(commandArgs(trailingOnly = TRUE))
@@ -14,6 +20,9 @@ getCommandArguments <- function(command_arguments = NULL) {
   command_arguments
 }
 
+#' Parse command-line config overrides
+#'
+#' Maps supported command-line key-value arguments to DQA config names.
 parseCommandLineConfig <- function(command_arguments = NULL) {
   command_arguments <- getCommandArguments(command_arguments)
   key_value_arguments <- command_arguments[grepl("=", command_arguments, fixed = TRUE)]
@@ -41,6 +50,9 @@ parseCommandLineConfig <- function(command_arguments = NULL) {
   parsed
 }
 
+#' Build the database quality analysis configuration
+#'
+#' Reads command-line, global-environment and default values into one config list.
 getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
   command_line_config <- parseCommandLineConfig(command_arguments)
 
@@ -95,6 +107,9 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
   )
 }
 
+#' Get configured filtered-scope sheet names
+#'
+#' Returns the base sheet names for which filtered-scope sheets should be created.
 getFilteredScopeSheetNames <- function(config) {
   if (!is.null(config$filtered_scope_sheet_names)) {
     return(config$filtered_scope_sheet_names[nzchar(config$filtered_scope_sheet_names)])
@@ -102,14 +117,23 @@ getFilteredScopeSheetNames <- function(config) {
   character()
 }
 
+#' Check whether filtered-scope sheets are configured
+#'
+#' Returns TRUE when at least one filtered-scope base sheet name is configured.
 isFilteredScopeSheetsEnabled <- function(config) {
   length(getFilteredScopeSheetNames(config)) > 0L
 }
 
+#' Check whether a sheet has a filtered-scope variant
+#'
+#' Tests whether a base sheet name is listed for filtered-scope generation.
 isFilteredScopeSheetConfigured <- function(sheet_name, config) {
   sheet_name %in% getFilteredScopeSheetNames(config)
 }
 
+#' Get the filtered-scope detail sheet suffix
+#'
+#' Returns the configured suffix used for filtered resource detail sheet names.
 getFilteredScopeDetailSheetSuffix <- function(config) {
   if (!is.null(config$filtered_scope_detail_sheet_suffix)) {
     return(config$filtered_scope_detail_sheet_suffix)
@@ -117,10 +141,16 @@ getFilteredScopeDetailSheetSuffix <- function(config) {
   "FILTERED"
 }
 
+#' Get the filtered-scope label
+#'
+#' Returns the configured suffix or a generic label for descriptions and logs.
 getFilteredScopeLabel <- function(config) {
   getFilteredScopeDetailSheetSuffix(config)
 }
 
+#' Build a filtered-scope sheet name
+#'
+#' Appends the configured suffix to a base sheet name when filtered output is enabled.
 getFilteredScopeSheetName <- function(sheet_name, config) {
   suffix <- getFilteredScopeDetailSheetSuffix(config)
   if (!nzchar(suffix)) {
@@ -129,6 +159,9 @@ getFilteredScopeSheetName <- function(sheet_name, config) {
   paste(sheet_name, suffix)
 }
 
+#' Parse grouping column overrides
+#'
+#' Converts configured grouping override strings into a nested lookup table.
 parseGroupingOverrides <- function(overrides) {
   empty_result <- data.table::data.table(
     TABLE_NAME = character(),
@@ -167,6 +200,9 @@ parseGroupingOverrides <- function(overrides) {
   result
 }
 
+#' Parse semicolon-separated name-value pairs
+#'
+#' Converts configuration strings like name=value into named character vectors.
 parseNameValuePairs <- function(value, entry_name) {
   if (length(value) > 1L) {
     pairs <- value
@@ -190,6 +226,9 @@ parseNameValuePairs <- function(value, entry_name) {
   result
 }
 
+#' Parse resource detail sheet configuration
+#'
+#' Builds resource detail sheet definitions from the configured sheet keys.
 parseResourceDetailSheets <- function(get_config_value) {
   sheet_names <- get_config_value("RESOURCE_DETAIL_SHEET_NAMES", character())
   if (!length(sheet_names)) {
@@ -199,6 +238,9 @@ parseResourceDetailSheets <- function(get_config_value) {
   parseResourceDetailSheetFields(sheet_names, get_config_value)
 }
 
+#' Parse resource detail sheet fields
+#'
+#' Reads the table, grouping and count settings for each configured detail sheet.
 parseResourceDetailSheetFields <- function(sheet_names, get_config_value) {
   # Resource detail sheets use the same grouping mechanism on two nested levels:
   # row_group creates the repeated row/table groups, and count_group creates
@@ -265,6 +307,9 @@ parseResourceDetailSheetFields <- function(sheet_names, get_config_value) {
   result
 }
 
+#' Read grouped detail sheet values
+#'
+#' Reads and validates named value lists for resource detail row or count groups.
 getResourceDetailGroupValueFields <- function(field_name, sheet_names, get_config_value) {
   value <- get_config_value(paste0("RESOURCE_DETAIL_", field_name), NULL)
   if (is.null(value)) {

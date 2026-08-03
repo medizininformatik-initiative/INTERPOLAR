@@ -1,3 +1,6 @@
+#' Normalize a database view name
+#'
+#' Removes configured prefixes and postfixes to derive the logical table name.
 normalizeViewName <- function(view_name, config) {
   table_name <- view_name
   if (startsWith(table_name, config$view_prefix)) {
@@ -9,6 +12,9 @@ normalizeViewName <- function(view_name, config) {
   table_name
 }
 
+#' Normalize a column description
+#'
+#' Converts missing or empty database comments to NA.
 normalizeColumnDescription <- function(column_description) {
   ifelse(
     is.na(column_description),
@@ -17,6 +23,9 @@ normalizeColumnDescription <- function(column_description) {
   )
 }
 
+#' Classify a table into a report family
+#'
+#' Assigns table names to FHIR, Frontend or Other report families.
 getTableFamily <- function(table_name) {
   if (endsWith(table_name, "_fe")) {
     return("Frontend")
@@ -27,6 +36,9 @@ getTableFamily <- function(table_name) {
   "FHIR"
 }
 
+#' Check whether a database view is included
+#'
+#' Applies configured include, exclude and additional-view patterns.
 isIncludedView <- function(view_name, config) {
   matches_pattern <- any(vapply(
     config$included_view_patterns,
@@ -45,6 +57,9 @@ isIncludedView <- function(view_name, config) {
   (matches_pattern || view_name %in% config$additional_views) && !excluded
 }
 
+#' Load metadata for configured views
+#'
+#' Reads column metadata for the views included in the DQA report.
 loadViewMetadata <- function(config) {
   logProgress("Loading view metadata from schema ", config$view_schema, ".")
   query <- paste0(
@@ -82,6 +97,9 @@ loadViewMetadata <- function(config) {
   metadata
 }
 
+#' Load metadata for history views
+#'
+#' Reads column metadata for history views used by value timestamp columns.
 loadHistoryMetadata <- function(config) {
   logProgress("Loading historical view metadata for value datetime columns.")
   query <- paste0(
@@ -112,6 +130,9 @@ loadHistoryMetadata <- function(config) {
   metadata[]
 }
 
+#' Load raw database metadata
+#'
+#' Queries information_schema and table comments for available view columns.
 loadDatabaseMetadata <- function() {
   logProgress("Loading neutral database metadata.")
   query <- paste0(
@@ -127,6 +148,9 @@ loadDatabaseMetadata <- function() {
   data.table::as.data.table(metadata)
 }
 
+#' Normalize raw database metadata
+#'
+#' Derives table names, report families and normalized column descriptions.
 normalizeMetadata <- function(metadata, config) {
   metadata <- data.table::as.data.table(metadata)
   if (!nrow(metadata)) {
@@ -159,10 +183,16 @@ normalizeMetadata <- function(metadata, config) {
   metadata[]
 }
 
+#' Build the history view name for a table
+#'
+#' Converts a last-version table name into its configured history view name.
 getHistoryViewName <- function(table_name, config) {
   paste0(config$view_prefix, table_name)
 }
 
+#' Resolve date source columns
+#'
+#' Determines which import or metadata timestamp columns are available for a table.
 getDateSources <- function(table_metadata, history_table_metadata, config) {
   sources <- data.table::data.table(
     source_name = character(),
@@ -201,6 +231,9 @@ getDateSources <- function(table_metadata, history_table_metadata, config) {
   sources
 }
 
+#' Check whether a column is technical
+#'
+#' Tests configured technical column names for a table and column.
 isTechnicalColumn <- function(table_name, column_name, config) {
   column_name %in% config$technical_columns |
     endsWith(column_name, "_raw_id") |
