@@ -60,88 +60,38 @@ buildResourceDetailCountQuery <- function(
   row_group_value,
   row_filter_condition = NA_character_
 ) {
-  table_ref <- quoteTable(
-    table_metadata$VIEW_SCHEMA[[1]],
-    table_metadata$VIEW_NAME[[1]]
-  )
-  data_types <- getMetadataDataTypes(table_metadata)
   row_group_condition <- getDetailRowGroupCondition(detail_config, row_group_value)
-  select_parts <- character()
-  alias_rows <- list()
-  alias_index <- 1L
+  count_groups <- buildConfiguredCountGroups(
+    grouping_columns,
+    extra_condition = row_group_condition
+  )
 
-  for (column_name in data_columns) {
-    filled_condition <- getValueAvailableCondition(column_name, table_metadata, data_types)
-    for (grouping_name in names(grouping_columns)) {
-      grouping_column <- grouping_columns[[grouping_name]]
-      if (is.na(grouping_column) || !grouping_column %in% table_metadata$COLUMN_NAME) {
-        next
-      }
-      alias <- paste0("count_", alias_index)
-      grouping_filled_condition <- getValueAvailableCondition(
-        grouping_column,
-        table_metadata,
-        data_types
-      )
-      select_parts <- c(
-        select_parts,
-        buildDistinctCountExpression(
-          c(filled_condition, grouping_filled_condition, row_group_condition),
-          grouping_column,
-          alias
+  resource_id_column <- grouping_columns[["resource_id"]]
+  detail_count_groups <- lapply(names(detail_config$count_group_values), function(count_group_name) {
+    data.table::data.table(
+      grouping_column = resource_id_column,
+      count_column = detail_config$count_group_count_columns[[count_group_name]],
+      extra_condition = paste(
+        row_group_condition,
+        "AND",
+        getDetailCountGroupCondition(
+          detail_config,
+          detail_config$count_group_values[[count_group_name]]
         )
       )
-      alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
-        alias = alias,
-        COLUMN_NAME = column_name,
-        count_column = DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
-      )
-      alias_index <- alias_index + 1L
-    }
-    for (count_group_name in names(detail_config$count_group_values)) {
-      grouping_column <- grouping_columns[["resource_id"]]
-      if (is.na(grouping_column) || !grouping_column %in% table_metadata$COLUMN_NAME) {
-        next
-      }
-      alias <- paste0("count_", alias_index)
-      grouping_filled_condition <- getValueAvailableCondition(
-        grouping_column,
-        table_metadata,
-        data_types
-      )
-      select_parts <- c(
-        select_parts,
-        buildDistinctCountExpression(
-          c(
-            filled_condition,
-            grouping_filled_condition,
-            row_group_condition,
-            getDetailCountGroupCondition(
-              detail_config,
-              detail_config$count_group_values[[count_group_name]]
-            )
-          ),
-          grouping_column,
-          alias
-        )
-      )
-      alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
-        alias = alias,
-        COLUMN_NAME = column_name,
-        count_column = detail_config$count_group_count_columns[[count_group_name]]
-      )
-      alias_index <- alias_index + 1L
-    }
-  }
+    )
+  })
 
-  alias_map <- data.table::rbindlist(alias_rows, use.names = TRUE)
-  if (!length(select_parts)) {
-    return(list(query = NA_character_, alias_map = alias_map))
-  }
+  count_groups <- data.table::rbindlist(
+    c(list(count_groups), detail_count_groups),
+    use.names = TRUE
+  )
 
-  list(
-    query = buildSelectQuery(select_parts, table_ref, row_filter_condition),
-    alias_map = alias_map
+  buildAvailabilityCountQuery(
+    table_metadata,
+    data_columns,
+    count_groups,
+    row_filter_condition = row_filter_condition
   )
 }
 createResourceDetailSheet <- function(

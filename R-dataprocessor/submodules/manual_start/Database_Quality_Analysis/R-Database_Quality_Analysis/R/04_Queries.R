@@ -97,12 +97,50 @@ getOptionalWhereClause <- function(row_filter_condition) {
   paste0("\nWHERE ", row_filter_condition)
 }
 
-buildCountQuery <- function(
+getEmptyCountAliasMap <- function() {
+  data.table::data.table(
+    alias = character(),
+    COLUMN_NAME = character(),
+    count_column = character()
+  )
+}
+
+buildConfiguredCountGroups <- function(grouping_columns, extra_condition = NA_character_) {
+  count_group_rows <- lapply(names(grouping_columns), function(grouping_name) {
+    count_column <- DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
+    if (is.null(count_column)) {
+      return(NULL)
+    }
+
+    data.table::data.table(
+      grouping_column = grouping_columns[[grouping_name]],
+      count_column = count_column,
+      extra_condition = extra_condition
+    )
+  })
+  count_group_rows <- Filter(Negate(is.null), count_group_rows)
+  if (!length(count_group_rows)) {
+    return(data.table::data.table(
+      grouping_column = character(),
+      count_column = character(),
+      extra_condition = character()
+    ))
+  }
+
+  data.table::rbindlist(count_group_rows, use.names = TRUE)
+}
+
+buildAvailabilityCountQuery <- function(
   table_metadata,
-  grouping_columns,
   data_columns,
+  count_groups,
   row_filter_condition = NA_character_
 ) {
+  empty_alias_map <- getEmptyCountAliasMap()
+  if (!length(data_columns) || !nrow(count_groups)) {
+    return(list(query = NA_character_, alias_map = empty_alias_map))
+  }
+
   table_ref <- quoteTable(
     table_metadata$VIEW_SCHEMA[[1]],
     table_metadata$VIEW_NAME[[1]]
@@ -115,11 +153,13 @@ buildCountQuery <- function(
 
   for (column_name in data_columns) {
     filled_condition <- getValueAvailableCondition(column_name, table_metadata, data_types)
-    for (grouping_name in names(grouping_columns)) {
-      grouping_column <- grouping_columns[[grouping_name]]
+    for (count_group_index in seq_len(nrow(count_groups))) {
+      count_group <- count_groups[count_group_index]
+      grouping_column <- count_group$grouping_column
       if (is.na(grouping_column) || !grouping_column %in% table_metadata$COLUMN_NAME) {
         next
       }
+
       alias <- paste0("count_", alias_index)
       grouping_filled_condition <- getValueAvailableCondition(
         grouping_column,
@@ -129,7 +169,7 @@ buildCountQuery <- function(
       select_parts <- c(
         select_parts,
         buildDistinctCountExpression(
-          c(filled_condition, grouping_filled_condition),
+          c(filled_condition, grouping_filled_condition, count_group$extra_condition),
           grouping_column,
           alias
         )
@@ -137,13 +177,17 @@ buildCountQuery <- function(
       alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
         alias = alias,
         COLUMN_NAME = column_name,
-        count_column = DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
+        count_column = count_group$count_column
       )
       alias_index <- alias_index + 1L
     }
   }
 
-  alias_map <- data.table::rbindlist(alias_rows, use.names = TRUE)
+  alias_map <- if (length(alias_rows)) {
+    data.table::rbindlist(alias_rows, use.names = TRUE)
+  } else {
+    empty_alias_map
+  }
   if (!length(select_parts)) {
     return(list(query = NA_character_, alias_map = alias_map))
   }
@@ -151,6 +195,20 @@ buildCountQuery <- function(
   list(
     query = buildSelectQuery(select_parts, table_ref, row_filter_condition),
     alias_map = alias_map
+  )
+}
+
+buildCountQuery <- function(
+  table_metadata,
+  grouping_columns,
+  data_columns,
+  row_filter_condition = NA_character_
+) {
+  buildAvailabilityCountQuery(
+    table_metadata,
+    data_columns,
+    buildConfiguredCountGroups(grouping_columns),
+    row_filter_condition = row_filter_condition
   )
 }
 buildValueDateRangeQuery <- function(
