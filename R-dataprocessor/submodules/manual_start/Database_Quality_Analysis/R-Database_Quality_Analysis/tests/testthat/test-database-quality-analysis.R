@@ -134,10 +134,18 @@ test_that("database quality analysis resource detail sheets are parsed", {
   expect_equal(unname(detail_config$count_group_values), c("IMP", "SS", "AMB", "OTHER"))
 })
 
+
+test_that("database quality analysis config defaults to no suppressed value summary columns", {
+  config <- getConfig(envir = new.env(parent = emptyenv()))
+
+  expect_equal(config$value_summary_suppressed_column_patterns, character())
+})
+
 test_that("database quality analysis config controls filtered scope sheets", {
   envir <- new.env(parent = emptyenv())
   assign("FILTERED_SCOPE_SHEET_NAMES", c("FHIR", "FHIR Encounter"), envir = envir)
   assign("FILTERED_SCOPE_DETAIL_SHEET_SUFFIX", "IP", envir = envir)
+  assign("VALUE_SUMMARY_SUPPRESSED_COLUMN_PATTERNS", c("_id$", "_ref$"), envir = envir)
 
   config <- getConfig(envir = envir)
 
@@ -149,6 +157,7 @@ test_that("database quality analysis config controls filtered scope sheets", {
   expect_equal(getFilteredScopeLabel(config), "IP")
   expect_equal(getFilteredScopeSheetName("FHIR", config), "FHIR IP")
   expect_equal(getFilteredScopeSheetName("FHIR Encounter", config), "FHIR Encounter IP")
+  expect_equal(config$value_summary_suppressed_column_patterns, c("_id$", "_ref$"))
 })
 
 
@@ -389,16 +398,16 @@ test_that("database quality analysis text value summary query counts values", {
     DATA_TYPE = "character varying"
   )
 
-  result <- buildTextValueSummaryQuery(table_metadata, c("obs_id", "obs_code_code"))
+  result <- buildTextValueSummaryQuery(table_metadata, c("obs_id", "obs_code_code"), "obs_id")
 
-  expect_match(result, "COUNT(*)::integer AS \"COUNT\"", fixed = TRUE)
+  expect_match(result, "COUNT(DISTINCT \"resource_values\".\"resource_id\")::integer", fixed = TRUE)
   expect_match(result, "'FHIR' AS \"TABLE_FAMILY\"", fixed = TRUE)
   expect_match(result, "'observation' AS \"TABLE_NAME\"", fixed = TRUE)
   expect_match(result, "CROSS JOIN LATERAL", fixed = TRUE)
   expect_match(result, "('obs_id', CASE WHEN \"source_row\".\"obs_id\" IS NULL", fixed = TRUE)
   expect_match(result, "('obs_code_code', CASE WHEN \"source_row\".\"obs_code_code\" IS NULL", fixed = TRUE)
   expect_match(result, "FROM \"db2dataprocessor_out\".\"v_observation_last_version\"", fixed = TRUE)
-  expect_match(result, "GROUP BY \"value_summary\".\"column_name\", \"value_summary\".\"value\"", fixed = TRUE)
+  expect_match(result, "GROUP BY \"resource_values\".\"column_name\", \"resource_values\".\"value\"", fixed = TRUE)
 })
 
 test_that("database quality analysis statistic value summary query batches aggregates", {
@@ -407,29 +416,31 @@ test_that("database quality analysis statistic value summary query batches aggre
     VIEW_NAME = "v_observation_last_version",
     TABLE_FAMILY = "FHIR",
     TABLE_NAME = "observation",
-    COLUMN_NAME = c("obs_value_quantity", "obs_effective_datetime"),
-    COLUMN_DESCRIPTION = c("value", "effective"),
-    ORDINAL_POSITION = 1:2,
-    DATA_TYPE = c("double precision", "timestamp without time zone")
+    COLUMN_NAME = c("obs_id", "obs_value_quantity", "obs_effective_datetime"),
+    COLUMN_DESCRIPTION = c("id", "value", "effective"),
+    ORDINAL_POSITION = 1:3,
+    DATA_TYPE = c("character varying", "double precision", "timestamp without time zone")
   )
 
   numeric_result <- buildStatisticValueSummaryQuery(
     table_metadata,
     "obs_value_quantity",
-    "numeric"
+    "numeric",
+    "obs_id"
   )
   datetime_result <- buildStatisticValueSummaryQuery(
     table_metadata,
     "obs_effective_datetime",
-    "datetime"
+    "datetime",
+    "obs_id"
   )
 
   expect_match(numeric_result$query, "MIN(\"source_row\".\"obs_value_quantity\"::double precision)", fixed = TRUE)
   expect_match(numeric_result$query, "PERCENTILE_CONT(0.5) WITHIN GROUP", fixed = TRUE)
   expect_match(numeric_result$query, "STDDEV_SAMP", fixed = TRUE)
-  expect_match(numeric_result$query, "COUNT(*) FILTER (WHERE NOT (\"source_row\".\"obs_value_quantity\" IS NOT NULL))::integer", fixed = TRUE)
+  expect_match(numeric_result$query, "(COUNT(DISTINCT \"source_row\".\"obs_id\") - COUNT(DISTINCT \"source_row\".\"obs_id\") FILTER (WHERE \"source_row\".\"obs_value_quantity\" IS NOT NULL))::integer", fixed = TRUE)
   expect_equal(unique(numeric_result$alias_map$COLUMN_NAME), "obs_value_quantity")
-  expect_equal(numeric_result$alias_map$result_column, c("MIN", "MAX", "AVG", "SE", "MEDIAN", "Q1", "Q3", "EMPTY"))
+  expect_equal(numeric_result$alias_map$result_column, c("MIN", "MAX", "AVG", "SE", "MEDIAN", "Q1", "Q3", "DISTINCT_VALUES", "EMPTY"))
 
   expect_match(datetime_result$query, "EXTRACT(EPOCH FROM \"source_row\".\"obs_effective_datetime\")", fixed = TRUE)
   expect_match(datetime_result$query, "'epoch'::timestamp", fixed = TRUE)
@@ -442,15 +453,21 @@ test_that("database quality analysis creates value summary reports", {
     VIEW_NAME = "v_observation_last_version",
     TABLE_FAMILY = "FHIR",
     TABLE_NAME = "observation",
-    COLUMN_NAME = c("obs_code_code", "obs_value_quantity", "obs_effective_datetime"),
-    COLUMN_DESCRIPTION = c("code", "value", "effective"),
-    ORDINAL_POSITION = 1:3,
-    DATA_TYPE = c("character varying", "double precision", "timestamp without time zone")
+    COLUMN_NAME = c("obs_id", "obs_code_code", "obs_value_quantity", "obs_effective_datetime"),
+    COLUMN_DESCRIPTION = c("id", "code", "value", "effective"),
+    ORDINAL_POSITION = 1:4,
+    DATA_TYPE = c("character varying", "character varying", "double precision", "timestamp without time zone")
+  )
+  config <- list(
+    count_batch_size = 2,
+    grouping_overrides = parseGroupingOverrides(character()),
+    value_summary_suppressed_column_patterns = c("_id$", "_ref$")
   )
   query_state <- new.env(parent = emptyenv())
   query_state$seen_queries <- character()
   query_fun <- function(query, lock_id = NULL) {
     query_state$seen_queries <- c(query_state$seen_queries, query)
+    aliases <- unique(regmatches(query, gregexpr("value_summary_[0-9]+", query))[[1]])
     if (grepl("CROSS JOIN LATERAL", query, fixed = TRUE)) {
       return(data.table::data.table(
         TABLE_FAMILY = "FHIR",
@@ -460,7 +477,9 @@ test_that("database quality analysis creates value summary reports", {
         COUNT = c(20L, 10L, 2L, 3L, 4L)
       ))
     }
-    aliases <- unique(regmatches(query, gregexpr("value_summary_[0-9]+", query))[[1]])
+    if (grepl("obs_id", query, fixed = TRUE) && !grepl("PERCENTILE_CONT", query, fixed = TRUE)) {
+      return(data.table::as.data.table(as.list(stats::setNames(c(3L, 0L)[seq_along(aliases)], aliases))))
+    }
     if (grepl("EXTRACT(EPOCH", query, fixed = TRUE)) {
       values <- c(
         as.POSIXct("2026-01-01 08:00:00", tz = "UTC"),
@@ -470,25 +489,30 @@ test_that("database quality analysis creates value summary reports", {
         as.POSIXct("2026-01-02 08:00:00", tz = "UTC"),
         as.POSIXct("2026-01-01 20:00:00", tz = "UTC"),
         as.POSIXct("2026-01-02 20:00:00", tz = "UTC"),
+        3L,
         1L
       )
       return(data.table::as.data.table(as.list(stats::setNames(values[seq_along(aliases)], aliases))))
     }
-    values <- c(1, 9, 5, 0.5, 5, 3, 7, 2)
+    values <- c(1, 9, 5, 0.5, 5, 3, 7, 4, 2)
     data.table::as.data.table(as.list(stats::setNames(values[seq_along(aliases)], aliases)))
   }
 
   result <- createValueSummaryReports(
     metadata,
-    config = list(count_batch_size = 2),
+    config = config,
     query_fun = query_fun
   )
 
   expect_equal(names(result), "observation")
   observation <- result$observation
   expect_equal(names(observation), DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_COLUMNS)
-  expect_equal(observation$COLUMN_NAME, c("obs_code_code", "obs_value_quantity", "obs_effective_datetime"))
+  expect_equal(observation$COLUMN_NAME, c("obs_id", "obs_code_code", "obs_value_quantity", "obs_effective_datetime"))
+  expect_equal(observation[COLUMN_NAME == "obs_id", DISTINCT_VALUES], 3L)
+  expect_true(is.na(observation[COLUMN_NAME == "obs_id", VALUE_COUNTS]))
+  expect_equal(observation[COLUMN_NAME == "obs_id", EMPTY], 0L)
   expect_equal(observation[COLUMN_NAME == "obs_code_code", VALUE_TYPE], "text")
+  expect_equal(observation[COLUMN_NAME == "obs_code_code", DISTINCT_VALUES], 4L)
   expect_equal(
     observation[COLUMN_NAME == "obs_code_code", VALUE_COUNTS],
     "'AMB': 20; 'IMP': 10; Other (count < 5): 5"
@@ -497,12 +521,14 @@ test_that("database quality analysis creates value summary reports", {
   expect_equal(observation[COLUMN_NAME == "obs_value_quantity", VALUE_TYPE], "numeric")
   expect_equal(observation[COLUMN_NAME == "obs_value_quantity", MIN], "1")
   expect_equal(observation[COLUMN_NAME == "obs_value_quantity", Q3], "7")
+  expect_equal(observation[COLUMN_NAME == "obs_value_quantity", DISTINCT_VALUES], 4L)
   expect_equal(observation[COLUMN_NAME == "obs_value_quantity", EMPTY], 2L)
   expect_equal(observation[COLUMN_NAME == "obs_effective_datetime", VALUE_TYPE], "datetime")
   expect_equal(observation[COLUMN_NAME == "obs_effective_datetime", MIN], "2026-01-01 08:00:00")
   expect_equal(observation[COLUMN_NAME == "obs_effective_datetime", SE], 3600)
+  expect_equal(observation[COLUMN_NAME == "obs_effective_datetime", DISTINCT_VALUES], 3L)
   expect_equal(observation[COLUMN_NAME == "obs_effective_datetime", EMPTY], 1L)
-  expect_length(query_state$seen_queries, 3L)
+  expect_length(query_state$seen_queries, 4L)
 })
 
 test_that("database quality analysis value summary reports use only FHIR metadata", {
@@ -520,14 +546,18 @@ test_that("database quality analysis value summary reports use only FHIR metadat
   query_state$seen_queries <- character()
   query_fun <- function(query, lock_id = NULL) {
     query_state$seen_queries <- c(query_state$seen_queries, query)
-    data.table::data.table(
-      COLUMN_NAME = "obs_id",
-      VALUE = "obs-1",
-      COUNT = 1L
-    )
+    aliases <- unique(regmatches(query, gregexpr("value_summary_[0-9]+", query))[[1]])
+    data.table::as.data.table(as.list(stats::setNames(c(1L, 0L)[seq_along(aliases)], aliases)))
   }
 
-  result <- createValueSummaryReports(metadata, query_fun = query_fun)
+  result <- createValueSummaryReports(
+    metadata,
+    config = list(
+      grouping_overrides = parseGroupingOverrides(character()),
+      value_summary_suppressed_column_patterns = "_id$"
+    ),
+    query_fun = query_fun
+  )
 
   expect_equal(names(result), "observation")
   expect_false("TABLE_FAMILY" %in% names(result$observation))
@@ -1687,14 +1717,15 @@ test_that("database quality analysis value summary writer creates zip archive", 
       COLUMN_NAME = "obs_code_code",
       DATA_TYPE = "character varying",
       VALUE_TYPE = "text",
+      DISTINCT_VALUES = 2L,
       VALUE_COUNTS = "'AMB': 20; 'IMP': 10",
       MIN = NA_character_,
       MAX = NA_character_,
       AVG = NA_character_,
-      SE = NA_real_,
       MEDIAN = NA_character_,
       Q1 = NA_character_,
       Q3 = NA_character_,
+      SE = NA_real_,
       EMPTY = 4L,
       check.names = FALSE
     )
@@ -1718,6 +1749,7 @@ test_that("database quality analysis value summary writer creates zip archive", 
   dir.create(extract_dir)
   utils::unzip(file_name, exdir = extract_dir)
   written_values <- data.table::fread(file.path(extract_dir, "observation.csv"), sep = ",")
+  expect_equal(written_values$DISTINCT_VALUES, 2L)
   expect_equal(written_values$VALUE_COUNTS, "'AMB': 20; 'IMP': 10")
   expect_equal(written_values$EMPTY, 4L)
 })
@@ -1754,14 +1786,15 @@ test_that("database quality analysis value summary writer handles relative outpu
       COLUMN_NAME = "obs_code_code",
       DATA_TYPE = "character varying",
       VALUE_TYPE = "text",
+      DISTINCT_VALUES = 2L,
       VALUE_COUNTS = "'AMB': 20",
       MIN = NA_character_,
       MAX = NA_character_,
       AVG = NA_character_,
-      SE = NA_real_,
       MEDIAN = NA_character_,
       Q1 = NA_character_,
       Q3 = NA_character_,
+      SE = NA_real_,
       EMPTY = 0L,
       check.names = FALSE
     )

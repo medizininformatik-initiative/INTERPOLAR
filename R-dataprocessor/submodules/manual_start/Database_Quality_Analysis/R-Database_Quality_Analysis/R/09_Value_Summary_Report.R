@@ -4,6 +4,7 @@ DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_COLUMNS <- c(
   "COLUMN_NAME",
   "DATA_TYPE",
   "VALUE_TYPE",
+  "DISTINCT_VALUES",
   "VALUE_COUNTS",
   "MIN",
   "MAX",
@@ -52,14 +53,15 @@ createEmptyValueSummaryRows <- function() {
     COLUMN_NAME = character(),
     DATA_TYPE = character(),
     VALUE_TYPE = character(),
+    DISTINCT_VALUES = integer(),
     VALUE_COUNTS = character(),
     MIN = character(),
     MAX = character(),
     AVG = character(),
-    SE = numeric(),
     MEDIAN = character(),
     Q1 = character(),
     Q3 = character(),
+    SE = numeric(),
     EMPTY = integer()
   )
 }
@@ -76,6 +78,9 @@ normalizeValueSummaryColumnClasses <- function(rows) {
   for (column_name in intersect(character_columns, names(rows))) {
     rows[, (column_name) := formatValueSummaryOutputValue(get(column_name))]
   }
+  if ("DISTINCT_VALUES" %in% names(rows)) {
+    rows[, DISTINCT_VALUES := as.integer(DISTINCT_VALUES)]
+  }
   if ("VALUE_COUNTS" %in% names(rows)) {
     rows[, VALUE_COUNTS := as.character(VALUE_COUNTS)]
   }
@@ -88,25 +93,71 @@ normalizeValueSummaryColumnClasses <- function(rows) {
   rows
 }
 
+getValueSummarySuppressedColumnPatterns <- function(config) {
+  patterns <- config$value_summary_suppressed_column_patterns
+  if (is.null(patterns)) {
+    return(character())
+  }
+  patterns[nzchar(patterns)]
+}
+
+shouldSuppressValueSummaryValues <- function(column_name, config) {
+  patterns <- getValueSummarySuppressedColumnPatterns(config)
+  if (!length(patterns)) {
+    return(FALSE)
+  }
+  any(vapply(patterns, grepl, logical(1), x = column_name))
+}
+
+getValueSummaryResourceIdColumn <- function(table_metadata, config) {
+  grouping_columns <- tryCatch(
+    inferGroupingColumns(table_metadata, config),
+    error = function(error) {
+      logProgress(
+        "Skipping value details for table ",
+        table_metadata$TABLE_NAME[[1]],
+        ": ",
+        conditionMessage(error),
+        "."
+      )
+      return(NULL)
+    }
+  )
+  if (is.null(grouping_columns)) {
+    return(NA_character_)
+  }
+  resource_id_column <- grouping_columns[["resource_id"]]
+  if (is.na(resource_id_column) || !resource_id_column %in% table_metadata$COLUMN_NAME) {
+    logProgress(
+      "Skipping value details for table ",
+      table_metadata$TABLE_NAME[[1]],
+      ": no resource_id grouping column available."
+    )
+    return(NA_character_)
+  }
+  resource_id_column
+}
+
 createValueSummaryRow <- function(table_metadata, column_name, value_type) {
   column_metadata <- table_metadata[COLUMN_NAME == column_name][1]
   data.table::data.table(
     COLUMN_NAME = column_name,
     DATA_TYPE = column_metadata$DATA_TYPE,
     VALUE_TYPE = value_type,
+    DISTINCT_VALUES = NA_integer_,
     VALUE_COUNTS = NA_character_,
     MIN = NA_character_,
     MAX = NA_character_,
     AVG = NA_character_,
-    SE = NA_real_,
     MEDIAN = NA_character_,
     Q1 = NA_character_,
     Q3 = NA_character_,
+    SE = NA_real_,
     EMPTY = NA_integer_
   )
 }
 
-buildTextValueSummaryQuery <- function(table_metadata, data_columns) {
+buildTextValueSummaryQuery <- function(table_metadata, data_columns, resource_id_column) {
   missing_columns <- setdiff(data_columns, table_metadata$COLUMN_NAME)
   if (length(missing_columns)) {
     stop(
@@ -126,10 +177,13 @@ buildTextValueSummaryQuery <- function(table_metadata, data_columns) {
 
   table_alias <- "source_row"
   value_alias <- "value_summary"
+  filled_alias <- "filled_resources"
+  resource_values_alias <- "resource_values"
   table_ref <- quoteTable(
     table_metadata$VIEW_SCHEMA[[1]],
     table_metadata$VIEW_NAME[[1]]
   )
+  resource_id_ref <- quoteQualifiedIdentifier(table_alias, resource_id_column)
   value_rows <- vapply(data_columns, function(column_name) {
     column_ref <- quoteQualifiedIdentifier(table_alias, column_name)
     paste0(
@@ -146,7 +200,47 @@ buildTextValueSummaryQuery <- function(table_metadata, data_columns) {
   }, character(1))
 
   paste0(
-    "SELECT\n  ",
+    "WITH ",
+    quoteIdentifier(resource_values_alias),
+    " AS (\n  SELECT\n    ",
+    resource_id_ref,
+    " AS ",
+    quoteIdentifier("resource_id"),
+    ",\n    ",
+    quoteQualifiedIdentifier(value_alias, "column_name"),
+    " AS ",
+    quoteIdentifier("column_name"),
+    ",\n    ",
+    quoteQualifiedIdentifier(value_alias, "value"),
+    " AS ",
+    quoteIdentifier("value"),
+    "\n  FROM ",
+    table_ref,
+    " ",
+    quoteIdentifier(table_alias),
+    "\n  CROSS JOIN LATERAL (\n    VALUES\n      ",
+    paste(value_rows, collapse = ",\n      "),
+    "\n  ) AS ",
+    quoteIdentifier(value_alias),
+    "(",
+    paste(vapply(c("column_name", "value"), quoteIdentifier, character(1)), collapse = ", "),
+    ")\n  GROUP BY ",
+    resource_id_ref,
+    ", ",
+    quoteQualifiedIdentifier(value_alias, "column_name"),
+    ", ",
+    quoteQualifiedIdentifier(value_alias, "value"),
+    "\n), ",
+    quoteIdentifier(filled_alias),
+    " AS (\n  SELECT DISTINCT ",
+    quoteIdentifier("resource_id"),
+    ", ",
+    quoteIdentifier("column_name"),
+    "\n  FROM ",
+    quoteIdentifier(resource_values_alias),
+    "\n  WHERE ",
+    quoteIdentifier("value"),
+    " IS NOT NULL\n)\nSELECT\n  ",
     quoteSqlString(table_metadata$TABLE_FAMILY[[1]]),
     " AS ",
     quoteIdentifier("TABLE_FAMILY"),
@@ -155,33 +249,45 @@ buildTextValueSummaryQuery <- function(table_metadata, data_columns) {
     " AS ",
     quoteIdentifier("TABLE_NAME"),
     ",\n  ",
-    quoteQualifiedIdentifier(value_alias, "column_name"),
+    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
     " AS ",
     quoteIdentifier("COLUMN_NAME"),
     ",\n  ",
-    quoteQualifiedIdentifier(value_alias, "value"),
+    quoteQualifiedIdentifier(resource_values_alias, "value"),
     " AS ",
     quoteIdentifier("VALUE"),
-    ",\n  COUNT(*)::integer AS ",
+    ",\n  CASE WHEN ",
+    quoteQualifiedIdentifier(resource_values_alias, "value"),
+    " IS NULL THEN\n    COUNT(DISTINCT ",
+    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
+    ") FILTER (WHERE ",
+    quoteQualifiedIdentifier(filled_alias, "resource_id"),
+    " IS NULL)::integer\n  ELSE\n    COUNT(DISTINCT ",
+    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
+    ")::integer\n  END AS ",
     quoteIdentifier("COUNT"),
     "\nFROM ",
-    table_ref,
-    " ",
-    quoteIdentifier(table_alias),
-    "\nCROSS JOIN LATERAL (\n  VALUES\n    ",
-    paste(value_rows, collapse = ",\n    "),
-    "\n) AS ",
-    quoteIdentifier(value_alias),
-    "(",
-    paste(vapply(c("column_name", "value"), quoteIdentifier, character(1)), collapse = ", "),
-    ")\nGROUP BY ",
-    quoteQualifiedIdentifier(value_alias, "column_name"),
+    quoteIdentifier(resource_values_alias),
+    "\nLEFT JOIN ",
+    quoteIdentifier(filled_alias),
+    " ON ",
+    quoteQualifiedIdentifier(filled_alias, "resource_id"),
+    " = ",
+    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
+    " AND ",
+    quoteQualifiedIdentifier(filled_alias, "column_name"),
+    " = ",
+    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
+    "\nGROUP BY ",
+    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
     ", ",
-    quoteQualifiedIdentifier(value_alias, "value"),
+    quoteQualifiedIdentifier(resource_values_alias, "value"),
     "\nORDER BY ",
-    quoteQualifiedIdentifier(value_alias, "column_name"),
-    " ASC, COUNT(*) DESC, ",
-    quoteQualifiedIdentifier(value_alias, "value"),
+    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
+    " ASC, COUNT(DISTINCT ",
+    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
+    ") DESC, ",
+    quoteQualifiedIdentifier(resource_values_alias, "value"),
     " ASC"
   )
 }
@@ -256,7 +362,7 @@ getStatisticSummaryExpressions <- function(column_ref, value_type, filled_condit
   )
 }
 
-buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_type) {
+buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_type, resource_id_column) {
   missing_columns <- setdiff(data_columns, table_metadata$COLUMN_NAME)
   if (length(missing_columns)) {
     stop(
@@ -279,6 +385,7 @@ buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_
     table_metadata$VIEW_SCHEMA[[1]],
     table_metadata$VIEW_NAME[[1]]
   )
+  resource_id_ref <- quoteQualifiedIdentifier(table_alias, resource_id_column)
   select_parts <- character()
   alias_rows <- list()
   alias_index <- 0L
@@ -286,9 +393,23 @@ buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_
   for (column_name in data_columns) {
     column_ref <- quoteQualifiedIdentifier(table_alias, column_name)
     filled_condition <- paste0(column_ref, " IS NOT NULL")
-    empty_condition <- paste0("NOT (", filled_condition, ")")
     expressions <- getStatisticSummaryExpressions(column_ref, value_type, filled_condition)
-    expressions$EMPTY <- paste0("COUNT(*) FILTER (WHERE ", empty_condition, ")::integer")
+    expressions$DISTINCT_VALUES <- paste0(
+      "COUNT(DISTINCT ",
+      column_ref,
+      ") FILTER (WHERE ",
+      filled_condition,
+      ")::integer"
+    )
+    expressions$EMPTY <- paste0(
+      "(COUNT(DISTINCT ",
+      resource_id_ref,
+      ") - COUNT(DISTINCT ",
+      resource_id_ref,
+      ") FILTER (WHERE ",
+      filled_condition,
+      "))::integer"
+    )
 
     for (result_column in names(expressions)) {
       alias_index <- alias_index + 1L
@@ -316,17 +437,104 @@ buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_
   )
 }
 
+buildSuppressedValueSummaryQuery <- function(table_metadata, data_columns, resource_id_column) {
+  data_columns <- intersect(data_columns, table_metadata$COLUMN_NAME)
+  if (!length(data_columns)) {
+    return(list(query = NA_character_, alias_map = data.table::data.table()))
+  }
+
+  table_alias <- "source_row"
+  table_ref <- quoteTable(
+    table_metadata$VIEW_SCHEMA[[1]],
+    table_metadata$VIEW_NAME[[1]]
+  )
+  resource_id_ref <- quoteQualifiedIdentifier(table_alias, resource_id_column)
+  select_parts <- character()
+  alias_rows <- list()
+  alias_index <- 0L
+
+  for (column_name in data_columns) {
+    column_ref <- quoteQualifiedIdentifier(table_alias, column_name)
+    filled_condition <- paste0(
+      column_ref,
+      " IS NOT NULL AND ",
+      column_ref,
+      "::text <> ",
+      quoteSqlString("")
+    )
+    expressions <- list(
+      DISTINCT_VALUES = paste0(
+        "COUNT(DISTINCT ",
+        column_ref,
+        ") FILTER (WHERE ",
+        filled_condition,
+        ")::integer"
+      ),
+      EMPTY = paste0(
+        "(COUNT(DISTINCT ",
+        resource_id_ref,
+        ") - COUNT(DISTINCT ",
+        resource_id_ref,
+        ") FILTER (WHERE ",
+        filled_condition,
+        "))::integer"
+      )
+    )
+
+    for (result_column in names(expressions)) {
+      alias_index <- alias_index + 1L
+      alias <- paste0("value_summary_", alias_index)
+      select_parts <- c(select_parts, paste0(expressions[[result_column]], " AS ", quoteIdentifier(alias)))
+      alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
+        COLUMN_NAME = column_name,
+        result_column = result_column,
+        alias = alias
+      )
+    }
+  }
+
+  list(
+    query = paste0(
+      "SELECT\n  ",
+      paste(select_parts, collapse = ",\n  "),
+      "\nFROM ",
+      table_ref,
+      " ",
+      quoteIdentifier(table_alias)
+    ),
+    alias_map = data.table::rbindlist(alias_rows, use.names = TRUE)
+  )
+}
+
+summariseSuppressedValueSummary <- function(summary_result, alias_map, table_metadata, data_columns) {
+  rows <- lapply(data_columns, function(column_name) {
+    column_metadata <- table_metadata[COLUMN_NAME == column_name][1]
+    row <- createValueSummaryRow(table_metadata, column_name, column_metadata$VALUE_TYPE)
+    column_aliases <- alias_map[COLUMN_NAME == column_name]
+    for (row_index in seq_len(nrow(column_aliases))) {
+      alias_row <- column_aliases[row_index]
+      value <- summary_result[[alias_row$alias]][[1]]
+      row[, (alias_row$result_column) := value]
+    }
+    row
+  })
+  rows <- lapply(rows, normalizeValueSummaryColumnClasses)
+  data.table::rbindlist(rows, use.names = TRUE)
+}
+
 summariseTextValueCounts <- function(counts, table_metadata, data_columns) {
   rows <- lapply(data_columns, function(column_name) {
     column_counts <- counts[COLUMN_NAME == column_name]
     empty_count <- column_counts[is.na(VALUE), sum(COUNT, na.rm = TRUE)]
     value_counts <- column_counts[!is.na(VALUE)]
     value_counts <- value_counts[, .(COUNT = sum(COUNT, na.rm = TRUE)), by = VALUE]
+    distinct_values <- nrow(value_counts)
     value_count_text <- NA_character_
     if (nrow(value_counts)) {
       value_count_text <- formatValueCounts(value_counts$VALUE, value_counts$COUNT)
     }
     row <- createValueSummaryRow(table_metadata, column_name, "text")
+    row[, DISTINCT_VALUES := as.integer(distinct_values)]
     row[, VALUE_COUNTS := value_count_text]
     row[, EMPTY := as.integer(empty_count)]
     row
@@ -365,6 +573,13 @@ createValueSummaryReports <- function(
     table_start_time <- Sys.time()
     table_metadata <- metadata[TABLE_NAME == table_name][order(ORDINAL_POSITION)]
     table_metadata[, VALUE_TYPE := vapply(DATA_TYPE, getValueSummaryType, character(1))]
+    table_metadata[, SUPPRESS_VALUES := vapply(
+      COLUMN_NAME,
+      shouldSuppressValueSummaryValues,
+      logical(1),
+      config = config
+    )]
+    resource_id_column <- getValueSummaryResourceIdColumn(table_metadata, config)
     data_columns <- table_metadata$COLUMN_NAME
     column_batches <- split(data_columns, ceiling(seq_along(data_columns) / count_batch_size))
     table_rows <- list()
@@ -381,72 +596,112 @@ createValueSummaryReports <- function(
       "."
     )
 
-    for (batch_index in seq_along(column_batches)) {
-      data_column_batch <- column_batches[[batch_index]]
-      batch_metadata <- table_metadata[COLUMN_NAME %in% data_column_batch]
-      if (length(column_batches) > 1L) {
-        logProgress(
-          "Value summary for table ",
-          table_name,
-          ": batch ",
-          batch_index,
-          "/",
-          length(column_batches),
-          " with ",
-          formatCountLabel(length(data_column_batch), "column"),
-          "."
-        )
-      }
-
-      text_columns <- batch_metadata[VALUE_TYPE == "text", COLUMN_NAME]
-      if (length(text_columns)) {
-        text_query <- buildTextValueSummaryQuery(table_metadata, text_columns)
-        text_counts <- query_fun(
-          text_query,
-          lock_id = paste0(
-            "calculate database quality analysis text value summary for ",
+    if (is.na(resource_id_column)) {
+      table_rows[[length(table_rows) + 1L]] <- data.table::rbindlist(
+        lapply(data_columns, function(column_name) {
+          column_metadata <- table_metadata[COLUMN_NAME == column_name][1]
+          createValueSummaryRow(table_metadata, column_name, column_metadata$VALUE_TYPE)
+        }),
+        use.names = TRUE
+      )
+    } else {
+      for (batch_index in seq_along(column_batches)) {
+        data_column_batch <- column_batches[[batch_index]]
+        batch_metadata <- table_metadata[COLUMN_NAME %in% data_column_batch]
+        if (length(column_batches) > 1L) {
+          logProgress(
+            "Value summary for table ",
             table_name,
-            " batch ",
-            batch_index
+            ": batch ",
+            batch_index,
+            "/",
+            length(column_batches),
+            " with ",
+            formatCountLabel(length(data_column_batch), "column"),
+            "."
           )
-        )
-        text_counts <- data.table::as.data.table(text_counts)
-        table_rows[[length(table_rows) + 1L]] <- summariseTextValueCounts(
-          text_counts,
-          table_metadata,
-          text_columns
-        )
-      }
-
-      for (value_type in c("numeric", "datetime")) {
-        statistic_columns <- batch_metadata[VALUE_TYPE == value_type, COLUMN_NAME]
-        if (!length(statistic_columns)) {
-          next
         }
-        statistic_query <- buildStatisticValueSummaryQuery(
-          table_metadata,
-          statistic_columns,
-          value_type
-        )
-        statistic_result <- query_fun(
-          statistic_query$query,
-          lock_id = paste0(
-            "calculate database quality analysis ",
-            value_type,
-            " value summary for ",
-            table_name,
-            " batch ",
-            batch_index
+
+        suppressed_columns <- batch_metadata[SUPPRESS_VALUES == TRUE, COLUMN_NAME]
+        if (length(suppressed_columns)) {
+          suppressed_query <- buildSuppressedValueSummaryQuery(
+            table_metadata,
+            suppressed_columns,
+            resource_id_column
           )
-        )
-        statistic_result <- data.table::as.data.table(statistic_result)
-        table_rows[[length(table_rows) + 1L]] <- summariseStatisticValues(
-          statistic_result,
-          statistic_query$alias_map,
-          table_metadata,
-          statistic_columns,
-          value_type
-        )
+          suppressed_result <- query_fun(
+            suppressed_query$query,
+            lock_id = paste0(
+              "calculate database quality analysis suppressed value summary for ",
+              table_name,
+              " batch ",
+              batch_index
+            )
+          )
+          suppressed_result <- data.table::as.data.table(suppressed_result)
+          table_rows[[length(table_rows) + 1L]] <- summariseSuppressedValueSummary(
+            suppressed_result,
+            suppressed_query$alias_map,
+            table_metadata,
+            suppressed_columns
+          )
+        }
+
+        text_columns <- batch_metadata[VALUE_TYPE == "text" & SUPPRESS_VALUES == FALSE, COLUMN_NAME]
+        if (length(text_columns)) {
+          text_query <- buildTextValueSummaryQuery(
+            table_metadata,
+            text_columns,
+            resource_id_column
+          )
+          text_counts <- query_fun(
+            text_query,
+            lock_id = paste0(
+              "calculate database quality analysis text value summary for ",
+              table_name,
+              " batch ",
+              batch_index
+            )
+          )
+          text_counts <- data.table::as.data.table(text_counts)
+          table_rows[[length(table_rows) + 1L]] <- summariseTextValueCounts(
+            text_counts,
+            table_metadata,
+            text_columns
+          )
+        }
+
+        for (value_type in c("numeric", "datetime")) {
+          statistic_columns <- batch_metadata[VALUE_TYPE == value_type & SUPPRESS_VALUES == FALSE, COLUMN_NAME]
+          if (!length(statistic_columns)) {
+            next
+          }
+          statistic_query <- buildStatisticValueSummaryQuery(
+            table_metadata,
+            statistic_columns,
+            value_type,
+            resource_id_column
+          )
+          statistic_result <- query_fun(
+            statistic_query$query,
+            lock_id = paste0(
+              "calculate database quality analysis ",
+              value_type,
+              " value summary for ",
+              table_name,
+              " batch ",
+              batch_index
+            )
+          )
+          statistic_result <- data.table::as.data.table(statistic_result)
+          table_rows[[length(table_rows) + 1L]] <- summariseStatisticValues(
+            statistic_result,
+            statistic_query$alias_map,
+            table_metadata,
+            statistic_columns,
+            value_type
+          )
+        }
       }
     }
 

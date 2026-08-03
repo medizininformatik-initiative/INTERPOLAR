@@ -47,6 +47,17 @@ GROUPING_OVERRIDES = [
   "medikationsanalyse_fe|meda_id|record_id|fall_meda_id"
 ]
 
+# Value-summary columns whose concrete values and statistics should not be exported.
+# Patterns are regular expressions matched against COLUMN_NAME. DISTINCT_VALUES
+# and EMPTY are still calculated for these columns.
+VALUE_SUMMARY_SUPPRESSED_COLUMN_PATTERNS = [
+  "_ref$",
+  "_id$",
+  "_identifier_value$",
+  "_display$",
+  "_text$"
+]
+
 # Optional resource detail sheets. The entries belong together by position: the
 # first sheet name uses the first table name, row group, and count group settings.
 # ROW_GROUP_VALUES defines the repeated table blocks. COUNT_GROUP_VALUES defines

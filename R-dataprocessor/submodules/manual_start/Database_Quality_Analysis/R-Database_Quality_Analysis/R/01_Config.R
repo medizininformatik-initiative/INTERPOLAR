@@ -87,6 +87,10 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     grouping_overrides = parseGroupingOverrides(getConfigValue("GROUPING_OVERRIDES", character())),
     filtered_scope_sheet_names = getConfigValue("FILTERED_SCOPE_SHEET_NAMES", character()),
     filtered_scope_detail_sheet_suffix = getConfigValue("FILTERED_SCOPE_DETAIL_SHEET_SUFFIX", "FILTERED"),
+    value_summary_suppressed_column_patterns = getConfigValue(
+      "VALUE_SUMMARY_SUPPRESSED_COLUMN_PATTERNS",
+      character()
+    ),
     resource_detail_sheets = parseResourceDetailSheets(getConfigValue)
   )
 }
