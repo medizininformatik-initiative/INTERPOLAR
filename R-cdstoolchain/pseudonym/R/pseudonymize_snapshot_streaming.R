@@ -45,7 +45,9 @@ buildSnapshotMedicationSourceQuery <- function(
   source_fields,
   medication_relation,
   spec,
-  enrichment_columns = c(spec[["system_column"]], spec[["code_column"]])
+  enrichment_columns = c(spec[["system_column"]], spec[["code_column"]]),
+  ingredient_reference_column =
+    SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN
 ) {
   source_alias <- "snapshot_source"
   medication_alias <- "medication_codes"
@@ -62,11 +64,138 @@ buildSnapshotMedicationSourceQuery <- function(
   quoted_med_id <- snapshotQuotedColumn(connection, "med_id")
   quoted_med_system <- snapshotQuotedColumn(connection, "med_code_system")
   quoted_med_code <- snapshotQuotedColumn(connection, "med_code_code")
+  quoted_issue_target <- snapshotQuotedColumn(
+    connection,
+    SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN
+  )
   normalized_reference <- paste0(
     "regexp_replace(regexp_replace(", quoted_reference,
     "::text, '^\\[[^]]+\\]', ''), '^Medication/', '')"
   )
-
+  medication_nodes_query <- paste0(
+    "SELECT DISTINCT ", quoted_med_id, "::text AS medication_id\n",
+    "FROM ", medication_relation, "\n",
+    "WHERE NULLIF(", quoted_med_id, "::text, '') IS NOT NULL"
+  )
+  medication_edges_query <- if (is.null(ingredient_reference_column)) {
+    paste(
+      "SELECT NULL::text AS source_medication_id,",
+      "NULL::text AS target_medication_id",
+      "WHERE FALSE"
+    )
+  } else {
+    quoted_ingredient_reference <- snapshotQuotedColumn(
+      connection,
+      ingredient_reference_column
+    )
+    normalized_ingredient_reference <- paste0(
+      "regexp_replace(regexp_replace(", quoted_ingredient_reference,
+      "::text, '^\\[[^]]+\\]', ''), '^Medication/', '')"
+    )
+    paste0(
+      "SELECT DISTINCT ", quoted_med_id,
+      "::text AS source_medication_id,\n",
+      normalized_ingredient_reference, " AS target_medication_id\n",
+      "FROM ", medication_relation, "\n",
+      "WHERE NULLIF(", quoted_med_id, "::text, '') IS NOT NULL\n",
+      "AND NULLIF(", normalized_ingredient_reference, ", '') IS NOT NULL"
+    )
+  }
+  source_roots_query <- paste0(
+    "SELECT DISTINCT ", normalized_reference, " AS root_medication_id\n",
+    "FROM ", source_relation, " ", source_alias, "\n",
+    "WHERE NULLIF(", normalized_reference, ", '') IS NOT NULL"
+  )
+  medication_walk_query <- paste(
+    "SELECT root_medication_id, root_medication_id",
+    "FROM source_roots",
+    # UNION deduplicates every root/node pair, so cycles terminate naturally.
+    "UNION",
+    "SELECT medication_walk.root_medication_id,",
+    "medication_edges.target_medication_id",
+    "FROM medication_walk",
+    "JOIN medication_edges",
+    "ON medication_edges.source_medication_id = medication_walk.medication_id",
+    sep = "\n"
+  )
+  medication_code_values_query <- paste0(
+    "SELECT DISTINCT medication_walk.root_medication_id,\n",
+    "medication.", quoted_med_system, " AS medication_system,\n",
+    "medication.", quoted_med_code, " AS medication_code\n",
+    "FROM medication_walk\n",
+    "JOIN ", medication_relation, " medication\n",
+    "ON medication.", quoted_med_id,
+    "::text = medication_walk.medication_id\n",
+    "WHERE NULLIF(medication.", quoted_med_system,
+    "::text, '') IS NOT NULL\n",
+    "AND NULLIF(medication.", quoted_med_code, "::text, '') IS NOT NULL"
+  )
+  medication_codes_query <- paste(
+    "SELECT root_medication_id, medication_system, medication_code,",
+    "row_number() OVER (",
+    "  PARTITION BY root_medication_id",
+    "  ORDER BY medication_system, medication_code",
+    ") AS code_number",
+    "FROM medication_code_values",
+    sep = "\n"
+  )
+  medication_issues_query <- paste(
+    "SELECT DISTINCT medication_walk.root_medication_id,",
+    "'missing_medication'::text AS issue_type,",
+    "medication_walk.medication_id AS related_medication_id",
+    "FROM medication_walk",
+    "LEFT JOIN medication_nodes",
+    "ON medication_nodes.medication_id = medication_walk.medication_id",
+    "WHERE medication_nodes.medication_id IS NULL",
+    "UNION",
+    "SELECT source_roots.root_medication_id,",
+    "'no_reachable_code'::text AS issue_type,",
+    "source_roots.root_medication_id AS related_medication_id",
+    "FROM source_roots",
+    "JOIN medication_nodes",
+    "ON medication_nodes.medication_id = source_roots.root_medication_id",
+    "WHERE NOT EXISTS (",
+    "  SELECT 1",
+    "  FROM medication_code_values",
+    paste0(
+      "  WHERE medication_code_values.root_medication_id = ",
+      "source_roots.root_medication_id"
+    ),
+    ")",
+    sep = "\n"
+  )
+  medication_issue_summary_query <- paste(
+    "SELECT root_medication_id,",
+    "string_agg(",
+    "  issue_type || E'\\t' || related_medication_id,",
+    "  E'\\n' ORDER BY issue_type, related_medication_id",
+    ") AS issues",
+    "FROM medication_issues",
+    "GROUP BY root_medication_id",
+    sep = "\n"
+  )
+  ctes <- c(
+    paste0("medication_nodes AS (\n", medication_nodes_query, "\n)"),
+    paste0("medication_edges AS (\n", medication_edges_query, "\n)"),
+    paste0("source_roots AS (\n", source_roots_query, "\n)"),
+    paste0(
+      "medication_walk(root_medication_id, medication_id) AS (\n",
+      medication_walk_query,
+      "\n)"
+    ),
+    paste0(
+      "medication_code_values AS (\n",
+      medication_code_values_query,
+      "\n)"
+    ),
+    paste0(medication_alias, " AS (\n", medication_codes_query, "\n)"),
+    paste0("medication_issues AS (\n", medication_issues_query, "\n)"),
+    paste0(
+      "medication_issue_summary AS (\n",
+      medication_issue_summary_query,
+      "\n)"
+    )
+  )
   enrichment_select <- c(
     if (system_column %in% enrichment_columns) {
       paste0(
@@ -81,19 +210,27 @@ buildSnapshotMedicationSourceQuery <- function(
       )
     }
   )
+  issue_select <- paste0(
+    # Issues are attached once per source row, not once per resolved code.
+    "CASE WHEN COALESCE(", medication_alias, ".code_number, 1) = 1 ",
+    "THEN medication_issue_summary.issues ELSE NULL END AS ",
+    quoted_issue_target
+  )
+  select_query <- paste0(
+    "SELECT ",
+    paste(c(source_columns, enrichment_select, issue_select), collapse = ",\n"),
+    "\nFROM ", source_relation, " ", source_alias, "\n",
+    "LEFT JOIN ", medication_alias, "\n",
+    "ON ", medication_alias, ".root_medication_id = ", normalized_reference,
+    "\nLEFT JOIN medication_issue_summary\n",
+    "ON medication_issue_summary.root_medication_id = ", normalized_reference
+  )
 
   paste0(
-    "WITH ", medication_alias, " AS (",
-    "SELECT DISTINCT ", quoted_med_id, "::text AS medication_id, ",
-    quoted_med_system, " AS medication_system, ",
-    quoted_med_code, " AS medication_code FROM ", medication_relation, " ",
-    "WHERE NULLIF(", quoted_med_id, "::text, '') IS NOT NULL ",
-    "AND NULLIF(", quoted_med_system, "::text, '') IS NOT NULL ",
-    "AND NULLIF(", quoted_med_code, "::text, '') IS NOT NULL)",
-    " SELECT ", source_columns, ", ", paste(enrichment_select, collapse = ", "),
-    " FROM ", source_relation, " ", source_alias,
-    " LEFT JOIN ", medication_alias,
-    " ON ", medication_alias, ".medication_id = ", normalized_reference
+    "WITH RECURSIVE\n",
+    paste(ctes, collapse = ",\n"),
+    "\n",
+    select_query
   )
 }
 
@@ -194,7 +331,11 @@ getSnapshotStreamingSourceQuery <- function(
       dependency_suffix
     )
     required_source_fields <- medication_spec[["reference_column"]]
-    required_medication_fields <- c("med_id", "med_code_system", "med_code_code")
+    required_medication_fields <- c(
+      "med_id",
+      "med_code_system",
+      "med_code_code"
+    )
     if (
       required_source_fields %in% described_columns &&
       required_source_fields %in% source_fields &&
@@ -217,7 +358,15 @@ getSnapshotStreamingSourceQuery <- function(
               source_schema
             ),
             medication_spec,
-            medication_enrichment_columns
+            medication_enrichment_columns,
+            ingredient_reference_column = if (
+              SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN %in%
+                medication_fields
+            ) {
+              SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN
+            } else {
+              NULL
+            }
           ),
           medication_spec = medication_spec
         ))
@@ -416,7 +565,8 @@ processSnapshotChunkStream <- function(
   review_chunk,
   write_review_chunk,
   chunk_size,
-  table_name
+  table_name,
+  strip_review_columns = identity
 ) {
   first_chunk <- TRUE
   chunk_number <- 0L
@@ -426,6 +576,7 @@ processSnapshotChunkStream <- function(
     chunk_number <- chunk_number + 1L
     chunk <- enrich_chunk(data.table::as.data.table(chunk))
     write_review_chunk(review_chunk(chunk))
+    chunk <- strip_review_columns(chunk)
     table_result <- pseudonymize_chunk(chunk, chunk_number)
     output <- table_result[["table"]]
     write_chunk(output, first_chunk)
@@ -452,6 +603,20 @@ processSnapshotChunkStream <- function(
     summary = summary,
     chunks = chunk_number
   )
+}
+
+stripSnapshotStreamingReviewColumns <- function(table) {
+  table <- data.table::as.data.table(table)
+  review_columns <- intersect(
+    SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN,
+    names(table)
+  )
+  if (length(review_columns) > 0) {
+    for (review_column in review_columns) {
+      table[[review_column]] <- NULL
+    }
+  }
+  table
 }
 
 streamSnapshotMaterializedTable <- function(

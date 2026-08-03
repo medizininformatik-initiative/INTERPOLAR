@@ -102,12 +102,57 @@ test_that("medication source query resolves codes in the source database", {
     spec
   )
 
-  expect_match(query, "WITH medication_codes AS", fixed = TRUE)
-  expect_match(query, "SELECT DISTINCT \"med_id\"::text", fixed = TRUE)
+  expect_match(query, "WITH RECURSIVE\nmedication_nodes AS", fixed = TRUE)
+  expect_match(query, "medication_edges AS", fixed = TRUE)
+  expect_match(query, "medication_walk(root_medication_id, medication_id)", fixed = TRUE)
+  expect_match(query, "FROM medication_walk\nJOIN medication_edges", fixed = TRUE)
   expect_match(query, "^Medication/", fixed = TRUE)
   expect_match(query, "AS \"medreq_medication_system\"", fixed = TRUE)
   expect_match(query, "AS \"medreq_medication_code\"", fixed = TRUE)
   expect_match(query, "LEFT JOIN medication_codes", fixed = TRUE)
+  expect_match(query, "missing_medication", fixed = TRUE)
+  expect_match(query, "no_reachable_code", fixed = TRUE)
+  expect_match(query, SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN, fixed = TRUE)
+})
+
+test_that("medication source query keeps direct codes without ingredient references", {
+  spec <- getMedicationReferenceSpec("medicationrequest")
+  query <- buildSnapshotMedicationSourceQuery(
+    DBI::ANSI(),
+    '"db2dataprocessor_out"."v_medicationrequest"',
+    c("medreq_id", "medreq_medicationreference_ref"),
+    '"db2dataprocessor_out"."v_medication"',
+    spec,
+    ingredient_reference_column = NULL
+  )
+
+  expect_match(query, "medication_edges AS", fixed = TRUE)
+  expect_match(query, "WHERE FALSE", fixed = TRUE)
+  expect_match(query, "medication_code_values AS", fixed = TRUE)
+})
+
+test_that("medication source query supports every configured reference table", {
+  for (i in seq_len(nrow(SNAPSHOT_MEDICATION_REFERENCE_SPECS))) {
+    spec <- SNAPSHOT_MEDICATION_REFERENCE_SPECS[i, ]
+    query <- buildSnapshotMedicationSourceQuery(
+      DBI::ANSI(),
+      '"db2dataprocessor_out"."v_source"',
+      c("source_id", spec[["reference_column"]]),
+      '"db2dataprocessor_out"."v_medication"',
+      spec
+    )
+
+    expect_match(
+      query,
+      paste0('AS "', spec[["system_column"]], '"'),
+      fixed = TRUE
+    )
+    expect_match(
+      query,
+      paste0('AS "', spec[["code_column"]], '"'),
+      fixed = TRUE
+    )
+  }
 })
 
 test_that("birthdate source query supports fallback patient keys", {
@@ -358,8 +403,90 @@ test_that("streaming medication review keeps exact counts and bounded examples",
   result <- finalizeBoundedMedicationReferenceReview(context)
 
   expect_equal(result$summary$UNMATCHED_ROWS, 2)
+  expect_equal(result$summary$ISSUE_TYPE, "no_reachable_code")
   expect_equal(nrow(result$unmatched_reference_examples), 1L)
   expect_equal(result$unmatched_reference_examples$MEDICATION_ID, "missing")
+})
+
+test_that("streaming medication review expands multiple graph issues once", {
+  spec <- getMedicationReferenceSpec("medicationrequest")
+  chunk <- data.table::data.table(
+    medreq_medicationreference_ref = c(
+      "Medication/mixture",
+      "Medication/mixture"
+    ),
+    medreq_medication_system = c("http://atc", "http://snomed"),
+    medreq_medication_code = c("A01", "C01")
+  )
+  chunk[[SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN]] <- c(
+    paste(
+      "missing_medication\tmissing-a",
+      "missing_medication\tmissing-b",
+      sep = "\n"
+    ),
+    NA_character_
+  )
+
+  report <- getUnmatchedMedicationReferencesFromEnrichedTable(
+    chunk,
+    "medicationrequest",
+    spec
+  )
+
+  expect_equal(nrow(report), 2L)
+  expect_equal(report$RELATED_MEDICATION_ID, c("missing-a", "missing-b"))
+  expect_equal(report$N, c(1L, 1L))
+})
+
+test_that("streaming review columns are removed before pseudonymization", {
+  fetched <- FALSE
+  captured <- new.env(parent = emptyenv())
+  captured$reviewed_issue <- NULL
+  pseudonymized_names <- NULL
+  written_names <- NULL
+  chunk <- data.table::data.table(value = 1L)
+  chunk[[SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN]] <-
+    "missing_medication\tmissing"
+
+  processSnapshotChunkStream(
+    fetch_chunk = function(chunk_size) {
+      fetched <<- TRUE
+      chunk
+    },
+    has_completed = function() fetched,
+    enrich_chunk = identity,
+    pseudonymize_chunk = function(chunk, chunk_number) {
+      pseudonymized_names <<- names(chunk)
+      list(
+        table = chunk,
+        summary = data.table::data.table(
+          INPUT_ROWS = nrow(chunk),
+          OUTPUT_ROWS = nrow(chunk),
+          OUTPUT_COLUMNS = ncol(chunk)
+        )
+      )
+    },
+    write_chunk = function(output, first_chunk) {
+      written_names <<- names(output)
+    },
+    review_chunk = function(chunk) {
+      captured$reviewed_issue <- paste(
+        chunk[[SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN]],
+        collapse = "\n"
+      )
+      emptyMedicationReferenceReport()
+    },
+    write_review_chunk = function(review) {
+      force(review)
+    },
+    chunk_size = 1L,
+    table_name = "example",
+    strip_review_columns = stripSnapshotStreamingReviewColumns
+  )
+
+  expect_equal(captured$reviewed_issue, "missing_medication\tmissing")
+  expect_equal(pseudonymized_names, "value")
+  expect_equal(written_names, "value")
 })
 
 test_that("snapshot chunk size must be positive", {
