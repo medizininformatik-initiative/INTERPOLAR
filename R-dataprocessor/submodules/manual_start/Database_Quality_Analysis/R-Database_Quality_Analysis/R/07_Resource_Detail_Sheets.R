@@ -64,17 +64,10 @@ buildResourceDetailCountQuery <- function(
     table_metadata$VIEW_SCHEMA[[1]],
     table_metadata$VIEW_NAME[[1]]
   )
-  data_types <- stats::setNames(
-    if ("DATA_TYPE" %in% names(table_metadata)) table_metadata$DATA_TYPE else rep(NA_character_, nrow(table_metadata)),
-    table_metadata$COLUMN_NAME
-  )
+  data_types <- getMetadataDataTypes(table_metadata)
   row_group_condition <- getDetailRowGroupCondition(detail_config, row_group_value)
   select_parts <- character()
-  alias_map <- data.table::data.table(
-    alias = character(),
-    COLUMN_NAME = character(),
-    count_column = character()
-  )
+  alias_rows <- list()
   alias_index <- 1L
 
   for (column_name in data_columns) {
@@ -90,27 +83,18 @@ buildResourceDetailCountQuery <- function(
         table_metadata,
         data_types
       )
-      conditions <- c(
-        filled_condition,
-        grouping_filled_condition,
-        row_group_condition
-      )
-      conditions <- conditions[!is.na(conditions)]
-      select_parts <- c(select_parts, paste0(
-        "COUNT(DISTINCT CASE WHEN ",
-        paste(conditions, collapse = " AND "),
-        " THEN ",
-        quoteIdentifier(grouping_column),
-        " END) AS ",
-        quoteIdentifier(alias)
-      ))
-      alias_map <- rbind(
-        alias_map,
-        data.table::data.table(
-          alias = alias,
-          COLUMN_NAME = column_name,
-          count_column = DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
+      select_parts <- c(
+        select_parts,
+        buildDistinctCountExpression(
+          c(filled_condition, grouping_filled_condition, row_group_condition),
+          grouping_column,
+          alias
         )
+      )
+      alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
+        alias = alias,
+        COLUMN_NAME = column_name,
+        count_column = DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
       )
       alias_index <- alias_index + 1L
     }
@@ -125,49 +109,41 @@ buildResourceDetailCountQuery <- function(
         table_metadata,
         data_types
       )
-      conditions <- c(
-        filled_condition,
-        grouping_filled_condition,
-        row_group_condition,
-        getDetailCountGroupCondition(detail_config, detail_config$count_group_values[[count_group_name]])
-      )
-      conditions <- conditions[!is.na(conditions)]
-      select_parts <- c(select_parts, paste0(
-        "COUNT(DISTINCT CASE WHEN ",
-        paste(conditions, collapse = " AND "),
-        " THEN ",
-        quoteIdentifier(grouping_column),
-        " END) AS ",
-        quoteIdentifier(alias)
-      ))
-      alias_map <- rbind(
-        alias_map,
-        data.table::data.table(
-          alias = alias,
-          COLUMN_NAME = column_name,
-          count_column = detail_config$count_group_count_columns[[count_group_name]]
+      select_parts <- c(
+        select_parts,
+        buildDistinctCountExpression(
+          c(
+            filled_condition,
+            grouping_filled_condition,
+            row_group_condition,
+            getDetailCountGroupCondition(
+              detail_config,
+              detail_config$count_group_values[[count_group_name]]
+            )
+          ),
+          grouping_column,
+          alias
         )
+      )
+      alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
+        alias = alias,
+        COLUMN_NAME = column_name,
+        count_column = detail_config$count_group_count_columns[[count_group_name]]
       )
       alias_index <- alias_index + 1L
     }
   }
 
+  alias_map <- data.table::rbindlist(alias_rows, use.names = TRUE)
   if (!length(select_parts)) {
     return(list(query = NA_character_, alias_map = alias_map))
   }
 
   list(
-    query = paste0(
-      "SELECT\n  ",
-      paste(select_parts, collapse = ",\n  "),
-      "\nFROM ",
-      table_ref,
-      getOptionalWhereClause(row_filter_condition)
-    ),
+    query = buildSelectQuery(select_parts, table_ref, row_filter_condition),
     alias_map = alias_map
   )
 }
-
 createResourceDetailSheet <- function(
   metadata,
   result,

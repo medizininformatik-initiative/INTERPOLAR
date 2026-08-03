@@ -38,6 +38,39 @@ getColumnFilledCondition <- function(column_name, data_type) {
   paste(conditions, collapse = " AND ")
 }
 
+getMetadataDataTypes <- function(table_metadata) {
+  stats::setNames(
+    if ("DATA_TYPE" %in% names(table_metadata)) {
+      table_metadata$DATA_TYPE
+    } else {
+      rep(NA_character_, nrow(table_metadata))
+    },
+    table_metadata$COLUMN_NAME
+  )
+}
+
+buildSelectQuery <- function(select_parts, table_ref, row_filter_condition = NA_character_) {
+  paste0(
+    "SELECT\n  ",
+    paste(select_parts, collapse = ",\n  "),
+    "\nFROM ",
+    table_ref,
+    getOptionalWhereClause(row_filter_condition)
+  )
+}
+
+buildDistinctCountExpression <- function(conditions, grouping_column, alias) {
+  conditions <- conditions[!is.na(conditions)]
+  paste0(
+    "COUNT(DISTINCT CASE WHEN ",
+    paste(conditions, collapse = " AND "),
+    " THEN ",
+    quoteIdentifier(grouping_column),
+    " END) AS ",
+    quoteIdentifier(alias)
+  )
+}
+
 quoteSqlString <- function(value) {
   paste0("'", gsub("'", "''", value, fixed = TRUE), "'")
 }
@@ -76,17 +109,9 @@ buildCountQuery <- function(
   )
 
   select_parts <- character()
-  alias_map <- data.table::data.table(
-    alias = character(),
-    COLUMN_NAME = character(),
-    count_column = character()
-  )
+  alias_rows <- list()
   alias_index <- 1L
-
-  data_types <- stats::setNames(
-    if ("DATA_TYPE" %in% names(table_metadata)) table_metadata$DATA_TYPE else rep(NA_character_, nrow(table_metadata)),
-    table_metadata$COLUMN_NAME
-  )
+  data_types <- getMetadataDataTypes(table_metadata)
 
   for (column_name in data_columns) {
     filled_condition <- getValueAvailableCondition(column_name, table_metadata, data_types)
@@ -96,53 +121,38 @@ buildCountQuery <- function(
         next
       }
       alias <- paste0("count_", alias_index)
-      quoted_grouping <- quoteIdentifier(grouping_column)
       grouping_filled_condition <- getValueAvailableCondition(
         grouping_column,
         table_metadata,
         data_types
       )
-      conditions <- c(
-        filled_condition,
-        grouping_filled_condition
-      )
-      conditions <- conditions[!is.na(conditions)]
-      select_parts <- c(select_parts, paste0(
-        "COUNT(DISTINCT CASE WHEN ",
-        paste(conditions, collapse = " AND "),
-        " THEN ",
-        quoted_grouping,
-        " END) AS ",
-        quoteIdentifier(alias)
-      ))
-      alias_map <- rbind(
-        alias_map,
-        data.table::data.table(
-          alias = alias,
-          COLUMN_NAME = column_name,
-          count_column = DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
+      select_parts <- c(
+        select_parts,
+        buildDistinctCountExpression(
+          c(filled_condition, grouping_filled_condition),
+          grouping_column,
+          alias
         )
+      )
+      alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
+        alias = alias,
+        COLUMN_NAME = column_name,
+        count_column = DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS[[grouping_name]]
       )
       alias_index <- alias_index + 1L
     }
   }
 
+  alias_map <- data.table::rbindlist(alias_rows, use.names = TRUE)
   if (!length(select_parts)) {
     return(list(query = NA_character_, alias_map = alias_map))
   }
 
   list(
-    query = paste0(
-      "SELECT\n  ",
-      paste(select_parts, collapse = ",\n  "),
-      "\nFROM ",
-      table_ref,
-      getOptionalWhereClause(row_filter_condition)
-    ),
+    query = buildSelectQuery(select_parts, table_ref, row_filter_condition),
     alias_map = alias_map
   )
 }
-
 buildValueDateRangeQuery <- function(
   table_metadata,
   history_metadata,
@@ -179,15 +189,9 @@ buildValueDateRangeQuery <- function(
     history_view_name
   )
   history_table_metadata[, TABLE_NAME := table_metadata$TABLE_NAME[[1]]]
-  data_types <- stats::setNames(history_table_metadata$DATA_TYPE, history_table_metadata$COLUMN_NAME)
+  data_types <- getMetadataDataTypes(history_table_metadata)
   select_parts <- character()
-  alias_map <- data.table::data.table(
-    first_alias = character(),
-    last_alias = character(),
-    first_result_column = character(),
-    last_result_column = character(),
-    COLUMN_NAME = character()
-  )
+  alias_rows <- list()
 
   for (column_index in seq_along(data_columns)) {
     column_name <- data_columns[[column_index]]
@@ -199,30 +203,35 @@ buildValueDateRangeQuery <- function(
       quoted_datetime_column <- quoteIdentifier(date_source$column_name)
       select_parts <- c(
         select_parts,
-        paste0("MIN(CASE WHEN ", column_filled_condition, " THEN ", quoted_datetime_column, " END) AS ", quoteIdentifier(first_alias)),
-        paste0("MAX(CASE WHEN ", column_filled_condition, " THEN ", quoted_datetime_column, " END) AS ", quoteIdentifier(last_alias))
-      )
-      alias_map <- rbind(
-        alias_map,
-        data.table::data.table(
-          first_alias = first_alias,
-          last_alias = last_alias,
-          first_result_column = date_source$first_result_column,
-          last_result_column = date_source$last_result_column,
-          COLUMN_NAME = column_name
+        paste0(
+          "MIN(CASE WHEN ",
+          column_filled_condition,
+          " THEN ",
+          quoted_datetime_column,
+          " END) AS ",
+          quoteIdentifier(first_alias)
+        ),
+        paste0(
+          "MAX(CASE WHEN ",
+          column_filled_condition,
+          " THEN ",
+          quoted_datetime_column,
+          " END) AS ",
+          quoteIdentifier(last_alias)
         )
+      )
+      alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
+        first_alias = first_alias,
+        last_alias = last_alias,
+        first_result_column = date_source$first_result_column,
+        last_result_column = date_source$last_result_column,
+        COLUMN_NAME = column_name
       )
     }
   }
 
   list(
-    query = paste0(
-      "SELECT\n  ",
-      paste(select_parts, collapse = ",\n  "),
-      "\nFROM ",
-      table_ref,
-      getOptionalWhereClause(row_filter_condition)
-    ),
-    alias_map = alias_map
+    query = buildSelectQuery(select_parts, table_ref, row_filter_condition),
+    alias_map = data.table::rbindlist(alias_rows, use.names = TRUE)
   )
 }

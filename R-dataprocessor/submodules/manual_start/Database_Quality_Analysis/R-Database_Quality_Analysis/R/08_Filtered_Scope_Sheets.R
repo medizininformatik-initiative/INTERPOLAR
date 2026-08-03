@@ -6,40 +6,44 @@ getTableMetadata <- function(metadata, table_name) {
   metadata[TABLE_NAME == table_name][order(ORDINAL_POSITION)]
 }
 
-getFilteredScopeMainEncounterSubquery <- function(metadata) {
+getFilteredScopeEncounterWardMetadata <- function(metadata, required_encounter_columns) {
   encounter_metadata <- getTableMetadata(metadata, "encounter")
   pids_per_ward_metadata <- getTableMetadata(metadata, "pids_per_ward")
   if (!nrow(encounter_metadata) || !nrow(pids_per_ward_metadata)) {
-    return(NA_character_)
+    return(NULL)
   }
-
-  required_encounter_columns <- c("enc_id", "enc_main_encounter_calculated_ref")
   if (
     !all(required_encounter_columns %in% encounter_metadata$COLUMN_NAME) ||
     !"encounter_id" %in% pids_per_ward_metadata$COLUMN_NAME
   ) {
-    return(NA_character_)
+    return(NULL)
   }
 
-  encounter_alias <- "filtered_scope_enc"
-  ward_alias <- "filtered_scope_ward"
-  main_encounter_column <- quoteQualifiedIdentifier(
-    encounter_alias,
-    "enc_main_encounter_calculated_ref"
+  list(
+    encounter_metadata = encounter_metadata,
+    pids_per_ward_metadata = pids_per_ward_metadata
   )
-  main_encounter_condition <- paste(
-    main_encounter_column,
+}
+
+getInvalidAwareQualifiedCondition <- function(qualified_column) {
+  paste(
+    qualified_column,
     "IS NOT NULL AND",
-    main_encounter_column,
+    qualified_column,
     "::text <> '' AND",
-    main_encounter_column,
+    qualified_column,
     "::text <>",
     quoteSqlString("invalid")
   )
+}
 
+getFilteredScopeEncounterWardJoinClause <- function(
+  encounter_metadata,
+  pids_per_ward_metadata,
+  encounter_alias,
+  ward_alias
+) {
   paste0(
-    "SELECT DISTINCT ",
-    main_encounter_column,
     "\n    FROM ",
     quoteTable(encounter_metadata$VIEW_SCHEMA[[1]], encounter_metadata$VIEW_NAME[[1]]),
     " ",
@@ -51,28 +55,45 @@ getFilteredScopeMainEncounterSubquery <- function(metadata) {
     "\n      ON ",
     quoteQualifiedIdentifier(encounter_alias, "enc_id"),
     " = ",
-    quoteQualifiedIdentifier(ward_alias, "encounter_id"),
-    "\n   WHERE ",
-    main_encounter_condition
+    quoteQualifiedIdentifier(ward_alias, "encounter_id")
   )
 }
 
-getFilteredScopePatientSubquery <- function(metadata) {
-  encounter_metadata <- getTableMetadata(metadata, "encounter")
-  pids_per_ward_metadata <- getTableMetadata(metadata, "pids_per_ward")
-  if (!nrow(encounter_metadata) || !nrow(pids_per_ward_metadata)) {
+getFilteredScopeMainEncounterSubquery <- function(metadata) {
+  scope_metadata <- getFilteredScopeEncounterWardMetadata(
+    metadata,
+    c("enc_id", "enc_main_encounter_calculated_ref")
+  )
+  if (is.null(scope_metadata)) {
     return(NA_character_)
   }
 
-  required_encounter_columns <- c(
-    "enc_id",
-    "enc_patient_ref",
+  encounter_alias <- "filtered_scope_enc"
+  ward_alias <- "filtered_scope_ward"
+  main_encounter_column <- quoteQualifiedIdentifier(
+    encounter_alias,
     "enc_main_encounter_calculated_ref"
   )
-  if (
-    !all(required_encounter_columns %in% encounter_metadata$COLUMN_NAME) ||
-    !"encounter_id" %in% pids_per_ward_metadata$COLUMN_NAME
-  ) {
+
+  paste0(
+    "SELECT DISTINCT ",
+    main_encounter_column,
+    getFilteredScopeEncounterWardJoinClause(
+      scope_metadata$encounter_metadata,
+      scope_metadata$pids_per_ward_metadata,
+      encounter_alias,
+      ward_alias
+    ),
+    "\n   WHERE ",
+    getInvalidAwareQualifiedCondition(main_encounter_column)
+  )
+}
+getFilteredScopePatientSubquery <- function(metadata) {
+  scope_metadata <- getFilteredScopeEncounterWardMetadata(
+    metadata,
+    c("enc_id", "enc_patient_ref", "enc_main_encounter_calculated_ref")
+  )
+  if (is.null(scope_metadata)) {
     return(NA_character_)
   }
 
@@ -83,41 +104,17 @@ getFilteredScopePatientSubquery <- function(metadata) {
     encounter_alias,
     "enc_main_encounter_calculated_ref"
   )
-  patient_condition <- paste(
-    patient_column,
-    "IS NOT NULL AND",
-    patient_column,
-    "::text <> '' AND",
-    patient_column,
-    "::text <>",
-    quoteSqlString("invalid")
-  )
-  main_encounter_condition <- paste(
-    main_encounter_column,
-    "IS NOT NULL AND",
-    main_encounter_column,
-    "::text <> '' AND",
-    main_encounter_column,
-    "::text <>",
-    quoteSqlString("invalid")
-  )
   from_join_clause <- paste0(
-    "\n    FROM ",
-    quoteTable(encounter_metadata$VIEW_SCHEMA[[1]], encounter_metadata$VIEW_NAME[[1]]),
-    " ",
-    quoteIdentifier(encounter_alias),
-    "\n    JOIN ",
-    quoteTable(pids_per_ward_metadata$VIEW_SCHEMA[[1]], pids_per_ward_metadata$VIEW_NAME[[1]]),
-    " ",
-    quoteIdentifier(ward_alias),
-    "\n      ON ",
-    quoteQualifiedIdentifier(encounter_alias, "enc_id"),
-    " = ",
-    quoteQualifiedIdentifier(ward_alias, "encounter_id"),
+    getFilteredScopeEncounterWardJoinClause(
+      scope_metadata$encounter_metadata,
+      scope_metadata$pids_per_ward_metadata,
+      encounter_alias,
+      ward_alias
+    ),
     "\n   WHERE ",
-    patient_condition,
+    getInvalidAwareQualifiedCondition(patient_column),
     " AND ",
-    main_encounter_condition
+    getInvalidAwareQualifiedCondition(main_encounter_column)
   )
 
   paste0(
@@ -130,7 +127,6 @@ getFilteredScopePatientSubquery <- function(metadata) {
     from_join_clause
   )
 }
-
 getFilteredScopeEncounterCalculatedRefColumn <- function(table_metadata, grouping_columns) {
   table_name <- table_metadata$TABLE_NAME[[1]]
   if (!identical(table_metadata$TABLE_FAMILY[[1]], "FHIR")) {
@@ -164,10 +160,7 @@ getFilteredScopeCaseFilterCondition <- function(table_metadata, grouping_columns
     return(NA_character_)
   }
 
-  data_types <- stats::setNames(
-    if ("DATA_TYPE" %in% names(table_metadata)) table_metadata$DATA_TYPE else rep(NA_character_, nrow(table_metadata)),
-    table_metadata$COLUMN_NAME
-  )
+  data_types <- getMetadataDataTypes(table_metadata)
   paste0(
     getValueAvailableCondition(encounter_column, table_metadata, data_types),
     " AND ",
@@ -184,10 +177,7 @@ getFilteredScopePatientFilterCondition <- function(table_metadata, grouping_colu
   }
 
   patient_column <- grouping_columns[["pid"]]
-  data_types <- stats::setNames(
-    if ("DATA_TYPE" %in% names(table_metadata)) table_metadata$DATA_TYPE else rep(NA_character_, nrow(table_metadata)),
-    table_metadata$COLUMN_NAME
-  )
+  data_types <- getMetadataDataTypes(table_metadata)
   paste0(
     getValueAvailableCondition(patient_column, table_metadata, data_types),
     " AND ",
@@ -314,64 +304,18 @@ createFilteredScopeFhirSheet <- function(
     data_columns <- table_config$table_metadata$COLUMN_NAME
     column_batches <- split(data_columns, ceiling(seq_along(data_columns) / config$count_batch_size))
     for (data_column_batch in column_batches) {
-      count_query <- buildCountQuery(
+      fillCountAndDateRangeColumns(
+        sheet,
+        table_name,
         table_config$table_metadata,
         table_config$grouping_columns,
         data_column_batch,
-        row_filter_condition = table_config$row_filter_condition
+        config,
+        history_metadata = history_metadata,
+        query_fun = query_fun,
+        row_filter_condition = table_config$row_filter_condition,
+        lock_label = paste(getFilteredScopeLabel(config), table_name)
       )
-      if (is.na(count_query$query)) {
-        next
-      }
-
-      count_result <- query_fun(
-        count_query$query,
-        lock_id = paste0(
-          "calculate database quality analysis ",
-          getFilteredScopeLabel(config),
-          " counts for ",
-          table_name
-        )
-      )
-      for (row_index in seq_len(nrow(count_query$alias_map))) {
-        alias_row <- count_query$alias_map[row_index]
-        sheet[
-          TABLE_NAME == table_name & COLUMN_NAME == alias_row$COLUMN_NAME,
-          (alias_row$count_column) := as.integer(count_result[[alias_row$alias]][[1]])
-        ]
-      }
-
-      if (isTRUE(config$include_value_datetime_columns)) {
-        date_range_query <- buildValueDateRangeQuery(
-          table_config$table_metadata,
-          history_metadata,
-          config,
-          data_column_batch,
-          row_filter_condition = table_config$row_filter_condition
-        )
-        if (!is.na(date_range_query$query)) {
-          date_range_result <- query_fun(
-            date_range_query$query,
-            lock_id = paste0(
-              "calculate database quality analysis ",
-              getFilteredScopeLabel(config),
-              " value date ranges for ",
-              table_name
-            )
-          )
-          for (row_index in seq_len(nrow(date_range_query$alias_map))) {
-            alias_row <- date_range_query$alias_map[row_index]
-            sheet[
-              TABLE_NAME == table_name & COLUMN_NAME == alias_row$COLUMN_NAME,
-              (alias_row$first_result_column) := date_range_result[[alias_row$first_alias]][[1]]
-            ]
-            sheet[
-              TABLE_NAME == table_name & COLUMN_NAME == alias_row$COLUMN_NAME,
-              (alias_row$last_result_column) := date_range_result[[alias_row$last_alias]][[1]]
-            ]
-          }
-        }
-      }
     }
   }
 

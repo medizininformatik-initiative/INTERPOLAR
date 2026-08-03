@@ -362,7 +362,12 @@ getStatisticSummaryExpressions <- function(column_ref, value_type, filled_condit
   )
 }
 
-buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_type, resource_id_column) {
+buildValueSummaryAggregateQuery <- function(
+  table_metadata,
+  data_columns,
+  resource_id_column,
+  get_expressions_fun
+) {
   missing_columns <- setdiff(data_columns, table_metadata$COLUMN_NAME)
   if (length(missing_columns)) {
     stop(
@@ -392,94 +397,7 @@ buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_
 
   for (column_name in data_columns) {
     column_ref <- quoteQualifiedIdentifier(table_alias, column_name)
-    filled_condition <- paste0(column_ref, " IS NOT NULL")
-    expressions <- getStatisticSummaryExpressions(column_ref, value_type, filled_condition)
-    expressions$DISTINCT_VALUES <- paste0(
-      "COUNT(DISTINCT ",
-      column_ref,
-      ") FILTER (WHERE ",
-      filled_condition,
-      ")::integer"
-    )
-    expressions$EMPTY <- paste0(
-      "(COUNT(DISTINCT ",
-      resource_id_ref,
-      ") - COUNT(DISTINCT ",
-      resource_id_ref,
-      ") FILTER (WHERE ",
-      filled_condition,
-      "))::integer"
-    )
-
-    for (result_column in names(expressions)) {
-      alias_index <- alias_index + 1L
-      alias <- paste0("value_summary_", alias_index)
-      expression <- expressions[[result_column]]
-      select_parts <- c(select_parts, paste0(expression, " AS ", quoteIdentifier(alias)))
-      alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
-        COLUMN_NAME = column_name,
-        result_column = result_column,
-        alias = alias
-      )
-    }
-  }
-
-  list(
-    query = paste0(
-      "SELECT\n  ",
-      paste(select_parts, collapse = ",\n  "),
-      "\nFROM ",
-      table_ref,
-      " ",
-      quoteIdentifier(table_alias)
-    ),
-    alias_map = data.table::rbindlist(alias_rows, use.names = TRUE)
-  )
-}
-
-buildSuppressedValueSummaryQuery <- function(table_metadata, data_columns, resource_id_column) {
-  data_columns <- intersect(data_columns, table_metadata$COLUMN_NAME)
-  if (!length(data_columns)) {
-    return(list(query = NA_character_, alias_map = data.table::data.table()))
-  }
-
-  table_alias <- "source_row"
-  table_ref <- quoteTable(
-    table_metadata$VIEW_SCHEMA[[1]],
-    table_metadata$VIEW_NAME[[1]]
-  )
-  resource_id_ref <- quoteQualifiedIdentifier(table_alias, resource_id_column)
-  select_parts <- character()
-  alias_rows <- list()
-  alias_index <- 0L
-
-  for (column_name in data_columns) {
-    column_ref <- quoteQualifiedIdentifier(table_alias, column_name)
-    filled_condition <- paste0(
-      column_ref,
-      " IS NOT NULL AND ",
-      column_ref,
-      "::text <> ",
-      quoteSqlString("")
-    )
-    expressions <- list(
-      DISTINCT_VALUES = paste0(
-        "COUNT(DISTINCT ",
-        column_ref,
-        ") FILTER (WHERE ",
-        filled_condition,
-        ")::integer"
-      ),
-      EMPTY = paste0(
-        "(COUNT(DISTINCT ",
-        resource_id_ref,
-        ") - COUNT(DISTINCT ",
-        resource_id_ref,
-        ") FILTER (WHERE ",
-        filled_condition,
-        "))::integer"
-      )
-    )
+    expressions <- get_expressions_fun(column_ref, resource_id_ref)
 
     for (result_column in names(expressions)) {
       alias_index <- alias_index + 1L
@@ -503,6 +421,70 @@ buildSuppressedValueSummaryQuery <- function(table_metadata, data_columns, resou
       quoteIdentifier(table_alias)
     ),
     alias_map = data.table::rbindlist(alias_rows, use.names = TRUE)
+  )
+}
+
+buildStatisticValueSummaryQuery <- function(table_metadata, data_columns, value_type, resource_id_column) {
+  buildValueSummaryAggregateQuery(
+    table_metadata,
+    data_columns,
+    resource_id_column,
+    get_expressions_fun = function(column_ref, resource_id_ref) {
+      filled_condition <- paste0(column_ref, " IS NOT NULL")
+      expressions <- getStatisticSummaryExpressions(column_ref, value_type, filled_condition)
+      expressions$DISTINCT_VALUES <- paste0(
+        "COUNT(DISTINCT ",
+        column_ref,
+        ") FILTER (WHERE ",
+        filled_condition,
+        ")::integer"
+      )
+      expressions$EMPTY <- paste0(
+        "(COUNT(DISTINCT ",
+        resource_id_ref,
+        ") - COUNT(DISTINCT ",
+        resource_id_ref,
+        ") FILTER (WHERE ",
+        filled_condition,
+        "))::integer"
+      )
+      expressions
+    }
+  )
+}
+
+buildSuppressedValueSummaryQuery <- function(table_metadata, data_columns, resource_id_column) {
+  buildValueSummaryAggregateQuery(
+    table_metadata,
+    data_columns,
+    resource_id_column,
+    get_expressions_fun = function(column_ref, resource_id_ref) {
+      filled_condition <- paste0(
+        column_ref,
+        " IS NOT NULL AND ",
+        column_ref,
+        "::text <> ",
+        quoteSqlString("")
+      )
+      list(
+        DISTINCT_VALUES = paste0(
+          "COUNT(DISTINCT ",
+          column_ref,
+          ") FILTER (WHERE ",
+          filled_condition,
+          ")::integer"
+        ),
+        EMPTY = paste0(
+          "(COUNT(DISTINCT ",
+          resource_id_ref,
+          ") - COUNT(DISTINCT ",
+          resource_id_ref,
+          ") FILTER (WHERE ",
+          filled_condition,
+          "))::integer"
+        )
+      )
+    }
   )
 }
 

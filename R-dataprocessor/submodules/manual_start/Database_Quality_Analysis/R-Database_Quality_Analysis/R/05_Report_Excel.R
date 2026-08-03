@@ -1,3 +1,82 @@
+applyCountQueryResult <- function(result, table_name, count_query, count_result) {
+  for (row_index in seq_len(nrow(count_query$alias_map))) {
+    alias_row <- count_query$alias_map[row_index]
+    result[
+      TABLE_NAME == table_name & COLUMN_NAME == alias_row$COLUMN_NAME,
+      (alias_row$count_column) := as.integer(count_result[[alias_row$alias]][[1]])
+    ]
+  }
+  invisible(result)
+}
+
+applyDateRangeQueryResult <- function(result, table_name, date_range_query, date_range_result) {
+  for (row_index in seq_len(nrow(date_range_query$alias_map))) {
+    alias_row <- date_range_query$alias_map[row_index]
+    result[
+      TABLE_NAME == table_name & COLUMN_NAME == alias_row$COLUMN_NAME,
+      (alias_row$first_result_column) := date_range_result[[alias_row$first_alias]][[1]]
+    ]
+    result[
+      TABLE_NAME == table_name & COLUMN_NAME == alias_row$COLUMN_NAME,
+      (alias_row$last_result_column) := date_range_result[[alias_row$last_alias]][[1]]
+    ]
+  }
+  invisible(result)
+}
+
+fillCountAndDateRangeColumns <- function(
+  result,
+  table_name,
+  table_metadata,
+  grouping_columns,
+  data_column_batch,
+  config,
+  history_metadata = NULL,
+  query_fun = etlutils::dbGetReadOnlyQuery,
+  row_filter_condition = NA_character_,
+  lock_label = NULL
+) {
+  if (is.null(lock_label)) {
+    lock_label <- table_name
+  }
+
+  count_query <- buildCountQuery(
+    table_metadata,
+    grouping_columns,
+    data_column_batch,
+    row_filter_condition = row_filter_condition
+  )
+  if (!is.na(count_query$query)) {
+    count_result <- query_fun(
+      count_query$query,
+      lock_id = paste0("calculate database quality analysis counts for ", lock_label)
+    )
+    applyCountQueryResult(result, table_name, count_query, count_result)
+  }
+
+  if (isTRUE(config$include_value_datetime_columns)) {
+    date_range_query <- buildValueDateRangeQuery(
+      table_metadata,
+      history_metadata,
+      config,
+      data_column_batch,
+      row_filter_condition = row_filter_condition
+    )
+    if (!is.na(date_range_query$query)) {
+      date_range_result <- query_fun(
+        date_range_query$query,
+        lock_id = paste0(
+          "calculate database quality analysis value date ranges for ",
+          lock_label
+        )
+      )
+      applyDateRangeQueryResult(result, table_name, date_range_query, date_range_result)
+    }
+  }
+
+  invisible(result)
+}
+
 calculateCounts <- function(
   metadata,
   config,
@@ -65,46 +144,16 @@ calculateCounts <- function(
         )
       }
 
-      count_query <- buildCountQuery(table_metadata, grouping_columns, data_column_batch)
-      if (!is.na(count_query$query)) {
-        count_result <- query_fun(
-          count_query$query,
-          lock_id = paste0("calculate database quality analysis counts for ", table_name)
-        )
-        for (row_index in seq_len(nrow(count_query$alias_map))) {
-          alias_row <- count_query$alias_map[row_index]
-          result[
-            TABLE_NAME == table_name & COLUMN_NAME == alias_row$COLUMN_NAME,
-            (alias_row$count_column) := as.integer(count_result[[alias_row$alias]][[1]])
-          ]
-        }
-      }
-
-      if (isTRUE(config$include_value_datetime_columns)) {
-        date_range_query <- buildValueDateRangeQuery(
-          table_metadata,
-          history_metadata,
-          config,
-          data_column_batch
-        )
-        if (!is.na(date_range_query$query)) {
-          date_range_result <- query_fun(
-            date_range_query$query,
-            lock_id = paste0("calculate database quality analysis value date ranges for ", table_name)
-          )
-          for (row_index in seq_len(nrow(date_range_query$alias_map))) {
-            alias_row <- date_range_query$alias_map[row_index]
-            result[
-              TABLE_NAME == table_name & COLUMN_NAME == alias_row$COLUMN_NAME,
-              (alias_row$first_result_column) := date_range_result[[alias_row$first_alias]][[1]]
-            ]
-            result[
-              TABLE_NAME == table_name & COLUMN_NAME == alias_row$COLUMN_NAME,
-              (alias_row$last_result_column) := date_range_result[[alias_row$last_alias]][[1]]
-            ]
-          }
-        }
-      }
+      fillCountAndDateRangeColumns(
+        result,
+        table_name,
+        table_metadata,
+        grouping_columns,
+        data_column_batch,
+        config,
+        history_metadata = history_metadata,
+        query_fun = query_fun
+      )
     }
     logProgress(
       "Finished table ",
@@ -128,7 +177,6 @@ calculateCounts <- function(
   ))
   orderByResourceReferenceScope(result)
 }
-
 getSheetDescription <- function(sheet_name, config = list()) {
   filtered_scope_label <- getFilteredScopeLabel(config)
   filtered_scope_fhir_sheet_name <- getFilteredScopeSheetName("FHIR", config)
