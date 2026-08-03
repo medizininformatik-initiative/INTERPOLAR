@@ -96,8 +96,8 @@ testthat::test_that("joinCalculatedRefColumsToEncounter uses one last reference 
   )
 
   result <- joinCalculatedRefColumsToEncounter(
-    fullEncTable = data.table::copy(full_encounters),
-    encTableWithCalculatedRefs = calculated_encounters
+    full_enc_table = data.table::copy(full_encounters),
+    enc_table_with_calculated_refs = calculated_encounters
   )
 
   testthat::expect_equal(nrow(result), nrow(full_encounters))

@@ -212,6 +212,7 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   ))
   names(parent_id_list) <- first_encounter_by_id$enc_id
   parent_id_env <- list2env(parent_id_list, parent = emptyenv())
+  invalid_parent_ids <- c(NA_character_, "", "invalid")
   # Memoization to avoid repeated walks
   resolve_cache <- new.env(parent = emptyenv())
 
@@ -239,12 +240,7 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
         break
       }
       # Go to parent; abort on "invalid" or empty
-      if (
-        identical(parent_id, "invalid") ||
-          length(parent_id) == 0L ||
-          is.na(parent_id) ||
-          !nzchar(parent_id)
-      ) {
+      if (length(parent_id) == 0L || parent_id %in% invalid_parent_ids) {
         main_id <- NA_character_
         break
       }
@@ -513,22 +509,22 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
 #
 # Write calculated reference columns back to the full encounter table
 #
-joinCalculatedRefColumsToEncounter <- function(fullEncTable, encTableWithCalculatedRefs) {
+joinCalculatedRefColumsToEncounter <- function(full_enc_table, enc_table_with_calculated_refs) {
   # get calculated ref columns by grep("_calculated_ref", ...)
-  calculated_col_names <- grep("_calculated_ref$", names(encTableWithCalculatedRefs), value = TRUE)
+  calculated_col_names <- grep("_calculated_ref$", names(enc_table_with_calculated_refs), value = TRUE)
   enc_id_col_name <- etlutils::fhirdbGetIDColumn("encounter")
   # Keep the previous last-match behavior without joining every combination of duplicated rows.
-  calculated_refs_by_id <- encTableWithCalculatedRefs[
+  calculated_refs_by_id <- enc_table_with_calculated_refs[
     !duplicated(get(enc_id_col_name), fromLast = TRUE),
     c(enc_id_col_name, calculated_col_names),
     with = FALSE
   ]
 
-  fullEncTable[
+  full_enc_table[
     calculated_refs_by_id,
     on = enc_id_col_name,
     (calculated_col_names) := mget(paste0("i.", calculated_col_names))
   ]
 
-  return(fullEncTable)
+  return(full_enc_table)
 }
