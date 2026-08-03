@@ -5,6 +5,10 @@ quoteIdentifier <- function(identifier) {
   paste0('"', gsub('"', '""', identifier, fixed = TRUE), '"')
 }
 
+quoteQualifiedIdentifier <- function(alias, identifier) {
+  paste(quoteIdentifier(alias), quoteIdentifier(identifier), sep = ".")
+}
+
 quoteTable <- function(schema, table_name) {
   paste(
     quoteIdentifier(schema),

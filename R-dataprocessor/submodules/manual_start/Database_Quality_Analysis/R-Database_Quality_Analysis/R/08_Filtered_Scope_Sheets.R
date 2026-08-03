@@ -1,7 +1,3 @@
-quoteQualifiedIdentifier <- function(alias, identifier) {
-  paste(quoteIdentifier(alias), quoteIdentifier(identifier), sep = ".")
-}
-
 getTableMetadata <- function(metadata, table_name) {
   metadata[TABLE_NAME == table_name][order(ORDINAL_POSITION)]
 }
