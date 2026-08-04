@@ -257,6 +257,11 @@ Auswertungsspalten:
   Medications und Referenzketten ohne erreichbaren Code bleiben erhalten und
   erscheinen im Enrichment-Review.
 
+Die Medication-Auflösung wird für die vereinigten Referenzen aus Request,
+Statement und Administration einmal je Snapshot-Variante vorbereitet und über
+eine temporäre, indexierte PostgreSQL-Tabelle wiederverwendet. Sie wird nicht
+für jeden Chunk oder jede Quelltabelle erneut berechnet.
+
 Das Alter wird in abgeschlossenen Jahren berechnet. Neu ergänzte Altersspalten
 stehen am Ende der Tabelle. Die bereits vorhandene Spalte `fall_bmi` wird nicht
 verschoben.

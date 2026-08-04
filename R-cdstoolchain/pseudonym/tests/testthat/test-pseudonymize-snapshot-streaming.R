@@ -92,37 +92,49 @@ test_that("processSnapshotChunkStream writes an empty relation once", {
   expect_equal(result$summary$OUTPUT_ROWS, 0L)
 })
 
-test_that("medication source query resolves codes in the source database", {
-  spec <- getMedicationReferenceSpec("medicationrequest")
-  query <- buildSnapshotMedicationSourceQuery(
+test_that("shared medication resolution query traverses the reference graph", {
+  root_queries <- c(
+    "SELECT 'med-1'::text AS root_medication_id",
+    "SELECT 'med-2'::text AS root_medication_id"
+  )
+  query <- buildSnapshotMedicationResolutionQuery(
     DBI::ANSI(),
-    '"db2dataprocessor_out"."v_medicationrequest"',
-    c("medreq_id", "medreq_medicationreference_ref"),
-    '"db2dataprocessor_out"."v_medication"',
-    spec
+    root_queries,
+    '"db2dataprocessor_out"."v_medication"'
   )
 
   expect_match(query, "WITH RECURSIVE\nmedication_nodes AS", fixed = TRUE)
+  expect_match(query, "UNION ALL", fixed = TRUE)
   expect_match(query, "medication_edges AS", fixed = TRUE)
   expect_match(query, "medication_walk(root_medication_id, medication_id)", fixed = TRUE)
   expect_match(query, "FROM medication_walk\nJOIN medication_edges", fixed = TRUE)
-  expect_match(query, "^Medication/", fixed = TRUE)
-  expect_match(query, "AS \"medreq_medication_system\"", fixed = TRUE)
-  expect_match(query, "AS \"medreq_medication_code\"", fixed = TRUE)
-  expect_match(query, "LEFT JOIN medication_codes", fixed = TRUE)
   expect_match(query, "missing_medication", fixed = TRUE)
   expect_match(query, "no_reachable_code", fixed = TRUE)
-  expect_match(query, SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN, fixed = TRUE)
 })
 
-test_that("medication source query keeps direct codes without ingredient references", {
+test_that("medication source query joins the prepared shared resolution", {
   spec <- getMedicationReferenceSpec("medicationrequest")
   query <- buildSnapshotMedicationSourceQuery(
     DBI::ANSI(),
     '"db2dataprocessor_out"."v_medicationrequest"',
     c("medreq_id", "medreq_medicationreference_ref"),
+    '"snapshot_medication_resolution_all"',
+    spec
+  )
+
+  expect_false(grepl("WITH RECURSIVE", query, fixed = TRUE))
+  expect_match(query, "^Medication/", fixed = TRUE)
+  expect_match(query, "AS \"medreq_medication_system\"", fixed = TRUE)
+  expect_match(query, "AS \"medreq_medication_code\"", fixed = TRUE)
+  expect_match(query, "LEFT JOIN \"snapshot_medication_resolution_all\"", fixed = TRUE)
+  expect_match(query, SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN, fixed = TRUE)
+})
+
+test_that("shared medication resolution keeps direct codes without ingredient references", {
+  query <- buildSnapshotMedicationResolutionQuery(
+    DBI::ANSI(),
+    "SELECT 'med-1'::text AS root_medication_id",
     '"db2dataprocessor_out"."v_medication"',
-    spec,
     ingredient_reference_column = NULL
   )
 
@@ -138,7 +150,7 @@ test_that("medication source query supports every configured reference table", {
       DBI::ANSI(),
       '"db2dataprocessor_out"."v_source"',
       c("source_id", spec[["reference_column"]]),
-      '"db2dataprocessor_out"."v_medication"',
+      '"snapshot_medication_resolution_all"',
       spec
     )
 
@@ -153,6 +165,65 @@ test_that("medication source query supports every configured reference table", {
       fixed = TRUE
     )
   }
+})
+
+test_that("shared medication resolution combines roots from all source resources", {
+  plan <- data.table::data.table(
+    BASE_TABLE_NAME = c(
+      "medicationrequest",
+      "medicationstatement",
+      "medicationadministration"
+    ),
+    RULE_TABLE_NAME = c(
+      "medicationrequest",
+      "medicationstatement",
+      "medicationadministration"
+    ),
+    RULE_SOURCE = NA_character_,
+    SOURCE_RELATION = c(
+      "v_medicationrequest",
+      "v_medicationstatement",
+      "v_medicationadministration"
+    ),
+    SNAPSHOT_RELATION_TYPE = "all"
+  )
+  rules <- data.table::rbindlist(lapply(
+    seq_len(nrow(SNAPSHOT_MEDICATION_REFERENCE_SPECS)),
+    function(row_index) {
+      spec <- SNAPSHOT_MEDICATION_REFERENCE_SPECS[row_index, ]
+      data.table::data.table(
+        TABLE_OR_RESOURCE = spec[["table_name"]],
+        SOURCE = NA_character_,
+        COLUMN_NAME = c(
+          spec[["reference_column"]],
+          spec[["system_column"]],
+          spec[["code_column"]]
+        ),
+        PSEUDONYMIZATION_RULE = "keep"
+      )
+    }
+  ))
+  testthat::local_mocked_bindings(
+    snapshotRelationFields = function(connection, name, schema = NULL) {
+      spec <- getMedicationReferenceSpec(sub("^v_", "", name))
+      c("row_id", spec[["reference_column"]])
+    }
+  )
+
+  queries <- getSnapshotMedicationRootQueries(
+    DBI::ANSI(),
+    plan,
+    rules,
+    relation_type = "all",
+    source_schema = NULL
+  )
+
+  expect_length(queries, 3L)
+  expect_true(all(vapply(
+    plan$SOURCE_RELATION,
+    function(relation_name) any(grepl(relation_name, queries, fixed = TRUE)),
+    logical(1)
+  )))
 })
 
 test_that("birthdate source query supports fallback patient keys", {
