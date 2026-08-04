@@ -1,116 +1,174 @@
-# Database_Quality_Analysis
+# Database Quality Analysis
 
-`Database_Quality_Analysis` is a manual dataprocessor submodule for creating an Excel
-report that counts how often database columns are populated per grouping level.
+`Database_Quality_Analysis` creates reports for checking data availability in
+the dataprocessor output views. The module does not change source data. It reads
+view and column metadata from the configured database schema and uses database
+view comments as `COLUMN_DESCRIPTION` where available.
 
-The submodule reads metadata from the `db2dataprocessor_out` views and treats
-view column comments as `COLUMN_DESCRIPTION`. Until the database generator adds
-comments to the output views, `COLUMN_DESCRIPTION` can be empty.
+## Start
 
-## Execution
+From the repository root:
 
-``` console
+```console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R database-quality-analysis
 ```
 
-To skip the optional datetime columns for a faster count-only report, pass:
+For a faster report without first/last value timestamp columns:
 
-``` console
+```console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R database-quality-analysis --skip-value-datetime-columns
 ```
 
-## Output
+The main configuration is
+`R-dataprocessor/submodules/manual_start/Database_Quality_Analysis/database_quality_analysis_config.toml`.
+For the pseudonymized snapshot database, point `PATH_TO_DB_CONFIG_TOML` to the
+matching database credential TOML file.
 
-The report is written to
-`outputGlobal/dataprocessor/reports/Database_Quality_Analysis_<analysis-start>.xlsx`
-with separate sheets for FHIR, Frontend, optional other tables, optional
-resource detail sheets, and run metadata. The timestamp uses the analysis start
-time and contains no spaces, for example
-`Database_Quality_Analysis_2026-06-19_08-00-02.xlsx`.
+## Output Files
 
-Progress is written to the console. When the submodule is started through
-`StartDataProcessor.R`, the existing dataprocessor logging captures these
-messages in `outputLocal/dataprocessor/log/dataprocessor-log.txt`.
+Each run writes two artifacts to `outputGlobal/dataprocessor/reports`:
 
-The normalized output columns are:
+- `Database_Quality_Analysis_<analysis-start>.xlsx`: Excel workbook with
+  availability counts.
+- `Database_Quality_Analysis_Value_Summary_<analysis-start>.zip`: ZIP archive
+  with value summary CSV files grouped in `FHIR/` and `Frontend/` folders.
 
-- `TABLE_NAME`
-- `COLUMN_NAME`
-- `COLUMN_DESCRIPTION`
-- `USED_AS_GROUPING_FOR`
-- `count per resource_id`
-- `count per PID`
-- `count per Fall-Id`
-- `first value import datetime`
-- `last value import datetime`
-- `first value meta last updated`
-- `last value meta last updated`
+## Excel Sheets
 
-The datetime columns are optional because they require additional reads from the
-historical views without the `_last_version` suffix. Use
-`--skip-value-datetime-columns` for a faster report that only counts current
-last-version availability.
+The workbook can contain these sheets:
 
-When the FHIR `encounter` table contains the required Kontaktart and class
-columns, the report also contains a `FHIR Encounter` detail sheet. It contains
-three encounter blocks for `Einrichtungskontakt`, `Abteilungskontakt`, and
-`Versorgungsstellenkontakt`. Each block uses the same columns as the normalized
-FHIR sheet and adds these class count columns at the end:
+- `Sheet Description`: describes the generated sheets in the workbook.
+- `FHIR`: availability counts for FHIR last-version views.
+- `FHIR <suffix>`: optional filtered FHIR variant, for example
+  `FHIR INTERPOLAR`. Patient-dependent resources are filtered to patients in
+  the filtered scope. Case-dependent resources are filtered to cases in the
+  filtered scope. Resources without patient or case reference are skipped.
+- `Frontend`: availability counts for frontend last-version views.
+- `Other`: configured additional views that are neither FHIR nor frontend.
+- `FHIR Encounter`: optional detail sheet for the `encounter` resource. It
+  creates one block per configured contact level and additional count columns
+  per configured encounter class.
+- `FHIR Encounter <suffix>`: optional filtered variant of the encounter detail
+  sheet.
+- `Metadata`: technical run metadata such as analysis start/end, duration and
+  row counts. Connection details such as host, port, database name and user are
+  intentionally not written.
 
-- `count class IMP`
-- `count class SS`
-- `count class AMB`
-- `count class Andere`
+Filtered-scope sheets are enabled by `FILTERED_SCOPE_SHEET_NAMES`. The default
+INTERPOLAR scope is derived from `pids_per_ward` and `encounter`: scoped ward
+encounters are mapped to main encounter IDs and patient references.
 
-The `Metadata` sheet contains neutral run metadata such as analysis start/end,
-duration, report row counts, source view/column counts, and non-site-specific
-database details. It deliberately does not include database host, port, name, or
-user values.
+## Availability Columns
 
-## Configuration
+The main availability sheets use these columns:
 
-Configuration is read from `database_quality_analysis_config.toml`.
+- `TABLE_NAME`: logical table/resource name derived from the view name.
+- `COLUMN_NAME`: database column being checked.
+- `COLUMN_DESCRIPTION`: database comment for the column, if available.
+- `USED_AS_GROUPING_FOR`: marks columns used as `resource_id`, `pid` or
+  `case_id` grouping columns.
+- `count per resource_id`: number of distinct resources where this column has
+  an available value.
+- `count per PID`: number of distinct patients where this column has an
+  available value.
+- `count per Fall-Id`: number of distinct cases where this column has an
+  available value.
+- `first value import datetime` / `last value import datetime`: earliest and
+  latest import timestamps among rows where this column has an available value.
+- `first value meta last updated` / `last value meta last updated`: earliest
+  and latest FHIR meta-last-updated timestamps among rows where this column has
+  an available value.
 
-`INCLUDE_VALUE_DATETIME_COLUMNS` controls whether the report calculates the
-optional first/last value datetime columns. The default is `true` for the full
-report.
+The timestamp columns require historical views without the `_last_version`
+suffix. They can be disabled with `--skip-value-datetime-columns` or
+`INCLUDE_VALUE_DATETIME_COLUMNS = false`.
 
-Grouping columns are resolved from table-specific overrides first. Missing
-grouping columns are then inferred by convention from the available columns. If
-no grouping column can be resolved for a count, that count remains `NA`.
+## Count Basis
 
-Optional resource detail sheets are configured through `RESOURCE_DETAIL_*`
-settings. For one detail sheet, each setting can be a single string. For multiple
-detail sheets, use lists of the same length; entries belong together by position.
-The row group defines the repeated table blocks in the sheet. The count group
-defines the additional count columns inside each row group. For one detail
-sheet, `ROW_GROUP_VALUES` and `COUNT_GROUP_VALUES` can be readable TOML lists
-of `name=value` entries. For multiple detail sheets, use lists with one
-semicolon-separated `name=value` string per detail sheet. The order of the
-configured row group values is preserved in the Excel sheet.
+Availability counts are distinct counts, not row counts. For each checked
+column, the module counts distinct IDs only when both conditions are true:
 
-Filtered-scope sheets are controlled through `FILTERED_SCOPE_SHEET_NAMES`.
-The values name the unfiltered source sheets that should get a filtered variant,
-for example `["FHIR", "FHIR Encounter"]`.
-`FILTERED_SCOPE_DETAIL_SHEET_SUFFIX` is appended to each source sheet name, so
-those examples become `FHIR INTERPOLAR` and `FHIR Encounter INTERPOLAR`.
+- the checked column has an available value, and
+- the grouping column used for the count is also available.
 
-Database-internal columns such as processing metadata, `*_raw_id`,
-last-version helper columns, and the physical table primary key
-`<table_name>_id` are excluded from the report. Raw last-version views are
-excluded by default.
+Grouping columns are resolved from `GROUPING_OVERRIDES` first and otherwise by
+naming convention. If a grouping column cannot be resolved, the corresponding
+count stays empty.
 
-The `FHIR Encounter` detail sheet distinguishes the CDS encounter hierarchy
-levels by `enc_type_system` and `enc_type_code`. It splits each hierarchy level
-by `enc_class_system` and `enc_class_code` into `AMB`, `IMP`, `SS`, and
-`Andere`. Empty class codes are not counted as `Andere`.
+FHIR rows are sorted by reference scope: patient-dependent resources first,
+case-dependent resources next, and resources without patient/case reference at
+the end. Filtered FHIR sheets keep the same order as the unfiltered `FHIR`
+sheet.
 
-Configured REDCap checkbox groups are counted as available only when at least
-one checkbox option in the group is `Checked`. `Unchecked` values alone are not
-counted as available data for these groups.
+## Encounter Detail Sheet
 
-## Development
+The default `FHIR Encounter` sheet uses the configured resource detail settings:
 
-The implementation lives in the `R-Database_Quality_Analysis` R subproject. Tests for
-this submodule belong to that subproject so the main `dataprocessor` package does
-not depend on this concrete submodule.
+- row groups: `Einrichtungskontakt`, `Abteilungskontakt`,
+  `Versorgungsstellenkontakt`, based on `enc_type_system` and `enc_type_code`.
+- count groups: `count class IMP`, `count class SS`, `count class AMB`,
+  `count class Andere`, based on `enc_class_system` and `enc_class_code`.
+
+`count class Andere` uses the special configured value `OTHER`. It counts
+non-empty class values outside the explicitly configured class values. Empty or
+missing class values are not counted as `Andere`. The configured system columns
+must match as well.
+
+## Value Summary ZIP
+
+The value summary is calculated for the table families configured in
+`VALUE_SUMMARY_TABLE_FAMILIES`, by default `FHIR` and `Frontend`. The ZIP
+archive stores CSV files below one folder per table family, for example
+`FHIR/observation.csv` and `Frontend/patient_fe.csv`. It is not
+calculated for other, detail or filtered-scope sheets.
+
+The value summary is resource-ID based. Values are counted per distinct resource
+ID. If one resource ID contains the same value multiple times in the same
+column, it contributes `1` to that value. If two different resource IDs contain
+the same value, it contributes `2`.
+
+CSV columns:
+
+- `COLUMN_NAME`: checked database column.
+- `VALUE_TYPE`: summary type derived from the database column type: `text`,
+  `numeric` or `datetime`.
+- `DISTINCT_VALUES`: number of distinct non-empty values in the column.
+- `VALUE_COUNTS`: compact value distribution for text columns.
+- `MIN`, `MAX`, `AVG`, `MEDIAN`, `Q1`, `Q3`: statistics for numeric and
+  datetime columns.
+- `SE`: standard error for numeric and datetime columns.
+- `EMPTY`: number of distinct resource IDs where the column has no available
+  value.
+
+For text columns, frequent values are shown as `value: count`. Values whose
+resource-ID based count is below the suppression threshold are grouped into
+`Other (count < 5): n`. Here `n` is the summed count of resource IDs with rare
+values, not the number of different rare values.
+
+Text columns matched by the family-specific suppression patterns still receive
+`DISTINCT_VALUES` and `EMPTY`, but concrete values are omitted. FHIR rules are
+configured with `VALUE_SUMMARY_FHIR_SUPPRESSED_COLUMN_PATTERNS`; frontend rules
+are configured separately with `VALUE_SUMMARY_FRONTEND_SUPPRESSED_COLUMN_PATTERNS`.
+Numeric and datetime columns are summarized with statistics instead of concrete
+values. To include concrete text values from columns ending in `_values`, set
+`INCLUDE_VALUE_SUMMARY_VALUES_COLUMNS = true` or pass
+`--include-value-summary-values-columns`.
+
+If no resource ID column can be resolved for a configured value-summary table,
+the module logs a warning and leaves its value summaries empty instead of using
+a fallback ID.
+
+## Availability Exceptions
+
+The following columns or values are handled specially:
+
+- technical columns listed in `TECHNICAL_COLUMNS` are excluded from the Excel
+  availability sheets.
+- raw views matching `EXCLUDED_VIEW_PATTERNS`, for example `_raw_`, are skipped.
+- physical table primary keys named `<table_name>_id` and last-version helper
+  columns are excluded.
+- calculated reference columns such as `*_calculated_ref` are counted only when
+  they are filled and not equal to `invalid`.
+- configured REDCap checkbox groups are counted as available only when at least
+  one checkbox option in the group is `Checked`. `Unchecked` values alone do
+  not count as available data for the grouped frontend field.
