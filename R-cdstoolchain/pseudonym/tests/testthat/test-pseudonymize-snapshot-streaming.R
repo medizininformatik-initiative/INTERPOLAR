@@ -107,7 +107,7 @@ test_that("shared medication resolution query traverses the reference graph", {
   expect_match(query, "UNION ALL", fixed = TRUE)
   expect_match(query, "medication_edges AS", fixed = TRUE)
   expect_match(query, "medication_walk(root_medication_id, medication_id)", fixed = TRUE)
-  expect_match(query, "FROM medication_walk\nJOIN medication_edges", fixed = TRUE)
+  expect_match(query, "FROM medication_walk\n  JOIN medication_edges", fixed = TRUE)
   expect_match(query, "missing_medication", fixed = TRUE)
   expect_match(query, "no_reachable_code", fixed = TRUE)
 })
@@ -141,6 +141,46 @@ test_that("shared medication resolution keeps direct codes without ingredient re
   expect_match(query, "medication_edges AS", fixed = TRUE)
   expect_match(query, "WHERE FALSE", fixed = TRUE)
   expect_match(query, "medication_code_values AS", fixed = TRUE)
+})
+
+test_that("composed medication SQL keeps nested queries indented", {
+  query <- buildSnapshotMedicationResolutionQuery(
+    DBI::ANSI(),
+    c(
+      "SELECT 'med-1'::text AS root_medication_id",
+      "SELECT 'med-2'::text AS root_medication_id"
+    ),
+    '"db2dataprocessor_out"."v_medication"'
+  )
+
+  expect_match(
+    query,
+    paste0(
+      "medication_nodes AS (\n",
+      "  SELECT DISTINCT \"med_id\"::text AS medication_id\n",
+      "  FROM \"db2dataprocessor_out\".\"v_medication\""
+    ),
+    fixed = TRUE
+  )
+  expect_match(
+    query,
+    paste0(
+      "FROM (\n",
+      "    SELECT 'med-1'::text AS root_medication_id\n",
+      "    UNION ALL\n",
+      "    SELECT 'med-2'::text AS root_medication_id\n",
+      "  ) medication_root_candidates"
+    ),
+    fixed = TRUE
+  )
+  expect_match(
+    query,
+    paste0(
+      "LEFT JOIN medication_codes\n",
+      "  ON medication_codes.root_medication_id = "
+    ),
+    fixed = TRUE
+  )
 })
 
 test_that("medication source query supports every configured reference table", {

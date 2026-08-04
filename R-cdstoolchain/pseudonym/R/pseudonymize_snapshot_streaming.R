@@ -52,6 +52,14 @@ snapshotNormalizedReferenceExpression <- function(
   )
 }
 
+indentSql <- function(sql, spaces = 2L) {
+  indentation <- strrep(" ", spaces)
+  paste0(
+    indentation,
+    gsub("\n", paste0("\n", indentation), sql, fixed = TRUE)
+  )
+}
+
 buildSnapshotMedicationResolutionQuery <- function(
   connection,
   source_root_queries,
@@ -81,16 +89,16 @@ buildSnapshotMedicationResolutionQuery <- function(
     paste0(
       "SELECT DISTINCT ", quoted_med_id,
       "::text AS source_medication_id,\n",
-      normalized_ingredient_reference, " AS target_medication_id\n",
+      "  ", normalized_ingredient_reference, " AS target_medication_id\n",
       "FROM ", medication_relation, "\n",
       "WHERE NULLIF(", quoted_med_id, "::text, '') IS NOT NULL\n",
-      "AND ", normalized_ingredient_reference, " IS NOT NULL"
+      "  AND ", normalized_ingredient_reference, " IS NOT NULL"
     )
   }
   source_roots_query <- paste(
     "SELECT DISTINCT root_medication_id",
     "FROM (",
-    paste(source_root_queries, collapse = "\nUNION ALL\n"),
+    indentSql(paste(source_root_queries, collapse = "\nUNION ALL\n")),
     ") medication_root_candidates",
     "WHERE root_medication_id IS NOT NULL",
     sep = "\n"
@@ -101,48 +109,48 @@ buildSnapshotMedicationResolutionQuery <- function(
     # UNION deduplicates every root/node pair, so cycles terminate naturally.
     "UNION",
     "SELECT medication_walk.root_medication_id,",
-    "medication_edges.target_medication_id",
+    "  medication_edges.target_medication_id",
     "FROM medication_walk",
     "JOIN medication_edges",
-    "ON medication_edges.source_medication_id = medication_walk.medication_id",
+    "  ON medication_edges.source_medication_id = medication_walk.medication_id",
     sep = "\n"
   )
   medication_code_values_query <- paste0(
     "SELECT DISTINCT medication_walk.root_medication_id,\n",
-    "medication.", quoted_med_system, " AS medication_system,\n",
-    "medication.", quoted_med_code, " AS medication_code\n",
+    "  medication.", quoted_med_system, " AS medication_system,\n",
+    "  medication.", quoted_med_code, " AS medication_code\n",
     "FROM medication_walk\n",
     "JOIN ", medication_relation, " medication\n",
-    "ON medication.", quoted_med_id,
+    "  ON medication.", quoted_med_id,
     "::text = medication_walk.medication_id\n",
     "WHERE NULLIF(medication.", quoted_med_system,
     "::text, '') IS NOT NULL\n",
-    "AND NULLIF(medication.", quoted_med_code, "::text, '') IS NOT NULL"
+    "  AND NULLIF(medication.", quoted_med_code, "::text, '') IS NOT NULL"
   )
   medication_codes_query <- paste(
     "SELECT root_medication_id, medication_system, medication_code,",
-    "row_number() OVER (",
-    "  PARTITION BY root_medication_id",
-    "  ORDER BY medication_system, medication_code",
-    ") AS code_number",
+    "  row_number() OVER (",
+    "    PARTITION BY root_medication_id",
+    "    ORDER BY medication_system, medication_code",
+    "  ) AS code_number",
     "FROM medication_code_values",
     sep = "\n"
   )
   medication_issues_query <- paste(
     "SELECT DISTINCT medication_walk.root_medication_id,",
-    "'missing_medication'::text AS issue_type,",
-    "medication_walk.medication_id AS related_medication_id",
+    "  'missing_medication'::text AS issue_type,",
+    "  medication_walk.medication_id AS related_medication_id",
     "FROM medication_walk",
     "LEFT JOIN medication_nodes",
-    "ON medication_nodes.medication_id = medication_walk.medication_id",
+    "  ON medication_nodes.medication_id = medication_walk.medication_id",
     "WHERE medication_nodes.medication_id IS NULL",
     "UNION",
     "SELECT source_roots.root_medication_id,",
-    "'no_reachable_code'::text AS issue_type,",
-    "source_roots.root_medication_id AS related_medication_id",
+    "  'no_reachable_code'::text AS issue_type,",
+    "  source_roots.root_medication_id AS related_medication_id",
     "FROM source_roots",
     "JOIN medication_nodes",
-    "ON medication_nodes.medication_id = source_roots.root_medication_id",
+    "  ON medication_nodes.medication_id = source_roots.root_medication_id",
     "WHERE NOT EXISTS (",
     "  SELECT 1",
     "  FROM medication_code_values",
@@ -155,33 +163,53 @@ buildSnapshotMedicationResolutionQuery <- function(
   )
   medication_issue_summary_query <- paste(
     "SELECT root_medication_id,",
-    "string_agg(",
-    "  issue_type || E'\\t' || related_medication_id,",
-    "  E'\\n' ORDER BY issue_type, related_medication_id",
-    ") AS issues",
+    "  string_agg(",
+    "    issue_type || E'\\t' || related_medication_id,",
+    "    E'\\n' ORDER BY issue_type, related_medication_id",
+    "  ) AS issues",
     "FROM medication_issues",
     "GROUP BY root_medication_id",
     sep = "\n"
   )
   ctes <- c(
-    paste0("medication_nodes AS (\n", medication_nodes_query, "\n)"),
-    paste0("medication_edges AS (\n", medication_edges_query, "\n)"),
-    paste0("source_roots AS (\n", source_roots_query, "\n)"),
+    paste0(
+      "medication_nodes AS (\n",
+      indentSql(medication_nodes_query),
+      "\n)"
+    ),
+    paste0(
+      "medication_edges AS (\n",
+      indentSql(medication_edges_query),
+      "\n)"
+    ),
+    paste0(
+      "source_roots AS (\n",
+      indentSql(source_roots_query),
+      "\n)"
+    ),
     paste0(
       "medication_walk(root_medication_id, medication_id) AS (\n",
-      medication_walk_query,
+      indentSql(medication_walk_query),
       "\n)"
     ),
     paste0(
       "medication_code_values AS (\n",
-      medication_code_values_query,
+      indentSql(medication_code_values_query),
       "\n)"
     ),
-    paste0("medication_codes AS (\n", medication_codes_query, "\n)"),
-    paste0("medication_issues AS (\n", medication_issues_query, "\n)"),
+    paste0(
+      "medication_codes AS (\n",
+      indentSql(medication_codes_query),
+      "\n)"
+    ),
+    paste0(
+      "medication_issues AS (\n",
+      indentSql(medication_issues_query),
+      "\n)"
+    ),
     paste0(
       "medication_issue_summary AS (\n",
-      medication_issue_summary_query,
+      indentSql(medication_issue_summary_query),
       "\n)"
     )
   )
@@ -189,16 +217,19 @@ buildSnapshotMedicationResolutionQuery <- function(
     "WITH RECURSIVE\n",
     paste(ctes, collapse = ",\n"),
     "\nSELECT source_roots.root_medication_id,\n",
-    "medication_codes.medication_system,\n",
-    "medication_codes.medication_code,\n",
+    "  medication_codes.medication_system,\n",
+    "  medication_codes.medication_code,\n",
     # Issues are stored once per root, not once per resolved code.
-    "CASE WHEN COALESCE(medication_codes.code_number, 1) = 1 ",
-    "THEN medication_issue_summary.issues ELSE NULL END AS issues\n",
+    "  CASE WHEN COALESCE(medication_codes.code_number, 1) = 1\n",
+    "    THEN medication_issue_summary.issues\n",
+    "    ELSE NULL\n",
+    "  END AS issues\n",
     "FROM source_roots\n",
     "LEFT JOIN medication_codes\n",
-    "ON medication_codes.root_medication_id = source_roots.root_medication_id\n",
+    "  ON medication_codes.root_medication_id = source_roots.root_medication_id\n",
     "LEFT JOIN medication_issue_summary\n",
-    "ON medication_issue_summary.root_medication_id = source_roots.root_medication_id"
+    "  ON medication_issue_summary.root_medication_id = ",
+    "source_roots.root_medication_id"
   )
 }
 
@@ -247,10 +278,13 @@ buildSnapshotMedicationSourceQuery <- function(
 
   paste0(
     "SELECT ",
-    paste(c(source_columns, enrichment_select, issue_select), collapse = ",\n"),
+    paste(
+      c(source_columns, enrichment_select, issue_select),
+      collapse = ",\n  "
+    ),
     "\nFROM ", source_relation, " ", source_alias, "\n",
     "LEFT JOIN ", medication_resolution_relation, " ", resolution_alias, "\n",
-    "ON ", resolution_alias, ".root_medication_id = ", normalized_reference
+    "  ON ", resolution_alias, ".root_medication_id = ", normalized_reference
   )
 }
 
