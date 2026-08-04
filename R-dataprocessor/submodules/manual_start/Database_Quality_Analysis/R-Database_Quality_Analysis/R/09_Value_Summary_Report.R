@@ -111,22 +111,55 @@ normalizeValueSummaryColumnClasses <- function(rows) {
   rows
 }
 
+#' Get configured table families for value summaries
+#'
+#' Returns the table families that should be included in the value summary archive.
+getValueSummaryTableFamilies <- function(config) {
+  table_families <- config$value_summary_table_families
+  if (is.null(table_families)) {
+    return("FHIR")
+  }
+  table_families[nzchar(table_families)]
+}
+
 #' Get value summary suppression patterns
 #'
 #' Returns configured regex patterns for columns whose values should be suppressed.
-getValueSummarySuppressedColumnPatterns <- function(config) {
+getValueSummarySuppressedColumnPatterns <- function(config, table_family = NULL) {
   patterns <- config$value_summary_suppressed_column_patterns
+  if (is.list(patterns) && !is.character(patterns)) {
+    if (is.null(table_family) || is.null(patterns[[table_family]])) {
+      return(character())
+    }
+    patterns <- patterns[[table_family]]
+  }
   if (is.null(patterns)) {
     return(character())
   }
   patterns[nzchar(patterns)]
 }
 
+#' Check whether a column stores plural value details
+#'
+#' Detects columns whose names end in _values. These can be enabled explicitly
+#' for value summaries even when the default suppression patterns hide them.
+isValueSummaryValuesColumn <- function(column_name) {
+  grepl("_values$", column_name)
+}
+
 #' Check whether value details should be suppressed
 #'
-#' Tests a column name against the configured value suppression patterns.
-shouldSuppressValueSummaryValues <- function(column_name, config) {
-  patterns <- getValueSummarySuppressedColumnPatterns(config)
+#' Tests a column name against the configured value suppression patterns. Columns
+#' ending in _values can be included with an explicit command-line/config flag.
+shouldSuppressValueSummaryValues <- function(column_name, config, table_family = NULL) {
+  if (
+    isTRUE(config$include_value_summary_values_columns) &&
+    isValueSummaryValuesColumn(column_name)
+  ) {
+    return(FALSE)
+  }
+
+  patterns <- getValueSummarySuppressedColumnPatterns(config, table_family)
   if (!length(patterns)) {
     return(FALSE)
   }
@@ -600,13 +633,14 @@ summariseStatisticValues <- function(summary_result, alias_map, table_metadata, 
 
 #' Create value summary reports
 #'
-#' Creates one CSV-ready value summary table per FHIR resource.
+#' Creates one CSV-ready value summary table per configured table family.
 createValueSummaryReports <- function(
   metadata,
   config = list(count_batch_size = 100),
   query_fun = etlutils::dbGetReadOnlyQuery
 ) {
-  metadata <- metadata[TABLE_FAMILY == "FHIR"]
+  value_summary_table_families <- getValueSummaryTableFamilies(config)
+  metadata <- metadata[TABLE_FAMILY %in% value_summary_table_families]
   table_names <- unique(metadata$TABLE_NAME)
   count_batch_size <- if (is.null(config$count_batch_size)) 100L else config$count_batch_size
   result <- list()
@@ -619,6 +653,7 @@ createValueSummaryReports <- function(
       COLUMN_NAME,
       shouldSuppressValueSummaryValues,
       logical(1),
+      table_family = table_metadata$TABLE_FAMILY[[1]],
       config = config
     )]
     resource_id_column <- getValueSummaryResourceIdColumn(table_metadata, config)
@@ -664,7 +699,7 @@ createValueSummaryReports <- function(
           )
         }
 
-        suppressed_columns <- batch_metadata[SUPPRESS_VALUES == TRUE, COLUMN_NAME]
+        suppressed_columns <- batch_metadata[VALUE_TYPE == "text" & SUPPRESS_VALUES == TRUE, COLUMN_NAME]
         if (length(suppressed_columns)) {
           suppressed_query <- buildSuppressedValueSummaryQuery(
             table_metadata,
@@ -714,7 +749,7 @@ createValueSummaryReports <- function(
         }
 
         for (value_type in c("numeric", "datetime")) {
-          statistic_columns <- batch_metadata[VALUE_TYPE == value_type & SUPPRESS_VALUES == FALSE, COLUMN_NAME]
+          statistic_columns <- batch_metadata[VALUE_TYPE == value_type, COLUMN_NAME]
           if (!length(statistic_columns)) {
             next
           }
@@ -754,6 +789,7 @@ createValueSummaryReports <- function(
       data.table::setorder(table_result, ORDINAL_POSITION)
       table_result[, ORDINAL_POSITION := NULL]
       data.table::setcolorder(table_result, DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_COLUMNS)
+      attr(table_result, "table_family") <- table_metadata$TABLE_FAMILY[[1]]
       result[[table_name]] <- table_result
     }
 
@@ -780,6 +816,17 @@ sanitizeValueSummaryFileName <- function(value) {
     return("resource")
   }
   value
+}
+
+#' Get the archive folder for a value summary table
+#'
+#' Returns the table-family folder used inside the value summary ZIP archive.
+getValueSummaryArchiveFolder <- function(value_summary) {
+  table_family <- attr(value_summary, "table_family", exact = TRUE)
+  if (is.null(table_family) || !nzchar(table_family)) {
+    return("FHIR")
+  }
+  sanitizeValueSummaryFileName(table_family)
 }
 
 #' Write the value summary archive
@@ -817,7 +864,13 @@ writeValueSummaryArchive <- function(
   on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
 
   csv_files <- vapply(names(value_summaries), function(table_name) {
-    file_name <- file.path(temp_dir, paste0(sanitizeValueSummaryFileName(table_name), ".csv"))
+    archive_folder <- getValueSummaryArchiveFolder(value_summaries[[table_name]])
+    relative_file_name <- file.path(
+      archive_folder,
+      paste0(sanitizeValueSummaryFileName(table_name), ".csv")
+    )
+    file_name <- file.path(temp_dir, relative_file_name)
+    dir.create(dirname(file_name), recursive = TRUE, showWarnings = FALSE)
     data.table::fwrite(
       value_summaries[[table_name]],
       file = file_name,
@@ -825,11 +878,13 @@ writeValueSummaryArchive <- function(
       na = "",
       quote = TRUE
     )
-    file_name
+    relative_file_name
   }, character(1))
 
   if (!length(csv_files)) {
-    file_name <- file.path(temp_dir, "FHIR_Value_Summary.csv")
+    csv_files <- file.path("FHIR", "FHIR_Value_Summary.csv")
+    file_name <- file.path(temp_dir, csv_files)
+    dir.create(dirname(file_name), recursive = TRUE, showWarnings = FALSE)
     data.table::fwrite(
       createEmptyValueSummaryRows(),
       file = file_name,
@@ -837,7 +892,6 @@ writeValueSummaryArchive <- function(
       na = "",
       quote = TRUE
     )
-    csv_files <- file_name
   }
 
   if (file.exists(archive_name)) {
@@ -847,7 +901,7 @@ writeValueSummaryArchive <- function(
   on.exit(setwd(old_wd), add = TRUE)
   setwd(temp_dir)
   logProgress("Writing value summary archive to ", archive_name, ".")
-  utils::zip(archive_name, files = basename(csv_files), flags = "-q")
+  utils::zip(archive_name, files = csv_files, flags = "-q")
   logProgress("Value summary archive written to ", archive_name, ".")
   invisible(archive_name)
 }

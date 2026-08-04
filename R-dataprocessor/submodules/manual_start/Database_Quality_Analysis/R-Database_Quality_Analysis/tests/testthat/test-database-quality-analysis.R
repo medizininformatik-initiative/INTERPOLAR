@@ -135,17 +135,23 @@ test_that("database quality analysis resource detail sheets are parsed", {
 })
 
 
-test_that("database quality analysis config defaults to no suppressed value summary columns", {
+test_that("database quality analysis config defaults value summary controls", {
   config <- getConfig(envir = new.env(parent = emptyenv()))
 
-  expect_equal(config$value_summary_suppressed_column_patterns, character())
+  expect_equal(config$value_summary_table_families, c("FHIR", "Frontend"))
+  expect_equal(config$value_summary_suppressed_column_patterns, list(
+    FHIR = character(),
+    Frontend = character()
+  ))
+  expect_false(config$include_value_summary_values_columns)
 })
 
 test_that("database quality analysis config controls filtered scope sheets", {
   envir <- new.env(parent = emptyenv())
   assign("FILTERED_SCOPE_SHEET_NAMES", c("FHIR", "FHIR Encounter"), envir = envir)
   assign("FILTERED_SCOPE_DETAIL_SHEET_SUFFIX", "IP", envir = envir)
-  assign("VALUE_SUMMARY_SUPPRESSED_COLUMN_PATTERNS", c("_id$", "_ref$"), envir = envir)
+  assign("VALUE_SUMMARY_FHIR_SUPPRESSED_COLUMN_PATTERNS", c("_id$", "_ref$"), envir = envir)
+  assign("VALUE_SUMMARY_FRONTEND_SUPPRESSED_COLUMN_PATTERNS", "_pid$", envir = envir)
 
   config <- getConfig(envir = envir)
 
@@ -157,9 +163,55 @@ test_that("database quality analysis config controls filtered scope sheets", {
   expect_equal(getFilteredScopeLabel(config), "IP")
   expect_equal(getFilteredScopeSheetName("FHIR", config), "FHIR IP")
   expect_equal(getFilteredScopeSheetName("FHIR Encounter", config), "FHIR Encounter IP")
-  expect_equal(config$value_summary_suppressed_column_patterns, c("_id$", "_ref$"))
+  expect_equal(config$value_summary_suppressed_column_patterns, list(
+    FHIR = c("_id$", "_ref$"),
+    Frontend = "_pid$"
+  ))
 })
 
+
+test_that("database quality analysis config can include values columns by command-line flags", {
+  envir <- new.env(parent = emptyenv())
+  command_arguments <- list(
+    c("database-quality-analysis", "--include-value-summary-values-columns"),
+    c("database-quality-analysis", "includeValuesColumns")
+  )
+
+  results <- lapply(command_arguments, function(arguments) {
+    getConfig(envir = envir, command_arguments = arguments)
+  })
+
+  expect_true(all(vapply(results, function(result) {
+    isTRUE(result$include_value_summary_values_columns)
+  }, logical(1))))
+})
+
+test_that("database quality analysis value summary can include values columns explicitly", {
+  config <- list(
+    value_summary_suppressed_column_patterns = "_values$",
+    include_value_summary_values_columns = FALSE
+  )
+
+  expect_true(shouldSuppressValueSummaryValues("obs_component_values", config))
+
+  config$include_value_summary_values_columns <- TRUE
+  expect_false(shouldSuppressValueSummaryValues("obs_component_values", config))
+})
+
+test_that("database quality analysis value summary suppression uses table family", {
+  config <- list(
+    value_summary_suppressed_column_patterns = list(
+      FHIR = "_ref$",
+      Frontend = "_pid$"
+    ),
+    include_value_summary_values_columns = FALSE
+  )
+
+  expect_true(shouldSuppressValueSummaryValues("obs_patient_ref", config, "FHIR"))
+  expect_false(shouldSuppressValueSummaryValues("obs_patient_ref", config, "Frontend"))
+  expect_true(shouldSuppressValueSummaryValues("record_pid", config, "Frontend"))
+  expect_false(shouldSuppressValueSummaryValues("record_pid", config, "FHIR"))
+})
 
 test_that("database quality analysis config can skip datetime columns by command-line flags", {
   envir <- new.env(parent = emptyenv())
@@ -531,7 +583,7 @@ test_that("database quality analysis creates value summary reports", {
   expect_length(query_state$seen_queries, 4L)
 })
 
-test_that("database quality analysis value summary reports use only FHIR metadata", {
+test_that("database quality analysis value summary reports use configured table families", {
   metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",
     VIEW_NAME = c("v_observation_last_version", "v_patient_fe_last_version", "v_pids_per_ward"),
@@ -554,18 +606,20 @@ test_that("database quality analysis value summary reports use only FHIR metadat
     metadata,
     config = list(
       grouping_overrides = parseGroupingOverrides(character()),
+      value_summary_table_families = c("FHIR", "Frontend"),
       value_summary_suppressed_column_patterns = "_id$"
     ),
     query_fun = query_fun
   )
 
-  expect_equal(names(result), "observation")
+  expect_equal(names(result), c("observation", "patient_fe"))
   expect_false("TABLE_FAMILY" %in% names(result$observation))
   expect_false("TABLE_NAME" %in% names(result$observation))
+  expect_false("TABLE_FAMILY" %in% names(result$patient_fe))
+  expect_false("TABLE_NAME" %in% names(result$patient_fe))
   expect_length(query_state$seen_queries, 1L)
   expect_match(query_state$seen_queries[[1]], "v_observation_last_version", fixed = TRUE)
-  expect_false(grepl("patient_fe", query_state$seen_queries[[1]], fixed = TRUE))
-  expect_false(grepl("pids_per_ward", query_state$seen_queries[[1]], fixed = TRUE))
+  expect_false(any(grepl("pids_per_ward", query_state$seen_queries, fixed = TRUE)))
 })
 
 test_that("database quality analysis count query applies optional row filters", {
@@ -1731,6 +1785,9 @@ test_that("database quality analysis value summary writer creates zip archive", 
     )
   )
 
+  value_summaries$patient_fe <- data.table::copy(value_summaries$observation)
+  attr(value_summaries$patient_fe, "table_family") <- "Frontend"
+
   file_name <- writeValueSummaryArchive(
     value_summaries,
     "Database_Quality_Analysis_Test",
@@ -1744,14 +1801,16 @@ test_that("database quality analysis value summary writer creates zip archive", 
     fixed = TRUE
   )
   archive_files <- utils::unzip(file_name, list = TRUE)
-  expect_equal(archive_files$Name, "observation.csv")
+  expect_equal(sort(archive_files$Name), c("FHIR/observation.csv", "Frontend/patient_fe.csv"))
   extract_dir <- tempfile("value-summary-unzip-")
   dir.create(extract_dir)
   utils::unzip(file_name, exdir = extract_dir)
-  written_values <- data.table::fread(file.path(extract_dir, "observation.csv"), sep = ",")
+  written_values <- data.table::fread(file.path(extract_dir, "FHIR", "observation.csv"), sep = ",")
+  frontend_values <- data.table::fread(file.path(extract_dir, "Frontend", "patient_fe.csv"), sep = ",")
   expect_equal(written_values$DISTINCT_VALUES, 2L)
   expect_equal(written_values$VALUE_COUNTS, "'AMB': 20; 'IMP': 10")
   expect_equal(written_values$EMPTY, 4L)
+  expect_equal(frontend_values$VALUE_COUNTS, "'AMB': 20; 'IMP': 10")
 })
 
 test_that("database quality analysis value summary writer handles relative output dirs", {
@@ -1808,5 +1867,5 @@ test_that("database quality analysis value summary writer handles relative outpu
 
   expect_true(file.exists(file_name))
   expect_true(grepl(normalizePath(relative_root, mustWork = TRUE), file_name, fixed = TRUE))
-  expect_equal(utils::unzip(file_name, list = TRUE)$Name, "observation.csv")
+  expect_equal(utils::unzip(file_name, list = TRUE)$Name, "FHIR/observation.csv")
 })

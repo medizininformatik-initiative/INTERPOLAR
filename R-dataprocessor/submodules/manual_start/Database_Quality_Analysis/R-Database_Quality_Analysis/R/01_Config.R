@@ -47,6 +47,12 @@ parseCommandLineConfig <- function(command_arguments = NULL) {
   if (any(normalized_argument_names %in% c("skip_value_datetime_columns", "s"))) {
     parsed$INCLUDE_VALUE_DATETIME_COLUMNS <- FALSE
   }
+  if (any(normalized_argument_names %in% c(
+    "include_value_summary_values_columns",
+    "include_values_columns"
+  ))) {
+    parsed$INCLUDE_VALUE_SUMMARY_VALUES_COLUMNS <- TRUE
+  }
   parsed
 }
 
@@ -99,9 +105,22 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     grouping_overrides = parseGroupingOverrides(getConfigValue("GROUPING_OVERRIDES", character())),
     filtered_scope_sheet_names = getConfigValue("FILTERED_SCOPE_SHEET_NAMES", character()),
     filtered_scope_detail_sheet_suffix = getConfigValue("FILTERED_SCOPE_DETAIL_SHEET_SUFFIX", "FILTERED"),
-    value_summary_suppressed_column_patterns = getConfigValue(
-      "VALUE_SUMMARY_SUPPRESSED_COLUMN_PATTERNS",
-      character()
+    value_summary_table_families = getConfigValue(
+      "VALUE_SUMMARY_TABLE_FAMILIES",
+      c("FHIR", "Frontend")
+    ),
+    value_summary_suppressed_column_patterns = list(
+      FHIR = getConfigValue(
+        "VALUE_SUMMARY_FHIR_SUPPRESSED_COLUMN_PATTERNS",
+        character()
+      ),
+      Frontend = getConfigValue(
+        "VALUE_SUMMARY_FRONTEND_SUPPRESSED_COLUMN_PATTERNS",
+        character()
+      )
+    ),
+    include_value_summary_values_columns = as.logical(
+      getConfigValue("INCLUDE_VALUE_SUMMARY_VALUES_COLUMNS", FALSE)
     ),
     resource_detail_sheets = parseResourceDetailSheets(getConfigValue)
   )

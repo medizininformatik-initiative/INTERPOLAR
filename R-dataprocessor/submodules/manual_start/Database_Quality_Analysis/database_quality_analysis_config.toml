@@ -5,6 +5,10 @@ OUTPUT_FILENAME = "Database_Quality_Analysis"
 COUNT_BATCH_SIZE = 100
 INCLUDE_VALUE_DATETIME_COLUMNS = true
 
+# Database credentials are loaded through this separate DB config file.
+# Point this to the pseudonymized snapshot DB config when running DQA there.
+PATH_TO_DB_CONFIG_TOML = "./cds_hub_db_config.toml"
+
 # Views matching these regular expressions are included automatically.
 INCLUDED_VIEW_PATTERNS = [
   "^v_[a-z0-9_]+_last_version$",
@@ -47,16 +51,37 @@ GROUPING_OVERRIDES = [
   "medikationsanalyse_fe|meda_id|record_id|fall_meda_id"
 ]
 
-# Value-summary columns whose concrete values and statistics should not be exported.
+# Table families included in the value-summary ZIP archive.
+# Typical values are FHIR and Frontend.
+VALUE_SUMMARY_TABLE_FAMILIES = ["FHIR", "Frontend"]
+
+# FHIR value-summary text columns whose concrete values should not be exported.
 # Patterns are regular expressions matched against COLUMN_NAME. DISTINCT_VALUES
-# and EMPTY are still calculated for these columns.
-VALUE_SUMMARY_SUPPRESSED_COLUMN_PATTERNS = [
+# and EMPTY are still calculated for these columns. Numeric and datetime
+# columns are summarized with statistics instead of concrete values.
+VALUE_SUMMARY_FHIR_SUPPRESSED_COLUMN_PATTERNS = [
   "_ref$",
   "_id$",
   "_identifier_value$",
   "_display$",
-  "_text$"
+  "_text$",
+  "_meta_versionid$",
+  "_values$"
 ]
+
+# Frontend value-summary text columns whose concrete values should not be exported.
+# Patterns are regular expressions matched against COLUMN_NAME.
+VALUE_SUMMARY_FRONTEND_SUPPRESSED_COLUMN_PATTERNS = [
+  "_id$",
+  "_fk$",
+  "_pid$",
+  "_additional_values$",
+  "_kurzbeschr$"
+]
+
+# Set this to true, or pass --include-value-summary-values-columns, to include
+# concrete text values from columns ending in _values.
+INCLUDE_VALUE_SUMMARY_VALUES_COLUMNS = false
 
 # Optional resource detail sheets. The entries belong together by position: the
 # first sheet name uses the first table name, row group, and count group settings.
