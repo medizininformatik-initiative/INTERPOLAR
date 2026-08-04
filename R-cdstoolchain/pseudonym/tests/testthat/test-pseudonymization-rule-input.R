@@ -48,7 +48,7 @@ test_that("loadPseudonymizationRules loads table descriptions and snapshot exten
       COLUMN_TYPE = "varchar",
       PSEUDONYMIZATION_RULE = "keep"
     ),
-    "snapshot_extensions"
+    "snapshot_extension"
   )
 
   rules <- loadPseudonymizationRules(
@@ -60,7 +60,7 @@ test_that("loadPseudonymizationRules loads table descriptions and snapshot exten
     snapshot_extensions = data.table::data.table(
       SOURCE = "observation_extensions",
       PATH = extension_file,
-      SHEET_NAME = "snapshot_extensions"
+      SHEET_NAME = "snapshot_extension"
     )
   )
 
@@ -97,7 +97,7 @@ test_that("loadPseudonymizationRules keeps snapshot-only TODO markers visible", 
       COLUMN_TYPE = "varchar",
       PSEUDONYMIZATION_RULE = "### TODO: NEW COLUMN ###"
     ),
-    "snapshot_extensions"
+    "snapshot_extension"
   )
 
   rules <- loadPseudonymizationRules(
@@ -121,8 +121,39 @@ test_that("default snapshot rule sources name all current rule workbooks", {
     sources$table_descriptions$SHEET_NAME,
     c("table_description", "table_description", "frontend_table_description")
   )
-  expect_equal(sources$snapshot_extensions$SHEET_NAME, "snapshot_extensions")
+  expect_equal(sources$snapshot_extensions$SHEET_NAME, "snapshot_extension")
   expect_true(any(grepl("Frontend_Table_Description.xlsx$", sources$table_descriptions$PATH)))
+})
+
+test_that("default snapshot rule sources allow a missing snapshot extension sheet", {
+  project_root <- tempfile("snapshot-rule-sources-")
+  table_description_path <- file.path(
+    project_root,
+    DEFAULT_FHIR_TABLE_DESCRIPTION_PATH
+  )
+  dir.create(dirname(table_description_path), recursive = TRUE)
+  workbook <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(workbook, "table_description")
+  openxlsx::writeData(
+    workbook,
+    "table_description",
+    data.table::data.table(TABLE_NAME = "Patient", COLUMN_NAME = "pat_id")
+  )
+  openxlsx::saveWorkbook(workbook, table_description_path)
+
+  sources <- getDefaultSnapshotPseudonymizationRuleSources(project_root)
+
+  expect_s3_class(sources$snapshot_extensions, "data.table")
+  expect_equal(nrow(sources$snapshot_extensions), 0L)
+})
+
+test_that("default snapshot extensions come from the generated table description", {
+  sources <- getDefaultSnapshotPseudonymizationRuleSources(project_root = "/repo")
+
+  expect_equal(
+    sources$snapshot_extensions$PATH,
+    file.path("/repo", DEFAULT_FHIR_TABLE_DESCRIPTION_PATH)
+  )
 })
 
 test_that("default snapshot rule sources can load current repository files", {
@@ -138,7 +169,7 @@ test_that("default snapshot rule sources can load current repository files", {
   expect_true(nrow(rules) > 0)
   expect_setequal(
     unique(rules$SOURCE),
-    c("fhir", "dataprocessor_submodules", "frontend", "snapshot_extensions")
+    c("fhir", "dataprocessor_submodules", "frontend", "snapshot_extension")
   )
 })
 

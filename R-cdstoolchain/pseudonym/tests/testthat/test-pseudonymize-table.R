@@ -345,6 +345,42 @@ test_that("pseudonym rules use fixed Excel mapping file and sheet argument", {
   expect_equal(result$redcap_data_access_group, c("ward 001", "ICU WEST", NA))
 })
 
+test_that("pseudonym rules map newline-separated values individually", {
+  input_repo_path <- tempfile("input-repo-")
+  writePseudonymMappingWorkbook(
+    input_repo_path,
+    "ward_mapping",
+    data.table::data.table(
+      KEY = c("Allgemeinchirurgie", "Pneumologie"),
+      PSEUDONYM = c("ward 001", "ward 002")
+    )
+  )
+  source_table <- data.table::data.table(
+    ward = c(
+      "Allgemeinchirurgie",
+      "Allgemeinchirurgie\nPneumologie",
+      "Pneumologie\r\nAllgemeinchirurgie"
+    )
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "frontend",
+    COLUMN_NAME = "ward",
+    PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "ward_mapping")'
+  )
+
+  result <- pseudonymizeTable(
+    source_table,
+    table_description,
+    "frontend",
+    input_repo_path = input_repo_path
+  )
+
+  expect_equal(
+    result$ward,
+    c("ward 001", "ward 001\nward 002", "ward 002\nward 001")
+  )
+})
+
 test_that("pseudonym mapping sheets may contain a comment block above the table", {
   input_repo_path <- tempfile("input-repo-")
   writeCommentedPseudonymMappingWorkbook(
@@ -460,64 +496,4 @@ test_that("pseudonym mapping validation rejects duplicate keys", {
     ),
     "duplicate KEY"
   )
-})
-
-test_that("pseudonymizeTables keeps unmatched columns by default", {
-  tables <- list(
-    patient = data.table::data.table(
-      id = c("p1", "p2"),
-      gender = c("female", "male"),
-      extra_admin_column = c("x", "y")
-    ),
-    cron_job = data.table::data.table(id = "internal")
-  )
-  rules <- data.table::data.table(
-    TABLE_OR_RESOURCE = "patient",
-    COLUMN_NAME = c("id", "gender", "missing_in_source"),
-    PSEUDONYMIZATION_RULE = c("cryptoHash", "keep", "keep")
-  )
-
-  result <- pseudonymizeTables(
-    tables,
-    rules,
-    log_steps = FALSE
-  )
-
-  expect_named(result$tables, "patient")
-  expect_named(result$tables$patient, c("id", "gender", "extra_admin_column"))
-  expect_false(identical(result$tables$patient$id, tables$patient$id))
-  expect_equal(result$tables$patient$gender, tables$patient$gender)
-  expect_equal(result$tables$patient$extra_admin_column, tables$patient$extra_admin_column)
-  expect_equal(
-    result$summary[result$summary$TABLE_NAME == "cron_job", ][["STATUS"]],
-    "skipped_no_rules"
-  )
-  expect_equal(
-    result$summary[result$summary$TABLE_NAME == "patient", ][["MISSING_COLUMNS"]],
-    "missing_in_source"
-  )
-})
-
-test_that("pseudonymizeTables can omit unmatched columns when requested", {
-  tables <- list(
-    observation = data.table::data.table(
-      id = "o1",
-      value = "visible",
-      source_only = "kept for debugging"
-    )
-  )
-  rules <- data.table::data.table(
-    TABLE_NAME = "observation",
-    COLUMN_NAME = c("id", "value"),
-    PSEUDONYMIZATION_RULE = c("cryptoHash", "keep")
-  )
-
-  result <- pseudonymizeTables(
-    tables,
-    rules,
-    keep_unmatched_columns = FALSE,
-    log_steps = FALSE
-  )
-
-  expect_named(result$tables$observation, c("id", "value"))
 })

@@ -7,8 +7,8 @@ set -o pipefail
 #
 #  Aufruf:
 #      ./ip-snapshot.sh list
-#      ./ip-snapshot.sh create  <name> [--with-pseudonymized]
-#      ./ip-snapshot.sh pseudonymize  <name_date> [--keep-temp-on-error]
+#      ./ip-snapshot.sh create  <name> [--with-pseudonymized] [--chunk-size <rows>]
+#      ./ip-snapshot.sh pseudonymize  <name_date> [--chunk-size <rows>]
 #      ./ip-snapshot.sh delete  <name_date>
 #      ./ip-snapshot.sh activate  <name_date>
 #      ./ip-snapshot.sh deactivate  <name_date>
@@ -32,9 +32,9 @@ Usage: ${0##*/} <action> <name>
   <name>     beliebiger String (ohne Pfad‑Komponenten), <name> | <name_date>
   --with-pseudonymized
              nur bei \"create\": erzeugt direkt zusätzlich <name_date>_pseud.sql.gz
-  --keep-temp-on-error
+  --chunk-size <rows>
              nur bei \"pseudonymize\" oder \"create --with-pseudonymized\":
-             temporäre Build-Datenbanken bei Fehlern zur Diagnose behalten
+             Anzahl der pro Verarbeitungsschritt gelesenen Zeilen (Standard: 25000)
 
 Beispiele:
   $0 list                            → listet alle .sql.gz-Dateien (ohne Endung) im Ordner Snapshots auf
@@ -42,8 +42,8 @@ Beispiele:
   $0 create  snapshot --with-pseudonymized
                                       → erzeugt  snapshot_<Datum>.sql.gz und snapshot_<Datum>_pseud.sql.gz
   $0 pseudonymize  snapshot_20250929 → erzeugt  snapshot_20250929_pseud.sql.gz
-  $0 pseudonymize  snapshot_20250929 --keep-temp-on-error
-                                      → behält ip_snapshot_20250929_build und ip_snapshot_20250929_pseud_build bei Fehlern
+  $0 pseudonymize  snapshot_20250929 --chunk-size 10000
+                                      → verarbeitet höchstens 10000 Zeilen pro Block
   $0 delete  snapshot_20250929       → löscht   snapshot_20250929.sql.gz
   $0 activate  snapshot_20250929     → erstellt eine Datenbank 'snapshot_20250929'
   $0 deactivate  snapshot_20250929   → löscht die Datenbank 'snapshot_20250929'
@@ -60,13 +60,56 @@ EOF
 
 action=$1
 name=$2
-option=$3
-option2=$4
 DIR=Snapshots
+with_pseudonymized=false
+chunk_size=25000
+chunk_size_set=false
 
 if [[ -z "$action" ]]; then
     print_usage
     exit 1
+fi
+
+if [[ $# -ge 2 ]]; then
+    shift 2
+else
+    shift "$#"
+fi
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --with-pseudonymized)
+            with_pseudonymized=true
+            shift
+            ;;
+        --chunk-size)
+            if [[ $# -lt 2 || ! "$2" =~ ^[1-9][0-9]*$ ]]; then
+                echo "Fehler: --chunk-size erwartet eine positive ganze Zahl." >&2
+                exit 3
+            fi
+            chunk_size="$2"
+            chunk_size_set=true
+            shift 2
+            ;;
+        *)
+            echo "Fehler: unbekannte Option \"$1\"." >&2
+            exit 3
+            ;;
+    esac
+done
+
+if [[ "$action" == "create" ]]; then
+    if [[ "$chunk_size_set" == "true" && "$with_pseudonymized" != "true" ]]; then
+        echo "Fehler: --chunk-size benötigt --with-pseudonymized." >&2
+        exit 3
+    fi
+elif [[ "$action" == "pseudonymize" ]]; then
+    if [[ "$with_pseudonymized" == "true" ]]; then
+        echo "Fehler: --with-pseudonymized ist nur bei \"create\" erlaubt." >&2
+        exit 3
+    fi
+elif [[ "$with_pseudonymized" == "true" || "$chunk_size_set" == "true" ]]; then
+    echo "Fehler: Optionen zur Pseudonymisierung sind bei \"$action\" nicht erlaubt." >&2
+    exit 3
 fi
 
 # Nur einfache Dateinamen/DB-Namen zulassen, weil der Name auch in SQL-DB-Namen verwendet wird.
@@ -128,7 +171,7 @@ container_input_repo_mount_args() {
     fi
     if [[ -d "${host_path}" ]]; then
         printf '%s\n' "-v"
-        printf '%s\n' "${host_path}:${container_path}:ro"
+        printf '%s\n' "${host_path}:${container_path}"
     fi
 }
 
@@ -183,7 +226,7 @@ prepare_pseudonymized_target_database() {
 
 create_pseudonymized_snapshot() {
     local snapshot_name="$1"
-    local keep_temp_on_error="${2:-false}"
+    local chunk_size="$2"
     local source_file_path="${DIR}/${snapshot_name}.sql.gz"
     local pseudonymized_snapshot_name="${snapshot_name}_pseud"
     local pseudonymized_file_path="${DIR}/${pseudonymized_snapshot_name}.sql.gz"
@@ -194,61 +237,77 @@ create_pseudonymized_snapshot() {
         echo "Fehler: Snapshot \"${source_file_path}\" existiert nicht."
         exit 1
     fi
-    ask_before_overwrite_file "${pseudonymized_file_path}"
 
-    if database_exists "${source_build_db}" ; then
-        echo "Fehler: Temporäre Source-Datenbank '${source_build_db}' existiert bereits."
+    local input_repo_mount_args=()
+    while IFS= read -r mount_arg; do
+        input_repo_mount_args+=("${mount_arg}")
+    done < <(container_input_repo_mount_args)
+    echo "Prüfe Pseudonymisierungsregeln und Mapping-Dateien..."
+    if ! docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
+        Rscript R-cdstoolchain/StartSnapshotPseudonymizationPreflight.R ; then
+        echo "Fehler: Vorprüfung der Pseudonymisierung fehlgeschlagen."
+        echo "Der Snapshot wurde nicht eingespielt und es wurden keine Build-Datenbanken angelegt."
         exit 1
     fi
+    echo "Vorprüfung der Pseudonymisierung abgeschlossen."
+
+    ask_before_overwrite_file "${pseudonymized_file_path}"
+    local source_build_db_exists=false
+    if database_exists "${source_build_db}" ; then
+        source_build_db_exists=true
+    fi
+
+    if [[ "${source_build_db_exists}" == "true" ]]; then
+        echo "Verwende bereits vollständig eingespielte Source-Datenbank '${source_build_db}'."
+    fi
     if database_exists "${target_build_db}" ; then
-        echo "Fehler: Temporäre Ziel-Datenbank '${target_build_db}' existiert bereits."
-        exit 1
+        echo "Entferne unvollständige Ziel-Datenbank '${target_build_db}' für den Neustart..."
+        if ! drop_database_if_exists "${target_build_db}" ; then
+            echo "Fehler: Temporäre Ziel-Datenbank '${target_build_db}' konnte nicht entfernt werden."
+            exit 1
+        fi
     fi
 
     SECONDS=0
-    echo "Erzeuge temporäre Source-Datenbank '${source_build_db}'..."
-    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
-        "CREATE DATABASE ${source_build_db} WITH OWNER=cds_hub_db_admin;"
-    if gzip -cd "${source_file_path}" | docker compose exec -T cds_hub psql -d "${source_build_db}" cds_hub_db_admin ; then
-        echo "Temporäre Source-Datenbank '${source_build_db}' eingespielt."
-    else
-        echo "Fehler: Einspielen der temporären Source-Datenbank '${source_build_db}' fehlgeschlagen."
-        if [[ "${keep_temp_on_error}" != "true" ]]; then
-            drop_database_if_exists "${source_build_db}"
+    if [[ "${source_build_db_exists}" != "true" ]]; then
+        echo "Erzeuge temporäre Source-Datenbank '${source_build_db}'..."
+        docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+            "CREATE DATABASE ${source_build_db} WITH OWNER=cds_hub_db_admin;"
+        if gzip -cd "${source_file_path}" | docker compose exec -T cds_hub \
+            psql -d "${source_build_db}" cds_hub_db_admin ; then
+            echo "Temporäre Source-Datenbank '${source_build_db}' eingespielt."
+        else
+            echo "Fehler: Einspielen der temporären Source-Datenbank '${source_build_db}' fehlgeschlagen."
+            echo "Entferne die unvollständig eingespielte Source-Datenbank..."
+            if ! drop_database_if_exists "${source_build_db}" ; then
+                echo "Fehler: Unvollständige Source-Datenbank '${source_build_db}' konnte nicht entfernt werden."
+                echo "Bitte vor einem erneuten Lauf manuell entfernen."
+            fi
+            exit 1
         fi
-        exit 1
     fi
 
     echo "Erzeuge leere temporäre Ziel-Datenbank '${target_build_db}'..."
     if ! prepare_pseudonymized_target_database "${target_build_db}" ; then
         echo "Fehler: Anlegen der temporären Ziel-Datenbank '${target_build_db}' fehlgeschlagen."
-        if [[ "${keep_temp_on_error}" != "true" ]]; then
-            drop_database_if_exists "${source_build_db}"
-            drop_database_if_exists "${target_build_db}"
-        fi
+        echo "Bereits angelegte temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
+        echo "  ${source_build_db}"
+        echo "  ${target_build_db}"
         exit 1
     fi
 
     echo "Starte Pseudonymisierung von '${source_build_db}' nach '${target_build_db}'..."
-    local input_repo_mount_args=()
-    while IFS= read -r mount_arg; do
-        input_repo_mount_args+=("${mount_arg}")
-    done < <(container_input_repo_mount_args)
     if docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
         source-db="${source_build_db}" \
-        target-db="${target_build_db}" ; then
+        target-db="${target_build_db}" \
+        chunk-size="${chunk_size}" ; then
         echo "Pseudonymisierung abgeschlossen."
     else
         echo "Fehler: Pseudonymisierung fehlgeschlagen."
-        if [[ "${keep_temp_on_error}" == "true" ]]; then
-            echo "Temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
-            echo "  ${source_build_db}"
-            echo "  ${target_build_db}"
-        else
-            drop_database_if_exists "${source_build_db}"
-            drop_database_if_exists "${target_build_db}"
-        fi
+        echo "Temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
+        echo "  ${source_build_db}"
+        echo "  ${target_build_db}"
         exit 1
     fi
 
@@ -263,14 +322,9 @@ create_pseudonymized_snapshot() {
             echo "Datei ${pseudonymized_file_path} existiert, ist jedoch leer -> cleanup."
             rm -f "${pseudonymized_file_path}"
         fi
-        if [[ "${keep_temp_on_error}" == "true" ]]; then
-            echo "Temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
-            echo "  ${source_build_db}"
-            echo "  ${target_build_db}"
-        else
-            drop_database_if_exists "${source_build_db}"
-            drop_database_if_exists "${target_build_db}"
-        fi
+        echo "Temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
+        echo "  ${source_build_db}"
+        echo "  ${target_build_db}"
         exit 1
     fi
 
@@ -307,14 +361,6 @@ case "$action" in
         ;;
 
     create)
-        if [[ -n "${option}" && "${option}" != "--with-pseudonymized" ]]; then
-            echo "Fehler: unbekannte Option \"${option}\". Erlaubt ist nur \"--with-pseudonymized\"." >&2
-            exit 3
-        fi
-        if [[ -n "${option2}" && "${option2}" != "--keep-temp-on-error" ]]; then
-            echo "Fehler: unbekannte Option \"${option2}\". Erlaubt ist nur \"--keep-temp-on-error\"." >&2
-            exit 3
-        fi
         # Ziel‑Datei mit Datum
         file_date="${name}_$(date +%Y%m%d).sql.gz"
         snapshot_name_date="${name}_$(date +%Y%m%d)"
@@ -371,25 +417,15 @@ case "$action" in
         fi
         printf "Dauer: %s s\n" "$SECONDS";
 
-        if [[ "${option}" == "--with-pseudonymized" ]]; then
-            keep_temp_on_error=false
-            if [[ "${option2}" == "--keep-temp-on-error" ]]; then
-                keep_temp_on_error=true
-            fi
-            create_pseudonymized_snapshot "${snapshot_name_date}" "${keep_temp_on_error}"
+        if [[ "${with_pseudonymized}" == "true" ]]; then
+            create_pseudonymized_snapshot \
+                "${snapshot_name_date}" \
+                "${chunk_size}"
         fi
         ;;
 
     pseudonymize)
-        if [[ -n "${option}" && "${option}" != "--keep-temp-on-error" ]]; then
-            echo "Fehler: unbekannte Option \"${option}\". Erlaubt ist nur \"--keep-temp-on-error\"." >&2
-            exit 3
-        fi
-        keep_temp_on_error=false
-        if [[ "${option}" == "--keep-temp-on-error" ]]; then
-            keep_temp_on_error=true
-        fi
-        create_pseudonymized_snapshot "${name}" "${keep_temp_on_error}"
+        create_pseudonymized_snapshot "${name}" "${chunk_size}"
         ;;
 
     delete)

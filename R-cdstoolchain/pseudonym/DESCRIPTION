@@ -22,5 +22,6 @@ Imports:
     DBI,
     digest,
     etlutils,
+    openxlsx,
     yaml
 Config/roxygen2/version: 8.0.0

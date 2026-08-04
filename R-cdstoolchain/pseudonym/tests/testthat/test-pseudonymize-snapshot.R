@@ -1,115 +1,114 @@
-writeSnapshotTestWorkbook <- function(table, sheet_name) {
-  file <- tempfile(fileext = ".xlsx")
-  table_with_header <- etlutils::addTextHeaderToTable(
-    table,
-    header = c("Hint", "snapshot pseudonymization test table"),
-    insert_column_names_below_header = TRUE
-  )
-  etlutils::writeExcelFile(
-    stats::setNames(list(table_with_header), sheet_name),
-    file,
-    with_column_names = FALSE
-  )
-  file
-}
+test_that("preflight checks rules without running database pseudonymization", {
+  captured <- new.env(parent = emptyenv())
+  rules <- data.table::data.table(COLUMN_NAME = "id")
+  review_report <- list(summary = data.table::data.table(N = 1L))
+  mockDefaultSources <- function(project_root) {
+    captured$project_root <- project_root
+    list(
+      table_descriptions = "table-description",
+      snapshot_extensions = "snapshot-extension"
+    )
+  }
+  mockLoadRules <- function(table_descriptions, snapshot_extensions) {
+    captured$table_descriptions <- table_descriptions
+    captured$snapshot_extensions <- snapshot_extensions
+    rules
+  }
+  mockReviewRules <- function(
+    rules,
+    input_repo_path,
+    validate_mapping_files,
+    fail_on_review_problems,
+    write_review_report,
+    review_report_file
+  ) {
+    captured$review_arguments <- list(
+      rules = rules,
+      input_repo_path = input_repo_path,
+      validate_mapping_files = validate_mapping_files,
+      fail_on_review_problems = fail_on_review_problems,
+      write_review_report = write_review_report,
+      review_report_file = review_report_file
+    )
+    review_report
+  }
 
-test_that("pseudonymizeSnapshotTables loads rules reviews and pseudonymizes tables", {
-  table_description_file <- writeSnapshotTestWorkbook(
-    data.table::data.table(
-      TABLE_NAME = c("patient", NA_character_),
-      COLUMN_NAME = c("id", "gender"),
-      COLUMN_DESCRIPTION = c("Patient id", "Gender"),
-      COLUMN_TYPE = c("varchar", "varchar"),
-      PSEUDONYMIZATION_RULE = c("cryptoHash", "keep")
-    ),
-    "table_description"
+  testthat::local_mocked_bindings(
+    getDefaultSnapshotPseudonymizationRuleSources = mockDefaultSources,
+    loadPseudonymizationRules = mockLoadRules,
+    reviewPseudonymizationRules = mockReviewRules,
+    .package = "pseudonym"
+  )
+
+  result <- preflightSnapshotPseudonymization(
+    project_root = "/project",
+    input_repo_path = "/input",
+    review_report_file = "/reports/review.xlsx",
+    log_steps = FALSE
+  )
+
+  expect_equal(captured$project_root, "/project")
+  expect_equal(captured$table_descriptions, "table-description")
+  expect_equal(captured$snapshot_extensions, "snapshot-extension")
+  expect_false(captured$review_arguments$validate_mapping_files)
+  expect_true(captured$review_arguments$fail_on_review_problems)
+  expect_true(captured$review_arguments$write_review_report)
+  expect_equal(captured$review_arguments$review_report_file, "/reports/review.xlsx")
+  expect_equal(result$rules, rules)
+  expect_equal(result$review_report, review_report)
+  expect_false("tables" %in% names(result))
+})
+
+test_that("pseudonym exports only external workflow entry points", {
+  expect_setequal(
+    getNamespaceExports("pseudonym"),
+    c(
+      "preflightSnapshotPseudonymization",
+      "pseudonymizeSnapshotDatabase",
+      "setFhirPseudonymizationRules"
+    )
+  )
+})
+
+test_that("blocking mapping review error reports deduplicated details and workbook path", {
+  rule_n <- 8L
+  rules <- data.table::data.table(
+    SOURCE = "frontend",
+    SOURCE_TYPE = "table_description",
+    SOURCE_FILE = "Frontend_Table_Description.xlsx",
+    SOURCE_SHEET = "frontend_table_description",
+    TABLE_NAME = "frontend",
+    RESOURCE = NA_character_,
+    TABLE_OR_RESOURCE = "frontend",
+    COLUMN_NAME = paste0("user_column_", seq_len(rule_n)),
+    COLUMN_DESCRIPTION = "Frontend user",
+    COLUMN_TYPE = "varchar",
+    FHIR_EXPRESSION = NA_character_,
+    PSEUDONYMIZATION_RULE_RAW = 'pseudonym(sheet = "frontend_users")',
+    PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "frontend_users")',
+    IMPLICIT_KEEP = FALSE
   )
   report_file <- tempfile(fileext = ".xlsx")
-  tables <- list(
-    patient = data.table::data.table(
-      id = c("p1", "p2"),
-      gender = c("female", "male"),
-      source_only = c("x", "y")
-    ),
-    internal = data.table::data.table(id = "admin")
-  )
 
-  result <- pseudonymizeSnapshotTables(
-    tables = tables,
-    table_descriptions = data.table::data.table(
-      SOURCE = "manual",
-      PATH = table_description_file,
-      SHEET_NAME = "table_description"
+  error <- tryCatch(
+    reviewPseudonymizationRules(
+      rules,
+      input_repo_path = NULL,
+      validate_mapping_files = TRUE,
+      fail_on_review_problems = TRUE,
+      write_review_report = TRUE,
+      review_report_file = report_file
     ),
-    fail_on_review_problems = TRUE,
-    write_review_report = TRUE,
-    review_report_file = report_file,
-    log_steps = FALSE
+    error = identity
   )
+  message <- conditionMessage(error)
 
+  expect_s3_class(error, "error")
   expect_true(file.exists(report_file))
-  expect_named(result$tables, "patient")
-  expect_named(result$tables$patient, c("id", "gender", "source_only"))
-  expect_false(identical(result$tables$patient$id, tables$patient$id))
-  expect_equal(result$tables$patient$gender, tables$patient$gender)
-  expect_equal(result$tables$patient$source_only, tables$patient$source_only)
-  expect_equal(
-    result$summary[result$summary$TABLE_NAME == "internal", ][["STATUS"]],
-    "skipped_no_rules"
-  )
-  expect_equal(nrow(result$review_report$unsupported_rules), 0L)
-})
-
-test_that("pseudonymizeSnapshotTables can abort on blocking review problems", {
-  table_description_file <- writeSnapshotTestWorkbook(
-    data.table::data.table(
-      TABLE_NAME = "patient",
-      COLUMN_NAME = "id",
-      COLUMN_DESCRIPTION = "Patient id",
-      COLUMN_TYPE = "varchar",
-      PSEUDONYMIZATION_RULE = "### TODO: NEW COLUMN ###"
-    ),
-    "table_description"
-  )
-
-  expect_error(
-    pseudonymizeSnapshotTables(
-      tables = list(patient = data.table::data.table(id = "p1")),
-      table_descriptions = table_description_file,
-      write_review_report = FALSE,
-      log_steps = FALSE
-    ),
-    "blocking problems"
-  )
-})
-
-test_that("pseudonymizeSnapshotTables can use preloaded rules", {
-  rules <- data.table::data.table(
-    SOURCE = "manual",
-    SOURCE_TYPE = "table_description",
-    SOURCE_FILE = "manual.xlsx",
-    SOURCE_SHEET = "table_description",
-    TABLE_NAME = "patient",
-    RESOURCE = NA_character_,
-    TABLE_OR_RESOURCE = "patient",
-    COLUMN_NAME = c("id", "gender"),
-    COLUMN_DESCRIPTION = c("Patient id", "Gender"),
-    COLUMN_TYPE = c("varchar", "varchar"),
-    FHIR_EXPRESSION = NA_character_,
-    PSEUDONYMIZATION_RULE_RAW = c("cryptoHash", "keep"),
-    PSEUDONYMIZATION_RULE = c("cryptoHash", "keep"),
-    IMPLICIT_KEEP = c(FALSE, FALSE)
-  )
-
-  result <- pseudonymizeSnapshotTables(
-    tables = list(patient = data.table::data.table(id = "p1", gender = "female")),
-    table_descriptions = NULL,
-    rules = rules,
-    write_review_report = FALSE,
-    log_steps = FALSE
-  )
-
-  expect_named(result$tables, "patient")
-  expect_false(identical(result$tables$patient$id, "p1"))
-  expect_equal(result$tables$patient$gender, "female")
+  expect_match(message, 'sheet "frontend_users"', fixed = TRUE)
+  expect_match(message, "missing_input_repo_path", fixed = TRUE)
+  expect_match(message, "8 affected rule(s)", fixed = TRUE)
+  expect_match(message, "mapping workbook is generated", fixed = TRUE)
+  expect_match(message, "original frontend user names", fixed = TRUE)
+  expect_match(message, report_file, fixed = TRUE)
 })
