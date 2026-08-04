@@ -86,6 +86,11 @@
 createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
                                     REPORT_PERIOD_END = as.character(Sys.Date()),
                                     WRITE_TABLE_LOCAL = FALSE) {
+  # CONFIG LOCAL ANFANG--------------------------------------------------------------------
+  # WRITE_TABLE_LOCAL <- TRUE
+  # REPORT_PERIOD_END <- "2026-03-27"
+  # CONFIG LOCAL ENDE---------------------------------------------------------------------
+
   if (!interactive()) {
     named_args <- parseNamedArgs()
     if ("REPORT_PERIOD_START" %in% names(named_args)) {
@@ -179,9 +184,22 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     lock_id = "statistical reports[9]",
     table_name = "v_consent_last_version"
   )
+  # TEST ANFANG--------------------------------------------------------------------
+  # consent_table <- rbind(consent_table, data.frame(
+  #   cons_patient_ref = "Patient/UKB-0001_1",
+  #   cons_status = "active",
+  #   cons_provision_provision_type = "permit",
+  #   cons_provision_provision_code_system = "urn:oid:2.16.840.1.113883.3.1937.777.24.5.3",
+  #   cons_provision_provision_code_code = "2.16.840.1.113883.3.1937.777.24.5.3.8",
+  #   cons_provision_provision_period_start = as.POSIXct("2020-09-01"),
+  #   cons_provision_provision_period_end = as.POSIXct("2026-08-31")
+  # ))
+  # TEST ENDE---------------------------------------------------------------------
+
   FHIR_table <- mergePatEnc(patient_table, encounter_table) |>
     addCuratedEncPeriodEnd() |>
     addMainEncId() |>
+    # TODO: go on with detailed documentation from here (+add the new processing exclusion reason advancements in doku) -------
     addMainEncPeriodStart() |>
     calculateAge() |>
     tagAmbulantEncounters() |>
@@ -190,9 +208,11 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
   FHIR_table_with_ward_name_and_record_id <- FHIR_table |>
     addWardName(pids_per_ward_table) |>
     addRecordId(patient_fe_table) |>
+    # TODO: remove completely if not needed in this step -----------
     # addFallIdAndStudienphase(fall_fe_table) |>
     ExpandProcessingExclusionReasonToAllEncounterLevels()
 
+  # TODO: implement FAS1 definition new -----------
   # full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table_with_ward_name_and_record_id)
 
   frontend_table <- mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
@@ -213,6 +233,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       result_variable_name = "multiple_wards_per_main_encounter"
     ) |>
     addVersorgungsstellenkontaktToFeData(FHIR_table_with_ward_name_and_record_id) |>
+    # TODO: check if this logic can be optimized (documented medas are deleted here if no matching enc_id is found!; same with MRP matching) ----------
     addMedaData(medikationsanalyse_fe_table) |>
     detectMultipleEntries(
       grouping_vars = c("pat_id"),
@@ -223,6 +244,18 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     addRetrolektiveMRPBewertungData(retrolektive_mrpbewertung_fe_table) |>
     addBroadConsentInformation(consent_table)
 
+  # TEST ANFANG--------------------------------------------------------------------
+  # change the actual_fall_studienphase to "PhaseB"
+  # frontend_table <- frontend_table |>
+  #   dplyr::mutate(actual_fall_studienphase = dplyr::case_when(
+  #     fall_fhir_main_enc_id %in% head(unique(frontend_table$fall_fhir_main_enc_id), 30) ~ "PhaseB",
+  #     TRUE ~ actual_fall_studienphase
+  #   )) |>
+  #   dplyr::mutate(fall_aufn_dat = dplyr::case_when(
+  #     fall_fhir_main_enc_id %in% tail(unique(frontend_table$fall_fhir_main_enc_id), 2) ~ as.Date("2025-12-31"),
+  #     TRUE ~ fall_aufn_dat
+  #   ))
+  # TEST ENDE---------------------------------------------------------------------
 
   frontend_summary_data <- prepareFeSummaryData(
     frontend_table, REPORT_PERIOD_START,
@@ -267,8 +300,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       list(etlutils::buildHtmlTable(frontend_summary_data)),
       pagename = "frontend_summary_data"
     )
-    # writeHtmlTable(full_analysis_set_1)
-    # writeHtmlTable(statistical_report_data)
   }
 
   frontend_summary <- calculateFeSummary(frontend_summary_data)
@@ -396,4 +427,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     output_location = "global",
     pagename = "INTERPOLAR-Reporting"
   )
+
+  # TODO: evtl. implement separate script/enhanced data quality checks (raw & processed data) ----------
 }

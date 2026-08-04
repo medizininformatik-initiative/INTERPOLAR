@@ -44,6 +44,7 @@ defineFullAnalysisSet1 <- function(complete_table) {
   full_analysis_set_1_raw <- complete_table |>
     dplyr::filter(main_enc_id %in% inpatient_encounters) |> # only IMP patients
     dplyr::filter(main_enc_id %in% INTERPOLAR_encounters) |> # only encounters with any INTERPOLAR ward visit
+    # TODO: make this not a filter but a tracker also here (processing_exclusion_reason) -----------
     dplyr::filter(age_at_hospitalization >= 18) |> # only adults
     dplyr::distinct()
 
