@@ -21,6 +21,11 @@ SNAPSHOT_MEDICATION_REFERENCE_SPECS <- data.table::data.table(
   )
 )
 
+SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN <-
+  "med_ingredient_itemreference_ref"
+SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN <-
+  ".snapshot_medication_reference_issues"
+
 extractMedicationReferenceId <- function(references) {
   references <- as.character(references)
   references[is.na(references) | !nzchar(references)] <- NA_character_
@@ -35,6 +40,8 @@ emptyMedicationReferenceReport <- function() {
     REFERENCE_COLUMN = character(),
     REFERENCE_VALUE = character(),
     MEDICATION_ID = character(),
+    ISSUE_TYPE = character(),
+    RELATED_MEDICATION_ID = character(),
     N = integer()
   )
 }
@@ -74,24 +81,55 @@ aggregateMedicationReferenceReport <- function(report) {
       "TABLE_NAME",
       "REFERENCE_COLUMN",
       "REFERENCE_VALUE",
-      "MEDICATION_ID"
+      "MEDICATION_ID",
+      "ISSUE_TYPE",
+      "RELATED_MEDICATION_ID"
     ),
     value_column = "N",
     result_column = "N"
   )
 }
 
-getUnmatchedMedicationReferencesFromEnrichedTable <- function(table, table_name, spec) {
+getUnmatchedMedicationReferencesFromEnrichedTable <- function(
+  table,
+  table_name,
+  spec
+) {
   reference_column <- spec[["reference_column"]]
   system_column <- spec[["system_column"]]
   code_column <- spec[["code_column"]]
-  required_columns <- c(reference_column, system_column, code_column)
-  if (!all(required_columns %in% names(table)) || nrow(table) == 0) {
+  if (!reference_column %in% names(table) || nrow(table) == 0) {
     return(emptyMedicationReferenceReport())
   }
 
   references <- as.character(table[[reference_column]])
   medication_ids <- extractMedicationReferenceId(references)
+  if (SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN %in% names(table)) {
+    issue_values <- as.character(table[[SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN]])
+    issue_rows <- which(!is.na(issue_values) & nzchar(issue_values))
+    reports <- lapply(issue_rows, function(row_index) {
+      issues <- strsplit(issue_values[row_index], "\n", fixed = TRUE)[[1]]
+      issue_parts <- strsplit(issues, "\t", fixed = TRUE)
+      data.table::data.table(
+        TABLE_NAME = table_name,
+        REFERENCE_COLUMN = reference_column,
+        REFERENCE_VALUE = references[row_index],
+        MEDICATION_ID = medication_ids[row_index],
+        ISSUE_TYPE = vapply(issue_parts, `[`, character(1), 1),
+        RELATED_MEDICATION_ID = vapply(issue_parts, `[`, character(1), 2),
+        N = 1L
+      )
+    })
+    if (length(reports) == 0) {
+      return(emptyMedicationReferenceReport())
+    }
+    return(aggregateMedicationReferenceReport(data.table::rbindlist(reports)))
+  }
+
+  required_code_columns <- c(system_column, code_column)
+  if (!all(required_code_columns %in% names(table))) {
+    return(emptyMedicationReferenceReport())
+  }
   unmatched_rows <- !is.na(medication_ids) &
     nzchar(medication_ids) &
     (
@@ -104,14 +142,24 @@ getUnmatchedMedicationReferencesFromEnrichedTable <- function(table, table_name,
     return(emptyMedicationReferenceReport())
   }
 
-  report <- data.table::data.table(
+  aggregateMedicationReferenceReport(data.table::data.table(
     TABLE_NAME = table_name,
     REFERENCE_COLUMN = reference_column,
     REFERENCE_VALUE = references[unmatched_rows],
     MEDICATION_ID = medication_ids[unmatched_rows],
+    ISSUE_TYPE = "no_reachable_code",
+    RELATED_MEDICATION_ID = medication_ids[unmatched_rows],
     N = 1L
+  ))
+}
+
+aggregateMedicationReferenceSummary <- function(summary) {
+  sumDataTableColumnBy(
+    summary,
+    group_columns = c("TABLE_NAME", "REFERENCE_COLUMN", "ISSUE_TYPE"),
+    value_column = "UNMATCHED_ROWS",
+    result_column = "UNMATCHED_ROWS"
   )
-  aggregateMedicationReferenceReport(report)
 }
 
 newBoundedMedicationReferenceReview <- function(detail_limit = 1000L) {
@@ -124,6 +172,7 @@ newBoundedMedicationReferenceReview <- function(detail_limit = 1000L) {
   context$summary <- data.table::data.table(
     TABLE_NAME = character(),
     REFERENCE_COLUMN = character(),
+    ISSUE_TYPE = character(),
     UNMATCHED_ROWS = numeric()
   )
   context$examples <- emptyMedicationReferenceReport()
@@ -137,24 +186,13 @@ recordBoundedMedicationReferenceReview <- function(context, report) {
 
   chunk_summary <- sumDataTableColumnBy(
     report,
-    group_columns = c("TABLE_NAME", "REFERENCE_COLUMN"),
+    group_columns = c("TABLE_NAME", "REFERENCE_COLUMN", "ISSUE_TYPE"),
     value_column = "N",
     result_column = "UNMATCHED_ROWS"
   )
-  for (i in seq_len(nrow(chunk_summary))) {
-    matching_row <- context$summary[["TABLE_NAME"]] == chunk_summary[["TABLE_NAME"]][i] &
-      context$summary[["REFERENCE_COLUMN"]] == chunk_summary[["REFERENCE_COLUMN"]][i]
-    if (any(matching_row)) {
-      context$summary[["UNMATCHED_ROWS"]][matching_row] <-
-        context$summary[["UNMATCHED_ROWS"]][matching_row] +
-        chunk_summary[["UNMATCHED_ROWS"]][i]
-    } else {
-      context$summary <- data.table::rbindlist(list(
-        context$summary,
-        chunk_summary[i, ]
-      ))
-    }
-  }
+  context$summary <- aggregateMedicationReferenceSummary(
+    data.table::rbindlist(list(context$summary, chunk_summary))
+  )
 
   remaining_examples <- context$detail_limit - nrow(context$examples)
   if (remaining_examples > 0) {
@@ -167,7 +205,21 @@ recordBoundedMedicationReferenceReview <- function(context, report) {
 }
 
 finalizeBoundedMedicationReferenceReview <- function(context) {
-  data.table::setorderv(context$summary, c("TABLE_NAME", "REFERENCE_COLUMN"))
+  data.table::setorderv(
+    context$summary,
+    c("TABLE_NAME", "REFERENCE_COLUMN", "ISSUE_TYPE")
+  )
+  data.table::setorderv(
+    context$examples,
+    c(
+      "TABLE_NAME",
+      "REFERENCE_COLUMN",
+      "ISSUE_TYPE",
+      "MEDICATION_ID",
+      "RELATED_MEDICATION_ID",
+      "REFERENCE_VALUE"
+    )
+  )
   list(
     summary = context$summary[],
     unmatched_reference_examples = context$examples[]

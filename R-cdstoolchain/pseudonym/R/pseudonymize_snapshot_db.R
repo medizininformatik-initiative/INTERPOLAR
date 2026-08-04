@@ -366,7 +366,32 @@ pseudonymizeSnapshotDatabase <- function(
   )
 
   snapshotEnsureSchema(target_connection, target_table_schema)
-  streaming_context <- newSnapshotStreamingContext(input_repo_path)
+  medication_resolution_tables <- list()
+  runPseudonymizationLogStep(2L,
+    "Prepare shared Medication reference resolution",
+    {
+      medication_resolution_tables <- prepareSnapshotMedicationResolutionTables(
+        connection = source_connection,
+        materialization_plan = result[["materialization_plan"]],
+        rules = result[["rules"]],
+        source_schema = source_schema,
+        source_view_prefix = source_view_prefix,
+        last_version_suffix = last_version_suffix
+      )
+    },
+    log_steps = log_steps
+  )
+  on.exit(
+    dropSnapshotMedicationResolutionTables(
+      source_connection,
+      medication_resolution_tables
+    ),
+    add = TRUE
+  )
+  streaming_context <- newSnapshotStreamingContext(
+    input_repo_path,
+    medication_resolution_tables
+  )
   summary_rows <- list()
   write_summary_rows <- list()
   runPseudonymizationLogStep(2L,

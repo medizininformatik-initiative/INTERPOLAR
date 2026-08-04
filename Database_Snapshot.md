@@ -249,10 +249,18 @@ Auswertungsspalten:
   LOINC-Mapping-Datei. Nicht gemappte oder Nicht-LOINC-Zeilen bleiben erhalten
   und erhalten in den Zusatzspalten leere Werte.
 - `medicationrequest`, `medicationadministration` und `medicationstatement`
-  erhalten die Code-/System-Paare der direkt referenzierten `Medication`.
-  Mehrere unterschiedliche Paare erzeugen entsprechend mehrere Ausgabezeilen.
-  Referenzen ohne gefundenes Paar bleiben erhalten und erscheinen im
-  Enrichment-Review.
+  erhalten die Code-/System-Paare aller `Medication`-Einträge, die über die
+  direkte Referenz und rekursiv über
+  `med_ingredient_itemreference_ref` erreichbar sind. Mehrere unterschiedliche
+  Paare erzeugen entsprechend mehrere Ausgabezeilen; Duplikate werden entfernt.
+  Auch zyklische Referenzen werden sicher beendet. Fehlende referenzierte
+  Medications und Referenzketten ohne erreichbaren Code bleiben erhalten und
+  erscheinen im Enrichment-Review.
+
+Die Medication-Auflösung wird für die vereinigten Referenzen aus Request,
+Statement und Administration einmal je Snapshot-Variante vorbereitet und über
+eine temporäre, indexierte PostgreSQL-Tabelle wiederverwendet. Sie wird nicht
+für jeden Chunk oder jede Quelltabelle erneut berechnet.
 
 Das Alter wird in abgeschlossenen Jahren berechnet. Neu ergänzte Altersspalten
 stehen am Ende der Tabelle. Die bereits vorhandene Spalte `fall_bmi` wird nicht
