@@ -293,6 +293,30 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       pagename = "FHIR_table_with_ward_name_and_record_id"
     )
     etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(patient_fe_table)),
+      pagename = "patient_fe_table"
+    )
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(fall_fe_table)),
+      pagename = "fall_fe_table"
+    )
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(medikationsanalyse_fe_table)),
+      pagename = "medikationsanalyse_fe_table"
+    )
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(mrp_dokumentation_validierung_fe_table)),
+      pagename = "mrp_dokumentation_validierung_fe_table"
+    )
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(retrolektive_mrpbewertung_fe_table)),
+      pagename = "retrolektive_mrpbewertung_fe_table"
+    )
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(consent_table)),
+      pagename = "consent_table"
+    )
+    etlutils::writeHtmlPage(
       list(etlutils::buildHtmlTable(frontend_table)),
       pagename = "frontend_table"
     )
