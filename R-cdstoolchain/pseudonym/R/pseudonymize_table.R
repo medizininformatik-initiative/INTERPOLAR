@@ -413,21 +413,22 @@ redactVector <- function(values) {
 generalizeDateLikeVector <- function(values, format) {
   if (format == "%Y-%m") {
     if (inherits(values, "Date") || inherits(values, "POSIXt")) {
-      return(as.Date(paste0(format(values, "%Y-%m"), "-01")))
+      return(as.Date(paste0(format(values, "%Y-%m"), "-15")))
     }
   }
 
   values_chr <- as.character(values)
-  result <- rep(NA, length(values_chr))
   has_value <- !is.na(values_chr)
 
   if (format == "%Y-%m") {
+    result <- rep(NA_character_, length(values_chr))
     matches <- regexec("^(\\d{2,4})-(\\d{2})", values_chr[has_value])
     parts <- regmatches(values_chr[has_value], matches)
-    result[has_value] <- as.Date(vapply(parts, function(part) {
-      if (length(part) >= 3) paste0(part[2], "-", part[3], "-01") else NA_character_
-    }, character(1)))
+    result[has_value] <- vapply(parts, function(part) {
+      if (length(part) >= 3) paste0(part[2], "-", part[3], "-15") else NA_character_
+    }, character(1))
   } else if (format == "%Y") {
+    result <- rep(NA_character_, length(values_chr))
     matches <- regexec("^(\\d{2,4})", values_chr[has_value])
     parts <- regmatches(values_chr[has_value], matches)
     result[has_value] <- vapply(parts, function(part) {
