@@ -1,3 +1,5 @@
+SNAPSHOT_MINIMUM_BIRTHDATE <- as.Date("1910-01-01")
+
 extractFhirReferenceId <- function(references, resource_type) {
   references <- as.character(references)
   references[is.na(references) | !nzchar(references)] <- NA_character_
@@ -10,8 +12,169 @@ calculateCompletedYears <- function(reference_dates, birth_dates) {
   reference_dates <- as.Date(reference_dates)
   birth_dates <- as.Date(birth_dates)
   age <- floor(as.numeric(difftime(reference_dates, birth_dates, units = "days")) / 365.25)
-  age[is.na(reference_dates) | is.na(birth_dates) | age < 0] <- NA_real_
+  age[
+    is.na(reference_dates) |
+      is.na(birth_dates) |
+      birth_dates < SNAPSHOT_MINIMUM_BIRTHDATE |
+      age < 0
+  ] <- NA_real_
   as.integer(age)
+}
+
+emptyAgeCalculationReview <- function() {
+  data.table::data.table(
+    TABLE_NAME = character(),
+    ISSUE_TYPE = character(),
+    REDCAP_RECORD_ID = character(),
+    FHIR_PATIENT_ID = character(),
+    FHIR_ENCOUNTER_ID = character(),
+    LOCAL_CASE_ID = character(),
+    PATIENT_LOOKUP_KEY = character(),
+    BIRTHDATE = as.Date(character()),
+    REFERENCE_DATE = as.Date(character()),
+    RAW_CALCULATED_AGE = integer(),
+    N = integer()
+  )
+}
+
+ageReviewColumn <- function(table, candidates) {
+  column_name <- candidates[candidates %in% names(table)][1]
+  if (length(column_name) == 0 || is.na(column_name)) {
+    return(rep(NA_character_, nrow(table)))
+  }
+  as.character(table[[column_name]])
+}
+
+getAgeCalculationReview <- function(
+  table,
+  table_name,
+  base_table_name,
+  birthdates,
+  matched_patient_keys = NULL
+) {
+  reference_column <- switch(
+    base_table_name,
+    fall_fe = "fall_aufn_dat",
+    encounter = "enc_period_start",
+    NULL
+  )
+  if (is.null(reference_column) || !reference_column %in% names(table)) {
+    return(emptyAgeCalculationReview())
+  }
+
+  reference_dates <- as.Date(table[[reference_column]])
+  birthdates <- as.Date(birthdates)
+  matched_patient_keys <- as.character(matched_patient_keys)
+  if (length(matched_patient_keys) == 0) {
+    matched_patient_keys <- rep(NA_character_, nrow(table))
+  }
+  patient_not_found <- is.na(matched_patient_keys) | !nzchar(matched_patient_keys)
+  issue_types <- rep(NA_character_, nrow(table))
+  issue_types[patient_not_found] <- "patient_not_found"
+  issue_types[is.na(birthdates) & is.na(issue_types)] <- "missing_birthdate"
+  issue_types[is.na(reference_dates) & is.na(issue_types)] <- "missing_reference_date"
+  issue_types[
+    !is.na(birthdates) &
+      birthdates < SNAPSHOT_MINIMUM_BIRTHDATE &
+      is.na(issue_types)
+  ] <- "birthdate_before_1910_01_01"
+  issue_types[
+    !is.na(reference_dates) &
+      !is.na(birthdates) &
+      reference_dates < birthdates &
+      is.na(issue_types)
+  ] <- "reference_date_before_birthdate"
+  issue_rows <- which(!is.na(issue_types))
+  if (length(issue_rows) == 0) {
+    return(emptyAgeCalculationReview())
+  }
+
+  raw_age <- floor(as.numeric(difftime(reference_dates, birthdates, units = "days")) / 365.25)
+  fhir_patient_ids <- if (identical(base_table_name, "encounter")) {
+    extractFhirReferenceId(ageReviewColumn(table, "enc_patient_ref"), "Patient")
+  } else {
+    ageReviewColumn(table, "fall_pat_id")
+  }
+  fhir_encounter_ids <- if (identical(base_table_name, "encounter")) {
+    ageReviewColumn(table, "enc_id")
+  } else {
+    ageReviewColumn(table, "fall_fhir_enc_id")
+  }
+
+  data.table::data.table(
+    TABLE_NAME = table_name,
+    ISSUE_TYPE = issue_types[issue_rows],
+    REDCAP_RECORD_ID = ageReviewColumn(
+      table,
+      c("record_id", "patient_id_fk")
+    )[issue_rows],
+    FHIR_PATIENT_ID = fhir_patient_ids[issue_rows],
+    FHIR_ENCOUNTER_ID = fhir_encounter_ids[issue_rows],
+    LOCAL_CASE_ID = ageReviewColumn(table, "fall_id")[issue_rows],
+    PATIENT_LOOKUP_KEY = matched_patient_keys[issue_rows],
+    BIRTHDATE = birthdates[issue_rows],
+    REFERENCE_DATE = reference_dates[issue_rows],
+    RAW_CALCULATED_AGE = as.integer(raw_age[issue_rows]),
+    N = 1L
+  )
+}
+
+newBoundedAgeCalculationReview <- function(detail_limit = 1000L) {
+  detail_limit <- suppressWarnings(as.integer(detail_limit))
+  if (length(detail_limit) != 1 || is.na(detail_limit) || detail_limit < 1) {
+    stop("detail_limit must be a positive integer.")
+  }
+  context <- new.env(parent = emptyenv())
+  context$detail_limit <- detail_limit
+  context$summary <- data.table::data.table(
+    TABLE_NAME = character(),
+    ISSUE_TYPE = character(),
+    AFFECTED_ROWS = numeric()
+  )
+  context$examples <- emptyAgeCalculationReview()
+  context
+}
+
+recordBoundedAgeCalculationReview <- function(context, report) {
+  if (nrow(report) == 0) {
+    return(invisible())
+  }
+
+  group_columns <- c("TABLE_NAME", "ISSUE_TYPE")
+  chunk_summary <- sumDataTableColumnBy(
+    report,
+    group_columns = group_columns,
+    value_column = "N",
+    result_column = "AFFECTED_ROWS"
+  )
+  combined_summary <- data.table::rbindlist(list(context$summary, chunk_summary))
+  context$summary <- sumDataTableColumnBy(
+    combined_summary,
+    group_columns = group_columns,
+    value_column = "AFFECTED_ROWS",
+    result_column = "AFFECTED_ROWS"
+  )
+
+  remaining_examples <- context$detail_limit - nrow(context$examples)
+  if (remaining_examples > 0) {
+    context$examples <- data.table::rbindlist(list(
+      context$examples,
+      utils::head(report, remaining_examples)
+    ))
+  }
+  invisible()
+}
+
+finalizeBoundedAgeCalculationReview <- function(context) {
+  data.table::setorderv(context$summary, c("TABLE_NAME", "ISSUE_TYPE"))
+  data.table::setorderv(
+    context$examples,
+    c("TABLE_NAME", "ISSUE_TYPE", "FHIR_PATIENT_ID", "FHIR_ENCOUNTER_ID")
+  )
+  list(
+    age_issue_summary = context$summary[],
+    age_issue_examples = context$examples[]
+  )
 }
 
 convertWeightToKg <- function(values, units) {
@@ -48,64 +211,33 @@ calculateBmi <- function(weight_values, weight_units, height_values, height_unit
   result
 }
 
-getPatientFrontendBirthdateMap <- function(patient_fe) {
-  patient_fe <- data.table::as.data.table(data.table::copy(patient_fe))
-  result <- data.table::data.table(
-    patient_key = character(),
-    birthdate = as.Date(character())
-  )
-  if ("record_id" %in% names(patient_fe) && "pat_gebdat" %in% names(patient_fe)) {
-    record_rows <- !is.na(patient_fe[["record_id"]]) &
-      nzchar(as.character(patient_fe[["record_id"]]))
-    result <- data.table::rbindlist(list(
-      result,
-      data.table::data.table(
-        patient_key = as.character(patient_fe[["record_id"]][record_rows]),
-        birthdate = as.Date(patient_fe[["pat_gebdat"]][record_rows])
-      )
-    ))
-  }
-  if ("pat_id" %in% names(patient_fe) && "pat_gebdat" %in% names(patient_fe)) {
-    pat_rows <- !is.na(patient_fe[["pat_id"]]) &
-      nzchar(as.character(patient_fe[["pat_id"]]))
-    result <- data.table::rbindlist(list(
-      result,
-      data.table::data.table(
-        patient_key = as.character(patient_fe[["pat_id"]][pat_rows]),
-        birthdate = as.Date(patient_fe[["pat_gebdat"]][pat_rows])
-      )
-    ))
-  }
-  unique(result[!is.na(result[["patient_key"]]), ], by = "patient_key")
-}
-
-enrichSnapshotFallTable <- function(fall_fe, patient_fe) {
+enrichSnapshotFallChunk <- function(
+  fall_fe,
+  birthdates = NULL,
+  enrichment_columns = c("fall_age_at_admission", "fall_bmi"),
+  source_columns = names(fall_fe)
+) {
   fall_fe <- data.table::as.data.table(data.table::copy(fall_fe))
-  if (!"fall_age_at_admission" %in% names(fall_fe)) {
+  if (
+    "fall_age_at_admission" %in% enrichment_columns &&
+    !"fall_age_at_admission" %in% names(fall_fe)
+  ) {
     fall_fe[["fall_age_at_admission"]] <- NA_integer_
   }
-  if (!"fall_bmi" %in% names(fall_fe)) {
+  if ("fall_bmi" %in% enrichment_columns && !"fall_bmi" %in% names(fall_fe)) {
     fall_fe[["fall_bmi"]] <- NA_real_
   }
-  if (nrow(fall_fe) == 0) {
-    return(fall_fe)
-  }
 
-  if (!is.null(patient_fe) && "fall_aufn_dat" %in% names(fall_fe)) {
-    patient_birthdates <- getPatientFrontendBirthdateMap(patient_fe)
-    patient_key <- rep(NA_character_, nrow(fall_fe))
-    if ("patient_id_fk" %in% names(fall_fe)) {
-      patient_key <- as.character(fall_fe[["patient_id_fk"]])
-    }
-    if ("fall_pat_id" %in% names(fall_fe)) {
-      fallback_rows <- is.na(patient_key) | !nzchar(patient_key)
-      patient_key[fallback_rows] <- as.character(fall_fe[["fall_pat_id"]][fallback_rows])
-    }
-    birthdates <- patient_birthdates[
-      match(patient_key, patient_birthdates[["patient_key"]]),
-      "birthdate"
-    ][[1]]
-    fall_fe[["fall_age_at_admission"]] <- calculateCompletedYears(fall_fe[["fall_aufn_dat"]], birthdates)
+  if (
+    "fall_age_at_admission" %in% enrichment_columns &&
+    "fall_aufn_dat" %in% source_columns &&
+    !is.null(birthdates) &&
+    "fall_aufn_dat" %in% names(fall_fe)
+  ) {
+    fall_fe[["fall_age_at_admission"]] <- calculateCompletedYears(
+      fall_fe[["fall_aufn_dat"]],
+      birthdates
+    )
   }
 
   bmi_columns <- c(
@@ -114,7 +246,11 @@ enrichSnapshotFallTable <- function(fall_fe, patient_fe) {
     "fall_groesse",
     "fall_groesse_einheit"
   )
-  if (all(bmi_columns %in% names(fall_fe))) {
+  if (
+    "fall_bmi" %in% enrichment_columns &&
+    all(bmi_columns %in% source_columns) &&
+    all(bmi_columns %in% names(fall_fe))
+  ) {
     fall_fe[["fall_bmi"]] <- calculateBmi(
       fall_fe[["fall_gewicht_aktuell"]],
       fall_fe[["fall_gewicht_aktl_einheit"]],
@@ -126,78 +262,29 @@ enrichSnapshotFallTable <- function(fall_fe, patient_fe) {
   fall_fe
 }
 
-getPatientBirthdateMap <- function(patient) {
-  patient <- data.table::as.data.table(data.table::copy(patient))
-  if (!all(c("pat_id", "pat_birthdate") %in% names(patient))) {
-    return(data.table::data.table(patient_id = character(), birthdate = as.Date(character())))
-  }
-  patient_rows <- !is.na(patient[["pat_id"]]) &
-    nzchar(as.character(patient[["pat_id"]]))
-  unique(
-    data.table::data.table(
-      patient_id = as.character(patient[["pat_id"]][patient_rows]),
-      birthdate = as.Date(patient[["pat_birthdate"]][patient_rows])
-    ),
-    by = "patient_id"
-  )
-}
-
-enrichSnapshotEncounterTable <- function(encounter, patient) {
+enrichSnapshotEncounterChunk <- function(
+  encounter,
+  birthdates = NULL,
+  enrichment_columns = "enc_age_at_admission",
+  source_columns = names(encounter)
+) {
   encounter <- data.table::as.data.table(data.table::copy(encounter))
-  if (!"enc_age_at_admission" %in% names(encounter)) {
+  if (
+    "enc_age_at_admission" %in% enrichment_columns &&
+    !"enc_age_at_admission" %in% names(encounter)
+  ) {
     encounter[["enc_age_at_admission"]] <- NA_integer_
   }
   if (
-    nrow(encounter) == 0 ||
-    is.null(patient) ||
-    !"enc_patient_ref" %in% names(encounter) ||
-    !"enc_period_start" %in% names(encounter)
+    "enc_age_at_admission" %in% enrichment_columns &&
+    "enc_period_start" %in% source_columns &&
+    !is.null(birthdates) &&
+    "enc_period_start" %in% names(encounter)
   ) {
-    return(encounter)
+    encounter[["enc_age_at_admission"]] <- calculateCompletedYears(
+      encounter[["enc_period_start"]],
+      birthdates
+    )
   }
-
-  patient_birthdates <- getPatientBirthdateMap(patient)
-  patient_ids <- extractFhirReferenceId(encounter[["enc_patient_ref"]], "Patient")
-  birthdates <- patient_birthdates[
-    match(patient_ids, patient_birthdates[["patient_id"]]),
-    "birthdate"
-  ][[1]]
-  encounter[["enc_age_at_admission"]] <- calculateCompletedYears(
-    encounter[["enc_period_start"]],
-    birthdates
-  )
   encounter
-}
-
-#' Enrich Snapshot Case Tables with Age and BMI
-#'
-#' Adds snapshot-specific case metrics before pseudonymization. `fall_fe` gets
-#' BMI and age at case admission, while `encounter` gets age at encounter start.
-#'
-#' @param tables Named list of snapshot source tables.
-#'
-#' @return The table list with enriched case and encounter tables.
-#' @export
-enrichSnapshotCaseMetricTables <- function(tables) {
-  for (suffix in c("", "_last_version")) {
-    fall_table_name <- paste0("fall_fe", suffix)
-    patient_fe_table_name <- paste0("patient_fe", suffix)
-    if (!is.null(tables[[fall_table_name]])) {
-      tables[[fall_table_name]] <- enrichSnapshotFallTable(
-        tables[[fall_table_name]],
-        tables[[patient_fe_table_name]]
-      )
-    }
-
-    encounter_table_name <- paste0("encounter", suffix)
-    patient_table_name <- paste0("patient", suffix)
-    if (!is.null(tables[[encounter_table_name]])) {
-      tables[[encounter_table_name]] <- enrichSnapshotEncounterTable(
-        tables[[encounter_table_name]],
-        tables[[patient_table_name]]
-      )
-    }
-  }
-
-  tables
 }

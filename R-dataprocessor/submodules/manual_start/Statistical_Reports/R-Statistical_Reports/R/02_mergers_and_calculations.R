@@ -1159,6 +1159,7 @@ addMRPDokuData <- function(merged_fe_pat_fall_meda_table_with_enc_id,
         "meda_id" = "mrp_meda_id"
       )
     ) |>
+    # TODO: eventually optimize this, it should not be na at any time (what happens id fall_meda_id is missing?) -------
     dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
       !is.na(meda_dat) & is.na(meda_id) ~ addProcessingExclusionReason(
         existing = processing_exclusion_reason,

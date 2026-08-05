@@ -34,6 +34,25 @@ logInfo <- function(...) {
   cat(paste0("[", format(Sys.time(), "%H:%M:%S"), "] ", paste0(...), "\n"))
 }
 
+install_from_rscript <- function(tarball) {
+  rscript <- file.path(R.home("bin"), "Rscript")
+
+  ncpus <- max(1L, parallel::detectCores(logical = TRUE) - 1L)
+
+  script <- tempfile(fileext = ".R")
+
+  writeLines(
+    sprintf(
+      "install.packages(%s, repos = NULL, type = 'source', Ncpus = %d)",
+      shQuote(normalizePath(tarball, winslash = "/")),
+      ncpus
+    ),
+    script
+  )
+
+  system2(rscript, script)
+}
+
 buildAndInstall <- function(pkg_dir) {
   # Build source tarball and install it (like R CMD INSTALL)
   withr::with_dir(pkg_dir, {
@@ -57,12 +76,11 @@ buildAndInstall <- function(pkg_dir) {
     tarball <- pkgbuild::build(path = ".", dest_path = tempdir(), binary = FALSE)
 
     logInfo("  • Installing from ", basename(tarball))
-    install.packages(
-      tarball,
-      repos = NULL,
-      type = "source",
-      Ncpus = max(1L, parallel::detectCores(logical = TRUE) - 1L)
-    )
+
+    cat("Tarball:", tarball, "\n")
+    cat("Exists :", file.exists(tarball), "\n")
+
+    install_from_rscript(tarball)
   })
 }
 
@@ -100,7 +118,7 @@ DEBUG_VM_CONFIGS <- list(
   `0` = list(db_port = 5432,  redcap_port = 80,    redcap_token = "35784E25CB814491E49EE51641966B50", db_admin_password = "2389673289479283"), # local-VM
   `1` = list(db_port = 5432,  redcap_port = 8082,  redcap_token = "",                                 db_admin_password = "2389673289479283"), # MR
   `2` = list(db_port = 25432, redcap_port = 28082, redcap_token = "5DD4ECFDC245D8FC955B13D894875F62", db_admin_password = "2389673289479283"), # FS+AXS
-  `3` = list(db_port = 35432, redcap_port = 8091,  redcap_token = "",                                 db_admin_password = "2389673289479283"), # TB
+  `3` = list(db_port = 35432, redcap_port = 8091,  redcap_token = "DFC537547BAC8ED8278EAB70BEA1BFF8", db_admin_password = "4432252352232"), # TB
   `4` = list(db_port = 45432, redcap_port = 48082, redcap_token = "",                                 db_admin_password = "2389673289479283"), # FS+AXS
   `5` = list(db_port = 55432, redcap_port = 58082, redcap_token = "",                                 db_admin_password = "2389673289479283"), # FS+AXS
   `6` = list(db_port = 25436, redcap_port = 28087, redcap_token = "35784E25CB814491E49EE51641966B50", db_admin_password = "2389673289479283"), # FS+AXS

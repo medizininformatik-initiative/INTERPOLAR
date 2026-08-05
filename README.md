@@ -114,7 +114,7 @@ Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der h
 
 ## Datenbank Snapshot
 
-Zur Erstellung, Löschung, Aktivierung, De-Aktivierung, Pseudonymisierung und Auflistung von Snapshots wird das Bash-Script `ip-snapshot.sh` verwendet. Das Script muss direkt im Hauptverzeichnis ausgeführt werden. Snapshot-Dateinamen dürfen keine Pfadangaben enthalten und werden im Verzeichnis `Snapshots` als `.sql.gz` abgelegt.
+Zur Erstellung, Löschung, Aktivierung, De-Aktivierung, Pseudonymisierung und Auflistung von Snapshots wird das Bash-Script `ip-snapshot.sh` verwendet. Das Script muss direkt im Hauptverzeichnis ausgeführt werden. Snapshot-Namen dürfen nur Buchstaben, Zahlen und Unterstriche und keine Pfadangaben enthalten. Die Dateien werden im Verzeichnis `Snapshots` als `.sql.gz` abgelegt.
 
 Eine ausführliche Beschreibung von Inhalt, Pseudonymisierung, Anreicherung und Reports steht in [Database_Snapshot.md](Database_Snapshot.md).
 
@@ -137,6 +137,14 @@ Mit _pseudonymize_ wird nachträglich aus einem vorhandenen Snapshot-Dump ein ps
 ```cmd
 ./ip-snapshot.sh pseudonymize snap01_20251002
 ```
+
+Die Anzahl der gleichzeitig verarbeiteten Tabellenzeilen kann mit `--chunk-size` angepasst werden. Der Standardwert ist 25.000; kleinere Werte benötigen weniger R-Speicher, können den Lauf aber verlängern. Der Parameter ist bei `pseudonymize` und bei `create --with-pseudonymized` verfügbar.
+```cmd
+./ip-snapshot.sh pseudonymize snap01_20251002 --chunk-size 10000
+./ip-snapshot.sh create snap01 --with-pseudonymized --chunk-size 10000
+```
+
+Wenn die Pseudonymisierung fehlschlägt, bleiben die temporär wiederhergestellte Source-Datenbank und die teilweise erzeugte pseudonymisierte Ziel-Datenbank zur Diagnose erhalten. Die ursprüngliche Snapshot-Datei wird bei einem Fehler nicht gelöscht. Vor einem erneuten Lauf müssen die behaltenen Build-Datenbanken geprüft und manuell entfernt werden, da das Script vorhandene Build-Datenbanken nicht überschreibt. Nach einem erfolgreichen Lauf werden die temporären Build-Datenbanken automatisch gelöscht.
 
 Mit _activate_ wird ein Snapshot-Dump in eine Snapshot-Datenbank geladen. Die aktivierte Datenbank erhält den Namen `ip_<snapshot_name>` und wird nach dem Einspielen in den Read-only-Modus gesetzt.
 ```cmd

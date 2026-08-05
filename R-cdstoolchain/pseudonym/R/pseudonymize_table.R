@@ -307,6 +307,14 @@ getPseudonymMappingSheet <- function(mapping_context, sheet_name) {
   mapping_context$cache[[sheet_name]]
 }
 
+newPseudonymMappingContext <- function(input_repo_path) {
+  mapping_context <- new.env(parent = emptyenv())
+  mapping_context$input_repo_path <- input_repo_path
+  mapping_context$cache <- new.env(parent = emptyenv())
+  mapping_context$missing <- list()
+  mapping_context
+}
+
 recordMissingPseudonymMappingValues <- function(mapping_context, sheet_name, column_name, values) {
   if (is.null(mapping_context) || length(values) == 0) {
     return(invisible())
@@ -343,20 +351,56 @@ assertNoMissingPseudonymMappingValues <- function(mapping_context) {
   )
 }
 
+splitPseudonymMappingValues <- function(values) {
+  values_chr <- as.character(values)
+  values_chr <- values_chr[!is.na(values_chr)]
+  unlist(
+    strsplit(values_chr, "\r\n|\r|\n", perl = TRUE),
+    use.names = FALSE
+  )
+}
+
 applyPseudonymMapping <- function(values, sheet_name, column_name, mapping_context) {
   mapping <- getPseudonymMappingSheet(mapping_context, sheet_name)
   values_chr <- as.character(values)
   result <- rep(NA_character_, length(values_chr))
   has_value <- !is.na(values_chr)
-  match_index <- match(values_chr[has_value], mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]])
-  missing_values <- values_chr[has_value][is.na(match_index)]
+  value_parts <- lapply(
+    values_chr[has_value],
+    splitPseudonymMappingValues
+  )
+  match_indices <- lapply(
+    value_parts,
+    match,
+    table = mapping[[PSEUDONYM_MAPPING_KEY_COLNAME]]
+  )
+  missing_values <- unlist(
+    Map(
+      function(parts, match_index) parts[is.na(match_index)],
+      value_parts,
+      match_indices
+    ),
+    use.names = FALSE
+  )
   recordMissingPseudonymMappingValues(
     mapping_context,
     sheet_name,
     column_name,
     missing_values
   )
-  result[has_value] <- mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]][match_index]
+  result[has_value] <- vapply(
+    match_indices,
+    function(match_index) {
+      if (anyNA(match_index)) {
+        return(NA_character_)
+      }
+      paste(
+        mapping[[PSEUDONYM_MAPPING_VALUE_COLNAME]][match_index],
+        collapse = "\n"
+      )
+    },
+    character(1)
+  )
   result
 }
 
@@ -369,21 +413,22 @@ redactVector <- function(values) {
 generalizeDateLikeVector <- function(values, format) {
   if (format == "%Y-%m") {
     if (inherits(values, "Date") || inherits(values, "POSIXt")) {
-      return(as.Date(paste0(format(values, "%Y-%m"), "-01")))
+      return(format(values, "%Y-%m"))
     }
   }
 
   values_chr <- as.character(values)
-  result <- rep(NA, length(values_chr))
   has_value <- !is.na(values_chr)
 
   if (format == "%Y-%m") {
+    result <- rep(NA_character_, length(values_chr))
     matches <- regexec("^(\\d{2,4})-(\\d{2})", values_chr[has_value])
     parts <- regmatches(values_chr[has_value], matches)
-    result[has_value] <- as.Date(vapply(parts, function(part) {
-      if (length(part) >= 3) paste0(part[2], "-", part[3], "-01") else NA_character_
-    }, character(1)))
+    result[has_value] <- vapply(parts, function(part) {
+      if (length(part) >= 3) paste0(part[2], "-", part[3]) else NA_character_
+    }, character(1))
   } else if (format == "%Y") {
+    result <- rep(NA_character_, length(values_chr))
     matches <- regexec("^(\\d{2,4})", values_chr[has_value])
     parts <- regmatches(values_chr[has_value], matches)
     result[has_value] <- vapply(parts, function(part) {
@@ -461,7 +506,8 @@ evaluateRuleCondition <- function(condition, table, table_description, fhir_expr
 applyHashRuleToVector <- function(
   values,
   max_length = NA_integer_,
-  fhir_expression = NA_character_) {
+  fhir_expression = NA_character_
+) {
   if (isFhirReferenceExpression(fhir_expression)) {
     return(pseudonymizationHashReference(
       values,
@@ -476,7 +522,8 @@ applyPseudonymizationRuleToVector <- function(
   rule,
   column_name = NA_character_,
   mapping_context = NULL,
-  fhir_expression = NA_character_) {
+  fhir_expression = NA_character_
+) {
   rule <- normalizePseudonymizationRule(rule)
   parsed_rule <- parsePseudonymizationRuleCall(rule)
   action <- parsed_rule$action
@@ -581,6 +628,20 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
   }
 
   result <- table[[column_name]]
+  produces_year_month_text <- any(vapply(rule_list, function(single_rule) {
+    parsed_rule <- parsePseudonymizationRuleCall(single_rule)
+    if (parsed_rule$action != "generalize") {
+      return(FALSE)
+    }
+    format <- getRuleArgument(parsed_rule, "format")
+    if (is.na(format)) {
+      format <- stripRuleQuotes(parsed_rule$arguments[1])
+    }
+    identical(format, "YYYY-MM")
+  }, logical(1)))
+  if (produces_year_month_text) {
+    result <- as.character(result)
+  }
   matched_rows <- rep(FALSE, nrow(table))
   has_conditional_rule <- FALSE
 
@@ -632,17 +693,24 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
 #'   for the pseudonymization run. If `pseudonym(sheet = ...)` rules are used,
 #'   `<input_repo_path>/pseudo_mapping.xlsx` is read and the `sheet` argument
 #'   selects the mapping sheet.
+#' @param mapping_context Optional reusable pseudonym-mapping cache. This is
+#'   primarily used by incremental snapshot processing so mapping sheets are
+#'   loaded once across chunks.
 #'
 #' @return A pseudonymized copy of `table`.
-#' @export
-pseudonymizeTable <- function(table, table_description, table_name = NULL, input_repo_path = NULL) {
+pseudonymizeTable <- function(
+  table,
+  table_description,
+  table_name = NULL,
+  input_repo_path = NULL,
+  mapping_context = NULL
+) {
   table <- data.table::as.data.table(data.table::copy(table))
   source_table <- data.table::copy(table)
   column_rules <- getPseudonymizationColumnRules(table_description, table_name)
-  mapping_context <- new.env(parent = emptyenv())
-  mapping_context$input_repo_path <- input_repo_path
-  mapping_context$cache <- new.env(parent = emptyenv())
-  mapping_context$missing <- list()
+  if (is.null(mapping_context)) {
+    mapping_context <- newPseudonymMappingContext(input_repo_path)
+  }
 
   for (column_name in names(table)) {
     rule_row <- column_rules[column_rules[["COLUMN_NAME"]] == column_name, ]
@@ -721,22 +789,18 @@ pseudonymizeTableForSnapshot <- function(
   table_name,
   rule_source = NULL,
   input_repo_path,
-  keep_unmatched_columns) {
+  mapping_context = NULL
+) {
   table_rules <- getPseudonymizationRulesForTable(rules, table_name, source = rule_source)
   described_columns <- unique(table_rules[["COLUMN_NAME"]])
-  available_columns <- described_columns[described_columns %in% names(table)]
   missing_columns <- described_columns[!(described_columns %in% names(table))]
 
-  table_to_pseudonymize <- data.table::as.data.table(data.table::copy(table))
-  if (!isTRUE(keep_unmatched_columns)) {
-    table_to_pseudonymize <- table_to_pseudonymize[, available_columns, drop = FALSE]
-  }
-
   result <- pseudonymizeTable(
-    table_to_pseudonymize,
+    table,
     table_rules,
     table_name = table_name,
-    input_repo_path = input_repo_path
+    input_repo_path = input_repo_path,
+    mapping_context = mapping_context
   )
 
   list(
@@ -751,104 +815,5 @@ pseudonymizeTableForSnapshot <- function(
       MISSING_COLUMNS = paste(missing_columns, collapse = ", "),
       STATUS = "pseudonymized"
     )
-  )
-}
-
-#' Pseudonymize a Named List of Tables Using Loaded Rule Sources
-#'
-#' This is the snapshot-oriented table-level wrapper around
-#' `pseudonymizeTable()`. Only tables with loaded pseudonymization rules are
-#' emitted. By default, columns not described in the rule sources are kept
-#' unchanged in the output tables.
-#'
-#' @param tables Named list of data.frames or data.tables.
-#' @param rules Rules loaded by `loadPseudonymizationRules()` or equivalent
-#'   table-description data.
-#' @param input_repo_path TOML-configured input repository directory used for
-#'   `pseudonym(sheet = ...)` mapping rules.
-#' @param keep_unmatched_columns If `TRUE`, source columns without a loaded rule
-#'   are kept unchanged. The default `TRUE` is intended for snapshot creation,
-#'   so original snapshot columns are not removed.
-#' @param log_steps If `TRUE` and module logging is initialized, wrap the process
-#'   in the existing `etlutils::runLevel...` logging.
-#'
-#' @return A list with `tables`, a named list of pseudonymized tables, and
-#'   `summary`, a data.table describing processed and skipped tables.
-#' @export
-pseudonymizeTables <- function(
-  tables,
-  rules,
-  input_repo_path = NULL,
-  keep_unmatched_columns = TRUE,
-  log_steps = TRUE) {
-  if (is.null(names(tables)) || any(!nzchar(names(tables)))) {
-    stop("tables must be a named list.")
-  }
-
-  rules <- normalizePseudonymizationRulesForTables(rules)
-  described_tables <- unique(rules[["TABLE_OR_RESOURCE"]])
-  input_table_names <- names(tables)
-  tables_to_process <- input_table_names[tolower(input_table_names) %in% tolower(described_tables)]
-  skipped_tables <- input_table_names[!(tolower(input_table_names) %in% tolower(described_tables))]
-
-  result_tables <- list()
-  summary_template <- data.table::data.table(
-    TABLE_NAME = character(),
-    INPUT_ROWS = integer(),
-    OUTPUT_ROWS = integer(),
-    INPUT_COLUMNS = integer(),
-    DESCRIBED_COLUMNS = integer(),
-    OUTPUT_COLUMNS = integer(),
-    MISSING_COLUMNS = character(),
-    STATUS = character()
-  )
-  summary_rows <- list()
-
-  runPseudonymizationLogStep(2L,
-    "Pseudonymize snapshot tables",
-    {
-      for (table_name in tables_to_process) {
-        table_result <- runPseudonymizationLogStep(
-          3L,
-          paste0("Pseudonymize table ", table_name),
-          pseudonymizeTableForSnapshot(
-            tables[[table_name]],
-            rules,
-            table_name,
-            rule_source = NULL,
-            input_repo_path = input_repo_path,
-            keep_unmatched_columns = keep_unmatched_columns
-          ),
-          log_steps = log_steps
-        )
-        result_tables[[table_name]] <- table_result$table
-        summary_rows[[length(summary_rows) + 1L]] <- table_result$summary
-      }
-    },
-    log_steps = log_steps
-  )
-
-  if (length(skipped_tables) > 0) {
-    skipped_summary <- data.table::data.table(
-      TABLE_NAME = skipped_tables,
-      INPUT_ROWS = vapply(tables[skipped_tables], nrow, integer(1)),
-      OUTPUT_ROWS = 0L,
-      INPUT_COLUMNS = vapply(tables[skipped_tables], function(table) length(names(table)), integer(1)),
-      DESCRIBED_COLUMNS = 0L,
-      OUTPUT_COLUMNS = 0L,
-      MISSING_COLUMNS = "",
-      STATUS = "skipped_no_rules"
-    )
-    summary_rows[[length(summary_rows) + 1L]] <- skipped_summary
-  }
-  summary <- if (length(summary_rows) > 0) {
-    data.table::rbindlist(summary_rows, fill = TRUE)
-  } else {
-    summary_template
-  }
-
-  list(
-    tables = result_tables,
-    summary = summary
   )
 }

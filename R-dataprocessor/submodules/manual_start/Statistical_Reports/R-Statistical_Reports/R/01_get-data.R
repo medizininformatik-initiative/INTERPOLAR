@@ -153,6 +153,19 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
     "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
 
+    # ----------------------------------------------------------------------------------------------------------#
+    # possible additional useful variables not included at the moment:
+
+    # "enc_identifier_type_code, enc_class_system, enc_servicetype_system, enc_servicetype_code, ",
+    # "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
+    # "enc_hospitalization_dischargedisposition_system, enc_hospitalization_dischargedisposition_code, ",
+    # "enc_location_ref, enc_location_identifier_value, enc_location_status, ",
+    # "enc_location_physicaltype_system, enc_location_physicaltype_code, ",
+    # "enc_serviceprovider_identifier_type_system, enc_serviceprovider_identifier_type_code, ",
+    # "enc_serviceprovider_identifier_system, enc_serviceprovider_identifier_value, ",
+    # "enc_meta_lastupdated ",
+    # ----------------------------------------------------------------------------------------------------------#
+
     "FROM ", table_name, "\n"
   )
 
@@ -530,6 +543,32 @@ getMedikationsanalyseFeData <- function(lock_id, table_name) {
     "medikationsanalyse_complete, meda_mrp_detekt, last_processing_nr, redcap_repeat_instance FROM ", table_name, "\n"
   )
 
+  # ----------------------------------------------------------------------------------------------------------#
+  # possible additional useful variables not included at the moment:
+
+  # \item `meda_anlage` – identifier of the person who created the medication analysis.
+  # \item `meda_edit` – identifier of the person who last edited the medication analysis.
+  # \item `meda_typ` – Type of medication analysis.
+  # \item `meda_gewicht_aktuell` – Current weight of the patient at the time of analysis.
+  # \item `meda_gewicht_aktl_einheit` – Unit of measurement for the current weight.
+  # \item `meda_groesse` – Height of the patient at the time of analysis.
+  # \item `meda_groesse_einheit` – Unit of measurement for the height.
+  # \item `meda_nieren_insuf_chron` – Flag indicating if the patient has chronic kidney insufficiency.
+  # \item `meda_nieren_insuf_ausmass` – Degree of chronic kidney insufficiency.
+  # \item `meda_nieren_insuf_dialysev` – Flag indicating if the patient is on dialysis.
+  # \item `meda_leber_insuf` – Flag indicating if the patient has liver insufficiency.
+  # \item `meda_leber_insuf_ausmass` – Degree of liver insufficiency.
+  # \item `meda_schwanger_mo` – Flag indicating if the patient is pregnant.
+  # \item `meda_ma_thueberw` – Flag indicating if medication analysis is marked for representment
+  # \item `meda_mrp_detekt` – Flag indicating if a medication-related problem (MRP) was detected.
+  # \item `meda_aufwand_zeit` – Time spent on the medication analysis.
+  # \item `meda_notiz` – Additional notes related to the medication analysis.
+
+  # meda_anlage, meda_edit, meda_typ, meda_gewicht_aktuell, meda_gewicht_aktl_einheit
+  # meda_groesse, meda_groesse_einheit, meda_nieren_insuf_chron, meda_nieren_insuf_ausmass
+  # meda_nieren_insuf_dialysev, meda_leber_insuf, meda_leber_insuf_ausmass, meda_schwanger_mo
+  # meda_ma_thueberw, meda_mrp_detekt, meda_aufwand_zeit, meda_notiz
+  # ----------------------------------------------------------------------------------------------------------#
   medikationsanalyse_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # create last version view
@@ -582,6 +621,18 @@ getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
     "FROM ", table_name, "\n"
   )
 
+  # ----------------------------------------------------------------------------------------------------------#
+  # possible additional useful variables not included at the moment:
+
+  # mrp_anlage, mrp_edit, mrp_kurzbeschr, mrp_hinweisgeber, mrp_hinweisgeber_oth, mrp_wirkstoff
+  # paste0("mrp_atc", 1:5, collapse = ", ")
+  # mrp_med_prod, mrp_med_prod_sonst
+  # paste0("mrp_pigrund___", 1:27, collapse = ", ")
+  # mrp_ip_klasse_disease, mrp_ip_klasse_nieren_insuf
+  # paste0("mrp_massn_am___", 1:10, collapse = ", ")
+  # paste0("mrp_massn_orga___", 1:8, collapse = ", ")
+  # mrp_notiz, mrp_merp
+  # ----------------------------------------------------------------------------------------------------------#
   mrp_dokumentation_validierung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # create last version view
@@ -639,6 +690,18 @@ getRetrolektiveMRPBewertungFeData <- function(lock_id, table_name) {
     "FROM ", table_name, "\n"
   )
 
+  # ----------------------------------------------------------------------------------------------------------#
+  # possible additional useful variables not included at the moment:
+
+  # ret_bewerter1, ret_meda_dat1, ret_kurzbeschr, ret_atc1, ret_atc2,
+  # ret_ip_klasse_disease,
+  # ret_gewissheit1_oth
+  # ret_gewiss_grund_abl_sonst1, ret_gewiss_grund_abl_klin1,
+  # ret_massn_am1___1/...10, ret_massn_orga1___1/..8, ret_notiz1,
+  # ret_meda_dat_referenz, ret_gewiss_trigger1_falsch___1/...4, ret_gewiss_datengrundl1_1___1/...4,
+  # ret_gewiss_datengrundl1_2___1/...4, ret_gewiss_datengrundl1_1_oth, ret_gewiss_datengrundl1_2_oth,
+  # ... weitere für Auswertung Zweitbewertung
+  # ----------------------------------------------------------------------------------------------------------#
   retrolektive_mrpbewertung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id, ret_meda_id, ret_id)
