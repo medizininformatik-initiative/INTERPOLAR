@@ -31,8 +31,10 @@ Für die Pseudonymisierung gelten zusätzlich folgende Voraussetzungen:
 - Die LOINC-Mapping-Datei muss unter
   `LOINC_Mapping/LOINC_Mapping_content/LOINC_Mapping_Table_processed.xlsx`
   innerhalb des `INPUT_REPO_PATH` verfügbar sein.
-- Für die normale Snapshot-Datei sowie die temporäre Quell- und Zieldatenbank muss
-  ausreichend Speicherplatz vorhanden sein.
+- Für die normale Snapshot-Datei sowie die temporäre Quell- und Zieldatenbank
+  muss ausreichend Speicherplatz vorhanden sein. Nach erfolgreicher
+  Pseudonymisierung bleiben die normale und die pseudonymisierte
+  Snapshot-Datenbank erhalten.
 
 ## Befehle
 
@@ -53,7 +55,9 @@ Der Befehl erstellt eine Snapshot-Datei aus `cds_hub_db` unter
 
 Zuerst wird die normale Snapshot-Datei erstellt. Anschließend wird daraus die
 pseudonymisierte Snapshot-Datei `Snapshots/snap01_<Datum>_pseud.sql.gz`
-erzeugt.
+erzeugt. Danach sind in PostgreSQL innerhalb des Docker-Compose-Service
+`cds_hub` die schreibgeschützten Snapshot-Datenbanken `ip_snap01_<Datum>` und
+`ip_snap01_<Datum>_pseud` verfügbar.
 
 ### Vorhandene Snapshot-Datei pseudonymisieren
 
@@ -64,7 +68,10 @@ Der Name wird ohne Dateiendung angegeben:
 ```
 
 Aus `Snapshots/snap01_20251002.sql.gz` entsteht
-`Snapshots/snap01_20251002_pseud.sql.gz`.
+`Snapshots/snap01_20251002_pseud.sql.gz`. Danach sind in PostgreSQL innerhalb
+des Docker-Compose-Service `cds_hub` die schreibgeschützten
+Snapshot-Datenbanken `ip_snap01_20251002` und `ip_snap01_20251002_pseud`
+verfügbar.
 
 ### Chunkgröße anpassen
 
@@ -87,6 +94,10 @@ Der Befehl zeigt vorhandene Snapshot-Dateien und aktivierte
 Snapshot-Datenbanken an.
 
 ### Snapshot-Datenbank aktivieren
+
+Dieser Schritt ist nur nötig, wenn die gewünschte Snapshot-Datenbank noch nicht
+vorhanden ist. Nach einer erfolgreichen Pseudonymisierung sind die normale und
+die pseudonymisierte Snapshot-Datenbank bereits aktiviert.
 
 ```bash
 ./ip-snapshot.sh activate snap01_20251002
@@ -126,15 +137,15 @@ gleichnamige Snapshot-Datenbank.
    pseudonymisierten Daten hinein.
 3. Die Zieldatenbank wird als neue Snapshot-Datei mit dem Suffix `_pseud`
    gespeichert.
-4. Nach einem erfolgreichen Lauf werden beide temporären Datenbanken gelöscht.
-5. `activate` spielt die pseudonymisierte Snapshot-Datei als schreibgeschützte
-   Snapshot-Datenbank ein. Auch dieser Schritt kann lange dauern.
+4. Die normale und die pseudonymisierte Snapshot-Datenbank werden in PostgreSQL
+   innerhalb des Docker-Compose-Service `cds_hub` schreibgeschützt unter ihren
+   endgültigen Namen bereitgestellt. Ein zusätzliches `activate` ist nicht
+   nötig.
 
 ## Prüfung vor der Weitergabe
 
-- Pseudonymisierte Snapshot-Datei aktivieren.
-- Die aktivierte pseudonymisierte Snapshot-Datenbank auf Daten prüfen, die den
-  Standort nicht verlassen dürfen.
+- Die pseudonymisierte Snapshot-Datenbank auf Daten prüfen, die den Standort
+  nicht verlassen dürfen.
 - Die pseudonymisierte Snapshot-Datei nicht weitergeben, wenn die
   Snapshot-Datenbank solche Daten enthält.
 - Solche Funde dem INTERPOLAR-Team melden. Die Pseudonymisierungsregeln werden
@@ -226,8 +237,20 @@ Quelldatenbank wird wiederverwendet.
 
 Bei späteren Fehlern bleiben die Quelldatenbank und die teilweise erzeugte
 Zieldatenbank zur Diagnose erhalten. Beim nächsten Lauf wird die Quelldatenbank
-wiederverwendet und die Zieldatenbank neu erstellt. Nach einem erfolgreichen
-Lauf werden beide temporären Datenbanken gelöscht.
+nur wiederverwendet, wenn ihr vermerkter SHA-256-Wert zur normalen
+Snapshot-Datei passt. Die Zieldatenbank wird neu erstellt.
+
+Nach einem erfolgreichen Lauf werden die normale und die pseudonymisierte
+Snapshot-Datenbank in PostgreSQL innerhalb des Docker-Compose-Service `cds_hub`
+schreibgeschützt unter ihren endgültigen Namen bereitgestellt:
+
+```text
+ip_<name>_<Datum>
+ip_<name>_<Datum>_pseud
+```
+
+Mit `deactivate` werden nicht mehr benötigte Snapshot-Datenbanken entfernt. Die
+Snapshot-Dateien bleiben erhalten.
 
 ### Fachliche Anreicherungen
 
