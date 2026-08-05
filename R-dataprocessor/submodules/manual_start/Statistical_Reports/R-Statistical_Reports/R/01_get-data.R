@@ -1,3 +1,11 @@
+getExistingReportColumns <- function(lock_id, table_name, optional_columns) {
+  available_columns <- names(etlutils::dbGetReadOnlyQuery(
+    paste0("SELECT * FROM ", table_name, " LIMIT 0\n"),
+    lock_id = lock_id
+  ))
+  intersect(optional_columns, available_columns)
+}
+
 #' Get Patient Data
 #'
 #' This function retrieves patient data—including patient IDs, birthdates, and metadata—
@@ -139,6 +147,7 @@ getPatientData <- function(lock_id, table_name) {
 #'    These will exist of strings where the reason as well as the level ( e.g. 'patient', 'main_encounter' 'sub_encounter')
 #'    and the type of exclusion (e.g. 'not_in_inclusion_criteria', 'data_issues', 'linkage_issiues') are noted in a structured way.
 #' 9. Checks for empty results and issuing errors if necessary.
+#' The optional `enc_age_at_admission` column is retrieved when it exists.
 #'
 #'
 #' @importFrom dplyr distinct arrange filter mutate if_else
@@ -148,10 +157,14 @@ getPatientData <- function(lock_id, table_name) {
 # (bottom variables not in use)
 
 getEncounterData <- function(lock_id, table_name, report_period_start) {
+  selected_columns <- c(
+    "enc_id", "enc_identifier_value", "enc_patient_ref", "enc_partof_calculated_ref",
+    "enc_class_code", "enc_type_code", "enc_period_start", "enc_period_end", "enc_status",
+    "enc_identifier_system", "enc_type_system", "enc_main_encounter_calculated_ref",
+    getExistingReportColumns(lock_id, table_name, "enc_age_at_admission")
+  )
   query <- paste0(
-    "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
-    "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-    "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
+    "SELECT ", paste(selected_columns, collapse = ", "), " ",
 
     # ----------------------------------------------------------------------------------------------------------#
     # possible additional useful variables not included at the moment:
@@ -445,6 +458,7 @@ getPatientFeData <- function(lock_id, table_name) {
 #'   \item{fall_aufn_dat}{Admission date of the main encounter}
 #'   \item{fall_ent_dat}{Discharge date of the main encounter}
 #'   \item{fall_complete}{"Complete"= hospitalized, "Incomplete"=discharged, "Unverified"= invalid record}
+#'   \item{fall_age_at_admission}{Optional precomputed age at admission}
 #'
 #' @details
 #' The function executes a SQL `SELECT` query on the specified `table_name`, retrieving all
@@ -458,9 +472,13 @@ getPatientFeData <- function(lock_id, table_name) {
 #' @importFrom dplyr distinct arrange select slice_max
 #' @export
 getFallFeData <- function(lock_id, table_name) {
+  selected_columns <- c(
+    "record_id", "fall_fhir_enc_id", "fall_pat_id", "fall_id", "fall_studienphase",
+    "fall_station", "fall_aufn_dat", "fall_ent_dat", "fall_complete", "input_processing_nr",
+    getExistingReportColumns(lock_id, table_name, "fall_age_at_admission")
+  )
   query <- paste0(
-    "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
-    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, fall_complete, input_processing_nr ",
+    "SELECT ", paste(selected_columns, collapse = ", "), " ",
     "FROM ", table_name, "\n"
   )
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>

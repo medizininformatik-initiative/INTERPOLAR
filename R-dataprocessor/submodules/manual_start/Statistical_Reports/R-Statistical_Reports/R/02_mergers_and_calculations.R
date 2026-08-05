@@ -295,6 +295,8 @@ addMainEncId <- function(encounter_table) {
 #' @return A data frame or tibble with an additional column:
 #'   - `main_enc_period_start`: The `enc_period_start` date corresponding to the `main_enc_id`.
 #'     This represents the start date of the primary encounter for each record.
+#'   - `main_enc_age_at_admission`: If `enc_age_at_admission` exists, the age from
+#'     the primary encounter, propagated to all associated encounter rows.
 #'
 #' @details
 #' The function performs a left join between the encounter table and a mapping
@@ -308,13 +310,19 @@ addMainEncId <- function(encounter_table) {
 #' @importFrom dplyr left_join select rename relocate
 #' @export
 addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
+  main_encounter_data <- encounter_table_with_main_enc |>
+    dplyr::select(dplyr::any_of(c("enc_id", "enc_period_start", "enc_age_at_admission"))) |>
+    dplyr::rename(
+      main_enc_id = enc_id,
+      main_enc_period_start = enc_period_start
+    )
+  if ("enc_age_at_admission" %in% names(main_encounter_data)) {
+    main_encounter_data <- main_encounter_data |>
+      dplyr::rename(main_enc_age_at_admission = enc_age_at_admission)
+  }
+
   encounter_table_with_MainEncPeriodStart <- encounter_table_with_main_enc |>
-    dplyr::left_join(
-      encounter_table_with_main_enc |>
-        dplyr::select(enc_id, enc_period_start) |>
-        dplyr::rename(main_enc_id = enc_id, main_enc_period_start = enc_period_start),
-      by = "main_enc_id"
-    ) |>
+    dplyr::left_join(main_encounter_data, by = "main_enc_id") |>
     dplyr::relocate(main_enc_period_start, .after = main_enc_id) |>
     dplyr::arrange(
       main_enc_period_start, enc_class_code, enc_type_code_Kontaktebene,
@@ -405,15 +413,20 @@ restrictToDefinedWards <- function(merged_pat_fall_fe_table) {
 #'   and `main_enc_period_start` (start date of the main encounter (Einrichtungskontakt)).
 #' @param main_enc_period_start The column name representing the start date of the main encounter period.
 #' @param pat_birthdate The column name representing the patient's birth date.
+#' @param precalculated_age_column Optional name of a precomputed age column. If
+#'   the column exists, it is used for every row. Otherwise, the age is calculated
+#'   from `main_enc_period_start` and `pat_birthdate` as before.
 #'
 #' @return A data frame or tibble with an additional column:
 #'   - `age_at_hospitalization`: The patient's age in completed years at the time of the main
 #'   encounter start.
 #'
 #' @details
-#' The function calculates age by taking the difference between `main_enc_period_start` and
-#' `pat_birthdate`, converting it into days, dividing by 365.25 to account for leap years,
-#' and rounding down to the nearest whole number. If any patients cannot have their age
+#' If `precalculated_age_column` exists, its values are used without recalculating
+#' missing rows. Otherwise, the function calculates age by taking the difference
+#' between `main_enc_period_start` and `pat_birthdate`, converting it into days,
+#' dividing by 365.25 to account for leap years, and rounding down to the nearest
+#' whole number. If any patients cannot have their age
 #' determined (i.e., if `age_at_hospitalization` is `NA`), a warning is issued, and those
 #' records are printed for review. The `processing_exclusion_reason` column is updated to
 #' indicate these cases: "patient_without_determined_age". Similarly, if any patients have
@@ -426,15 +439,27 @@ restrictToDefinedWards <- function(merged_pat_fall_fe_table) {
 #' @export
 calculateAge <- function(merged_table_with_MainEncPeriodStart,
                          main_enc_period_start = main_enc_period_start,
-                         pat_birthdate = pat_birthdate) {
-  merged_table_with_age <- merged_table_with_MainEncPeriodStart |>
-    dplyr::mutate(age_at_hospitalization = floor(as.numeric(difftime(
-      as.Date({{ main_enc_period_start }}),
-      as.Date({{ pat_birthdate }}),
+                         pat_birthdate = pat_birthdate,
+                         precalculated_age_column = NULL) {
+  main_enc_period_start_column <- deparse(substitute(main_enc_period_start))
+  pat_birthdate_column <- deparse(substitute(pat_birthdate))
+  if (
+    !is.null(precalculated_age_column) &&
+    precalculated_age_column %in% names(merged_table_with_MainEncPeriodStart)
+  ) {
+    calculated_age <- merged_table_with_MainEncPeriodStart[[precalculated_age_column]]
+  } else {
+    calculated_age <- floor(as.numeric(difftime(
+      as.Date(merged_table_with_MainEncPeriodStart[[main_enc_period_start_column]]),
+      as.Date(merged_table_with_MainEncPeriodStart[[pat_birthdate_column]]),
       units = "days"
-    )) / 365.25)) |>
-    dplyr::relocate(age_at_hospitalization, .after = {{ pat_birthdate }}) |>
-    dplyr::select(-{{ pat_birthdate }}) |>
+    )) / 365.25)
+  }
+  merged_table_with_age <- merged_table_with_MainEncPeriodStart
+  merged_table_with_age[["age_at_hospitalization"]] <- calculated_age
+  merged_table_with_age <- merged_table_with_age |>
+    dplyr::relocate(age_at_hospitalization, .after = dplyr::all_of(pat_birthdate_column)) |>
+    dplyr::select(-dplyr::all_of(pat_birthdate_column)) |>
     dplyr::distinct()
 
   if (any(is.na(merged_table_with_age$age_at_hospitalization))) {
