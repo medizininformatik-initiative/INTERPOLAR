@@ -125,7 +125,8 @@ calculateF1 <- function(F1_prep) {
 #'   - `contraindications_resolved`: Contraindications marked as resolved
 #'   - `encounters_eligible_for_algorithmic_mrp`: Encounters eligible for algorithmic MRP calculation
 #'   - `encounters_with_any_algorithmic_mrp`: Encounters with at least one algorithmically identified MRP
-#'   - `encounters_with_any_algorithmic_mrp_and_consent`: Encounters with at least one algorithmic MRP and consent given
+#'   - `encounters_with_non_confirmed_non_incorrect_data_items_mrp_and_consent`: Encounters with non-confirmed
+#'      non-incorrect data items MRP and consent given
 #'   - `algorithmic_MRP`: Total algorithmic MRPs
 #'   - `algorithmic_MRP_drug_drug`: Algorithmic drug-drug interactions
 #'   - `algorithmic_MRP_drug_disease`: Algorithmic drug-disease interactions
@@ -312,8 +313,13 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP],
         na.rm = TRUE
       ),
-      encounters_with_any_algorithmic_mrp_and_consent = dplyr::n_distinct(
-        main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP & MDAT_wissenschaftlich_nutzen],
+      encounters_with_non_confirmed_non_incorrect_data_items_mrp_and_consent = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP &
+          retrolektive_mrpbewertung_complete == "Complete" &
+          ret_gewissheit1 == "MRP nicht bestätigt" &
+          (ret_gewiss_grund1_abl != "MRP sachlich richtig, aber falsche Datengrundlage" |
+            ret_gewiss_grund1_abl_01 != "MRP sachlich richtig, aber falsche Datengrundlage") &
+          MDAT_wissenschaftlich_nutzen],
         na.rm = TRUE
       ),
       algorithmic_MRP = dplyr::n_distinct(
@@ -523,8 +529,13 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         main_enc_id[valid_for_overall_counting & sub_enc_any_algorithmic_MRP],
         na.rm = TRUE
       ),
-      encounters_with_any_algorithmic_mrp_and_consent = dplyr::n_distinct(
-        main_enc_id[valid_for_overall_counting & sub_enc_any_algorithmic_MRP & MDAT_wissenschaftlich_nutzen],
+      encounters_with_non_confirmed_non_incorrect_data_items_mrp_and_consent = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP &
+          retrolektive_mrpbewertung_complete == "Complete" &
+          ret_gewissheit1 == "MRP nicht bestätigt" &
+          (ret_gewiss_grund1_abl != "MRP sachlich richtig, aber falsche Datengrundlage" |
+            ret_gewiss_grund1_abl_01 != "MRP sachlich richtig, aber falsche Datengrundlage") &
+          MDAT_wissenschaftlich_nutzen],
         na.rm = TRUE
       ),
       algorithmic_MRP = dplyr::n_distinct(
