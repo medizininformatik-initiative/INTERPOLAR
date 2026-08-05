@@ -33,8 +33,9 @@ Für die Pseudonymisierung gelten zusätzlich folgende Voraussetzungen:
 - Die LOINC-Mapping-Datei muss unter
   `LOINC_Mapping/LOINC_Mapping_content/LOINC_Mapping_Table_processed.xlsx`
   innerhalb des `INPUT_REPO_PATH` verfügbar sein.
-- Für den normalen Dump sowie die temporäre Source- und Ziel-Datenbank muss
-  ausreichend Speicherplatz vorhanden sein.
+- Für die normale Snapshot-Datei sowie die Quell- und Zieldatenbank muss
+  ausreichend Speicherplatz vorhanden sein. Nach erfolgreicher
+  Pseudonymisierung bleiben beide Datenbanken erhalten.
 
 Vor dem Einspielen eines Dumps prüft das Script automatisch die
 Pseudonymisierungsregeln und die statisch prüfbaren Mapping-Voraussetzungen.
@@ -57,7 +58,8 @@ Der Befehl erstellt einen Dump von `cds_hub_db` unter
 ```
 
 Zuerst wird der normale Snapshot erstellt. Anschließend wird daraus der
-pseudonymisierte Snapshot `Snapshots/snap01_<Datum>_pseud.sql.gz` erzeugt.
+pseudonymisierte Snapshot `Snapshots/snap01_<Datum>_pseud.sql.gz` erzeugt. Beide
+Snapshot-Datenbanken stehen danach schreibgeschützt zur Prüfung bereit.
 
 ### Vorhandenen Snapshot pseudonymisieren
 
@@ -68,7 +70,8 @@ Der Name wird ohne Dateiendung angegeben:
 ```
 
 Aus `Snapshots/snap01_20251002.sql.gz` entsteht
-`Snapshots/snap01_20251002_pseud.sql.gz`.
+`Snapshots/snap01_20251002_pseud.sql.gz`. Die normale und die pseudonymisierte
+Snapshot-Datenbank stehen danach schreibgeschützt zur Prüfung bereit.
 
 ### Chunkgröße anpassen
 
@@ -91,6 +94,10 @@ Der Befehl zeigt vorhandene Snapshot-Dateien und aktivierte
 Snapshot-Datenbanken an.
 
 ### Snapshot aktivieren
+
+Dieser Schritt ist nur nötig, wenn die gewünschte Snapshot-Datenbank noch nicht
+vorhanden ist. Nach einer erfolgreichen Pseudonymisierung sind die normale und
+die pseudonymisierte Snapshot-Datenbank bereits aktiviert.
 
 ```bash
 ./ip-snapshot.sh activate snap01_20251002
@@ -170,21 +177,34 @@ Schlägt die Verarbeitung nach dem Einspielen fehl, bleiben die temporäre
 Source-Datenbank und die teilweise erzeugte Ziel-Datenbank zur Diagnose
 erhalten. Die ursprüngliche Snapshot-Datei wird nicht gelöscht.
 
-Ist beim nächsten Lauf die Source-Datenbank bereits vorhanden, verwendet das
-Script sie erneut. Das gilt unabhängig davon, ob zusätzlich eine unvollständige
-Ziel-Datenbank vorhanden ist. Die Ziel-Datenbank wird immer gelöscht und neu
-angelegt. Der große Snapshot-Dump muss dadurch nicht erneut eingespielt werden.
+Ist beim nächsten Lauf die Quelldatenbank bereits vorhanden und gehört sie
+nachweislich zur normalen Snapshot-Datei, verwendet das Script sie erneut. Die
+Zieldatenbank wird immer neu angelegt. Die große Snapshot-Datei muss dadurch
+nicht erneut eingespielt werden.
+
+Dazu vermerkt das Script beim Einspielen den SHA-256-Wert der Snapshot-Datei in
+der Datenbank. Eine Datenbank wird nur wiederverwendet, wenn dieser Wert zur
+aktuellen Datei passt.
 
 Schlägt bereits das Einspielen des Snapshot-Dumps fehl, entfernt das Script die
 unvollständige Source-Datenbank. Dadurch wird sie beim nächsten Lauf nicht
 versehentlich wiederverwendet. Eine Ziel-Datenbank ohne Source-Datenbank wird
 ebenfalls automatisch entfernt; anschließend wird der Dump neu eingespielt.
 
-Nach einem erfolgreichen Lauf löscht das Script beide Build-Datenbanken
-automatisch. Die Pseudonymisierung der Tabellen beginnt bei einem neuen Lauf
-weiterhin von vorne. Ein Wiederaufsetzen ab dem letzten Chunk ist derzeit nicht
-vorgesehen. Existiert die pseudonymisierte Snapshot-Datei bereits, fragt das
-Script vor dem Überschreiben nach.
+Nach einem erfolgreichen Lauf benennt das Script beide Build-Datenbanken um und
+setzt sie in den Read-only-Modus. Sie stehen unter diesen Namen zur Prüfung
+bereit:
+
+```text
+ip_<name>_<Datum>
+ip_<name>_<Datum>_pseud
+```
+
+Mit `deactivate` werden nicht mehr benötigte Datenbanken entfernt. Die
+Snapshot-Dateien bleiben dabei erhalten. Die Pseudonymisierung der Tabellen
+beginnt bei einem neuen Lauf weiterhin von vorne. Ein Wiederaufsetzen ab dem
+letzten Chunk ist derzeit nicht vorgesehen. Existiert die pseudonymisierte
+Snapshot-Datei bereits, fragt das Script vor dem Überschreiben nach.
 
 ## Technische Details
 

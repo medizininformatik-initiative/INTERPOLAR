@@ -181,6 +181,52 @@ database_exists() {
         "SELECT 1 FROM pg_database WHERE datname = '${database_name}';" | grep -q 1
 }
 
+snapshot_file_checksum() {
+    local snapshot_file="$1"
+    if command -v sha256sum >/dev/null 2>&1 ; then
+        sha256sum "${snapshot_file}" | awk '{print $1}'
+    elif command -v shasum >/dev/null 2>&1 ; then
+        shasum -a 256 "${snapshot_file}" | awk '{print $1}'
+    else
+        echo "Fehler: Für die Prüfung des Datenstands wird sha256sum oder shasum benötigt." >&2
+        return 1
+    fi
+}
+
+database_snapshot_checksum() {
+    local database_name="$1"
+    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -tAc \
+        "SELECT shobj_description(oid, 'pg_database') FROM pg_database WHERE datname = '${database_name}';"
+}
+
+set_database_snapshot_checksum() {
+    local database_name="$1"
+    local checksum="$2"
+    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+        "COMMENT ON DATABASE ${database_name} IS 'INTERPOLAR snapshot SHA-256: ${checksum}';"
+}
+
+database_matches_snapshot() {
+    local database_name="$1"
+    local checksum="$2"
+    local database_comment
+    database_comment="$(database_snapshot_checksum "${database_name}")"
+    [[ "${database_comment}" == "INTERPOLAR snapshot SHA-256: ${checksum}" ]]
+}
+
+set_database_read_only() {
+    local database_name="$1"
+    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+        "ALTER DATABASE ${database_name} SET default_transaction_read_only=on;"
+}
+
+rename_database() {
+    local database_name="$1"
+    local target_database_name="$2"
+    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+        "ALTER DATABASE ${database_name} RENAME TO ${target_database_name};"
+}
+
 drop_database_if_exists() {
     local database_name="$1"
     if database_exists "${database_name}" ; then
@@ -232,6 +278,8 @@ create_pseudonymized_snapshot() {
     local pseudonymized_file_path="${DIR}/${pseudonymized_snapshot_name}.sql.gz"
     local source_build_db="ip_${snapshot_name}_build"
     local target_build_db="ip_${pseudonymized_snapshot_name}_build"
+    local source_database_name="ip_${snapshot_name}"
+    local target_database_name="ip_${pseudonymized_snapshot_name}"
 
     if [[ ! -f "${source_file_path}" ]]; then
         echo "Fehler: Snapshot \"${source_file_path}\" existiert nicht."
@@ -251,14 +299,43 @@ create_pseudonymized_snapshot() {
     fi
     echo "Vorprüfung der Pseudonymisierung abgeschlossen."
 
-    ask_before_overwrite_file "${pseudonymized_file_path}"
-    local source_build_db_exists=false
-    if database_exists "${source_build_db}" ; then
-        source_build_db_exists=true
+    local source_file_checksum
+    if ! source_file_checksum="$(snapshot_file_checksum "${source_file_path}")" ; then
+        exit 1
     fi
 
-    if [[ "${source_build_db_exists}" == "true" ]]; then
-        echo "Verwende bereits vollständig eingespielte Source-Datenbank '${source_build_db}'."
+    if database_exists "${target_database_name}" ; then
+        echo "Fehler: Die pseudonymisierte Snapshot-Datenbank '${target_database_name}' existiert bereits."
+        echo "Deaktiviere sie vor einer erneuten Pseudonymisierung."
+        exit 1
+    fi
+
+    ask_before_overwrite_file "${pseudonymized_file_path}"
+    local source_database="${source_build_db}"
+    if database_exists "${source_database_name}" && database_exists "${source_build_db}" ; then
+        echo "Fehler: Sowohl die Snapshot-Datenbank als auch die temporäre Quelldatenbank existieren:"
+        echo "  ${source_database_name}"
+        echo "  ${source_build_db}"
+        echo "Entferne die nicht benötigte Datenbank vor einem erneuten Lauf."
+        exit 1
+    fi
+    if database_exists "${source_database_name}" ; then
+        if database_matches_snapshot "${source_database_name}" "${source_file_checksum}" ; then
+            source_database="${source_database_name}"
+            echo "Verwende die bereits aktivierte Snapshot-Datenbank '${source_database}'."
+        else
+            echo "Fehler: Die Snapshot-Datenbank '${source_database_name}' gehört nicht eindeutig zur Snapshot-Datei."
+            echo "Deaktiviere sie vor einem erneuten Lauf."
+            exit 1
+        fi
+    elif database_exists "${source_build_db}" ; then
+        if database_matches_snapshot "${source_build_db}" "${source_file_checksum}" ; then
+            echo "Verwende die bereits vollständig eingespielte temporäre Quelldatenbank '${source_build_db}'."
+        else
+            echo "Fehler: Die temporäre Quelldatenbank '${source_build_db}' gehört nicht eindeutig zur Snapshot-Datei."
+            echo "Entferne sie vor einem erneuten Lauf."
+            exit 1
+        fi
     fi
     if database_exists "${target_build_db}" ; then
         echo "Entferne unvollständige Ziel-Datenbank '${target_build_db}' für den Neustart..."
@@ -269,16 +346,20 @@ create_pseudonymized_snapshot() {
     fi
 
     SECONDS=0
-    if [[ "${source_build_db_exists}" != "true" ]]; then
-        echo "Erzeuge temporäre Source-Datenbank '${source_build_db}'..."
+    if ! database_exists "${source_database}" ; then
+        echo "Erzeuge temporäre Quelldatenbank '${source_build_db}'..."
         docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
             "CREATE DATABASE ${source_build_db} WITH OWNER=cds_hub_db_admin;"
         if gzip -cd "${source_file_path}" | docker compose exec -T cds_hub \
             psql -d "${source_build_db}" cds_hub_db_admin ; then
-            echo "Temporäre Source-Datenbank '${source_build_db}' eingespielt."
+            echo "Temporäre Quelldatenbank '${source_build_db}' eingespielt."
+            if ! set_database_snapshot_checksum "${source_build_db}" "${source_file_checksum}" ; then
+                echo "Fehler: Der Datenstand der Quelldatenbank konnte nicht vermerkt werden."
+                exit 1
+            fi
         else
-            echo "Fehler: Einspielen der temporären Source-Datenbank '${source_build_db}' fehlgeschlagen."
-            echo "Entferne die unvollständig eingespielte Source-Datenbank..."
+            echo "Fehler: Einspielen der temporären Quelldatenbank '${source_build_db}' fehlgeschlagen."
+            echo "Entferne die unvollständig eingespielte Quelldatenbank..."
             if ! drop_database_if_exists "${source_build_db}" ; then
                 echo "Fehler: Unvollständige Source-Datenbank '${source_build_db}' konnte nicht entfernt werden."
                 echo "Bitte vor einem erneuten Lauf manuell entfernen."
@@ -290,23 +371,23 @@ create_pseudonymized_snapshot() {
     echo "Erzeuge leere temporäre Ziel-Datenbank '${target_build_db}'..."
     if ! prepare_pseudonymized_target_database "${target_build_db}" ; then
         echo "Fehler: Anlegen der temporären Ziel-Datenbank '${target_build_db}' fehlgeschlagen."
-        echo "Bereits angelegte temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
-        echo "  ${source_build_db}"
+        echo "Bereits angelegte Datenbanken bleiben zur Diagnose erhalten:"
+        echo "  ${source_database}"
         echo "  ${target_build_db}"
         exit 1
     fi
 
-    echo "Starte Pseudonymisierung von '${source_build_db}' nach '${target_build_db}'..."
+    echo "Starte Pseudonymisierung von '${source_database}' nach '${target_build_db}'..."
     if docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
-        source-db="${source_build_db}" \
+        source-db="${source_database}" \
         target-db="${target_build_db}" \
         chunk-size="${chunk_size}" ; then
         echo "Pseudonymisierung abgeschlossen."
     else
         echo "Fehler: Pseudonymisierung fehlgeschlagen."
-        echo "Temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
-        echo "  ${source_build_db}"
+        echo "Die beteiligten Datenbanken bleiben zur Diagnose erhalten:"
+        echo "  ${source_database}"
         echo "  ${target_build_db}"
         exit 1
     fi
@@ -322,15 +403,44 @@ create_pseudonymized_snapshot() {
             echo "Datei ${pseudonymized_file_path} existiert, ist jedoch leer -> cleanup."
             rm -f "${pseudonymized_file_path}"
         fi
-        echo "Temporäre Build-Datenbanken bleiben zur Diagnose erhalten:"
-        echo "  ${source_build_db}"
+        echo "Die beteiligten Datenbanken bleiben zur Diagnose erhalten:"
+        echo "  ${source_database}"
         echo "  ${target_build_db}"
         exit 1
     fi
 
-    drop_database_if_exists "${source_build_db}"
-    drop_database_if_exists "${target_build_db}"
+    local pseudonymized_file_checksum
+    if ! pseudonymized_file_checksum="$(snapshot_file_checksum "${pseudonymized_file_path}")" ; then
+        echo "Fehler: Der Datenstand der pseudonymisierten Snapshot-Datei konnte nicht ermittelt werden."
+        exit 1
+    fi
+    if ! set_database_snapshot_checksum "${target_build_db}" "${pseudonymized_file_checksum}" ; then
+        echo "Fehler: Der Datenstand der pseudonymisierten Datenbank konnte nicht vermerkt werden."
+        exit 1
+    fi
+
+    if [[ "${source_database}" == "${source_build_db}" ]]; then
+        if ! set_database_read_only "${source_build_db}" ||
+            ! rename_database "${source_build_db}" "${source_database_name}" ; then
+            echo "Fehler: Die Quelldatenbank konnte nicht als Snapshot-Datenbank beibehalten werden."
+            exit 1
+        fi
+        source_database="${source_database_name}"
+    elif ! set_database_read_only "${source_database}" ; then
+        echo "Fehler: Die Quelldatenbank konnte nicht in den Read-only-Modus gesetzt werden."
+        exit 1
+    fi
+
+    if ! set_database_read_only "${target_build_db}" ||
+        ! rename_database "${target_build_db}" "${target_database_name}" ; then
+        echo "Fehler: Die pseudonymisierte Zieldatenbank konnte nicht als Snapshot-Datenbank beibehalten werden."
+        exit 1
+    fi
+
     printf "Dauer Pseudonymisierung: %s s\n" "$SECONDS"
+    echo "Die zugehörigen Snapshot-Datenbanken bleiben schreibgeschützt erhalten:"
+    echo "  ${source_database}"
+    echo "  ${target_database_name}"
     echo
     echo "======================================================================"
     echo "WARNING: Check the pseudonymization issue report for data issues:"
@@ -485,7 +595,7 @@ case "$action" in
             SECONDS=0;
 
             # Snapshot-Datenbank anlegen
-            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE ${db_name} WITH OWNER=cds_hub_db_admin;" > ${logfile} 2>&1 ; then
+            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE ${db_name} WITH OWNER=cds_hub_db_admin;" > "${logfile}" 2>&1 ; then
                 echo "Snapshot Datenbank '${db_name}' angelegt."
             else
                 echo "Fehler: Anlegen der Snapshot Datenbank '${db_name}' fehlgeschlagen."
@@ -493,12 +603,20 @@ case "$action" in
             fi
 
             # Snapshot-Datei in zuvor angelegte Snapshot-Datenbank einspielen
-            if gzip -cd ${file_path} | docker compose exec -T cds_hub psql -d ${db_name} cds_hub_db_admin >> ${logfile} 2>&1 ; then
+            if gzip -cd "${file_path}" | docker compose exec -T cds_hub psql -d "${db_name}" cds_hub_db_admin >> "${logfile}" 2>&1 ; then
                 echo "Snapshot Datenbank '${db_name}' eingespielt."
-                if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "ALTER DATABASE ${db_name} SET default_transaction_read_only=on ;" >> ${logfile} 2>&1 ; then
+                if ! snapshot_checksum="$(snapshot_file_checksum "${file_path}")" ; then
+                    exit 1
+                fi
+                if ! set_database_snapshot_checksum "${db_name}" "${snapshot_checksum}" >> "${logfile}" 2>&1 ; then
+                    echo "Fehler: Der Datenstand der Snapshot Datenbank '${db_name}' konnte nicht vermerkt werden."
+                    exit 1
+                fi
+                if set_database_read_only "${db_name}" >> "${logfile}" 2>&1 ; then
                     echo "Snapshot Datenbank '${db_name}' in 'read-only' Modus gesetzt."
                 else
                     echo "Fehler: Setzen des 'read-only' Modus in der Snapshot Datenbank '${db_name}' fehlgeschlagen."
+                    exit 1
                 fi
             else
                 echo "Fehler: Einspielen der Snapshot Datenbank '${db_name}' fehlgeschlagen."
