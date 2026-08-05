@@ -331,6 +331,11 @@ create_pseudonymized_snapshot() {
     drop_database_if_exists "${source_build_db}"
     drop_database_if_exists "${target_build_db}"
     printf "Dauer Pseudonymisierung: %s s\n" "$SECONDS"
+    echo
+    echo "======================================================================"
+    echo "WARNING: Check the pseudonymization issue report for data issues:"
+    echo "  outputLocal/snapshot_pseudonymization/reports/snapshot_pseudonymization_issues.xlsx"
+    echo "======================================================================"
 }
 
 

@@ -225,6 +225,13 @@ Regelnotation. Ein `domain = ...`-Parameter verändert den erzeugten Hash nicht.
 Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten; nur der
 ID-Anteil hinter dem Schrägstrich wird gehasht.
 
+Die Regel `generalize(format = "YYYY-MM")` erhält Jahr und Monat eines Datums.
+Da PostgreSQL für den Datentyp `date` weiterhin einen vollständigen Tag
+benötigt, wird der Tag einheitlich auf den 15. gesetzt. Dadurch bleiben Datentyp
+und Auswertungen zwischen Original- und pseudonymisierter Datenbank kompatibel;
+der 15. ist kein tatsächliches Geburtsdatum. Die vor der Pseudonymisierung
+berechneten Altersspalten verwenden weiterhin das vollständige Originaldatum.
+
 Die Regel `redact` entfernt den ursprünglichen Wert vollständig. Das Ergebnis
 ist `NA` in R und wird als `NULL` in PostgreSQL gespeichert. Es wird kein
 Platzhaltertext wie `redacted` eingetragen.
@@ -255,16 +262,19 @@ Auswertungsspalten:
   Paare erzeugen entsprechend mehrere Ausgabezeilen; Duplikate werden entfernt.
   Auch zyklische Referenzen werden sicher beendet. Fehlende referenzierte
   Medications und Referenzketten ohne erreichbaren Code bleiben erhalten und
-  erscheinen im Enrichment-Review.
+  erscheinen im Issue-Report.
 
 Die Medication-Auflösung wird für die vereinigten Referenzen aus Request,
 Statement und Administration einmal je Snapshot-Variante vorbereitet und über
 eine temporäre, indexierte PostgreSQL-Tabelle wiederverwendet. Sie wird nicht
 für jeden Chunk oder jede Quelltabelle erneut berechnet.
 
-Das Alter wird in abgeschlossenen Jahren berechnet. Neu ergänzte Altersspalten
-stehen am Ende der Tabelle. Die bereits vorhandene Spalte `fall_bmi` wird nicht
-verschoben.
+Das Alter wird in abgeschlossenen Jahren berechnet. Die Berechnung erfolgt nur,
+wenn das Geburtsdatum am oder nach dem 01.01.1910 liegt und das jeweilige
+Aufnahme- beziehungsweise Encounter-Datum nicht vor dem Geburtsdatum liegt.
+Andernfalls bleibt das Altersfeld leer und der Grund wird im Issue-Report
+protokolliert. Neu ergänzte Altersspalten stehen am Ende der Tabelle. Die bereits
+vorhandene Spalte `fall_bmi` wird nicht verschoben.
 
 ### Reports
 
@@ -280,9 +290,15 @@ Bestandteil der auswertbaren Read-only-Datenbank:
 - `pseudonymization_rule_review.xlsx` enthält die geladenen Regeln, TODOs,
   implizite Keep-Regeln, nicht unterstützte Regeln, doppelte Spalten und
   Mapping-Regeln.
-- `snapshot_enrichment_review.xlsx` fasst Medication-Referenzen ohne gefundenes
-  Code-/System-Paar zusammen. Der Report enthält exakte Summen und höchstens
-  1.000 Beispiele.
+- `snapshot_pseudonymization_issues.xlsx` ist der Fehlerbericht für fehlende
+  direkt oder transitiv referenzierte `Medication`-Ressourcen, Referenzketten
+  ohne erreichbares Code-/System-Paar und nicht berechenbare Alterswerte. Für
+  Altersprobleme enthält er die verfügbaren REDCap-, FHIR-, Fall- und
+  Encounter-Identifikatoren sowie Geburts- und Referenzdatum. Der Report enthält
+  exakte Summen und je Prüfbereich höchstens 1.000 Beispiele. Die Detailzeilen
+  enthalten nicht pseudonymisierte Identifikatoren für die lokale Fehlersuche
+  und dürfen deshalb nicht zusammen mit dem pseudonymisierten Snapshot
+  weitergegeben werden.
 - `snapshot_postprocessing_report.xlsx` enthält die technische Zusammenfassung,
   insbesondere Zeilen- und Spaltenzahlen.
 
@@ -291,3 +307,8 @@ Eine kompakte CLI-Hilfe liefert:
 ```bash
 ./ip-snapshot.sh
 ```
+
+Nach erfolgreicher Pseudonymisierung endet die Ausgabe mit einem deutlich
+hervorgehobenen Hinweis auf `snapshot_pseudonymization_issues.xlsx`. Wenn der
+Prozess Probleme gefunden hat, nennt die direkte R-Ausgabe außerdem deren
+Gesamtzahl.

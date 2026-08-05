@@ -202,7 +202,7 @@ writePseudonymizationReportWorkbook <- function(
   }
 }
 
-writeSnapshotEnrichmentReviewReport <- function(report, file_name = NA) {
+writeSnapshotIssueReport <- function(report, file_name = NA) {
   report_tables <- if (data.table::is.data.table(report)) {
     list(unmatched_medication_references = report)
   } else {
@@ -211,7 +211,7 @@ writeSnapshotEnrichmentReviewReport <- function(report, file_name = NA) {
   writePseudonymizationReportWorkbook(
     report_tables,
     file_name = file_name,
-    filename_without_extension = "snapshot_enrichment_review"
+    filename_without_extension = "snapshot_pseudonymization_issues"
   )
   invisible(report)
 }
@@ -255,8 +255,8 @@ writeSnapshotPostprocessingReport <- function(summary, file_name = NA) {
 #'   each materialized relation.
 #' @param review_report_file Optional explicit pseudonymization rule review
 #'   path. If `NA`, the report is written below `outputLocal`.
-#' @param enrichment_review_report_file Optional explicit enrichment review
-#'   report path. If `NA`, the report is written to
+#' @param issue_report_file Optional explicit pseudonymization issue report
+#'   path. If `NA`, the report is written to
 #'   `outputLocal/<MODULE>/reports`.
 #' @param postprocessing_report_file Optional explicit snapshot postprocessing
 #'   report path. If `NA`, the report is written to
@@ -283,7 +283,7 @@ pseudonymizeSnapshotDatabase <- function(
   tables = NULL,
   chunk_size = DEFAULT_SNAPSHOT_CHUNK_SIZE,
   review_report_file = NA,
-  enrichment_review_report_file = NA,
+  issue_report_file = NA,
   postprocessing_report_file = NA,
   log_steps = TRUE
 ) {
@@ -423,16 +423,23 @@ pseudonymizeSnapshotDatabase <- function(
   result[["pseudonymization"]] <- list(summary = data.table::rbindlist(summary_rows, fill = TRUE))
   result[["postprocessing_report"]] <- result[["pseudonymization"]][["summary"]]
   result[["write_summary"]] <- data.table::rbindlist(write_summary_rows, fill = TRUE)
-  result[["enrichment_review_report"]] <- finalizeBoundedMedicationReferenceReview(
-    streaming_context$medication_review
+  medication_review <- finalizeBoundedMedicationReferenceReview(streaming_context$medication_review)
+  age_review <- finalizeBoundedAgeCalculationReview(streaming_context$age_review)
+  result[["issue_report"]] <- c(
+    list(
+      medication_issue_summary = medication_review[["summary"]],
+      medication_issue_examples =
+        medication_review[["unmatched_reference_examples"]]
+    ),
+    age_review
   )
 
   runPseudonymizationLogStep(2L,
     "Write snapshot processing reports",
     {
-      writeSnapshotEnrichmentReviewReport(
-        result[["enrichment_review_report"]],
-        file_name = enrichment_review_report_file
+      writeSnapshotIssueReport(
+        result[["issue_report"]],
+        file_name = issue_report_file
       )
       writeSnapshotPostprocessingReport(
         result[["postprocessing_report"]],
