@@ -181,7 +181,7 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #' @param report_period_end A character string representing the end of the reporting period
 #'                          (format: "YYYY-MM-DD").
 #'
-#' @return A data frame containing enriched front-end summary data for encounters with `fall_aufn_dat`
+#' @return A data frame containing enriched front-end summary data for encounters with currently on an INTERPOLAR ward
 #' within the specified reporting period. The dataset includes additional variables derived from the
 #' original front-end data, such as calendar week, eligibility for algorithmic MRP calculation, and various flags
 #' indicating the presence of MRP documentation, medication analysis, and processing exclusion reasons
@@ -209,7 +209,10 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #'                                              completed medication analysis and being in Phase B of the study)
 #' - `sub_enc_any_algorithmic_MRP` (indicating if any algorithmic MRP documentation exists for the sub encounter)
 #'
-#' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
+#' Time filtering is performed using the 'fall_ent_dat' and 'fall_aufn_dat' columns to ensure that
+#' only encounters within the reporting period are included. Specifically, encounters with a `fall_ent_dat`
+#' timestamp greater than or equal to the `report_period_start` or a `fall_ent_dat` timestamp that is `NA`
+#' and a `fall_aufn_dat` timestamp less than the `report_period_end ` are retained.
 #'
 #' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename n_distinct
 #' @importFrom data.table isoweek isoyear
@@ -308,7 +311,8 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       main_enc_id = fall_fhir_main_enc_id,
       ward_name = fall_station
     ) |>
-    dplyr::filter(fall_aufn_dat >= as.POSIXct(report_period_start)) |> # only main-encounter start date in reporting period
+    # Filter for encounters that started in the reporting period or are still ongoing
+    dplyr::filter(is.na(fall_ent_dat) | fall_ent_dat >= as.POSIXct(report_period_start)) |>
     dplyr::filter(fall_aufn_dat < as.POSIXct(report_period_end)) |>
     dplyr::distinct()
 
