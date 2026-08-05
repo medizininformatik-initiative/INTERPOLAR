@@ -13,16 +13,14 @@ From the repository root:
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R database-quality-analysis
 ```
 
-For a faster report without first/last value timestamp columns:
-
-```console
-docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R database-quality-analysis --skip-value-datetime-columns
-```
-
 The main configuration is
 `R-dataprocessor/submodules/manual_start/Database_Quality_Analysis/database_quality_analysis_config.toml`.
 For the pseudonymized snapshot database, point `PATH_TO_DB_CONFIG_TOML` to the
-matching database credential TOML file.
+matching database credential TOML file. If the analysis database uses a different
+database name, host or port, set `DB_ANALYSIS_NAME`, `DB_ANALYSIS_HOST` and
+`DB_ANALYSIS_PORT` in that DB config file. If the admin password differs,
+set `DB_ANALYSIS_ADMIN_PASSWORD`. Leave these values empty to use `DB_NAME`,
+`DB_HOST`, `DB_PORT` and `DB_ADMIN_PASSWORD`.
 
 ## Output Files
 
@@ -49,7 +47,7 @@ The workbook can contain these sheets:
   creates one block per configured contact level and additional count columns
   per configured encounter class.
 - `FHIR Encounter <suffix>`: optional filtered variant of the encounter detail
-  sheet.
+  sheet, for example `FHIR Encounter INTERPOLAR`.
 - `Metadata`: technical run metadata such as analysis start/end, duration and
   row counts. Connection details such as host, port, database name and user are
   intentionally not written.
