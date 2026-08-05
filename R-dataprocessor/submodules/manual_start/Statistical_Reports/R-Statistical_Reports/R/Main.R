@@ -37,8 +37,6 @@
 #'             `addMainEncPeriodStart()`, `calculateAge()`, `addWardName()`,
 #'       \item `addRecordId()`, `addFallIdAndStudienphase()`
 #'     }
-#'     Precomputed snapshot age columns are preferred when available. On databases
-#'     without those columns, `calculateAge()` retains the previous date-based fallback.
 #'
 #'   \item Merges and enriches front-end documentation:
 #'     \itemize{
@@ -203,7 +201,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     addMainEncId() |>
     # TODO: go on with detailed documentation from here (+add the new processing exclusion reason advancements in doku) -------
     addMainEncPeriodStart() |>
-    calculateAge(precalculated_age_column = "main_enc_age_at_admission") |>
+    calculateAge() |>
     tagAmbulantEncounters() |>
     tagKontaktartDenotingNoInpatientEncounter()
 
@@ -221,8 +219,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
     restrictToDefinedWards() |>
     calculateAge(
       main_enc_period_start = fall_aufn_dat,
-      pat_birthdate = pat_gebdat,
-      precalculated_age_column = "fall_age_at_admission"
+      pat_birthdate = pat_gebdat
     ) |>
     CheckMultipleRowsPerMainEncAndWardInMergedPatFallFe() |>
     detectMultipleEntries(
