@@ -189,7 +189,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       sub_enc_all_processing_exclusion_fe, main_enc_not_in_inclusion_criteria,
       table_count_less_than_5_patients, overall_count_less_than_5,
       sub_enc_any_completed_medication_analysis, sub_enc_any_MRP, sub_enc_any_algorithmic_MRP,
-      medikationsanalyse_complete, mrpdokumentation_validierung_complete,
+      medikationsanalyse_complete, meda_mrp_detekt, mrpdokumentation_validierung_complete,
       mrp_dokup_hand_emp_akz, Kontraindikation, mrp_ip_klasse_01, retrolektive_mrpbewertung_complete,
       ret_ip_klasse_01, eligible_for_algorithmic_MRP_calculation, ret_gewissheit1, ret_gewiss_grund1_abl,
       ret_gewiss_grund1_abl_01,
@@ -236,6 +236,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ),
       medication_analyses_complete = dplyr::n_distinct(
         dplyr::if_else(medikationsanalyse_complete == "Complete", meda_id, NA)[valid_for_counting],
+        na.rm = TRUE
+      ),
+      medication_analyses_complete_and_detected_MRP = dplyr::n_distinct(
+        meda_id[valid_for_counting & medikationsanalyse_complete == "Complete" & meda_mrp_detekt == "Ja"],
         na.rm = TRUE
       ),
       encounters_with_any_completed_mrp = dplyr::n_distinct(
@@ -454,6 +458,10 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         )[valid_for_overall_counting],
         na.rm = TRUE
       ),
+      medication_analyses_complete_and_detected_MRP = dplyr::n_distinct(
+        meda_id[valid_for_overall_counting & medikationsanalyse_complete == "Complete" & meda_mrp_detekt == "Ja"],
+        na.rm = TRUE
+      ),
       encounters_with_any_completed_mrp = dplyr::n_distinct(
         main_enc_id[valid_for_overall_counting & sub_enc_any_MRP],
         na.rm = TRUE
@@ -530,7 +538,7 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       encounters_with_non_confirmed_non_incorrect_data_items_mrp_and_consent = dplyr::n_distinct(
-        main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP &
+        main_enc_id[valid_for_overall_counting & sub_enc_any_algorithmic_MRP &
           retrolektive_mrpbewertung_complete == "Complete" &
           ret_gewissheit1 == "MRP nicht bestätigt" &
           (ret_gewiss_grund1_abl != "MRP sachlich richtig, aber falsche Datengrundlage" |
