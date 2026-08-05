@@ -1,5 +1,7 @@
 SNAPSHOT_STREAMING_BIRTHDATE_COLUMN <- ".snapshot_pseudonym_birthdate"
+SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN <- ".snapshot_pseudonym_patient_key"
 SNAPSHOT_MEDICATION_REVIEW_DETAIL_LIMIT <- 1000L
+SNAPSHOT_AGE_REVIEW_DETAIL_LIMIT <- 1000L
 DEFAULT_SNAPSHOT_CHUNK_SIZE <- 25000L
 
 snapshotRelationId <- function(name, schema = NULL) {
@@ -39,16 +41,210 @@ snapshotDependencySuffix <- function(plan_row, last_version_suffix) {
   ""
 }
 
+snapshotNormalizedReferenceExpression <- function(
+  connection,
+  column_name,
+  alias = NULL,
+  resource_type = "Medication"
+) {
+  quoted_reference <- snapshotQuotedColumn(connection, column_name, alias)
+  paste0(
+    "NULLIF(regexp_replace(regexp_replace(", quoted_reference,
+    "::text, '^\\[[^]]+\\]', ''), '^", resource_type, "/', ''), '')"
+  )
+}
+
+indentSql <- function(sql, spaces = 2L) {
+  indentation <- strrep(" ", spaces)
+  paste0(
+    indentation,
+    gsub("\n", paste0("\n", indentation), sql, fixed = TRUE)
+  )
+}
+
+buildSnapshotMedicationResolutionQuery <- function(
+  connection,
+  source_root_queries,
+  medication_relation,
+  ingredient_reference_column =
+    SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN
+) {
+  quoted_med_id <- snapshotQuotedColumn(connection, "med_id")
+  quoted_med_system <- snapshotQuotedColumn(connection, "med_code_system")
+  quoted_med_code <- snapshotQuotedColumn(connection, "med_code_code")
+  medication_nodes_query <- paste0(
+    "SELECT DISTINCT ", quoted_med_id, "::text AS medication_id\n",
+    "FROM ", medication_relation, "\n",
+    "WHERE NULLIF(", quoted_med_id, "::text, '') IS NOT NULL"
+  )
+  medication_edges_query <- if (is.null(ingredient_reference_column)) {
+    paste(
+      "SELECT NULL::text AS source_medication_id,",
+      "NULL::text AS target_medication_id",
+      "WHERE FALSE"
+    )
+  } else {
+    normalized_ingredient_reference <- snapshotNormalizedReferenceExpression(
+      connection,
+      ingredient_reference_column
+    )
+    paste0(
+      "SELECT DISTINCT ", quoted_med_id,
+      "::text AS source_medication_id,\n",
+      "  ", normalized_ingredient_reference, " AS target_medication_id\n",
+      "FROM ", medication_relation, "\n",
+      "WHERE NULLIF(", quoted_med_id, "::text, '') IS NOT NULL\n",
+      "  AND ", normalized_ingredient_reference, " IS NOT NULL"
+    )
+  }
+  source_roots_query <- paste(
+    "SELECT DISTINCT root_medication_id",
+    "FROM (",
+    indentSql(paste(source_root_queries, collapse = "\nUNION ALL\n")),
+    ") medication_root_candidates",
+    "WHERE root_medication_id IS NOT NULL",
+    sep = "\n"
+  )
+  medication_walk_query <- paste(
+    "SELECT root_medication_id, root_medication_id",
+    "FROM source_roots",
+    # UNION deduplicates every root/node pair, so cycles terminate naturally.
+    "UNION",
+    "SELECT medication_walk.root_medication_id,",
+    "  medication_edges.target_medication_id",
+    "FROM medication_walk",
+    "JOIN medication_edges",
+    "  ON medication_edges.source_medication_id = medication_walk.medication_id",
+    sep = "\n"
+  )
+  medication_code_values_query <- paste0(
+    "SELECT DISTINCT medication_walk.root_medication_id,\n",
+    "  medication.", quoted_med_system, " AS medication_system,\n",
+    "  medication.", quoted_med_code, " AS medication_code\n",
+    "FROM medication_walk\n",
+    "JOIN ", medication_relation, " medication\n",
+    "  ON medication.", quoted_med_id,
+    "::text = medication_walk.medication_id\n",
+    "WHERE NULLIF(medication.", quoted_med_system,
+    "::text, '') IS NOT NULL\n",
+    "  AND NULLIF(medication.", quoted_med_code, "::text, '') IS NOT NULL"
+  )
+  medication_codes_query <- paste(
+    "SELECT root_medication_id, medication_system, medication_code,",
+    "  row_number() OVER (",
+    "    PARTITION BY root_medication_id",
+    "    ORDER BY medication_system, medication_code",
+    "  ) AS code_number",
+    "FROM medication_code_values",
+    sep = "\n"
+  )
+  medication_issues_query <- paste(
+    "SELECT DISTINCT medication_walk.root_medication_id,",
+    "  'missing_medication'::text AS issue_type,",
+    "  medication_walk.medication_id AS related_medication_id",
+    "FROM medication_walk",
+    "LEFT JOIN medication_nodes",
+    "  ON medication_nodes.medication_id = medication_walk.medication_id",
+    "WHERE medication_nodes.medication_id IS NULL",
+    "UNION",
+    "SELECT source_roots.root_medication_id,",
+    "  'no_reachable_code'::text AS issue_type,",
+    "  source_roots.root_medication_id AS related_medication_id",
+    "FROM source_roots",
+    "JOIN medication_nodes",
+    "  ON medication_nodes.medication_id = source_roots.root_medication_id",
+    "WHERE NOT EXISTS (",
+    "  SELECT 1",
+    "  FROM medication_code_values",
+    paste0(
+      "  WHERE medication_code_values.root_medication_id = ",
+      "source_roots.root_medication_id"
+    ),
+    ")",
+    sep = "\n"
+  )
+  medication_issue_summary_query <- paste(
+    "SELECT root_medication_id,",
+    "  string_agg(",
+    "    issue_type || E'\\t' || related_medication_id,",
+    "    E'\\n' ORDER BY issue_type, related_medication_id",
+    "  ) AS issues",
+    "FROM medication_issues",
+    "GROUP BY root_medication_id",
+    sep = "\n"
+  )
+  ctes <- c(
+    paste0(
+      "medication_nodes AS (\n",
+      indentSql(medication_nodes_query),
+      "\n)"
+    ),
+    paste0(
+      "medication_edges AS (\n",
+      indentSql(medication_edges_query),
+      "\n)"
+    ),
+    paste0(
+      "source_roots AS (\n",
+      indentSql(source_roots_query),
+      "\n)"
+    ),
+    paste0(
+      "medication_walk(root_medication_id, medication_id) AS (\n",
+      indentSql(medication_walk_query),
+      "\n)"
+    ),
+    paste0(
+      "medication_code_values AS (\n",
+      indentSql(medication_code_values_query),
+      "\n)"
+    ),
+    paste0(
+      "medication_codes AS (\n",
+      indentSql(medication_codes_query),
+      "\n)"
+    ),
+    paste0(
+      "medication_issues AS (\n",
+      indentSql(medication_issues_query),
+      "\n)"
+    ),
+    paste0(
+      "medication_issue_summary AS (\n",
+      indentSql(medication_issue_summary_query),
+      "\n)"
+    )
+  )
+  paste0(
+    "WITH RECURSIVE\n",
+    paste(ctes, collapse = ",\n"),
+    "\nSELECT source_roots.root_medication_id,\n",
+    "  medication_codes.medication_system,\n",
+    "  medication_codes.medication_code,\n",
+    # Issues are stored once per root, not once per resolved code.
+    "  CASE WHEN COALESCE(medication_codes.code_number, 1) = 1\n",
+    "    THEN medication_issue_summary.issues\n",
+    "    ELSE NULL\n",
+    "  END AS issues\n",
+    "FROM source_roots\n",
+    "LEFT JOIN medication_codes\n",
+    "  ON medication_codes.root_medication_id = source_roots.root_medication_id\n",
+    "LEFT JOIN medication_issue_summary\n",
+    "  ON medication_issue_summary.root_medication_id = ",
+    "source_roots.root_medication_id"
+  )
+}
+
 buildSnapshotMedicationSourceQuery <- function(
   connection,
   source_relation,
   source_fields,
-  medication_relation,
+  medication_resolution_relation,
   spec,
   enrichment_columns = c(spec[["system_column"]], spec[["code_column"]])
 ) {
   source_alias <- "snapshot_source"
-  medication_alias <- "medication_codes"
+  resolution_alias <- "medication_resolution"
   reference_column <- spec[["reference_column"]]
   system_column <- spec[["system_column"]]
   code_column <- spec[["code_column"]]
@@ -58,42 +254,39 @@ buildSnapshotMedicationSourceQuery <- function(
     source_alias,
     exclude = c(system_column, code_column)
   )
-  quoted_reference <- snapshotQuotedColumn(connection, reference_column, source_alias)
-  quoted_med_id <- snapshotQuotedColumn(connection, "med_id")
-  quoted_med_system <- snapshotQuotedColumn(connection, "med_code_system")
-  quoted_med_code <- snapshotQuotedColumn(connection, "med_code_code")
-  normalized_reference <- paste0(
-    "regexp_replace(regexp_replace(", quoted_reference,
-    "::text, '^\\[[^]]+\\]', ''), '^Medication/', '')"
+  normalized_reference <- snapshotNormalizedReferenceExpression(
+    connection,
+    reference_column,
+    source_alias
   )
-
   enrichment_select <- c(
     if (system_column %in% enrichment_columns) {
       paste0(
-        medication_alias, ".medication_system AS ",
+        resolution_alias, ".medication_system AS ",
         snapshotQuotedColumn(connection, system_column)
       )
     },
     if (code_column %in% enrichment_columns) {
       paste0(
-        medication_alias, ".medication_code AS ",
+        resolution_alias, ".medication_code AS ",
         snapshotQuotedColumn(connection, code_column)
       )
     }
   )
+  issue_select <- paste0(
+    resolution_alias, ".issues AS ",
+    snapshotQuotedColumn(connection, SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN)
+  )
 
   paste0(
-    "WITH ", medication_alias, " AS (",
-    "SELECT DISTINCT ", quoted_med_id, "::text AS medication_id, ",
-    quoted_med_system, " AS medication_system, ",
-    quoted_med_code, " AS medication_code FROM ", medication_relation, " ",
-    "WHERE NULLIF(", quoted_med_id, "::text, '') IS NOT NULL ",
-    "AND NULLIF(", quoted_med_system, "::text, '') IS NOT NULL ",
-    "AND NULLIF(", quoted_med_code, "::text, '') IS NOT NULL)",
-    " SELECT ", source_columns, ", ", paste(enrichment_select, collapse = ", "),
-    " FROM ", source_relation, " ", source_alias,
-    " LEFT JOIN ", medication_alias,
-    " ON ", medication_alias, ".medication_id = ", normalized_reference
+    "SELECT ",
+    paste(
+      c(source_columns, enrichment_select, issue_select),
+      collapse = ",\n  "
+    ),
+    "\nFROM ", source_relation, " ", source_alias, "\n",
+    "LEFT JOIN ", medication_resolution_relation, " ", resolution_alias, "\n",
+    "  ON ", resolution_alias, ".root_medication_id = ", normalized_reference
   )
 }
 
@@ -113,7 +306,10 @@ buildSnapshotBirthdateMapQuery <- function(
     connection,
     source_fields,
     source_alias,
-    exclude = SNAPSHOT_STREAMING_BIRTHDATE_COLUMN
+    exclude = c(
+      SNAPSHOT_STREAMING_BIRTHDATE_COLUMN,
+      SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN
+    )
   )
   patient_birthdate <- snapshotQuotedColumn(connection, patient_birthdate_column)
   patient_key_queries <- vapply(patient_key_columns, function(column_name) {
@@ -142,6 +338,10 @@ buildSnapshotBirthdateMapQuery <- function(
     connection,
     SNAPSHOT_STREAMING_BIRTHDATE_COLUMN
   )
+  hidden_patient_key <- snapshotQuotedColumn(
+    connection,
+    SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN
+  )
 
   paste0(
     "WITH ", birthdate_alias, " AS (",
@@ -150,11 +350,182 @@ buildSnapshotBirthdateMapQuery <- function(
     ") patient_birthdate_candidates WHERE patient_key IS NOT NULL ",
     "GROUP BY patient_key)",
     " SELECT ", source_columns, ", ", birthdate_alias, ".birthdate AS ",
-    hidden_birthdate,
+    hidden_birthdate, ", ", birthdate_alias, ".patient_key AS ",
+    hidden_patient_key,
     " FROM ", source_relation, " ", source_alias,
     " LEFT JOIN ", birthdate_alias,
     " ON ", birthdate_alias, ".patient_key = ", source_key
   )
+}
+
+getSnapshotMedicationRootQueries <- function(
+  connection,
+  materialization_plan,
+  rules,
+  relation_type,
+  source_schema
+) {
+  plan_rows <- which(materialization_plan[["SNAPSHOT_RELATION_TYPE"]] == relation_type)
+  root_queries <- list()
+  for (row_index in plan_rows) {
+    plan_row <- materialization_plan[row_index, ]
+    medication_spec <- getMedicationReferenceSpec(plan_row[["BASE_TABLE_NAME"]])
+    if (is.null(medication_spec)) {
+      next
+    }
+
+    table_rules <- getPseudonymizationRulesForTable(
+      rules,
+      plan_row[["RULE_TABLE_NAME"]],
+      source = plan_row[["RULE_SOURCE"]]
+    )
+    described_columns <- unique(table_rules[["COLUMN_NAME"]])
+    enrichment_columns <- intersect(
+      c(
+        medication_spec[["system_column"]],
+        medication_spec[["code_column"]]
+      ),
+      described_columns
+    )
+    reference_column <- medication_spec[["reference_column"]]
+    source_relation_name <- plan_row[["SOURCE_RELATION"]]
+    source_fields <- snapshotRelationFields(
+      connection,
+      source_relation_name,
+      source_schema
+    )
+    if (
+      length(enrichment_columns) == 0 ||
+      !reference_column %in% described_columns ||
+      !reference_column %in% source_fields
+    ) {
+      next
+    }
+
+    normalized_reference <- snapshotNormalizedReferenceExpression(
+      connection,
+      reference_column,
+      alias = "snapshot_source"
+    )
+    source_relation <- snapshotQualifiedName(
+      connection,
+      source_relation_name,
+      source_schema
+    )
+    root_queries[[length(root_queries) + 1L]] <- paste0(
+      "SELECT DISTINCT ", normalized_reference,
+      " AS root_medication_id\n",
+      "FROM ", source_relation, " snapshot_source\n",
+      "WHERE ", normalized_reference, " IS NOT NULL"
+    )
+  }
+  unname(unlist(root_queries, use.names = FALSE))
+}
+
+prepareSnapshotMedicationResolutionTables <- function(
+  connection,
+  materialization_plan,
+  rules,
+  source_schema,
+  source_view_prefix,
+  last_version_suffix
+) {
+  resolution_tables <- list()
+  relation_types <- unique(materialization_plan[["SNAPSHOT_RELATION_TYPE"]])
+  for (relation_type in relation_types) {
+    source_root_queries <- getSnapshotMedicationRootQueries(
+      connection,
+      materialization_plan,
+      rules,
+      relation_type,
+      source_schema
+    )
+    if (length(source_root_queries) == 0) {
+      next
+    }
+
+    medication_suffix <- if (identical(relation_type, "last_version")) {
+      last_version_suffix
+    } else {
+      ""
+    }
+    medication_relation_name <- paste0(
+      source_view_prefix,
+      "medication",
+      medication_suffix
+    )
+    if (!snapshotRelationExists(
+      connection,
+      medication_relation_name,
+      source_schema
+    )) {
+      next
+    }
+    medication_fields <- snapshotRelationFields(
+      connection,
+      medication_relation_name,
+      source_schema
+    )
+    required_medication_fields <- c(
+      "med_id",
+      "med_code_system",
+      "med_code_code"
+    )
+    if (!all(required_medication_fields %in% medication_fields)) {
+      next
+    }
+
+    medication_relation <- snapshotQualifiedName(
+      connection,
+      medication_relation_name,
+      source_schema
+    )
+    resolution_query <- buildSnapshotMedicationResolutionQuery(
+      connection,
+      source_root_queries,
+      medication_relation,
+      ingredient_reference_column = if (
+        SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN %in%
+          medication_fields
+      ) {
+        SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN
+      } else {
+        NULL
+      }
+    )
+    resolution_table_name <- basename(tempfile(
+      pattern = paste0("snapshot_medication_resolution_", relation_type, "_")
+    ))
+    resolution_table <- snapshotQualifiedName(
+      connection,
+      resolution_table_name
+    )
+    created_rows <- DBI::dbExecute(
+      connection,
+      paste0("CREATE TEMP TABLE ", resolution_table, " AS\n", resolution_query)
+    )
+    DBI::dbExecute(
+      connection,
+      paste0("CREATE INDEX ON ", resolution_table, " (root_medication_id)")
+    )
+    DBI::dbExecute(connection, paste0("ANALYZE ", resolution_table))
+    message(
+      "Prepared shared Medication resolution for ", relation_type,
+      ": ", created_rows, " root/code rows"
+    )
+    resolution_tables[[relation_type]] <- resolution_table_name
+  }
+  resolution_tables
+}
+
+dropSnapshotMedicationResolutionTables <- function(connection, tables) {
+  for (table_name in unname(unlist(tables, use.names = FALSE))) {
+    DBI::dbExecute(
+      connection,
+      paste0("DROP TABLE IF EXISTS ", snapshotQualifiedName(connection, table_name))
+    )
+  }
+  invisible()
 }
 
 getSnapshotStreamingSourceQuery <- function(
@@ -163,7 +534,8 @@ getSnapshotStreamingSourceQuery <- function(
   source_schema,
   source_view_prefix,
   last_version_suffix,
-  described_columns
+  described_columns,
+  medication_resolution_tables = list()
 ) {
   source_relation_name <- plan_row[["SOURCE_RELATION"]]
   source_relation <- snapshotQualifiedName(
@@ -188,40 +560,25 @@ getSnapshotStreamingSourceQuery <- function(
     character()
   }
   if (!is.null(medication_spec) && length(medication_enrichment_columns) > 0) {
-    medication_relation_name <- paste0(
-      source_view_prefix,
-      "medication",
-      dependency_suffix
-    )
-    required_source_fields <- medication_spec[["reference_column"]]
-    required_medication_fields <- c("med_id", "med_code_system", "med_code_code")
+    reference_column <- medication_spec[["reference_column"]]
+    relation_type <- plan_row[["SNAPSHOT_RELATION_TYPE"]]
+    resolution_table_name <- medication_resolution_tables[[relation_type]]
     if (
-      required_source_fields %in% described_columns &&
-      required_source_fields %in% source_fields &&
-      snapshotRelationExists(connection, medication_relation_name, source_schema)
+      reference_column %in% described_columns &&
+      reference_column %in% source_fields &&
+      !is.null(resolution_table_name)
     ) {
-      medication_fields <- snapshotRelationFields(
-        connection,
-        medication_relation_name,
-        source_schema
-      )
-      if (all(required_medication_fields %in% medication_fields)) {
-        return(list(
-          query = buildSnapshotMedicationSourceQuery(
-            connection,
-            source_relation,
-            source_fields,
-            snapshotQualifiedName(
-              connection,
-              medication_relation_name,
-              source_schema
-            ),
-            medication_spec,
-            medication_enrichment_columns
-          ),
-          medication_spec = medication_spec
-        ))
-      }
+      return(list(
+        query = buildSnapshotMedicationSourceQuery(
+          connection,
+          source_relation,
+          source_fields,
+          snapshotQualifiedName(connection, resolution_table_name),
+          medication_spec,
+          medication_enrichment_columns
+        ),
+        medication_spec = medication_spec
+      ))
     }
   }
 
@@ -314,14 +671,19 @@ getSnapshotStreamingSourceQuery <- function(
   )
 }
 
-newSnapshotStreamingContext <- function(input_repo_path) {
+newSnapshotStreamingContext <- function(
+  input_repo_path,
+  medication_resolution_tables = list()
+) {
   context <- new.env(parent = emptyenv())
   context$input_repo_path <- input_repo_path
+  context$medication_resolution_tables <- medication_resolution_tables
   context$loinc_mapping <- NULL
   context$mapping_context <- newPseudonymMappingContext(input_repo_path)
   context$medication_review <- newBoundedMedicationReferenceReview(
     SNAPSHOT_MEDICATION_REVIEW_DETAIL_LIMIT
   )
+  context$age_review <- newBoundedAgeCalculationReview(SNAPSHOT_AGE_REVIEW_DETAIL_LIMIT)
   context
 }
 
@@ -335,7 +697,6 @@ enrichSnapshotStreamingChunk <- function(
   birthdates <- NULL
   if (SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(table)) {
     birthdates <- table[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]]
-    table[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]] <- NULL
   }
 
   if (identical(base_table_name, "fall_fe")) {
@@ -416,7 +777,8 @@ processSnapshotChunkStream <- function(
   review_chunk,
   write_review_chunk,
   chunk_size,
-  table_name
+  table_name,
+  strip_review_columns = identity
 ) {
   first_chunk <- TRUE
   chunk_number <- 0L
@@ -426,6 +788,7 @@ processSnapshotChunkStream <- function(
     chunk_number <- chunk_number + 1L
     chunk <- enrich_chunk(data.table::as.data.table(chunk))
     write_review_chunk(review_chunk(chunk))
+    chunk <- strip_review_columns(chunk)
     table_result <- pseudonymize_chunk(chunk, chunk_number)
     output <- table_result[["table"]]
     write_chunk(output, first_chunk)
@@ -452,6 +815,20 @@ processSnapshotChunkStream <- function(
     summary = summary,
     chunks = chunk_number
   )
+}
+
+stripSnapshotStreamingReviewColumns <- function(table) {
+  table <- data.table::as.data.table(table)
+  review_columns <- intersect(
+    SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN,
+    names(table)
+  )
+  if (length(review_columns) > 0) {
+    for (review_column in review_columns) {
+      table[[review_column]] <- NULL
+    }
+  }
+  table
 }
 
 streamSnapshotMaterializedTable <- function(
@@ -500,7 +877,9 @@ streamSnapshotMaterializedTable <- function(
     source_schema,
     source_view_prefix,
     last_version_suffix,
-    described_columns
+    described_columns,
+    medication_resolution_tables =
+      streaming_context$medication_resolution_tables
   )
   message(
     "Streaming snapshot source relation ",
@@ -579,23 +958,56 @@ streamSnapshotMaterializedTable <- function(
       }
     },
     review_chunk = function(chunk) {
-      if (is.null(query_info[["medication_spec"]])) {
-        return(emptyMedicationReferenceReport())
+      medication_review <- if (is.null(query_info[["medication_spec"]])) {
+        emptyMedicationReferenceReport()
+      } else {
+        getUnmatchedMedicationReferencesFromEnrichedTable(
+          chunk,
+          materialized_table_name,
+          query_info[["medication_spec"]]
+        )
       }
-      getUnmatchedMedicationReferencesFromEnrichedTable(
-        chunk,
-        materialized_table_name,
-        query_info[["medication_spec"]]
+      age_review <- if (base_table_name %in% c("fall_fe", "encounter")) {
+        birthdates <- if (SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(chunk)) {
+          chunk[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]]
+        } else {
+          rep(as.Date(NA), nrow(chunk))
+        }
+        matched_patient_keys <- if (
+          SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN %in% names(chunk)
+        ) {
+          chunk[[SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN]]
+        } else {
+          rep(NA_character_, nrow(chunk))
+        }
+        getAgeCalculationReview(
+          chunk,
+          materialized_table_name,
+          base_table_name,
+          birthdates,
+          matched_patient_keys
+        )
+      } else {
+        emptyAgeCalculationReview()
+      }
+      list(
+        medication = medication_review,
+        age = age_review
       )
     },
     write_review_chunk = function(review) {
       recordBoundedMedicationReferenceReview(
         streaming_context$medication_review,
-        review
+        review[["medication"]]
+      )
+      recordBoundedAgeCalculationReview(
+        streaming_context$age_review,
+        review[["age"]]
       )
     },
     chunk_size = chunk_size,
-    table_name = materialized_table_name
+    table_name = materialized_table_name,
+    strip_review_columns = stripSnapshotStreamingReviewColumns
   )
   summary <- stream_result[["summary"]]
 

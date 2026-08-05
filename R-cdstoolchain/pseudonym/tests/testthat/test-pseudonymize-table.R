@@ -25,10 +25,23 @@ test_that("pseudonymizeTable applies keep redact hash and generalize rules", {
     table_description[1, ],
     "Patient"
   )$pat_id)
-  expect_equal(result$pat_birthdate, as.Date(c("1980-05-01", "1975-12-01", NA)))
+  expect_equal(result$pat_birthdate, c("1980-05", "1975-12", NA_character_))
   expect_equal(result$pat_gender, source_table$pat_gender)
   expect_true(all(is.na(result$pat_name)))
   expect_equal(result$undocumented, source_table$undocumented)
+})
+
+test_that("month-generalized dates do not invent a day", {
+  source_table <- data.table::data.table(birthdate = c("1980-05-17", "1975-12", NA_character_))
+  table_description <- data.table::data.table(
+    RESOURCE = "Patient",
+    COLUMN_NAME = "birthdate",
+    PSEUDONYMIZATION_RULE = 'generalize(format = "YYYY-MM")'
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_equal(result$birthdate, c("1980-05", "1975-12", NA_character_))
 })
 
 test_that("conditional rules use first match and redact unmatched rows", {

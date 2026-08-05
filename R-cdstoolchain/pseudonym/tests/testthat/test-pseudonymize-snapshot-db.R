@@ -124,22 +124,66 @@ test_that("writeSnapshotPostprocessingReport writes an xlsx report", {
   expect_equal(result, summary)
 })
 
-test_that("writeSnapshotEnrichmentReviewReport writes bounded report sheets", {
+test_that("writeSnapshotIssueReport writes bounded issue sheets", {
   file_name <- tempfile(fileext = ".xlsx")
   report <- list(
-    summary = data.table::data.table(
+    medication_issue_summary = data.table::data.table(
       TABLE_NAME = "medicationrequest",
       UNMATCHED_ROWS = 5
     ),
-    unmatched_reference_examples = data.table::data.table(
+    medication_issue_examples = data.table::data.table(
       TABLE_NAME = "medicationrequest",
       MEDICATION_ID = "missing"
+    ),
+    age_issue_summary = data.table::data.table(
+      TABLE_NAME = "encounter",
+      ISSUE_TYPE = "reference_date_before_birthdate",
+      AFFECTED_ROWS = 1
+    ),
+    age_issue_examples = data.table::data.table(
+      TABLE_NAME = "encounter",
+      FHIR_PATIENT_ID = "pat-1",
+      FHIR_ENCOUNTER_ID = "enc-1",
+      BIRTHDATE = as.Date("1980-01-01"),
+      REFERENCE_DATE = as.Date("1979-01-01")
     )
   )
 
-  result <- writeSnapshotEnrichmentReviewReport(report, file_name = file_name)
+  result <- writeSnapshotIssueReport(report, file_name = file_name)
 
   expect_true(file.exists(file_name))
   expect_equal(names(etlutils::readExcelFileAsTableList(file_name)), names(report))
   expect_equal(result, report)
+})
+
+test_that("writeSnapshotIssueReport uses the issue report filename by default", {
+  old_module_dirs <- if (exists("MODULE_DIRS", envir = .GlobalEnv)) {
+    get("MODULE_DIRS", envir = .GlobalEnv)
+  } else {
+    NULL
+  }
+  output_dir <- tempfile("snapshot-issue-report-")
+  assign("MODULE_DIRS", list(local_dir = output_dir), envir = .GlobalEnv)
+  on.exit({
+    if (is.null(old_module_dirs)) {
+      rm("MODULE_DIRS", envir = .GlobalEnv)
+    } else {
+      assign("MODULE_DIRS", old_module_dirs, envir = .GlobalEnv)
+    }
+  })
+  report <- list(
+    age_issue_summary = data.table::data.table(
+      TABLE_NAME = "encounter",
+      ISSUE_TYPE = "missing_birthdate",
+      AFFECTED_ROWS = 1
+    )
+  )
+
+  writeSnapshotIssueReport(report)
+
+  expect_true(file.exists(file.path(
+    output_dir,
+    "reports",
+    "snapshot_pseudonymization_issues.xlsx"
+  )))
 })

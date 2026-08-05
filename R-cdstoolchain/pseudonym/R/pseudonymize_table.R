@@ -413,21 +413,22 @@ redactVector <- function(values) {
 generalizeDateLikeVector <- function(values, format) {
   if (format == "%Y-%m") {
     if (inherits(values, "Date") || inherits(values, "POSIXt")) {
-      return(as.Date(paste0(format(values, "%Y-%m"), "-01")))
+      return(format(values, "%Y-%m"))
     }
   }
 
   values_chr <- as.character(values)
-  result <- rep(NA, length(values_chr))
   has_value <- !is.na(values_chr)
 
   if (format == "%Y-%m") {
+    result <- rep(NA_character_, length(values_chr))
     matches <- regexec("^(\\d{2,4})-(\\d{2})", values_chr[has_value])
     parts <- regmatches(values_chr[has_value], matches)
-    result[has_value] <- as.Date(vapply(parts, function(part) {
-      if (length(part) >= 3) paste0(part[2], "-", part[3], "-01") else NA_character_
-    }, character(1)))
+    result[has_value] <- vapply(parts, function(part) {
+      if (length(part) >= 3) paste0(part[2], "-", part[3]) else NA_character_
+    }, character(1))
   } else if (format == "%Y") {
+    result <- rep(NA_character_, length(values_chr))
     matches <- regexec("^(\\d{2,4})", values_chr[has_value])
     parts <- regmatches(values_chr[has_value], matches)
     result[has_value] <- vapply(parts, function(part) {
@@ -627,6 +628,20 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
   }
 
   result <- table[[column_name]]
+  produces_year_month_text <- any(vapply(rule_list, function(single_rule) {
+    parsed_rule <- parsePseudonymizationRuleCall(single_rule)
+    if (parsed_rule$action != "generalize") {
+      return(FALSE)
+    }
+    format <- getRuleArgument(parsed_rule, "format")
+    if (is.na(format)) {
+      format <- stripRuleQuotes(parsed_rule$arguments[1])
+    }
+    identical(format, "YYYY-MM")
+  }, logical(1)))
+  if (produces_year_month_text) {
+    result <- as.character(result)
+  }
   matched_rows <- rep(FALSE, nrow(table))
   has_conditional_rule <- FALSE
 

@@ -188,6 +188,44 @@ test_that("convertTemplate normalizes multiline table values before replacement"
   expect_match(result, "COALESCE(db.to_char_immutable(fall_meda_id), '#NULL#')", fixed = TRUE)
 })
 
+test_that("convertTemplate permits missing column descriptions", {
+  tables <- list(
+    retrolektive_mrpbewertung = data.table::data.table(
+      TABLE_NAME = "retrolektive_mrpbewertung",
+      COLUMN_NAME = "ret_bewerter3",
+      COLUMN_DESCRIPTION = NA_character_,
+      COLUMN_TYPE = "varchar",
+      TAGS = ""
+    )
+  )
+  rights <- data.table::data.table(
+    SCRIPTNAME = "test.sql",
+    TEMPLATE = "test",
+    OWNER_SCHEMA = "db_log",
+    OWNER_USER = "db_user",
+    TAGS = "",
+    TABLE_PREFIX = "",
+    TABLE_POSTFIX = "",
+    RIGHTS = "SELECT",
+    GRANT_TARGET_USER = "db_user"
+  )
+
+  result <- convertTemplate(
+    tables,
+    rights,
+    template_content = "<%LOOP_COLS_SUB_LOOP_TABS_SUB_cre_table_COMMENTS%>",
+    table_name = "retrolektive_mrpbewertung",
+    column_prefix = "ret",
+    loop_row = 1,
+    recursion = 1
+  )
+
+  expect_identical(
+    result,
+    "COMMENT ON COLUMN db_log.retrolektive_mrpbewertung.ret_bewerter3 IS ' (varchar)';"
+  )
+})
+
 test_that("create table column templates do not inline free-text descriptions", {
   tables <- list(
     medikationsanalyse = data.table::data.table(
