@@ -226,11 +226,11 @@ Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten; nur der
 ID-Anteil hinter dem Schrägstrich wird gehasht.
 
 Die Regel `generalize(format = "YYYY-MM")` erhält Jahr und Monat eines Datums.
-Da PostgreSQL für den Datentyp `date` weiterhin einen vollständigen Tag
-benötigt, wird der Tag einheitlich auf den 15. gesetzt. Dadurch bleiben Datentyp
-und Auswertungen zwischen Original- und pseudonymisierter Datenbank kompatibel;
-der 15. ist kein tatsächliches Geburtsdatum. Die vor der Pseudonymisierung
-berechneten Altersspalten verwenden weiterhin das vollständige Originaldatum.
+In der pseudonymisierten Datenbank wird das Ergebnis als Text im Format
+`YYYY-MM` gespeichert. Es wird kein Tag ergänzt, damit der Wert nicht mit einem
+tatsächlichen Geburtsdatum verwechselt werden kann. Alters- und
+Volljährigkeitsprüfungen müssen die vor der Pseudonymisierung aus dem
+vollständigen Originaldatum berechneten Altersspalten verwenden.
 
 Die Regel `redact` entfernt den ursprünglichen Wert vollständig. Das Ergebnis
 ist `NA` in R und wird als `NULL` in PostgreSQL gespeichert. Es wird kein
