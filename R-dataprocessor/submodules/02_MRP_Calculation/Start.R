@@ -13,6 +13,6 @@ if (hasPhaseBOrBTestWards()) {
 
 } else {
   etlutils::runLevel2("MRP Calculation", {
-    etlutils::catWarningMessage("No Phase B wards found. MRP calculation will not be performed.\n")
+    etlutils::catWarningMessage("No active Phase B wards found. MRP calculation will not be performed.\n")
   })
 }

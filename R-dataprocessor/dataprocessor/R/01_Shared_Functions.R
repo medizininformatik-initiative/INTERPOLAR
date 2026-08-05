@@ -2,9 +2,11 @@
 #'
 #' Validates ward phase definitions loaded from global variables with the prefix
 #' `PHASES_WARD`. Each definition must contain exactly one non-empty
-#' `ward_name`, exactly one `phase_a_start`, and at most one `phase_b_start`.
+#' `ward_name`, exactly one `phase_a_start`, and at most one `phase_b_start` and
+#' `phase_b_end`.
 #' The function also checks that all timestamps have a valid format and that
-#' `phase_b_start`, if present, is later than `phase_a_start`.
+#' `phase_b_start`, if present, is later than `phase_a_start`. `phase_b_end`
+#' requires `phase_b_start` and must be later than it.
 #'
 #' @param timezone A character string defining the timezone used for parsing
 #'   phase timestamps.
@@ -61,7 +63,7 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
   parsed_records <- tryCatch(
     etlutils::parseStructuredConfigDefinitions(
       definitions = list(ward_phases),
-      allowed_key_pattern = "ward_name|phase_a_start|phase_b_start",
+      allowed_key_pattern = "ward_name|phase_a_start|phase_b_start|phase_b_end",
       allow_plus = FALSE
     ),
     error = function(e) {
@@ -87,6 +89,12 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
     if (sum(keys == "phase_b_start") > 1L) {
       stop(msg_prefix, "Entry ", entry_name, " must contain at most one phase_b_start.")
     }
+    if (sum(keys == "phase_b_end") > 1L) {
+      stop(msg_prefix, "Entry ", entry_name, " must contain at most one phase_b_end.")
+    }
+    if (any(keys == "phase_b_end") && !any(keys == "phase_b_start")) {
+      stop(msg_prefix, "Entry ", entry_name, " must contain phase_b_start when phase_b_end is set.")
+    }
 
     ward_name <- values[keys == "ward_name"]
     if (trimws(ward_name) == "") {
@@ -110,6 +118,16 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
       }
       if (!(phase_a < phase_b)) {
         stop(msg_prefix, "phase_a_start must be earlier than phase_b_start in entry ", entry_name, ".")
+      }
+      if (any(keys == "phase_b_end")) {
+        phase_b_end_raw <- values[keys == "phase_b_end"]
+        phase_b_end <- etlutils::parseTimestamp(phase_b_end_raw, timezone = timezone)
+        if (is.na(phase_b_end)) {
+          stop(msg_prefix, "phase_b_end is not a valid timestamp in entry ", entry_name, ": ", phase_b_end_raw)
+        }
+        if (!(phase_b < phase_b_end)) {
+          stop(msg_prefix, "phase_b_start must be earlier than phase_b_end in entry ", entry_name, ".")
+        }
       }
     }
     ward_names <- c(ward_names, ward_name)

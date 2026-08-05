@@ -135,3 +135,27 @@ testthat::test_that("validateWardPhases rejects phase_b_start earlier than phase
   on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
   testthat::expect_error(validateWardPhases(timezone = "UTC"), "phase_a_start must be earlier than phase_b_start")
 })
+
+testthat::test_that("validateWardPhases accepts phase_b_end after phase_b_start", {
+  assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11'", "phase_b_start = '2026-01-12'", "phase_b_end = '2026-04-21'"), envir = .GlobalEnv)
+  on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
+  testthat::expect_true(validateWardPhases(timezone = "UTC"))
+})
+
+testthat::test_that("validateWardPhases rejects phase_b_end without phase_b_start", {
+  assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11'", "phase_b_end = '2026-04-21'"), envir = .GlobalEnv)
+  on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
+  testthat::expect_error(validateWardPhases(timezone = "UTC"), "must contain phase_b_start")
+})
+
+testthat::test_that("validateWardPhases rejects invalid phase_b_end", {
+  assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11'", "phase_b_start = '2026-01-12'", "phase_b_end = 'invalid'"), envir = .GlobalEnv)
+  on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
+  testthat::expect_error(validateWardPhases(timezone = "UTC"), "phase_b_end is not a valid timestamp")
+})
+
+testthat::test_that("validateWardPhases rejects phase_b_end at phase_b_start", {
+  assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11'", "phase_b_start = '2026-01-12'", "phase_b_end = '2026-01-12'"), envir = .GlobalEnv)
+  on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
+  testthat::expect_error(validateWardPhases(timezone = "UTC"), "phase_b_start must be earlier than phase_b_end")
+})
