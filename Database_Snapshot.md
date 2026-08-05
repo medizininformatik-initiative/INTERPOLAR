@@ -1,24 +1,22 @@
-# Datenbank-Snapshots
+# Snapshot-Dateien und Snapshot-Datenbanken
 
-Das Script `ip-snapshot.sh` erstellt, pseudonymisiert, aktiviert, deaktiviert,
-löscht und listet Datenbank-Snapshots. Snapshot-Dateien liegen als `.sql.gz`
-im Verzeichnis `Snapshots`.
+Das Script `ip-snapshot.sh` erstellt und pseudonymisiert Snapshot-Dateien. Es
+aktiviert und deaktiviert die zugehörigen Snapshot-Datenbanken und kann
+Snapshot-Dateien sowie Snapshot-Datenbanken löschen. Außerdem zeigt es
+vorhandene Snapshot-Dateien und aktivierte Snapshot-Datenbanken an.
+Snapshot-Dateien liegen als `.sql.gz` im Verzeichnis `Snapshots`.
 
 ## Voraussetzungen
 
 - Alle Befehle müssen im Hauptverzeichnis von INTERPOLAR ausgeführt werden.
 - Der Docker-Compose-Service `cds_hub` muss laufen.
-- Snapshot-Namen dürfen nur Buchstaben, Zahlen und Unterstriche enthalten.
+- Namen von Snapshot-Dateien und Snapshot-Datenbanken dürfen nur Buchstaben,
+  Zahlen und Unterstriche enthalten.
   Pfadangaben sind nicht erlaubt.
-- Für die Snapshot-Erstellung muss die Datenbank `cds_hub_db` verfügbar sein.
-- Für die nachträgliche Pseudonymisierung muss der normale Snapshot bereits
-  unter `Snapshots/<name>_<Datum>.sql.gz` vorhanden sein.
-- Das R-Image muss den aktuellen Code enthalten. Nach Änderungen am R-Code muss
-  es neu gebaut werden:
-
-```bash
-docker compose build r-env
-```
+- Zum Erstellen einer Snapshot-Datei muss die Datenbank `cds_hub_db` verfügbar
+  sein.
+- Für die nachträgliche Pseudonymisierung muss die normale Snapshot-Datei
+  bereits unter `Snapshots/<name>_<Datum>.sql.gz` vorhanden sein.
 
 Für die Pseudonymisierung gelten zusätzlich folgende Voraussetzungen:
 
@@ -27,39 +25,37 @@ Für die Pseudonymisierung gelten zusätzlich folgende Voraussetzungen:
   Container erreichbar sein. Das Verzeichnis muss für die automatische
   Aktualisierung von `pseudo_mapping.xlsx` schreibbar sein.
 - Die Datei `pseudo_mapping.xlsx` wird bei Bedarf automatisch im konfigurierten
-  `INPUT_REPO_PATH` erzeugt und mit den in der Snapshot-Datenbank vorkommenden
-  Originalwerten vorausgefüllt. Die gewünschten Pseudonyme müssen anschließend
-  manuell in der Spalte `PSEUDONYM` ergänzt werden.
+  `INPUT_REPO_PATH` erzeugt und mit den in der temporären Quelldatenbank
+  vorkommenden Originalwerten vorausgefüllt. Die gewünschten Pseudonyme müssen
+  anschließend manuell in der Spalte `PSEUDONYM` ergänzt werden.
 - Die LOINC-Mapping-Datei muss unter
   `LOINC_Mapping/LOINC_Mapping_content/LOINC_Mapping_Table_processed.xlsx`
   innerhalb des `INPUT_REPO_PATH` verfügbar sein.
-- Für den normalen Dump sowie die temporäre Source- und Ziel-Datenbank muss
+- Für die normale Snapshot-Datei sowie die temporäre Quell- und Zieldatenbank muss
   ausreichend Speicherplatz vorhanden sein.
-
-Vor dem Einspielen eines Dumps prüft das Script automatisch die
-Pseudonymisierungsregeln und die statisch prüfbaren Mapping-Voraussetzungen.
 
 ## Befehle
 
-### Normalen Snapshot erstellen
+### Normale Snapshot-Datei erstellen
 
 ```bash
 ./ip-snapshot.sh create snap01
 ```
 
-Der Befehl erstellt einen Dump von `cds_hub_db` unter
+Der Befehl erstellt eine Snapshot-Datei aus `cds_hub_db` unter
 `Snapshots/snap01_<Datum>.sql.gz`.
 
-### Normalen und pseudonymisierten Snapshot zusammen erstellen
+### Normale und pseudonymisierte Snapshot-Dateien zusammen erstellen
 
 ```bash
 ./ip-snapshot.sh create snap01 --with-pseudonymized
 ```
 
-Zuerst wird der normale Snapshot erstellt. Anschließend wird daraus der
-pseudonymisierte Snapshot `Snapshots/snap01_<Datum>_pseud.sql.gz` erzeugt.
+Zuerst wird die normale Snapshot-Datei erstellt. Anschließend wird daraus die
+pseudonymisierte Snapshot-Datei `Snapshots/snap01_<Datum>_pseud.sql.gz`
+erzeugt.
 
-### Vorhandenen Snapshot pseudonymisieren
+### Vorhandene Snapshot-Datei pseudonymisieren
 
 Der Name wird ohne Dateiendung angegeben:
 
@@ -81,7 +77,7 @@ Lauf aber verlängern.
 ./ip-snapshot.sh create snap01 --with-pseudonymized --chunk-size 10000
 ```
 
-### Snapshots anzeigen
+### Snapshot-Dateien und Snapshot-Datenbanken anzeigen
 
 ```bash
 ./ip-snapshot.sh list
@@ -90,36 +86,30 @@ Lauf aber verlängern.
 Der Befehl zeigt vorhandene Snapshot-Dateien und aktivierte
 Snapshot-Datenbanken an.
 
-### Snapshot aktivieren
+### Snapshot-Datenbank aktivieren
 
 ```bash
 ./ip-snapshot.sh activate snap01_20251002
 ```
 
-Die Datenbank erhält den Namen `ip_snap01_20251002` und wird nach dem Einspielen
-in den Read-only-Modus versetzt. Pseudonymisierte Snapshots werden genauso
-aktiviert:
+Die Snapshot-Datenbank erhält den Namen `ip_snap01_20251002` und wird nach dem
+Einspielen in den Read-only-Modus versetzt. Pseudonymisierte Snapshot-Dateien
+werden genauso als Snapshot-Datenbank aktiviert:
 
 ```bash
 ./ip-snapshot.sh activate snap01_20251002_pseud
 ```
 
-### Snapshot deaktivieren
+### Snapshot-Datenbank deaktivieren
 
 ```bash
 ./ip-snapshot.sh deactivate snap01_20251002
 ```
 
-Der Befehl löscht nur die aktivierte Datenbank. Die Snapshot-Datei bleibt
-erhalten. Vor dem erneuten Aktivieren muss eine bereits vorhandene
-Snapshot-Datenbank deaktiviert werden:
+Der Befehl löscht nur die aktivierte Snapshot-Datenbank. Die Snapshot-Datei
+bleibt erhalten.
 
-```bash
-./ip-snapshot.sh deactivate snap01_20251002_pseud
-./ip-snapshot.sh activate snap01_20251002_pseud
-```
-
-### Snapshot löschen
+### Snapshot-Datei und Snapshot-Datenbank löschen
 
 ```bash
 ./ip-snapshot.sh delete snap01_20251002
@@ -128,79 +118,53 @@ Snapshot-Datenbank deaktiviert werden:
 Der Befehl löscht die Snapshot-Datei und eine gegebenenfalls vorhandene,
 gleichnamige Snapshot-Datenbank.
 
-## Vorprüfung und Verhalten bei Fehlern
+## Ablauf bis zur Prüfung
 
-Vor jeder Pseudonymisierung prüft das Script:
+1. Die normale Snapshot-Datei wird in eine temporäre Quelldatenbank eingespielt.
+   Das kann bei großen Snapshot-Dateien lange dauern.
+2. Das Script erstellt eine temporäre Zieldatenbank und schreibt die
+   pseudonymisierten Daten hinein.
+3. Die Zieldatenbank wird als neue Snapshot-Datei mit dem Suffix `_pseud`
+   gespeichert.
+4. Nach einem erfolgreichen Lauf werden beide temporären Datenbanken gelöscht.
+5. `activate` spielt die pseudonymisierte Snapshot-Datei als schreibgeschützte
+   Snapshot-Datenbank ein. Auch dieser Schritt kann lange dauern.
 
-- TODO-Regeln,
-- nicht unterstützte Regeln,
-- doppelte Spaltendefinitionen,
-- die konfigurierte `INPUT_REPO_PATH` und
-- die Syntax der benötigten Mapping-Regeln.
+## Prüfung vor der Weitergabe
 
-Beim separaten Pseudonymisieren erfolgt diese Prüfung vor dem Einspielen des
-Snapshot-Dumps. Bei `create --with-pseudonymized` wird zuerst der normale
-Snapshot erstellt; die Vorprüfung erfolgt anschließend vor dem Einspielen für
-die Pseudonymisierung.
+- Pseudonymisierte Snapshot-Datei aktivieren.
+- Die aktivierte pseudonymisierte Snapshot-Datenbank auf Daten prüfen, die den
+  Standort nicht verlassen dürfen.
+- Die pseudonymisierte Snapshot-Datei nicht weitergeben, wenn die
+  Snapshot-Datenbank solche Daten enthält.
+- Solche Funde dem INTERPOLAR-Team melden. Die Pseudonymisierungsregeln werden
+  dann gemeinsam geprüft und bei Bedarf angepasst.
 
-Schlägt diese statische Vorprüfung fehl, werden keine Build-Datenbanken
-angelegt. Die Fehlermeldung beschreibt die notwendige Korrektur. Alle Details
-stehen unter:
+## Verhalten bei Fehlern
 
-```text
-outputLocal/snapshot_pseudonymization_preflight*/reports/pseudonymization_rule_review.xlsx
-```
-
-Nach dem Einspielen der Source-Datenbank und vor der eigentlichen
-Pseudonymisierung prüft das Script alle Regeln der Form
-`pseudonym(sheet = "...")` gegen die tatsächlichen Daten. Dazu liest es pro
-betroffener Spalte die unterschiedlichen Werte mit `DISTINCT`.
-
-Fehlt `pseudo_mapping.xlsx`, ein benötigtes Sheet oder ein konkreter `KEY`,
-ergänzt das Script die Datei im `INPUT_REPO_PATH`. Die Keys werden innerhalb
-jedes Sheets alphabetisch sortiert. Neue `PSEUDONYM`-Zellen bleiben leer.
-Anschließend bricht der Lauf ab und nennt den Dateipfad sowie die betroffenen
-Sheets. Nach dem manuellen Ausfüllen kann der Befehl erneut gestartet werden;
-die bereits eingespielte Source-Datenbank wird wiederverwendet.
-
-Vorhandene Pseudonyme bleiben beim Ergänzen und Sortieren erhalten. Leere
-Pseudonyme und doppelte oder leere Keys blockieren die Pseudonymisierung.
-
-Schlägt die Verarbeitung nach dem Einspielen fehl, bleiben die temporäre
-Source-Datenbank und die teilweise erzeugte Ziel-Datenbank zur Diagnose
-erhalten. Die ursprüngliche Snapshot-Datei wird nicht gelöscht.
-
-Ist beim nächsten Lauf die Source-Datenbank bereits vorhanden, verwendet das
-Script sie erneut. Das gilt unabhängig davon, ob zusätzlich eine unvollständige
-Ziel-Datenbank vorhanden ist. Die Ziel-Datenbank wird immer gelöscht und neu
-angelegt. Der große Snapshot-Dump muss dadurch nicht erneut eingespielt werden.
-
-Schlägt bereits das Einspielen des Snapshot-Dumps fehl, entfernt das Script die
-unvollständige Source-Datenbank. Dadurch wird sie beim nächsten Lauf nicht
-versehentlich wiederverwendet. Eine Ziel-Datenbank ohne Source-Datenbank wird
-ebenfalls automatisch entfernt; anschließend wird der Dump neu eingespielt.
-
-Nach einem erfolgreichen Lauf löscht das Script beide Build-Datenbanken
-automatisch. Die Pseudonymisierung der Tabellen beginnt bei einem neuen Lauf
-weiterhin von vorne. Ein Wiederaufsetzen ab dem letzten Chunk ist derzeit nicht
-vorgesehen. Existiert die pseudonymisierte Snapshot-Datei bereits, fragt das
-Script vor dem Überschreiben nach.
+- Die Fehlermeldung und die erzeugten Reports prüfen.
+- Ergänzt das Script `pseudo_mapping.xlsx`, die leeren `PSEUDONYM`-Zellen
+  ausfüllen und denselben Befehl erneut starten.
+- Die normale Snapshot-Datei bleibt bei einem Fehler erhalten.
+- Temporäre Datenbanken können zur Diagnose und für einen erneuten Lauf
+  bestehen bleiben.
 
 ## Technische Details
 
-### Inhalt des pseudonymisierten Snapshots
+### Inhalt der pseudonymisierten Snapshot-Datei und Snapshot-Datenbank
 
-Der pseudonymisierte Snapshot enthält die für Auswertungen relevanten Schemata
-`db_log` und `db2dataprocessor_out`. In `db_log` liegen die pseudonymisierten
-Tabellen materialisiert. `db2dataprocessor_out` enthält durchgereichte Views wie
+Die pseudonymisierte Snapshot-Datei und die pseudonymisierte Snapshot-Datenbank
+enthalten die für Auswertungen relevanten Schemata `db_log` und
+`db2dataprocessor_out`. In `db_log` liegen die pseudonymisierten Tabellen
+materialisiert. `db2dataprocessor_out` enthält durchgereichte Views wie
 `v_<table>` und `v_<table>_last_version`.
 
 Aufgenommen werden Tabellen, die über die Pseudonymisierungsquellen oder Table
-Descriptions für den Snapshot ausgewählt sind. Innerhalb dieser Tabellen
-bleiben alle Spalten der Originaltabellen erhalten. Spalten ohne Regel werden
-unverändert übernommen. Technische Originalspalten wie `hash_index_col`,
-RAW-Referenzen und Einfügezeitpunkte werden nicht entfernt. Zeilen werden nicht
-mit `unique()` zusammengefasst.
+Descriptions für die pseudonymisierte Snapshot-Datenbank ausgewählt sind.
+Innerhalb dieser Tabellen bleiben alle Spalten der Originaltabellen erhalten.
+Spalten ohne Regel werden unverändert übernommen. Technische Originalspalten
+wie `hash_index_col`, RAW-Referenzen und Einfügezeitpunkte werden nicht
+entfernt. Zeilen werden nicht mit `unique()` zusammengefasst.
 
 ### Verarbeitung großer Tabellen
 
@@ -208,17 +172,22 @@ Die Tabellen werden nacheinander verarbeitet. Innerhalb einer Tabelle wird
 jeder Chunk angereichert, pseudonymisiert und unmittelbar in die Zieldatenbank
 geschrieben. Erst danach wird der nächste Chunk gelesen. Der R-Speicherbedarf
 hängt dadurch von der Chunkgröße und nicht von der Gesamtgröße einer Tabelle
-oder des Snapshots ab.
+oder der Snapshot-Datenbank ab.
 
 Kontrollsummen und Enrichment-Reports werden über alle Chunks hinweg
 zusammengeführt.
 
 ### Pseudonymisierungsregeln
 
-Die Regeln stammen aus den Table-Description-Dateien und den
-Snapshot-Erweiterungen. `cryptoHash` und `pseudonymize(...)` werden bei der
-DB-Pseudonymisierung als deterministischer SHA-256-Hash ohne Salt umgesetzt.
-Der gleiche Originalwert ergibt immer den gleichen Hash.
+Für jede Spalte legt `PSEUDONYMIZATION_RULE` in der erzeugten Table Description
+fest, wie sie behandelt wird. Die Regeln für FHIR-Daten werden aus der
+mitgelieferten DIMP-DUP-Basis-YAML abgeleitet. Regeln für weitere Tabellen und
+zusätzliche Spalten der Snapshot-Datenbank werden in den zugehörigen Table
+Descriptions gepflegt.
+
+`cryptoHash` und `pseudonymize(...)` werden bei der DB-Pseudonymisierung als
+deterministischer SHA-256-Hash ohne Salt umgesetzt. Der gleiche Originalwert
+ergibt immer den gleichen Hash.
 
 `pseudonymize(...)` dient in der Table Description als fachlich lesbare
 Regelnotation. Ein `domain = ...`-Parameter verändert den erzeugten Hash nicht.
@@ -226,7 +195,7 @@ Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten; nur der
 ID-Anteil hinter dem Schrägstrich wird gehasht.
 
 Die Regel `generalize(format = "YYYY-MM")` erhält Jahr und Monat eines Datums.
-In der pseudonymisierten Datenbank wird das Ergebnis als Text im Format
+In der pseudonymisierten Snapshot-Datenbank wird das Ergebnis als Text im Format
 `YYYY-MM` gespeichert. Es wird kein Tag ergänzt, damit der Wert nicht mit einem
 tatsächlichen Geburtsdatum verwechselt werden kann. Alters- und
 Volljährigkeitsprüfungen müssen die vor der Pseudonymisierung aus dem
@@ -241,10 +210,29 @@ Sheet aus `INPUT_REPO_PATH/pseudo_mapping.xlsx`. Jedes verwendete Sheet enthält
 die Spalten `KEY` und `PSEUDONYM`. Beide Werte dürfen Leerzeichen enthalten,
 aber nicht leer sein. Doppelte Keys sind nicht erlaubt.
 
+### Vorprüfung und Wiederaufnahme
+
+Vor der Pseudonymisierung prüft das Script die Regeln, Spaltendefinitionen und
+Mapping-Voraussetzungen. Der vollständige Prüfbericht steht unter:
+
+```text
+outputLocal/snapshot_pseudonymization_preflight*/reports/pseudonymization_rule_review.xlsx
+```
+
+Nach dem Einspielen der Quelldatenbank ergänzt das Script fehlende Werte in
+`INPUT_REPO_PATH/pseudo_mapping.xlsx` und bricht ab. Nach dem manuellen
+Ausfüllen kann derselbe Befehl erneut gestartet werden; die bereits eingespielte
+Quelldatenbank wird wiederverwendet.
+
+Bei späteren Fehlern bleiben die Quelldatenbank und die teilweise erzeugte
+Zieldatenbank zur Diagnose erhalten. Beim nächsten Lauf wird die Quelldatenbank
+wiederverwendet und die Zieldatenbank neu erstellt. Nach einem erfolgreichen
+Lauf werden beide temporären Datenbanken gelöscht.
+
 ### Fachliche Anreicherungen
 
-Vor der Pseudonymisierung ergänzt der Prozess Snapshot-spezifische
-Auswertungsspalten:
+Vor der Pseudonymisierung ergänzt der Prozess zusätzliche Auswertungsspalten in
+der pseudonymisierten Snapshot-Datenbank:
 
 - `fall_fe` und `fall_fe_last_version` erhalten `fall_age_at_admission`.
 - `encounter` und `encounter_last_version` erhalten
@@ -264,11 +252,6 @@ Auswertungsspalten:
   Medications und Referenzketten ohne erreichbaren Code bleiben erhalten und
   erscheinen im Issue-Report.
 
-Die Medication-Auflösung wird für die vereinigten Referenzen aus Request,
-Statement und Administration einmal je Snapshot-Variante vorbereitet und über
-eine temporäre, indexierte PostgreSQL-Tabelle wiederverwendet. Sie wird nicht
-für jeden Chunk oder jede Quelltabelle erneut berechnet.
-
 Das Alter wird in abgeschlossenen Jahren berechnet. Die Berechnung erfolgt nur,
 wenn das Geburtsdatum am oder nach dem 01.01.1910 liegt und das jeweilige
 Aufnahme- beziehungsweise Encounter-Datum nicht vor dem Geburtsdatum liegt.
@@ -284,8 +267,9 @@ Der Pseudonymisierungslauf schreibt Kontroll- und Freigabereports unter:
 outputLocal/snapshot_pseudonymization*/reports
 ```
 
-Die Reports werden nicht in den Snapshot-Dump aufgenommen und sind kein
-Bestandteil der auswertbaren Read-only-Datenbank:
+Die Reports werden nicht in die pseudonymisierte Snapshot-Datei aufgenommen
+und sind kein Bestandteil der auswertbaren, pseudonymisierten
+Snapshot-Datenbank:
 
 - `pseudonymization_rule_review.xlsx` enthält die geladenen Regeln, TODOs,
   implizite Keep-Regeln, nicht unterstützte Regeln, doppelte Spalten und
@@ -297,7 +281,7 @@ Bestandteil der auswertbaren Read-only-Datenbank:
   Encounter-Identifikatoren sowie Geburts- und Referenzdatum. Der Report enthält
   exakte Summen und je Prüfbereich höchstens 1.000 Beispiele. Die Detailzeilen
   enthalten nicht pseudonymisierte Identifikatoren für die lokale Fehlersuche
-  und dürfen deshalb nicht zusammen mit dem pseudonymisierten Snapshot
+  und dürfen deshalb nicht zusammen mit der pseudonymisierten Snapshot-Datei
   weitergegeben werden.
 - `snapshot_postprocessing_report.xlsx` enthält die technische Zusammenfassung,
   insbesondere Zeilen- und Spaltenzahlen.
