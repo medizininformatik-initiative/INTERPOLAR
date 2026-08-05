@@ -148,26 +148,39 @@ getPatientData <- function(lock_id, table_name) {
 # (bottom variables not in use)
 
 getEncounterData <- function(lock_id, table_name, report_period_start) {
-  query <- paste0(
-    "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
-    "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-    "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
+  columns <- etlutils::dbGetTableColumnTypes(table_name, readonly = TRUE) |>
+    dplyr::distinct(column_name) |>
+    dplyr::pull(column_name)
 
-    # ----------------------------------------------------------------------------------------------------------#
-    # possible additional useful variables not included at the moment:
+  if ("enc_age_at_admission" %in% columns) {
+    query <- paste0(
+      "SELECT enc_id, enc_age_at_admission, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
+      "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
+      "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
+      "FROM ", table_name, "\n"
+    )
+  } else {
+    query <- paste0(
+      "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
+      "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
+      "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
 
-    # "enc_identifier_type_code, enc_class_system, enc_servicetype_system, enc_servicetype_code, ",
-    # "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
-    # "enc_hospitalization_dischargedisposition_system, enc_hospitalization_dischargedisposition_code, ",
-    # "enc_location_ref, enc_location_identifier_value, enc_location_status, ",
-    # "enc_location_physicaltype_system, enc_location_physicaltype_code, ",
-    # "enc_serviceprovider_identifier_type_system, enc_serviceprovider_identifier_type_code, ",
-    # "enc_serviceprovider_identifier_system, enc_serviceprovider_identifier_value, ",
-    # "enc_meta_lastupdated ",
-    # ----------------------------------------------------------------------------------------------------------#
+      # ----------------------------------------------------------------------------------------------------------#
+      # possible additional useful variables not included at the moment:
 
-    "FROM ", table_name, "\n"
-  )
+      # "enc_identifier_type_code, enc_class_system, enc_servicetype_system, enc_servicetype_code, ",
+      # "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
+      # "enc_hospitalization_dischargedisposition_system, enc_hospitalization_dischargedisposition_code, ",
+      # "enc_location_ref, enc_location_identifier_value, enc_location_status, ",
+      # "enc_location_physicaltype_system, enc_location_physicaltype_code, ",
+      # "enc_serviceprovider_identifier_type_system, enc_serviceprovider_identifier_type_code, ",
+      # "enc_serviceprovider_identifier_system, enc_serviceprovider_identifier_value, ",
+      # "enc_meta_lastupdated ",
+      # ----------------------------------------------------------------------------------------------------------#
+
+      "FROM ", table_name, "\n"
+    )
+  }
 
   encounter_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct()
@@ -458,11 +471,23 @@ getPatientFeData <- function(lock_id, table_name) {
 #' @importFrom dplyr distinct arrange select slice_max
 #' @export
 getFallFeData <- function(lock_id, table_name) {
-  query <- paste0(
-    "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
-    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, fall_complete, input_processing_nr ",
-    "FROM ", table_name, "\n"
-  )
+  columns <- etlutils::dbGetTableColumnTypes(table_name, readonly = TRUE) |>
+    dplyr::distinct(column_name) |>
+    dplyr::pull(column_name)
+
+  if ("fall_age_at_admission" %in% columns) {
+    query <- paste0(
+      "SELECT record_id, fall_fhir_enc_id, fall_pat_id, fall_age_at_admission, ",
+      "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, fall_complete, input_processing_nr ",
+      "FROM ", table_name, "\n"
+    )
+  } else {
+    query <- paste0(
+      "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
+      "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, fall_complete, input_processing_nr ",
+      "FROM ", table_name, "\n"
+    )
+  }
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # get correct study phase (first one in fall_fe for each case)

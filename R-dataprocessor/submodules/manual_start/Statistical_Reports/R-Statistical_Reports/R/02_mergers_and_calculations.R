@@ -399,12 +399,15 @@ restrictToDefinedWards <- function(merged_pat_fall_fe_table) {
 #' (Einrichtungskontakt) by computing the difference between the main encounter start date and the
 #' patient's birthdate. It adds a new column `age_at_hospitalization` to the merged table.
 #' The age is calculated in completed years, rounding down to the nearest whole number.
+#' If the age already exists in the dataset (e.g., from a pre-calculated column), it can be used
+#' directly by specifying the `age_at_admission` parameter in the format: `age_at_admission = "column_name"`.
 #'
 #' @param merged_table_with_MainEncPeriodStart A data frame or tibble containing merged patient
 #'   and encounter data. It must include the columns `pat_birthdate` (patient's birth date)
 #'   and `main_enc_period_start` (start date of the main encounter (Einrichtungskontakt)).
 #' @param main_enc_period_start The column name representing the start date of the main encounter period.
 #' @param pat_birthdate The column name representing the patient's birth date.
+#' @param age_at_admission Optional. The column name representing the patient's age at admission, if already available.
 #'
 #' @return A data frame or tibble with an additional column:
 #'   - `age_at_hospitalization`: The patient's age in completed years at the time of the main
@@ -426,17 +429,29 @@ restrictToDefinedWards <- function(merged_pat_fall_fe_table) {
 #' @export
 calculateAge <- function(merged_table_with_MainEncPeriodStart,
                          main_enc_period_start = main_enc_period_start,
-                         pat_birthdate = pat_birthdate) {
-  merged_table_with_age <- merged_table_with_MainEncPeriodStart |>
-    dplyr::mutate(age_at_hospitalization = floor(as.numeric(difftime(
-      as.Date({{ main_enc_period_start }}),
-      as.Date({{ pat_birthdate }}),
-      units = "days"
-    )) / 365.25)) |>
-    dplyr::relocate(age_at_hospitalization, .after = {{ pat_birthdate }}) |>
-    dplyr::select(-{{ pat_birthdate }}) |>
-    dplyr::distinct()
+                         pat_birthdate = pat_birthdate,
+                         age_at_admission = NA) {
+  columns <- colnames(merged_table_with_MainEncPeriodStart)
 
+  # if age at admission is defined and it exists as column in the database,
+  # use this directly instead of calculating it from birthdate and main_enc_period_start
+  if (!is.na(age_at_admission) && age_at_admission %in% columns) {
+    merged_table_with_age <- merged_table_with_MainEncPeriodStart |>
+      dplyr::mutate(age_at_hospitalization = {{ age_at_admission }}) |>
+      dplyr::relocate(age_at_hospitalization, .after = {{ pat_birthdate }}) |>
+      dplyr::select(-{{ pat_birthdate }}) |>
+      dplyr::distinct()
+  } else {
+    merged_table_with_age <- merged_table_with_MainEncPeriodStart |>
+      dplyr::mutate(age_at_hospitalization = floor(as.numeric(difftime(
+        as.Date({{ main_enc_period_start }}),
+        as.Date({{ pat_birthdate }}, format = "%Y-%m-%d"),
+        units = "days"
+      )) / 365.25)) |>
+      dplyr::relocate(age_at_hospitalization, .after = {{ pat_birthdate }}) |>
+      dplyr::select(-{{ pat_birthdate }}) |>
+      dplyr::distinct()
+  }
   if (any(is.na(merged_table_with_age$age_at_hospitalization))) {
     warning("Some patients have no determined age_at_hospitalization.
             Please check the data.")

@@ -1371,6 +1371,7 @@ dbGetCurrentSchema <- function(readonly = FALSE) {
 #' @details
 #' - Retrieves column metadata from `information_schema.columns` for the current schema.
 #'
+#' @export
 dbGetTableColumnTypes <- function(table_name, readonly = FALSE) {
   schema <- dbGetCurrentSchema(readonly)
   # SQL query to retrieve column names and data types
