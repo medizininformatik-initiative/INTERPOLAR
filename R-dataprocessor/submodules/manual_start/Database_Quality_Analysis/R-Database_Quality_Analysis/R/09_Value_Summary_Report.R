@@ -708,11 +708,14 @@ createValueSummaryReports <- function(
           )
           suppressed_result <- query_fun(
             suppressed_query$query,
-            lock_id = paste0(
-              "calculate database quality analysis suppressed value summary for ",
-              table_name,
-              " batch ",
-              batch_index
+            lock_id = getDatabaseQualityAnalysisLockId(
+              config,
+              paste0(
+                "calculate database quality analysis suppressed value summary for ",
+                table_name,
+                " batch ",
+                batch_index
+              )
             )
           )
           suppressed_result <- data.table::as.data.table(suppressed_result)
@@ -733,11 +736,14 @@ createValueSummaryReports <- function(
           )
           text_counts <- query_fun(
             text_query,
-            lock_id = paste0(
-              "calculate database quality analysis text value summary for ",
-              table_name,
-              " batch ",
-              batch_index
+            lock_id = getDatabaseQualityAnalysisLockId(
+              config,
+              paste0(
+                "calculate database quality analysis text value summary for ",
+                table_name,
+                " batch ",
+                batch_index
+              )
             )
           )
           text_counts <- data.table::as.data.table(text_counts)
@@ -761,13 +767,16 @@ createValueSummaryReports <- function(
           )
           statistic_result <- query_fun(
             statistic_query$query,
-            lock_id = paste0(
-              "calculate database quality analysis ",
-              value_type,
-              " value summary for ",
-              table_name,
-              " batch ",
-              batch_index
+            lock_id = getDatabaseQualityAnalysisLockId(
+              config,
+              paste0(
+                "calculate database quality analysis ",
+                value_type,
+                " value summary for ",
+                table_name,
+                " batch ",
+                batch_index
+              )
             )
           )
           statistic_result <- data.table::as.data.table(statistic_result)

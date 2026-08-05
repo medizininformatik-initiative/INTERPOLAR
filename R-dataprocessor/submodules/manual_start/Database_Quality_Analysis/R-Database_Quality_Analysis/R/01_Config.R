@@ -82,6 +82,7 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     ),
     output_filename = getConfigValue("OUTPUT_FILENAME", "Database_Quality_Analysis"),
     count_batch_size = as.integer(getConfigValue("COUNT_BATCH_SIZE", 100)),
+    use_database_locks = as.logical(getConfigValue("USE_DATABASE_LOCKS", FALSE)),
     included_view_patterns = getConfigValue(
       "INCLUDED_VIEW_PATTERNS",
       c("^v_[a-z0-9_]+_last_version$", "^v_[a-z0-9_]+_fe_last_version$")

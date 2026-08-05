@@ -58,7 +58,10 @@ fillCountAndDateRangeColumns <- function(
   if (!is.na(count_query$query)) {
     count_result <- query_fun(
       count_query$query,
-      lock_id = paste0("calculate database quality analysis counts for ", lock_label)
+      lock_id = getDatabaseQualityAnalysisLockId(
+        config,
+        paste0("calculate database quality analysis counts for ", lock_label)
+      )
     )
     applyCountQueryResult(result, table_name, count_query, count_result)
   }
@@ -74,9 +77,12 @@ fillCountAndDateRangeColumns <- function(
     if (!is.na(date_range_query$query)) {
       date_range_result <- query_fun(
         date_range_query$query,
-        lock_id = paste0(
-          "calculate database quality analysis value date ranges for ",
-          lock_label
+        lock_id = getDatabaseQualityAnalysisLockId(
+          config,
+          paste0(
+            "calculate database quality analysis value date ranges for ",
+            lock_label
+          )
         )
       )
       applyDateRangeQueryResult(result, table_name, date_range_query, date_range_result)

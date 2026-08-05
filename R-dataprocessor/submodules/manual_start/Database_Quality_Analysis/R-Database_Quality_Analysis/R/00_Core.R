@@ -58,3 +58,15 @@ formatDuration <- function(start_time, end_time = Sys.time()) {
 formatCountLabel <- function(count, singular, plural = paste0(singular, "s")) {
   paste(count, if (identical(as.integer(count), 1L)) singular else plural)
 }
+
+#' Get a database lock ID for the current DQA configuration
+#'
+#' Returns the given lock ID only when database locks are explicitly enabled for
+#' the report. Database quality analysis is read-only, so locks are disabled by
+#' default to avoid waiting for the transfer semaphore during site-side reports.
+getDatabaseQualityAnalysisLockId <- function(config, lock_id) {
+  if (isTRUE(config$use_database_locks)) {
+    return(lock_id)
+  }
+  NULL
+}

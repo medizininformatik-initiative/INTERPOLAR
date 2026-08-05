@@ -135,6 +135,20 @@ test_that("database quality analysis resource detail sheets are parsed", {
 })
 
 
+test_that("database quality analysis database locks are optional", {
+  config <- getConfig(envir = new.env(parent = emptyenv()))
+
+  expect_false(config$use_database_locks)
+  expect_null(getDatabaseQualityAnalysisLockId(config, "test lock"))
+
+  envir <- new.env(parent = emptyenv())
+  assign("USE_DATABASE_LOCKS", TRUE, envir = envir)
+  config <- getConfig(envir = envir)
+
+  expect_equal(getDatabaseQualityAnalysisLockId(config, "test lock"), "test lock")
+})
+
+
 test_that("database quality analysis config defaults value summary controls", {
   config <- getConfig(envir = new.env(parent = emptyenv()))
 

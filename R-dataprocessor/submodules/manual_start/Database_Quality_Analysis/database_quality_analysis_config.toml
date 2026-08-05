@@ -5,6 +5,11 @@ OUTPUT_FILENAME = "Database_Quality_Analysis"
 COUNT_BATCH_SIZE = 100
 INCLUDE_VALUE_DATETIME_COLUMNS = true
 
+# DQA reads analysis views only. Keep this disabled so reports do not wait for
+# the CDS Hub transfer semaphore. Set to true only if the database should be
+# paused explicitly while the report runs.
+USE_DATABASE_LOCKS = false
+
 # Database credentials are loaded through this separate DB config file.
 # Point this to the pseudonymized snapshot DB config when running DQA there.
 PATH_TO_DB_CONFIG_TOML = "./cds_hub_db_config.toml"

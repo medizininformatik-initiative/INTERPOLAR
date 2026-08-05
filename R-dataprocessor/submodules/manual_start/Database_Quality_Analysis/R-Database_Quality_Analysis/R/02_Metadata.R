@@ -81,7 +81,10 @@ loadViewMetadata <- function(config) {
   metadata <- etlutils::dbGetReadOnlyQuery(
     query,
     params = list(config$view_schema),
-    lock_id = "load database quality analysis view metadata"
+    lock_id = getDatabaseQualityAnalysisLockId(
+      config,
+      "load database quality analysis view metadata"
+    )
   )
   metadata <- normalizeMetadata(metadata, config)
   table_counts <- unique(metadata[, .(TABLE_FAMILY, TABLE_NAME)])[, .N, by = TABLE_FAMILY]
@@ -118,7 +121,10 @@ loadHistoryMetadata <- function(config) {
   metadata <- etlutils::dbGetReadOnlyQuery(
     query,
     params = list(config$view_schema),
-    lock_id = "load database quality analysis history metadata"
+    lock_id = getDatabaseQualityAnalysisLockId(
+      config,
+      "load database quality analysis history metadata"
+    )
   )
   metadata <- data.table::as.data.table(metadata)
   data.table::setnames(
@@ -143,7 +149,7 @@ loadDatabaseMetadata <- function() {
 
   metadata <- etlutils::dbGetReadOnlyQuery(
     query,
-    lock_id = "load database quality analysis database metadata"
+    lock_id = NULL
   )
   data.table::as.data.table(metadata)
 }

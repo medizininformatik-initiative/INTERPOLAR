@@ -169,11 +169,14 @@ createResourceDetailSheet <- function(
     if (!is.na(count_query$query)) {
       count_result <- query_fun(
         count_query$query,
-        lock_id = paste0(
-          "calculate database quality analysis ",
-          detail_config$table_name,
-          " detail counts for ",
-          row_group_value
+        lock_id = getDatabaseQualityAnalysisLockId(
+          config,
+          paste0(
+            "calculate database quality analysis ",
+            detail_config$table_name,
+            " detail counts for ",
+            row_group_value
+          )
         )
       )
       for (row_index in seq_len(nrow(count_query$alias_map))) {
