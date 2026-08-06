@@ -26,7 +26,7 @@ set `DB_ANALYSIS_ADMIN_PASSWORD`. Leave these values empty to use `DB_NAME`,
 
 Each run writes two artifacts to `outputGlobal/dataprocessor/reports`:
 
-- `Database_Quality_Analysis_<analysis-start>.xlsx`: Excel workbook with
+- `Database_Quality_Analysis_Count_Summary_<analysis-start>.xlsx`: Excel workbook with
   availability counts.
 - `Database_Quality_Analysis_Value_Summary_<analysis-start>.zip`: ZIP archive
   with value summary CSV files grouped in `FHIR/` and `Frontend/` folders.

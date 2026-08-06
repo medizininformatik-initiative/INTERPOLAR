@@ -1690,6 +1690,14 @@ test_that("database quality analysis excel sheets visually group table rows", {
   expect_equal(formatted_sheet$TABLE_NAME, c("observation", NA_character_, NA_character_, "condition", NA_character_))
 })
 
+test_that("database quality analysis count summary filename uses suffix", {
+  expect_equal(
+    getCountSummaryOutputFilename(list(output_filename = "Database_Quality_Analysis_Test")),
+    "Database_Quality_Analysis_Test_Count_Summary"
+  )
+})
+
+
 test_that("database quality analysis excel writer uses readable column widths", {
   old_module_dirs <- if (exists("MODULE_DIRS", envir = .GlobalEnv, inherits = FALSE)) {
     get("MODULE_DIRS", envir = .GlobalEnv)

@@ -434,6 +434,13 @@ formatSheetForExcel <- function(sheet) {
   data.table::rbindlist(formatted_tables, use.names = TRUE)
 }
 
+#' Get the count-summary output filename base
+#'
+#' Adds the count-summary suffix to the configured report basename.
+getCountSummaryOutputFilename <- function(config) {
+  paste(config$output_filename, "Count_Summary", sep = "_")
+}
+
 #' Write the Excel report
 #'
 #' Writes all report sheets to the configured output workbook.
@@ -562,7 +569,7 @@ createReport <- function(config = getConfig()) {
 
   output_file <- writeExcelFile(
     sheets,
-    config$output_filename,
+    getCountSummaryOutputFilename(config),
     timestamp = analysis_start_time
   )
   logProgress("Calculating database quality analysis value summary.")
