@@ -11,7 +11,7 @@ set -o pipefail
 #      ./ip-snapshot.sh pseudonymize  <name_date> [--chunk-size <rows>]
 #      ./ip-snapshot.sh delete  <name_date>
 #      ./ip-snapshot.sh activate  <name_date>
-#      ./ip-snapshot.sh deactivate  <name_date>
+#      ./ip-snapshot.sh deactivate  <name_date>|ip_<name_date>
 #
 #  Hinweis: Der Dateiname darf **keine** Pfadangaben (/, ..) enthalten,
 #           sonst wird das Skript mit einer Fehlermeldung beendet.
@@ -27,7 +27,7 @@ Usage: ${0##*/} <action> <name>
              \"pseudonymize\" – erzeugt einen pseudonymisierten Snapshot <name_date>_pseud.sql.gz
              \"delete\"      – löscht einen Snapshot <name_date>.sql.gz
              \"activate\"    – aktiviert einen Snapshot <name_date>.sql.gz, d.h. es wird eine Datenbank für diesen Snapshot angelegt.
-             \"deactivate\"  – deaktiviert einen Snapshot <name_date>.sql.gz, d.h. die Datenbank für diesen Snapshot wird gelöscht.
+             \"deactivate\"  – deaktiviert eine Snapshot-Datenbank. Akzeptiert <name_date> und den von \"list\" ausgegebenen Namen ip_<name_date>.
 
   <name>     beliebiger String (ohne Pfad‑Komponenten), <name> | <name_date>
   --with-pseudonymized
@@ -45,8 +45,10 @@ Beispiele:
   $0 pseudonymize  snapshot_20250929 --chunk-size 10000
                                       → verarbeitet höchstens 10000 Zeilen pro Block
   $0 delete  snapshot_20250929       → löscht   snapshot_20250929.sql.gz
-  $0 activate  snapshot_20250929     → erstellt eine Datenbank 'snapshot_20250929'
-  $0 deactivate  snapshot_20250929   → löscht die Datenbank 'snapshot_20250929'
+  $0 activate  snapshot_20250929     → erstellt die Datenbank 'ip_snapshot_20250929'
+  $0 deactivate  snapshot_20250929   → löscht die Datenbank 'ip_snapshot_20250929'
+  $0 deactivate  ip_snapshot_20250929
+                                      → löscht dieselbe Datenbank
 EOF
 }
 
@@ -124,8 +126,13 @@ file="${name}.sql.gz"
 # Vollständiger Pfad zur Datei
 file_path="${DIR}/${file}"
 
-# Name der Snapshot Datenbank
-db_name="ip_${name}"
+# Name der Snapshot-Datenbank. Bei "deactivate" darf auch der vollständige,
+# von "list" ausgegebene Datenbankname übergeben werden.
+if [[ "$action" == "deactivate" && "$name" == ip_* ]]; then
+    db_name="$name"
+else
+    db_name="ip_${name}"
+fi
 
 toml_file_value() {
     local file_path="$1"
