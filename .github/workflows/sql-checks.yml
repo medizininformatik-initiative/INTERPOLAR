@@ -2,7 +2,15 @@ name: SQL checks
 
 on:
   pull_request:
+    branches:
+      - develop
   push:
+    branches:
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   changes:
@@ -72,13 +80,56 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore successful generated SQL check
+        id: generated-sql-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/generated-sql-drift
+          key: generated-sql-drift-${{ runner.os }}-${{ hashFiles('.github/workflows/sql-checks.yml', 'Dockerfile_R', 'Postgres-cds_hub/generate-sql.sh', 'Postgres-cds_hub/R-initcdstoolchain/**', 'Postgres-cds_hub/sql/template/**', 'Postgres-cds_hub/sql/start.sql', 'Postgres-cds_hub/sql/base/**', 'R-etlutils/**', 'R-cds2db/**', 'R-db2frontend/**', 'R-dataprocessor/**', 'R-cdstoolchain/**', 'tools/check-generated-sql.sh', 'tools/format-sql.sh', 'tools/install-pgformatter.sh') }}
+
       - name: Build R runtime image
+        if: steps.generated-sql-cache.outputs.cache-hit != 'true'
         run: docker build -t interpolar-r -f Dockerfile_R .
 
       - name: Check generated SQL is committed
+        if: steps.generated-sql-cache.outputs.cache-hit != 'true'
         run: |
           docker run --rm \
             -v "${PWD}:/src" \
             -w /src \
             interpolar-r \
             bash -lc 'apt-get update && apt-get install -y perl && tools/install-pgformatter.sh && bash tools/check-generated-sql.sh'
+
+      - name: Mark generated SQL check successful
+        if: steps.generated-sql-cache.outputs.cache-hit != 'true'
+        run: mkdir -p .cache/generated-sql-drift && touch .cache/generated-sql-drift/success
+
+      - name: Cache successful generated SQL check
+        if: steps.generated-sql-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/generated-sql-drift
+          key: ${{ steps.generated-sql-cache.outputs.cache-primary-key }}
+
+  sql-checks-result:
+    name: SQL checks result
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - changes
+      - sql-format
+      - generated-sql-drift
+
+    steps:
+      - name: Verify SQL checks
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          FORMAT_RESULT: ${{ needs.sql-format.result }}
+          GENERATED_RESULT: ${{ needs.generated-sql-drift.result }}
+        run: |
+          for result in "$CHANGES_RESULT" "$FORMAT_RESULT" "$GENERATED_RESULT"; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              echo "A required SQL check did not complete successfully." >&2
+              exit 1
+            fi
+          done
