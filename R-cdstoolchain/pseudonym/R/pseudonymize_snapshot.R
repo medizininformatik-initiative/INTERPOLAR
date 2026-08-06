@@ -106,8 +106,8 @@ pseudonymizationMappingProblemAction <- function(review_report) {
     result <- c(
       result,
       paste0(
-        "- In sheet \"frontend_users\", replace the example rows: KEY must contain ",
-        "the original frontend user names and PSEUDONYM their desired replacements."
+        "- In sheet \"frontend_users\", KEY contains the original frontend user names; ",
+        "enter their desired replacements in PSEUDONYM."
       )
     )
   }
@@ -189,12 +189,19 @@ reviewPseudonymizationRules <- function(
 
 #' Check Snapshot Pseudonymization Prerequisites
 #'
-#' Loads the default snapshot pseudonymization rules, writes their static review
-#' report, and aborts on blocking rule problems. Data-dependent mapping coverage
-#' is checked later by the database pseudonymization run.
+#' Loads the default snapshot pseudonymization rules, writes their review report,
+#' and aborts on blocking rule problems. If a source database connection is
+#' supplied, the function also updates and validates the data-dependent mapping
+#' coverage before a pseudonymized target database is created.
 #'
 #' @param project_root Repository root used to resolve rule sources.
 #' @param input_repo_path TOML-configured input repository directory.
+#' @param source_connection Optional open DBI connection to the restored source
+#'   database.
+#' @param source_schema Optional schema containing source views.
+#' @param source_view_prefix Prefix used for source view names.
+#' @param last_version_suffix Suffix used for last-version source views.
+#' @param tables Optional character vector limiting tables to inspect.
 #' @param review_report_file Optional explicit report path. If `NA`, the report
 #'   is written to `outputLocal/<MODULE>/reports`.
 #' @param log_steps If `TRUE` and module logging is initialized, wrap the
@@ -205,6 +212,11 @@ reviewPseudonymizationRules <- function(
 preflightSnapshotPseudonymization <- function(
   project_root = ".",
   input_repo_path = NULL,
+  source_connection = NULL,
+  source_schema = NULL,
+  source_view_prefix = "v_",
+  last_version_suffix = "_last_version",
+  tables = NULL,
   review_report_file = NA,
   log_steps = TRUE
 ) {
@@ -224,10 +236,18 @@ preflightSnapshotPseudonymization <- function(
   runPseudonymizationLogStep(2L,
     "Review pseudonymization rules",
     {
+      mapping_file <- if (
+        !is.null(input_repo_path) && length(input_repo_path) == 1L &&
+          !is.na(input_repo_path) && nzchar(input_repo_path)
+      ) {
+        getPseudonymMappingFilePath(input_repo_path)
+      } else {
+        NA_character_
+      }
       result[["review_report"]] <- reviewPseudonymizationRules(
         result[["rules"]],
         input_repo_path = input_repo_path,
-        validate_mapping_files = FALSE,
+        validate_mapping_files = !is.na(mapping_file) && file.exists(mapping_file),
         fail_on_review_problems = TRUE,
         write_review_report = TRUE,
         review_report_file = review_report_file
@@ -235,6 +255,50 @@ preflightSnapshotPseudonymization <- function(
     },
     log_steps = log_steps
   )
+
+  if (!is.null(source_connection)) {
+    runPseudonymizationLogStep(2L,
+      "Plan snapshot source relations",
+      {
+        result[["materialization_plan"]] <- getExistingSnapshotMaterializationPlan(
+          source_connection,
+          rules = result[["rules"]],
+          source_schema = source_schema,
+          source_view_prefix = source_view_prefix,
+          last_version_suffix = last_version_suffix,
+          tables = tables
+        )
+      },
+      log_steps = log_steps
+    )
+    runPseudonymizationLogStep(2L,
+      "Prepare and validate pseudonym mapping workbook",
+      {
+        result[["mapping_coverage"]] <- ensurePseudonymMappingCoverage(
+          connection = source_connection,
+          rules = result[["rules"]],
+          materialization_plan = result[["materialization_plan"]],
+          input_repo_path = input_repo_path,
+          source_schema = source_schema
+        )
+      },
+      log_steps = log_steps
+    )
+    runPseudonymizationLogStep(2L,
+      "Validate pseudonym mapping workbook",
+      {
+        result[["review_report"]] <- reviewPseudonymizationRules(
+          result[["rules"]],
+          input_repo_path = input_repo_path,
+          validate_mapping_files = TRUE,
+          fail_on_review_problems = TRUE,
+          write_review_report = TRUE,
+          review_report_file = review_report_file
+        )
+      },
+      log_steps = log_steps
+    )
+  }
 
   result
 }

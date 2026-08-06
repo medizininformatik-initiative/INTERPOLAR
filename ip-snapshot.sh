@@ -242,6 +242,18 @@ drop_database_if_exists() {
     fi
 }
 
+cleanup_failed_pseudonymized_database() {
+    local target_database_name="$1"
+    if ! database_exists "${target_database_name}" ; then
+        return
+    fi
+    echo "Entferne unvollständige pseudonymisierte Ziel-Datenbank '${target_database_name}'..."
+    if ! drop_database_if_exists "${target_database_name}" ; then
+        echo "Fehler: Ziel-Datenbank '${target_database_name}' konnte nicht entfernt werden." >&2
+        echo "Bitte vor einem erneuten Lauf manuell entfernen." >&2
+    fi
+}
+
 ask_before_overwrite_file() {
     local target_file="$1"
     if [[ -e "$target_file" ]]; then
@@ -301,7 +313,10 @@ create_pseudonymized_snapshot() {
     if ! docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymizationPreflight.R ; then
         echo "Fehler: Vorprüfung der Pseudonymisierung fehlgeschlagen."
-        echo "Der Snapshot wurde nicht eingespielt und es wurden keine Build-Datenbanken angelegt."
+        echo "Die Datenbank-Pseudonymisierung wurde nicht gestartet."
+        echo
+        echo "Nach Behebung des Fehlers mit folgendem Befehl fortsetzen:"
+        echo "  ./ip-snapshot.sh pseudonymize ${snapshot_name} --chunk-size ${chunk_size}"
         exit 1
     fi
     echo "Vorprüfung der Pseudonymisierung abgeschlossen."
@@ -375,12 +390,27 @@ create_pseudonymized_snapshot() {
         fi
     fi
 
+    echo "Prüfe Datenbankwerte und Pseudonym-Mapping..."
+    if ! docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
+        Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
+        source-db="${source_database}" ; then
+        cleanup_failed_pseudonymized_database "${target_build_db}"
+        echo "Fehler: Datenabhängige Prüfung des Pseudonym-Mappings fehlgeschlagen."
+        echo "Die vollständig eingespielte Quelldatenbank bleibt für die Fortsetzung erhalten:"
+        echo "  ${source_database}"
+        echo
+        echo "Nach Behebung des Fehlers mit folgendem Befehl fortsetzen:"
+        echo "  ./ip-snapshot.sh pseudonymize ${snapshot_name} --chunk-size ${chunk_size}"
+        exit 1
+    fi
+    echo "Datenbankwerte und Pseudonym-Mapping sind vollständig."
+
     echo "Erzeuge leere temporäre Ziel-Datenbank '${target_build_db}'..."
     if ! prepare_pseudonymized_target_database "${target_build_db}" ; then
         echo "Fehler: Anlegen der temporären Ziel-Datenbank '${target_build_db}' fehlgeschlagen."
-        echo "Bereits angelegte Datenbanken bleiben zur Diagnose erhalten:"
+        cleanup_failed_pseudonymized_database "${target_build_db}"
+        echo "Die Quelldatenbank bleibt für die Fortsetzung erhalten:"
         echo "  ${source_database}"
-        echo "  ${target_build_db}"
         exit 1
     fi
 
@@ -393,9 +423,9 @@ create_pseudonymized_snapshot() {
         echo "Pseudonymisierung abgeschlossen."
     else
         echo "Fehler: Pseudonymisierung fehlgeschlagen."
-        echo "Die beteiligten Datenbanken bleiben zur Diagnose erhalten:"
+        cleanup_failed_pseudonymized_database "${target_build_db}"
+        echo "Die Quelldatenbank bleibt für die Fortsetzung erhalten:"
         echo "  ${source_database}"
-        echo "  ${target_build_db}"
         echo
         echo "Nach Behebung des Fehlers mit folgendem Befehl fortsetzen:"
         echo "  ./ip-snapshot.sh pseudonymize ${snapshot_name} --chunk-size ${chunk_size}"
@@ -413,19 +443,21 @@ create_pseudonymized_snapshot() {
             echo "Datei ${pseudonymized_file_path} existiert, ist jedoch leer -> cleanup."
             rm -f "${pseudonymized_file_path}"
         fi
-        echo "Die beteiligten Datenbanken bleiben zur Diagnose erhalten:"
+        cleanup_failed_pseudonymized_database "${target_build_db}"
+        echo "Die Quelldatenbank bleibt für die Fortsetzung erhalten:"
         echo "  ${source_database}"
-        echo "  ${target_build_db}"
         exit 1
     fi
 
     local pseudonymized_file_checksum
     if ! pseudonymized_file_checksum="$(snapshot_file_checksum "${pseudonymized_file_path}")" ; then
         echo "Fehler: Der Datenstand der pseudonymisierten Snapshot-Datei konnte nicht ermittelt werden."
+        cleanup_failed_pseudonymized_database "${target_build_db}"
         exit 1
     fi
     if ! set_database_snapshot_checksum "${target_build_db}" "${pseudonymized_file_checksum}" ; then
         echo "Fehler: Der Datenstand der pseudonymisierten Datenbank konnte nicht vermerkt werden."
+        cleanup_failed_pseudonymized_database "${target_build_db}"
         exit 1
     fi
 
@@ -433,17 +465,20 @@ create_pseudonymized_snapshot() {
         if ! set_database_read_only "${source_build_db}" ||
             ! rename_database "${source_build_db}" "${source_database_name}" ; then
             echo "Fehler: Die Quelldatenbank konnte nicht als Snapshot-Datenbank beibehalten werden."
+            cleanup_failed_pseudonymized_database "${target_build_db}"
             exit 1
         fi
         source_database="${source_database_name}"
     elif ! set_database_read_only "${source_database}" ; then
         echo "Fehler: Die Quelldatenbank konnte nicht in den Read-only-Modus gesetzt werden."
+        cleanup_failed_pseudonymized_database "${target_build_db}"
         exit 1
     fi
 
     if ! set_database_read_only "${target_build_db}" ||
         ! rename_database "${target_build_db}" "${target_database_name}" ; then
         echo "Fehler: Die pseudonymisierte Zieldatenbank konnte nicht als Snapshot-Datenbank beibehalten werden."
+        cleanup_failed_pseudonymized_database "${target_build_db}"
         exit 1
     fi
 

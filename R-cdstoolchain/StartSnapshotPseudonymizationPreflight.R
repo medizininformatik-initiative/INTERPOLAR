@@ -1,6 +1,6 @@
 library(etlutils)
 
-etlutils::setProcess("SnapshotPseudonymizationPreflight")
+invisible(etlutils::setProcess("SnapshotPseudonymizationPreflight"))
 
 # Change the working directory to the main project directory.
 if (grepl("/cdstoolchain$", getwd())) setwd("../..")
@@ -33,7 +33,7 @@ dataprocessor_config <- etlutils::initModule(
 etlutils::startModule(dataprocessor_config, hide_value_pattern = "TOKEN|PASSWORD|SALT")
 
 status <- 0L
-tryCatch(
+invisible(tryCatch(
   {
     pseudonym::preflightSnapshotPseudonymization(
       project_root = command_arguments[["project_root"]],
@@ -46,6 +46,6 @@ tryCatch(
     status <<- 1L
     etlutils::catErrorMessage(conditionMessage(error))
   }
-)
+))
 
 quit(save = "no", status = status)

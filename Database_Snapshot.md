@@ -133,11 +133,13 @@ gleichnamige Snapshot-Datenbank.
 
 1. Die normale Snapshot-Datei wird in eine temporäre Quelldatenbank eingespielt.
    Das kann bei großen Snapshot-Dateien lange dauern.
-2. Das Script erstellt eine temporäre Zieldatenbank und schreibt die
+2. Das Script ergänzt und prüft `pseudo_mapping.xlsx`. Fehlende Pseudonyme
+   müssen vor der Fortsetzung eingetragen werden.
+3. Das Script erstellt eine temporäre Zieldatenbank und schreibt die
    pseudonymisierten Daten hinein.
-3. Die Zieldatenbank wird als neue Snapshot-Datei mit dem Suffix `_pseud`
+4. Die Zieldatenbank wird als neue Snapshot-Datei mit dem Suffix `_pseud`
    gespeichert.
-4. Die normale und die pseudonymisierte Snapshot-Datenbank werden in PostgreSQL
+5. Die normale und die pseudonymisierte Snapshot-Datenbank werden in PostgreSQL
    innerhalb des Docker-Compose-Service `cds_hub` schreibgeschützt unter ihren
    endgültigen Namen bereitgestellt. Ein zusätzliches `activate` ist nicht
    nötig.
@@ -157,8 +159,9 @@ gleichnamige Snapshot-Datenbank.
 - Ergänzt das Script `pseudo_mapping.xlsx`, die leeren `PSEUDONYM`-Zellen
   ausfüllen und denselben Befehl erneut starten.
 - Die normale Snapshot-Datei bleibt bei einem Fehler erhalten.
-- Temporäre Datenbanken können zur Diagnose und für einen erneuten Lauf
-  bestehen bleiben.
+- Die vollständig eingespielte Quelldatenbank bleibt für den erneuten Lauf
+  erhalten.
+- Eine unvollständige pseudonymisierte Zieldatenbank wird entfernt.
 
 ## Technische Details
 
@@ -242,10 +245,10 @@ Nach dem Einspielen der Quelldatenbank ergänzt das Script fehlende Werte in
 Ausfüllen kann derselbe Befehl erneut gestartet werden; die bereits eingespielte
 Quelldatenbank wird wiederverwendet.
 
-Bei späteren Fehlern bleiben die Quelldatenbank und die teilweise erzeugte
-Zieldatenbank zur Diagnose erhalten. Beim nächsten Lauf wird die Quelldatenbank
-nur wiederverwendet, wenn ihr vermerkter SHA-256-Wert zur normalen
-Snapshot-Datei passt. Die Zieldatenbank wird neu erstellt.
+Bei späteren Fehlern bleibt die Quelldatenbank erhalten. Beim nächsten Lauf wird
+sie nur wiederverwendet, wenn ihr vermerkter SHA-256-Wert zur normalen
+Snapshot-Datei passt. Eine unvollständige Zieldatenbank wird entfernt und bei
+der Fortsetzung neu erstellt.
 
 Nach einem erfolgreichen Lauf werden die normale und die pseudonymisierte
 Snapshot-Datenbank in PostgreSQL innerhalb des Docker-Compose-Service `cds_hub`

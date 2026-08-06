@@ -261,6 +261,9 @@ writeSnapshotPostprocessingReport <- function(summary, file_name = NA) {
 #' @param postprocessing_report_file Optional explicit snapshot postprocessing
 #'   report path. If `NA`, the report is written to
 #'   `outputLocal/<MODULE>/reports`.
+#' @param mapping_preflight_completed Whether mapping coverage and workbook
+#'   validation already completed against the same source database immediately
+#'   before this call.
 #' @param log_steps If `TRUE` and module logging is initialized, wrap major
 #'   steps in the existing `etlutils::runLevel...` logging.
 #'
@@ -285,6 +288,7 @@ pseudonymizeSnapshotDatabase <- function(
   review_report_file = NA,
   issue_report_file = NA,
   postprocessing_report_file = NA,
+  mapping_preflight_completed = FALSE,
   log_steps = TRUE
 ) {
   chunk_size <- validateSnapshotChunkSize(chunk_size)
@@ -336,34 +340,36 @@ pseudonymizeSnapshotDatabase <- function(
     log_steps = log_steps
   )
 
-  runPseudonymizationLogStep(2L,
-    "Prepare and validate pseudonym mapping workbook",
-    {
-      result[["mapping_coverage"]] <- ensurePseudonymMappingCoverage(
-        connection = source_connection,
-        rules = result[["rules"]],
-        materialization_plan = result[["materialization_plan"]],
-        input_repo_path = input_repo_path,
-        source_schema = source_schema
-      )
-    },
-    log_steps = log_steps
-  )
+  if (!isTRUE(mapping_preflight_completed)) {
+    runPseudonymizationLogStep(2L,
+      "Prepare and validate pseudonym mapping workbook",
+      {
+        result[["mapping_coverage"]] <- ensurePseudonymMappingCoverage(
+          connection = source_connection,
+          rules = result[["rules"]],
+          materialization_plan = result[["materialization_plan"]],
+          input_repo_path = input_repo_path,
+          source_schema = source_schema
+        )
+      },
+      log_steps = log_steps
+    )
 
-  runPseudonymizationLogStep(2L,
-    "Validate pseudonym mapping workbook",
-    {
-      result[["review_report"]] <- reviewPseudonymizationRules(
-        result[["rules"]],
-        input_repo_path = input_repo_path,
-        validate_mapping_files = TRUE,
-        fail_on_review_problems = TRUE,
-        write_review_report = TRUE,
-        review_report_file = review_report_file
-      )
-    },
-    log_steps = log_steps
-  )
+    runPseudonymizationLogStep(2L,
+      "Validate pseudonym mapping workbook",
+      {
+        result[["review_report"]] <- reviewPseudonymizationRules(
+          result[["rules"]],
+          input_repo_path = input_repo_path,
+          validate_mapping_files = TRUE,
+          fail_on_review_problems = TRUE,
+          write_review_report = TRUE,
+          review_report_file = review_report_file
+        )
+      },
+      log_steps = log_steps
+    )
+  }
 
   snapshotEnsureSchema(target_connection, target_table_schema)
   medication_resolution_tables <- list()
