@@ -396,6 +396,9 @@ create_pseudonymized_snapshot() {
         echo "Die beteiligten Datenbanken bleiben zur Diagnose erhalten:"
         echo "  ${source_database}"
         echo "  ${target_build_db}"
+        echo
+        echo "Nach Behebung des Fehlers mit folgendem Befehl fortsetzen:"
+        echo "  ./ip-snapshot.sh pseudonymize ${snapshot_name} --chunk-size ${chunk_size}"
         exit 1
     fi
 

@@ -77,7 +77,7 @@ connectSnapshotDatabase <- function(dbname, user, password) {
 source_connection <- NULL
 target_connection <- NULL
 status <- 0L
-tryCatch(
+invisible(tryCatch(
   {
     source_connection <- connectSnapshotDatabase(
       dbname = command_arguments[["source_db"]],
@@ -144,7 +144,7 @@ tryCatch(
       DBI::dbDisconnect(target_connection)
     }
   }
-)
+))
 
 if (!interactive()) {
   quit(status = status, save = "no")
