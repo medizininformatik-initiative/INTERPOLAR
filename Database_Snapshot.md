@@ -153,7 +153,7 @@ gleichnamige Snapshot-Datenbank.
 
 ## Verhalten bei Fehlern
 
-- Die Fehlermeldung und die erzeugten Reports prüfen.
+- Die Fehlermeldung prüfen.
 - Ergänzt das Script `pseudo_mapping.xlsx`, die leeren `PSEUDONYM`-Zellen
   ausfüllen und denselben Befehl erneut starten.
 - Die normale Snapshot-Datei bleibt bei einem Fehler erhalten.
@@ -170,12 +170,13 @@ enthalten die für Auswertungen relevanten Schemata `db_log` und
 materialisiert. `db2dataprocessor_out` enthält durchgereichte Views wie
 `v_<table>` und `v_<table>_last_version`.
 
-Aufgenommen werden Tabellen, die über die Pseudonymisierungsquellen oder Table
-Descriptions für die pseudonymisierte Snapshot-Datenbank ausgewählt sind.
-Innerhalb dieser Tabellen bleiben alle Spalten der Originaltabellen erhalten.
-Spalten ohne Regel werden unverändert übernommen. Technische Originalspalten
-wie `hash_index_col`, RAW-Referenzen und Einfügezeitpunkte werden nicht
-entfernt. Zeilen werden nicht mit `unique()` zusammengefasst.
+Aufgenommen werden Tabellen, die über die maßgeblichen Table Descriptions für
+die pseudonymisierte Snapshot-Datenbank ausgewählt sind. Innerhalb dieser
+Tabellen bleiben alle Spalten der Originaltabellen erhalten. Für beschriebene
+Spalten muss eine Regel angegeben sein; `keep` übernimmt eine Spalte
+ausdrücklich unverändert. Technische Originalspalten wie `hash_index_col`,
+RAW-Referenzen und Einfügezeitpunkte werden nicht entfernt. Zeilen werden nicht
+mit `unique()` zusammengefasst.
 
 ### Verarbeitung großer Tabellen
 
@@ -185,16 +186,25 @@ geschrieben. Erst danach wird der nächste Chunk gelesen. Der R-Speicherbedarf
 hängt dadurch von der Chunkgröße und nicht von der Gesamtgröße einer Tabelle
 oder der Snapshot-Datenbank ab.
 
-Kontrollsummen und Enrichment-Reports werden über alle Chunks hinweg
+Kontrollsummen und Prüfergebnisse werden über alle Chunks hinweg
 zusammengeführt.
 
 ### Pseudonymisierungsregeln
 
-Für jede Spalte legt `PSEUDONYMIZATION_RULE` in der erzeugten Table Description
-fest, wie sie behandelt wird. Die Regeln für FHIR-Daten werden aus der
-mitgelieferten DIMP-DUP-Basis-YAML abgeleitet. Regeln für weitere Tabellen und
-zusätzliche Spalten der Snapshot-Datenbank werden in den zugehörigen Table
-Descriptions gepflegt.
+Für jede beschriebene Spalte legt `PSEUDONYMIZATION_RULE` fest, wie sie
+behandelt wird. Maßgeblich sind folgende Tabellenblätter:
+
+- `table_description` und `snapshot_extension` in
+  `R-cds2db/cds2db/inst/extdata/Table_Description.xlsx`
+- `table_description` in
+  `R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx`
+- `frontend_table_description` in
+  `R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx`
+
+Die FHIR-Regeln in `Table_Description.xlsx` werden aus der mitgelieferten
+DIMP-DUP-Basis-YAML erzeugt. Nicht von der YAML erfasste Spalten erhalten dabei
+ausdrücklich die Regel `keep`. Leere Regeln sind ungültig. Die Dateien werden
+vom INTERPOLAR-Team gepflegt.
 
 `cryptoHash` und `pseudonymize(...)` werden bei der DB-Pseudonymisierung als
 deterministischer SHA-256-Hash ohne Salt umgesetzt. Der gleiche Originalwert
@@ -224,11 +234,8 @@ aber nicht leer sein. Doppelte Keys sind nicht erlaubt.
 ### Vorprüfung und Wiederaufnahme
 
 Vor der Pseudonymisierung prüft das Script die Regeln, Spaltendefinitionen und
-Mapping-Voraussetzungen. Der vollständige Prüfbericht steht unter:
-
-```text
-outputLocal/snapshot_pseudonymization_preflight*/reports/pseudonymization_rule_review.xlsx
-```
+Mapping-Voraussetzungen. Bei einem Problem bricht es mit einer Fehlermeldung
+ab.
 
 Nach dem Einspielen der Quelldatenbank ergänzt das Script fehlende Werte in
 `INPUT_REPO_PATH/pseudo_mapping.xlsx` und bricht ab. Nach dem manuellen
@@ -273,39 +280,36 @@ der pseudonymisierten Snapshot-Datenbank:
   Paare erzeugen entsprechend mehrere Ausgabezeilen; Duplikate werden entfernt.
   Auch zyklische Referenzen werden sicher beendet. Fehlende referenzierte
   Medications und Referenzketten ohne erreichbaren Code bleiben erhalten und
-  erscheinen im Issue-Report.
+  werden als Prüfproblem erfasst.
 
 Das Alter wird in abgeschlossenen Jahren berechnet. Die Berechnung erfolgt nur,
 wenn das Geburtsdatum am oder nach dem 01.01.1910 liegt und das jeweilige
 Aufnahme- beziehungsweise Encounter-Datum nicht vor dem Geburtsdatum liegt.
-Andernfalls bleibt das Altersfeld leer und der Grund wird im Issue-Report
-protokolliert. Neu ergänzte Altersspalten stehen am Ende der Tabelle. Die bereits
-vorhandene Spalte `fall_bmi` wird nicht verschoben.
+Andernfalls bleibt das Altersfeld leer und der Grund wird als Prüfproblem
+protokolliert. Neu ergänzte Altersspalten stehen am Ende der Tabelle. Die
+bereits vorhandene Spalte `fall_bmi` wird nicht verschoben.
 
 ### Reports
 
-Der Pseudonymisierungslauf schreibt Kontroll- und Freigabereports unter:
+Der Pseudonymisierungslauf schreibt lokale Prüfberichte in diese Verzeichnisse:
 
 ```text
-outputLocal/snapshot_pseudonymization*/reports
+outputLocal/snapshot_pseudonymization_preflight/reports
+outputLocal/snapshot_pseudonymization/reports
 ```
 
 Die Reports werden nicht in die pseudonymisierte Snapshot-Datei aufgenommen
 und sind kein Bestandteil der auswertbaren, pseudonymisierten
 Snapshot-Datenbank:
 
-- `pseudonymization_rule_review.xlsx` enthält die geladenen Regeln, TODOs,
-  implizite Keep-Regeln, nicht unterstützte Regeln, doppelte Spalten und
-  Mapping-Regeln.
+- `pseudonymization_rule_review.xlsx` enthält die technische Prüfung der
+  geladenen Regeln. Das Tabellenblatt `README` erklärt die weiteren
+  Tabellenblätter. Regelprobleme werden vom INTERPOLAR-Team behoben.
 - `snapshot_pseudonymization_issues.xlsx` ist der Fehlerbericht für fehlende
   direkt oder transitiv referenzierte `Medication`-Ressourcen, Referenzketten
-  ohne erreichbares Code-/System-Paar und nicht berechenbare Alterswerte. Für
-  Altersprobleme enthält er die verfügbaren REDCap-, FHIR-, Fall- und
-  Encounter-Identifikatoren sowie Geburts- und Referenzdatum. Der Report enthält
-  exakte Summen und je Prüfbereich höchstens 1.000 Beispiele. Die Detailzeilen
-  enthalten nicht pseudonymisierte Identifikatoren für die lokale Fehlersuche
-  und dürfen deshalb nicht zusammen mit der pseudonymisierten Snapshot-Datei
-  weitergegeben werden.
+  ohne erreichbares Code-/System-Paar und nicht berechenbare Alterswerte. Er
+  kann nicht pseudonymisierte Identifikatoren für die lokale Fehlersuche
+  enthalten und darf deshalb nicht weitergegeben werden.
 - `snapshot_postprocessing_report.xlsx` enthält die technische Zusammenfassung,
   insbesondere Zeilen- und Spaltenzahlen.
 
