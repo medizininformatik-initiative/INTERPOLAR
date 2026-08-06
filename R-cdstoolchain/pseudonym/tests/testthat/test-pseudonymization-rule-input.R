@@ -36,7 +36,7 @@ test_that("loadPseudonymizationRules loads table descriptions and snapshot exten
       COLUMN_NAME = c("obs_id", "obs_value"),
       COLUMN_DESCRIPTION = c("Observation id", "Observation value"),
       COLUMN_TYPE = c("varchar", "double precision"),
-      PSEUDONYMIZATION_RULE = c("cryptoHash", NA_character_)
+      PSEUDONYMIZATION_RULE = c("cryptoHash", "keep")
     ),
     "table_description"
   )
@@ -81,7 +81,7 @@ test_that("loadPseudonymizationRules loads table descriptions and snapshot exten
     rules[rules$COLUMN_NAME == "obs_value", ][["PSEUDONYMIZATION_RULE"]],
     "keep"
   )
-  expect_true(rules[rules$COLUMN_NAME == "obs_value", ][["IMPLICIT_KEEP"]])
+  expect_false(rules[rules$COLUMN_NAME == "obs_value", ][["EMPTY_RULE"]])
   expect_equal(
     rules[rules$COLUMN_NAME == "medreq_medication_code", ][["SOURCE_TYPE"]],
     "snapshot_extension"
@@ -107,7 +107,7 @@ test_that("loadPseudonymizationRules keeps snapshot-only TODO markers visible", 
 
   expect_equal(rules$SOURCE_TYPE, "snapshot_extension")
   expect_equal(rules$PSEUDONYMIZATION_RULE, "### TODO: NEW COLUMN ###")
-  expect_false(rules$IMPLICIT_KEEP)
+  expect_false(rules$EMPTY_RULE)
 })
 
 test_that("default snapshot rule sources name all current rule workbooks", {
@@ -171,9 +171,10 @@ test_that("default snapshot rule sources can load current repository files", {
     unique(rules$SOURCE),
     c("fhir", "dataprocessor_submodules", "frontend", "snapshot_extension")
   )
+  expect_false(any(rules$EMPTY_RULE))
 })
 
-test_that("rule review report flags todo implicit keep unsupported and duplicates", {
+test_that("rule review report flags empty todo unsupported and duplicate rules", {
   rules <- data.table::data.table(
     SOURCE = "manual",
     SOURCE_TYPE = "table_description",
@@ -182,19 +183,21 @@ test_that("rule review report flags todo implicit keep unsupported and duplicate
     TABLE_OR_RESOURCE = "frontend",
     COLUMN_NAME = c("id", "id", "note", "new_col"),
     PSEUDONYMIZATION_RULE_RAW = c(NA_character_, "blur", "keep", "### TODO: NEW COLUMN ###"),
-    PSEUDONYMIZATION_RULE = c("keep", "blur", "keep", "### TODO: NEW COLUMN ###"),
-    IMPLICIT_KEEP = c(TRUE, FALSE, FALSE, FALSE)
+    PSEUDONYMIZATION_RULE = c(NA_character_, "blur", "keep", "### TODO: NEW COLUMN ###"),
+    EMPTY_RULE = c(TRUE, FALSE, FALSE, FALSE)
   )
 
   report <- getPseudonymizationRuleReviewReport(rules)
 
   expect_equal(report$summary$N, 4L)
-  expect_equal(report$summary$IMPLICIT_KEEP_N, 1L)
+  expect_equal(report$summary$EMPTY_RULE_N, 1L)
+  expect_equal(report$empty_rules$COLUMN_NAME, "id")
   expect_equal(report$summary$TODO_N, 1L)
   expect_equal(nrow(report$unsupported_rules), 2L)
   expect_setequal(report$unsupported_rules$RULE_PART, c("blur", "### TODO: NEW COLUMN ###"))
   expect_equal(report$duplicate_columns$COLUMN_NAME, "id")
   expect_equal(report$duplicate_columns$N, 2L)
+  expect_true(pseudonymizationReviewHasBlockingProblems(report))
 })
 
 test_that("rule review report validates pseudonym mapping sheets", {
@@ -217,7 +220,7 @@ test_that("rule review report validates pseudonym mapping sheets", {
     COLUMN_NAME = "meda_anlage",
     PSEUDONYMIZATION_RULE_RAW = 'pseudonym(sheet = "frontend_users")',
     PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "frontend_users")',
-    IMPLICIT_KEEP = FALSE
+    EMPTY_RULE = FALSE
   )
 
   report <- getPseudonymizationRuleReviewReport(rules, input_repo_path = input_repo_path)
@@ -239,7 +242,7 @@ test_that("rule review report reports missing mapping input path", {
     COLUMN_NAME = "meda_anlage",
     PSEUDONYMIZATION_RULE_RAW = 'pseudonym("frontend_users")',
     PSEUDONYMIZATION_RULE = 'pseudonym("frontend_users")',
-    IMPLICIT_KEEP = FALSE
+    EMPTY_RULE = FALSE
   )
 
   report <- getPseudonymizationRuleReviewReport(rules)
@@ -260,7 +263,7 @@ test_that("rule review report can be written as Excel workbook", {
     COLUMN_NAME = "meda_anlage",
     PSEUDONYMIZATION_RULE_RAW = 'pseudonym("frontend_users")',
     PSEUDONYMIZATION_RULE = 'pseudonym("frontend_users")',
-    IMPLICIT_KEEP = FALSE
+    EMPTY_RULE = FALSE
   )
   file_name <- tempfile(fileext = ".xlsx")
 
@@ -271,9 +274,10 @@ test_that("rule review report can be written as Excel workbook", {
   expect_setequal(
     names(workbook),
     c(
+      "README",
       "summary",
       "todo_rules",
-      "implicit_keep_rules",
+      "empty_rules",
       "unsupported_rules",
       "duplicate_columns",
       "mapping_rules"
@@ -293,7 +297,7 @@ test_that("rule review report defaults to outputLocal reports directory", {
     COLUMN_NAME = "meda_anlage",
     PSEUDONYMIZATION_RULE_RAW = "keep",
     PSEUDONYMIZATION_RULE = "keep",
-    IMPLICIT_KEEP = FALSE
+    EMPTY_RULE = FALSE
   )
   old_module_dirs <- if (exists("MODULE_DIRS", envir = .GlobalEnv)) {
     get("MODULE_DIRS", envir = .GlobalEnv)

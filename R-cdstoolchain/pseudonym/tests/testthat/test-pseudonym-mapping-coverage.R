@@ -14,7 +14,7 @@ mappingCoverageTestRules <- function() {
       'pseudonym(sheet = "wards")',
       'pseudonym(sheet = "patients")'
     ),
-    IMPLICIT_KEEP = FALSE
+    EMPTY_RULE = FALSE
   )
 }
 

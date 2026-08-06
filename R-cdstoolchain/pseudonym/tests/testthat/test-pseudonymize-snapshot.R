@@ -86,7 +86,7 @@ test_that("blocking mapping review error reports deduplicated details and workbo
     FHIR_EXPRESSION = NA_character_,
     PSEUDONYMIZATION_RULE_RAW = 'pseudonym(sheet = "frontend_users")',
     PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "frontend_users")',
-    IMPLICIT_KEEP = FALSE
+    EMPTY_RULE = FALSE
   )
   report_file <- tempfile(fileext = ".xlsx")
 

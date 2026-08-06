@@ -38,8 +38,8 @@ test_that("setFhirPseudonymizationRules maps explicit and default keep semantics
     "cryptoHash",
     "generalize(format = \"YYYY-MM\")",
     "redact",
-    NA_character_,
-    NA_character_
+    "keep",
+    "keep"
   ))
 })
 
@@ -295,7 +295,7 @@ test_that("nodesByType uses expansion provenance instead of matching element nam
 
   expect_equal(
     result$PSEUDONYMIZATION_RULE,
-    c("redact", NA_character_, "redact", NA_character_)
+    c("redact", "keep", "redact", "keep")
   )
 })
 
@@ -320,7 +320,7 @@ test_that("nodesByType provenance supports root-level expanded node types", {
 
   result <- setFhirPseudonymizationRules(table_description, yaml_file)
 
-  expect_equal(result$PSEUDONYMIZATION_RULE, c("redact", NA_character_))
+  expect_equal(result$PSEUDONYMIZATION_RULE, c("redact", "keep"))
 })
 
 test_that("rule report includes summary and contextual conflicts", {

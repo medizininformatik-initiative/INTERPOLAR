@@ -1,5 +1,6 @@
 pseudonymizationReviewHasBlockingProblems <- function(review_report) {
-  nrow(review_report[["todo_rules"]]) > 0 ||
+  nrow(review_report[["empty_rules"]]) > 0 ||
+    nrow(review_report[["todo_rules"]]) > 0 ||
     nrow(review_report[["unsupported_rules"]]) > 0 ||
     nrow(review_report[["duplicate_columns"]]) > 0 ||
     any(isPseudonymMappingStatusProblem(review_report[["mapping_rules"]][["MAPPING_STATUS"]]))
@@ -7,6 +8,7 @@ pseudonymizationReviewHasBlockingProblems <- function(review_report) {
 
 summarizePseudonymizationReviewProblems <- function(review_report) {
   c(
+    paste0("Empty rules: ", nrow(review_report[["empty_rules"]])),
     paste0("TODO rules: ", nrow(review_report[["todo_rules"]])),
     paste0("Unsupported rules: ", nrow(review_report[["unsupported_rules"]])),
     paste0("Duplicate columns: ", nrow(review_report[["duplicate_columns"]])),
@@ -127,7 +129,8 @@ pseudonymizationReviewReportHint <- function(write_review_report, review_report_
   }
   paste0(
     "Full details: ", report_file,
-    " (relevant sheets: todo_rules, unsupported_rules, duplicate_columns, mapping_rules)."
+    " (relevant sheets: empty_rules, todo_rules, unsupported_rules, ",
+    "duplicate_columns, mapping_rules)."
   )
 }
 
