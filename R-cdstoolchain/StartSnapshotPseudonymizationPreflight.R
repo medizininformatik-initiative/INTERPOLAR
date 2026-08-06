@@ -30,7 +30,8 @@ dataprocessor_config <- etlutils::initModule(
   ),
   mandatory_parameters = c("INPUT_REPO_PATH", "PATH_TO_DB_CONFIG_TOML")
 )
-etlutils::startModule(dataprocessor_config, hide_value_pattern = "TOKEN|PASSWORD|SALT")
+invisible(etlutils::createDIRS("snapshot_pseudonymization_preflight"))
+invisible(etlutils::createClock())
 
 status <- 0L
 invisible(tryCatch(

@@ -192,3 +192,55 @@ test_that("blocking mapping review error reports deduplicated details and workbo
   expect_match(message, "original frontend user names", fixed = TRUE)
   expect_match(message, report_file, fixed = TRUE)
 })
+
+test_that("incomplete mapping error only reports the required user action", {
+  input_repo_path <- tempfile("incomplete-mapping-")
+  dir.create(input_repo_path)
+  mapping_file <- file.path(input_repo_path, "pseudo_mapping.xlsx")
+  etlutils::writeExcelFile(
+    list(frontend_users = data.table::data.table(
+      KEY = "site_admin",
+      PSEUDONYM = NA_character_
+    )),
+    mapping_file,
+    with_column_names = TRUE
+  )
+  rules <- data.table::data.table(
+    SOURCE = "frontend",
+    SOURCE_TYPE = "table_description",
+    SOURCE_FILE = "Frontend_Table_Description.xlsx",
+    SOURCE_SHEET = "frontend_table_description",
+    TABLE_NAME = "frontend",
+    RESOURCE = NA_character_,
+    TABLE_OR_RESOURCE = "frontend",
+    COLUMN_NAME = "meda_anlage",
+    COLUMN_DESCRIPTION = "Frontend user",
+    COLUMN_TYPE = "varchar",
+    FHIR_EXPRESSION = NA_character_,
+    PSEUDONYMIZATION_RULE_RAW = 'pseudonym(sheet = "frontend_users")',
+    PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "frontend_users")',
+    EMPTY_RULE = FALSE
+  )
+
+  error <- tryCatch(
+    reviewPseudonymizationRules(
+      rules,
+      input_repo_path = input_repo_path,
+      validate_mapping_files = TRUE,
+      fail_on_review_problems = TRUE,
+      write_review_report = FALSE,
+      review_report_file = NA_character_
+    ),
+    error = identity
+  )
+  message <- conditionMessage(error)
+
+  expect_match(message, "Pseudonymisierungsmapping muss ausgefüllt werden", fixed = TRUE)
+  expect_match(message, mapping_file, fixed = TRUE)
+  expect_match(message, '"frontend_users"', fixed = TRUE)
+  expect_match(message, "Spalte PSEUDONYM", fixed = TRUE)
+  expect_false(grepl("Empty rules", message, fixed = TRUE))
+  expect_false(grepl("TODO rules", message, fixed = TRUE))
+  expect_false(grepl("Mapping problems", message, fixed = TRUE))
+  expect_false(grepl("Full details", message, fixed = TRUE))
+})

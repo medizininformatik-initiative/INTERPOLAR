@@ -7,15 +7,51 @@ pseudonymizationReviewHasBlockingProblems <- function(review_report) {
 }
 
 summarizePseudonymizationReviewProblems <- function(review_report) {
-  c(
-    paste0("Empty rules: ", nrow(review_report[["empty_rules"]])),
-    paste0("TODO rules: ", nrow(review_report[["todo_rules"]])),
-    paste0("Unsupported rules: ", nrow(review_report[["unsupported_rules"]])),
-    paste0("Duplicate columns: ", nrow(review_report[["duplicate_columns"]])),
+  counts <- c(
+    "Empty rules" = nrow(review_report[["empty_rules"]]),
+    "TODO rules" = nrow(review_report[["todo_rules"]]),
+    "Unsupported rules" = nrow(review_report[["unsupported_rules"]]),
+    "Duplicate columns" = nrow(review_report[["duplicate_columns"]]),
+    "Mapping problems" = sum(isPseudonymMappingStatusProblem(
+      review_report[["mapping_rules"]][["MAPPING_STATUS"]]
+    ))
+  )
+  counts <- counts[counts > 0]
+  paste0(names(counts), ": ", counts)
+}
+
+getIncompletePseudonymMappingSheets <- function(review_report) {
+  has_other_problems <- nrow(review_report[["empty_rules"]]) > 0 ||
+    nrow(review_report[["todo_rules"]]) > 0 ||
+    nrow(review_report[["unsupported_rules"]]) > 0 ||
+    nrow(review_report[["duplicate_columns"]]) > 0
+  mapping_rules <- review_report[["mapping_rules"]]
+  problem_rows <- isPseudonymMappingStatusProblem(mapping_rules[["MAPPING_STATUS"]])
+  mapping_problems <- mapping_rules[which(problem_rows), ]
+  incomplete_rows <- mapping_problems[["MAPPING_STATUS"]] == "invalid_sheet" &
+    grepl("empty KEY or PSEUDONYM", mapping_problems[["ERROR"]], fixed = TRUE)
+  incomplete_rows[is.na(incomplete_rows)] <- FALSE
+  if (
+    has_other_problems || nrow(mapping_problems) == 0 ||
+    !all(incomplete_rows)
+  ) {
+    return(character())
+  }
+  sort(unique(mapping_problems[["SHEET_NAME"]]))
+}
+
+getIncompletePseudonymMappingMessage <- function(sheets, input_repo_path) {
+  mapping_file <- getPseudonymMappingFilePath(input_repo_path)
+  sheet_text <- paste(sprintf('"%s"', sheets), collapse = ", ")
+  paste(
+    "Pseudonymisierungsmapping muss ausgefüllt werden.",
+    paste0("Excel-Datei: ", mapping_file),
+    paste0("Betroffene Blätter: ", sheet_text),
     paste0(
-      "Mapping problems: ",
-      sum(isPseudonymMappingStatusProblem(review_report[["mapping_rules"]][["MAPPING_STATUS"]]))
-    )
+      "Öffne die Excel-Datei und fülle in diesen Blättern alle leeren Zellen ",
+      "der Spalte PSEUDONYM aus."
+    ),
+    sep = "\n"
   )
 }
 
@@ -136,9 +172,17 @@ pseudonymizationReviewReportHint <- function(write_review_report, review_report_
 
 getPseudonymizationReviewErrorMessage <- function(
   review_report,
+  input_repo_path,
   write_review_report,
   review_report_file
 ) {
+  incomplete_mapping_sheets <- getIncompletePseudonymMappingSheets(review_report)
+  if (length(incomplete_mapping_sheets) > 0) {
+    return(getIncompletePseudonymMappingMessage(
+      incomplete_mapping_sheets,
+      input_repo_path
+    ))
+  }
   paste(
     c(
       "Pseudonymization rule review contains blocking problems:",
@@ -179,6 +223,7 @@ reviewPseudonymizationRules <- function(
     stop(
       getPseudonymizationReviewErrorMessage(
         review_report,
+        input_repo_path,
         write_review_report,
         review_report_file
       )

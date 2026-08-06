@@ -312,10 +312,7 @@ create_pseudonymized_snapshot() {
     echo "Prüfe Pseudonymisierungsregeln und Mapping-Dateien..."
     if ! docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymizationPreflight.R ; then
-        echo "Fehler: Vorprüfung der Pseudonymisierung fehlgeschlagen."
-        echo "Die Datenbank-Pseudonymisierung wurde nicht gestartet."
-        echo
-        echo "Nach Behebung des Fehlers mit folgendem Befehl fortsetzen:"
+        echo "Danach fortsetzen:"
         echo "  ./ip-snapshot.sh pseudonymize ${snapshot_name} --chunk-size ${chunk_size}"
         exit 1
     fi
@@ -395,11 +392,10 @@ create_pseudonymized_snapshot() {
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
         source-db="${source_database}" ; then
         cleanup_failed_pseudonymized_database "${target_build_db}"
-        echo "Fehler: Datenabhängige Prüfung des Pseudonym-Mappings fehlgeschlagen."
         echo "Die vollständig eingespielte Quelldatenbank bleibt für die Fortsetzung erhalten:"
         echo "  ${source_database}"
         echo
-        echo "Nach Behebung des Fehlers mit folgendem Befehl fortsetzen:"
+        echo "Danach fortsetzen:"
         echo "  ./ip-snapshot.sh pseudonymize ${snapshot_name} --chunk-size ${chunk_size}"
         exit 1
     fi
