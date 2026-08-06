@@ -43,6 +43,28 @@ test_that("setFhirPseudonymizationRules maps explicit and default keep semantics
   ))
 })
 
+test_that("setFhirPseudonymizationRules leaves structural rows empty", {
+  yaml_file <- tempfile(fileext = ".yaml")
+  writeLines(c(
+    "---",
+    "fhirPathRules:",
+    "  - path: Resource.id",
+    "    method: cryptoHash"
+  ), yaml_file)
+
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA_character_, NA_character_),
+    COLUMN_NAME = c("pat_id", "pat_gender", NA_character_),
+    FHIR_EXPRESSION = c("id", "gender", NA_character_),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+
+  result <- setFhirPseudonymizationRules(table_description, yaml_file)
+
+  expect_equal(result$PSEUDONYMIZATION_RULE, c("cryptoHash", "keep", NA_character_))
+})
+
 test_that("setFhirPseudonymizationRules accepts top-level YAML rule lists", {
   yaml_file <- tempfile(fileext = ".yaml")
   writeLines(c(

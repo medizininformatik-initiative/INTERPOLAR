@@ -694,9 +694,9 @@ extractFhirPathRulesFromYaml <- function(yaml_config) {
 #' Add Pseudonymization Rules to a FHIR Table Description
 #'
 #' Adds a `PSEUDONYMIZATION_RULE` column to an expanded FHIR table description.
-#' Rules are derived from a FHIR pseudonymizer YAML file. Rows without any match
-#' receive an explicit `keep` rule, which represents the YAML default of leaving
-#' unmatched values unchanged.
+#' Rules are derived from a FHIR pseudonymizer YAML file. Column rows without
+#' any match receive an explicit `keep` rule, which represents the YAML default
+#' of leaving unmatched values unchanged. Structural rows remain empty.
 #'
 #' @param table_description Expanded FHIR table description as a data.table.
 #' @param yaml_path Path to a FHIR pseudonymizer YAML file. Defaults to the
@@ -728,7 +728,10 @@ setFhirPseudonymizationRules <- function(
   overridden <- getOverriddenPseudonymizationCandidates(candidates, selected)
   yaml_rule_matches <- buildFhirYamlRuleMatches(yaml_rules, candidates)
 
-  selected_rules <- rep("keep", nrow(table_description))
+  selected_rules <- rep(NA_character_, nrow(table_description))
+  column_rows <- !is.na(table_description[["COLUMN_NAME"]]) &
+    nzchar(trimws(table_description[["COLUMN_NAME"]]))
+  selected_rules[column_rows] <- "keep"
   if (nrow(selected) > 0) {
     selected_rules[selected[["row_index"]]] <- selected[["pseudonymization_rule"]]
   }
