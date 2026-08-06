@@ -85,6 +85,105 @@ test_that("No parameters provided", {
   expect_equal(fhirsearchCombineParams(), "")
 })
 
+########################
+# fhirsearchLogRequest #
+########################
+
+test_that("fhirsearchLogRequest can write a request without duplicating console output", {
+  log_directory <- tempfile("fhir-request-log-")
+  dir.create(log_directory)
+  on.exit(unlink(log_directory, recursive = TRUE))
+  testthat::local_mocked_bindings(
+    getBundlesDirectory = function() log_directory,
+    .package = "etlutils"
+  )
+
+  output <- capture.output(
+    fhirsearchLogRequest(
+      VL_90_FHIR_RESPONSE,
+      "Observation",
+      "patient=123",
+      print_to_console = FALSE
+    )
+  )
+
+  expect_length(output, 0)
+  expect_equal(
+    readLines(file.path(log_directory, "cds2db_total_bundles.txt")),
+    "patient=123"
+  )
+})
+
+test_that("fhirsearchResourceHasEntries requests only the resource total", {
+  requests <- character()
+  testthat::local_mocked_bindings(
+    executeFHIRSearchVariation = function(request, ...) {
+      requests <<- c(requests, toString(request))
+      list(xml2::read_xml("<Bundle><total value=\"2\"/></Bundle>"))
+    },
+    .package = "etlutils"
+  )
+
+  expect_true(fhirsearchResourceHasEntries("https://example.test/fhir", "Observation"))
+  expect_equal(
+    requests,
+    "https://example.test/fhir/Observation?_summary=count"
+  )
+})
+
+test_that("fhirsearchResourceHasEntries distinguishes empty resources and failed checks", {
+  testthat::local_mocked_bindings(
+    executeFHIRSearchVariation = function(...) {
+      list(xml2::read_xml("<Bundle><total value=\"0\"/></Bundle>"))
+    },
+    .package = "etlutils"
+  )
+  expect_false(fhirsearchResourceHasEntries("https://example.test/fhir", "Observation"))
+
+  testthat::local_mocked_bindings(
+    executeFHIRSearchVariation = function(...) stop("FHIR server unavailable"),
+    .package = "etlutils"
+  )
+  expect_true(is.na(fhirsearchResourceHasEntries("https://example.test/fhir", "Observation")))
+})
+
+test_that("fhirsearchMultipleResourcesByPID skips searches after one zero total", {
+  global_names <- c("FHIR_SERVER_ENDPOINT", "VERBOSE")
+  global_exists <- vapply(global_names, exists, logical(1), envir = .GlobalEnv, inherits = FALSE)
+  global_values <- mget(global_names[global_exists], envir = .GlobalEnv, inherits = FALSE)
+  on.exit({
+    remove(list = global_names, envir = .GlobalEnv)
+    list2env(global_values, envir = .GlobalEnv)
+  })
+  assign("FHIR_SERVER_ENDPOINT", "https://example.test/fhir", envir = .GlobalEnv)
+  assign("VERBOSE", 0, envir = .GlobalEnv)
+
+  availability_checks <- 0
+  testthat::local_mocked_bindings(
+    fhirsearchResourceHasEntries = function(...) {
+      availability_checks <<- availability_checks + 1
+      FALSE
+    },
+    fhirsearchResourcesByPID = function(...) stop("Unexpected filtered FHIR search"),
+    .package = "etlutils"
+  )
+  table_description <- fhircrackr::fhir_table_description(
+    resource = "Observation",
+    cols = fhircrackr::fhir_columns(c(obs_id = "id"))
+  )
+  pids <- c("PID1", "PID2")
+  names(pids) <- c("2026-05-21", "2026-06-01")
+
+  result <- fhirsearchMultipleResourcesByPID(
+    pids,
+    list(Observation = table_description),
+    patient_age_at_enc_start = 0
+  )
+
+  expect_equal(availability_checks, 1)
+  expect_equal(nrow(result$raw_fhir_resources$Observation), 0)
+})
+
 # Test new_params provided as a single string
 test_that("new_params as a single string", {
   existing_params <- c("status" = "active")
