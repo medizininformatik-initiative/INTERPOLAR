@@ -16,7 +16,6 @@ USE_DATABASE_LOCKS = false
 BOOLEAN_GROUP_TABLE_FAMILIES = ["Frontend"]
 BOOLEAN_GROUP_COLUMN_PATTERN = "___[0-9]+$"
 BOOLEAN_TRUE_VALUES = ["Checked"]
-BOOLEAN_FALSE_VALUES = ["Unchecked"]
 
 # Database credentials are loaded through this separate DB config file.
 # Point this to the pseudonymized snapshot DB config when running DQA there.

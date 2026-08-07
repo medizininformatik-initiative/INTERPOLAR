@@ -170,5 +170,5 @@ The following columns or values are handled specially:
 - pattern-based boolean option groups are counted as available only when at
   least one option in the group contains a configured true value. The default
   pattern applies to frontend columns such as `field_name___1` and
-  `field_name___2`; it can be changed with `BOOLEAN_GROUP_COLUMN_PATTERN`,
-  `BOOLEAN_TRUE_VALUES` and `BOOLEAN_FALSE_VALUES`.
+  `field_name___2`; it can be changed with `BOOLEAN_GROUP_COLUMN_PATTERN` and
+  `BOOLEAN_TRUE_VALUES`.

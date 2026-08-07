@@ -86,7 +86,6 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     boolean_group_table_families = getConfigValue("BOOLEAN_GROUP_TABLE_FAMILIES", "Frontend"),
     boolean_group_column_pattern = getConfigValue("BOOLEAN_GROUP_COLUMN_PATTERN", "___[0-9]+$"),
     boolean_true_values = getConfigValue("BOOLEAN_TRUE_VALUES", "Checked"),
-    boolean_false_values = getConfigValue("BOOLEAN_FALSE_VALUES", "Unchecked"),
     included_view_patterns = getConfigValue(
       "INCLUDED_VIEW_PATTERNS",
       c("^v_[a-z0-9_]+_last_version$", "^v_[a-z0-9_]+_fe_last_version$")
