@@ -480,6 +480,28 @@ test_that("observation enrichment converts value groups without changing row ord
   expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(result))
 })
 
+test_that("observation enrichment converts grouped values through a mapping unit", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = "1975-2",
+    obs_valuequantity_value = c(1, 2, NA_real_),
+    obs_valuequantity_code = "mg/dL",
+    obs_valuequantity_unit = "mg/dL"
+  )
+  mapping <- data.table::data.table(
+    LOINC = "1975-2",
+    LOINC_PRIMARY = "14631-6",
+    UNIT = "umol/L",
+    CONVERSION_FACTOR = 17.104,
+    CONVERSION_UNIT = "mg/dL"
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+
+  expect_equal(result$value_in_reference_unit, c(17.104, 34.208, NA_real_))
+  expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(result))
+})
+
 test_that("observation enrichment aggregates incompatible units without warnings", {
   observation <- data.table::data.table(
     obs_code_system = "http://loinc.org",

@@ -6,10 +6,27 @@ test_that("convertLabUnits keeps existing units package conversions unchanged", 
   expect_true(etlutils::isValidUnit("10^9/L"))
 })
 
+test_that("convertLabUnits converts vectors through a mapping unit", {
+  expect_equal(
+    etlutils::convertLabUnits(
+      c(1, 2, NA_real_),
+      "mg/dL",
+      "umol/L",
+      conversion_factor = 17.104,
+      conversion_unit = "mg/dL"
+    ),
+    c(17.104, 34.208, NA_real_)
+  )
+})
+
 test_that("convertLabUnits keeps legacy missing and invalid unit behavior", {
   expect_equal(etlutils::convertLabUnits(7, "mg/L", NA), 7)
   expect_equal(etlutils::convertLabUnits(7, "mg/L", ""), 7)
   expect_true(is.na(etlutils::convertLabUnits(7, "foo", "mg/L")))
+  expect_equal(
+    etlutils::convertLabUnits(c(7, 8), "foo", "mg/L"),
+    c(NA_real_, NA_real_)
+  )
   expect_false(etlutils::isValidUnit("foo"))
 })
 
