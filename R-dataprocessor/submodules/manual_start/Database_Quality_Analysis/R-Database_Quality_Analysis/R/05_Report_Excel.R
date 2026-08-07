@@ -53,7 +53,8 @@ fillCountAndDateRangeColumns <- function(
     table_metadata,
     grouping_columns,
     data_column_batch,
-    row_filter_condition = row_filter_condition
+    row_filter_condition = row_filter_condition,
+    config = config
   )
   if (!is.na(count_query$query)) {
     count_result <- query_fun(

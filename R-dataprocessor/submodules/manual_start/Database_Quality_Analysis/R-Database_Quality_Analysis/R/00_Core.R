@@ -4,31 +4,6 @@ DATABASE_QUALITY_ANALYSIS_COUNT_COLUMNS <- c(
   case_id = "count per Fall-Id"
 )
 
-DATABASE_QUALITY_ANALYSIS_CHECKED_VALUE <- "Checked"
-
-DATABASE_QUALITY_ANALYSIS_FRONTEND_CHECKBOX_GROUPS <- list(
-  mrpdokumentation_validierung_fe = list(
-    mrp_pigrund = paste0("mrp_pigrund___", 1:27),
-    mrp_massn_am = paste0("mrp_massn_am___", 1:10),
-    mrp_massn_orga = paste0("mrp_massn_orga___", 1:8)
-  ),
-  retrolektive_mrpbewertung_fe = list(
-    ret_gewiss_trigger1_falsch = paste0("ret_gewiss_trigger1_falsch___", 1:4),
-    ret_gewiss_datengrundl1_1 = paste0("ret_gewiss_datengrundl1_1___", 1:4),
-    ret_gewiss_datengrundl1_2 = paste0("ret_gewiss_datengrundl1_2___", 1:4),
-    ret_gewiss_grund_abl_klin1_neg = "ret_gewiss_grund_abl_klin1_neg___1",
-    ret_massn_am1 = paste0("ret_massn_am1___", 1:10),
-    ret_massn_orga1 = paste0("ret_massn_orga1___", 1:8),
-    ret_2ndbewertung = "ret_2ndbewertung___1",
-    ret_gewiss_trigger2_falsch = paste0("ret_gewiss_trigger2_falsch___", 1:4),
-    ret_gewiss_datengrundl2_1 = paste0("ret_gewiss_datengrundl2_1___", 1:4),
-    ret_gewiss_datengrundl2_2 = paste0("ret_gewiss_datengrundl2_2___", 1:4),
-    ret_gewiss_grund_abl_klin2_neg = "ret_gewiss_grund_abl_klin2_neg___1",
-    ret_massn_am2 = paste0("ret_massn_am2___", 1:10),
-    ret_massn_orga2 = paste0("ret_massn_orga2___", 1:8)
-  )
-)
-
 DATABASE_QUALITY_ANALYSIS_VALUE_DATETIME_COLUMNS <- c(
   first_import = "first value import datetime",
   last_import = "last value import datetime",

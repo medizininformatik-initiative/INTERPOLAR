@@ -1202,7 +1202,12 @@ test_that("database quality analysis count query treats configured frontend chec
   result <- buildCountQuery(
     table_metadata,
     grouping_columns,
-    data_columns = c("mrp_pigrund___1")
+    data_columns = c("mrp_pigrund___1"),
+    config = list(
+      boolean_group_table_families = "Frontend",
+      boolean_group_column_pattern = "___[0-9]+$",
+      boolean_true_values = "Checked"
+    )
   )
 
   expect_match(result$query, '"mrp_pigrund___1" = \'Checked\'', fixed = TRUE)
@@ -1215,6 +1220,61 @@ test_that("database quality analysis count query treats configured frontend chec
   )
   expect_false(grepl('"mrp_pigrund___1"::text <> \'\'', result$query, fixed = TRUE))
 })
+
+test_that("database quality analysis boolean groups are configurable by pattern and values", {
+  table_metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = "v_example_fe_last_version",
+    TABLE_NAME = "example_fe",
+    TABLE_FAMILY = "Frontend",
+    COLUMN_NAME = c("example_id", "record_id", "field___1", "field___2", "field_other"),
+    DATA_TYPE = "character varying"
+  )
+  grouping_columns <- c(resource_id = "example_id", pid = "record_id", case_id = NA_character_)
+  config <- list(
+    boolean_group_table_families = "Frontend",
+    boolean_group_column_pattern = "___[0-9]+$",
+    boolean_true_values = c("Checked", "TRUE")
+  )
+
+  result <- buildCountQuery(
+    table_metadata,
+    grouping_columns,
+    data_columns = c("field___1"),
+    config = config
+  )
+
+  expect_match(result$query, "field___1", fixed = TRUE)
+  expect_match(result$query, "field___2", fixed = TRUE)
+  expect_match(result$query, " IN (", fixed = TRUE)
+  expect_match(result$query, "Checked", fixed = TRUE)
+  expect_match(result$query, "TRUE", fixed = TRUE)
+  expect_false(grepl("field_other", result$query, fixed = TRUE))
+})
+
+test_that("database quality analysis boolean groups are limited to configured families", {
+  table_metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
+    VIEW_NAME = "v_observation_last_version",
+    TABLE_NAME = "observation",
+    TABLE_FAMILY = "FHIR",
+    COLUMN_NAME = c("obs_id", "obs_patient_ref", "obs_field___1", "obs_field___2"),
+    DATA_TYPE = "character varying"
+  )
+  grouping_columns <- c(resource_id = "obs_id", pid = "obs_patient_ref", case_id = NA_character_)
+
+  result <- buildCountQuery(
+    table_metadata,
+    grouping_columns,
+    data_columns = c("obs_field___1"),
+    config = list(boolean_group_table_families = "Frontend")
+  )
+
+  expect_match(result$query, "obs_field___1", fixed = TRUE)
+  expect_match(result$query, "IS NOT NULL", fixed = TRUE)
+  expect_false(grepl("obs_field___2", result$query, fixed = TRUE))
+})
+
 
 test_that("database quality analysis counts are mapped back to normalized result rows", {
   config <- list(
@@ -1422,7 +1482,10 @@ test_that("database quality analysis date range query ignores invalid calculated
 test_that("database quality analysis date range query treats configured frontend checkboxes as checked groups", {
   config <- list(
     view_prefix = "v_",
-    value_import_datetime_column = "input_datetime"
+    value_import_datetime_column = "input_datetime",
+    boolean_group_table_families = "Frontend",
+    boolean_group_column_pattern = "___[0-9]+$",
+    boolean_true_values = "Checked"
   )
   table_metadata <- data.table::data.table(
     VIEW_SCHEMA = "db2dataprocessor_out",

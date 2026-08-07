@@ -167,6 +167,8 @@ The following columns or values are handled specially:
   columns are excluded.
 - calculated reference columns such as `*_calculated_ref` are counted only when
   they are filled and not equal to `invalid`.
-- configured REDCap checkbox groups are counted as available only when at least
-  one checkbox option in the group is `Checked`. `Unchecked` values alone do
-  not count as available data for the grouped frontend field.
+- pattern-based boolean option groups are counted as available only when at
+  least one option in the group contains a configured true value. The default
+  pattern applies to frontend columns such as `field_name___1` and
+  `field_name___2`; it can be changed with `BOOLEAN_GROUP_COLUMN_PATTERN`,
+  `BOOLEAN_TRUE_VALUES` and `BOOLEAN_FALSE_VALUES`.

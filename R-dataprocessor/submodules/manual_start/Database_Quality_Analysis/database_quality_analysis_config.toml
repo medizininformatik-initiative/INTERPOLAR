@@ -10,6 +10,14 @@ INCLUDE_VALUE_DATETIME_COLUMNS = true
 # paused explicitly while the report runs.
 USE_DATABASE_LOCKS = false
 
+# Pattern-based boolean option groups, for example REDCap checkbox columns
+# like field_name___1, field_name___2. Counts use the whole group as
+# available when at least one option contains a configured true value.
+BOOLEAN_GROUP_TABLE_FAMILIES = ["Frontend"]
+BOOLEAN_GROUP_COLUMN_PATTERN = "___[0-9]+$"
+BOOLEAN_TRUE_VALUES = ["Checked"]
+BOOLEAN_FALSE_VALUES = ["Unchecked"]
+
 # Database credentials are loaded through this separate DB config file.
 # Point this to the pseudonymized snapshot DB config when running DQA there.
 PATH_TO_DB_CONFIG_TOML = "./cds_hub_db_config.toml"

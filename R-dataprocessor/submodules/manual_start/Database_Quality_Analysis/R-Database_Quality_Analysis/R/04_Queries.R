@@ -112,8 +112,8 @@ quoteSqlString <- function(value) {
 #' Build the availability condition for a value column
 #'
 #' Combines default filled-value logic with project-specific availability rules.
-getValueAvailableCondition <- function(column_name, table_metadata, data_types) {
-  override_condition <- getProjectAvailabilityOverrideCondition(column_name, table_metadata)
+getValueAvailableCondition <- function(column_name, table_metadata, data_types, config = list()) {
+  override_condition <- getProjectAvailabilityOverrideCondition(column_name, table_metadata, config)
   if (!is.na(override_condition)) {
     return(override_condition)
   }
@@ -183,7 +183,8 @@ buildAvailabilityCountQuery <- function(
   table_metadata,
   data_columns,
   count_groups,
-  row_filter_condition = NA_character_
+  row_filter_condition = NA_character_,
+  config = list()
 ) {
   empty_alias_map <- getEmptyCountAliasMap()
   if (!length(data_columns) || !nrow(count_groups)) {
@@ -201,7 +202,7 @@ buildAvailabilityCountQuery <- function(
   data_types <- getMetadataDataTypes(table_metadata)
 
   for (column_name in data_columns) {
-    filled_condition <- getValueAvailableCondition(column_name, table_metadata, data_types)
+    filled_condition <- getValueAvailableCondition(column_name, table_metadata, data_types, config)
     for (count_group_index in seq_len(nrow(count_groups))) {
       count_group <- count_groups[count_group_index]
       grouping_column <- count_group$grouping_column
@@ -213,7 +214,8 @@ buildAvailabilityCountQuery <- function(
       grouping_filled_condition <- getValueAvailableCondition(
         grouping_column,
         table_metadata,
-        data_types
+        data_types,
+        config
       )
       select_parts <- c(
         select_parts,
@@ -254,13 +256,15 @@ buildCountQuery <- function(
   table_metadata,
   grouping_columns,
   data_columns,
-  row_filter_condition = NA_character_
+  row_filter_condition = NA_character_,
+  config = list()
 ) {
   buildAvailabilityCountQuery(
     table_metadata,
     data_columns,
     buildConfiguredCountGroups(grouping_columns),
-    row_filter_condition = row_filter_condition
+    row_filter_condition = row_filter_condition,
+    config = config
   )
 }
 #' Build a value date range query
@@ -308,7 +312,7 @@ buildValueDateRangeQuery <- function(
 
   for (column_index in seq_along(data_columns)) {
     column_name <- data_columns[[column_index]]
-    column_filled_condition <- getValueAvailableCondition(column_name, history_table_metadata, data_types)
+    column_filled_condition <- getValueAvailableCondition(column_name, history_table_metadata, data_types, config)
     for (source_index in seq_len(nrow(date_sources))) {
       date_source <- date_sources[source_index]
       first_alias <- paste0("first_value_datetime_", column_index, "_", date_source$source_name)
