@@ -53,6 +53,9 @@ jobs:
         id: sql-checks
         run: tools/detect-sql-checks.sh < changed-files.txt >> "$GITHUB_OUTPUT"
 
+      - name: Test SQL check detection
+        run: tools/test-detect-sql-checks.sh
+
   sql-format:
     runs-on: ubuntu-latest
     needs: changes
@@ -85,7 +88,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .cache/generated-sql-drift
-          key: generated-sql-drift-${{ runner.os }}-${{ hashFiles('.github/workflows/sql-checks.yml', 'Dockerfile_R', 'Postgres-cds_hub/generate-sql.sh', 'Postgres-cds_hub/R-initcdstoolchain/**', 'Postgres-cds_hub/sql/template/**', 'Postgres-cds_hub/sql/start.sql', 'Postgres-cds_hub/sql/base/**', 'R-etlutils/**', 'R-cds2db/**', 'R-db2frontend/**', 'R-dataprocessor/**', 'R-cdstoolchain/**', 'tools/check-generated-sql.sh', 'tools/format-sql.sh', 'tools/install-pgformatter.sh') }}
+          key: generated-sql-drift-${{ runner.os }}-${{ hashFiles('.github/workflows/sql-checks.yml', 'Dockerfile_R', 'Postgres-cds_hub/generate-sql.sh', 'Postgres-cds_hub/R-initcdstoolchain/**', 'Postgres-cds_hub/sql/template/**', 'Postgres-cds_hub/sql/start.sql', 'Postgres-cds_hub/sql/base/**', 'R-etlutils/**', 'R-cds2db/cds2db/inst/extdata/Table_Description.xlsx', 'R-cdstoolchain/pseudonym/**', 'R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx', 'tools/check-generated-sql.sh', 'tools/format-sql.sh', 'tools/install-pgformatter.sh') }}
 
       - name: Build R runtime image
         if: steps.generated-sql-cache.outputs.cache-hit != 'true'
