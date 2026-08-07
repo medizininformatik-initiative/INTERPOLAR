@@ -88,7 +88,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .cache/generated-sql-drift
-          key: generated-sql-drift-${{ runner.os }}-${{ hashFiles('.github/workflows/sql-checks.yml', 'Dockerfile_R', 'Postgres-cds_hub/generate-sql.sh', 'Postgres-cds_hub/R-initcdstoolchain/**', 'Postgres-cds_hub/sql/template/**', 'Postgres-cds_hub/sql/start.sql', 'Postgres-cds_hub/sql/base/**', 'R-etlutils/**', 'R-cds2db/cds2db/inst/extdata/Table_Description.xlsx', 'R-cdstoolchain/pseudonym/**', 'R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx', 'tools/check-generated-sql.sh', 'tools/format-sql.sh', 'tools/install-pgformatter.sh') }}
+          key: generated-sql-drift-${{ runner.os }}-${{ hashFiles('.github/workflows/sql-checks.yml', 'Dockerfile_R', 'Postgres-cds_hub/generate-sql.sh', 'Postgres-cds_hub/R-initcdstoolchain/**', 'Postgres-cds_hub/sql/template/**', 'Postgres-cds_hub/sql/start.sql', 'Postgres-cds_hub/sql/base/**', 'R-etlutils/**', 'R-cds2db/cds2db/inst/extdata/Table_Description.xlsx', 'R-cdstoolchain/pseudonym/**', 'R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx', 'R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx', 'R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx', 'tools/check-generated-sql.sh', 'tools/format-sql.sh', 'tools/install-pgformatter.sh') }}
 
       - name: Build R runtime image
         if: steps.generated-sql-cache.outputs.cache-hit != 'true'
