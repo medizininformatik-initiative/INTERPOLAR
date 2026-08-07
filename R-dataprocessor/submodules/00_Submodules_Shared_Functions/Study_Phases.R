@@ -14,20 +14,6 @@ extractSingleEntryLinesValue <- function(entry_lines, key) {
 }
 
 #
-# Return the phase definition for a ward, or NULL if the ward is not configured.
-#
-getWardPhaseDefinition <- function(ward_name) {
-  ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")
-  for (ward_phase in ward_phases) {
-    configured_ward_name <- extractSingleEntryLinesValue(ward_phase, "ward_name")
-    if (identical(configured_ward_name, ward_name)) {
-      return(ward_phase)
-    }
-  }
-  return(NULL)
-}
-
-#
 # Extract values for a given key from a list of character vectors. Each element of the list is expected to be a character vector of lines containing key-value pairs.
 # Returns a character vector of values corresponding to the key, excluding any NA values.
 #
@@ -53,21 +39,30 @@ getStudyPhase <- function(ward_name, date_time) {
     return("PhaseBTest")
   }
 
+  # get the index of the ward phase definition for the given ward name, return -1 if not found
+  getWardPhaseIndex <- function(ward_phases, ward_name) {
+    for (i in seq_along(ward_phases)) {
+      lines <- ward_phases[[i]]
+      configured_ward_name <- extractSingleEntryLinesValue(lines, "ward_name")
+      if (identical(configured_ward_name, ward_name)) {
+        return(i)
+      }
+    }
+    return(-1)
+  }
+
   # determine the phase for the given ward and date_time based on the ward phases defined in the configuration.
   # If no phase is active for the given date_time, return "NoPhaseActive".
   phase <- NA_character_ # indicates that the ward is not defined in the configuration
-  ward_phase <- getWardPhaseDefinition(ward_name)
-  if (!is.null(ward_phase)) {
+  ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")
+  phase_def_index <- getWardPhaseIndex(ward_phases, ward_name)
+  if (phase_def_index != -1L) {
     phase <- "NoPhaseActive" # indicates that the ward is defined in the configuration but no phase is active for the given date_time
-    lines <- ward_phase
+    lines <- ward_phases[[phase_def_index]]
     phase_b_start <- etlutils::parseTimestamp(extractSingleEntryLinesValue(lines, "phase_b_start"))
-    phase_b_end <- etlutils::parseTimestamp(extractSingleEntryLinesValue(lines, "phase_b_end"))
-    if (
-      !is.na(phase_b_start) && date_time >= phase_b_start &&
-      (is.na(phase_b_end) || date_time < phase_b_end)
-    ) {
+    if (!is.na(phase_b_start) && date_time >= phase_b_start) {
       phase <- "PhaseB"
-    } else if (is.na(phase_b_start) || date_time < phase_b_start) {
+    } else {
       phase_a_start <- etlutils::parseTimestamp(extractSingleEntryLinesValue(lines, "phase_a_start"))
       if (date_time >= phase_a_start) {
         phase <- "PhaseA"
@@ -79,51 +74,19 @@ getStudyPhase <- function(ward_name, date_time) {
 }
 
 #
-# Check whether Phase B is active for a ward at a timestamp.
-#
-isPhaseBActiveForWard <- function(ward_name, timestamp = etlutils::as.POSIXctWithTimezone(Sys.time())) {
-  if (etlutils::isDefinedAndNotEmpty("WARDS_PHASE_B_TEST") && ward_name %in% WARDS_PHASE_B_TEST) {
-    return(TRUE)
-  }
-
-  ward_phase <- getWardPhaseDefinition(ward_name)
-  if (is.null(ward_phase)) {
-    return(FALSE)
-  }
-
-  phase_b_start <- etlutils::parseTimestamp(
-    extractSingleEntryLinesValue(ward_phase, "phase_b_start")
-  )
-  phase_b_end <- etlutils::parseTimestamp(extractSingleEntryLinesValue(ward_phase, "phase_b_end"))
-  return(
-    !is.na(phase_b_start) && phase_b_start <= timestamp &&
-      (is.na(phase_b_end) || timestamp < phase_b_end)
-  )
-}
-
-#
-# Check whether MRP calculation is active for any ward represented by fall_fe rows.
-#
-isMRPCalculationActiveForFallFeRows <- function(
-  fall_fe_rows,
-  timestamp = etlutils::as.POSIXctWithTimezone(Sys.time())
-) {
-  study_phases <- fall_fe_rows$fall_studienphase
-  if (any(!is.na(study_phases) & study_phases == "PhaseBTest")) {
-    return(TRUE)
-  }
-
-  ward_names <- unique(stats::na.omit(fall_fe_rows$fall_station))
-  return(any(vapply(ward_names, isPhaseBActiveForWard, logical(1), timestamp = timestamp)))
-}
-
-#
 # Check if the study has Phase B wards defined in the configuration.
 #
 isPhaseBActive <- function(timestamp = etlutils::as.POSIXctWithTimezone(Sys.time())) {
+  # phase_b_end is study metadata and intentionally does not stop MRP calculation.
   ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")
-  ward_names <- extractValues(ward_phases, "ward_name")
-  return(any(vapply(ward_names, isPhaseBActiveForWard, logical(1), timestamp = timestamp)))
+  phase_b_starts <- extractValues(ward_phases, "phase_b_start")
+  for (phase_b_start in phase_b_starts) {
+    phase_b_start <- etlutils::parseTimestamp(phase_b_start)
+    if (phase_b_start <= timestamp) {
+      return(TRUE)
+    }
+  }
+  return(FALSE)
 }
 
 #

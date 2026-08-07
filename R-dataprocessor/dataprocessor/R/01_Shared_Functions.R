@@ -2,11 +2,11 @@
 #'
 #' Validates ward phase definitions loaded from global variables with the prefix
 #' `PHASES_WARD`. Each definition must contain exactly one non-empty
-#' `ward_name`, exactly one `phase_a_start`, and at most one `phase_b_start` and
-#' `phase_b_end`.
+#' `ward_name`, exactly one `phase_a_start`, and at most one `phase_b_start`.
 #' The function also checks that all timestamps have a valid format and that
-#' `phase_b_start`, if present, is later than `phase_a_start`. `phase_b_end`
-#' requires `phase_b_start` and must be later than it.
+#' If `phase_b_start` is present, exactly one `phase_b_end` is required. All phase
+#' timestamps must be valid, `phase_b_start` must be later than `phase_a_start`,
+#' and `phase_b_end` must be later than `phase_b_start`.
 #'
 #' @param timezone A character string defining the timezone used for parsing
 #'   phase timestamps.
@@ -19,7 +19,8 @@
 #' PHASES_WARD_1 <- c(
 #'   "ward_name = 'Station 1'",
 #'   "phase_a_start = '2026-01-11 10:00:00'",
-#'   "phase_b_start = '2026-01-21 10:00:00'"
+#'   "phase_b_start = '2026-01-21 10:00:00'",
+#'   "phase_b_end = '2026-04-21 10:00:00'"
 #' )
 #'
 #' PHASES_WARD_2 <- c(
@@ -118,6 +119,9 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
       }
       if (!(phase_a < phase_b)) {
         stop(msg_prefix, "phase_a_start must be earlier than phase_b_start in entry ", entry_name, ".")
+      }
+      if (!any(keys == "phase_b_end")) {
+        stop(msg_prefix, "Entry ", entry_name, " must contain phase_b_end when phase_b_start is set.")
       }
       if (any(keys == "phase_b_end")) {
         phase_b_end_raw <- values[keys == "phase_b_end"]

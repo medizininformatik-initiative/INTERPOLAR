@@ -4,8 +4,8 @@
 
 # Accepts multiple valid definitions
 testthat::test_that("validateWardPhases returns TRUE for valid definitions", {
-  assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11 10:00:00'", "phase_b_start = '2026-01-21 10:00:00'"), envir = .GlobalEnv)
-  assign("PHASES_WARD_2", c("ward_name = 'Station 2'", "phase_a_start = '2026-01-11'", "phase_b_start = '2026-01-12'"), envir = .GlobalEnv)
+  assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11 10:00:00'", "phase_b_start = '2026-01-21 10:00:00'", "phase_b_end = '2026-04-21 10:00:00'"), envir = .GlobalEnv)
+  assign("PHASES_WARD_2", c("ward_name = 'Station 2'", "phase_a_start = '2026-01-11'", "phase_b_start = '2026-01-12'", "phase_b_end = '2026-04-12'"), envir = .GlobalEnv)
   on.exit(rm(list = c("PHASES_WARD_1", "PHASES_WARD_2"), envir = .GlobalEnv), add = TRUE)
   testthat::expect_true(validateWardPhases(timezone = "UTC"))
 })
@@ -19,7 +19,7 @@ testthat::test_that("validateWardPhases accepts missing phase_b_start", {
 
 # Accepts date-only and minute-only timestamps
 testthat::test_that("validateWardPhases accepts date without time and date with minutes only", {
-  assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11'", "phase_b_start = '2026-01-11 10:00'"), envir = .GlobalEnv)
+  assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11'", "phase_b_start = '2026-01-11 10:00'", "phase_b_end = '2026-04-21'"), envir = .GlobalEnv)
   on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
   testthat::expect_true(validateWardPhases(timezone = "UTC"))
 })
@@ -33,7 +33,7 @@ testthat::test_that("validateWardPhases rejects equal phase_a_start and phase_b_
 
 # Accepts whitespace variations
 testthat::test_that("validateWardPhases accepts whitespace variations", {
-  assign("PHASES_WARD_1", c("   ward_name     =    'Station 1'   ", " phase_a_start   =   '2026-01-11 10:00' ", " phase_b_start = '2026-01-21 10:00:00'   "), envir = .GlobalEnv)
+  assign("PHASES_WARD_1", c("   ward_name     =    'Station 1'   ", " phase_a_start   =   '2026-01-11 10:00' ", " phase_b_start = '2026-01-21 10:00:00'   ", " phase_b_end = '2026-04-21 10:00:00'   "), envir = .GlobalEnv)
   on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
   testthat::expect_true(validateWardPhases(timezone = "UTC"))
 })
@@ -158,4 +158,11 @@ testthat::test_that("validateWardPhases rejects phase_b_end at phase_b_start", {
   assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11'", "phase_b_start = '2026-01-12'", "phase_b_end = '2026-01-12'"), envir = .GlobalEnv)
   on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
   testthat::expect_error(validateWardPhases(timezone = "UTC"), "phase_b_start must be earlier than phase_b_end")
+})
+
+
+testthat::test_that("validateWardPhases rejects missing phase_b_end", {
+  assign("PHASES_WARD_1", c("ward_name = 'Station 1'", "phase_a_start = '2026-01-11'", "phase_b_start = '2026-01-12'"), envir = .GlobalEnv)
+  on.exit(rm(list = "PHASES_WARD_1", envir = .GlobalEnv), add = TRUE)
+  testthat::expect_error(validateWardPhases(timezone = "UTC"), "must contain phase_b_end when phase_b_start is set")
 })

@@ -180,10 +180,7 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   }
 
   encounters <- unique(data.table::rbindlist(encounters_per_mrp_type, use.names = TRUE))
-  encounters[, `:=`(
-    study_phase = character(),
-    mrp_calculation_active = FALSE
-  )]
+  encounters[, study_phase := character()]
 
   if (nrow(encounters)) {
     #
@@ -243,16 +240,10 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
         }
       }
       encounters[enc_id %in% current_enc_id, `:=`(
-        study_phase = new_study_phase,
-        mrp_calculation_active = isMRPCalculationActiveForFallFeRows(fall_fe_rows)
+        study_phase = new_study_phase
       )]
     }
   }
-
-  # Only retain encounters from wards whose Phase B is currently active.
-  # PhaseBTest encounters remain eligible independently of configured phase dates.
-  encounters <- encounters[mrp_calculation_active == TRUE]
-  encounters[, mrp_calculation_active := NULL]
 
   # TODO: Diese Funktion an die "richtige" Stelle verschieben
   getCurrentDate <- function() {
