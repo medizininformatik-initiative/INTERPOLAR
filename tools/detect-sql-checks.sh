@@ -40,16 +40,20 @@ while IFS= read -r changed_file; do
   fi
 
   case "$changed_file" in
+    Dockerfile_R | \
     Postgres-cds_hub/generate-sql.sh | \
     Postgres-cds_hub/R-initcdstoolchain/* | \
-    Postgres-cds_hub/R-initcdstoolchain/** | \
     Postgres-cds_hub/sql/template/* | \
-    Postgres-cds_hub/sql/template/** | \
     Postgres-cds_hub/sql/start.sql | \
+    R-etlutils/* | \
     R-cds2db/cds2db/inst/extdata/Table_Description.xlsx | \
+    R-cdstoolchain/pseudonym/* | \
+    R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx | \
+    R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx | \
     R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx | \
     tools/check-generated-sql.sh | \
     tools/format-sql.sh | \
+    tools/install-pgformatter.sh | \
     tools/detect-sql-checks.sh | \
     .github/workflows/sql-checks.yml)
       generated=true
