@@ -124,9 +124,11 @@ invisible(tryCatch(
       issue_report <- pseudonymization_result[["issue_report"]]
       medication_issue_summary <- issue_report[["medication_issue_summary"]]
       age_issue_summary <- issue_report[["age_issue_summary"]]
+      loinc_unit_issues <- issue_report[["loinc_unit_conversion_issues"]]
       issue_count <- sum(
         medication_issue_summary[["UNMATCHED_ROWS"]],
         age_issue_summary[["AFFECTED_ROWS"]],
+        loinc_unit_issues[["AFFECTED_ROWS"]],
         na.rm = TRUE
       )
       issue_report_file <- file.path(

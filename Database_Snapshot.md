@@ -310,9 +310,10 @@ Snapshot-Datenbank:
   Tabellenblätter. Regelprobleme werden vom INTERPOLAR-Team behoben.
 - `snapshot_pseudonymization_issues.xlsx` ist der Fehlerbericht für fehlende
   direkt oder transitiv referenzierte `Medication`-Ressourcen, Referenzketten
-  ohne erreichbares Code-/System-Paar und nicht berechenbare Alterswerte. Er
-  kann nicht pseudonymisierte Identifikatoren für die lokale Fehlersuche
-  enthalten und darf deshalb nicht weitergegeben werden.
+  ohne erreichbares Code-/System-Paar, nicht berechenbare Alterswerte und nicht
+  umrechenbare Laboreinheiten. Er kann nicht pseudonymisierte Identifikatoren
+  für die lokale Fehlersuche enthalten und darf deshalb nicht weitergegeben
+  werden.
 - `snapshot_postprocessing_report.xlsx` enthält die technische Zusammenfassung,
   insbesondere Zeilen- und Spaltenzahlen.
 

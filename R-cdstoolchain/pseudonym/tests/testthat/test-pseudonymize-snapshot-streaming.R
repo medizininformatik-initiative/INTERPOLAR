@@ -477,6 +477,53 @@ test_that("observation enrichment converts value groups without changing row ord
 
   expect_equal(result$obs_id, observation$obs_id)
   expect_equal(result$value_in_reference_unit, c(0.002, 3000, 0.004))
+  expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(result))
+})
+
+test_that("observation enrichment aggregates incompatible units without warnings", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = rep("1975-2", 3),
+    obs_valuequantity_value = c(1, 2, 3),
+    obs_valuequantity_code = "mg",
+    obs_valuequantity_unit = "milligram"
+  )
+  mapping <- data.table::data.table(
+    LOINC = "1975-2",
+    LOINC_PRIMARY = "14631-6",
+    UNIT = "umol/L",
+    CONVERSION_FACTOR = 17.104,
+    CONVERSION_UNIT = "mg/dL"
+  )
+
+  output <- utils::capture.output(result <- enrichObservationWithLoincMapping(observation, mapping))
+  review <- getLoincUnitConversionReview(result, "observation")
+  context <- newLoincUnitConversionReview()
+  expect_message(
+    recordLoincUnitConversionReview(context, review),
+    'LOINC 1975-2; verwendete Einheit "mg"',
+    fixed = TRUE
+  )
+  expect_silent(recordLoincUnitConversionReview(context, review))
+  last_version_review <- data.table::copy(review)
+  last_version_review[["TABLE_NAME"]] <- "observation_last_version"
+  expect_silent(recordLoincUnitConversionReview(context, last_version_review))
+  combined_review <- finalizeLoincUnitConversionReview(context)
+  stripped <- stripSnapshotStreamingReviewColumns(data.table::copy(result))
+
+  expect_length(output, 0)
+  expect_true(all(is.na(result$value_in_reference_unit)))
+  expect_equal(review$LOINC_CODE, "1975-2")
+  expect_equal(review$SOURCE_UNIT_CODE, "mg")
+  expect_equal(review$SOURCE_UNIT_DISPLAY, "milligram")
+  expect_equal(review$USED_SOURCE_UNIT, "mg")
+  expect_equal(review$MAPPING_CONVERSION_UNIT, "mg/dL")
+  expect_equal(review$TARGET_UNIT, "umol/L")
+  expect_equal(review$AFFECTED_ROWS, 3)
+  expect_equal(nrow(combined_review), 2)
+  expect_equal(sum(combined_review$AFFECTED_ROWS), 9)
+  expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(stripped))
+  expect_false(SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN %in% names(stripped))
 })
 
 test_that("medication enrichment only creates described targets", {

@@ -18,6 +18,11 @@ SNAPSHOT_OBSERVATION_SOURCE_COLUMNS <- c(
   "obs_valuequantity_unit"
 )
 
+SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN <-
+  ".snapshot_pseudonym_loinc_conversion_issue"
+SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN <-
+  ".snapshot_pseudonym_loinc_mapping_conversion_unit"
+
 loadSnapshotLoincMapping <- function(input_repo_path) {
   if (is.null(input_repo_path) || is.na(input_repo_path) || !nzchar(input_repo_path)) {
     stop("input_repo_path must be provided for observation LOINC enrichment.")
@@ -84,6 +89,127 @@ normalizeConversionFactor <- function(conversion_factor) {
   conversion_factor <- suppressWarnings(as.numeric(conversion_factor))
   conversion_factor[conversion_factor %in% 1] <- NA_real_
   conversion_factor
+}
+
+emptyLoincUnitConversionReview <- function() {
+  data.table::data.table(
+    TABLE_NAME = character(),
+    LOINC_CODE = character(),
+    SOURCE_UNIT_CODE = character(),
+    SOURCE_UNIT_DISPLAY = character(),
+    USED_SOURCE_UNIT = character(),
+    MAPPING_CONVERSION_UNIT = character(),
+    TARGET_UNIT = character(),
+    AFFECTED_ROWS = numeric()
+  )
+}
+
+getLoincUnitConversionReview <- function(table, table_name) {
+  table <- data.table::as.data.table(table)
+  if (!SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(table)) {
+    return(emptyLoincUnitConversionReview())
+  }
+  issue_rows <- which(table[[SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN]] %in% TRUE)
+  if (length(issue_rows) == 0) {
+    return(emptyLoincUnitConversionReview())
+  }
+  review <- data.table::data.table(
+    TABLE_NAME = table_name,
+    LOINC_CODE = as.character(table[["obs_code_code"]][issue_rows]),
+    SOURCE_UNIT_CODE = as.character(table[["obs_valuequantity_code"]][issue_rows]),
+    SOURCE_UNIT_DISPLAY = as.character(table[["obs_valuequantity_unit"]][issue_rows]),
+    USED_SOURCE_UNIT = as.character(getObservationValueUnit(table)[issue_rows]),
+    MAPPING_CONVERSION_UNIT = as.character(table[[SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN]][issue_rows]),
+    TARGET_UNIT = as.character(table[["reference_unit"]][issue_rows]),
+    N = 1L
+  )
+  sumDataTableColumnBy(
+    review,
+    group_columns = setdiff(names(review), "N"),
+    value_column = "N",
+    result_column = "AFFECTED_ROWS"
+  )
+}
+
+newLoincUnitConversionReview <- function() {
+  context <- new.env(parent = emptyenv())
+  context$summary <- emptyLoincUnitConversionReview()
+  context$reported_issue_keys <- character()
+  context
+}
+
+loincUnitConversionIssueKeys <- function(review) {
+  key_columns <- setdiff(
+    names(emptyLoincUnitConversionReview()),
+    c("TABLE_NAME", "AFFECTED_ROWS")
+  )
+  key_values <- lapply(key_columns, function(column_name) {
+    values <- as.character(review[[column_name]])
+    values[is.na(values)] <- "<NA>"
+    values
+  })
+  do.call(paste, c(key_values, sep = "\r"))
+}
+
+formatLoincUnitReviewValue <- function(value) {
+  value <- as.character(value)
+  if (length(value) == 0 || is.na(value) || !nzchar(value)) {
+    return("<leer>")
+  }
+  paste0('"', value, '"')
+}
+
+reportNewLoincUnitConversionIssues <- function(context, review) {
+  issue_keys <- loincUnitConversionIssueKeys(review)
+  new_rows <- which(!issue_keys %in% context$reported_issue_keys)
+  if (length(new_rows) == 0) {
+    return(invisible())
+  }
+  for (row_index in new_rows) {
+    message(
+      "WARNING: Laboreinheit nicht umrechenbar: LOINC ",
+      review[["LOINC_CODE"]][row_index],
+      "; verwendete Einheit ",
+      formatLoincUnitReviewValue(review[["USED_SOURCE_UNIT"]][row_index]),
+      "; Unit-Code ",
+      formatLoincUnitReviewValue(review[["SOURCE_UNIT_CODE"]][row_index]),
+      "; Unit-Anzeige ",
+      formatLoincUnitReviewValue(review[["SOURCE_UNIT_DISPLAY"]][row_index]),
+      "; Mapping-Eingangseinheit ",
+      formatLoincUnitReviewValue(review[["MAPPING_CONVERSION_UNIT"]][row_index]),
+      "; Zieleinheit ",
+      formatLoincUnitReviewValue(review[["TARGET_UNIT"]][row_index]),
+      "."
+    )
+  }
+  context$reported_issue_keys <- unique(c(
+    context$reported_issue_keys,
+    issue_keys[new_rows]
+  ))
+  invisible()
+}
+
+recordLoincUnitConversionReview <- function(context, review) {
+  if (nrow(review) == 0) {
+    return(invisible())
+  }
+  reportNewLoincUnitConversionIssues(context, review)
+  group_columns <- setdiff(names(context$summary), "AFFECTED_ROWS")
+  context$summary <- sumDataTableColumnBy(
+    data.table::rbindlist(list(context$summary, review)),
+    group_columns = group_columns,
+    value_column = "AFFECTED_ROWS",
+    result_column = "AFFECTED_ROWS"
+  )
+  invisible()
+}
+
+finalizeLoincUnitConversionReview <- function(context) {
+  data.table::setorderv(
+    context$summary,
+    c("TABLE_NAME", "LOINC_CODE", "USED_SOURCE_UNIT", "TARGET_UNIT")
+  )
+  context$summary[]
 }
 
 enrichObservationWithLoincMapping <- function(
@@ -185,17 +311,19 @@ enrichObservationWithLoincMapping <- function(
         matched_rows[[conversion_factor_column]][first_group_row]
       group_conversion_unit <-
         matched_rows[[conversion_unit_column]][first_group_row]
-      converted_values[group_rows] <- etlutils::convertLabUnits(
-        measured_value = matched_rows[["obs_valuequantity_value"]][group_rows],
-        measured_unit = matched_rows[[source_unit_column]][first_group_row],
-        target_unit = matched_rows[[".snapshot_pseudonym_target_unit"]][first_group_row],
-        conversion_factor = group_conversion_factor,
-        conversion_unit = group_conversion_unit,
-        additional_error_message = paste0(
-          " for LOINC code ",
-          matched_rows[["obs_code_code"]][first_group_row]
+      invisible(utils::capture.output(
+        converted_values[group_rows] <- etlutils::convertLabUnits(
+          measured_value = matched_rows[["obs_valuequantity_value"]][group_rows],
+          measured_unit = matched_rows[[source_unit_column]][first_group_row],
+          target_unit = matched_rows[[".snapshot_pseudonym_target_unit"]][first_group_row],
+          conversion_factor = group_conversion_factor,
+          conversion_unit = group_conversion_unit,
+          additional_error_message = paste0(
+            " for LOINC code ",
+            matched_rows[["obs_code_code"]][first_group_row]
+          )
         )
-      )
+      ))
     }
 
     enriched_row_ids <- matched_rows[[row_id_column]]
@@ -205,6 +333,15 @@ enrichObservationWithLoincMapping <- function(
       matched_rows[[".snapshot_pseudonym_target_unit"]]
     observation[["primary_loinc_code"]][enriched_row_ids] <-
       matched_rows[[".snapshot_pseudonym_primary_loinc"]]
+    failed_conversion_rows <- which(is.na(converted_values))
+    if (length(failed_conversion_rows) > 0) {
+      failed_row_ids <- enriched_row_ids[failed_conversion_rows]
+      observation[[SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN]] <- FALSE
+      observation[[SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN]] <- NA_character_
+      observation[[SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN]][failed_row_ids] <- TRUE
+      observation[[SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN]][failed_row_ids] <-
+        matched_rows[[conversion_unit_column]][failed_conversion_rows]
+    }
   }
 
   unused_enrichment_columns <- setdiff(

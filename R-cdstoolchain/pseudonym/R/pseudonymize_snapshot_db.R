@@ -431,11 +431,13 @@ pseudonymizeSnapshotDatabase <- function(
   result[["write_summary"]] <- data.table::rbindlist(write_summary_rows, fill = TRUE)
   medication_review <- finalizeBoundedMedicationReferenceReview(streaming_context$medication_review)
   age_review <- finalizeBoundedAgeCalculationReview(streaming_context$age_review)
+  loinc_unit_review <- finalizeLoincUnitConversionReview(streaming_context$loinc_unit_review)
   result[["issue_report"]] <- c(
     list(
       medication_issue_summary = medication_review[["summary"]],
       medication_issue_examples =
-        medication_review[["unmatched_reference_examples"]]
+        medication_review[["unmatched_reference_examples"]],
+      loinc_unit_conversion_issues = loinc_unit_review
     ),
     age_review
   )

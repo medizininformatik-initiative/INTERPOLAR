@@ -684,6 +684,7 @@ newSnapshotStreamingContext <- function(
     SNAPSHOT_MEDICATION_REVIEW_DETAIL_LIMIT
   )
   context$age_review <- newBoundedAgeCalculationReview(SNAPSHOT_AGE_REVIEW_DETAIL_LIMIT)
+  context$loinc_unit_review <- newLoincUnitConversionReview()
   context
 }
 
@@ -820,7 +821,11 @@ processSnapshotChunkStream <- function(
 stripSnapshotStreamingReviewColumns <- function(table) {
   table <- data.table::as.data.table(table)
   review_columns <- intersect(
-    SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN,
+    c(
+      SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN,
+      SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN,
+      SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN
+    ),
     names(table)
   )
   if (length(review_columns) > 0) {
@@ -990,9 +995,15 @@ streamSnapshotMaterializedTable <- function(
       } else {
         emptyAgeCalculationReview()
       }
+      loinc_unit_review <- if (identical(base_table_name, "observation")) {
+        getLoincUnitConversionReview(chunk, materialized_table_name)
+      } else {
+        emptyLoincUnitConversionReview()
+      }
       list(
         medication = medication_review,
-        age = age_review
+        age = age_review,
+        loinc_unit = loinc_unit_review
       )
     },
     write_review_chunk = function(review) {
@@ -1003,6 +1014,10 @@ streamSnapshotMaterializedTable <- function(
       recordBoundedAgeCalculationReview(
         streaming_context$age_review,
         review[["age"]]
+      )
+      recordLoincUnitConversionReview(
+        streaming_context$loinc_unit_review,
+        review[["loinc_unit"]]
       )
     },
     chunk_size = chunk_size,

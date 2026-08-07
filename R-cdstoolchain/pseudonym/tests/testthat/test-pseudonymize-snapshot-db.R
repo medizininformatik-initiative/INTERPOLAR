@@ -146,6 +146,13 @@ test_that("writeSnapshotIssueReport writes bounded issue sheets", {
       FHIR_ENCOUNTER_ID = "enc-1",
       BIRTHDATE = as.Date("1980-01-01"),
       REFERENCE_DATE = as.Date("1979-01-01")
+    ),
+    loinc_unit_conversion_issues = data.table::data.table(
+      TABLE_NAME = "observation",
+      LOINC_CODE = "1975-2",
+      USED_SOURCE_UNIT = "mg",
+      TARGET_UNIT = "umol/L",
+      AFFECTED_ROWS = 5
     )
   )
 
