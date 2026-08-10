@@ -53,6 +53,23 @@ test_that("processSnapshotChunkStream keeps only one chunk in the processing con
   expect_equal(result$summary$OUTPUT_ROWS, 3L)
   expect_equal(result$chunks, 2L)
   expect_equal(review_writes, 2L)
+  expect_named(
+    result$timing,
+    c(
+      "FETCH_SECONDS",
+      "ENRICH_SECONDS",
+      "REVIEW_SECONDS",
+      "PSEUDONYMIZE_SECONDS",
+      "WRITE_SECONDS",
+      "OTHER_SECONDS",
+      "STREAM_SECONDS"
+    )
+  )
+  expect_true(all(result$timing >= 0))
+  expect_gte(
+    result$timing[["STREAM_SECONDS"]] + 0.01,
+    sum(result$timing[setdiff(names(result$timing), "STREAM_SECONDS")])
+  )
 })
 
 test_that("processSnapshotChunkStream writes an empty relation once", {

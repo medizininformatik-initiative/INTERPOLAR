@@ -323,7 +323,9 @@ Snapshot-Datenbank:
   für die lokale Fehlersuche enthalten und darf deshalb nicht weitergegeben
   werden.
 - `snapshot_postprocessing_report.xlsx` enthält die technische Zusammenfassung,
-  insbesondere Zeilen- und Spaltenzahlen.
+  insbesondere Zeilen- und Spaltenzahlen, Chunk-Zahlen sowie Laufzeiten für das
+  Öffnen der Quelle, Lesen, Anreichern, Prüfen, Pseudonymisieren und Schreiben
+  jeder Tabelle.
 
 Eine kompakte CLI-Hilfe liefert:
 

@@ -784,15 +784,42 @@ processSnapshotChunkStream <- function(
   first_chunk <- TRUE
   chunk_number <- 0L
   summary <- NULL
+  timing <- c(
+    FETCH_SECONDS = 0,
+    ENRICH_SECONDS = 0,
+    REVIEW_SECONDS = 0,
+    PSEUDONYMIZE_SECONDS = 0,
+    WRITE_SECONDS = 0
+  )
+  stream_started <- proc.time()[["elapsed"]]
   repeat {
+    step_started <- proc.time()[["elapsed"]]
     chunk <- fetch_chunk(chunk_size)
+    timing[["FETCH_SECONDS"]] <- timing[["FETCH_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
     chunk_number <- chunk_number + 1L
+
+    step_started <- proc.time()[["elapsed"]]
     chunk <- enrich_chunk(data.table::as.data.table(chunk))
+    timing[["ENRICH_SECONDS"]] <- timing[["ENRICH_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
+
+    step_started <- proc.time()[["elapsed"]]
     write_review_chunk(review_chunk(chunk))
+    timing[["REVIEW_SECONDS"]] <- timing[["REVIEW_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
     chunk <- strip_review_columns(chunk)
+
+    step_started <- proc.time()[["elapsed"]]
     table_result <- pseudonymize_chunk(chunk, chunk_number)
+    timing[["PSEUDONYMIZE_SECONDS"]] <- timing[["PSEUDONYMIZE_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
     output <- table_result[["table"]]
+
+    step_started <- proc.time()[["elapsed"]]
     write_chunk(output, first_chunk)
+    timing[["WRITE_SECONDS"]] <- timing[["WRITE_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
     first_chunk <- FALSE
     if (is.null(summary)) {
       summary <- table_result[["summary"]]
@@ -812,9 +839,17 @@ processSnapshotChunkStream <- function(
     }
   }
 
+  stream_seconds <- proc.time()[["elapsed"]] - stream_started
+  timing <- c(
+    timing,
+    OTHER_SECONDS = max(0, stream_seconds - sum(timing)),
+    STREAM_SECONDS = stream_seconds
+  )
+
   list(
     summary = summary,
-    chunks = chunk_number
+    chunks = chunk_number,
+    timing = timing
   )
 }
 
@@ -877,6 +912,8 @@ streamSnapshotMaterializedTable <- function(
     )
   }
 
+  table_started <- proc.time()[["elapsed"]]
+  source_open_started <- proc.time()[["elapsed"]]
   query_info <- getSnapshotStreamingSourceQuery(
     source_connection,
     plan_row,
@@ -903,6 +940,7 @@ streamSnapshotMaterializedTable <- function(
       )
     }
   )
+  source_open_seconds <- proc.time()[["elapsed"]] - source_open_started
   on.exit(
     {
       if (DBI::dbIsValid(source_result)) {
@@ -1026,6 +1064,8 @@ streamSnapshotMaterializedTable <- function(
     strip_review_columns = stripSnapshotStreamingReviewColumns
   )
   summary <- stream_result[["summary"]]
+  timing <- stream_result[["timing"]]
+  total_seconds <- proc.time()[["elapsed"]] - table_started
 
   summary[["TABLE_NAME"]] <- materialized_table_name
   summary[["BASE_TABLE_NAME"]] <- base_table_name
@@ -1035,6 +1075,30 @@ streamSnapshotMaterializedTable <- function(
   summary[["ORIGINAL_COLUMNS_REMOVED"]] <- 0L
   summary[["DUPLICATE_ROWS_REMOVED"]] <- 0L
   summary[["POSTPROCESSING_ACTION"]] <- "none"
+  summary[["CHUNKS"]] <- stream_result[["chunks"]]
+  summary[["SOURCE_OPEN_SECONDS"]] <- source_open_seconds
+  for (timing_name in names(timing)) {
+    summary[[timing_name]] <- timing[[timing_name]]
+  }
+  summary[["TOTAL_SECONDS"]] <- total_seconds
+  message(
+    sprintf(
+      paste0(
+        "Snapshot timing for %s: source open %.3fs, fetch %.3fs, ",
+        "enrich %.3fs, review %.3fs, pseudonymize %.3fs, write %.3fs, ",
+        "other %.3fs, total %.3fs"
+      ),
+      materialized_table_name,
+      source_open_seconds,
+      timing[["FETCH_SECONDS"]],
+      timing[["ENRICH_SECONDS"]],
+      timing[["REVIEW_SECONDS"]],
+      timing[["PSEUDONYMIZE_SECONDS"]],
+      timing[["WRITE_SECONDS"]],
+      timing[["OTHER_SECONDS"]],
+      total_seconds
+    )
+  )
 
   list(
     summary = summary,
