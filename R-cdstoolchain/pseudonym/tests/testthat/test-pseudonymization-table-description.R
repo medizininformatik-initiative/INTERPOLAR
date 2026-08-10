@@ -432,11 +432,12 @@ test_that("setFhirPseudonymizationRules uses the packaged YAML by default", {
 
 test_that("currently absent non-Bundle default YAML paths match when present", {
   table_description <- data.table::data.table(
-    RESOURCE = c("Patient", NA, NA, "Provenance", "Observation"),
+    RESOURCE = c("Patient", NA, NA, NA, "Provenance", "Observation"),
     COLUMN_NAME = c(
       "pat_address_country",
       "pat_address_state",
       "pat_deceased_boolean",
+      "pat_deceaseddatetime",
       "pro_target_ref",
       "obs_telecom_value"
     ),
@@ -444,6 +445,7 @@ test_that("currently absent non-Bundle default YAML paths match when present", {
       "address/country",
       "address/state",
       "deceasedBoolean",
+      "deceasedDateTime",
       "target/reference",
       "telecom/value"
     ),
@@ -457,6 +459,7 @@ test_that("currently absent non-Bundle default YAML paths match when present", {
     "keep",
     "keep",
     "keep",
+    "generalize(format = \"YYYY-MM\")",
     "cryptoHash",
     "redact"
   ))

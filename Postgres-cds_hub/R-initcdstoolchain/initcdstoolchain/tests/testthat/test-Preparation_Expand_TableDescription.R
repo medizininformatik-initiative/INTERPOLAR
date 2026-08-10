@@ -103,9 +103,9 @@ test_that("expandTableDescriptionInternal retains nested FHIR node type provenan
 
 test_that("addPseudonymizationRulesToTableDescription adds default YAML rules", {
   table_description <- data.table(
-    RESOURCE = c("Patient", NA),
-    COLUMN_NAME = c("pat_id", "pat_birthdate"),
-    FHIR_EXPRESSION = c("id", "birthDate"),
+    RESOURCE = c("Patient", NA, NA),
+    COLUMN_NAME = c("pat_id", "pat_birthdate", "pat_deceaseddatetime"),
+    FHIR_EXPRESSION = c("id", "birthDate", "deceasedDateTime"),
     REFERENCE_TYPES = NA_character_,
     FHIR_TYPE = NA_character_
   )
@@ -122,7 +122,11 @@ test_that("addPseudonymizationRulesToTableDescription adds default YAML rules", 
   ))
   expect_equal(
     result$PSEUDONYMIZATION_RULE,
-    c("cryptoHash", "generalize(format = \"YYYY-MM\")")
+    c(
+      "cryptoHash",
+      "generalize(format = \"YYYY-MM\")",
+      "generalize(format = \"YYYY-MM\")"
+    )
   )
 })
 
