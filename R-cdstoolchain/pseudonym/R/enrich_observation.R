@@ -4,10 +4,11 @@ SNAPSHOT_LOINC_MAPPING_FILE <- file.path(
   "LOINC_Mapping_Table_processed.xlsx"
 )
 
-SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS <- c(
-  "value_in_reference_unit",
-  "reference_unit",
-  "primary_loinc_code"
+SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS <- c(
+  "analysis_loinc_code",
+  "analysis_unit",
+  "analysis_value",
+  "analysis_value_status"
 )
 
 SNAPSHOT_OBSERVATION_SOURCE_COLUMNS <- c(
@@ -22,6 +23,8 @@ SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN <-
   ".snapshot_pseudonym_loinc_conversion_issue"
 SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN <-
   ".snapshot_pseudonym_loinc_mapping_conversion_unit"
+SNAPSHOT_LOINC_TARGET_UNIT_COLUMN <-
+  ".snapshot_pseudonym_loinc_target_unit"
 
 loadSnapshotLoincMapping <- function(input_repo_path) {
   if (is.null(input_repo_path) || is.na(input_repo_path) || !nzchar(input_repo_path)) {
@@ -120,7 +123,7 @@ getLoincUnitConversionReview <- function(table, table_name) {
     SOURCE_UNIT_DISPLAY = as.character(table[["obs_valuequantity_unit"]][issue_rows]),
     USED_SOURCE_UNIT = as.character(getObservationValueUnit(table)[issue_rows]),
     MAPPING_CONVERSION_UNIT = as.character(table[[SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN]][issue_rows]),
-    TARGET_UNIT = as.character(table[["reference_unit"]][issue_rows]),
+    TARGET_UNIT = as.character(table[[SNAPSHOT_LOINC_TARGET_UNIT_COLUMN]][issue_rows]),
     N = 1L
   )
   sumDataTableColumnBy(
@@ -215,18 +218,18 @@ finalizeLoincUnitConversionReview <- function(context) {
 enrichObservationWithLoincMapping <- function(
   observation,
   loinc_mapping,
-  enrichment_columns = SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
+  enrichment_columns = SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS,
   source_columns = names(observation)
 ) {
   observation <- data.table::copy(data.table::as.data.table(observation))
   enrichment_columns <- intersect(
     enrichment_columns,
-    SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS
+    SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS
   )
   if (length(enrichment_columns) == 0) {
     return(observation)
   }
-  for (column_name in SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS) {
+  for (column_name in SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS) {
     if (!column_name %in% names(observation)) {
       observation[[column_name]] <- NA
     }
@@ -237,7 +240,7 @@ enrichObservationWithLoincMapping <- function(
     !all(SNAPSHOT_OBSERVATION_SOURCE_COLUMNS %in% names(observation))
   ) {
     observation[setdiff(
-      SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
+      SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS,
       enrichment_columns
     )] <- NULL
     return(observation)
@@ -253,39 +256,70 @@ enrichObservationWithLoincMapping <- function(
   )
   data.table::setnames(mapping, mapping_column_names, c(
     "obs_code_code",
-    "primary_loinc_code",
-    "reference_unit",
+    "analysis_loinc_code",
+    "analysis_unit",
     "conversion_factor",
     "conversion_unit"
   ))
   mapping[["conversion_factor"]] <- normalizeConversionFactor(mapping[["conversion_factor"]])
   mapping[["conversion_unit"]][is.na(mapping[["conversion_factor"]])] <- NA_character_
 
-  observation[["value_in_reference_unit"]] <- as.numeric(observation[["value_in_reference_unit"]])
-  observation[["reference_unit"]] <- as.character(observation[["reference_unit"]])
-  observation[["primary_loinc_code"]] <- as.character(observation[["primary_loinc_code"]])
+  observation[["analysis_value"]] <- as.numeric(observation[["analysis_value"]])
+  observation[["analysis_unit"]] <- as.character(observation[["analysis_unit"]])
+  observation[["analysis_loinc_code"]] <- as.character(observation[["analysis_loinc_code"]])
+  observation[["analysis_value_status"]] <- as.character(
+    observation[["analysis_value_status"]]
+  )
   row_id_column <- ".snapshot_pseudonym_row_id"
   source_unit_column <- ".snapshot_pseudonym_source_unit"
-  candidate_row_indices <- which(
-    observation[["obs_code_system"]] == "http://loinc.org" &
-      !is.na(observation[["obs_valuequantity_value"]])
+  loinc_row_indices <- which(
+    observation[["obs_code_system"]] == "http://loinc.org"
   )
-  candidate_mapping_rows <- match(
-    observation[["obs_code_code"]][candidate_row_indices],
+  source_units <- getObservationValueUnit(observation)
+  observation[["analysis_loinc_code"]][loinc_row_indices] <-
+    observation[["obs_code_code"]][loinc_row_indices]
+  observation[["analysis_unit"]][loinc_row_indices] <- source_units[loinc_row_indices]
+  observation[["analysis_value"]][loinc_row_indices] <-
+    observation[["obs_valuequantity_value"]][loinc_row_indices]
+  observation[["analysis_value_status"]][loinc_row_indices] <- "missing_value"
+
+  loinc_mapping_rows <- match(
+    observation[["obs_code_code"]][loinc_row_indices],
     mapping[["obs_code_code"]]
   )
+  mapped_loinc_indices <- which(!is.na(loinc_mapping_rows))
+  mapped_primary_loincs <-
+    mapping[["analysis_loinc_code"]][loinc_mapping_rows[mapped_loinc_indices]]
+  has_mapped_primary <- !is.na(mapped_primary_loincs) &
+    nzchar(trimws(mapped_primary_loincs))
+  observation[["analysis_loinc_code"]][
+    loinc_row_indices[mapped_loinc_indices[has_mapped_primary]]
+  ] <- mapped_primary_loincs[has_mapped_primary]
+
+  candidate_loinc_indices <- which(
+    !is.na(observation[["obs_valuequantity_value"]][loinc_row_indices])
+  )
+  candidate_row_indices <- loinc_row_indices[candidate_loinc_indices]
+  candidate_source_units <- source_units[candidate_row_indices]
+  candidate_units_missing <- is.na(candidate_source_units) |
+    !nzchar(trimws(candidate_source_units))
+  observation[["analysis_value_status"]][candidate_row_indices] <-
+    data.table::fifelse(
+      candidate_units_missing,
+      "source_no_mapping_missing_unit",
+      "source_no_mapping"
+    )
+  candidate_mapping_rows <- loinc_mapping_rows[candidate_loinc_indices]
   matched_candidate_indices <- which(!is.na(candidate_mapping_rows))
 
   if (length(matched_candidate_indices) > 0) {
     matched_row_indices <- candidate_row_indices[matched_candidate_indices]
     matched_rows <- observation[matched_row_indices, ]
     matched_rows[[row_id_column]] <- matched_row_indices
-    matched_rows[[source_unit_column]] <- getObservationValueUnit(matched_rows)
+    matched_rows[[source_unit_column]] <- source_units[matched_row_indices]
     matched_mapping_rows <- candidate_mapping_rows[matched_candidate_indices]
     matched_rows[[".snapshot_pseudonym_target_unit"]] <-
-      mapping[["reference_unit"]][matched_mapping_rows]
-    matched_rows[[".snapshot_pseudonym_primary_loinc"]] <-
-      mapping[["primary_loinc_code"]][matched_mapping_rows]
+      mapping[["analysis_unit"]][matched_mapping_rows]
     matched_rows[[".snapshot_pseudonym_conversion_factor"]] <-
       mapping[["conversion_factor"]][matched_mapping_rows]
     matched_rows[[".snapshot_pseudonym_conversion_unit"]] <-
@@ -311,11 +345,16 @@ enrichObservationWithLoincMapping <- function(
         matched_rows[[conversion_factor_column]][first_group_row]
       group_conversion_unit <-
         matched_rows[[conversion_unit_column]][first_group_row]
+      group_target_unit <-
+        matched_rows[[".snapshot_pseudonym_target_unit"]][first_group_row]
+      if (is.na(group_target_unit) || !nzchar(trimws(group_target_unit))) {
+        next
+      }
       invisible(utils::capture.output(
         converted_values[group_rows] <- etlutils::convertLabUnits(
           measured_value = matched_rows[["obs_valuequantity_value"]][group_rows],
           measured_unit = matched_rows[[source_unit_column]][first_group_row],
-          target_unit = matched_rows[[".snapshot_pseudonym_target_unit"]][first_group_row],
+          target_unit = group_target_unit,
           conversion_factor = group_conversion_factor,
           conversion_unit = group_conversion_unit,
           additional_error_message = paste0(
@@ -327,25 +366,59 @@ enrichObservationWithLoincMapping <- function(
     }
 
     enriched_row_ids <- matched_rows[[row_id_column]]
-    observation[["value_in_reference_unit"]][enriched_row_ids] <-
-      converted_values
-    observation[["reference_unit"]][enriched_row_ids] <-
-      matched_rows[[".snapshot_pseudonym_target_unit"]]
-    observation[["primary_loinc_code"]][enriched_row_ids] <-
-      matched_rows[[".snapshot_pseudonym_primary_loinc"]]
+    converted_rows <- which(!is.na(converted_values))
+    if (length(converted_rows) > 0) {
+      converted_row_ids <- enriched_row_ids[converted_rows]
+      converted_source_units <- matched_rows[[source_unit_column]][converted_rows]
+      converted_target_units <-
+        matched_rows[[".snapshot_pseudonym_target_unit"]][converted_rows]
+      same_unit <- !is.na(converted_source_units) &
+        !is.na(converted_target_units) &
+        tolower(trimws(converted_source_units)) ==
+          tolower(trimws(converted_target_units))
+      observation[["analysis_value"]][converted_row_ids] <-
+        converted_values[converted_rows]
+      observation[["analysis_unit"]][converted_row_ids] <- converted_target_units
+      observation[["analysis_value_status"]][converted_row_ids] <-
+        data.table::fifelse(
+          same_unit,
+          "already_reference_unit",
+          "converted"
+        )
+    }
     failed_conversion_rows <- which(is.na(converted_values))
     if (length(failed_conversion_rows) > 0) {
       failed_row_ids <- enriched_row_ids[failed_conversion_rows]
+      failed_source_units <- matched_rows[[source_unit_column]][failed_conversion_rows]
+      failed_target_units <-
+        matched_rows[[".snapshot_pseudonym_target_unit"]][failed_conversion_rows]
+      failed_units_missing <- is.na(failed_source_units) |
+        !nzchar(trimws(failed_source_units))
+      failed_targets_missing <- is.na(failed_target_units) |
+        !nzchar(trimws(failed_target_units))
+      observation[["analysis_value_status"]][failed_row_ids] <-
+        data.table::fifelse(
+          failed_targets_missing,
+          "source_mapping_missing_unit",
+          data.table::fifelse(
+            failed_units_missing,
+            "source_missing_unit",
+            "source_conversion_failed"
+          )
+        )
       observation[[SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN]] <- FALSE
       observation[[SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN]] <- NA_character_
+      observation[[SNAPSHOT_LOINC_TARGET_UNIT_COLUMN]] <- NA_character_
       observation[[SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN]][failed_row_ids] <- TRUE
       observation[[SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN]][failed_row_ids] <-
         matched_rows[[conversion_unit_column]][failed_conversion_rows]
+      observation[[SNAPSHOT_LOINC_TARGET_UNIT_COLUMN]][failed_row_ids] <-
+        matched_rows[[".snapshot_pseudonym_target_unit"]][failed_conversion_rows]
     }
   }
 
   unused_enrichment_columns <- setdiff(
-    SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
+    SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS,
     enrichment_columns
   )
   observation[unused_enrichment_columns] <- NULL

@@ -148,8 +148,8 @@ test_that("expandTableDescriptionFromFile handles table and snapshot extensions"
   )
   snapshot_extension <- data.table(
     V1 = c("Hint", "Snapshot-only columns", NA, "TABLE_NAME", "observation"),
-    V2 = c(NA, NA, NA, "COLUMN_NAME", "primary_loinc_code"),
-    V3 = c(NA, NA, NA, "COLUMN_DESCRIPTION", "Primary LOINC Code"),
+    V2 = c(NA, NA, NA, "COLUMN_NAME", "analysis_loinc_code"),
+    V3 = c(NA, NA, NA, "COLUMN_DESCRIPTION", "Analysis LOINC Code"),
     V4 = c(NA, NA, NA, "COLUMN_TYPE", "varchar"),
     V5 = c(NA, NA, NA, "PSEUDONYMIZATION_RULE", "keep")
   )
@@ -188,7 +188,7 @@ test_that("expandTableDescriptionFromFile handles table and snapshot extensions"
   additional_output_sheets <- attr(result, "additional_output_sheets")
   expect_named(additional_output_sheets, "snapshot_extension")
   expect_equal(additional_output_sheets$snapshot_extension[4, 1], "TABLE_NAME")
-  expect_equal(additional_output_sheets$snapshot_extension[5, 2], "primary_loinc_code")
+  expect_equal(additional_output_sheets$snapshot_extension[5, 2], "analysis_loinc_code")
 
   extension <- attr(result, "table_description_extension")
   expect_equal(extension$RESOURCE, c("pids_per_ward", NA_character_))

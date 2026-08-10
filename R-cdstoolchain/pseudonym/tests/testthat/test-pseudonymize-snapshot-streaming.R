@@ -420,11 +420,11 @@ test_that("observation enrichment is optional for missing sources and targets", 
     observation,
     "observation",
     context,
-    described_columns = c(names(observation), "primary_loinc_code")
+    described_columns = c(names(observation), "analysis_loinc_code")
   )
 
-  expect_false("primary_loinc_code" %in% names(without_target))
-  expect_true(is.na(with_missing_sources$primary_loinc_code))
+  expect_false("analysis_loinc_code" %in% names(without_target))
+  expect_true(is.na(with_missing_sources$analysis_loinc_code))
   expect_null(context$loinc_mapping)
 })
 
@@ -447,13 +447,14 @@ test_that("observation enrichment keeps only described target columns", {
   result <- enrichObservationWithLoincMapping(
     observation,
     mapping,
-    enrichment_columns = "primary_loinc_code",
+    enrichment_columns = "analysis_loinc_code",
     source_columns = names(observation)
   )
 
-  expect_equal(result$primary_loinc_code, "1234-5")
-  expect_false("value_in_reference_unit" %in% names(result))
-  expect_false("reference_unit" %in% names(result))
+  expect_equal(result$analysis_loinc_code, "1234-5")
+  expect_false("analysis_value" %in% names(result))
+  expect_false("analysis_unit" %in% names(result))
+  expect_false("analysis_value_status" %in% names(result))
 })
 
 test_that("observation enrichment converts value groups without changing row order", {
@@ -476,7 +477,10 @@ test_that("observation enrichment converts value groups without changing row ord
   result <- enrichObservationWithLoincMapping(observation, mapping)
 
   expect_equal(result$obs_id, observation$obs_id)
-  expect_equal(result$value_in_reference_unit, c(0.002, 3000, 0.004))
+  expect_equal(result$analysis_value, c(0.002, 3000, 0.004))
+  expect_equal(result$analysis_unit, c("g", "umol/L", "g"))
+  expect_equal(result$analysis_loinc_code, c("mass", "amount", "mass"))
+  expect_equal(result$analysis_value_status, rep("converted", 3))
   expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(result))
 })
 
@@ -498,7 +502,12 @@ test_that("observation enrichment converts grouped values through a mapping unit
 
   result <- enrichObservationWithLoincMapping(observation, mapping)
 
-  expect_equal(result$value_in_reference_unit, c(17.104, 34.208, NA_real_))
+  expect_equal(result$analysis_value, c(17.104, 34.208, NA_real_))
+  expect_equal(result$analysis_loinc_code, rep("14631-6", 3))
+  expect_equal(
+    result$analysis_value_status,
+    c("converted", "converted", "missing_value")
+  )
   expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(result))
 })
 
@@ -534,7 +543,10 @@ test_that("observation enrichment aggregates incompatible units without warnings
   stripped <- stripSnapshotStreamingReviewColumns(data.table::copy(result))
 
   expect_length(output, 0)
-  expect_true(all(is.na(result$value_in_reference_unit)))
+  expect_equal(result$analysis_value, observation$obs_valuequantity_value)
+  expect_equal(result$analysis_unit, rep("mg", 3))
+  expect_equal(result$analysis_loinc_code, rep("14631-6", 3))
+  expect_equal(result$analysis_value_status, rep("source_conversion_failed", 3))
   expect_equal(review$LOINC_CODE, "1975-2")
   expect_equal(review$SOURCE_UNIT_CODE, "mg")
   expect_equal(review$SOURCE_UNIT_DISPLAY, "milligram")
@@ -546,6 +558,112 @@ test_that("observation enrichment aggregates incompatible units without warnings
   expect_equal(sum(combined_review$AFFECTED_ROWS), 9)
   expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(stripped))
   expect_false(SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN %in% names(stripped))
+  expect_false(SNAPSHOT_LOINC_TARGET_UNIT_COLUMN %in% names(stripped))
+})
+
+test_that("observation enrichment uses source values when no mapping exists", {
+  observation <- data.table::data.table(
+    obs_code_system = c("http://loinc.org", "http://loinc.org"),
+    obs_code_code = c("unmapped", "missing"),
+    obs_valuequantity_value = c(7, NA_real_),
+    obs_valuequantity_code = c("mg/L", NA_character_),
+    obs_valuequantity_unit = c("mg/L", NA_character_)
+  )
+  mapping <- data.table::data.table(
+    LOINC = character(),
+    LOINC_PRIMARY = character(),
+    UNIT = character(),
+    CONVERSION_FACTOR = numeric(),
+    CONVERSION_UNIT = character()
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+
+  expect_equal(result$analysis_value, c(7, NA_real_))
+  expect_equal(result$analysis_unit, c("mg/L", NA_character_))
+  expect_equal(result$analysis_loinc_code, c("unmapped", "missing"))
+  expect_equal(
+    result$analysis_value_status,
+    c("source_no_mapping", "missing_value")
+  )
+})
+
+test_that("observation enrichment marks values already in the reference unit", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = "same",
+    obs_valuequantity_value = 7,
+    obs_valuequantity_code = "mg/L",
+    obs_valuequantity_unit = "mg/L"
+  )
+  mapping <- data.table::data.table(
+    LOINC = "same",
+    LOINC_PRIMARY = "primary",
+    UNIT = "mg/L",
+    CONVERSION_FACTOR = NA_real_,
+    CONVERSION_UNIT = NA_character_
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+
+  expect_equal(result$analysis_value, 7)
+  expect_equal(result$analysis_unit, "mg/L")
+  expect_equal(result$analysis_loinc_code, "primary")
+  expect_equal(result$analysis_value_status, "already_reference_unit")
+})
+
+test_that("observation enrichment falls back when the mapping target unit is missing", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = "mapped-without-unit",
+    obs_valuequantity_value = 7,
+    obs_valuequantity_code = "mg/L",
+    obs_valuequantity_unit = "mg/L"
+  )
+  mapping <- data.table::data.table(
+    LOINC = "mapped-without-unit",
+    LOINC_PRIMARY = "primary",
+    UNIT = NA_character_,
+    CONVERSION_FACTOR = NA_real_,
+    CONVERSION_UNIT = NA_character_
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+  review <- getLoincUnitConversionReview(result, "observation")
+
+  expect_equal(result$analysis_loinc_code, "primary")
+  expect_equal(result$analysis_unit, "mg/L")
+  expect_equal(result$analysis_value, 7)
+  expect_equal(result$analysis_value_status, "source_mapping_missing_unit")
+  expect_equal(review$TARGET_UNIT, NA_character_)
+  expect_equal(review$AFFECTED_ROWS, 1)
+})
+
+test_that("observation enrichment distinguishes missing source units", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = c("mapped", "unmapped"),
+    obs_valuequantity_value = c(7, 8),
+    obs_valuequantity_code = NA_character_,
+    obs_valuequantity_unit = NA_character_
+  )
+  mapping <- data.table::data.table(
+    LOINC = "mapped",
+    LOINC_PRIMARY = "primary",
+    UNIT = "mg/L",
+    CONVERSION_FACTOR = NA_real_,
+    CONVERSION_UNIT = NA_character_
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+
+  expect_equal(result$analysis_loinc_code, c("primary", "unmapped"))
+  expect_equal(result$analysis_unit, c(NA_character_, NA_character_))
+  expect_equal(result$analysis_value, c(7, 8))
+  expect_equal(
+    result$analysis_value_status,
+    c("source_missing_unit", "source_no_mapping_missing_unit")
+  )
 })
 
 test_that("medication enrichment only creates described targets", {

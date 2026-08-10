@@ -50,22 +50,24 @@ test_that("getSnapshotSourceViewPlan maps frontend rule names to frontend DB tab
 
 test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension columns", {
   rules <- data.table::data.table(
-    SOURCE = c("fhir", rep("snapshot_extension", 3)),
-    SOURCE_TYPE = c("table_description", rep("snapshot_extension", 3)),
-    TABLE_OR_RESOURCE = rep("observation", 4),
+    SOURCE = c("fhir", rep("snapshot_extension", 4)),
+    SOURCE_TYPE = c("table_description", rep("snapshot_extension", 4)),
+    TABLE_OR_RESOURCE = rep("observation", 5),
     COLUMN_NAME = c(
       "obs_id",
-      "value_in_reference_unit",
-      "reference_unit",
-      "primary_loinc_code"
+      "analysis_loinc_code",
+      "analysis_unit",
+      "analysis_value",
+      "analysis_value_status"
     ),
     PSEUDONYMIZATION_RULE = "keep"
   )
   observation <- data.table::data.table(
     obs_id = "obs-1",
-    value_in_reference_unit = 1000,
-    reference_unit = "umol/L",
-    primary_loinc_code = "9999-9"
+    analysis_loinc_code = "9999-9",
+    analysis_unit = "umol/L",
+    analysis_value = 1000,
+    analysis_value_status = "converted"
   )
 
   result <- pseudonymizeTableForSnapshot(
@@ -77,9 +79,10 @@ test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension column
   )
 
   expect_equal(names(result$table), names(observation))
-  expect_equal(result$table$value_in_reference_unit, 1000)
-  expect_equal(result$table$reference_unit, "umol/L")
-  expect_equal(result$table$primary_loinc_code, "9999-9")
+  expect_equal(result$table$analysis_value, 1000)
+  expect_equal(result$table$analysis_unit, "umol/L")
+  expect_equal(result$table$analysis_loinc_code, "9999-9")
+  expect_equal(result$table$analysis_value_status, "converted")
 })
 
 test_that("pseudonymizeTableForSnapshot keeps unmatched source columns", {

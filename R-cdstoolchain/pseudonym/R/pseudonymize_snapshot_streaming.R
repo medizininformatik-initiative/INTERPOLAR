@@ -723,7 +723,7 @@ enrichSnapshotStreamingChunk <- function(
   }
   if (identical(base_table_name, "observation")) {
     enrichment_columns <- intersect(
-      SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
+      SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS,
       described_columns
     )
     has_source_columns <- all(
@@ -824,7 +824,8 @@ stripSnapshotStreamingReviewColumns <- function(table) {
     c(
       SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN,
       SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN,
-      SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN
+      SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN,
+      SNAPSHOT_LOINC_TARGET_UNIT_COLUMN
     ),
     names(table)
   )

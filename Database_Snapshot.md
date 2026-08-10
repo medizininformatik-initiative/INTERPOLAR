@@ -272,10 +272,18 @@ der pseudonymisierten Snapshot-Datenbank:
   `enc_age_at_admission`.
 - `fall_bmi` wird befüllt, wenn Gewicht und Größe in unterstützten Einheiten
   vorliegen. Unterstützt werden `kg`, `g`, `mg`, `m`, `cm` und `mm`.
-- `observation` und `observation_last_version` erhalten
-  `primary_loinc_code`, `reference_unit` und `value_in_reference_unit` aus der
-  LOINC-Mapping-Datei. Nicht gemappte oder Nicht-LOINC-Zeilen bleiben erhalten
-  und erhalten in den Zusatzspalten leere Werte.
+- `observation` und `observation_last_version` erhalten `analysis_loinc_code`,
+  `analysis_unit`, `analysis_value` und `analysis_value_status`. Wenn die
+  LOINC-Mapping-Datei eine Referenzeinheit enthält und die Umrechnung gelingt,
+  stehen dort der Primary-LOINC, die Referenzeinheit und der umgerechnete Wert.
+  Andernfalls werden für LOINC-Observations der gemappte Primary-LOINC, soweit
+  vorhanden, sowie die ursprüngliche Einheit und der ursprüngliche Wert
+  übernommen. `analysis_value_status` enthält `converted`,
+  `already_reference_unit`, `source_conversion_failed`, `source_missing_unit`,
+  `source_mapping_missing_unit`, `source_no_mapping`,
+  `source_no_mapping_missing_unit` oder `missing_value`. Damit ist für jeden
+  Analysewert erkennbar, ob Referenz- oder Quelldaten verwendet wurden. Die
+  ursprünglichen Observation-Spalten bleiben unverändert erhalten.
 - `medicationrequest`, `medicationadministration` und `medicationstatement`
   erhalten die Code-/System-Paare aller `Medication`-Einträge, die über die
   direkte Referenz und rekursiv über
