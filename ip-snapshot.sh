@@ -292,6 +292,7 @@ prepare_pseudonymized_target_database() {
 create_pseudonymized_snapshot() {
     local snapshot_name="$1"
     local chunk_size="$2"
+    local reuse_source_database="${3:-true}"
     local source_file_path="${DIR}/${snapshot_name}.sql.gz"
     local pseudonymized_snapshot_name="${snapshot_name}_pseud"
     local pseudonymized_file_path="${DIR}/${pseudonymized_snapshot_name}.sql.gz"
@@ -331,29 +332,44 @@ create_pseudonymized_snapshot() {
 
     ask_before_overwrite_file "${pseudonymized_file_path}"
     local source_database="${source_build_db}"
-    if database_exists "${source_database_name}" && database_exists "${source_build_db}" ; then
-        echo "Fehler: Sowohl die Snapshot-Datenbank als auch die temporäre Quelldatenbank existieren:"
-        echo "  ${source_database_name}"
-        echo "  ${source_build_db}"
-        echo "Entferne die nicht benötigte Datenbank vor einem erneuten Lauf."
-        exit 1
-    fi
-    if database_exists "${source_database_name}" ; then
-        if database_matches_snapshot "${source_database_name}" "${source_file_checksum}" ; then
-            source_database="${source_database_name}"
-            echo "Verwende die bereits aktivierte Snapshot-Datenbank '${source_database}'."
-        else
-            echo "Fehler: Die Snapshot-Datenbank '${source_database_name}' gehört nicht eindeutig zur Snapshot-Datei."
-            echo "Deaktiviere sie vor einem erneuten Lauf."
+    if [[ "${reuse_source_database}" == "true" ]]; then
+        if database_exists "${source_database_name}" && database_exists "${source_build_db}" ; then
+            echo "Fehler: Sowohl die Snapshot-Datenbank als auch die temporäre Quelldatenbank existieren:"
+            echo "  ${source_database_name}"
+            echo "  ${source_build_db}"
+            echo "Entferne die nicht benötigte Datenbank vor einem erneuten Lauf."
             exit 1
         fi
-    elif database_exists "${source_build_db}" ; then
-        if database_matches_snapshot "${source_build_db}" "${source_file_checksum}" ; then
-            echo "Verwende die bereits vollständig eingespielte temporäre Quelldatenbank '${source_build_db}'."
-        else
-            echo "Fehler: Die temporäre Quelldatenbank '${source_build_db}' gehört nicht eindeutig zur Snapshot-Datei."
-            echo "Entferne sie vor einem erneuten Lauf."
+        if database_exists "${source_database_name}" ; then
+            if database_matches_snapshot "${source_database_name}" "${source_file_checksum}" ; then
+                source_database="${source_database_name}"
+                echo "Verwende die bereits aktivierte Snapshot-Datenbank '${source_database}'."
+            else
+                echo "Fehler: Die Snapshot-Datenbank '${source_database_name}' gehört nicht eindeutig zur Snapshot-Datei."
+                echo "Deaktiviere sie vor einem erneuten Lauf."
+                exit 1
+            fi
+        elif database_exists "${source_build_db}" ; then
+            if database_matches_snapshot "${source_build_db}" "${source_file_checksum}" ; then
+                echo "Verwende die bereits vollständig eingespielte temporäre Quelldatenbank '${source_build_db}'."
+            else
+                echo "Fehler: Die temporäre Quelldatenbank '${source_build_db}' gehört nicht eindeutig zur Snapshot-Datei."
+                echo "Entferne sie vor einem erneuten Lauf."
+                exit 1
+            fi
+        fi
+    else
+        if database_exists "${source_database_name}" ; then
+            echo "Fehler: Die Snapshot-Datenbank '${source_database_name}' ist bereits aktiviert."
+            echo "Deaktiviere sie vor einem vollständigen neuen Snapshot-Lauf."
             exit 1
+        fi
+        if database_exists "${source_build_db}" ; then
+            echo "Entferne die vorhandene temporäre Quelldatenbank '${source_build_db}' für den vollständigen neuen Snapshot-Lauf..."
+            if ! drop_database_if_exists "${source_build_db}" ; then
+                echo "Fehler: Temporäre Quelldatenbank '${source_build_db}' konnte nicht entfernt werden."
+                exit 1
+            fi
         fi
     fi
     if database_exists "${target_build_db}" ; then
@@ -582,7 +598,8 @@ case "$action" in
         if [[ "${with_pseudonymized}" == "true" ]]; then
             create_pseudonymized_snapshot \
                 "${snapshot_name_date}" \
-                "${chunk_size}"
+                "${chunk_size}" \
+                false
         fi
         ;;
 

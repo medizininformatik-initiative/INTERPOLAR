@@ -1,3 +1,23 @@
+test_that("snapshot source session permits temporary resolution tables", {
+  captured <- new.env(parent = emptyenv())
+  testthat::local_mocked_bindings(
+    dbExecute = function(connection, statement) {
+      captured$connection <- connection
+      captured$statement <- statement
+      0L
+    },
+    .package = "DBI"
+  )
+
+  snapshotAllowTemporarySourceTables("source-connection")
+
+  expect_equal(captured$connection, "source-connection")
+  expect_equal(
+    captured$statement,
+    "SET SESSION default_transaction_read_only = off"
+  )
+})
+
 test_that("getSnapshotSourceViewPlan uses described table sources only", {
   rules <- data.table::data.table(
     SOURCE_TYPE = c("table_description", "snapshot_extension", "table_description"),

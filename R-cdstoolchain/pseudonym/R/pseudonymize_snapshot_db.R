@@ -44,6 +44,13 @@ snapshotEnsureSchema <- function(connection, schema) {
   }
 }
 
+snapshotAllowTemporarySourceTables <- function(connection) {
+  DBI::dbExecute(
+    connection,
+    "SET SESSION default_transaction_read_only = off"
+  )
+}
+
 snapshotRelationExists <- function(connection, name, schema = NULL) {
   relation <- if (!is.null(schema) && !is.na(schema) && nzchar(schema)) {
     DBI::Id(schema = schema, table = name)
@@ -372,6 +379,7 @@ pseudonymizeSnapshotDatabase <- function(
   }
 
   snapshotEnsureSchema(target_connection, target_table_schema)
+  snapshotAllowTemporarySourceTables(source_connection)
   medication_resolution_tables <- list()
   runPseudonymizationLogStep(2L,
     "Prepare shared Medication reference resolution",
