@@ -84,7 +84,7 @@
 #'
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstWardStart()),
-                                    REPORT_PERIOD_END = as.character(Sys.Date()),
+                                    REPORT_PERIOD_END = as.character(min(getLastWardEnd(), Sys.Date())),
                                     WRITE_TABLE_LOCAL = FALSE) {
   # CONFIG LOCAL ANFANG--------------------------------------------------------------------
   # WRITE_TABLE_LOCAL <- TRUE
@@ -109,6 +109,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     ", Report period end: ", REPORT_PERIOD_END,
     ", Write local tables: ", WRITE_TABLE_LOCAL
   ))
+
+  print(getWardStartsAndEnds())
 
   patient_table <- getPatientData(
     lock_id = "statistical reports[1]",
@@ -365,7 +367,12 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     caption = paste0(
       "Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
       REPORT_PERIOD_END, " (hospitalizations from: ", first_case_in, " to ",
-      last_case_in, ")"
+      last_case_in, "; wards: ",
+      paste0(
+        getWardStartsAndEnds()$ward_name, " (", getWardStartsAndEnds()$ward_start, " to ",
+        getWardStartsAndEnds()$ward_end, ")",
+        collapse = "; "
+      ), ")"
     ),
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),
@@ -408,7 +415,12 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     caption = paste0(
       "Weekly Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
       REPORT_PERIOD_END, " (hospitalizations from: ", first_case_in, " to ",
-      last_case_in, ")"
+      last_case_in, "; wards: ",
+      paste0(
+        getWardStartsAndEnds()$ward_name, " (", getWardStartsAndEnds()$ward_start, " to ",
+        getWardStartsAndEnds()$ward_end, ")",
+        collapse = "; "
+      ), ")"
     ),
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),

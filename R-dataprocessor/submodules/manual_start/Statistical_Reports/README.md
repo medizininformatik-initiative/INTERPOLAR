@@ -105,9 +105,16 @@ Auf Anforderung können ergänzend weitere Tabellen als html-Dateien ausgegeben 
 
 abgefragter Zeitraum konfigurierbar
 
-- alle Fälle werden gezählt, die innerhalb dieses Zeitraumes in der Klinik (Beginn des Einrichtungskontaktes) aufgenommen wurden; dabei zählt der Start-Tag dazu, der End-Tag nicht
+- alle Fälle werden gezählt, die innerhalb dieses Zeitraumes auf einer INTERPOLAR-Station stationär waren; dabei zählt der Start-Tag dazu, der End-Tag nicht
 
-- Default ist aktuell gesetzt auf [erstes Phase A Start Datum, aktuelles Datum)
+- Default ist aktuell gesetzt auf [erstes Phase A Start Datum, aktuelles Datum bzw. letztes Phase B End Datum falls vor aktuellem Datum]
+
+- die Filterung der Zeiträume erfolgt stationsspezifisch:
+
+  - Maximum aus Startdatum der Station und REPORT_PERIOD_START
+  - Minimum aus Enddatum der Station und REPORT_PERIOD_END
+
+  --\> Dies ermöglicht eine Begrenzung des abgefragten Zeitraumes, schließt aber höchstens alle Fälle ab Start und bis Ende der Station ein
 
 bei Bedarf Ausgabe der zu Grunde liegenden Datentabellen (outputLocal)
 

@@ -210,9 +210,10 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #' - `sub_enc_any_algorithmic_MRP` (indicating if any algorithmic MRP documentation exists for the sub encounter)
 #'
 #' Time filtering is performed using the 'fall_ent_dat' and 'fall_aufn_dat' columns to ensure that
-#' only encounters within the reporting period are included. Specifically, encounters with a `fall_ent_dat`
-#' timestamp greater than or equal to the `report_period_start` or a `fall_ent_dat` timestamp that is `NA`
-#' and a `fall_aufn_dat` timestamp less than the `report_period_end ` are retained.
+#' only encounters within the reporting period are included. Specifically, the function retains encounters where:
+#' - `fall_ent_dat` is either missing or greater than or equal to the maximum of the ward start date and
+#'    the reporting period start date.
+#' - `fall_aufn dat` is less than the minimum of the ward end date and the reporting period end date.
 #'
 #' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename n_distinct
 #' @importFrom data.table isoweek isoyear
@@ -311,9 +312,10 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       main_enc_id = fall_fhir_main_enc_id,
       ward_name = fall_station
     ) |>
-    # Filter for encounters that started in the reporting period or are still ongoing
-    dplyr::filter(is.na(fall_ent_dat) | fall_ent_dat >= as.POSIXct(report_period_start)) |>
-    dplyr::filter(fall_aufn_dat < as.POSIXct(report_period_end)) |>
+    mergeWardStartsAndEnds() |>
+    # Filter for encounters that fall within the reporting period based on fall_ent_dat and fall_aufn_dat
+    dplyr::filter(is.na(fall_ent_dat) | fall_ent_dat >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
+    dplyr::filter(fall_aufn_dat < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
     dplyr::distinct()
 
   return(frontend_summary_prep)
