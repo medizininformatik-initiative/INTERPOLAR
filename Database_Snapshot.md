@@ -169,9 +169,23 @@ gleichnamige Snapshot-Datenbank.
 
 Die pseudonymisierte Snapshot-Datei und die pseudonymisierte Snapshot-Datenbank
 enthalten die für Auswertungen relevanten Schemata `db_log` und
-`db2dataprocessor_out`. In `db_log` liegen die pseudonymisierten Tabellen
-materialisiert. `db2dataprocessor_out` enthält durchgereichte Views wie
-`v_<table>` und `v_<table>_last_version`.
+`db2dataprocessor_out`. Wenn für eine Quelltabelle eine Last-Version-View
+existiert, liegen in `db_log` zwei disjunkte pseudonymisierte Tabellen:
+`<table>_old_versions` enthält nur frühere Versionen und
+`<table>_last_version` nur die letzten Versionen. Die letzten Versionen werden
+dadurch nicht zusätzlich in einer materialisierten Gesamttabelle gespeichert.
+
+`db2dataprocessor_out.v_<table>_old_versions` und
+`db2dataprocessor_out.v_<table>_last_version` reichen die jeweilige Tabelle
+direkt durch. Die für Auswertungen unverändert benannte View
+`db2dataprocessor_out.v_<table>` vereinigt beide Views mit `UNION ALL` und zeigt
+damit weiterhin alle Versionen. Tabellen ohne Last-Version-View bleiben als
+einzelne Tabelle mit einer durchgereichten `v_<table>`-View erhalten.
+
+Die Zuordnung erfolgt über die technische Zeilen-ID `<table>_id`, die sowohl
+die normale als auch die Last-Version-View bereitstellen muss. Dadurch bestimmt
+die vorhandene Last-Version-View allein die fachliche Auswahl; der
+Snapshot-Prozess führt keine zusätzliche tabellenspezifische Schlüsselliste.
 
 Aufgenommen werden Tabellen, die über die maßgeblichen Table Descriptions für
 die pseudonymisierte Snapshot-Datenbank ausgewählt sind. Innerhalb dieser
@@ -267,13 +281,15 @@ Snapshot-Dateien bleiben erhalten.
 Vor der Pseudonymisierung ergänzt der Prozess zusätzliche Auswertungsspalten in
 der pseudonymisierten Snapshot-Datenbank:
 
-- `fall_fe` und `fall_fe_last_version` erhalten `fall_age_at_admission`.
-- `encounter` und `encounter_last_version` erhalten
+- `fall_fe_old_versions` und `fall_fe_last_version` erhalten
+  `fall_age_at_admission`.
+- `encounter_old_versions` und `encounter_last_version` erhalten
   `enc_age_at_admission`.
 - `fall_bmi` wird befüllt, wenn Gewicht und Größe in unterstützten Einheiten
   vorliegen. Unterstützt werden `kg`, `g`, `mg`, `m`, `cm` und `mm`.
-- `observation` und `observation_last_version` erhalten `analysis_loinc_code`,
-  `analysis_unit`, `analysis_value` und `analysis_value_status`. Wenn die
+- `observation_old_versions` und `observation_last_version` erhalten
+  `analysis_loinc_code`, `analysis_unit`, `analysis_value` und
+  `analysis_value_status`. Wenn die
   LOINC-Mapping-Datei eine Referenzeinheit enthält und die Umrechnung gelingt,
   stehen dort der Primary-LOINC, die Referenzeinheit und der umgerechnete Wert.
   Andernfalls werden für LOINC-Observations der gemappte Primary-LOINC, soweit
