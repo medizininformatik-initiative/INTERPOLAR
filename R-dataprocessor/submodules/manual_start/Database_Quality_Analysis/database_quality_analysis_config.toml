@@ -1,0 +1,130 @@
+VIEW_SCHEMA = "db2dataprocessor_out"
+VIEW_PREFIX = "v_"
+VIEW_POSTFIX = "_last_version"
+OUTPUT_FILENAME = "Database_Quality_Analysis"
+COUNT_BATCH_SIZE = 100
+INCLUDE_VALUE_DATETIME_COLUMNS = true
+
+# DQA reads analysis views only. Keep this disabled so reports do not wait for
+# the CDS Hub transfer semaphore. Set to true only if the database should be
+# paused explicitly while the report runs.
+USE_DATABASE_LOCKS = false
+
+# Pattern-based boolean option groups, for example REDCap checkbox columns
+# like field_name___1, field_name___2. Counts use the whole group as
+# available when at least one option contains a configured true value.
+BOOLEAN_GROUP_TABLE_FAMILIES = ["Frontend"]
+BOOLEAN_GROUP_COLUMN_PATTERN = "___[0-9]+$"
+BOOLEAN_TRUE_VALUES = ["Checked"]
+
+# Database credentials are loaded through this separate DB config file.
+# Point this to the pseudonymized snapshot DB config when running DQA there.
+PATH_TO_DB_CONFIG_TOML = "./cds_hub_db_config.toml"
+
+# Views matching these regular expressions are included automatically.
+INCLUDED_VIEW_PATTERNS = [
+  "^v_[a-z0-9_]+_last_version$",
+  "^v_[a-z0-9_]+_fe_last_version$"
+]
+
+EXCLUDED_VIEW_PATTERNS = [
+  "_raw_"
+]
+
+# Additional views that do not follow the last-version naming convention.
+ADDITIONAL_VIEWS = [
+  "v_pids_per_ward"
+]
+
+# Technical columns that should not appear in the report.
+TECHNICAL_COLUMNS = [
+  "raw_already_processed",
+  "hash_index_col",
+  "id",
+  "last_version_date",
+  "input_datetime",
+  "last_check_datetime",
+  "current_dataset_status",
+  "input_processing_nr",
+  "last_processing_nr"
+]
+
+# Table-specific grouping overrides. Format:
+# table_name|resource_id_column|pid_column|case_id_column
+#
+# table_name is the normalized table name without view prefix/postfix, for example
+# observation, patient_fe, fall_fe, or pids_per_ward.
+GROUPING_OVERRIDES = [
+  "patient|pat_id|pat_id|",
+  "fall_fe|fall_fhir_enc_id|record_id|fall_id",
+  "pids_per_ward|encounter_id|patient_id|encounter_id",
+  "risikofaktor_fe|record_id|record_id|",
+  "trigger_fe|record_id|record_id|",
+  "medikationsanalyse_fe|meda_id|record_id|fall_meda_id"
+]
+
+# Table families included in the value-summary ZIP archive.
+# Typical values are FHIR and Frontend.
+VALUE_SUMMARY_TABLE_FAMILIES = ["FHIR", "Frontend"]
+
+# FHIR value-summary text columns whose concrete values should not be exported.
+# Patterns are regular expressions matched against COLUMN_NAME. DISTINCT_VALUES
+# and EMPTY are still calculated for these columns. Numeric and datetime
+# columns are summarized with statistics instead of concrete values.
+VALUE_SUMMARY_FHIR_SUPPRESSED_COLUMN_PATTERNS = [
+  "_ref$",
+  "_id$",
+  "_identifier_value$",
+  "_display$",
+  "_text$",
+  "_meta_versionid$",
+  "_values$"
+]
+
+# Frontend value-summary text columns whose concrete values should not be exported.
+# Patterns are regular expressions matched against COLUMN_NAME.
+VALUE_SUMMARY_FRONTEND_SUPPRESSED_COLUMN_PATTERNS = [
+  "_id$",
+  "_fk$",
+  "_pid$",
+  "_additional_values$",
+  "_kurzbeschr$"
+]
+
+# Set this to true, or pass --include-value-summary-values-columns, to include
+# concrete text values from columns ending in _values.
+INCLUDE_VALUE_SUMMARY_VALUES_COLUMNS = false
+
+# Optional resource detail sheets. The entries belong together by position: the
+# first sheet name uses the first table name, row group, and count group settings.
+# ROW_GROUP_VALUES defines the repeated table blocks. COUNT_GROUP_VALUES defines
+# the additional count columns inside each table block. The special count group
+# value OTHER counts non-empty values outside the explicitly configured values.
+RESOURCE_DETAIL_SHEET_NAMES = "FHIR Encounter"
+RESOURCE_DETAIL_TABLE_NAMES = "encounter"
+
+RESOURCE_DETAIL_ROW_GROUP_SYSTEM_COLUMNS = "enc_type_system"
+RESOURCE_DETAIL_ROW_GROUP_SYSTEMS = "http://fhir.de/CodeSystem/Kontaktebene"
+RESOURCE_DETAIL_ROW_GROUP_VALUE_COLUMNS = "enc_type_code"
+RESOURCE_DETAIL_ROW_GROUP_VALUES = [
+  "Einrichtungskontakt=einrichtungskontakt",
+  "Abteilungskontakt=abteilungskontakt",
+  "Versorgungsstellenkontakt=versorgungsstellenkontakt"
+]
+
+RESOURCE_DETAIL_COUNT_GROUP_SYSTEM_COLUMNS = "enc_class_system"
+RESOURCE_DETAIL_COUNT_GROUP_SYSTEMS = "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+RESOURCE_DETAIL_COUNT_GROUP_VALUE_COLUMNS = "enc_class_code"
+RESOURCE_DETAIL_COUNT_GROUP_VALUES = [
+  "count class IMP=IMP",
+  "count class SS=SS",
+  "count class AMB=AMB",
+  "count class Andere=OTHER"
+]
+
+# Optional filtered-scope sheets. These settings create additional versions of
+# the listed sheets for a configured row scope, for example only patients/cases
+# identified through pids_per_ward. Leave FILTERED_SCOPE_SHEET_NAMES empty or
+# undefined to keep only the unfiltered sheets.
+FILTERED_SCOPE_SHEET_NAMES = ["FHIR", "FHIR Encounter"]
+FILTERED_SCOPE_DETAIL_SHEET_SUFFIX = "INTERPOLAR"

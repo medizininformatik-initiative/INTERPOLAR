@@ -23,3 +23,16 @@ Das R-Skript [StartDataProcessor.R](https://github.com/medizininformatik-initiat
 ```console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R
 ```
+
+## Submodule
+
+Submodule werden vom Data Processor anhand von Verzeichnis- und Dateikonventionen
+geladen. Das Hauptpaket `dataprocessor` soll konkrete Submodule nicht fachlich
+kennen. Ein Submodul-Ordner muss löschbar bleiben, ohne dass die Tests oder der
+Start des Hauptpakets dadurch fehlschlagen.
+
+Submodul-spezifische Implementierung und Tests gehören deshalb in das jeweilige
+Submodul, üblicherweise in ein eigenes R-Subprojekt unterhalb des
+Submodul-Ordners. Tests im Hauptpaket dürfen nur generische Loader- oder
+Konventionslogik prüfen und sollen keine konkreten Submodule wie
+`Database_Quality_Analysis`, `MRP_Check` oder andere namentlich voraussetzen.

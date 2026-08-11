@@ -8,6 +8,9 @@ BEGIN
 --Create SQL View for latest Version of the FHIR-Data for schema <%OWNER_SCHEMA%>
 <%LOOP_TABS_SUB_cre_view_last_version_TABLES%>
 
+--SQL Column Comments for Views in Schema <%OWNER_SCHEMA%>
+<%LOOP_TABS_SUB_cre_view_last_version_COMMENTS%>
+
 --SQL Role for Views in Schema <%OWNER_SCHEMA%>
 <%LOOP_TABS_SUB_cre_view_last_version_GRANTS%>
 

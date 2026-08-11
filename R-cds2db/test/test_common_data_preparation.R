@@ -134,6 +134,8 @@ testPrepareRAWResources <- function(patient_ids) {
   enc_templates[, enc_identifier_value := sub("[1]", "[1.1]", sub("-A-1$", "", enc_id), fixed = TRUE)]
   # Add encounters with type "Versorgungstellenkontakt"
   enc_templates <- testAddEncounterLevel3(enc_templates)
+  enc_templates[, enc_type_system := "[1.1]http://fhir.de/CodeSystem/Kontaktebene"]
+  enc_templates[, enc_class_system := "[1]http://terminology.hl7.org/CodeSystem/v3-ActCode"]
   # Change encounter data
   enc_templates[
     grepl("-(A|V)-1$", enc_id),

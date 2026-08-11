@@ -76,13 +76,10 @@ getStudyPhase <- function(ward_name, date_time) {
 #
 # Check if the study has Phase B wards defined in the configuration.
 #
-isPhaseBActive <- function(timestamp =  etlutils::as.POSIXctWithTimezone(Sys.time())) {
-  # get all phase_b_start values from the ward phases and check if any is before the given timestamp
+isPhaseBActive <- function(timestamp = etlutils::as.POSIXctWithTimezone(Sys.time())) {
+  # phase_b_end is study metadata and intentionally does not stop MRP calculation.
   ward_phases <- etlutils::getGlobalVariablesByPrefix("PHASES_WARD")
   phase_b_starts <- extractValues(ward_phases, "phase_b_start")
-  # convert to timestamp via parseTimestamp and check if any is before the given timestamp
-  # the timestamp cannot be empty or invalid format because this is already checked in validateWardPhase
-  # which is called in before this function is called
   for (phase_b_start in phase_b_starts) {
     phase_b_start <- etlutils::parseTimestamp(phase_b_start)
     if (phase_b_start <= timestamp) {
