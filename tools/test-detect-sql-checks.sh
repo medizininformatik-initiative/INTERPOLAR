@@ -23,9 +23,13 @@ no_checks=$'format=false\ngenerated=false'
 assert_detection "Dockerfile_R" "$generated_only"
 assert_detection "R-etlutils/etlutils/R/lib_table.R" "$generated_only"
 assert_detection "R-cdstoolchain/pseudonym/R/pseudonymize_table.R" "$generated_only"
+assert_detection "R-cds2db/cds2db/inst/extdata/Table_Description_Definition.xlsx" "$generated_only"
+assert_detection "R-cds2db/cds2db/inst/extdata/Table_Description.xlsx" "$generated_only"
 assert_detection "R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx" "$generated_only"
 assert_detection "R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx" "$generated_only"
 assert_detection "tools/install-pgformatter.sh" "$generated_only"
+assert_detection "tools/check-table-description-consistency.R" "$generated_only"
+assert_detection "tools/test-check-table-description-consistency.R" "$generated_only"
 assert_detection "README.md" "$no_checks"
 
 echo "SQL check detection tests passed."

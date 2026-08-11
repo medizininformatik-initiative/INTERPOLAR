@@ -60,6 +60,14 @@ behavior.
 
 ## Table Description And Excel Handling
 
+- `R-cds2db/cds2db/inst/extdata/Table_Description_Definition.xlsx` is the
+  maintained source of truth. Do not edit the generated
+  `R-cds2db/cds2db/inst/extdata/Table_Description.xlsx` directly.
+- Change the definition first, regenerate the output with
+  `initcdstoolchain::initTableDescription()`, and commit both files together.
+  Before committing, run `Rscript tools/check-table-description-consistency.R`
+  to compare copied definition sheets such as `snapshot_extension`
+  semantically.
 - For Table Description files, use the existing `etlutils` and
   `initcdstoolchain` helpers for reading headers, writing generated Excel files,
   expanding table descriptions, splitting by table/resource, and filling
