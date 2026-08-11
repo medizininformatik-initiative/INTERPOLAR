@@ -26,10 +26,9 @@ runConsistencyCheckTests <- function() {
   definition_path <- file.path(temporary_directory, "definition.xlsx")
   generated_path <- file.path(temporary_directory, "generated.xlsx")
 
-  matching_values <- data.frame(
+  matching_values <- data.table::data.table(
     c("TABLE_NAME", "observation"),
-    c("COLUMN_NAME", "analysis_value"),
-    check.names = FALSE
+    c("COLUMN_NAME", "analysis_value")
   )
   writeSnapshotExtension(definition_path, matching_values)
   writeSnapshotExtension(generated_path, matching_values)

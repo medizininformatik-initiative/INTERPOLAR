@@ -17,15 +17,12 @@ normalizeWorksheetCells <- function(file_path, sheet_name) {
     skipEmptyCols = FALSE,
     check.names = FALSE
   )
-  cells <- as.data.frame(
-    lapply(cells, as.character),
-    check.names = FALSE,
-    stringsAsFactors = FALSE
-  )
-  cells[] <- lapply(cells, function(column) {
+  data.table::setDT(cells)
+  for (column_name in names(cells)) {
+    column <- as.character(cells[[column_name]])
     column[is.na(column) | column == ""] <- NA_character_
-    column
-  })
+    data.table::set(cells, j = column_name, value = column)
+  }
   cells
 }
 
@@ -97,32 +94,24 @@ checkTableDescriptionConsistency <- function(
   invisible(TRUE)
 }
 
-getCurrentScriptPath <- function() {
-  file_argument <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
-  if (length(file_argument) != 1L) {
-    stop("Could not determine the current script path.", call. = FALSE)
-  }
-  normalizePath(sub("^--file=", "", file_argument))
+getInstalledTableDescriptionPath <- function(file_name) {
+  system.file("extdata", file_name, package = "cds2db", mustWork = TRUE)
 }
 
 if (sys.nframe() == 0L) {
-  script_path <- getCurrentScriptPath()
-  project_root <- normalizePath(file.path(dirname(script_path), ".."))
   arguments <- commandArgs(trailingOnly = TRUE)
   definition_path <- if (length(arguments) >= 1L) {
     arguments[[1L]]
   } else {
-    file.path(
-      project_root,
-      "R-cds2db/cds2db/inst/extdata/Table_Description_Definition.xlsx"
+    getInstalledTableDescriptionPath(
+      "Table_Description_Definition.xlsx"
     )
   }
   generated_path <- if (length(arguments) >= 2L) {
     arguments[[2L]]
   } else {
-    file.path(
-      project_root,
-      "R-cds2db/cds2db/inst/extdata/Table_Description.xlsx"
+    getInstalledTableDescriptionPath(
+      "Table_Description.xlsx"
     )
   }
   checkTableDescriptionConsistency(definition_path, generated_path)
