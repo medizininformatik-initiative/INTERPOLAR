@@ -565,7 +565,7 @@ getFallFeData <- function(lock_id, table_name) {
 getMedikationsanalyseFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, fall_meda_id, meda_id, meda_dat, ",
-    "medikationsanalyse_complete, last_processing_nr, redcap_repeat_instance FROM ", table_name, "\n"
+    "medikationsanalyse_complete, meda_mrp_detekt, last_processing_nr, redcap_repeat_instance FROM ", table_name, "\n"
   )
 
   # ----------------------------------------------------------------------------------------------------------#

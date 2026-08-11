@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-06-11 17:22:24
+-- Rights definition file last update : 2026-06-18 14:50:31
 -- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2026-06-12 11:40:35
+-- Create time: 2026-06-18 16:06:35
 -- TABLE_DESCRIPTION:  ./R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/344_cre_view_dataproc_core_last_import.sql
 -- TEMPLATE:  template_cre_view_last_import.sql
@@ -114,6 +114,15 @@ END $innerview$;
 END IF;
         -- do migration
 END $innerview$;
+    --SQL Column Comments for Views in Schema db2dataprocessor_out
+    -------- COMMENTS db2dataprocessor_out.v_input_data_files_last_import ------------
+    COMMENT ON COLUMN db2dataprocessor_out.v_input_data_files_last_import.file_name IS 'table file name (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_input_data_files_last_import.content_hash IS 'hashed table content (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_input_data_files_last_import.content IS 'table content (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_input_data_files_last_import.processed_content_hash IS 'optional – hashed processed table content (varchar)';
+    -------- COMMENTS db2dataprocessor_out.v_input_data_files_processed_content_last_import ------------
+    COMMENT ON COLUMN db2dataprocessor_out.v_input_data_files_processed_content_last_import.processed_content_hash IS 'hashed processed table content (varchar)';
+    COMMENT ON COLUMN db2dataprocessor_out.v_input_data_files_processed_content_last_import.processed_content IS 'processed table content (varchar)';
     --SQL Role for Views in Schema db2dataprocessor_out
     GRANT SELECT ON TABLE db2dataprocessor_out.v_input_data_files_last_import TO db2dataprocessor_user;
     GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;

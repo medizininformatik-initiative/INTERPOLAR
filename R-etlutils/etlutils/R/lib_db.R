@@ -34,6 +34,122 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
   )
 }
 
+#' Read database config and apply target-specific connection overrides
+#'
+#' Loads a CDS Hub database TOML file and optionally replaces \code{DB_NAME},
+#' \code{DB_HOST} and \code{DB_PORT} with target-specific values such as
+#' \code{DB_ANALYSIS_NAME}, \code{DB_ANALYSIS_HOST} and
+#' \code{DB_ANALYSIS_PORT} and \code{DB_ANALYSIS_ADMIN_PASSWORD}.
+#'
+#' @param path_to_db_toml Character path to the database TOML file.
+#' @param target_prefix Character prefix for optional target DB values.
+#' @return Named list of database configuration values.
+#' @export
+dbReadConfigForTarget <- function(path_to_db_toml, target_prefix = NULL) {
+  db_config <- readTomlAsNamedList(path_to_db_toml)
+  if (is.null(target_prefix) || !nzchar(target_prefix)) {
+    return(db_config)
+  }
+
+  target_names <- c(
+    DB_NAME = paste0(target_prefix, "_NAME"),
+    DB_HOST = paste0(target_prefix, "_HOST"),
+    DB_PORT = paste0(target_prefix, "_PORT"),
+    DB_ADMIN_PASSWORD = paste0(target_prefix, "_ADMIN_PASSWORD")
+  )
+  for (db_name in names(target_names)) {
+    target_name <- target_names[[db_name]]
+    target_value <- db_config[[target_name]]
+    if (
+      !is.null(target_value) &&
+      length(target_value) &&
+      !is.na(target_value[[1]]) &&
+      nzchar(as.character(target_value[[1]]))
+    ) {
+      db_config[[db_name]] <- target_value
+    }
+  }
+  db_config
+}
+
+#' Set a module database context from a database TOML file
+#'
+#' Loads database settings from a TOML file, optionally applies target-specific
+#' connection values, and initializes the etlutils database context for a module.
+#'
+#' @param module_name Character module name used for the DB context.
+#' @param path_to_db_toml Character path to the database TOML file.
+#' @param db_schema_base_name Optional schema/user prefix. Defaults to module name.
+#' @param target_prefix Optional prefix for target DB values, for example
+#'   \code{DB_ANALYSIS}.
+#' @param log Logical flag for DB logging.
+#' @return Invisibly returns TRUE after setting the context.
+#' @export
+dbSetModuleContextFromToml <- function(
+  module_name,
+  path_to_db_toml,
+  db_schema_base_name = module_name,
+  target_prefix = NULL,
+  log = FALSE
+) {
+  db_config <- dbReadConfigForTarget(path_to_db_toml, target_prefix)
+  module_name_upper <- toupper(db_schema_base_name)
+  dbSetContext(
+    module_name = module_name,
+    dbname = db_config[["DB_NAME"]],
+    host = db_config[["DB_HOST"]],
+    port = db_config[["DB_PORT"]],
+    user = db_config[[paste0("DB_", module_name_upper, "_USER")]],
+    password = db_config[[paste0("DB_", module_name_upper, "_PASSWORD")]],
+    schema_in = db_config[[paste0("DB_", module_name_upper, "_SCHEMA_IN")]],
+    schema_out = db_config[[paste0("DB_", module_name_upper, "_SCHEMA_OUT")]],
+    admin_user = db_config[["DB_ADMIN_USER"]],
+    admin_password = db_config[["DB_ADMIN_PASSWORD"]],
+    admin_schemas = db_config[["DB_ADMIN_SCHEMAS"]],
+    log = log
+  )
+  invisible(TRUE)
+}
+
+#' Set a module database context from an environment TOML path
+#'
+#' Reads a database TOML path from an environment variable and initializes the
+#' etlutils database context for a module. If the path variable is missing or
+#' empty, the function returns FALSE invisibly.
+#'
+#' @param module_name Character module name used for the DB context.
+#' @param path_variable Character environment variable containing the DB TOML path.
+#' @param envir Environment containing the path variable.
+#' @param db_schema_base_name Optional schema/user prefix. Defaults to module name.
+#' @param target_prefix Optional prefix for target DB values.
+#' @param log Logical flag for DB logging.
+#' @return Invisibly returns TRUE when a context was set, otherwise FALSE.
+#' @export
+dbSetModuleContextFromEnvironment <- function(
+  module_name,
+  path_variable = "PATH_TO_DB_CONFIG_TOML",
+  envir = .GlobalEnv,
+  db_schema_base_name = module_name,
+  target_prefix = NULL,
+  log = FALSE
+) {
+  if (!exists(path_variable, envir = envir, inherits = FALSE)) {
+    return(invisible(FALSE))
+  }
+  path_to_db_toml <- get(path_variable, envir = envir)
+  if (is.null(path_to_db_toml) || !length(path_to_db_toml) || !nzchar(path_to_db_toml[[1]])) {
+    return(invisible(FALSE))
+  }
+
+  dbSetModuleContextFromToml(
+    module_name = module_name,
+    path_to_db_toml = path_to_db_toml[[1]],
+    db_schema_base_name = db_schema_base_name,
+    target_prefix = target_prefix,
+    log = log
+  )
+}
+
 #' Set the Database Connection Context
 #'
 #' This function initializes the database connection context by storing connection

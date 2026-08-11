@@ -46,28 +46,81 @@ fhirsearchRefreshToken <- function() {
 #' @param verbose current verbose level
 #' @param resource_name The name of the resource being requested.
 #' @param bundles A list of bundles where the first bundle's self link is included in the log.
+#' @param print_to_console Logical. Whether to print the request in addition to writing it to the
+#'   request log file.
 #'
 #' @details The function constructs a detailed request string from the resource name and the
-#' self link of the first bundle. If `verbose` is set to `VL_90_FHIR_RESPONSE` or higher, the
-#' request details are printed to the console using `cat()`. The log file path is generated
-#' using `fhircrackr::paste_paths()` and the file `cds2db_total_bundles.txt` in the specified
-#' directory. The file is created or overwritten in write-text mode and the request is logged.
+#' self link of the first bundle. If `print_to_console` is `TRUE` and `verbose` is set to
+#' `VL_90_FHIR_RESPONSE` or higher, the request details are printed to the console using `cat()`.
+#' The log file path is generated using `fhircrackr::paste_paths()` and the
+#' file `cds2db_total_bundles.txt` in the specified
+#' directory. The request is appended to the file.
 #'
 #' @return This function does not return a value, focusing instead on side effects such as
 #' writing to a file and potentially printing to the console.
 #'
-fhirsearchLogRequest <- function(verbose, resource_name, bundles) {
+fhirsearchLogRequest <- function(verbose, resource_name, bundles, print_to_console = TRUE) {
   bundles_requests <- try(paste0("Request for ", resource_name, ":\n", toString(bundles[[1]]@self_link), "\n"), silent = TRUE)
   if (isError(bundles_requests)) {
     bundles_requests <- bundles
   }
-  if (verbose >= VL_90_FHIR_RESPONSE) {
+  if (print_to_console && verbose >= VL_90_FHIR_RESPONSE) {
     cat(bundles_requests, "\n")
   }
   log_filename <- fhircrackr::paste_paths(getBundlesDirectory(), paste0("cds2db_total_bundles.txt"))
   log_file <- file(log_filename, open = "at")
   writeLines(bundles_requests, log_file, useBytes = TRUE)
   close(log_file)
+}
+
+#' Check Whether a FHIR Resource Type Contains Entries
+#'
+#' @param endpoint FHIR server endpoint URL.
+#' @param resource FHIR resource type.
+#' @param verbose Verbosity level.
+#'
+#' @return `TRUE` if the resource type contains entries, `FALSE` if its total is zero, and `NA`
+#'   if the availability check failed or returned no valid total.
+fhirsearchResourceHasEntries <- function(endpoint, resource, verbose = 0) {
+  request <- fhircrackr::fhir_url(
+    url = endpoint,
+    resource = resource,
+    parameters = c("_summary" = "count"),
+    url_enc = TRUE
+  )
+  bundles <- try(
+    executeFHIRSearchVariation(
+      request = request,
+      log_errors = paste0(resource, "Availability-Test-error.xml"),
+      verbose = verbose
+    ),
+    silent = TRUE
+  )
+
+  if (isError(bundles)) {
+    if (verbose > 0) {
+      catWarningMessage(paste(
+        "Availability check for", resource,
+        "failed. Continue with the filtered FHIR searches."
+      ))
+    }
+    return(NA)
+  }
+
+  total <- suppressWarnings(as.numeric(
+    xml2::xml_attr(xml2::xml_find_all(bundles[[1]], "//total"), "value")
+  ))
+  if (length(total) != 1 || is.na(total)) {
+    if (verbose > 0) {
+      catWarningMessage(paste(
+        "Availability check for", resource,
+        "returned no valid total. Continue with the filtered FHIR searches."
+      ))
+    }
+    return(NA)
+  }
+
+  total > 0
 }
 
 #' Construct a Parameter String for FHIR Search Requests
@@ -469,37 +522,6 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
   max_trials <- length(WAIT_TIMES)
 
   verbose <- max(c(0, verbose))
-  request <- fhircrackr::fhir_url(
-    url        = FHIR_SERVER_ENDPOINT,
-    resource   = resource,
-    parameters = c(
-      "_summary" = "count",
-      "_count"   = "1"
-    ),
-    url_enc = TRUE
-  )
-  bndls <- try(
-    executeFHIRSearchVariation(
-      request    = request,
-      log_errors = paste0(resource, "Availability-Test-error.xml"),
-      verbose    = verbose
-    )
-  )
-  if (VL_90_FHIR_RESPONSE <= VERBOSE) {
-    print(bndls)
-  }
-
-  total <- if (isError(bndls)) {
-    if (verbose) {
-      cat(formatStringStyle("\nAvailability-Check failed.", fg = 1), "\n")
-    }
-    0
-  } else {
-    as.numeric(xml2::xml_attr(xml2::xml_find_all(bndls[[1]], "//total"), "value"))
-  }
-  if (total < 1) {
-    if (verbose) catWarningMessage(paste0("No ", resource, "s found on FHIR Server. Return empty Table. Please note!\n"))
-  }
 
   curr_len <- min(ids_at_once, length(ids))
 
@@ -642,7 +664,12 @@ fhirsearchDownloadAndCrackResourcesByPIDs <- function(
                 Sys.sleep(WAIT_TIMES[[trial]])
                 trial <- trial + 1
               } else {
-                fhirsearchLogRequest(verbose, resource_name, bundles)
+                fhirsearchLogRequest(
+                  verbose,
+                  resource_name,
+                  bundles,
+                  print_to_console = FALSE
+                )
                 break
               }
             }
@@ -837,17 +864,33 @@ fhirsearchMultipleResourcesByPID <- function(pids_with_last_updated,
     table_description <- table_descriptions[[resource_name]]
     # Extract the resource_name name from the current `table_description` object
     resource_name <- table_description@resource@.Data
+    additional_search_parameter <- if (resource_name %in% names(resources_add_search_parameter)) {
+      resources_add_search_parameter[[resource_name]]
+    } else {
+      NULL
+    }
+    resource_download_enabled <- is.null(additional_search_parameter) ||
+      all(nchar(additional_search_parameter) > 0)
+    resource_has_entries <- if (resource_download_enabled && length(date_to_pids)) {
+      fhirsearchResourceHasEntries(FHIR_SERVER_ENDPOINT, resource_name, VERBOSE)
+    } else {
+      NA
+    }
+
+    if (identical(resource_has_entries, FALSE)) {
+      raw_fhir_resources <- fhirdataCreateResourceTable(
+        table_description,
+        resource_key = resource_name,
+        resource_collection = raw_fhir_resources
+      )
+      catInfoMessage(paste("Info: No", resource_name, "resources found on the FHIR server.\n"))
+      next
+    }
+
     # Iterate over each unique last updated date
     for (i in seq_along(date_to_pids)) {
       last_updated <- names(date_to_pids)[i]
-      # Check if the current resource_name has a corresponding entry in `resources_add_search_parameter`
-      if (resource_name %in% names(resources_add_search_parameter)) {
-        # Retrieve the additional search parameter for this resource_name
-        additional_search_parameter <- resources_add_search_parameter[[resource_name]]
-      } else {
-        additional_search_parameter <- NULL
-      }
-      if (is.null(additional_search_parameter) || all(!nchar(additional_search_parameter) == 0)) {
+      if (resource_download_enabled) {
         # We need to update the last_check_date of every pid on every run of the toolchain,
         # so we download all patients independently of the last_updated date.
         if (resource_name == "Patient") {

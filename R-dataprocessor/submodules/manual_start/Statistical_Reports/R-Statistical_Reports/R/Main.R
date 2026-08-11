@@ -8,7 +8,7 @@
 #' current date for the end date.
 #'
 #' @param REPORT_PERIOD_START Character string in `"YYYY-MM-DD"` format.
-#'   Start date of the reporting period. Default is `"2024-01-01"`.
+#'   Start date of the reporting period. Default is the defined first Phase A INTERPOLAR ward start date.
 #' @param REPORT_PERIOD_END Character string in `"YYYY-MM-DD"` format.
 #'   End date of the reporting period. Defaults to `Sys.Date()`.
 #' @param WRITE_TABLE_LOCAL Logical. If `TRUE`, intermediate tables are written to the outputLocal folder.
@@ -83,7 +83,7 @@
 #' [writeHtmlTable()]
 #'
 #' @export
-createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
+createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstWardStart()),
                                     REPORT_PERIOD_END = as.character(Sys.Date()),
                                     WRITE_TABLE_LOCAL = FALSE) {
   # CONFIG LOCAL ANFANG--------------------------------------------------------------------
@@ -380,6 +380,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "encounters with completed medication analysis",
       "medication analyses",
       "completed medication analyses",
+      "completed medication analyses with detected MRP",
       "encounters with completed MRP documentation",
       "MRP documented", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
@@ -388,7 +389,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "resolved contra-indications",
       "encounters eligible for algorithmic MRP",
       "encounters with algorithmic MRP",
-      "encounters with algorithmic MRP and consent",
+      "encounters with non-confirmed non-incorrect data items MRP and consent",
       "algorithmic MRP found",
       "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency",
       "completed algorithmic MRP evaluation",
@@ -422,6 +423,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "encounters with completed medication analysis",
       "medication analyses",
       "completed medication analyses",
+      "completed medication analyses with detected MRP",
       "encounters with completed MRP documentation",
       "MRP documented", "completed MRP documention",
       "resolved MRP", "MRP resolution not informative", "contra-indications",
@@ -430,7 +432,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = "2024-01-01",
       "resolved contra-indications",
       "encounters eligible for algorithmic MRP",
       "encounters with algorithmic MRP",
-      "encounters with algorithmic MRP and consent",
+      "encounters with non-confirmed non-incorrect data items MRP and consent",
       "algorithmic MRP found",
       "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency",
       "completed algorithmic MRP evaluation",

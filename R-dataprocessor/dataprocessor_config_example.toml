@@ -28,6 +28,26 @@ MAX_DIR_COUNT = 5
 [analyse]
 
 #################
+# Define the phase times for every ward. ward_name and phase_a_start are
+# mandatory. phase_b_start is optional. If phase_b_start is set, phase_b_end is
+# mandatory metadata for later study analyses. phase_b_end does not stop MRP
+# calculation.
+# The ward_name must be exactly the same as in the ENCOUNTER_FILTER_PATTERNS in
+# the cds2db_config.toml.
+#################
+PHASES_WARD_1 = [
+  "ward_name = 'Station 1'",
+  "phase_a_start = '2026-01-11 10:00:00'",
+  "phase_b_start = '2026-01-21 10:00:00'",
+  "phase_b_end = '2026-04-21 10:00:00'"
+]
+
+PHASES_WARD_2 = [
+  "ward_name = 'Station 2'",
+  "phase_a_start = '2026-01-11'"
+]
+
+#################
 # Filter for the displayable PID
 # ------------------------------
 # To filter the correct patient ID from the hospital information system for the

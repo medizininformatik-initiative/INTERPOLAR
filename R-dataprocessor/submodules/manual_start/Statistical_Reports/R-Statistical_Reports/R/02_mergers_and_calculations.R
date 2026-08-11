@@ -57,6 +57,43 @@ getLastCaseDateInFe <- function(frontend_summary_data) {
   return(last_case_date_in_fe)
 }
 
+#' Get Earliest Start Date of Defined INTERPOLAR Wards
+#'
+#' Determines the earliest start date among all INTERPOLAR wards defined via
+#' global environment variables.
+#'
+#' @return A `Date` value representing the earliest start date found in the
+#'   ward phase definitions.
+#'
+#' @details
+#' The function searches the global environment for objects matching the
+#' pattern `"^PHASES_WARD_"`. For each matching object, it checks whether the
+#' definition is available and non-empty using `etlutils::isDefinedAndNotEmpty()`.
+#'
+#' The start date is extracted from the second element of each valid ward
+#' definition and parsed using `stringr::str_split_i()`. All extracted dates
+#' are converted to `Date` format, and the earliest date is returned.
+#'
+#' @importFrom etlutils isDefinedAndNotEmpty
+#' @importFrom stringr str_split_i
+#'
+#' @export
+getFirstWardStart <- function() {
+  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
+  interpolar_ward_starts <- c()
+  for (i in seq_along(interpolar_wards_definition)) {
+    ward_phase_defintion <- interpolar_wards_definition[i]
+    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
+      ward_start <- get(ward_phase_defintion, envir = .GlobalEnv)[2] |>
+        stringr::str_split_i("'", 2)
+      interpolar_ward_starts <- c(interpolar_ward_starts, ward_start)
+    }
+  }
+  minimum_start_date <- min(as.Date(interpolar_ward_starts), na.rm = TRUE)
+
+  return(minimum_start_date)
+}
+
 #' Merge Patient and Encounter Data
 #'
 #' This function merges patient-level data with encounter-level data into a unified dataset.
