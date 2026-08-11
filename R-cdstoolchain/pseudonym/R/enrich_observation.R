@@ -4,12 +4,15 @@ SNAPSHOT_LOINC_MAPPING_FILE <- file.path(
   "LOINC_Mapping_Table_processed.xlsx"
 )
 
-SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS <- c(
-  "analysis_loinc_code",
-  "analysis_unit",
-  "analysis_value",
-  "analysis_value_status"
+SNAPSHOT_OBSERVATION_ANALYSIS_DEFAULTS <- list(
+  analysis_loinc_code = NA_character_,
+  analysis_unit = NA_character_,
+  analysis_value = NA_real_,
+  analysis_value_status = NA_character_
 )
+
+SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS <-
+  names(SNAPSHOT_OBSERVATION_ANALYSIS_DEFAULTS)
 
 SNAPSHOT_OBSERVATION_SOURCE_COLUMNS <- c(
   "obs_code_system",
@@ -231,7 +234,10 @@ enrichObservationWithLoincMapping <- function(
   }
   for (column_name in SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS) {
     if (!column_name %in% names(observation)) {
-      observation[[column_name]] <- NA
+      observation[[column_name]] <- rep(
+        SNAPSHOT_OBSERVATION_ANALYSIS_DEFAULTS[[column_name]],
+        nrow(observation)
+      )
     }
   }
 

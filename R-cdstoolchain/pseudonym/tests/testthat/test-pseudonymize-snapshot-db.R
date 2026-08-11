@@ -68,6 +68,94 @@ test_that("getSnapshotSourceViewPlan maps frontend rule names to frontend DB tab
   )
 })
 
+test_that("existing last-version sources split snapshot storage", {
+  rules <- data.table::data.table(
+    SOURCE_TYPE = "table_description",
+    TABLE_OR_RESOURCE = c("patient", "observation")
+  )
+  testthat::local_mocked_bindings(
+    snapshotRelationExists = function(connection, name, schema = NULL) {
+      name %in% c("v_patient", "v_patient_last_version", "v_observation")
+    }
+  )
+
+  plan <- getExistingSnapshotMaterializationPlan(
+    "connection",
+    rules,
+    source_schema = NULL,
+    source_view_prefix = "v_",
+    last_version_suffix = "_last_version",
+    tables = NULL
+  )
+
+  expect_equal(
+    plan$MATERIALIZED_TABLE_NAME,
+    c("patient_old_versions", "observation", "patient_last_version")
+  )
+  expect_equal(
+    plan$TARGET_VIEW_NAME,
+    c("v_patient_old_versions", "v_observation", "v_patient_last_version")
+  )
+  expect_equal(
+    plan$SNAPSHOT_RELATION_TYPE,
+    c("old_versions", "all", "last_version")
+  )
+})
+
+test_that("snapshot views combine disjoint partitions through passthrough views", {
+  statements <- character()
+  testthat::local_mocked_bindings(
+    snapshotRelationExists = function(connection, name, schema = NULL) FALSE
+  )
+  testthat::local_mocked_bindings(
+    dbExecute = function(connection, statement) {
+      statements <<- c(statements, statement)
+      0L
+    },
+    .package = "DBI"
+  )
+  plan <- data.table::data.table(
+    BASE_TABLE_NAME = c("patient", "patient"),
+    MATERIALIZED_TABLE_NAME = c(
+      "patient_old_versions",
+      "patient_last_version"
+    ),
+    TARGET_VIEW_NAME = c(
+      "v_patient_old_versions",
+      "v_patient_last_version"
+    ),
+    SNAPSHOT_RELATION_TYPE = c("old_versions", "last_version")
+  )
+
+  summary <- createSnapshotPassthroughViews(
+    DBI::ANSI(),
+    plan,
+    table_schema = "db_log",
+    view_schema = "db2dataprocessor_out"
+  )
+
+  expect_equal(
+    summary$VIEW_NAME,
+    c("v_patient_old_versions", "v_patient_last_version", "v_patient")
+  )
+  combined_statement <- statements[grepl(
+    'CREATE VIEW "db2dataprocessor_out"."v_patient"',
+    statements,
+    fixed = TRUE
+  )]
+  expect_length(combined_statement, 1L)
+  expect_match(
+    combined_statement,
+    'SELECT * FROM "db2dataprocessor_out"."v_patient_old_versions"',
+    fixed = TRUE
+  )
+  expect_match(
+    combined_statement,
+    'UNION ALL SELECT * FROM "db2dataprocessor_out"."v_patient_last_version"',
+    fixed = TRUE
+  )
+})
+
 test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension columns", {
   rules <- data.table::data.table(
     SOURCE = c("fhir", rep("snapshot_extension", 4)),

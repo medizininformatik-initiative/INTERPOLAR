@@ -301,6 +301,143 @@ test_that("birthdate source query supports fallback patient keys", {
   expect_match(query, SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN, fixed = TRUE)
 })
 
+test_that("version-key preparation follows the technical row-ID convention", {
+  statements <- character()
+  testthat::local_mocked_bindings(
+    snapshotRelationFields = function(connection, name, schema = NULL) {
+      c("patient_id", "pat_id", "pat_meta_lastupdated")
+    }
+  )
+  testthat::local_mocked_bindings(
+    dbExecute = function(connection, statement) {
+      statements <<- c(statements, statement)
+      2L
+    },
+    .package = "DBI"
+  )
+  plan <- data.table::data.table(
+    BASE_TABLE_NAME = c("patient", "patient"),
+    SOURCE_RELATION = c("v_patient", "v_patient_last_version"),
+    SNAPSHOT_RELATION_TYPE = c("old_versions", "last_version")
+  )
+
+  key_tables <- prepareSnapshotVersionKeyTables(
+    DBI::ANSI(),
+    plan,
+    source_schema = "db2dataprocessor_out"
+  )
+
+  expect_named(key_tables, "patient")
+  expect_match(statements[1L], "SELECT DISTINCT", fixed = TRUE)
+  expect_match(
+    statements[1L],
+    'snapshot_last_version."patient_id" AS "row_id"',
+    fixed = TRUE
+  )
+  expect_match(
+    statements[1L],
+    'FROM "db2dataprocessor_out"."v_patient_last_version"',
+    fixed = TRUE
+  )
+  expect_match(statements[2L], "CREATE INDEX", fixed = TRUE)
+  expect_match(statements[3L], "ANALYZE", fixed = TRUE)
+})
+
+test_that("old-version source excludes prepared last-version keys", {
+  testthat::local_mocked_bindings(
+    snapshotRelationFields = function(connection, name, schema = NULL) {
+      c("patient_id", "pat_id", "pat_meta_lastupdated", "pat_name")
+    }
+  )
+  plan_row <- data.table::data.table(
+    SOURCE_RELATION = "v_patient",
+    BASE_TABLE_NAME = "patient",
+    SNAPSHOT_RELATION_TYPE = "old_versions"
+  )
+
+  source <- getSnapshotPartitionSource(
+    DBI::ANSI(),
+    plan_row,
+    source_schema = "db2dataprocessor_out",
+    source_view_prefix = "v_",
+    version_key_tables = list(patient = "snapshot_patient_keys")
+  )
+
+  expect_equal(
+    source$fields,
+    c("patient_id", "pat_id", "pat_meta_lastupdated", "pat_name")
+  )
+  expect_match(source$relation, "WHERE NOT EXISTS", fixed = TRUE)
+  expect_match(
+    source$relation,
+    'snapshot_partition_source."patient_id" = snapshot_version_keys."row_id"',
+    fixed = TRUE
+  )
+})
+
+test_that("version partitioning needs no per-table registry", {
+  expect_equal(snapshotTechnicalRowIdColumn("patient"), "patient_id")
+  expect_equal(snapshotTechnicalRowIdColumn("new_resource"), "new_resource_id")
+})
+
+test_that("version partitioning rejects sources without technical row ID", {
+  testthat::local_mocked_bindings(
+    snapshotRelationFields = function(connection, name, schema = NULL) {
+      c("pat_id", "pat_meta_lastupdated")
+    }
+  )
+  plan <- data.table::data.table(
+    BASE_TABLE_NAME = c("patient", "patient"),
+    SOURCE_RELATION = c("v_patient", "v_patient_last_version"),
+    SNAPSHOT_RELATION_TYPE = c("old_versions", "last_version")
+  )
+
+  expect_error(
+    prepareSnapshotVersionKeyTables(
+      DBI::ANSI(),
+      plan,
+      source_schema = "db2dataprocessor_out"
+    ),
+    "lacks conventional technical row ID: patient_id",
+    fixed = TRUE
+  )
+})
+
+test_that("last-version source projects the normal view schema", {
+  testthat::local_mocked_bindings(
+    snapshotRelationFields = function(connection, name, schema = NULL) {
+      if (name == "v_patient_last_version") {
+        return(c(
+          "pat_id",
+          "pat_name",
+          "id",
+          "last_version_date"
+        ))
+      }
+      c("pat_id", "pat_name")
+    }
+  )
+  plan_row <- data.table::data.table(
+    SOURCE_RELATION = "v_patient_last_version",
+    BASE_TABLE_NAME = "patient",
+    SNAPSHOT_RELATION_TYPE = "last_version"
+  )
+
+  source <- getSnapshotPartitionSource(
+    DBI::ANSI(),
+    plan_row,
+    source_schema = "db2dataprocessor_out",
+    source_view_prefix = "v_",
+    version_key_tables = list(patient = "snapshot_patient_keys")
+  )
+
+  expect_equal(source$fields, c("pat_id", "pat_name"))
+  expect_match(source$relation, '"pat_id"', fixed = TRUE)
+  expect_match(source$relation, '"pat_name"', fixed = TRUE)
+  expect_false(grepl('"id"', source$relation, fixed = TRUE))
+  expect_false(grepl('"last_version_date"', source$relation, fixed = TRUE))
+})
+
 test_that("source query omits enrichment joins not enabled by table description", {
   testthat::local_mocked_bindings(
     snapshotRelationFields = function(connection, name, schema = NULL) {
@@ -404,6 +541,46 @@ test_that("missing described source columns leave enrichment targets empty", {
   )
 
   expect_true(is.na(result$fall_bmi))
+})
+
+test_that("snapshot enrichments preserve typed columns for empty partitions", {
+  observation <- data.table::data.table(
+    obs_code_system = character(),
+    obs_code_code = character(),
+    obs_valuequantity_value = numeric(),
+    obs_valuequantity_code = character(),
+    obs_valuequantity_unit = character()
+  )
+  mapping <- data.table::data.table(
+    LOINC = "1234-5",
+    LOINC_PRIMARY = "1234-5",
+    UNIT = "mg",
+    CONVERSION_FACTOR = NA_real_,
+    CONVERSION_UNIT = NA_character_
+  )
+
+  enriched_observation <- enrichObservationWithLoincMapping(
+    observation,
+    mapping
+  )
+  enriched_fall <- enrichSnapshotFallChunk(data.table::data.table())
+  enriched_encounter <- enrichSnapshotEncounterChunk(data.table::data.table())
+  enriched_medication <- enrichSnapshotStreamingChunk(
+    data.table::data.table(),
+    "medicationrequest",
+    newSnapshotStreamingContext(NULL),
+    described_columns = c("medreq_medication_system", "medreq_medication_code")
+  )
+
+  expect_equal(nrow(enriched_observation), 0L)
+  expect_type(enriched_observation$analysis_loinc_code, "character")
+  expect_type(enriched_observation$analysis_unit, "character")
+  expect_type(enriched_observation$analysis_value, "double")
+  expect_type(enriched_observation$analysis_value_status, "character")
+  expect_type(enriched_fall$fall_age_at_admission, "integer")
+  expect_type(enriched_fall$fall_bmi, "double")
+  expect_type(enriched_encounter$enc_age_at_admission, "integer")
+  expect_true(all(vapply(enriched_medication, is.character, logical(1))))
 })
 
 test_that("encounter enrichment tolerates an omitted admission date", {

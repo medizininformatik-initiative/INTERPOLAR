@@ -1,3 +1,9 @@
+SNAPSHOT_LAST_VERSION_SUFFIX <- "_last_version"
+SNAPSHOT_OLD_VERSIONS_SUFFIX <- "_old_versions"
+SNAPSHOT_RELATION_TYPE_ALL <- "all"
+SNAPSHOT_RELATION_TYPE_OLD <- "old_versions"
+SNAPSHOT_RELATION_TYPE_LAST <- "last_version"
+
 snapshotRuleTablePlan <- function(rules) {
   rules <- data.table::as.data.table(rules)
   if (!"TABLE_OR_RESOURCE" %in% names(rules)) {
@@ -77,7 +83,7 @@ snapshotRelationExists <- function(connection, name, schema = NULL) {
 getSnapshotSourceViewPlan <- function(
   rules,
   source_view_prefix = "v_",
-  last_version_suffix = "_last_version",
+  last_version_suffix = SNAPSHOT_LAST_VERSION_SUFFIX,
   tables = NULL
 ) {
   table_plan <- snapshotRuleTablePlan(rules)
@@ -96,7 +102,7 @@ getSnapshotSourceViewPlan <- function(
       MATERIALIZED_TABLE_NAME = table_plan[["DB_TABLE_NAME"]],
       SOURCE_RELATION = paste0(source_view_prefix, table_plan[["DB_TABLE_NAME"]]),
       TARGET_VIEW_NAME = paste0(source_view_prefix, table_plan[["DB_TABLE_NAME"]]),
-      SNAPSHOT_RELATION_TYPE = "all"
+      SNAPSHOT_RELATION_TYPE = SNAPSHOT_RELATION_TYPE_ALL
     ),
     data.table::data.table(
       BASE_TABLE_NAME = table_plan[["DB_TABLE_NAME"]],
@@ -113,7 +119,7 @@ getSnapshotSourceViewPlan <- function(
         table_plan[["DB_TABLE_NAME"]],
         last_version_suffix
       ),
-      SNAPSHOT_RELATION_TYPE = "last_version"
+      SNAPSHOT_RELATION_TYPE = SNAPSHOT_RELATION_TYPE_LAST
     )
   ))
   plan[
@@ -131,10 +137,12 @@ getSnapshotSourceViewPlan <- function(
   ]
 }
 
-#' Create Passthrough Views for Pseudonymized Snapshot Tables
+#' Create Views for Pseudonymized Snapshot Tables
 #'
-#' Creates `db2dataprocessor_out.v_<table>` style views that directly select
-#' from the materialized pseudonymized tables in `db_log`.
+#' Creates passthrough views for materialized pseudonymized tables. For sources
+#' with a last-version relation, it additionally creates the stable
+#' `v_<table>` view as a `UNION ALL` of the disjoint old- and last-version
+#' passthrough views.
 #'
 #' @param connection Target DBI connection.
 #' @param materialization_plan Plan returned by `getSnapshotSourceViewPlan()`.
@@ -173,6 +181,55 @@ createSnapshotPassthroughViews <- function(
     summary_rows[[length(summary_rows) + 1L]] <- data.table::data.table(
       VIEW_NAME = view_name,
       SOURCE_TABLE = source_table,
+      STATUS = "created"
+    )
+  }
+
+  partitioned_tables <- unique(materialization_plan[["BASE_TABLE_NAME"]][
+    materialization_plan[["SNAPSHOT_RELATION_TYPE"]] ==
+      SNAPSHOT_RELATION_TYPE_OLD
+  ])
+  for (base_table_name in partitioned_tables) {
+    partition_rows <- materialization_plan[
+      materialization_plan[["BASE_TABLE_NAME"]] == base_table_name &
+        materialization_plan[["SNAPSHOT_RELATION_TYPE"]] %in% c(
+          SNAPSHOT_RELATION_TYPE_OLD,
+          SNAPSHOT_RELATION_TYPE_LAST
+        ),
+    ]
+    if (nrow(partition_rows) != 2L) {
+      stop("Expected old- and last-version views for: ", base_table_name)
+    }
+    old_view <- partition_rows[["TARGET_VIEW_NAME"]][
+      partition_rows[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_OLD
+    ]
+    last_view <- partition_rows[["TARGET_VIEW_NAME"]][
+      partition_rows[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_LAST
+    ]
+    view_name <- sub(
+      paste0(SNAPSHOT_OLD_VERSIONS_SUFFIX, "$"),
+      "",
+      old_view
+    )
+    if (snapshotRelationExists(connection, view_name, view_schema)) {
+      stop("Target view already exists: ", snapshotQualifiedName(
+        connection,
+        view_name,
+        view_schema
+      ))
+    }
+    statement <- paste0(
+      "CREATE VIEW ",
+      snapshotQualifiedName(connection, view_name, view_schema),
+      " AS SELECT * FROM ",
+      snapshotQualifiedName(connection, old_view, view_schema),
+      " UNION ALL SELECT * FROM ",
+      snapshotQualifiedName(connection, last_view, view_schema)
+    )
+    DBI::dbExecute(connection, statement)
+    summary_rows[[length(summary_rows) + 1L]] <- data.table::data.table(
+      VIEW_NAME = view_name,
+      SOURCE_TABLE = paste(old_view, last_view, sep = " UNION ALL "),
       STATUS = "created"
     )
   }
@@ -289,7 +346,7 @@ pseudonymizeSnapshotDatabase <- function(
   target_table_schema = "db_log",
   target_view_schema = "db2dataprocessor_out",
   source_view_prefix = "v_",
-  last_version_suffix = "_last_version",
+  last_version_suffix = SNAPSHOT_LAST_VERSION_SUFFIX,
   tables = NULL,
   chunk_size = DEFAULT_SNAPSHOT_CHUNK_SIZE,
   review_report_file = NA,
@@ -380,6 +437,22 @@ pseudonymizeSnapshotDatabase <- function(
 
   snapshotEnsureSchema(target_connection, target_table_schema)
   snapshotAllowTemporarySourceTables(source_connection)
+  version_key_tables <- list()
+  runPseudonymizationLogStep(2L,
+    "Prepare snapshot version partitions",
+    {
+      version_key_tables <- prepareSnapshotVersionKeyTables(
+        connection = source_connection,
+        materialization_plan = result[["materialization_plan"]],
+        source_schema = source_schema
+      )
+    },
+    log_steps = log_steps
+  )
+  on.exit(
+    dropSnapshotVersionKeyTables(source_connection, version_key_tables),
+    add = TRUE
+  )
   medication_resolution_tables <- list()
   runPseudonymizationLogStep(2L,
     "Prepare shared Medication reference resolution",
@@ -404,7 +477,8 @@ pseudonymizeSnapshotDatabase <- function(
   )
   streaming_context <- newSnapshotStreamingContext(
     input_repo_path,
-    medication_resolution_tables
+    medication_resolution_tables,
+    version_key_tables
   )
   summary_rows <- list()
   write_summary_rows <- list()

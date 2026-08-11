@@ -260,7 +260,7 @@ preflightSnapshotPseudonymization <- function(
   source_connection = NULL,
   source_schema = NULL,
   source_view_prefix = "v_",
-  last_version_suffix = "_last_version",
+  last_version_suffix = SNAPSHOT_LAST_VERSION_SUFFIX,
   tables = NULL,
   review_report_file = NA,
   log_steps = TRUE
