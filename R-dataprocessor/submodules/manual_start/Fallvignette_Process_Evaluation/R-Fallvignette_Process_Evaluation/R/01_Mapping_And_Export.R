@@ -135,8 +135,8 @@ writeFallvignetteImportFiles <- function(
   mapping,
   file_name = "WP8_Fallvignetten_Import"
 ) {
-  if (!is.data.frame(fallvignettes)) {
-    stop("fallvignettes must be a data.frame or data.table.")
+  if (!data.table::is.data.table(fallvignettes)) {
+    stop("fallvignettes must be a data.table.")
   }
   if (anyDuplicated(names(fallvignettes))) {
     stop("fallvignettes must not contain duplicate column names.")
