@@ -103,16 +103,12 @@ if (sys.nframe() == 0L) {
   definition_path <- if (length(arguments) >= 1L) {
     arguments[[1L]]
   } else {
-    getInstalledTableDescriptionPath(
-      "Table_Description_Definition.xlsx"
-    )
+    getInstalledTableDescriptionPath("Table_Description_Definition.xlsx")
   }
   generated_path <- if (length(arguments) >= 2L) {
     arguments[[2L]]
   } else {
-    getInstalledTableDescriptionPath(
-      "Table_Description.xlsx"
-    )
+    getInstalledTableDescriptionPath("Table_Description.xlsx")
   }
   checkTableDescriptionConsistency(definition_path, generated_path)
 }
