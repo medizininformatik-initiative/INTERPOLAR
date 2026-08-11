@@ -273,14 +273,10 @@ enrichObservationWithLoincMapping <- function(
   observation[["analysis_value"]] <- as.numeric(observation[["analysis_value"]])
   observation[["analysis_unit"]] <- as.character(observation[["analysis_unit"]])
   observation[["analysis_loinc_code"]] <- as.character(observation[["analysis_loinc_code"]])
-  observation[["analysis_value_status"]] <- as.character(
-    observation[["analysis_value_status"]]
-  )
+  observation[["analysis_value_status"]] <- as.character(observation[["analysis_value_status"]])
   row_id_column <- ".snapshot_pseudonym_row_id"
   source_unit_column <- ".snapshot_pseudonym_source_unit"
-  loinc_row_indices <- which(
-    observation[["obs_code_system"]] == "http://loinc.org"
-  )
+  loinc_row_indices <- which(observation[["obs_code_system"]] == "http://loinc.org")
   source_units <- getObservationValueUnit(observation)
   observation[["analysis_loinc_code"]][loinc_row_indices] <-
     observation[["obs_code_code"]][loinc_row_indices]
