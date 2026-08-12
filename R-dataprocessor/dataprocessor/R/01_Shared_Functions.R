@@ -258,6 +258,73 @@ loadFachabteilungsschluessel <- function(
   departments
 }
 
+# Get the path of the packaged site-code workbook.
+getSiteCodePath <- function() {
+  file_path <- system.file(
+    "extdata",
+    "Standortkuerzel.xlsx",
+    package = "dataprocessor"
+  )
+  if (!nzchar(file_path) || !file.exists(file_path)) {
+    stop("Standortkuerzel.xlsx not found in dataprocessor/inst/extdata.")
+  }
+  normalizePath(file_path, winslash = "/")
+}
+
+# Load valid site codes from the packaged workbook.
+loadSiteCodes <- function(file_path = getSiteCodePath()) {
+  sheets <- etlutils::readExcelFileAsTableList(file_path)
+  if (length(sheets) != 1L) {
+    stop("Standortkuerzel.xlsx must contain exactly one sheet.")
+  }
+
+  site_codes <- etlutils::removeTableHeader(
+    data.table::copy(sheets[[1]]),
+    "SITE_CODE"
+  )
+  if (
+    !data.table::is.data.table(site_codes) ||
+      !nrow(site_codes) ||
+      !"SITE_CODE" %in% names(site_codes)
+  ) {
+    stop("Standortkuerzel.xlsx must contain a non-empty SITE_CODE column.")
+  }
+
+  valid_site_codes <- trimws(as.character(site_codes[["SITE_CODE"]]))
+  invalid_rows <- is.na(valid_site_codes) |
+    !grepl("^[A-Z][A-Z0-9_-]*$", valid_site_codes)
+  if (any(invalid_rows)) {
+    stop(
+      "Standortkuerzel.xlsx contains an invalid SITE_CODE in data row ",
+      which(invalid_rows)[1], "."
+    )
+  }
+  if (anyDuplicated(valid_site_codes)) {
+    stop("Standortkuerzel.xlsx contains duplicate SITE_CODE entries.")
+  }
+  valid_site_codes
+}
+
+# Validate the configured site code against the packaged workbook.
+validateSiteCode <- function(site_code, file_path = getSiteCodePath()) {
+  if (
+    !is.character(site_code) || length(site_code) != 1L ||
+      is.na(site_code) || !nzchar(trimws(site_code))
+  ) {
+    stop("dataprocessor_config.toml: SITE_CODE must be one non-empty string.")
+  }
+
+  site_code <- trimws(site_code)
+  if (!site_code %in% loadSiteCodes(file_path)) {
+    stop(
+      "dataprocessor_config.toml: SITE_CODE must be a valid value from ",
+      normalizePath(file_path, winslash = "/", mustWork = FALSE),
+      ": ", site_code
+    )
+  }
+  invisible(TRUE)
+}
+
 #' Construct an error or warning message with additional context
 #'
 #' Creates a human-readable error or warning message and appends optional

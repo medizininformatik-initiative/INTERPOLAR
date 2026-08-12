@@ -2,8 +2,8 @@ testthat::test_that("loadFallvignetteMapping reads the WP8 mapping", {
   mapping <- getTestFallvignetteMapping()
 
   testthat::expect_s3_class(mapping, "data.table")
-  testthat::expect_equal(nrow(mapping), 61L)
-  testthat::expect_equal(data.table::uniqueN(mapping$target_field), 39L)
+  testthat::expect_equal(nrow(mapping), 62L)
+  testthat::expect_equal(data.table::uniqueN(mapping$target_field), 40L)
   testthat::expect_equal(
     mapping$source_field[mapping$target_field == "wp8_ret_notiz"],
     c("ret_notiz1", "ret_notiz2")
@@ -29,6 +29,11 @@ testthat::test_that("writeFallvignetteImportFiles writes equivalent files", {
     fallvignettes,
     j = "record_id",
     value = "Standort-1-MRP-1-Bewertung-1"
+  )
+  data.table::set(
+    fallvignettes,
+    j = "wp8_standort_id",
+    value = "UKB"
   )
   data.table::set(
     fallvignettes,
@@ -63,5 +68,19 @@ testthat::test_that("writeFallvignetteImportFiles validates record_id", {
   testthat::expect_error(
     writeFallvignetteImportFiles(fallvignettes, tempdir(), mapping = mapping),
     "non-empty record_id"
+  )
+})
+
+testthat::test_that("writeFallvignetteImportFiles validates the site code", {
+  mapping <- getTestFallvignetteMapping()
+  columns <- unique(mapping$target_field)
+  fallvignettes <- data.table::as.data.table(
+    stats::setNames(as.list(rep("", length(columns))), columns)
+  )
+  data.table::set(fallvignettes, j = "record_id", value = "record-1")
+
+  testthat::expect_error(
+    writeFallvignetteImportFiles(fallvignettes, tempdir(), mapping = mapping),
+    "non-empty wp8_standort_id"
   )
 })

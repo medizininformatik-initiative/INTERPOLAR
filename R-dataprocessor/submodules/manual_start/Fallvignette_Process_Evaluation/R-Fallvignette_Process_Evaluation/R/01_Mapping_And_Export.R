@@ -175,6 +175,12 @@ writeFallvignetteImportFiles <- function(
     if (anyDuplicated(export_data$record_id)) {
       stop("record_id must be unique in the fallvignette export.")
     }
+    if (any(
+      is.na(export_data$wp8_standort_id) |
+        !nzchar(trimws(export_data$wp8_standort_id))
+    )) {
+      stop("Every fallvignette export row must contain a non-empty wp8_standort_id.")
+    }
   }
 
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)

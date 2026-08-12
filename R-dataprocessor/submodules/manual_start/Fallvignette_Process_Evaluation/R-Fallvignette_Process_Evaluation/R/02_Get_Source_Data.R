@@ -14,10 +14,12 @@ buildFallvignetteSourceQuery <- function(mapping) {
     stop("mapping must be a normalized fallvignette mapping.")
   }
 
-  source_fields <- setdiff(
-    unique(mapping$source_field),
-    "Mapping aus WP8"
+  directly_mapped_rows <- !mapping[["target_field"]] %in% c(
+    "record_id",
+    "wp8_standort_id",
+    "wp8_mrp_fachbereich"
   )
+  source_fields <- unique(mapping[["source_field"]][directly_mapped_rows])
   source_fields <- source_fields[
     !is.na(source_fields) & nzchar(source_fields)
   ]

@@ -34,12 +34,14 @@ init <- function(validate_config = TRUE) {
       "OBSERVATION_BODY_HEIGHT_CODES",
       "OBSERVATION_BMI_SYSTEM",
       "OBSERVATION_BMI_CODES",
+      "SITE_CODE",
       "INPUT_REPO_PATH",
       "PATH_TO_DB_CONFIG_TOML"
     )
   )
   if (validate_config) {
     validateWardPhases()
+    validateSiteCode(config[["SITE_CODE"]])
   }
   return(config)
 }

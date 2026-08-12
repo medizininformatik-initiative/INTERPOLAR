@@ -93,7 +93,7 @@ testthat::test_that("getFallvignetteSourceData executes a read-only query", {
 
 testthat::test_that("buildFallvignetteSourceQuery rejects unsupported sources", {
   mapping <- getTestFallvignetteMapping()
-  mapping$source_field[1] <- "fall_unknown"
+  mapping$source_field[mapping$target_field == "wp8_fv_alter"] <- "fall_unknown"
 
   testthat::expect_error(
     buildFallvignetteSourceQuery(mapping),

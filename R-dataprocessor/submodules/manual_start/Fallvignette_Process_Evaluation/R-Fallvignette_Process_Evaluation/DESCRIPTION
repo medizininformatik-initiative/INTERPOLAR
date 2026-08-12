@@ -19,6 +19,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
     data.table,
+    digest,
     etlutils
 Suggests:
     testthat (>= 3.0.0)
