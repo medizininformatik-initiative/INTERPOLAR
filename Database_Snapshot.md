@@ -113,12 +113,25 @@ gefilterter Datenbestand weitergegeben werden.
 ### Chunkgröße anpassen
 
 Standardmäßig verarbeiten die Pseudonymisierung und die Erstellung eines
-Broad-Consent-Snapshots 25.000 Tabellenzeilen pro Chunk. Kleinere Werte
-reduzieren den maximalen R-Speicherbedarf, können den Lauf aber verlängern.
+Broad-Consent-Snapshots 5.000 Tabellenzeilen pro Chunk. In Tests hat sich diese
+Chunkgröße als günstig erwiesen und ist deshalb der Standardwert.
+
+Für die Pseudonymisierung einer vorhandenen Snapshot-Datei:
 
 ```bash
 ./ip-snapshot.sh pseudonymize snap01_20251002 --chunk-size 10000
+```
+
+Für die gemeinsame Erstellung einer normalen und einer pseudonymisierten
+Snapshot-Datei:
+
+```bash
 ./ip-snapshot.sh create snap01 --with-pseudonymized --chunk-size 10000
+```
+
+Für die Erstellung eines Broad-Consent-Snapshots:
+
+```bash
 ./ip-snapshot.sh create-broad-consent snap01_20251002_pseud --chunk-size 10000
 ```
 

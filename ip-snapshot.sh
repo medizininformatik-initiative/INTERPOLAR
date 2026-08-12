@@ -39,7 +39,7 @@ Usage: ${0##*/} <action> <name>
   --chunk-size <rows>
              only for "pseudonymize", "create-broad-consent", or
              "create --with-pseudonymized":
-             number of rows read per processing chunk (default: 25000)
+             number of rows read per processing chunk (default: 5000)
 
 Examples:
   $0 list                            → lists all .sql.gz files without extensions in Snapshots
@@ -71,7 +71,7 @@ action=$1
 name=$2
 DIR=Snapshots
 with_pseudonymized=false
-chunk_size=25000
+chunk_size=5000
 chunk_size_set=false
 
 if [[ -z "$action" ]]; then
