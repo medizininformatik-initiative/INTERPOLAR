@@ -1,5 +1,9 @@
 SNAPSHOT_MINIMUM_BIRTHDATE <- as.Date("1910-01-01")
 
+getSnapshotCaseEnrichmentSpec <- function(base_table_name) {
+  SNAPSHOT_CASE_ENRICHMENT_SPECS[[base_table_name]]
+}
+
 extractFhirReferenceId <- function(references, resource_type) {
   references <- as.character(references)
   references[is.na(references) | !nzchar(references)] <- NA_character_
@@ -52,12 +56,8 @@ getAgeCalculationReview <- function(
   birthdates,
   matched_patient_keys = NULL
 ) {
-  reference_column <- switch(
-    base_table_name,
-    fall_fe = "fall_aufn_dat",
-    encounter = "enc_period_start",
-    NULL
-  )
+  spec <- getSnapshotCaseEnrichmentSpec(base_table_name)
+  reference_column <- spec[["reference_date_column"]]
   if (is.null(reference_column) || !reference_column %in% names(table)) {
     return(emptyAgeCalculationReview())
   }
@@ -90,24 +90,19 @@ getAgeCalculationReview <- function(
   }
 
   raw_age <- floor(as.numeric(difftime(reference_dates, birthdates, units = "days")) / 365.25)
-  fhir_patient_ids <- if (identical(base_table_name, "encounter")) {
-    extractFhirReferenceId(ageReviewColumn(table, "enc_patient_ref"), "Patient")
-  } else {
-    ageReviewColumn(table, "fall_pat_id")
+  fhir_patient_ids <- ageReviewColumn(table, spec[["review_patient_column"]])
+  if (!is.null(spec[["review_patient_reference_type"]])) {
+    fhir_patient_ids <- extractFhirReferenceId(
+      fhir_patient_ids,
+      spec[["review_patient_reference_type"]]
+    )
   }
-  fhir_encounter_ids <- if (identical(base_table_name, "encounter")) {
-    ageReviewColumn(table, "enc_id")
-  } else {
-    ageReviewColumn(table, "fall_fhir_enc_id")
-  }
+  fhir_encounter_ids <- ageReviewColumn(table, spec[["review_encounter_column"]])
 
   data.table::data.table(
     TABLE_NAME = table_name,
     ISSUE_TYPE = issue_types[issue_rows],
-    REDCAP_RECORD_ID = ageReviewColumn(
-      table,
-      c("record_id", "patient_id_fk")
-    )[issue_rows],
+    REDCAP_RECORD_ID = ageReviewColumn(table, c("record_id", "patient_id_fk"))[issue_rows],
     FHIR_PATIENT_ID = fhir_patient_ids[issue_rows],
     FHIR_ENCOUNTER_ID = fhir_encounter_ids[issue_rows],
     LOCAL_CASE_ID = ageReviewColumn(table, "fall_id")[issue_rows],
@@ -214,7 +209,7 @@ calculateBmi <- function(weight_values, weight_units, height_values, height_unit
 enrichSnapshotFallChunk <- function(
   fall_fe,
   birthdates = NULL,
-  enrichment_columns = c("fall_age_at_admission", "fall_bmi"),
+  enrichment_columns = getSnapshotCaseEnrichmentSpec("fall_fe")[["enrichment_columns"]],
   source_columns = names(fall_fe)
 ) {
   fall_fe <- data.table::as.data.table(data.table::copy(fall_fe))
@@ -222,10 +217,10 @@ enrichSnapshotFallChunk <- function(
     "fall_age_at_admission" %in% enrichment_columns &&
     !"fall_age_at_admission" %in% names(fall_fe)
   ) {
-    fall_fe[["fall_age_at_admission"]] <- NA_integer_
+    fall_fe[["fall_age_at_admission"]] <- rep(NA_integer_, nrow(fall_fe))
   }
   if ("fall_bmi" %in% enrichment_columns && !"fall_bmi" %in% names(fall_fe)) {
-    fall_fe[["fall_bmi"]] <- NA_real_
+    fall_fe[["fall_bmi"]] <- rep(NA_real_, nrow(fall_fe))
   }
 
   if (
@@ -265,7 +260,7 @@ enrichSnapshotFallChunk <- function(
 enrichSnapshotEncounterChunk <- function(
   encounter,
   birthdates = NULL,
-  enrichment_columns = "enc_age_at_admission",
+  enrichment_columns = getSnapshotCaseEnrichmentSpec("encounter")[["enrichment_columns"]],
   source_columns = names(encounter)
 ) {
   encounter <- data.table::as.data.table(data.table::copy(encounter))
@@ -273,7 +268,7 @@ enrichSnapshotEncounterChunk <- function(
     "enc_age_at_admission" %in% enrichment_columns &&
     !"enc_age_at_admission" %in% names(encounter)
   ) {
-    encounter[["enc_age_at_admission"]] <- NA_integer_
+    encounter[["enc_age_at_admission"]] <- rep(NA_integer_, nrow(encounter))
   }
   if (
     "enc_age_at_admission" %in% enrichment_columns &&
@@ -288,3 +283,37 @@ enrichSnapshotEncounterChunk <- function(
   }
   encounter
 }
+
+# Case enrichment cannot be derived from column naming alone. Keep its schema
+# mapping and function dispatch in one place so source joins, enrichment, and
+# review reporting cannot silently diverge.
+SNAPSHOT_CASE_ENRICHMENT_SPECS <- list(
+  fall_fe = list(
+    enrichment_function = enrichSnapshotFallChunk,
+    enrichment_columns = c("fall_age_at_admission", "fall_bmi"),
+    age_column = "fall_age_at_admission",
+    reference_date_column = "fall_aufn_dat",
+    patient_table = "patient_fe",
+    source_patient_key_columns = c("patient_id_fk", "fall_pat_id"),
+    patient_key_columns = c("record_id", "pat_id"),
+    patient_birthdate_column = "pat_gebdat",
+    source_reference_type = NULL,
+    review_patient_column = "fall_pat_id",
+    review_patient_reference_type = NULL,
+    review_encounter_column = "fall_fhir_enc_id"
+  ),
+  encounter = list(
+    enrichment_function = enrichSnapshotEncounterChunk,
+    enrichment_columns = "enc_age_at_admission",
+    age_column = "enc_age_at_admission",
+    reference_date_column = "enc_period_start",
+    patient_table = "patient",
+    source_patient_key_columns = "enc_patient_ref",
+    patient_key_columns = "pat_id",
+    patient_birthdate_column = "pat_birthdate",
+    source_reference_type = "Patient",
+    review_patient_column = "enc_patient_ref",
+    review_patient_reference_type = "Patient",
+    review_encounter_column = "enc_id"
+  )
+)

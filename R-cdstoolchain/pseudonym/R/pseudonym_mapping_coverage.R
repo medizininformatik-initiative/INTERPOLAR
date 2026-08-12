@@ -344,27 +344,10 @@ ensurePseudonymMappingCoverage <- function(
   }
   if (length(missing_summary) > 0) {
     summary <- data.table::rbindlist(missing_summary)
-    details <- paste0(
-      "- ", summary[["SHEET_NAME"]],
-      ": ", summary[["MISSING_PSEUDONYM_N"]],
-      " empty PSEUDONYM value(s), ",
-      summary[["NEW_KEY_N"]], " newly added KEY value(s)"
-    )
-    stop(
-      paste(
-        c(
-          "Pseudonym mapping is incomplete.",
-          paste0("The workbook was updated: ", mapping_file),
-          details,
-          paste0(
-            "Fill every empty PSEUDONYM cell in the listed sheets and restart ",
-            "snapshot pseudonymization. The restored source database can be reused."
-          )
-        ),
-        collapse = "\n"
-      ),
-      call. = FALSE
-    )
+    stop(getIncompletePseudonymMappingMessage(
+      summary[["SHEET_NAME"]],
+      input_repo_path
+    ), call. = FALSE)
   }
 
   invisible(data.table::data.table(

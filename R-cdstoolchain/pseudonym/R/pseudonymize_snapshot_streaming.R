@@ -35,10 +35,146 @@ snapshotSelectColumns <- function(connection, fields, alias, exclude = character
 }
 
 snapshotDependencySuffix <- function(plan_row, last_version_suffix) {
-  if (identical(plan_row[["SNAPSHOT_RELATION_TYPE"]], "last_version")) {
+  if (identical(plan_row[["SNAPSHOT_RELATION_TYPE"]], SNAPSHOT_RELATION_TYPE_LAST)) {
     return(last_version_suffix)
   }
   ""
+}
+
+snapshotTechnicalRowIdColumn <- function(base_table_name) {
+  paste0(base_table_name, "_id")
+}
+
+prepareSnapshotVersionKeyTables <- function(
+  connection,
+  materialization_plan,
+  source_schema
+) {
+  partitioned_tables <- unique(materialization_plan[["BASE_TABLE_NAME"]][
+    materialization_plan[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_OLD
+  ])
+  key_tables <- list()
+  for (base_table_name in partitioned_tables) {
+    last_rows <- materialization_plan[
+      materialization_plan[["BASE_TABLE_NAME"]] == base_table_name &
+        materialization_plan[["SNAPSHOT_RELATION_TYPE"]] ==
+          SNAPSHOT_RELATION_TYPE_LAST,
+    ]
+    if (nrow(last_rows) != 1L) {
+      stop("Expected one last-version source for: ", base_table_name)
+    }
+    row_id_column <- snapshotTechnicalRowIdColumn(base_table_name)
+    source_relation_name <- last_rows[["SOURCE_RELATION"]][1L]
+    source_fields <- snapshotRelationFields(connection, source_relation_name, source_schema)
+    if (!row_id_column %in% source_fields) {
+      stop(
+        "Last-version source ", source_relation_name,
+        " lacks conventional technical row ID: ", row_id_column
+      )
+    }
+
+    source_alias <- "snapshot_last_version"
+    key_select <- paste0(
+      snapshotQuotedColumn(connection, row_id_column, source_alias),
+      " AS ", snapshotQuotedColumn(connection, "row_id")
+    )
+    key_table_name <- basename(tempfile(pattern = "snapshot_version_keys_"))
+    key_table <- snapshotQualifiedName(connection, key_table_name)
+    created_rows <- DBI::dbExecute(
+      connection,
+      paste0(
+        "CREATE TEMP TABLE ", key_table, " AS\n",
+        "SELECT DISTINCT ", key_select, "\n",
+        "FROM ",
+        snapshotQualifiedName(connection, source_relation_name, source_schema),
+        " ", source_alias
+      )
+    )
+    DBI::dbExecute(
+      connection,
+      paste0("CREATE INDEX ON ", key_table, " (", snapshotQuotedColumn(connection, "row_id"), ")")
+    )
+    DBI::dbExecute(connection, paste0("ANALYZE ", key_table))
+    message("Prepared version keys for ", base_table_name, ": ", created_rows, " key rows")
+    key_tables[[base_table_name]] <- key_table_name
+  }
+  key_tables
+}
+
+dropSnapshotVersionKeyTables <- function(connection, tables) {
+  for (table_name in unname(unlist(tables, use.names = FALSE))) {
+    DBI::dbExecute(
+      connection,
+      paste0("DROP TABLE IF EXISTS ", snapshotQualifiedName(connection, table_name))
+    )
+  }
+  invisible()
+}
+
+getSnapshotPartitionSource <- function(
+  connection,
+  plan_row,
+  source_schema,
+  source_view_prefix,
+  version_key_tables
+) {
+  source_relation_name <- plan_row[["SOURCE_RELATION"]]
+  source_relation <- snapshotQualifiedName(connection, source_relation_name, source_schema)
+  source_fields <- snapshotRelationFields(connection, source_relation_name, source_schema)
+  relation_type <- plan_row[["SNAPSHOT_RELATION_TYPE"]]
+  if (!relation_type %in% c(SNAPSHOT_RELATION_TYPE_OLD, SNAPSHOT_RELATION_TYPE_LAST)) {
+    return(list(relation = source_relation, fields = source_fields))
+  }
+
+  base_table_name <- plan_row[["BASE_TABLE_NAME"]]
+  all_relation_name <- paste0(source_view_prefix, base_table_name)
+  all_fields <- snapshotRelationFields(connection, all_relation_name, source_schema)
+  missing_fields <- setdiff(all_fields, source_fields)
+  if (length(missing_fields) > 0L) {
+    stop(
+      "Snapshot source ", source_relation_name,
+      " lacks columns from ", all_relation_name, ": ",
+      paste(missing_fields, collapse = ", ")
+    )
+  }
+  source_alias <- "snapshot_partition_source"
+  source_columns <- snapshotSelectColumns(connection, all_fields, source_alias)
+  if (identical(relation_type, SNAPSHOT_RELATION_TYPE_LAST)) {
+    return(list(
+      relation = paste0(
+        "(SELECT ", source_columns,
+        " FROM ", source_relation, " ", source_alias, ")"
+      ),
+      fields = all_fields
+    ))
+  }
+
+  row_id_column <- snapshotTechnicalRowIdColumn(base_table_name)
+  key_table_name <- version_key_tables[[base_table_name]]
+  if (!row_id_column %in% source_fields) {
+    stop(
+      "Snapshot source ", source_relation_name,
+      " lacks conventional technical row ID: ", row_id_column
+    )
+  }
+  if (is.null(key_table_name)) {
+    stop("Missing prepared version keys for: ", base_table_name)
+  }
+  key_alias <- "snapshot_version_keys"
+  key_predicate <- paste0(
+    snapshotQuotedColumn(connection, row_id_column, source_alias),
+    " = ", key_alias, ".", snapshotQuotedColumn(connection, "row_id")
+  )
+  list(
+    relation = paste0(
+      "(SELECT ", source_columns,
+      " FROM ", source_relation, " ", source_alias,
+      " WHERE NOT EXISTS (SELECT 1 FROM ",
+      snapshotQualifiedName(connection, key_table_name), " ", key_alias,
+      " WHERE ", key_predicate, "))"
+    ),
+    fields = all_fields
+  )
 }
 
 snapshotNormalizedReferenceExpression <- function(
@@ -56,10 +192,7 @@ snapshotNormalizedReferenceExpression <- function(
 
 indentSql <- function(sql, spaces = 2L) {
   indentation <- strrep(" ", spaces)
-  paste0(
-    indentation,
-    gsub("\n", paste0("\n", indentation), sql, fixed = TRUE)
-  )
+  paste0(indentation, gsub("\n", paste0("\n", indentation), sql, fixed = TRUE))
 }
 
 buildSnapshotMedicationResolutionQuery <- function(
@@ -444,7 +577,10 @@ prepareSnapshotMedicationResolutionTables <- function(
       next
     }
 
-    medication_suffix <- if (identical(relation_type, "last_version")) {
+    medication_suffix <- if (identical(
+      relation_type,
+      SNAPSHOT_RELATION_TYPE_LAST
+    )) {
       last_version_suffix
     } else {
       ""
@@ -466,11 +602,7 @@ prepareSnapshotMedicationResolutionTables <- function(
       medication_relation_name,
       source_schema
     )
-    required_medication_fields <- c(
-      "med_id",
-      "med_code_system",
-      "med_code_code"
-    )
+    required_medication_fields <- c("med_id", "med_code_system", "med_code_code")
     if (!all(required_medication_fields %in% medication_fields)) {
       next
     }
@@ -535,19 +667,19 @@ getSnapshotStreamingSourceQuery <- function(
   source_view_prefix,
   last_version_suffix,
   described_columns,
-  medication_resolution_tables = list()
+  medication_resolution_tables = list(),
+  version_key_tables = list()
 ) {
   source_relation_name <- plan_row[["SOURCE_RELATION"]]
-  source_relation <- snapshotQualifiedName(
+  partition_source <- getSnapshotPartitionSource(
     connection,
-    source_relation_name,
-    source_schema
+    plan_row,
+    source_schema,
+    source_view_prefix,
+    version_key_tables
   )
-  source_fields <- snapshotRelationFields(
-    connection,
-    source_relation_name,
-    source_schema
-  )
+  source_relation <- partition_source[["relation"]]
+  source_fields <- partition_source[["fields"]]
   base_table_name <- plan_row[["BASE_TABLE_NAME"]]
   dependency_suffix <- snapshotDependencySuffix(plan_row, last_version_suffix)
   medication_spec <- getMedicationReferenceSpec(base_table_name)
@@ -582,23 +714,24 @@ getSnapshotStreamingSourceQuery <- function(
     }
   }
 
+  case_spec <- getSnapshotCaseEnrichmentSpec(base_table_name)
   if (
-    identical(base_table_name, "fall_fe") &&
-    "fall_age_at_admission" %in% described_columns
+    !is.null(case_spec) &&
+    case_spec[["age_column"]] %in% described_columns
   ) {
     patient_relation_name <- paste0(
       source_view_prefix,
-      "patient_fe",
+      case_spec[["patient_table"]],
       dependency_suffix
     )
     source_key_columns <- intersect(
-      intersect(c("patient_id_fk", "fall_pat_id"), source_fields),
+      intersect(case_spec[["source_patient_key_columns"]], source_fields),
       described_columns
     )
     if (
       length(source_key_columns) > 0 &&
-      "fall_aufn_dat" %in% described_columns &&
-      "fall_aufn_dat" %in% source_fields &&
+      case_spec[["reference_date_column"]] %in% described_columns &&
+      case_spec[["reference_date_column"]] %in% source_fields &&
       snapshotRelationExists(connection, patient_relation_name, source_schema)
     ) {
       patient_fields <- snapshotRelationFields(
@@ -606,8 +739,11 @@ getSnapshotStreamingSourceQuery <- function(
         patient_relation_name,
         source_schema
       )
-      patient_key_columns <- intersect(c("record_id", "pat_id"), patient_fields)
-      if (length(patient_key_columns) > 0 && "pat_gebdat" %in% patient_fields) {
+      patient_key_columns <- intersect(case_spec[["patient_key_columns"]], patient_fields)
+      if (
+        length(patient_key_columns) > 0 &&
+        case_spec[["patient_birthdate_column"]] %in% patient_fields
+      ) {
         return(list(
           query = buildSnapshotBirthdateMapQuery(
             connection,
@@ -620,7 +756,8 @@ getSnapshotStreamingSourceQuery <- function(
             ),
             source_key_columns,
             patient_key_columns,
-            "pat_gebdat"
+            case_spec[["patient_birthdate_column"]],
+            source_reference_type = case_spec[["source_reference_type"]]
           ),
           medication_spec = NULL
         ))
@@ -628,62 +765,25 @@ getSnapshotStreamingSourceQuery <- function(
     }
   }
 
-  if (
-    identical(base_table_name, "encounter") &&
-    "enc_age_at_admission" %in% described_columns
-  ) {
-    patient_relation_name <- paste0(source_view_prefix, "patient", dependency_suffix)
-    if (
-      all(c("enc_patient_ref", "enc_period_start") %in% described_columns) &&
-      all(c("enc_patient_ref", "enc_period_start") %in% source_fields) &&
-      snapshotRelationExists(connection, patient_relation_name, source_schema)
-    ) {
-      patient_fields <- snapshotRelationFields(
-        connection,
-        patient_relation_name,
-        source_schema
-      )
-      if (all(c("pat_id", "pat_birthdate") %in% patient_fields)) {
-        return(list(
-          query = buildSnapshotBirthdateMapQuery(
-            connection,
-            source_relation,
-            source_fields,
-            snapshotQualifiedName(
-              connection,
-              patient_relation_name,
-              source_schema
-            ),
-            "enc_patient_ref",
-            "pat_id",
-            "pat_birthdate",
-            source_reference_type = "Patient"
-          ),
-          medication_spec = NULL
-        ))
-      }
-    }
-  }
-
-  list(
-    query = paste0("SELECT * FROM ", source_relation),
-    medication_spec = NULL
-  )
+  list(query = paste0("SELECT * FROM ", source_relation), medication_spec = NULL)
 }
 
 newSnapshotStreamingContext <- function(
   input_repo_path,
-  medication_resolution_tables = list()
+  medication_resolution_tables = list(),
+  version_key_tables = list()
 ) {
   context <- new.env(parent = emptyenv())
   context$input_repo_path <- input_repo_path
   context$medication_resolution_tables <- medication_resolution_tables
+  context$version_key_tables <- version_key_tables
   context$loinc_mapping <- NULL
   context$mapping_context <- newPseudonymMappingContext(input_repo_path)
   context$medication_review <- newBoundedMedicationReferenceReview(
     SNAPSHOT_MEDICATION_REVIEW_DETAIL_LIMIT
   )
   context$age_review <- newBoundedAgeCalculationReview(SNAPSHOT_AGE_REVIEW_DETAIL_LIMIT)
+  context$loinc_unit_review <- newLoincUnitConversionReview()
   context
 }
 
@@ -699,21 +799,13 @@ enrichSnapshotStreamingChunk <- function(
     birthdates <- table[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]]
   }
 
-  if (identical(base_table_name, "fall_fe")) {
+  case_spec <- getSnapshotCaseEnrichmentSpec(base_table_name)
+  if (!is.null(case_spec)) {
     enrichment_columns <- intersect(
-      c("fall_age_at_admission", "fall_bmi"),
+      case_spec[["enrichment_columns"]],
       described_columns
     )
-    return(enrichSnapshotFallChunk(
-      table,
-      birthdates,
-      enrichment_columns,
-      described_columns
-    ))
-  }
-  if (identical(base_table_name, "encounter")) {
-    enrichment_columns <- intersect("enc_age_at_admission", described_columns)
-    return(enrichSnapshotEncounterChunk(
+    return(case_spec[["enrichment_function"]](
       table,
       birthdates,
       enrichment_columns,
@@ -722,7 +814,7 @@ enrichSnapshotStreamingChunk <- function(
   }
   if (identical(base_table_name, "observation")) {
     enrichment_columns <- intersect(
-      SNAPSHOT_OBSERVATION_ENRICHMENT_COLUMNS,
+      SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS,
       described_columns
     )
     has_source_columns <- all(
@@ -750,7 +842,7 @@ enrichSnapshotStreamingChunk <- function(
     )
     for (column_name in enrichment_columns) {
       if (!column_name %in% names(table)) {
-        table[[column_name]] <- NA_character_
+        table[[column_name]] <- rep(NA_character_, nrow(table))
       }
     }
   }
@@ -783,15 +875,42 @@ processSnapshotChunkStream <- function(
   first_chunk <- TRUE
   chunk_number <- 0L
   summary <- NULL
+  timing <- c(
+    FETCH_SECONDS = 0,
+    ENRICH_SECONDS = 0,
+    REVIEW_SECONDS = 0,
+    PSEUDONYMIZE_SECONDS = 0,
+    WRITE_SECONDS = 0
+  )
+  stream_started <- proc.time()[["elapsed"]]
   repeat {
+    step_started <- proc.time()[["elapsed"]]
     chunk <- fetch_chunk(chunk_size)
+    timing[["FETCH_SECONDS"]] <- timing[["FETCH_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
     chunk_number <- chunk_number + 1L
+
+    step_started <- proc.time()[["elapsed"]]
     chunk <- enrich_chunk(data.table::as.data.table(chunk))
+    timing[["ENRICH_SECONDS"]] <- timing[["ENRICH_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
+
+    step_started <- proc.time()[["elapsed"]]
     write_review_chunk(review_chunk(chunk))
+    timing[["REVIEW_SECONDS"]] <- timing[["REVIEW_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
     chunk <- strip_review_columns(chunk)
+
+    step_started <- proc.time()[["elapsed"]]
     table_result <- pseudonymize_chunk(chunk, chunk_number)
+    timing[["PSEUDONYMIZE_SECONDS"]] <- timing[["PSEUDONYMIZE_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
     output <- table_result[["table"]]
+
+    step_started <- proc.time()[["elapsed"]]
     write_chunk(output, first_chunk)
+    timing[["WRITE_SECONDS"]] <- timing[["WRITE_SECONDS"]] +
+      proc.time()[["elapsed"]] - step_started
     first_chunk <- FALSE
     if (is.null(summary)) {
       summary <- table_result[["summary"]]
@@ -811,16 +930,25 @@ processSnapshotChunkStream <- function(
     }
   }
 
-  list(
-    summary = summary,
-    chunks = chunk_number
+  stream_seconds <- proc.time()[["elapsed"]] - stream_started
+  timing <- c(
+    timing,
+    OTHER_SECONDS = max(0, stream_seconds - sum(timing)),
+    STREAM_SECONDS = stream_seconds
   )
+
+  list(summary = summary, chunks = chunk_number, timing = timing)
 }
 
 stripSnapshotStreamingReviewColumns <- function(table) {
   table <- data.table::as.data.table(table)
   review_columns <- intersect(
-    SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN,
+    c(
+      SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN,
+      SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN,
+      SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN,
+      SNAPSHOT_LOINC_TARGET_UNIT_COLUMN
+    ),
     names(table)
   )
   if (length(review_columns) > 0) {
@@ -871,6 +999,8 @@ streamSnapshotMaterializedTable <- function(
     )
   }
 
+  table_started <- proc.time()[["elapsed"]]
+  source_open_started <- proc.time()[["elapsed"]]
   query_info <- getSnapshotStreamingSourceQuery(
     source_connection,
     plan_row,
@@ -879,7 +1009,8 @@ streamSnapshotMaterializedTable <- function(
     last_version_suffix,
     described_columns,
     medication_resolution_tables =
-      streaming_context$medication_resolution_tables
+      streaming_context$medication_resolution_tables,
+    version_key_tables = streaming_context$version_key_tables
   )
   message(
     "Streaming snapshot source relation ",
@@ -897,6 +1028,7 @@ streamSnapshotMaterializedTable <- function(
       )
     }
   )
+  source_open_seconds <- proc.time()[["elapsed"]] - source_open_started
   on.exit(
     {
       if (DBI::dbIsValid(source_result)) {
@@ -967,7 +1099,7 @@ streamSnapshotMaterializedTable <- function(
           query_info[["medication_spec"]]
         )
       }
-      age_review <- if (base_table_name %in% c("fall_fe", "encounter")) {
+      age_review <- if (!is.null(getSnapshotCaseEnrichmentSpec(base_table_name))) {
         birthdates <- if (SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(chunk)) {
           chunk[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]]
         } else {
@@ -990,10 +1122,12 @@ streamSnapshotMaterializedTable <- function(
       } else {
         emptyAgeCalculationReview()
       }
-      list(
-        medication = medication_review,
-        age = age_review
-      )
+      loinc_unit_review <- if (identical(base_table_name, "observation")) {
+        getLoincUnitConversionReview(chunk, materialized_table_name)
+      } else {
+        emptyLoincUnitConversionReview()
+      }
+      list(medication = medication_review, age = age_review, loinc_unit = loinc_unit_review)
     },
     write_review_chunk = function(review) {
       recordBoundedMedicationReferenceReview(
@@ -1004,12 +1138,15 @@ streamSnapshotMaterializedTable <- function(
         streaming_context$age_review,
         review[["age"]]
       )
+      recordLoincUnitConversionReview(streaming_context$loinc_unit_review, review[["loinc_unit"]])
     },
     chunk_size = chunk_size,
     table_name = materialized_table_name,
     strip_review_columns = stripSnapshotStreamingReviewColumns
   )
   summary <- stream_result[["summary"]]
+  timing <- stream_result[["timing"]]
+  total_seconds <- proc.time()[["elapsed"]] - table_started
 
   summary[["TABLE_NAME"]] <- materialized_table_name
   summary[["BASE_TABLE_NAME"]] <- base_table_name
@@ -1019,6 +1156,30 @@ streamSnapshotMaterializedTable <- function(
   summary[["ORIGINAL_COLUMNS_REMOVED"]] <- 0L
   summary[["DUPLICATE_ROWS_REMOVED"]] <- 0L
   summary[["POSTPROCESSING_ACTION"]] <- "none"
+  summary[["CHUNKS"]] <- stream_result[["chunks"]]
+  summary[["SOURCE_OPEN_SECONDS"]] <- source_open_seconds
+  for (timing_name in names(timing)) {
+    summary[[timing_name]] <- timing[[timing_name]]
+  }
+  summary[["TOTAL_SECONDS"]] <- total_seconds
+  message(
+    sprintf(
+      paste0(
+        "Snapshot timing for %s: source open %.3fs, fetch %.3fs, ",
+        "enrich %.3fs, review %.3fs, pseudonymize %.3fs, write %.3fs, ",
+        "other %.3fs, total %.3fs"
+      ),
+      materialized_table_name,
+      source_open_seconds,
+      timing[["FETCH_SECONDS"]],
+      timing[["ENRICH_SECONDS"]],
+      timing[["REVIEW_SECONDS"]],
+      timing[["PSEUDONYMIZE_SECONDS"]],
+      timing[["WRITE_SECONDS"]],
+      timing[["OTHER_SECONDS"]],
+      total_seconds
+    )
+  )
 
   list(
     summary = summary,
@@ -1052,10 +1213,26 @@ getExistingSnapshotMaterializationPlan <- function(
       plan[["SOURCE_RELATION"]][i],
       source_schema
     )
-    if (!relation_exists && plan[["SNAPSHOT_RELATION_TYPE"]][i] == "all") {
+    if (!relation_exists && plan[["SNAPSHOT_RELATION_TYPE"]][i] == SNAPSHOT_RELATION_TYPE_ALL) {
       stop("Required source relation does not exist: ", plan[["SOURCE_RELATION"]][i])
     }
     existing_rows[i] <- relation_exists
   }
-  plan[existing_rows, , drop = FALSE]
+  plan <- plan[existing_rows, , drop = FALSE]
+  partitioned_tables <- unique(plan[["BASE_TABLE_NAME"]][
+    plan[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_LAST
+  ])
+  old_rows <- plan[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_ALL &
+    plan[["BASE_TABLE_NAME"]] %in% partitioned_tables
+  plan[["MATERIALIZED_TABLE_NAME"]][old_rows] <- paste0(
+    plan[["BASE_TABLE_NAME"]][old_rows],
+    SNAPSHOT_OLD_VERSIONS_SUFFIX
+  )
+  plan[["TARGET_VIEW_NAME"]][old_rows] <- paste0(
+    source_view_prefix,
+    plan[["BASE_TABLE_NAME"]][old_rows],
+    SNAPSHOT_OLD_VERSIONS_SUFFIX
+  )
+  plan[["SNAPSHOT_RELATION_TYPE"]][old_rows] <- SNAPSHOT_RELATION_TYPE_OLD
+  plan
 }

@@ -112,67 +112,12 @@ Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der h
     docker compose run --rm --no-deps r-env Rscript R-db2frontend/Start2_DB2Frontend.R
     ```
 
-## Datenbank Snapshot
+## Snapshot-Dateien, Snapshot-Datenbanken und Pseudonymisierung
 
-Zur Erstellung, Löschung, Aktivierung, De-Aktivierung, Pseudonymisierung und Auflistung von Snapshots wird das Bash-Script `ip-snapshot.sh` verwendet. Das Script muss direkt im Hauptverzeichnis ausgeführt werden. Snapshot-Namen dürfen nur Buchstaben, Zahlen und Unterstriche und keine Pfadangaben enthalten. Die Dateien werden im Verzeichnis `Snapshots` als `.sql.gz` abgelegt.
-
-Eine ausführliche Beschreibung von Inhalt, Pseudonymisierung, Anreicherung und Reports steht in [Database_Snapshot.md](Database_Snapshot.md).
-
-Vor lokalen Tests nach Codeänderungen muss das R-Image neu gebaut werden, da die Pseudonymisierung das im Container installierte R-Paket verwendet.
-```cmd
-docker compose build r-env
-```
-
-Mit _create_ wird ein Dump der `cds_hub_db` Datenbank erzeugt und unter `Snapshots/<name>_<Datum>.sql.gz` gespeichert.
-```cmd
-./ip-snapshot.sh create snap01
-```
-
-Mit _create --with-pseudonymized_ wird zusätzlich direkt ein pseudonymisierter Auswertungs-Snapshot erzeugt.
-```cmd
-./ip-snapshot.sh create snap01 --with-pseudonymized
-```
-
-Mit _pseudonymize_ wird nachträglich aus einem vorhandenen Snapshot-Dump ein pseudonymisierter Snapshot erzeugt. Der Name wird ohne Dateiendung angegeben. Aus `Snapshots/snap01_20251002.sql.gz` wird dadurch `Snapshots/snap01_20251002_pseud.sql.gz`.
-```cmd
-./ip-snapshot.sh pseudonymize snap01_20251002
-```
-
-Die Anzahl der gleichzeitig verarbeiteten Tabellenzeilen kann mit `--chunk-size` angepasst werden. Der Standardwert ist 25.000; kleinere Werte benötigen weniger R-Speicher, können den Lauf aber verlängern. Der Parameter ist bei `pseudonymize` und bei `create --with-pseudonymized` verfügbar.
-```cmd
-./ip-snapshot.sh pseudonymize snap01_20251002 --chunk-size 10000
-./ip-snapshot.sh create snap01 --with-pseudonymized --chunk-size 10000
-```
-
-Wenn die Pseudonymisierung fehlschlägt, bleiben die temporär wiederhergestellte Source-Datenbank und die teilweise erzeugte pseudonymisierte Ziel-Datenbank zur Diagnose erhalten. Die ursprüngliche Snapshot-Datei wird bei einem Fehler nicht gelöscht. Vor einem erneuten Lauf müssen die behaltenen Build-Datenbanken geprüft und manuell entfernt werden, da das Script vorhandene Build-Datenbanken nicht überschreibt. Nach einem erfolgreichen Lauf werden die temporären Build-Datenbanken automatisch gelöscht.
-
-Mit _activate_ wird ein Snapshot-Dump in eine Snapshot-Datenbank geladen. Die aktivierte Datenbank erhält den Namen `ip_<snapshot_name>` und wird nach dem Einspielen in den Read-only-Modus gesetzt.
-```cmd
-./ip-snapshot.sh activate snap01_20251002
-```
-
-Pseudonymisierte Snapshots werden gleichartig aktiviert.
-```cmd
-./ip-snapshot.sh activate snap01_20251002_pseud
-```
-
-Mit _deactivate_ wird nur die aus einer Snapshot-Datei geladene Datenbank gelöscht. Die Snapshot-Datei selbst bleibt erhalten. Falls eine Snapshot-Datenbank bereits existiert, muss sie vor dem erneuten Aktivieren deaktiviert werden.
-```cmd
-./ip-snapshot.sh deactivate snap01_20251002_pseud
-./ip-snapshot.sh activate snap01_20251002_pseud
-```
-
-Mit _delete_ wird die Snapshot-Datei gelöscht; falls eine gleichnamige Snapshot-Datenbank existiert, wird sie ebenfalls entfernt.
-```cmd
-./ip-snapshot.sh delete snap01_20251002
-```
-
-Mit _list_ werden Snapshot-Dateien und aktivierte Snapshot-Datenbanken angezeigt.
-```cmd
-./ip-snapshot.sh list
-```
-
-Eine ausführliche Beschreibung liefert der Aufruf von `./ip-snapshot.sh` ohne Parameter.
+Mit Snapshot-Dateien kann der aktuelle Stand der CDS_HUB-Datenbank gesichert und
+pseudonymisiert werden. Snapshot-Dateien können außerdem als schreibgeschützte
+Snapshot-Datenbanken bereitgestellt werden. Die vollständige Anleitung steht in
+[Database_Snapshot.md](Database_Snapshot.md).
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)
