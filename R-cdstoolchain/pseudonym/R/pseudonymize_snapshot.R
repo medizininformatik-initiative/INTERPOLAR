@@ -39,15 +39,33 @@ getIncompletePseudonymMappingSheets <- function(review_report) {
 
 getIncompletePseudonymMappingMessage <- function(sheets, input_repo_path) {
   mapping_file <- getPseudonymMappingFilePath(input_repo_path)
-  sheet_text <- paste(sprintf('"%s"', sheets), collapse = ", ")
+  missing_keys <- unlist(lapply(sheets, function(sheet) {
+    mapping <- readPseudonymMappingSheetForUpdate(mapping_file, sheet)
+    empty_pseudonyms <- is.na(mapping[["PSEUDONYM"]]) |
+      !nzchar(trimws(mapping[["PSEUDONYM"]]))
+    c(
+      paste0('Sheet "', sheet, '":'),
+      paste0("- ", mapping[["KEY"]][empty_pseudonyms])
+    )
+  }), use.names = FALSE)
   paste(
-    "Pseudonymisierungsmapping muss ausgefüllt werden.",
-    paste0("Excel-Datei: ", mapping_file),
-    paste0("Betroffene Blätter: ", sheet_text),
+    "Snapshot pseudonymization is paused because pseudonyms are still missing.",
+    "This is an expected interruption, not a technical error.",
+    "",
+    "You must manually complete the generated mapping file for your data.",
+    paste0('Mapping file: "', mapping_file, '"'),
+    "",
+    "Missing pseudonyms:",
+    paste(missing_keys, collapse = "\n"),
+    "",
+    "To continue:",
+    "1. Open the mapping workbook shown above.",
     paste0(
-      "Öffne die Excel-Datei und fülle in diesen Blättern alle leeren Zellen ",
-      "der Spalte PSEUDONYM aus."
+      "2. In each listed sheet, enter a PSEUDONYM for every listed KEY. ",
+      "Do not change the KEY values."
     ),
+    "3. Save the mapping workbook.",
+    "4. Run the continuation command shown below.",
     sep = "\n"
   )
 }
