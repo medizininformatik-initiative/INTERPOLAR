@@ -117,10 +117,7 @@ invisible(tryCatch(
         mapping_preflight_completed = TRUE,
         log_steps = TRUE
       )
-      report_dir <- file.path(
-        get("MODULE_DIRS", envir = .GlobalEnv)[["local_dir"]],
-        "reports"
-      )
+      report_dir <- file.path(get("MODULE_DIRS", envir = .GlobalEnv)[["local_dir"]], "reports")
       issue_report <- pseudonymization_result[["issue_report"]]
       medication_issue_summary <- issue_report[["medication_issue_summary"]]
       age_issue_summary <- issue_report[["age_issue_summary"]]
@@ -131,10 +128,7 @@ invisible(tryCatch(
         loinc_unit_issues[["AFFECTED_ROWS"]],
         na.rm = TRUE
       )
-      issue_report_file <- file.path(
-        report_dir,
-        "snapshot_pseudonymization_issues.xlsx"
-      )
+      issue_report_file <- file.path(report_dir, "snapshot_pseudonymization_issues.xlsx")
       if (issue_count > 0) {
         message(
           "\nWARNING: ", issue_count,

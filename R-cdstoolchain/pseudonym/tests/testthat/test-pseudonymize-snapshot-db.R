@@ -12,10 +12,7 @@ test_that("snapshot source session permits temporary resolution tables", {
   snapshotAllowTemporarySourceTables("source-connection")
 
   expect_equal(captured$connection, "source-connection")
-  expect_equal(
-    captured$statement,
-    "SET SESSION default_transaction_read_only = off"
-  )
+  expect_equal(captured$statement, "SET SESSION default_transaction_read_only = off")
 })
 
 test_that("getSnapshotSourceViewPlan uses described table sources only", {
@@ -96,10 +93,7 @@ test_that("existing last-version sources split snapshot storage", {
     plan$TARGET_VIEW_NAME,
     c("v_patient_old_versions", "v_observation", "v_patient_last_version")
   )
-  expect_equal(
-    plan$SNAPSHOT_RELATION_TYPE,
-    c("old_versions", "all", "last_version")
-  )
+  expect_equal(plan$SNAPSHOT_RELATION_TYPE, c("old_versions", "all", "last_version"))
 })
 
 test_that("snapshot views combine disjoint partitions through passthrough views", {
@@ -116,14 +110,8 @@ test_that("snapshot views combine disjoint partitions through passthrough views"
   )
   plan <- data.table::data.table(
     BASE_TABLE_NAME = c("patient", "patient"),
-    MATERIALIZED_TABLE_NAME = c(
-      "patient_old_versions",
-      "patient_last_version"
-    ),
-    TARGET_VIEW_NAME = c(
-      "v_patient_old_versions",
-      "v_patient_last_version"
-    ),
+    MATERIALIZED_TABLE_NAME = c("patient_old_versions", "patient_last_version"),
+    TARGET_VIEW_NAME = c("v_patient_old_versions", "v_patient_last_version"),
     SNAPSHOT_RELATION_TYPE = c("old_versions", "last_version")
   )
 

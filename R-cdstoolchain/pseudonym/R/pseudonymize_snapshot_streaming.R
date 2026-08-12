@@ -35,10 +35,7 @@ snapshotSelectColumns <- function(connection, fields, alias, exclude = character
 }
 
 snapshotDependencySuffix <- function(plan_row, last_version_suffix) {
-  if (identical(
-    plan_row[["SNAPSHOT_RELATION_TYPE"]],
-    SNAPSHOT_RELATION_TYPE_LAST
-  )) {
+  if (identical(plan_row[["SNAPSHOT_RELATION_TYPE"]], SNAPSHOT_RELATION_TYPE_LAST)) {
     return(last_version_suffix)
   }
   ""
@@ -54,8 +51,7 @@ prepareSnapshotVersionKeyTables <- function(
   source_schema
 ) {
   partitioned_tables <- unique(materialization_plan[["BASE_TABLE_NAME"]][
-    materialization_plan[["SNAPSHOT_RELATION_TYPE"]] ==
-      SNAPSHOT_RELATION_TYPE_OLD
+    materialization_plan[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_OLD
   ])
   key_tables <- list()
   for (base_table_name in partitioned_tables) {
@@ -69,11 +65,7 @@ prepareSnapshotVersionKeyTables <- function(
     }
     row_id_column <- snapshotTechnicalRowIdColumn(base_table_name)
     source_relation_name <- last_rows[["SOURCE_RELATION"]][1L]
-    source_fields <- snapshotRelationFields(
-      connection,
-      source_relation_name,
-      source_schema
-    )
+    source_fields <- snapshotRelationFields(connection, source_relation_name, source_schema)
     if (!row_id_column %in% source_fields) {
       stop(
         "Last-version source ", source_relation_name,
@@ -100,16 +92,10 @@ prepareSnapshotVersionKeyTables <- function(
     )
     DBI::dbExecute(
       connection,
-      paste0(
-        "CREATE INDEX ON ", key_table,
-        " (", snapshotQuotedColumn(connection, "row_id"), ")"
-      )
+      paste0("CREATE INDEX ON ", key_table, " (", snapshotQuotedColumn(connection, "row_id"), ")")
     )
     DBI::dbExecute(connection, paste0("ANALYZE ", key_table))
-    message(
-      "Prepared version keys for ", base_table_name,
-      ": ", created_rows, " key rows"
-    )
+    message("Prepared version keys for ", base_table_name, ": ", created_rows, " key rows")
     key_tables[[base_table_name]] <- key_table_name
   }
   key_tables
@@ -133,31 +119,16 @@ getSnapshotPartitionSource <- function(
   version_key_tables
 ) {
   source_relation_name <- plan_row[["SOURCE_RELATION"]]
-  source_relation <- snapshotQualifiedName(
-    connection,
-    source_relation_name,
-    source_schema
-  )
-  source_fields <- snapshotRelationFields(
-    connection,
-    source_relation_name,
-    source_schema
-  )
+  source_relation <- snapshotQualifiedName(connection, source_relation_name, source_schema)
+  source_fields <- snapshotRelationFields(connection, source_relation_name, source_schema)
   relation_type <- plan_row[["SNAPSHOT_RELATION_TYPE"]]
-  if (!relation_type %in% c(
-    SNAPSHOT_RELATION_TYPE_OLD,
-    SNAPSHOT_RELATION_TYPE_LAST
-  )) {
+  if (!relation_type %in% c(SNAPSHOT_RELATION_TYPE_OLD, SNAPSHOT_RELATION_TYPE_LAST)) {
     return(list(relation = source_relation, fields = source_fields))
   }
 
   base_table_name <- plan_row[["BASE_TABLE_NAME"]]
   all_relation_name <- paste0(source_view_prefix, base_table_name)
-  all_fields <- snapshotRelationFields(
-    connection,
-    all_relation_name,
-    source_schema
-  )
+  all_fields <- snapshotRelationFields(connection, all_relation_name, source_schema)
   missing_fields <- setdiff(all_fields, source_fields)
   if (length(missing_fields) > 0L) {
     stop(
@@ -221,10 +192,7 @@ snapshotNormalizedReferenceExpression <- function(
 
 indentSql <- function(sql, spaces = 2L) {
   indentation <- strrep(" ", spaces)
-  paste0(
-    indentation,
-    gsub("\n", paste0("\n", indentation), sql, fixed = TRUE)
-  )
+  paste0(indentation, gsub("\n", paste0("\n", indentation), sql, fixed = TRUE))
 }
 
 buildSnapshotMedicationResolutionQuery <- function(
@@ -634,11 +602,7 @@ prepareSnapshotMedicationResolutionTables <- function(
       medication_relation_name,
       source_schema
     )
-    required_medication_fields <- c(
-      "med_id",
-      "med_code_system",
-      "med_code_code"
-    )
+    required_medication_fields <- c("med_id", "med_code_system", "med_code_code")
     if (!all(required_medication_fields %in% medication_fields)) {
       next
     }
@@ -775,10 +739,7 @@ getSnapshotStreamingSourceQuery <- function(
         patient_relation_name,
         source_schema
       )
-      patient_key_columns <- intersect(
-        case_spec[["patient_key_columns"]],
-        patient_fields
-      )
+      patient_key_columns <- intersect(case_spec[["patient_key_columns"]], patient_fields)
       if (
         length(patient_key_columns) > 0 &&
         case_spec[["patient_birthdate_column"]] %in% patient_fields
@@ -804,10 +765,7 @@ getSnapshotStreamingSourceQuery <- function(
     }
   }
 
-  list(
-    query = paste0("SELECT * FROM ", source_relation),
-    medication_spec = NULL
-  )
+  list(query = paste0("SELECT * FROM ", source_relation), medication_spec = NULL)
 }
 
 newSnapshotStreamingContext <- function(
@@ -979,11 +937,7 @@ processSnapshotChunkStream <- function(
     STREAM_SECONDS = stream_seconds
   )
 
-  list(
-    summary = summary,
-    chunks = chunk_number,
-    timing = timing
-  )
+  list(summary = summary, chunks = chunk_number, timing = timing)
 }
 
 stripSnapshotStreamingReviewColumns <- function(table) {
@@ -1173,11 +1127,7 @@ streamSnapshotMaterializedTable <- function(
       } else {
         emptyLoincUnitConversionReview()
       }
-      list(
-        medication = medication_review,
-        age = age_review,
-        loinc_unit = loinc_unit_review
-      )
+      list(medication = medication_review, age = age_review, loinc_unit = loinc_unit_review)
     },
     write_review_chunk = function(review) {
       recordBoundedMedicationReferenceReview(
@@ -1188,10 +1138,7 @@ streamSnapshotMaterializedTable <- function(
         streaming_context$age_review,
         review[["age"]]
       )
-      recordLoincUnitConversionReview(
-        streaming_context$loinc_unit_review,
-        review[["loinc_unit"]]
-      )
+      recordLoincUnitConversionReview(streaming_context$loinc_unit_review, review[["loinc_unit"]])
     },
     chunk_size = chunk_size,
     table_name = materialized_table_name,
@@ -1266,10 +1213,7 @@ getExistingSnapshotMaterializationPlan <- function(
       plan[["SOURCE_RELATION"]][i],
       source_schema
     )
-    if (
-      !relation_exists &&
-      plan[["SNAPSHOT_RELATION_TYPE"]][i] == SNAPSHOT_RELATION_TYPE_ALL
-    ) {
+    if (!relation_exists && plan[["SNAPSHOT_RELATION_TYPE"]][i] == SNAPSHOT_RELATION_TYPE_ALL) {
       stop("Required source relation does not exist: ", plan[["SOURCE_RELATION"]][i])
     }
     existing_rows[i] <- relation_exists

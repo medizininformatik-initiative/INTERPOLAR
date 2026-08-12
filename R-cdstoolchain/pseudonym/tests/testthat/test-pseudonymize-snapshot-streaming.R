@@ -329,16 +329,8 @@ test_that("version-key preparation follows the technical row-ID convention", {
 
   expect_named(key_tables, "patient")
   expect_match(statements[1L], "SELECT DISTINCT", fixed = TRUE)
-  expect_match(
-    statements[1L],
-    'snapshot_last_version."patient_id" AS "row_id"',
-    fixed = TRUE
-  )
-  expect_match(
-    statements[1L],
-    'FROM "db2dataprocessor_out"."v_patient_last_version"',
-    fixed = TRUE
-  )
+  expect_match(statements[1L], 'snapshot_last_version."patient_id" AS "row_id"', fixed = TRUE)
+  expect_match(statements[1L], 'FROM "db2dataprocessor_out"."v_patient_last_version"', fixed = TRUE)
   expect_match(statements[2L], "CREATE INDEX", fixed = TRUE)
   expect_match(statements[3L], "ANALYZE", fixed = TRUE)
 })
@@ -363,10 +355,7 @@ test_that("old-version source excludes prepared last-version keys", {
     version_key_tables = list(patient = "snapshot_patient_keys")
   )
 
-  expect_equal(
-    source$fields,
-    c("patient_id", "pat_id", "pat_meta_lastupdated", "pat_name")
-  )
+  expect_equal(source$fields, c("patient_id", "pat_id", "pat_meta_lastupdated", "pat_name"))
   expect_match(source$relation, "WHERE NOT EXISTS", fixed = TRUE)
   expect_match(
     source$relation,
@@ -393,11 +382,7 @@ test_that("version partitioning rejects sources without technical row ID", {
   )
 
   expect_error(
-    prepareSnapshotVersionKeyTables(
-      DBI::ANSI(),
-      plan,
-      source_schema = "db2dataprocessor_out"
-    ),
+    prepareSnapshotVersionKeyTables(DBI::ANSI(), plan, source_schema = "db2dataprocessor_out"),
     "lacks conventional technical row ID: patient_id",
     fixed = TRUE
   )
@@ -407,12 +392,7 @@ test_that("last-version source projects the normal view schema", {
   testthat::local_mocked_bindings(
     snapshotRelationFields = function(connection, name, schema = NULL) {
       if (name == "v_patient_last_version") {
-        return(c(
-          "pat_id",
-          "pat_name",
-          "id",
-          "last_version_date"
-        ))
+        return(c("pat_id", "pat_name", "id", "last_version_date"))
       }
       c("pat_id", "pat_name")
     }
@@ -559,10 +539,7 @@ test_that("snapshot enrichments preserve typed columns for empty partitions", {
     CONVERSION_UNIT = NA_character_
   )
 
-  enriched_observation <- enrichObservationWithLoincMapping(
-    observation,
-    mapping
-  )
+  enriched_observation <- enrichObservationWithLoincMapping(observation, mapping)
   enriched_fall <- enrichSnapshotFallChunk(data.table::data.table())
   enriched_encounter <- enrichSnapshotEncounterChunk(data.table::data.table())
   enriched_medication <- enrichSnapshotStreamingChunk(
@@ -698,10 +675,7 @@ test_that("observation enrichment converts grouped values through a mapping unit
 
   expect_equal(result$analysis_value, c(17.104, 34.208, NA_real_))
   expect_equal(result$analysis_loinc_code, rep("14631-6", 3))
-  expect_equal(
-    result$analysis_value_status,
-    c("converted", "converted", "missing_value")
-  )
+  expect_equal(result$analysis_value_status, c("converted", "converted", "missing_value"))
   expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(result))
 })
 
@@ -776,10 +750,7 @@ test_that("observation enrichment uses source values when no mapping exists", {
   expect_equal(result$analysis_value, c(7, NA_real_))
   expect_equal(result$analysis_unit, c("mg/L", NA_character_))
   expect_equal(result$analysis_loinc_code, c("unmapped", "missing"))
-  expect_equal(
-    result$analysis_value_status,
-    c("source_no_mapping", "missing_value")
-  )
+  expect_equal(result$analysis_value_status, c("source_no_mapping", "missing_value"))
 })
 
 test_that("observation enrichment marks values already in the reference unit", {

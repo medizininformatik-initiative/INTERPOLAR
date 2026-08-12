@@ -108,10 +108,7 @@ test_that("preflight validates existing mappings and database coverage before a 
 
   testthat::local_mocked_bindings(
     getDefaultSnapshotPseudonymizationRuleSources = function(project_root) {
-      list(
-        table_descriptions = "table-description",
-        snapshot_extensions = "snapshot-extension"
-      )
+      list(table_descriptions = "table-description", snapshot_extensions = "snapshot-extension")
     },
     loadPseudonymizationRules = function(table_descriptions, snapshot_extensions) rules,
     reviewPseudonymizationRules = mockReviewRules,
@@ -198,10 +195,7 @@ test_that("incomplete mapping error only reports the required user action", {
   dir.create(input_repo_path)
   mapping_file <- file.path(input_repo_path, "pseudo_mapping.xlsx")
   etlutils::writeExcelFile(
-    list(frontend_users = data.table::data.table(
-      KEY = "site_admin",
-      PSEUDONYM = NA_character_
-    )),
+    list(frontend_users = data.table::data.table(KEY = "site_admin", PSEUDONYM = NA_character_)),
     mapping_file,
     with_column_names = TRUE
   )

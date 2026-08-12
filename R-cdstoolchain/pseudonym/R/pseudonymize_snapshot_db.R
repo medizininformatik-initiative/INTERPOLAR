@@ -51,10 +51,7 @@ snapshotEnsureSchema <- function(connection, schema) {
 }
 
 snapshotAllowTemporarySourceTables <- function(connection) {
-  DBI::dbExecute(
-    connection,
-    "SET SESSION default_transaction_read_only = off"
-  )
+  DBI::dbExecute(connection, "SET SESSION default_transaction_read_only = off")
 }
 
 snapshotRelationExists <- function(connection, name, schema = NULL) {
@@ -169,7 +166,11 @@ createSnapshotPassthroughViews <- function(
     view_name <- materialization_plan[["TARGET_VIEW_NAME"]][i]
     source_table <- materialization_plan[["MATERIALIZED_TABLE_NAME"]][i]
     if (snapshotRelationExists(connection, view_name, view_schema)) {
-      stop("Target view already exists: ", snapshotQualifiedName(connection, view_name, view_schema))
+      stop("Target view already exists: ", snapshotQualifiedName(
+        connection,
+        view_name,
+        view_schema
+      ))
     }
     statement <- paste0(
       "CREATE VIEW ",
@@ -186,8 +187,7 @@ createSnapshotPassthroughViews <- function(
   }
 
   partitioned_tables <- unique(materialization_plan[["BASE_TABLE_NAME"]][
-    materialization_plan[["SNAPSHOT_RELATION_TYPE"]] ==
-      SNAPSHOT_RELATION_TYPE_OLD
+    materialization_plan[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_OLD
   ])
   for (base_table_name in partitioned_tables) {
     partition_rows <- materialization_plan[
@@ -206,11 +206,7 @@ createSnapshotPassthroughViews <- function(
     last_view <- partition_rows[["TARGET_VIEW_NAME"]][
       partition_rows[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_LAST
     ]
-    view_name <- sub(
-      paste0(SNAPSHOT_OLD_VERSIONS_SUFFIX, "$"),
-      "",
-      old_view
-    )
+    view_name <- sub(paste0(SNAPSHOT_OLD_VERSIONS_SUFFIX, "$"), "", old_view)
     if (snapshotRelationExists(connection, view_name, view_schema)) {
       stop("Target view already exists: ", snapshotQualifiedName(
         connection,
@@ -449,10 +445,7 @@ pseudonymizeSnapshotDatabase <- function(
     },
     log_steps = log_steps
   )
-  on.exit(
-    dropSnapshotVersionKeyTables(source_connection, version_key_tables),
-    add = TRUE
-  )
+  on.exit(dropSnapshotVersionKeyTables(source_connection, version_key_tables), add = TRUE)
   medication_resolution_tables <- list()
   runPseudonymizationLogStep(2L,
     "Prepare shared Medication reference resolution",
@@ -527,10 +520,7 @@ pseudonymizeSnapshotDatabase <- function(
   runPseudonymizationLogStep(2L,
     "Write snapshot processing reports",
     {
-      writeSnapshotIssueReport(
-        result[["issue_report"]],
-        file_name = issue_report_file
-      )
+      writeSnapshotIssueReport(result[["issue_report"]], file_name = issue_report_file)
       writeSnapshotPostprocessingReport(
         result[["postprocessing_report"]],
         file_name = postprocessing_report_file

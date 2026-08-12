@@ -23,10 +23,7 @@ test_that("convertLabUnits keeps legacy missing and invalid unit behavior", {
   expect_equal(etlutils::convertLabUnits(7, "mg/L", NA), 7)
   expect_equal(etlutils::convertLabUnits(7, "mg/L", ""), 7)
   expect_true(is.na(etlutils::convertLabUnits(7, "foo", "mg/L")))
-  expect_equal(
-    etlutils::convertLabUnits(c(7, 8), "foo", "mg/L"),
-    c(NA_real_, NA_real_)
-  )
+  expect_equal(etlutils::convertLabUnits(c(7, 8), "foo", "mg/L"), c(NA_real_, NA_real_))
   expect_false(etlutils::isValidUnit("foo"))
 })
 

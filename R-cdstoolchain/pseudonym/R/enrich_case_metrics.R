@@ -90,28 +90,19 @@ getAgeCalculationReview <- function(
   }
 
   raw_age <- floor(as.numeric(difftime(reference_dates, birthdates, units = "days")) / 365.25)
-  fhir_patient_ids <- ageReviewColumn(
-    table,
-    spec[["review_patient_column"]]
-  )
+  fhir_patient_ids <- ageReviewColumn(table, spec[["review_patient_column"]])
   if (!is.null(spec[["review_patient_reference_type"]])) {
     fhir_patient_ids <- extractFhirReferenceId(
       fhir_patient_ids,
       spec[["review_patient_reference_type"]]
     )
   }
-  fhir_encounter_ids <- ageReviewColumn(
-    table,
-    spec[["review_encounter_column"]]
-  )
+  fhir_encounter_ids <- ageReviewColumn(table, spec[["review_encounter_column"]])
 
   data.table::data.table(
     TABLE_NAME = table_name,
     ISSUE_TYPE = issue_types[issue_rows],
-    REDCAP_RECORD_ID = ageReviewColumn(
-      table,
-      c("record_id", "patient_id_fk")
-    )[issue_rows],
+    REDCAP_RECORD_ID = ageReviewColumn(table, c("record_id", "patient_id_fk"))[issue_rows],
     FHIR_PATIENT_ID = fhir_patient_ids[issue_rows],
     FHIR_ENCOUNTER_ID = fhir_encounter_ids[issue_rows],
     LOCAL_CASE_ID = ageReviewColumn(table, "fall_id")[issue_rows],
@@ -218,8 +209,7 @@ calculateBmi <- function(weight_values, weight_units, height_values, height_unit
 enrichSnapshotFallChunk <- function(
   fall_fe,
   birthdates = NULL,
-  enrichment_columns =
-    getSnapshotCaseEnrichmentSpec("fall_fe")[["enrichment_columns"]],
+  enrichment_columns = getSnapshotCaseEnrichmentSpec("fall_fe")[["enrichment_columns"]],
   source_columns = names(fall_fe)
 ) {
   fall_fe <- data.table::as.data.table(data.table::copy(fall_fe))
@@ -270,8 +260,7 @@ enrichSnapshotFallChunk <- function(
 enrichSnapshotEncounterChunk <- function(
   encounter,
   birthdates = NULL,
-  enrichment_columns =
-    getSnapshotCaseEnrichmentSpec("encounter")[["enrichment_columns"]],
+  enrichment_columns = getSnapshotCaseEnrichmentSpec("encounter")[["enrichment_columns"]],
   source_columns = names(encounter)
 ) {
   encounter <- data.table::as.data.table(data.table::copy(encounter))

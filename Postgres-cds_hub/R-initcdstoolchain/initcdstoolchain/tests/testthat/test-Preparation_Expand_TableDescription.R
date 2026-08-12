@@ -122,11 +122,7 @@ test_that("addPseudonymizationRulesToTableDescription adds default YAML rules", 
   ))
   expect_equal(
     result$PSEUDONYMIZATION_RULE,
-    c(
-      "cryptoHash",
-      "generalize(format = \"YYYY-MM\")",
-      "generalize(format = \"YYYY-MM\")"
-    )
+    c("cryptoHash", "generalize(format = \"YYYY-MM\")", "generalize(format = \"YYYY-MM\")")
   )
 })
 

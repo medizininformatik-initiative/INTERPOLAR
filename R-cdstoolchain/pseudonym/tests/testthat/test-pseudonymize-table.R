@@ -46,10 +46,7 @@ test_that("month-generalized dates do not invent a day", {
 
 test_that("month-generalized timestamps retain only year and month", {
   source_table <- data.table::data.table(
-    deceased_datetime = as.POSIXct(
-      c("2024-07-18 13:45:00", NA_character_),
-      tz = "UTC"
-    )
+    deceased_datetime = as.POSIXct(c("2024-07-18 13:45:00", NA_character_), tz = "UTC")
   )
   table_description <- data.table::data.table(
     RESOURCE = "Patient",

@@ -31,10 +31,7 @@ getIncompletePseudonymMappingSheets <- function(review_report) {
   incomplete_rows <- mapping_problems[["MAPPING_STATUS"]] == "invalid_sheet" &
     grepl("empty KEY or PSEUDONYM", mapping_problems[["ERROR"]], fixed = TRUE)
   incomplete_rows[is.na(incomplete_rows)] <- FALSE
-  if (
-    has_other_problems || nrow(mapping_problems) == 0 ||
-    !all(incomplete_rows)
-  ) {
+  if (has_other_problems || nrow(mapping_problems) == 0 || !all(incomplete_rows)) {
     return(character())
   }
   sort(unique(mapping_problems[["SHEET_NAME"]]))
@@ -178,10 +175,7 @@ getPseudonymizationReviewErrorMessage <- function(
 ) {
   incomplete_mapping_sheets <- getIncompletePseudonymMappingSheets(review_report)
   if (length(incomplete_mapping_sheets) > 0) {
-    return(getIncompletePseudonymMappingMessage(
-      incomplete_mapping_sheets,
-      input_repo_path
-    ))
+    return(getIncompletePseudonymMappingMessage(incomplete_mapping_sheets, input_repo_path))
   }
   paste(
     c(
