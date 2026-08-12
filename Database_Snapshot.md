@@ -1,4 +1,4 @@
-# Snapshot-Dateien und Snapshot-Datenbanken
+# Snapshot-Dateien, Snapshot-Datenbanken und Pseudonymisierung
 
 Das Script `ip-snapshot.sh` erstellt und pseudonymisiert Snapshot-Dateien. Es
 aktiviert und deaktiviert die zugehörigen Snapshot-Datenbanken und kann
