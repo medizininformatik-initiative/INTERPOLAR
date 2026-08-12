@@ -140,6 +140,7 @@ test_that("pseudonym exports only external workflow entry points", {
   expect_setequal(
     getNamespaceExports("pseudonym"),
     c(
+      "createBroadConsentSnapshotDatabase",
       "preflightSnapshotPseudonymization",
       "pseudonymizeSnapshotDatabase",
       "setFhirPseudonymizationRules"
