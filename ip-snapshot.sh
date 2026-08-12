@@ -7,7 +7,8 @@ set -o pipefail
 #
 #  Aufruf:
 #      ./ip-snapshot.sh list
-#      ./ip-snapshot.sh create  <name> [--with-pseudonymized] [--chunk-size <rows>]
+#      ./ip-snapshot.sh create  <name> [--with-pseudonymized|--with-broad-consent]
+#                                      [--chunk-size <rows>]
 #      ./ip-snapshot.sh pseudonymize  <name_date> [--chunk-size <rows>]
 #      ./ip-snapshot.sh create-broad-consent  <name_date> [--chunk-size <rows>]
 #      ./ip-snapshot.sh delete  <name_date>
@@ -36,9 +37,12 @@ Usage: ${0##*/} <action> <name>
   <name>     any string without path components, <name> | <name_date>
   --with-pseudonymized
              only for "create": also creates <name_date>_pseud.sql.gz
+  --with-broad-consent
+             only for "create": also creates the pseudonymized snapshot and
+             <name_date>_pseud_broad_consent.sql.gz
   --chunk-size <rows>
              only for "pseudonymize", "create-broad-consent", or
-             "create --with-pseudonymized":
+             "create --with-pseudonymized|--with-broad-consent":
              number of rows read per processing chunk (default: 5000)
 
 Examples:
@@ -46,6 +50,8 @@ Examples:
   $0 create  snapshot                → creates snapshot_<date>.sql.gz
   $0 create  snapshot --with-pseudonymized
                                       → creates snapshot_<date>.sql.gz and snapshot_<date>_pseud.sql.gz
+  $0 create  snapshot --with-broad-consent
+                                      → additionally creates snapshot_<date>_pseud_broad_consent.sql.gz
   $0 pseudonymize  snapshot_20250929 → creates snapshot_20250929_pseud.sql.gz
   $0 pseudonymize  snapshot_20250929 --chunk-size 10000
                                       → processes at most 10000 rows per chunk
@@ -71,6 +77,7 @@ action=$1
 name=$2
 DIR=Snapshots
 with_pseudonymized=false
+with_broad_consent=false
 chunk_size=5000
 chunk_size_set=false
 
@@ -87,6 +94,11 @@ fi
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --with-pseudonymized)
+            with_pseudonymized=true
+            shift
+            ;;
+        --with-broad-consent)
+            with_broad_consent=true
             with_pseudonymized=true
             shift
             ;;
@@ -108,16 +120,16 @@ done
 
 if [[ "$action" == "create" ]]; then
     if [[ "$chunk_size_set" == "true" && "$with_pseudonymized" != "true" ]]; then
-        echo "Error: --chunk-size requires --with-pseudonymized." >&2
+        echo "Error: --chunk-size requires --with-pseudonymized or --with-broad-consent." >&2
         exit 3
     fi
 elif [[ "$action" =~ ^(pseudonymize|create-broad-consent)$ ]]; then
-    if [[ "$with_pseudonymized" == "true" ]]; then
-        echo "Error: --with-pseudonymized is only allowed with \"create\"." >&2
+    if [[ "$with_pseudonymized" == "true" || "$with_broad_consent" == "true" ]]; then
+        echo "Error: --with-pseudonymized and --with-broad-consent are only allowed with \"create\"." >&2
         exit 3
     fi
-elif [[ "$with_pseudonymized" == "true" || "$chunk_size_set" == "true" ]]; then
-    echo "Error: pseudonymization options are not allowed with \"$action\"." >&2
+elif [[ "$with_pseudonymized" == "true" || "$with_broad_consent" == "true" || "$chunk_size_set" == "true" ]]; then
+    echo "Error: snapshot processing options are not allowed with \"$action\"." >&2
     exit 3
 fi
 
@@ -626,6 +638,24 @@ create_broad_consent_snapshot() {
     echo "======================================================================"
 }
 
+create_requested_snapshot_derivatives() {
+    local snapshot_name="$1"
+    local chunk_size="$2"
+    local reuse_source_database="$3"
+
+    if [[ "${with_pseudonymized}" == "true" ]]; then
+        create_pseudonymized_snapshot \
+            "${snapshot_name}" \
+            "${chunk_size}" \
+            "${reuse_source_database}"
+    fi
+    if [[ "${with_broad_consent}" == "true" ]]; then
+        create_broad_consent_snapshot \
+            "${snapshot_name}_pseud" \
+            "${chunk_size}"
+    fi
+}
+
 
 # ---------- Aktionen ----------
 case "$action" in
@@ -710,12 +740,10 @@ case "$action" in
         fi
         printf "Duration: %s s\n" "$SECONDS";
 
-        if [[ "${with_pseudonymized}" == "true" ]]; then
-            create_pseudonymized_snapshot \
-                "${snapshot_name_date}" \
-                "${chunk_size}" \
-                false
-        fi
+        create_requested_snapshot_derivatives \
+            "${snapshot_name_date}" \
+            "${chunk_size}" \
+            false
         ;;
 
     pseudonymize)

@@ -79,23 +79,32 @@ verfügbar.
 
 ### Broad-Consent-Snapshot erstellen
 
-Im Standardablauf wird zuerst die pseudonymisierte Snapshot-Datenbank erzeugt.
-Anschließend wird diese Datenbank als Quelle angegeben:
+Im Standardablauf erstellt ein Befehl die normale, die pseudonymisierte und die
+daraus abgeleitete Broad-Consent-Snapshot-Datei:
 
 ```bash
-./ip-snapshot.sh create snap01 --with-pseudonymized
-./ip-snapshot.sh create-broad-consent snap01_20251002_pseud
+./ip-snapshot.sh create snap01 --with-broad-consent
 ```
 
-Der zweite Befehl liest `ip_snap01_20251002_pseud` und erstellt:
+Der Befehl erstellt:
 
 ```text
+Snapshots/snap01_20251002.sql.gz
+Snapshots/snap01_20251002_pseud.sql.gz
 Snapshots/snap01_20251002_pseud_broad_consent.sql.gz
+ip_snap01_20251002
+ip_snap01_20251002_pseud
 ip_snap01_20251002_pseud_broad_consent
 ```
 
-Die Ergebnisdatenbank bleibt schreibgeschützt verfügbar. Die Quelldatenbank
-wird nicht verändert.
+Alle drei Datenbanken bleiben schreibgeschützt verfügbar. Schlägt nur der
+Broad-Consent-Schritt fehl, bleiben die normale und die pseudonymisierte
+Snapshot-Datei sowie deren Datenbanken erhalten. Der letzte Schritt kann dann
+gesondert fortgesetzt werden:
+
+```bash
+./ip-snapshot.sh create-broad-consent snap01_20251002_pseud
+```
 
 Der technische Prozess ist unabhängig von der Pseudonymisierung. Für eine
 gesonderte lokale Prüfung kann deshalb ausdrücklich auch eine nicht
@@ -127,6 +136,12 @@ Snapshot-Datei:
 
 ```bash
 ./ip-snapshot.sh create snap01 --with-pseudonymized --chunk-size 10000
+```
+
+Für den vollständigen Standardablauf einschließlich Broad-Consent-Snapshot:
+
+```bash
+./ip-snapshot.sh create snap01 --with-broad-consent --chunk-size 10000
 ```
 
 Für die Erstellung eines Broad-Consent-Snapshots:
@@ -194,10 +209,11 @@ gleichnamige Snapshot-Datenbank.
    innerhalb des Docker-Compose-Service `cds_hub` schreibgeschützt unter ihren
    endgültigen Namen bereitgestellt. Ein zusätzliches `activate` ist nicht
    nötig.
-6. Für einen WP8-Broad-Consent-Snapshot wird anschließend die pseudonymisierte
-   Snapshot-Datenbank mit `create-broad-consent` verarbeitet. Derzeit bildet
-   dieser Schritt nur den technischen Datenbank- und Dateilebenszyklus ab und
-   filtert noch keine Patienten.
+6. Mit `create --with-broad-consent` wird anschließend automatisch die
+   pseudonymisierte Snapshot-Datenbank verarbeitet. Alternativ kann dieser
+   Schritt mit `create-broad-consent` einzeln ausgeführt werden. Derzeit bildet
+   er nur den technischen Datenbank- und Dateilebenszyklus ab und filtert noch
+   keine Patienten.
 
 ## Prüfung vor der Weitergabe
 
