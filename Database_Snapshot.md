@@ -1,6 +1,7 @@
-# Snapshot-Dateien, Snapshot-Datenbanken und Pseudonymisierung
+# Snapshot-Dateien, Pseudonymisierung und Broad Consent
 
 Das Script `ip-snapshot.sh` erstellt und pseudonymisiert Snapshot-Dateien. Es
+erstellt außerdem Broad-Consent-Snapshots aus vorhandenen Snapshot-Datenbanken,
 aktiviert und deaktiviert die zugehörigen Snapshot-Datenbanken und kann
 Snapshot-Dateien sowie Snapshot-Datenbanken löschen. Außerdem zeigt es
 vorhandene Snapshot-Dateien und aktivierte Snapshot-Datenbanken an.
@@ -17,6 +18,9 @@ Snapshot-Dateien liegen als `.sql.gz` im Verzeichnis `Snapshots`.
   sein.
 - Für die nachträgliche Pseudonymisierung muss die normale Snapshot-Datei
   bereits unter `Snapshots/<name>_<Datum>.sql.gz` vorhanden sein.
+- Für einen Broad-Consent-Snapshot muss die als Quelle gewählte
+  Snapshot-Datenbank bereits aktiviert sein. Die Quelle kann pseudonymisiert
+  oder nicht pseudonymisiert sein und wird nicht verändert.
 
 Für die Pseudonymisierung gelten zusätzlich folgende Voraussetzungen:
 
@@ -73,15 +77,49 @@ des Docker-Compose-Service `cds_hub` die schreibgeschützten
 Snapshot-Datenbanken `ip_snap01_20251002` und `ip_snap01_20251002_pseud`
 verfügbar.
 
+### Broad-Consent-Snapshot erstellen
+
+Im Standardablauf wird zuerst die pseudonymisierte Snapshot-Datenbank erzeugt.
+Anschließend wird diese Datenbank als Quelle angegeben:
+
+```bash
+./ip-snapshot.sh create snap01 --with-pseudonymized
+./ip-snapshot.sh create-broad-consent snap01_20251002_pseud
+```
+
+Der zweite Befehl liest `ip_snap01_20251002_pseud` und erstellt:
+
+```text
+Snapshots/snap01_20251002_pseud_broad_consent.sql.gz
+ip_snap01_20251002_pseud_broad_consent
+```
+
+Die Ergebnisdatenbank bleibt schreibgeschützt verfügbar. Die Quelldatenbank
+wird nicht verändert.
+
+Der technische Prozess ist unabhängig von der Pseudonymisierung. Für eine
+gesonderte lokale Prüfung kann deshalb ausdrücklich auch eine nicht
+pseudonymisierte Snapshot-Datenbank als Quelle verwendet werden:
+
+```bash
+./ip-snapshot.sh create-broad-consent snap01_20251002
+```
+
+**Achtung:** Die fachliche Broad-Consent-Auswahl ist noch nicht implementiert.
+Der aktuelle technische Rahmen übernimmt alle Patienten und alle übrigen
+Snapshot-Zeilen. Die so erzeugte Datei darf noch nicht als nach Broad Consent
+gefilterter Datenbestand weitergegeben werden.
+
 ### Chunkgröße anpassen
 
-Standardmäßig verarbeitet die Pseudonymisierung 25.000 Tabellenzeilen pro
-Chunk. Kleinere Werte reduzieren den maximalen R-Speicherbedarf, können den
-Lauf aber verlängern.
+Standardmäßig verarbeiten die Pseudonymisierung und die Erstellung eines
+Broad-Consent-Snapshots 25.000 Tabellenzeilen pro Chunk. Kleinere Werte
+reduzieren den maximalen R-Speicherbedarf, können den Lauf aber verlängern.
 
 ```bash
 ./ip-snapshot.sh pseudonymize snap01_20251002 --chunk-size 10000
 ./ip-snapshot.sh create snap01 --with-pseudonymized --chunk-size 10000
+./ip-snapshot.sh create-broad-consent snap01_20251002_pseud --chunk-size 10000
 ```
 
 ### Snapshot-Dateien und Snapshot-Datenbanken anzeigen
@@ -143,6 +181,10 @@ gleichnamige Snapshot-Datenbank.
    innerhalb des Docker-Compose-Service `cds_hub` schreibgeschützt unter ihren
    endgültigen Namen bereitgestellt. Ein zusätzliches `activate` ist nicht
    nötig.
+6. Für einen WP8-Broad-Consent-Snapshot wird anschließend die pseudonymisierte
+   Snapshot-Datenbank mit `create-broad-consent` verarbeitet. Derzeit bildet
+   dieser Schritt nur den technischen Datenbank- und Dateilebenszyklus ab und
+   filtert noch keine Patienten.
 
 ## Prüfung vor der Weitergabe
 
@@ -162,8 +204,25 @@ gleichnamige Snapshot-Datenbank.
 - Die vollständig eingespielte Quelldatenbank bleibt für den erneuten Lauf
   erhalten.
 - Eine unvollständige pseudonymisierte Zieldatenbank wird entfernt.
+- Beim Erstellen eines Broad-Consent-Snapshots bleibt die Quelldatenbank
+  unverändert. Eine unvollständige Zieldatenbank wird vor dem nächsten Lauf
+  entfernt und vollständig neu aufgebaut.
 
 ## Technische Details
+
+### Inhalt des Broad-Consent-Snapshots
+
+Ein Broad-Consent-Snapshot enthält dieselben für Auswertungen vorgesehenen
+Relationen und Versionspartitionen wie die gewählte Snapshot-Datenbank. Die
+Tabellen werden in Chunks gelesen und unverändert in eine neue Datenbank
+geschrieben. Der Filter-Einstiegspunkt ist von Datenbankaufbau, Dump und
+Lebenszyklus getrennt. Aktuell ist dort ausdrücklich ein Durchlassfilter
+eingesetzt; die fachliche Patientenauswahl wird separat ergänzt.
+
+Der Prozess prüft nicht, ob die Quelle pseudonymisiert ist. Er arbeitet mit den
+in der jeweiligen Datenbank vorhandenen Patienten- und Relationsschlüsseln.
+Dadurch kann derselbe Ablauf regulär auf der pseudonymisierten und bei Bedarf
+gesondert auf der nicht pseudonymisierten Snapshot-Datenbank ausgeführt werden.
 
 ### Inhalt der pseudonymisierten Snapshot-Datei und Snapshot-Datenbank
 
@@ -342,6 +401,12 @@ Snapshot-Datenbank:
   insbesondere Zeilen- und Spaltenzahlen, Chunk-Zahlen sowie Laufzeiten für das
   Öffnen der Quelle, Lesen, Anreichern, Prüfen, Pseudonymisieren und Schreiben
   jeder Tabelle.
+
+Der Broad-Consent-Prozess schreibt zusätzlich den lokalen Bericht
+`outputLocal/broad_consent_snapshot/reports/broad_consent_snapshot_report.xlsx`.
+Er enthält für jede Relation insbesondere Ein- und Ausgabezeilen,
+Versionspartition, Chunk-Anzahl, Laufzeiten und die derzeit aktive
+Filteraktion. Auch dieser Bericht ist nicht Bestandteil der Snapshot-Datei.
 
 Eine kompakte CLI-Hilfe liefert:
 
