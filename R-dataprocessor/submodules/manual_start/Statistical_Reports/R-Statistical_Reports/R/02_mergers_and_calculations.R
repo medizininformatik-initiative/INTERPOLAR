@@ -247,6 +247,98 @@ getLastWardEnd <- function() {
   return(maximum_end_date)
 }
 
+#' Add Calendar Week to a Data Frame
+#'
+#' Adds an ISO calendar week column to a data frame based on a
+#' reference date column. The resulting calendar_week column is
+#' formatted as "YYYY-WW", where YYYY is the ISO year and WW
+#' is the zero-padded ISO week number.
+#'
+#' The new column is inserted immediately after the reference date
+#' column. The reference date column is supplied using tidy evaluation,
+#' so it should be passed as an unquoted column name.
+#'
+#' @param data A data frame containing the reference date column.
+#' @param reference_date_col A date or date-time column used to
+#' determine the ISO calendar year and week. The column should be
+#' supplied without quotation marks.
+#'
+#' @return A data frame containing all columns from data and an
+#' additional calendar_week column formatted as "YYYY-WW".
+#'
+#' @importFrom dplyr mutate
+#' @importFrom data.table isoyear isoweek
+#'
+#' @seealso [data.table::isoyear()], [data.table::isoweek()], [dplyr::mutate()]
+#' @export
+addCalendarWeek <- function(data, reference_date_col) {
+  data_with_calendar_week <- data |>
+    dplyr::mutate(
+      calendar_week = paste0(
+        data.table::isoyear({{ reference_date_col }}), "-",
+        sprintf("%02d", data.table::isoweek({{ reference_date_col }}))
+      ),
+      .after = {{ reference_date_col }}
+    )
+  return(data_with_calendar_week)
+}
+
+#' Add First Encounter Period Start per Main Encounter
+#'
+#' Adds the first encounter period start to each observation belonging
+#' to the same combination of grouping variables.
+#'
+#' The function excludes observations with missing grouping variables
+#' when calculating the first encounter period start. For each remaining
+#' group, the earliest non-missing value of `time_var` is determined. If
+#' all values of `time_var` within a group are missing, the resulting
+#' value is `NA`. The calculated values are then joined back to the
+#' original data, preserving observations with missing grouping variables.
+#'
+#' @param data A data frame containing encounter period information.
+#' @param grouping_vars A character vector specifying the variables used
+#'   to define groups. Defaults to `c("pat_id", "main_enc_id")`.
+#' @param time_var A date or date-time column used to determine the first
+#'   encounter period start. The column should be supplied unquoted.
+#'
+#' @return A data frame containing the original columns and an additional
+#'   `first_enc_period_start_per_main_enc` column, positioned immediately
+#'   after `time_var`.
+#'
+#' @importFrom dplyr all_of
+#' @importFrom dplyr across
+#' @importFrom dplyr filter
+#' @importFrom dplyr if_any
+#' @importFrom dplyr left_join
+#' @importFrom dplyr relocate
+#' @importFrom dplyr summarise
+#' @importFrom dplyr group_by
+#'
+#' @export
+addFirstEncPeriodStartPerMainEnc <- function(
+  data,
+  grouping_vars = c("pat_id", "main_enc_id"),
+  time_var = enc_period_start
+) {
+  first_dates <- data |>
+    dplyr::filter(!dplyr::if_any(dplyr::all_of(grouping_vars), is.na)) |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
+    dplyr::summarise(
+      first_enc_period_start_per_main_enc =
+        if (all(is.na({{ time_var }}))) {
+          {{ time_var }}[NA_integer_]
+        } else {
+          min({{ time_var }}, na.rm = TRUE)
+        },
+      .groups = "drop"
+    )
+
+  data |>
+    dplyr::left_join(first_dates, by = grouping_vars) |>
+    dplyr::relocate(first_enc_period_start_per_main_enc, .after = {{ time_var }})
+}
+
+
 #' Merge Patient and Encounter Data
 #'
 #' This function merges patient-level data with encounter-level data into a unified dataset.

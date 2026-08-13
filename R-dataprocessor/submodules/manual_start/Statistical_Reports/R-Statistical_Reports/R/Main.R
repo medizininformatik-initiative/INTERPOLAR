@@ -286,13 +286,15 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
   frontend_summary_data <- prepareFeSummaryData(
     frontend_table, REPORT_PERIOD_START,
     REPORT_PERIOD_END,
-    report_period_boundary = "hospital_stay"
+    report_period_boundary = "hospital_stay",
+    calendar_week_reference_date_col = fall_aufn_dat
   )
 
   frontend_summary_data_ward_stay_defined <- prepareFeSummaryData(
     frontend_table, REPORT_PERIOD_START,
     REPORT_PERIOD_END,
-    report_period_boundary = "ward_stay"
+    report_period_boundary = "ward_stay",
+    calendar_week_reference_date_col = first_enc_period_start_per_main_enc
   )
 
   # statistical_report_data <- prepareF1data(
@@ -353,6 +355,10 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     etlutils::writeHtmlPage(
       list(etlutils::buildHtmlTable(frontend_summary_data)),
       pagename = "frontend_summary_data"
+    )
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(frontend_summary_data_ward_stay_defined)),
+      pagename = "frontend_summary_data_ward_stay_defined"
     )
   }
 
