@@ -10,7 +10,9 @@ Zählung von Patienten, Fällen, Medikationsanalysen und MRPs mittels Frontend- 
 
 Es wird eine html Datei in OutputGlobal ((../outputGlobal/dataprocessor/reports/INTERPOLAR-Reporting\_*Ausführungsdatum*.html) ausgegeben:
 
-- Darin sind zwei Tabellen enthalten: Die obere Tabelle stellt die Kennzahlen pro Standort (letzte Zeile: "all") sowie Stations-bezogen dar. Die untere Tabelle enthält eine zusätzliche Gruppierung nach Aufnahmewoche des jeweiligen Falls.
+- Darin sind mehrere Tabellen enthalten: Die erste Tabelle stellt die Kennzahlen pro Standort (letzte Zeile: "all") sowie Stations-bezogen dar. Die zweite Tabelle enthält eine zusätzliche Gruppierung nach Aufnahmewoche des jeweiligen Falls.
+
+- In der dritten und vierten Tabelle werden die gezählten Fälle nicht durch die Zeiten des Krankenhausaufenthalt sondern durch die Zeiten des Stationsaufenthalts begrenzt
 
 - Es ist eine Suche ("Search" im oberen rechten Rand) sowie eine Sortierung (Klicken auf die Spaltennamen) und Filterung der Tabelleneinträge möglich. Über den Download-Button im oberen linken Rand kann wahlweise eine csv-Datei oder Excel-Datei der Tabelleneinträge erzeugt werden.
 

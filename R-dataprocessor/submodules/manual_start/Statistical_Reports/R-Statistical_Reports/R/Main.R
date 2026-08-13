@@ -1,87 +1,111 @@
 #' Create Statistical Report for INTERPOLAR Ward Metrics
 #'
-#' Generates a comprehensive statistical report for patients hospitalized on INTERPOLAR wards,
-#' using patient, encounter, and front-end documentation data within a defined reporting period.
-#' The report computes base population metrics (F1) and a summary of medication safety documentation
-#' for internal monitoring and evaluation. REPORT_PERIOD_START and REPORT_PERIOD_END can be set
-#' via command line arguments. Defaults are set to `"2024-01-01"` for the start date and the
-#' current date for the end date.
+#' Generates a comprehensive statistical report for patients hospitalized on
+#' INTERPOLAR wards, using patient, encounter, and front-end documentation
+#' data within a defined reporting period. The report summarizes medication
+#' analysis, MRP documentation, retrospective MRP assessment, and broad
+#' consent information for internal monitoring and evaluation.
 #'
-#' @param REPORT_PERIOD_START Character string in `"YYYY-MM-DD"` format.
-#'   Start date of the reporting period. Default is the defined first Phase A INTERPOLAR ward start date.
-#' @param REPORT_PERIOD_END Character string in `"YYYY-MM-DD"` format.
-#'   End date of the reporting period. Defaults to `Sys.Date()`.
-#' @param WRITE_TABLE_LOCAL Logical. If `TRUE`, intermediate tables are written to the outputLocal folder.
+#' By default, the reporting period starts at the earliest defined INTERPOLAR
+#' ward start date and ends at the earlier of the latest defined INTERPOLAR
+#' ward end date and the current date. REPORT_PERIOD_START and
+#' REPORT_PERIOD_END can be set via command line arguments.
 #'
-#' @return Invisibly returns `NULL`. This function is called for its side effects:
-#'   writing local and global summary tables and producing a structured internal report.
+#' @param REPORT_PERIOD_START Character string in "YYYY-MM-DD" format.
+#' Start date of the reporting period. Defaults to the earliest start date
+#' of the defined INTERPOLAR wards.
+#' @param REPORT_PERIOD_END Character string in "YYYY-MM-DD" format.
+#' End date of the reporting period. Defaults to the earlier of the latest
+#' end date of the defined INTERPOLAR wards and Sys.Date().
+#' @param WRITE_TABLE_LOCAL Logical. If TRUE, intermediate tables are
+#' written to the local output folder.
+#'
+#' @return Invisibly returns NULL. This function is called for its side
+#' effects: writing local and global summary tables and producing a
+#' structured internal report.
 #'
 #' @details
 #' The function performs the following main steps:
 #'
 #' \enumerate{
-#'   \item Fetches source tables:
-#'     \itemize{
-#'       \item `getPatientData()` – one row per patient
-#'       \item `getEncounterData()` – multiple rows per encounter possible
-#'       \item `getPidsPerWardData()` – ward stays per sub-encounter
-#'       \item `getPatientFeData()` – one row per patient
-#'       \item `getFallFeData()` – one or more rows per case e.g. different wards
-#'       \item `getMedikationsanalyseFeData()` – not yet latest version per entry
-#'       \item `getMRPDokumentationValidierungFeData()` – not yet latest version per entry
-#'     }
+#' \item Determines the reporting period from the defined INTERPOLAR ward
+#' phases, unless explicitly provided through the function arguments or command line arguments.
 #'
-#'   \item Constructs the core encounter-patient dataset:
-#'     \itemize{
-#'       \item `mergePatEnc()`, `addCuratedEncPeriodEnd()`, `addMainEncId()`,
-#'             `addMainEncPeriodStart()`, `calculateAge()`, `addWardName()`,
-#'       \item `addRecordId()`, `addFallIdAndStudienphase()`
-#'     }
-#'
-#'   \item Merges and enriches front-end documentation:
-#'     \itemize{
-#'       \item `mergePatFeFallFe()`, `addMedaData()`, `addVersorgungsstellenkontaktToFeData()`,
-#'             `addMRPDokuData()`
-#'     }
-#'
-#'   \item Defines the Full Analysis Set 1 (FAS1) base population with `defineFullAnalysisSet1()`
-#'
-#'   \item Prepares and calculates key F1 metrics:
-#'     \itemize{
-#'       \item `prepareF1data()`, `addFeDataToF1data()`, `calculateF1()`, `calculateFeAddOnToF1()`
-#'     }
-#'
-#'   \item Summarizes medication and MRP documentation activity:
-#'     \itemize{
-#'       \item `prepareFeSummaryData()`, `calculateFeSummary()`
-#'     }
-#'
-#'   \item Writes outputs:
-#'     \itemize{
-#'       \item `writeHtmlTable()` – html table in output local (default) or global (if defined)
-#'     }
+#' \item Fetches source tables:
+#' \itemize{
+#' \item getPatientData() - one row per patient
+#' \item getEncounterData() - multiple rows per encounter possible
+#' \item getPidsPerWardData() - ward stays per sub-encounter
+#' \item getPatientFeData() - one row per patient
+#' \item getFallFeData() - one or more rows per case
+#' \item getMedikationsanalyseFeData() - medication analysis entries
+#' \item getMRPDokumentationValidierungFeData() - MRP documentation
+#' \item getRetrolektiveMRPBewertungFeData() - retrospective MRP assessment entries
+#' \item getConsentData() - consent information
 #' }
 #'
-#' @section Output:
-#' - **Local output**: `FHIR_table_with_ward_name_and_record_id`, `full_analysis_set_1`, `statistical_report_data`,
-#'   `frontend_table`, `frontend_summary_data`
-#' - **Global output**:
-#'   \itemize{
-#'     \item `statistical_report`: F1 metrics with front-end add-ons
-#'     \item `frontend_summary`: Overall summary of front-end documentation
-#'   }
-#' Tables include captions describing the reporting period and footnotes explaining relevant metric
-#' assumptions.
+#' \item Constructs the core encounter-patient dataset:
+#' \itemize{
+#' \item mergePatEnc(), addCuratedEncPeriodEnd(), addMainEncId(), addMainEncPeriodStart()
+#' \item calculateAge(), tagAmbulantEncounters(),tagKontaktartDenotingNoInpatientEncounter()
+#' \item addWardName(), addRecordId()
+#' }
 #'
-#' @note
-#' Additional functionality for F2 metrics is scaffolded in the function but currently inactive.
+#' \item Restricts front-end data to defined INTERPOLAR wards and enriches
+#' it with ward, encounter, and fall information:
+#' \itemize{
+#' \item mergePatFeFallFe()
+#' \item restrictToDefinedWards()
+#' \item addVersorgungsstellenkontaktToFeData()
+#' }
+#'
+#' \item Merges and enriches front-end documentation:
+#' \itemize{
+#' \item addMedaData() - medication analysis data
+#' \item addMRPDokuData() - MRP documentation data
+#' \item addRetrolektiveMRPBewertungData() - retrospective MRP assessment data
+#' \item addBroadConsentInformation() - broad consent information
+#' }
+#'
+#' \item Prepares front-end summary data for the reporting period with prepareFeSummaryData().
+#'
+#' \item Calculates front-end summaries using both hospitalization dates and defined ward
+#' stay boundaries. Weekly summaries are calculated for both approaches.
+#'
+#' \item Writes the resulting summary tables to the global output as an
+#' HTML report. If WRITE_TABLE_LOCAL is TRUE, intermediate datasets
+#' are additionally written to the local output folder.
+#' }
+#'
+#' The front-end processing distinguishes between different combinations of
+#' multiple main encounters, multiple wards, and multiple medication analyses
+#' to determine the most appropriate linkage of medication analyses and MRP
+#' documentation. Entries that cannot be unambiguously linked are retained
+#' where possible and annotated with processing exclusion reasons.
+#'
+#' @section Output:
+#' - Local output: intermediate patient, encounter, ward, front-end, and
+#' summary datasets when WRITE_TABLE_LOCAL is TRUE.
+#' - Global output: an HTML report containing front-end summary tables
+#' based on the reporting period and the defined INTERPOLAR ward periods.
+#'
+#' The global report includes overall and weekly summaries. The summaries
+#' contain counts for patients, encounters, medication analyses, completed
+#' medication analyses, MRP documentation, completed and resolved MRP
+#' documentation, MRP resolution categories, contraindications, MRP classes,
+#' and processing exclusions.
 #'
 #' @seealso
 #' [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
-#' [mergePatEnc()], [defineFullAnalysisSet1()], [prepareF1data()], [calculateF1()],
-#' [prepareFeSummaryData()], [calculateFeSummary()],
-#' [writeHtmlTable()]
-#'
+#' [getPatientFeData()], [getFallFeData()],
+#' [getMedikationsanalyseFeData()],
+#' [getMRPDokumentationValidierungFeData()],
+#' [getRetrolektiveMRPBewertungFeData()], [getConsentData()],
+#' [mergePatEnc()], [restrictToDefinedWards()],
+#' [addVersorgungsstellenkontaktToFeData()], [addMedaData()],
+#' [addMRPDokuData()], [addRetrolektiveMRPBewertungData()],
+#' [addBroadConsentInformation()], [prepareFeSummaryData()],
+#' [calculateFeSummary()], [writeHtmlTable()]
 #' @export
 createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstWardStart()),
                                     REPORT_PERIOD_END = as.character(min(getLastWardEnd(), Sys.Date())),
@@ -261,11 +285,15 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
 
   frontend_summary_data <- prepareFeSummaryData(
     frontend_table, REPORT_PERIOD_START,
-    REPORT_PERIOD_END
+    REPORT_PERIOD_END,
+    report_period_boundary = "hospital_stay"
   )
 
-  first_case_in <- getFirstCaseDateInFe(frontend_summary_data)
-  last_case_in <- getLastCaseDateInFe(frontend_summary_data)
+  frontend_summary_data_ward_stay_defined <- prepareFeSummaryData(
+    frontend_table, REPORT_PERIOD_START,
+    REPORT_PERIOD_END,
+    report_period_boundary = "ward_stay"
+  )
 
   # statistical_report_data <- prepareF1data(
   #   full_analysis_set_1, REPORT_PERIOD_START,
@@ -334,6 +362,12 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     grouping_variables = c("ward_name", "calendar_week")
   )
 
+  frontend_summary_ward_stay_defined <- calculateFeSummary(frontend_summary_data_ward_stay_defined)
+  frontend_summary_weekly_ward_stay_defined <- calculateFeSummary(
+    frontend_summary_data_ward_stay_defined,
+    grouping_variables = c("ward_name", "calendar_week")
+  )
+
   # statistical_report <- calculateF1(statistical_report_data) |>
   #   calculateFeAddOnToF1(statistical_report_data)
   # calculateF2(F2_data)
@@ -361,13 +395,45 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
   #   )
   # )
 
+  colnames_reporting_counts <- c(
+    "patients",
+    "censored patients (n < 5)",
+    "consent given (MDAT wissenschaftlich nutzen)",
+    "encounters",
+    "processing excluded encounters (linkage issues)",
+    "not meeting inclusion criteria (patient underage)",
+    "encounters with completed medication analysis",
+    "medication analyses",
+    "completed medication analyses",
+    "completed medication analyses with detected MRP",
+    "encounters with completed MRP documentation",
+    "MRP documented", "completed MRP documention",
+    "resolved MRP", "MRP resolution not informative", "contra-indications",
+    "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
+    "class not assigned",
+    "resolved contra-indications",
+    "encounters eligible for algorithmic MRP",
+    "encounters with algorithmic MRP",
+    "encounters with non-confirmed non-incorrect data items MRP and consent",
+    "algorithmic MRP found",
+    "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency",
+    "completed algorithmic MRP evaluation",
+    "evaluation: new and clinically relevant",
+    "evaluation: already manually documented",
+    "evaluation: no contraindication",
+    "evaluation: based on incorrect data items",
+    "evaluation: MRP concept unspecific",
+    "evaluation: clinically irrelevant",
+    "evaluation: always clinically irrelevant"
+  )
+
   frontend_summary_html_table <- etlutils::buildHtmlTable(
     frontend_summary,
     filename_without_extension = paste0("frontend_summary_", format(Sys.Date(), "%Y%m%d")),
     caption = paste0(
       "Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
-      REPORT_PERIOD_END, " (hospitalizations from: ", first_case_in, " to ",
-      last_case_in, "; wards: ",
+      REPORT_PERIOD_END, " (hospitalizations from: ", getFirstCaseDateInFe(frontend_summary_data), " to ",
+      getLastCaseDateInFe(frontend_summary_data), "; wards: ",
       paste0(
         getWardStartsAndEnds()$ward_name, " (", getWardStartsAndEnds()$ward_start, " to ",
         getWardStartsAndEnds()$ward_end, ")",
@@ -376,37 +442,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     ),
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),
-    colnames = c(
-      "ward", "patients",
-      "censored patients (n < 5)",
-      "consent given (MDAT wissenschaftlich nutzen)",
-      "encounters",
-      "processing excluded encounters (linkage issues)",
-      "not meeting inclusion criteria (patient underage)",
-      "encounters with completed medication analysis",
-      "medication analyses",
-      "completed medication analyses",
-      "completed medication analyses with detected MRP",
-      "encounters with completed MRP documentation",
-      "MRP documented", "completed MRP documention",
-      "resolved MRP", "MRP resolution not informative", "contra-indications",
-      "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
-      "class not assigned",
-      "resolved contra-indications",
-      "encounters eligible for algorithmic MRP",
-      "encounters with algorithmic MRP",
-      "encounters with non-confirmed non-incorrect data items MRP and consent",
-      "algorithmic MRP found",
-      "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency",
-      "completed algorithmic MRP evaluation",
-      "evaluation: new and clinically relevant",
-      "evaluation: already manually documented",
-      "evaluation: no contraindication",
-      "evaluation: based on incorrect data items",
-      "evaluation: MRP concept unspecific",
-      "evaluation: clinically irrelevant",
-      "evaluation: always clinically irrelevant"
-    )
+    colnames = c("ward", colnames_reporting_counts)
   )
 
   frontend_summary_weekly_html_table <- etlutils::buildHtmlTable(
@@ -414,8 +450,8 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     filename_without_extension = paste0("frontend_summary_weekly_", format(Sys.Date(), "%Y%m%d")),
     caption = paste0(
       "Weekly Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
-      REPORT_PERIOD_END, " (hospitalizations from: ", first_case_in, " to ",
-      last_case_in, "; wards: ",
+      REPORT_PERIOD_END, " (hospitalizations from: ", getFirstCaseDateInFe(frontend_summary_data), " to ",
+      getLastCaseDateInFe(frontend_summary_data), "; wards: ",
       paste0(
         getWardStartsAndEnds()$ward_name, " (", getWardStartsAndEnds()$ward_start, " to ",
         getWardStartsAndEnds()$ward_end, ")",
@@ -424,43 +460,53 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     ),
     footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
                  INTERPOLAR ward contacts for each case"),
-    colnames = c(
-      "ward", "calendar week", "patients",
-      "censored patients (n < 5)",
-      "consent given (MDAT wissenschaftlich nutzen)",
-      "encounters",
-      "processing excluded encounters (linkage issues)",
-      "not meeting inclusion criteria (patient underage)",
-      "encounters with completed medication analysis",
-      "medication analyses",
-      "completed medication analyses",
-      "completed medication analyses with detected MRP",
-      "encounters with completed MRP documentation",
-      "MRP documented", "completed MRP documention",
-      "resolved MRP", "MRP resolution not informative", "contra-indications",
-      "class: drug-drug", "class: drug-disease", "class: drug-renal insufficiency",
-      "class not assigned",
-      "resolved contra-indications",
-      "encounters eligible for algorithmic MRP",
-      "encounters with algorithmic MRP",
-      "encounters with non-confirmed non-incorrect data items MRP and consent",
-      "algorithmic MRP found",
-      "algorithmic class: drug-drug", "algorithmic class: drug-disease", "algorithmic class: drug-renal insufficiency",
-      "completed algorithmic MRP evaluation",
-      "evaluation: new and clinically relevant",
-      "evaluation: already manually documented",
-      "evaluation: no contraindication",
-      "evaluation: based on incorrect data items",
-      "evaluation: MRP concept unspecific",
-      "evaluation: clinically irrelevant",
-      "evaluation: always clinically irrelevant"
-    )
+    colnames = c("ward", "calendar week", colnames_reporting_counts)
+  )
+
+  frontend_summary_html_table_ward_stay_defined <- etlutils::buildHtmlTable(
+    frontend_summary_ward_stay_defined,
+    filename_without_extension = paste0("frontend_summary_ward_stay_defined_", format(Sys.Date(), "%Y%m%d")),
+    caption = paste0(
+      "Ward-Stay defined Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
+      REPORT_PERIOD_END, " (hospitalizations from: ", getFirstCaseDateInFe(frontend_summary_data_ward_stay_defined), " to ",
+      getLastCaseDateInFe(frontend_summary_data_ward_stay_defined), "; wards: ",
+      paste0(
+        getWardStartsAndEnds()$ward_name, " (", getWardStartsAndEnds()$ward_start, " to ",
+        getWardStartsAndEnds()$ward_end, ")",
+        collapse = "; "
+      ), ")"
+    ),
+    footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
+                 INTERPOLAR ward contacts for each case; inclusion in reporting period is defined by
+                 the ward stay boundaries of each case"),
+    colnames = c("ward", colnames_reporting_counts)
+  )
+
+  frontend_summary_weekly_html_table_ward_stay_defined <- etlutils::buildHtmlTable(
+    frontend_summary_weekly_ward_stay_defined,
+    filename_without_extension = paste0("frontend_summary_weekly_ward_stay_defined_", format(Sys.Date(), "%Y%m%d")),
+    caption = paste0(
+      "Weekly Ward-Stay defined Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
+      REPORT_PERIOD_END, " (hospitalizations from: ", getFirstCaseDateInFe(frontend_summary_data_ward_stay_defined), " to ",
+      getLastCaseDateInFe(frontend_summary_data_ward_stay_defined), "; wards: ",
+      paste0(
+        getWardStartsAndEnds()$ward_name, " (", getWardStartsAndEnds()$ward_start, " to ",
+        getWardStartsAndEnds()$ward_end, ")",
+        collapse = "; "
+      ), ")"
+    ),
+    footnote = c("Medication analysis and mrp counts: for all documented medication analysis of all
+                 INTERPOLAR ward contacts for each case; inclusion in reporting period is defined by
+                 the ward stay boundaries of each case"),
+    colnames = c("ward", "calendar week", colnames_reporting_counts)
   )
 
   etlutils::writeHtmlPage(
     html_content_list = list(
       frontend_summary_html_table,
-      frontend_summary_weekly_html_table
+      frontend_summary_weekly_html_table,
+      frontend_summary_html_table_ward_stay_defined,
+      frontend_summary_weekly_html_table_ward_stay_defined
     ),
     output_location = "global",
     pagename = "INTERPOLAR-Reporting"

@@ -180,6 +180,8 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #'                           (format: "YYYY-MM-DD").
 #' @param report_period_end A character string representing the end of the reporting period
 #'                          (format: "YYYY-MM-DD").
+#' @param report_period_boundary A character string specifying the boundary for the reporting period
+#'                               (options: "hospital_stay" or "ward_stay").
 #'
 #' @return A data frame containing enriched front-end summary data for encounters with currently on an INTERPOLAR ward
 #' within the specified reporting period. The dataset includes additional variables derived from the
@@ -209,16 +211,21 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #'                                              completed medication analysis and being in Phase B of the study)
 #' - `sub_enc_any_algorithmic_MRP` (indicating if any algorithmic MRP documentation exists for the sub encounter)
 #'
-#' Time filtering is performed using the 'fall_ent_dat' and 'fall_aufn_dat' columns to ensure that
-#' only encounters within the reporting period are included. Specifically, the function retains encounters where:
+#' for `report_period_boundary = 'hospital_stay' time filtering is performed using the 'fall_ent_dat' and 'fall_aufn_dat'
+#' columns to ensure that only encounters within the reporting period are included. Specifically, the function
+#' retains encounters where:
 #' - `fall_ent_dat` is either missing or greater than or equal to the maximum of the ward start date and
 #'    the reporting period start date.
 #' - `fall_aufn dat` is less than the minimum of the ward end date and the reporting period end date.
+#' for `report_period_boundary = 'ward_stay', the function retains encounters where:
+#' - `enc_period_start` is greater than or equal to the maximum of the ward start date and the reporting period start date.
+#' - `curated_enc_period_end` is either missing or less than the minimum of the ward end date and the reporting period end date.
 #'
 #' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename n_distinct
 #' @importFrom data.table isoweek isoyear
 #' @export
-prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
+prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end,
+                                 report_period_boundary = c("hospital_stay", "ward_stay")) {
   frontend_summary_prep <- frontend_table |>
     CombineWardsForAnalysis() |>
     dplyr::mutate(
@@ -312,11 +319,21 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       main_enc_id = fall_fhir_main_enc_id,
       ward_name = fall_station
     ) |>
-    mergeWardStartsAndEnds() |>
+    mergeWardStartsAndEnds()
+
+  if (report_period_boundary == "hospital_stay") {
     # Filter for encounters that fall within the reporting period based on fall_ent_dat and fall_aufn_dat
-    dplyr::filter(is.na(fall_ent_dat) | fall_ent_dat >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
-    dplyr::filter(fall_aufn_dat < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
-    dplyr::distinct()
+    frontend_summary_prep <- frontend_summary_prep |>
+      dplyr::filter(is.na(fall_ent_dat) | fall_ent_dat >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
+      dplyr::filter(fall_aufn_dat < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
+      dplyr::distinct()
+  } else if (report_period_boundary == "ward_stay") {
+    # Filter for encounters that fall within the reporting period based on enc_period_start and curated_enc_period_end
+    frontend_summary_prep <- frontend_summary_prep |>
+      dplyr::filter(is.na(curated_enc_period_end) | curated_enc_period_end >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
+      dplyr::filter(enc_period_start < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
+      dplyr::distinct()
+  }
 
   return(frontend_summary_prep)
 }
