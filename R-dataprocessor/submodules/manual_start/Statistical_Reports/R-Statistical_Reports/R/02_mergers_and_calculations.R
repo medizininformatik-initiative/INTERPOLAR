@@ -892,49 +892,58 @@ mergePatFeFallFe <- function(patient_fe_table, fall_fe_table) {
 
 #------------------------------------------------------------------------------#
 
-#' Add Medication Analysis Data to Fall Event Data
+#' Add Medication Analysis Data to Front-End Data
 #'
-#' This function merges medication analysis data (`medikationsanalyse_fe_table`)
-#' with fall event data (`merged_fe_pat_fall_table_with_enc_id`) based on various
-#' conditions, creating new columns for processing exclusion reasons when necessary.
-#' The function handles four distinct scenarios: one encounter with one ward,
-#' multiple encounters with one ward, one encounter with multiple wards, and
-#' multiple encounters with multiple wards. It ensures data consistency through
-#' left joins, distinct rows, and proper handling of missing or conflicting data.
+#' Merges medication analysis front-end data into a merged patient and fall
+#' front-end dataset. The linkage strategy depends on whether patients have
+#' multiple main encounters and whether main encounters span multiple wards.
 #'
-#' @param merged_fe_pat_fall_table_with_enc_id A data frame containing fall event
-#'   data, including patient and encounter ids, as well as ward-related
-#'   information as ward, and period of stay.
-#' @param medikationsanalyse_fe_table A data frame containing documented medication analysis
-#'   data from fronted, including medication date (`meda_dat`) and medication fall ID (`fall_meda_id`).
+#' @param merged_fe_pat_fall_table_with_enc_id A data frame containing merged
+#'   patient and fall front-end data enriched with encounter information.
+#' @param medikationsanalyse_fe_table A data frame containing medication
+#'   analysis front-end data, including medication analysis identifiers,
+#'   dates, and fall identifiers.
 #'
-#' @return A data frame containing the merged fall event and medication analysis data
-#'   with additional columns for processing exclusion reasons.
+#' @return A data frame containing the merged patient, fall, encounter, and
+#'   medication analysis data. Medication analysis records that cannot be
+#'   linked to an existing front-end row are retained and annotated with
+#'   an appropriate `processing_exclusion_reason`.
 #'
 #' @details
-#' The function performs four distinct filtering and merging operations based on
-#' combinations of the following variables:
-#' - `multiple_main_encounters_per_patient`
-#' - `multiple_wards_per_main_encounter`
+#' The function applies different medication analysis linkage strategies
+#' according to the encounter and ward structure:
 #'
-#' For each condition, the function applies a left join with the medication analysis
-#' table, adds processing exclusion reasons if necessary, and ensures that the
-#' resulting data frame contains only distinct rows. The function handles situations
-#' where `fall_id_cis` or `enc_id` might be missing and adds appropriate exclusion
-#' reasons.
+#' \enumerate{
+#'   \item For patients with one main encounter and one ward, medication
+#'   analyses are linked using `record_id`.
+#'   \item For patients with multiple main encounters but one ward,
+#'   medication analyses are linked using `record_id` and `fall_meda_id`.
+#'   \item For patients with one main encounter and multiple wards,
+#'   medication analyses are linked using `record_id` and the medication
+#'   analysis date within the corresponding ward stay period.
+#'   \item For patients with multiple main encounters and multiple wards,
+#'   medication analyses are linked using `record_id`, `fall_meda_id`,
+#'   and the medication analysis date within the corresponding ward stay
+#'   period.
+#' }
 #'
-#' The final result is a single data frame containing the merged data, with
-#' exclusion reasons applied where necessary, ready for further analysis or processing.
+#' Medication analysis records that cannot be linked through these strategies
+#' are identified separately and added to the resulting dataset. Depending
+#' on the available linkage information, appropriate processing exclusion
+#' reasons are assigned for missing fall identifiers, missing medication
+#' analysis dates, or missing ward stay period information.
 #'
-#' @note
-#' The `addProcessingExclusionReason()` function must be defined elsewhere in the
-#' code for this function to work correctly. It is used to append exclusion reasons
-#' to the `processing_exclusion_reason` column.
+#' Duplicate rows are removed throughout the processing steps and from the
+#' final result.
 #'
-#' @importFrom dplyr filter left_join distinct mutate case_when join_by between select
+#' @importFrom dplyr anti_join arrange bind_rows between case_when distinct filter left_join mutate select
 #'
 #' @export
 addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse_fe_table) {
+  meda_with_date <- medikationsanalyse_fe_table |>
+    dplyr::filter(!is.na(meda_dat)) |>
+    dplyr::distinct()
+
   one_encounter_one_ward <- merged_fe_pat_fall_table_with_enc_id |>
     dplyr::filter(multiple_main_encounters_per_patient == FALSE &
       multiple_wards_per_main_encounter == FALSE) |>
@@ -944,6 +953,18 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
         dplyr::select(-fall_meda_id) |>
         dplyr::distinct(),
       by = c("record_id")
+    ) |>
+    dplyr::mutate(
+      processing_exclusion_reason = dplyr::case_when(
+        !is.na(meda_id) & is.na(meda_dat) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "missing_meda_dat",
+            level = "sub_encounter",
+            type = "linkage_issues"
+          ),
+        TRUE ~ processing_exclusion_reason
+      )
     ) |>
     dplyr::distinct()
 
@@ -957,7 +978,8 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
       by = c(
         "record_id",
         "fall_id_cis" = "fall_meda_id"
-      )
+      ),
+      na_matches = "never"
     ) |>
     dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
       is.na(fall_id_cis) ~ addProcessingExclusionReason(
@@ -966,6 +988,13 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
         level = "sub_encounter",
         type = "linkage_issues"
       ),
+      !is.na(fall_id_cis) & !is.na(meda_id) & is.na(meda_dat) ~
+        addProcessingExclusionReason(
+          existing = processing_exclusion_reason,
+          reason = "missing_meda_dat",
+          level = "sub_encounter",
+          type = "linkage_issues"
+        ),
       TRUE ~ processing_exclusion_reason
     )) |>
     dplyr::distinct()
@@ -975,9 +1004,8 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
       multiple_wards_per_main_encounter == TRUE) |>
     # use assignment depending on record_id and linking medication analysis date to ward stay period
     dplyr::left_join(
-      medikationsanalyse_fe_table |>
+      meda_with_date |>
         dplyr::select(-fall_meda_id) |>
-        dplyr::filter(!is.na(meda_dat)) |>
         dplyr::distinct(),
       by = dplyr::join_by(
         record_id == record_id,
@@ -1011,9 +1039,7 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
     # use assignment depending on record_id  and fall_meda_id and linking medication analysis date
     # to ward stay period
     dplyr::left_join(
-      medikationsanalyse_fe_table |>
-        dplyr::filter(!is.na(meda_dat)) |>
-        dplyr::distinct(),
+      meda_with_date,
       by = dplyr::join_by(
         record_id == record_id,
         fall_id_cis == fall_meda_id,
@@ -1022,7 +1048,8 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
           x$enc_period_start,
           x$curated_enc_period_end
         )
-      )
+      ),
+      na_matches = "never"
     ) |>
     dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
       is.na(fall_id_cis) ~ addProcessingExclusionReason(
@@ -1053,6 +1080,158 @@ addMedaData <- function(merged_fe_pat_fall_table_with_enc_id, medikationsanalyse
     rbind(multiple_encounters_one_ward) |>
     rbind(one_encounter_multiple_wards) |>
     rbind(multiple_encounters_multiple_wards) |>
+    dplyr::distinct()
+
+  # Check for unmatched medication analysis entries
+  unmatched_medas <- medikationsanalyse_fe_table |>
+    dplyr::anti_join(
+      merged_fe_pat_fall_meda_table |>
+        dplyr::filter(!is.na(meda_id)) |>
+        dplyr::distinct(meda_id),
+      by = "meda_id"
+    )
+
+  unmatched_medas_with_fall_meda_id <- unmatched_medas |>
+    dplyr::filter(!is.na(fall_meda_id)) |>
+    dplyr::left_join(
+      merged_fe_pat_fall_table_with_enc_id |>
+        dplyr::select(-c(
+          enc_id,
+          enc_period_start,
+          curated_enc_period_end
+        )) |>
+        dplyr::distinct(),
+      by = c(
+        "record_id" = "record_id",
+        "fall_meda_id" = "fall_id_cis"
+      ),
+      na_matches = "never"
+    ) |>
+    dplyr::rename(fall_id_cis = fall_meda_id)
+
+  unmatched_medas_without_fall_meda_id <- unmatched_medas |>
+    dplyr::filter(is.na(fall_meda_id)) |>
+    dplyr::select(-fall_meda_id) |>
+    dplyr::left_join(
+      merged_fe_pat_fall_table_with_enc_id |>
+        dplyr::select(-c(
+          age_at_hospitalization,
+          fall_fhir_main_enc_id,
+          fall_id_cis,
+          fall_studienphase,
+          actual_fall_studienphase,
+          fall_station,
+          fall_aufn_dat,
+          enc_id,
+          enc_period_start,
+          curated_enc_period_end,
+          fall_ent_dat,
+          fall_complete
+        )) |>
+        dplyr::distinct(),
+      by = "record_id"
+    )
+
+  unmatched_medas_to_add <- dplyr::bind_rows(
+    unmatched_medas_with_fall_meda_id,
+    unmatched_medas_without_fall_meda_id
+  ) |>
+    dplyr::mutate(
+      processing_exclusion_reason = dplyr::case_when(
+        # Multiple encounters + multiple wards:
+        # both fall_meda_id and meda_dat are needed.
+        multiple_main_encounters_per_patient == TRUE &
+          multiple_wards_per_main_encounter == TRUE &
+          !is.na(fall_id_cis) &
+          is.na(meda_dat) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "missing_meda_dat",
+            level = "sub_encounter",
+            type = "linkage_issues"
+          ),
+
+        # Multiple encounters + multiple wards:
+        # neither fall nor ward could be determined.
+        multiple_main_encounters_per_patient == TRUE &
+          multiple_wards_per_main_encounter == TRUE &
+          is.na(fall_id_cis) &
+          is.na(meda_dat) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "missing_fall_meda_id_and_meda_dat",
+            level = "sub_encounter",
+            type = "linkage_issues"
+          ),
+
+        multiple_main_encounters_per_patient == TRUE &
+          multiple_wards_per_main_encounter == TRUE &
+          !is.na(fall_id_cis) &
+          !is.na(meda_dat) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "no_matching_ward_stay_period_information",
+            level = "sub_encounter",
+            type = "linkage_issues"
+          ),
+
+        # Multiple encounters + multiple wards:
+        # fall_meda_id is required to identify the fall.
+        multiple_main_encounters_per_patient == TRUE &
+          multiple_wards_per_main_encounter == TRUE &
+          is.na(fall_id_cis) &
+          !is.na(meda_dat) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "missing_fall_meda_id",
+            level = "sub_encounter",
+            type = "linkage_issues"
+          ),
+
+        # Multiple encounters + one ward:
+        # fall_meda_id is required to identify the correct fall.
+        multiple_main_encounters_per_patient == TRUE &
+          multiple_wards_per_main_encounter == FALSE &
+          is.na(fall_id_cis) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "missing_fall_meda_id",
+            level = "sub_encounter",
+            type = "linkage_issues"
+          ),
+
+        # One encounter + multiple wards:
+        # no fall_meda_id is needed, but meda_dat is required to determine
+        # which ward the MDA belongs to.
+        multiple_main_encounters_per_patient == FALSE &
+          multiple_wards_per_main_encounter == TRUE &
+          is.na(meda_dat) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "missing_meda_dat",
+            level = "sub_encounter",
+            type = "linkage_issues"
+          ),
+
+        # If the date exists but no ward could be matched, this means
+        # that the date did not fall into any ward period.
+        multiple_main_encounters_per_patient == FALSE &
+          multiple_wards_per_main_encounter == TRUE &
+          !is.na(meda_dat) ~
+          addProcessingExclusionReason(
+            existing = processing_exclusion_reason,
+            reason = "no_matching_ward_stay_period_information",
+            level = "sub_encounter",
+            type = "linkage_issues"
+          ),
+
+        TRUE ~ processing_exclusion_reason
+      )
+    ) |>
+    dplyr::distinct()
+
+  merged_fe_pat_fall_meda_table  <- merged_fe_pat_fall_meda_table |>
+    dplyr::bind_rows(unmatched_medas_to_add) |>
     dplyr::distinct()
 
   return(merged_fe_pat_fall_meda_table)
@@ -1110,7 +1289,8 @@ addVersorgungsstellenkontaktToFeData <- function(merged_fe_pat_fall_table, FHIR_
         pat_id == pat_id,
         fall_fhir_main_enc_id == main_enc_id,
         fall_station == ward_name,
-      )
+      ),
+      na_matches = "never"
     ) |>
     dplyr::distinct() |>
     dplyr::relocate(
@@ -1122,73 +1302,334 @@ addVersorgungsstellenkontaktToFeData <- function(merged_fe_pat_fall_table, FHIR_
 
 #------------------------------------------------------------------------------#
 
-#' Merge MRP Documentation Data with Medication Analysis Table
+#' Add MRP Documentation Data to Front-End Medication Analysis Data
 #'
-#' This function merges MRP (Medication-Related Problems) documentation validation data
-#' into a processed table that already includes medication analysis data, encounter linkage,
-#' and patient/case-level identifiers. The merge is performed based on `record_id` and
-#' `meda_id`, ensuring that each medication analysis entry is enriched with its corresponding
-#' MRP documentation details. The function handles cases where patients have either a single
-#' or multiple medication analyses, applying the appropriate join conditions for each scenario.
+#' Merges MRP documentation and validation data into a merged patient,
+#' fall, encounter, and medication analysis dataset. The linkage strategy
+#' depends on whether a patient has one or multiple medication analyses.
 #'
-#' @param merged_fe_pat_fall_meda_table_with_enc_id A data frame containing merged patient,
-#'   case, and encounter data, enriched with medication analysis IDs (`meda_id`) and linked
-#'   to a specific hospital stay segment.
-#' @param mrp_dokumentation_validierung_fe_table A data frame containing MRP documentation
-#'   validation entries as retrieved by `getMRPDokumentationValidierungFeData()`.
+#' @param merged_fe_pat_fall_meda_table_with_enc_id A data frame containing
+#'   merged patient, fall, encounter, ward, and medication analysis data.
+#' @param mrp_dokumentation_validierung_fe_table A data frame containing
+#'   MRP documentation and validation front-end data, including medication
+#'   analysis and MRP identifiers.
 #'
-#' @return A data frame that includes all columns from `merged_fe_pat_fall_meda_table_with_enc_id`
-#'   along with matching MRP documentation fields (e.g., `mrp_id`, etc.) based on `record_id` and `meda_id`.
+#' @return A data frame containing the input data enriched with matched MRP
+#'   documentation data. MRP documentation entries that cannot be assigned
+#'   to a medication analysis are retained where possible and annotated with
+#'   an appropriate `processing_exclusion_reason`.
 #'
 #' @details
-#' The merge operation is performed on the following keys:
-#' - `record_id` (common to both datasets)
-#' - `meda_id` from the medication analysis table matched to `mrp_meda_id` in the MRP documentation
-#'    table
+#' The function applies different linkage strategies depending on the number
+#' of medication analyses associated with a patient:
 #'
-#' Duplicate entries are removed post-merge using `dplyr::distinct()`.
+#' \enumerate{
+#'   \item For patients with one medication analysis, MRP documentation is
+#'   linked using `record_id`.
+#'   \item For patients with multiple medication analyses, MRP documentation
+#'   is linked using `record_id` and `mrp_meda_id`, matched to `meda_id`.
+#' }
 #'
-#' @importFrom dplyr left_join distinct
+#' MRP documentation entries that cannot be matched to an existing MRP are
+#' identified separately. Entries without `mrp_meda_id` are retained and
+#' assigned to the available patient and encounter context according to the
+#' available fall and ward information:
+#'
+#' \itemize{
+#'   \item For one encounter and one ward, fall and ward information are
+#'   retained because `record_id` is sufficient to identify the context.
+#'   \item For multiple encounters and one ward, fall and ward information
+#'   are removed because the fall cannot be identified from `record_id`
+#'   alone.
+#'   \item For one encounter and multiple wards, fall information is retained,
+#'   while ward and encounter-period information are removed because the
+#'   ward cannot be determined.
+#'   \item For multiple encounters and multiple wards, fall and ward
+#'   information are removed because neither can be determined reliably.
+#' }
+#'
+#' Unmatched MRP documentation entries without a medication analysis
+#' identifier are marked with the `missing_mrp_meda_id` processing exclusion
+#' reason. Duplicate rows are removed throughout the processing steps and
+#' from the final result.
+#'
+#' @importFrom dplyr anti_join bind_rows distinct filter left_join mutate select
+#'
 #' @export
 addMRPDokuData <- function(merged_fe_pat_fall_meda_table_with_enc_id,
                            mrp_dokumentation_validierung_fe_table) {
+  # ============================================================
+  # 1. MRP documentation with one medication analysis per patient
+  # ============================================================
+
   one_medication_analysis <- merged_fe_pat_fall_meda_table_with_enc_id |>
     dplyr::filter(!multiple_medas_per_patient) |>
-    # use assignment only depending on record_id
+    # record_id is sufficient to identify the medication analysis
     dplyr::left_join(
       mrp_dokumentation_validierung_fe_table |>
         dplyr::select(-mrp_meda_id) |>
         dplyr::distinct(),
-      by = c("record_id")
+      by = "record_id"
     ) |>
     dplyr::distinct()
 
+
+  # ============================================================
+  # 2. MRP documentation with multiple medication analyses
+  # ============================================================
+
   multiple_medication_analyses <- merged_fe_pat_fall_meda_table_with_enc_id |>
     dplyr::filter(multiple_medas_per_patient) |>
-    # use assigment depending on record_id and mrp_meda_id
+    # record_id + mrp_meda_id are required
     dplyr::left_join(
       mrp_dokumentation_validierung_fe_table |>
         dplyr::distinct(),
       by = c(
         "record_id",
         "meda_id" = "mrp_meda_id"
-      )
-    ) |>
-    # TODO: eventually optimize this, it should not be na at any time (what happens id fall_meda_id is missing?) -------
-    dplyr::mutate(processing_exclusion_reason = dplyr::case_when(
-      !is.na(meda_dat) & is.na(meda_id) ~ addProcessingExclusionReason(
-        existing = processing_exclusion_reason,
-        reason = "missing_meda_id_in_medikationsanalyse_fe",
-        level = "sub_encounter",
-        type = "linkage_issues"
       ),
-      TRUE ~ processing_exclusion_reason
-    )) |>
+      na_matches = "never"
+    ) |>
     dplyr::distinct()
 
-  # merge both scenarios back together
-  merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku <- one_medication_analysis |>
+
+  # ============================================================
+  # 3. Merge successful MRP assignments
+  # ============================================================
+
+  merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku <-
+    one_medication_analysis |>
     rbind(multiple_medication_analyses) |>
+    dplyr::distinct()
+
+
+  # ============================================================
+  # 4. Find MRP documentation entries not yet assigned
+  # ============================================================
+
+  unmatched_mrps <- mrp_dokumentation_validierung_fe_table |>
+    dplyr::anti_join(
+      merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku |>
+        dplyr::filter(!is.na(mrp_id)) |>
+        dplyr::distinct(mrp_id),
+      by = "mrp_id"
+    )
+
+
+  # ============================================================
+  # 5. Only MRP documentation without mrp_meda_id remains here
+  #
+  # These MRPs cannot be assigned to a medication analysis.
+  # However, record_id can still be used to determine the
+  # patient and potentially the fall/ward context.
+  # ============================================================
+
+  unmatched_mrps_without_mrp_meda_id <- unmatched_mrps |>
+    dplyr::filter(is.na(mrp_meda_id))
+
+
+  # ============================================================
+  # 6. One fall + one ward
+  #
+  # record_id uniquely identifies the fall and ward context.
+  # Keep fall and ward information.
+  #
+  # Medication-analysis variables remain NA because
+  # mrp_meda_id is missing.
+  # ============================================================
+
+  unmatched_mrps_one_encounter_one_ward <-
+    unmatched_mrps_without_mrp_meda_id |>
+    dplyr::left_join(
+      merged_fe_pat_fall_meda_table_with_enc_id |>
+        dplyr::filter(
+          multiple_main_encounters_per_patient == FALSE &
+            multiple_wards_per_main_encounter == FALSE
+        ) |>
+        dplyr::select(
+          -c(
+            meda_id,
+            meda_dat,
+            medikationsanalyse_complete,
+            meda_mrp_detekt
+          )
+        ) |>
+        dplyr::distinct(),
+      by = "record_id"
+    ) |>
+    dplyr::distinct() |>
+    dplyr::mutate(
+      processing_exclusion_reason = addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "missing_mrp_meda_id",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      )
+    )
+
+
+  # ============================================================
+  # 7. Multiple falls + one ward
+  #
+  # The fall cannot be identified from record_id alone.
+  # Therefore remove fall AND ward information.
+  #
+  # Medication-analysis variables also remain NA.
+  # ============================================================
+
+  unmatched_mrps_multiple_encounters_one_ward <-
+    unmatched_mrps_without_mrp_meda_id |>
+    dplyr::left_join(
+      merged_fe_pat_fall_meda_table_with_enc_id |>
+        dplyr::filter(
+          multiple_main_encounters_per_patient == TRUE &
+            multiple_wards_per_main_encounter == FALSE
+        ) |>
+        dplyr::select(
+          -c(
+            meda_id,
+            meda_dat,
+            medikationsanalyse_complete,
+            meda_mrp_detekt,
+            fall_fhir_main_enc_id,
+            fall_id_cis,
+            fall_studienphase,
+            actual_fall_studienphase,
+            fall_station,
+            fall_aufn_dat,
+            fall_ent_dat,
+            fall_complete,
+            enc_id,
+            enc_period_start,
+            curated_enc_period_end
+          )
+        ) |>
+        dplyr::distinct(),
+      by = "record_id"
+    ) |>
+    dplyr::distinct() |>
+    dplyr::mutate(
+      processing_exclusion_reason = addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "missing_mrp_meda_id",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      )
+    )
+
+
+  # ============================================================
+  # 8. One fall + multiple wards
+  #
+  # The fall can be identified, but the ward cannot.
+  # Keep fall information, remove ward information.
+  #
+  # Medication-analysis variables remain NA.
+  # ============================================================
+
+  unmatched_mrps_one_encounter_multiple_wards <-
+    unmatched_mrps_without_mrp_meda_id |>
+    dplyr::left_join(
+      merged_fe_pat_fall_meda_table_with_enc_id |>
+        dplyr::filter(
+          multiple_main_encounters_per_patient == FALSE &
+            multiple_wards_per_main_encounter == TRUE
+        ) |>
+        dplyr::select(
+          -c(
+            meda_id,
+            meda_dat,
+            medikationsanalyse_complete,
+            meda_mrp_detekt,
+            enc_id,
+            enc_period_start,
+            curated_enc_period_end
+          )
+        ) |>
+        dplyr::distinct(),
+      by = "record_id"
+    ) |>
+    dplyr::distinct() |>
+    dplyr::mutate(
+      processing_exclusion_reason = addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "missing_mrp_meda_id",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      )
+    )
+
+
+  # ============================================================
+  # 9. Multiple falls + multiple wards
+  #
+  # Neither the fall nor the ward can be identified.
+  # Remove both fall and ward information.
+  #
+  # Medication-analysis variables remain NA.
+  # ============================================================
+
+  unmatched_mrps_multiple_encounters_multiple_wards <-
+    unmatched_mrps_without_mrp_meda_id |>
+    dplyr::left_join(
+      merged_fe_pat_fall_meda_table_with_enc_id |>
+        dplyr::filter(
+          multiple_main_encounters_per_patient == TRUE &
+            multiple_wards_per_main_encounter == TRUE
+        ) |>
+        dplyr::select(
+          -c(
+            meda_id,
+            meda_dat,
+            medikationsanalyse_complete,
+            meda_mrp_detekt,
+            fall_fhir_main_enc_id,
+            fall_id_cis,
+            fall_studienphase,
+            actual_fall_studienphase,
+            fall_station,
+            fall_aufn_dat,
+            fall_ent_dat,
+            fall_complete,
+            enc_id,
+            enc_period_start,
+            curated_enc_period_end
+          )
+        ) |>
+        dplyr::distinct(),
+      by = "record_id"
+    ) |>
+    dplyr::distinct() |>
+    dplyr::mutate(
+      processing_exclusion_reason = addProcessingExclusionReason(
+        existing = processing_exclusion_reason,
+        reason = "missing_mrp_meda_id",
+        level = "sub_encounter",
+        type = "linkage_issues"
+      )
+    )
+
+
+  # ============================================================
+  # 10. Merge the four unresolved-MRP scenarios
+  # ============================================================
+
+  unmatched_mrps_to_add <- dplyr::bind_rows(
+    unmatched_mrps_one_encounter_one_ward,
+    unmatched_mrps_multiple_encounters_one_ward,
+    unmatched_mrps_one_encounter_multiple_wards,
+    unmatched_mrps_multiple_encounters_multiple_wards
+  ) |>
+    dplyr::distinct()
+
+
+  # ============================================================
+  # 11. Add unresolved MRP records to final table
+  # ============================================================
+
+  merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku <-
+    merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku |>
+    dplyr::bind_rows(unmatched_mrps_to_add) |>
     dplyr::distinct()
 
   return(merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku)

@@ -168,6 +168,26 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     CheckMissingMedaDat()
   # --> this table should show only the last version of each medikationsanalyse_fe entry
 
+  # TEST ANFANG--------------------------------------------------------------------
+  # change data to test scenario with missing meda_dat and or missing fall_meda_id
+  # medikationsanalyse_fe_table <- medikationsanalyse_fe_table |>
+  #   dplyr::mutate(
+  #     meda_dat = dplyr::case_when(
+  #       meda_id %in% head(unique(medikationsanalyse_fe_table$meda_id), 2) ~ as.Date(NA),
+  #       TRUE ~ meda_dat
+  #     ),
+  #     fall_meda_id = dplyr::case_when(
+  #       meda_id %in% tail(unique(medikationsanalyse_fe_table$meda_id), 4) ~ as.character(NA),
+  #       TRUE ~ fall_meda_id
+  #     ),
+  #     # both missing
+  #     meda_dat = dplyr::case_when(
+  #       meda_id %in% tail(unique(medikationsanalyse_fe_table$meda_id), 2) ~ as.Date(NA),
+  #       TRUE ~ meda_dat
+  #     )
+  #   )
+  # TEST ENDE---------------------------------------------------------------------
+
   mrp_dokumentation_validierung_fe_table <- getMRPDokumentationValidierungFeData(
     lock_id = "statistical reports[7]",
     # table_name = "v_mrpdokumentation_validierung_fe"
@@ -234,7 +254,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
       result_variable_name = "multiple_wards_per_main_encounter"
     ) |>
     addVersorgungsstellenkontaktToFeData(FHIR_table_with_ward_name_and_record_id) |>
-    # TODO: check if this logic can be optimized (documented medas are deleted here if no matching enc_id is found!; same with MRP matching) ----------
     addMedaData(medikationsanalyse_fe_table) |>
     detectMultipleEntries(
       grouping_vars = c("pat_id"),
