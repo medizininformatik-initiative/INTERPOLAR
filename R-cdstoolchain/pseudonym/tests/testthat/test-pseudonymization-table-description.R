@@ -38,9 +38,31 @@ test_that("setFhirPseudonymizationRules maps explicit and default keep semantics
     "cryptoHash",
     "generalize(format = \"YYYY-MM\")",
     "redact",
-    NA_character_,
-    NA_character_
+    "keep",
+    "keep"
   ))
+})
+
+test_that("setFhirPseudonymizationRules leaves structural rows empty", {
+  yaml_file <- tempfile(fileext = ".yaml")
+  writeLines(c(
+    "---",
+    "fhirPathRules:",
+    "  - path: Resource.id",
+    "    method: cryptoHash"
+  ), yaml_file)
+
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA_character_, NA_character_),
+    COLUMN_NAME = c("pat_id", "pat_gender", NA_character_),
+    FHIR_EXPRESSION = c("id", "gender", NA_character_),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+
+  result <- setFhirPseudonymizationRules(table_description, yaml_file)
+
+  expect_equal(result$PSEUDONYMIZATION_RULE, c("cryptoHash", "keep", NA_character_))
 })
 
 test_that("setFhirPseudonymizationRules accepts top-level YAML rule lists", {
@@ -295,7 +317,7 @@ test_that("nodesByType uses expansion provenance instead of matching element nam
 
   expect_equal(
     result$PSEUDONYMIZATION_RULE,
-    c("redact", NA_character_, "redact", NA_character_)
+    c("redact", "keep", "redact", "keep")
   )
 })
 
@@ -320,7 +342,7 @@ test_that("nodesByType provenance supports root-level expanded node types", {
 
   result <- setFhirPseudonymizationRules(table_description, yaml_file)
 
-  expect_equal(result$PSEUDONYMIZATION_RULE, c("redact", NA_character_))
+  expect_equal(result$PSEUDONYMIZATION_RULE, c("redact", "keep"))
 })
 
 test_that("rule report includes summary and contextual conflicts", {
@@ -410,11 +432,12 @@ test_that("setFhirPseudonymizationRules uses the packaged YAML by default", {
 
 test_that("currently absent non-Bundle default YAML paths match when present", {
   table_description <- data.table::data.table(
-    RESOURCE = c("Patient", NA, NA, "Provenance", "Observation"),
+    RESOURCE = c("Patient", NA, NA, NA, "Provenance", "Observation"),
     COLUMN_NAME = c(
       "pat_address_country",
       "pat_address_state",
       "pat_deceased_boolean",
+      "pat_deceaseddatetime",
       "pro_target_ref",
       "obs_telecom_value"
     ),
@@ -422,6 +445,7 @@ test_that("currently absent non-Bundle default YAML paths match when present", {
       "address/country",
       "address/state",
       "deceasedBoolean",
+      "deceasedDateTime",
       "target/reference",
       "telecom/value"
     ),
@@ -435,6 +459,7 @@ test_that("currently absent non-Bundle default YAML paths match when present", {
     "keep",
     "keep",
     "keep",
+    "generalize(format = \"YYYY-MM\")",
     "cryptoHash",
     "redact"
   ))

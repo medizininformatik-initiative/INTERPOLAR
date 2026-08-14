@@ -229,8 +229,8 @@ convertLabUnits <- function(measured_value,
   # To set this globally outside this function doesnt work
   # This option is relevant for units::set_units() function
   units::units_options(set_units_mode = "standard")
-  # Initialize result
-  result <- NA
+  # Initialize the result vector
+  result <- rep(NA_real_, length(measured_value))
   measured_unit_raw <- measured_unit
   target_unit_raw <- target_unit
   target_unit_missing <- isMissingUnit(target_unit_raw)
@@ -245,9 +245,9 @@ convertLabUnits <- function(measured_value,
       measured_unit <- parseConvertibleUnit(measured_unit_raw)
       target_unit <- parseConvertibleUnit(target_unit_raw)
 
-      # the provided FHIR unit is invalid -> the full Observations is invald
+      # Invalid FHIR units produce missing conversion results
       if (is.null(measured_unit) || is.null(target_unit)) {
-        return(NA)
+        return(result)
       }
 
       if (
@@ -287,28 +287,29 @@ convertLabUnits <- function(measured_value,
         # Case 2: Indirect conversion via mapping unit and factor
         result_u_conversion <- suppressWarnings(units::set_units(u_measured, u_conversion))
 
-        if (!is.na(result_u_conversion)) {
-          # Drop unit to apply mapping factor
-          numeric_value <- units::drop_units(result_u_conversion)
-          converted_value <- numeric_value * conversion_factor
+        # Drop the unit before applying the mapping factor
+        numeric_value <- units::drop_units(result_u_conversion)
+        converted_value <- numeric_value * conversion_factor
 
-          # Assign the target unit back
-          result <- suppressWarnings(units::set_units(converted_value, u_target))
-          result <- units::drop_units(result)
-        }
-      }
-      if (all(is.na(result))) {
-        result <- NA
+        # Assign the target unit to the converted values
+        result <- suppressWarnings(units::set_units(converted_value, u_target))
+        result <- units::drop_units(result)
       }
     },
     error = function(e) {
+      error_context <- if (etlutils::isSimpleNAorNULL(additional_error_message)) {
+        ""
+      } else {
+        additional_error_message
+      }
       warning_message <- paste0(
         "Error converting lab units from '",
-        as.character(units(u_measured)$numerator),
+        measured_unit_raw,
         "' to '",
-        as.character(units(u_target)$numerator),
+        target_unit_raw,
         "': ",
-        additional_error_message
+        conditionMessage(e),
+        error_context
       )
       if (!ignore_errors) {
         etlutils::catErrorMessage(warning_message)

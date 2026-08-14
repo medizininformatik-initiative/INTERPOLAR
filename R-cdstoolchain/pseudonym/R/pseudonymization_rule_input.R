@@ -160,7 +160,7 @@ normalizePseudonymizationRuleInput <- function(table_description, source, path, 
   table_description[["PSEUDONYMIZATION_RULE"]] <- normalizePseudonymizationRule(
     table_description[["PSEUDONYMIZATION_RULE_RAW"]]
   )
-  table_description[["IMPLICIT_KEEP"]] <-
+  table_description[["EMPTY_RULE"]] <-
     is.na(table_description[["PSEUDONYMIZATION_RULE_RAW"]]) |
       trimws(table_description[["PSEUDONYMIZATION_RULE_RAW"]]) == ""
   table_description[["SOURCE"]] <- source
@@ -182,7 +182,7 @@ normalizePseudonymizationRuleInput <- function(table_description, source, path, 
     "FHIR_EXPRESSION",
     "PSEUDONYMIZATION_RULE_RAW",
     "PSEUDONYMIZATION_RULE",
-    "IMPLICIT_KEEP"
+    "EMPTY_RULE"
   )
   for (output_column in output_columns) {
     if (!output_column %in% names(table_description)) {
@@ -309,6 +309,12 @@ getRulePartReview <- function(rules) {
 
   rows <- list()
   for (i in seq_len(nrow(rules))) {
+    if (
+      is.na(rules[["PSEUDONYMIZATION_RULE"]][i]) ||
+      !nzchar(rules[["PSEUDONYMIZATION_RULE"]][i])
+    ) {
+      next
+    }
     rule_parts <- splitRuleList(rules[["PSEUDONYMIZATION_RULE"]][i])
     rule_parts <- trimws(rule_parts)
     rule_parts <- rule_parts[nzchar(rule_parts)]
@@ -489,8 +495,8 @@ isPseudonymMappingStatusProblem <- function(status) {
 #' Review loaded pseudonymization rules before building a snapshot.
 #'
 #' The report is intentionally metadata-focused. It checks loaded table
-#' descriptions and snapshot extensions for unresolved TODO markers, implicit
-#' `keep` rules, unsupported rule actions, duplicate column definitions, and
+#' descriptions and snapshot extensions for unresolved TODO markers, empty
+#' rules, unsupported rule actions, duplicate column definitions, and
 #' mapping-rule references to `pseudo_mapping.xlsx`. Missing concrete mapping
 #' keys are collected later while applying the rules to actual data.
 #'
@@ -501,8 +507,8 @@ isPseudonymMappingStatusProblem <- function(status) {
 #'   defer workbook and sheet validation until the snapshot database is
 #'   available.
 #'
-#' @return A named list of data.tables: `summary`, `todo_rules`,
-#'   `implicit_keep_rules`, `unsupported_rules`, `duplicate_columns`, and
+#' @return A named list of data.tables: `README`, `summary`, `todo_rules`,
+#'   `empty_rules`, `unsupported_rules`, `duplicate_columns`, and
 #'   `mapping_rules`.
 #'
 getPseudonymizationRuleReviewReport <- function(
@@ -514,8 +520,10 @@ getPseudonymizationRuleReviewReport <- function(
   if (!PSEUDONYMIZATION_RULE_COLNAME %in% names(rules)) {
     stop("rules must contain PSEUDONYMIZATION_RULE.")
   }
-  if (!"IMPLICIT_KEEP" %in% names(rules)) {
-    rules[["IMPLICIT_KEEP"]] <- FALSE
+  if (!"EMPTY_RULE" %in% names(rules)) {
+    rules[["EMPTY_RULE"]] <-
+      is.na(rules[[PSEUDONYMIZATION_RULE_COLNAME]]) |
+        !nzchar(trimws(rules[[PSEUDONYMIZATION_RULE_COLNAME]]))
   }
   if (!"PSEUDONYMIZATION_RULE_RAW" %in% names(rules)) {
     rules[["PSEUDONYMIZATION_RULE_RAW"]] <- rules[[PSEUDONYMIZATION_RULE_COLNAME]]
@@ -535,11 +543,11 @@ getPseudonymizationRuleReviewReport <- function(
   } else {
     todo_rules <- getRuleReviewBaseColumns(todo_rules)
   }
-  implicit_keep_rules <- rules[which(rules[["IMPLICIT_KEEP"]] == TRUE), ]
-  if (nrow(implicit_keep_rules) == 0) {
-    implicit_keep_rules <- emptyRuleReviewTable()
+  empty_rules <- rules[which(rules[["EMPTY_RULE"]] == TRUE), ]
+  if (nrow(empty_rules) == 0) {
+    empty_rules <- emptyRuleReviewTable()
   } else {
-    implicit_keep_rules <- getRuleReviewBaseColumns(implicit_keep_rules)
+    empty_rules <- getRuleReviewBaseColumns(empty_rules)
   }
 
   unsupported_rules <- getUnsupportedRuleParts(rule_parts)
@@ -553,7 +561,7 @@ getPseudonymizationRuleReviewReport <- function(
   summary <- stats::aggregate(
     x = list(
       N = rep(1L, nrow(rules)),
-      IMPLICIT_KEEP_N = as.integer(rules[["IMPLICIT_KEEP"]] == TRUE),
+      EMPTY_RULE_N = as.integer(rules[["EMPTY_RULE"]] == TRUE),
       TODO_N = as.integer(rules[["HAS_TODO_RULE"]] == TRUE),
       MAPPING_RULE_N = as.integer(rules[["HAS_MAPPING_RULE"]] == TRUE)
     ),
@@ -598,9 +606,27 @@ getPseudonymizationRuleReviewReport <- function(
   data.table::setorder(summary, SOURCE_TYPE, SOURCE)
 
   list(
+    README = data.table::data.table(
+      SHEET = c(
+        "summary",
+        "empty_rules",
+        "todo_rules",
+        "unsupported_rules",
+        "duplicate_columns",
+        "mapping_rules"
+      ),
+      CONTENT = c(
+        "Counts of reviewed rules and detected problems by source.",
+        "Columns without a rule. Every unchanged column requires an explicit keep rule.",
+        "Unresolved TODO markers that must be replaced with a rule.",
+        "Rules that cannot be interpreted by the pseudonymization process.",
+        "Columns defined more than once within the same rule source.",
+        "References to pseudo_mapping.xlsx and their validation status."
+      )
+    ),
     summary = summary,
     todo_rules = todo_rules,
-    implicit_keep_rules = implicit_keep_rules,
+    empty_rules = empty_rules,
     unsupported_rules = unsupported_rules,
     duplicate_columns = getDuplicateRuleColumns(rules),
     mapping_rules = mapping_rules

@@ -691,7 +691,8 @@ expandTableDescription <- function() {
       "If you want to add or remove columns for a resource or an entire table, change the Excel file",
       "'TableDescriptionDefinition' and execute the generation process via the init scripts in the cds2db module.",
       paste(
-        "Empty values in PSEUDONYMIZATION_RULE are interpreted as keep.",
+        "Columns not matched by the YAML receive an explicit keep rule.",
+        "Empty PSEUDONYMIZATION_RULE values are invalid.",
         "cryptoHash defaults to maxLength = 32; cryptoHash, cryptoHash(32),",
         "and cryptoHash(maxLength = 32) are equivalent.",
         "Conditional rule chains end with an explicit keep or redact fallback.",

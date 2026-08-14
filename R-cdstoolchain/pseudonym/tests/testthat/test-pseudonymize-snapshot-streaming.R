@@ -53,6 +53,23 @@ test_that("processSnapshotChunkStream keeps only one chunk in the processing con
   expect_equal(result$summary$OUTPUT_ROWS, 3L)
   expect_equal(result$chunks, 2L)
   expect_equal(review_writes, 2L)
+  expect_named(
+    result$timing,
+    c(
+      "FETCH_SECONDS",
+      "ENRICH_SECONDS",
+      "REVIEW_SECONDS",
+      "PSEUDONYMIZE_SECONDS",
+      "WRITE_SECONDS",
+      "OTHER_SECONDS",
+      "STREAM_SECONDS"
+    )
+  )
+  expect_true(all(result$timing >= 0))
+  expect_gte(
+    result$timing[["STREAM_SECONDS"]] + 0.01,
+    sum(result$timing[setdiff(names(result$timing), "STREAM_SECONDS")])
+  )
 })
 
 test_that("processSnapshotChunkStream writes an empty relation once", {
@@ -284,6 +301,123 @@ test_that("birthdate source query supports fallback patient keys", {
   expect_match(query, SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN, fixed = TRUE)
 })
 
+test_that("version-key preparation follows the technical row-ID convention", {
+  statements <- character()
+  testthat::local_mocked_bindings(
+    snapshotRelationFields = function(connection, name, schema = NULL) {
+      c("patient_id", "pat_id", "pat_meta_lastupdated")
+    }
+  )
+  testthat::local_mocked_bindings(
+    dbExecute = function(connection, statement) {
+      statements <<- c(statements, statement)
+      2L
+    },
+    .package = "DBI"
+  )
+  plan <- data.table::data.table(
+    BASE_TABLE_NAME = c("patient", "patient"),
+    SOURCE_RELATION = c("v_patient", "v_patient_last_version"),
+    SNAPSHOT_RELATION_TYPE = c("old_versions", "last_version")
+  )
+
+  key_tables <- prepareSnapshotVersionKeyTables(
+    DBI::ANSI(),
+    plan,
+    source_schema = "db2dataprocessor_out"
+  )
+
+  expect_named(key_tables, "patient")
+  expect_match(statements[1L], "SELECT DISTINCT", fixed = TRUE)
+  expect_match(statements[1L], 'snapshot_last_version."patient_id" AS "row_id"', fixed = TRUE)
+  expect_match(statements[1L], 'FROM "db2dataprocessor_out"."v_patient_last_version"', fixed = TRUE)
+  expect_match(statements[2L], "CREATE INDEX", fixed = TRUE)
+  expect_match(statements[3L], "ANALYZE", fixed = TRUE)
+})
+
+test_that("old-version source excludes prepared last-version keys", {
+  testthat::local_mocked_bindings(
+    snapshotRelationFields = function(connection, name, schema = NULL) {
+      c("patient_id", "pat_id", "pat_meta_lastupdated", "pat_name")
+    }
+  )
+  plan_row <- data.table::data.table(
+    SOURCE_RELATION = "v_patient",
+    BASE_TABLE_NAME = "patient",
+    SNAPSHOT_RELATION_TYPE = "old_versions"
+  )
+
+  source <- getSnapshotPartitionSource(
+    DBI::ANSI(),
+    plan_row,
+    source_schema = "db2dataprocessor_out",
+    source_view_prefix = "v_",
+    version_key_tables = list(patient = "snapshot_patient_keys")
+  )
+
+  expect_equal(source$fields, c("patient_id", "pat_id", "pat_meta_lastupdated", "pat_name"))
+  expect_match(source$relation, "WHERE NOT EXISTS", fixed = TRUE)
+  expect_match(
+    source$relation,
+    'snapshot_partition_source."patient_id" = snapshot_version_keys."row_id"',
+    fixed = TRUE
+  )
+})
+
+test_that("version partitioning needs no per-table registry", {
+  expect_equal(snapshotTechnicalRowIdColumn("patient"), "patient_id")
+  expect_equal(snapshotTechnicalRowIdColumn("new_resource"), "new_resource_id")
+})
+
+test_that("version partitioning rejects sources without technical row ID", {
+  testthat::local_mocked_bindings(
+    snapshotRelationFields = function(connection, name, schema = NULL) {
+      c("pat_id", "pat_meta_lastupdated")
+    }
+  )
+  plan <- data.table::data.table(
+    BASE_TABLE_NAME = c("patient", "patient"),
+    SOURCE_RELATION = c("v_patient", "v_patient_last_version"),
+    SNAPSHOT_RELATION_TYPE = c("old_versions", "last_version")
+  )
+
+  expect_error(
+    prepareSnapshotVersionKeyTables(DBI::ANSI(), plan, source_schema = "db2dataprocessor_out"),
+    "lacks conventional technical row ID: patient_id",
+    fixed = TRUE
+  )
+})
+
+test_that("last-version source projects the normal view schema", {
+  testthat::local_mocked_bindings(
+    snapshotRelationFields = function(connection, name, schema = NULL) {
+      if (name == "v_patient_last_version") {
+        return(c("pat_id", "pat_name", "id", "last_version_date"))
+      }
+      c("pat_id", "pat_name")
+    }
+  )
+  plan_row <- data.table::data.table(
+    SOURCE_RELATION = "v_patient_last_version",
+    BASE_TABLE_NAME = "patient",
+    SNAPSHOT_RELATION_TYPE = "last_version"
+  )
+
+  source <- getSnapshotPartitionSource(
+    DBI::ANSI(),
+    plan_row,
+    source_schema = "db2dataprocessor_out",
+    source_view_prefix = "v_",
+    version_key_tables = list(patient = "snapshot_patient_keys")
+  )
+
+  expect_equal(source$fields, c("pat_id", "pat_name"))
+  expect_match(source$relation, '"pat_id"', fixed = TRUE)
+  expect_match(source$relation, '"pat_name"', fixed = TRUE)
+  expect_false(grepl('"id"', source$relation, fixed = TRUE))
+  expect_false(grepl('"last_version_date"', source$relation, fixed = TRUE))
+})
+
 test_that("source query omits enrichment joins not enabled by table description", {
   testthat::local_mocked_bindings(
     snapshotRelationFields = function(connection, name, schema = NULL) {
@@ -389,6 +523,43 @@ test_that("missing described source columns leave enrichment targets empty", {
   expect_true(is.na(result$fall_bmi))
 })
 
+test_that("snapshot enrichments preserve typed columns for empty partitions", {
+  observation <- data.table::data.table(
+    obs_code_system = character(),
+    obs_code_code = character(),
+    obs_valuequantity_value = numeric(),
+    obs_valuequantity_code = character(),
+    obs_valuequantity_unit = character()
+  )
+  mapping <- data.table::data.table(
+    LOINC = "1234-5",
+    LOINC_PRIMARY = "1234-5",
+    UNIT = "mg",
+    CONVERSION_FACTOR = NA_real_,
+    CONVERSION_UNIT = NA_character_
+  )
+
+  enriched_observation <- enrichObservationWithLoincMapping(observation, mapping)
+  enriched_fall <- enrichSnapshotFallChunk(data.table::data.table())
+  enriched_encounter <- enrichSnapshotEncounterChunk(data.table::data.table())
+  enriched_medication <- enrichSnapshotStreamingChunk(
+    data.table::data.table(),
+    "medicationrequest",
+    newSnapshotStreamingContext(NULL),
+    described_columns = c("medreq_medication_system", "medreq_medication_code")
+  )
+
+  expect_equal(nrow(enriched_observation), 0L)
+  expect_type(enriched_observation$analysis_loinc_code, "character")
+  expect_type(enriched_observation$analysis_unit, "character")
+  expect_type(enriched_observation$analysis_value, "double")
+  expect_type(enriched_observation$analysis_value_status, "character")
+  expect_type(enriched_fall$fall_age_at_admission, "integer")
+  expect_type(enriched_fall$fall_bmi, "double")
+  expect_type(enriched_encounter$enc_age_at_admission, "integer")
+  expect_true(all(vapply(enriched_medication, is.character, logical(1))))
+})
+
 test_that("encounter enrichment tolerates an omitted admission date", {
   context <- newSnapshotStreamingContext(NULL)
   encounter <- data.table::data.table(enc_patient_ref = "Patient/pat-1")
@@ -420,11 +591,11 @@ test_that("observation enrichment is optional for missing sources and targets", 
     observation,
     "observation",
     context,
-    described_columns = c(names(observation), "primary_loinc_code")
+    described_columns = c(names(observation), "analysis_loinc_code")
   )
 
-  expect_false("primary_loinc_code" %in% names(without_target))
-  expect_true(is.na(with_missing_sources$primary_loinc_code))
+  expect_false("analysis_loinc_code" %in% names(without_target))
+  expect_true(is.na(with_missing_sources$analysis_loinc_code))
   expect_null(context$loinc_mapping)
 })
 
@@ -447,13 +618,14 @@ test_that("observation enrichment keeps only described target columns", {
   result <- enrichObservationWithLoincMapping(
     observation,
     mapping,
-    enrichment_columns = "primary_loinc_code",
+    enrichment_columns = "analysis_loinc_code",
     source_columns = names(observation)
   )
 
-  expect_equal(result$primary_loinc_code, "1234-5")
-  expect_false("value_in_reference_unit" %in% names(result))
-  expect_false("reference_unit" %in% names(result))
+  expect_equal(result$analysis_loinc_code, "1234-5")
+  expect_false("analysis_value" %in% names(result))
+  expect_false("analysis_unit" %in% names(result))
+  expect_false("analysis_value_status" %in% names(result))
 })
 
 test_that("observation enrichment converts value groups without changing row order", {
@@ -476,7 +648,187 @@ test_that("observation enrichment converts value groups without changing row ord
   result <- enrichObservationWithLoincMapping(observation, mapping)
 
   expect_equal(result$obs_id, observation$obs_id)
-  expect_equal(result$value_in_reference_unit, c(0.002, 3000, 0.004))
+  expect_equal(result$analysis_value, c(0.002, 3000, 0.004))
+  expect_equal(result$analysis_unit, c("g", "umol/L", "g"))
+  expect_equal(result$analysis_loinc_code, c("mass", "amount", "mass"))
+  expect_equal(result$analysis_value_status, rep("converted", 3))
+  expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(result))
+})
+
+test_that("observation enrichment converts grouped values through a mapping unit", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = "1975-2",
+    obs_valuequantity_value = c(1, 2, NA_real_),
+    obs_valuequantity_code = "mg/dL",
+    obs_valuequantity_unit = "mg/dL"
+  )
+  mapping <- data.table::data.table(
+    LOINC = "1975-2",
+    LOINC_PRIMARY = "14631-6",
+    UNIT = "umol/L",
+    CONVERSION_FACTOR = 17.104,
+    CONVERSION_UNIT = "mg/dL"
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+
+  expect_equal(result$analysis_value, c(17.104, 34.208, NA_real_))
+  expect_equal(result$analysis_loinc_code, rep("14631-6", 3))
+  expect_equal(result$analysis_value_status, c("converted", "converted", "missing_value"))
+  expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(result))
+})
+
+test_that("observation enrichment aggregates incompatible units without warnings", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = rep("1975-2", 3),
+    obs_valuequantity_value = c(1, 2, 3),
+    obs_valuequantity_code = "mg",
+    obs_valuequantity_unit = "milligram"
+  )
+  mapping <- data.table::data.table(
+    LOINC = "1975-2",
+    LOINC_PRIMARY = "14631-6",
+    UNIT = "umol/L",
+    CONVERSION_FACTOR = 17.104,
+    CONVERSION_UNIT = "mg/dL"
+  )
+
+  output <- utils::capture.output(result <- enrichObservationWithLoincMapping(observation, mapping))
+  review <- getLoincUnitConversionReview(result, "observation")
+  context <- newLoincUnitConversionReview()
+  expect_message(
+    recordLoincUnitConversionReview(context, review),
+    'LOINC 1975-2; verwendete Einheit "mg"',
+    fixed = TRUE
+  )
+  expect_silent(recordLoincUnitConversionReview(context, review))
+  last_version_review <- data.table::copy(review)
+  last_version_review[["TABLE_NAME"]] <- "observation_last_version"
+  expect_silent(recordLoincUnitConversionReview(context, last_version_review))
+  combined_review <- finalizeLoincUnitConversionReview(context)
+  stripped <- stripSnapshotStreamingReviewColumns(data.table::copy(result))
+
+  expect_length(output, 0)
+  expect_equal(result$analysis_value, observation$obs_valuequantity_value)
+  expect_equal(result$analysis_unit, rep("mg", 3))
+  expect_equal(result$analysis_loinc_code, rep("14631-6", 3))
+  expect_equal(result$analysis_value_status, rep("source_conversion_failed", 3))
+  expect_equal(review$LOINC_CODE, "1975-2")
+  expect_equal(review$SOURCE_UNIT_CODE, "mg")
+  expect_equal(review$SOURCE_UNIT_DISPLAY, "milligram")
+  expect_equal(review$USED_SOURCE_UNIT, "mg")
+  expect_equal(review$MAPPING_CONVERSION_UNIT, "mg/dL")
+  expect_equal(review$TARGET_UNIT, "umol/L")
+  expect_equal(review$AFFECTED_ROWS, 3)
+  expect_equal(nrow(combined_review), 2)
+  expect_equal(sum(combined_review$AFFECTED_ROWS), 9)
+  expect_false(SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(stripped))
+  expect_false(SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN %in% names(stripped))
+  expect_false(SNAPSHOT_LOINC_TARGET_UNIT_COLUMN %in% names(stripped))
+})
+
+test_that("observation enrichment uses source values when no mapping exists", {
+  observation <- data.table::data.table(
+    obs_code_system = c("http://loinc.org", "http://loinc.org"),
+    obs_code_code = c("unmapped", "missing"),
+    obs_valuequantity_value = c(7, NA_real_),
+    obs_valuequantity_code = c("mg/L", NA_character_),
+    obs_valuequantity_unit = c("mg/L", NA_character_)
+  )
+  mapping <- data.table::data.table(
+    LOINC = character(),
+    LOINC_PRIMARY = character(),
+    UNIT = character(),
+    CONVERSION_FACTOR = numeric(),
+    CONVERSION_UNIT = character()
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+
+  expect_equal(result$analysis_value, c(7, NA_real_))
+  expect_equal(result$analysis_unit, c("mg/L", NA_character_))
+  expect_equal(result$analysis_loinc_code, c("unmapped", "missing"))
+  expect_equal(result$analysis_value_status, c("source_no_mapping", "missing_value"))
+})
+
+test_that("observation enrichment marks values already in the reference unit", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = "same",
+    obs_valuequantity_value = 7,
+    obs_valuequantity_code = "mg/L",
+    obs_valuequantity_unit = "mg/L"
+  )
+  mapping <- data.table::data.table(
+    LOINC = "same",
+    LOINC_PRIMARY = "primary",
+    UNIT = "mg/L",
+    CONVERSION_FACTOR = NA_real_,
+    CONVERSION_UNIT = NA_character_
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+
+  expect_equal(result$analysis_value, 7)
+  expect_equal(result$analysis_unit, "mg/L")
+  expect_equal(result$analysis_loinc_code, "primary")
+  expect_equal(result$analysis_value_status, "already_reference_unit")
+})
+
+test_that("observation enrichment falls back when the mapping target unit is missing", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = "mapped-without-unit",
+    obs_valuequantity_value = 7,
+    obs_valuequantity_code = "mg/L",
+    obs_valuequantity_unit = "mg/L"
+  )
+  mapping <- data.table::data.table(
+    LOINC = "mapped-without-unit",
+    LOINC_PRIMARY = "primary",
+    UNIT = NA_character_,
+    CONVERSION_FACTOR = NA_real_,
+    CONVERSION_UNIT = NA_character_
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+  review <- getLoincUnitConversionReview(result, "observation")
+
+  expect_equal(result$analysis_loinc_code, "primary")
+  expect_equal(result$analysis_unit, "mg/L")
+  expect_equal(result$analysis_value, 7)
+  expect_equal(result$analysis_value_status, "source_mapping_missing_unit")
+  expect_equal(review$TARGET_UNIT, NA_character_)
+  expect_equal(review$AFFECTED_ROWS, 1)
+})
+
+test_that("observation enrichment distinguishes missing source units", {
+  observation <- data.table::data.table(
+    obs_code_system = "http://loinc.org",
+    obs_code_code = c("mapped", "unmapped"),
+    obs_valuequantity_value = c(7, 8),
+    obs_valuequantity_code = NA_character_,
+    obs_valuequantity_unit = NA_character_
+  )
+  mapping <- data.table::data.table(
+    LOINC = "mapped",
+    LOINC_PRIMARY = "primary",
+    UNIT = "mg/L",
+    CONVERSION_FACTOR = NA_real_,
+    CONVERSION_UNIT = NA_character_
+  )
+
+  result <- enrichObservationWithLoincMapping(observation, mapping)
+
+  expect_equal(result$analysis_loinc_code, c("primary", "unmapped"))
+  expect_equal(result$analysis_unit, c(NA_character_, NA_character_))
+  expect_equal(result$analysis_value, c(7, 8))
+  expect_equal(
+    result$analysis_value_status,
+    c("source_missing_unit", "source_no_mapping_missing_unit")
+  )
 })
 
 test_that("medication enrichment only creates described targets", {

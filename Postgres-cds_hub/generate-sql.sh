@@ -87,6 +87,9 @@ copy_manual_base_sql "${source_sql_dir}/base" "${tmp_sql_dir}/base"
 mkdir -p "$r_lib_dir"
 R_LIBS_USER="$r_lib_dir" \
   R CMD INSTALL --preclean --no-multiarch --with-keep.source \
+  "${repo_root}/R-cds2db/cds2db"
+R_LIBS_USER="$r_lib_dir" \
+  R CMD INSTALL --preclean --no-multiarch --with-keep.source \
   "${repo_root}/R-cdstoolchain/pseudonym"
 R_LIBS_USER="$r_lib_dir" \
   R CMD INSTALL --preclean --no-multiarch --with-keep.source \

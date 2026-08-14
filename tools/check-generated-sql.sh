@@ -11,6 +11,11 @@ INTERPOLAR_DB_SQL_TARGET_DIR="$generated_sql_dir" \
 INTERPOLAR_GENERATOR_R_LIB_DIR="${tmp_dir}/r-lib" \
   bash "${repo_root}/Postgres-cds_hub/generate-sql.sh"
 
+R_LIBS_USER="${tmp_dir}/r-lib" \
+  Rscript "${repo_root}/tools/test-check-table-description-consistency.R"
+R_LIBS_USER="${tmp_dir}/r-lib" \
+  Rscript "${repo_root}/tools/check-table-description-consistency.R"
+
 compare_file() {
   local relative_path="$1"
 

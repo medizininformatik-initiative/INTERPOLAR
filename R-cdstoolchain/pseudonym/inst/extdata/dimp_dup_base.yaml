@@ -42,9 +42,11 @@ fhirPathRules:
   ### Keep if patient deceased boolean
   - path: Patient.deceased.ofType(boolean)
     method: keep
-  ### Remove if patient deceased dateTime
+  ### INTERPOLAR deviation from the original DIMP YAML: generalize deceased dateTime to month instead of redacting it
   - path: Patient.deceased.ofType(dateTime)
-    method: redact
+    method: generalize
+    cases:
+      "$this": "$this.toString().replaceMatches('(?<year>\\\\d{2,4})-(?<month>\\\\d{2})-(?<day>\\\\d{2}).*', '${year}-${month}')"
   ### Generalize BirthDate to month
   ###
   ### A Method needs to be added here to add an extension with the quarter the Patient was born in

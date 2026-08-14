@@ -1,3 +1,20 @@
+test_that("snapshot source session permits temporary resolution tables", {
+  captured <- new.env(parent = emptyenv())
+  testthat::local_mocked_bindings(
+    dbExecute = function(connection, statement) {
+      captured$connection <- connection
+      captured$statement <- statement
+      0L
+    },
+    .package = "DBI"
+  )
+
+  snapshotAllowTemporarySourceTables("source-connection")
+
+  expect_equal(captured$connection, "source-connection")
+  expect_equal(captured$statement, "SET SESSION default_transaction_read_only = off")
+})
+
 test_that("getSnapshotSourceViewPlan uses described table sources only", {
   rules <- data.table::data.table(
     SOURCE_TYPE = c("table_description", "snapshot_extension", "table_description"),
@@ -48,24 +65,105 @@ test_that("getSnapshotSourceViewPlan maps frontend rule names to frontend DB tab
   )
 })
 
+test_that("existing last-version sources split snapshot storage", {
+  rules <- data.table::data.table(
+    SOURCE_TYPE = "table_description",
+    TABLE_OR_RESOURCE = c("patient", "observation")
+  )
+  testthat::local_mocked_bindings(
+    snapshotRelationExists = function(connection, name, schema = NULL) {
+      name %in% c("v_patient", "v_patient_last_version", "v_observation")
+    }
+  )
+
+  plan <- getExistingSnapshotMaterializationPlan(
+    "connection",
+    rules,
+    source_schema = NULL,
+    source_view_prefix = "v_",
+    last_version_suffix = "_last_version",
+    tables = NULL
+  )
+
+  expect_equal(
+    plan$MATERIALIZED_TABLE_NAME,
+    c("patient_old_versions", "observation", "patient_last_version")
+  )
+  expect_equal(
+    plan$TARGET_VIEW_NAME,
+    c("v_patient_old_versions", "v_observation", "v_patient_last_version")
+  )
+  expect_equal(plan$SNAPSHOT_RELATION_TYPE, c("old_versions", "all", "last_version"))
+})
+
+test_that("snapshot views combine disjoint partitions through passthrough views", {
+  statements <- character()
+  testthat::local_mocked_bindings(
+    snapshotRelationExists = function(connection, name, schema = NULL) FALSE
+  )
+  testthat::local_mocked_bindings(
+    dbExecute = function(connection, statement) {
+      statements <<- c(statements, statement)
+      0L
+    },
+    .package = "DBI"
+  )
+  plan <- data.table::data.table(
+    BASE_TABLE_NAME = c("patient", "patient"),
+    MATERIALIZED_TABLE_NAME = c("patient_old_versions", "patient_last_version"),
+    TARGET_VIEW_NAME = c("v_patient_old_versions", "v_patient_last_version"),
+    SNAPSHOT_RELATION_TYPE = c("old_versions", "last_version")
+  )
+
+  summary <- createSnapshotPassthroughViews(
+    DBI::ANSI(),
+    plan,
+    table_schema = "db_log",
+    view_schema = "db2dataprocessor_out"
+  )
+
+  expect_equal(
+    summary$VIEW_NAME,
+    c("v_patient_old_versions", "v_patient_last_version", "v_patient")
+  )
+  combined_statement <- statements[grepl(
+    'CREATE VIEW "db2dataprocessor_out"."v_patient"',
+    statements,
+    fixed = TRUE
+  )]
+  expect_length(combined_statement, 1L)
+  expect_match(
+    combined_statement,
+    'SELECT * FROM "db2dataprocessor_out"."v_patient_old_versions"',
+    fixed = TRUE
+  )
+  expect_match(
+    combined_statement,
+    'UNION ALL SELECT * FROM "db2dataprocessor_out"."v_patient_last_version"',
+    fixed = TRUE
+  )
+})
+
 test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension columns", {
   rules <- data.table::data.table(
-    SOURCE = c("fhir", rep("snapshot_extension", 3)),
-    SOURCE_TYPE = c("table_description", rep("snapshot_extension", 3)),
-    TABLE_OR_RESOURCE = rep("observation", 4),
+    SOURCE = c("fhir", rep("snapshot_extension", 4)),
+    SOURCE_TYPE = c("table_description", rep("snapshot_extension", 4)),
+    TABLE_OR_RESOURCE = rep("observation", 5),
     COLUMN_NAME = c(
       "obs_id",
-      "value_in_reference_unit",
-      "reference_unit",
-      "primary_loinc_code"
+      "analysis_loinc_code",
+      "analysis_unit",
+      "analysis_value",
+      "analysis_value_status"
     ),
     PSEUDONYMIZATION_RULE = "keep"
   )
   observation <- data.table::data.table(
     obs_id = "obs-1",
-    value_in_reference_unit = 1000,
-    reference_unit = "umol/L",
-    primary_loinc_code = "9999-9"
+    analysis_loinc_code = "9999-9",
+    analysis_unit = "umol/L",
+    analysis_value = 1000,
+    analysis_value_status = "converted"
   )
 
   result <- pseudonymizeTableForSnapshot(
@@ -77,9 +175,10 @@ test_that("pseudonymizeTableForSnapshot keeps matching snapshot extension column
   )
 
   expect_equal(names(result$table), names(observation))
-  expect_equal(result$table$value_in_reference_unit, 1000)
-  expect_equal(result$table$reference_unit, "umol/L")
-  expect_equal(result$table$primary_loinc_code, "9999-9")
+  expect_equal(result$table$analysis_value, 1000)
+  expect_equal(result$table$analysis_unit, "umol/L")
+  expect_equal(result$table$analysis_loinc_code, "9999-9")
+  expect_equal(result$table$analysis_value_status, "converted")
 })
 
 test_that("pseudonymizeTableForSnapshot keeps unmatched source columns", {
@@ -146,6 +245,13 @@ test_that("writeSnapshotIssueReport writes bounded issue sheets", {
       FHIR_ENCOUNTER_ID = "enc-1",
       BIRTHDATE = as.Date("1980-01-01"),
       REFERENCE_DATE = as.Date("1979-01-01")
+    ),
+    loinc_unit_conversion_issues = data.table::data.table(
+      TABLE_NAME = "observation",
+      LOINC_CODE = "1975-2",
+      USED_SOURCE_UNIT = "mg",
+      TARGET_UNIT = "umol/L",
+      AFFECTED_ROWS = 5
     )
   )
 

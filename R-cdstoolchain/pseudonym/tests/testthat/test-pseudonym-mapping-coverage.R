@@ -14,7 +14,7 @@ mappingCoverageTestRules <- function() {
       'pseudonym(sheet = "wards")',
       'pseudonym(sheet = "patients")'
     ),
-    IMPLICIT_KEEP = FALSE
+    EMPTY_RULE = FALSE
   )
 }
 
@@ -100,7 +100,7 @@ test_that("mapping coverage creates sheets with sorted distinct database keys", 
       input_repo_path = input_repo_path,
       distinct_value_reader = reader
     ),
-    "Fill every empty PSEUDONYM cell"
+    "Pseudonymisierungsmapping muss ausgefüllt werden"
   )
 
   mapping_file <- file.path(input_repo_path, "pseudo_mapping.xlsx")

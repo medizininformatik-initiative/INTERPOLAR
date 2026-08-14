@@ -2,7 +2,7 @@ library(DBI)
 library(RPostgres)
 library(etlutils)
 
-etlutils::setProcess("SnapshotPseudonymization")
+invisible(etlutils::setProcess("SnapshotPseudonymization"))
 
 # Change the working directory to the main project directory.
 if (grepl("/cdstoolchain$", getwd())) setwd("../..")
@@ -21,7 +21,7 @@ command_arguments <- etlutils::initCommandLineArguments(
   )
 )
 
-required_arguments <- c("source_db", "target_db")
+required_arguments <- "source_db"
 missing_arguments <- required_arguments[
   !required_arguments %in% names(command_arguments) |
     !nzchar(as.character(command_arguments[required_arguments]))
@@ -31,9 +31,13 @@ if (length(missing_arguments) > 0) {
     "Missing required argument(s): ",
     paste(missing_arguments, collapse = ", "),
     "\nExample: Rscript R-cdstoolchain/StartSnapshotPseudonymization.R ",
-    "source-db=ip_snap01_20260716 target-db=ip_snap01_20260716_pseud"
+    "source-db=ip_snap01_20260716"
   )
 }
+mapping_preflight_only <- !(
+  "target_db" %in% names(command_arguments) &&
+    nzchar(as.character(command_arguments[["target_db"]]))
+)
 
 dataprocessor_config <- etlutils::initModule(
   "snapshot_pseudonymization",
@@ -77,64 +81,74 @@ connectSnapshotDatabase <- function(dbname, user, password) {
 source_connection <- NULL
 target_connection <- NULL
 status <- 0L
-tryCatch(
+invisible(tryCatch(
   {
     source_connection <- connectSnapshotDatabase(
       dbname = command_arguments[["source_db"]],
       user = dbConfigValue("source_db_user", dbConfigValue("db_dataprocessor_user")),
       password = dbConfigValue("source_db_password", dbConfigValue("db_dataprocessor_password"))
     )
-    target_connection <- connectSnapshotDatabase(
-      dbname = command_arguments[["target_db"]],
-      user = dbConfigValue("target_db_user", dbConfigValue("db_dataprocessor_user")),
-      password = dbConfigValue("target_db_password", dbConfigValue("db_dataprocessor_password"))
-    )
-
-    pseudonymization_result <- pseudonym::pseudonymizeSnapshotDatabase(
-      source_connection = source_connection,
-      target_connection = target_connection,
-      project_root = command_arguments[["project_root"]],
-      input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
-      source_schema = command_arguments[["source_schema"]],
-      target_table_schema = command_arguments[["target_table_schema"]],
-      target_view_schema = command_arguments[["target_view_schema"]],
-      chunk_size = command_arguments[["chunk_size"]],
-      review_report_file = command_arguments[["review_report_file"]],
-      log_steps = TRUE
-    )
-    report_dir <- file.path(
-      get("MODULE_DIRS", envir = .GlobalEnv)[["local_dir"]],
-      "reports"
-    )
-    issue_report <- pseudonymization_result[["issue_report"]]
-    medication_issue_summary <- issue_report[["medication_issue_summary"]]
-    age_issue_summary <- issue_report[["age_issue_summary"]]
-    issue_count <- sum(
-      medication_issue_summary[["UNMATCHED_ROWS"]],
-      age_issue_summary[["AFFECTED_ROWS"]],
-      na.rm = TRUE
-    )
-    issue_report_file <- file.path(
-      report_dir,
-      "snapshot_pseudonymization_issues.xlsx"
-    )
-    if (issue_count > 0) {
-      message(
-        "\nWARNING: ", issue_count,
-        " pseudonymization issues were detected.",
-        "\nISSUE REPORT: ", issue_report_file
+    if (mapping_preflight_only) {
+      pseudonym::preflightSnapshotPseudonymization(
+        project_root = command_arguments[["project_root"]],
+        input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
+        source_connection = source_connection,
+        source_schema = command_arguments[["source_schema"]],
+        review_report_file = command_arguments[["review_report_file"]],
+        log_steps = TRUE
       )
     } else {
-      message(
-        "\nNo pseudonymization issues were detected.",
-        "\nISSUE REPORT: ", issue_report_file
+      target_connection <- connectSnapshotDatabase(
+        dbname = command_arguments[["target_db"]],
+        user = dbConfigValue("target_db_user", dbConfigValue("db_dataprocessor_user")),
+        password = dbConfigValue("target_db_password", dbConfigValue("db_dataprocessor_password"))
       )
+
+      pseudonymization_result <- pseudonym::pseudonymizeSnapshotDatabase(
+        source_connection = source_connection,
+        target_connection = target_connection,
+        project_root = command_arguments[["project_root"]],
+        input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
+        source_schema = command_arguments[["source_schema"]],
+        target_table_schema = command_arguments[["target_table_schema"]],
+        target_view_schema = command_arguments[["target_view_schema"]],
+        chunk_size = command_arguments[["chunk_size"]],
+        review_report_file = command_arguments[["review_report_file"]],
+        mapping_preflight_completed = TRUE,
+        log_steps = TRUE
+      )
+      report_dir <- file.path(get("MODULE_DIRS", envir = .GlobalEnv)[["local_dir"]], "reports")
+      issue_report <- pseudonymization_result[["issue_report"]]
+      medication_issue_summary <- issue_report[["medication_issue_summary"]]
+      age_issue_summary <- issue_report[["age_issue_summary"]]
+      loinc_unit_issues <- issue_report[["loinc_unit_conversion_issues"]]
+      issue_count <- sum(
+        medication_issue_summary[["UNMATCHED_ROWS"]],
+        age_issue_summary[["AFFECTED_ROWS"]],
+        loinc_unit_issues[["AFFECTED_ROWS"]],
+        na.rm = TRUE
+      )
+      issue_report_file <- file.path(report_dir, "snapshot_pseudonymization_issues.xlsx")
+      if (issue_count > 0) {
+        message(
+          "\nWARNING: ", issue_count,
+          " pseudonymization issues were detected.",
+          "\nISSUE REPORT: ", issue_report_file
+        )
+      } else {
+        message(
+          "\nNo pseudonymization issues were detected.",
+          "\nISSUE REPORT: ", issue_report_file
+        )
+      }
+      invisible(pseudonymization_result)
     }
-    invisible(pseudonymization_result)
   },
   error = function(error) {
     status <<- 1L
-    etlutils::catErrorMessage(conditionMessage(error))
+    if (!etlutils::isErrorOccured()) {
+      etlutils::catErrorMessage(conditionMessage(error))
+    }
   },
   finally = {
     if (!is.null(source_connection) && DBI::dbIsValid(source_connection)) {
@@ -144,7 +158,7 @@ tryCatch(
       DBI::dbDisconnect(target_connection)
     }
   }
-)
+))
 
 if (!interactive()) {
   quit(status = status, save = "no")

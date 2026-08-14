@@ -129,8 +129,14 @@ createDIRS <- function(module_name, showWarnings = FALSE) {
 
   # copy the cache from last run to current run
   cache_dir_name <- paste0(module_dirs$local_dir, "/", module_dirs$local_cache_dir_name)
-  old_cache_dir_name <- paste0(module_dirs$last_local_dir, "/", module_dirs$local_cache_dir_name)
-  if (!file.rename(old_cache_dir_name, cache_dir_name)) {
+  cache_moved <- FALSE
+  if (!is.na(module_dirs$last_local_dir)) {
+    old_cache_dir_name <- paste0(module_dirs$last_local_dir, "/", module_dirs$local_cache_dir_name)
+    if (dir.exists(old_cache_dir_name)) {
+      cache_moved <- file.rename(old_cache_dir_name, cache_dir_name)
+    }
+  }
+  if (!cache_moved) {
     dir.create(cache_dir_name, recursive = TRUE, showWarnings = showWarnings)
   }
   return(module_dirs)

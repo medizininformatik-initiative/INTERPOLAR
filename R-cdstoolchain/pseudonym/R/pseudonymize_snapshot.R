@@ -1,19 +1,54 @@
 pseudonymizationReviewHasBlockingProblems <- function(review_report) {
-  nrow(review_report[["todo_rules"]]) > 0 ||
+  nrow(review_report[["empty_rules"]]) > 0 ||
+    nrow(review_report[["todo_rules"]]) > 0 ||
     nrow(review_report[["unsupported_rules"]]) > 0 ||
     nrow(review_report[["duplicate_columns"]]) > 0 ||
     any(isPseudonymMappingStatusProblem(review_report[["mapping_rules"]][["MAPPING_STATUS"]]))
 }
 
 summarizePseudonymizationReviewProblems <- function(review_report) {
-  c(
-    paste0("TODO rules: ", nrow(review_report[["todo_rules"]])),
-    paste0("Unsupported rules: ", nrow(review_report[["unsupported_rules"]])),
-    paste0("Duplicate columns: ", nrow(review_report[["duplicate_columns"]])),
+  counts <- c(
+    "Empty rules" = nrow(review_report[["empty_rules"]]),
+    "TODO rules" = nrow(review_report[["todo_rules"]]),
+    "Unsupported rules" = nrow(review_report[["unsupported_rules"]]),
+    "Duplicate columns" = nrow(review_report[["duplicate_columns"]]),
+    "Mapping problems" = sum(isPseudonymMappingStatusProblem(
+      review_report[["mapping_rules"]][["MAPPING_STATUS"]]
+    ))
+  )
+  counts <- counts[counts > 0]
+  paste0(names(counts), ": ", counts)
+}
+
+getIncompletePseudonymMappingSheets <- function(review_report) {
+  has_other_problems <- nrow(review_report[["empty_rules"]]) > 0 ||
+    nrow(review_report[["todo_rules"]]) > 0 ||
+    nrow(review_report[["unsupported_rules"]]) > 0 ||
+    nrow(review_report[["duplicate_columns"]]) > 0
+  mapping_rules <- review_report[["mapping_rules"]]
+  problem_rows <- isPseudonymMappingStatusProblem(mapping_rules[["MAPPING_STATUS"]])
+  mapping_problems <- mapping_rules[which(problem_rows), ]
+  incomplete_rows <- mapping_problems[["MAPPING_STATUS"]] == "invalid_sheet" &
+    grepl("empty KEY or PSEUDONYM", mapping_problems[["ERROR"]], fixed = TRUE)
+  incomplete_rows[is.na(incomplete_rows)] <- FALSE
+  if (has_other_problems || nrow(mapping_problems) == 0 || !all(incomplete_rows)) {
+    return(character())
+  }
+  sort(unique(mapping_problems[["SHEET_NAME"]]))
+}
+
+getIncompletePseudonymMappingMessage <- function(sheets, input_repo_path) {
+  mapping_file <- getPseudonymMappingFilePath(input_repo_path)
+  sheet_text <- paste(sprintf('"%s"', sheets), collapse = ", ")
+  paste(
+    "Pseudonymisierungsmapping muss ausgefüllt werden.",
+    paste0("Excel-Datei: ", mapping_file),
+    paste0("Betroffene Blätter: ", sheet_text),
     paste0(
-      "Mapping problems: ",
-      sum(isPseudonymMappingStatusProblem(review_report[["mapping_rules"]][["MAPPING_STATUS"]]))
-    )
+      "Öffne die Excel-Datei und fülle in diesen Blättern alle leeren Zellen ",
+      "der Spalte PSEUDONYM aus."
+    ),
+    sep = "\n"
   )
 }
 
@@ -104,8 +139,8 @@ pseudonymizationMappingProblemAction <- function(review_report) {
     result <- c(
       result,
       paste0(
-        "- In sheet \"frontend_users\", replace the example rows: KEY must contain ",
-        "the original frontend user names and PSEUDONYM their desired replacements."
+        "- In sheet \"frontend_users\", KEY contains the original frontend user names; ",
+        "enter their desired replacements in PSEUDONYM."
       )
     )
   }
@@ -127,15 +162,21 @@ pseudonymizationReviewReportHint <- function(write_review_report, review_report_
   }
   paste0(
     "Full details: ", report_file,
-    " (relevant sheets: todo_rules, unsupported_rules, duplicate_columns, mapping_rules)."
+    " (relevant sheets: empty_rules, todo_rules, unsupported_rules, ",
+    "duplicate_columns, mapping_rules)."
   )
 }
 
 getPseudonymizationReviewErrorMessage <- function(
   review_report,
+  input_repo_path,
   write_review_report,
   review_report_file
 ) {
+  incomplete_mapping_sheets <- getIncompletePseudonymMappingSheets(review_report)
+  if (length(incomplete_mapping_sheets) > 0) {
+    return(getIncompletePseudonymMappingMessage(incomplete_mapping_sheets, input_repo_path))
+  }
   paste(
     c(
       "Pseudonymization rule review contains blocking problems:",
@@ -176,6 +217,7 @@ reviewPseudonymizationRules <- function(
     stop(
       getPseudonymizationReviewErrorMessage(
         review_report,
+        input_repo_path,
         write_review_report,
         review_report_file
       )
@@ -186,12 +228,19 @@ reviewPseudonymizationRules <- function(
 
 #' Check Snapshot Pseudonymization Prerequisites
 #'
-#' Loads the default snapshot pseudonymization rules, writes their static review
-#' report, and aborts on blocking rule problems. Data-dependent mapping coverage
-#' is checked later by the database pseudonymization run.
+#' Loads the default snapshot pseudonymization rules, writes their review report,
+#' and aborts on blocking rule problems. If a source database connection is
+#' supplied, the function also updates and validates the data-dependent mapping
+#' coverage before a pseudonymized target database is created.
 #'
 #' @param project_root Repository root used to resolve rule sources.
 #' @param input_repo_path TOML-configured input repository directory.
+#' @param source_connection Optional open DBI connection to the restored source
+#'   database.
+#' @param source_schema Optional schema containing source views.
+#' @param source_view_prefix Prefix used for source view names.
+#' @param last_version_suffix Suffix used for last-version source views.
+#' @param tables Optional character vector limiting tables to inspect.
 #' @param review_report_file Optional explicit report path. If `NA`, the report
 #'   is written to `outputLocal/<MODULE>/reports`.
 #' @param log_steps If `TRUE` and module logging is initialized, wrap the
@@ -202,6 +251,11 @@ reviewPseudonymizationRules <- function(
 preflightSnapshotPseudonymization <- function(
   project_root = ".",
   input_repo_path = NULL,
+  source_connection = NULL,
+  source_schema = NULL,
+  source_view_prefix = "v_",
+  last_version_suffix = SNAPSHOT_LAST_VERSION_SUFFIX,
+  tables = NULL,
   review_report_file = NA,
   log_steps = TRUE
 ) {
@@ -221,10 +275,18 @@ preflightSnapshotPseudonymization <- function(
   runPseudonymizationLogStep(2L,
     "Review pseudonymization rules",
     {
+      mapping_file <- if (
+        !is.null(input_repo_path) && length(input_repo_path) == 1L &&
+          !is.na(input_repo_path) && nzchar(input_repo_path)
+      ) {
+        getPseudonymMappingFilePath(input_repo_path)
+      } else {
+        NA_character_
+      }
       result[["review_report"]] <- reviewPseudonymizationRules(
         result[["rules"]],
         input_repo_path = input_repo_path,
-        validate_mapping_files = FALSE,
+        validate_mapping_files = !is.na(mapping_file) && file.exists(mapping_file),
         fail_on_review_problems = TRUE,
         write_review_report = TRUE,
         review_report_file = review_report_file
@@ -232,6 +294,50 @@ preflightSnapshotPseudonymization <- function(
     },
     log_steps = log_steps
   )
+
+  if (!is.null(source_connection)) {
+    runPseudonymizationLogStep(2L,
+      "Plan snapshot source relations",
+      {
+        result[["materialization_plan"]] <- getExistingSnapshotMaterializationPlan(
+          source_connection,
+          rules = result[["rules"]],
+          source_schema = source_schema,
+          source_view_prefix = source_view_prefix,
+          last_version_suffix = last_version_suffix,
+          tables = tables
+        )
+      },
+      log_steps = log_steps
+    )
+    runPseudonymizationLogStep(2L,
+      "Prepare and validate pseudonym mapping workbook",
+      {
+        result[["mapping_coverage"]] <- ensurePseudonymMappingCoverage(
+          connection = source_connection,
+          rules = result[["rules"]],
+          materialization_plan = result[["materialization_plan"]],
+          input_repo_path = input_repo_path,
+          source_schema = source_schema
+        )
+      },
+      log_steps = log_steps
+    )
+    runPseudonymizationLogStep(2L,
+      "Validate pseudonym mapping workbook",
+      {
+        result[["review_report"]] <- reviewPseudonymizationRules(
+          result[["rules"]],
+          input_repo_path = input_repo_path,
+          validate_mapping_files = TRUE,
+          fail_on_review_problems = TRUE,
+          write_review_report = TRUE,
+          review_report_file = review_report_file
+        )
+      },
+      log_steps = log_steps
+    )
+  }
 
   result
 }

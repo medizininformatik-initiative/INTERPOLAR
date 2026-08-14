@@ -2,8 +2,15 @@ normalizePseudonymizationRule <- function(rule) {
   rule <- trimws(as.character(rule))
   rule <- gsub("_x000D_", "\n", rule, fixed = TRUE)
   rule <- gsub("&#10;", "\n", rule, fixed = TRUE)
-  rule[is.na(rule) | !nzchar(rule)] <- "keep"
+  rule[!is.na(rule) & !nzchar(rule)] <- NA_character_
   rule
+}
+
+assertPseudonymizationRulesNotEmpty <- function(rule) {
+  if (any(is.na(rule) | !nzchar(rule))) {
+    stop("PSEUDONYMIZATION_RULE must not be empty.")
+  }
+  invisible(rule)
 }
 
 stripRuleQuotes <- function(value) {
@@ -156,6 +163,7 @@ getPseudonymizationColumnRules <- function(table_description, table_name = NULL)
   ]
   table_description[[PSEUDONYMIZATION_RULE_COLNAME]] <-
     normalizePseudonymizationRule(table_description[[PSEUDONYMIZATION_RULE_COLNAME]])
+  assertPseudonymizationRulesNotEmpty(table_description[[PSEUDONYMIZATION_RULE_COLNAME]])
 
   column_names <- table_description[["COLUMN_NAME"]]
   duplicated_columns <- unique(column_names[
@@ -525,6 +533,7 @@ applyPseudonymizationRuleToVector <- function(
   fhir_expression = NA_character_
 ) {
   rule <- normalizePseudonymizationRule(rule)
+  assertPseudonymizationRulesNotEmpty(rule)
   parsed_rule <- parsePseudonymizationRuleCall(rule)
   action <- parsed_rule$action
   if (action == "keepIf") action <- "keep"
@@ -621,6 +630,7 @@ applyPseudonymizationRuleToVector <- function(
 
 applyRuleListToColumn <- function(table, source_table, column_name, fhir_expression, rule, table_description, mapping_context = NULL) {
   rule <- normalizePseudonymizationRule(rule)
+  assertPseudonymizationRulesNotEmpty(rule)
   rule_list <- trimws(splitRuleList(rule))
   rule_list <- rule_list[nzchar(rule_list)]
   if (length(rule_list) == 0 || identical(rule_list, "keep")) {
@@ -678,7 +688,8 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
 #' Pseudonymize a Table Using Table Description Rules
 #'
 #' Applies `PSEUDONYMIZATION_RULE` values from a table description to one
-#' `data.table`. Empty or missing rules are treated as `keep`.
+#' `data.table`. Empty or missing rules are rejected; unchanged columns require
+#' an explicit `keep` rule.
 #' `pseudonymize(...)` is executed as an alias of `cryptoHash`; the optional
 #' `domain` argument remains a readable table-description annotation but does
 #' not change the generated hash.

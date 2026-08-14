@@ -44,6 +44,21 @@ test_that("month-generalized dates do not invent a day", {
   expect_equal(result$birthdate, c("1980-05", "1975-12", NA_character_))
 })
 
+test_that("month-generalized timestamps retain only year and month", {
+  source_table <- data.table::data.table(
+    deceased_datetime = as.POSIXct(c("2024-07-18 13:45:00", NA_character_), tz = "UTC")
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = "Patient",
+    COLUMN_NAME = "deceased_datetime",
+    PSEUDONYMIZATION_RULE = 'generalize(format = "YYYY-MM")'
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_equal(result$deceased_datetime, c("2024-07", NA_character_))
+})
+
 test_that("conditional rules use first match and redact unmatched rows", {
   source_table <- data.table::data.table(
     identifier_type_system = c("https://example.test", "https://example.test", "other"),
@@ -59,8 +74,8 @@ test_that("conditional rules use first match and redact unmatched rows", {
       "identifier/value"
     ),
     PSEUDONYMIZATION_RULE = c(
-      NA_character_,
-      NA_character_,
+      "keep",
+      "keep",
       paste0(
         "pseudonymize(domain = \"encounter-vn\"; ",
         "type.coding.system == \"https://example.test\" & type.coding.code == \"VN\")"
@@ -90,8 +105,8 @@ test_that("conditional rules tolerate Excel escaped line breaks", {
       "identifier/value"
     ),
     PSEUDONYMIZATION_RULE = c(
-      NA_character_,
-      NA_character_,
+      "keep",
+      "keep",
       paste0(
         "pseudonymize(domain = \"encounter-vn\"; ",
         "type.coding.system == \"https://example.test\" & type.coding.code == \"VN\");",
@@ -132,8 +147,8 @@ test_that("conditional rules honor explicit keep and redact fallbacks", {
       "identifier/value"
     ),
     PSEUDONYMIZATION_RULE = c(
-      NA_character_,
-      NA_character_,
+      "keep",
+      "keep",
       paste0(
         "redactIf(type.coding.system == \"https://example.test\" & ",
         "type.coding.code == \"GKV\"); keep"
@@ -166,7 +181,7 @@ test_that("conditional rules treat NA conditions as not matched", {
     COLUMN_NAME = c("identifier_type_system", "identifier_value"),
     FHIR_EXPRESSION = c("identifier/type/coding/system", "identifier/value"),
     PSEUDONYMIZATION_RULE = c(
-      NA_character_,
+      "keep",
       "keepIf(type.coding.system == \"https://example.test\"); redact"
     )
   )
@@ -262,7 +277,7 @@ test_that("pseudonymize rules execute as cryptoHash aliases", {
   expect_equal(result$id_pseudonymize, result$id_crypto)
 })
 
-test_that("empty rules default to keep and explicit table filtering is respected", {
+test_that("empty rules fail and explicit keep rules preserve values", {
   source_table <- data.table::data.table(id = "abc", value = "visible")
   table_description <- data.table::data.table(
     TABLE_NAME = c("other", "target", NA),
@@ -270,6 +285,12 @@ test_that("empty rules default to keep and explicit table filtering is respected
     PSEUDONYMIZATION_RULE = c("keep", NA_character_, "keep")
   )
 
+  expect_error(
+    pseudonymizeTable(source_table, table_description, "target"),
+    "PSEUDONYMIZATION_RULE must not be empty"
+  )
+
+  table_description$PSEUDONYMIZATION_RULE[2] <- "keep"
   result <- pseudonymizeTable(source_table, table_description, "target")
 
   expect_equal(result$id, "abc")
