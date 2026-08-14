@@ -1,0 +1,33 @@
+name: Enhancement
+description: Make a proposal for a feature.
+title: "[ENH]: ..."
+labels: [enhancement]
+
+
+body:
+- type: markdown
+  attributes:
+    value: >
+      Check the [Contributor Guide](CONTRIBUTING.md) for more information.
+
+- type: textarea
+  attributes:
+    label: "Describe the enhancement or feature request:"
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: "Link to discussion and related issues"
+    description: >
+      << link here >>
+  validations:
+    required: false
+
+- type: textarea
+  attributes:
+    label: "Proposed implementation"
+    description: >
+      << proposed implementation here >>
+  validations:
+    required: false
