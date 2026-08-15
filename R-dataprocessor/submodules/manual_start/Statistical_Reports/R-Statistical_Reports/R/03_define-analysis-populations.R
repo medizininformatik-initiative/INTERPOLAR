@@ -66,20 +66,5 @@ filterFullAnalysisSet1 <- function(
 
 #------------------------------------------------------------------------------#
 
-# TODO: identify proper lenght of first interpolar ward contact --------
-# TODO: implement rules for combining short absences? -------
-# TODO: include all patients with documented medication analysis within the first 7 days -------------
+# TODO: implement rules for combining short absences for determining length of first interpolar ward contact? -------
 # TODO: handle NA end-dates properly (e.g. deceased) -------------
-
-# defineFAS2_1 <- function(full_analysis_set_1, report_period_end) {
-#   FAS2_1 <- full_analysis_set_1 |>
-#     dplyr::filter(dplyr::case_when(
-#       !is.na(enc_period_end) ~
-#         as.numeric(enc_period_end - enc_period_start) >= 7,
-#       is.na(enc_period_end) & enc_status == "in-progress" ~
-#         as.numeric(as.POSIXct(report_period_end) - enc_period_start) >= 7
-#     )) |>
-#     dplyr::distinct()
-#
-#   return(FAS2_1)
-# }

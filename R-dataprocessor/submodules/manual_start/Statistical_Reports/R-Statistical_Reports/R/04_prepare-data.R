@@ -269,6 +269,7 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       time_var = enc_period_start
     ) |>
     addCalendarWeek(reference_date_col = {{ calendar_week_reference_date_col }}) |>
+    calculateWardStayPeriod() |>
     dplyr::mutate(unverified_pat_or_sub_enc = dplyr::if_else(
       patient_complete == "Unverified" | fall_complete == "Unverified",
       TRUE, FALSE, missing = FALSE
@@ -377,7 +378,21 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       enc_period_start = enc_period_start,
       meda_id = meda_id,
       first_enc_period_start_col = first_enc_period_start_per_main_enc
-    )
+    ) |>
+      # include patient in analysis set fas2.1 if the ward stay >= 7 days & or if its is less
+      # but medication analysis was recorded
+      dplyr::mutate(
+        FAS2_1_inclusion = dplyr::if_else(
+          !is.na(ward_stay_period) &
+            (
+              ward_stay_period >= 7 |
+                (ward_stay_period < 7 & sub_enc_any_completed_medication_analysis)
+            ),
+          TRUE,
+          FALSE,
+          missing = FALSE
+        )
+      )
   }
 
   return(frontend_summary_prep)
@@ -456,13 +471,4 @@ addFeDataToF1data <- function(F1_data, frontend_summary_data) {
     )
 
   return(F1_data_with_fe)
-}
-
-# TODO: prepare F2 data for calculation -----------------------------------------------
-prepareF2data <- function(FAS2_1, report_period_start, report_period_end) {
-  F2_prep <- FAS2_1 |>
-    dplyr::filter(enc_period_start >= as.POSIXct(report_period_start)) |> # only admission to INTEROPLAR ward in reporting period
-    dplyr::filter(enc_period_start < as.POSIXct(report_period_end)) |>
-    dplyr::distinct()
-  return(F2_prep)
 }

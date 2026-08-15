@@ -338,6 +338,29 @@ addFirstEncPeriodStartPerMainEnc <- function(
     dplyr::relocate(first_enc_period_start_per_main_enc, .after = {{ time_var }})
 }
 
+#' Calculate Ward Stay Period
+#'
+#' Calculates the duration of a ward stay based on the difference between
+#' encounter period end and start timestamps.
+#'
+#' The resulting ward stay duration is calculated in days and added as a new
+#' column named `ward_stay_period`.
+#'
+#' @param frontend_table A data frame containing encounter period start and
+#'   end information.
+#'
+#' @return A data frame containing the original data and an additional
+#'   `ward_stay_period` column representing the ward stay duration in days.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @export
+calculateWardStayPeriod <- function(frontend_table) {
+  frontend_table_with_ward_stay <- frontend_table |>
+    dplyr::mutate(ward_stay_period = curated_enc_period_end - enc_period_start) |>
+    dplyr::mutate(ward_stay_period = as.numeric(ward_stay_period, units = "days")) |>
+    dplyr::relocate(ward_stay_period, .after = curated_enc_period_end)
+}
 
 #' Merge Patient and Encounter Data
 #'

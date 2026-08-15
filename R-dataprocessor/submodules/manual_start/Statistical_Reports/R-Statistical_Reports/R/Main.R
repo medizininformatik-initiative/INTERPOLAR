@@ -383,10 +383,14 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     grouping_variables = c("ward_name", "calendar_week")
   )
 
-  frontend_summary_only_first_ward_stay_and_meda <- calculateFeSummary(frontend_summary_data_only_first_ward_stay_and_meda)
+  frontend_summary_only_first_ward_stay_and_meda <- calculateFeSummary(
+    frontend_summary_data_only_first_ward_stay_and_meda,
+    includeFAS2_1_counting = TRUE
+  )
   frontend_summary_weekly_only_first_ward_stay_and_meda <- calculateFeSummary(
     frontend_summary_data_only_first_ward_stay_and_meda,
-    grouping_variables = c("ward_name", "calendar_week")
+    grouping_variables = c("ward_name", "calendar_week"),
+    includeFAS2_1_counting = TRUE
   )
 
   # statistical_report <- calculateF1(statistical_report_data) |>
@@ -538,7 +542,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     footnote = c("Medication analysis and mrp counts: for only the first documented medication analysis of the first
                  INTERPOLAR ward contact for each case; inclusion in reporting period is defined by
                  the ward stay boundaries of each case"),
-    colnames = c("ward", colnames_reporting_counts)
+    colnames = c("ward", colnames_reporting_counts, "encounters in FAS2_1")
   )
 
   frontend_summary_weekly_html_table_only_first_ward_stay_and_meda <- etlutils::buildHtmlTable(
@@ -557,7 +561,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     footnote = c("Medication analysis and mrp counts: for only the first documented medication analysis of the first
                  INTERPOLAR ward contact for each case; inclusion in reporting period is defined by
                  the ward stay boundaries of each case"),
-    colnames = c("ward", "calendar week", colnames_reporting_counts)
+    colnames = c("ward", "calendar week", colnames_reporting_counts, "encounters in FAS2_1")
   )
 
   etlutils::writeHtmlPage(
