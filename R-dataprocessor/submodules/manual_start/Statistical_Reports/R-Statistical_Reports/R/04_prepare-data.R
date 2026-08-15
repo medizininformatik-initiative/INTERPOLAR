@@ -189,6 +189,8 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #' @param calendar_week_reference_date_col A date or date-time column used
 #'   as the reference for calculating the calendar week. The column should
 #'   be supplied unquoted.
+#' @param first_ward_stay_and_meda_filter A logical flag indicating whether to
+#'  restrict the data to the first ward stay and its first medication analysis
 #'
 #' @return A data frame containing enriched front-end summary data restricted
 #'   to the specified reporting period. The result includes derived variables
@@ -258,7 +260,8 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #' @export
 prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end,
                                  report_period_boundary = c("hospital_stay", "ward_stay"),
-                                 calendar_week_reference_date_col) {
+                                 calendar_week_reference_date_col,
+                                 first_ward_stay_and_meda_filter = FALSE) {
   frontend_summary_prep <- frontend_table |>
     CombineWardsForAnalysis() |>
     addFirstEncPeriodStartPerMainEnc(
@@ -364,6 +367,17 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       dplyr::filter(is.na(curated_enc_period_end) | curated_enc_period_end >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
       dplyr::filter(enc_period_start < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
       dplyr::distinct()
+  }
+
+  if (first_ward_stay_and_meda_filter) {
+    frontend_summary_prep <- filterFullAnalysisSet1(
+      frontend_summary_prep,
+      main_enc_id = main_enc_id,
+      sub_enc_id = enc_id,
+      enc_period_start = enc_period_start,
+      meda_id = meda_id,
+      first_enc_period_start_col = first_enc_period_start_per_main_enc
+    )
   }
 
   return(frontend_summary_prep)

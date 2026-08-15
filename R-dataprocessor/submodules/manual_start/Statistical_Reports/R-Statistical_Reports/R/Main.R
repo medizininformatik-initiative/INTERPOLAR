@@ -72,6 +72,9 @@
 #' \item Calculates front-end summaries using both hospitalization dates and defined ward
 #' stay boundaries. Weekly summaries are calculated for both approaches.
 #'
+#' \item Calculates front-end summaries for only the first ward stay and first medication analysis
+#' per case, with weekly summaries.
+#'
 #' \item Writes the resulting summary tables to the global output as an
 #' HTML report. If WRITE_TABLE_LOCAL is TRUE, intermediate datasets
 #' are additionally written to the local output folder.
@@ -238,9 +241,6 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     # addFallIdAndStudienphase(fall_fe_table) |>
     ExpandProcessingExclusionReasonToAllEncounterLevels()
 
-  # TODO: implement FAS1 definition new -----------
-  # full_analysis_set_1 <- defineFullAnalysisSet1(FHIR_table_with_ward_name_and_record_id)
-
   frontend_table <- mergePatFeFallFe(patient_fe_table, fall_fe_table) |>
     restrictToDefinedWards() |>
     calculateAge(
@@ -297,14 +297,19 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     calendar_week_reference_date_col = first_enc_period_start_per_main_enc
   )
 
+  frontend_summary_data_only_first_ward_stay_and_meda <- prepareFeSummaryData(
+    frontend_table, REPORT_PERIOD_START,
+    REPORT_PERIOD_END,
+    report_period_boundary = "ward_stay",
+    calendar_week_reference_date_col = first_enc_period_start_per_main_enc,
+    first_ward_stay_and_meda_filter = TRUE
+  )
+
   # statistical_report_data <- prepareF1data(
   #   full_analysis_set_1, REPORT_PERIOD_START,
   #   REPORT_PERIOD_END
   # ) |>
   #   addFeDataToF1data(frontend_summary_data)
-
-  # FAS2_1 <- defineFAS2_1(full_analysis_set_1, REPORT_PERIOD_END)
-  # F2_data <- prepareF2data(FAS2_1, REPORT_PERIOD_START, REPORT_PERIOD_END)
 
   # if needed: Print datasets for verification to outputLocal
   if (WRITE_TABLE_LOCAL) {
@@ -360,6 +365,10 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
       list(etlutils::buildHtmlTable(frontend_summary_data_ward_stay_defined)),
       pagename = "frontend_summary_data_ward_stay_defined"
     )
+    etlutils::writeHtmlPage(
+      list(etlutils::buildHtmlTable(frontend_summary_data_only_first_ward_stay_and_meda)),
+      pagename = "frontend_summary_data_only_first_ward_stay_and_meda"
+    )
   }
 
   frontend_summary <- calculateFeSummary(frontend_summary_data)
@@ -371,6 +380,12 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
   frontend_summary_ward_stay_defined <- calculateFeSummary(frontend_summary_data_ward_stay_defined)
   frontend_summary_weekly_ward_stay_defined <- calculateFeSummary(
     frontend_summary_data_ward_stay_defined,
+    grouping_variables = c("ward_name", "calendar_week")
+  )
+
+  frontend_summary_only_first_ward_stay_and_meda <- calculateFeSummary(frontend_summary_data_only_first_ward_stay_and_meda)
+  frontend_summary_weekly_only_first_ward_stay_and_meda <- calculateFeSummary(
+    frontend_summary_data_only_first_ward_stay_and_meda,
     grouping_variables = c("ward_name", "calendar_week")
   )
 
@@ -507,12 +522,52 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     colnames = c("ward", "calendar week", colnames_reporting_counts)
   )
 
+  frontend_summary_html_table_only_first_ward_stay_and_meda <- etlutils::buildHtmlTable(
+    frontend_summary_only_first_ward_stay_and_meda,
+    filename_without_extension = paste0("frontend_summary_only_first_ward_stay_and_meda_", format(Sys.Date(), "%Y%m%d")),
+    caption = paste0(
+      "First Ward-Stay and Medication Analysis defined Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
+      REPORT_PERIOD_END, " (hospitalizations from: ", getFirstCaseDateInFe(frontend_summary_data_only_first_ward_stay_and_meda), " to ",
+      getLastCaseDateInFe(frontend_summary_data_only_first_ward_stay_and_meda), "; wards: ",
+      paste0(
+        getWardStartsAndEnds()$ward_name, " (", getWardStartsAndEnds()$ward_start, " to ",
+        getWardStartsAndEnds()$ward_end, ")",
+        collapse = "; "
+      ), ")"
+    ),
+    footnote = c("Medication analysis and mrp counts: for only the first documented medication analysis of the first
+                 INTERPOLAR ward contact for each case; inclusion in reporting period is defined by
+                 the ward stay boundaries of each case"),
+    colnames = c("ward", colnames_reporting_counts)
+  )
+
+  frontend_summary_weekly_html_table_only_first_ward_stay_and_meda <- etlutils::buildHtmlTable(
+    frontend_summary_weekly_only_first_ward_stay_and_meda,
+    filename_without_extension = paste0("frontend_summary_weekly_only_first_ward_stay_and_meda_", format(Sys.Date(), "%Y%m%d")),
+    caption = paste0(
+      "Weekly First Ward-Stay and Medication Analysis defined Front-End Summary for period: ", REPORT_PERIOD_START, " to ",
+      REPORT_PERIOD_END, " (hospitalizations from: ", getFirstCaseDateInFe(frontend_summary_data_only_first_ward_stay_and_meda), " to ",
+      getLastCaseDateInFe(frontend_summary_data_only_first_ward_stay_and_meda), "; wards: ",
+      paste0(
+        getWardStartsAndEnds()$ward_name, " (", getWardStartsAndEnds()$ward_start, " to ",
+        getWardStartsAndEnds()$ward_end, ")",
+        collapse = "; "
+      ), ")"
+    ),
+    footnote = c("Medication analysis and mrp counts: for only the first documented medication analysis of the first
+                 INTERPOLAR ward contact for each case; inclusion in reporting period is defined by
+                 the ward stay boundaries of each case"),
+    colnames = c("ward", "calendar week", colnames_reporting_counts)
+  )
+
   etlutils::writeHtmlPage(
     html_content_list = list(
       frontend_summary_html_table,
       frontend_summary_weekly_html_table,
       frontend_summary_html_table_ward_stay_defined,
-      frontend_summary_weekly_html_table_ward_stay_defined
+      frontend_summary_weekly_html_table_ward_stay_defined,
+      frontend_summary_html_table_only_first_ward_stay_and_meda,
+      frontend_summary_weekly_html_table_only_first_ward_stay_and_meda
     ),
     output_location = "global",
     pagename = "INTERPOLAR-Reporting"

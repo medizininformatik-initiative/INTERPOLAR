@@ -14,6 +14,8 @@ Es wird eine html Datei in OutputGlobal ((../outputGlobal/dataprocessor/reports/
 
 - In der dritten und vierten Tabelle werden die gezählten Fälle nicht durch die Zeiten des Krankenhausaufenthalt sondern durch die Zeiten des Stationsaufenthalts begrenzt
 
+- In der fünften und sechsten Tabelle werden die gezählten Fälle zusätzlich gefiltert auf den ersten INTERPOLAR-Stationsaufenthalt sowie dessen erste Medikationsanalyse
+
 - Es ist eine Suche ("Search" im oberen rechten Rand) sowie eine Sortierung (Klicken auf die Spaltennamen) und Filterung der Tabelleneinträge möglich. Über den Download-Button im oberen linken Rand kann wahlweise eine csv-Datei oder Excel-Datei der Tabelleneinträge erzeugt werden.
 
 - Die Tabellen beinhalten die Zählungen für alle im Frontend dokumentierten Fälle. War ein Fall auf mehreren INTERPOLAR-Stationen, wird er auf jeder seiner Stationen gezählt, wodurch die Summe über alle Stationen einzeln höher als die angezeigte Gesamtanzahl der Fälle sein kann.
