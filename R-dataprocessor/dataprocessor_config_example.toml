@@ -25,13 +25,13 @@ VERBOSE               = 10 # Retrieval / analysis verbose level
 #################
 MAX_DIR_COUNT = 5
 
+[analyse]
+
 #################
-# Short code identifying this site. The value must be listed in
+# Short code identifying the clinic location. The value must be listed in
 # dataprocessor/inst/extdata/Standortkuerzel.xlsx.
 #################
 SITE_CODE = "UKB"
-
-[analyse]
 
 #################
 # Define the phase times for every ward. ward_name, phase_a_start,

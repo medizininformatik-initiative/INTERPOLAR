@@ -34,6 +34,31 @@ getTestFallvignetteSourceData <- function(mapping) {
   ))
   data.table::set(
     source_data,
+    j = "source_record_id",
+    value = c("source-1", "source-2")
+  )
+  data.table::set(
+    source_data,
+    j = "pat_id",
+    value = c("patient-1", "patient-2")
+  )
+  data.table::set(
+    source_data,
+    j = "fall_id",
+    value = c("fall-1", "fall-2")
+  )
+  data.table::set(
+    source_data,
+    j = "meda_id",
+    value = c("meda-1", "meda-2")
+  )
+  data.table::set(
+    source_data,
+    j = "ret_id",
+    value = c("ret-1", "ret-2")
+  )
+  data.table::set(
+    source_data,
     j = "fall_station",
     value = c("Station 1", "Station 2")
   )
@@ -74,6 +99,11 @@ getTestFallvignetteSourceData <- function(mapping) {
   )
   data.table::set(
     source_data,
+    j = "ret_gewissheit2",
+    value = c("Zweitbewertung A", "Zweitbewertung B")
+  )
+  data.table::set(
+    source_data,
     j = "ret_gewiss_grund1_abl_01",
     value = c("3", "3")
   )
@@ -95,22 +125,33 @@ getTestFallvignetteSourceData <- function(mapping) {
   source_data[]
 }
 
-testthat::test_that("generateFallvignetteRecordIds creates UUID version 4 IDs", {
-  record_ids <- generateFallvignetteRecordIds(10L)
+testthat::test_that("record IDs hash the site-specific running number", {
+  result <- generateFallvignetteRecordIdMapping(3L, "UKB")
 
-  testthat::expect_length(record_ids, 10L)
-  testthat::expect_equal(anyDuplicated(record_ids), 0L)
-  testthat::expect_true(all(grepl(
-    "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-    record_ids
-  )))
+  testthat::expect_equal(
+    result[["local_record_id"]],
+    c("UKB0001", "UKB0002", "UKB0003")
+  )
+  testthat::expect_equal(
+    result[["record_id"]],
+    unname(vapply(
+      result[["local_record_id"]],
+      digest::digest,
+      character(1),
+      algo = "sha256",
+      serialize = FALSE
+    ))
+  )
 })
 
 testthat::test_that("createFallvignetteImportData creates evaluation rows", {
   mapping <- getTestFallvignetteMapping()
   source_data <- getTestFallvignetteSourceData(mapping)
-  record_id_fun <- function(row_count) {
-    paste0("site-independent-id-", seq_len(row_count))
+  record_id_mapping_fun <- function(row_count, site_code) {
+    data.table::data.table(
+      local_record_id = paste0(site_code, sprintf("%04d", seq_len(row_count))),
+      record_id = paste0("site-independent-id-", seq_len(row_count))
+    )
   }
 
   result <- createFallvignetteImportData(
@@ -118,13 +159,26 @@ testthat::test_that("createFallvignetteImportData creates evaluation rows", {
     mapping,
     getTestWardDefinitions(),
     site_code = "UKB",
-    record_id_fun = record_id_fun
+    record_id_mapping_fun = record_id_mapping_fun
   )
 
   testthat::expect_identical(names(result), unique(mapping$target_field))
   testthat::expect_equal(
-    result$record_id,
+    result[["record_id"]],
     paste0("site-independent-id-", 1:3)
+  )
+  id_mapping <- attr(result, "fallvignette_id_mapping")
+  testthat::expect_equal(
+    id_mapping[["local_record_id"]],
+    c("UKB0001", "UKB0002", "UKB0003")
+  )
+  testthat::expect_equal(
+    id_mapping[["source_record_id"]],
+    c("source-1", "source-2", "source-2")
+  )
+  testthat::expect_equal(
+    id_mapping[["evaluation_index"]],
+    c(1L, 1L, 2L)
   )
   testthat::expect_equal(
     result$wp8_standort_id,
@@ -161,7 +215,7 @@ testthat::test_that("createFallvignetteImportData creates evaluation rows", {
   )
   testthat::expect_equal(
     result$wp8_ret_gewissheit,
-    c("Bewertung A", "Bewertung B", "Bewertung B")
+    c("Bewertung A", "Bewertung B", "Zweitbewertung B")
   )
   testthat::expect_equal(
     result$wp8_ret_notiz,
@@ -171,6 +225,7 @@ testthat::test_that("createFallvignetteImportData creates evaluation rows", {
     result$wp8_ret_gewiss_grund_abl_01,
     rep("3", 3L)
   )
+  testthat::expect_true(all(is.na(result[["mrp_auswahl_complete"]])))
 })
 
 testthat::test_that("createFallvignetteImportData rejects unknown wards", {
@@ -208,9 +263,14 @@ testthat::test_that("createFallvignetteImportData validates generated IDs", {
       mapping,
       getTestWardDefinitions(),
       site_code = "UKB",
-      record_id_fun = function(row_count) rep("duplicate", row_count)
+      record_id_mapping_fun = function(row_count, site_code) {
+        data.table::data.table(
+          local_record_id = rep(paste0(site_code, "0001"), row_count),
+          record_id = rep("duplicate", row_count)
+        )
+      }
     ),
-    "one unique, non-empty character ID per row"
+    "one unique, non-empty local_record_id"
   )
 })
 

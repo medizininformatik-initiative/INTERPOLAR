@@ -123,9 +123,11 @@ testthat::test_that("addFallvignetteMedications selects active ATC and PZN", {
     pat_id = "patient-1",
     fall_fhir_enc_id = "case-1",
     fall_aufn_dat = as.POSIXct("2026-01-01 00:00:00", tz = "UTC"),
+    fall_ent_dat = as.POSIXct("2026-02-10 00:00:00", tz = "UTC"),
     meda_dat = as.POSIXct("2026-02-01 12:00:00", tz = "UTC")
   )
   medication_requests <- data.table::data.table(
+    medreq_id = paste0("request-", 1:5),
     medreq_patient_ref = rep("Patient/patient-1", 5L),
     medreq_encounter_calculated_ref = c(
       "Encounter/case-1",
@@ -172,7 +174,36 @@ testthat::test_that("addFallvignetteMedications selects active ATC and PZN", {
     atc_display = c("Heparin", NA, "Abgesetzt", "Zukuenftig", "Anderer Fall")
   )
 
-  result <- addFallvignetteMedications(source_data, medication_requests)
+  active_atc_fun <- function(
+    medication_requests,
+    enc_period_start,
+    enc_period_end,
+    meda_datetime
+  ) {
+    requests <- data.table::copy(medication_requests)
+    data.table::set(
+      requests,
+      i = which(is.na(requests[["end_datetime"]])),
+      j = "end_datetime",
+      value = enc_period_end
+    )
+    active <- requests[["medreq_authoredon"]] >= enc_period_start &
+      requests[["start_datetime"]] >= enc_period_start &
+      requests[["medreq_authoredon"]] <= meda_datetime &
+      requests[["end_datetime"]] >= meda_datetime
+    data.table::data.table(
+      fhir_id = requests[["medreq_id"]][active],
+      atc_code = requests[["atc_code"]][active],
+      start_datetime = requests[["start_datetime"]][active],
+      end_datetime = requests[["end_datetime"]][active]
+    )
+  }
+
+  result <- addFallvignetteMedications(
+    source_data,
+    medication_requests,
+    active_atc_fun = active_atc_fun
+  )
 
   testthat::expect_equal(
     result$wp8_fv_medikation,

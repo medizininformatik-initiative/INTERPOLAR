@@ -205,3 +205,57 @@ writeFallvignetteImportFiles <- function(
     xlsx = normalizePath(xlsx_path, winslash = "/")
   ))
 }
+
+#' Write the local fallvignette ID mapping
+#'
+#' Writes the unhashed local IDs, their exported hashes and available source
+#' identifiers to a separate workbook that must remain at the exporting site.
+#'
+#' @param id_mapping Local mapping attached by createFallvignetteImportData().
+#' @param output_dir Local-only output directory.
+#' @param file_name File name without extension.
+#'
+#' @return Invisibly returns the normalized XLSX path.
+writeFallvignetteIdMappingFile <- function(
+  id_mapping,
+  output_dir,
+  file_name = "Fallvignette_Process_Evaluation_ID_Mapping"
+) {
+  if (!data.table::is.data.table(id_mapping)) {
+    stop("id_mapping must be a data.table.")
+  }
+  required_columns <- c(
+    "record_id",
+    "local_record_id",
+    "site_code",
+    "evaluation_index"
+  )
+  missing_columns <- setdiff(required_columns, names(id_mapping))
+  if (length(missing_columns)) {
+    stop(
+      "Fallvignette ID mapping is missing columns: ",
+      paste(missing_columns, collapse = ", ")
+    )
+  }
+  if (
+    !is.character(output_dir) || length(output_dir) != 1L ||
+      !nzchar(output_dir)
+  ) {
+    stop("output_dir must be one non-empty path.")
+  }
+  if (
+    !is.character(file_name) || length(file_name) != 1L ||
+      !nzchar(file_name) || basename(file_name) != file_name
+  ) {
+    stop("file_name must be one non-empty string without a directory path.")
+  }
+
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  mapping_path <- file.path(output_dir, paste0(file_name, ".xlsx"))
+  etlutils::writeExcelFile(
+    list(ID_Mapping = data.table::copy(id_mapping)),
+    mapping_path,
+    with_column_names = TRUE
+  )
+  invisible(normalizePath(mapping_path, winslash = "/"))
+}

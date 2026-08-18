@@ -2,11 +2,17 @@ testthat::test_that("loadFallvignetteMapping reads the WP8 mapping", {
   mapping <- getTestFallvignetteMapping()
 
   testthat::expect_s3_class(mapping, "data.table")
-  testthat::expect_equal(nrow(mapping), 62L)
+  testthat::expect_equal(nrow(mapping), 63L)
   testthat::expect_equal(data.table::uniqueN(mapping$target_field), 40L)
   testthat::expect_equal(
     mapping$source_field[mapping$target_field == "wp8_ret_notiz"],
     c("ret_notiz1", "ret_notiz2")
+  )
+  testthat::expect_equal(
+    mapping[["source_field"]][
+      mapping[["target_field"]] == "wp8_ret_gewissheit"
+    ],
+    c("ret_gewissheit1", "ret_gewissheit2")
   )
 })
 
@@ -83,4 +89,33 @@ testthat::test_that("writeFallvignetteImportFiles validates the site code", {
     writeFallvignetteImportFiles(fallvignettes, tempdir(), mapping = mapping),
     "non-empty wp8_standort_id"
   )
+})
+
+testthat::test_that("writeFallvignetteIdMappingFile writes local crosswalk", {
+  id_mapping <- data.table::data.table(
+    record_id = digest::digest(
+      "UKB0001",
+      algo = "sha256",
+      serialize = FALSE
+    ),
+    local_record_id = "UKB0001",
+    site_code = "UKB",
+    evaluation_index = 1L,
+    source_record_id = "source-1",
+    fall_id = "fall-1",
+    meda_id = "meda-1",
+    ret_id = "ret-1"
+  )
+
+  path <- writeFallvignetteIdMappingFile(
+    id_mapping,
+    tempdir(),
+    file_name = "fallvignette-id-mapping-test"
+  )
+  result <- etlutils::readExcelFileAsTableList(path)[["ID_Mapping"]]
+
+  testthat::expect_true(file.exists(path))
+  testthat::expect_equal(result[["record_id"]], id_mapping[["record_id"]])
+  testthat::expect_equal(result[["local_record_id"]], "UKB0001")
+  testthat::expect_equal(result[["ret_id"]], "ret-1")
 })

@@ -220,27 +220,39 @@ addFallvignetteDiagnoses <- function(
 #' Includes MedicationRequest resources active at the medication analysis.
 #' ATC information is preferred; a directly coded PZN is used as fallback.
 #'
-#' @param source_data Source rows containing pat_id, fall_aufn_dat and meda_dat.
+#' @param source_data Source rows containing the main encounter and analysis
+#'   timestamps.
 #' @param medication_requests MedicationRequest resources from
 #'   getMedicationRequestsFromDB(), optionally enriched by appendATCColumns().
 #' @param datetime_format Format used for the first planned administration.
+#' @param active_atc_fun Existing getActiveATCs() helper from the regular MRP
+#'   calculation.
 #'
 #' @return A copy of source_data with the wp8_fv_medikation column.
 addFallvignetteMedications <- function(
   source_data,
   medication_requests,
-  datetime_format = "%Y-%m-%d %H:%M:%S"
+  datetime_format = "%Y-%m-%d %H:%M:%S",
+  active_atc_fun = getActiveATCs
 ) {
   validateFallvignetteClinicalData(
     source_data,
     "source_data",
-    c("pat_id", "fall_aufn_dat", "meda_dat")
+    c(
+      "pat_id",
+      "fall_fhir_enc_id",
+      "fall_aufn_dat",
+      "fall_ent_dat",
+      "meda_dat"
+    )
   )
   validateFallvignetteClinicalData(
     medication_requests,
     "medication_requests",
     c(
+      "medreq_id",
       "medreq_patient_ref",
+      "medreq_encounter_calculated_ref",
       "medreq_medicationcodeableconcept_system",
       "medreq_medicationcodeableconcept_code",
       "medreq_medicationcodeableconcept_display",
@@ -314,19 +326,44 @@ addFallvignetteMedications <- function(
     admission_datetime <- asFallvignetteDatetime(
       result[["fall_aufn_dat"]][source_index]
     )
-    medication_start <- asFallvignetteDatetime(medications[["start_datetime"]])
-    medication_end <- asFallvignetteDatetime(medications[["end_datetime"]])
-    authored_datetime <- asFallvignetteDatetime(
-      medications[["medreq_authoredon"]]
+    discharge_datetime <- asFallvignetteDatetime(
+      result[["fall_ent_dat"]][source_index]
     )
+    medication_start <- asFallvignetteDatetime(medications[["start_datetime"]])
     patient_reference <- paste0("Patient/", result[["pat_id"]][source_index])
-    active <- medications[["medreq_patient_ref"]] == patient_reference &
-      !is.na(medication_start) &
-      medication_start >= admission_datetime &
-      medication_start <= meda_datetime &
-      (is.na(authored_datetime) | authored_datetime >= admission_datetime) &
-      (is.na(authored_datetime) | authored_datetime <= meda_datetime) &
-      (is.na(medication_end) | medication_end >= meda_datetime) &
+    current_encounter_id <- normalizeFallvignetteReference(
+      result[["fall_fhir_enc_id"]][source_index],
+      "Encounter"
+    )
+    request_encounter_ids <- normalizeFallvignetteReference(
+      medications[["medreq_encounter_calculated_ref"]],
+      "Encounter"
+    )
+    encounter_request_indices <- which(
+      medications[["medreq_patient_ref"]] == patient_reference &
+        !is.na(request_encounter_ids) &
+        request_encounter_ids == current_encounter_id
+    )
+    if (!length(encounter_request_indices)) {
+      return(NA_character_)
+    }
+
+    encounter_requests <- data.table::copy(medications)[
+      encounter_request_indices,
+      names(medications),
+      with = FALSE
+    ]
+    active_atcs <- active_atc_fun(
+      medication_requests = encounter_requests,
+      enc_period_start = admission_datetime,
+      enc_period_end = discharge_datetime,
+      meda_datetime = meda_datetime
+    )
+    active_request_ids <- unique(active_atcs[["fhir_id"]][
+      !is.na(active_atcs[["start_datetime"]]) &
+        active_atcs[["start_datetime"]] <= meda_datetime
+    ])
+    active <- medications[["medreq_id"]] %in% active_request_ids &
       !is.na(medications[["fallvignette_code"]]) &
       nzchar(medications[["fallvignette_code"]])
     included_indices <- which(active %in% TRUE)

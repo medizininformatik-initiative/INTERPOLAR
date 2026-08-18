@@ -1,12 +1,14 @@
-#' Generate unique fallvignette record IDs
+#' Generate unique fallvignette record IDs and their local mapping
 #'
-#' Generates random UUID version 4 identifiers for new records in the separate
-#' WP8 REDCap project.
+#' Combines the site code with a one-based, zero-padded sequence and hashes the
+#' resulting local IDs with SHA-256. The unhashed IDs are retained only in the
+#' returned local mapping.
 #'
 #' @param row_count Number of identifiers to generate.
+#' @param site_code Non-empty site code configured for the exporting site.
 #'
-#' @return A character vector containing unique UUIDs.
-generateFallvignetteRecordIds <- function(row_count) {
+#' @return A `data.table` containing local_record_id and record_id.
+generateFallvignetteRecordIdMapping <- function(row_count, site_code) {
   if (
     !is.numeric(row_count) ||
       length(row_count) != 1L ||
@@ -17,28 +19,32 @@ generateFallvignetteRecordIds <- function(row_count) {
   ) {
     stop("row_count must be one non-negative integer.")
   }
-
-  record_ids <- character(as.integer(row_count))
-  for (row_index in seq_along(record_ids)) {
-    repeat {
-      uuid_bytes <- sample.int(256L, 16L, replace = TRUE) - 1L
-      uuid_bytes[7] <- bitwOr(bitwAnd(uuid_bytes[7], 15L), 64L)
-      uuid_bytes[9] <- bitwOr(bitwAnd(uuid_bytes[9], 63L), 128L)
-      uuid_hex <- sprintf("%02x", uuid_bytes)
-      record_id <- paste0(
-        paste0(uuid_hex[1:4], collapse = ""), "-",
-        paste0(uuid_hex[5:6], collapse = ""), "-",
-        paste0(uuid_hex[7:8], collapse = ""), "-",
-        paste0(uuid_hex[9:10], collapse = ""), "-",
-        paste0(uuid_hex[11:16], collapse = "")
-      )
-      if (!record_id %in% record_ids) {
-        record_ids[row_index] <- record_id
-        break
-      }
-    }
+  if (
+    !is.character(site_code) || length(site_code) != 1L ||
+      is.na(site_code) || !nzchar(trimws(site_code))
+  ) {
+    stop("site_code must be one non-empty string.")
   }
-  record_ids
+
+  local_record_ids <- if (row_count == 0L) {
+    character()
+  } else {
+    paste0(
+      trimws(site_code),
+      sprintf("%04d", seq_len(as.integer(row_count)))
+    )
+  }
+  record_ids <- vapply(
+    local_record_ids,
+    digest::digest,
+    character(1),
+    algo = "sha256",
+    serialize = FALSE
+  )
+  data.table::data.table(
+    local_record_id = local_record_ids,
+    record_id = record_ids
+  )
 }
 
 #' Create a ward-to-department mapping
@@ -124,8 +130,8 @@ hashFallvignetteSiteCode <- function(site_code) {
 #' @param ward_definitions Environment or named list containing the
 #'   PHASES_WARD definitions from the dataprocessor configuration.
 #' @param site_code Non-empty site code configured for the exporting site.
-#' @param record_id_fun Function accepting a row count and returning unique
-#'   record IDs.
+#' @param record_id_mapping_fun Function accepting a row count and site code
+#'   and returning local and hashed record IDs.
 #'
 #' @return A data.table with all ordered WP8 output columns.
 createFallvignetteImportData <- function(
@@ -133,7 +139,7 @@ createFallvignetteImportData <- function(
   mapping,
   ward_definitions,
   site_code,
-  record_id_fun = generateFallvignetteRecordIds
+  record_id_mapping_fun = generateFallvignetteRecordIdMapping
 ) {
   if (!data.table::is.data.table(source_data)) {
     stop("source_data must be a data.table.")
@@ -144,8 +150,8 @@ createFallvignetteImportData <- function(
   ) {
     stop("mapping must be a normalized fallvignette mapping.")
   }
-  if (!is.function(record_id_fun)) {
-    stop("record_id_fun must be a function.")
+  if (!is.function(record_id_mapping_fun)) {
+    stop("record_id_mapping_fun must be a function.")
   }
   hashed_site_code <- hashFallvignetteSiteCode(site_code)
 
@@ -247,15 +253,23 @@ createFallvignetteImportData <- function(
   }
 
   output_count <- nrow(output_rows)
-  record_ids <- record_id_fun(output_count)
+  record_id_mapping <- data.table::as.data.table(
+    record_id_mapping_fun(output_count, site_code)
+  )
   if (
-    !is.character(record_ids) ||
-      length(record_ids) != output_count ||
-      anyNA(record_ids) ||
-      any(!nzchar(record_ids)) ||
-      anyDuplicated(record_ids)
+    !all(c("local_record_id", "record_id") %in% names(record_id_mapping)) ||
+      nrow(record_id_mapping) != output_count ||
+      anyNA(record_id_mapping[["local_record_id"]]) ||
+      anyNA(record_id_mapping[["record_id"]]) ||
+      any(!nzchar(record_id_mapping[["local_record_id"]])) ||
+      any(!nzchar(record_id_mapping[["record_id"]])) ||
+      anyDuplicated(record_id_mapping[["local_record_id"]]) ||
+      anyDuplicated(record_id_mapping[["record_id"]])
   ) {
-    stop("record_id_fun must return one unique, non-empty character ID per row.")
+    stop(
+      "record_id_mapping_fun must return one unique, non-empty local_record_id ",
+      "and record_id per row."
+    )
   }
 
   empty_export <- createEmptyFallvignetteExport(mapping)
@@ -265,7 +279,11 @@ createFallvignetteImportData <- function(
     }),
     names(empty_export)
   ))
-  data.table::set(export_data, j = "record_id", value = record_ids)
+  data.table::set(
+    export_data,
+    j = "record_id",
+    value = record_id_mapping[["record_id"]]
+  )
   data.table::set(
     export_data,
     j = "wp8_standort_id",
@@ -318,5 +336,46 @@ createFallvignetteImportData <- function(
       ])
     )
   }
+  traceability_columns <- intersect(
+    c(
+      "source_record_id",
+      "pat_id",
+      "fall_id",
+      "fall_fhir_enc_id",
+      "meda_id",
+      "ret_id",
+      "ret_meda_id"
+    ),
+    names(source_data)
+  )
+  local_mapping <- data.table::copy(record_id_mapping)
+  data.table::set(
+    local_mapping,
+    j = "site_code",
+    value = rep(trimws(site_code), output_count)
+  )
+  data.table::set(
+    local_mapping,
+    j = "evaluation_index",
+    value = output_rows[["evaluation_index"]]
+  )
+  for (column_name in traceability_columns) {
+    data.table::set(
+      local_mapping,
+      j = column_name,
+      value = source_data[[column_name]][output_rows[["source_row"]]]
+    )
+  }
+  data.table::setcolorder(
+    local_mapping,
+    c(
+      "record_id",
+      "local_record_id",
+      "site_code",
+      "evaluation_index",
+      traceability_columns
+    )
+  )
+  attr(export_data, "fallvignette_id_mapping") <- local_mapping
   export_data[]
 }
