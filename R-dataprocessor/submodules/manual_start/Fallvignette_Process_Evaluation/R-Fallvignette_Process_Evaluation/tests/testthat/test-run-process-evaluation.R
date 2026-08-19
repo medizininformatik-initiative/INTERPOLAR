@@ -167,30 +167,37 @@ testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
       "pseudonymized-db.toml"
     )
   }
+  db_config_environment <- new.env(parent = emptyenv())
+  db_config_environment$PATH_TO_DB_CONFIG_TOML <- "pseudonymized-db.toml"
   get_source_fun <- function(mapping, lock_id) {
     calls <<- c(calls, "source")
     testthat::expect_null(lock_id)
     empty_source
   }
   write_fun <- function(...) {
+    arguments <- list(...)
     calls <<- c(calls, "write")
+    testthat::expect_equal(
+      arguments[["file_name"]],
+      "WP8_Fallvignetten_Import"
+    )
     list(csv = "output.csv", xlsx = "output.xlsx")
   }
   write_id_mapping_fun <- function(id_mapping, output_dir, file_name) {
     calls <<- c(calls, "id_mapping")
     testthat::expect_equal(output_dir, "local-output")
-    testthat::expect_equal(file_name, "local-id-mapping")
+    testthat::expect_equal(
+      file_name,
+      "Fallvignette_Process_Evaluation_ID_Mapping"
+    )
     "local-output/local-id-mapping.xlsx"
   }
 
   result <- runFallvignetteProcessEvaluation(
-    mapping_file_name = "WP8MRP_Liste_Daten_Mapping20260722.xlsx",
-    path_to_db_config_toml = "pseudonymized-db.toml",
     output_dir = tempdir(),
-    output_file_name = "fallvignettes",
     id_mapping_output_dir = "local-output",
-    id_mapping_file_name = "local-id-mapping",
     site_code = "UKB",
+    db_config_environment = db_config_environment,
     ward_definitions = list(
       PHASES_WARD_1 = c(
         "ward_name = 'Station 1'",

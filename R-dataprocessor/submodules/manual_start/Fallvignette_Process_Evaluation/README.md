@@ -53,26 +53,19 @@ Feld in die Fallvignetten-Datei geschrieben.
 Eine beispielhafte Konfiguration befindet sich in
 `R-dataprocessor/dataprocessor_config_example.toml`.
 
-### Modulkonfiguration
+### Datenbankverbindung
 
-Die Datei `fallvignette_process_evaluation_config.toml` enthält:
-
-| Parameter | Bedeutung |
-| --- | --- |
-| `FALLVIGNETTE_MAPPING_FILE_NAME` | Mapping-Datei unter `inst/extdata` |
-| `FALLVIGNETTE_OUTPUT_FILE_NAME` | Basisname der globalen CSV- und XLSX-Datei |
-| `FALLVIGNETTE_ID_MAPPING_FILE_NAME` | Basisname der lokalen Rückverfolgungsdatei |
-| `PATH_TO_DB_CONFIG_TOML` | DB-Konfiguration mit dem `DB_ANALYSIS_*`-Ziel |
-
-Die DB-Zugangsdaten werden nicht in der Modulkonfiguration hinterlegt. Vor dem
-Lesen der Fall-, Patienten- und FHIR-Daten wechselt das Modul anhand der
-`DB_ANALYSIS_*`-Werte aus der referenzierten DB-Konfiguration in den Kontext
+Die DB-Zugangsdaten werden aus der zentralen Dataprocessor-Konfiguration
+geladen. Vor dem Lesen der Fall-, Patienten- und FHIR-Daten verwendet das Modul
+`PATH_TO_DB_CONFIG_TOML` aus der zentralen `dataprocessor_config.toml` und
+wechselt anhand der dort referenzierten `DB_ANALYSIS_*`-Werte in den Kontext
 der pseudonymisierten Analysedatenbank.
 
 ### Mapping-Arbeitsmappe
 
-Die konfigurierte XLSX-Datei muss genau ein Tabellenblatt und diese Spalten
-enthalten:
+Die neueste Datei mit dem Namen `WP8MRP_Liste_Daten_Mapping<YYYYMMDD>.xlsx`
+unter `R-Fallvignette_Process_Evaluation/inst/extdata` wird automatisch
+verwendet. Sie muss genau ein Tabellenblatt und diese Spalten enthalten:
 
 - `Fallvignette`: Name und Reihenfolge des REDCap-Zielfelds
 - `Quelle`: DB-Quellfeld; leer bei berechneten Feldern
@@ -242,12 +235,13 @@ der Spalten sowie Befüllung und Eindeutigkeit der `record_id` geprüft.
   trennen.
 - **Keine Fachabteilung für `fall_station`:** `fall_station` und `ward_name`
   müssen exakt übereinstimmen.
-- **Mapping-Datei nicht gefunden:** Der Dateiname darf keinen Pfad enthalten;
-  die Datei muss unter `inst/extdata` liegen.
+- **Mapping-Datei nicht gefunden:** Mindestens eine Datei nach dem Muster
+  `WP8MRP_Liste_Daten_Mapping<YYYYMMDD>.xlsx` muss unter `inst/extdata` liegen.
 - **Unbekanntes Quellfeld:** Nur `pat_`, `meda_`, `ret_` sowie
   `fall_age_at_admission` verwenden.
-- **Datenbankverbindung schlägt fehl:** Pfad und `DB_ANALYSIS_*`-Werte der
-  referenzierten DB-Konfiguration prüfen.
+- **Datenbankverbindung schlägt fehl:** `PATH_TO_DB_CONFIG_TOML` in der
+  `dataprocessor_config.toml` und die `DB_ANALYSIS_*`-Werte der referenzierten
+  DB-Konfiguration prüfen.
 - **Leerer Export:** Prüfen, ob geeignete Bewertungen mit Wert `3`, eine
   passende MRP-Dokumentation und zugehörige Fall-/Patientendaten vorhanden
   sind.

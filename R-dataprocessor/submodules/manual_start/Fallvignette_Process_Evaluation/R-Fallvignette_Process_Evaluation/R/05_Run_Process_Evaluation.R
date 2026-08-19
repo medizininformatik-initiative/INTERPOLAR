@@ -259,15 +259,12 @@ getFallvignetteClinicalResources <- function(patient_references) {
 #' configured DB_ANALYSIS target. All patient and case data are then read from
 #' that target and written as REDCap-compatible CSV and XLSX files.
 #'
-#' @param mapping_file_name Packaged fallvignette mapping workbook name.
-#' @param path_to_db_config_toml Database configuration containing the
-#'   DB_ANALYSIS target.
 #' @param output_dir Output directory.
-#' @param output_file_name Output file name without extension.
 #' @param id_mapping_output_dir Local-only ID mapping output directory.
-#' @param id_mapping_file_name Local ID mapping file name without extension.
 #' @param site_code Configured site code.
 #' @param ward_definitions Environment containing PHASES_WARD definitions.
+#' @param db_config_environment Environment containing the central
+#'   `PATH_TO_DB_CONFIG_TOML` dataprocessor setting.
 #' @param load_mrp_fun Function loading processed local WP7 MRP definitions.
 #' @param load_loinc_fun Function loading the processed local LOINC mapping.
 #' @param set_db_context_fun Function switching to the analysis database.
@@ -278,14 +275,11 @@ getFallvignetteClinicalResources <- function(patient_references) {
 #'
 #' @return Invisibly returns the import and local ID mapping paths.
 runFallvignetteProcessEvaluation <- function(
-  mapping_file_name,
-  path_to_db_config_toml,
   output_dir,
-  output_file_name,
   id_mapping_output_dir,
-  id_mapping_file_name,
   site_code,
   ward_definitions = .GlobalEnv,
+  db_config_environment = .GlobalEnv,
   load_mrp_fun = getMRPPairLists,
   load_loinc_fun = getLOINCMapping,
   set_db_context_fun = etlutils::dbSetModuleContextFromEnvironment,
@@ -294,7 +288,7 @@ runFallvignetteProcessEvaluation <- function(
   write_fun = writeFallvignetteImportFiles,
   write_id_mapping_fun = writeFallvignetteIdMappingFile
 ) {
-  mapping_path <- getFallvignetteMappingPath(mapping_file_name)
+  mapping_path <- getFallvignetteMappingPath()
   mapping <- loadFallvignetteMapping(mapping_path)
 
   wp7_definitions <- prepareFallvignetteWp7Definitions(
@@ -302,12 +296,6 @@ runFallvignetteProcessEvaluation <- function(
     load_loinc_fun()$processed_content
   )
 
-  db_config_environment <- new.env(parent = emptyenv())
-  assign(
-    "PATH_TO_DB_CONFIG_TOML",
-    path_to_db_config_toml,
-    envir = db_config_environment
-  )
   set_db_context_fun(
     module_name = "dataprocessor",
     path_variable = "PATH_TO_DB_CONFIG_TOML",
@@ -346,13 +334,13 @@ runFallvignetteProcessEvaluation <- function(
   id_mapping_path <- write_id_mapping_fun(
     id_mapping = id_mapping,
     output_dir = id_mapping_output_dir,
-    file_name = id_mapping_file_name
+    file_name = "Fallvignette_Process_Evaluation_ID_Mapping"
   )
   import_paths <- write_fun(
     fallvignettes = import_data,
     output_dir = output_dir,
     mapping = mapping,
-    file_name = output_file_name
+    file_name = "WP8_Fallvignetten_Import"
   )
   invisible(c(import_paths, list(id_mapping = id_mapping_path)))
 }

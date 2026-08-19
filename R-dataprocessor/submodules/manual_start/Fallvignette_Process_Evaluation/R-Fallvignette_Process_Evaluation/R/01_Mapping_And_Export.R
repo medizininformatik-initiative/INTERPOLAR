@@ -1,32 +1,38 @@
 #' Get the WP8 fallvignette mapping path
 #'
-#' @param mapping_file_name File name of the mapping workbook packaged in
-#'   `inst/extdata`.
-#'
 #' @return Absolute path to the packaged mapping workbook.
 #'
-getFallvignetteMappingPath <- function(mapping_file_name) {
-  if (
-    !is.character(mapping_file_name) ||
-      length(mapping_file_name) != 1L ||
-      !nzchar(mapping_file_name) ||
-      basename(mapping_file_name) != mapping_file_name
-  ) {
-    stop("mapping_file_name must be one non-empty file name without a path.")
-  }
-
-  mapping_path <- system.file(
+getFallvignetteMappingPath <- function(
+  extdata_dir = system.file(
     "extdata",
-    mapping_file_name,
     package = "FallvignetteProcessEvaluation"
   )
-  if (!nzchar(mapping_path) || !file.exists(mapping_path)) {
+) {
+  if (
+    !is.character(extdata_dir) ||
+      length(extdata_dir) != 1L ||
+      !nzchar(extdata_dir) ||
+      !dir.exists(extdata_dir)
+  ) {
+    stop("FallvignetteProcessEvaluation/inst/extdata not found.")
+  }
+
+  mapping_file_names <- list.files(
+    extdata_dir,
+    pattern = "^WP8MRP_Liste_Daten_Mapping[0-9]{8}\\.xlsx$"
+  )
+  if (!length(mapping_file_names)) {
     stop(
-      mapping_file_name,
-      " not found in FallvignetteProcessEvaluation/inst/extdata."
+      "No WP8MRP_Liste_Daten_Mapping<YYYYMMDD>.xlsx found in ",
+      normalizePath(extdata_dir, winslash = "/")
     )
   }
-  normalizePath(mapping_path, winslash = "/")
+
+  latest_file_name <- max(mapping_file_names)
+  normalizePath(
+    file.path(extdata_dir, latest_file_name),
+    winslash = "/"
+  )
 }
 
 #' Load the WP8 fallvignette mapping

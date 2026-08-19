@@ -274,34 +274,11 @@ getSiteCodePath <- function() {
 # Load valid site codes from the packaged workbook.
 loadSiteCodes <- function(file_path = getSiteCodePath()) {
   sheets <- etlutils::readExcelFileAsTableList(file_path)
-  if (length(sheets) != 1L) {
-    stop("Standortkuerzel.xlsx must contain exactly one sheet.")
-  }
-
   site_codes <- etlutils::removeTableHeader(
     data.table::copy(sheets[[1]]),
     "SITE_CODE"
   )
-  if (
-    !data.table::is.data.table(site_codes) ||
-      !nrow(site_codes) ||
-      !"SITE_CODE" %in% names(site_codes)
-  ) {
-    stop("Standortkuerzel.xlsx must contain a non-empty SITE_CODE column.")
-  }
-
   valid_site_codes <- trimws(as.character(site_codes[["SITE_CODE"]]))
-  invalid_rows <- is.na(valid_site_codes) |
-    !grepl("^[A-Z][A-Z0-9_-]*$", valid_site_codes)
-  if (any(invalid_rows)) {
-    stop(
-      "Standortkuerzel.xlsx contains an invalid SITE_CODE in data row ",
-      which(invalid_rows)[1], "."
-    )
-  }
-  if (anyDuplicated(valid_site_codes)) {
-    stop("Standortkuerzel.xlsx contains duplicate SITE_CODE entries.")
-  }
   valid_site_codes
 }
 

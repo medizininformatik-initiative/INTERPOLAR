@@ -1,3 +1,27 @@
+testthat::test_that("getFallvignetteMappingPath selects the newest dated workbook", {
+  mapping_dir <- tempfile("fallvignette-mapping-")
+  dir.create(mapping_dir)
+  on.exit(unlink(mapping_dir, recursive = TRUE), add = TRUE)
+
+  testthat::expect_error(
+    getFallvignetteMappingPath(mapping_dir),
+    "No WP8MRP_Liste_Daten_Mapping<YYYYMMDD>.xlsx found"
+  )
+  file.create(file.path(
+    mapping_dir,
+    c(
+      "WP8MRP_Liste_Daten_Mapping20260722.xlsx",
+      "WP8MRP_Liste_Daten_Mapping20260819.xlsx",
+      "unrelated.xlsx"
+    )
+  ))
+
+  testthat::expect_equal(
+    basename(getFallvignetteMappingPath(mapping_dir)),
+    "WP8MRP_Liste_Daten_Mapping20260819.xlsx"
+  )
+})
+
 testthat::test_that("loadFallvignetteMapping reads the WP8 mapping", {
   mapping <- getTestFallvignetteMapping()
 
