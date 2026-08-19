@@ -19,8 +19,18 @@ prepareFallvignetteWp7Definitions <- function(
     stop("No WP7 diagnosis definition was loaded for fallvignettes.")
   }
 
-  diagnosis_rules <- data.table::rbindlist(lapply(
+  relevant_mrp_definitions <- lapply(
     mrp_pair_lists[relevant_mrp_types],
+    function(mrp_definition) {
+      if ("processed_content" %in% names(mrp_definition)) {
+        return(mrp_definition[["processed_content"]])
+      }
+      mrp_definition
+    }
+  )
+
+  diagnosis_rules <- data.table::rbindlist(lapply(
+    relevant_mrp_definitions,
     function(mrp_definition) {
       required_columns <- c("ICD", "ICD_VALIDITY_DAYS")
       missing_columns <- setdiff(required_columns, names(mrp_definition))
@@ -45,7 +55,7 @@ prepareFallvignetteWp7Definitions <- function(
   ])
 
   relevant_loinc_codes <- unique(unlist(lapply(
-    mrp_pair_lists[relevant_mrp_types],
+    relevant_mrp_definitions,
     function(mrp_definition) {
       if (!"LOINC_PRIMARY_PROXY" %in% names(mrp_definition)) {
         return(character())
@@ -296,14 +306,18 @@ runFallvignetteProcessEvaluation <- function(
     load_loinc_fun()$processed_content
   )
 
-  set_db_context_fun(
-    module_name = "dataprocessor",
-    path_variable = "PATH_TO_DB_CONFIG_TOML",
-    envir = db_config_environment,
-    db_schema_base_name = "dataprocessor",
-    target_prefix = "DB_ANALYSIS",
-    log = FALSE
-  )
+  set_database_context <- function(target_prefix) {
+    set_db_context_fun(
+      module_name = "dataprocessor",
+      path_variable = "PATH_TO_DB_CONFIG_TOML",
+      envir = db_config_environment,
+      db_schema_base_name = "dataprocessor",
+      target_prefix = target_prefix,
+      log = FALSE
+    )
+  }
+  set_database_context("DB_ANALYSIS")
+  on.exit(set_database_context(NULL), add = TRUE)
 
   source_data <- get_source_fun(mapping, lock_id = NULL)
   if (nrow(source_data)) {

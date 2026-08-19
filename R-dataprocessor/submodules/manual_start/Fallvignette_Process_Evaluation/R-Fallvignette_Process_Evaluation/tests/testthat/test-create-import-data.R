@@ -105,12 +105,18 @@ getTestFallvignetteSourceData <- function(mapping) {
   data.table::set(
     source_data,
     j = "ret_gewiss_grund1_abl_01",
-    value = c("3", "3")
+    value = rep(
+      "MRP sachlich richtig, aber klinisch nicht relevant",
+      2L
+    )
   )
   data.table::set(
     source_data,
     j = "ret_gewiss_grund2_abl_01",
-    value = c("1", "3")
+    value = c(
+      "MRP sachlich falsch (keine Kontraindikation)",
+      "MRP sachlich richtig, aber klinisch nicht relevant"
+    )
   )
   data.table::set(
     source_data,

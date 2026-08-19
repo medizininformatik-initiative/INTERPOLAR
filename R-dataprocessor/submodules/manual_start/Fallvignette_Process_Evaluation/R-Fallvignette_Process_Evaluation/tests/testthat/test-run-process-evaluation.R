@@ -12,6 +12,12 @@ testthat::test_that("prepareFallvignetteWp7Definitions combines local rules", {
     ),
     Drug_Drug = data.table::data.table(ATC_PRIMARY = "A01AA01")
   )
+  mrp_pair_lists[c("Drug_Disease", "Drug_Niereninsuffizienz")] <- lapply(
+    mrp_pair_lists[c("Drug_Disease", "Drug_Niereninsuffizienz")],
+    function(processed_content) {
+      list(processed_content = processed_content)
+    }
+  )
   loinc_mapping <- data.table::data.table(
     LOINC = c("2160-0", "33914-3"),
     LOINC_PRIMARY = c("2160-0", "33914-3"),
@@ -156,8 +162,14 @@ testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
   }
   set_db_context_fun <- function(...) {
     arguments <- list(...)
-    calls <<- c(calls, "db")
-    testthat::expect_equal(arguments$target_prefix, "DB_ANALYSIS")
+    target_prefix <- arguments[["target_prefix"]]
+    calls <<- c(
+      calls,
+      if (is.null(target_prefix)) "db_restore" else "db"
+    )
+    testthat::expect_true(
+      is.null(target_prefix) || identical(target_prefix, "DB_ANALYSIS")
+    )
     testthat::expect_equal(
       get(
         arguments$path_variable,
@@ -219,7 +231,10 @@ testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
 
   testthat::expect_equal(
     calls,
-    c("wp7_mrp", "wp7_loinc", "db", "source", "id_mapping", "write")
+    c(
+      "wp7_mrp", "wp7_loinc", "db", "source", "id_mapping", "write",
+      "db_restore"
+    )
   )
   testthat::expect_equal(result[["csv"]], "output.csv")
   testthat::expect_equal(

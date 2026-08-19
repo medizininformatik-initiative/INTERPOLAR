@@ -92,14 +92,16 @@ alle folgenden Bedingungen erfüllt sind:
 - `ret_id` und die referenzierte Medikationsanalyse sind vorhanden.
 - Mindestens eine der beiden Bewertungen besitzt für
   `ret_gewiss_grund1_abl_01` beziehungsweise
-  `ret_gewiss_grund2_abl_01` den Wert `3`, also sachlich richtig, aber klinisch
-  nicht relevant.
+  `ret_gewiss_grund2_abl_01` den Datenbankwert
+  `MRP sachlich richtig, aber klinisch nicht relevant` enthält. Das entspricht
+  in REDCap dem Code `3`.
 - Für dieselbe Medikationsanalyse existiert mindestens eine
   MRP-Dokumentation mit einer `mrp_id`.
 - Es handelt sich nicht um eine Test-MRP. IDs mit `-TEST-` und
   Kurzbeschreibungen mit `*TEST*` werden ausgeschlossen.
 
-Sind beide retrospektiven Bewertungen mit `3` gekennzeichnet, entstehen zwei
+Sind beide retrospektiven Bewertungen entsprechend gekennzeichnet,
+entstehen zwei
 Exportzeilen. Jede erhält eine eigene `record_id`. Gemeinsam gemappte Fall- und
 Patientendaten werden wiederholt, doppelt hinterlegte Zielfelder werden aus der
 jeweils passenden Bewertung befüllt.
@@ -242,7 +244,8 @@ der Spalten sowie Befüllung und Eindeutigkeit der `record_id` geprüft.
 - **Datenbankverbindung schlägt fehl:** `PATH_TO_DB_CONFIG_TOML` in der
   `dataprocessor_config.toml` und die `DB_ANALYSIS_*`-Werte der referenzierten
   DB-Konfiguration prüfen.
-- **Leerer Export:** Prüfen, ob geeignete Bewertungen mit Wert `3`, eine
+- **Leerer Export:** Prüfen, ob geeignete Bewertungen mit dem Datenbankwert
+  `MRP sachlich richtig, aber klinisch nicht relevant`, eine
   passende MRP-Dokumentation und zugehörige Fall-/Patientendaten vorhanden
   sind.
 

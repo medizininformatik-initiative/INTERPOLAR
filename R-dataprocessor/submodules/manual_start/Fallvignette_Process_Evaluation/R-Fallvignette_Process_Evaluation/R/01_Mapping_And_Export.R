@@ -8,6 +8,17 @@ getFallvignetteMappingPath <- function(
     package = "FallvignetteProcessEvaluation"
   )
 ) {
+  if (is.character(extdata_dir) && length(extdata_dir) == 1L && !nzchar(extdata_dir)) {
+    extdata_dir <- file.path(
+      "R-dataprocessor",
+      "submodules",
+      "manual_start",
+      "Fallvignette_Process_Evaluation",
+      "R-Fallvignette_Process_Evaluation",
+      "inst",
+      "extdata"
+    )
+  }
   if (
     !is.character(extdata_dir) ||
       length(extdata_dir) != 1L ||
@@ -82,11 +93,7 @@ loadFallvignetteMapping <- function(
     )
   }
   target_fields <- mapping[["target_field"]]
-  mapping <- mapping[
-    !is.na(target_fields) & nzchar(target_fields),
-    ,
-    with = FALSE
-  ]
+  mapping <- mapping[!is.na(target_fields) & nzchar(target_fields), ]
 
   target_fields <- mapping[["target_field"]]
   invalid_target_fields <- unique(

@@ -230,7 +230,11 @@ createFallvignetteImportData <- function(
       ]
       eligibility_values <- as.character(source_data[[eligibility_source]])
       data.table::data.table(
-        source_row = which(!is.na(eligibility_values) & eligibility_values == "3"),
+        source_row = which(
+          !is.na(eligibility_values) &
+            eligibility_values ==
+              "MRP sachlich richtig, aber klinisch nicht relevant"
+        ),
         evaluation_index = evaluation_index
       )
     }
@@ -313,6 +317,9 @@ createFallvignetteImportData <- function(
       },
       character(1)
     )
+    if (identical(target_field, eligibility_target)) {
+      target_values[] <- "3"
+    }
     data.table::set(
       export_data,
       j = target_field,
