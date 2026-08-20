@@ -172,11 +172,6 @@ addFallvignetteDiagnoses <- function(
       diagnosis_codes <- trimws(
         included_conditions[["con_code_code"]]
       )
-      missing_displays <- is.na(diagnosis_displays) |
-        !nzchar(diagnosis_displays)
-      diagnosis_displays[missing_displays] <- diagnosis_codes[
-        missing_displays
-      ]
 
       diagnosis_lines <- diagnosis_displays
       has_code <- !is.na(diagnosis_codes) & nzchar(diagnosis_codes)
@@ -203,7 +198,7 @@ addFallvignetteDiagnoses <- function(
         included_datetimes,
         na.last = TRUE
       )
-      paste(diagnosis_lines[diagnosis_order], collapse = "\n")
+      paste(unique(diagnosis_lines[diagnosis_order]), collapse = "\n")
     },
     character(1)
   )
@@ -306,18 +301,10 @@ addFallvignetteMedications <- function(
     medications,
     j = "fallvignette_display",
     value = data.table::fifelse(
-      has_atc & !is.na(atc_display) & nzchar(atc_display),
+      has_atc,
       atc_display,
-      direct_display
+      data.table::fifelse(is_pzn, direct_display, NA_character_)
     )
-  )
-  missing_display <- is.na(medications[["fallvignette_display"]]) |
-    !nzchar(medications[["fallvignette_display"]])
-  data.table::set(
-    medications,
-    i = which(missing_display),
-    j = "fallvignette_display",
-    value = medications[["fallvignette_code"]][missing_display]
   )
 
   result <- data.table::copy(source_data)
@@ -385,7 +372,7 @@ addFallvignetteMedications <- function(
       "]"
     )
     line_order <- order(tolower(display), code, start, na.last = TRUE)
-    paste(lines[line_order], collapse = "\n")
+    paste(unique(lines[line_order]), collapse = "\n")
   }, character(1))
 
   data.table::set(result, j = "wp8_fv_medikation", value = medication_texts)
@@ -509,17 +496,9 @@ addFallvignetteLaboratoryValues <- function(
     }
 
     code <- as.character(observations[["obs_code_code"]][included_indices])
-    mapping_indices <- match(code, relevant_mapping[["LOINC"]])
-    display <- as.character(
-      relevant_mapping[["GERMAN_NAME_LOINC_PRIMARY"]][mapping_indices]
-    )
-    observation_display <- trimws(as.character(
+    display <- trimws(as.character(
       observations[["obs_code_display"]][included_indices]
     ))
-    missing_display <- is.na(display) | !nzchar(trimws(display))
-    display[missing_display] <- observation_display[missing_display]
-    missing_display <- is.na(display) | !nzchar(trimws(display))
-    display[missing_display] <- code[missing_display]
 
     value <- as.character(
       observations[["obs_valuequantity_value"]][included_indices]
@@ -554,7 +533,7 @@ addFallvignetteLaboratoryValues <- function(
       code,
       na.last = TRUE
     )
-    paste(lines[line_order], collapse = "\n")
+    paste(unique(lines[line_order]), collapse = "\n")
   }, character(1))
 
   data.table::set(

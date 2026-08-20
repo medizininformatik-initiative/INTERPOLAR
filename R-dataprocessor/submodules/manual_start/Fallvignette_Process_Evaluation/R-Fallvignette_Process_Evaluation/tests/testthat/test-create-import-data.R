@@ -95,12 +95,12 @@ getTestFallvignetteSourceData <- function(mapping) {
   data.table::set(
     source_data,
     j = "ret_gewissheit1",
-    value = c("Bewertung A", "Bewertung B")
+    value = rep("MRP nicht bestätigt", 2L)
   )
   data.table::set(
     source_data,
     j = "ret_gewissheit2",
-    value = c("Zweitbewertung A", "Zweitbewertung B")
+    value = rep("MRP nicht bestätigt", 2L)
   )
   data.table::set(
     source_data,
@@ -173,6 +173,10 @@ testthat::test_that("createFallvignetteImportData creates evaluation rows", {
     result[["record_id"]],
     paste0("site-independent-id-", 1:3)
   )
+  testthat::expect_equal(
+    result[["wp8_ret_id"]],
+    c("ret-1", "ret-2", "ret-2")
+  )
   id_mapping <- attr(result, "fallvignette_id_mapping")
   testthat::expect_equal(
     id_mapping[["local_record_id"]],
@@ -221,7 +225,7 @@ testthat::test_that("createFallvignetteImportData creates evaluation rows", {
   )
   testthat::expect_equal(
     result$wp8_ret_gewissheit,
-    c("Bewertung A", "Bewertung B", "Zweitbewertung B")
+    rep("3", 3L)
   )
   testthat::expect_equal(
     result$wp8_ret_notiz,

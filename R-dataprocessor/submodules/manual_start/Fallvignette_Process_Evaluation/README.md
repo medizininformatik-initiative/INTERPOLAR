@@ -84,6 +84,10 @@ wird `fall_age_at_admission` aus `fall_fe` unterstützt. `record_id`,
 und OP-Status werden durch das Modul befüllt. `mrp_auswahl_complete` bleibt
 absichtlich leer.
 
+`wp8_ret_id` wird gemäß Mapping direkt aus `ret_id` übernommen. Entstehen aus
+beiden retrospektiven Bewertungen zwei Exportzeilen, enthalten beide dieselbe
+`wp8_ret_id`.
+
 ## Auswahl der Exportfälle
 
 Grundlage ist die retrospektive MRP-Bewertung. Eine Zeile ist geeignet, wenn
@@ -106,6 +110,11 @@ Exportzeilen. Jede erhält eine eigene `record_id`. Gemeinsam gemappte Fall- und
 Patientendaten werden wiederholt, doppelt hinterlegte Zielfelder werden aus der
 jeweils passenden Bewertung befüllt.
 
+Die Datenbank-Displays `MRP nicht bestätigt` und
+`MRP sachlich richtig, aber klinisch nicht relevant` werden für die
+REDCap-Auswahlfelder `wp8_ret_gewissheit` und
+`wp8_ret_gewiss_grund_abl_01` jeweils als Rohcode `3` exportiert.
+
 ## Klinischer Kontext
 
 Alle klinischen Ressourcen werden aus der pseudonymisierten Analysedatenbank
@@ -121,7 +130,10 @@ Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
   und `ICD_VALIDITY_DAYS` am Analysezeitpunkt erfüllt ist.
 - `unbegrenzt` sowie ein leerer Gültigkeitswert gelten als zeitlich
   unbeschränkt.
-- Doppelte Diagnosen bleiben erhalten.
+- Identische fertig formatierte Diagnosezeilen werden entfernt. Diagnosen mit
+  abweichendem Zeitpunkt bleiben getrennt erhalten.
+- Die Diagnosebezeichnung stammt ausschließlich aus
+  `Condition.code.coding.display`. Fehlt sie, wird `NA` ausgegeben.
 - Die Ausgabe wird alphabetisch nach Diagnosetext sortiert. Ein vorhandener
   Diagnosezeitpunkt wird mit ausgegeben.
 
@@ -137,11 +149,12 @@ Essentielle Hypertonie (ICD: I10) [2026-01-15 08:30:00]
 - Die Aktivitätsprüfung verwendet `getActiveATCs()` aus der regulären
   MRP-Berechnung und berücksichtigt Aufnahme, Entlassung und Analysezeitpunkt.
 - Der Medikationsbeginn darf nicht nach der Medikationsanalyse liegen.
-- Bevorzugt werden Wirkstoffbezeichnung und ATC-Code ausgegeben. Ist kein ATC
-  ermittelbar, wird eine direkt oder über Medication referenzierte PZN als
-  Rückfallwert verwendet.
+- Verwendet wird ausschließlich das zum ATC beziehungsweise zur PZN gehörende
+  Coding-Display. Fehlt es, wird `NA` ausgegeben. Ist kein ATC ermittelbar,
+  wird eine direkt oder über Medication referenzierte PZN verwendet.
 - Die Ausgabe wird alphabetisch nach der Bezeichnung sortiert. Der erste
   geplante Medikationsbeginn wird mit ausgegeben.
+- Identische fertig formatierte Medikationszeilen werden entfernt.
 
 Beispiel:
 
@@ -157,10 +170,11 @@ Heparin (ATC: B01AB01) [2026-01-18 09:00:00]
   vorkommen.
 - Das Zeitfenster umfasst die sieben Tage bis einschließlich der
   Medikationsanalyse. Spätere Werte werden ausgeschlossen.
-- Die Bezeichnung stammt bevorzugt aus dem lokalen LOINC-Mapping, anschließend
-  aus `Observation.code.display` und zuletzt aus dem Code.
+- Die Bezeichnung stammt ausschließlich aus `Observation.code.display`.
+  Fehlt sie, wird `NA` ausgegeben.
 - Wert, Einheit, LOINC-Code und vorhandener Beobachtungszeitpunkt werden
   ausgegeben. Die Sortierung erfolgt alphabetisch nach der Bezeichnung.
+- Identische fertig formatierte Laborwertzeilen werden entfernt.
 
 Beispiel:
 

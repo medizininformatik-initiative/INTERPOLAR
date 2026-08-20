@@ -177,6 +177,10 @@ createFallvignetteImportData <- function(
   }
 
   eligibility_target <- "wp8_ret_gewiss_grund_abl_01"
+  redcap_code_values <- c(
+    wp8_ret_gewissheit = "3",
+    wp8_ret_gewiss_grund_abl_01 = "3"
+  )
   eligibility_mapping_indices <- which(
     direct_target_fields == eligibility_target
   )
@@ -317,8 +321,8 @@ createFallvignetteImportData <- function(
       },
       character(1)
     )
-    if (identical(target_field, eligibility_target)) {
-      target_values[] <- "3"
+    if (target_field %in% names(redcap_code_values)) {
+      target_values[] <- redcap_code_values[[target_field]]
     }
     data.table::set(
       export_data,

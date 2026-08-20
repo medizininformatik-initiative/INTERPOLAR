@@ -36,7 +36,7 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
     ),
     con_code_display = c(
       "Alpha historisch",
-      "Beta aktuell",
+      NA_character_,
       "Doppelte Diagnose",
       "Doppelte Diagnose",
       "Gamma gueltig",
@@ -57,6 +57,10 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
       "2026-02-02 10:00:00"
     ), tz = "UTC")
   )
+  conditions <- data.table::rbindlist(list(
+    conditions,
+    conditions[3L, names(conditions), with = FALSE]
+  ))
   diagnosis_rules <- data.table::data.table(
     ICD = c("A01", "C03"),
     ICD_VALIDITY_DAYS = c("unbegrenzt", "30")
@@ -73,11 +77,11 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
     paste(
       c(
         "Alpha historisch (ICD: A01) [2020-01-01 08:00:00]",
-        "Beta aktuell (ICD: X01)",
         "Doppelte Diagnose (ICD: D01) [2026-01-29 10:00:00]",
         "Doppelte Diagnose (ICD: D01) [2026-01-30 10:00:00]",
         "Gamma gueltig (ICD: C03) [2026-01-15 09:00:00]",
-        "Zeta aktuell (ICD: Z99) [2026-01-31 11:00:00]"
+        "Zeta aktuell (ICD: Z99) [2026-01-31 11:00:00]",
+        "NA (ICD: X01)"
       ),
       collapse = "\n"
     )
@@ -171,8 +175,14 @@ testthat::test_that("addFallvignetteMedications selects active ATC and PZN", {
       NA
     ), tz = "UTC"),
     atc_code = c("B01AB01", NA, "A01AA01", "C01AA01", "D01AA01"),
-    atc_display = c("Heparin", NA, "Abgesetzt", "Zukuenftig", "Anderer Fall")
+    atc_display = c(NA, NA, "Abgesetzt", "Zukuenftig", "Anderer Fall")
   )
+  medication_requests <- data.table::rbindlist(list(
+    medication_requests,
+    medication_requests[
+      1L, names(medication_requests), with = FALSE
+    ]
+  ))
 
   active_atc_fun <- function(
     medication_requests,
@@ -209,8 +219,8 @@ testthat::test_that("addFallvignetteMedications selects active ATC and PZN", {
     result$wp8_fv_medikation,
     paste(
       c(
-        "Heparin (ATC: B01AB01) [2026-01-11 10:00:00]",
-        "Zubereitung (PZN: 12345678) [2026-01-21 10:00:00]"
+        "Zubereitung (PZN: 12345678) [2026-01-21 10:00:00]",
+        "NA (ATC: B01AB01) [2026-01-11 10:00:00]"
       ),
       collapse = "\n"
     )
@@ -233,7 +243,7 @@ testthat::test_that("addFallvignetteLaboratoryValues applies WP7 and time window
     ),
     obs_code_code = c("2160-0", "718-7", "9999-9", "2160-0", "2160-0"),
     obs_code_display = c(
-      "Creatinine",
+      NA_character_,
       "Haemoglobin",
       "Irrelevant",
       "Too old",
@@ -250,6 +260,10 @@ testthat::test_that("addFallvignetteLaboratoryValues applies WP7 and time window
       "2026-02-07 10:00:00"
     ), tz = "UTC")
   )
+  observations <- data.table::rbindlist(list(
+    observations,
+    observations[1L, names(observations), with = FALSE]
+  ))
   loinc_mapping <- data.table::data.table(
     LOINC = c("2160-0", "718-7"),
     LOINC_PRIMARY = c("2160-0", "718-7"),
@@ -268,7 +282,7 @@ testthat::test_that("addFallvignetteLaboratoryValues applies WP7 and time window
     paste(
       c(
         "Haemoglobin (LOINC: 718-7): 12.5 g/dL [2026-02-06 08:00:00]",
-        "Kreatinin (LOINC: 2160-0): 1.2 mg/dL [2026-02-07 09:00:00]"
+        "NA (LOINC: 2160-0): 1.2 mg/dL [2026-02-07 09:00:00]"
       ),
       collapse = "\n"
     )

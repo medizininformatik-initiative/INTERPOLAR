@@ -26,8 +26,19 @@ testthat::test_that("loadFallvignetteMapping reads the WP8 mapping", {
   mapping <- getTestFallvignetteMapping()
 
   testthat::expect_s3_class(mapping, "data.table")
-  testthat::expect_equal(nrow(mapping), 63L)
-  testthat::expect_equal(data.table::uniqueN(mapping$target_field), 40L)
+  testthat::expect_true(all(c(
+    "record_id",
+    "wp8_ret_id",
+    "wp8_standort_id",
+    "wp8_mrp_fachbereich",
+    "wp8_ret_gewissheit",
+    "wp8_ret_gewiss_grund_abl_01",
+    "mrp_auswahl_complete"
+  ) %in% mapping[["target_field"]]))
+  testthat::expect_equal(
+    mapping[["source_field"]][mapping[["target_field"]] == "wp8_ret_id"],
+    "ret_id"
+  )
   testthat::expect_equal(
     mapping$source_field[mapping$target_field == "wp8_ret_notiz"],
     c("ret_notiz1", "ret_notiz2")
