@@ -181,6 +181,7 @@ createFallvignetteImportData <- function(
     wp8_ret_gewissheit = "3",
     wp8_ret_gewiss_grund_abl_01 = "3"
   )
+  checkbox_target <- "wp8_ret_gewiss_grund_abl_klin_neg"
   eligibility_mapping_indices <- which(
     direct_target_fields == eligibility_target
   )
@@ -213,6 +214,7 @@ createFallvignetteImportData <- function(
     "record_id",
     "wp8_standort_id",
     "wp8_mrp_fachbereich",
+    "mrp_auswahl_complete",
     unique(direct_target_fields)
   )
   missing_target_fields <- setdiff(
@@ -224,6 +226,16 @@ createFallvignetteImportData <- function(
       "Fallvignette mapping is missing target fields: ",
       paste(missing_target_fields, collapse = ", ")
     )
+  }
+
+  complete_values <- unique(mapping[["fixed_value"]][
+    mapping[["target_field"]] == "mrp_auswahl_complete"
+  ])
+  complete_values <- complete_values[
+    !is.na(complete_values) & nzchar(complete_values)
+  ]
+  if (length(complete_values) != 1L) {
+    stop("mrp_auswahl_complete must contain exactly one fixed Value.")
   }
 
   output_rows <- data.table::rbindlist(lapply(
@@ -302,6 +314,11 @@ createFallvignetteImportData <- function(
     j = "wp8_mrp_fachbereich",
     value = ward_mapping[["department"]][ward_indices]
   )
+  data.table::set(
+    export_data,
+    j = "mrp_auswahl_complete",
+    value = rep(complete_values, output_count)
+  )
 
   for (target_field in unique(direct_target_fields)) {
     target_mapping_indices <- which(direct_target_fields == target_field)
@@ -323,6 +340,21 @@ createFallvignetteImportData <- function(
     )
     if (target_field %in% names(redcap_code_values)) {
       target_values[] <- redcap_code_values[[target_field]]
+    }
+    if (identical(target_field, checkbox_target)) {
+      invalid_values <- unique(target_values[
+        !is.na(target_values) &
+          !target_values %in% c("Unchecked", "Checked")
+      ])
+      if (length(invalid_values)) {
+        stop(
+          checkbox_target,
+          " must contain only Unchecked, Checked or NA: ",
+          paste(invalid_values, collapse = ", ")
+        )
+      }
+      target_values[which(target_values == "Unchecked")] <- "0"
+      target_values[which(target_values == "Checked")] <- "1"
     }
     data.table::set(
       export_data,

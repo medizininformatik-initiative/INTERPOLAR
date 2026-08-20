@@ -120,6 +120,16 @@ getTestFallvignetteSourceData <- function(mapping) {
   )
   data.table::set(
     source_data,
+    j = "ret_gewiss_grund_abl_klin1_neg",
+    value = c("Unchecked", "Checked")
+  )
+  data.table::set(
+    source_data,
+    j = "ret_gewiss_grund_abl_klin2_neg",
+    value = c("Checked", "Unchecked")
+  )
+  data.table::set(
+    source_data,
     j = "ret_notiz1",
     value = c("Erstbewertung A", "Erstbewertung B")
   )
@@ -235,7 +245,33 @@ testthat::test_that("createFallvignetteImportData creates evaluation rows", {
     result$wp8_ret_gewiss_grund_abl_01,
     rep("3", 3L)
   )
-  testthat::expect_true(all(is.na(result[["mrp_auswahl_complete"]])))
+  testthat::expect_equal(
+    result$wp8_ret_gewiss_grund_abl_klin_neg,
+    c("0", "1", "0")
+  )
+  testthat::expect_equal(result[["mrp_auswahl_complete"]], rep("0", 3L))
+})
+
+testthat::test_that("createFallvignetteImportData rejects invalid checkbox values", {
+  mapping <- getTestFallvignetteMapping()
+  source_data <- getTestFallvignetteSourceData(mapping)
+  data.table::set(
+    source_data,
+    i = 1L,
+    j = "ret_gewiss_grund_abl_klin1_neg",
+    value = "invalid"
+  )
+
+  testthat::expect_error(
+    createFallvignetteImportData(
+      source_data,
+      mapping,
+      getTestWardDefinitions(),
+      site_code = "UKB"
+    ),
+    "must contain only Unchecked, Checked or NA: invalid",
+    fixed = TRUE
+  )
 })
 
 testthat::test_that("createFallvignetteImportData rejects unknown wards", {

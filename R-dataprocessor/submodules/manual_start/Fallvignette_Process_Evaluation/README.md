@@ -81,8 +81,8 @@ retrospektiven Bewertungen verwendet, zum Beispiel `ret_gewissheit1` und
 Direkte Quellfelder müssen mit `pat_`, `meda_` oder `ret_` beginnen. Zusätzlich
 wird `fall_age_at_admission` aus `fall_fe` unterstützt. `record_id`,
 `wp8_standort_id`, `wp8_mrp_fachbereich`, Diagnosen, Medikationen, Laborwerte
-und OP-Status werden durch das Modul befüllt. `mrp_auswahl_complete` bleibt
-absichtlich leer.
+und OP-Status werden durch das Modul befüllt. `mrp_auswahl_complete` wird
+entsprechend der Spalte `Value` in der Mapping-Arbeitsmappe auf `0` gesetzt.
 
 `wp8_ret_id` wird gemäß Mapping direkt aus `ret_id` übernommen. Entstehen aus
 beiden retrospektiven Bewertungen zwei Exportzeilen, enthalten beide dieselbe
@@ -114,6 +114,8 @@ Die Datenbank-Displays `MRP nicht bestätigt` und
 `MRP sachlich richtig, aber klinisch nicht relevant` werden für die
 REDCap-Auswahlfelder `wp8_ret_gewissheit` und
 `wp8_ret_gewiss_grund_abl_01` jeweils als Rohcode `3` exportiert.
+Für `wp8_ret_gewiss_grund_abl_klin_neg` wird `Unchecked` als `0` und `Checked`
+als `1` exportiert; fehlende Werte bleiben leer.
 
 ## Klinischer Kontext
 
