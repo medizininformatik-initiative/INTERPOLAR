@@ -27,7 +27,7 @@ testthat::test_that("buildFallvignetteSourceQuery selects the mapped source fiel
     query,
     paste(
       "ret_fe.ret_gewiss_grund_abl_klin2_neg___1 AS",
-      "ret_gewiss_grund_abl_klin2_neg"
+      "ret_gewiss_grund_abl_klin2_neg___1"
     ),
     fixed = TRUE
   )

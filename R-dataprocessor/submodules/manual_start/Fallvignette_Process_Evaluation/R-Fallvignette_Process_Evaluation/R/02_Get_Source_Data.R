@@ -55,16 +55,7 @@ buildFallvignetteSourceQuery <- function(mapping) {
     } else {
       "ret_fe"
     }
-    database_column <- switch(
-      source_field,
-      ret_gewiss_grund_abl_klin1_neg =
-        "ret_gewiss_grund_abl_klin1_neg___1",
-      ret_gewiss_grund_abl_klin2_neg =
-        "ret_gewiss_grund_abl_klin2_neg___1",
-      source_field
-    )
-
-    paste0(source_alias, ".", database_column, " AS ", source_field)
+    paste0(source_alias, ".", source_field, " AS ", source_field)
   }
 
   mapped_select <- vapply(

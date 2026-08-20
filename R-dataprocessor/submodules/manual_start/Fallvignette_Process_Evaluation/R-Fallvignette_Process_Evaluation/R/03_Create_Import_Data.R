@@ -181,7 +181,13 @@ createFallvignetteImportData <- function(
     wp8_ret_gewissheit = "3",
     wp8_ret_gewiss_grund_abl_01 = "3"
   )
-  checkbox_target <- "wp8_ret_gewiss_grund_abl_klin_neg"
+  checkbox_target <- "wp8_ret_gewiss_grund_abl_klin_neg___1"
+  mrp_class_values <- c(
+    `Drug-Drug` = "1",
+    `Drug-Disease` = "2",
+    `Drug-Niereninsuffizienz` = "3"
+  )
+  atc_targets <- c("wp8_ret_atc1_2026", "wp8_ret_atc2_2026")
   eligibility_mapping_indices <- which(
     direct_target_fields == eligibility_target
   )
@@ -355,6 +361,38 @@ createFallvignetteImportData <- function(
       }
       target_values[which(target_values == "Unchecked")] <- "0"
       target_values[which(target_values == "Checked")] <- "1"
+    }
+    if (identical(target_field, "wp8_ret_ip_klasse_01")) {
+      nonempty_values <- !is.na(target_values) & nzchar(target_values)
+      invalid_values <- unique(target_values[
+        nonempty_values & !target_values %in% names(mrp_class_values)
+      ])
+      if (length(invalid_values)) {
+        stop(
+          target_field,
+          " contains invalid MRP classes: ",
+          paste(invalid_values, collapse = ", ")
+        )
+      }
+      target_values[nonempty_values] <- unname(
+        mrp_class_values[target_values[nonempty_values]]
+      )
+    }
+    if (target_field %in% atc_targets) {
+      nonempty_values <- !is.na(target_values) & nzchar(trimws(target_values))
+      atc_codes <- sub("\\s+-.*$", "", trimws(target_values))
+      invalid_values <- unique(target_values[
+        nonempty_values &
+          !grepl("^[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}$", atc_codes)
+      ])
+      if (length(invalid_values)) {
+        stop(
+          target_field,
+          " contains invalid ATC values: ",
+          paste(invalid_values, collapse = ", ")
+        )
+      }
+      target_values[nonempty_values] <- atc_codes[nonempty_values]
     }
     data.table::set(
       export_data,

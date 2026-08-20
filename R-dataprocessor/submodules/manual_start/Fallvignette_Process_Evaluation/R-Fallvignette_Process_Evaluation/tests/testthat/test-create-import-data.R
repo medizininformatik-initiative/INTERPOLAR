@@ -94,6 +94,24 @@ getTestFallvignetteSourceData <- function(mapping) {
   )
   data.table::set(
     source_data,
+    j = "ret_ip_klasse_01",
+    value = c("Drug-Drug", "Drug-Disease")
+  )
+  data.table::set(
+    source_data,
+    j = "ret_atc1",
+    value = c(
+      "J05AF06 - Abacavir",
+      "C09DA06 - Candesartan und Diuretika"
+    )
+  )
+  data.table::set(
+    source_data,
+    j = "ret_atc2",
+    value = c("A04AA01 - Ondansetron", NA_character_)
+  )
+  data.table::set(
+    source_data,
     j = "ret_gewissheit1",
     value = rep("MRP nicht bestätigt", 2L)
   )
@@ -120,12 +138,12 @@ getTestFallvignetteSourceData <- function(mapping) {
   )
   data.table::set(
     source_data,
-    j = "ret_gewiss_grund_abl_klin1_neg",
+    j = "ret_gewiss_grund_abl_klin1_neg___1",
     value = c("Unchecked", "Checked")
   )
   data.table::set(
     source_data,
-    j = "ret_gewiss_grund_abl_klin2_neg",
+    j = "ret_gewiss_grund_abl_klin2_neg___1",
     value = c("Checked", "Unchecked")
   )
   data.table::set(
@@ -234,6 +252,18 @@ testthat::test_that("createFallvignetteImportData creates evaluation rows", {
     c("MRP A", "MRP B", "MRP B")
   )
   testthat::expect_equal(
+    result$wp8_ret_ip_klasse_01,
+    c("1", "2", "2")
+  )
+  testthat::expect_equal(
+    result$wp8_ret_atc1_2026,
+    c("J05AF06", "C09DA06", "C09DA06")
+  )
+  testthat::expect_equal(
+    result$wp8_ret_atc2_2026,
+    c("A04AA01", NA_character_, NA_character_)
+  )
+  testthat::expect_equal(
     result$wp8_ret_gewissheit,
     rep("3", 3L)
   )
@@ -246,7 +276,7 @@ testthat::test_that("createFallvignetteImportData creates evaluation rows", {
     rep("3", 3L)
   )
   testthat::expect_equal(
-    result$wp8_ret_gewiss_grund_abl_klin_neg,
+    result$wp8_ret_gewiss_grund_abl_klin_neg___1,
     c("0", "1", "0")
   )
   testthat::expect_equal(result[["mrp_auswahl_complete"]], rep("0", 3L))
@@ -258,7 +288,7 @@ testthat::test_that("createFallvignetteImportData rejects invalid checkbox value
   data.table::set(
     source_data,
     i = 1L,
-    j = "ret_gewiss_grund_abl_klin1_neg",
+    j = "ret_gewiss_grund_abl_klin1_neg___1",
     value = "invalid"
   )
 
@@ -270,6 +300,47 @@ testthat::test_that("createFallvignetteImportData rejects invalid checkbox value
       site_code = "UKB"
     ),
     "must contain only Unchecked, Checked or NA: invalid",
+    fixed = TRUE
+  )
+})
+
+testthat::test_that("createFallvignetteImportData rejects invalid REDCap values", {
+  mapping <- getTestFallvignetteMapping()
+  source_data <- getTestFallvignetteSourceData(mapping)
+  data.table::set(
+    source_data,
+    i = 1L,
+    j = "ret_ip_klasse_01",
+    value = "invalid"
+  )
+
+  testthat::expect_error(
+    createFallvignetteImportData(
+      source_data,
+      mapping,
+      getTestWardDefinitions(),
+      site_code = "UKB"
+    ),
+    "contains invalid MRP classes: invalid",
+    fixed = TRUE
+  )
+
+  source_data <- getTestFallvignetteSourceData(mapping)
+  data.table::set(
+    source_data,
+    i = 1L,
+    j = "ret_atc1",
+    value = "not-an-atc"
+  )
+
+  testthat::expect_error(
+    createFallvignetteImportData(
+      source_data,
+      mapping,
+      getTestWardDefinitions(),
+      site_code = "UKB"
+    ),
+    "contains invalid ATC values: not-an-atc",
     fixed = TRUE
   )
 })

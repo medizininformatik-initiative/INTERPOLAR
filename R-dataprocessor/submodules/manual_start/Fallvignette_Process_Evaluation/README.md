@@ -114,8 +114,13 @@ Die Datenbank-Displays `MRP nicht bestätigt` und
 `MRP sachlich richtig, aber klinisch nicht relevant` werden für die
 REDCap-Auswahlfelder `wp8_ret_gewissheit` und
 `wp8_ret_gewiss_grund_abl_01` jeweils als Rohcode `3` exportiert.
-Für `wp8_ret_gewiss_grund_abl_klin_neg` wird `Unchecked` als `0` und `Checked`
-als `1` exportiert; fehlende Werte bleiben leer.
+Für `wp8_ret_gewiss_grund_abl_klin_neg___1` wird `Unchecked` als `0` und
+`Checked` als `1` exportiert; fehlende Werte bleiben leer.
+
+`wp8_ret_ip_klasse_01` wird als REDCap-Code exportiert: `Drug-Drug` als `1`,
+`Drug-Disease` als `2` und `Drug-Niereninsuffizienz` als `3`. Für
+`wp8_ret_atc1_2026` und `wp8_ret_atc2_2026` wird aus Werten wie
+`J05AF06 - Abacavir` ausschließlich der ATC-Code `J05AF06` übernommen.
 
 ## Klinischer Kontext
 
