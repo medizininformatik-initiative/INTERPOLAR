@@ -37,7 +37,12 @@ getPseudonymMappingCoverageRequests <- function(rules, materialization_plan) {
     with = FALSE
   ])
   plan <- data.table::as.data.table(data.table::copy(materialization_plan))
-  plan <- plan[plan[["SNAPSHOT_RELATION_TYPE"]] == "all", ]
+  plan <- plan[
+    plan[["SNAPSHOT_RELATION_TYPE"]] %in% c(
+      SNAPSHOT_RELATION_TYPE_ALL,
+      SNAPSHOT_RELATION_TYPE_OLD
+    ),
+  ]
   requests <- merge(
     plan[
       ,
