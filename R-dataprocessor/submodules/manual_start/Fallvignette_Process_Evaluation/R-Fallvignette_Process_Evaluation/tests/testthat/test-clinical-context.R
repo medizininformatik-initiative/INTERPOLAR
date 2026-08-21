@@ -131,7 +131,13 @@ testthat::test_that("addFallvignetteMedications selects active ATC and PZN", {
     meda_dat = as.POSIXct("2026-02-01 12:00:00", tz = "UTC")
   )
   medication_requests <- data.table::data.table(
-    medreq_id = paste0("request-", 1:5),
+    medreq_id = c(
+      "request-1",
+      "request-2",
+      "request-3",
+      "request-4",
+      "request-1"
+    ),
     medreq_patient_ref = rep("Patient/patient-1", 5L),
     medreq_encounter_calculated_ref = c(
       "Encounter/case-1",
@@ -266,8 +272,7 @@ testthat::test_that("addFallvignetteLaboratoryValues applies WP7 and time window
   ))
   loinc_mapping <- data.table::data.table(
     LOINC = c("2160-0", "718-7"),
-    LOINC_PRIMARY = c("2160-0", "718-7"),
-    GERMAN_NAME_LOINC_PRIMARY = c("Kreatinin", "Haemoglobin")
+    LOINC_PRIMARY = c("2160-0", "718-7")
   )
 
   result <- addFallvignetteLaboratoryValues(

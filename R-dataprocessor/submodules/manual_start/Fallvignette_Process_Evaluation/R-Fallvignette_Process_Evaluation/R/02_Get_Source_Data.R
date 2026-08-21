@@ -74,8 +74,7 @@ buildFallvignetteSourceQuery <- function(mapping) {
     "meda_fe.meda_id",
     "meda_fe.meda_dat",
     "ret_fe.ret_id",
-    "ret_fe.ret_meda_id",
-    "ret_fe.ret_meda_dat_referenz"
+    "ret_fe.ret_meda_id"
   )
   select_expressions <- unique(c(identifier_select, mapped_select))
 

@@ -4,15 +4,17 @@
 #'
 #' Includes every diagnosis assigned to the current encounter. Diagnoses from
 #' previous encounters are included only if their ICD code occurs in the
-#' processed WP7 Drug-Disease rules and their configured validity period covers
-#' the medication analysis timestamp. Duplicate diagnoses are retained.
+#' processed WP7 Drug-Disease or Drug-Niereninsuffizienz rules and their
+#' configured validity period covers the medication analysis timestamp.
+#' Identical formatted lines are removed; the same diagnosis with different
+#' timestamps is retained.
 #'
 #' @param source_data Fallvignette source rows. Required columns are pat_id,
 #'   fall_fhir_enc_id and meda_dat.
 #' @param conditions Condition resources as returned by the existing
 #'   getConditionsFromDB() helper.
-#' @param diagnosis_rules Processed WP7 Drug-Disease table containing ICD and
-#'   ICD_VALIDITY_DAYS.
+#' @param diagnosis_rules Combined processed WP7 Drug-Disease and
+#'   Drug-Niereninsuffizienz rules containing ICD and ICD_VALIDITY_DAYS.
 #' @param datetime_format Format used for available diagnosis timestamps.
 #'
 #' @return A copy of source_data with the wp8_fv_diagnosen column.
@@ -316,7 +318,6 @@ addFallvignetteMedications <- function(
     discharge_datetime <- asFallvignetteDatetime(
       result[["fall_ent_dat"]][source_index]
     )
-    medication_start <- asFallvignetteDatetime(medications[["start_datetime"]])
     patient_reference <- paste0("Patient/", result[["pat_id"]][source_index])
     current_encounter_id <- normalizeFallvignetteReference(
       result[["fall_fhir_enc_id"]][source_index],
@@ -340,6 +341,9 @@ addFallvignetteMedications <- function(
       names(medications),
       with = FALSE
     ]
+    medication_start <- asFallvignetteDatetime(
+      encounter_requests[["start_datetime"]]
+    )
     active_atcs <- active_atc_fun(
       medication_requests = encounter_requests,
       enc_period_start = admission_datetime,
@@ -350,17 +354,19 @@ addFallvignetteMedications <- function(
       !is.na(active_atcs[["start_datetime"]]) &
         active_atcs[["start_datetime"]] <= meda_datetime
     ])
-    active <- medications[["medreq_id"]] %in% active_request_ids &
-      !is.na(medications[["fallvignette_code"]]) &
-      nzchar(medications[["fallvignette_code"]])
+    active <- encounter_requests[["medreq_id"]] %in% active_request_ids &
+      !is.na(encounter_requests[["fallvignette_code"]]) &
+      nzchar(encounter_requests[["fallvignette_code"]])
     included_indices <- which(active %in% TRUE)
     if (!length(included_indices)) {
       return(NA_character_)
     }
 
-    display <- medications[["fallvignette_display"]][included_indices]
-    code <- medications[["fallvignette_code"]][included_indices]
-    code_type <- medications[["fallvignette_code_type"]][included_indices]
+    display <- encounter_requests[["fallvignette_display"]][included_indices]
+    code <- encounter_requests[["fallvignette_code"]][included_indices]
+    code_type <- encounter_requests[["fallvignette_code_type"]][
+      included_indices
+    ]
     start <- medication_start[included_indices]
     lines <- paste0(display, " (", code_type, ": ", code, ")")
     timestamp <- formatFallvignetteTimestamp(start, datetime_format)
@@ -457,7 +463,7 @@ addFallvignetteLaboratoryValues <- function(
   validateFallvignetteClinicalData(
     loinc_mapping,
     "loinc_mapping",
-    c("LOINC", "LOINC_PRIMARY", "GERMAN_NAME_LOINC_PRIMARY")
+    c("LOINC", "LOINC_PRIMARY")
   )
   if (!is.numeric(lookback_days) || length(lookback_days) != 1L ||
       is.na(lookback_days) || lookback_days < 0) {

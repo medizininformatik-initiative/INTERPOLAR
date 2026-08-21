@@ -26,12 +26,6 @@ VERBOSE               = 10 # Retrieval / analysis verbose level
 MAX_DIR_COUNT = 5
 
 #################
-# Short code identifying this site. The value must be listed in
-# dataprocessor/inst/extdata/Standortkuerzel.xlsx.
-#################
-SITE_CODE = "UKB"
-
-#################
 # If this parameter is activated, specified tables are written as Excel files in the folder outputLocal/tables.
 # This can be used to check results from FHIR download, melting or other steps.
 # Per default, there are some tables which are written, see code sections with the function writeDebugExcelFile()
@@ -40,6 +34,12 @@ SITE_CODE = "UKB"
 #LOG_TEMP_EXCEL_TABLES = true
 
 [analyse]
+
+#################
+# Short code identifying the clinic location. The value must be listed in
+# dataprocessor/inst/extdata/Standortkuerzel.xlsx.
+#################
+SITE_CODE = ""
 
 #################
 # Study phase A but with test calculation for retrolective MRP evaluations

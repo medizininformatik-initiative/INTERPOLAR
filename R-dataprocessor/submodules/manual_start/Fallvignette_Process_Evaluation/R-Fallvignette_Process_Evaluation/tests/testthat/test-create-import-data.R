@@ -282,6 +282,29 @@ testthat::test_that("createFallvignetteImportData creates evaluation rows", {
   testthat::expect_equal(result[["mrp_auswahl_complete"]], rep("0", 3L))
 })
 
+testthat::test_that("createFallvignetteImportData maps renal MRP class", {
+  mapping <- getTestFallvignetteMapping()
+  source_data <- getTestFallvignetteSourceData(mapping)
+  data.table::set(
+    source_data,
+    i = 1L,
+    j = "ret_ip_klasse_01",
+    value = "Drug-Niereninsuffizienz"
+  )
+
+  result <- createFallvignetteImportData(
+    source_data,
+    mapping,
+    getTestWardDefinitions(),
+    site_code = "UKB"
+  )
+
+  testthat::expect_equal(
+    result[["wp8_ret_ip_klasse_01"]],
+    c("3", "2", "2")
+  )
+})
+
 testthat::test_that("createFallvignetteImportData rejects invalid checkbox values", {
   mapping <- getTestFallvignetteMapping()
   source_data <- getTestFallvignetteSourceData(mapping)
