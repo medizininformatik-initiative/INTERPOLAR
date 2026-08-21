@@ -167,9 +167,7 @@ testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
       calls,
       if (is.null(target_prefix)) "db_restore" else "db"
     )
-    testthat::expect_true(
-      is.null(target_prefix) || identical(target_prefix, "DB_ANALYSIS")
-    )
+    testthat::expect_true(is.null(target_prefix) || identical(target_prefix, "DB_ANALYSIS"))
     testthat::expect_equal(
       get(
         arguments$path_variable,

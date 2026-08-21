@@ -11,17 +11,17 @@
 generateFallvignetteRecordIdMapping <- function(row_count, site_code) {
   if (
     !is.numeric(row_count) ||
-      length(row_count) != 1L ||
-      is.na(row_count) ||
-      !is.finite(row_count) ||
-      row_count < 0L ||
-      row_count != floor(row_count)
+    length(row_count) != 1L ||
+    is.na(row_count) ||
+    !is.finite(row_count) ||
+    row_count < 0L ||
+    row_count != floor(row_count)
   ) {
     stop("row_count must be one non-negative integer.")
   }
   if (
     !is.character(site_code) || length(site_code) != 1L ||
-      is.na(site_code) || !nzchar(trimws(site_code))
+    is.na(site_code) || !nzchar(trimws(site_code))
   ) {
     stop("site_code must be one non-empty string.")
   }
@@ -74,7 +74,7 @@ createFallvignetteWardDepartmentMapping <- function(ward_definitions) {
       department <- etlutils::extractValuesForKey(entry_lines, "department")
       if (
         is.na(ward_name) || !nzchar(trimws(ward_name)) ||
-          is.na(department) || !nzchar(trimws(department))
+        is.na(department) || !nzchar(trimws(department))
       ) {
         stop(
           entry_name,
@@ -89,9 +89,7 @@ createFallvignetteWardDepartmentMapping <- function(ward_definitions) {
   ))
 
   if (anyDuplicated(ward_mapping$ward_name)) {
-    duplicate_wards <- unique(
-      ward_mapping$ward_name[duplicated(ward_mapping$ward_name)]
-    )
+    duplicate_wards <- unique(ward_mapping$ward_name[duplicated(ward_mapping$ward_name)])
     stop(
       "ward_definitions contain duplicate ward_name values: ",
       paste(duplicate_wards, collapse = ", ")
@@ -110,7 +108,7 @@ createFallvignetteWardDepartmentMapping <- function(ward_definitions) {
 hashFallvignetteSiteCode <- function(site_code) {
   if (
     !is.character(site_code) || length(site_code) != 1L ||
-      is.na(site_code) || !nzchar(trimws(site_code))
+    is.na(site_code) || !nzchar(trimws(site_code))
   ) {
     stop("site_code must be one non-empty string.")
   }
@@ -146,7 +144,7 @@ createFallvignetteImportData <- function(
   }
   if (
     !data.table::is.data.table(mapping) ||
-      !all(c("target_field", "source_field") %in% names(mapping))
+    !all(c("target_field", "source_field") %in% names(mapping))
   ) {
     stop("mapping must be a normalized fallvignette mapping.")
   }
@@ -188,9 +186,7 @@ createFallvignetteImportData <- function(
     `Drug-Niereninsuffizienz` = "3"
   )
   atc_targets <- c("wp8_ret_atc1_2026", "wp8_ret_atc2_2026")
-  eligibility_mapping_indices <- which(
-    direct_target_fields == eligibility_target
-  )
+  eligibility_mapping_indices <- which(direct_target_fields == eligibility_target)
   eligibility_mapping <- direct_mapping[
     eligibility_mapping_indices,
     names(direct_mapping),
@@ -279,18 +275,16 @@ createFallvignetteImportData <- function(
   }
 
   output_count <- nrow(output_rows)
-  record_id_mapping <- data.table::as.data.table(
-    record_id_mapping_fun(output_count, site_code)
-  )
+  record_id_mapping <- data.table::as.data.table(record_id_mapping_fun(output_count, site_code))
   if (
     !all(c("local_record_id", "record_id") %in% names(record_id_mapping)) ||
-      nrow(record_id_mapping) != output_count ||
-      anyNA(record_id_mapping[["local_record_id"]]) ||
-      anyNA(record_id_mapping[["record_id"]]) ||
-      any(!nzchar(record_id_mapping[["local_record_id"]])) ||
-      any(!nzchar(record_id_mapping[["record_id"]])) ||
-      anyDuplicated(record_id_mapping[["local_record_id"]]) ||
-      anyDuplicated(record_id_mapping[["record_id"]])
+    nrow(record_id_mapping) != output_count ||
+    anyNA(record_id_mapping[["local_record_id"]]) ||
+    anyNA(record_id_mapping[["record_id"]]) ||
+    any(!nzchar(record_id_mapping[["local_record_id"]])) ||
+    any(!nzchar(record_id_mapping[["record_id"]])) ||
+    anyDuplicated(record_id_mapping[["local_record_id"]]) ||
+    anyDuplicated(record_id_mapping[["record_id"]])
   ) {
     stop(
       "record_id_mapping_fun must return one unique, non-empty local_record_id ",
@@ -374,9 +368,7 @@ createFallvignetteImportData <- function(
           paste(invalid_values, collapse = ", ")
         )
       }
-      target_values[nonempty_values] <- unname(
-        mrp_class_values[target_values[nonempty_values]]
-      )
+      target_values[nonempty_values] <- unname(mrp_class_values[target_values[nonempty_values]])
     }
     if (target_field %in% atc_targets) {
       nonempty_values <- !is.na(target_values) & nzchar(trimws(target_values))
@@ -401,9 +393,7 @@ createFallvignetteImportData <- function(
     )
   }
 
-  calculated_mapping_indices <- which(
-    is.na(mapping_source_fields) | !nzchar(mapping_source_fields)
-  )
+  calculated_mapping_indices <- which(is.na(mapping_source_fields) | !nzchar(mapping_source_fields))
   calculated_target_fields <- intersect(
     mapping[["target_field"]][calculated_mapping_indices],
     names(source_data)

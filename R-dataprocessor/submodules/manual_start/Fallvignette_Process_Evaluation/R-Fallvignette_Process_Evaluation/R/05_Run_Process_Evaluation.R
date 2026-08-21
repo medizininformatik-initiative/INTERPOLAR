@@ -175,9 +175,7 @@ prepareFallvignetteMedicationRequests <- function(
     medications
   )
   requests_with_atc <- unique(atc_requests[["medreq_id"]])
-  fallback_indices <- which(
-    !medication_requests[["medreq_id"]] %in% requests_with_atc
-  )
+  fallback_indices <- which(!medication_requests[["medreq_id"]] %in% requests_with_atc)
   fallback_requests <- data.table::copy(medication_requests)[
     fallback_indices,
     names(medication_requests),
@@ -231,21 +229,15 @@ getFallvignetteClinicalResources <- function(patient_references) {
     patient_references,
     lock_id = NULL
   )
-  empty_administrations <- data.table::data.table(
-    medadm_medicationreference_ref = character()
-  )
-  empty_statements <- data.table::data.table(
-    medstat_medicationreference_ref = character()
-  )
+  empty_administrations <- data.table::data.table(medadm_medicationreference_ref = character())
+  empty_statements <- data.table::data.table(medstat_medicationreference_ref = character())
   medications <- getATCMedicationsFromDB(
     medication_requests,
     empty_administrations,
     empty_statements,
     lock_id_prefix = NULL
   )
-  pzn_medications <- getFallvignettePznMedicationsFromDB(
-    medication_requests
-  )
+  pzn_medications <- getFallvignettePznMedicationsFromDB(medication_requests)
 
   list(
     conditions = getConditionsFromDB(patient_references, lock_id = NULL),

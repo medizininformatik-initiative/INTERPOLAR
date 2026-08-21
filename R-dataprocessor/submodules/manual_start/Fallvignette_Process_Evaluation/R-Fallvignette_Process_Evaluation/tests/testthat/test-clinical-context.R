@@ -153,12 +153,8 @@ testthat::test_that("addFallvignetteMedications selects active ATC and PZN", {
       NA,
       NA
     ),
-    medreq_medicationcodeableconcept_code = c(
-      NA, "12345678", NA, NA, NA
-    ),
-    medreq_medicationcodeableconcept_display = c(
-      NA, "Zubereitung", NA, NA, NA
-    ),
+    medreq_medicationcodeableconcept_code = c(NA, "12345678", NA, NA, NA),
+    medreq_medicationcodeableconcept_display = c(NA, "Zubereitung", NA, NA, NA),
     medreq_authoredon = as.POSIXct(c(
       "2026-01-10 08:00:00",
       "2026-01-20 08:00:00",
@@ -186,7 +182,8 @@ testthat::test_that("addFallvignetteMedications selects active ATC and PZN", {
   medication_requests <- data.table::rbindlist(list(
     medication_requests,
     medication_requests[
-      1L, names(medication_requests), with = FALSE
+      1L, names(medication_requests),
+      with = FALSE
     ]
   ))
 

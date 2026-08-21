@@ -47,9 +47,7 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
   }
 
   department_path <- getFachabteilungsschluesselPath()
-  valid_departments <- loadFachabteilungsschluessel(
-    department_path
-  )
+  valid_departments <- loadFachabteilungsschluessel(department_path)
   valid_ward_types <- c("surgical", "internistic")
   ward_names <- character()
   getEntryName <- function(x, index) {
@@ -216,9 +214,7 @@ getFachabteilungsschluesselPath <- function() {
 }
 
 # Load valid department keys from the packaged terminology workbook.
-loadFachabteilungsschluessel <- function(
-  file_path = getFachabteilungsschluesselPath()
-) {
+loadFachabteilungsschluessel <- function(file_path = getFachabteilungsschluesselPath()) {
   sheets <- etlutils::readExcelFileAsTableList(file_path)
   if (length(sheets) != 1L) {
     stop("Fachabteilungsschluessel.xlsx must contain exactly one sheet.")
@@ -231,8 +227,8 @@ loadFachabteilungsschluessel <- function(
   )
   if (
     !data.table::is.data.table(fachabteilungen) ||
-      !nrow(fachabteilungen) ||
-      !all(required_columns %in% names(fachabteilungen))
+    !nrow(fachabteilungen) ||
+    !all(required_columns %in% names(fachabteilungen))
   ) {
     stop("Fachabteilungsschluessel.xlsx must contain the columns Code and Display.")
   }
@@ -286,7 +282,7 @@ loadSiteCodes <- function(file_path = getSiteCodePath()) {
 validateSiteCode <- function(site_code, file_path = getSiteCodePath()) {
   if (
     !is.character(site_code) || length(site_code) != 1L ||
-      is.na(site_code) || !nzchar(trimws(site_code))
+    is.na(site_code) || !nzchar(trimws(site_code))
   ) {
     stop("dataprocessor_config.toml: SITE_CODE must be one non-empty string.")
   }

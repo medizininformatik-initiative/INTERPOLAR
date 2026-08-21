@@ -21,9 +21,9 @@ getFallvignetteMappingPath <- function(
   }
   if (
     !is.character(extdata_dir) ||
-      length(extdata_dir) != 1L ||
-      !nzchar(extdata_dir) ||
-      !dir.exists(extdata_dir)
+    length(extdata_dir) != 1L ||
+    !nzchar(extdata_dir) ||
+    !dir.exists(extdata_dir)
   ) {
     stop("FallvignetteProcessEvaluation/inst/extdata not found.")
   }
@@ -57,9 +57,7 @@ getFallvignetteMappingPath <- function(
 #'
 #' @return A `data.table` with normalized mapping columns.
 #'
-loadFallvignetteMapping <- function(
-  mapping_path
-) {
+loadFallvignetteMapping <- function(mapping_path) {
   if (!file.exists(mapping_path)) {
     stop("Fallvignette mapping file not found: ", mapping_path)
   }
@@ -96,9 +94,7 @@ loadFallvignetteMapping <- function(
   mapping <- mapping[!is.na(target_fields) & nzchar(target_fields), ]
 
   target_fields <- mapping[["target_field"]]
-  invalid_target_fields <- unique(
-    target_fields[!grepl("^[a-z][a-z0-9_]*$", target_fields)]
-  )
+  invalid_target_fields <- unique(target_fields[!grepl("^[a-z][a-z0-9_]*$", target_fields)])
   if (length(invalid_target_fields)) {
     stop(
       "Fallvignette mapping contains invalid target fields: ",
@@ -120,13 +116,9 @@ loadFallvignetteMapping <- function(
 #'
 #' @return An empty `data.table` with the ordered WP8 export columns.
 #'
-createEmptyFallvignetteExport <- function(
-  mapping
-) {
+createEmptyFallvignetteExport <- function(mapping) {
   columns <- unique(mapping$target_field)
-  data.table::as.data.table(
-    stats::setNames(rep(list(character()), length(columns)), columns)
-  )
+  data.table::as.data.table(stats::setNames(rep(list(character()), length(columns)), columns))
 }
 
 #' Write the WP8 fallvignette import files
@@ -252,13 +244,13 @@ writeFallvignetteIdMappingFile <- function(
   }
   if (
     !is.character(output_dir) || length(output_dir) != 1L ||
-      !nzchar(output_dir)
+    !nzchar(output_dir)
   ) {
     stop("output_dir must be one non-empty path.")
   }
   if (
     !is.character(file_name) || length(file_name) != 1L ||
-      !nzchar(file_name) || basename(file_name) != file_name
+    !nzchar(file_name) || basename(file_name) != file_name
   ) {
     stop("file_name must be one non-empty string without a directory path.")
   }

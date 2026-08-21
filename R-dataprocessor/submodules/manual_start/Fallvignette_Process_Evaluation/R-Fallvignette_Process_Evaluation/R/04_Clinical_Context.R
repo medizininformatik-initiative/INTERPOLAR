@@ -128,9 +128,7 @@ addFallvignetteDiagnoses <- function(
         with = FALSE
       ]
       meda_datetime <- asFallvignetteDatetime(result[["meda_dat"]][source_index])
-      diagnosis_datetimes <- asFallvignetteDatetime(
-        patient_conditions[["start_datetime"]]
-      )
+      diagnosis_datetimes <- asFallvignetteDatetime(patient_conditions[["start_datetime"]])
       current_encounter_id <- normalizeFallvignetteReference(
         result[["fall_fhir_enc_id"]][source_index],
         "Encounter"
@@ -168,12 +166,8 @@ addFallvignetteDiagnoses <- function(
         with = FALSE
       ]
       included_datetimes <- diagnosis_datetimes[included_indices]
-      diagnosis_displays <- trimws(
-        included_conditions[["con_code_display"]]
-      )
-      diagnosis_codes <- trimws(
-        included_conditions[["con_code_code"]]
-      )
+      diagnosis_displays <- trimws(included_conditions[["con_code_display"]])
+      diagnosis_codes <- trimws(included_conditions[["con_code_code"]])
 
       diagnosis_lines <- diagnosis_displays
       has_code <- !is.na(diagnosis_codes) & nzchar(diagnosis_codes)
@@ -270,12 +264,8 @@ addFallvignetteMedications <- function(
   direct_system <- tolower(trimws(as.character(
     medications[["medreq_medicationcodeableconcept_system"]]
   )))
-  direct_code <- trimws(as.character(
-    medications[["medreq_medicationcodeableconcept_code"]]
-  ))
-  direct_display <- trimws(as.character(
-    medications[["medreq_medicationcodeableconcept_display"]]
-  ))
+  direct_code <- trimws(as.character(medications[["medreq_medicationcodeableconcept_code"]]))
+  direct_display <- trimws(as.character(medications[["medreq_medicationcodeableconcept_display"]]))
   atc_code <- trimws(as.character(medications[["atc_code"]]))
   atc_display <- trimws(as.character(medications[["atc_display"]]))
   has_atc <- !is.na(atc_code) & nzchar(atc_code)
@@ -312,12 +302,8 @@ addFallvignetteMedications <- function(
   result <- data.table::copy(source_data)
   medication_texts <- vapply(seq_len(nrow(result)), function(source_index) {
     meda_datetime <- asFallvignetteDatetime(result[["meda_dat"]][source_index])
-    admission_datetime <- asFallvignetteDatetime(
-      result[["fall_aufn_dat"]][source_index]
-    )
-    discharge_datetime <- asFallvignetteDatetime(
-      result[["fall_ent_dat"]][source_index]
-    )
+    admission_datetime <- asFallvignetteDatetime(result[["fall_aufn_dat"]][source_index])
+    discharge_datetime <- asFallvignetteDatetime(result[["fall_ent_dat"]][source_index])
     patient_reference <- paste0("Patient/", result[["pat_id"]][source_index])
     current_encounter_id <- normalizeFallvignetteReference(
       result[["fall_fhir_enc_id"]][source_index],
@@ -341,9 +327,7 @@ addFallvignetteMedications <- function(
       names(medications),
       with = FALSE
     ]
-    medication_start <- asFallvignetteDatetime(
-      encounter_requests[["start_datetime"]]
-    )
+    medication_start <- asFallvignetteDatetime(encounter_requests[["start_datetime"]])
     active_atcs <- active_atc_fun(
       medication_requests = encounter_requests,
       enc_period_start = admission_datetime,
@@ -465,8 +449,10 @@ addFallvignetteLaboratoryValues <- function(
     "loinc_mapping",
     c("LOINC", "LOINC_PRIMARY")
   )
-  if (!is.numeric(lookback_days) || length(lookback_days) != 1L ||
-      is.na(lookback_days) || lookback_days < 0) {
+  if (
+    !is.numeric(lookback_days) || length(lookback_days) != 1L ||
+    is.na(lookback_days) || lookback_days < 0
+  ) {
     stop("lookback_days must be one non-negative number.")
   }
 
@@ -486,9 +472,7 @@ addFallvignetteLaboratoryValues <- function(
   result <- data.table::copy(source_data)
   laboratory_texts <- vapply(seq_len(nrow(result)), function(source_index) {
     meda_datetime <- asFallvignetteDatetime(result[["meda_dat"]][source_index])
-    observation_datetime <- asFallvignetteDatetime(
-      observations[["start_datetime"]]
-    )
+    observation_datetime <- asFallvignetteDatetime(observations[["start_datetime"]])
     patient_reference <- paste0("Patient/", result[["pat_id"]][source_index])
     include <- observations[["obs_patient_ref"]] == patient_reference &
       observations[["obs_code_system"]] == "http://loinc.org" &
@@ -502,19 +486,11 @@ addFallvignetteLaboratoryValues <- function(
     }
 
     code <- as.character(observations[["obs_code_code"]][included_indices])
-    display <- trimws(as.character(
-      observations[["obs_code_display"]][included_indices]
-    ))
+    display <- trimws(as.character(observations[["obs_code_display"]][included_indices]))
 
-    value <- as.character(
-      observations[["obs_valuequantity_value"]][included_indices]
-    )
-    unit <- trimws(as.character(
-      observations[["obs_valuequantity_unit"]][included_indices]
-    ))
-    unit_code <- trimws(as.character(
-      observations[["obs_valuequantity_code"]][included_indices]
-    ))
+    value <- as.character(observations[["obs_valuequantity_value"]][included_indices])
+    unit <- trimws(as.character(observations[["obs_valuequantity_unit"]][included_indices]))
+    unit_code <- trimws(as.character(observations[["obs_valuequantity_code"]][included_indices]))
     missing_unit <- is.na(unit) | !nzchar(unit)
     unit[missing_unit] <- unit_code[missing_unit]
     value_text <- value
@@ -593,8 +569,10 @@ addFallvignetteOperationStatus <- function(
       "enc_period_end"
     )
   )
-  if (!is.numeric(lookback_days) || length(lookback_days) != 1L ||
-      is.na(lookback_days) || lookback_days < 0) {
+  if (
+    !is.numeric(lookback_days) || length(lookback_days) != 1L ||
+    is.na(lookback_days) || lookback_days < 0
+  ) {
     stop("lookback_days must be one non-negative number.")
   }
 
@@ -609,24 +587,24 @@ addFallvignetteOperationStatus <- function(
 
     recent_operation_procedure <-
       procedures[["proc_patient_ref"]] == patient_reference &
-      procedures[["proc_code_system"]] ==
-        "http://fhir.de/CodeSystem/bfarm/ops" &
-      grepl("^5-", procedures[["proc_code_code"]]) &
-      !is.na(procedure_datetime) &
-      procedure_datetime >= window_start &
-      procedure_datetime <= meda_datetime
+        procedures[["proc_code_system"]] ==
+          "http://fhir.de/CodeSystem/bfarm/ops" &
+        grepl("^5-", procedures[["proc_code_code"]]) &
+        !is.na(procedure_datetime) &
+        procedure_datetime >= window_start &
+        procedure_datetime <= meda_datetime
     recent_operation_encounter <-
       encounters[["enc_patient_ref"]] == patient_reference &
-      encounters[["enc_type_system"]] ==
-        "http://fhir.de/CodeSystem/kontaktart-de" &
-      encounters[["enc_type_code"]] == "operation" &
-      !is.na(encounter_start) &
-      encounter_start <= meda_datetime &
-      (is.na(encounter_end) | encounter_end >= window_start)
+        encounters[["enc_type_system"]] ==
+          "http://fhir.de/CodeSystem/kontaktart-de" &
+        encounters[["enc_type_code"]] == "operation" &
+        !is.na(encounter_start) &
+        encounter_start <= meda_datetime &
+        (is.na(encounter_end) | encounter_end >= window_start)
 
     if (
       any(recent_operation_procedure %in% TRUE) ||
-        any(recent_operation_encounter %in% TRUE)
+      any(recent_operation_encounter %in% TRUE)
     ) {
       "1"
     } else {

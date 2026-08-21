@@ -9,7 +9,7 @@
 buildFallvignetteSourceQuery <- function(mapping) {
   if (
     !data.table::is.data.table(mapping) ||
-      !all(c("source_field", "target_field") %in% names(mapping))
+    !all(c("source_field", "target_field") %in% names(mapping))
   ) {
     stop("mapping must be a normalized fallvignette mapping.")
   }
