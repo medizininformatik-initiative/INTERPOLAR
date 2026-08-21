@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: INTERPOLAR IT Zulip Chat
+    url: https://mii.zulipchat.com/#narrow/channel/391087-INTERPOLAR
+    about: Please ask and answer questions here.
+  - name: INTERPOLAR IT Github Discussions
+    url: https://github.com/medizininformatik-initiative/INTERPOLAR/discussions
+    about: Please start discussions here.
