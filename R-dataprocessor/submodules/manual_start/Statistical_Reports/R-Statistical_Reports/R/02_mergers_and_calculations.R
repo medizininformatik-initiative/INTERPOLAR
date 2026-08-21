@@ -94,6 +94,274 @@ getFirstWardStart <- function() {
   return(minimum_start_date)
 }
 
+#' Get INTERPOLAR Ward Start and End Dates
+#'
+#' Creates a data frame containing the configured start and end dates for
+#' each defined INTERPOLAR ward.
+#'
+#' @return A data frame with one row per defined INTERPOLAR ward and the
+#'   following columns:
+#'   \itemize{
+#'     \item `ward_name`: Name of the INTERPOLAR ward.
+#'     \item `ward_start`: Start date of the ward phase as a `Date`.
+#'     \item `ward_end`: End date of the ward phase as a `Date`.
+#'   }
+#'
+#' @details
+#' The function searches the global environment for objects matching the
+#' pattern `"^PHASES_WARD_"`. For each defined and non-empty ward phase
+#' definition, the ward name, start date, and end date are extracted from
+#' the corresponding definition.
+#'
+#' The extracted start and end dates are converted to `Date` objects and
+#' combined with the ward names into a data frame.
+#'
+#' @importFrom etlutils isDefinedAndNotEmpty
+#' @importFrom stringr str_split_i
+#'
+#' @export
+getWardStartsAndEnds <- function() {
+  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
+  interpolar_ward_names <- c()
+  interpolar_ward_starts <- c()
+  interpolar_ward_ends <- c()
+  for (i in seq_along(interpolar_wards_definition)) {
+    ward_phase_defintion <- interpolar_wards_definition[i]
+    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
+      ward_start <- get(ward_phase_defintion, envir = .GlobalEnv)[2] |>
+        stringr::str_split_i("'", 2)
+      interpolar_ward_starts <- c(interpolar_ward_starts, ward_start)
+      ward_end <- get(ward_phase_defintion, envir = .GlobalEnv)[4] |>
+        stringr::str_split_i("'", 2)
+      interpolar_ward_ends <- c(interpolar_ward_ends, ward_end)
+      ward_name_i <- get(ward_phase_defintion, envir = .GlobalEnv)[1] |>
+        stringr::str_split_i("'", 2)
+      interpolar_ward_names <- c(interpolar_ward_names, ward_name_i)
+    }
+  }
+  interpolar_wards_start_end_data <- data.frame(
+    ward_name = interpolar_ward_names,
+    ward_start = as.Date(interpolar_ward_starts),
+    ward_end = as.Date(interpolar_ward_ends)
+  )
+
+  return(interpolar_wards_start_end_data)
+}
+
+#' Merge INTERPOLAR Ward Start and End Dates
+#'
+#' Adds the configured start and end dates of each INTERPOLAR ward to a
+#' data frame based on the ward name.
+#'
+#' @param data A data frame containing a column identifying the ward.
+#' @param ward_name_col Column in `data` containing the ward names. Defaults
+#'   to `ward_name`.
+#'
+#' @return A data frame containing the original data enriched with
+#'   `ward_start` and `ward_end` columns containing the configured start
+#'   and end dates for each matching INTERPOLAR ward.
+#'
+#' @details
+#' The function searches the global environment for objects matching the
+#' pattern `"^PHASES_WARD_"`. For each defined and non-empty ward phase
+#' definition, the ward name, start date, and end date are extracted.
+#'
+#' A lookup table containing the ward names and corresponding start and end
+#' dates is constructed and joined to `data` using the column specified by
+#' `ward_name_col`. The extracted dates are converted to `Date` objects
+#' before the join.
+#'
+#' @importFrom dplyr left_join
+#' @importFrom etlutils isDefinedAndNotEmpty
+#' @importFrom stringr str_split_i
+#' @export
+mergeWardStartsAndEnds <- function(data, ward_name_col = ward_name) {
+  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
+  interpolar_ward_names <- c()
+  interpolar_ward_starts <- c()
+  interpolar_ward_ends <- c()
+  for (i in seq_along(interpolar_wards_definition)) {
+    ward_phase_defintion <- interpolar_wards_definition[i]
+    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
+      ward_start <- get(ward_phase_defintion, envir = .GlobalEnv)[2] |>
+        stringr::str_split_i("'", 2)
+      interpolar_ward_starts <- c(interpolar_ward_starts, ward_start)
+      ward_end <- get(ward_phase_defintion, envir = .GlobalEnv)[4] |>
+        stringr::str_split_i("'", 2)
+      interpolar_ward_ends <- c(interpolar_ward_ends, ward_end)
+      ward_name_i <- get(ward_phase_defintion, envir = .GlobalEnv)[1] |>
+        stringr::str_split_i("'", 2)
+      interpolar_ward_names <- c(interpolar_ward_names, ward_name_i)
+    }
+  }
+  interpolar_wards_start_end_data <- data.frame(
+    ward_name = interpolar_ward_names,
+    ward_start = as.Date(interpolar_ward_starts),
+    ward_end = as.Date(interpolar_ward_ends)
+  )
+
+  data <- data |>
+    dplyr::left_join(
+      interpolar_wards_start_end_data,
+      by = setNames("ward_name", deparse(substitute(ward_name_col)))
+    )
+
+  return(data)
+}
+
+#' Get Latest End Date of Defined INTERPOLAR Wards
+#'
+#' Determines the latest end date among all INTERPOLAR wards defined via
+#' global environment variables.
+#'
+#' @return A `Date` value representing the latest end date found in the
+#'   ward phase definitions.
+#'
+#' @details
+#' The function searches the global environment for objects matching the
+#' pattern `"^PHASES_WARD_"`. For each matching object, it checks whether
+#' the definition is available and non-empty using
+#' `etlutils::isDefinedAndNotEmpty()`.
+#'
+#' The end date is extracted from the fourth element of each valid ward
+#' definition and parsed using `stringr::str_split_i()`. All extracted
+#' dates are converted to `Date` format, and the latest date is returned.
+#'
+#' @importFrom etlutils isDefinedAndNotEmpty
+#' @importFrom stringr str_split_i
+#'
+#' @export
+getLastWardEnd <- function() {
+  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
+  interpolar_ward_ends <- c()
+  for (i in seq_along(interpolar_wards_definition)) {
+    ward_phase_defintion <- interpolar_wards_definition[i]
+    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
+      ward_end <- get(ward_phase_defintion, envir = .GlobalEnv)[4] |>
+        stringr::str_split_i("'", 2)
+      interpolar_ward_ends <- c(interpolar_ward_ends, ward_end)
+    }
+  }
+  maximum_end_date <- max(as.Date(interpolar_ward_ends), na.rm = TRUE)
+
+  return(maximum_end_date)
+}
+
+#' Add Calendar Week to a Data Frame
+#'
+#' Adds an ISO calendar week column to a data frame based on a
+#' reference date column. The resulting calendar_week column is
+#' formatted as "YYYY-WW", where YYYY is the ISO year and WW
+#' is the zero-padded ISO week number.
+#'
+#' The new column is inserted immediately after the reference date
+#' column. The reference date column is supplied using tidy evaluation,
+#' so it should be passed as an unquoted column name.
+#'
+#' @param data A data frame containing the reference date column.
+#' @param reference_date_col A date or date-time column used to
+#' determine the ISO calendar year and week. The column should be
+#' supplied without quotation marks.
+#'
+#' @return A data frame containing all columns from data and an
+#' additional calendar_week column formatted as "YYYY-WW".
+#'
+#' @importFrom dplyr mutate
+#' @importFrom data.table isoyear isoweek
+#'
+#' @seealso [data.table::isoyear()], [data.table::isoweek()], [dplyr::mutate()]
+#' @export
+addCalendarWeek <- function(data, reference_date_col) {
+  data_with_calendar_week <- data |>
+    dplyr::mutate(
+      calendar_week = paste0(
+        data.table::isoyear({{ reference_date_col }}), "-",
+        sprintf("%02d", data.table::isoweek({{ reference_date_col }}))
+      ),
+      .after = {{ reference_date_col }}
+    )
+  return(data_with_calendar_week)
+}
+
+#' Add First Encounter Period Start per Main Encounter
+#'
+#' Adds the first encounter period start to each observation belonging
+#' to the same combination of grouping variables.
+#'
+#' The function excludes observations with missing grouping variables
+#' when calculating the first encounter period start. For each remaining
+#' group, the earliest non-missing value of `time_var` is determined. If
+#' all values of `time_var` within a group are missing, the resulting
+#' value is `NA`. The calculated values are then joined back to the
+#' original data, preserving observations with missing grouping variables.
+#'
+#' @param data A data frame containing encounter period information.
+#' @param grouping_vars A character vector specifying the variables used
+#'   to define groups. Defaults to `c("pat_id", "main_enc_id")`.
+#' @param time_var A date or date-time column used to determine the first
+#'   encounter period start. The column should be supplied unquoted.
+#'
+#' @return A data frame containing the original columns and an additional
+#'   `first_enc_period_start_per_main_enc` column, positioned immediately
+#'   after `time_var`.
+#'
+#' @importFrom dplyr all_of
+#' @importFrom dplyr across
+#' @importFrom dplyr filter
+#' @importFrom dplyr if_any
+#' @importFrom dplyr left_join
+#' @importFrom dplyr relocate
+#' @importFrom dplyr summarise
+#' @importFrom dplyr group_by
+#'
+#' @export
+addFirstEncPeriodStartPerMainEnc <- function(
+  data,
+  grouping_vars = c("pat_id", "main_enc_id"),
+  time_var = enc_period_start
+) {
+  first_dates <- data |>
+    dplyr::filter(!dplyr::if_any(dplyr::all_of(grouping_vars), is.na)) |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
+    dplyr::summarise(
+      first_enc_period_start_per_main_enc =
+        if (all(is.na({{ time_var }}))) {
+          {{ time_var }}[NA_integer_]
+        } else {
+          min({{ time_var }}, na.rm = TRUE)
+        },
+      .groups = "drop"
+    )
+
+  data |>
+    dplyr::left_join(first_dates, by = grouping_vars) |>
+    dplyr::relocate(first_enc_period_start_per_main_enc, .after = {{ time_var }})
+}
+
+#' Calculate Ward Stay Period
+#'
+#' Calculates the duration of a ward stay based on the difference between
+#' encounter period end and start timestamps.
+#'
+#' The resulting ward stay duration is calculated in days and added as a new
+#' column named `ward_stay_period`.
+#'
+#' @param frontend_table A data frame containing encounter period start and
+#'   end information.
+#'
+#' @return A data frame containing the original data and an additional
+#'   `ward_stay_period` column representing the ward stay duration in days.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @export
+calculateWardStayPeriod <- function(frontend_table) {
+  frontend_table_with_ward_stay <- frontend_table |>
+    dplyr::mutate(ward_stay_period = curated_enc_period_end - enc_period_start) |>
+    dplyr::mutate(ward_stay_period = as.numeric(ward_stay_period, units = "days")) |>
+    dplyr::relocate(ward_stay_period, .after = curated_enc_period_end)
+}
+
 #' Merge Patient and Encounter Data
 #'
 #' This function merges patient-level data with encounter-level data into a unified dataset.
