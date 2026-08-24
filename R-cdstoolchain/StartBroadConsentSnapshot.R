@@ -1,5 +1,4 @@
 library(DBI)
-library(RPostgres)
 library(etlutils)
 
 invisible(etlutils::setProcess("BroadConsentSnapshot"))
@@ -62,14 +61,12 @@ dbConfigValue <- function(name, default = NULL) {
 }
 
 connectSnapshotDatabase <- function(dbname, user, password) {
-  DBI::dbConnect(
-    RPostgres::Postgres(),
+  etlutils::dbCreateConnection(
     dbname = dbname,
     host = dbConfigValue("db_host", "cds_hub"),
     port = dbConfigValue("db_port", 5432),
     user = user,
-    password = password,
-    timezone = etlutils::GLOBAL_TIMEZONE
+    password = password
   )
 }
 

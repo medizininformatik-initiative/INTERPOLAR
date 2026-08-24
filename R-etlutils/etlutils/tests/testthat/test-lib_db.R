@@ -50,3 +50,83 @@ test_that("dbSetModuleContextFromEnvironment handles missing path variable", {
 
   expect_false(result)
 })
+
+test_that("dbCreateConnection applies shared connection settings", {
+  connection_arguments <- NULL
+  executed_statement <- NULL
+  fake_connection <- structure(list(), class = "fake_db_connection")
+  testthat::local_mocked_bindings(
+    dbConnect = function(...) {
+      connection_arguments <<- list(...)
+      fake_connection
+    },
+    dbExecute = function(connection, statement) {
+      expect_identical(connection, fake_connection)
+      executed_statement <<- statement
+      0L
+    },
+    dbDisconnect = function(connection) {
+      fail("Successful connection must not be disconnected by the factory")
+    },
+    .package = "DBI"
+  )
+
+  result <- dbCreateConnection(
+    dbname = "snapshot_source",
+    host = "database-host",
+    port = 5432,
+    user = "snapshot_user",
+    password = "snapshot_password",
+    schema = "snapshot_schema"
+  )
+
+  expect_identical(result, fake_connection)
+  expect_s4_class(connection_arguments[["drv"]], "PqDriver")
+  expect_equal(connection_arguments[["dbname"]], "snapshot_source")
+  expect_equal(connection_arguments[["host"]], "database-host")
+  expect_equal(connection_arguments[["port"]], 5432)
+  expect_equal(connection_arguments[["user"]], "snapshot_user")
+  expect_equal(connection_arguments[["password"]], "snapshot_password")
+  expect_equal(connection_arguments[["timezone"]], GLOBAL_TIMEZONE)
+  expect_equal(connection_arguments[["options"]], "-c search_path=snapshot_schema")
+  expect_equal(executed_statement, "set work_mem to '32MB';")
+})
+
+test_that("dbCreateConnection omits the search path without a schema", {
+  connection_arguments <- NULL
+  fake_connection <- structure(list(), class = "fake_db_connection")
+  testthat::local_mocked_bindings(
+    dbConnect = function(...) {
+      connection_arguments <<- list(...)
+      fake_connection
+    },
+    dbExecute = function(connection, statement) 0L,
+    dbDisconnect = function(connection) NULL,
+    .package = "DBI"
+  )
+
+  dbCreateConnection("snapshot", "database-host", 5432, "user", "password")
+
+  expect_false("options" %in% names(connection_arguments))
+})
+
+test_that("dbCreateConnection closes connections after session setup errors", {
+  disconnected <- FALSE
+  fake_connection <- structure(list(), class = "fake_db_connection")
+  testthat::local_mocked_bindings(
+    dbConnect = function(...) fake_connection,
+    dbExecute = function(connection, statement) stop("session setup failed"),
+    dbDisconnect = function(connection) {
+      expect_identical(connection, fake_connection)
+      disconnected <<- TRUE
+      TRUE
+    },
+    .package = "DBI"
+  )
+
+  expect_error(
+    dbCreateConnection("snapshot", "database-host", 5432, "user", "password"),
+    "session setup failed"
+  )
+  expect_true(disconnected)
+})

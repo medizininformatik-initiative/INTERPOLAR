@@ -312,6 +312,49 @@ dbGetAdminPassword <- function() {
   return(if (exists("DEBUG_DB_ADMIN_PASSWORD")) DEBUG_DB_ADMIN_PASSWORD else .lib_db_env[["DB_ADMIN_PASSWORD"]])
 }
 
+#' Create a PostgreSQL Database Connection
+#'
+#' Creates a database connection with the shared INTERPOLAR driver and session
+#' settings. Callers provide connection values explicitly so that workflows can
+#' use multiple databases without changing the module database context.
+#'
+#' @param dbname Database name.
+#' @param host Database host.
+#' @param port Database port.
+#' @param user Database user.
+#' @param password Database password.
+#' @param schema Optional schema used as the connection `search_path`.
+#'
+#' @return A DBI database connection.
+#'
+#' @export
+dbCreateConnection <- function(dbname, host, port, user, password, schema = NULL) {
+  connection_arguments <- list(
+    drv = RPostgres::Postgres(),
+    dbname = dbname,
+    host = host,
+    port = port,
+    user = user,
+    password = password,
+    timezone = GLOBAL_TIMEZONE
+  )
+  if (!is.null(schema) && !is.na(schema) && nzchar(schema)) {
+    connection_arguments[["options"]] <- paste0("-c search_path=", schema)
+  }
+
+  db_connection <- do.call(DBI::dbConnect, connection_arguments)
+  connection_ready <- FALSE
+  on.exit({
+    if (!connection_ready) {
+      invisible(try(suppressWarnings(DBI::dbDisconnect(db_connection)), silent = TRUE))
+    }
+  })
+
+  DBI::dbExecute(db_connection, "set work_mem to '32MB';")
+  connection_ready <- TRUE
+  db_connection
+}
+
 #' Get a Fresh PostgreSQL Database Connection
 #'
 #' This function establishes and returns a new PostgreSQL database connection
@@ -337,21 +380,14 @@ dbGetConnection <- function(readonly = FALSE) {
     dont_repeat_key = "dbGetConnection()"
   )
 
-  db_connection <- DBI::dbConnect(
-    RPostgres::Postgres(),
+  dbCreateConnection(
     dbname = .lib_db_env[["DB_NAME"]],
     host = dbGetHost(),
     port = dbGetPort(),
     user = .lib_db_env[["DB_USER"]],
     password = .lib_db_env[["DB_PASSWORD"]],
-    options = paste0("-c search_path=", schema_name),
-    timezone = GLOBAL_TIMEZONE
+    schema = schema_name
   )
-
-  # Increase memory allocation
-  DBI::dbExecute(db_connection, "set work_mem to '32MB';")
-
-  return(db_connection)
 }
 
 #' Establish a PostgreSQL admin connection
@@ -372,20 +408,13 @@ dbGetAdminConnection <- function() {
     " user=", .lib_db_env[["DB_ADMIN_USER"]], "\n"
   )
 
-  admin_connection <- DBI::dbConnect(
-    RPostgres::Postgres(),
+  dbCreateConnection(
     dbname = .lib_db_env[["DB_NAME"]],
     host = dbGetHost(),
     port = dbGetPort(),
     user = .lib_db_env[["DB_ADMIN_USER"]],
-    password = dbGetAdminPassword(),
-    timezone = GLOBAL_TIMEZONE
+    password = dbGetAdminPassword()
   )
-
-  # Increase memory allocation
-  DBI::dbExecute(admin_connection, "set work_mem to '32MB';")
-
-  return(admin_connection)
 }
 
 #' Execute a Query and Retrieve a Single Value
