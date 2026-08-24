@@ -3,7 +3,7 @@
 
 # PostgreSQL-Datenbank-Vacuum-Script für CDS Hub
 # Autor: Sebastian Stäubert, Henner Kruse
-# Version: 1.3 (mit -f/--force-Modus)
+# Version: 1.5 (mit --full-Modus)
 
 # ========================
 # HILFE-AUSGABE
@@ -17,20 +17,24 @@ der PostgreSQL-Datenbank im Docker-Container aus.
 
 Optionen:
   -y, --yes               Force-Modus: Startet ohne Benutzerabfrage
-  -f, --force             Führt VACUUM FULL auch aus, wenn keine toten Tupel vorhanden sind
+  -f, --force             Führt VACUUM (VERBOSE, ANALYSE) auf allen Tabellen aus
+  --full                  Führt VACUUM FULL aus (benötigt exklusive Sperre)
   -h, --help              Zeigt diese Hilfe an
 
 Beispiel:
   $(basename "$0")
   $(basename "$0") -y
   $(basename "$0") -y -f
+  $(basename "$0") --full
+  $(basename "$0") -y --full
   $(basename "$0") -f cds_hub
 
 Hinweise:
   - Der Container muss laufen und die Datenbank erreichbar sein.
   - Benötigt: docker, docker compose, psql im Container.
-  - VACUUM FULL wird nur ausgeführt, wenn tote Tupel vorhanden sind (Standard).
-  - Mit -f wird VACUUM FULL auch bei 0 toten Tupeln durchgeführt.
+  - Standardmäßig: 'VACUUM (VERBOSE, ANALYSE)' wird nur ausgeführt, wenn tote Tupel vorhanden sind.
+  - Mit -f wird VACUUM auf allen Tabellen ohne Rückfrage ausgeführt.
+  - Mit --full wird 'VACUUM FULL' ausgeführt (benötigt exklusive Sperre, langsamer).
   - Im Force-Modus (-y) wird automatisch verarbeitet.
 
 EOF
@@ -41,6 +45,7 @@ EOF
 # ========================
 YES_MODE=false
 FORCE_MODE=false
+FULL_MODE=false
 CONTAINER="cds_hub"
 
 while [[ $# -gt 0 ]]; do
@@ -51,6 +56,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -f|--force)
       FORCE_MODE=true
+      shift
+      ;;
+    --full)
+      FULL_MODE=true
       shift
       ;;
     -h|--help)
@@ -227,27 +236,44 @@ for s in "${SCHEMAS[@]}"; do
       log "    Pages:     $pages_before"
     fi
 
-    # Entscheidung: VACUUM FULL ausführen?
+    # Entscheidung: VACUUM ausführen?
     run_vacuum=false
-    if [ "$dead_before" -gt 0 ]; then
+    if [ "$FULL_MODE" = true ]; then
+      # Im FULL_MODE immer VACUUM FULL ausführen
       run_vacuum=true
     elif [ "$FORCE_MODE" = true ]; then
+      # Im FORCE_MODE immer VACUUM (ohne FULL) ausführen
+      run_vacuum=true
+    elif [ "$dead_before" -gt 0 ]; then
+      # Standard: VACUUM (ohne FULL) nur bei toten Tupeln
       run_vacuum=true
     fi
 
     if [ "$run_vacuum" = true ]; then
-      log "  → Running VACUUM FULL..."
-      if ! docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
-          VACUUM FULL ${s}.${tablename};
-        " > /dev/null 2>&1; then
-        error "Fehler beim VACUUM FULL: ${s}.${tablename}"
+      if [ "$FULL_MODE" = true ]; then
+        log "  → Running VACUUM FULL..."
+        if ! docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
+            VACUUM FULL ${s}.${tablename};
+          " > /dev/null 2>&1; then
+          error "Fehler beim VACUUM FULL: ${s}.${tablename}"
+        fi
+      else
+        log "  → Running VACUUM (ohne FULL)..."
+        if ! docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
+            VACUUM (VERBOSE, ANALYZE) ${s}.${tablename};
+          " > /dev/null 2>&1; then
+          error "Fehler beim VACUUM: ${s}.${tablename}"
+        fi
       fi
 
-      log "  → Running ANALYZE..."
-      if ! docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
-        ANALYZE ${s}.${tablename};
-        " > /dev/null 2>&1; then
-        error "Fehler beim ANALYZE: ${s}.${tablename}"
+      # ANALYZE nur nach VACUUM FULL ausführen (VACUUM ohne FULL enthält bereits ANALYZE)
+      if [ "$FULL_MODE" = true ]; then
+        log "  → Running ANALYZE..."
+        if ! docker compose exec -T "${CONTAINER}" /usr/bin/psql -U "${DB_USER}" -d "${DB_NAME}" -t -c "
+          ANALYZE ${s}.${tablename};
+          " > /dev/null 2>&1; then
+          error "Fehler beim ANALYZE: ${s}.${tablename}"
+        fi
       fi
 
       # Lade Zustand nach VACUUM
@@ -295,7 +321,7 @@ for s in "${SCHEMAS[@]}"; do
         log "  → After: Keine signifikante Änderung erkannt."
       fi
     else
-      log "  → Keine toten Tupel und kein Force-Modus → VACUUM FULL und ANALYZE übersprungen."
+      log "  → Keine toten Tupel → VACUUM übersprungen."
     fi
   done
 done

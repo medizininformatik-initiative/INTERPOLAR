@@ -5,14 +5,22 @@ repository's code.
 
 ## Contributing
 
-Bugs, questions, and change requests can be filed as GitHub issues. Larger
-changes should be discussed in an issue or discussion before implementation so
-that the goal, scope, and expected behavior are clear.
+Bugs, questions, and change requests can be filed as 
+[GitHub issues](https://github.com/medizininformatik-initiative/INTERPOLAR/issues). 
+Please use the resp. issue templates.
+Larger changes should be discussed in an issue or 
+[discussion](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions) 
+before implementation so that the goal, scope, and expected behavior are clear.
 
-Code changes are submitted through pull requests. A pull request should describe
-the purpose of the change, link relevant issues, and list the checks that were
-run. Keep pull requests focused where possible and avoid unrelated refactorings
-in the same PR.
+Code changes are submitted through 
+[pull requests](https://github.com/medizininformatik-initiative/INTERPOLAR/pulls). 
+A pull request should describe the purpose of the change, link relevant issues, 
+and list the checks that were run. Keep pull requests focused where possible and 
+avoid unrelated refactorings in the same PR.
+
+See also instructions for bugs and feature request in discussion 
+[#574](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/574) 
+(german).
 
 ## Development
 

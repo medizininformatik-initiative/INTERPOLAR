@@ -145,6 +145,7 @@ calculateF1 <- function(F1_prep) {
 #'      relevant due to case-specific risk assessment
 #'   - `algorithmic_MRP_always_clinically_irrelevant_on_ward`: Algoithmic MRPs that were evaluated as not clinically
 #'      relevant for every case on this ward
+#'   - `encounters_FAS2_1`: Encounters with a ward stay >= 7 days or < 7 days and a recorded medication analysis (only counted for FAS 1 filtered tables)
 #'
 #'
 #' @details
@@ -157,7 +158,8 @@ calculateF1 <- function(F1_prep) {
 #'
 #' @importFrom dplyr group_by summarise bind_rows n_distinct rename across all_of any_of if_else
 #' @export
-calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("ward_name")) {
+calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("ward_name"),
+                               includeFAS2_1_counting = FALSE) {
   if (identical(grouping_variables, "ward_name")) {
     frontend_summary_data <- frontend_summary_data |>
       dplyr::mutate(table_count_less_than_5_patients = ward_count_less_than_5)
@@ -195,8 +197,28 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       ret_gewiss_grund1_abl_01,
       ret_gewiss_grund_abl_klin1_neg___1,
       MDAT_wissenschaftlich_nutzen
-    )) |>
+    ), dplyr::any_of("FAS2_1_inclusion")) |>
     dplyr::distinct()
+
+  # make helpers for counting FAS2.1
+  fas2_1_grouped_count_expr <- list()
+  fas2_1_total_count_expr <- list()
+
+  if (includeFAS2_1_counting && "FAS2_1_inclusion" %in% names(frontend_summary_data)) {
+    fas2_1_grouped_count_expr <- rlang::exprs(
+      encounters_FAS2_1 = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & FAS2_1_inclusion],
+        na.rm = TRUE
+      )
+    )
+
+    fas2_1_total_count_expr <- rlang::exprs(
+      encounters_FAS2_1 = dplyr::n_distinct(
+        main_enc_id[valid_for_overall_counting & FAS2_1_inclusion],
+        na.rm = TRUE
+      )
+    )
+  }
 
   fe_grouped_counts <- frontend_summary_data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_variables))) |>
@@ -413,6 +435,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         )[valid_for_counting],
         na.rm = TRUE
       ),
+      # count FAS2.1
+      !!!fas2_1_grouped_count_expr,
       .groups = "drop"
     )
 
@@ -632,7 +656,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
             ret_gewiss_grund_abl_klin1_neg___1 == "Checked", ret_id, NA
         )[valid_for_overall_counting],
         na.rm = TRUE
-      )
+      ),
+      !!!fas2_1_total_count_expr
     )
 
   frontend_summary <- dplyr::bind_rows(fe_grouped_counts, fe_total_counts)
