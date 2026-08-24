@@ -345,7 +345,7 @@ dbGetConnection <- function(readonly = FALSE) {
     user = .lib_db_env[["DB_USER"]],
     password = .lib_db_env[["DB_PASSWORD"]],
     options = paste0("-c search_path=", schema_name),
-    timezone = "Europe/Berlin"
+    timezone = GLOBAL_TIMEZONE
   )
 
   # Increase memory allocation
@@ -379,7 +379,7 @@ dbGetAdminConnection <- function() {
     port = dbGetPort(),
     user = .lib_db_env[["DB_ADMIN_USER"]],
     password = dbGetAdminPassword(),
-    timezone = "Europe/Berlin"
+    timezone = GLOBAL_TIMEZONE
   )
 
   # Increase memory allocation
