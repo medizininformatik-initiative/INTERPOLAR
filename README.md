@@ -112,11 +112,12 @@ Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der h
     docker compose run --rm --no-deps r-env Rscript R-db2frontend/Start2_DB2Frontend.R
     ```
 
-## Snapshot-Dateien, Snapshot-Datenbanken und Pseudonymisierung
+## Snapshot-Dateien, Pseudonymisierung und Broad Consent
 
 Mit Snapshot-Dateien kann der aktuelle Stand der CDS_HUB-Datenbank gesichert und
 pseudonymisiert werden. Snapshot-Dateien können außerdem als schreibgeschützte
-Snapshot-Datenbanken bereitgestellt werden. Die vollständige Anleitung steht in
+Snapshot-Datenbanken bereitgestellt und als Grundlage für einen separaten
+Broad-Consent-Snapshot verwendet werden. Die vollständige Anleitung steht in
 [Database_Snapshot.md](Database_Snapshot.md).
 
 ## Hilfe und Unterstützung

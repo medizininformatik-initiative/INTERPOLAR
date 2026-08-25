@@ -2,7 +2,7 @@ SNAPSHOT_STREAMING_BIRTHDATE_COLUMN <- ".snapshot_pseudonym_birthdate"
 SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN <- ".snapshot_pseudonym_patient_key"
 SNAPSHOT_MEDICATION_REVIEW_DETAIL_LIMIT <- 1000L
 SNAPSHOT_AGE_REVIEW_DETAIL_LIMIT <- 1000L
-DEFAULT_SNAPSHOT_CHUNK_SIZE <- 25000L
+DEFAULT_SNAPSHOT_CHUNK_SIZE <- 5000L
 
 snapshotRelationId <- function(name, schema = NULL) {
   if (!is.null(schema) && !is.na(schema) && nzchar(schema)) {

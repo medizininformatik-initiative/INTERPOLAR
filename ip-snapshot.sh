@@ -7,8 +7,10 @@ set -o pipefail
 #
 #  Aufruf:
 #      ./ip-snapshot.sh list
-#      ./ip-snapshot.sh create  <name> [--with-pseudonymized] [--chunk-size <rows>]
+#      ./ip-snapshot.sh create  <name> [--with-pseudonymized|--with-broad-consent]
+#                                      [--chunk-size <rows>]
 #      ./ip-snapshot.sh pseudonymize  <name_date> [--chunk-size <rows>]
+#      ./ip-snapshot.sh create-broad-consent  <name_date> [--chunk-size <rows>]
 #      ./ip-snapshot.sh delete  <name_date>
 #      ./ip-snapshot.sh activate  <name_date>
 #      ./ip-snapshot.sh deactivate  <name_date>|ip_<name_date>
@@ -25,6 +27,8 @@ Usage: ${0##*/} <action> <name>
   <action>   "list"        – lists all snapshots
              "create"      – creates a snapshot <name>.sql.gz
              "pseudonymize" – creates a pseudonymized snapshot <name_date>_pseud.sql.gz
+             "create-broad-consent"
+                           – creates a Broad Consent snapshot from an activated snapshot database
              "delete"      – deletes a snapshot <name_date>.sql.gz
              "activate"    – activates a snapshot <name_date>.sql.gz by creating a database for it
              "deactivate"  – deactivates a snapshot database; accepts <name_date> and the
@@ -33,18 +37,26 @@ Usage: ${0##*/} <action> <name>
   <name>     any string without path components, <name> | <name_date>
   --with-pseudonymized
              only for "create": also creates <name_date>_pseud.sql.gz
+  --with-broad-consent
+             only for "create": also creates the pseudonymized snapshot and
+             <name_date>_pseud_broad_consent.sql.gz
   --chunk-size <rows>
-             only for "pseudonymize" or "create --with-pseudonymized":
-             number of rows read per processing chunk (default: 25000)
+             only for "pseudonymize", "create-broad-consent", or
+             "create --with-pseudonymized|--with-broad-consent":
+             number of rows read per processing chunk (default: 5000)
 
 Examples:
   $0 list                            → lists all .sql.gz files without extensions in Snapshots
   $0 create  snapshot                → creates snapshot_<date>.sql.gz
   $0 create  snapshot --with-pseudonymized
                                       → creates snapshot_<date>.sql.gz and snapshot_<date>_pseud.sql.gz
+  $0 create  snapshot --with-broad-consent
+                                      → additionally creates snapshot_<date>_pseud_broad_consent.sql.gz
   $0 pseudonymize  snapshot_20250929 → creates snapshot_20250929_pseud.sql.gz
   $0 pseudonymize  snapshot_20250929 --chunk-size 10000
                                       → processes at most 10000 rows per chunk
+  $0 create-broad-consent  snapshot_20250929_pseud
+                                      → creates snapshot_20250929_pseud_broad_consent.sql.gz
   $0 delete  snapshot_20250929       → deletes snapshot_20250929.sql.gz
   $0 activate  snapshot_20250929     → creates database 'ip_snapshot_20250929'
   $0 deactivate  snapshot_20250929   → drops database 'ip_snapshot_20250929'
@@ -65,7 +77,8 @@ action=$1
 name=$2
 DIR=Snapshots
 with_pseudonymized=false
-chunk_size=25000
+with_broad_consent=false
+chunk_size=5000
 chunk_size_set=false
 
 if [[ -z "$action" ]]; then
@@ -81,6 +94,11 @@ fi
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --with-pseudonymized)
+            with_pseudonymized=true
+            shift
+            ;;
+        --with-broad-consent)
+            with_broad_consent=true
             with_pseudonymized=true
             shift
             ;;
@@ -102,21 +120,21 @@ done
 
 if [[ "$action" == "create" ]]; then
     if [[ "$chunk_size_set" == "true" && "$with_pseudonymized" != "true" ]]; then
-        echo "Error: --chunk-size requires --with-pseudonymized." >&2
+        echo "Error: --chunk-size requires --with-pseudonymized or --with-broad-consent." >&2
         exit 3
     fi
-elif [[ "$action" == "pseudonymize" ]]; then
-    if [[ "$with_pseudonymized" == "true" ]]; then
-        echo "Error: --with-pseudonymized is only allowed with \"create\"." >&2
+elif [[ "$action" =~ ^(pseudonymize|create-broad-consent)$ ]]; then
+    if [[ "$with_pseudonymized" == "true" || "$with_broad_consent" == "true" ]]; then
+        echo "Error: --with-pseudonymized and --with-broad-consent are only allowed with \"create\"." >&2
         exit 3
     fi
-elif [[ "$with_pseudonymized" == "true" || "$chunk_size_set" == "true" ]]; then
-    echo "Error: pseudonymization options are not allowed with \"$action\"." >&2
+elif [[ "$with_pseudonymized" == "true" || "$with_broad_consent" == "true" || "$chunk_size_set" == "true" ]]; then
+    echo "Error: snapshot processing options are not allowed with \"$action\"." >&2
     exit 3
 fi
 
 # Nur einfache Dateinamen/DB-Namen zulassen, weil der Name auch in SQL-DB-Namen verwendet wird.
-if [[ "$action" =~ ^(create|pseudonymize|delete|activate|deactivate)$ && ! "$name" =~ ^[A-Za-z0-9_]+$ ]]; then
+if [[ "$action" =~ ^(create|pseudonymize|create-broad-consent|delete|activate|deactivate)$ && ! "$name" =~ ^[A-Za-z0-9_]+$ ]]; then
     echo "Error: the name may only contain letters, numbers, and underscores." >&2
     exit 2
 fi
@@ -255,6 +273,18 @@ cleanup_failed_pseudonymized_database() {
     fi
 }
 
+cleanup_failed_broad_consent_database() {
+    local target_database_name="$1"
+    if ! database_exists "${target_database_name}" ; then
+        return
+    fi
+    echo "Removing incomplete Broad Consent target database '${target_database_name}'..."
+    if ! drop_database_if_exists "${target_database_name}" ; then
+        echo "Error: Broad Consent target database '${target_database_name}' could not be removed." >&2
+        echo "Remove it manually before retrying." >&2
+    fi
+}
+
 ask_before_overwrite_file() {
     local target_file="$1"
     if [[ -e "$target_file" ]]; then
@@ -278,7 +308,7 @@ ask_before_overwrite_file() {
     fi
 }
 
-prepare_pseudonymized_target_database() {
+prepare_snapshot_analysis_target_database() {
     local target_database_name="$1"
     local dataprocessor_user
     dataprocessor_user="$(toml_value DB_DATAPROCESSOR_USER)"
@@ -419,7 +449,7 @@ create_pseudonymized_snapshot() {
     echo "Database values and pseudonym mapping are complete."
 
     echo "Creating empty temporary target database '${target_build_db}'..."
-    if ! prepare_pseudonymized_target_database "${target_build_db}" ; then
+    if ! prepare_snapshot_analysis_target_database "${target_build_db}" ; then
         echo "Error: creating temporary target database '${target_build_db}' failed."
         cleanup_failed_pseudonymized_database "${target_build_db}"
         echo "The source database remains available for continuing:"
@@ -512,6 +542,120 @@ create_pseudonymized_snapshot() {
     echo "======================================================================"
 }
 
+create_broad_consent_snapshot() {
+    local snapshot_name="$1"
+    local chunk_size="$2"
+    local source_database_name="ip_${snapshot_name}"
+    local broad_consent_snapshot_name="${snapshot_name}_broad_consent"
+    local broad_consent_file_path="${DIR}/${broad_consent_snapshot_name}.sql.gz"
+    local target_build_db="ip_${broad_consent_snapshot_name}_build"
+    local target_database_name="ip_${broad_consent_snapshot_name}"
+
+    if ! database_exists "${source_database_name}" ; then
+        echo "Error: source snapshot database '${source_database_name}' is not activated."
+        echo "Activate or create it before creating the Broad Consent snapshot."
+        exit 1
+    fi
+    if database_exists "${target_database_name}" ; then
+        echo "Error: Broad Consent snapshot database '${target_database_name}' already exists."
+        echo "Deactivate it before creating the Broad Consent snapshot again."
+        exit 1
+    fi
+
+    ask_before_overwrite_file "${broad_consent_file_path}"
+    if database_exists "${target_build_db}" ; then
+        echo "Removing incomplete Broad Consent target database '${target_build_db}' before restarting..."
+        if ! drop_database_if_exists "${target_build_db}" ; then
+            echo "Error: incomplete Broad Consent target database '${target_build_db}' could not be removed."
+            exit 1
+        fi
+    fi
+
+    SECONDS=0
+    echo "Creating empty Broad Consent target database '${target_build_db}'..."
+    if ! prepare_snapshot_analysis_target_database "${target_build_db}" ; then
+        echo "Error: creating Broad Consent target database '${target_build_db}' failed."
+        cleanup_failed_broad_consent_database "${target_build_db}"
+        exit 1
+    fi
+
+    echo "Creating Broad Consent snapshot data from '${source_database_name}'..."
+    if docker compose run --rm --no-deps r-env \
+        Rscript R-cdstoolchain/StartBroadConsentSnapshot.R \
+        source-db="${source_database_name}" \
+        target-db="${target_build_db}" \
+        chunk-size="${chunk_size}" ; then
+        echo "Broad Consent snapshot data created."
+    else
+        echo "Error: creating Broad Consent snapshot data failed."
+        cleanup_failed_broad_consent_database "${target_build_db}"
+        exit 1
+    fi
+
+    echo "Creating Broad Consent snapshot file '${broad_consent_file_path}'..."
+    if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
+        --format=plain --compress=gzip > "${broad_consent_file_path}" ; then
+        echo "File \"${broad_consent_file_path}\" created."
+        ls -ho "${broad_consent_file_path}"
+    else
+        echo "Error: creating the Broad Consent snapshot file failed."
+        if [[ -e "${broad_consent_file_path}" && ! -s "${broad_consent_file_path}" ]]; then
+            echo "File ${broad_consent_file_path} exists but is empty; cleaning it up."
+            rm -f "${broad_consent_file_path}"
+        fi
+        cleanup_failed_broad_consent_database "${target_build_db}"
+        exit 1
+    fi
+
+    local broad_consent_file_checksum
+    if ! broad_consent_file_checksum="$(snapshot_file_checksum "${broad_consent_file_path}")" ; then
+        echo "Error: Broad Consent snapshot file provenance could not be determined."
+        cleanup_failed_broad_consent_database "${target_build_db}"
+        exit 1
+    fi
+    if ! set_database_snapshot_checksum "${target_build_db}" "${broad_consent_file_checksum}" ; then
+        echo "Error: Broad Consent snapshot database provenance could not be recorded."
+        cleanup_failed_broad_consent_database "${target_build_db}"
+        exit 1
+    fi
+    if ! set_database_read_only "${target_build_db}" ||
+        ! rename_database "${target_build_db}" "${target_database_name}" ; then
+        echo "Error: Broad Consent target database could not be retained as a snapshot database."
+        cleanup_failed_broad_consent_database "${target_build_db}"
+        exit 1
+    fi
+
+    printf "Broad Consent snapshot duration: %s s\n" "$SECONDS"
+    echo "The read-only Broad Consent snapshot database remains available:"
+    echo "  ${target_database_name}"
+    echo
+    echo "To remove the database:"
+    echo "  ./ip-snapshot.sh deactivate ${broad_consent_snapshot_name}"
+    echo
+    echo "======================================================================"
+    echo "WARNING: Broad Consent filtering is not implemented yet."
+    echo "The current technical workflow copies every snapshot row."
+    echo "======================================================================"
+}
+
+create_requested_snapshot_derivatives() {
+    local snapshot_name="$1"
+    local chunk_size="$2"
+    local reuse_source_database="$3"
+
+    if [[ "${with_pseudonymized}" == "true" ]]; then
+        create_pseudonymized_snapshot \
+            "${snapshot_name}" \
+            "${chunk_size}" \
+            "${reuse_source_database}"
+    fi
+    if [[ "${with_broad_consent}" == "true" ]]; then
+        create_broad_consent_snapshot \
+            "${snapshot_name}_pseud" \
+            "${chunk_size}"
+    fi
+}
+
 
 # ---------- Aktionen ----------
 case "$action" in
@@ -596,16 +740,18 @@ case "$action" in
         fi
         printf "Duration: %s s\n" "$SECONDS";
 
-        if [[ "${with_pseudonymized}" == "true" ]]; then
-            create_pseudonymized_snapshot \
-                "${snapshot_name_date}" \
-                "${chunk_size}" \
-                false
-        fi
+        create_requested_snapshot_derivatives \
+            "${snapshot_name_date}" \
+            "${chunk_size}" \
+            false
         ;;
 
     pseudonymize)
         create_pseudonymized_snapshot "${name}" "${chunk_size}"
+        ;;
+
+    create-broad-consent)
+        create_broad_consent_snapshot "${name}" "${chunk_size}"
         ;;
 
     delete)
@@ -739,7 +885,7 @@ case "$action" in
         #fi
         ;;
     *)
-        echo "Error: unknown action \"$action\". Allowed actions are \"create\", \"pseudonymize\", \"list\", \"activate\", \"deactivate\", and \"delete\"." >&2
+        echo "Error: unknown action \"$action\". Allowed actions are \"create\", \"pseudonymize\", \"create-broad-consent\", \"list\", \"activate\", \"deactivate\", and \"delete\"." >&2
         print_usage
         exit 3
         ;;

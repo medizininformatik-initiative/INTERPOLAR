@@ -54,7 +54,7 @@ test_that("mapping coverage includes frontend user columns before chunking", {
     ),
     RULE_TABLE_NAME = "medikationsanalyse",
     RULE_SOURCE = "frontend",
-    SNAPSHOT_RELATION_TYPE = c("all", "last_version")
+    SNAPSHOT_RELATION_TYPE = c("old_versions", "last_version")
   )
 
   requests <- getPseudonymMappingCoverageRequests(rules, plan)

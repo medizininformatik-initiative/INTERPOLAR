@@ -959,7 +959,7 @@ test_that("streaming review columns are removed before pseudonymization", {
 })
 
 test_that("snapshot chunk size must be positive", {
-  expect_equal(validateSnapshotChunkSize(NULL), DEFAULT_SNAPSHOT_CHUNK_SIZE)
+  expect_equal(validateSnapshotChunkSize(NULL), 5000L)
   expect_equal(validateSnapshotChunkSize("25000"), 25000L)
   expect_error(validateSnapshotChunkSize(0), "positive integer")
   expect_error(validateSnapshotChunkSize(NA), "positive integer")
