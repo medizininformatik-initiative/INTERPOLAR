@@ -145,8 +145,8 @@ pseudonymizationMappingProblemAction <- function(review_report) {
   result <- c(
     "Required action for mapping problems:",
     paste0(
-      "- The mapping workbook is generated as pseudo_mapping.xlsx in the ",
-      "INPUT_REPO_PATH configured in R-dataprocessor/dataprocessor_config.toml."
+      "- The mapping workbook is generated as pseudo_mapping.xlsx in the enclosing ",
+      "Input-Repo directory."
     ),
     paste0(
       "- Fill every referenced sheet with KEY and PSEUDONYM values. ",
@@ -300,6 +300,9 @@ preflightSnapshotPseudonymization <- function(
         getPseudonymMappingFilePath(input_repo_path)
       } else {
         NA_character_
+      }
+      if (!is.na(mapping_file)) {
+        assertPseudonymMappingFileLocation(input_repo_path)
       }
       result[["review_report"]] <- reviewPseudonymizationRules(
         result[["rules"]],

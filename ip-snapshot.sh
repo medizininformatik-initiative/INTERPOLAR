@@ -180,6 +180,20 @@ toml_value() {
     toml_file_value cds_hub_db_config.toml "${key}"
 }
 
+input_repo_root_path() {
+    local current_path="${1%/}"
+    local parent_path
+    while [[ "${current_path##*/}" != "Input-Repo" ]]; do
+        parent_path="$(dirname "${current_path}")"
+        if [[ "${parent_path}" == "${current_path}" ]]; then
+            echo "Error: INPUT_REPO_PATH is not located within an Input-Repo directory: $1" >&2
+            return 1
+        fi
+        current_path="${parent_path}"
+    done
+    printf '%s\n' "${current_path}"
+}
+
 container_input_repo_mount_args() {
     local input_repo_path
     local host_path
@@ -196,6 +210,8 @@ container_input_repo_mount_args() {
         container_path="/src/${input_repo_path#./}"
     fi
     if [[ -d "${host_path}" ]]; then
+        host_path="$(input_repo_root_path "${host_path}")" || return
+        container_path="$(input_repo_root_path "${container_path}")" || return
         printf '%s\n' "-v"
         printf '%s\n' "${host_path}:${container_path}"
     fi

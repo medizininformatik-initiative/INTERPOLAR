@@ -26,15 +26,26 @@ Für die Pseudonymisierung gelten zusätzlich folgende Voraussetzungen:
 
 - `INPUT_REPO_PATH` muss in
   `R-dataprocessor/dataprocessor_config.toml` korrekt konfiguriert und für den
-  Container erreichbar sein. Das Verzeichnis muss für die automatische
-  Aktualisierung von `pseudo_mapping.xlsx` schreibbar sein.
-- Die Datei `pseudo_mapping.xlsx` wird bei Bedarf automatisch im konfigurierten
-  `INPUT_REPO_PATH` erzeugt und mit den in der temporären Quelldatenbank
-  vorkommenden Originalwerten vorausgefüllt. Die gewünschten Pseudonyme müssen
-  anschließend manuell in der Spalte `PSEUDONYM` ergänzt werden.
-- Die LOINC-Mapping-Datei muss unter
-  `LOINC_Mapping/LOINC_Mapping_content/LOINC_Mapping_Table_processed.xlsx`
-  innerhalb des `INPUT_REPO_PATH` verfügbar sein.
+  Container erreichbar sein. Der Pfad darf direkt auf `Input-Repo` oder auf
+  einen beliebig benannten Unterordner darin zeigen. `./` am Pfadanfang ist
+  optional.
+- Benötigte Eingabedateien und -verzeichnisse werden zuerst unterhalb des
+  konfigurierten Pfads gesucht. Gibt es dort keinen Treffer, wird die Suche
+  schrittweise bis einschließlich `Input-Repo` nach oben fortgesetzt. Der erste
+  Suchbereich mit genau einem Treffer wird verwendet. Mehrere Treffer im selben
+  Suchbereich führen zu einem Abbruch mit allen Fundstellen.
+- Die Datei `pseudo_mapping.xlsx` wird bei Bedarf automatisch direkt unter
+  `Input-Repo/pseudo_mapping.xlsx` erzeugt und mit den in der temporären
+  Quelldatenbank vorkommenden Originalwerten vorausgefüllt. Die gewünschten
+  Pseudonyme müssen anschließend manuell in der Spalte `PSEUDONYM` ergänzt
+  werden. Das Verzeichnis `Input-Repo` muss dafür schreibbar sein.
+- Bei einer Aktualisierung muss eine bereits vorhandene
+  `pseudo_mapping.xlsx` aus dem bisher konfigurierten Eingabeordner einmalig
+  nach `Input-Repo/pseudo_mapping.xlsx` verschoben werden. Der Prozess erkennt
+  die bisherige Datei und zeigt die beiden Pfade an, bevor weitere Verarbeitung
+  beginnt.
+- Die LOINC-Mapping-Datei `LOINC_Mapping_Table_processed.xlsx` muss eindeutig
+  innerhalb des durchsuchten Bereichs verfügbar sein.
 - Für die normale Snapshot-Datei sowie die temporäre Quell- und Zieldatenbank
   muss ausreichend Speicherplatz vorhanden sein. Nach erfolgreicher
   Pseudonymisierung bleiben die normale und die pseudonymisierte
@@ -332,9 +343,9 @@ ist `NA` in R und wird als `NULL` in PostgreSQL gespeichert. Es wird kein
 Platzhaltertext wie `redacted` eingetragen.
 
 Mapping-Regeln der Form `pseudonym(sheet = "Sheetname")` lesen das angegebene
-Sheet aus `INPUT_REPO_PATH/pseudo_mapping.xlsx`. Jedes verwendete Sheet enthält
-die Spalten `KEY` und `PSEUDONYM`. Beide Werte dürfen Leerzeichen enthalten,
-aber nicht leer sein. Doppelte Keys sind nicht erlaubt.
+Sheet aus `Input-Repo/pseudo_mapping.xlsx`. Jedes verwendete Sheet enthält die
+Spalten `KEY` und `PSEUDONYM`. Beide Werte dürfen Leerzeichen enthalten, aber
+nicht leer sein. Doppelte Keys sind nicht erlaubt.
 
 ### Vorprüfung und Wiederaufnahme
 
@@ -343,9 +354,9 @@ Mapping-Voraussetzungen. Bei einem Problem bricht es mit einer Fehlermeldung
 ab.
 
 Nach dem Einspielen der Quelldatenbank ergänzt das Script fehlende Werte in
-`INPUT_REPO_PATH/pseudo_mapping.xlsx` und bricht ab. Nach dem manuellen
-Ausfüllen kann derselbe Befehl erneut gestartet werden; die bereits eingespielte
-Quelldatenbank wird wiederverwendet.
+`Input-Repo/pseudo_mapping.xlsx` und bricht ab. Nach dem manuellen Ausfüllen kann
+derselbe Befehl erneut gestartet werden; die bereits eingespielte Quelldatenbank
+wird wiederverwendet.
 
 Bei späteren Fehlern bleibt die Quelldatenbank erhalten. Beim nächsten Lauf wird
 sie nur wiederverwendet, wenn ihr vermerkter SHA-256-Wert zur normalen

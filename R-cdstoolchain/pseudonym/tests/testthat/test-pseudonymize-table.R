@@ -331,7 +331,7 @@ writePseudonymMappingWorkbook <- function(input_repo_path, sheet_name, mapping) 
   dir.create(input_repo_path, recursive = TRUE, showWarnings = FALSE)
   etlutils::writeExcelFile(
     stats::setNames(list(mapping), sheet_name),
-    file.path(input_repo_path, "pseudo_mapping.xlsx"),
+    getPseudonymMappingFilePath(input_repo_path),
     with_column_names = TRUE
   )
 }
@@ -345,13 +345,40 @@ writeCommentedPseudonymMappingWorkbook <- function(input_repo_path, sheet_name, 
   )
   etlutils::writeExcelFile(
     stats::setNames(list(mapping_with_header), sheet_name),
-    file.path(input_repo_path, "pseudo_mapping.xlsx"),
+    getPseudonymMappingFilePath(input_repo_path),
     with_column_names = FALSE
   )
 }
 
+test_that("pseudonym mapping workbook is stored in the enclosing Input-Repo", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  input_repo_root <- dirname(input_repo_path)
+  expect_equal(
+    getPseudonymMappingFilePath(input_repo_path),
+    file.path(normalizePath(input_repo_root), "pseudo_mapping.xlsx")
+  )
+  expect_equal(
+    getPseudonymMappingFilePath(input_repo_root),
+    file.path(normalizePath(input_repo_root), "pseudo_mapping.xlsx")
+  )
+})
+
+test_that("the previous mapping workbook location is reported before processing", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  legacy_mapping_file <- file.path(normalizePath(input_repo_path), "pseudo_mapping.xlsx")
+  file.create(legacy_mapping_file)
+
+  expect_error(
+    assertPseudonymMappingFileLocation(input_repo_path),
+    paste0(
+      "Move it from:\\n", legacy_mapping_file, "\\n",
+      "Move it to:\\n", getPseudonymMappingFilePath(input_repo_path)
+    )
+  )
+})
+
 test_that("pseudonym rules use fixed Excel mapping file and sheet argument", {
-  input_repo_path <- tempfile("input-repo-")
+  input_repo_path <- newPseudonymTestInputRepoPath()
   writePseudonymMappingWorkbook(
     input_repo_path,
     "ward_mapping",
@@ -380,7 +407,7 @@ test_that("pseudonym rules use fixed Excel mapping file and sheet argument", {
 })
 
 test_that("pseudonym rules map newline-separated values individually", {
-  input_repo_path <- tempfile("input-repo-")
+  input_repo_path <- newPseudonymTestInputRepoPath()
   writePseudonymMappingWorkbook(
     input_repo_path,
     "ward_mapping",
@@ -416,7 +443,7 @@ test_that("pseudonym rules map newline-separated values individually", {
 })
 
 test_that("pseudonym mapping sheets may contain a comment block above the table", {
-  input_repo_path <- tempfile("input-repo-")
+  input_repo_path <- newPseudonymTestInputRepoPath()
   writeCommentedPseudonymMappingWorkbook(
     input_repo_path,
     "frontend_users",
@@ -443,7 +470,7 @@ test_that("pseudonym mapping sheets may contain a comment block above the table"
 })
 
 test_that("pseudonym rules allow the sheet name as first positional argument", {
-  input_repo_path <- tempfile("input-repo-")
+  input_repo_path <- newPseudonymTestInputRepoPath()
   writePseudonymMappingWorkbook(
     input_repo_path,
     "patient_group",
@@ -470,7 +497,7 @@ test_that("pseudonym rules allow the sheet name as first positional argument", {
 })
 
 test_that("pseudonym rules report all missing mapping keys together", {
-  input_repo_path <- tempfile("input-repo-")
+  input_repo_path <- newPseudonymTestInputRepoPath()
   writePseudonymMappingWorkbook(
     input_repo_path,
     "ward_mapping",
@@ -505,7 +532,7 @@ test_that("pseudonym rules report all missing mapping keys together", {
 })
 
 test_that("pseudonym mapping validation rejects duplicate keys", {
-  input_repo_path <- tempfile("input-repo-")
+  input_repo_path <- newPseudonymTestInputRepoPath()
   writePseudonymMappingWorkbook(
     input_repo_path,
     "ward_mapping",

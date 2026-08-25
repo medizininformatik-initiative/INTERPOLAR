@@ -442,14 +442,17 @@ validatePseudonymMappingRuleSheets <- function(mapping_rules, input_repo_path) {
     return(mapping_rules)
   }
 
-  if (is.null(input_repo_path) || is.na(input_repo_path) || !nzchar(input_repo_path)) {
+  if (
+    is.null(input_repo_path) || length(input_repo_path) != 1L ||
+    is.na(input_repo_path) || !nzchar(input_repo_path)
+  ) {
     mapping_rules[["MAPPING_STATUS"]][needs_mapping] <- "missing_input_repo_path"
     mapping_rules[["ERROR"]][needs_mapping] <-
       "input_repo_path is required to validate pseudonym(sheet = ...) rules."
     return(mapping_rules)
   }
 
-  mapping_file_path <- file.path(input_repo_path, PSEUDONYM_MAPPING_FILE_NAME)
+  mapping_file_path <- getPseudonymMappingFilePath(input_repo_path)
   if (!file.exists(mapping_file_path)) {
     mapping_rules[["MAPPING_STATUS"]][needs_mapping] <- "missing_file"
     mapping_rules[["ERROR"]][needs_mapping] <-
