@@ -1,8 +1,4 @@
-SNAPSHOT_LOINC_MAPPING_FILE <- file.path(
-  "LOINC_Mapping",
-  "LOINC_Mapping_content",
-  "LOINC_Mapping_Table_processed.xlsx"
-)
+SNAPSHOT_LOINC_MAPPING_FILE_NAME <- "LOINC_Mapping_Table_processed.xlsx"
 
 SNAPSHOT_OBSERVATION_ANALYSIS_DEFAULTS <- list(
   analysis_loinc_code = NA_character_,
@@ -30,10 +26,11 @@ loadSnapshotLoincMapping <- function(input_repo_path) {
     stop("input_repo_path must be provided for observation LOINC enrichment.")
   }
 
-  mapping_file_path <- file.path(input_repo_path, SNAPSHOT_LOINC_MAPPING_FILE)
-  if (!file.exists(mapping_file_path)) {
-    stop("LOINC mapping file not found: ", mapping_file_path)
-  }
+  mapping_file_path <- etlutils::findUniqueInputRepoPath(
+    input_repo_path,
+    SNAPSHOT_LOINC_MAPPING_FILE_NAME,
+    type = "file"
+  )
 
   mapping_sheets <- etlutils::readExcelFileAsTableList(mapping_file_path)
   if (length(mapping_sheets) == 0) {

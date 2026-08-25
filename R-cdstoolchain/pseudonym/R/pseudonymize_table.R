@@ -233,10 +233,35 @@ pseudonymizationHashReference <- function(values, max_length = NA_integer_) {
 }
 
 getPseudonymMappingFilePath <- function(input_repo_path) {
-  if (is.null(input_repo_path) || is.na(input_repo_path) || !nzchar(input_repo_path)) {
+  if (
+    is.null(input_repo_path) || length(input_repo_path) != 1L ||
+    is.na(input_repo_path) || !nzchar(input_repo_path)
+  ) {
     stop("input_repo_path must be provided for pseudonym(sheet = ...) rules.")
   }
-  file.path(input_repo_path, PSEUDONYM_MAPPING_FILE_NAME)
+  file.path(etlutils::getInputRepoRootPath(input_repo_path), PSEUDONYM_MAPPING_FILE_NAME)
+}
+
+assertPseudonymMappingFileLocation <- function(input_repo_path) {
+  mapping_file <- getPseudonymMappingFilePath(input_repo_path)
+  legacy_mapping_file <- etlutils::findUniqueInputRepoPath(
+    input_repo_path,
+    PSEUDONYM_MAPPING_FILE_NAME,
+    type = "file",
+    required = FALSE
+  )
+  if (
+    !is.na(legacy_mapping_file) && !identical(mapping_file, legacy_mapping_file) &&
+    !file.exists(mapping_file)
+  ) {
+    stop(
+      "The pseudonym mapping file still uses its previous location.\n",
+      "Move it from:\n", legacy_mapping_file, "\n",
+      "Move it to:\n", mapping_file,
+      call. = FALSE
+    )
+  }
+  invisible(mapping_file)
 }
 
 loadPseudonymMappingSheet <- function(input_repo_path, sheet_name) {
@@ -702,8 +727,8 @@ applyRuleListToColumn <- function(table, source_table, column_name, fhir_express
 #' `table_description` before applying the rules.
 #' @param input_repo_path Path to the TOML-configured input repository directory
 #'   for the pseudonymization run. If `pseudonym(sheet = ...)` rules are used,
-#'   `<input_repo_path>/pseudo_mapping.xlsx` is read and the `sheet` argument
-#'   selects the mapping sheet.
+#'   `pseudo_mapping.xlsx` is read from the enclosing `Input-Repo` directory,
+#'   and the `sheet` argument selects the mapping sheet.
 #' @param mapping_context Optional reusable pseudonym-mapping cache. This is
 #'   primarily used by incremental snapshot processing so mapping sheets are
 #'   loaded once across chunks.

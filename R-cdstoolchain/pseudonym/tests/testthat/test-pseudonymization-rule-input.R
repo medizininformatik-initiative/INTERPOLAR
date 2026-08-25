@@ -201,14 +201,13 @@ test_that("rule review report flags empty todo unsupported and duplicate rules",
 })
 
 test_that("rule review report validates pseudonym mapping sheets", {
-  input_repo_path <- tempfile("input-repo-")
-  dir.create(input_repo_path, recursive = TRUE, showWarnings = FALSE)
+  input_repo_path <- newPseudonymTestInputRepoPath()
   etlutils::writeExcelFile(
     list(frontend_users = data.table::data.table(
       KEY = c("Name 1", "Name 2"),
       PSEUDONYM = c("Pseudonym 1", "Pseudonym 2")
     )),
-    file.path(input_repo_path, "pseudo_mapping.xlsx"),
+    getPseudonymMappingFilePath(input_repo_path),
     with_column_names = TRUE
   )
   rules <- data.table::data.table(

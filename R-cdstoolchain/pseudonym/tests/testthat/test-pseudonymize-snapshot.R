@@ -2,6 +2,7 @@ test_that("preflight checks rules without running database pseudonymization", {
   captured <- new.env(parent = emptyenv())
   rules <- data.table::data.table(COLUMN_NAME = "id")
   review_report <- list(summary = data.table::data.table(N = 1L))
+  input_repo_path <- newPseudonymTestInputRepoPath("snapshot-preflight-rules-")
   mockDefaultSources <- function(project_root) {
     captured$project_root <- project_root
     list(
@@ -42,7 +43,7 @@ test_that("preflight checks rules without running database pseudonymization", {
 
   result <- preflightSnapshotPseudonymization(
     project_root = "/project",
-    input_repo_path = "/input",
+    input_repo_path = input_repo_path,
     review_report_file = "/reports/review.xlsx",
     log_steps = FALSE
   )
@@ -65,9 +66,8 @@ test_that("preflight validates existing mappings and database coverage before a 
   rules <- data.table::data.table(COLUMN_NAME = "user")
   plan <- data.table::data.table(SOURCE_RELATION = "v_users")
   coverage <- data.table::data.table(SHEET_NAME = "users", STATUS = "complete")
-  input_repo_path <- tempfile("snapshot-preflight-")
-  dir.create(input_repo_path)
-  file.create(file.path(input_repo_path, "pseudo_mapping.xlsx"))
+  input_repo_path <- newPseudonymTestInputRepoPath("snapshot-preflight-")
+  file.create(getPseudonymMappingFilePath(input_repo_path))
 
   mockReviewRules <- function(
     rules,
@@ -192,9 +192,8 @@ test_that("blocking mapping review error reports deduplicated details and workbo
 })
 
 test_that("incomplete mapping error only reports the required user action", {
-  input_repo_path <- tempfile("incomplete-mapping-")
-  dir.create(input_repo_path)
-  mapping_file <- file.path(input_repo_path, "pseudo_mapping.xlsx")
+  input_repo_path <- newPseudonymTestInputRepoPath("incomplete-mapping-")
+  mapping_file <- getPseudonymMappingFilePath(input_repo_path)
   etlutils::writeExcelFile(
     list(frontend_users = data.table::data.table(KEY = "site_admin", PSEUDONYM = NA_character_)),
     mapping_file,

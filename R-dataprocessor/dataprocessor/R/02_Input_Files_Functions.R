@@ -12,7 +12,11 @@
 #' @export
 getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
   # path to the directory containing the MRP Excel files.
-  table_dir <- file.path(INPUT_REPO_PATH, paste0(table_name_prefix, table_name))
+  table_dir <- etlutils::findUniqueInputRepoPath(
+    INPUT_REPO_PATH,
+    paste0(table_name_prefix, table_name),
+    type = "directory"
+  )
   # Load the MRP definition from the Excel file
   columnnames <- getRelevantColumnNames(table_name)
   file_definition <- etlutils::readFirstExcelFileSheet(table_dir, table_name, columnnames)

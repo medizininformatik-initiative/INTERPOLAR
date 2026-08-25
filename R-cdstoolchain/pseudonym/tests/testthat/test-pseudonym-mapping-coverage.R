@@ -71,8 +71,7 @@ test_that("mapping coverage includes frontend user columns before chunking", {
 })
 
 test_that("mapping coverage creates sheets with sorted distinct database keys", {
-  input_repo_path <- tempfile("mapping-coverage-")
-  dir.create(input_repo_path)
+  input_repo_path <- newPseudonymTestInputRepoPath("mapping-coverage-")
   reader <- function(
     connection,
     source_relation,
@@ -103,7 +102,7 @@ test_that("mapping coverage creates sheets with sorted distinct database keys", 
     "Snapshot pseudonymization is paused"
   )
 
-  mapping_file <- file.path(input_repo_path, "pseudo_mapping.xlsx")
+  mapping_file <- getPseudonymMappingFilePath(input_repo_path)
   expect_true(file.exists(mapping_file))
   expect_setequal(openxlsx::getSheetNames(mapping_file), c("patients", "wards"))
   wards <- openxlsx::read.xlsx(mapping_file, sheet = "wards")
@@ -115,9 +114,8 @@ test_that("mapping coverage creates sheets with sorted distinct database keys", 
 })
 
 test_that("mapping coverage preserves filled pseudonyms and completes", {
-  input_repo_path <- tempfile("mapping-complete-")
-  dir.create(input_repo_path)
-  mapping_file <- file.path(input_repo_path, "pseudo_mapping.xlsx")
+  input_repo_path <- newPseudonymTestInputRepoPath("mapping-complete-")
+  mapping_file <- getPseudonymMappingFilePath(input_repo_path)
   workbook <- openxlsx::createWorkbook()
   openxlsx::addWorksheet(workbook, "wards")
   openxlsx::writeData(

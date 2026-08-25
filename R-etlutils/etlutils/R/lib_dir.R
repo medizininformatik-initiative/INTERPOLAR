@@ -536,6 +536,104 @@ getFilesByPattern <- function(paths, pattern, recursive = FALSE) {
   return(unique(matching_files))
 }
 
+#' Get the Input Repository Root
+#'
+#' Walks upwards from a configured input path to the enclosing `Input-Repo`
+#' directory. Both `Input-Repo/...` and `./Input-Repo/...` are supported.
+#'
+#' @param input_repo_path Configured input repository directory.
+#'
+#' @return The normalized absolute path to the enclosing `Input-Repo`.
+#' @export
+getInputRepoRootPath <- function(input_repo_path) {
+  if (
+    is.null(input_repo_path) || length(input_repo_path) != 1L ||
+    is.na(input_repo_path) || !nzchar(input_repo_path)
+  ) {
+    stop("input_repo_path must contain exactly one non-empty path.")
+  }
+
+  current_path <- normalizePath(input_repo_path, winslash = "/", mustWork = FALSE)
+  repeat {
+    if (identical(basename(current_path), "Input-Repo")) {
+      return(current_path)
+    }
+    parent_path <- dirname(current_path)
+    if (identical(parent_path, current_path)) {
+      stop(
+        "Configured input repository path is not located within an Input-Repo directory: ",
+        input_repo_path
+      )
+    }
+    current_path <- parent_path
+  }
+}
+
+#' Find a Unique Path within the Input Repository
+#'
+#' Searches recursively in the configured directory first. If the requested
+#' file or directory is not found, the search continues one directory higher,
+#' stopping after the enclosing `Input-Repo` directory. The first search level
+#' containing exactly one match is used. Ambiguous matches are rejected.
+#'
+#' @param input_repo_path Configured input repository directory.
+#' @param name Exact file or directory name to find.
+#' @param type Whether to find a `"file"` or `"directory"`.
+#' @param required Whether to fail when no matching path exists. If `FALSE`,
+#'   `NA_character_` is returned for no match. Ambiguous matches always fail.
+#'
+#' @return The normalized absolute path to the unique match.
+#' @export
+findUniqueInputRepoPath <- function(
+  input_repo_path,
+  name,
+  type = c("file", "directory"),
+  required = TRUE
+) {
+  type <- match.arg(type)
+  if (length(required) != 1L || is.na(required)) {
+    stop("required must contain exactly one non-missing logical value.")
+  }
+  if (!dir.exists(input_repo_path)) {
+    stop("Configured input repository path does not exist: ", input_repo_path)
+  }
+  if (length(name) != 1L || is.na(name) || !nzchar(name) || basename(name) != name) {
+    stop("name must contain exactly one file or directory name without a path.")
+  }
+
+  input_repo_root <- getInputRepoRootPath(input_repo_path)
+  search_path <- normalizePath(input_repo_path, winslash = "/", mustWork = TRUE)
+  repeat {
+    candidates <- if (identical(type, "directory")) {
+      c(search_path, list.dirs(search_path, recursive = TRUE, full.names = TRUE))
+    } else {
+      list.files(search_path, recursive = TRUE, full.names = TRUE)
+    }
+    candidates <- unique(candidates[basename(candidates) == name])
+    if (length(candidates) == 1L) {
+      return(normalizePath(candidates, winslash = "/", mustWork = TRUE))
+    }
+    if (length(candidates) > 1L) {
+      stop(
+        "Multiple input repository paths named '", name, "' were found below ",
+        search_path, ":\n", paste0("- ", sort(candidates), collapse = "\n")
+      )
+    }
+    if (identical(search_path, input_repo_root)) {
+      break
+    }
+    search_path <- dirname(search_path)
+  }
+
+  if (isTRUE(required)) {
+    stop(
+      "No input repository ", type, " named '", name,
+      "' was found between ", input_repo_path, " and ", input_repo_root, "."
+    )
+  }
+  NA_character_
+}
+
 #' Get Full List of Excel Files
 #'
 #' This function retrieves a full list of `.xlsx` files from a mix of directories and file paths.
