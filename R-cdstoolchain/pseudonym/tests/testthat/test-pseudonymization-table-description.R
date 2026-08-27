@@ -465,6 +465,40 @@ test_that("currently absent non-Bundle default YAML paths match when present", {
   ))
 })
 
+test_that("packaged YAML redacts identifiers unless their type is approved", {
+  table_description <- data.table::data.table(
+    RESOURCE = c("Observation", NA, NA, NA),
+    COLUMN_NAME = c(
+      "obs_identifier_type_system",
+      "obs_identifier_type_code",
+      "obs_identifier_system",
+      "obs_identifier_value"
+    ),
+    FHIR_EXPRESSION = c(
+      "identifier/type/coding/system",
+      "identifier/type/coding/code",
+      "identifier/system",
+      "identifier/value"
+    ),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+
+  result <- setFhirPseudonymizationRules(table_description)
+
+  metadata_rule <- result$PSEUDONYMIZATION_RULE[3]
+  value_rule <- result$PSEUDONYMIZATION_RULE[4]
+  expect_match(metadata_rule, "keepIf(", fixed = TRUE)
+  expect_match(value_rule, "pseudonymize(", fixed = TRUE)
+  for (code in c("VN", "MR", "PSEUDED", "ANONYED")) {
+    condition_end <- paste0('code == "', code, '")')
+    expect_match(metadata_rule, condition_end, fixed = TRUE)
+    expect_match(value_rule, condition_end, fixed = TRUE)
+  }
+  expect_true(endsWith(metadata_rule, "; redact"))
+  expect_true(endsWith(value_rule, "; redact"))
+})
+
 test_that("conditional reference identifier rules are translated into readable rule calls", {
   yaml_file <- tempfile(fileext = ".yaml")
   writeLines(c(

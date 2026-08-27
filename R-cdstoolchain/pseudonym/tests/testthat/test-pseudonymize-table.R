@@ -191,6 +191,110 @@ test_that("conditional rules treat NA conditions as not matched", {
   expect_true(is.na(result$identifier_value[1]))
 })
 
+test_that("default rules retain only approved identifier structures", {
+  v2_system <- "http://terminology.hl7.org/CodeSystem/v2-0203"
+  v3_system <- "http://terminology.hl7.org/CodeSystem/v3-ObservationValue"
+  source_table <- data.table::data.table(
+    obs_identifier_type_system = c(v2_system, v2_system, v3_system, v3_system, v2_system, NA),
+    obs_identifier_type_code = c("VN", "MR", "PSEUDED", "ANONYED", "OTHER", NA),
+    obs_identifier_system = paste0("system-", seq_len(6)),
+    obs_identifier_value = paste0("identifier-", seq_len(6)),
+    obs_identifier_start = as.Date("2026-01-01") + seq_len(6)
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Observation", rep(NA_character_, 4)),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c(
+      "identifier/type/coding/system",
+      "identifier/type/coding/code",
+      "identifier/system",
+      "identifier/value",
+      "identifier/start"
+    ),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+  table_description <- setFhirPseudonymizationRules(table_description)
+
+  result <- pseudonymizeTable(source_table, table_description, "Observation")
+
+  approved_rows <- seq_len(4)
+  redacted_rows <- 5:6
+  expect_equal(
+    result$obs_identifier_system[approved_rows],
+    source_table$obs_identifier_system[approved_rows]
+  )
+  expect_equal(
+    result$obs_identifier_start[approved_rows],
+    source_table$obs_identifier_start[approved_rows]
+  )
+  expect_false(anyNA(result$obs_identifier_value[approved_rows]))
+  expect_false(any(
+    result$obs_identifier_value[approved_rows] ==
+      source_table$obs_identifier_value[approved_rows]
+  ))
+  expect_true(all(is.na(result$obs_identifier_system[redacted_rows])))
+  expect_true(all(is.na(result$obs_identifier_value[redacted_rows])))
+  expect_true(all(is.na(result$obs_identifier_start[redacted_rows])))
+})
+
+test_that("default rules retain approved logical reference identifiers", {
+  v2_system <- "http://terminology.hl7.org/CodeSystem/v2-0203"
+  attribute_group_system <- paste0(
+    "https://www.medizininformatik-initiative.de/fhir/fdpg/NamingSystem/",
+    "attribute_group"
+  )
+  extraction_id_system <- paste0(
+    "https://www.medizininformatik-initiative.de/fhir/fdpg/NamingSystem/",
+    "extraction_id"
+  )
+  source_table <- data.table::data.table(
+    enc_subject_ref = paste0("Patient/", seq_len(5)),
+    enc_subject_identifier_type_coding_system = c(v2_system, v2_system, NA, NA, v2_system),
+    enc_subject_identifier_type_coding_code = c("VN", "MR", NA, NA, "OTHER"),
+    enc_subject_identifier_system = c(
+      "visit-system",
+      "patient-system",
+      attribute_group_system,
+      extraction_id_system,
+      "other-system"
+    ),
+    enc_subject_identifier_value = paste0("identifier-", seq_len(5))
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Encounter", rep(NA_character_, 4)),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c(
+      "subject/reference",
+      "subject/identifier/type/coding/system",
+      "subject/identifier/type/coding/code",
+      "subject/identifier/system",
+      "subject/identifier/value"
+    ),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+  table_description <- setFhirPseudonymizationRules(table_description)
+
+  result <- pseudonymizeTable(source_table, table_description, "Encounter")
+
+  expect_equal(
+    result$enc_subject_identifier_system[1:4],
+    source_table$enc_subject_identifier_system[1:4]
+  )
+  expect_false(anyNA(result$enc_subject_identifier_value[1:4]))
+  expect_false(any(
+    result$enc_subject_identifier_value[1:2] ==
+      source_table$enc_subject_identifier_value[1:2]
+  ))
+  expect_equal(
+    result$enc_subject_identifier_value[3:4],
+    source_table$enc_subject_identifier_value[3:4]
+  )
+  expect_true(is.na(result$enc_subject_identifier_system[5]))
+  expect_true(is.na(result$enc_subject_identifier_value[5]))
+})
+
 test_that("cryptoHash maxLength truncates generated hashes", {
   source_table <- data.table::data.table(id = "abc")
   table_description <- data.table::data.table(
