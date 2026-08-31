@@ -289,7 +289,14 @@ getMedicationAnalysesFromDB <- function(record_ids) {
 #
 # General function to load resources by PID
 #
-getResourcesFromDB <- function(resource_name, column_names, patient_references, status_exclusion = NULL, additional_conditions = NULL) {
+getResourcesFromDB <- function(
+  resource_name,
+  column_names,
+  patient_references,
+  status_exclusion = NULL,
+  additional_conditions = NULL,
+  lock_id = paste0("getResourcesFromDB(", resource_name, ")")
+) {
   patient_ref_column_name <- etlutils::fhirdbGetPIDColumn(resource_name)
   patient_references <- etlutils::fhirdataGetPatientReference(patient_references)
   patient_references <- etlutils::fhirdbGetQueryList(patient_references)
@@ -308,7 +315,7 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
   }
 
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, column_names, where_clause)
-  return(etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getResourcesFromDB(", resource_name, ")")))
+  return(etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id))
 }
 
 #
@@ -330,7 +337,10 @@ addMedicationIdColumn <- function(medication_resources) {
 #
 # MedicationRequest
 #
-getMedicationRequestsFromDB <- function(patient_references) {
+getMedicationRequestsFromDB <- function(
+  patient_references,
+  lock_id = "getResourcesFromDB(MedicationRequest)"
+) {
   medication_requests <- getResourcesFromDB(
     resource_name = "MedicationRequest",
     column_names = c(
@@ -347,7 +357,8 @@ getMedicationRequestsFromDB <- function(patient_references) {
       "medreq_doseinstruc_timing_repeat_boundsperiod_end"
     ),
     patient_references = patient_references,
-    status_exclusion = c("on-hold", "cancelled", "entered-in-error", "stopped") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
+    status_exclusion = c("on-hold", "cancelled", "entered-in-error", "stopped"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
+    lock_id = lock_id
   )
   medication_requests <- addMedicationIdColumn(medication_requests)
 
@@ -466,7 +477,15 @@ getMedicationStatementsFromDB <- function(patient_references) {
 #
 # Medication (filtered by Medications with ATC)
 #
-getATCMedicationsFromDB <- function(medication_request, medication_administrations, medication_statements) {
+getATCMedicationsFromDB <- function(
+  medication_request,
+  medication_administrations,
+  medication_statements,
+  lock_id_prefix = "getATCMedicationsFromDB()"
+) {
+  get_lock_id <- function(suffix) {
+    if (is.null(lock_id_prefix)) NULL else paste0(lock_id_prefix, suffix)
+  }
   medication_ids <- etlutils::fhirdataExtractIDs(unique(c(
     medication_request$medreq_medicationreference_ref,
     medication_administrations$medadm_medicationreference_ref,
@@ -493,7 +512,7 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 
   medications_with_atc_OR_with_reference <- etlutils::dbGetReadOnlyQuery(
     query,
-    lock_id = "getATCMedicationsFromDB()#atc_OR_reference"
+    lock_id = get_lock_id("#atc_OR_reference")
   )
 
   # extract medications with ATC codes
@@ -524,7 +543,7 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 
     referenced_medications_with_atc <- etlutils::dbGetReadOnlyQuery(
       query,
-      lock_id = "getATCMedicationsFromDB()#referenced_medications_with_atc"
+      lock_id = get_lock_id("#referenced_medications_with_atc")
     )
   } else {
     referenced_medications_with_atc <- data.table::data.table(
@@ -562,7 +581,10 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 #
 # Observation
 #
-getObservationsFromDB <- function(patient_references) {
+getObservationsFromDB <- function(
+  patient_references,
+  lock_id = "getResourcesFromDB(Observation)"
+) {
   observations <- getResourcesFromDB(
     resource_name = "Observation",
     column_names = c(
@@ -589,7 +611,8 @@ getObservationsFromDB <- function(patient_references) {
     additional_conditions = c(
       "obs_category_code = 'laboratory'",
       "obs_code_system = 'http://loinc.org'"
-    )
+    ),
+    lock_id = lock_id
   )
   observations[, start_datetime := obs_effectivedatetime]
   return(observations)
@@ -598,7 +621,10 @@ getObservationsFromDB <- function(patient_references) {
 #
 # Procedure
 #
-getProceduresFromDB <- function(patient_references) {
+getProceduresFromDB <- function(
+  patient_references,
+  lock_id = "getResourcesFromDB(Procedure)"
+) {
   procedures <- getResourcesFromDB(
     resource_name = "Procedure",
     column_names = c(
@@ -614,7 +640,8 @@ getProceduresFromDB <- function(patient_references) {
     ),
     patient_references = patient_references,
     status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
-    additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
+    additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'",
+    lock_id = lock_id
   )
   procedures[, start_datetime := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
   procedures <- procedures[!is.na(start_datetime)]
@@ -629,7 +656,10 @@ getProceduresFromDB <- function(patient_references) {
 #
 # Condition
 #
-getConditionsFromDB <- function(patient_references) {
+getConditionsFromDB <- function(
+  patient_references,
+  lock_id = "getResourcesFromDB(Condition)"
+) {
   conditions <- getResourcesFromDB(
     resource_name = "Condition",
     column_names = c(
@@ -650,7 +680,8 @@ getConditionsFromDB <- function(patient_references) {
       "con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm'",
       # "(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
       "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))"
-    )
+    ),
+    lock_id = lock_id
   )
   conditions[, start_datetime := pmin(con_onsetperiod_start, con_recordeddate, na.rm = TRUE)]
   return(conditions)

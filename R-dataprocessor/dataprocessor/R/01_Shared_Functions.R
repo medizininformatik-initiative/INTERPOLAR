@@ -2,11 +2,14 @@
 #'
 #' Validates ward phase definitions loaded from global variables with the prefix
 #' `PHASES_WARD`. Each definition must contain exactly one non-empty
-#' `ward_name`, exactly one `phase_a_start`, and at most one `phase_b_start`.
-#' The function also checks that all timestamps have a valid format and that
+#' `ward_name`, one `phase_a_start`, one `department`, one
+#' `ward_type`, and at most one `phase_b_start`.
 #' If `phase_b_start` is present, exactly one `phase_b_end` is required. All phase
 #' timestamps must be valid, `phase_b_start` must be later than `phase_a_start`,
 #' and `phase_b_end` must be later than `phase_b_start`.
+#' `department` must contain one or more `Code Display` values as
+#' defined in `Fachabteilungsschluessel.xlsx`. Multiple values are separated by
+#' semicolons. `ward_type` must be either `"surgical"` or `"internistic"`.
 #'
 #' @param timezone A character string defining the timezone used for parsing
 #'   phase timestamps.
@@ -20,13 +23,16 @@
 #'   "ward_name = 'Station 1'",
 #'   "phase_a_start = '2026-01-11 10:00:00'",
 #'   "phase_b_start = '2026-01-21 10:00:00'",
-#'   "phase_b_end = '2026-04-21 10:00:00'"
+#'   "phase_b_end = '2026-04-21 10:00:00'",
+#'   "department = '0100 Innere Medizin; 0300 Kardiologie'",
+#'   "ward_type = 'internistic'"
 #' )
 #'
 #' PHASES_WARD_2 <- c(
 #'   "ward_name = 'Station 2'",
 #'   "phase_a_start = '2026-01-11'",
-#'   "phase_b_start = '2026-01-12'"
+#'   "department = '1500 Allgemeine Chirurgie'",
+#'   "ward_type = 'surgical'"
 #' )
 #'
 #' validateWardPhases(timezone = "UTC")
@@ -40,6 +46,9 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
     return(invisible(TRUE))
   }
 
+  department_path <- getFachabteilungsschluesselPath()
+  valid_departments <- loadFachabteilungsschluessel(department_path)
+  valid_ward_types <- c("surgical", "internistic")
   ward_names <- character()
   getEntryName <- function(x, index) {
     x_names <- names(x)
@@ -64,7 +73,11 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
   parsed_records <- tryCatch(
     etlutils::parseStructuredConfigDefinitions(
       definitions = list(ward_phases),
-      allowed_key_pattern = "ward_name|phase_a_start|phase_b_start|phase_b_end",
+      allowed_key_pattern = paste(
+        "ward_name|phase_a_start|phase_b_start|phase_b_end",
+        "department|ward_type",
+        sep = "|"
+      ),
       allow_plus = FALSE
     ),
     error = function(e) {
@@ -134,7 +147,153 @@ validateWardPhases <- function(timezone = GLOBAL_TIMEZONE) {
         }
       }
     }
+
+    department_count <- sum(keys == "department")
+    if (department_count == 0L) {
+      stop(
+        msg_prefix, "Entry ", entry_name,
+        " must contain department with one or more semicolon-separated values."
+      )
+    }
+    if (department_count > 1L) {
+      stop(
+        msg_prefix, "Entry ", entry_name,
+        " must contain only one department parameter; ",
+        "separate multiple values with semicolons."
+      )
+    }
+    if (sum(keys == "ward_type") != 1L) {
+      stop(msg_prefix, "Entry ", entry_name, " must contain exactly one ward_type.")
+    }
+
+    departments <- trimws(strsplit(
+      values[keys == "department"],
+      ";",
+      fixed = TRUE
+    )[[1]])
+    if (any(departments == "")) {
+      stop(
+        msg_prefix, "department contains an empty semicolon-separated value ",
+        "in entry ", entry_name, "."
+      )
+    }
+    invalid_departments <- departments[
+      !departments %in% valid_departments
+    ]
+    if (length(invalid_departments)) {
+      stop(
+        msg_prefix, "department must be a valid '<Code> <Display>' value from ",
+        department_path, " in entry ", entry_name, ": ",
+        paste(invalid_departments, collapse = ", ")
+      )
+    }
+
+    ward_type <- values[keys == "ward_type"]
+    if (!ward_type %in% valid_ward_types) {
+      stop(
+        msg_prefix, "ward_type must be either 'surgical' or 'internistic' in entry ",
+        entry_name, ": ", ward_type
+      )
+    }
     ward_names <- c(ward_names, ward_name)
+  }
+  invisible(TRUE)
+}
+
+# Get the path of the packaged department terminology workbook.
+getFachabteilungsschluesselPath <- function() {
+  file_path <- system.file(
+    "extdata",
+    "Fachabteilungsschluessel.xlsx",
+    package = "dataprocessor"
+  )
+  if (!nzchar(file_path) || !file.exists(file_path)) {
+    stop("Fachabteilungsschluessel.xlsx not found in dataprocessor/inst/extdata.")
+  }
+  normalizePath(file_path, winslash = "/")
+}
+
+# Load valid department keys from the packaged terminology workbook.
+loadFachabteilungsschluessel <- function(file_path = getFachabteilungsschluesselPath()) {
+  sheets <- etlutils::readExcelFileAsTableList(file_path)
+  if (length(sheets) != 1L) {
+    stop("Fachabteilungsschluessel.xlsx must contain exactly one sheet.")
+  }
+
+  required_columns <- c("Code", "Display")
+  fachabteilungen <- etlutils::removeTableHeader(
+    data.table::copy(sheets[[1]]),
+    required_columns
+  )
+  if (
+    !data.table::is.data.table(fachabteilungen) ||
+    !nrow(fachabteilungen) ||
+    !all(required_columns %in% names(fachabteilungen))
+  ) {
+    stop("Fachabteilungsschluessel.xlsx must contain the columns Code and Display.")
+  }
+
+  codes <- trimws(as.character(fachabteilungen[["Code"]]))
+  displays <- trimws(as.character(fachabteilungen[["Display"]]))
+  invalid_rows <- is.na(codes) | !grepl("^[0-9]{1,4}$", codes) |
+    is.na(displays) | displays == ""
+  if (any(invalid_rows)) {
+    stop(
+      "Fachabteilungsschluessel.xlsx contains an invalid Code or Display in data row ",
+      which(invalid_rows)[1], "."
+    )
+  }
+
+  departments <- paste(
+    sprintf("%04d", as.integer(codes)),
+    displays
+  )
+  if (anyDuplicated(departments)) {
+    stop("Fachabteilungsschluessel.xlsx contains duplicate Code/Display entries.")
+  }
+  departments
+}
+
+# Get the path of the packaged site-code workbook.
+getSiteCodePath <- function() {
+  file_path <- system.file(
+    "extdata",
+    "Standortkuerzel.xlsx",
+    package = "dataprocessor"
+  )
+  if (!nzchar(file_path) || !file.exists(file_path)) {
+    stop("Standortkuerzel.xlsx not found in dataprocessor/inst/extdata.")
+  }
+  normalizePath(file_path, winslash = "/")
+}
+
+# Load valid site codes from the packaged workbook.
+loadSiteCodes <- function(file_path = getSiteCodePath()) {
+  sheets <- etlutils::readExcelFileAsTableList(file_path)
+  site_codes <- etlutils::removeTableHeader(
+    data.table::copy(sheets[[1]]),
+    "SITE_CODE"
+  )
+  valid_site_codes <- trimws(as.character(site_codes[["SITE_CODE"]]))
+  valid_site_codes
+}
+
+# Validate the configured site code against the packaged workbook.
+validateSiteCode <- function(site_code, file_path = getSiteCodePath()) {
+  if (
+    !is.character(site_code) || length(site_code) != 1L ||
+    is.na(site_code) || !nzchar(trimws(site_code))
+  ) {
+    stop("dataprocessor_config.toml: SITE_CODE must be one non-empty string.")
+  }
+
+  site_code <- trimws(site_code)
+  if (!site_code %in% loadSiteCodes(file_path)) {
+    stop(
+      "dataprocessor_config.toml: SITE_CODE must be a valid value from ",
+      normalizePath(file_path, winslash = "/", mustWork = FALSE),
+      ": ", site_code
+    )
   }
   invisible(TRUE)
 }
