@@ -69,6 +69,34 @@ fhirPathRules:
     cases:
       "$this": "$this.toString().replaceMatches('(?<year>\\\\d{2,4})-(?<month>\\\\d{2})-(?<day>\\\\d{2})\\\\b', '${year}-${month}')"
 
+## Observation
+  ### INTERPOLAR deviation: retain only approved coding systems used for analyses
+  - path: Observation.code.coding.where(system='http://loinc.org' or system='http://snomed.info/sct').code
+    method: keep
+  - path: Observation.code.coding.code
+    method: cryptoHash
+  - path: Observation.code.coding.where(system='http://loinc.org' or system='http://snomed.info/sct').display
+    method: keep
+  - path: Observation.code.coding.display
+    method: redact
+  - path: Observation.code.where(coding.where(system='http://loinc.org' or system='http://snomed.info/sct').exists()).text
+    method: keep
+  - path: Observation.code.text
+    method: redact
+
+  - path: Observation.valueCodeableConcept.coding.where(system='http://fhir.de/CodeSystem/bfarm/atc' or system='http://fhir.de/CodeSystem/ifa/pzn' or system='http://snomed.info/sct' or system='http://fhir.de/CodeSystem/ask').code
+    method: keep
+  - path: Observation.valueCodeableConcept.coding.code
+    method: cryptoHash
+  - path: Observation.valueCodeableConcept.coding.where(system='http://fhir.de/CodeSystem/bfarm/atc' or system='http://fhir.de/CodeSystem/ifa/pzn' or system='http://snomed.info/sct' or system='http://fhir.de/CodeSystem/ask').display
+    method: keep
+  - path: Observation.valueCodeableConcept.coding.display
+    method: redact
+  - path: Observation.valueCodeableConcept.where(coding.where(system='http://fhir.de/CodeSystem/bfarm/atc' or system='http://fhir.de/CodeSystem/ifa/pzn' or system='http://snomed.info/sct' or system='http://fhir.de/CodeSystem/ask').exists()).text
+    method: keep
+  - path: Observation.valueCodeableConcept.text
+    method: redact
+
 ## Base - All Resources
   - path: nodesByType('Address')
     method: redact

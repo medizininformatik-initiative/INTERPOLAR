@@ -263,6 +263,68 @@ test_that("default rules retain only approved identifier structures", {
   expect_true(all(is.na(result$obs_identifier_start[redacted_rows])))
 })
 
+test_that("default rules retain only approved Observation coding details", {
+  source_table <- data.table::data.table(
+    obs_code_system = c(
+      "http://loinc.org",
+      "http://snomed.info/sct",
+      "http://loinc.org",
+      "http://snomed.info/sct",
+      "https://example.test/local",
+      NA_character_
+    ),
+    obs_code_code = paste0("observation-code-", seq_len(6)),
+    obs_code_display = paste0("observation display ", seq_len(6)),
+    obs_code_text = paste0("observation text ", seq_len(6)),
+    obs_valuecodeableconcept_system = c(
+      "http://fhir.de/CodeSystem/bfarm/atc",
+      "http://fhir.de/CodeSystem/ifa/pzn",
+      "http://snomed.info/sct",
+      "http://fhir.de/CodeSystem/ask",
+      "https://example.test/local",
+      NA_character_
+    ),
+    obs_valuecodeableconcept_code = paste0("value-code-", seq_len(6)),
+    obs_valuecodeableconcept_display = paste0("value display ", seq_len(6)),
+    obs_valuecodeableconcept_text = paste0("value text ", seq_len(6))
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Observation", rep(NA_character_, ncol(source_table) - 1L)),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c(
+      "code/coding/system",
+      "code/coding/code",
+      "code/coding/display",
+      "code/text",
+      "valueCodeableConcept/coding/system",
+      "valueCodeableConcept/coding/code",
+      "valueCodeableConcept/coding/display",
+      "valueCodeableConcept/text"
+    ),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+  table_description <- setFhirPseudonymizationRules(table_description)
+
+  result <- pseudonymizeTable(source_table, table_description, "Observation")
+
+  expect_equal(result$obs_code_system, source_table$obs_code_system)
+  expect_equal(result$obs_valuecodeableconcept_system, source_table$obs_valuecodeableconcept_system)
+  for (field in c("obs_code_code", "obs_valuecodeableconcept_code")) {
+    expect_equal(result[[field]][1:4], source_table[[field]][1:4])
+    expect_equal(nchar(result[[field]][5:6]), c(32L, 32L))
+  }
+  for (field in c(
+    "obs_code_display",
+    "obs_code_text",
+    "obs_valuecodeableconcept_display",
+    "obs_valuecodeableconcept_text"
+  )) {
+    expect_equal(result[[field]][1:4], source_table[[field]][1:4])
+    expect_true(all(is.na(result[[field]][5:6])))
+  }
+})
+
 test_that("default rules retain approved logical reference identifiers", {
   v2_system <- "http://terminology.hl7.org/CodeSystem/v2-0203"
   attribute_group_system <- paste0(
