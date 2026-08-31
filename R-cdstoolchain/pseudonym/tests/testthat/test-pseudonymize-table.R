@@ -191,6 +191,31 @@ test_that("conditional rules treat NA conditions as not matched", {
   expect_true(is.na(result$identifier_value[1]))
 })
 
+test_that("conditional rules resolve sibling fields outside identifiers", {
+  source_table <- data.table::data.table(
+    obs_code_system = c("http://loinc.org", "https://example.test/local", NA_character_),
+    obs_code_code = c("1234-5", "local-code", "missing-system-code"),
+    obs_code_text = c("standard text", "local text", "missing system text")
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Observation", NA, NA),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c("code/coding/system", "code/coding/code", "code/text"),
+    PSEUDONYMIZATION_RULE = c(
+      "keep",
+      'keepIf(system in ["http://loinc.org"]); cryptoHash',
+      'keepIf(coding.system in ["http://loinc.org"]); redact'
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Observation")
+
+  expect_equal(result$obs_code_code[1], source_table$obs_code_code[1])
+  expect_equal(nchar(result$obs_code_code[2:3]), c(32L, 32L))
+  expect_equal(result$obs_code_text[1], source_table$obs_code_text[1])
+  expect_true(all(is.na(result$obs_code_text[2:3])))
+})
+
 test_that("default rules retain only approved identifier structures", {
   v2_system <- "http://terminology.hl7.org/CodeSystem/v2-0203"
   v3_system <- "http://terminology.hl7.org/CodeSystem/v3-ObservationValue"

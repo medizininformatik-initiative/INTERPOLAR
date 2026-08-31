@@ -543,6 +543,68 @@ test_that("conditional reference identifier rules are translated into readable r
   )
 })
 
+test_that("explicit YAML rules become fallbacks after conditional rules", {
+  yaml_file <- tempfile(fileext = ".yaml")
+  writeLines(c(
+    "---",
+    "fhirVersion: R4",
+    "fhirPathRules:",
+    paste0(
+      "  - path: Observation.code.coding.where(",
+      "system='http://loinc.org' or system='http://snomed.info/sct').code"
+    ),
+    "    method: keep",
+    "  - path: Observation.code.coding.code",
+    "    method: cryptoHash"
+  ), yaml_file)
+
+  table_description <- data.table::data.table(
+    RESOURCE = c("Observation", NA),
+    COLUMN_NAME = c("obs_code_system", "obs_code_code"),
+    FHIR_EXPRESSION = c("code/coding/system", "code/coding/code"),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+
+  result <- setFhirPseudonymizationRules(table_description, yaml_file)
+
+  expect_equal(result$PSEUDONYMIZATION_RULE[2], paste0(
+    "keepIf(system in [\"http://loinc.org\", \"http://snomed.info/sct\"]); ",
+    "cryptoHash"
+  ))
+})
+
+test_that("nested coding conditions retain their path prefix", {
+  yaml_file <- tempfile(fileext = ".yaml")
+  writeLines(c(
+    "---",
+    "fhirVersion: R4",
+    "fhirPathRules:",
+    paste0(
+      "  - path: Observation.code.where(coding.where(",
+      "system='http://loinc.org' or system='http://snomed.info/sct').exists()).text"
+    ),
+    "    method: keep",
+    "  - path: Observation.code.text",
+    "    method: redact"
+  ), yaml_file)
+
+  table_description <- data.table::data.table(
+    RESOURCE = c("Observation", NA),
+    COLUMN_NAME = c("obs_code_system", "obs_code_text"),
+    FHIR_EXPRESSION = c("code/coding/system", "code/text"),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+
+  result <- setFhirPseudonymizationRules(table_description, yaml_file)
+
+  expect_equal(result$PSEUDONYMIZATION_RULE[2], paste0(
+    "keepIf(coding.system in [\"http://loinc.org\", ",
+    "\"http://snomed.info/sct\"]); redact"
+  ))
+})
+
 test_that("conditional redact rules are hidden when fallback redact already applies", {
   yaml_file <- tempfile(fileext = ".yaml")
   writeLines(c(
