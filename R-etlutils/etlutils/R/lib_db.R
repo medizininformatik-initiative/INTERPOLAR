@@ -1,6 +1,9 @@
 # Environment for saving everything but the connections
 .lib_db_env <- new.env()
 
+DB_COORDINATION_MODE_NONE <- "none"
+DB_COORDINATION_MODE_TRANSFER <- "transfer"
+
 #' Initialize a module database context
 #'
 #' Loads the database connection settings for one module into the internal
@@ -209,6 +212,70 @@ dbSetContext <- function(module_name,
   .lib_db_env[["DB_ADMIN_USER"]] <- admin_user
   .lib_db_env[["DB_ADMIN_PASSWORD"]] <- admin_password
   .lib_db_env[["DB_ADMIN_SCHEMAS"]] <- admin_schemas
+  .lib_db_env[["DB_COORDINATION_MODE"]] <- NULL
+}
+
+#' Detect the Database Coordination Mode
+#'
+#' Transfer coordination is only used for writable databases that provide at
+#' least one of the INTERPOLAR transfer control functions. Read-only databases
+#' and databases without those functions do not need database locks for
+#' analyses.
+#'
+#' @return One of `none` or `transfer`.
+dbDetectCoordinationMode <- function() {
+  statement <- paste0(
+    "SELECT\n",
+    "  current_setting('transaction_read_only') = 'on' AS transaction_read_only,\n",
+    "  EXISTS (\n",
+    "    SELECT 1\n",
+    "    FROM pg_catalog.pg_proc AS p\n",
+    "    INNER JOIN pg_catalog.pg_namespace AS n ON n.oid = p.pronamespace\n",
+    "    WHERE n.nspname = 'db'\n",
+    "      AND p.proname IN (\n",
+    "        'data_transfer_status',\n",
+    "        'data_transfer_stop',\n",
+    "        'data_transfer_start',\n",
+    "        'data_transfer_reset_lock'\n",
+    "      )\n",
+    "  ) AS has_transfer_functions"
+  )
+  capabilities <- dbWithRetry(
+    db_call = function(db_connection) {
+      DBI::dbGetQuery(db_connection, statement)
+    },
+    call_label = "DBI::dbGetQuery",
+    sql = statement,
+    readonly = TRUE
+  )
+
+  if (isTRUE(capabilities[["transaction_read_only"]][1])) {
+    return(DB_COORDINATION_MODE_NONE)
+  }
+  if (isTRUE(capabilities[["has_transfer_functions"]][1])) {
+    return(DB_COORDINATION_MODE_TRANSFER)
+  }
+  DB_COORDINATION_MODE_NONE
+}
+
+#' Get the Cached Database Coordination Mode
+#'
+#' @return One of `none` or `transfer`.
+dbGetCoordinationMode <- function() {
+  coordination_mode <- .lib_db_env[["DB_COORDINATION_MODE"]]
+  if (is.null(coordination_mode)) {
+    coordination_mode <- dbDetectCoordinationMode()
+    .lib_db_env[["DB_COORDINATION_MODE"]] <- coordination_mode
+  }
+  coordination_mode
+}
+
+#' Check Whether Database Transfer Coordination Is Available
+#'
+#' @return `TRUE` for a database with active transfer coordination and `FALSE`
+#'   for an analysis database without it.
+dbUsesTransferCoordination <- function() {
+  identical(dbGetCoordinationMode(), DB_COORDINATION_MODE_TRANSFER)
 }
 
 #' Check if Database Logging is Enabled
@@ -559,7 +626,7 @@ dbCreateLockID <- function(...) {
 #'         of retries.
 #'
 dbLock <- function(lock_id) {
-  if (!is.null(lock_id)) {
+  if (!is.null(lock_id) && dbUsesTransferCoordination()) {
     full_lock_id <- dbCreateLockID(lock_id)
     # increase the recursive call counter 'db_lock_depth'
     db_lock_depth <- .lib_db_env[[lock_id]]
@@ -637,7 +704,7 @@ dbTransferDataInternal <- function() {
 #'
 dbUnlock <- function(lock_id, readonly = FALSE) {
   unlock_successful <- FALSE
-  if (!is.null(lock_id)) {
+  if (!is.null(lock_id) && dbUsesTransferCoordination()) {
     full_lock_id <- dbCreateLockID(lock_id)
     dbLog("Try to unlock database with lock_id: '", full_lock_id, "' and readonly: ", readonly)
     unlock_request <- paste0("SELECT db.data_transfer_start('", dbGetModuleName(), "', '", full_lock_id, "', ", readonly, ");")
@@ -692,6 +759,10 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
 #'
 #' @export
 dbResetLock <- function() {
+  if (!dbUsesTransferCoordination()) {
+    dbLog("Database transfer lock is disabled for this database context")
+    return(FALSE)
+  }
   module_name <- dbGetModuleName()
   unlock_successful <- FALSE
   if (dbIsLockedByModule()) {

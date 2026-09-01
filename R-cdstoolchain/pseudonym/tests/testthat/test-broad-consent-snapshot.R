@@ -129,9 +129,18 @@ test_that("Broad Consent database workflow materializes and publishes its plan",
     SOURCE_TABLE = "patient",
     STATUS = "created"
   )
+  version_summary <- data.table::data.table(
+    VIEW_NAME = "v_db_parameter",
+    SOURCE_TABLE = NA_character_,
+    STATUS = "created"
+  )
 
   testthat::local_mocked_bindings(
     validateSnapshotChunkSize = function(chunk_size) as.integer(chunk_size),
+    getSnapshotReleaseVersion = function(connection, source_schema) {
+      captured$version_connection <- connection
+      "2.1.0"
+    },
     getDefaultSnapshotPseudonymizationRuleSources = function(project_root) {
       list(table_descriptions = "rules", snapshot_extensions = "extensions")
     },
@@ -187,6 +196,11 @@ test_that("Broad Consent database workflow materializes and publishes its plan",
     ) {
       captured$view_connection <- connection
       view_summary
+    },
+    createSnapshotVersionView = function(connection, release_version, view_schema) {
+      captured$version_view_connection <- connection
+      captured$release_version <- release_version
+      version_summary
     }
   )
 
@@ -202,13 +216,20 @@ test_that("Broad Consent database workflow materializes and publishes its plan",
   )
 
   expect_equal(captured$plan_connection, "source-connection")
+  expect_equal(captured$version_connection, "source-connection")
   expect_equal(captured$target_schema, "db_log")
   expect_equal(captured$temporary_source_connection, "source-connection")
   expect_equal(captured$stream_connections, c("source-connection", "target-connection"))
   expect_equal(captured$chunk_size, 2L)
   expect_equal(captured$reported_summary, summary)
   expect_equal(captured$view_connection, "target-connection")
+  expect_equal(captured$version_view_connection, "target-connection")
+  expect_equal(captured$release_version, "2.1.0")
   expect_equal(result$materialization_plan, plan)
   expect_equal(result$summary, summary)
-  expect_equal(result$view_summary, view_summary)
+  expect_equal(result$release_version, "2.1.0")
+  expect_equal(
+    result$view_summary,
+    data.table::rbindlist(list(view_summary, version_summary))
+  )
 })

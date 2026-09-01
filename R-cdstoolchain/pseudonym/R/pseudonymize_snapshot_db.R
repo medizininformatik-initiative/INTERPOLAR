@@ -63,6 +63,72 @@ snapshotRelationExists <- function(connection, name, schema = NULL) {
   DBI::dbExistsTable(connection, relation)
 }
 
+getSnapshotReleaseVersion <- function(
+  connection,
+  source_schema = "db2dataprocessor_out"
+) {
+  source_view <- snapshotQualifiedName(connection, "v_db_parameter", source_schema)
+  statement <- paste0(
+    "SELECT parameter_value FROM ",
+    source_view,
+    " WHERE parameter_name = 'release_version'"
+  )
+  version_rows <- DBI::dbGetQuery(connection, statement)
+  if (nrow(version_rows) != 1L) {
+    stop(
+      "Source view ", source_view,
+      " must contain exactly one release_version row.",
+      call. = FALSE
+    )
+  }
+  release_version <- as.character(version_rows[["parameter_value"]][1])
+  if (is.na(release_version) || !nzchar(release_version)) {
+    stop("Source database release_version must not be empty.", call. = FALSE)
+  }
+  release_version
+}
+
+createSnapshotVersionView <- function(
+  connection,
+  release_version,
+  view_schema = "db2dataprocessor_out"
+) {
+  if (
+    length(release_version) != 1L ||
+    is.na(release_version) ||
+    !nzchar(release_version)
+  ) {
+    stop("release_version must be one non-empty value.", call. = FALSE)
+  }
+  view_name <- "v_db_parameter"
+  snapshotEnsureSchema(connection, view_schema)
+  if (snapshotRelationExists(connection, view_name, view_schema)) {
+    stop("Target view already exists: ", snapshotQualifiedName(
+      connection,
+      view_name,
+      view_schema
+    ))
+  }
+  quoted_version <- as.character(DBI::dbQuoteString(connection, release_version))
+  statement <- paste0(
+    "CREATE VIEW ",
+    snapshotQualifiedName(connection, view_name, view_schema),
+    " AS SELECT ",
+    "CAST(NULL AS integer) AS id, ",
+    "CAST('release_version' AS varchar) AS parameter_name, ",
+    "CAST(", quoted_version, " AS varchar) AS parameter_value, ",
+    "CAST('Source database release version' AS varchar) AS parameter_description, ",
+    "CAST(NULL AS timestamp) AS input_datetime, ",
+    "CAST(NULL AS timestamp) AS last_change_timestamp"
+  )
+  DBI::dbExecute(connection, statement)
+  data.table::data.table(
+    VIEW_NAME = view_name,
+    SOURCE_TABLE = NA_character_,
+    STATUS = "created"
+  )
+}
+
 #' Build Source Relation Plan for Snapshot Pseudonymization
 #'
 #' This derives the database read plan from loaded pseudonymization rules. Only
@@ -360,6 +426,16 @@ pseudonymizeSnapshotDatabase <- function(
 
   result <- list()
   runPseudonymizationLogStep(2L,
+    "Read source database release version",
+    {
+      result[["release_version"]] <- getSnapshotReleaseVersion(
+        source_connection,
+        source_schema = source_schema
+      )
+    },
+    log_steps = log_steps
+  )
+  runPseudonymizationLogStep(2L,
     "Load pseudonymization rules for snapshot DB",
     {
       result[["rules"]] <- loadPseudonymizationRules(
@@ -532,12 +608,21 @@ pseudonymizeSnapshotDatabase <- function(
   runPseudonymizationLogStep(2L,
     "Create snapshot passthrough views",
     {
-      result[["view_summary"]] <- createSnapshotPassthroughViews(
+      passthrough_summary <- createSnapshotPassthroughViews(
         target_connection,
         materialization_plan = result[["materialization_plan"]],
         table_schema = target_table_schema,
         view_schema = target_view_schema
       )
+      version_summary <- createSnapshotVersionView(
+        target_connection,
+        release_version = result[["release_version"]],
+        view_schema = target_view_schema
+      )
+      result[["view_summary"]] <- data.table::rbindlist(list(
+        passthrough_summary,
+        version_summary
+      ))
     },
     log_steps = log_steps
   )

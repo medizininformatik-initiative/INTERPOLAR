@@ -130,3 +130,110 @@ test_that("dbCreateConnection closes connections after session setup errors", {
   )
   expect_true(disconnected)
 })
+
+test_that("dbGetCoordinationMode caches the detected mode per context", {
+  detection_count <- 0L
+  testthat::local_mocked_bindings(
+    dbDetectCoordinationMode = function() {
+      detection_count <<- detection_count + 1L
+      DB_COORDINATION_MODE_NONE
+    }
+  )
+
+  dbSetContext(
+    "dataprocessor", "snapshot", "host", 5432, "user", "password",
+    "schema_in", "schema_out", FALSE
+  )
+  expect_equal(dbGetCoordinationMode(), DB_COORDINATION_MODE_NONE)
+  expect_equal(dbGetCoordinationMode(), DB_COORDINATION_MODE_NONE)
+  expect_equal(detection_count, 1L)
+
+  dbSetContext(
+    "dataprocessor", "other_snapshot", "host", 5432, "user", "password",
+    "schema_in", "schema_out", FALSE
+  )
+  expect_equal(dbGetCoordinationMode(), DB_COORDINATION_MODE_NONE)
+  expect_equal(detection_count, 2L)
+})
+
+test_that("dbDetectCoordinationMode accepts read-only databases", {
+  testthat::local_mocked_bindings(
+    dbWithRetry = function(...) {
+      data.frame(
+        transaction_read_only = TRUE,
+        has_transfer_functions = TRUE
+      )
+    }
+  )
+
+  expect_equal(dbDetectCoordinationMode(), DB_COORDINATION_MODE_NONE)
+})
+
+test_that("dbDetectCoordinationMode accepts complete transfer coordination", {
+  detection_calls <- 0L
+  detection_sql <- NULL
+  testthat::local_mocked_bindings(
+    dbWithRetry = function(db_call,
+                           call_label,
+                           sql,
+                           readonly = FALSE,
+                           params = NULL,
+                           admin = FALSE) {
+      detection_calls <<- detection_calls + 1L
+      detection_sql <<- sql
+      expect_false(admin)
+      data.frame(
+        transaction_read_only = FALSE,
+        has_transfer_functions = TRUE
+      )
+    }
+  )
+
+  expect_equal(dbDetectCoordinationMode(), DB_COORDINATION_MODE_TRANSFER)
+  expect_equal(detection_calls, 1L)
+  expect_match(detection_sql, "EXISTS", fixed = TRUE)
+  expect_match(detection_sql, "'data_transfer_reset_lock'", fixed = TRUE)
+  expect_false(grepl("data_transfer_get_lock_module", detection_sql, fixed = TRUE))
+  expect_false(grepl("cron.job", detection_sql, fixed = TRUE))
+})
+
+test_that("dbDetectCoordinationMode accepts databases without transfer functions", {
+  testthat::local_mocked_bindings(
+    dbWithRetry = function(...) {
+      data.frame(
+        transaction_read_only = FALSE,
+        has_transfer_functions = FALSE
+      )
+    }
+  )
+
+  expect_equal(dbDetectCoordinationMode(), DB_COORDINATION_MODE_NONE)
+})
+
+test_that("database locks are no-ops without transfer coordination", {
+  testthat::local_mocked_bindings(
+    dbUsesTransferCoordination = function() FALSE,
+    dbGetStatus = function() fail("status must not be read"),
+    dbIsLockedByModule = function() fail("lock owner must not be read")
+  )
+
+  expect_null(dbLock("analysis"))
+  expect_false(dbUnlock("analysis"))
+  expect_false(dbResetLock())
+})
+
+test_that("read-only query results do not depend on transfer coordination", {
+  query_result <- data.table::data.table(patient_id = c(1L, 2L))
+  testthat::local_mocked_bindings(
+    dbUsesTransferCoordination = function() FALSE,
+    dbWithRetry = function(...) query_result
+  )
+
+  without_lock <- dbGetReadOnlyQuery("SELECT patient_id FROM v_patient")
+  with_inactive_lock <- dbGetReadOnlyQuery(
+    "SELECT patient_id FROM v_patient",
+    lock_id = "analysis"
+  )
+
+  expect_equal(with_inactive_lock, without_lock)
+})

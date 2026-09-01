@@ -15,6 +15,61 @@ test_that("snapshot source session permits temporary resolution tables", {
   expect_equal(captured$statement, "SET SESSION default_transaction_read_only = off")
 })
 
+test_that("getSnapshotReleaseVersion reads exactly one source version", {
+  captured_statement <- NULL
+  testthat::local_mocked_bindings(
+    dbGetQuery = function(connection, statement) {
+      captured_statement <<- statement
+      data.frame(parameter_value = "2.1.0")
+    },
+    .package = "DBI"
+  )
+
+  result <- getSnapshotReleaseVersion(DBI::ANSI(), "db2dataprocessor_out")
+
+  expect_equal(result, "2.1.0")
+  expect_match(
+    captured_statement,
+    'FROM "db2dataprocessor_out"."v_db_parameter"',
+    fixed = TRUE
+  )
+})
+
+test_that("getSnapshotReleaseVersion rejects missing or empty versions", {
+  version_rows <- data.frame(parameter_value = character())
+  testthat::local_mocked_bindings(
+    dbGetQuery = function(connection, statement) version_rows,
+    .package = "DBI"
+  )
+
+  expect_error(getSnapshotReleaseVersion(DBI::ANSI()), "exactly one release_version")
+
+  version_rows <- data.frame(parameter_value = "")
+  expect_error(getSnapshotReleaseVersion(DBI::ANSI()), "must not be empty")
+})
+
+test_that("createSnapshotVersionView publishes the source release version", {
+  statements <- character()
+  testthat::local_mocked_bindings(
+    snapshotRelationExists = function(connection, name, schema = NULL) FALSE
+  )
+  testthat::local_mocked_bindings(
+    dbExecute = function(connection, statement) {
+      statements <<- c(statements, statement)
+      0L
+    },
+    .package = "DBI"
+  )
+
+  summary <- createSnapshotVersionView(DBI::ANSI(), "2.1'0")
+
+  expect_equal(summary$VIEW_NAME, "v_db_parameter")
+  view_statement <- statements[grepl("CREATE VIEW", statements, fixed = TRUE)]
+  expect_length(view_statement, 1L)
+  expect_match(view_statement, "CAST('2.1''0' AS varchar)", fixed = TRUE)
+  expect_match(view_statement, "AS parameter_value", fixed = TRUE)
+})
+
 test_that("getSnapshotSourceViewPlan uses described table sources only", {
   rules <- data.table::data.table(
     SOURCE_TYPE = c("table_description", "snapshot_extension", "table_description"),
