@@ -247,6 +247,16 @@ createBroadConsentSnapshotDatabase <- function(
 
   result <- list()
   runPseudonymizationLogStep(2L,
+    "Read source database release version",
+    {
+      result[["release_version"]] <- getSnapshotReleaseVersion(
+        source_connection,
+        source_schema = source_schema
+      )
+    },
+    log_steps = log_steps
+  )
+  runPseudonymizationLogStep(2L,
     "Plan Broad Consent snapshot source relations",
     {
       result[["materialization_plan"]] <- getExistingSnapshotMaterializationPlan(
@@ -306,12 +316,21 @@ createBroadConsentSnapshotDatabase <- function(
   runPseudonymizationLogStep(2L,
     "Create Broad Consent snapshot views",
     {
-      result[["view_summary"]] <- createSnapshotPassthroughViews(
+      passthrough_summary <- createSnapshotPassthroughViews(
         target_connection,
         materialization_plan = result[["materialization_plan"]],
         table_schema = target_table_schema,
         view_schema = target_view_schema
       )
+      version_summary <- createSnapshotVersionView(
+        target_connection,
+        release_version = result[["release_version"]],
+        view_schema = target_view_schema
+      )
+      result[["view_summary"]] <- data.table::rbindlist(list(
+        passthrough_summary,
+        version_summary
+      ))
     },
     log_steps = log_steps
   )
