@@ -14,13 +14,11 @@ Es wird eine html Datei in OutputGlobal ((../outputGlobal/dataprocessor/reports/
 
 - In der dritten und vierten Tabelle werden die gezählten Fälle nicht durch die Zeiten des Krankenhausaufenthalt sondern durch die Zeiten des Stationsaufenthalts begrenzt
 
-- In der fünften und sechsten Tabelle werden die gezählten Fälle zusätzlich gefiltert auf den ersten INTERPOLAR-Stationsaufenthalt sowie dessen erste Medikationsanalyse
+- Diese ersten vier Tabellen beinhalten die Zählungen für alle im Frontend dokumentierten Fälle. War ein Fall auf mehreren INTERPOLAR-Stationen, wird er auf jeder seiner Stationen gezählt, wodurch die Summe über alle Stationen einzeln höher als die angezeigte Gesamtanzahl der Fälle sein kann.
+
+- In der fünften und sechsten Tabelle werden die gezählten Fälle zusätzlich gefiltert auf den ersten INTERPOLAR-Stationsaufenthalt sowie dessen erste Medikationsanalyse (primäre Auswertung; FAS 1).
 
 - Es ist eine Suche ("Search" im oberen rechten Rand) sowie eine Sortierung (Klicken auf die Spaltennamen) und Filterung der Tabelleneinträge möglich. Über den Download-Button im oberen linken Rand kann wahlweise eine csv-Datei oder Excel-Datei der Tabelleneinträge erzeugt werden.
-
-- Die Tabellen beinhalten die Zählungen für alle im Frontend dokumentierten Fälle. War ein Fall auf mehreren INTERPOLAR-Stationen, wird er auf jeder seiner Stationen gezählt, wodurch die Summe über alle Stationen einzeln höher als die angezeigte Gesamtanzahl der Fälle sein kann.
-
-- Die Zählung gemäß primärer Endpunktanalyse (nur erster Kontakt eines Falls auf einer INTERPOLAR-Station und davon nur die erste Medikationanalyse und dazugehörige MRPs) ist in Erarbeitung.
 
 - die Tabellen enthalten folgende Kennzahlen:
 
@@ -98,6 +96,8 @@ Es wird eine html Datei in OutputGlobal ((../outputGlobal/dataprocessor/reports/
 
   - Anzahl der algorithmisch detektierten MRP, die für diese Station immer als klinisch nicht relevant eingestuft werden (evaluation: always clinically irrelevant)
 
+  - für die Tabellen fünf und sechs zusätzlich FAS2.1: die Anzahl der Fälle, deren Liegedauer lange genug war, sodass prinzipiell eine Medikationsanalyse möglich gewesen sein sollte oder diese trotz kurzer Liegedauer stattgefunden hat (Stationsaufenthalt mindestens 7 Tage bzw. Aufenthalt kürzer, aber Medikationsanalyse erhalten)
+
 Auf Anforderung können ergänzend weitere Tabellen als html-Dateien ausgegeben werden, welche die der Zählung zugrunde liegenden Datenelemente auf Patienten bzw. Fallbasis enthalten. Diese sind keine aggregierten Daten und werden daher im outputLocal gespeichert.
 
 ### Details
@@ -109,7 +109,7 @@ Auf Anforderung können ergänzend weitere Tabellen als html-Dateien ausgegeben 
 
 abgefragter Zeitraum konfigurierbar
 
-- alle Fälle werden gezählt, die innerhalb dieses Zeitraumes auf einer INTERPOLAR-Station stationär waren; dabei zählt der Start-Tag dazu, der End-Tag nicht
+- alle Fälle werden gezählt, die innerhalb dieses Zeitraumes auf einer INTERPOLAR-Station stationär aufgenommen wurden; dabei zählt der Start-Tag dazu, der End-Tag nicht
 
 - Default ist aktuell gesetzt auf [erstes Phase A Start Datum, aktuelles Datum bzw. letztes Phase B End Datum falls vor aktuellem Datum]
 
@@ -162,11 +162,11 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 - Encounter-Ressourcen aller Hierarchie-Ebenen besitzen ein End-Datum, wenn der Status auf 'finished' gesetzt ist (gemäß Invarianten des Implementation Guides)
 - Encounter-Ressources mit status 'planned', 'cancelled', 'entered-in-error' & 'unknown' werden nicht für die Zählungen berücksichtigt
 - für Encounter-Ressourcen mit status 'onleave' und fehlendem End-Datum, wird für Berechnungen das End-Datum auf deren Start-Datum gesetzt
-- Encounter-Ressourcen mit class_code 'PRENC', 'VR', 'HH' werden nicht für die Zählungen berücksichtigt; 'AMB' und 'SS' könnten ggf. für komplexere Analysen benötigt werden (z.B. Ermittlung eines OP Aufenthalts), werden aber aktuell nicht in die Berechnungen einbezogen
+- Encounter-Ressourcen mit class_code 'PRENC', 'VR', 'HH' werden nicht für die Zählungen berücksichtigt; 'AMB' und 'SS' könnten ggf. für komplexere Analysen benötigt werden (z.B. Ermittlung eines OP Aufenthalts)
 - stationäre INTERPOLAR-Kontakte tragen enc_class_code entsprechend der Definition in FRONTEND_DISPLAYED_ENCOUNTER_CLASS (e.g. "IMP"", ggf. "SS")
 - Kontakte mit Kontaktart "begleitperson" werden in den Zählungen nicht berücksichtigt. Die Kontaktarten "vorstationaer", "nachstationaer", "ub", "konsil" und "operation" könnten als Sekundärkontakte für komplexere Analysen benötigt werden, werden aber aktuell nicht in die Berechnungen einbezogen. Die Kontaktarten "teilstationaer", "tagesklinik", "nachtklinik", "normalstationaer", "intensivstationaer" im Versorgungsstellenkontakt werden für INTERPOLAR Stationskontakte in den Zählungen berücksichtigt.
 - Wenn fall_studienphase in fall_fe leer ist, wird diese durch 'PhaseA' ersetzt (für Daten vor Einführung der Befüllung der Spalte Studienphase)
 - Encounter-Altdaten (die ggf. in den lokalen Tabellen erscheinen) werden ressourcensparend aktuell gefiltert auf ein Startdatum(enc_period_start) von 1 Jahr vor REPORT_PERIOD_START
 - Dateneinträge mit processing_exclusion_reason waren betroffen von einem der Datenqualitätschecks und werden nicht weiter verarbeitet (siehe warnings)
-- dokumentierte Medikationsanalysen müssen mit einem Fall verknüpft sein (im Frontend Fall-ID setzen); falls dies fehlt und es meherer Fälle für einen Patienten gibt, fehlen die zugehörigen Analysen u.U. im Reporting, da sie keinem Fall zugeordnet werden können falls das Matching über den Zeitraum des Falls fehlschlägt
+- dokumentierte Medikationsanalysen müssen mit einem Fall verknüpft sein (im Frontend Fall-ID setzen); falls dies fehlt und es mehrere Fälle für einen Patienten gibt, fehlen die zugehörigen Analysen u.U. im Reporting, da sie keinem Fall zugeordnet werden können falls das Matching über den Zeitraum des Falls fehlschlägt
 - Einträge mit RedCap-Status "unverified" werden in der Zählung nicht beachtet
