@@ -13,8 +13,8 @@ getFallvignetteMappingPath <- function(
       "R-dataprocessor",
       "submodules",
       "manual_start",
-      "Fallvignette_Process_Evaluation",
-      "R-Fallvignette_Process_Evaluation",
+      "WP8_export",
+      "R-WP8_export",
       "inst",
       "extdata"
     )
@@ -224,7 +224,7 @@ writeFallvignetteImportFiles <- function(
 writeFallvignetteIdMappingFile <- function(
   id_mapping,
   output_dir,
-  file_name = "Fallvignette_Process_Evaluation_ID_Mapping"
+  file_name = "WP8_Fallvignetten_ID_Mapping"
 ) {
   if (!data.table::is.data.table(id_mapping)) {
     stop("id_mapping must be a data.table.")

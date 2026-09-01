@@ -1,4 +1,4 @@
-# Fallvignette Process Evaluation
+# WP8-Export (Fallvignetten)
 
 Dieses manuell gestartete Dataprocessor-Submodul erzeugt die Importdatei für
 das eigenständige REDCap-Projekt zur Prozessevaluation der WP8-Fallvignetten.
@@ -21,9 +21,26 @@ Vor der Ausführung müssen folgende Voraussetzungen erfüllt sein:
 - Standortkürzel und Stationen sind in der `dataprocessor_config.toml`
   konfiguriert.
 - Die Mapping-Arbeitsmappe liegt unter
-  `R-Fallvignette_Process_Evaluation/inst/extdata`.
+  `R-dataprocessor/submodules/manual_start/WP8_export/`
+  `R-WP8_export/inst/extdata`.
 
 Ein Broad Consent wird für diesen einmaligen Export nicht zusätzlich geprüft.
+
+## Ausführung
+
+Start aus dem Repository-Stamm:
+
+```console
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R wp8-export
+```
+
+Der Ablauf ist:
+
+1. Mapping-Arbeitsmappe und lokale WP7-/LOINC-Definitionen laden.
+2. Auf die konfigurierte pseudonymisierte `DB_ANALYSIS`-Datenbank umschalten.
+3. Geeignete Bewertungen und klinische Ressourcen lesen.
+4. Klinischen Kontext berechnen und Zielfelder gemäß Mapping anordnen.
+5. Lokale Rückverfolgungsdatei sowie globale CSV und XLSX schreiben.
 
 ## Konfiguration
 
@@ -64,8 +81,9 @@ der pseudonymisierten Analysedatenbank.
 ### Mapping-Arbeitsmappe
 
 Die neueste Datei mit dem Namen `WP8MRP_Liste_Daten_Mapping<YYYYMMDD>.xlsx`
-unter `R-Fallvignette_Process_Evaluation/inst/extdata` wird automatisch
-verwendet. Sie muss genau ein Tabellenblatt und diese Spalten enthalten:
+unter `WP8_export/R-WP8_export/inst/extdata` wird
+automatisch verwendet. Sie muss genau ein Tabellenblatt und diese Spalten
+enthalten:
 
 - `Fallvignette`: Name und Reihenfolge des REDCap-Zielfelds
 - `Quelle`: DB-Quellfeld; leer bei berechneten Feldern
@@ -137,18 +155,10 @@ Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
   und `ICD_VALIDITY_DAYS` am Analysezeitpunkt erfüllt ist.
 - `unbegrenzt` sowie ein leerer Gültigkeitswert gelten als zeitlich
   unbeschränkt.
-- Identische fertig formatierte Diagnosezeilen werden entfernt. Diagnosen mit
-  abweichendem Zeitpunkt bleiben getrennt erhalten.
 - Die Diagnosebezeichnung stammt ausschließlich aus
   `Condition.code.coding.display`. Fehlt sie, wird `NA` ausgegeben.
-- Die Ausgabe wird alphabetisch nach Diagnosetext sortiert. Ein vorhandener
-  Diagnosezeitpunkt wird mit ausgegeben.
-
-Beispiel:
-
-```text
-Essentielle Hypertonie (ICD: I10) [2026-01-15 08:30:00]
-```
+- Identische Ausgabezeilen werden entfernt und alphabetisch sortiert. Ein
+  vorhandener Diagnosezeitpunkt wird mit ausgegeben.
 
 ### Medikationen
 
@@ -159,15 +169,8 @@ Essentielle Hypertonie (ICD: I10) [2026-01-15 08:30:00]
 - Verwendet wird ausschließlich das zum ATC beziehungsweise zur PZN gehörende
   Coding-Display. Fehlt es, wird `NA` ausgegeben. Ist kein ATC ermittelbar,
   wird eine direkt oder über Medication referenzierte PZN verwendet.
-- Die Ausgabe wird alphabetisch nach der Bezeichnung sortiert. Der erste
+- Identische Ausgabezeilen werden entfernt und alphabetisch sortiert. Der erste
   geplante Medikationsbeginn wird mit ausgegeben.
-- Identische fertig formatierte Medikationszeilen werden entfernt.
-
-Beispiel:
-
-```text
-Heparin (ATC: B01AB01) [2026-01-18 09:00:00]
-```
 
 ### Laborwerte
 
@@ -180,14 +183,8 @@ Heparin (ATC: B01AB01) [2026-01-18 09:00:00]
 - Die Bezeichnung stammt ausschließlich aus `Observation.code.display`.
   Fehlt sie, wird `NA` ausgegeben.
 - Wert, Einheit, LOINC-Code und vorhandener Beobachtungszeitpunkt werden
-  ausgegeben. Die Sortierung erfolgt alphabetisch nach der Bezeichnung.
-- Identische fertig formatierte Laborwertzeilen werden entfernt.
-
-Beispiel:
-
-```text
-Kreatinin (LOINC: 2160-0): 1.2 mg/dL [2026-01-19 07:45:00]
-```
+  ausgegeben. Identische Ausgabezeilen werden entfernt und alphabetisch
+  sortiert.
 
 ### Operation innerhalb der letzten 30 Tage
 
@@ -222,33 +219,28 @@ erneuten Lauf mit veränderter Fallmenge können lokale Nummern anderen Fällen
 zugeordnet werden. Die Mapping-Datei muss daher eindeutig dem Lauf zugeordnet
 und sicher aufbewahrt werden.
 
-## Ausführung
-
-Start aus dem Repository-Stamm:
-
-```console
-docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R fallvignette-process-evaluation
-```
-
-Der Ablauf ist:
-
-1. Mapping-Arbeitsmappe und lokale WP7-/LOINC-Definitionen laden.
-2. Auf die konfigurierte pseudonymisierte `DB_ANALYSIS`-Datenbank umschalten.
-3. Geeignete Bewertungen und klinische Ressourcen lesen.
-4. Klinischen Kontext berechnen und Zielfelder gemäß Mapping anordnen.
-5. Lokale Rückverfolgungsdatei sowie globale CSV und XLSX schreiben.
-
 ## Ausgabedateien
 
 | Datei | Ablage | Verwendung |
 | --- | --- | --- |
 | `WP8_Fallvignetten_Import.csv` | `outputGlobal/dataprocessor/reports` | Import in das eigenständige WP8-REDCap-Projekt |
 | `WP8_Fallvignetten_Import.xlsx` | `outputGlobal/dataprocessor/reports` | Kontrolle; inhaltlich identisch zur CSV |
-| `Fallvignette_Process_Evaluation_ID_Mapping.xlsx` | `outputLocal/dataprocessor/data` | Ausschließlich lokale Rückverfolgung |
+| `WP8_Fallvignetten_ID_Mapping.xlsx` | `outputLocal/dataprocessor/data` | Ausschließlich lokale Rückverfolgung |
 
 Die CSV wird UTF-8-kodiert, mit BOM, Spaltenüberschriften und leeren Feldern
 anstelle von `NA` geschrieben. Vorher werden Vollständigkeit und Reihenfolge
 der Spalten sowie Befüllung und Eindeutigkeit der `record_id` geprüft.
+
+## Abgabe
+
+Nach der lokalen Kontrolle werden ausschließlich
+`WP8_Fallvignetten_Import.csv` und `WP8_Fallvignetten_Import.xlsx` in den
+INTERPOLAR-DIZ-Nextcloud-Freigabeordner unter `WP8` hochgeladen. Der Unterordner
+ist bei Bedarf anzulegen.
+
+Die lokale Datei `WP8_Fallvignetten_ID_Mapping.xlsx` verbleibt am
+Standort. Sie darf weder in die Nextcloud hochgeladen noch in das
+WP8-REDCap-Projekt importiert werden.
 
 ## Typische Fehler
 
@@ -273,5 +265,5 @@ der Spalten sowie Befüllung und Eindeutigkeit der `record_id` geprüft.
 ## Tests
 
 ```console
-R --slave -e "setwd('R-dataprocessor/submodules/manual_start/Fallvignette_Process_Evaluation/R-Fallvignette_Process_Evaluation'); testthat::test_local(reporter='summary')"
+R --slave -e "setwd('R-dataprocessor/submodules/manual_start/WP8_export/R-WP8_export'); testthat::test_local(reporter='summary')"
 ```

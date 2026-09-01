@@ -198,7 +198,7 @@ testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
     testthat::expect_equal(output_dir, "local-output")
     testthat::expect_equal(
       file_name,
-      "Fallvignette_Process_Evaluation_ID_Mapping"
+      "WP8_Fallvignetten_ID_Mapping"
     )
     "local-output/local-id-mapping.xlsx"
   }
