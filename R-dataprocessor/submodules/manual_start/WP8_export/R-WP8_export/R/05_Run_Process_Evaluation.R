@@ -340,7 +340,7 @@ runFallvignetteProcessEvaluation <- function(
   id_mapping_path <- write_id_mapping_fun(
     id_mapping = id_mapping,
     output_dir = id_mapping_output_dir,
-    file_name = "Fallvignette_Process_Evaluation_ID_Mapping"
+    file_name = "WP8_Fallvignetten_ID_Mapping"
   )
   import_paths <- write_fun(
     fallvignettes = import_data,

@@ -123,7 +123,7 @@ buildFallvignetteSourceQuery <- function(mapping) {
 #'   assignment.
 getFallvignetteSourceData <- function(
   mapping,
-  lock_id = "Fallvignette_Process_Evaluation",
+  lock_id = "WP8_export",
   query_fun = etlutils::dbGetReadOnlyQuery
 ) {
   if (!is.function(query_fun)) {

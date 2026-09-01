@@ -1,5 +1,5 @@
 Package: FallvignetteProcessEvaluation
-Title: Prepare Fallvignette Process Evaluation Data
+Title: Prepare WP8 Fallvignette Export Data
 Version: 0.0.0.9000
 Authors@R:
     c(person(given = "Alexander",
