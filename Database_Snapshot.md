@@ -259,6 +259,22 @@ geschrieben. Der Filter-Einstiegspunkt ist von Datenbankaufbau, Dump und
 Lebenszyklus getrennt. Aktuell ist dort ausdrücklich ein Durchlassfilter
 eingesetzt; die fachliche Patientenauswahl wird separat ergänzt.
 
+### Auswertungen ohne Datenbank-Cronjob
+
+Pseudonymisierte und Broad-Consent-Snapshot-Datenbanken enthalten die für die
+Versionsprüfung benötigte View `db2dataprocessor_out.v_db_parameter`. Sie stellt
+die `release_version` der jeweiligen Quelldatenbank bereit, ohne die übrige
+Datenbankkonfiguration in den Snapshot zu kopieren.
+
+Die gemeinsame Datenbankbibliothek prüft beim ersten Zugriff, ob die ausgewählte
+Datenbank schreibgeschützt ist und ob mindestens eine der für die
+INTERPOLAR-Transfersteuerung typischen Datenbankfunktionen vorhanden ist. Nur
+eine beschreibbare Datenbank mit einem solchen Funktionsmarker verwendet das
+zugehörige Locking. In schreibgeschützten Snapshot-Datenbanken und in anderen
+Datenbanken ohne diese Funktionen werden dieselben Abfragen ohne Locking
+ausgeführt. Die Auswertungen benötigen deshalb weder Adminzugang noch
+Cron-Metadaten oder einen bereits ausgeführten Cronjob.
+
 Der Prozess prüft nicht, ob die Quelle pseudonymisiert ist. Er arbeitet mit den
 in der jeweiligen Datenbank vorhandenen Patienten- und Relationsschlüsseln.
 Dadurch kann derselbe Ablauf regulär auf der pseudonymisierten und bei Bedarf
