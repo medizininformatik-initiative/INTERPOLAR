@@ -476,10 +476,7 @@ generalizeDateLikeVector <- function(values, format) {
 
 getConditionBaseExpression <- function(fhir_expression) {
   expression <- as.character(fhir_expression)
-  if (grepl("(^|/)identifier(/|$)", expression)) {
-    return(sub("identifier/.*$", "identifier/", expression))
-  }
-  ""
+  sub("[^/]+$", "", expression)
 }
 
 findConditionColumnName <- function(field_name, fhir_expression, table_description) {

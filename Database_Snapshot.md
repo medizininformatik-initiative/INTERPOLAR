@@ -322,6 +322,11 @@ DIMP-DUP-Basis-YAML erzeugt. Nicht von der YAML erfasste Spalten erhalten dabei
 ausdrücklich die Regel `keep`. Leere Regeln sind ungültig. Die Dateien werden
 vom INTERPOLAR-Team gepflegt.
 
+Bei `Observation.code` bleiben LOINC- und SNOMED-Codes samt `display` und
+`text` erhalten. Bei `Observation.valueCodeableConcept` gilt dies für ATC, PZN,
+SNOMED und ASK. Codes anderer oder fehlender Systeme werden gehasht; ihr
+`display` und `text` werden entfernt. Das jeweilige `system` bleibt erhalten.
+
 `cryptoHash` und `pseudonymize(...)` werden bei der DB-Pseudonymisierung als
 deterministischer SHA-256-Hash ohne Salt umgesetzt. Der gleiche Originalwert
 ergibt immer den gleichen Hash.

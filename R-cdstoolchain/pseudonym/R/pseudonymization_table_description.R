@@ -38,20 +38,32 @@ conditionTextFromFhirWhere <- function(where_expression) {
     return(NA_character_)
   }
 
-  coding_prefix <- if (grepl("type.coding.where", where_expression, fixed = TRUE)) {
-    "type.coding."
-  } else {
-    ""
-  }
+  coding_match <- regexec("([A-Za-z0-9.]+)\\.where\\(", where_expression)
+  coding_parts <- regmatches(where_expression, coding_match)[[1]]
+  coding_prefix <- if (length(coding_parts) > 0) paste0(coding_parts[2], ".") else ""
 
   conditions <- character()
-  system_match <- regexec("system='([^']+)'", where_expression)
-  system_parts <- regmatches(where_expression, system_match)[[1]]
-  if (length(system_parts) > 0) {
-    conditions <- c(
-      conditions,
-      paste0(coding_prefix, "system == ", quoteRuleValue(system_parts[2]))
-    )
+  system_matches <- gregexpr("system='([^']+)'", where_expression, perl = TRUE)
+  system_values <- regmatches(where_expression, system_matches)[[1]]
+  if (length(system_values) > 0 && !identical(system_values, character(0))) {
+    system_values <- sub("^system='", "", system_values)
+    system_values <- sub("'$", "", system_values)
+    if (length(system_values) == 1) {
+      conditions <- c(
+        conditions,
+        paste0(coding_prefix, "system == ", quoteRuleValue(system_values))
+      )
+    } else {
+      conditions <- c(
+        conditions,
+        paste0(
+          coding_prefix,
+          "system in [",
+          paste(vapply(system_values, quoteRuleValue, character(1)), collapse = ", "),
+          "]"
+        )
+      )
+    }
   }
 
   code_matches <- gregexpr("code='([^']+)'", where_expression, perl = TRUE)
@@ -416,12 +428,13 @@ specificPathRuleMatches <- function(path, table_description) {
 
   resource <- sub("\\..*$", "", path)
   expression <- sub("^[^.]+\\.", "", path)
-  expression <- normalizeFhirPathExpression(expression)
+  where_suffix <- parseWhereSuffix(expression)
+  expression <- normalizeFhirPathExpression(where_suffix$suffix)
 
   buildRuleMatchTable(which(
     table_description$RESOURCE_FILLED == resource &
       table_description$FHIR_EXPRESSION == expression
-  ))
+  ), condition = where_suffix$condition)
 }
 
 matchYamlRuleToTableDescription <- function(rule, table_description) {
@@ -530,43 +543,54 @@ selectPseudonymizationCandidates <- function(candidates) {
     split(candidates, candidates[["row_index"]]),
     function(row_candidates) {
       row_candidates <- data.table::as.data.table(row_candidates)
-      rule_text <- row_candidates[["pseudonymization_rule"]]
       conditional <- row_candidates[
-        grepl("If\\(", rule_text) |
-          grepl("; .+\\)", rule_text), ,
+        !is.na(row_candidates[["condition"]]) & nzchar(row_candidates[["condition"]]), ,
         drop = FALSE
       ]
       if (nrow(conditional) > 0) {
+        first_conditional_rule <- min(conditional[["rule_index"]])
+        fallback <- row_candidates[
+          (is.na(row_candidates[["condition"]]) | !nzchar(row_candidates[["condition"]])) &
+            row_candidates[["rule_index"]] > first_conditional_rule, ,
+          drop = FALSE
+        ]
+        if (nrow(fallback) > 0) {
+          fallback <- fallback[order(as.vector(fallback[["rule_index"]]))[1], , drop = FALSE]
+          conditional <- conditional[
+            conditional[["rule_index"]] < fallback[["rule_index"]], ,
+            drop = FALSE
+          ]
+        }
         selected <- conditional[order(as.vector(conditional[["rule_index"]])), , drop = FALSE]
         positive <- selected[
           !isConditionalRedactRule(selected[["pseudonymization_rule"]]), ,
           drop = FALSE
         ]
-        if (nrow(positive) == 0) {
-          selected <- keepFirstRulePerCondition(selected)
-          return(data.table::data.table(
-            row_index = selected$row_index[1],
-            rule_index = selected$rule_index[1],
-            yaml_path = paste(selected$yaml_path, collapse = " | "),
-            pseudonymization_rule = paste0(
-              paste(selected$pseudonymization_rule, collapse = "; "),
-              "; keep"
-            ),
-            match_type = paste(unique(selected$match_type), collapse = " | "),
-            condition = paste(unique(stats::na.omit(selected$condition)), collapse = " | ")
-          ))
+        fallback_rule <- if (nrow(fallback) > 0) {
+          fallback[["pseudonymization_rule"]][1]
+        } else if (nrow(positive) == 0) {
+          "keep"
+        } else {
+          "redact"
         }
-        selected <- positive
+        if (nrow(positive) > 0) {
+          selected <- positive
+        }
         selected <- keepFirstRulePerCondition(selected)
+        report_rules <- if (nrow(fallback) > 0) {
+          data.table::rbindlist(list(selected, fallback), use.names = TRUE)
+        } else {
+          selected
+        }
         return(data.table::data.table(
           row_index = selected$row_index[1],
           rule_index = selected$rule_index[1],
-          yaml_path = paste(selected$yaml_path, collapse = " | "),
+          yaml_path = paste(report_rules$yaml_path, collapse = " | "),
           pseudonymization_rule = paste0(
             paste(selected$pseudonymization_rule, collapse = "; "),
-            "; redact"
+            "; ", fallback_rule
           ),
-          match_type = paste(unique(selected$match_type), collapse = " | "),
+          match_type = paste(unique(report_rules$match_type), collapse = " | "),
           condition = paste(unique(stats::na.omit(selected$condition)), collapse = " | ")
         ))
       }
