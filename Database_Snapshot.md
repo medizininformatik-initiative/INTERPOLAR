@@ -6,6 +6,9 @@ aktiviert und deaktiviert die zugehörigen Snapshot-Datenbanken und kann
 Snapshot-Dateien sowie Snapshot-Datenbanken löschen. Außerdem zeigt es
 vorhandene Snapshot-Dateien und aktivierte Snapshot-Datenbanken an.
 Snapshot-Dateien liegen als `.sql.gz` im Verzeichnis `Snapshots`.
+Bei der Pseudonymisierung werden außerdem analysefertige Zusatzspalten ergänzt,
+unter anderem Alters-, BMI-, Medication-Code- und Observation-Analysewerte mit
+LOINC-basierter Einheitenumrechnung.
 
 ## Voraussetzungen
 
@@ -24,11 +27,10 @@ Snapshot-Dateien liegen als `.sql.gz` im Verzeichnis `Snapshots`.
 
 Für die Pseudonymisierung gelten zusätzlich folgende Voraussetzungen:
 
-- `INPUT_REPO_PATH` muss in
-  `R-dataprocessor/dataprocessor_config.toml` korrekt konfiguriert und für den
-  Container erreichbar sein. Der Pfad darf direkt auf `Input-Repo` oder auf
-  einen beliebig benannten Unterordner darin zeigen. `./` am Pfadanfang ist
-  optional.
+- `INPUT_REPO_PATH` in `R-dataprocessor/dataprocessor_config.toml` muss auf ein
+  Verzeichnis zeigen, das für den Container erreichbar ist. Der Pfad darf direkt
+  auf `Input-Repo` oder auf einen beliebig benannten Unterordner darin zeigen.
+  `./` am Pfadanfang ist optional.
 - Benötigte Eingabedateien und -verzeichnisse werden zuerst unterhalb des
   konfigurierten Pfads gesucht. Gibt es dort keinen Treffer, wird die Suche
   schrittweise bis einschließlich `Input-Repo` nach oben fortgesetzt. Der erste
@@ -45,7 +47,8 @@ Für die Pseudonymisierung gelten zusätzlich folgende Voraussetzungen:
   die bisherige Datei und zeigt die beiden Pfade an, bevor weitere Verarbeitung
   beginnt.
 - Die LOINC-Mapping-Datei `LOINC_Mapping_Table_processed.xlsx` muss eindeutig
-  innerhalb des durchsuchten Bereichs verfügbar sein.
+  innerhalb des durchsuchten Bereichs verfügbar sein. Sie wird für die
+  Observation-Anreicherung und die Einheitenumrechnung benötigt.
 - Für die normale Snapshot-Datei sowie die temporäre Quell- und Zieldatenbank
   muss ausreichend Speicherplatz vorhanden sein. Nach erfolgreicher
   Pseudonymisierung bleiben die normale und die pseudonymisierte
@@ -68,11 +71,13 @@ Der Befehl erstellt eine Snapshot-Datei aus `cds_hub_db` unter
 ./ip-snapshot.sh create snap01 --with-pseudonymized
 ```
 
-Zuerst wird die normale Snapshot-Datei erstellt. Anschließend wird daraus die
-pseudonymisierte Snapshot-Datei `Snapshots/snap01_<Datum>_pseud.sql.gz`
-erzeugt. Danach sind in PostgreSQL innerhalb des Docker-Compose-Service
-`cds_hub` die schreibgeschützten Snapshot-Datenbanken `ip_snap01_<Datum>` und
-`ip_snap01_<Datum>_pseud` verfügbar.
+Zuerst prüft der Prozess die Voraussetzungen der Pseudonymisierung gegen die
+laufende `cds_hub_db`. Danach wird die normale Snapshot-Datei erstellt und
+daraus die pseudonymisierte Snapshot-Datei
+`Snapshots/snap01_<Datum>_pseud.sql.gz` erzeugt. Danach sind in PostgreSQL
+innerhalb des Docker-Compose-Service `cds_hub` die schreibgeschützten
+Snapshot-Datenbanken `ip_snap01_<Datum>` und `ip_snap01_<Datum>_pseud`
+verfügbar.
 
 ### Vorhandene Snapshot-Datei pseudonymisieren
 
