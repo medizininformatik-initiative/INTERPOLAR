@@ -67,12 +67,14 @@ resetLock <- function() {
 #' If a manual submodule should be started independently, it must be specified as a command-line argument for the dataprocessor
 #' using its name according to the manual_start subdirectory of the submodules directory.
 #'
-runSubmodules <- function() {
+runSubmodules <- function(command_line_args = NULL) {
   # Get lists of submodule directories
   submodule_dirs <- list.dirs(DATAPROCESSOR_SUBMODULES_PATH, recursive = FALSE)
   manual_start_submodule_dirs <- list.dirs(DATAPROCESSOR_MANUAL_START_PATH, recursive = FALSE)
 
-  command_line_args <- commandArgs(trailingOnly = TRUE)
+  if (is.null(command_line_args)) {
+    command_line_args <- commandArgs(trailingOnly = TRUE)
+  }
   # # for debug purposes set hard our new submodule MRP_Check
   # if (interactive()) {
   #   command_line_args <- c("mrp-check", "start-date=2025-12-01") # second parameter is irrelevant
@@ -83,10 +85,10 @@ runSubmodules <- function() {
   # when they are started interactively via DEBUG_SUBMODULE_DIR.
   if (!interactive() || length(command_line_args) || exists("DEBUG_SUBMODULE_DIR")) {
     # enable minus for underscrore in arguments and ignore case
-    command_line_args <- gsub("-", "_", tolower(command_line_args), fixed = TRUE)
-    called_manual_start_submodule_dirs <- manual_start_submodule_dirs[
-      tolower(basename(manual_start_submodule_dirs)) %in% command_line_args
-    ]
+    called_manual_start_submodule_dirs <- getCalledManualStartSubmoduleDirs(
+      command_line_args,
+      manual_start_submodule_dirs
+    )
     sourceAllSubmodules() # initialize all functions of all automatic submodules for a use in the now manual started submodule
   } else {
     called_manual_start_submodule_dirs <- as.character(c())
@@ -132,8 +134,12 @@ runSubmodules <- function() {
   }
 }
 
-startDataprocessorModule <- function(validate_config = TRUE) {
+startDataprocessorModule <- function(
+  validate_config = TRUE,
+  command_line_args = NULL
+) {
   config <- init(validate_config)
+  configureManualStartDatabase(config, command_line_args)
   etlutils::startModule(config)
   config
 }
@@ -155,25 +161,30 @@ sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
 #' Starts the Data Processor execution for this project
 #'
 #' This is the main entry point for the data processing pipeline. It initializes the
-#' Data Processor module, resets any existing ETL lock, and triggers the creation
-#' of frontend tables. If `reset_lock_only` is set to `TRUE`, the function only resets
-#' the lock and exits without executing any further logic.
+#' Data Processor module, selects the database for a manually started project,
+#' resets any existing ETL lock and runs the selected submodules.
 #'
-#' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
-#' @param validate_config Logical. If TRUE, validates the module configuration before starting
-#'                        the retrieval process. Default is TRUE.
-#' than the release version. Default is FALSE and will stop if the database version is newer.
+#' @param ignore_newer_db_version Logical. If `TRUE`, allows a database version
+#'   newer than the release version. Default is `FALSE`.
+#' @param validate_config Logical. If `TRUE`, validates the module configuration
+#'   before starting the retrieval process. Default is `TRUE`.
+#' @param command_line_args Optional character vector of command-line arguments.
+#'   Defaults to `commandArgs(trailingOnly = TRUE)`.
 #'
 #' @export
-processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
+processData <- function(
+  ignore_newer_db_version = FALSE,
+  validate_config = TRUE,
+  command_line_args = NULL
+) {
   # Initialize and start module
-  startDataprocessorModule(validate_config)
+  startDataprocessorModule(validate_config, command_line_args)
 
   try(etlutils::runLevel1("Run Dataprocessor", {
     sourceDataprocessorSubmodules(ignore_newer_db_version)
 
     etlutils::runLevel2("Run dataprocessor submodules", {
-      runSubmodules()
+      runSubmodules(command_line_args)
     })
   }))
 

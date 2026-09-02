@@ -1,0 +1,12 @@
+# Copy this file to database.toml in a manual Data Processor project directory.
+# DB_NAME is mandatory and intentionally empty. Optional empty values inherit
+# the corresponding value from the normal database configuration.
+
+# mandatory
+DB_NAME = ""
+
+# optional (inherit from cds_hub_db_config.toml if empty or not present)
+DB_HOST = ""
+DB_PORT = ""
+DB_DATAPROCESSOR_USER = ""
+DB_DATAPROCESSOR_PASSWORD = ""

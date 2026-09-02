@@ -16,6 +16,8 @@ Vor der Ausführung müssen folgende Voraussetzungen erfüllt sein:
 - Die normale INTERPOLAR-Konfiguration wurde initialisiert.
 - Die pseudonymisierte Analysedatenbank ist erreichbar und enthält die
   benötigten `*_last_version`-Views.
+- Im Projektordner liegt eine `database.toml`, deren `DB_NAME` die gewünschte
+  pseudonymisierte Analysedatenbank bezeichnet.
 - Die lokalen WP7-MRP-Listen und das LOINC-Mapping sind über
   `INPUT_REPO_PATH` erreichbar.
 - Standortkürzel und Stationen sind in der `dataprocessor_config.toml`
@@ -36,8 +38,8 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 
 Der Ablauf ist:
 
-1. Mapping-Arbeitsmappe und lokale WP7-/LOINC-Definitionen laden.
-2. Auf die konfigurierte pseudonymisierte `DB_ANALYSIS`-Datenbank umschalten.
+1. Projekt-Datenbank auswählen und deren Version prüfen.
+2. Mapping-Arbeitsmappe und lokale WP7-/LOINC-Definitionen laden.
 3. Geeignete Bewertungen und klinische Ressourcen lesen.
 4. Klinischen Kontext berechnen und Zielfelder gemäß Mapping anordnen.
 5. Lokale Rückverfolgungsdatei sowie globale CSV und XLSX schreiben.
@@ -72,11 +74,19 @@ Eine beispielhafte Konfiguration befindet sich in
 
 ### Datenbankverbindung
 
-Die DB-Zugangsdaten werden aus der zentralen Dataprocessor-Konfiguration
-geladen. Vor dem Lesen der Fall-, Patienten- und FHIR-Daten verwendet das Modul
-`PATH_TO_DB_CONFIG_TOML` aus der zentralen `dataprocessor_config.toml` und
-wechselt anhand der dort referenzierten `DB_ANALYSIS_*`-Werte in den Kontext
-der pseudonymisierten Analysedatenbank.
+Der absichtlich leere `DB_NAME` in der `database.toml` des WP8-Projektordners
+muss auf die gewünschte pseudonymisierte Datenbank gesetzt werden. Weitere
+Werte werden aus der normalen, über `PATH_TO_DB_CONFIG_TOML` referenzierten
+Datenbankkonfiguration geerbt. Nur nicht leere gleichnamige Werte in
+`database.toml` überschreiben sie. Die gemeinsame Vorlage für neue Projekte
+liegt unter `R-dataprocessor/submodules/manual_start/database_example.toml`.
+
+Die lokale Datei wird automatisch read-only in den R-Container eingebunden;
+ein Neubau des Images ist nach einer Änderung nicht erforderlich.
+
+Der Data Processor wählt diese Datenbank vor Lock- und Versionsprüfung aus.
+`cds_hub_db` ist für manuelle Auswertungen standardmäßig gesperrt und kann nur
+bewusst mit dem zusätzlichen Argument `--force` verwendet werden.
 
 ### Mapping-Arbeitsmappe
 
@@ -254,9 +264,9 @@ WP8-REDCap-Projekt importiert werden.
   `WP8MRP_Liste_Daten_Mapping<YYYYMMDD>.xlsx` muss unter `inst/extdata` liegen.
 - **Unbekanntes Quellfeld:** Nur `pat_`, `meda_`, `ret_` sowie
   `fall_age_at_admission` verwenden.
-- **Datenbankverbindung schlägt fehl:** `PATH_TO_DB_CONFIG_TOML` in der
-  `dataprocessor_config.toml` und die `DB_ANALYSIS_*`-Werte der referenzierten
-  DB-Konfiguration prüfen.
+- **Datenbankverbindung schlägt fehl:** `DB_NAME` und gegebenenfalls weitere
+  Überschreibungen in der projektbezogenen `database.toml` sowie
+  `PATH_TO_DB_CONFIG_TOML` in der `dataprocessor_config.toml` prüfen.
 - **Leerer Export:** Prüfen, ob geeignete Bewertungen mit dem Datenbankwert
   `MRP sachlich richtig, aber klinisch nicht relevant`, eine
   passende MRP-Dokumentation und zugehörige Fall-/Patientendaten vorhanden

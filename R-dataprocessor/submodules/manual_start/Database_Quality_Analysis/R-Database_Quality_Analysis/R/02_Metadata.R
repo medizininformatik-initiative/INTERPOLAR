@@ -61,7 +61,7 @@ isIncludedView <- function(view_name, config) {
 #'
 #' Reads column metadata for the views included in the DQA report.
 loadViewMetadata <- function(config) {
-  logProgress("Loading view metadata from schema ", config$view_schema, ".")
+  logProgress("Loading view metadata from the Data Processor output schema.")
   query <- paste0(
     "SELECT c.table_schema,\n",
     "       c.table_name AS view_name,\n",
@@ -74,13 +74,12 @@ loadViewMetadata <- function(config) {
     "JOIN information_schema.views v\n",
     "  ON v.table_schema = c.table_schema\n",
     " AND v.table_name = c.table_name\n",
-    "WHERE c.table_schema = $1\n",
+    "WHERE c.table_schema = current_schema()\n",
     "ORDER BY c.table_name, c.ordinal_position"
   )
 
   metadata <- etlutils::dbGetReadOnlyQuery(
     query,
-    params = list(config$view_schema),
     lock_id = getDatabaseQualityAnalysisLockId(
       config,
       "load database quality analysis view metadata"
@@ -114,13 +113,12 @@ loadHistoryMetadata <- function(config) {
     "JOIN information_schema.views v\n",
     "  ON v.table_schema = c.table_schema\n",
     " AND v.table_name = c.table_name\n",
-    "WHERE c.table_schema = $1\n",
+    "WHERE c.table_schema = current_schema()\n",
     "ORDER BY c.table_name, c.ordinal_position"
   )
 
   metadata <- etlutils::dbGetReadOnlyQuery(
     query,
-    params = list(config$view_schema),
     lock_id = getDatabaseQualityAnalysisLockId(
       config,
       "load database quality analysis history metadata"

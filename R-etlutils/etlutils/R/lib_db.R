@@ -20,82 +20,89 @@ DB_COORDINATION_MODE_TRANSFER <- "transfer"
 #' @export
 dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
   constants <- initConstants(path_to_db_toml, envir = .lib_db_env)
-  module_name_upper <- toupper(module_name)
-  dbSetContext(
+  dbSetModuleContext(
     module_name = module_name,
-    dbname = constants[["DB_NAME"]],
-    host = constants[["DB_HOST"]],
-    port = constants[["DB_PORT"]],
-    user = constants[[paste0("DB_", module_name_upper, "_USER")]],
-    password = constants[[paste0("DB_", module_name_upper, "_PASSWORD")]],
-    schema_in = constants[[paste0("DB_", module_name_upper, "_SCHEMA_IN")]],
-    schema_out = constants[[paste0("DB_", module_name_upper, "_SCHEMA_OUT")]],
-    admin_user = constants[["DB_ADMIN_USER"]],
-    admin_password = constants[["DB_ADMIN_PASSWORD"]],
-    admin_schemas = constants[["DB_ADMIN_SCHEMAS"]],
+    db_config = constants,
     log = log
   )
 }
 
-#' Read database config and apply target-specific connection overrides
+#' Read Database Configuration with Project Overrides
 #'
-#' Loads a CDS Hub database TOML file and optionally replaces \code{DB_NAME},
-#' \code{DB_HOST} and \code{DB_PORT} with target-specific values such as
-#' \code{DB_ANALYSIS_NAME}, \code{DB_ANALYSIS_HOST} and
-#' \code{DB_ANALYSIS_PORT} and \code{DB_ANALYSIS_ADMIN_PASSWORD}.
+#' Loads the normal database configuration and overlays values from an optional
+#' project-specific TOML file. Project values must use the same parameter names
+#' as the normal database configuration.
 #'
-#' @param path_to_db_toml Character path to the database TOML file.
-#' @param target_prefix Character prefix for optional target DB values.
+#' @param path_to_db_toml Character path to the normal database TOML file.
+#' @param path_to_override_toml Optional character path to a project-specific
+#'   database TOML file.
+#' @param mandatory_override_parameters Character vector of parameters that must
+#'   be explicitly set to a non-empty value in the project TOML file.
+#'
 #' @return Named list of database configuration values.
+#'
 #' @export
-dbReadConfigForTarget <- function(path_to_db_toml, target_prefix = NULL) {
+dbReadConfigWithOverrides <- function(
+  path_to_db_toml,
+  path_to_override_toml = NULL,
+  mandatory_override_parameters = character()
+) {
   db_config <- readTomlAsNamedList(path_to_db_toml)
-  if (is.null(target_prefix) || !nzchar(target_prefix)) {
+  if (is.null(path_to_override_toml)) {
     return(db_config)
   }
 
-  target_names <- c(
-    DB_NAME = paste0(target_prefix, "_NAME"),
-    DB_HOST = paste0(target_prefix, "_HOST"),
-    DB_PORT = paste0(target_prefix, "_PORT"),
-    DB_ADMIN_PASSWORD = paste0(target_prefix, "_ADMIN_PASSWORD")
-  )
-  for (db_name in names(target_names)) {
-    target_name <- target_names[[db_name]]
-    target_value <- db_config[[target_name]]
-    if (
-      !is.null(target_value) &&
-      length(target_value) &&
-      !is.na(target_value[[1]]) &&
-      nzchar(as.character(target_value[[1]]))
-    ) {
-      db_config[[db_name]] <- target_value
+  override_config <- readTomlAsNamedList(path_to_override_toml)
+  is_non_empty <- function(value) {
+    length(value) &&
+      !is.na(value[[1]]) &&
+      nzchar(as.character(value[[1]]))
+  }
+  for (parameter_name in mandatory_override_parameters) {
+    parameter_value <- override_config[[parameter_name]]
+    if (is.null(parameter_value) || !is_non_empty(parameter_value)) {
+      stop(
+        "Project database configuration must define a non-empty ",
+        parameter_name, ": ", path_to_override_toml,
+        call. = FALSE
+      )
     }
   }
+
+  unknown_parameters <- setdiff(names(override_config), names(db_config))
+  if (length(unknown_parameters)) {
+    stop(
+      "Unknown project database configuration parameter",
+      if (length(unknown_parameters) > 1L) "s" else "",
+      ": ", paste(unknown_parameters, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  override_config <- override_config[vapply(
+    override_config,
+    is_non_empty,
+    logical(1)
+  )]
+  db_config[names(override_config)] <- override_config
   db_config
 }
 
-#' Set a module database context from a database TOML file
-#'
-#' Loads database settings from a TOML file, optionally applies target-specific
-#' connection values, and initializes the etlutils database context for a module.
+#' Set a Module Database Context from Configuration Values
 #'
 #' @param module_name Character module name used for the DB context.
-#' @param path_to_db_toml Character path to the database TOML file.
+#' @param db_config Named list containing the database configuration.
 #' @param db_schema_base_name Optional schema/user prefix. Defaults to module name.
-#' @param target_prefix Optional prefix for target DB values, for example
-#'   \code{DB_ANALYSIS}.
 #' @param log Logical flag for DB logging.
-#' @return Invisibly returns TRUE after setting the context.
+#'
+#' @return No return value, called for its side effect.
+#'
 #' @export
-dbSetModuleContextFromToml <- function(
+dbSetModuleContext <- function(
   module_name,
-  path_to_db_toml,
+  db_config,
   db_schema_base_name = module_name,
-  target_prefix = NULL,
   log = FALSE
 ) {
-  db_config <- dbReadConfigForTarget(path_to_db_toml, target_prefix)
   module_name_upper <- toupper(db_schema_base_name)
   dbSetContext(
     module_name = module_name,
@@ -109,46 +116,6 @@ dbSetModuleContextFromToml <- function(
     admin_user = db_config[["DB_ADMIN_USER"]],
     admin_password = db_config[["DB_ADMIN_PASSWORD"]],
     admin_schemas = db_config[["DB_ADMIN_SCHEMAS"]],
-    log = log
-  )
-  invisible(TRUE)
-}
-
-#' Set a module database context from an environment TOML path
-#'
-#' Reads a database TOML path from an environment variable and initializes the
-#' etlutils database context for a module. If the path variable is missing or
-#' empty, the function returns FALSE invisibly.
-#'
-#' @param module_name Character module name used for the DB context.
-#' @param path_variable Character environment variable containing the DB TOML path.
-#' @param envir Environment containing the path variable.
-#' @param db_schema_base_name Optional schema/user prefix. Defaults to module name.
-#' @param target_prefix Optional prefix for target DB values.
-#' @param log Logical flag for DB logging.
-#' @return Invisibly returns TRUE when a context was set, otherwise FALSE.
-#' @export
-dbSetModuleContextFromEnvironment <- function(
-  module_name,
-  path_variable = "PATH_TO_DB_CONFIG_TOML",
-  envir = .GlobalEnv,
-  db_schema_base_name = module_name,
-  target_prefix = NULL,
-  log = FALSE
-) {
-  if (!exists(path_variable, envir = envir, inherits = FALSE)) {
-    return(invisible(FALSE))
-  }
-  path_to_db_toml <- get(path_variable, envir = envir)
-  if (is.null(path_to_db_toml) || !length(path_to_db_toml) || !nzchar(path_to_db_toml[[1]])) {
-    return(invisible(FALSE))
-  }
-
-  dbSetModuleContextFromToml(
-    module_name = module_name,
-    path_to_db_toml = path_to_db_toml[[1]],
-    db_schema_base_name = db_schema_base_name,
-    target_prefix = target_prefix,
     log = log
   )
 }

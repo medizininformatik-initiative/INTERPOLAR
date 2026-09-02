@@ -158,6 +158,7 @@ services:
       - ./R-cds2db/debug_config_toml:/src/R-cds2db/debug_config_toml
       - ./R-cds2db/source_PIDs.txt:/src/R-cds2db/source_PIDs.txt
       - ./R-dataprocessor/dataprocessor_config.toml:/src/R-dataprocessor/dataprocessor_config.toml
+      - ./R-dataprocessor/submodules/manual_start:/src/R-dataprocessor/submodules/manual_start:ro
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
       - ./release-version.txt:/src/release-version.txt
@@ -210,4 +211,3 @@ volumes:
     redcap-db-data:
     cds_hub_db-data:
     pgadmin-data:
-

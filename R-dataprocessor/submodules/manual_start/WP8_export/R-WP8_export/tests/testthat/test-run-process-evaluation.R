@@ -132,7 +132,7 @@ testthat::test_that("referenced PZN is added only without an ATC", {
   )
 })
 
-testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
+testthat::test_that("run uses the database context selected before WP8 starts", {
   calls <- character()
   mapping <- getTestFallvignetteMapping()
   mapped_source_fields <- unique(mapping[["source_field"]])
@@ -160,25 +160,6 @@ testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
       GERMAN_NAME_LOINC_PRIMARY = "Kreatinin"
     ))
   }
-  set_db_context_fun <- function(...) {
-    arguments <- list(...)
-    target_prefix <- arguments[["target_prefix"]]
-    calls <<- c(
-      calls,
-      if (is.null(target_prefix)) "db_restore" else "db"
-    )
-    testthat::expect_true(is.null(target_prefix) || identical(target_prefix, "DB_ANALYSIS"))
-    testthat::expect_equal(
-      get(
-        arguments$path_variable,
-        envir = arguments$envir,
-        inherits = FALSE
-      ),
-      "pseudonymized-db.toml"
-    )
-  }
-  db_config_environment <- new.env(parent = emptyenv())
-  db_config_environment$PATH_TO_DB_CONFIG_TOML <- "pseudonymized-db.toml"
   get_source_fun <- function(mapping, lock_id) {
     calls <<- c(calls, "source")
     testthat::expect_null(lock_id)
@@ -207,7 +188,6 @@ testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
     output_dir = tempdir(),
     id_mapping_output_dir = "local-output",
     site_code = "UKB",
-    db_config_environment = db_config_environment,
     ward_definitions = list(
       PHASES_WARD_1 = c(
         "ward_name = 'Station 1'",
@@ -218,7 +198,6 @@ testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
     ),
     load_mrp_fun = load_mrp_fun,
     load_loinc_fun = load_loinc_fun,
-    set_db_context_fun = set_db_context_fun,
     get_source_fun = get_source_fun,
     get_resources_fun = function(...) {
       testthat::fail("Resources must not be loaded without source rows.")
@@ -229,10 +208,7 @@ testthat::test_that("run loads WP7 before switching to DB_ANALYSIS", {
 
   testthat::expect_equal(
     calls,
-    c(
-      "wp7_mrp", "wp7_loinc", "db", "source", "id_mapping", "write",
-      "db_restore"
-    )
+    c("wp7_mrp", "wp7_loinc", "source", "id_mapping", "write")
   )
   testthat::expect_equal(result[["csv"]], "output.csv")
   testthat::expect_equal(

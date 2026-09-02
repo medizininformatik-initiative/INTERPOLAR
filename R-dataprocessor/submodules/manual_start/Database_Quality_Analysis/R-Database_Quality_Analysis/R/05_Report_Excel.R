@@ -331,6 +331,7 @@ createMetadataSheet <- function(
   commented_columns <- source_metadata[
     !is.na(COLUMN_DESCRIPTION) & nzchar(COLUMN_DESCRIPTION)
   ]
+  view_schemas <- unique(source_metadata$VIEW_SCHEMA)
 
   rows <- list(
     add_row("analysis started at", formatRunTimestamp(analysis_start_time)),
@@ -339,7 +340,7 @@ createMetadataSheet <- function(
       "analysis duration seconds",
       round(as.numeric(difftime(analysis_end_time, analysis_start_time, units = "secs")), 2)
     ),
-    add_row("view schema", config$view_schema),
+    add_row("view schema", collapseConfigValue(view_schemas)),
     add_row("view prefix", config$view_prefix),
     add_row("view postfix", config$view_postfix),
     add_row("included view patterns", collapseConfigValue(config$included_view_patterns)),

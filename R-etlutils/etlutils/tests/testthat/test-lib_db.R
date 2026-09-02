@@ -1,54 +1,77 @@
-test_that("dbReadConfigForTarget applies target database values", {
+test_that("dbReadConfigWithOverrides inherits and overrides database values", {
   db_config_file <- tempfile(fileext = ".toml")
+  project_config_file <- tempfile(fileext = ".toml")
   writeLines(c(
     "DB_NAME = \"source_db\"",
     "DB_HOST = \"source-host\"",
-    "DB_PORT = \"5432\"",
-    "DB_ANALYSIS_NAME = \"analysis_db\"",
-    "DB_ANALYSIS_HOST = \"analysis-host\"",
-    "DB_ANALYSIS_PORT = \"15432\"",
-    "DB_ADMIN_PASSWORD = \"source-admin-password\"",
-    "DB_ANALYSIS_ADMIN_PASSWORD = \"analysis-admin-password\"",
-    "DB_DATAPROCESSOR_USER = \"dp_user\"",
-    "DB_DATAPROCESSOR_PASSWORD = \"dp_password\"",
-    "DB_DATAPROCESSOR_SCHEMA_IN = \"dp_in\"",
-    "DB_DATAPROCESSOR_SCHEMA_OUT = \"dp_out\""
+    "DB_PORT = 5432",
+    "DB_DATAPROCESSOR_USER = \"dp_user\""
   ), db_config_file)
+  writeLines(c(
+    "DB_NAME = \"analysis_db\"",
+    "DB_HOST = \"\"",
+    "DB_PORT = 15432",
+    "DB_DATAPROCESSOR_USER = \"\""
+  ), project_config_file)
 
-  result <- dbReadConfigForTarget(db_config_file, target_prefix = "DB_ANALYSIS")
+  result <- dbReadConfigWithOverrides(
+    db_config_file,
+    project_config_file,
+    mandatory_override_parameters = "DB_NAME"
+  )
 
   expect_equal(result$DB_NAME, "analysis_db")
-  expect_equal(result$DB_HOST, "analysis-host")
-  expect_equal(result$DB_PORT, "15432")
-  expect_equal(result$DB_ADMIN_PASSWORD, "analysis-admin-password")
+  expect_equal(result$DB_HOST, "source-host")
+  expect_equal(result$DB_PORT, 15432)
   expect_equal(result$DB_DATAPROCESSOR_USER, "dp_user")
-  expect_equal(result$DB_DATAPROCESSOR_SCHEMA_OUT, "dp_out")
 })
 
-test_that("dbReadConfigForTarget falls back to base database values", {
+test_that("dbReadConfigWithOverrides requires DB_NAME in the project config", {
   db_config_file <- tempfile(fileext = ".toml")
+  project_config_file <- tempfile(fileext = ".toml")
   writeLines(c(
     "DB_NAME = \"source_db\"",
-    "DB_HOST = \"source-host\"",
-    "DB_PORT = \"5432\"",
-    "DB_ANALYSIS_NAME = \"\"",
-    "DB_ANALYSIS_HOST = \"\"",
-    "DB_ANALYSIS_PORT = \"\""
+    "DB_HOST = \"source-host\""
   ), db_config_file)
+  writeLines("DB_NAME = \"\"", project_config_file)
 
-  result <- dbReadConfigForTarget(db_config_file, target_prefix = "DB_ANALYSIS")
+  expect_error(
+    dbReadConfigWithOverrides(
+      db_config_file,
+      project_config_file,
+      mandatory_override_parameters = "DB_NAME"
+    ),
+    "must define a non-empty DB_NAME"
+  )
 
-  expect_equal(result$DB_NAME, "source_db")
-  expect_equal(result$DB_HOST, "source-host")
-  expect_equal(result$DB_PORT, "5432")
+  writeLines("DB_HOST = \"analysis-host\"", project_config_file)
+  expect_error(
+    dbReadConfigWithOverrides(
+      db_config_file,
+      project_config_file,
+      mandatory_override_parameters = "DB_NAME"
+    ),
+    "must define a non-empty DB_NAME"
+  )
 })
 
-test_that("dbSetModuleContextFromEnvironment handles missing path variable", {
-  envir <- new.env(parent = emptyenv())
+test_that("dbReadConfigWithOverrides rejects unknown project parameters", {
+  db_config_file <- tempfile(fileext = ".toml")
+  project_config_file <- tempfile(fileext = ".toml")
+  writeLines("DB_NAME = \"source_db\"", db_config_file)
+  writeLines(c(
+    "DB_NAME = \"analysis_db\"",
+    "DB_NMAE = \"typo\""
+  ), project_config_file)
 
-  result <- dbSetModuleContextFromEnvironment("dataprocessor", envir = envir)
-
-  expect_false(result)
+  expect_error(
+    dbReadConfigWithOverrides(
+      db_config_file,
+      project_config_file,
+      mandatory_override_parameters = "DB_NAME"
+    ),
+    "Unknown project database configuration parameter: DB_NMAE"
+  )
 })
 
 test_that("dbCreateConnection applies shared connection settings", {

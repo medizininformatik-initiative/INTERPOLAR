@@ -257,19 +257,16 @@ getFallvignetteClinicalResources <- function(patient_references) {
 
 #' Run the fallvignette process evaluation export
 #'
-#' Loads the local WP7 definitions before switching the database context to the
-#' configured DB_ANALYSIS target. All patient and case data are then read from
-#' that target and written as REDCap-compatible CSV and XLSX files.
+#' Loads the local WP7 definitions and reads all patient and case data from the
+#' project database selected by the Data Processor before this function starts.
+#' The result is written as REDCap-compatible CSV and XLSX files.
 #'
 #' @param output_dir Output directory.
 #' @param id_mapping_output_dir Local-only ID mapping output directory.
 #' @param site_code Configured site code.
 #' @param ward_definitions Environment containing PHASES_WARD definitions.
-#' @param db_config_environment Environment containing the central
-#'   `PATH_TO_DB_CONFIG_TOML` dataprocessor setting.
 #' @param load_mrp_fun Function loading processed local WP7 MRP definitions.
 #' @param load_loinc_fun Function loading the processed local LOINC mapping.
-#' @param set_db_context_fun Function switching to the analysis database.
 #' @param get_source_fun Function loading eligible source rows.
 #' @param get_resources_fun Function loading clinical FHIR resources.
 #' @param write_fun Function writing the final import files.
@@ -281,10 +278,8 @@ runFallvignetteProcessEvaluation <- function(
   id_mapping_output_dir,
   site_code,
   ward_definitions = .GlobalEnv,
-  db_config_environment = .GlobalEnv,
   load_mrp_fun = getMRPPairLists,
   load_loinc_fun = getLOINCMapping,
-  set_db_context_fun = etlutils::dbSetModuleContextFromEnvironment,
   get_source_fun = getFallvignetteSourceData,
   get_resources_fun = getFallvignetteClinicalResources,
   write_fun = writeFallvignetteImportFiles,
@@ -297,19 +292,6 @@ runFallvignetteProcessEvaluation <- function(
     load_mrp_fun(),
     load_loinc_fun()$processed_content
   )
-
-  set_database_context <- function(target_prefix) {
-    set_db_context_fun(
-      module_name = "dataprocessor",
-      path_variable = "PATH_TO_DB_CONFIG_TOML",
-      envir = db_config_environment,
-      db_schema_base_name = "dataprocessor",
-      target_prefix = target_prefix,
-      log = FALSE
-    )
-  }
-  set_database_context("DB_ANALYSIS")
-  on.exit(set_database_context(NULL), add = TRUE)
 
   source_data <- get_source_fun(mapping, lock_id = NULL)
   if (nrow(source_data)) {
