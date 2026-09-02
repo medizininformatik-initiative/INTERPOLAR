@@ -23,10 +23,11 @@ Der Ordner der manuellen Projekte wird read-only in den R-Container
 eingebunden. Änderungen an `database.toml` erfordern deshalb keinen Neubau des
 R-Images.
 
-Die Datenbank wird vor Lock- und Versionsprüfung ausgewählt. Ein manuelles
-Projekt darf deshalb nicht versehentlich auf der Originaldatenbank
-`cds_hub_db` laufen. Ist das im Ausnahmefall ausdrücklich beabsichtigt, muss
-zusätzlich `--force` übergeben werden. Beispiel:
+Die Datenbank wird vor Lock- und Versionsprüfung ausgewählt. Ohne zusätzliches
+Argument starten manuelle Projekte nur auf pseudonymisierten Snapshot-Datenbanken,
+die in `v_db_parameter` als `database_content_type = pseudonymized_snapshot`
+markiert sind. Ist ein Lauf auf einer anderen kompatiblen Datenbank ausdrücklich
+beabsichtigt, muss zusätzlich `--force` übergeben werden. Beispiel:
 
 ```console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R mrp-check --force
