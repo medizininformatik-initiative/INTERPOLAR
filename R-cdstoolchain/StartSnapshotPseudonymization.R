@@ -3,89 +3,58 @@ library(etlutils)
 
 invisible(etlutils::setProcess("SnapshotPseudonymization"))
 
-# Change the working directory to the main project directory.
-if (grepl("/cdstoolchain$", getwd())) setwd("../..")
-if (grepl("/R-cdstoolchain$", getwd())) setwd("../")
+source_file <- if (file.exists("R-cdstoolchain/Snapshot_Pseudonymization_Cli.R")) {
+  "R-cdstoolchain/Snapshot_Pseudonymization_Cli.R"
+} else if (file.exists("../Snapshot_Pseudonymization_Cli.R")) {
+  "../Snapshot_Pseudonymization_Cli.R"
+} else {
+  "Snapshot_Pseudonymization_Cli.R"
+}
+source(source_file, local = TRUE)
 
-command_arguments <- etlutils::initCommandLineArguments(
+setSnapshotPseudonymizationWorkingDirectory()
+command_arguments <- readSnapshotPseudonymizationArguments(
   defaults = list(
-    path_to_db_config_toml = "./cds_hub_db_config.toml",
-    path_to_dataprocessor_config_toml = "./R-dataprocessor/dataprocessor_config.toml",
-    project_root = ".",
-    source_schema = "db2dataprocessor_out",
     target_table_schema = "db_log",
     target_view_schema = "db2dataprocessor_out",
-    chunk_size = NULL,
-    review_report_file = NA_character_
+    chunk_size = NULL
   )
 )
 
-required_arguments <- "source_db"
-missing_arguments <- required_arguments[
-  !required_arguments %in% names(command_arguments) |
-    !nzchar(as.character(command_arguments[required_arguments]))
-]
-if (length(missing_arguments) > 0) {
-  stop(
-    "Missing required argument(s): ",
-    paste(missing_arguments, collapse = ", "),
-    "\nExample: Rscript R-cdstoolchain/StartSnapshotPseudonymization.R ",
+stopOnMissingSnapshotPseudonymizationArguments(
+  command_arguments,
+  required_arguments = "source_db",
+  example = paste0(
+    "Rscript R-cdstoolchain/StartSnapshotPseudonymization.R ",
     "source-db=ip_snap01_20260716"
   )
-}
-mapping_preflight_only <- !(
+)
+run_preflight_only <- !(
   "target_db" %in% names(command_arguments) &&
     nzchar(as.character(command_arguments[["target_db"]]))
 )
 
-dataprocessor_config <- etlutils::initModule(
+dataprocessor_config <- initSnapshotPseudonymizationModule(
   "snapshot_pseudonymization",
-  db_schema_base_name = "dataprocessor",
-  path_to_toml = command_arguments[["path_to_dataprocessor_config_toml"]],
-  defaults = list(
-    VERBOSE = 10,
-    MAX_DIR_COUNT = 5,
-    PATH_TO_DB_CONFIG_TOML = command_arguments[["path_to_db_config_toml"]],
-    INPUT_REPO_PATH = "./Input-Repo"
-  ),
-  mandatory_parameters = c("INPUT_REPO_PATH", "PATH_TO_DB_CONFIG_TOML")
+  command_arguments
 )
-etlutils::startModule(dataprocessor_config, hide_value_pattern = "TOKEN|PASSWORD|SALT")
-
-db_config <- etlutils::readTomlAsNamedList(command_arguments[["path_to_db_config_toml"]])
-
-dbConfigValue <- function(name, default = NULL) {
-  if (name %in% names(command_arguments) && nzchar(as.character(command_arguments[[name]]))) {
-    return(command_arguments[[name]])
-  }
-  config_name <- toupper(name)
-  if (config_name %in% names(db_config)) {
-    return(db_config[[config_name]])
-  }
-  default
-}
-
-connectSnapshotDatabase <- function(dbname, user, password) {
-  etlutils::dbCreateConnection(
-    dbname = dbname,
-    host = dbConfigValue("db_host", "cds_hub"),
-    port = dbConfigValue("db_port", 5432),
-    user = user,
-    password = password
-  )
-}
+db_config <- readSnapshotPseudonymizationDbConfig(command_arguments)
 
 source_connection <- NULL
 target_connection <- NULL
 status <- 0L
 invisible(tryCatch(
   {
-    source_connection <- connectSnapshotDatabase(
+    source_connection <- connectSnapshotPseudonymizationDatabase(
+      command_arguments = command_arguments,
+      db_config = db_config,
       dbname = command_arguments[["source_db"]],
-      user = dbConfigValue("source_db_user", dbConfigValue("db_dataprocessor_user")),
-      password = dbConfigValue("source_db_password", dbConfigValue("db_dataprocessor_password"))
+      user_argument = "source_db_user",
+      password_argument = "source_db_password"
     )
-    if (mapping_preflight_only) {
+
+    if (run_preflight_only) {
+      message("\nNo target-db provided. Running snapshot pseudonymization preflight only.")
       pseudonym::preflightSnapshotPseudonymization(
         project_root = command_arguments[["project_root"]],
         input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
@@ -95,10 +64,12 @@ invisible(tryCatch(
         log_steps = TRUE
       )
     } else {
-      target_connection <- connectSnapshotDatabase(
+      target_connection <- connectSnapshotPseudonymizationDatabase(
+        command_arguments = command_arguments,
+        db_config = db_config,
         dbname = command_arguments[["target_db"]],
-        user = dbConfigValue("target_db_user", dbConfigValue("db_dataprocessor_user")),
-        password = dbConfigValue("target_db_password", dbConfigValue("db_dataprocessor_password"))
+        user_argument = "target_db_user",
+        password_argument = "target_db_password"
       )
 
       pseudonymization_result <- pseudonym::pseudonymizeSnapshotDatabase(
@@ -111,7 +82,6 @@ invisible(tryCatch(
         target_view_schema = command_arguments[["target_view_schema"]],
         chunk_size = command_arguments[["chunk_size"]],
         review_report_file = command_arguments[["review_report_file"]],
-        mapping_preflight_completed = TRUE,
         log_steps = TRUE
       )
       report_dir <- file.path(get("MODULE_DIRS", envir = .GlobalEnv)[["local_dir"]], "reports")

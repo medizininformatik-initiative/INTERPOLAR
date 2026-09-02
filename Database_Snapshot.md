@@ -208,19 +208,28 @@ gleichnamige Snapshot-Datenbank.
 
 ## Ablauf bis zur Prüfung
 
-1. Die normale Snapshot-Datei wird in eine temporäre Quelldatenbank eingespielt.
+1. Wenn der Befehl `create --with-pseudonymized` oder
+   `create --with-broad-consent` verwendet wird, prüft das Script
+   `pseudo_mapping.xlsx` zuerst gegen die aktuell laufende
+   `cds_hub_db`. Dafür wird `StartSnapshotPseudonymization.R` ohne `target-db`
+   gestartet; in diesem Modus läuft nur die Vorprüfung. Fehlende Pseudonyme
+   müssen eingetragen werden, bevor der normale Snapshot erstellt wird.
+2. Die normale Snapshot-Datei wird in eine temporäre Quelldatenbank eingespielt.
    Das kann bei großen Snapshot-Dateien lange dauern.
-2. Das Script ergänzt und prüft `pseudo_mapping.xlsx`. Fehlende Pseudonyme
-   müssen vor der Fortsetzung eingetragen werden.
-3. Das Script erstellt eine temporäre Zieldatenbank und schreibt die
+3. `StartSnapshotPseudonymization.R` prüft `pseudo_mapping.xlsx` erneut gegen
+   die eingespielte Quelldatenbank. Weil der Aufruf hier zusätzlich eine
+   `target-db` enthält, startet nach erfolgreicher Prüfung die eigentliche
+   Pseudonymisierung. Damit bleiben zwischenzeitliche Änderungen oder
+   abweichende Snapshot-Inhalte sicher abgedeckt.
+4. Das Script erstellt eine temporäre Zieldatenbank und schreibt die
    pseudonymisierten Daten hinein.
-4. Die Zieldatenbank wird als neue Snapshot-Datei mit dem Suffix `_pseud`
+5. Die Zieldatenbank wird als neue Snapshot-Datei mit dem Suffix `_pseud`
    gespeichert.
-5. Die normale und die pseudonymisierte Snapshot-Datenbank werden in PostgreSQL
+6. Die normale und die pseudonymisierte Snapshot-Datenbank werden in PostgreSQL
    innerhalb des Docker-Compose-Service `cds_hub` schreibgeschützt unter ihren
    endgültigen Namen bereitgestellt. Ein zusätzliches `activate` ist nicht
    nötig.
-6. Mit `create --with-broad-consent` wird anschließend automatisch die
+7. Mit `create --with-broad-consent` wird anschließend automatisch die
    pseudonymisierte Snapshot-Datenbank verarbeitet. Alternativ kann dieser
    Schritt mit `create-broad-consent` einzeln ausgeführt werden. Derzeit bildet
    er nur den technischen Datenbank- und Dateilebenszyklus ab und filtert noch
@@ -384,10 +393,14 @@ Vor der Pseudonymisierung prüft das Script die Regeln, Spaltendefinitionen und
 Mapping-Voraussetzungen. Bei einem Problem bricht es mit einer Fehlermeldung
 ab.
 
-Nach dem Einspielen der Quelldatenbank ergänzt das Script fehlende Werte in
-`Input-Repo/pseudo_mapping.xlsx` und bricht ab. Nach dem manuellen Ausfüllen kann
-derselbe Befehl erneut gestartet werden; die bereits eingespielte Quelldatenbank
-wird wiederverwendet.
+Bei `create --with-pseudonymized` und `create --with-broad-consent` ergänzt das
+Script fehlende Werte in `Input-Repo/pseudo_mapping.xlsx` bereits vor dem
+normalen Snapshot und bricht ab. Nach dem manuellen Ausfüllen kann derselbe
+Befehl erneut gestartet werden. Direkt im R-Start der eigentlichen
+Pseudonymisierung wird dieselbe Prüfung gegen die konkrete
+Snapshot-Quelldatenbank wiederholt. Wenn dabei zusätzliche Werte gefunden
+werden, wird `pseudo_mapping.xlsx` erneut ergänzt und der Lauf bricht vor dem
+Schreiben der pseudonymisierten Daten ab.
 
 Bei späteren Fehlern bleibt die Quelldatenbank erhalten. Beim nächsten Lauf wird
 sie nur wiederverwendet, wenn ihr vermerkter SHA-256-Wert zur normalen
