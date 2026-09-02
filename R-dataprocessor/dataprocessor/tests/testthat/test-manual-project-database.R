@@ -135,6 +135,7 @@ test_that("manual projects inherit the normal connection and select DB_NAME", {
       expect_equal(db_config$DB_NAME, "ip_snapshot_pseud")
       expect_equal(project_name, "WP8_export")
     },
+    getManualStartDatabaseContentType = function() "pseudonymized_snapshot",
     .package = "dataprocessor"
   )
 
@@ -150,7 +151,7 @@ test_that("manual projects inherit the normal connection and select DB_NAME", {
   expect_equal(selected_config, result)
 })
 
-test_that("cds_hub_db requires an explicit force flag for manual projects", {
+test_that("non-pseudonymized databases require an explicit force flag for manual projects", {
   test_dir <- file.path(tempdir(), "manual-project-force")
   project_dir <- file.path(test_dir, "MRP_Check")
   dir.create(project_dir, recursive = TRUE, showWarnings = FALSE)
@@ -165,12 +166,12 @@ test_that("cds_hub_db requires an explicit force flag for manual projects", {
     "DB_DATAPROCESSOR_SCHEMA_OUT = \"db2dataprocessor_out\""
   ), base_config_path)
   writeLines(
-    "DB_NAME = \"cds_hub_db\"",
+    "DB_NAME = \"ip_snapshot\"",
     file.path(project_dir, "database.toml")
   )
   context_calls <- 0L
   effective_config <- list(
-    DB_NAME = "cds_hub_db",
+    DB_NAME = "ip_snapshot",
     DB_HOST = "cds_hub",
     DB_PORT = 5432,
     DB_DATAPROCESSOR_USER = "dataprocessor",
@@ -184,6 +185,7 @@ test_that("cds_hub_db requires an explicit force flag for manual projects", {
       context_calls <<- context_calls + 1L
     },
     validateManualStartDatabaseConnection = function(...) NULL,
+    getManualStartDatabaseContentType = function() NA_character_,
     .package = "dataprocessor"
   )
 
@@ -193,17 +195,17 @@ test_that("cds_hub_db requires an explicit force flag for manual projects", {
       command_line_args = "mrp-check",
       manual_start_submodule_dirs = project_dir
     ),
-    "must not run on cds_hub_db by default"
+    "must run on a pseudonymized snapshot database by default"
   )
-  expect_equal(context_calls, 0L)
+  expect_equal(context_calls, 1L)
 
   result <- configureManualStartDatabase(
     config = list(PATH_TO_DB_CONFIG_TOML = base_config_path),
     command_line_args = c("mrp-check", "--force"),
     manual_start_submodule_dirs = project_dir
   )
-  expect_equal(result$DB_NAME, "cds_hub_db")
-  expect_equal(context_calls, 1L)
+  expect_equal(result$DB_NAME, "ip_snapshot")
+  expect_equal(context_calls, 2L)
 })
 
 test_that("manual database configuration reports missing inherited values", {
@@ -299,6 +301,27 @@ test_that("manual database preflight validates the selected database", {
     validateManualStartDatabaseConnection(db_config, "WP8_export"),
     "cannot read required view.*Check the user's database permissions"
   )
+})
+
+test_that("manual database content type is read from v_db_parameter", {
+  content_type <- data.table::data.table(parameter_value = "pseudonymized_snapshot")
+  testthat::local_mocked_bindings(
+    dbGetReadOnlyQuery = function(query, lock_id) {
+      expect_match(query, "v_db_parameter", fixed = TRUE)
+      expect_match(query, "database_content_type", fixed = TRUE)
+      expect_null(lock_id)
+      content_type
+    },
+    .package = "etlutils"
+  )
+
+  expect_equal(getManualStartDatabaseContentType(), "pseudonymized_snapshot")
+
+  content_type <- data.table::data.table(parameter_value = character())
+  expect_true(is.na(getManualStartDatabaseContentType()))
+
+  content_type <- data.table::data.table(parameter_value = c("a", "b"))
+  expect_error(getManualStartDatabaseContentType(), "multiple database_content_type rows")
 })
 
 test_that("manual database connection errors include project and connection context", {

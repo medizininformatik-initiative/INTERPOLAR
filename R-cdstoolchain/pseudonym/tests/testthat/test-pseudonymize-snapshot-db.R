@@ -70,6 +70,26 @@ test_that("createSnapshotVersionView publishes the source release version", {
   expect_match(view_statement, "AS parameter_value", fixed = TRUE)
 })
 
+test_that("createSnapshotVersionView can mark pseudonymized snapshot databases", {
+  statements <- character()
+  testthat::local_mocked_bindings(
+    snapshotRelationExists = function(connection, name, schema = NULL) FALSE
+  )
+  testthat::local_mocked_bindings(
+    dbExecute = function(connection, statement) {
+      statements <<- c(statements, statement)
+      0L
+    },
+    .package = "DBI"
+  )
+
+  createSnapshotVersionView(DBI::ANSI(), "2.1.0", database_content_type = "pseudonymized_snapshot")
+
+  view_statement <- statements[grepl("CREATE VIEW", statements, fixed = TRUE)]
+  expect_match(view_statement, "CAST('database_content_type' AS varchar)", fixed = TRUE)
+  expect_match(view_statement, "CAST('pseudonymized_snapshot' AS varchar)", fixed = TRUE)
+})
+
 test_that("getSnapshotSourceViewPlan uses described table sources only", {
   rules <- data.table::data.table(
     SOURCE_TYPE = c("table_description", "snapshot_extension", "table_description"),

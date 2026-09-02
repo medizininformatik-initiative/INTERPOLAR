@@ -295,14 +295,11 @@ lokale `database.toml` im jeweiligen Projektordner unter
 `database_example.toml` direkt in diesem Ordner. In jeder Projektdatei muss
 mindestens `DB_NAME` gesetzt sein. Die übrigen Werte werden aus der normalen
 DB-Konfiguration geerbt und nur durch nicht leere Projektwerte überschrieben.
-Die Auswahl erfolgt vor Lock- und Versionsprüfung. Die Originaldatenbank
-`cds_hub_db` ist für manuelle Projekte standardmäßig gesperrt und kann nur
-bewusst mit `--force` verwendet werden.
-
-Der Prozess prüft nicht, ob die Quelle pseudonymisiert ist. Er arbeitet mit den
-in der jeweiligen Datenbank vorhandenen Patienten- und Relationsschlüsseln.
-Dadurch kann derselbe Ablauf regulär auf der pseudonymisierten und bei Bedarf
-gesondert auf der nicht pseudonymisierten Snapshot-Datenbank ausgeführt werden.
+Die Auswahl erfolgt vor Lock- und Versionsprüfung. Ohne zusätzliches Argument
+starten manuelle Projekte nur auf pseudonymisierten Snapshot-Datenbanken, die in
+`v_db_parameter` als `database_content_type = pseudonymized_snapshot` markiert
+sind. Eine andere kompatible Datenbank, zum Beispiel ein normaler Snapshot oder
+die Originaldatenbank, kann nur bewusst mit `--force` verwendet werden.
 
 ### Inhalt der pseudonymisierten Snapshot-Datei und Snapshot-Datenbank
 

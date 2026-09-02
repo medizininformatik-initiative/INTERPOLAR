@@ -91,7 +91,8 @@ getSnapshotReleaseVersion <- function(
 createSnapshotVersionView <- function(
   connection,
   release_version,
-  view_schema = "db2dataprocessor_out"
+  view_schema = "db2dataprocessor_out",
+  database_content_type = NULL
 ) {
   if (
     length(release_version) != 1L ||
@@ -110,6 +111,26 @@ createSnapshotVersionView <- function(
     ))
   }
   quoted_version <- as.character(DBI::dbQuoteString(connection, release_version))
+  content_type_statement <- ""
+  if (!is.null(database_content_type)) {
+    if (
+      length(database_content_type) != 1L ||
+      is.na(database_content_type) ||
+      !nzchar(database_content_type)
+    ) {
+      stop("database_content_type must be NULL or one non-empty value.", call. = FALSE)
+    }
+    quoted_content_type <- as.character(DBI::dbQuoteString(connection, database_content_type))
+    content_type_statement <- paste0(
+      " UNION ALL SELECT ",
+      "CAST(NULL AS integer) AS id, ",
+      "CAST('database_content_type' AS varchar) AS parameter_name, ",
+      "CAST(", quoted_content_type, " AS varchar) AS parameter_value, ",
+      "CAST('Database content type' AS varchar) AS parameter_description, ",
+      "CAST(NULL AS timestamp) AS input_datetime, ",
+      "CAST(NULL AS timestamp) AS last_change_timestamp"
+    )
+  }
   statement <- paste0(
     "CREATE VIEW ",
     snapshotQualifiedName(connection, view_name, view_schema),
@@ -119,7 +140,8 @@ createSnapshotVersionView <- function(
     "CAST(", quoted_version, " AS varchar) AS parameter_value, ",
     "CAST('Source database release version' AS varchar) AS parameter_description, ",
     "CAST(NULL AS timestamp) AS input_datetime, ",
-    "CAST(NULL AS timestamp) AS last_change_timestamp"
+    "CAST(NULL AS timestamp) AS last_change_timestamp",
+    content_type_statement
   )
   DBI::dbExecute(connection, statement)
   data.table::data.table(
@@ -617,7 +639,8 @@ pseudonymizeSnapshotDatabase <- function(
       version_summary <- createSnapshotVersionView(
         target_connection,
         release_version = result[["release_version"]],
-        view_schema = target_view_schema
+        view_schema = target_view_schema,
+        database_content_type = "pseudonymized_snapshot"
       )
       result[["view_summary"]] <- data.table::rbindlist(list(
         passthrough_summary,

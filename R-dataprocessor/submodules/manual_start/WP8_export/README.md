@@ -85,8 +85,9 @@ Die lokale Datei wird automatisch read-only in den R-Container eingebunden;
 ein Neubau des Images ist nach einer Änderung nicht erforderlich.
 
 Der Data Processor wählt diese Datenbank vor Lock- und Versionsprüfung aus.
-`cds_hub_db` ist für manuelle Auswertungen standardmäßig gesperrt und kann nur
-bewusst mit dem zusätzlichen Argument `--force` verwendet werden.
+Ohne zusätzliches Argument startet das Projekt nur auf einer pseudonymisierten
+Snapshot-Datenbank. Für jede andere kompatible Datenbank ist bewusst zusätzlich
+`--force` erforderlich.
 
 ### Mapping-Arbeitsmappe
 

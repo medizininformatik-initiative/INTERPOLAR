@@ -250,6 +250,35 @@ validateManualStartDatabaseConnection <- function(db_config, project_name) {
   invisible(connection_details)
 }
 
+getManualStartDatabaseContentType <- function() {
+  content_type <- etlutils::dbGetReadOnlyQuery(
+    paste0(
+      "SELECT parameter_value ",
+      "FROM v_db_parameter ",
+      "WHERE parameter_name = 'database_content_type'"
+    ),
+    lock_id = NULL
+  )
+  if (!"parameter_value" %in% names(content_type)) {
+    stop(
+      "Could not validate selected database content type: ",
+      "v_db_parameter returned incomplete metadata.",
+      call. = FALSE
+    )
+  }
+  if (nrow(content_type) > 1L) {
+    stop(
+      "Could not validate selected database content type: ",
+      "v_db_parameter contains multiple database_content_type rows.",
+      call. = FALSE
+    )
+  }
+  if (!nrow(content_type)) {
+    return(NA_character_)
+  }
+  as.character(content_type$parameter_value[[1]])
+}
+
 setManualStartDatabaseContext <- function(db_config) {
   etlutils::dbSetModuleContext(
     module_name = "dataprocessor",
@@ -314,20 +343,21 @@ configureManualStartDatabase <- function(
     }
   )
   validateManualStartDatabaseConfig(db_config, project_name)
-  force_original_database <- "--force" %in% command_line_args
-  if (
-    identical(db_config[["DB_NAME"]], "cds_hub_db") &&
-    !force_original_database
-  ) {
-    stop(
-      "Manual Data Processor projects must not run on cds_hub_db by default. ",
-      "Use --force only when running this project on the original database is intentional.",
-      call. = FALSE
-    )
-  }
+  force_database <- "--force" %in% command_line_args
 
   setManualStartDatabaseContext(db_config)
   validateManualStartDatabaseConnection(db_config, project_name)
+  database_content_type <- getManualStartDatabaseContentType()
+  if (
+    !identical(database_content_type, "pseudonymized_snapshot") &&
+    !force_database
+  ) {
+    stop(
+      "Manual Data Processor projects must run on a pseudonymized snapshot database by default. ",
+      "Use --force only when running this project on another database is intentional.",
+      call. = FALSE
+    )
+  }
   message(
     "Manual Data Processor project '", project_name,
     "' database verified: ", db_config[["DB_NAME"]]

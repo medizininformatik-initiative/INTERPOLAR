@@ -31,8 +31,9 @@ Aufruf des dataprocessors mit folgenden Argumenten:
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R mrp-check
 ```
 
-Soll `MRP_Check` bewusst auf der Originaldatenbank `cds_hub_db` laufen, ist
-zusätzlich `--force` erforderlich.
+Ohne zusätzliches Argument startet `MRP_Check` nur auf einer pseudonymisierten
+Snapshot-Datenbank. Für jede andere kompatible Datenbank ist bewusst zusätzlich
+`--force` erforderlich.
 
 -   optional Anpassung des Zeitraumes über die Argumente `start-date` und `end-date` mit Name=Wert (ohne Leerzeichen zwischen Name und Wert) und Wert im Format YYYY-MM-DD
 
