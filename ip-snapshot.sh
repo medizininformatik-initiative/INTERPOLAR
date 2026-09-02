@@ -217,6 +217,34 @@ container_input_repo_mount_args() {
     fi
 }
 
+check_live_database_pseudonym_mapping() {
+    local chunk_size="$1"
+
+    if [[ "${with_pseudonymized}" != "true" ]]; then
+        return
+    fi
+
+    local input_repo_mount_args=()
+    while IFS= read -r mount_arg; do
+        input_repo_mount_args+=("${mount_arg}")
+    done < <(container_input_repo_mount_args)
+
+    echo "Checking pseudonym mapping against the current database before creating the snapshot..."
+    if ! docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
+        Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
+        source-db=cds_hub_db ; then
+        echo "Fix the pseudonym mapping and run the create command again."
+        echo "Continue afterwards with:"
+        if [[ "${with_broad_consent}" == "true" ]]; then
+            echo "  ./ip-snapshot.sh create ${name} --with-broad-consent --chunk-size ${chunk_size}"
+        else
+            echo "  ./ip-snapshot.sh create ${name} --with-pseudonymized --chunk-size ${chunk_size}"
+        fi
+        exit 1
+    fi
+    echo "Current database pseudonym mapping is complete."
+}
+
 database_exists() {
     local database_name="$1"
     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -tAc \
@@ -449,20 +477,6 @@ create_pseudonymized_snapshot() {
             exit 1
         fi
     fi
-
-    echo "Checking database values and pseudonym mapping..."
-    if ! docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
-        Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
-        source-db="${source_database}" ; then
-        cleanup_failed_pseudonymized_database "${target_build_db}"
-        echo "The fully restored source database remains available for continuing:"
-        echo "  ${source_database}"
-        echo
-        echo "Continue afterwards with:"
-        echo "  ./ip-snapshot.sh pseudonymize ${snapshot_name} --chunk-size ${chunk_size}"
-        exit 1
-    fi
-    echo "Database values and pseudonym mapping are complete."
 
     echo "Creating empty temporary target database '${target_build_db}'..."
     if ! prepare_snapshot_analysis_target_database "${target_build_db}" ; then
@@ -742,6 +756,7 @@ case "$action" in
 
         # Snapshot erstellen
         SECONDS=0;
+        check_live_database_pseudonym_mapping "${chunk_size}"
         if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table=db_config.v_cron_jobs --exclude-table='*.*_raw*' --compress=gzip > $file_date_path; then
             echo "File \"${file_date_path}\" created."
             ls -ho ${file_date_path}
