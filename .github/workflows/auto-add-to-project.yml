@@ -9,7 +9,7 @@ jobs:
   add-to-project:
     runs-on: ubuntu-latest
     steps:
-      - uses: github/gh-project-automation-plus@v0.3.0
+      - uses: actions/add-to-project@v2.0.0
         with:
           project-url: https://github.com/orgs/medizininformatik-initiative/projects/4  # Projekt-URL
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.REPO_PROJECT_PAT }}
