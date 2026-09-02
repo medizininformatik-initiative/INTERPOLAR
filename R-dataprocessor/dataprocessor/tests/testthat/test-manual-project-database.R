@@ -1,12 +1,12 @@
 test_that("manual project names use the existing command convention", {
   project_dirs <- file.path(
     "/manual_start",
-    c("Database_Quality_Analysis", "WP8_export")
+    c("Database_Quality_Analysis", "Statistical_Reports", "WP8_export")
   )
 
   expect_equal(
     getCalledManualStartSubmoduleDirs(
-      "wp8-export",
+      "statistical-reports",
       project_dirs
     ),
     project_dirs[[2]]
@@ -75,7 +75,7 @@ test_that("project database selection precedes module startup", {
     configureManualStartDatabase = function(module_config, command_line_args) {
       calls <<- c(calls, "database")
       expect_equal(module_config, config)
-      expect_equal(command_line_args, "wp8-export")
+      expect_equal(command_line_args, "statistical-reports")
     },
     .package = "dataprocessor"
   )
@@ -89,7 +89,7 @@ test_that("project database selection precedes module startup", {
 
   result <- startDataprocessorModule(
     validate_config = TRUE,
-    command_line_args = "wp8-export"
+    command_line_args = "statistical-reports"
   )
 
   expect_equal(calls, c("init", "database", "start"))

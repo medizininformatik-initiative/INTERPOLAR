@@ -128,12 +128,19 @@ bei Bedarf Ausgabe der zu Grunde liegenden Datentabellen (outputLocal)
 
 ### Ausführung
 
+Vor der Ausführung muss in der [`database.toml`](database.toml) des Submoduls
+mindestens `DB_NAME` auf die pseudonymisierte Auswertedatenbank gesetzt werden. Leere
+oder nicht vorhandene optionale Verbindungsparameter werden aus der regulären
+`cds_hub_db_config.toml` übernommen. Die Statistical Reports verwenden damit dieselben
+Zugangsdaten und Datenbankschemata wie der reguläre Data Processor, greifen aber auf
+die explizit ausgewählte Datenbank zu.
+
 Aufruf des dataprocessors mit folgenden Argumenten:
 
-- `Statistical_Reports`(=Name des Submoduls im Ordner manual_start) als Argument anhängen
+- `statistical-reports` (= Name des Submoduls im Ordner `manual_start`) als Argument anhängen
 
 ``` console
-docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R Statistical_Reports
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R statistical-reports
 ```
 
 - optional Anpassung des Zeitraumes über die Argumente `REPORT_PERIOD_START`und `REPORT_PERIOD_END`mit Name=Wert (ohne Leerzeichen zwischen Name und Wert) und Wert im Format YYYY-MM-DD oder YYYY/MM/DD
@@ -141,7 +148,7 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 - optional Ausgabe der zu Grunde liegenden Datentabellen in outputLocal über das Argument `WRITE_TABLE_LOCAL=TRUE`
 
 ``` console
-docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R Statistical_Reports REPORT_PERIOD_START=2025-09-01 REPORT_PERIOD_END=2025-09-08 WRITE_TABLE_LOCAL=TRUE
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R statistical-reports REPORT_PERIOD_START=2025-09-01 REPORT_PERIOD_END=2025-09-08 WRITE_TABLE_LOCAL=TRUE
 ```
 
 ### Annahmen/Erläuterungen
