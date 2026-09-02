@@ -28,7 +28,6 @@ parseCommandLineConfig <- function(command_arguments = NULL) {
   key_value_arguments <- command_arguments[grepl("=", command_arguments, fixed = TRUE)]
   parsed <- etlutils::initCommandLineArguments(
     argument2global_variable_name = c(
-      "view_schema" = "VIEW_SCHEMA",
       "view_prefix" = "VIEW_PREFIX",
       "view_postfix" = "VIEW_POSTFIX",
       "value_import_datetime_column" = "VALUE_IMPORT_DATETIME_COLUMN",
@@ -73,7 +72,6 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
   }
 
   list(
-    view_schema = getConfigValue("VIEW_SCHEMA", "db2dataprocessor_out"),
     view_prefix = getConfigValue("VIEW_PREFIX", "v_"),
     view_postfix = getConfigValue("VIEW_POSTFIX", "_last_version"),
     value_import_datetime_column = getConfigValue("VALUE_IMPORT_DATETIME_COLUMN", "input_datetime"),

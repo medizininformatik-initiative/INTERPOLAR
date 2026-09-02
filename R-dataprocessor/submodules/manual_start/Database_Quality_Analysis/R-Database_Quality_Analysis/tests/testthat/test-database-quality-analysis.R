@@ -152,6 +152,7 @@ test_that("database quality analysis database locks are optional", {
 test_that("database quality analysis config defaults value summary controls", {
   config <- getConfig(envir = new.env(parent = emptyenv()))
 
+  expect_false("view_schema" %in% names(config))
   expect_equal(config$value_summary_table_families, c("FHIR", "Frontend"))
   expect_equal(config$value_summary_suppressed_column_patterns, list(
     FHIR = character(),
@@ -1580,7 +1581,6 @@ test_that("database quality analysis sheet description is prepended", {
 
 test_that("database quality analysis metadata sheet contains neutral run metadata", {
   config <- list(
-    view_schema = "db2dataprocessor_out",
     view_prefix = "v_",
     view_postfix = "_last_version",
     included_view_patterns = c("^v_[a-z0-9_]+_last_version$"),
@@ -1598,6 +1598,7 @@ test_that("database quality analysis metadata sheet contains neutral run metadat
     COLUMN_DESCRIPTION = c("id", NA_character_)
   )
   source_metadata <- data.table::data.table(
+    VIEW_SCHEMA = "db2dataprocessor_out",
     VIEW_NAME = c("v_observation_last_version", "v_patient_fe_last_version"),
     COLUMN_DESCRIPTION = c("id", NA_character_)
   )
@@ -1617,6 +1618,7 @@ test_that("database quality analysis metadata sheet contains neutral run metadat
   )
 
   expect_equal(sheet[PROPERTY == "analysis duration seconds", VALUE], "2")
+  expect_equal(sheet[PROPERTY == "view schema", VALUE], "db2dataprocessor_out")
   expect_equal(sheet[PROPERTY == "value datetime columns enabled", VALUE], "FALSE")
   expect_equal(sheet[PROPERTY == "database system", VALUE], "PostgreSQL")
   expect_false(any(tolower(sheet$PROPERTY) %in% c(

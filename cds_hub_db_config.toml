@@ -6,14 +6,6 @@ DB_HOST = "cds_hub"
 DB_PORT = 5432
 DB_NAME = "cds_hub_db"
 
-# Optional target database for analysis-only reports, for example a pseudonymized
-# database, see also Database_Snapshot.md.
-# Leave empty to use DB_NAME, DB_HOST, DB_PORT and DB_ADMIN_PASSWORD.
-DB_ANALYSIS_NAME = ""
-DB_ANALYSIS_HOST = ""
-DB_ANALYSIS_PORT = ""
-DB_ANALYSIS_ADMIN_PASSWORD = ""
-
 ##########################
 # CDS2DB module settings #
 ##########################

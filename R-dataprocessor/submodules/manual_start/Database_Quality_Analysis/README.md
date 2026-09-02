@@ -2,8 +2,9 @@
 
 `Database_Quality_Analysis` creates reports for checking data availability in
 the dataprocessor output views. The module does not change source data. It reads
-view and column metadata from the configured database schema and uses database
-view comments as `COLUMN_DESCRIPTION` where available.
+view and column metadata from the Data Processor output schema configured as
+`DB_DATAPROCESSOR_SCHEMA_OUT` and uses database view comments as
+`COLUMN_DESCRIPTION` where available.
 
 ## Start
 
@@ -15,12 +16,12 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 
 The main configuration is
 `R-dataprocessor/submodules/manual_start/Database_Quality_Analysis/database_quality_analysis_config.toml`.
-For the pseudonymized snapshot database, point `PATH_TO_DB_CONFIG_TOML` to the
-matching database credential TOML file. If the analysis database uses a different
-database name, host or port, set `DB_ANALYSIS_NAME`, `DB_ANALYSIS_HOST` and
-`DB_ANALYSIS_PORT` in that DB config file. If the admin password differs,
-set `DB_ANALYSIS_ADMIN_PASSWORD`. Leave these values empty to use `DB_NAME`,
-`DB_HOST`, `DB_PORT` and `DB_ADMIN_PASSWORD`.
+Set `DB_NAME` in this project's `database.toml` to the pseudonymized snapshot
+database. Other connection values are inherited from the normal database
+configuration. Non-empty values in `database.toml` override them; missing or
+empty optional values leave them unchanged. The file is mounted into `r-env`
+automatically; rebuilding the image is not needed. The shared template for new
+projects is `R-dataprocessor/submodules/manual_start/database_example.toml`.
 
 ## Output Files
 
