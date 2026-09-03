@@ -243,9 +243,9 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #' the earlier of `ward_end` and `report_period_end`.
 #'
 #' For `report_period_boundary = "ward_stay"`, observations are retained
-#' when `curated_enc_period_end` is missing or is greater than or equal to
-#' the later of `ward_start` and `report_period_start`, and `enc_period_start`
-#' is earlier than the earlier of `ward_end` and `report_period_end`.
+#' when `enc_period_start` is greater than or equal to the later of
+#' `ward_start` and `report_period_start`, and earlier than the earlier of
+#' `ward_end` and `report_period_end`.
 #'
 #' @importFrom dplyr distinct
 #' @importFrom dplyr filter
@@ -358,14 +358,16 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
 
   if (report_period_boundary == "hospital_stay") {
     # Filter for encounters that fall within the reporting period based on fall_ent_dat and fall_aufn_dat
+    # (as approximation the hospital stay is used and therefore the fall_ent_dat is used to determine if the encounter
+    # is on the ward within the reporting period)
     frontend_summary_prep <- frontend_summary_prep |>
       dplyr::filter(is.na(fall_ent_dat) | fall_ent_dat >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
       dplyr::filter(fall_aufn_dat < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
       dplyr::distinct()
   } else if (report_period_boundary == "ward_stay") {
-    # Filter for encounters that fall within the reporting period based on enc_period_start and curated_enc_period_end
+    # Filter for encounters that start within the reporting period based on enc_period_start and curated_enc_period_end
     frontend_summary_prep <- frontend_summary_prep |>
-      dplyr::filter(is.na(curated_enc_period_end) | curated_enc_period_end >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
+      dplyr::filter(enc_period_start >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
       dplyr::filter(enc_period_start < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
       dplyr::distinct()
   }

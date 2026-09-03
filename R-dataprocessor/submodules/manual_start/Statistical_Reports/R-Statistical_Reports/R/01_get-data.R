@@ -207,8 +207,8 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
   }
 
   encounter_table <- encounter_table_raw |>
-    dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_start)) |>
-    dplyr::filter(enc_period_end >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_end))
+    dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - as.difftime(365, units = "days")) | is.na(enc_period_start)) |>
+    dplyr::filter(enc_period_end >= (as.POSIXct(report_period_start) - as.difftime(365, units = "days")) | is.na(enc_period_end))
 
   if (nrow(encounter_table) == 0) {
     stop("The downloaded and date-filtered encounter table (only encounter data from one year before
