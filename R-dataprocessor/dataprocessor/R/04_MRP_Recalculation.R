@@ -1,3 +1,91 @@
+normalizeMRPRecalculationKeyColumn <- function(value) {
+  if (inherits(value, "POSIXct")) {
+    value <- format(value, "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  } else {
+    value <- as.character(value)
+  }
+  value[is.na(value)] <- "#NULL#"
+  trimws(value)
+}
+
+addMRPRecalculationKey <- function(dt, key_cols) {
+  dt[, .mrp_recalculation_key := do.call(
+    paste,
+    c(lapply(.SD, normalizeMRPRecalculationKeyColumn), sep = "|||")
+  ), .SDcols = key_cols]
+}
+
+filterExistingMRPRows <- function(current_table, existing_table, key_cols, exact_key_cols = character()) {
+  if (!nrow(current_table)) {
+    return(current_table)
+  }
+
+  current_table <- data.table::copy(current_table)
+  existing_table <- data.table::copy(existing_table)
+  current_table[, .mrp_recalculation_order := .I]
+  addMRPRecalculationKey(current_table, key_cols)
+  if (!nrow(existing_table)) {
+    current_table[, c(".mrp_recalculation_order", ".mrp_recalculation_key") := NULL]
+    return(current_table)
+  }
+
+  addMRPRecalculationKey(existing_table, key_cols)
+
+  # Prefer candidates that match an existing row on the complete legacy key
+  # when more than one fixed WP7 rule shares the same visible MRP key. This
+  # makes the legacy comparison a multiset subtraction instead of suppressing
+  # every candidate with that key.
+  current_table[, .mrp_recalculation_exact_match := FALSE]
+  if (length(exact_key_cols)) {
+    current_exact <- data.table::copy(current_table)
+    existing_exact <- data.table::copy(existing_table)
+    addMRPRecalculationKey(current_exact, exact_key_cols)
+    addMRPRecalculationKey(existing_exact, exact_key_cols)
+    current_table[, .mrp_recalculation_exact_match :=
+      current_exact$.mrp_recalculation_key %in% existing_exact$.mrp_recalculation_key]
+  }
+
+  existing_identity_cols <- c(".mrp_recalculation_key", intersect("ret_id", names(existing_table)))
+  existing_counts <- unique(existing_table[, ..existing_identity_cols])[
+    , .mrp_recalculation_existing_count := .N,
+    by = .mrp_recalculation_key
+  ]
+  current_table <- merge(
+    current_table,
+    existing_counts,
+    by = ".mrp_recalculation_key",
+    all.x = TRUE,
+    sort = FALSE
+  )
+  current_table[is.na(.mrp_recalculation_existing_count), .mrp_recalculation_existing_count := 0L]
+
+  data.table::setorder(
+    current_table,
+    .mrp_recalculation_key,
+    -.mrp_recalculation_exact_match,
+    .mrp_recalculation_order
+  )
+  current_table[, .mrp_recalculation_rank := seq_len(.N), by = .mrp_recalculation_key]
+  current_table <- current_table[
+    .mrp_recalculation_rank > .mrp_recalculation_existing_count
+  ]
+  data.table::setorder(current_table, .mrp_recalculation_order)
+  current_table[, c(
+    ".mrp_recalculation_order",
+    ".mrp_recalculation_key",
+    ".mrp_recalculation_exact_match",
+    ".mrp_recalculation_existing_count",
+    ".mrp_recalculation_rank"
+  ) := NULL]
+
+  current_table
+}
+
+splitMRPRecordIds <- function(record_ids, chunk_size = 1000L) {
+  record_ids <- unique(na.omit(record_ids))
+  split(record_ids, ceiling(seq_along(record_ids) / chunk_size))
+}
+
 #' Recalculate retrospective MRPs additively for a selected time range
 #'
 #' Re-runs the retrospective MRP calculation for encounters in the given time
@@ -29,53 +117,35 @@ recalculateMRPs <- function(start_date,
     stop("Parameter end_date (", end_date, ") must be greater than start_date (", start_date, ").")
   }
 
-  # Normalize values that are part of the logical MRP identity so that
-  # comparisons are stable across character, NA, and timestamp columns.
-  normalizeMRPKeyColumn <- function(value) {
-    if (inherits(value, "POSIXct")) {
-      value <- format(value, "%Y-%m-%d %H:%M:%S", tz = GLOBAL_TIMEZONE)
-    } else {
-      value <- as.character(value)
-    }
-    value[is.na(value)] <- "#NULL#"
-    trimws(value)
-  }
-
-  # Build one comparable key from the clinically relevant MRP columns.
-  addMRPKey <- function(dt, key_cols) {
-    dt[, .mrp_recalculation_key := do.call(
-      paste,
-      c(lapply(.SD, normalizeMRPKeyColumn), sep = "|||")
-    ), .SDcols = key_cols]
-  }
-
-  # Load existing rows for the same logical scope from the database and remove
-  # all currently prepared rows that already exist on the given key.
-  filterExistingRows <- function(current_table, key_cols, query = NULL, lock_id = NULL) {
-    if (!nrow(current_table)) {
-      return(current_table)
+  # Load only the columns needed for duplicate detection and renumbering. The
+  # query is chunked by record_id to keep memory and SQL statement sizes bounded
+  # without introducing per-record database round trips.
+  loadExistingMRPRows <- function(record_ids, key_cols, chunk_size = 1000L) {
+    chunks <- splitMRPRecordIds(record_ids, chunk_size)
+    if (!length(chunks)) {
+      return(data.table::data.table())
     }
 
-    existing_table <- data.table::data.table()
-    if (!is.null(query)) {
-      existing_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id)
-    }
+    existing_chunks <- lapply(seq_along(chunks), function(chunk_index) {
+      query <- paste0(
+        "SELECT ", paste(unique(c(key_cols, "ret_id", "redcap_repeat_instance")), collapse = ", "), "\n",
+        "FROM v_retrolektive_mrpbewertung_fe\n",
+        "WHERE record_id IN ", etlutils::fhirdbGetQueryList(chunks[[chunk_index]]), "\n"
+      )
+      etlutils::dbGetReadOnlyQuery(
+        query,
+        lock_id = paste0("MRP_Recalculation_existing_mrps_", chunk_index)
+      )
+    })
 
-    addMRPKey(current_table, key_cols)
-    if (nrow(existing_table)) {
-      addMRPKey(existing_table, key_cols)
-      current_table <- current_table[!.mrp_recalculation_key %in% existing_table$.mrp_recalculation_key]
-    }
-    current_table[, .mrp_recalculation_key := NULL]
-
-    current_table
+    data.table::rbindlist(existing_chunks, use.names = TRUE, fill = TRUE)
   }
 
   # ret_id values continue per medication analysis, while REDCap repeat
   # instances continue per patient record. After deduplication, both sequences
   # must be rebuilt from the current last-version state so the surviving new
   # rows remain gap-free and consistent.
-  renumberNewMRPs <- function(mrp_tables) {
+  renumberNewMRPs <- function(mrp_tables, existing_ret_rows) {
     ret_table <- mrp_tables$retrolektive_mrpbewertung_fe
     dp_table <- mrp_tables$dp_mrp_calculations
 
@@ -171,20 +241,6 @@ recalculateMRPs <- function(start_date,
       list(ret_table = ret_table, dp_table = dp_table)
     }
 
-    record_ids <- unique(na.omit(ret_table$record_id))
-    existing_ret_rows <- data.table::data.table()
-    if (length(record_ids)) {
-      query <- paste0(
-        "SELECT record_id, ret_meda_id, ret_id, redcap_repeat_instance\n",
-        "FROM v_retrolektive_mrpbewertung_fe_last_version\n",
-        "WHERE record_id IN ", etlutils::fhirdbGetQueryList(record_ids), "\n"
-      )
-      existing_ret_rows <- etlutils::dbGetReadOnlyQuery(
-        query,
-        lock_id = "MRP_Recalculation_existing_ret_ids_and_repeat_instances"
-      )
-    }
-
     ret_table[, temp_old_ret_id := ret_id]
     ret_table[, temp_old_redcap_repeat_instance := redcap_repeat_instance]
     dp_table[, temp_old_ret_id := ret_id]
@@ -244,78 +300,49 @@ recalculateMRPs <- function(start_date,
       # dp_mrp_calculations rows of those surviving MRPs.
       ret_table <- mrp_tables$retrolektive_mrpbewertung_fe[!is.na(ret_id)]
       dp_table <- mrp_tables$dp_mrp_calculations[!is.na(ret_id)]
+      existing_ret_rows <- data.table::data.table()
       if (!nrow(ret_table)) {
         mrp_tables$retrolektive_mrpbewertung_fe <- ret_table
         mrp_tables$dp_mrp_calculations <- dp_table[0]
       } else {
+        # The display text and reference timestamp are intentionally excluded.
+        # Both can change when additional evidence is loaded although the
+        # underlying clinical MRP is unchanged.
         ret_key_cols <- c(
           "record_id",
           "ret_meda_id",
-          "ret_meda_dat_referenz",
-          "ret_kurzbeschr",
           "ret_atc1",
           "ret_ip_klasse_01",
           "ret_ip_klasse_disease",
           "ret_atc2"
         )
-        ret_meda_ids <- unique(na.omit(ret_table$ret_meda_id))
-        ret_query <- NULL
-        if (length(ret_meda_ids)) {
-          ret_query <- paste0(
-            "SELECT ", paste(
-              ret_key_cols,
-              collapse = ", "
-            ), "\n",
-            "FROM v_retrolektive_mrpbewertung_fe\n",
-            "WHERE ret_meda_id IN ", etlutils::fhirdbGetQueryList(ret_meda_ids), "\n"
-          )
-        }
-        ret_table <- filterExistingRows(
+        exact_ret_key_cols <- c(
+          ret_key_cols,
+          "ret_meda_dat_referenz",
+          "ret_kurzbeschr"
+        )
+        existing_ret_rows <- loadExistingMRPRows(
+          ret_table$record_id,
+          unique(c(ret_key_cols, exact_ret_key_cols))
+        )
+        ret_table <- filterExistingMRPRows(
           current_table = ret_table,
+          existing_table = existing_ret_rows,
           key_cols = ret_key_cols,
-          query = ret_query,
-          lock_id = "MRP_Recalculation_existing_retrolektive_mrpbewertung"
+          exact_key_cols = exact_ret_key_cols
         )
         mrp_tables$retrolektive_mrpbewertung_fe <- ret_table
         mrp_tables$dp_mrp_calculations <- dp_table[ret_id %in% unique(ret_table$ret_id)]
       }
 
-      mrp_tables <- renumberNewMRPs(mrp_tables)
+      mrp_tables <- renumberNewMRPs(mrp_tables, existing_ret_rows)
       mrp_tables <- markRecalculatedMRPs(mrp_tables)
 
-      # Remove dp_mrp_calculations rows that already exist in the database.
-      dp_table <- mrp_tables$dp_mrp_calculations
-      if (nrow(dp_table)) {
-        dp_key_cols <- c(
-          "enc_id",
-          "mrp_calculation_type",
-          "meda_id",
-          "study_phase",
-          "ward_name",
-          "atc1_medreq_fhir_id",
-          "mrp_proxy_type",
-          "mrp_proxy_code",
-          "mrp_proxy_fhir_id"
-        )
-        dp_meda_ids <- unique(na.omit(dp_table$meda_id))
-        dp_query <- NULL
-        if (length(dp_meda_ids)) {
-          dp_query <- paste0(
-            "SELECT ", paste(
-              dp_key_cols,
-              collapse = ", "
-            ), "\n",
-            "FROM v_dp_mrp_calculations\n",
-            "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(dp_meda_ids), "\n"
-          )
-        }
-        mrp_tables$dp_mrp_calculations <- filterExistingRows(
-          current_table = dp_table,
-          key_cols = dp_key_cols,
-          query = dp_query,
-          lock_id = "MRP_Recalculation_existing_dp_mrp_calculations"
-        )
-      }
+      # Only rows belonging to surviving new MRPs remain at this point. Remove
+      # exact within-run duplicates without another database query. Including
+      # ret_id preserves audit rows when one source item contributes to more
+      # than one genuinely distinct MRP.
+      mrp_tables$dp_mrp_calculations <- unique(mrp_tables$dp_mrp_calculations)
     })
 
     etlutils::runLevel2("Write new MRP results to database", {
