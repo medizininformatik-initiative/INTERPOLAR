@@ -33,6 +33,21 @@ test_that("enrichSnapshotEncounterChunk adds age", {
   expect_equal(tail(names(result), 1), "enc_age_at_admission")
 })
 
+test_that("enrichSnapshotMedicationAnalysisChunk calculates BMI", {
+  medication_analysis <- data.table::data.table(
+    meda_gewicht_aktuell = c(80, 75000, NA),
+    meda_gewicht_aktl_einheit = c("kg", "g", "kg"),
+    meda_groesse = c(180, 1.5, 170),
+    meda_groesse_einheit = c("cm", "m", "cm"),
+    meda_bmi = c(999, 999, 999)
+  )
+
+  result <- enrichSnapshotMedicationAnalysisChunk(medication_analysis)
+
+  expect_equal(result$meda_bmi[1:2], c(80 / 1.8^2, 75 / 1.5^2))
+  expect_true(is.na(result$meda_bmi[3]))
+})
+
 test_that("case metric enrichment remains optional when source columns are missing", {
   fall_result <- enrichSnapshotFallChunk(
     data.table::data.table(fall_id = "fall-1"),
@@ -42,10 +57,15 @@ test_that("case metric enrichment remains optional when source columns are missi
     data.table::data.table(enc_id = "enc-1"),
     source_columns = "enc_id"
   )
+  medication_analysis_result <- enrichSnapshotMedicationAnalysisChunk(
+    data.table::data.table(meda_gewicht_aktuell = 80),
+    source_columns = "meda_gewicht_aktuell"
+  )
 
   expect_true(is.na(fall_result$fall_age_at_admission))
   expect_true(is.na(fall_result$fall_bmi))
   expect_true(is.na(encounter_result$enc_age_at_admission))
+  expect_true(is.na(medication_analysis_result$meda_bmi))
 })
 
 test_that("age calculation accepts 1910-01-01 and rejects earlier birthdates", {
