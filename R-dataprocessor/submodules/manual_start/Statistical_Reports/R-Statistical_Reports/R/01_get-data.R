@@ -56,31 +56,31 @@ getPatientData <- function(lock_id, table_name) {
     patient_table_raw <- createPatientDataWarningsSituations(patient_table_raw)
   }
   # DEBUG END-------------------------------
-
-  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
-    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "")) {
-    patient_table_raw <- patient_table_raw |>
-      dplyr::filter(
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system)
-      ) |>
-      dplyr::distinct()
-  }
-  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") &
-    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "")) {
-    patient_table_raw <- patient_table_raw |>
-      dplyr::filter(
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system)
-      ) |>
-      dplyr::distinct()
-  }
-  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") &
-    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", "")) {
-    patient_table_raw <- patient_table_raw |>
-      dplyr::filter(
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)
-      ) |>
-      dplyr::distinct()
-  }
+  # TODO: check if this filtering is still needed ---------------
+  # if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
+  #   !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "")) {
+  #   patient_table_raw <- patient_table_raw |>
+  #     dplyr::filter(
+  #       grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system)
+  #     ) |>
+  #     dplyr::distinct()
+  # }
+  # if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") &
+  #   !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "")) {
+  #   patient_table_raw <- patient_table_raw |>
+  #     dplyr::filter(
+  #       grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system)
+  #     ) |>
+  #     dplyr::distinct()
+  # }
+  # if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") &
+  #   !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", "")) {
+  #   patient_table_raw <- patient_table_raw |>
+  #     dplyr::filter(
+  #       grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)
+  #     ) |>
+  #     dplyr::distinct()
+  # }
   patient_table <- patient_table_raw |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
@@ -195,16 +195,17 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     stop("No encounter data downloaded from database. Please check the database.")
   }
 
-  if (etlutils::isDefinedAndNotEmpty("MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
-    encounter_table_raw <- encounter_table_raw |>
-      dplyr::filter(enc_identifier_system %in% MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM) |>
-      dplyr::distinct()
-  }
+  # TODO: check if this filtering is still needed ---------------
+  # if (etlutils::isDefinedAndNotEmpty("MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+  #   encounter_table_raw <- encounter_table_raw |>
+  #     dplyr::filter(enc_identifier_system %in% MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM) |>
+  #     dplyr::distinct()
+  # }
 
-  if (nrow(encounter_table_raw) == 0) {
-    stop("The downloaded and identifier-filtered encounter table is empty. Please check (if defined)
-    for the correct definition of MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")
-  }
+  # if (nrow(encounter_table_raw) == 0) {
+  #   stop("The downloaded and identifier-filtered encounter table is empty. Please check (if defined)
+  #   for the correct definition of MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")
+  # }
 
   encounter_table <- encounter_table_raw |>
     dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - as.difftime(365, units = "days")) | is.na(enc_period_start)) |>
