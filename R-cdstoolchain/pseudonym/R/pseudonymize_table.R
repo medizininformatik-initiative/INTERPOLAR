@@ -479,17 +479,42 @@ getConditionBaseExpression <- function(fhir_expression) {
   sub("[^/]+$", "", expression)
 }
 
-findConditionColumnName <- function(field_name, fhir_expression, table_description) {
-  field_expression <- gsub("\\.", "/", field_name)
-  condition_expression <- paste0(getConditionBaseExpression(fhir_expression), field_expression)
-  matches <- table_description[["COLUMN_NAME"]][
-    !is.na(table_description[["FHIR_EXPRESSION"]]) &
-      table_description[["FHIR_EXPRESSION"]] == condition_expression
-  ]
-  if (length(matches) == 0) {
+getIdentifierConditionExpression <- function(field_expression, fhir_expression) {
+  field_segments <- strsplit(field_expression, "/", fixed = TRUE)[[1]]
+  if (
+    !field_segments[1] %in% c("assigner", "period", "system", "type", "use", "value")
+  ) {
     return(NA_character_)
   }
-  matches[1]
+
+  expression_segments <- strsplit(as.character(fhir_expression), "/", fixed = TRUE)[[1]]
+  identifier_index <- which(expression_segments == "identifier")
+  if (length(identifier_index) == 0) {
+    return(NA_character_)
+  }
+
+  # Identifier conditions describe siblings below the enclosing Identifier node,
+  # even when the target column itself is nested below identifier/type/coding.
+  paste(c(expression_segments[seq_len(identifier_index[1])], field_segments), collapse = "/")
+}
+
+findConditionColumnName <- function(field_name, fhir_expression, table_description) {
+  field_expression <- gsub("\\.", "/", field_name)
+  condition_expressions <- unique(stats::na.omit(c(
+    getIdentifierConditionExpression(field_expression, fhir_expression),
+    paste0(getConditionBaseExpression(fhir_expression), field_expression)
+  )))
+
+  for (condition_expression in condition_expressions) {
+    matches <- table_description[["COLUMN_NAME"]][
+      !is.na(table_description[["FHIR_EXPRESSION"]]) &
+        table_description[["FHIR_EXPRESSION"]] == condition_expression
+    ]
+    if (length(matches) > 0) {
+      return(matches[1])
+    }
+  }
+  NA_character_
 }
 
 evaluateSingleCondition <- function(condition, table, table_description, fhir_expression) {
