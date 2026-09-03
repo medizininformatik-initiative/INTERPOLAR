@@ -88,6 +88,34 @@ getSnapshotReleaseVersion <- function(
   release_version
 }
 
+getSnapshotDatabaseContentType <- function(
+  connection,
+  source_schema = "db2dataprocessor_out"
+) {
+  source_view <- snapshotQualifiedName(connection, "v_db_parameter", source_schema)
+  statement <- paste0(
+    "SELECT parameter_value FROM ",
+    source_view,
+    " WHERE parameter_name = 'database_content_type'"
+  )
+  content_type_rows <- DBI::dbGetQuery(connection, statement)
+  if (nrow(content_type_rows) > 1L) {
+    stop(
+      "Source view ", source_view,
+      " must contain at most one database_content_type row.",
+      call. = FALSE
+    )
+  }
+  if (!nrow(content_type_rows)) {
+    return(NULL)
+  }
+  database_content_type <- as.character(content_type_rows[["parameter_value"]][1])
+  if (is.na(database_content_type) || !nzchar(database_content_type)) {
+    stop("Source database_content_type must not be empty.", call. = FALSE)
+  }
+  database_content_type
+}
+
 createSnapshotVersionView <- function(
   connection,
   release_version,

@@ -141,6 +141,10 @@ test_that("Broad Consent database workflow materializes and publishes its plan",
       captured$version_connection <- connection
       "2.1.0"
     },
+    getSnapshotDatabaseContentType = function(connection, source_schema) {
+      captured$content_type_connection <- connection
+      "pseudonymized_snapshot"
+    },
     getDefaultSnapshotPseudonymizationRuleSources = function(project_root) {
       list(table_descriptions = "rules", snapshot_extensions = "extensions")
     },
@@ -197,9 +201,15 @@ test_that("Broad Consent database workflow materializes and publishes its plan",
       captured$view_connection <- connection
       view_summary
     },
-    createSnapshotVersionView = function(connection, release_version, view_schema) {
+    createSnapshotVersionView = function(
+                                         connection,
+                                         release_version,
+                                         view_schema,
+                                         database_content_type
+    ) {
       captured$version_view_connection <- connection
       captured$release_version <- release_version
+      captured$database_content_type <- database_content_type
       version_summary
     }
   )
@@ -217,6 +227,7 @@ test_that("Broad Consent database workflow materializes and publishes its plan",
 
   expect_equal(captured$plan_connection, "source-connection")
   expect_equal(captured$version_connection, "source-connection")
+  expect_equal(captured$content_type_connection, "source-connection")
   expect_equal(captured$target_schema, "db_log")
   expect_equal(captured$temporary_source_connection, "source-connection")
   expect_equal(captured$stream_connections, c("source-connection", "target-connection"))
@@ -225,9 +236,11 @@ test_that("Broad Consent database workflow materializes and publishes its plan",
   expect_equal(captured$view_connection, "target-connection")
   expect_equal(captured$version_view_connection, "target-connection")
   expect_equal(captured$release_version, "2.1.0")
+  expect_equal(captured$database_content_type, "pseudonymized_snapshot")
   expect_equal(result$materialization_plan, plan)
   expect_equal(result$summary, summary)
   expect_equal(result$release_version, "2.1.0")
+  expect_equal(result$database_content_type, "pseudonymized_snapshot")
   expect_equal(
     result$view_summary,
     data.table::rbindlist(list(view_summary, version_summary))

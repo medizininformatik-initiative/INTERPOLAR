@@ -48,6 +48,44 @@ test_that("getSnapshotReleaseVersion rejects missing or empty versions", {
   expect_error(getSnapshotReleaseVersion(DBI::ANSI()), "must not be empty")
 })
 
+test_that("getSnapshotDatabaseContentType preserves an optional source marker", {
+  content_type_rows <- data.frame(parameter_value = "pseudonymized_snapshot")
+  captured_statement <- NULL
+  testthat::local_mocked_bindings(
+    dbGetQuery = function(connection, statement) {
+      captured_statement <<- statement
+      content_type_rows
+    },
+    .package = "DBI"
+  )
+
+  expect_equal(
+    getSnapshotDatabaseContentType(DBI::ANSI(), "db2dataprocessor_out"),
+    "pseudonymized_snapshot"
+  )
+  expect_match(
+    captured_statement,
+    'FROM "db2dataprocessor_out"."v_db_parameter"',
+    fixed = TRUE
+  )
+
+  content_type_rows <- data.frame(parameter_value = character())
+  expect_null(getSnapshotDatabaseContentType(DBI::ANSI()))
+})
+
+test_that("getSnapshotDatabaseContentType rejects invalid source markers", {
+  content_type_rows <- data.frame(parameter_value = c("first", "second"))
+  testthat::local_mocked_bindings(
+    dbGetQuery = function(connection, statement) content_type_rows,
+    .package = "DBI"
+  )
+
+  expect_error(getSnapshotDatabaseContentType(DBI::ANSI()), "at most one")
+
+  content_type_rows <- data.frame(parameter_value = "")
+  expect_error(getSnapshotDatabaseContentType(DBI::ANSI()), "must not be empty")
+})
+
 test_that("createSnapshotVersionView publishes the source release version", {
   statements <- character()
   testthat::local_mocked_bindings(
