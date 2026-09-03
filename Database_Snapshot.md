@@ -202,14 +202,19 @@ werden genauso als Snapshot-Datenbank aktiviert:
 Der Befehl löscht nur die aktivierte Snapshot-Datenbank. Die Snapshot-Datei
 bleibt erhalten.
 
-### Snapshot-Datei und Snapshot-Datenbank löschen
+### Snapshot-Datei löschen
 
 ```bash
 ./ip-snapshot.sh delete snap01_20251002
 ```
 
-Der Befehl löscht die Snapshot-Datei und eine gegebenenfalls vorhandene,
-gleichnamige Snapshot-Datenbank.
+Der Befehl löscht ausschließlich die Snapshot-Datei. Eine gegebenenfalls
+aktivierte Snapshot-Datenbank bleibt erhalten und muss separat mit `deactivate`
+entfernt werden.
+
+`delete` erwartet den in der Dateiliste ausgegebenen Namen ohne die Erweiterung
+`.sql.gz`. Das Präfix `ip_` gehört nur zum Datenbanknamen und darf hier nicht
+angegeben werden.
 
 ## Ablauf bis zur Prüfung
 

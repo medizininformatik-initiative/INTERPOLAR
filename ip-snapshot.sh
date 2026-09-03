@@ -29,7 +29,8 @@ Usage: ${0##*/} <action> <name>
              "pseudonymize" – creates a pseudonymized snapshot <name_date>_pseud.sql.gz
              "create-broad-consent"
                            – creates a Broad Consent snapshot from an activated snapshot database
-             "delete"      – deletes a snapshot <name_date>.sql.gz
+             "delete"      – deletes only a snapshot file <name_date>.sql.gz;
+                              expects the file name without the database prefix "ip_"
              "activate"    – activates a snapshot <name_date>.sql.gz by creating a database for it
              "deactivate"  – deactivates a snapshot database; accepts <name_date> and the
                               ip_<name_date> name printed by "list"
@@ -790,6 +791,13 @@ case "$action" in
         # 1. Existenz‑ und Typ‑Prüfung
         # ------------------------------------------------------------
         if [[ ! -f "$file_path" ]]; then
+            if [[ "$name" == ip_* ]]; then
+                snapshot_file_name="${name#ip_}"
+                echo "Error: \"${name}\" is a snapshot database name, not a snapshot file name." >&2
+                echo "The \"delete\" action only deletes snapshot files and expects the name without the \"ip_\" prefix." >&2
+                echo "To delete the snapshot file, run: $0 delete ${snapshot_file_name}" >&2
+                exit 1
+            fi
             echo "Error: snapshot \"$file\" does not exist or is not a regular file."
             # kein exit – das Skript läuft weiter
             # break
