@@ -313,6 +313,12 @@ starten manuelle Projekte nur auf pseudonymisierten Snapshot-Datenbanken, die in
 sind. Eine andere kompatible Datenbank, zum Beispiel ein normaler Snapshot oder
 die Originaldatenbank, kann nur bewusst mit `--force` verwendet werden.
 
+Die Versionsprüfung blockiert manuelle Auswertungen nicht, wenn der ausgewählte
+Snapshot älter als die verwendete INTERPOLAR-Version ist. Stattdessen wird der
+Versionsunterschied als Warnung protokolliert. Neuere Datenbankversionen bleiben
+gesperrt. Ob eine konkrete Auswertung mit dem älteren Schema kompatibel ist,
+ergibt sich aus den von ihr tatsächlich benötigten Views und Spalten.
+
 ### Inhalt der pseudonymisierten Snapshot-Datei und Snapshot-Datenbank
 
 Die pseudonymisierte Snapshot-Datei und die pseudonymisierte Snapshot-Datenbank

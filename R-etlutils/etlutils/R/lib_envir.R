@@ -750,7 +750,8 @@ getReleaseVersion <- function() {
 #' version expected by the R project and enforces compatibility rules.
 #'
 #' If the database version is older than the release version, execution is
-#' stopped and the user is instructed to run the required database migrations.
+#' stopped and the user is instructed to run the required database migrations,
+#' unless historical database analysis was explicitly enabled by the caller.
 #'
 #' If the database version is newer than the release version, execution is
 #' stopped unless explicitly allowed. Allowing newer database versions is
@@ -764,23 +765,40 @@ getReleaseVersion <- function() {
 #'   version. If \code{FALSE}, execution is stopped and the user is instructed
 #'   to explicitly force the run. If \code{TRUE}, newer database versions are
 #'   accepted.
+#' @param allow_older_db_version Logical flag indicating whether execution
+#'   should continue with a warning when the database version is older than the
+#'   release version. This is intended for analyses of historical snapshots.
+#'   Default is \code{FALSE}.
 #'
 #' @return Invisibly returns \code{NULL}. This function is called for its side
 #'   effects and will stop execution with an error if version compatibility
 #'   requirements are not met.
 #'
 #' @export
-checkVersion <- function(ignore_newer_db_version) {
+checkVersion <- function(ignore_newer_db_version, allow_older_db_version = FALSE) {
   if (!isDefinedAndTrue("VERSION_ALREADY_CHECKED", .lib_envir_env)) {
     db_version <- dbGetVersion()
     # read the first line of the release-version.txt file in the main directory
     release_version <- getReleaseVersion()
     compare_result <- compareVersionsSemver(db_version, release_version)
-    if (compare_result < 0L) { # DB is older than release version -> stop execution
-      stop(paste0(
-        "The database version '", db_version, "' is older than the release version '", release_version, "'. Please update the database via migration.\n",
-        "  See https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."
-      ))
+    if (compare_result < 0L) { # DB is older than release version
+      version_message <- paste0(
+        "The database version '", db_version,
+        "' is older than the release version '", release_version, "'."
+      )
+      if (allow_older_db_version) {
+        warning(
+          version_message,
+          " Continuing with the manual analysis of this historical database.",
+          call. = FALSE
+        )
+      } else {
+        stop(paste0(
+          version_message,
+          " Please update the database via migration.\n",
+          "  See https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."
+        ))
+      }
     } else if (compare_result > 0L) { # DB is newer than release version -> allow force run
       if (!ignore_newer_db_version) {
         stop(paste0(
