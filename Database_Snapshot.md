@@ -280,6 +280,13 @@ Versionsprüfung benötigte View `db2dataprocessor_out.v_db_parameter`. Sie stel
 die `release_version` der jeweiligen Quelldatenbank bereit, ohne die übrige
 Datenbankkonfiguration in den Snapshot zu kopieren.
 
+Bei der Erzeugung eines Broad-Consent-Snapshots wird außerdem ein vorhandener
+`database_content_type` unverändert aus der Quelldatenbank übernommen. Fehlt
+dieser Marker in der Quelle, wird für das Ziel kein Inhaltstyp angenommen oder
+aus dem Datenbanknamen abgeleitet. Ein aus einem markierten pseudonymisierten
+Snapshot erzeugter Broad-Consent-Snapshot kann deshalb ohne `--force` für
+manuelle Data-Processor-Projekte verwendet werden.
+
 Die gemeinsame Datenbankbibliothek prüft beim ersten Zugriff, ob die ausgewählte
 Datenbank schreibgeschützt ist und ob mindestens eine der für die
 INTERPOLAR-Transfersteuerung typischen Datenbankfunktionen vorhanden ist. Nur

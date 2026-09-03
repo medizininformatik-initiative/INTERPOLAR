@@ -247,9 +247,13 @@ createBroadConsentSnapshotDatabase <- function(
 
   result <- list()
   runPseudonymizationLogStep(2L,
-    "Read source database release version",
+    "Read source database metadata",
     {
       result[["release_version"]] <- getSnapshotReleaseVersion(
+        source_connection,
+        source_schema = source_schema
+      )
+      result[["database_content_type"]] <- getSnapshotDatabaseContentType(
         source_connection,
         source_schema = source_schema
       )
@@ -325,7 +329,8 @@ createBroadConsentSnapshotDatabase <- function(
       version_summary <- createSnapshotVersionView(
         target_connection,
         release_version = result[["release_version"]],
-        view_schema = target_view_schema
+        view_schema = target_view_schema,
+        database_content_type = result[["database_content_type"]]
       )
       result[["view_summary"]] <- data.table::rbindlist(list(
         passthrough_summary,
