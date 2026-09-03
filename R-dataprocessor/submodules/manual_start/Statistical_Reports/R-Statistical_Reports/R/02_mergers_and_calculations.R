@@ -742,7 +742,7 @@ calculateAge <- function(merged_table_with_MainEncPeriodStart,
   # use this directly instead of calculating it from birthdate and main_enc_period_start
   if (!is.na(age_at_admission) && age_at_admission %in% columns) {
     merged_table_with_age <- merged_table_with_MainEncPeriodStart |>
-      dplyr::mutate(age_at_hospitalization = {{ age_at_admission }}) |>
+      dplyr::mutate(age_at_hospitalization = !!dplyr::sym(age_at_admission)) |>
       dplyr::relocate(age_at_hospitalization, .after = {{ pat_birthdate }}) |>
       dplyr::select(-{{ pat_birthdate }}) |>
       dplyr::distinct()
