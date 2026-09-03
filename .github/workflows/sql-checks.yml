@@ -20,7 +20,7 @@ jobs:
       generated: ${{ steps.sql-checks.outputs.generated }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -62,7 +62,7 @@ jobs:
     if: needs.changes.outputs.format == 'true'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install system dependencies
         run: |
@@ -81,7 +81,7 @@ jobs:
     if: needs.changes.outputs.generated == 'true'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Restore successful generated SQL check
         id: generated-sql-cache
