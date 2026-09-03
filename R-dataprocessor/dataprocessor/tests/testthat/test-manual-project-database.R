@@ -96,6 +96,47 @@ test_that("project database selection precedes module startup", {
   expect_equal(result, config)
 })
 
+test_that("only manual processing allows an older database version", {
+  called_manual_dirs <- "/manual_start/Statistical_Reports"
+  version_checks <- list()
+  testthat::local_mocked_bindings(
+    startDataprocessorModule = function(...) list(),
+    getCalledManualStartSubmoduleDirs = function(...) called_manual_dirs,
+    sourceDataprocessorSubmodules = function(
+                                             ignore_newer_db_version,
+                                             source_submodule_functions = FALSE,
+                                             allow_older_db_version = FALSE
+    ) {
+      version_checks[[length(version_checks) + 1L]] <<- list(
+        ignore_newer_db_version = ignore_newer_db_version,
+        allow_older_db_version = allow_older_db_version
+      )
+    },
+    runSubmodules = function(...) NULL,
+    .package = "dataprocessor"
+  )
+  testthat::local_mocked_bindings(
+    runLevel1 = function(description, code) force(code),
+    runLevel2 = function(description, code) force(code),
+    dbCloseAllConnections = function() NULL,
+    generateFinishMessage = function() "finished",
+    finalize = function(...) 0L,
+    .package = "etlutils"
+  )
+
+  expect_equal(
+    processData(command_line_args = "statistical-reports"),
+    0L
+  )
+  called_manual_dirs <- character()
+  expect_equal(processData(command_line_args = character()), 0L)
+
+  expect_false(version_checks[[1]]$ignore_newer_db_version)
+  expect_true(version_checks[[1]]$allow_older_db_version)
+  expect_false(version_checks[[2]]$ignore_newer_db_version)
+  expect_false(version_checks[[2]]$allow_older_db_version)
+})
+
 test_that("manual projects inherit the normal connection and select DB_NAME", {
   test_dir <- file.path(tempdir(), "manual-project-config")
   project_dir <- file.path(test_dir, "WP8_export")

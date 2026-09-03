@@ -145,10 +145,14 @@ startDataprocessorModule <- function(
 }
 
 sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
-                                          source_submodule_functions = FALSE) {
+                                          source_submodule_functions = FALSE,
+                                          allow_older_db_version = FALSE) {
   etlutils::runLevel2("Reset database lock from unfinished previous run", {
     etlutils::dbResetLock()
-    etlutils::checkVersion(ignore_newer_db_version)
+    etlutils::checkVersion(
+      ignore_newer_db_version,
+      allow_older_db_version = allow_older_db_version
+    )
   })
 
   if (source_submodule_functions) {
@@ -179,9 +183,13 @@ processData <- function(
 ) {
   # Initialize and start module
   startDataprocessorModule(validate_config, command_line_args)
+  manual_start <- length(getCalledManualStartSubmoduleDirs(command_line_args)) > 0L
 
   try(etlutils::runLevel1("Run Dataprocessor", {
-    sourceDataprocessorSubmodules(ignore_newer_db_version)
+    sourceDataprocessorSubmodules(
+      ignore_newer_db_version,
+      allow_older_db_version = manual_start
+    )
 
     etlutils::runLevel2("Run dataprocessor submodules", {
       runSubmodules(command_line_args)

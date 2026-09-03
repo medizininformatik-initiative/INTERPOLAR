@@ -33,6 +33,13 @@ beabsichtigt, muss zusätzlich `--force` übergeben werden. Beispiel:
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R mrp-check --force
 ```
 
+Bei manuellen Projekten darf die in `v_db_parameter` gespeicherte
+Datenbankversion älter als die verwendete INTERPOLAR-Version sein. Der Lauf wird
+dann mit einer Warnung fortgesetzt, damit historische Snapshots auswertbar
+bleiben. Eine neuere Datenbankversion wird weiterhin abgelehnt. Fehlen einer
+Auswertung benötigte Views oder Spalten, meldet die konkrete Datenbankabfrage
+die strukturelle Inkompatibilität.
+
 ### Anpassung der Codes für Körpergröße, -gewicht und BMI
 
 Im Abschnitt "analyse" in der toml-Datei können die auf dem FHIR-Server verfügbaren Codes und Codesysteme für Körpergröße, -gewicht und BMI eingestellt werden. Es werden nur Observationen gefunden, die genau diese Codes enthalten.
