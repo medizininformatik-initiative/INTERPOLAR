@@ -100,6 +100,13 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
   return(newName)
 }
 
+getMaxDirCount <- function() {
+  if (isDefinedAndNotEmpty("MAX_DIR_COUNT", envir = .GlobalEnv)) {
+    return(as.integer(get("MAX_DIR_COUNT", envir = .GlobalEnv)))
+  }
+  5L
+}
+
 #'
 #' This function is used by the framework itself
 #'
@@ -109,8 +116,9 @@ renameWithCreationTimeIfDirExists <- function(dir, MAX_DIR_COUNT = NA, timeStamp
 #' @export
 createDIRS <- function(module_name, showWarnings = FALSE) {
   module_dirs <- getModuleDirNames(module_name)
-  module_dirs$last_global_dir <- renameWithCreationTimeIfDirExists(module_dirs$global_dir, MAX_DIR_COUNT)
-  module_dirs$last_local_dir <- renameWithCreationTimeIfDirExists(module_dirs$local_dir, MAX_DIR_COUNT)
+  max_dir_count <- getMaxDirCount()
+  module_dirs$last_global_dir <- renameWithCreationTimeIfDirExists(module_dirs$global_dir, max_dir_count)
+  module_dirs$last_local_dir <- renameWithCreationTimeIfDirExists(module_dirs$local_dir, max_dir_count)
   for (dir_name in module_dirs$global_results_dir_names) {
     dir.create(paste0(module_dirs$global_dir, "/", dir_name), recursive = TRUE, showWarnings = showWarnings)
   }
@@ -121,8 +129,14 @@ createDIRS <- function(module_name, showWarnings = FALSE) {
 
   # copy the cache from last run to current run
   cache_dir_name <- paste0(module_dirs$local_dir, "/", module_dirs$local_cache_dir_name)
-  old_cache_dir_name <- paste0(module_dirs$last_local_dir, "/", module_dirs$local_cache_dir_name)
-  if (!file.rename(old_cache_dir_name, cache_dir_name)) {
+  cache_moved <- FALSE
+  if (!is.na(module_dirs$last_local_dir)) {
+    old_cache_dir_name <- paste0(module_dirs$last_local_dir, "/", module_dirs$local_cache_dir_name)
+    if (dir.exists(old_cache_dir_name)) {
+      cache_moved <- file.rename(old_cache_dir_name, cache_dir_name)
+    }
+  }
+  if (!cache_moved) {
     dir.create(cache_dir_name, recursive = TRUE, showWarnings = showWarnings)
   }
   return(module_dirs)
@@ -210,13 +224,13 @@ readFile <- function(full_file_name_with_path) {
     # operation and throw a warning. Therefore it is recommended to call
     # setalloccol() on each data.table loaded with readRDS() or load() calls.
     rds_content <- readRDS(full_file_name_with_path)
-    if ('data.table' %in% class(rds_content)) {
+    if ("data.table" %in% class(rds_content)) {
       invisible(data.table::setalloccol(rds_content))
     }
     rds_content
   } else if (endsWith(full_file_name_with_path, ".rRata")) {
     load(fileName)
-    #} else if (endsWith(full_file_name_with_path, ".???")) {
+    # } else if (endsWith(full_file_name_with_path, ".???")) {
     # TODO
   } else {
     readFileAsString(full_file_name_with_path)
@@ -245,7 +259,7 @@ writeExcelFileInternal <- function(target = c("local", "global"), tables, filena
   if (!dir.exists(module_sub_dir)) {
     dir.create(module_sub_dir, recursive = TRUE)
   }
-  file_name <- fhircrackr::pastep(module_sub_dir, filename_without_extension, ext = '.xlsx')
+  file_name <- fhircrackr::pastep(module_sub_dir, filename_without_extension, ext = ".xlsx")
   writeExcelFile(tables, file_name, with_column_names)
 }
 
@@ -336,7 +350,8 @@ buildHtmlTable <- function(table, caption = NA, footnote = "", colnames = NULL,
   if (is.null(colnames)) {
     colnames <- colnames(table)
   }
-  tbl <- DT::datatable(table,
+  tbl <- DT::datatable(
+    table,
     caption = caption,
     escape = FALSE,
     colnames = colnames,
@@ -519,6 +534,104 @@ getFilesByPattern <- function(paths, pattern, recursive = FALSE) {
 
   # Remove duplicates and return the result
   return(unique(matching_files))
+}
+
+#' Get the Input Repository Root
+#'
+#' Walks upwards from a configured input path to the enclosing `Input-Repo`
+#' directory. Both `Input-Repo/...` and `./Input-Repo/...` are supported.
+#'
+#' @param input_repo_path Configured input repository directory.
+#'
+#' @return The normalized absolute path to the enclosing `Input-Repo`.
+#' @export
+getInputRepoRootPath <- function(input_repo_path) {
+  if (
+    is.null(input_repo_path) || length(input_repo_path) != 1L ||
+    is.na(input_repo_path) || !nzchar(input_repo_path)
+  ) {
+    stop("input_repo_path must contain exactly one non-empty path.")
+  }
+
+  current_path <- normalizePath(input_repo_path, winslash = "/", mustWork = FALSE)
+  repeat {
+    if (identical(basename(current_path), "Input-Repo")) {
+      return(current_path)
+    }
+    parent_path <- dirname(current_path)
+    if (identical(parent_path, current_path)) {
+      stop(
+        "Configured input repository path is not located within an Input-Repo directory: ",
+        input_repo_path
+      )
+    }
+    current_path <- parent_path
+  }
+}
+
+#' Find a Unique Path within the Input Repository
+#'
+#' Searches recursively in the configured directory first. If the requested
+#' file or directory is not found, the search continues one directory higher,
+#' stopping after the enclosing `Input-Repo` directory. The first search level
+#' containing exactly one match is used. Ambiguous matches are rejected.
+#'
+#' @param input_repo_path Configured input repository directory.
+#' @param name Exact file or directory name to find.
+#' @param type Whether to find a `"file"` or `"directory"`.
+#' @param required Whether to fail when no matching path exists. If `FALSE`,
+#'   `NA_character_` is returned for no match. Ambiguous matches always fail.
+#'
+#' @return The normalized absolute path to the unique match.
+#' @export
+findUniqueInputRepoPath <- function(
+  input_repo_path,
+  name,
+  type = c("file", "directory"),
+  required = TRUE
+) {
+  type <- match.arg(type)
+  if (length(required) != 1L || is.na(required)) {
+    stop("required must contain exactly one non-missing logical value.")
+  }
+  if (!dir.exists(input_repo_path)) {
+    stop("Configured input repository path does not exist: ", input_repo_path)
+  }
+  if (length(name) != 1L || is.na(name) || !nzchar(name) || basename(name) != name) {
+    stop("name must contain exactly one file or directory name without a path.")
+  }
+
+  input_repo_root <- getInputRepoRootPath(input_repo_path)
+  search_path <- normalizePath(input_repo_path, winslash = "/", mustWork = TRUE)
+  repeat {
+    candidates <- if (identical(type, "directory")) {
+      c(search_path, list.dirs(search_path, recursive = TRUE, full.names = TRUE))
+    } else {
+      list.files(search_path, recursive = TRUE, full.names = TRUE)
+    }
+    candidates <- unique(candidates[basename(candidates) == name])
+    if (length(candidates) == 1L) {
+      return(normalizePath(candidates, winslash = "/", mustWork = TRUE))
+    }
+    if (length(candidates) > 1L) {
+      stop(
+        "Multiple input repository paths named '", name, "' were found below ",
+        search_path, ":\n", paste0("- ", sort(candidates), collapse = "\n")
+      )
+    }
+    if (identical(search_path, input_repo_root)) {
+      break
+    }
+    search_path <- dirname(search_path)
+  }
+
+  if (isTRUE(required)) {
+    stop(
+      "No input repository ", type, " named '", name,
+      "' was found between ", input_repo_path, " and ", input_repo_root, "."
+    )
+  }
+  NA_character_
 }
 
 #' Get Full List of Excel Files

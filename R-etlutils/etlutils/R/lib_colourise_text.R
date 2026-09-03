@@ -13,7 +13,7 @@ createAnsiEscape <- function(code) {
 #'
 #' @export
 checkRcmdRunning <- function() {
-  nchar(Sys.getenv('R_TESTS')) != 0
+  nchar(Sys.getenv("R_TESTS")) != 0
 }
 
 #' Colourise text for display in the terminal.
@@ -68,7 +68,7 @@ colourise <- function(text, fg = "dark gray", bg = NULL) {
   term <- Sys.getenv()["TERM"]
 
   # allowed terminal types
-  colour_terms <- c("xterm-color","xterm-256color", "screen", "screen-256color")
+  colour_terms <- c("xterm-color", "xterm-256color", "screen", "screen-256color")
 
   # if there are running programs or terminal type is unknown, return unchanged text
   if (checkRcmdRunning() || !any(term %in% colour_terms, na.rm = TRUE)) {
@@ -237,9 +237,9 @@ catInfoMessage <- function(msg, bg = NULL) {
 #'
 #' @return A styled string.
 #' @export
-formatStringStyle <- function( #old name str.
+formatStringStyle <- function( # old name str.
   ...,
-  sep        = '',
+  sep        = "",
   fg         = NULL,
   bg         = NULL,
   bold       = FALSE,
@@ -271,27 +271,27 @@ formatStringStyle <- function( #old name str.
 
   # map arguments to its codes and paste them separated by a ;
   codes <- paste0(
-    c(       1,      3,         4,         5,          6,      7,          9)[
+    c(1,      3,         4,         5,          6,      7,          9)[
       c(bold, italic, underline, slowblink, rapidblink, invert, strike_out)
     ],
-    collapse = ';'
+    collapse = ";"
   )
 
   # if all arguments were FALSE set codes to NULL
-  if (codes == '') codes <- NULL
+  if (codes == "") codes <- NULL
 
   # create color codes
-  colors <- paste(c(30 + fg, 40 + bg), collapse = ';')
+  colors <- paste(c(30 + fg, 40 + bg), collapse = ";")
 
   # if no colors present, return NULL
-  if (colors == '') colors <- NULL
+  if (colors == "") colors <- NULL
 
   # collect codes and colors
-  codes <- paste0(c(codes, colors), collapse = ';')
+  codes <- paste0(c(codes, colors), collapse = ";")
 
   # only paste the strings, if no codes given, otherwise paste the strings and surround them with ansi-codes
   if (length(codes)) {
-    paste0('\033[', codes, 'm', paste(strings, collapse = sep), '\033[0m')
+    paste0("\033[", codes, "m", paste(strings, collapse = sep), "\033[0m")
   } else {
     paste(strings, collapse = sep)
   }

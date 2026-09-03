@@ -1,8 +1,13 @@
 # CDS-HUB DB (cds_hub_db)
 
-Die Datenbank "cds_hub_db" wird mit SQL-Scripten im Ordner "Postgres-cds_hub/init/" beim ersten Start (docker compose up) initialisiert. Die Daten werden in einem Volume "cds_hub_db-data" gespeichert.
+Die Datenbank "cds_hub_db" wird mit SQL-Skripten aus
+`Postgres-cds_hub/sql/` initialisiert bzw. migriert. Diese SQL-Skripte liegen
+versioniert im Repository und werden in der CI gegen den Generatoroutput geprüft.
+Die Daten werden in einem Volume "cds_hub_db-data" gespeichert.
 
 Eine detaillierte Beschreibung der Datenbankstruktur befindet sich in [DB_description.md](DB_description.md).
+Hinweise zur Pflege, Formatierung und Generierung der SQL-Skripte stehen in
+[SQL_development.md](SQL_development.md).
 
 ## Verbindung: Console
 

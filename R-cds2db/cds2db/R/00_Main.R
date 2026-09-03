@@ -23,12 +23,17 @@ getModuleName <- function() {
 init <- function(validate_config = TRUE) {
   # Initialize and start module if init_constants_only == FALSE
   config <- etlutils::initModule(getModuleName(),
-                       path_to_toml = "./R-cds2db/cds2db_config.toml",
-                       mandatory_parameters = c(
-                         "FHIR_SERVER_ENDPOINT",
-                         "ENCOUNTER_FILTER_PATTERN",
-                         "PATH_TO_DB_CONFIG_TOML"
-                       )
+    path_to_toml = "./R-cds2db/cds2db_config.toml",
+    defaults = list(
+      VERBOSE = 10,
+      MAX_DIR_COUNT = 5,
+      COMMON_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+    ),
+    mandatory_parameters = c(
+      "FHIR_SERVER_ENDPOINT",
+      "ENCOUNTER_FILTER_PATTERN",
+      "PATH_TO_DB_CONFIG_TOML"
+    )
   )
   if (validate_config) {
     validateConfig()
@@ -85,13 +90,20 @@ deleteNextCacheFile <- function() {
 #' which encounters belong to phase A and which do not, based on their start time and the ward
 #' they took place in.
 #' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
+#' than the release version. Default is FALSE and will stop if the database is newer.
 #' @param validate_config Logical. If TRUE, validates the module configuration before starting
 #'                        the retrieval process. Default is TRUE.
-#' than the release version. Default is FALSE and will stop if the database version is newer.
+#' @param pids_splitted_by_ward Optional named list of data tables with `patient_id` and
+#' `encounter_id` columns. If supplied, these cases are processed instead of retrieving the
+#' current cases from the FHIR server.
 #'
 #' @export
-retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, validate_config = TRUE) {
-
+retrieve <- function(
+  phase_a_starts = NULL,
+  ignore_newer_db_version = FALSE,
+  validate_config = TRUE,
+  pids_splitted_by_ward = NULL
+) {
   # Initialize and start module
   config <- init(validate_config)
   etlutils::startModule(config, hide_value_pattern = "^FHIR_(?!SEARCH_).+|^DATA_IMPORT_FHIR_PIDS$")
@@ -100,7 +112,6 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
   retrieve_runlevel_message <- if (isProcess("DataImport")) "Run Data Import Retrieve" else "Run Retrieve"
   try(etlutils::runLevel1(retrieve_runlevel_message, {
-
     if (!skip_db_operations) {
       # Reset database lock from unfinished previous cds2db run
       etlutils::runLevel2("Reset database lock from unfinished previous run", {
@@ -110,7 +121,6 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
       })
       # Check if we must create references for old data (should be executed exactly once and then never again)
       etlutils::runLevel2("Create references for old data", {
-
         debug_active <- etlutils::isDefinedAndTrue("DEBUG_RECALCULATE_INVALID_REFS") || etlutils::isDefinedAndNotEmpty("DEBUG_RECALCULATE_REFS_FOR_RESOURCES")
 
         if (mustCreateReferencesForOldData() || debug_active) {
@@ -124,7 +134,10 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
     # Extract Patient IDs
     etlutils::runLevel2("Extract Patient IDs", {
-      if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
+      if (!is.null(pids_splitted_by_ward)) {
+        cat("Use supplied Patient and Encounter IDs for recovery run:\n")
+        print(pids_splitted_by_ward)
+      } else if (etlutils::isSubProcess("DataImport.ResourceTypes")) {
         pids_splitted_by_ward <- getDataImportPIDsFromDB()
       } else if (etlutils::isSubProcess("DataImport.All")) {
         if (!etlutils::hasNextCacheFile()) {
@@ -172,7 +185,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
           etlutils::dbWriteTables(
             tables = resource_tables,
             lock_id = "Write RAW tables to database",
-            stop_if_table_not_empty = TRUE)
+            stop_if_table_not_empty = TRUE
+          )
         })
       } else if (etlutils::isSubProcess("DataImport.All") || !isProcess("DataImport")) {
         # Write pids_per_ward table to database
@@ -180,7 +194,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
           etlutils::dbWriteTables(
             tables = list(pids_per_ward_raw = resource_tables$pids_per_ward_raw),
             lock_id = "Write pids_per_ward table to database",
-            stop_if_table_not_empty = TRUE)
+            stop_if_table_not_empty = TRUE
+          )
         })
       } else {
         etlutils::catWarningMessage("No FHIR resources found for resource type data import.")
@@ -207,7 +222,8 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
         resource_tables_raw_diff <- etlutils::dbReadTables(
           table_names = all_table_names_raw_diff,
-          lock_id = "Load untyped RAW tables from database")
+          lock_id = "Load untyped RAW tables from database"
+        )
 
         all_empty_raw <- all(sapply(resource_tables_raw_diff, function(dt) nrow(dt) == 0))
         if (all_empty_raw) {
@@ -217,7 +233,6 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
       })
 
       if (!all_empty_raw) {
-
         etlutils::runLevel2("Convert RAW tables to typed tables", {
           fhir_table_descriptions <- extractTableDescriptionsList(fhir_table_descriptions)
           resource_tables <- convertTypes(resource_tables_raw_diff, fhir_table_descriptions)
@@ -231,12 +246,11 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
           etlutils::dbWriteTables(
             tables = resource_tables,
             lock_id = "Write typed tables to database",
-            stop_if_table_not_empty = TRUE)
+            stop_if_table_not_empty = TRUE
+          )
         })
-
       }
     }
-
   }))
 
   # Reset lock and close all database connections. Do not surround this with runLevelX!
@@ -244,10 +258,12 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
 
   # Generate finish message
   finish_message <- etlutils::generateFinishMessage()
-  if (!etlutils::isErrorOccured() &&
+  if (
+    !etlutils::isErrorOccured() &&
       (etlutils::isDefinedAndTrue("all_wards_empty") ||
-       etlutils::isDefinedAndTrue("all_empty_fhir") ||
-       etlutils::isDefinedAndTrue("all_empty_raw"))) {
+        etlutils::isDefinedAndTrue("all_empty_fhir") ||
+        etlutils::isDefinedAndTrue("all_empty_raw"))
+  ) {
     finish_message <- paste0(
       "\nModule '", etlutils::getModuleName(), "' finished with no errors but the result was empty (see warnings above).\n"
     )
@@ -257,5 +273,4 @@ retrieve <- function(phase_a_starts = NULL, ignore_newer_db_version = FALSE, val
   finish_message <- etlutils::appendDebugWarning(finish_message)
 
   return(etlutils::finalize(finish_message))
-
 }

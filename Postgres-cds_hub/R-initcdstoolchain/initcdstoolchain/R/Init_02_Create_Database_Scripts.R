@@ -1,26 +1,80 @@
 # This is used to set whether the column widths specified in the TableDefinition Excel file are to
 # be taken into account (FALSE) or ignored (TRUE) when generating the database scripts.
-IGNORE_DEFINED_COLUMN_WIDTHS = TRUE
+IGNORE_DEFINED_COLUMN_WIDTHS <- TRUE
 
 # The fhircrackr places the indices before each value in brackets, indicating where in the
 # structure of the resource a column value was located. In addition, a separator is inserted between
 # the list values (in our case length 3). The memory requirement for these indices and the separator
 # should not exceed 15 and must be added to each single_length in the RAW tables.
-RAW_DATA_FHIR_CRACKR_INDICES_STRING_WIDTH = 15
+RAW_DATA_FHIR_CRACKR_INDICES_STRING_WIDTH <- 15
 
 ######################################################
 # Static Definitions of Paths, File- and Columnnames #
 ######################################################
 
-getDBScriptsTargetDir <- function() "./Postgres-cds_hub/sql/"
-getTemplateDir <- function() paste0(getDBScriptsTargetDir(), "template/")
+ensureTrailingSlash <- function(path) {
+  if (!endsWith(path, "/")) path <- paste0(path, "/")
+  path
+}
+
+findProjectRoot <- function(start_dir = getwd()) {
+  current_dir <- normalizePath(start_dir, mustWork = TRUE)
+  marker <- file.path("Postgres-cds_hub", "sql", "template", "User_Schema_Rights_Definition.xlsx")
+  repeat {
+    if (file.exists(file.path(current_dir, marker))) {
+      return(current_dir)
+    }
+    parent_dir <- dirname(current_dir)
+    if (identical(parent_dir, current_dir)) {
+      stop(
+        "Could not find project root containing '", marker, "'. ",
+        "Set INTERPOLAR_PROJECT_ROOT explicitly."
+      )
+    }
+    current_dir <- parent_dir
+  }
+}
+
+getProjectRoot <- function() {
+  configured_root <- Sys.getenv("INTERPOLAR_PROJECT_ROOT", unset = "")
+  if (nzchar(configured_root)) {
+    return(normalizePath(configured_root, mustWork = TRUE))
+  }
+  findProjectRoot()
+}
+
+getDBScriptsSourceDir <- function() {
+  configured_dir <- Sys.getenv("INTERPOLAR_DB_SQL_SOURCE_DIR", unset = "")
+  if (nzchar(configured_dir)) {
+    return(ensureTrailingSlash(normalizePath(configured_dir, mustWork = TRUE)))
+  }
+  ensureTrailingSlash(file.path(getProjectRoot(), "Postgres-cds_hub", "sql"))
+}
+
+getDBScriptsTargetDir <- function() {
+  configured_dir <- Sys.getenv("INTERPOLAR_DB_SQL_TARGET_DIR", unset = "")
+  if (nzchar(configured_dir)) {
+    return(ensureTrailingSlash(normalizePath(configured_dir, mustWork = FALSE)))
+  }
+  getDBScriptsSourceDir()
+}
+
+getProjectRelativePath <- function(path) {
+  normalized_path <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  project_root <- ensureTrailingSlash(normalizePath(getProjectRoot(), winslash = "/", mustWork = TRUE))
+  if (startsWith(normalized_path, project_root)) {
+    return(substring(normalized_path, nchar(project_root) + 1))
+  }
+  normalized_path
+}
+
+getTemplateDir <- function() paste0(getDBScriptsSourceDir(), "template/")
 getRightsDefinitionDirName <- function() getTemplateDir()
 getRightsDefinitionFileName <- function() paste0(getRightsDefinitionDirName(), "User_Schema_Rights_Definition.xlsx")
 getRightsDefinitionSheetName <- function() "rights_and_functions"
 getConvertDefinitionSheetName <- function() "table_description_convert_def"
 
 isContentChanged <- function(existing_file_path, new_file_content) {
-
   # Check if file exists
   if (!file.exists(existing_file_path)) return(TRUE)
 
@@ -30,8 +84,12 @@ isContentChanged <- function(existing_file_path, new_file_content) {
   # Split new content into lines
   new_lines <- strsplit(new_file_content, "\n", fixed = TRUE)[[1]]
 
-  # Define patterns of lines to ignore (last pattern is for empty lines)
-  drop_patterns <- c("Rights definition", "Create time", "^\\s*$")
+  # Define volatile generated header lines to ignore.
+  drop_patterns <- c(
+    "^-- Rights definition file last update :",
+    "^-- Rights definition file size        :",
+    "^-- Create time:"
+  )
 
   # Function to remove lines containing any of the drop patterns
   cleanLines <- function(lines) {
@@ -49,6 +107,7 @@ isContentChanged <- function(existing_file_path, new_file_content) {
 writeResultFile <- function(scriptname, content) {
   content <- gsub("\r\n", "\n", content, fixed = TRUE)
   path <- paste0(getDBScriptsTargetDir(), scriptname)
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   changed <- isContentChanged(path, content)
   if (changed) {
     writeLines(content, path, useBytes = TRUE, sep = "\n")
@@ -81,7 +140,7 @@ getCommonPrefix <- function(strings) {
 extractBetweenQuotes <- function(string) {
   match <- regmatches(string, regexpr('"([^"]*)"', string))
   if (length(match) > 0) {
-    return(sub('"', '', sub('"$', '', match)))
+    return(sub('"', "", sub('"$', "", match)))
   } else {
     return(NA_character_)
   }
@@ -114,8 +173,11 @@ extractBetweenQuotes <- function(string) {
 #'
 #' @export
 removePlaceholderLines <- function(input_string, placeholder) {
-
   placeholder_escaped <- etlutils::getEscaped(placeholder)
+
+  # Remove multiline placeholders first when the placeholder occupies full lines.
+  multiline_placeholder_pattern <- paste0("(?m)^[ \t]*", placeholder_escaped, "[ \t]*(\\r?\\n)?")
+  input_string <- gsub(multiline_placeholder_pattern, "", input_string, perl = TRUE)
 
   # Check if input_string ends with a newline
   ends_with_newline <- grepl("\n$", input_string)
@@ -161,7 +223,8 @@ getRightsDefinitionColumnNames <- function() {
     "SCHEMA_2",
     "TABLE_POSTFIX_2",
     "SCHEMA_3",
-    "TABLE_POSTFIX_3")
+    "TABLE_POSTFIX_3"
+  )
 }
 
 getConvertDefinitionColumnNames <- function() {
@@ -171,7 +234,8 @@ getConvertDefinitionColumnNames <- function() {
     "SOURCE_COLUMN_NAME",
     "TARGET_COLUMN_NAME",
     "SOURCE_TYPE",
-    "TARGET_TYPE")
+    "TARGET_TYPE"
+  )
 }
 
 
@@ -196,6 +260,13 @@ extractPlaceholders <- function(input_string) {
   # Combine sorted placeholders
   sorted_placeholders <- c(if_placeholders, other_placeholders)
   return(sorted_placeholders)
+}
+
+resolveProjectPath <- function(path) {
+  if (etlutils::isSimpleNA(path) || grepl("^(/|[A-Za-z]:[/\\\\])", path)) {
+    return(path)
+  }
+  file.path(getProjectRoot(), path)
 }
 
 extractPlaceholderName <- function(placeholder) {
@@ -276,18 +347,22 @@ replace <- function(original, replacement, string) {
   gsub(original, replacement, string, fixed = TRUE)
 }
 
+normalizeTemplateValue <- function(value) {
+  if (etlutils::isSimpleNA(value)) {
+    return("")
+  }
+  value <- as.character(value)
+  value <- gsub("[\r\n]+", " ", value)
+  gsub("[[:space:]]+", " ", trimws(value))
+}
+
 #####################################
 # Crate Generated SQL Script Header #
 #####################################
 
 createHeader <- function(script_rights_definition) {
-
   add <- function(...) {
     header <<- paste0(header, paste0(...), "\n")
-  }
-
-  formatTime <- function(timestamp) {
-    format(timestamp, "%Y-%m-%d %H:%M:%S")
   }
 
   rights_definition_file_name <- getRightsDefinitionFileName()
@@ -298,12 +373,12 @@ createHeader <- function(script_rights_definition) {
   add("--")
   add("-- This file is generated. Changes should only be made by regenerating the file.")
   add("--")
-  add("-- Rights definition file             : ", rights_definition_file_name)
-  add("-- Rights definition file last update : ", formatTime(rights_definition_file_info$mtime))
+  add("-- Rights definition file             : ", getProjectRelativePath(rights_definition_file_name))
+  add("-- Rights definition file last update : ", format(rights_definition_file_info$mtime, "%Y-%m-%d %H:%M:%S"))
   add("-- Rights definition file size        : ", rights_definition_file_info$size, " Byte")
   add("--")
-  add("-- Create SQL Tables in Schema \"", script_rights_definition[1]$OWNER_SCHEMA ,"\"")
-  add("-- Create time: ", formatTime(Sys.time()))
+  add("-- Create SQL Tables in Schema \"", script_rights_definition[1]$OWNER_SCHEMA, "\"")
+  add("-- Create time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
   # iterate over all columns and rows in the script_rights_definition
   col_names <- names(script_rights_definition)
   for (col_name in col_names) {
@@ -351,10 +426,9 @@ createHeader <- function(script_rights_definition) {
 #'
 #' @export
 parseIFExpression <- function(expression) {
-
   # Pattern: Support multiline and embedded quotes in the result
   patternInlineIf <-
-    '^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+):([a-zA-Z0-9_]+)\\s+([\'\"].*?[\'\"])\\s+(.*)%>$'
+    '^<%[iI][fF](\\s+[nN][oO][tT])?\\s+([a-zA-Z0-9_]+):([a-zA-Z0-9_]+)\\s+([\'\"][\\s\\S]*?[\'\"])\\s+([\\s\\S]*)%>$'
 
   # Extract the parts of the expression
   matches <- regmatches(expression, regexec(patternInlineIf, expression, perl = TRUE))
@@ -391,7 +465,6 @@ convertTemplate <- function(tables_descriptions,
                             loop_row = 1,
                             indentation = "",
                             recursion = 0) {
-
   rights_first_row <- script_rights_definition[1]
   # Load SQL template
   content <- ifelse (is.na(template_content), getTemplateContent(template_name), template_content)
@@ -416,17 +489,19 @@ convertTemplate <- function(tables_descriptions,
         for (table_name in names(tables_descriptions)) {
           column_prefix <- getCommonPrefix(tables_descriptions[[table_name]][["COLUMN_NAME"]])
 
-          single_table_content <- convertTemplate(tables_descriptions,
-                                                  script_rights_definition,
-                                                  result_file_name_column,
-                                                  template_content,
-                                                  template_name = placeholder,
-                                                  table_name,
-                                                  column_prefix,
-                                                  column_name,
-                                                  loop_row,
-                                                  indentation,
-                                                  recursion = recursion + 1)
+          single_table_content <- convertTemplate(
+            tables_descriptions,
+            script_rights_definition,
+            result_file_name_column,
+            template_content,
+            template_name = placeholder,
+            table_name,
+            column_prefix,
+            column_name,
+            loop_row,
+            indentation,
+            recursion = recursion + 1
+          )
           if (!is.na(single_table_content)) {
             loop_content <- paste0(loop_content, single_table_content)
           }
@@ -436,33 +511,34 @@ convertTemplate <- function(tables_descriptions,
         single_table_description <- tables_descriptions[[table_name]]
         for (loop_row in seq_len(nrow(single_table_description))) {
           column_row <- single_table_description[loop_row]
-          single_loop_content <- convertTemplate(tables_descriptions,
-                                                 script_rights_definition,
-                                                 result_file_name_column,
-                                                 template_content = loop_template_content,
-                                                 template_name = template_name,
-                                                 table_name = table_name,
-                                                 column_prefix = column_prefix,
-                                                 column_name,
-                                                 loop_row,
-                                                 indentation,
-                                                 recursion = recursion + 1)
+          single_loop_content <- convertTemplate(
+            tables_descriptions,
+            script_rights_definition,
+            result_file_name_column,
+            template_content = loop_template_content,
+            template_name = template_name,
+            table_name = table_name,
+            column_prefix = column_prefix,
+            column_name,
+            loop_row,
+            indentation,
+            recursion = recursion + 1
+          )
           single_loop_content_placeholders <- extractPlaceholders(single_loop_content)
           for (sub_placeholder in single_loop_content_placeholders) {
             # parse the columns value separator. this is a special tag which defines the separator
             # between all lines, but not after the last line. (style: <%SEP = " AND"%>)
             if (grepl("^<%SEP\\s*=\\s*\".*\"\\s*%>$", sub_placeholder)) {
-              replace = if (loop_row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
+              replace <- if (loop_row == nrow(single_table_description)) "" else extractBetweenQuotes(sub_placeholder)
               single_loop_content <- replace(sub_placeholder, replace, single_loop_content)
             } else {
               sub_placeholder_name <- extractPlaceholderName(sub_placeholder)
               if (sub_placeholder_name %in% names(column_row)) {
                 replace_value <- column_row[[sub_placeholder_name]]
-                if (is.na(replace_value)) {
-                  # missing values in the current column row are replaced by the value in the first row
+                if (is.na(replace_value) && sub_placeholder_name != "COLUMN_DESCRIPTION") {
                   stop(paste0("Missing value in column '", sub_placeholder_name, "' in table '", table_name, "' in row ", loop_row, "."))
                 }
-                single_loop_content <- replace(sub_placeholder, column_row[[sub_placeholder_name]], single_loop_content)
+                single_loop_content <- replace(sub_placeholder, normalizeTemplateValue(replace_value), single_loop_content)
               }
             }
           }
@@ -486,20 +562,22 @@ convertTemplate <- function(tables_descriptions,
               value <- rights_row[[sub_placeholder_name]]
               # missing values in the current rights row are replaced by the value in the first row
               if (is.na(value)) value <- rights_first_row[[sub_placeholder_name]]
-              sub_content <- replace(sub_placeholder, value, sub_content)
+              sub_content <- replace(sub_placeholder, normalizeTemplateValue(value), sub_content)
             }
           }
-          sub_content <- convertTemplate(tables_descriptions,
-                                         script_rights_definition,
-                                         result_file_name_column,
-                                         template_content = sub_content,
-                                         template_name,
-                                         table_name,
-                                         column_prefix,
-                                         column_name,
-                                         loop_row,
-                                         indentation,
-                                         recursion = recursion + 1)
+          sub_content <- convertTemplate(
+            tables_descriptions,
+            script_rights_definition,
+            result_file_name_column,
+            template_content = sub_content,
+            template_name,
+            table_name,
+            column_prefix,
+            column_name,
+            loop_row,
+            indentation,
+            recursion = recursion + 1
+          )
           loop_content <- paste0(loop_content, sub_content)
         }
       }
@@ -534,7 +612,7 @@ convertTemplate <- function(tables_descriptions,
         stop("Unknown source in IF expression: ", condition_arguments$source)
       }
       if (etlutils::isSimpleNA(condition_compare_value)) {
-        condition_compare_value = ""
+        condition_compare_value <- ""
       }
 
       if (xor(condition_arguments$invert, grepl(condition_arguments$pattern, condition_compare_value, perl = TRUE))) {
@@ -547,17 +625,19 @@ convertTemplate <- function(tables_descriptions,
           template_content <- NA
           template_name <- condition_arguments$result
         }
-        condition_content <- convertTemplate(tables_descriptions,
-                                             script_rights_definition,
-                                             result_file_name_column,
-                                             template_content,
-                                             template_name,
-                                             table_name,
-                                             column_prefix,
-                                             column_name,
-                                             loop_row,
-                                             indentation,
-                                             recursion = recursion + 1)
+        condition_content <- convertTemplate(
+          tables_descriptions,
+          script_rights_definition,
+          result_file_name_column,
+          template_content,
+          template_name,
+          table_name,
+          column_prefix,
+          column_name,
+          loop_row,
+          indentation,
+          recursion = recursion + 1
+        )
 
         condition_content <- gsub("^\"|\"$", "", condition_content)
         condition_content <- gsub("\n$", "", condition_content)
@@ -568,13 +648,12 @@ convertTemplate <- function(tables_descriptions,
     } else {
       placeholder_name <- extractPlaceholderName(placeholder)
       if (placeholder_name %in% names(rights_first_row)) {
-        content <- replace(placeholder, rights_first_row[[placeholder_name]], content)
+        content <- replace(placeholder, normalizeTemplateValue(rights_first_row[[placeholder_name]]), content)
       }
     }
   }
 
   if (recursion == 0) {
-
     placeholders <- extractPlaceholders(content)
     if (length(placeholders)) {
       warning("There are unreplaced placeholders in the file ", file_name, ":\n", placeholders)
@@ -585,7 +664,6 @@ convertTemplate <- function(tables_descriptions,
     } else {
       cat(" skipped\n")
     }
-
   }
   # Write the modified content to the file
   return(content)
@@ -596,7 +674,6 @@ convertTemplate <- function(tables_descriptions,
 ########
 
 loadDatabaseRightsAndConvertDefinition <- function() {
-
   rights_definition_file_name <- getRightsDefinitionFileName()
   rights_and_convert_definition <- etlutils::readExcelFileAsTableList(rights_definition_file_name)
 
@@ -614,11 +691,16 @@ loadDatabaseRightsAndConvertDefinition <- function() {
   rights_definition <- etlutils::removeTableHeader(rights_definition, rights_definition_columns)
 
   if (!etlutils::isValidTable(rights_definition)) {
-    stop(paste0("Could not find a row with the follwing entries in file '",
-                rights_definition_file_name, "' in sheet '", rights_definition_sheet_name, "':\n",
-                paste0(rights_definition_columns, collapse = ", "), "\n",
-                "Hint: If the column names are changed in the Excel file, then replace the same ",
-                "strings here in this R-script."))
+    stop(paste0(
+      "Could not find a row with the follwing entries in file '",
+      rights_definition_file_name, "' in sheet '", rights_definition_sheet_name, "':\n",
+      paste0(
+        rights_definition_columns,
+        collapse = ", "
+      ), "\n",
+      "Hint: If the column names are changed in the Excel file, then replace the same ",
+      "strings here in this R-script."
+    ))
   }
 
   rights_definition <- etlutils::dtRemoveCommentRows(rights_definition)
@@ -662,6 +744,7 @@ createDatabaseScriptsFromTemplates <- function() {
     } else { # remove the worksheet name from the path
       table_description_path <- sub("\\[.*\\]$", "", table_description_path_with_sheet_name)
     }
+    table_description_path <- resolveProjectPath(table_description_path)
     table_description_convert_definition <- rights_and_convert_definition$convert_definition[[table_description_path_with_sheet_name]]
     table_description <- getConvertedTableDescriptionSplittedByTableName(table_description_path, table_description_sheet_name, table_description_convert_definition)
     rights_definition <- full_rights_definition[[i]]
@@ -676,5 +759,4 @@ createDatabaseScriptsFromTemplates <- function() {
       }
     }
   }
-
 }

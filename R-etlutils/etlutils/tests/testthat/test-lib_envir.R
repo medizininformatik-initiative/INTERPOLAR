@@ -80,3 +80,66 @@ test_that("Variable is empty or missing in a named list", {
   expect_false(isDefinedAndNotEmpty("var3", envir = test_config))
   expect_false(isDefinedAndNotEmpty("var4", envir = test_config))
 })
+
+################
+# checkVersion #
+################
+
+resetVersionCheck <- function() {
+  .lib_envir_env[["VERSION_ALREADY_CHECKED"]] <- NULL
+}
+
+test_that("older database versions remain blocked by default", {
+  resetVersionCheck()
+  on.exit(resetVersionCheck())
+  testthat::local_mocked_bindings(
+    dbGetVersion = function() "2.0.0",
+    getReleaseVersion = function() "2.1.0",
+    .package = "etlutils"
+  )
+
+  expect_error(
+    checkVersion(ignore_newer_db_version = FALSE),
+    "database version '2.0.0' is older than the release version '2.1.0'"
+  )
+})
+
+test_that("older database versions warn but continue for historical analyses", {
+  resetVersionCheck()
+  on.exit(resetVersionCheck())
+  testthat::local_mocked_bindings(
+    dbGetVersion = function() "2.0.0",
+    getReleaseVersion = function() "2.1.0",
+    .package = "etlutils"
+  )
+
+  expect_warning(
+    checkVersion(
+      ignore_newer_db_version = FALSE,
+      allow_older_db_version = TRUE
+    ),
+    paste0(
+      "database version '2.0.0' is older than the release version '2.1.0'. ",
+      "Continuing with the manual analysis"
+    )
+  )
+  expect_true(isDefinedAndTrue("VERSION_ALREADY_CHECKED", .lib_envir_env))
+})
+
+test_that("newer database versions remain blocked for historical analyses", {
+  resetVersionCheck()
+  on.exit(resetVersionCheck())
+  testthat::local_mocked_bindings(
+    dbGetVersion = function() "2.2.0",
+    getReleaseVersion = function() "2.1.0",
+    .package = "etlutils"
+  )
+
+  expect_error(
+    checkVersion(
+      ignore_newer_db_version = FALSE,
+      allow_older_db_version = TRUE
+    ),
+    "database version '2.2.0' is newer than the release version '2.1.0'"
+  )
+})

@@ -24,7 +24,7 @@ getTableDescriptionsTable <- function(columns = NA) {
   table_description <- table_description[!is.na(FHIR_EXPRESSION), ]
   # fill RESOURCE NA column with the last valid (non NA) value above
   table_description[, RESOURCE := RESOURCE[1], .(cumsum(!is.na(RESOURCE)))]
-  #remove unneccesary columns
+  # remove unneccesary columns
   etlutils::retainColumns(table_description, columns)
   return(table_description)
 }
@@ -57,7 +57,6 @@ getTableDescriptionsTable <- function(columns = NA) {
 #'
 #' @keywords data manipulation
 getFhircrackrTableDescriptions <- function(table_description_table = NA) {
-
   isPIDDependant <- function(table_description) {
     resource_name <- table_description@resource@.Data
     return(resource_name == "Patient" || "subject/reference" %in% table_description@cols@.Data || "patient/reference" %in% table_description@cols@.Data)
@@ -121,7 +120,7 @@ getDataImportPIDDependantResourceTypes <- function(table_description_table = get
 #' @param table_description_table TableDescription rows with RESOURCE, FHIR_EXPRESSION and REFERENCE_TYPES.
 #' @return A character vector of allowed referenced FHIR resource types.
 getDataImportReferencedResourceTypes <- function(
-    table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION", "REFERENCE_TYPES"))
+  table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION", "REFERENCE_TYPES"))
 ) {
   fhir_resource_types <- unique(table_description_table[!grepl("^[a-z]", RESOURCE)]$RESOURCE)
   referenced_resource_types <- unique(etlutils::extractWords(na.omit(table_description_table$REFERENCE_TYPES)))
@@ -136,7 +135,7 @@ getDataImportReferencedResourceTypes <- function(
 #' @param table_description_table TableDescription rows with RESOURCE, FHIR_EXPRESSION and REFERENCE_TYPES.
 #' @return A character vector of allowed FHIR resource types.
 getDataImportAllowedResourceTypes <- function(
-    table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION", "REFERENCE_TYPES"))
+  table_description_table = getTableDescriptionsTable(c("RESOURCE", "FHIR_EXPRESSION", "REFERENCE_TYPES"))
 ) {
   data_import_resource_types <- unique(c(
     getDataImportPIDDependantResourceTypes(table_description_table),
@@ -155,8 +154,10 @@ getDataImportResourceTypes <- function(allowed_resource_types = getDataImportAll
     invalid_resource_types <- setdiff(tolower(requested_resource_types), tolower(allowed_resource_types))
     if (length(invalid_resource_types)) {
       invalid_resource_types <- requested_resource_types[tolower(requested_resource_types) %in% invalid_resource_types]
-      stop("DATA_IMPORT_RESOURCE_TYPES contains invalid or unsupported resource types: ",
-           paste(invalid_resource_types, collapse = ", "))
+      stop(
+        "DATA_IMPORT_RESOURCE_TYPES contains invalid or unsupported resource types: ",
+        paste(invalid_resource_types, collapse = ", ")
+      )
     }
     return(allowed_resource_types[match(tolower(requested_resource_types), tolower(allowed_resource_types))])
   }

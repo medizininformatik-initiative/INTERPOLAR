@@ -43,9 +43,8 @@
 #'
 #' @export
 addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColumnName = NA, cciColumnName = NA) {
-
   # Convert variable names with '_' for spaces, '__' for commas, and '___' for slashes to a display format.
-  varNameToDisplay <- function(var_name) gsub('_', ' ', gsub('__', ', ', gsub('___', '/', var_name)))
+  varNameToDisplay <- function(var_name) gsub("_", " ", gsub("__", ", ", gsub("___", "/", var_name)))
 
   ########################
   ### Define Diagnoses ###
@@ -58,70 +57,67 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
   # In some cases, a sublist is composed of two subsublists indicating pairs of diagnoses,
   # where the first diagnosis is overshadowed by the second if both are present in one case.
   codes <- list(
-
     Myocardial_infarction =
-      c(0, 'I21', 'I22', 'I25.2'),
+      c(0, "I21", "I22", "I25.2"),
 
     Congestive_heart_failure =
-      c(2, 'I09.9', 'I11.0', 'I13.0', 'I13.2', 'I25.5', 'I42.0', paste0('I42.', 5:9), 'I43', 'I50', 'P29.0'),
+      c(2, "I09.9", "I11.0", "I13.0", "I13.2", "I25.5", "I42.0", paste0("I42.", 5:9), "I43", "I50", "P29.0"),
 
     Peripheral_vascular_disease =
-      c(0, 'I70', 'I71', 'I73.1', 'I73.8', 'I73.9', 'I77.1', 'I79.0', 'I79.2', 'K55.1', 'K55.8', 'K55.9', 'Z95.8', 'Z95.9'),
+      c(0, "I70", "I71", "I73.1", "I73.8", "I73.9", "I77.1", "I79.0", "I79.2", "K55.1", "K55.8", "K55.9", "Z95.8", "Z95.9"),
 
     Cerebrovascular_disease =
-      c(0, 'G45', 'G46', 'H34.0', paste0('I', 60:69)),
+      c(0, "G45", "G46", "H34.0", paste0("I", 60:69)),
 
     Dementia =
-      c(2, paste0('F0', 0:3), 'F05.1', 'G30', 'G31.1'),
+      c(2, paste0("F0", 0:3), "F05.1", "G30", "G31.1"),
 
     Chronic_pulmonary_disease =
-      c(1, 'I27.8', 'I27.9', paste0('J', c(40:47, 60:67)), 'J68.4', 'J70.1', 'J70.3'),
+      c(1, "I27.8", "I27.9", paste0("J", c(40:47, 60:67)), "J68.4", "J70.1", "J70.3"),
 
     Rheumatic_disease =
-      c(1, 'M05', 'M06', 'M31.5', paste0('M', 32:34),'M35.1', 'M35.3', 'M36.0'),
+      c(1, "M05", "M06", "M31.5", paste0("M", 32:34), "M35.1", "M35.3", "M36.0"),
 
     Peptic_ulcer_disease =
-      c(0, c(paste0('K', 25:28))),
+      c(0, c(paste0("K", 25:28))),
 
     Liver_disease = list(
-
       Mild_liver_disease =
-        c(2, 'B18', paste0('K70.', c(0:3, 9)), paste0('K71.', 3:5), 'K71.7', 'K73', 'K74', paste0('K76.', c(0, 2:4)),
-          'K76.8', 'K76.9', 'Z94.4'),
+        c(
+          2, "B18", paste0("K70.", c(0:3, 9)), paste0("K71.", 3:5), "K71.7", "K73", "K74", paste0("K76.", c(
+            0, 2:4
+          )),
+          "K76.8", "K76.9", "Z94.4"
+        ),
 
       Moderate_or_severe_liver_disease =
-        c(4, 'I85.0', 'I85.9', 'I86.4', 'I98.2', 'K70.4', 'K71.1', 'K72.1', 'K72.9', 'K76.5', 'K76.6', 'K76.7')
-
+        c(4, "I85.0", "I85.9", "I86.4", "I98.2", "K70.4", "K71.1", "K72.1", "K72.9", "K76.5", "K76.6", "K76.7")
     ),
 
     Diabetes = list(
-
       Diabetes_without_chronic_complication =
-        c(0, paste0(paste0('E', 10:14, '.'), rep(c(0, 1, 6, 8, 9), each = 5))),
+        c(0, paste0(paste0("E", 10:14, "."), rep(c(0, 1, 6, 8, 9), each = 5))),
 
       Diabetes_with_chronic_complication =
-        c(1, paste0(paste0('E', 10:14, '.'), rep(c(2:5, 7), each = 5)))
-
+        c(1, paste0(paste0("E", 10:14, "."), rep(c(2:5, 7), each = 5)))
     ),
 
     Cancer = list(
-
       Any_malignancy__including_lymphoma_and_leukemia__except_malignant_neoplasm_of_skin =
-        c(2, paste0('C0', 0:9), paste0('C', c(10:26, 30:34, 37:41, 43, 45:58, 60:76, 81:85, 88, 90:97))),
+        c(2, paste0("C0", 0:9), paste0("C", c(10:26, 30:34, 37:41, 43, 45:58, 60:76, 81:85, 88, 90:97))),
 
       Metastatic_solid_tumor =
-        c(6, paste0('C', 77:80))
-
+        c(6, paste0("C", 77:80))
     ),
 
     Hemiplegia_or_paraplegia =
-      c(2, 'G04.1', 'G11.4', 'G80.1', 'G80.2', 'G81', 'G82', paste0('G83.', c(0:4, 9))),
+      c(2, "G04.1", "G11.4", "G80.1", "G80.2", "G81", "G82", paste0("G83.", c(0:4, 9))),
 
     Renal_disease =
-      c(1, 'I12.0', 'I13.1', paste0('N03.', 2:7), paste0('N05.', 2:7), 'N18', 'N19', 'N25.0', paste0('Z49.', 0:2),'Z94.0', 'Z99.2'),
+      c(1, "I12.0", "I13.1", paste0("N03.", 2:7), paste0("N05.", 2:7), "N18", "N19", "N25.0", paste0("Z49.", 0:2), "Z94.0", "Z99.2"),
 
     AIDS___HIV =
-      c(4, paste0('B', c(20:22, 24)))
+      c(4, paste0("B", c(20:22, 24)))
   )
 
   ############################
@@ -131,15 +127,20 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
   # Function to print the defined ICD codes list.
   # @param as_R_code If TRUE (default), the list is printed in R syntax; if FALSE, in a more human-readable format.
   printCodes <- function(as_R_code = TRUE) {
-
     getSubCodeListString <- function(mainCodesList, subCodeList, name, indentation, subCodeListIndex) {
       code <- unlist(subCodeList)
-      indentation <- c(rep(' ', times = indentation))
-      indentation <- paste0(indentation, collapse =  '')
-      paste0(indentation, name, " =\n", indentation, "  c(", code[1], ", '",
-             paste0(code[-1], collapse = "', '"), "')",
-             ifelse(as_R_code && subCodeListIndex < length(mainCodesList), ",", ""),
-             "\n\n")
+      indentation <- c(rep(" ", times = indentation))
+      indentation <- paste0(indentation, collapse =  "")
+      paste0(
+        indentation, name, " =\n", indentation, "  c(
+          ", code[1], ", '",
+        paste0(
+          code[-1],
+          collapse = "', '"
+        ), "')",
+        ifelse(as_R_code && subCodeListIndex < length(mainCodesList), ",", ""),
+        "\n\n"
+      )
     }
 
     formatName <- function(name) ifelse(as_R_code, name, varNameToDisplay(name))
@@ -172,8 +173,8 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
     message(codes_string)
   }
 
-  #printCodes()
-  #printCodes(FALSE)
+  # printCodes()
+  # printCodes(FALSE)
 
   #########################
   ### Fill Column 'cci' ###
@@ -195,7 +196,7 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
       return(integer())                                             # return empty row indices list
     }
     subcodes <- subcodes[-1]                                        # remove the cci score from the sublist
-    subcodes <- paste0(subcodes, collapse = '|')                    # generate grep pattern from all codes
+    subcodes <- paste0(subcodes, collapse = "|")                    # generate grep pattern from all codes
     grep(subcodes, table[[icdCodeColumnName]])                      # get all row indices with a matching diagnosis code
   }
 
@@ -247,7 +248,6 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
 
 
     subCodesListIndex <- subCodesListIndex + 1
-
   }
 
   # for all rows with a diagnosis but without a cci score (from a high or relevant low risk diagnosis) -> set the cci score to 0
@@ -255,7 +255,7 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
 
   # if the same case has multiple diagnoses from the same sublist -> set cci
   # to 0 for all diagnoses from the same sublist in this case
-  cols <- c(caseIDColumnName, 'cciListIndex')
+  cols <- c(caseIDColumnName, "cciListIndex")
   duplicateDiagnoses <- which(duplicated(table[, ..cols]))
   table[duplicateDiagnoses, cci := 0]
 
@@ -269,7 +269,8 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
     unique_cci <- unique(cci)
     ifelse(length(unique_cci) == 1 && is.na(unique_cci[1]), NA, sum(cci, na.rm = TRUE))
   },
-  by = c(caseIDColumnName)]
+  by = c(caseIDColumnName)
+  ]
 
   if (!is.na(ageColumnName)) {                                      # if the age column name parameter was not NA -> add the age score
     for (r in 1:nrow(table)) {                                      # for every row in the result table
@@ -277,7 +278,7 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
     }
   }
   if (!is.na(cciColumnName)) {
-    setnames(table, 'cci', cciColumnName)
+    setnames(table, "cci", cciColumnName)
   }
 }
 
@@ -393,4 +394,3 @@ addCharlsonScore <- function(table, caseIDColumnName, icdCodeColumnName, ageColu
 # addCharlsonScore(table, 'caseID', 'diagnoses', cciColumnName = 'cci.without.age')
 # addCharlsonScore(table, 'caseID', 'diagnoses', 'age')
 # print(table)
-

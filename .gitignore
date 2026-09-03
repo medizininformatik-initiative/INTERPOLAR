@@ -1,4 +1,5 @@
 .env*
+.DS_Store
 .Rproj.user
 .Rhistory
 .tar.gz
@@ -22,6 +23,7 @@ Input-Repo/**/*.xlsx
 *- Kopie*
 Snapshots/*.sql.gz
 Snapshots/*.log
+Postgres-cds_hub/generated/
 .positai
 .agents/
 /bin/

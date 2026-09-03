@@ -22,21 +22,19 @@ getEncounterColNamesForReferenceCalculation <- function() {
       "_class_code",
       "_partof_ref",
       "_partof_calculated_ref",
-      "_main_encounter_calculated_ref"#,
-      #"_diagnosis_condition_ref",
-      #"_diagnosis_condition_calculated_ref"
+      "_main_encounter_calculated_ref" # ,
+      # "_diagnosis_condition_ref",
+      # "_diagnosis_condition_calculated_ref"
     ))
   )
   return(enc_col_names_for_ref_calculation)
 }
 
 createReferencesForEncounters <- function(encounters, common_encounter_fhir_identifier_system) {
-
   #
   # Find the best fitting parent encounter by timestamp and prefer inpatient encounters
   #
   findParentEncounter <- function(child_row, candidate_parent_encounters) {
-
     child_start <- child_row$enc_period_start
     child_end <- child_row$enc_period_end
     # filter candidates that enclose the child encounter
@@ -47,7 +45,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
         (is.na(child_end) | is.na(enc_period_end) | enc_period_end >= child_end)
     ]
     if (nrow(candidate_parent_encounters) > 1) {
-
       getParentCandidates <- function(candidate_parent_encounters, enc_class) {
         new_candidate_parent_encounters <- candidate_parent_encounters[enc_class_code == enc_class]
         if (nrow(new_candidate_parent_encounters) >= 1) {
@@ -87,16 +84,18 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   if (!("enc_partof_calculated_ref" %in% names(encounters))) {
     encounters[, enc_partof_calculated_ref := NA_character_]
     encounters[, enc_main_encounter_calculated_ref := NA_character_]
-    #encounters[, enc_diagnosis_condition_calculated_ref := NA_character_] # currently not used
+    # encounters[, enc_diagnosis_condition_calculated_ref := NA_character_] # currently not used
   } else {
     encounters[enc_partof_calculated_ref == "invalid", enc_partof_calculated_ref := NA_character_]
     encounters[enc_main_encounter_calculated_ref == "invalid", enc_main_encounter_calculated_ref := NA_character_]
   }
 
   # split Encounters by type code
-  encounters_by_type <- list(einrichtungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[1]]],
-                             abteilungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[2]]],
-                             versorgungsstellenkontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[3]]])
+  encounters_by_type <- list(
+    einrichtungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[1]]],
+    abteilungskontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[2]]],
+    versorgungsstellenkontakt = encounters[enc_type_code == ENCOUNTER_TYPES[[3]]]
+  )
 
   # cat warning message if there are no encounters of at least one type
   for (type_index in 1:3) {
@@ -111,7 +110,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   }
 
   etlutils::runLevel2("Fill the enc_partof_calculated_ref column level by level (direct copy)", {
-
     etlutils::runLevel2("... from existing part_of references", {
       for (i in 2:3) { # for each level except the first (einrichtungskontakt)
         encounters_of_lvl <- encounters_by_type[[i]]
@@ -173,7 +171,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
               patient_ref <- encounters_of_lvl$enc_patient_ref[enc_index]
               candidate_parent_encounters <- parent_encounters_of_lvl[enc_patient_ref == patient_ref]
               if (nrow(candidate_parent_encounters)) {
-
                 parent_encounter <- findParentEncounter(
                   child_row = encounters_of_lvl[enc_index],
                   candidate_parent_encounters = candidate_parent_encounters
@@ -197,18 +194,32 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
   # update the encounters table in the list
   encounters <- data.table::rbindlist(encounters_by_type)
   # fill all abteilungskontakt and versorgungstellenkontakt Encounters NA partof refs with "invalid"
-  encounters[is.na(enc_partof_calculated_ref) & (enc_type_code %in% ENCOUNTER_TYPES[2:3]),
-             enc_partof_calculated_ref := "invalid"]
+  encounters[
+    is.na(enc_partof_calculated_ref) & (enc_type_code %in% ENCOUNTER_TYPES[2:3]),
+    enc_partof_calculated_ref := "invalid"
+  ]
 
   # Start: create enc_main_encounter_calculated_ref
 
   # Unique enc_ids (FHIR-cracked table can have duplicates per enc_id)
   ids <- unique(encounters$enc_id)
+  first_encounter_by_id <- encounters[!duplicated(enc_id)]
+  first_encounter_by_id <- first_encounter_by_id[!is.na(enc_id) & nzchar(enc_id)]
+  parent_id_list <- as.list(etlutils::fhirdataExtractIDs(
+    first_encounter_by_id$enc_partof_calculated_ref,
+    unique = FALSE
+  ))
+  names(parent_id_list) <- first_encounter_by_id$enc_id
+  parent_id_env <- list2env(parent_id_list, parent = emptyenv())
+  invalid_parent_ids <- c(NA_character_, "", "invalid")
   # Memoization to avoid repeated walks
   resolve_cache <- new.env(parent = emptyenv())
 
   # Resolve top-most encounter (max depth = 3), return "Encounter/<id>" or "invalid"
   resolveMainRef <- function(id) {
+    if (is.na(id) || !nzchar(id)) {
+      return("invalid")
+    }
     # Return cached if present
     if (exists(id, envir = resolve_cache, inherits = FALSE)) {
       return(get(id, envir = resolve_cache, inherits = FALSE))
@@ -217,21 +228,18 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
     main_id <- NA_character_
 
     for (hop in 1:3) {
-      current_row <- encounters[enc_id == walk_id]
-      if (nrow(current_row) == 0L) {  # unknown id
+      if (!exists(walk_id, envir = parent_id_env, inherits = FALSE)) {
         main_id <- NA_character_
         break
       }
-      current_row <- current_row[1]  # take any row for this enc_id
-      partof_ref <- current_row$enc_partof_calculated_ref
+      parent_id <- get(walk_id, envir = parent_id_env, inherits = FALSE)
       # Reached top-level (no parent)
-      if (is.na(partof_ref)) {
+      if (is.na(parent_id)) {
         main_id <- walk_id
         break
       }
       # Go to parent; abort on "invalid" or empty
-      parent_id <- etlutils::fhirdataExtractIDs(partof_ref)
-      if (identical(parent_id, "invalid") || length(parent_id) == 0L || is.na(parent_id)) {
+      if (length(parent_id) == 0L || parent_id %in% invalid_parent_ids) {
         main_id <- NA_character_
         break
       }
@@ -300,7 +308,6 @@ createReferencesForEncounters <- function(encounters, common_encounter_fhir_iden
 
 createReferencesForResource <- function(encounters, resource_name, resource_table, start_column_names) {
   etlutils::runLevel2Line(paste0("Create Encounter References for ", resource_name), {
-
     calculated_ref_col_name <- getEncounterCalculatedReferenceColumnName(resource_name)
     # Once the data has been retrieved from the database, we only need to calculate the cal_ref
     # columns for the resources that have no valid value, so all others can be removed.
@@ -500,16 +507,22 @@ createReferencesForResource <- function(encounters, resource_name, resource_tabl
 #
 # Write calculated reference columns back to the full encounter table
 #
-joinCalculatedRefColumsToEncounter <- function(fullEncTable, encTableWithCalculatedRefs) {
+joinCalculatedRefColumsToEncounter <- function(full_enc_table, enc_table_with_calculated_refs) {
   # get calculated ref columns by grep("_calculated_ref", ...)
-  calculated_col_names <- grep("_calculated_ref$", names(encTableWithCalculatedRefs), value = TRUE)
+  calculated_col_names <- grep("_calculated_ref$", names(enc_table_with_calculated_refs), value = TRUE)
   enc_id_col_name <- etlutils::fhirdbGetIDColumn("encounter")
+  # Keep the previous last-match behavior without joining every combination of duplicated rows.
+  calculated_refs_by_id <- enc_table_with_calculated_refs[
+    !duplicated(get(enc_id_col_name), fromLast = TRUE),
+    c(enc_id_col_name, calculated_col_names),
+    with = FALSE
+  ]
 
-  fullEncTable[
-    encTableWithCalculatedRefs,
+  full_enc_table[
+    calculated_refs_by_id,
     on = enc_id_col_name,
     (calculated_col_names) := mget(paste0("i.", calculated_col_names))
   ]
 
-  return(fullEncTable)
+  return(full_enc_table)
 }

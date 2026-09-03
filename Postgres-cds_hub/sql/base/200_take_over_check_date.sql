@@ -2,39 +2,42 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-02-02 10:00:19
--- Rights definition file size        : 16573 Byte
+-- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2026-06-11 17:22:24
+-- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-02-02 10:25:51
+-- Create time: 2026-06-12 11:40:03
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/200_take_over_check_date.sql
 -- TEMPLATE:  template_take_over_check_date_function.sql
--- OWNER_USER:  
+-- OWNER_USER:
 -- OWNER_SCHEMA:  db_log
--- TAGS:  
--- TABLE_PREFIX:  
+-- TAGS:
+-- TABLE_PREFIX:
 -- TABLE_POSTFIX:  _raw
--- RIGHTS:  
--- GRANT_TARGET_USER:  
+-- RIGHTS:
+-- GRANT_TARGET_USER:
 -- COPY_FUNC_SCRIPTNAME:  template_take_over_check_date_function.sql
--- COPY_FUNC_TEMPLATE:  
+-- COPY_FUNC_TEMPLATE:
 -- COPY_FUNC_NAME:  take_over_last_check_date
 -- SCHEMA_2:  db_log
--- TABLE_POSTFIX_2:  
--- SCHEMA_3:  
--- TABLE_POSTFIX_3:  
+-- TABLE_POSTFIX_2:
+-- SCHEMA_3:
+-- TABLE_POSTFIX_3:
 -- ########################################################################################################
-
-DO
-$$
+DO $$
 BEGIN
     IF EXISTS ( -- do migration
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
-    ) THEN
---------------------------------------------------------------------
-EXECUTE $f$
+        SELECT
+            1
+        FROM
+            db_config.db_parameter
+        WHERE
+            parameter_name = 'current_migration_flag'
+            AND parameter_value = '1') THEN
+        --------------------------------------------------------------------
+        EXECUTE $f$
 ------------------------------
 CREATE OR REPLACE FUNCTION db.take_over_last_check_date()
 RETURNS TEXT
@@ -237,10 +240,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.encounter_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.encounter_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.encounter WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.encounter_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.encounter_raw_id=t.encounter_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.encounter_raw_id=t.encounter_raw_id;
             END IF;
         END IF;
 
@@ -258,10 +261,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.patient_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.patient_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.patient WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.patient_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.patient_raw_id=t.patient_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.patient_raw_id=t.patient_raw_id;
             END IF;
         END IF;
 
@@ -279,10 +282,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.condition_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.condition_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.condition WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.condition_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.condition_raw_id=t.condition_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.condition_raw_id=t.condition_raw_id;
             END IF;
         END IF;
 
@@ -300,10 +303,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.medication_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.medication_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.medication WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.medication_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medication_raw_id=t.medication_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medication_raw_id=t.medication_raw_id;
             END IF;
         END IF;
 
@@ -321,10 +324,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.medicationrequest_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.medicationrequest_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.medicationrequest WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.medicationrequest_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationrequest_raw_id=t.medicationrequest_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationrequest_raw_id=t.medicationrequest_raw_id;
             END IF;
         END IF;
 
@@ -342,10 +345,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.medicationadministration_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.medicationadministration_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.medicationadministration WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.medicationadministration_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationadministration_raw_id=t.medicationadministration_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationadministration_raw_id=t.medicationadministration_raw_id;
             END IF;
         END IF;
 
@@ -363,10 +366,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.medicationstatement_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.medicationstatement_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.medicationstatement WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.medicationstatement_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationstatement_raw_id=t.medicationstatement_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.medicationstatement_raw_id=t.medicationstatement_raw_id;
             END IF;
         END IF;
 
@@ -384,10 +387,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.observation_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.observation_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.observation WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.observation_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.observation_raw_id=t.observation_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.observation_raw_id=t.observation_raw_id;
             END IF;
         END IF;
 
@@ -405,10 +408,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.diagnosticreport_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.diagnosticreport_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.diagnosticreport WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.diagnosticreport_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.diagnosticreport_raw_id=t.diagnosticreport_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.diagnosticreport_raw_id=t.diagnosticreport_raw_id;
             END IF;
         END IF;
 
@@ -426,10 +429,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.servicerequest_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.servicerequest_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.servicerequest WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.servicerequest_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.servicerequest_raw_id=t.servicerequest_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.servicerequest_raw_id=t.servicerequest_raw_id;
             END IF;
         END IF;
 
@@ -447,10 +450,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.procedure_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.procedure_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.procedure WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.procedure_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.procedure_raw_id=t.procedure_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.procedure_raw_id=t.procedure_raw_id;
             END IF;
         END IF;
 
@@ -468,10 +471,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.consent_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.consent_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.consent WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.consent_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.consent_raw_id=t.consent_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.consent_raw_id=t.consent_raw_id;
             END IF;
         END IF;
 
@@ -489,10 +492,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.location WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.location_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.location_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.location WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.location_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.location_raw_id=t.location_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.location_raw_id=t.location_raw_id;
             END IF;
         END IF;
 
@@ -510,10 +513,10 @@ BEGIN
             SELECT COUNT(1) INTO temp_int FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr; -- und es auch Treffer in dieser Tabelle gibt mit nicht letzter processing number
             IF temp_int>0 THEN
                 SELECT COUNT(1) INTO data_count_pro_all
-    	        FROM (SELECT * FROM db_log.pids_per_ward_raw WHERE last_processing_nr!=max_last_pro_nr) r
+	        FROM (SELECT * FROM db_log.pids_per_ward_raw WHERE last_processing_nr!=max_last_pro_nr) r
                 , (SELECT * FROM db_log.pids_per_ward WHERE last_processing_nr=max_last_pro_nr) t
                 , db_log.pids_per_ward_raw r2
-    	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.pids_per_ward_raw_id=t.pids_per_ward_raw_id;
+	        WHERE r.last_processing_nr=r2.last_processing_nr AND r2.pids_per_ward_raw_id=t.pids_per_ward_raw_id;
             END IF;
         END IF;
 
@@ -526,10 +529,10 @@ BEGIN
     ELSE
         err_section:='HEAD-17';    err_schema:='db_log';    err_table:='db_log.pids_per_ward (ELSE)';
         SELECT COUNT(1) INTO data_count_pro_all
-    	FROM (select * from db_log.pids_per_ward_raw where last_processing_nr!=max_ent_pro_nr) r
+	FROM (select * from db_log.pids_per_ward_raw where last_processing_nr!=max_ent_pro_nr) r
 	, (select * from db_log.pids_per_ward where last_processing_nr=max_ent_pro_nr) t
         , db_log.pids_per_ward_raw r2
-    	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.pids_per_ward_raw_id=t.pids_per_ward_raw_id;
+	WHERE r.last_processing_nr=r2.last_processing_nr AND r2.pids_per_ward_raw_id=t.pids_per_ward_raw_id;
     END IF;
 
 --/*Test*/SELECT res FROM pg_background_result(pg_background_launch(
@@ -738,11 +741,11 @@ BEGIN
 
             ---- Start check db_log.pids_per_ward ---- Update FHIR Metadata
             UPDATE db_log.pids_per_ward z SET
-                
+
                 z.last_check_datetime = q.last_check_datetime
             FROM db_log.pids_per_ward_raw q
             WHERE z.pids_per_ward_raw_id = q.pids_per_ward_raw_id AND (
-                
+
                 z.last_check_datetime != q.last_check_datetime
             );
             ---- End check db_log.pids_per_ward ---- Update FHIR Metadata
@@ -754,8 +757,8 @@ BEGIN
 	-- Get value for documentation of each individual data record
         SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes';
 
-    	-- Number of data records then status have to be set
-    	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
+	-- Number of data records then status have to be set
+	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
 
         err_section:='MAIN-20';    err_schema:='db_config';    err_table:='db_process_control';
         -- Set current executed function and total number of records
@@ -1637,10 +1640,9 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql;
 $f$;
------------------------------
-
---------------------------------------------------------------------
-    END IF; -- do migration
+    -----------------------------
+    --------------------------------------------------------------------
+END IF;
+    -- do migration
 END
 $$;
-

@@ -1,0 +1,49 @@
+name: Bug Report
+description: File a bug report.
+title: "[BUG]: ..."
+labels: ["bug"]
+
+body:
+- type: markdown
+  attributes:
+    value: >
+      Thank you for taking the time to file a bug report.
+      Please also check the [Issues](https://github.com/medizininformatik-initiative/INTERPOLAR/issues) and [Discussions](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions) section for existing issues about the bug.
+
+- type: textarea
+  attributes:
+    label: "Describe the issue:"
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: "Reproduceable commands or code example:"
+    description: >
+      A short command or code example that reproduces the problem/missing feature.
+    placeholder: |
+      << your command or code here >>
+    render: shell
+  validations:
+    required: false
+
+- type: textarea
+  attributes:
+    label: "Error message:"
+    description: >
+      Please include full error message, if any.
+    placeholder: |
+      << your error message here >>
+    render: shell
+
+- type: textarea
+  attributes:
+    label: "Version information:"
+    description: >
+      CDS Tool Chain Version or commit SHA?
+      CDS Tool Chain Database Version?
+    placeholder: |
+      CDS Tool Chain Version or commit SHA: 
+      CDS Tool Chain Database Version:
+  validations:
+    required: true

@@ -10,6 +10,12 @@ ein MRP auslösen.
 
 ### Konfiguration
 
+- Im Projektordner liegt eine `database.toml`. Ihr absichtlich leerer `DB_NAME`
+  muss vor dem Start gesetzt werden. Weitere Verbindungswerte werden aus der
+  normalen Datenbankkonfiguration geerbt. Nur nicht leere Projektwerte
+  überschreiben sie. Die gemeinsame Vorlage für neue Projekte liegt unter
+  `R-dataprocessor/submodules/manual_start/database_example.toml`. Ein
+  Image-Neubau ist nach einer Änderung nicht erforderlich.
 - abgefragter Zeitraum konfigurierbar über Start- und Enddatum als Argument
 - fehlt das Enddatum, wird der aktuelle Ausführungszeitpunkt genommen
 - fehlt das Startdatum, wird der aktuelle Ausführungszeitpunkt - 60 Tage genommen
@@ -24,6 +30,10 @@ Aufruf des dataprocessors mit folgenden Argumenten:
 ``` console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R mrp-check
 ```
+
+Ohne zusätzliches Argument startet `MRP_Check` nur auf einer pseudonymisierten
+Snapshot-Datenbank. Für jede andere kompatible Datenbank ist bewusst zusätzlich
+`--force` erforderlich.
 
 -   optional Anpassung des Zeitraumes über die Argumente `start-date` und `end-date` mit Name=Wert (ohne Leerzeichen zwischen Name und Wert) und Wert im Format YYYY-MM-DD
 

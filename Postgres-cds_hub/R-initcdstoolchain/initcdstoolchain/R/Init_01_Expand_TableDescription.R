@@ -50,7 +50,7 @@ extractReplacePatterns <- function(table_description_collapsed) {
   patterns_start_row <- etlutils::getFirstRowWithPatterns(table_description_collapsed, c("PATTERN", "REPLACEMENT")) + 1
   # found the header line?
   if (patterns_start_row > 0) {
-    for(r in patterns_start_row:nrow(table_description_collapsed)) {
+    for (r in patterns_start_row:nrow(table_description_collapsed)) {
       pattern <- table_description_collapsed$RESOURCE[r] # patterns are in the column 'RESOURCE'
       replace <- table_description_collapsed$RESOURCE_PREFIX[r] # replaces strings are in the column 'RESOURCE_PREFIX'
       if (etlutils::isSimpleNotEmptyString(pattern)) {
@@ -79,7 +79,6 @@ extractReplacePatterns <- function(table_description_collapsed) {
 #' print(table)
 #' }
 addEmptyRowsBeforeNewResource <- function(table) {
-
   # Generate an index indicating where empty rows should be inserted
   # (before each row except the first and if 'RESOURCE' column is not NA)
   new_resource_start_rows <- which(!is.na(table$RESOURCE) & seq_len(nrow(table)) != 1)
@@ -94,6 +93,113 @@ addEmptyRowsBeforeNewResource <- function(table) {
     )
   }
   return(table)
+}
+
+FHIR_NODE_TYPE_PATHS_COLNAME <- "FHIR_NODE_TYPE_PATHS"
+TABLE_DESCRIPTION_EXTENSION_SHEET_NAME <- "table_description_extension"
+SNAPSHOT_EXTENSION_SHEET_NAMES <- c("snapshot_extension")
+
+emptyTableDescriptionExtension <- function() {
+  data.table::data.table(
+    RESOURCE = character(),
+    COLUMN_NAME = character(),
+    FHIR_EXPRESSION = character(),
+    REFERENCE_TYPES = character(),
+    FHIR_TYPE = character(),
+    FHIR_ID_COLUMN_NAME = character(),
+    REFERENCE_ID_COLUMN_NAME = character(),
+    PSEUDONYMIZATION_RULE = character()
+  )
+}
+
+normalizeTableDescriptionExtension <- function(table_description_extension) {
+  required_columns <- c(
+    "TABLE_NAME",
+    "COLUMN_NAME",
+    "COLUMN_DESCRIPTION",
+    "COLUMN_TYPE",
+    "PSEUDONYMIZATION_RULE"
+  )
+  missing_columns <- setdiff(required_columns, names(table_description_extension))
+  if (length(missing_columns) > 0) {
+    stop(
+      TABLE_DESCRIPTION_EXTENSION_SHEET_NAME,
+      " must contain columns: ",
+      paste(required_columns, collapse = ", "),
+      ". Missing: ",
+      paste(missing_columns, collapse = ", ")
+    )
+  }
+
+  extension <- data.table::as.data.table(data.table::copy(
+    table_description_extension[, required_columns, with = FALSE]
+  ))
+  extension <- extension[
+    !is.na(COLUMN_NAME) & nzchar(trimws(as.character(COLUMN_NAME))),
+  ]
+  if (nrow(extension) == 0) {
+    return(emptyTableDescriptionExtension())
+  }
+  if (is.na(extension[["TABLE_NAME"]][1]) || !nzchar(extension[["TABLE_NAME"]][1])) {
+    stop(
+      TABLE_DESCRIPTION_EXTENSION_SHEET_NAME,
+      " must start with a non-empty TABLE_NAME."
+    )
+  }
+
+  table_names <- extension[["TABLE_NAME"]]
+  etlutils::fillNAWithLastRowValue(extension, "TABLE_NAME")
+  duplicate_columns <- duplicated(paste(
+    tolower(extension[["TABLE_NAME"]]),
+    tolower(extension[["COLUMN_NAME"]]),
+    sep = "."
+  ))
+  if (any(duplicate_columns)) {
+    stop(
+      TABLE_DESCRIPTION_EXTENSION_SHEET_NAME,
+      " contains duplicate table columns: ",
+      paste(
+        unique(paste(
+          extension[["TABLE_NAME"]][duplicate_columns],
+          extension[["COLUMN_NAME"]][duplicate_columns],
+          sep = "."
+        )),
+        collapse = ", "
+      )
+    )
+  }
+
+  data.table::data.table(
+    RESOURCE = table_names,
+    COLUMN_NAME = extension[["COLUMN_NAME"]],
+    FHIR_EXPRESSION = extension[["COLUMN_DESCRIPTION"]],
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = extension[["COLUMN_TYPE"]],
+    FHIR_ID_COLUMN_NAME = NA_character_,
+    REFERENCE_ID_COLUMN_NAME = NA_character_,
+    PSEUDONYMIZATION_RULE = extension[["PSEUDONYMIZATION_RULE"]]
+  )
+}
+
+appendFhirNodeTypePath <- function(existing_paths, node_type, node_path) {
+  entry <- paste0(node_type, "=", node_path)
+  if (is.na(existing_paths) || !nzchar(existing_paths)) {
+    return(entry)
+  }
+  paste(existing_paths, entry, sep = "|")
+}
+
+getExpandedFhirNodePath <- function(node_path, node_type, expansion_table) {
+  if (nzchar(node_path)) {
+    return(node_path)
+  }
+
+  first_segments <- sub("/.*$", "", expansion_table[["FHIR_EXPRESSION"]])
+  first_segments <- unique(first_segments[!is.na(first_segments) & nzchar(first_segments)])
+  if (length(first_segments) == 1 && tolower(first_segments) == tolower(node_type)) {
+    return(first_segments)
+  }
+  node_path
 }
 
 #' Expand Table Description with Specified Expansion Tables
@@ -135,13 +241,13 @@ addEmptyRowsBeforeNewResource <- function(table) {
 #' \code{\link[etlutils]{isSimpleNotEmptyString}}, \code{\link[etlutils]{getAfterLastSlash}},
 #' \code{\link[etlutils]{getBeforeLastSlash}}, \code{\link[etlutils]{replacePatternsInString}}
 expandTableDescriptionInternal <- function(table_description_collapsed, expansion_tables) {
-
   table <- data.table::copy(table_description_collapsed)
 
   replace_patterns <- extractReplacePatterns(table)
 
   # remove all rows with NA in column 'FHIR_EXPRESSION'
   table <- table[!is.na(FHIR_EXPRESSION), ]
+  table[, (FHIR_NODE_TYPE_PATHS_COLNAME) := NA_character_]
 
   # prepare expand_table for rbind = add missing columns of target table and set same column order
   for (expand_table in expansion_tables) {
@@ -157,7 +263,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   }
 
   getFullColumnName <- function(resource_prefix, fhir_expression) {
-    full_column_name <- gsub('/', '_', fhir_expression)
+    full_column_name <- gsub("/", "_", fhir_expression)
     full_column_name <- paste0(resource_prefix, full_column_name)
   }
 
@@ -170,11 +276,10 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   row <- 1
   last_row_index <- nrow(table)
   while (row <= last_row_index) {
-
     if (!is.na(table$RESOURCE[row])) {
       resource <- table$RESOURCE[row]
       if (!is.na(table$RESOURCE_PREFIX[row])) {
-        resource_prefix <- paste0(table$RESOURCE_PREFIX[row], '_')
+        resource_prefix <- paste0(table$RESOURCE_PREFIX[row], "_")
       } else {
         resource_prefix <- ""
       }
@@ -187,8 +292,21 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       fhir_expression <- substr(fhir_expression, 1, nchar(fhir_expression) - nchar(stringAfterLastlash))
       replace_prefix_column_name <- getFullColumnName(resource_prefix, fhir_expression)
       replace_prefix_fhir_expression <- etlutils::getBeforeLastSlash(table$FHIR_EXPRESSION[row])
+      inherited_node_type_paths <- table[[FHIR_NODE_TYPE_PATHS_COLNAME]][row]
 
       expansion_table <- data.table::copy(expansion_tables[[expand_table_names[replace_table_index]]])
+      expanded_node_path <- getExpandedFhirNodePath(
+        replace_prefix_fhir_expression,
+        expand_table_names[replace_table_index],
+        expansion_table
+      )
+      expanded_node_type_paths <- appendFhirNodeTypePath(
+        inherited_node_type_paths,
+        expand_table_names[replace_table_index],
+        expanded_node_path
+      )
+
+      expansion_table[, (FHIR_NODE_TYPE_PATHS_COLNAME) := expanded_node_type_paths]
 
       if ("COUNT" %in% names(expansion_table)) {
         expansion_table[, COUNT := ifelse(is.na(COUNT), 1, COUNT) * table$COUNT[row]]
@@ -200,7 +318,9 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       } else {
         new_table <- rbind(table[1:(row - 1)], expansion_table, fill = TRUE)
       }
-      new_table <- rbind(new_table, table[(row + 1):nrow(table)], fill = TRUE)
+      if (row < nrow(table)) {
+        new_table <- rbind(new_table, table[(row + 1):nrow(table)], fill = TRUE)
+      }
 
       # Only for References: If the REFERENCE_TYPES column is filled for a Reference
       # which should be expanded -> write the REFERENCE_TYPES column value also to
@@ -217,7 +337,7 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
           data.table::set(new_table, replaced_row_index, "COLUMN_NAME", new_value)
         }
         if (nchar(replace_prefix_fhir_expression)) {
-          data.table::set(new_table, replaced_row_index, 'FHIR_EXPRESSION', paste(replace_prefix_fhir_expression, new_table$FHIR_EXPRESSION[replaced_row_index], sep = "/"))
+          data.table::set(new_table, replaced_row_index, "FHIR_EXPRESSION", paste(replace_prefix_fhir_expression, new_table$FHIR_EXPRESSION[replaced_row_index], sep = "/"))
         }
       }
 
@@ -234,13 +354,12 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
       row <- row + 1
     }
 
-    reference_type <- new_table[row, REFERENCE_TYPES]
+    reference_type <- if (row <= nrow(table)) table[row, REFERENCE_TYPES] else NA_character_
     if (!is.na(reference_type) && nchar(reference_type)) {
-      new_table[row, FHIR_ID_COLUMN_NAME := paste0(resource_prefix, "id")]
+      table[row, FHIR_ID_COLUMN_NAME := paste0(resource_prefix, "id")]
       reference_prefix <- getResourceAbbreviation(table_description_collapsed, reference_type)
-      new_table[row, REFERENCE_ID_COLUMN_NAME := paste0(reference_prefix, "_id")]
+      table[row, REFERENCE_ID_COLUMN_NAME := paste0(reference_prefix, "_id")]
     }
-
   }
 
   # set the column 'COLUMN_NAME' directly in front of column 'FHIR_EXPRESSION'
@@ -251,7 +370,6 @@ expandTableDescriptionInternal <- function(table_description_collapsed, expansio
   table[, COLUMN_NAME := tolower(COLUMN_NAME)]
   # add empty row after every last entry of a resource (and before a new resource starts)
   table <- addEmptyRowsBeforeNewResource(table)
-
 }
 
 #' Expand Table Description from an Excel File
@@ -283,18 +401,240 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
   # Check if files exists
   if (!file.exists(table_description_file_path) || table_description_file_path == "") {
     current_dir <- getwd()
-    stop("Error: The specified file path '", table_description_file_path,
-         "' is invalid or the file does not exist.\nCurrent working directory: '",
-         current_dir, "'")
+    stop(
+      "Error: The specified file path '", table_description_file_path,
+      "' is invalid or the file does not exist.\nCurrent working directory: '",
+      current_dir, "'"
+    )
   }
 
   tables <- etlutils::readExcelFileAsTableList(table_description_file_path)
+  additional_output_sheets <- list()
+  for (sheet_name in intersect(names(tables), SNAPSHOT_EXTENSION_SHEET_NAMES)) {
+    additional_output_sheets[[sheet_name]] <- openxlsx::read.xlsx(
+      table_description_file_path,
+      sheet = sheet_name,
+      colNames = FALSE,
+      skipEmptyRows = FALSE,
+      skipEmptyCols = FALSE
+    )
+  }
+  table_description_extension <- if (
+    TABLE_DESCRIPTION_EXTENSION_SHEET_NAME %in% names(tables)
+  ) {
+    normalizeTableDescriptionExtension(
+      etlutils::loadTableDescriptionFile(
+        table_description_file_path,
+        TABLE_DESCRIPTION_EXTENSION_SHEET_NAME
+      )
+    )
+  } else {
+    emptyTableDescriptionExtension()
+  }
 
   # extract the collapsed table description
   table_description_collapsed <- tables[["table_description_collapsed"]]
   # delete the extracted collapsed table description from tables list
   tables[["table_description_collapsed"]] <- NULL
-  expandTableDescriptionInternal(table_description_collapsed, tables)
+  tables[[TABLE_DESCRIPTION_EXTENSION_SHEET_NAME]] <- NULL
+  tables[SNAPSHOT_EXTENSION_SHEET_NAMES] <- NULL
+  expanded_table_description <- expandTableDescriptionInternal(table_description_collapsed, tables)
+  attr(expanded_table_description, "additional_output_sheets") <- additional_output_sheets
+  attr(expanded_table_description, "table_description_extension") <-
+    table_description_extension
+  expanded_table_description
+}
+
+addPseudonymizationRulesToTableDescription <- function(expanded_table_description) {
+  result <- pseudonym::setFhirPseudonymizationRules(expanded_table_description)
+  if (FHIR_NODE_TYPE_PATHS_COLNAME %in% names(result)) {
+    result[, (FHIR_NODE_TYPE_PATHS_COLNAME) := NULL]
+  }
+  result
+}
+
+setTableDescriptionColumnWidths <- function(table_description_file_name) {
+  workbook <- openxlsx::loadWorkbook(table_description_file_name)
+  widths <- c(18, 34, 60, 28, 22, 30, 34, 32)
+  table_description <- openxlsx::read.xlsx(
+    table_description_file_name,
+    sheet = "table_description",
+    colNames = FALSE,
+    skipEmptyRows = FALSE,
+    skipEmptyCols = FALSE
+  )
+  rule_cell <- which(table_description == "PSEUDONYMIZATION_RULE", arr.ind = TRUE)
+  if (nrow(rule_cell) > 0) {
+    rule_col <- rule_cell[1, "col"]
+    rule_values <- table_description[[rule_col]]
+    formatted_rules <- vapply(rule_values, splitPseudonymizationRuleChain, character(1))
+    first_rule_lines <- vapply(
+      strsplit(formatted_rules, "\n", fixed = TRUE),
+      function(lines) lines[1],
+      character(1)
+    )
+    first_rule_lines <- first_rule_lines[!is.na(first_rule_lines) & nzchar(first_rule_lines)]
+    if (length(first_rule_lines) > 0) {
+      widths[rule_col] <- max(widths[rule_col], max(nchar(first_rule_lines)) + 2)
+    }
+  }
+  openxlsx::setColWidths(
+    workbook,
+    sheet = "table_description",
+    cols = seq_along(widths),
+    widths = widths
+  )
+  openxlsx::saveWorkbook(workbook, table_description_file_name, overwrite = TRUE)
+}
+
+splitPseudonymizationRuleChain <- function(rule) {
+  if (is.na(rule) || !nzchar(rule)) {
+    return(rule)
+  }
+  rule <- gsub("_x000D_", "\n", rule, fixed = TRUE)
+  rule <- gsub("&#10;", "\n", rule, fixed = TRUE)
+  rule <- gsub(intToUtf8(c(13, 10)), "\n", rule, fixed = TRUE, useBytes = TRUE)
+
+  chars <- strsplit(rule, "", fixed = TRUE)[[1]]
+  depth <- 0L
+  in_quotes <- FALSE
+  current <- character()
+  parts <- character()
+
+  for (char in chars) {
+    if (char == "\"") {
+      in_quotes <- !in_quotes
+    } else if (!in_quotes && char == "(") {
+      depth <- depth + 1L
+    } else if (!in_quotes && char == ")") {
+      depth <- depth - 1L
+    }
+
+    if (!in_quotes && depth == 0L && char == ";") {
+      parts <- c(parts, paste0(current, collapse = ""))
+      current <- character()
+    } else {
+      current <- c(current, char)
+    }
+  }
+  parts <- trimws(c(parts, paste0(current, collapse = "")))
+  parts <- parts[nzchar(parts)]
+  if (length(parts) < 2) {
+    return(rule)
+  }
+
+  paste(parts, collapse = paste0(";", intToUtf8(10)))
+}
+
+xmlEscapeSharedString <- function(value) {
+  value <- gsub("&", "&amp;", value, fixed = TRUE)
+  value <- gsub("<", "&lt;", value, fixed = TRUE)
+  value <- gsub(">", "&gt;", value, fixed = TRUE)
+  value <- gsub("\"", "&quot;", value, fixed = TRUE)
+  value <- gsub("'", "&apos;", value, fixed = TRUE)
+  value
+}
+
+patchExcelSharedStrings <- function(file_name, original_values, formatted_values) {
+  changed <- !is.na(original_values) & original_values != formatted_values
+  if (!any(changed)) {
+    return(invisible())
+  }
+  file_name <- normalizePath(file_name, mustWork = TRUE)
+
+  replacements <- unique(data.table::data.table(
+    original = original_values[changed],
+    formatted = formatted_values[changed]
+  ))
+  replacements <- replacements[order(nchar(replacements[["original"]]), decreasing = TRUE), ]
+
+  tmp_dir <- tempfile("table-description-xlsx-")
+  dir.create(tmp_dir)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+  utils::unzip(file_name, exdir = tmp_dir)
+
+  shared_strings_file <- file.path(tmp_dir, "xl", "sharedStrings.xml")
+  shared_strings <- rawToChar(readBin(shared_strings_file, what = "raw", n = file.info(shared_strings_file)$size))
+  for (row_index in seq_len(nrow(replacements))) {
+    shared_strings <- gsub(
+      xmlEscapeSharedString(replacements[["original"]][row_index]),
+      xmlEscapeSharedString(replacements[["formatted"]][row_index]),
+      shared_strings,
+      fixed = TRUE,
+      useBytes = TRUE
+    )
+  }
+  writeBin(charToRaw(shared_strings), shared_strings_file)
+
+  zip_file <- tempfile(fileext = ".xlsx")
+  old_wd <- getwd()
+  on.exit(setwd(old_wd), add = TRUE)
+  setwd(tmp_dir)
+  zip::zipr(
+    zipfile = zip_file,
+    files = list.files(".", recursive = TRUE, all.files = TRUE, no.. = TRUE),
+    root = ".",
+    mode = "mirror",
+    compression_level = 9,
+    include_directories = FALSE
+  )
+  if (!file.copy(zip_file, file_name, overwrite = TRUE)) {
+    stop("Could not write formatted Excel file: ", file_name)
+  }
+}
+
+formatTableDescriptionPseudonymizationRules <- function(table_description_file_name) {
+  workbook <- openxlsx::loadWorkbook(table_description_file_name)
+  sheet_name <- "table_description"
+  table_description <- openxlsx::read.xlsx(
+    table_description_file_name,
+    sheet = sheet_name,
+    colNames = FALSE,
+    skipEmptyRows = FALSE,
+    skipEmptyCols = FALSE
+  )
+  rule_cell <- which(table_description == "PSEUDONYMIZATION_RULE", arr.ind = TRUE)
+  if (nrow(rule_cell) == 0) {
+    openxlsx::saveWorkbook(workbook, table_description_file_name, overwrite = TRUE)
+    return(invisible())
+  }
+  rule_col <- rule_cell[1, "col"]
+
+  rule_values <- table_description[[rule_col]]
+  formatted_rules <- vapply(rule_values, splitPseudonymizationRuleChain, character(1))
+  changed_rows <- which(!is.na(rule_values) & rule_values != formatted_rules)
+  if (length(changed_rows) > 0) {
+    top_alignment_style <- openxlsx::createStyle(valign = "top")
+    openxlsx::addStyle(
+      workbook,
+      sheet = sheet_name,
+      style = top_alignment_style,
+      rows = changed_rows,
+      cols = seq_len(ncol(table_description)),
+      gridExpand = TRUE,
+      stack = TRUE
+    )
+    rule_style <- openxlsx::createStyle(valign = "top", wrapText = TRUE)
+    openxlsx::addStyle(
+      workbook,
+      sheet = sheet_name,
+      style = rule_style,
+      rows = changed_rows,
+      cols = rule_col,
+      gridExpand = TRUE,
+      stack = TRUE
+    )
+    line_counts <- lengths(regmatches(formatted_rules[changed_rows], gregexpr("\n", formatted_rules[changed_rows], fixed = TRUE))) + 1L
+    openxlsx::setRowHeights(
+      workbook,
+      sheet = sheet_name,
+      rows = changed_rows,
+      heights = line_counts * 15 + 2
+    )
+  }
+
+  openxlsx::saveWorkbook(workbook, table_description_file_name, overwrite = TRUE)
+  patchExcelSharedStrings(table_description_file_name, rule_values, formatted_rules)
 }
 
 #' Expand Table Description from Definition File
@@ -326,19 +666,57 @@ expandTableDescriptionFromFile <- function(table_description_collapsed_excel_sim
 #' @seealso \code{\link{expandTableDescriptionFromFile}}
 expandTableDescription <- function() {
   expanded_table_description <- expandTableDescriptionFromFile("Table_Description_Definition.xlsx")
+  additional_output_sheets <- attr(expanded_table_description, "additional_output_sheets")
+  table_description_extension <- attr(
+    expanded_table_description,
+    "table_description_extension"
+  )
   if (checkResult(expanded_table_description)) {
     message("All result columns could be transformed or expanded.")
+    expanded_table_description <- addPseudonymizationRulesToTableDescription(
+      expanded_table_description
+    )
+    expanded_table_description <- data.table::rbindlist(
+      list(expanded_table_description, table_description_extension),
+      use.names = TRUE,
+      fill = FALSE
+    )
+    if (!checkResult(expanded_table_description)) {
+      stop("Table description extensions produce an invalid table description.")
+    }
     # Add the "This file is generated..." header to the resut file
     header <- c(
       "Hint",
       "This file is generated by the R script 'Init_01_Expand_TableDescription'. Do not change it directly.",
       "If you want to add or remove columns for a resource or an entire table, change the Excel file",
-      "'TableDescriptionDefinition' and execute the generation process via the init scripts in the cds2db module."
+      "'TableDescriptionDefinition' and execute the generation process via the init scripts in the cds2db module.",
+      paste(
+        "Columns not matched by the YAML receive an explicit keep rule.",
+        "Empty PSEUDONYMIZATION_RULE values are invalid.",
+        "cryptoHash defaults to maxLength = 32; cryptoHash, cryptoHash(32),",
+        "and cryptoHash(maxLength = 32) are equivalent.",
+        "Conditional rule chains end with an explicit keep or redact fallback.",
+        "Explicit redact values originate from matched YAML redact rules."
+      )
     )
-    expanded_table_description <- etlutils::addTextHeaderToTable(expanded_table_description, header, insert_column_names_below_header = TRUE)
+    expanded_table_description <- etlutils::addTextHeaderToTable(
+      expanded_table_description,
+      header,
+      insert_column_names_below_header = TRUE
+    )
 
     table_description_file_name <- "./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx"
-    etlutils::writeExcelFile(list("table_description" = expanded_table_description), "./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx", with_column_names = FALSE)
+    output_sheets <- c(
+      list("table_description" = expanded_table_description),
+      additional_output_sheets
+    )
+    etlutils::writeExcelFile(
+      output_sheets,
+      table_description_file_name,
+      with_column_names = FALSE
+    )
+    setTableDescriptionColumnWidths(table_description_file_name)
+    formatTableDescriptionPseudonymizationRules(table_description_file_name)
     message("Expanded Table Description is written to ", normalizePath(table_description_file_name))
   }
 }
@@ -377,8 +755,10 @@ checkResult <- function(expanded_table_description) {
     for (s in expanded_table_description$COLUMN_NAME[which(nchar(na.omit(expanded_table_description$COLUMN_NAME)) > 64)]) {
       message(paste0("\t", s))
     }
-    message(paste0("Solution: Define a replacement at the end of the table 'table_description_collapsed' in the ",
-                   "Table_Description_Definition.xlsx file to shorten these column names.\n"))
+    message(paste0(
+      "Solution: Define a replacement at the end of the table 'table_description_collapsed' in the ",
+      "Table_Description_Definition.xlsx file to shorten these column names.\n"
+    ))
     isValid <- FALSE
   }
 
@@ -393,9 +773,11 @@ checkResult <- function(expanded_table_description) {
         message("ERROR: Table ", table_name,  ": The following result column names (column 'COLUMN_NAMES') in Table_Description.xlsx are duplicated:")
         message(paste0("\t", duplicates, collapse = "\n"))
         message("Solution: Check entries in Table_Description_Definition.xlsx in column 'FHIR_EXPRESSION' for these duplicates.")
-        message(paste0("Note: An entry such as 'subject/Reference' generates the entries 'subject/reference' and ",
-                       "'subject/type', among others. If these then appear again in the list or 'subject/Reference' ",
-                       "itself appears twice, this error occurs.\n"))
+        message(paste0(
+          "Note: An entry such as 'subject/Reference' generates the entries 'subject/reference' and ",
+          "'subject/type', among others. If these then appear again in the list or 'subject/Reference' ",
+          "itself appears twice, this error occurs.\n"
+        ))
         isValid <- FALSE
       }
       resource <- expanded_table_description$RESOURCE[row]

@@ -125,7 +125,8 @@ calculateF1 <- function(F1_prep) {
 #'   - `contraindications_resolved`: Contraindications marked as resolved
 #'   - `encounters_eligible_for_algorithmic_mrp`: Encounters eligible for algorithmic MRP calculation
 #'   - `encounters_with_any_algorithmic_mrp`: Encounters with at least one algorithmically identified MRP
-#'   - `encounters_with_any_algorithmic_mrp_and_consent`: Encounters with at least one algorithmic MRP and consent given
+#'   - `encounters_with_non_confirmed_non_incorrect_data_items_mrp_and_consent`: Encounters with non-confirmed
+#'      non-incorrect data items MRP and consent given
 #'   - `algorithmic_MRP`: Total algorithmic MRPs
 #'   - `algorithmic_MRP_drug_drug`: Algorithmic drug-drug interactions
 #'   - `algorithmic_MRP_drug_disease`: Algorithmic drug-disease interactions
@@ -144,6 +145,7 @@ calculateF1 <- function(F1_prep) {
 #'      relevant due to case-specific risk assessment
 #'   - `algorithmic_MRP_always_clinically_irrelevant_on_ward`: Algoithmic MRPs that were evaluated as not clinically
 #'      relevant for every case on this ward
+#'   - `encounters_FAS2_1`: Encounters with a ward stay >= 7 days or < 7 days and a recorded medication analysis (only counted for FAS 1 filtered tables)
 #'
 #'
 #' @details
@@ -156,7 +158,8 @@ calculateF1 <- function(F1_prep) {
 #'
 #' @importFrom dplyr group_by summarise bind_rows n_distinct rename across all_of any_of if_else
 #' @export
-calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("ward_name")) {
+calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("ward_name"),
+                               includeFAS2_1_counting = FALSE) {
   if (identical(grouping_variables, "ward_name")) {
     frontend_summary_data <- frontend_summary_data |>
       dplyr::mutate(table_count_less_than_5_patients = ward_count_less_than_5)
@@ -188,14 +191,34 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
       sub_enc_all_processing_exclusion_fe, main_enc_not_in_inclusion_criteria,
       table_count_less_than_5_patients, overall_count_less_than_5,
       sub_enc_any_completed_medication_analysis, sub_enc_any_MRP, sub_enc_any_algorithmic_MRP,
-      medikationsanalyse_complete, mrpdokumentation_validierung_complete,
+      medikationsanalyse_complete, meda_mrp_detekt, mrpdokumentation_validierung_complete,
       mrp_dokup_hand_emp_akz, Kontraindikation, mrp_ip_klasse_01, retrolektive_mrpbewertung_complete,
       ret_ip_klasse_01, eligible_for_algorithmic_MRP_calculation, ret_gewissheit1, ret_gewiss_grund1_abl,
       ret_gewiss_grund1_abl_01,
       ret_gewiss_grund_abl_klin1_neg___1,
       MDAT_wissenschaftlich_nutzen
-    )) |>
+    ), dplyr::any_of("FAS2_1_inclusion")) |>
     dplyr::distinct()
+
+  # make helpers for counting FAS2.1
+  fas2_1_grouped_count_expr <- list()
+  fas2_1_total_count_expr <- list()
+
+  if (includeFAS2_1_counting && "FAS2_1_inclusion" %in% names(frontend_summary_data)) {
+    fas2_1_grouped_count_expr <- rlang::exprs(
+      encounters_FAS2_1 = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & FAS2_1_inclusion],
+        na.rm = TRUE
+      )
+    )
+
+    fas2_1_total_count_expr <- rlang::exprs(
+      encounters_FAS2_1 = dplyr::n_distinct(
+        main_enc_id[valid_for_overall_counting & FAS2_1_inclusion],
+        na.rm = TRUE
+      )
+    )
+  }
 
   fe_grouped_counts <- frontend_summary_data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_variables))) |>
@@ -234,9 +257,11 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       medication_analyses_complete = dplyr::n_distinct(
-        dplyr::if_else(
-          medikationsanalyse_complete == "Complete", meda_id, NA
-        )[valid_for_counting],
+        dplyr::if_else(medikationsanalyse_complete == "Complete", meda_id, NA)[valid_for_counting],
+        na.rm = TRUE
+      ),
+      medication_analyses_complete_and_detected_MRP = dplyr::n_distinct(
+        meda_id[valid_for_counting & medikationsanalyse_complete == "Complete" & meda_mrp_detekt == "Ja"],
         na.rm = TRUE
       ),
       encounters_with_any_completed_mrp = dplyr::n_distinct(
@@ -314,8 +339,13 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP],
         na.rm = TRUE
       ),
-      encounters_with_any_algorithmic_mrp_and_consent = dplyr::n_distinct(
-        main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP & MDAT_wissenschaftlich_nutzen],
+      encounters_with_non_confirmed_non_incorrect_data_items_mrp_and_consent = dplyr::n_distinct(
+        main_enc_id[valid_for_counting & sub_enc_any_algorithmic_MRP &
+          retrolektive_mrpbewertung_complete == "Complete" &
+          ret_gewissheit1 == "MRP nicht bestätigt" &
+          (ret_gewiss_grund1_abl != "MRP sachlich richtig, aber falsche Datengrundlage" |
+            ret_gewiss_grund1_abl_01 != "MRP sachlich richtig, aber falsche Datengrundlage") &
+          MDAT_wissenschaftlich_nutzen],
         na.rm = TRUE
       ),
       algorithmic_MRP = dplyr::n_distinct(
@@ -405,6 +435,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         )[valid_for_counting],
         na.rm = TRUE
       ),
+      # count FAS2.1
+      !!!fas2_1_grouped_count_expr,
       .groups = "drop"
     )
 
@@ -445,7 +477,13 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         na.rm = TRUE
       ),
       medication_analyses_complete = dplyr::n_distinct(
-        dplyr::if_else(medikationsanalyse_complete == "Complete", meda_id, NA)[valid_for_overall_counting],
+        dplyr::if_else(
+          medikationsanalyse_complete == "Complete", meda_id, NA
+        )[valid_for_overall_counting],
+        na.rm = TRUE
+      ),
+      medication_analyses_complete_and_detected_MRP = dplyr::n_distinct(
+        meda_id[valid_for_overall_counting & medikationsanalyse_complete == "Complete" & meda_mrp_detekt == "Ja"],
         na.rm = TRUE
       ),
       encounters_with_any_completed_mrp = dplyr::n_distinct(
@@ -523,8 +561,13 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
         main_enc_id[valid_for_overall_counting & sub_enc_any_algorithmic_MRP],
         na.rm = TRUE
       ),
-      encounters_with_any_algorithmic_mrp_and_consent = dplyr::n_distinct(
-        main_enc_id[valid_for_overall_counting & sub_enc_any_algorithmic_MRP & MDAT_wissenschaftlich_nutzen],
+      encounters_with_non_confirmed_non_incorrect_data_items_mrp_and_consent = dplyr::n_distinct(
+        main_enc_id[valid_for_overall_counting & sub_enc_any_algorithmic_MRP &
+          retrolektive_mrpbewertung_complete == "Complete" &
+          ret_gewissheit1 == "MRP nicht bestätigt" &
+          (ret_gewiss_grund1_abl != "MRP sachlich richtig, aber falsche Datengrundlage" |
+            ret_gewiss_grund1_abl_01 != "MRP sachlich richtig, aber falsche Datengrundlage") &
+          MDAT_wissenschaftlich_nutzen],
         na.rm = TRUE
       ),
       algorithmic_MRP = dplyr::n_distinct(
@@ -613,7 +656,8 @@ calculateFeSummary <- function(frontend_summary_data, grouping_variables = c("wa
             ret_gewiss_grund_abl_klin1_neg___1 == "Checked", ret_id, NA
         )[valid_for_overall_counting],
         na.rm = TRUE
-      )
+      ),
+      !!!fas2_1_total_count_expr
     )
 
   frontend_summary <- dplyr::bind_rows(fe_grouped_counts, fe_total_counts)
@@ -660,8 +704,10 @@ calculateFeAddOnToF1 <- function(F1, statistical_report_data_F1_with_fe) {
     calculateFeSummary(grouping_variables = c("ward_name", "calendar_week"))
 
   report_with_fe <- F1 |>
-    dplyr::left_join(report_with_fe_prep,
-      by = c("ward_name",
+    dplyr::left_join(
+      report_with_fe_prep,
+      by = c(
+        "ward_name",
         "calendar_week",
         "F1_patients" = "patients",
         "F1_encounters" = "encounters"

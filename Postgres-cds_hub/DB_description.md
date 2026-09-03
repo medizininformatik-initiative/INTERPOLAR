@@ -70,9 +70,26 @@ Bei der initialiesierung der Datenbank ist die Ausführung des Skriptes zum anle
 
 Danach ist die Strukturen und Funktionalität der Datenbank zu erzeugen, dies funktioniert wie eine Migration und ist weiter unten im Zugehörigen Abschnitt beschrieben.
 
-Der genaue Inhalt ist im jeweiligen SQL-Skript nachzulesen (siehe [Postgres-cds_hub/init (SQL-Skripte)](https://github.com/medizininformatik-initiative/INTERPOLAR/tree/main/Postgres-cds_hub/sql/base)). 
+Der genaue Inhalt der manuell gepflegten und generierten SQL-Skripte ist im
+jeweiligen SQL-Skript nachzulesen. Generierte SQL-Skripte werden versioniert,
+damit sie in GitHub direkt je Version einsehbar und vergleichbar bleiben. Die CI
+prüft, dass diese Dateien zum Generatoroutput passen.
 
-Teilweise werden diese Skripte mit Hilfe von Templates und Konfigurationsdateien erzeugt. Dies betrifft alle Skripte zum Anlegen von Tabellen und deren Spalten. Die Definition der Tabellen für das Modul 'cds2db' (insbesondere die Definition der Tabellen für die FHIR Ressourcen) finden sich in der Datei [Table_Description.xlsx](../R-cds2db/cds2db/inst/extdata/Table_Description.xlsx). Die Definition der Tabellen für das Modul 'frontend' sind in der Datei [Frontend_Table_Description.xlsx](../R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx) angegeben. Zusätzlich dazu gibt es noch eine Definition der Tabellenschemata und Rechte, die im Generierungsprozess benötigt wird (siehe [User_Schema_Rights_Definition.xlsx](sql/template/User_Schema_Rights_Definition.xlsx)) sowie die eigentlichen Templates im selben Ordner. Durch das R-Script [Init_02_Create_Database_Scripts.R](https://github.com/medizininformatik-initiative/INTERPOLAR/blob/main/Postgres-cds_hub/R-initcdstoolchain/initcdstoolchain/R/Init_02_Create_Database_Scripts.R) wird der generierte Teil der SQL-Scripte erzeugt und in /base zur späteren ausführung abgelegt.
+Ein Großteil der Skripte wird mit Hilfe von Templates und Konfigurationsdateien
+erzeugt. Dies betrifft insbesondere Skripte zum Anlegen von Tabellen, Views,
+Funktionen und deren tabellen- bzw. spaltenabhängigen Wiederholungen. Die
+Definition der Tabellen für das Modul 'cds2db' (insbesondere die Definition der
+Tabellen für die FHIR Ressourcen) finden sich in der Datei
+[Table_Description.xlsx](../R-cds2db/cds2db/inst/extdata/Table_Description.xlsx).
+Die Definition der Tabellen für das Modul 'frontend' sind in der Datei
+[Frontend_Table_Description.xlsx](../R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx)
+angegeben. Zusätzlich dazu gibt es noch eine Definition der Tabellenschemata und
+Rechte, die im Generierungsprozess benötigt wird (siehe
+[User_Schema_Rights_Definition.xlsx](sql/template/User_Schema_Rights_Definition.xlsx))
+sowie die eigentlichen Templates im selben Ordner. Durch das R-Script
+[Init_02_Create_Database_Scripts.R](https://github.com/medizininformatik-initiative/INTERPOLAR/blob/main/Postgres-cds_hub/R-initcdstoolchain/initcdstoolchain/R/Init_02_Create_Database_Scripts.R)
+wird der generierte Teil der SQL-Skripte erzeugt. Im Docker-Setup werden die
+versionierten SQL-Skripte unter `Postgres-cds_hub/sql/` verwendet.
 
 Bei der Initalisierung bzw. Migratin (start.sql) der Datenbank ist darauf zu achten das alle Skripte fehlerfrei ausgeführt werden, um die Funktionalität zu gewährleisten.
 
@@ -218,7 +235,14 @@ Erstellt eine zentralen cron-job der alle Überführungsfunktionen der Datenbank
 Anlegen von Hilfstabellen für Tests und Entwicklung - nicht Produktiv.
 
 ## Migration (start.sql)
-Wenn es eine Neuer Version der Datenbank gibt (z.B. nach aktualiesierung des Frontends) oder bei Initialisierung der Datenabnk ist die Strukturen und Funktionalität (neu) zu erzeugen. Dies wird durch ausführen eines start-Skriptes welches sich im SQL-Hauptpfad befindet (SQL-Skripte)](https://github.com/medizininformatik-initiative/INTERPOLAR/tree/main/Postgres-cds_hub/sql/start.sql)) realisiert. Dabei wird die Version der Datenbank auf den aktuellen ausgecheckten Versions-Stand gehoben, wenn dieser neuer ist als die bisherige Version. Bei der Migration werden neue Spalten hinzugefügt, alte Spalten die nicht mehr dokumentiert werden, bleiben erhalten.
+Wenn es eine neue Version der Datenbank gibt (z.B. nach Aktualisierung des
+Frontends) oder bei Initialisierung der Datenbank sind Strukturen und
+Funktionalität neu zu erzeugen. Dies wird durch Ausführen des generierten
+`start.sql`-Skriptes im SQL-Installationsverzeichnis realisiert. Dabei wird die
+Version der Datenbank auf den aktuellen ausgecheckten Versions-Stand gehoben,
+wenn dieser neuer ist als die bisherige Version. Bei der Migration werden neue
+Spalten hinzugefügt, alte Spalten die nicht mehr dokumentiert werden, bleiben
+erhalten.
 
 docker compose exec -w /cds_hub-initdb.d cds_hub psql -U cds_hub_db_admin -d cds_hub_db -f ./start.sql
 

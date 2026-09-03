@@ -2,19 +2,19 @@
 --
 -- This file is generated. Changes should only be made by regenerating the file.
 --
--- Rights definition file             : ./Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-03-16 11:41:52
--- Rights definition file size        : 19645 Byte
+-- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
+-- Rights definition file last update : 2026-06-11 17:22:24
+-- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "db_log"
--- Create time: 2026-03-25 15:49:04
+-- Create time: 2026-06-12 11:39:02
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/120_cre_table_raw_db_log.sql
 -- TEMPLATE:  template_cre_table.sql
 -- OWNER_USER:  db_log_user
 -- OWNER_SCHEMA:  db_log
 -- TAGS:  RAW
--- TABLE_PREFIX:  
+-- TABLE_PREFIX:
 -- TABLE_POSTFIX:  _raw
 -- RIGHTS:  INSERT, DELETE, UPDATE, SELECT
 -- GRANT_TARGET_USER:  db_log_user
@@ -24,18 +24,21 @@
 -- COPY_FUNC_NAME:  copy_raw_cds_in_to_db_log
 -- SCHEMA_2:  cds2db_in
 -- TABLE_POSTFIX_2:  _raw
--- SCHEMA_3:  
--- TABLE_POSTFIX_3:  
+-- SCHEMA_3:
+-- TABLE_POSTFIX_3:
 -- ########################################################################################################
-
-DO
-$$
+DO $$
 BEGIN
     IF EXISTS ( -- do migration
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
-    ) THEN
---------------------------------------------------------------------
-EXECUTE $f$
+        SELECT
+            1
+        FROM
+            db_config.db_parameter
+        WHERE
+            parameter_name = 'current_migration_flag'
+            AND parameter_value = '1') THEN
+        --------------------------------------------------------------------
+        EXECUTE $f$
 ------------------------------
 CREATE OR REPLACE FUNCTION db.copy_raw_cds_in_to_db_log()
 RETURNS TEXT
@@ -107,8 +110,8 @@ BEGIN
         err_section:='HEAD-05';    err_schema:='db_config';    err_table:='db_parameter';
         SELECT COUNT(1) INTO data_import_hist_every_dataset FROM db_config.db_parameter WHERE parameter_name='data_import_hist_every_dataset' and parameter_value='yes'; -- Get value for documentation of each individual data record
 
-    	-- Number of data records then status have to be set
-    	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
+	-- Number of data records then status have to be set
+	SELECT COALESCE(parameter_value::INT,10) INTO data_count_last_status_max FROM db_config.db_parameter WHERE parameter_name='number_of_data_records_after_which_the_status_is_updated';
 
         err_section:='HEAD-20';    err_schema:='db_config';    err_table:='db_process_control';
         -- Set current executed function and total number of records
@@ -4666,7 +4669,7 @@ BEGIN
                             ;
 
                             err_section:='pids_per_ward_raw-37';    err_schema:='cds2db_in';    err_table:='pids_per_ward_raw';
-                            
+
 
                             -- Delete updatet datasets
                             err_section:='pids_per_ward_raw-30';    err_schema:='cds2db_in';    err_table:='pids_per_ward_raw';
@@ -4801,8 +4804,8 @@ END;
 $inner$ LANGUAGE plpgsql;
 -----------------------------
 $f$;
---------------------------------------------------------------------
-    END IF; -- do migration
+    --------------------------------------------------------------------
+END IF;
+    -- do migration
 END
 $$;
-

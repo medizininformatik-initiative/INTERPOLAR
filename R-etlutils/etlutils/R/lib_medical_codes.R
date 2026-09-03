@@ -98,7 +98,7 @@ expandICDs <- function(icdCodes, minyear = NA, maxyear = NA, fullExpanded = FALS
 
 # https://stackoverflow.com/questions/69947452/regex-boundary-to-also-exclude-special-characters
 # These are PERL Patterns -> works only for grep with perl = TRUE
-patternw <- function(pattern) paste0('(?<!\\S)', pattern, '(?!\\S)')
+patternw <- function(pattern) paste0("(?<!\\S)", pattern, "(?!\\S)")
 
 #####################
 ### ATC (and PZN) ###
@@ -107,21 +107,21 @@ patternw <- function(pattern) paste0('(?<!\\S)', pattern, '(?!\\S)')
 # All patterns for valid ATC codes.
 # https://www.wido.de/publikationen-produkte/analytik/arzneimittel-klassifikation/
 SIMPLE_ATC_PATTERN <- list(
-  ATC1 = '[A-Z]',
-  #ATC2 is not a valid ATC code
-  ATC3 = '[A-Z][0-9]{2}',
-  ATC4_5 = '[A-Z][0-9]{2}[A-Z]{1,2}',
-  #ATC6 is not a valid ATC code
-  ATC7 = '[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}'
+  ATC1 = "[A-Z]",
+  # ATC2 is not a valid ATC code
+  ATC3 = "[A-Z][0-9]{2}",
+  ATC4_5 = "[A-Z][0-9]{2}[A-Z]{1,2}",
+  # ATC6 is not a valid ATC code
+  ATC7 = "[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}"
 )
 
 # All patterns for valid ATC codes in word boundaries.
 WORD_ATC_PATTERN <- list(
   ATC1 = patternw(SIMPLE_ATC_PATTERN$ATC1),
-  #ATC2 is not a valid ATC code
+  # ATC2 is not a valid ATC code
   ATC3 = patternw(SIMPLE_ATC_PATTERN$ATC3),
   ATC4_5 = patternw(SIMPLE_ATC_PATTERN$ATC4_5),
-  #ATC6 is not a valid ATC code
+  # ATC6 is not a valid ATC code
   ATC7 = patternw(SIMPLE_ATC_PATTERN$ATC7)
 )
 
@@ -130,12 +130,18 @@ WORD_ATC_PATTERN <- list(
 MED_CODES_PATTERN <- list(
   ATCsystem = "atc",
   ATC7 = WORD_ATC_PATTERN$ATC7,
-  ATCsmaller7 = paste(WORD_ATC_PATTERN$ATC4_5, WORD_ATC_PATTERN$ATC3, WORD_ATC_PATTERN$ATC1, sep = '|'),
-  ATCgreater7 = patternw('[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}\\S+'), # accepts more chars after a valid ATC7 code which are not whitespaces
-  ATC7orSmaller = paste(WORD_ATC_PATTERN$ATC7, WORD_ATC_PATTERN$ATC4_5, WORD_ATC_PATTERN$ATC3, WORD_ATC_PATTERN$ATC1, sep = '|'),
-  PZNsystem = 'pzn',
-  PZN8 = patternw('[0-9]{8}'),
-  PZN8orSmaller = patternw('[0-9]{7,8}')
+  ATCsmaller7 = paste(
+    WORD_ATC_PATTERN$ATC4_5, WORD_ATC_PATTERN$ATC3, WORD_ATC_PATTERN$ATC1,
+    sep = "|"
+  ),
+  ATCgreater7 = patternw("[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}\\S+"), # accepts more chars after a valid ATC7 code which are not whitespaces
+  ATC7orSmaller = paste(
+    WORD_ATC_PATTERN$ATC7, WORD_ATC_PATTERN$ATC4_5, WORD_ATC_PATTERN$ATC3, WORD_ATC_PATTERN$ATC1,
+    sep = "|"
+  ),
+  PZNsystem = "pzn",
+  PZN8 = patternw("[0-9]{8}"),
+  PZN8orSmaller = patternw("[0-9]{7,8}")
 )
 
 # #Tests for MED_CODES_PATTERN
@@ -224,9 +230,9 @@ isLOINC <- function(codes) {
 # https://stackoverflow.com/questions/69947452/regex-boundary-to-also-exclude-special-characters
 # These are PERL Patterns -> works only for grep with perl = TRUE
 SIMPLE_ICD_PATTERN <- list(
-  ICD1 = '[A-Z]',
-  ICD2_3 = '[A-Z][0-9]{1,2}',
-  ICD4_6 = '[A-Z][0-9]{2}\\.[0-9]{0,2}'
+  ICD1 = "[A-Z]",
+  ICD2_3 = "[A-Z][0-9]{1,2}",
+  ICD4_6 = "[A-Z][0-9]{2}\\.[0-9]{0,2}"
 )
 
 WORD_ICD_PATTERN <- list(
@@ -236,7 +242,7 @@ WORD_ICD_PATTERN <- list(
 )
 
 ICD_CODES_PATTERN <- list(
-  ICD6orSmaller = paste(WORD_ICD_PATTERN$ICD4_6, WORD_ICD_PATTERN$ICD2_3, WORD_ICD_PATTERN$ICD1, sep = '|')
+  ICD6orSmaller = paste(WORD_ICD_PATTERN$ICD4_6, WORD_ICD_PATTERN$ICD2_3, WORD_ICD_PATTERN$ICD1, sep = "|")
 )
 
 # # Tests for ICD_CODES_PATTERN
@@ -248,20 +254,20 @@ ICD_CODES_PATTERN <- list(
 # TEST_ICD[greplic(ICD_CODES_PATTERN$ICD6orSmaller, TEST_ICD)]
 
 getCodes <- function(codesColumnName, ...) {
-  codes_pattern <- paste0(paste0('^', c(...)), collapse = "|")
+  codes_pattern <- paste0(paste0("^", c(...)), collapse = "|")
 }
 
 getATC <- function(...) {
-  getCodes('atc', ...)
+  getCodes("atc", ...)
 }
 
 getICD <- function(...) {
-  getCodes('icd', ...)
+  getCodes("icd", ...)
 }
 
 catEmptyCodeWarnings <- function(list) {
   for (i in 1:length(list)) {
-    if (nchar(c(list[i])) < 1) message('no valid code for ', paste0(sys.call()[-1], '$', names(list)[i]), ' found in assets/ALL-CODES.RData \n')
+    if (nchar(c(list[i])) < 1) message("no valid code for ", paste0(sys.call()[-1], "$", names(list)[i]), " found in assets/ALL-CODES.RData \n")
   }
 }
 

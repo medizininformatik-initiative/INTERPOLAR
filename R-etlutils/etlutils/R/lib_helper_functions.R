@@ -205,7 +205,7 @@ isOK <- function(obj) !isError(obj)
 #'
 #' @return TRUE if debugging mode is enabled, otherwise FALSE.
 #'
-isDebug <- function() exists('DEBUG') && DEBUG
+isDebug <- function() exists("DEBUG") && DEBUG
 
 #' Check for Errors
 #'
@@ -217,7 +217,11 @@ isDebug <- function() exists('DEBUG') && DEBUG
 #'
 #' @return The result of either `expr_ok` or `expr_err` depending on the presence of an error.
 #' @export
-checkError <- function(potencial_error, expr_ok = {catOkMessage()}, expr_err = {catErrorMessage()}) {
+checkError <- function(potencial_error, expr_ok = {
+                         catOkMessage()
+                       }, expr_err = {
+                         catErrorMessage()
+                       }) {
   if (isError(potencial_error)) expr_err else expr_ok
 }
 
@@ -230,10 +234,10 @@ checkError <- function(potencial_error, expr_ok = {catOkMessage()}, expr_err = {
 #' @return A character vector representing the verbose number representation.
 #' @export
 convertVerboseNumbers <- function(n) {
-  n[n < 1 | 3 < n] <- paste0(n[n < 1 | 3 < n], 'th')
-  n[n == 1] <- '1st'
-  n[n == 2] <- '2nd'
-  n[n == 3] <- '3rd'
+  n[n < 1 | 3 < n] <- paste0(n[n < 1 | 3 < n], "th")
+  n[n == 1] <- "1st"
+  n[n == 2] <- "2nd"
+  n[n == 3] <- "3rd"
   n
 }
 

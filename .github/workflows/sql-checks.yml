@@ -1,0 +1,138 @@
+name: SQL checks
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      format: ${{ steps.sql-checks.outputs.format }}
+      generated: ${{ steps.sql-checks.outputs.generated }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files
+        id: changed-files
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --name-only \
+              "${{ github.event.pull_request.base.sha }}" \
+              "${{ github.sha }}" > changed-files.txt
+          elif [[ "${{ github.event.before }}" =~ ^0+$ ]]; then
+            git diff-tree --no-commit-id --name-only -r \
+              "${{ github.sha }}" > changed-files.txt
+          else
+            base_ref="${{ github.event.before }}"
+            if ! git cat-file -e "${base_ref}^{commit}" 2>/dev/null; then
+              git fetch --no-tags --depth=1 origin "${base_ref}" || true
+            fi
+            if ! git cat-file -e "${base_ref}^{commit}" 2>/dev/null; then
+              git fetch --no-tags origin develop
+              base_ref="$(git merge-base HEAD origin/develop)"
+            fi
+            git diff --name-only "${base_ref}" "${{ github.sha }}" > changed-files.txt
+          fi
+
+          cat changed-files.txt
+
+      - name: Detect SQL checks
+        id: sql-checks
+        run: tools/detect-sql-checks.sh < changed-files.txt >> "$GITHUB_OUTPUT"
+
+      - name: Test SQL check detection
+        run: tools/test-detect-sql-checks.sh
+
+  sql-format:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.format == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+
+      - name: Install pgFormatter
+        run: sudo tools/install-pgformatter.sh
+
+      - name: Check SQL formatting
+        run: pg_format --version && tools/check-sql-format.sh
+
+  generated-sql-drift:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.generated == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore successful generated SQL check
+        id: generated-sql-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/generated-sql-drift
+          key: generated-sql-drift-${{ runner.os }}-${{ hashFiles('.github/workflows/sql-checks.yml', 'Dockerfile_R', 'Postgres-cds_hub/generate-sql.sh', 'Postgres-cds_hub/R-initcdstoolchain/**', 'Postgres-cds_hub/sql/template/**', 'Postgres-cds_hub/sql/start.sql', 'Postgres-cds_hub/sql/base/**', 'R-etlutils/**', 'R-cds2db/cds2db/inst/extdata/Table_Description_Definition.xlsx', 'R-cds2db/cds2db/inst/extdata/Table_Description.xlsx', 'R-cdstoolchain/pseudonym/**', 'R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx', 'R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx', 'R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx', 'tools/check-generated-sql.sh', 'tools/check-table-description-consistency.R', 'tools/test-check-table-description-consistency.R', 'tools/format-sql.sh', 'tools/install-pgformatter.sh') }}
+
+      - name: Build R runtime image
+        if: steps.generated-sql-cache.outputs.cache-hit != 'true'
+        run: docker build -t interpolar-r -f Dockerfile_R .
+
+      - name: Check generated SQL is committed
+        if: steps.generated-sql-cache.outputs.cache-hit != 'true'
+        run: |
+          docker run --rm \
+            -v "${PWD}:/src" \
+            -w /src \
+            interpolar-r \
+            bash -lc 'apt-get update && apt-get install -y perl && tools/install-pgformatter.sh && bash tools/check-generated-sql.sh'
+
+      - name: Mark generated SQL check successful
+        if: steps.generated-sql-cache.outputs.cache-hit != 'true'
+        run: mkdir -p .cache/generated-sql-drift && touch .cache/generated-sql-drift/success
+
+      - name: Cache successful generated SQL check
+        if: steps.generated-sql-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/generated-sql-drift
+          key: ${{ steps.generated-sql-cache.outputs.cache-primary-key }}
+
+  sql-checks-result:
+    name: SQL checks result
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - changes
+      - sql-format
+      - generated-sql-drift
+
+    steps:
+      - name: Verify SQL checks
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          FORMAT_RESULT: ${{ needs.sql-format.result }}
+          GENERATED_RESULT: ${{ needs.generated-sql-drift.result }}
+        run: |
+          for result in "$CHANGES_RESULT" "$FORMAT_RESULT" "$GENERATED_RESULT"; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              echo "A required SQL check did not complete successfully." >&2
+              exit 1
+            fi
+          done

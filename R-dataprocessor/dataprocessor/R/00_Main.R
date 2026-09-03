@@ -15,23 +15,33 @@
 #' @export
 init <- function(validate_config = TRUE) {
   # Initialize and start module if init_constants_only == FALSE
-  config <- etlutils::initModule("dataprocessor",
-                       path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
-                       mandatory_parameters = c(
-                         "PHASES_WARD",
-                         "MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM",
-                         "OBSERVATION_BODY_WEIGHT_SYSTEM",
-                         "OBSERVATION_BODY_WEIGHT_CODES",
-                         "OBSERVATION_BODY_HEIGHT_SYSTEM",
-                         "OBSERVATION_BODY_HEIGHT_CODES",
-                         "OBSERVATION_BMI_SYSTEM",
-                         "OBSERVATION_BMI_CODES",
-                         "INPUT_REPO_PATH",
-                         "PATH_TO_DB_CONFIG_TOML"
-                       )
+  config <- etlutils::initModule(
+    "dataprocessor",
+    path_to_toml = "./R-dataprocessor/dataprocessor_config.toml",
+    defaults = list(
+      VERBOSE = 10,
+      MAX_DIR_COUNT = 5,
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM = ".*",
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM = ".*",
+      FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE = ".*",
+      MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM = ""
+    ),
+    mandatory_parameters = c(
+      "PHASES_WARD",
+      "OBSERVATION_BODY_WEIGHT_SYSTEM",
+      "OBSERVATION_BODY_WEIGHT_CODES",
+      "OBSERVATION_BODY_HEIGHT_SYSTEM",
+      "OBSERVATION_BODY_HEIGHT_CODES",
+      "OBSERVATION_BMI_SYSTEM",
+      "OBSERVATION_BMI_CODES",
+      "SITE_CODE",
+      "INPUT_REPO_PATH",
+      "PATH_TO_DB_CONFIG_TOML"
+    )
   )
   if (validate_config) {
     validateWardPhases()
+    validateSiteCode(config[["SITE_CODE"]])
   }
   return(config)
 }
@@ -57,13 +67,14 @@ resetLock <- function() {
 #' If a manual submodule should be started independently, it must be specified as a command-line argument for the dataprocessor
 #' using its name according to the manual_start subdirectory of the submodules directory.
 #'
-runSubmodules <- function() {
-
+runSubmodules <- function(command_line_args = NULL) {
   # Get lists of submodule directories
   submodule_dirs <- list.dirs(DATAPROCESSOR_SUBMODULES_PATH, recursive = FALSE)
   manual_start_submodule_dirs <- list.dirs(DATAPROCESSOR_MANUAL_START_PATH, recursive = FALSE)
 
-  command_line_args <- commandArgs(trailingOnly = TRUE)
+  if (is.null(command_line_args)) {
+    command_line_args <- commandArgs(trailingOnly = TRUE)
+  }
   # # for debug purposes set hard our new submodule MRP_Check
   # if (interactive()) {
   #   command_line_args <- c("mrp-check", "start-date=2025-12-01") # second parameter is irrelevant
@@ -74,9 +85,10 @@ runSubmodules <- function() {
   # when they are started interactively via DEBUG_SUBMODULE_DIR.
   if (!interactive() || length(command_line_args) || exists("DEBUG_SUBMODULE_DIR")) {
     # enable minus for underscrore in arguments and ignore case
-    command_line_args <- sub("-", "_", tolower(command_line_args), fixed = TRUE)
-    called_manual_start_submodule_dirs <- manual_start_submodule_dirs[
-      tolower(basename(manual_start_submodule_dirs)) %in% command_line_args]
+    called_manual_start_submodule_dirs <- getCalledManualStartSubmoduleDirs(
+      command_line_args,
+      manual_start_submodule_dirs
+    )
     sourceAllSubmodules() # initialize all functions of all automatic submodules for a use in the now manual started submodule
   } else {
     called_manual_start_submodule_dirs <- as.character(c())
@@ -97,13 +109,11 @@ runSubmodules <- function() {
 
   # Iterate over each submodule directory
   for (dir in submodule_dirs) {
-
     submodule_name <- basename(dir)
     etlutils::setSubmoduleName(submodule_name)
 
     # Source all R scripts in the directory
     etlutils::runLevel1(paste0("Run Dataprocessor submodule ", submodule_name), {
-
       # Load all submodule config.toml files
       submodule_config <- etlutils::initSubmoduleConstants(dir)
       # log all configuration parameters but hide value with parameter name starts with "FHIR_"
@@ -118,26 +128,31 @@ runSubmodules <- function() {
       if (file.exists(start_script)) {
         source(start_script)
       }
-
     })
 
     etlutils::removeSubmoduleName()
-
   }
 }
 
-startDataprocessorModule <- function(validate_config = TRUE) {
+startDataprocessorModule <- function(
+  validate_config = TRUE,
+  command_line_args = NULL
+) {
   config <- init(validate_config)
+  configureManualStartDatabase(config, command_line_args)
   etlutils::startModule(config)
   config
 }
 
 sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
-                                      source_submodule_functions = FALSE) {
-
+                                          source_submodule_functions = FALSE,
+                                          allow_older_db_version = FALSE) {
   etlutils::runLevel2("Reset database lock from unfinished previous run", {
     etlutils::dbResetLock()
-    etlutils::checkVersion(ignore_newer_db_version)
+    etlutils::checkVersion(
+      ignore_newer_db_version,
+      allow_older_db_version = allow_older_db_version
+    )
   })
 
   if (source_submodule_functions) {
@@ -150,29 +165,35 @@ sourceDataprocessorSubmodules <- function(ignore_newer_db_version = FALSE,
 #' Starts the Data Processor execution for this project
 #'
 #' This is the main entry point for the data processing pipeline. It initializes the
-#' Data Processor module, resets any existing ETL lock, and triggers the creation
-#' of frontend tables. If `reset_lock_only` is set to `TRUE`, the function only resets
-#' the lock and exits without executing any further logic.
+#' Data Processor module, selects the database for a manually started project,
+#' resets any existing ETL lock and runs the selected submodules.
 #'
-#' @param ignore_newer_db_version Logical. If TRUE, ignores if the database version is newer
-#' @param validate_config Logical. If TRUE, validates the module configuration before starting
-#'                        the retrieval process. Default is TRUE.
-#' than the release version. Default is FALSE and will stop if the database version is newer.
+#' @param ignore_newer_db_version Logical. If `TRUE`, allows a database version
+#'   newer than the release version. Default is `FALSE`.
+#' @param validate_config Logical. If `TRUE`, validates the module configuration
+#'   before starting the retrieval process. Default is `TRUE`.
+#' @param command_line_args Optional character vector of command-line arguments.
+#'   Defaults to `commandArgs(trailingOnly = TRUE)`.
 #'
 #' @export
-processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE) {
-
+processData <- function(
+  ignore_newer_db_version = FALSE,
+  validate_config = TRUE,
+  command_line_args = NULL
+) {
   # Initialize and start module
-  startDataprocessorModule(validate_config)
+  startDataprocessorModule(validate_config, command_line_args)
+  manual_start <- length(getCalledManualStartSubmoduleDirs(command_line_args)) > 0L
 
   try(etlutils::runLevel1("Run Dataprocessor", {
-
-    sourceDataprocessorSubmodules(ignore_newer_db_version)
+    sourceDataprocessorSubmodules(
+      ignore_newer_db_version,
+      allow_older_db_version = manual_start
+    )
 
     etlutils::runLevel2("Run dataprocessor submodules", {
-      runSubmodules()
+      runSubmodules(command_line_args)
     })
-
   }))
 
   # Reset lock and close all database connections. Do not surround this with runLevelX!
@@ -182,5 +203,4 @@ processData <- function(ignore_newer_db_version = FALSE, validate_config = TRUE)
   finish_message <- etlutils::generateFinishMessage()
 
   return(etlutils::finalize(finish_message))
-
 }

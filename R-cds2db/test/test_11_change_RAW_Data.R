@@ -16,7 +16,7 @@
 DEBUG_DAYS_COUNT <- 2
 
 # Activate if only a specific debug day should be run
-#DEBUG_RUN_SINGLE_DAY_ONLY <- 2
+# DEBUG_RUN_SINGLE_DAY_ONLY <- 2
 
 ###
 # DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
@@ -41,7 +41,6 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 
 
 if (exists("TOOLCHAIN_DAY")) {
-
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   # resources are a list of data tables from outside we want to change for the test
@@ -111,7 +110,6 @@ if (exists("TOOLCHAIN_DAY")) {
   }
 
   runCodeForDebugDay(1, {
-
     ################
     # Drug_Disease #
     ################
@@ -129,8 +127,8 @@ if (exists("TOOLCHAIN_DAY")) {
     addObservation(pid, "12980-9", value = 1000, unit = "umol/L") # secondary loinc code
 
     # Zeile 1429 aus Drug Disease Originalliste -  Weiteres Drug-Disease MRP mit Diagnose/Procedure
-    addDrugs(pid, c("B01AB01",	"B01AB01", "B01AB51"))
-    addDrugs(pid, c("B05CX05",	"B01AB51"))
+    addDrugs(pid, c("B01AB01",  "B01AB01", "B01AB51"))
+    addDrugs(pid, c("B05CX05",  "B01AB51"))
     addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
     addProcedures(pid, c("8-151.4"))
     addConditions(pid, "G97.0")
@@ -160,8 +158,8 @@ if (exists("TOOLCHAIN_DAY")) {
     addObservation(pid, "14933-6", day_offset = -7.6, value = 1000, unit = "umol/L")
 
     # Zeile 1004 aus Drug Disease Originalliste - mehrere ATC1 (in selber/unterschiedlichen Request) + mehrer OPS-Codes + Diagnose
-    pid <- addDrugs("UKB-0001_8", c("B01AB01",	"B01AB01", "B01AB51"))
-    addDrugs(pid, c("B05CX05",	"B01AB51"))
+    pid <- addDrugs("UKB-0001_8", c("B01AB01",  "B01AB01", "B01AB51"))
+    addDrugs(pid, c("B05CX05",  "B01AB51"))
     addProcedures(pid, c("1-204.2", "1-204.2", "8-151.4"))
     addProcedures(pid, c("8-151.4"))
     addConditions(pid, "G97.0")
@@ -184,7 +182,6 @@ if (exists("TOOLCHAIN_DAY")) {
     # ATC und mehrere Diagnosen mit mehreren Zeilen in der nach ICD gesplitteten Drug Disease Liste
     pid <- addDrugs("UKB-0001_12", "L01XX05")
     addConditions(pid, c("D69.58", "D69.61"))
-
   })
 
   # Update the resource_tables list with the modified data tables
