@@ -50,7 +50,6 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 
 
 if (exists("TOOLCHAIN_DAY")) {
-
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   # resources are a list of data tables from outside we want to change for the test
@@ -101,7 +100,6 @@ if (exists("TOOLCHAIN_DAY")) {
   duplicatePatients(7)
 
   runCodeForDebugDay(1, {
-
     ################
     # Drug_Drug #
     ################
@@ -168,7 +166,6 @@ if (exists("TOOLCHAIN_DAY")) {
     # pid <- "UKB-0001_10"
     # addDrugs(pid, "N06AX22", day_offset = -0.3, period_type = "timing_events")
     # addDrugs(pid, "J01MA02", period_type = "all_timestamps_NA")
-
   })
 
   # Update the resource_tables list with the modified data tables

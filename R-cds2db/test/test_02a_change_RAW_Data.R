@@ -9,7 +9,7 @@
 DEBUG_DAYS_COUNT <- 2
 
 # Activate if only a specific debug day should be run
-#DEBUG_RUN_SINGLE_DAY_ONLY <- 2
+# DEBUG_RUN_SINGLE_DAY_ONLY <- 2
 
 ###
 # DEBUG_MODULES_PATH_TO_CONFIG_TOML can contain for every module a path to
@@ -34,7 +34,6 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 
 
 if (exists("TOOLCHAIN_DAY")) {
-
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   # resources are a list of data tables from outside we want to change for the test
@@ -85,7 +84,6 @@ if (exists("TOOLCHAIN_DAY")) {
   duplicatePatients(12)
 
   runCodeForDebugDay(1, {
-
     #########################################################################
     # Drug_Disease mit Beachtung des letzten Laborwertes, der triggern muss #
     #########################################################################
@@ -268,7 +266,6 @@ if (exists("TOOLCHAIN_DAY")) {
     addObservation(pid, "2951-2", value = 7, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # kein MRP
     addObservation(pid, "2951-2", value = 3, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10)
     addObservation(pid, "2951-2", value = 7, unit = "mg/dL", referencerange_low_value = 5, referencerange_high_value = 10) # kein MRP
-
   })
 
   # Update the resource_tables list with the modified data tables

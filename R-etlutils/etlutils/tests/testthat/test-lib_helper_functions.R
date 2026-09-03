@@ -321,23 +321,29 @@ test_that("convertVerboseNumbers returns empty vector for empty input", {
 
 test_that("convertIntegerFormat function works correctly", {
   # Test case 1: Valid integer conversion
-  dt <- data.table(column1 = c("1", "2", "3", "4"),
-                   column2 = c(NA, "6", "", "8"))
+  dt <- data.table(
+    column1 = c("1", "2", "3", "4"),
+    column2 = c(NA, "6", "", "8")
+  )
   convertIntegerFormat(dt, "column1")
   convertIntegerFormat(dt, "column2")
   expect_equal(as.integer(dt$column1), c(1, 2, 3, 4))
   expect_equal(as.integer(dt$column2), c(NA, 6, NA, 8))
 
   # Test case 2: Empty input, should not throw an error
-  dt <- data.table(column1 = character(0),
-                   column2 = character(0))
+  dt <- data.table(
+    column1 = character(0),
+    column2 = character(0)
+  )
   convertIntegerFormat(dt, "column1")
   convertIntegerFormat(dt, "column2")
   expect_equal(nrow(dt), 0)
 
   # Test case 3: NA input, should not throw an error
-  dt <- data.table(column1 = NA_character_,
-                   column2 = NA_character_)
+  dt <- data.table(
+    column1 = NA_character_,
+    column2 = NA_character_
+  )
   convertIntegerFormat(dt, "column1")
   convertIntegerFormat(dt, "column2")
   expect_equal(nrow(dt), 1)
@@ -349,23 +355,29 @@ test_that("convertIntegerFormat function works correctly", {
 
 test_that("convertDecimalFormat converts strings to decimals", {
   # Test case 1: Valid decimal conversion
-  dt <- data.table(column1 = c("1.5", "2.3", NA, "4"),
-                   column2 = c("1", "6.2", "", "8.9"))
+  dt <- data.table(
+    column1 = c("1.5", "2.3", NA, "4"),
+    column2 = c("1", "6.2", "", "8.9")
+  )
   convertDecimalFormat(dt, "column1")
   convertDecimalFormat(dt, "column2")
   expect_equal(as.numeric(dt$column1), c(1.5, 2.3, NA, 4))
   expect_equal(as.numeric(dt$column2), c(1, 6.2, NA, 8.9))
 
   # Test case 2: Empty input, should not throw an error
-  dt <- data.table(column1 = character(0),
-                   column2 = character(0))
+  dt <- data.table(
+    column1 = character(0),
+    column2 = character(0)
+  )
   convertDecimalFormat(dt, "column1")
   convertDecimalFormat(dt, "column2")
   expect_equal(nrow(dt), 0)
 
   # Test case 3: NA input, should not throw an error
-  dt <- data.table(column1 = NA_character_,
-                   column2 = NA_character_)
+  dt <- data.table(
+    column1 = NA_character_,
+    column2 = NA_character_
+  )
   convertDecimalFormat(dt, "column1")
   convertDecimalFormat(dt, "column2")
   expect_equal(nrow(dt), 1)
@@ -377,23 +389,29 @@ test_that("convertDecimalFormat converts strings to decimals", {
 
 test_that("convertBooleanFormat converts strings to boolean values", {
   # Test case 1: Valid boolean conversion
-  dt <- data.table(column1 = c("TRUE", "FALSE", "TRUE", NA),
-                   column2 = c("NA", "TRUE", "", "FALSE"))
+  dt <- data.table(
+    column1 = c("TRUE", "FALSE", "TRUE", NA),
+    column2 = c("NA", "TRUE", "", "FALSE")
+  )
   convertBooleanFormat(dt, "column1")
   convertBooleanFormat(dt, "column2")
   expect_equal(as.logical(dt$column1), c(TRUE, FALSE, TRUE, NA))
   expect_equal(as.logical(dt$column2), c(NA, TRUE, NA, FALSE))
 
   # Test case 2: Empty input, should not throw an error
-  dt <- data.table(column1 = character(0),
-                   column2 = character(0))
+  dt <- data.table(
+    column1 = character(0),
+    column2 = character(0)
+  )
   convertBooleanFormat(dt, "column1")
   convertBooleanFormat(dt, "column2")
   expect_equal(nrow(dt), 0)
 
   # Test case 3: NA input, should not throw an error
-  dt <- data.table(column1 = NA_character_,
-                   column2 = NA_character_)
+  dt <- data.table(
+    column1 = NA_character_,
+    column2 = NA_character_
+  )
   convertBooleanFormat(dt, "column1")
   convertBooleanFormat(dt, "column2")
   expect_equal(nrow(dt), 1)

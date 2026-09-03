@@ -11,9 +11,12 @@
 #'
 #' @export
 getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
-
-  #path to the directory containing the MRP Excel files.
-  table_dir <- file.path(INPUT_REPO_PATH, paste0(table_name_prefix, table_name))
+  # path to the directory containing the MRP Excel files.
+  table_dir <- etlutils::findUniqueInputRepoPath(
+    INPUT_REPO_PATH,
+    paste0(table_name_prefix, table_name),
+    type = "directory"
+  )
   # Load the MRP definition from the Excel file
   columnnames <- getRelevantColumnNames(table_name)
   file_definition <- etlutils::readFirstExcelFileSheet(table_dir, table_name, columnnames)
@@ -46,10 +49,14 @@ getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
     file_path_part <- paste0(table_dir, "/", table_name, "_content")
 
     # Write content and processed content to Excel files
-    openxlsx::write.xlsx(content, file = file.path(file_path_part,
-                                                   paste0(table_name, "_", table_name_prefix, "Table.xlsx")), overwrite = TRUE)
-    openxlsx::write.xlsx(processed_content, file = file.path(file_path_part,
-                                                             paste0(table_name, "_", table_name_prefix, "Table_processed.xlsx")), overwrite = TRUE)
+    openxlsx::write.xlsx(content, file = file.path(
+      file_path_part,
+      paste0(table_name, "_", table_name_prefix, "Table.xlsx")
+    ), overwrite = TRUE)
+    openxlsx::write.xlsx(processed_content, file = file.path(
+      file_path_part,
+      paste0(table_name, "_", table_name_prefix, "Table_processed.xlsx")
+    ), overwrite = TRUE)
 
     # Load or init storage tables locally
     input_data_files_path <- paste0(table_dir, "/input_data_files.RData")
@@ -101,11 +108,12 @@ getExpandedExcelContent <- function(table_name, table_name_prefix = "") {
     # Save the updated data tables back to the database
     etlutils::dbWriteTables(
       tables = etlutils::namedListByParam(input_data_files, input_data_files_processed_content),
-      lock_id = "Write input data files to database")
+      lock_id = "Write input data files to database"
+    )
 
   } else {
     # Load processed content
-    #TODO: Replace with database functionality
+    # TODO: Replace with database functionality
     input_data_files_processed_content <- readRDS(paste0(table_dir, "/input_data_files_processed_content.RData"))
     matching_row <- input_data_files_processed_content[processed_content_hash == content_hash_processed]
     processed_content <- unserialize(base64enc::base64decode(matching_row$processed_content))
@@ -170,8 +178,10 @@ formatCodeErrors <- function(error_list, code_type_label) {
 
   messages <- c(sprintf("The following errors were found in %s codes:", code_type_label))
   for (col in names(error_list)) {
-    messages <- c(messages,
-                  sprintf("  Column '%s': %s", col, paste(error_list[[col]], collapse = ", ")))
+    messages <- c(
+      messages,
+      sprintf("  Column '%s': %s", col, paste(error_list[[col]], collapse = ", "))
+    )
   }
   return(messages)
 }

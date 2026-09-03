@@ -210,7 +210,9 @@ ENCOUNTER_FILTER_PATTERN_3 = [
 #
 # DATA_IMPORT_RANGE_END requires DATA_IMPORT_RANGE_START.
 # Empty DATA_IMPORT_RESOURCE_TYPES is treated as not defined.
-# Consent and PID-independent resources ignore the date range.
+# The date range is not applied to Consent because all consent records for
+# the selected patients are loaded. Referenced PID-independent resources
+# are loaded by ID and are therefore not date-filtered.
 DATA_IMPORT_RANGE_START = "1999-01-01 00:00:00"
 #DATA_IMPORT_RANGE_END = "2021-12-01 00:00:00"
 
@@ -257,6 +259,18 @@ DATA_IMPORT_FHIR_PIDS = []
 # This mechanism is also used for running integration tests.
 #################
 #DEBUG_PATH_TO_CONFIG_TOML = "./R-cds2db/debug_config_toml/debug_cds2db_config_1.toml"
+
+
+[toolchain]
+
+#################
+# If true, a normal full toolchain start checks for cases from interrupted
+# previous runs. Missing cases are recovered once before the current run starts.
+# The process finds cases that occurred in database table `pids_per_ward` (entered in module `cds2db)
+# but have no corresponding entry in `fall_fe` (entered in `module dataprocessor`).
+# Set this to false to skip the additional recovery run.
+#################
+RECOVER_INCOMPLETE_TOOLCHAIN_RUNS = true
 
 
 [database]

@@ -32,22 +32,28 @@ getRedcapToken <- function() {
 #' @export
 getRedcapConnection <- function() {
   # Attempt to connect to REDCap
-  frontend_connection <- tryCatch({
-    suppressWarnings(redcapAPI::redcapConnection(url = getRedcapURL(), token = getRedcapToken()))
-  }, error = function(e) {
-    stop("Failed to establish a REDCap connection. Error: ", e$message)
-  })
+  frontend_connection <- tryCatch(
+    {
+      suppressWarnings(redcapAPI::redcapConnection(url = getRedcapURL(), token = getRedcapToken()))
+    },
+    error = function(e) {
+      stop("Failed to establish a REDCap connection. Error: ", e$message)
+    }
+  )
 
   if (etlutils::isDefinedAndNotEmpty("REDCAP_CSV_DELIMITER")) {
     frontend_connection$set_csv_delimiter(REDCAP_CSV_DELIMITER)
   }
 
   # Test the connection by fetching metadata
-  meta_data <- tryCatch({
-    suppressWarnings(redcapAPI::exportMetaData(frontend_connection))
-  }, error = function(e) {
-    stop("Invalid API token or REDCap URL! Error: ", e$message)
-  })
+  meta_data <- tryCatch(
+    {
+      suppressWarnings(redcapAPI::exportMetaData(frontend_connection))
+    },
+    error = function(e) {
+      stop("Invalid API token or REDCap URL! Error: ", e$message)
+    }
+  )
 
   # Ensure metadata retrieval was successful
   if (is.null(meta_data) || nrow(meta_data) == 0) {
@@ -83,7 +89,6 @@ getFrontendTableDescription <- function() {
 #'
 #' @export
 deleteRedcapContent <- function() {
-
   # Define REDCap API connection
   frontend_connection <- db2frontend::getRedcapConnection()
 
@@ -109,7 +114,6 @@ deleteRedcapContent <- function() {
 #' @return A character vector of all field names present in actual REDCap records
 #'
 getRedcapFieldNames <- function(rcon) {
-
   # Export data to retrieve full field structure, if no data found empty data frame is returned
   # Is this case warning messages are suppressed
   data_sample <- suppressWarnings(redcapAPI::exportRecords(
@@ -124,9 +128,11 @@ getRedcapFieldNames <- function(rcon) {
   data_sample <- data.table::as.data.table(data_sample)
 
   # Define required columns
-  required_cols <- c("redcap_repeat_instrument",
-                     "redcap_repeat_instance",
-                     "redcap_data_access_group")
+  required_cols <- c(
+    "redcap_repeat_instrument",
+    "redcap_repeat_instance",
+    "redcap_data_access_group"
+  )
 
   # Add one "_complete" column per instrument
   instruments <- suppressWarnings(redcapAPI::exportInstruments(rcon))
@@ -138,7 +144,7 @@ getRedcapFieldNames <- function(rcon) {
   # Add any missing columns to data_sample
   for (col in all_required_cols) {
     if (!col %in% names(data_sample)) {
-      data_sample[ , (col) := character()]
+      data_sample[, (col) := character()]
     }
   }
 

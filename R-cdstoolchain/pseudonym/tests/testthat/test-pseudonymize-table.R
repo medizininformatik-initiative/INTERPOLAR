@@ -1,0 +1,792 @@
+test_that("pseudonymizeTable applies keep redact hash and generalize rules", {
+  source_table <- data.table::data.table(
+    pat_id = c("p1", "p2", NA),
+    pat_birthdate = as.Date(c("1980-05-17", "1975-12-01", NA)),
+    pat_gender = c("female", "male", "other"),
+    pat_name = c("A", "B", "C"),
+    undocumented = c("x", "y", "z")
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA, NA, NA),
+    COLUMN_NAME = c("pat_id", "pat_birthdate", "pat_gender", "pat_name"),
+    PSEUDONYMIZATION_RULE = c(
+      "cryptoHash",
+      "generalize(format = \"YYYY-MM\")",
+      "keep",
+      "redact"
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_false(identical(result$pat_id[1], source_table$pat_id[1]))
+  expect_equal(result$pat_id[1], pseudonymizeTable(
+    data.table::data.table(pat_id = source_table$pat_id[1]),
+    table_description[1, ],
+    "Patient"
+  )$pat_id)
+  expect_equal(result$pat_birthdate, c("1980-05", "1975-12", NA_character_))
+  expect_equal(result$pat_gender, source_table$pat_gender)
+  expect_true(all(is.na(result$pat_name)))
+  expect_equal(result$undocumented, source_table$undocumented)
+})
+
+test_that("month-generalized dates do not invent a day", {
+  source_table <- data.table::data.table(birthdate = c("1980-05-17", "1975-12", NA_character_))
+  table_description <- data.table::data.table(
+    RESOURCE = "Patient",
+    COLUMN_NAME = "birthdate",
+    PSEUDONYMIZATION_RULE = 'generalize(format = "YYYY-MM")'
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_equal(result$birthdate, c("1980-05", "1975-12", NA_character_))
+})
+
+test_that("month-generalized timestamps retain only year and month", {
+  source_table <- data.table::data.table(
+    deceased_datetime = as.POSIXct(c("2024-07-18 13:45:00", NA_character_), tz = "UTC")
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = "Patient",
+    COLUMN_NAME = "deceased_datetime",
+    PSEUDONYMIZATION_RULE = 'generalize(format = "YYYY-MM")'
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_equal(result$deceased_datetime, c("2024-07", NA_character_))
+})
+
+test_that("conditional rules use first match and redact unmatched rows", {
+  source_table <- data.table::data.table(
+    identifier_type_system = c("https://example.test", "https://example.test", "other"),
+    identifier_type_code = c("VN", "MR", "VN"),
+    identifier_value = c("visit-1", "record-2", "other-3")
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Encounter", NA, NA),
+    COLUMN_NAME = c("identifier_type_system", "identifier_type_code", "identifier_value"),
+    FHIR_EXPRESSION = c(
+      "identifier/type/coding/system",
+      "identifier/type/coding/code",
+      "identifier/value"
+    ),
+    PSEUDONYMIZATION_RULE = c(
+      "keep",
+      "keep",
+      paste0(
+        "pseudonymize(domain = \"encounter-vn\"; ",
+        "type.coding.system == \"https://example.test\" & type.coding.code == \"VN\")"
+      )
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Encounter")
+
+  expect_false(identical(result$identifier_value[1], source_table$identifier_value[1]))
+  expect_true(is.na(result$identifier_value[2]))
+  expect_true(is.na(result$identifier_value[3]))
+})
+
+test_that("conditional rules tolerate Excel escaped line breaks", {
+  source_table <- data.table::data.table(
+    identifier_type_system = c("https://example.test", "https://example.test"),
+    identifier_type_code = c("VN", "MR"),
+    identifier_value = c("visit-1", "record-2")
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "target",
+    COLUMN_NAME = c("identifier_type_system", "identifier_type_code", "identifier_value"),
+    FHIR_EXPRESSION = c(
+      "identifier/type/coding/system",
+      "identifier/type/coding/code",
+      "identifier/value"
+    ),
+    PSEUDONYMIZATION_RULE = c(
+      "keep",
+      "keep",
+      paste0(
+        "pseudonymize(domain = \"encounter-vn\"; ",
+        "type.coding.system == \"https://example.test\" & type.coding.code == \"VN\");",
+        "_x000D_keepIf(type.coding.system == \"https://example.test\" & type.coding.code == \"MR\")"
+      )
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_false(identical(result$identifier_value[1], source_table$identifier_value[1]))
+  expect_equal(result$identifier_value[2], source_table$identifier_value[2])
+
+  table_description$PSEUDONYMIZATION_RULE <- gsub(
+    "_x000D_",
+    "&#10;",
+    table_description$PSEUDONYMIZATION_RULE,
+    fixed = TRUE
+  )
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_false(identical(result$identifier_value[1], source_table$identifier_value[1]))
+  expect_equal(result$identifier_value[2], source_table$identifier_value[2])
+})
+
+test_that("conditional rules honor explicit keep and redact fallbacks", {
+  source_table <- data.table::data.table(
+    identifier_type_system = c("https://example.test", "other"),
+    identifier_type_code = c("GKV", "MR"),
+    identifier_value = c("insurance-1", "record-2")
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA, NA),
+    COLUMN_NAME = c("identifier_type_system", "identifier_type_code", "identifier_value"),
+    FHIR_EXPRESSION = c(
+      "identifier/type/coding/system",
+      "identifier/type/coding/code",
+      "identifier/value"
+    ),
+    PSEUDONYMIZATION_RULE = c(
+      "keep",
+      "keep",
+      paste0(
+        "redactIf(type.coding.system == \"https://example.test\" & ",
+        "type.coding.code == \"GKV\"); keep"
+      )
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_true(is.na(result$identifier_value[1]))
+  expect_equal(result$identifier_value[2], source_table$identifier_value[2])
+
+  table_description$PSEUDONYMIZATION_RULE[3] <- paste0(
+    "keepIf(type.coding.system == \"https://example.test\" & ",
+    "type.coding.code == \"GKV\"); redact"
+  )
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_equal(result$identifier_value[1], source_table$identifier_value[1])
+  expect_true(is.na(result$identifier_value[2]))
+})
+
+test_that("identifier type fields use the enclosing identifier for conditions", {
+  source_table <- data.table::data.table(
+    identifier_type_system = c("https://example.test", "https://example.test"),
+    identifier_type_code = c("MR", "OTHER"),
+    identifier_value = c("record-1", "record-2")
+  )
+  rule <- paste0(
+    "keepIf(type.coding.system == \"https://example.test\" & ",
+    "type.coding.code == \"MR\"); redact"
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA, NA),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c(
+      "identifier/type/coding/system",
+      "identifier/type/coding/code",
+      "identifier/value"
+    ),
+    PSEUDONYMIZATION_RULE = rule
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_equal(result$identifier_type_system[1], source_table$identifier_type_system[1])
+  expect_equal(result$identifier_type_code[1], source_table$identifier_type_code[1])
+  expect_equal(result$identifier_value[1], source_table$identifier_value[1])
+  expect_true(is.na(result$identifier_type_system[2]))
+  expect_true(is.na(result$identifier_type_code[2]))
+  expect_true(is.na(result$identifier_value[2]))
+})
+
+test_that("conditional rules treat NA conditions as not matched", {
+  source_table <- data.table::data.table(
+    identifier_type_system = NA_character_,
+    identifier_value = "record-1"
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA),
+    COLUMN_NAME = c("identifier_type_system", "identifier_value"),
+    FHIR_EXPRESSION = c("identifier/type/coding/system", "identifier/value"),
+    PSEUDONYMIZATION_RULE = c(
+      "keep",
+      "keepIf(type.coding.system == \"https://example.test\"); redact"
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_true(is.na(result$identifier_value[1]))
+})
+
+test_that("conditional rules resolve sibling fields outside identifiers", {
+  source_table <- data.table::data.table(
+    obs_code_system = c("http://loinc.org", "https://example.test/local", NA_character_),
+    obs_code_code = c("1234-5", "local-code", "missing-system-code"),
+    obs_code_text = c("standard text", "local text", "missing system text")
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Observation", NA, NA),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c("code/coding/system", "code/coding/code", "code/text"),
+    PSEUDONYMIZATION_RULE = c(
+      "keep",
+      'keepIf(system in ["http://loinc.org"]); cryptoHash',
+      'keepIf(coding.system in ["http://loinc.org"]); redact'
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Observation")
+
+  expect_equal(result$obs_code_code[1], source_table$obs_code_code[1])
+  expect_equal(nchar(result$obs_code_code[2:3]), c(32L, 32L))
+  expect_equal(result$obs_code_text[1], source_table$obs_code_text[1])
+  expect_true(all(is.na(result$obs_code_text[2:3])))
+})
+
+test_that("default rules retain only approved identifier structures", {
+  v2_system <- "http://terminology.hl7.org/CodeSystem/v2-0203"
+  v3_system <- "http://terminology.hl7.org/CodeSystem/v3-ObservationValue"
+  source_table <- data.table::data.table(
+    obs_identifier_type_system = c(v2_system, v2_system, v3_system, v3_system, v2_system, NA),
+    obs_identifier_type_code = c("VN", "MR", "PSEUDED", "ANONYED", "OTHER", NA),
+    obs_identifier_system = paste0("system-", seq_len(6)),
+    obs_identifier_value = paste0("identifier-", seq_len(6)),
+    obs_identifier_start = as.Date("2026-01-01") + seq_len(6)
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Observation", rep(NA_character_, 4)),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c(
+      "identifier/type/coding/system",
+      "identifier/type/coding/code",
+      "identifier/system",
+      "identifier/value",
+      "identifier/start"
+    ),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+  table_description <- setFhirPseudonymizationRules(table_description)
+
+  result <- pseudonymizeTable(source_table, table_description, "Observation")
+
+  approved_rows <- seq_len(4)
+  redacted_rows <- 5:6
+  expect_equal(
+    result$obs_identifier_system[approved_rows],
+    source_table$obs_identifier_system[approved_rows]
+  )
+  expect_equal(
+    result$obs_identifier_start[approved_rows],
+    source_table$obs_identifier_start[approved_rows]
+  )
+  expect_false(anyNA(result$obs_identifier_value[approved_rows]))
+  expect_false(any(
+    result$obs_identifier_value[approved_rows] ==
+      source_table$obs_identifier_value[approved_rows]
+  ))
+  expect_true(all(is.na(result$obs_identifier_system[redacted_rows])))
+  expect_true(all(is.na(result$obs_identifier_value[redacted_rows])))
+  expect_true(all(is.na(result$obs_identifier_start[redacted_rows])))
+})
+
+test_that("default rules retain only approved Observation coding details", {
+  source_table <- data.table::data.table(
+    obs_code_system = c(
+      "http://loinc.org",
+      "http://snomed.info/sct",
+      "http://loinc.org",
+      "http://snomed.info/sct",
+      "https://example.test/local",
+      NA_character_
+    ),
+    obs_code_code = paste0("observation-code-", seq_len(6)),
+    obs_code_display = paste0("observation display ", seq_len(6)),
+    obs_code_text = paste0("observation text ", seq_len(6)),
+    obs_valuecodeableconcept_system = c(
+      "http://fhir.de/CodeSystem/bfarm/atc",
+      "http://fhir.de/CodeSystem/ifa/pzn",
+      "http://snomed.info/sct",
+      "http://fhir.de/CodeSystem/ask",
+      "https://example.test/local",
+      NA_character_
+    ),
+    obs_valuecodeableconcept_code = paste0("value-code-", seq_len(6)),
+    obs_valuecodeableconcept_display = paste0("value display ", seq_len(6)),
+    obs_valuecodeableconcept_text = paste0("value text ", seq_len(6))
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Observation", rep(NA_character_, ncol(source_table) - 1L)),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c(
+      "code/coding/system",
+      "code/coding/code",
+      "code/coding/display",
+      "code/text",
+      "valueCodeableConcept/coding/system",
+      "valueCodeableConcept/coding/code",
+      "valueCodeableConcept/coding/display",
+      "valueCodeableConcept/text"
+    ),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+  table_description <- setFhirPseudonymizationRules(table_description)
+
+  result <- pseudonymizeTable(source_table, table_description, "Observation")
+
+  expect_equal(result$obs_code_system, source_table$obs_code_system)
+  expect_equal(result$obs_valuecodeableconcept_system, source_table$obs_valuecodeableconcept_system)
+  for (field in c("obs_code_code", "obs_valuecodeableconcept_code")) {
+    expect_equal(result[[field]][1:4], source_table[[field]][1:4])
+    expect_equal(nchar(result[[field]][5:6]), c(32L, 32L))
+  }
+  for (field in c(
+    "obs_code_display",
+    "obs_code_text",
+    "obs_valuecodeableconcept_display",
+    "obs_valuecodeableconcept_text"
+  )) {
+    expect_equal(result[[field]][1:4], source_table[[field]][1:4])
+    expect_true(all(is.na(result[[field]][5:6])))
+  }
+})
+
+test_that("default rules retain approved logical reference identifiers", {
+  v2_system <- "http://terminology.hl7.org/CodeSystem/v2-0203"
+  attribute_group_system <- paste0(
+    "https://www.medizininformatik-initiative.de/fhir/fdpg/NamingSystem/",
+    "attribute_group"
+  )
+  extraction_id_system <- paste0(
+    "https://www.medizininformatik-initiative.de/fhir/fdpg/NamingSystem/",
+    "extraction_id"
+  )
+  source_table <- data.table::data.table(
+    enc_subject_ref = paste0("Patient/", seq_len(5)),
+    enc_subject_identifier_type_coding_system = c(v2_system, v2_system, NA, NA, v2_system),
+    enc_subject_identifier_type_coding_code = c("VN", "MR", NA, NA, "OTHER"),
+    enc_subject_identifier_system = c(
+      "visit-system",
+      "patient-system",
+      attribute_group_system,
+      extraction_id_system,
+      "other-system"
+    ),
+    enc_subject_identifier_value = paste0("identifier-", seq_len(5))
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Encounter", rep(NA_character_, 4)),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c(
+      "subject/reference",
+      "subject/identifier/type/coding/system",
+      "subject/identifier/type/coding/code",
+      "subject/identifier/system",
+      "subject/identifier/value"
+    ),
+    REFERENCE_TYPES = NA_character_,
+    FHIR_TYPE = NA_character_
+  )
+  table_description <- setFhirPseudonymizationRules(table_description)
+
+  result <- pseudonymizeTable(source_table, table_description, "Encounter")
+
+  expect_equal(
+    result$enc_subject_identifier_type_coding_system[1:2],
+    source_table$enc_subject_identifier_type_coding_system[1:2]
+  )
+  expect_equal(
+    result$enc_subject_identifier_type_coding_code[1:2],
+    source_table$enc_subject_identifier_type_coding_code[1:2]
+  )
+  expect_equal(
+    result$enc_subject_identifier_system[1:4],
+    source_table$enc_subject_identifier_system[1:4]
+  )
+  expect_false(anyNA(result$enc_subject_identifier_value[1:4]))
+  expect_false(any(
+    result$enc_subject_identifier_value[1:2] ==
+      source_table$enc_subject_identifier_value[1:2]
+  ))
+  expect_equal(
+    result$enc_subject_identifier_value[3:4],
+    source_table$enc_subject_identifier_value[3:4]
+  )
+  expect_true(is.na(result$enc_subject_identifier_system[5]))
+  expect_true(is.na(result$enc_subject_identifier_type_coding_system[5]))
+  expect_true(is.na(result$enc_subject_identifier_type_coding_code[5]))
+  expect_true(is.na(result$enc_subject_identifier_value[5]))
+})
+
+test_that("cryptoHash maxLength truncates generated hashes", {
+  source_table <- data.table::data.table(id = "abc")
+  table_description <- data.table::data.table(
+    TABLE_NAME = "target",
+    COLUMN_NAME = "id",
+    PSEUDONYMIZATION_RULE = "cryptoHash(maxLength = 8)"
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_equal(nchar(result$id), 8L)
+
+  table_description$PSEUDONYMIZATION_RULE <- "cryptoHash(8)"
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_equal(nchar(result$id), 8L)
+})
+
+test_that("cryptoHash defaults to maxLength 32", {
+  source_table <- data.table::data.table(id = "abc")
+  table_description <- data.table::data.table(
+    TABLE_NAME = "target",
+    COLUMN_NAME = "id",
+    PSEUDONYMIZATION_RULE = "cryptoHash"
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_equal(nchar(result$id), 32L)
+})
+
+test_that("hashing rules preserve relative FHIR reference prefixes", {
+  source_table <- data.table::data.table(
+    enc_id = "enc-1",
+    subject_ref = "Encounter/enc-1",
+    calculated_ref = "Patient/pat-1"
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "target",
+    COLUMN_NAME = c("enc_id", "subject_ref", "calculated_ref"),
+    FHIR_EXPRESSION = c("id", "subject/reference", "calculated_ref"),
+    PSEUDONYMIZATION_RULE = c(
+      "cryptoHash",
+      "cryptoHash",
+      "pseudonymize(domain = \"patient-reference\")"
+    )
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "target")
+  expected_enc_id <- pseudonymizeTable(
+    data.table::data.table(enc_id = "enc-1"),
+    table_description[1, ],
+    "target"
+  )$enc_id
+  expected_patient_ref_id <- pseudonymizeTable(
+    data.table::data.table(calculated_ref = "pat-1"),
+    data.table::data.table(
+      TABLE_NAME = "target",
+      COLUMN_NAME = "calculated_ref",
+      FHIR_EXPRESSION = "id",
+      PSEUDONYMIZATION_RULE = "pseudonymize(domain = \"patient-reference\")"
+    ),
+    "target"
+  )$calculated_ref
+
+  expect_equal(result$enc_id, expected_enc_id)
+  expect_equal(result$subject_ref, paste0("Encounter/", expected_enc_id))
+  expect_equal(result$calculated_ref, paste0("Patient/", expected_patient_ref_id))
+})
+
+test_that("pseudonymize rules execute as cryptoHash aliases", {
+  source_table <- data.table::data.table(
+    id_crypto = "abc",
+    id_pseudonymize = "abc"
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "target",
+    COLUMN_NAME = c("id_crypto", "id_pseudonymize"),
+    PSEUDONYMIZATION_RULE = c("cryptoHash", "pseudonymize(domain = \"ignored-domain\")")
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_equal(result$id_pseudonymize, result$id_crypto)
+})
+
+test_that("empty rules fail and explicit keep rules preserve values", {
+  source_table <- data.table::data.table(id = "abc", value = "visible")
+  table_description <- data.table::data.table(
+    TABLE_NAME = c("other", "target", NA),
+    COLUMN_NAME = c("id", "id", "value"),
+    PSEUDONYMIZATION_RULE = c("keep", NA_character_, "keep")
+  )
+
+  expect_error(
+    pseudonymizeTable(source_table, table_description, "target"),
+    "PSEUDONYMIZATION_RULE must not be empty"
+  )
+
+  table_description$PSEUDONYMIZATION_RULE[2] <- "keep"
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_equal(result$id, "abc")
+  expect_equal(result$value, "visible")
+})
+
+test_that("hashing rules are deterministic without salt", {
+  source_table <- data.table::data.table(id = "abc")
+  table_description <- data.table::data.table(
+    TABLE_NAME = "target",
+    COLUMN_NAME = "id",
+    PSEUDONYMIZATION_RULE = "cryptoHash"
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "target")
+
+  expect_equal(
+    result$id,
+    substr(digest::digest("abc", algo = "sha256", serialize = FALSE), 1, 32)
+  )
+})
+
+test_that("unsupported rules fail loudly", {
+  source_table <- data.table::data.table(id = "abc")
+  table_description <- data.table::data.table(
+    TABLE_NAME = "target",
+    COLUMN_NAME = "id",
+    PSEUDONYMIZATION_RULE = "blur"
+  )
+
+  expect_error(
+    pseudonymizeTable(source_table, table_description, "target"),
+    "Unsupported PSEUDONYMIZATION_RULE"
+  )
+})
+
+writePseudonymMappingWorkbook <- function(input_repo_path, sheet_name, mapping) {
+  dir.create(input_repo_path, recursive = TRUE, showWarnings = FALSE)
+  etlutils::writeExcelFile(
+    stats::setNames(list(mapping), sheet_name),
+    getPseudonymMappingFilePath(input_repo_path),
+    with_column_names = TRUE
+  )
+}
+
+writeCommentedPseudonymMappingWorkbook <- function(input_repo_path, sheet_name, mapping) {
+  dir.create(input_repo_path, recursive = TRUE, showWarnings = FALSE)
+  mapping_with_header <- etlutils::addTextHeaderToTable(
+    mapping,
+    header = c("Hint", "Mapping sheets may contain explanatory text above the table."),
+    insert_column_names_below_header = TRUE
+  )
+  etlutils::writeExcelFile(
+    stats::setNames(list(mapping_with_header), sheet_name),
+    getPseudonymMappingFilePath(input_repo_path),
+    with_column_names = FALSE
+  )
+}
+
+test_that("pseudonym mapping workbook is stored in the enclosing Input-Repo", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  input_repo_root <- dirname(input_repo_path)
+  expect_equal(
+    getPseudonymMappingFilePath(input_repo_path),
+    file.path(normalizePath(input_repo_root), "pseudo_mapping.xlsx")
+  )
+  expect_equal(
+    getPseudonymMappingFilePath(input_repo_root),
+    file.path(normalizePath(input_repo_root), "pseudo_mapping.xlsx")
+  )
+})
+
+test_that("the previous mapping workbook location is reported before processing", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  legacy_mapping_file <- file.path(normalizePath(input_repo_path), "pseudo_mapping.xlsx")
+  file.create(legacy_mapping_file)
+
+  expect_error(
+    assertPseudonymMappingFileLocation(input_repo_path),
+    paste0(
+      "Move it from:\\n", legacy_mapping_file, "\\n",
+      "Move it to:\\n", getPseudonymMappingFilePath(input_repo_path)
+    )
+  )
+})
+
+test_that("pseudonym rules use fixed Excel mapping file and sheet argument", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  writePseudonymMappingWorkbook(
+    input_repo_path,
+    "ward_mapping",
+    data.table::data.table(
+      KEY = c("Station A", "Intensiv 1 West"),
+      PSEUDONYM = c("ward 001", "ICU WEST")
+    )
+  )
+  source_table <- data.table::data.table(
+    redcap_data_access_group = c("Station A", "Intensiv 1 West", NA)
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "frontend",
+    COLUMN_NAME = "redcap_data_access_group",
+    PSEUDONYMIZATION_RULE = "pseudonym(sheet = \"ward_mapping\")"
+  )
+
+  result <- pseudonymizeTable(
+    source_table,
+    table_description,
+    "frontend",
+    input_repo_path = input_repo_path
+  )
+
+  expect_equal(result$redcap_data_access_group, c("ward 001", "ICU WEST", NA))
+})
+
+test_that("pseudonym rules map newline-separated values individually", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  writePseudonymMappingWorkbook(
+    input_repo_path,
+    "ward_mapping",
+    data.table::data.table(
+      KEY = c("Allgemeinchirurgie", "Pneumologie"),
+      PSEUDONYM = c("ward 001", "ward 002")
+    )
+  )
+  source_table <- data.table::data.table(
+    ward = c(
+      "Allgemeinchirurgie",
+      "Allgemeinchirurgie\nPneumologie",
+      "Pneumologie\r\nAllgemeinchirurgie"
+    )
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "frontend",
+    COLUMN_NAME = "ward",
+    PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "ward_mapping")'
+  )
+
+  result <- pseudonymizeTable(
+    source_table,
+    table_description,
+    "frontend",
+    input_repo_path = input_repo_path
+  )
+
+  expect_equal(
+    result$ward,
+    c("ward 001", "ward 001\nward 002", "ward 002\nward 001")
+  )
+})
+
+test_that("pseudonym mapping sheets may contain a comment block above the table", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  writeCommentedPseudonymMappingWorkbook(
+    input_repo_path,
+    "frontend_users",
+    data.table::data.table(
+      KEY = "Originalwert mit Leerzeichen",
+      PSEUDONYM = "pseudo user"
+    )
+  )
+  source_table <- data.table::data.table(user = "Originalwert mit Leerzeichen")
+  table_description <- data.table::data.table(
+    TABLE_NAME = "frontend",
+    COLUMN_NAME = "user",
+    PSEUDONYMIZATION_RULE = "pseudonym(sheet = \"frontend_users\")"
+  )
+
+  result <- pseudonymizeTable(
+    source_table,
+    table_description,
+    "frontend",
+    input_repo_path = input_repo_path
+  )
+
+  expect_equal(result$user, "pseudo user")
+})
+
+test_that("pseudonym rules allow the sheet name as first positional argument", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  writePseudonymMappingWorkbook(
+    input_repo_path,
+    "patient_group",
+    data.table::data.table(
+      KEY = "group one",
+      PSEUDONYM = "pseudo group one"
+    )
+  )
+  source_table <- data.table::data.table(group = "group one")
+  table_description <- data.table::data.table(
+    TABLE_NAME = "frontend",
+    COLUMN_NAME = "group",
+    PSEUDONYMIZATION_RULE = "pseudonym(\"patient_group\")"
+  )
+
+  result <- pseudonymizeTable(
+    source_table,
+    table_description,
+    "frontend",
+    input_repo_path = input_repo_path
+  )
+
+  expect_equal(result$group, "pseudo group one")
+})
+
+test_that("pseudonym rules report all missing mapping keys together", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  writePseudonymMappingWorkbook(
+    input_repo_path,
+    "ward_mapping",
+    data.table::data.table(
+      KEY = "known",
+      PSEUDONYM = "pseudo known"
+    )
+  )
+  source_table <- data.table::data.table(
+    ward = c("known", "missing ward"),
+    group = c("missing group", "known")
+  )
+  table_description <- data.table::data.table(
+    TABLE_NAME = "frontend",
+    COLUMN_NAME = c("ward", "group"),
+    PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "ward_mapping")'
+  )
+
+  expect_error(
+    pseudonymizeTable(
+      source_table,
+      table_description,
+      "frontend",
+      input_repo_path = input_repo_path
+    ),
+    regexp = paste0(
+      "Missing pseudonym mapping values.*",
+      "column=group, key=missing group.*",
+      "column=ward, key=missing ward"
+    )
+  )
+})
+
+test_that("pseudonym mapping validation rejects duplicate keys", {
+  input_repo_path <- newPseudonymTestInputRepoPath()
+  writePseudonymMappingWorkbook(
+    input_repo_path,
+    "ward_mapping",
+    data.table::data.table(
+      KEY = c("Station A", "Station A"),
+      PSEUDONYM = c("ward 001", "ward 002")
+    )
+  )
+  source_table <- data.table::data.table(ward = "Station A")
+  table_description <- data.table::data.table(
+    TABLE_NAME = "frontend",
+    COLUMN_NAME = "ward",
+    PSEUDONYMIZATION_RULE = 'pseudonym(sheet = "ward_mapping")'
+  )
+
+  expect_error(
+    pseudonymizeTable(
+      source_table,
+      table_description,
+      "frontend",
+      input_repo_path = input_repo_path
+    ),
+    "duplicate KEY"
+  )
+})

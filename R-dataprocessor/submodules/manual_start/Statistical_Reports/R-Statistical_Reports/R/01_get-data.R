@@ -56,31 +56,31 @@ getPatientData <- function(lock_id, table_name) {
     patient_table_raw <- createPatientDataWarningsSituations(patient_table_raw)
   }
   # DEBUG END-------------------------------
-
-  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
-    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "")) {
-    patient_table_raw <- patient_table_raw |>
-      dplyr::filter(
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system)
-      ) |>
-      dplyr::distinct()
-  }
-  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") &
-    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "")) {
-    patient_table_raw <- patient_table_raw |>
-      dplyr::filter(
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system)
-      ) |>
-      dplyr::distinct()
-  }
-  if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") &
-    !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", "")) {
-    patient_table_raw <- patient_table_raw |>
-      dplyr::filter(
-        grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)
-      ) |>
-      dplyr::distinct()
-  }
+  # TODO: check if this filtering is still needed ---------------
+  # if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM") &
+  #   !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM %in% c(".*", "")) {
+  #   patient_table_raw <- patient_table_raw |>
+  #     dplyr::filter(
+  #       grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_SYSTEM, pat_identifier_system)
+  #     ) |>
+  #     dplyr::distinct()
+  # }
+  # if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM") &
+  #   !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM %in% c(".*", "")) {
+  #   patient_table_raw <- patient_table_raw |>
+  #     dplyr::filter(
+  #       grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_SYSTEM, pat_identifier_type_system)
+  #     ) |>
+  #     dplyr::distinct()
+  # }
+  # if (exists("FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE") &
+  #   !FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE %in% c(".*", "")) {
+  #   patient_table_raw <- patient_table_raw |>
+  #     dplyr::filter(
+  #       grepl(FRONTEND_DISPLAYED_PATIENT_FHIR_IDENTIFIER_TYPE_CODE, pat_identifier_type_code)
+  #     ) |>
+  #     dplyr::distinct()
+  # }
   patient_table <- patient_table_raw |>
     dplyr::distinct() |>
     dplyr::arrange(pat_id)
@@ -148,13 +148,39 @@ getPatientData <- function(lock_id, table_name) {
 # (bottom variables not in use)
 
 getEncounterData <- function(lock_id, table_name, report_period_start) {
-  query <- paste0(
-    "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
-    "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
-    "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
+  columns <- etlutils::dbGetTableColumnTypes(table_name, readonly = TRUE) |>
+    dplyr::distinct(column_name) |>
+    dplyr::pull(column_name)
 
-    "FROM ", table_name, "\n"
-  )
+  if ("enc_age_at_admission" %in% columns) {
+    query <- paste0(
+      "SELECT enc_id, enc_age_at_admission, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
+      "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
+      "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
+      "FROM ", table_name, "\n"
+    )
+  } else {
+    query <- paste0(
+      "SELECT enc_id, enc_identifier_value, enc_patient_ref, enc_partof_calculated_ref, ",
+      "enc_class_code, enc_type_code, enc_period_start, enc_period_end, enc_status, ",
+      "enc_identifier_system, enc_type_system, enc_main_encounter_calculated_ref ",
+
+      # ----------------------------------------------------------------------------------------------------------#
+      # possible additional useful variables not included at the moment:
+
+      # "enc_identifier_type_code, enc_class_system, enc_servicetype_system, enc_servicetype_code, ",
+      # "enc_hospitalization_admitsource_system, enc_hospitalization_admitsource_code, ",
+      # "enc_hospitalization_dischargedisposition_system, enc_hospitalization_dischargedisposition_code, ",
+      # "enc_location_ref, enc_location_identifier_value, enc_location_status, ",
+      # "enc_location_physicaltype_system, enc_location_physicaltype_code, ",
+      # "enc_serviceprovider_identifier_type_system, enc_serviceprovider_identifier_type_code, ",
+      # "enc_serviceprovider_identifier_system, enc_serviceprovider_identifier_value, ",
+      # "enc_meta_lastupdated ",
+      # ----------------------------------------------------------------------------------------------------------#
+
+      "FROM ", table_name, "\n"
+    )
+  }
 
   encounter_table_raw <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct()
@@ -169,20 +195,21 @@ getEncounterData <- function(lock_id, table_name, report_period_start) {
     stop("No encounter data downloaded from database. Please check the database.")
   }
 
-  if (etlutils::isDefinedAndNotEmpty("MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
-    encounter_table_raw <- encounter_table_raw |>
-      dplyr::filter(enc_identifier_system %in% MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM) |>
-      dplyr::distinct()
-  }
+  # TODO: check if this filtering is still needed ---------------
+  # if (etlutils::isDefinedAndNotEmpty("MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")) {
+  #   encounter_table_raw <- encounter_table_raw |>
+  #     dplyr::filter(enc_identifier_system %in% MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM) |>
+  #     dplyr::distinct()
+  # }
 
-  if (nrow(encounter_table_raw) == 0) {
-    stop("The downloaded and identifier-filtered encounter table is empty. Please check (if defined)
-    for the correct definition of MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")
-  }
+  # if (nrow(encounter_table_raw) == 0) {
+  #   stop("The downloaded and identifier-filtered encounter table is empty. Please check (if defined)
+  #   for the correct definition of MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM")
+  # }
 
   encounter_table <- encounter_table_raw |>
-    dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_start)) |>
-    dplyr::filter(enc_period_end >= (as.POSIXct(report_period_start) - 365) | is.na(enc_period_end))
+    dplyr::filter(enc_period_start >= (as.POSIXct(report_period_start) - as.difftime(365, units = "days")) | is.na(enc_period_start)) |>
+    dplyr::filter(enc_period_end >= (as.POSIXct(report_period_start) - as.difftime(365, units = "days")) | is.na(enc_period_end))
 
   if (nrow(encounter_table) == 0) {
     stop("The downloaded and date-filtered encounter table (only encounter data from one year before
@@ -445,11 +472,23 @@ getPatientFeData <- function(lock_id, table_name) {
 #' @importFrom dplyr distinct arrange select slice_max
 #' @export
 getFallFeData <- function(lock_id, table_name) {
-  query <- paste0(
-    "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
-    "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, fall_complete, input_processing_nr ",
-    "FROM ", table_name, "\n"
-  )
+  columns <- etlutils::dbGetTableColumnTypes(table_name, readonly = TRUE) |>
+    dplyr::distinct(column_name) |>
+    dplyr::pull(column_name)
+
+  if ("fall_age_at_admission" %in% columns) {
+    query <- paste0(
+      "SELECT record_id, fall_fhir_enc_id, fall_pat_id, fall_age_at_admission, ",
+      "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, fall_complete, input_processing_nr ",
+      "FROM ", table_name, "\n"
+    )
+  } else {
+    query <- paste0(
+      "SELECT record_id, fall_fhir_enc_id, fall_pat_id, ",
+      "fall_id, fall_studienphase, fall_station, fall_aufn_dat, fall_ent_dat, fall_complete, input_processing_nr ",
+      "FROM ", table_name, "\n"
+    )
+  }
   fall_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # get correct study phase (first one in fall_fe for each case)
@@ -466,8 +505,10 @@ getFallFeData <- function(lock_id, table_name) {
     dplyr::distinct() |>
     dplyr::arrange(record_id)
 
-  if (any(is.na(fall_fe_table$actual_fall_studienphase)) ||
-    any(fall_fe_table$actual_fall_studienphase == "PhaseBTest")) {
+  if (
+    any(is.na(fall_fe_table$actual_fall_studienphase)) ||
+    any(fall_fe_table$actual_fall_studienphase == "PhaseBTest")
+  ) {
     warning("The study phase from fall_fe contains NA or PhaseBTest values. These will be replaced with 'PhaseA'.
             For manual check compare fall_studienphase and actual_fall_studienphase in frontend_table in outpulLocal.")
 
@@ -525,9 +566,35 @@ getFallFeData <- function(lock_id, table_name) {
 getMedikationsanalyseFeData <- function(lock_id, table_name) {
   query <- paste0(
     "SELECT record_id, fall_meda_id, meda_id, meda_dat, ",
-    "medikationsanalyse_complete, last_processing_nr, redcap_repeat_instance FROM ", table_name, "\n"
+    "medikationsanalyse_complete, meda_mrp_detekt, last_processing_nr, redcap_repeat_instance FROM ", table_name, "\n"
   )
 
+  # ----------------------------------------------------------------------------------------------------------#
+  # possible additional useful variables not included at the moment:
+
+  # \item `meda_anlage` – identifier of the person who created the medication analysis.
+  # \item `meda_edit` – identifier of the person who last edited the medication analysis.
+  # \item `meda_typ` – Type of medication analysis.
+  # \item `meda_gewicht_aktuell` – Current weight of the patient at the time of analysis.
+  # \item `meda_gewicht_aktl_einheit` – Unit of measurement for the current weight.
+  # \item `meda_groesse` – Height of the patient at the time of analysis.
+  # \item `meda_groesse_einheit` – Unit of measurement for the height.
+  # \item `meda_nieren_insuf_chron` – Flag indicating if the patient has chronic kidney insufficiency.
+  # \item `meda_nieren_insuf_ausmass` – Degree of chronic kidney insufficiency.
+  # \item `meda_nieren_insuf_dialysev` – Flag indicating if the patient is on dialysis.
+  # \item `meda_leber_insuf` – Flag indicating if the patient has liver insufficiency.
+  # \item `meda_leber_insuf_ausmass` – Degree of liver insufficiency.
+  # \item `meda_schwanger_mo` – Flag indicating if the patient is pregnant.
+  # \item `meda_ma_thueberw` – Flag indicating if medication analysis is marked for representment
+  # \item `meda_mrp_detekt` – Flag indicating if a medication-related problem (MRP) was detected.
+  # \item `meda_aufwand_zeit` – Time spent on the medication analysis.
+  # \item `meda_notiz` – Additional notes related to the medication analysis.
+
+  # meda_anlage, meda_edit, meda_typ, meda_gewicht_aktuell, meda_gewicht_aktl_einheit
+  # meda_groesse, meda_groesse_einheit, meda_nieren_insuf_chron, meda_nieren_insuf_ausmass
+  # meda_nieren_insuf_dialysev, meda_leber_insuf, meda_leber_insuf_ausmass, meda_schwanger_mo
+  # meda_ma_thueberw, meda_mrp_detekt, meda_aufwand_zeit, meda_notiz
+  # ----------------------------------------------------------------------------------------------------------#
   medikationsanalyse_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # create last version view
@@ -580,6 +647,18 @@ getMRPDokumentationValidierungFeData <- function(lock_id, table_name) {
     "FROM ", table_name, "\n"
   )
 
+  # ----------------------------------------------------------------------------------------------------------#
+  # possible additional useful variables not included at the moment:
+
+  # mrp_anlage, mrp_edit, mrp_kurzbeschr, mrp_hinweisgeber, mrp_hinweisgeber_oth, mrp_wirkstoff
+  # paste0("mrp_atc", 1:5, collapse = ", ")
+  # mrp_med_prod, mrp_med_prod_sonst
+  # paste0("mrp_pigrund___", 1:27, collapse = ", ")
+  # mrp_ip_klasse_disease, mrp_ip_klasse_nieren_insuf
+  # paste0("mrp_massn_am___", 1:10, collapse = ", ")
+  # paste0("mrp_massn_orga___", 1:8, collapse = ", ")
+  # mrp_notiz, mrp_merp
+  # ----------------------------------------------------------------------------------------------------------#
   mrp_dokumentation_validierung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     # create last version view
@@ -637,6 +716,18 @@ getRetrolektiveMRPBewertungFeData <- function(lock_id, table_name) {
     "FROM ", table_name, "\n"
   )
 
+  # ----------------------------------------------------------------------------------------------------------#
+  # possible additional useful variables not included at the moment:
+
+  # ret_bewerter1, ret_meda_dat1, ret_kurzbeschr, ret_atc1, ret_atc2,
+  # ret_ip_klasse_disease,
+  # ret_gewissheit1_oth
+  # ret_gewiss_grund_abl_sonst1, ret_gewiss_grund_abl_klin1,
+  # ret_massn_am1___1/...10, ret_massn_orga1___1/..8, ret_notiz1,
+  # ret_meda_dat_referenz, ret_gewiss_trigger1_falsch___1/...4, ret_gewiss_datengrundl1_1___1/...4,
+  # ret_gewiss_datengrundl1_2___1/...4, ret_gewiss_datengrundl1_1_oth, ret_gewiss_datengrundl1_2_oth,
+  # ... weitere für Auswertung Zweitbewertung
+  # ----------------------------------------------------------------------------------------------------------#
   retrolektive_mrpbewertung_fe_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
     dplyr::distinct() |>
     dplyr::arrange(record_id, ret_meda_id, ret_id)

@@ -1,5 +1,4 @@
 mrpCheck <- function(start_date, end_date) {
-
   anonymizeTimestampsByPatient <- function(
     dt,
     patient_id_col = "FHIR Patient ID",
@@ -81,7 +80,10 @@ mrpCheck <- function(start_date, end_date) {
         )
 
         new_ts <- format(
-          as.POSIXct(old_ts, tz = "UTC") + shift_val,
+          as.POSIXct(
+            old_ts,
+            tz = "UTC"
+          ) + shift_val,
           "%Y-%m-%d %H:%M:%S"
         )
 
@@ -138,7 +140,9 @@ mrpCheck <- function(start_date, end_date) {
     # Merge only enc_period_start and enc_period_end into result
     result <- merge(
       result,
-      main_encounters_unique[, .(enc_id, enc_period_start, enc_period_end)],
+      main_encounters_unique[, .(
+        enc_id, enc_period_start, enc_period_end
+      )],
       by = "enc_id",
       all.x = TRUE
     )
@@ -163,32 +167,41 @@ mrpCheck <- function(start_date, end_date) {
   })
 
   etlutils::runLevel2("Rename columns in calculated MRP Excel file", {
-    data.table::setnames(result,
-                         old = old_col_names,
-                         new = c("FHIR Patient ID",
-                                 "REDCap Record ID",
-                                 "FHIR Encounter ID",
-                                 "FHIR Encounter Start",
-                                 "FHIR Encounter End",
-                                 "MRP Typ",
-                                 "REDCap Medikationsanalyse ID",
-                                 "Station",
-                                 "Datum Medikationsanalyse",
-                                 "MRP Beschreibung"))
+    data.table::setnames(
+      result,
+      old = old_col_names,
+      new = c(
+        "FHIR Patient ID",
+        "REDCap Record ID",
+        "FHIR Encounter ID",
+        "FHIR Encounter Start",
+        "FHIR Encounter End",
+        "MRP Typ",
+        "REDCap Medikationsanalyse ID",
+        "Station",
+        "Datum Medikationsanalyse",
+        "MRP Beschreibung"
+      )
+    )
 
-    query <- paste0("SELECT MIN(enc_period_start) AS min_enc_period_start\n",
-                    "FROM v_encounter_last_version\n",
-                    "WHERE enc_period_start BETWEEN '", start_date, "' AND '", end_date, "';")
+    query <- paste0(
+      "SELECT MIN(enc_period_start) AS min_enc_period_start\n",
+      "FROM v_encounter_last_version\n",
+      "WHERE enc_period_start BETWEEN '", start_date, "' AND '", end_date, "';"
+    )
     min_encounter_start <- etlutils::dbGetReadOnlyQuery(query, lock_id = "get encounter minimum startdate")
 
     # Add export period at the end of the table in the first column
-    result <- etlutils::addRowsWithColumn(result, c("",
-                                                    paste("Start:", format(start_date, "%Y-%m-%d %H:%M:%S")),
-                                                    paste("End:", format(end_date, "%Y-%m-%d %H:%M:%S")),
-                                                    paste("Exported on:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
-                                                    paste("Minimum Encounter Start:", format(min_encounter_start, "%Y-%m-%d %H:%M:%S")),
-                                                    paste("Release Version:", etlutils::getReleaseVersion())),
-                                          column = "MRP Typ")
+    result <- etlutils::addRowsWithColumn(result, c(
+      "",
+      paste("Start:", format(start_date, "%Y-%m-%d %H:%M:%S")),
+      paste("End:", format(end_date, "%Y-%m-%d %H:%M:%S")),
+      paste("Exported on:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
+      paste("Minimum Encounter Start:", format(min_encounter_start, "%Y-%m-%d %H:%M:%S")),
+      paste("Release Version:", etlutils::getReleaseVersion())
+    ),
+    column = "MRP Typ"
+    )
   })
 
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {
@@ -218,5 +231,4 @@ mrpCheck <- function(start_date, end_date) {
   etlutils::runLevel2("Save calculated MRPs as local Excel file", {
     etlutils::writeExcelFileGlobal(list("MRP Check" = result), "MRP_Check_Result_global")
   })
-
 }

@@ -8,8 +8,8 @@
 #' @return A named character vector of column names relevant to Drug-Disease MRP definitions.
 getRelevantColumnNamesDrugDisease <- function() {
   etlutils::namedVectorByValue(
-    #"SMPC_NAME",
-    #"SMPC_VERSION",
+    # "SMPC_NAME",
+    # "SMPC_VERSION",
     "ATC_DISPLAY",
     "ATC_PRIMARY",
     "ATC_SYSTEMIC_SY",
@@ -31,7 +31,8 @@ getRelevantColumnNamesDrugDisease <- function() {
     "LOINC_DISPLAY",
     "LOINC_VALIDITY_DAYS",
     "LOINC_CUTOFF_REFERENCE",
-    "LOINC_CUTOFF_ABSOLUTE")
+    "LOINC_CUTOFF_ABSOLUTE"
+  )
 }
 
 #' Get Category Display Name for Drug-Disease MRPs
@@ -40,7 +41,9 @@ getRelevantColumnNamesDrugDisease <- function() {
 #' tagging or labeling MRPs in evaluation outputs.
 #'
 #' @return A character string: \code{"Drug-Disease"}
-getCategoryDisplayDrugDisease <- function() {"Drug-Disease"}
+getCategoryDisplayDrugDisease <- function() {
+  "Drug-Disease"
+}
 
 #' Clean and Expand Drug_Disease_MRP Definition Table
 #'
@@ -54,7 +57,6 @@ getCategoryDisplayDrugDisease <- function() {"Drug-Disease"}
 #'
 #' @export
 processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type) {
-
   drug_disease_mrp_definition <- processExcelContentDrugCondition(drug_disease_mrp_definition, mrp_type)
 
   return(drug_disease_mrp_definition)
@@ -77,17 +79,28 @@ processExcelContentDrugDisease <- function(drug_disease_mrp_definition, mrp_type
 #' }
 #'
 getSplittedMRPTablesDrugDisease <- function(mrp_pair_list) {
-
   # ensure the optional columns for the proxy validity days are present in the pair list table
   mrp_pair_list[, ICD_PROXY_ATC_VALIDITY_DAYS := if (!"ICD_PROXY_ATC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else ICD_PROXY_ATC_VALIDITY_DAYS]
   mrp_pair_list[, ICD_PROXY_OPS_VALIDITY_DAYS := if (!"ICD_PROXY_OPS_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else ICD_PROXY_OPS_VALIDITY_DAYS]
   mrp_pair_list[, LOINC_VALIDITY_DAYS := if (!"LOINC_VALIDITY_DAYS" %in% names(mrp_pair_list)) NA_character_ else LOINC_VALIDITY_DAYS]
 
   splitted <- list(
-    by_atc = etlutils::splitTableToList(mrp_pair_list, "ATC_FOR_CALCULATION", rm.na = TRUE),
-    by_icd = etlutils::splitTableToList(mrp_pair_list, "ICD", rm.na = TRUE),
-    by_atc_proxy = etlutils::splitTableToList(mrp_pair_list, "ICD_PROXY_ATC", rm.na = TRUE),
-    by_ops_proxy = etlutils::splitTableToList(mrp_pair_list, "ICD_PROXY_OPS", rm.na = TRUE),
+    by_atc = etlutils::splitTableToList(
+      mrp_pair_list, "ATC_FOR_CALCULATION",
+      rm.na = TRUE
+    ),
+    by_icd = etlutils::splitTableToList(
+      mrp_pair_list, "ICD",
+      rm.na = TRUE
+    ),
+    by_atc_proxy = etlutils::splitTableToList(
+      mrp_pair_list, "ICD_PROXY_ATC",
+      rm.na = TRUE
+    ),
+    by_ops_proxy = etlutils::splitTableToList(
+      mrp_pair_list, "ICD_PROXY_OPS",
+      rm.na = TRUE
+    ),
     by_loinc_proxy = etlutils::splitTableToList(mrp_pair_list, "LOINC_PRIMARY_PROXY", rm.na = TRUE)
   )
 

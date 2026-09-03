@@ -8,7 +8,7 @@ debugAddMultiplePatientLines <- function(patients_from_database) {
     i_source <- nrow(patients_from_database) - (2 * new_row_count) + i
     i_target <- i_source + new_row_count
     patients_from_database[i_target] <- patients_from_database[i_source]
-    #increase the patient_id = db internal record id number
+    # increase the patient_id = db internal record id number
     new_id <- max(na.omit(patients_from_database$patient_id)) + 1
     patients_from_database[i_target, patient_id := new_id]
   }

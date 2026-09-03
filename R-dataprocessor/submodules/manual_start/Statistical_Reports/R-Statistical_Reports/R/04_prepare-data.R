@@ -47,7 +47,7 @@
 prepareF1data <- function(full_analysis_set_1, report_period_start, report_period_end) {
   F1_prep_raw <- full_analysis_set_1 |>
     dplyr::filter(!is.na(ward_name)) |> # only encounters with ward name (see addWardName)
-    dplyr::mutate(calendar_week = data.table::isoweek(enc_period_start), .after = enc_period_start) |> # add calendar week
+    addCalendarWeek(reference_date_col = enc_period_start) |>
     dplyr::distinct(
       enc_id, main_enc_id, main_enc_period_start, enc_identifier_value, pat_id,
       record_id, fall_id_cis, enc_type_code_Kontaktebene, age_at_hospitalization, enc_period_start,
@@ -164,66 +164,112 @@ CombineWardsForAnalysis <- function(frontend_table) {
 }
 
 #------------------------------------------------------------------------------#
-#' Prepare Front-End Summary Data for Reporting Period
+#' Prepare Front-End Summary Data for a Reporting Period
 #'
-#' Enriches the complete front-end dataset with summary variables for
-#' reporting within a defined period. Only entries with a `fall_aufn_dat` timestamp falling
-#' within the specified `report_period_start` and `report_period_end` range are retained.
-#' To show all frontend cases, this is needed (instead of using the enc_period_start),
-#' because the frontend only provides the main encounter start date and cases without medication
-#' analysis are not assigned to a sub-encounter.
+#' Enriches front-end data with summary variables and restricts the
+#' resulting data to a specified reporting period and boundary.
 #'
-#' @param frontend_table A data frame containing merged front-end data, including medication analysis
-#'   and MRP documentation information. Must include at least `pat_id`, `record_id`, `fall_id_cis`,
-#'   `actual_fall_studienphase`, `enc_id`, `fall_aufn_dat`,  relevant MRP fields and `processing_exclusion_reason`.
-#' @param report_period_start A character string representing the start of the reporting period
-#'                           (format: "YYYY-MM-DD").
-#' @param report_period_end A character string representing the end of the reporting period
-#'                          (format: "YYYY-MM-DD").
+#' The function combines ward information, determines the first encounter
+#' period start per main encounter, adds a calendar week, and derives flags
+#' for verification status, processing exclusions, medication analyses, MRP
+#' documentation, algorithmic MRP eligibility, and reporting thresholds.
+#' Depending on `report_period_boundary`, encounters are filtered according
+#' to either their hospital stay or their ward stay.
 #'
-#' @return A data frame containing enriched front-end summary data for encounters with `fall_aufn_dat`
-#' within the specified reporting period. The dataset includes additional variables derived from the
-#' original front-end data, such as calendar week, eligibility for algorithmic MRP calculation, and various flags
-#' indicating the presence of MRP documentation, medication analysis, and processing exclusion reasons
-#' for both main and sub encounters.
+#' @param frontend_table A data frame containing merged front-end data,
+#'   including patient, encounter, ward, medication analysis, MRP
+#'   documentation, and processing exclusion information.
+#' @param report_period_start A character string specifying the start of the
+#'   reporting period in `"YYYY-MM-DD"` format.
+#' @param report_period_end A character string specifying the end of the
+#'   reporting period in `"YYYY-MM-DD"` format.
+#' @param report_period_boundary A character string specifying the temporal
+#'   boundary used for filtering. Must be either `"hospital_stay"` or
+#'   `"ward_stay"`.
+#' @param calendar_week_reference_date_col A date or date-time column used
+#'   as the reference for calculating the calendar week. The column should
+#'   be supplied unquoted.
+#' @param first_ward_stay_and_meda_filter A logical flag indicating whether to
+#'  restrict the data to the first ward stay and its first medication analysis
+#'
+#' @return A data frame containing enriched front-end summary data restricted
+#'   to the specified reporting period. The result includes derived variables
+#'   for calendar week, encounter verification, processing exclusions,
+#'   medication analyses, MRP documentation, algorithmic MRP eligibility,
+#'   patient-count thresholds, and renamed encounter and ward identifiers.
 #'
 #' @details
-#' The resulting dataset includes additional variables derived from the original front-end data:
-#' - `calendar_week` (derived from `fall_aufn_dat`; including the year)
-#' - `Kontraindikation` (derived from `mrp_pigrund___21`)
-#' - `main_enc_id` (derived from `fall_fhir_main_enc_id`)
-#' - `ward_name` (derived from `fall_station`, optionally after combining wards for analysis)
-#' - `unverified_pat_or_sub_enc` (indicating if either the patient or the sub encounter is unverified)
-#' - `main_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
-#'                                           for the main encounter (if not already in 'not in inclusion criteria'))
-#' - `main_enc_not_in_inclusion_criteria` (indicating if the main encounter is excluded due to
-#'                                           not being in inclusion criteria)
-#' - `sub_enc_any_processing_exclusion_fe` (indicating if any processing exclusion reason exists
-#'                                          for the sub encounter  (if not already in 'not in inclusion criteria'))
-#' - `sub_enc_all_processing_exclusion_fe` (indicating if all entries for the sub encounters have
-#'                                         processing exclusion reasons (if not already in 'not in inclusion criteria'))
-#' - `sub_enc_any_completed_medication_analysis` (indicating if any completed medication analysis exists for the sub encounter)
-#' - `sub_enc_any_MRP` (indicating if any MRP documentation exists for the sub encounter)
-#' - `eligible_for_algorithmic_MRP_calculation` (indicating if the sub encounter is eligible for algorithmic MRP
-#'                                              calculation based on the time since discharge (>14 days), presence of
-#'                                              completed medication analysis and being in Phase B of the study)
-#' - `sub_enc_any_algorithmic_MRP` (indicating if any algorithmic MRP documentation exists for the sub encounter)
+#' The resulting data includes the following derived variables:
+#' \itemize{
+#'   \item `calendar_week`: ISO calendar week derived from the specified
+#'     reference date.
+#'   \item `Kontraindikation`: Renamed from `mrp_pigrund___21`.
+#'   \item `main_enc_id`: Renamed from `fall_fhir_main_enc_id`.
+#'   \item `ward_name`: Renamed from `fall_station`.
+#'   \item `unverified_pat_or_sub_enc`: Indicates whether the patient or
+#'     encounter is unverified.
+#'   \item `main_enc_any_processing_exclusion_fe`: Indicates whether any
+#'     main-encounter processing exclusion exists, excluding
+#'     `not_in_inclusion_criteria`.
+#'   \item `main_enc_not_in_inclusion_criteria`: Indicates whether the main
+#'     encounter has a `not_in_inclusion_criteria` exclusion.
+#'   \item `sub_enc_any_processing_exclusion_fe`: Indicates whether any
+#'     sub-encounter processing exclusion exists, excluding
+#'     `not_in_inclusion_criteria`.
+#'   \item `sub_enc_all_processing_exclusion_fe`: Indicates whether all
+#'     observations in a sub-encounter have a processing exclusion, excluding
+#'     `not_in_inclusion_criteria`.
+#'   \item `sub_enc_any_completed_medication_analysis`: Indicates whether a
+#'     completed medication analysis exists for the sub-encounter.
+#'   \item `sub_enc_any_MRP`: Indicates whether completed MRP documentation
+#'     exists for the sub-encounter.
+#'   \item `sub_enc_any_algorithmic_MRP`: Indicates whether algorithmic MRP
+#'     documentation exists for the sub-encounter.
+#'   \item `eligible_for_algorithmic_MRP_calculation`: Indicates whether the
+#'     encounter meets the implemented criteria for algorithmic MRP
+#'     calculation, including more than 14 days since discharge, a completed
+#'     medication analysis, and study Phase B.
+#'   \item `overall_count_less_than_5`: Indicates whether fewer than five
+#'     distinct patients are present in the complete result.
+#'   \item `ward_count_less_than_5`: Indicates whether fewer than five
+#'     distinct patients are present within the ward.
+#'   \item `ward_week_count_less_than_5`: Indicates whether fewer than five
+#'     distinct patients are present within the ward and calendar week.
+#' }
 #'
-#' Time filtering is performed with `fall_aufn_dat >= report_period_start` and `< report_period_end`.
+#' For `report_period_boundary = "hospital_stay"`, observations are retained
+#' when `fall_ent_dat` is missing or is greater than or equal to the later of
+#' `ward_start` and `report_period_start`, and `fall_aufn_dat` is earlier than
+#' the earlier of `ward_end` and `report_period_end`.
 #'
-#' @importFrom dplyr distinct filter group_by ungroup mutate if_else rename n_distinct
-#' @importFrom data.table isoweek isoyear
+#' For `report_period_boundary = "ward_stay"`, observations are retained
+#' when `enc_period_start` is greater than or equal to the later of
+#' `ward_start` and `report_period_start`, and earlier than the earlier of
+#' `ward_end` and `report_period_end`.
+#'
+#' @importFrom dplyr distinct
+#' @importFrom dplyr filter
+#' @importFrom dplyr group_by
+#' @importFrom dplyr if_else
+#' @importFrom dplyr mutate
+#' @importFrom dplyr n_distinct
+#' @importFrom dplyr rename
+#' @importFrom dplyr ungroup
+#' @importFrom stringr str_detect
+#'
 #' @export
-prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end) {
+prepareFeSummaryData <- function(frontend_table, report_period_start, report_period_end,
+                                 report_period_boundary = c("hospital_stay", "ward_stay"),
+                                 calendar_week_reference_date_col,
+                                 first_ward_stay_and_meda_filter = FALSE) {
   frontend_summary_prep <- frontend_table |>
     CombineWardsForAnalysis() |>
-    dplyr::mutate(
-      calendar_week = paste0(
-        data.table::isoyear(fall_aufn_dat), "-",
-        sprintf("%02d", data.table::isoweek(fall_aufn_dat))
-      ),
-      .after = fall_aufn_dat
+    addFirstEncPeriodStartPerMainEnc(
+      grouping_vars = c("pat_id", "fall_fhir_main_enc_id"),
+      time_var = enc_period_start
     ) |>
+    addCalendarWeek(reference_date_col = {{ calendar_week_reference_date_col }}) |>
+    calculateWardStayPeriod() |>
     dplyr::mutate(unverified_pat_or_sub_enc = dplyr::if_else(
       patient_complete == "Unverified" | fall_complete == "Unverified",
       TRUE, FALSE, missing = FALSE
@@ -231,26 +277,31 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::group_by(fall_fhir_main_enc_id) |>
     dplyr::mutate(main_enc_any_processing_exclusion_fe = dplyr::if_else(any(
       !is.na(processing_exclusion_reason) &
-        stringr::str_detect(processing_exclusion_reason,
+        stringr::str_detect(
+          processing_exclusion_reason,
           pattern = "main_encounter"
         ) &
-        stringr::str_detect(processing_exclusion_reason,
+        stringr::str_detect(
+          processing_exclusion_reason,
           pattern = "not_in_inclusion_criteria",
           negate = TRUE
         )
     ), TRUE, FALSE, missing = FALSE)) |>
     dplyr::mutate(main_enc_not_in_inclusion_criteria = dplyr::if_else(
-      any(stringr::str_detect(processing_exclusion_reason,
+      any(stringr::str_detect(
+        processing_exclusion_reason,
         pattern = "not_in_inclusion_criteria"
       )), TRUE, FALSE, missing = FALSE
     )) |>
     dplyr::mutate(sub_enc_all_processing_exclusion_fe = dplyr::if_else(
       all(
         !is.na(processing_exclusion_reason) &
-          stringr::str_detect(processing_exclusion_reason,
+          stringr::str_detect(
+            processing_exclusion_reason,
             pattern = "sub_encounter"
           ) &
-          stringr::str_detect(processing_exclusion_reason,
+          stringr::str_detect(
+            processing_exclusion_reason,
             pattern = "not_in_inclusion_criteria",
             negate = TRUE
           )
@@ -273,10 +324,12 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     dplyr::mutate(sub_enc_any_processing_exclusion_fe = dplyr::if_else(
       any(
         !is.na(processing_exclusion_reason) &
-          stringr::str_detect(processing_exclusion_reason,
+          stringr::str_detect(
+            processing_exclusion_reason,
             pattern = "sub_encounter"
           ) &
-          stringr::str_detect(processing_exclusion_reason,
+          stringr::str_detect(
+            processing_exclusion_reason,
             pattern = "not_in_inclusion_criteria",
             negate = TRUE
           )
@@ -301,9 +354,48 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       main_enc_id = fall_fhir_main_enc_id,
       ward_name = fall_station
     ) |>
-    dplyr::filter(fall_aufn_dat >= as.POSIXct(report_period_start)) |> # only main-encounter start date in reporting period
-    dplyr::filter(fall_aufn_dat < as.POSIXct(report_period_end)) |>
-    dplyr::distinct()
+    mergeWardStartsAndEnds()
+
+  if (report_period_boundary == "hospital_stay") {
+    # Filter for encounters that fall within the reporting period based on fall_ent_dat and fall_aufn_dat
+    # (as approximation the hospital stay is used and therefore the fall_ent_dat is used to determine if the encounter
+    # is on the ward within the reporting period)
+    frontend_summary_prep <- frontend_summary_prep |>
+      dplyr::filter(is.na(fall_ent_dat) | fall_ent_dat >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
+      dplyr::filter(fall_aufn_dat < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
+      dplyr::distinct()
+  } else if (report_period_boundary == "ward_stay") {
+    # Filter for encounters that start within the reporting period based on enc_period_start and curated_enc_period_end
+    frontend_summary_prep <- frontend_summary_prep |>
+      dplyr::filter(enc_period_start >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
+      dplyr::filter(enc_period_start < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
+      dplyr::distinct()
+  }
+
+  if (first_ward_stay_and_meda_filter) {
+    frontend_summary_prep <- filterFullAnalysisSet1(
+      frontend_summary_prep,
+      main_enc_id = main_enc_id,
+      sub_enc_id = enc_id,
+      enc_period_start = enc_period_start,
+      meda_id = meda_id,
+      first_enc_period_start_col = first_enc_period_start_per_main_enc
+    ) |>
+      # include patient in analysis set fas2.1 if the ward stay >= 7 days & or if its is less
+      # but medication analysis was recorded
+      dplyr::mutate(
+        FAS2_1_inclusion = dplyr::if_else(
+          !is.na(ward_stay_period) &
+            (
+              ward_stay_period >= 7 |
+                (ward_stay_period < 7 & sub_enc_any_completed_medication_analysis)
+            ),
+          TRUE,
+          FALSE,
+          missing = FALSE
+        )
+      )
+  }
 
   return(frontend_summary_prep)
 }
@@ -355,9 +447,7 @@ addFeDataToF1data <- function(F1_data, frontend_summary_data) {
   F1_data_with_fe <- F1_data |>
     dplyr::left_join(
       frontend_summary_data |>
-        dplyr::distinct(
-          main_enc_id, main_enc_any_processing_exclusion_fe
-        ),
+        dplyr::distinct(main_enc_id, main_enc_any_processing_exclusion_fe),
       by = c("main_enc_id")
     ) |>
     dplyr::left_join(
@@ -383,13 +473,4 @@ addFeDataToF1data <- function(F1_data, frontend_summary_data) {
     )
 
   return(F1_data_with_fe)
-}
-
-# TODO: prepare F2 data for calculation -----------------------------------------------
-prepareF2data <- function(FAS2_1, report_period_start, report_period_end) {
-  F2_prep <- FAS2_1 |>
-    dplyr::filter(enc_period_start >= as.POSIXct(report_period_start)) |> # only admission to INTEROPLAR ward in reporting period
-    dplyr::filter(enc_period_start < as.POSIXct(report_period_end)) |>
-    dplyr::distinct()
-  return(F2_prep)
 }

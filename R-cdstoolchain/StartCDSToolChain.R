@@ -6,8 +6,8 @@ library(db2frontend)
 etlutils::setProcess("FullToolchain")
 
 # chance the working directory to the main directory
-if (grepl('/cdstoolchain$', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
+if (grepl("/cdstoolchain$", getwd())) setwd("../..")
+if (grepl("/R-cdstoolchain$", getwd())) setwd("../")
 
 
 # Reset error status
@@ -79,6 +79,7 @@ resetMemory <- function(...) {
     "DEBUG_DATA_IMPORT_RUN_ONLY_CDS2DB",
 
     "CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1",
+    "RECOVER_INCOMPLETE_TOOLCHAIN_RUNS",
 
     "DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS",
 
@@ -88,6 +89,7 @@ resetMemory <- function(...) {
     "start_day",
     "debug_day_index",
     "delete_db_and_redcap",
+    "ignore_newer_db_version",
 
     # Module configurations
     "config_cds2db",
@@ -108,8 +110,10 @@ setDebugPathToConfigToml <- function(module_name) {
 
 shouldStart <- function(module_name) {
   if (!etlutils::isErrorOccured()) {
-    if (!exists("DEBUG_START_SINGLE_MODULE") ||
-        (exists("DEBUG_START_SINGLE_MODULE") && identical(DEBUG_START_SINGLE_MODULE, module_name))) {
+    if (
+      !exists("DEBUG_START_SINGLE_MODULE") ||
+      (exists("DEBUG_START_SINGLE_MODULE") && identical(DEBUG_START_SINGLE_MODULE, module_name))
+    ) {
       resetMemory()
       setDebugPathToConfigToml(module_name)
       return(TRUE)
@@ -122,7 +126,6 @@ shouldStart <- function(module_name) {
 # match the ward names defined in the PHASES_WARD definitions in config_dataprocessor. If there is a
 # mismatch, it throws an error with details about the mismatch.
 validateConfigs <- function() {
-
   args <- commandArgs(trailingOnly = TRUE)
   if ("--ignoreWardNameMismatch" %in% args) {
     etlutils::catWarningMessage("Ignoring ward name mismatch between config_cds2db and config_dataprocessor due to --ignoreWardNameMismatch argument.")
@@ -175,9 +178,9 @@ resetMemory()
 
 delete_db_and_redcap <- etlutils::isDefinedAndTrue("CLEAR_DATABASE_AND_REDCAP_ON_TOOLCHAIN_DAY_1") && exists("TOOLCHAIN_DAY") && TOOLCHAIN_DAY == 1
 
-tryCatch({
-  args <- commandArgs(trailingOnly = TRUE)
-  ignore_newer_db_version = "--ignoreNewerDBVersion" %in% args
+runToolchain <- function(pids_splitted_by_ward = NULL) {
+  force(pids_splitted_by_ward)
+
   if (shouldStart("cds2db")) {
     if (delete_db_and_redcap && !etlutils::isDefinedAndTrue("DEBUG_DONT_DELETE_DB_DATA")) {
       etlutils::dbReset()
@@ -189,7 +192,12 @@ tryCatch({
     phase_a_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start", config_dataprocessor)
     # set the ward names for the phase_a_start values to get the map from ward_name to it's phase a start date
     names(phase_a_starts) <- ward_names
-    cds2db::retrieve(phase_a_starts, ignore_newer_db_version = ignore_newer_db_version, validate_config = isProcess("DataImport"))
+    cds2db::retrieve(
+      phase_a_starts,
+      ignore_newer_db_version = ignore_newer_db_version,
+      validate_config = isProcess("DataImport"),
+      pids_splitted_by_ward = pids_splitted_by_ward
+    )
   }
   if (shouldStart("db2frontend")) {
     db2frontend::startFrontend2DB(ignore_newer_db_version = ignore_newer_db_version, validate_config = FALSE, delete_redcap_content = delete_db_and_redcap)
@@ -203,31 +211,69 @@ tryCatch({
   if (etlutils::isErrorOccured()) {
     stop(etlutils::getErrorMessage())
   }
-}, error = function(e) {
-  # Split the error message into individual lines
-  error_lines <- unlist(strsplit(e$message, "\n"))
+}
 
-  # Define the pattern for SQL column errors
-  allowed_pattern <- "column .* of relation .* does not exist"
+tryCatch(
+  {
+    args <- commandArgs(trailingOnly = TRUE)
+    ignore_newer_db_version <- "--ignoreNewerDBVersion" %in% args
 
-  # Check if any of the lines contain the pattern
-  if (any(grepl(allowed_pattern, error_lines))) {
-    message("Ignoring expected error: ", e$message)
-
-    # Execute `next` only if not in the last iteration of the loop
-    if (i < length(DEBUG_DATES)) {
-      next
+    recovery_enabled <- !etlutils::isDefinedAndFalse("RECOVER_INCOMPLETE_TOOLCHAIN_RUNS") &&
+      !etlutils::isProcess("DataImport") &&
+      !delete_db_and_redcap &&
+      !exists("DEBUG_START_SINGLE_MODULE")
+    if (recovery_enabled) {
+      etlutils::dbInitModuleContext(
+        module_name = "dataprocessor",
+        path_to_db_toml = config_dataprocessor[["PATH_TO_DB_CONFIG_TOML"]],
+        log = TRUE
+      )
+      recovery_pids <- etlutils::fhirdbGetIncompleteCasesPidsPerWard()
+      # Normalize legacy/raw query results to the ward-based structure expected by cds2db.
+      if (data.table::is.data.table(recovery_pids)) {
+        recovery_pids <- split(
+          recovery_pids[, c("patient_id", "encounter_id"), with = FALSE],
+          recovery_pids[["ward_name"]]
+        )
+      }
+      if (length(recovery_pids)) {
+        # Run at most one recovery pass per start. Additional missing cases for the
+        # same patient are picked up by a later regular toolchain start.
+        cat("Recover incomplete cases from a previous toolchain run.\n")
+        runToolchain(recovery_pids)
+      }
     }
-  } else {
-    # the submodules log their errors itself -> we must check
-    # if etlutils::isErrorOccured() and if TRUE then do nothing
-    # here. Stop hard only if the error comes not from a submodule.
+
     if (!etlutils::isErrorOccured()) {
-      etlutils::catErrorMessage(e$message)
-      quit(status = 1, save = "no")  # Abort with error
+      runToolchain()
+    }
+  },
+  error = function(e) {
+    # Split the error message into individual lines
+    error_lines <- unlist(strsplit(e$message, "\n"))
+
+    # Define the pattern for SQL column errors
+    allowed_pattern <- "column .* of relation .* does not exist"
+
+    # Check if any of the lines contain the pattern
+    if (any(grepl(allowed_pattern, error_lines))) {
+      message("Ignoring expected error: ", e$message)
+
+      # Execute `next` only if not in the last iteration of the loop
+      if (i < length(DEBUG_DATES)) {
+        next
+      }
+    } else {
+      # the submodules log their errors itself -> we must check
+      # if etlutils::isErrorOccured() and if TRUE then do nothing
+      # here. Stop hard only if the error comes not from a submodule.
+      if (!etlutils::isErrorOccured()) {
+        etlutils::catErrorMessage(e$message)
+        quit(status = 1, save = "no")  # Abort with error
+      }
     }
   }
-})
+)
 
 if (!etlutils::isErrorOccured()) {
   status <- 0

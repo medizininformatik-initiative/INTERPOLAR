@@ -39,7 +39,6 @@ isMRPCheckSubmodule <- function() {
 #'
 #' @export
 processExcelContentDrugCondition <- function(mrp_definition, mrp_type) {
-
   # Remove not necessary columns
   mrp_columnnames <- getRelevantColumnNames(mrp_type)
   mrp_definition <- mrp_definition[, ..mrp_columnnames]
@@ -53,9 +52,9 @@ processExcelContentDrugCondition <- function(mrp_definition, mrp_type) {
 
   # ICD column:
   # remove white spaces around plus signs
-  etlutils::replacePatternsInColumn(mrp_definition, 'ICD', '\\s*\\+\\s*', '+')
+  etlutils::replacePatternsInColumn(mrp_definition, "ICD", "\\s*\\+\\s*", "+")
   # replace all invalid chars in the ICD codes by a simple whitespace -> can be trimmed and splitted
-  mrp_definition[, ICD := sapply(ICD, function(text) gsub('[^0-9A-Za-z. +]', '', text))]
+  mrp_definition[, ICD := sapply(ICD, function(text) gsub("[^0-9A-Za-z. +]", "", text))]
 
   computeATCForCalculation(
     data_table = mrp_definition,
@@ -81,7 +80,7 @@ processExcelContentDrugCondition <- function(mrp_definition, mrp_type) {
   # trim all values in the whole table
   etlutils::trimTableValues(mrp_definition)
   # ICD column: remove tailing points from ICD codes
-  etlutils::replacePatternsInColumn(mrp_definition, 'ICD', '\\.$', '')
+  etlutils::replacePatternsInColumn(mrp_definition, "ICD", "\\.$", "")
   # remove rows with empty ICD code and empty proxy codes (ATC, LOINC, OPS) again.
   # After the replacing of special signs with an empty string their can be new empty rows in this both columns
   mrp_definition <- etlutils::removeRowsWithNAorEmpty(mrp_definition, code_column_names)
@@ -150,7 +149,6 @@ getEncountersWithTimeRangeFromDB <- function(start_time, end_time) {
 # Load Einrichtungskontakt Encounters without retrolective MRP evaluation
 #
 getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
-
   encounters_per_mrp_type <- list()
   #
   # 1.) Get all Einrichtungskontakt encounters that ended before now and do not
@@ -185,20 +183,24 @@ getEncountersWithoutRetrolectiveMRPEvaluationFromDB <- function() {
   encounters[, study_phase := character()]
 
   if (nrow(encounters)) {
-
     #
     # 2.) Add the Study Phase to all Encounters
     #
-    column_names <- c("fall_fe_id",
-                      "input_datetime",
-                      "record_id",
-                      "fall_fhir_enc_id",
-                      "fall_pat_id",
-                      "fall_id",
-                      "fall_studienphase",
-                      "fall_station")
+    column_names <- c(
+      "fall_fe_id",
+      "input_datetime",
+      "record_id",
+      "fall_fhir_enc_id",
+      "fall_pat_id",
+      "fall_id",
+      "fall_studienphase",
+      "fall_station"
+    )
     query <- paste0(
-      "SELECT ", paste(column_names, collapse = ", "), " \n",
+      "SELECT ", paste(
+        column_names,
+        collapse = ", "
+      ), " \n",
       "FROM v_fall_fe\n",
       "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(encounters$enc_id), "\n",
       "ORDER BY input_datetime"
@@ -287,7 +289,14 @@ getMedicationAnalysesFromDB <- function(record_ids) {
 #
 # General function to load resources by PID
 #
-getResourcesFromDB <- function(resource_name, column_names, patient_references, status_exclusion = NULL, additional_conditions = NULL) {
+getResourcesFromDB <- function(
+  resource_name,
+  column_names,
+  patient_references,
+  status_exclusion = NULL,
+  additional_conditions = NULL,
+  lock_id = paste0("getResourcesFromDB(", resource_name, ")")
+) {
   patient_ref_column_name <- etlutils::fhirdbGetPIDColumn(resource_name)
   patient_references <- etlutils::fhirdataGetPatientReference(patient_references)
   patient_references <- etlutils::fhirdbGetQueryList(patient_references)
@@ -306,7 +315,7 @@ getResourcesFromDB <- function(resource_name, column_names, patient_references, 
   }
 
   query <- getQueryToLoadResourcesLastVersionFromDB(resource_name, column_names, where_clause)
-  return(etlutils::dbGetReadOnlyQuery(query, lock_id = paste0("getResourcesFromDB(", resource_name, ")")))
+  return(etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id))
 }
 
 #
@@ -328,21 +337,28 @@ addMedicationIdColumn <- function(medication_resources) {
 #
 # MedicationRequest
 #
-getMedicationRequestsFromDB <- function(patient_references) {
-  medication_requests <- getResourcesFromDB(resource_name = "MedicationRequest",
-                                            column_names = c("medreq_id",
-                                                             "medreq_encounter_calculated_ref",
-                                                             "medreq_patient_ref",
-                                                             "medreq_medicationreference_ref",
-                                                             "medreq_medicationcodeableconcept_system",
-                                                             "medreq_medicationcodeableconcept_code",
-                                                             "medreq_medicationcodeableconcept_display",
-                                                             "medreq_authoredon",
-                                                             "medreq_doseinstruc_timing_event",
-                                                             "medreq_doseinstruc_timing_repeat_boundsperiod_start",
-                                                             "medreq_doseinstruc_timing_repeat_boundsperiod_end"),
-                                            patient_references = patient_references,
-                                            status_exclusion = c("on-hold", "cancelled", "entered-in-error", "stopped") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
+getMedicationRequestsFromDB <- function(
+  patient_references,
+  lock_id = "getResourcesFromDB(MedicationRequest)"
+) {
+  medication_requests <- getResourcesFromDB(
+    resource_name = "MedicationRequest",
+    column_names = c(
+      "medreq_id",
+      "medreq_encounter_calculated_ref",
+      "medreq_patient_ref",
+      "medreq_medicationreference_ref",
+      "medreq_medicationcodeableconcept_system",
+      "medreq_medicationcodeableconcept_code",
+      "medreq_medicationcodeableconcept_display",
+      "medreq_authoredon",
+      "medreq_doseinstruc_timing_event",
+      "medreq_doseinstruc_timing_repeat_boundsperiod_start",
+      "medreq_doseinstruc_timing_repeat_boundsperiod_end"
+    ),
+    patient_references = patient_references,
+    status_exclusion = c("on-hold", "cancelled", "entered-in-error", "stopped"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
+    lock_id = lock_id
   )
   medication_requests <- addMedicationIdColumn(medication_requests)
 
@@ -353,7 +369,8 @@ getMedicationRequestsFromDB <- function(patient_references) {
     data.table::fifelse(
       !is.na(medreq_doseinstruc_timing_event),
       medreq_doseinstruc_timing_event,
-      medreq_authoredon)
+      medreq_authoredon
+    )
   )]
 
   # for all medication analyses with a valid start_datetime calculate end_datetime
@@ -368,14 +385,16 @@ getMedicationRequestsFromDB <- function(patient_references) {
       data.table::fifelse(
         !is.na(medreq_doseinstruc_timing_event),
         etlutils::getStartOfNextDay(medreq_doseinstruc_timing_event),
-        NA)
+        NA
+      )
     )]
   }
   # remove all now irrelevant timing and DB ID columns ()
   medication_requests[, c(
-    "medicationrequest_id","medreq_doseinstruc_timing_event",
+    "medicationrequest_id", "medreq_doseinstruc_timing_event",
     "medreq_doseinstruc_timing_repeat_boundsperiod_start",
-    "medreq_doseinstruc_timing_repeat_boundsperiod_end") := NULL]
+    "medreq_doseinstruc_timing_repeat_boundsperiod_end"
+  ) := NULL]
   # for each medreq_id keep only the earliest start_datetime and the latest
   # end_datetime (if the timestamps are definied via multiple timing_events)
   medication_requests[
@@ -395,19 +414,22 @@ getMedicationRequestsFromDB <- function(patient_references) {
 # MedicationAdministration
 #
 getMedicationAdministrationsFromDB <- function(patient_references) {
-  medication_administrations <- getResourcesFromDB(resource_name = "MedicationAdministration",
-                                                   column_names = c("medadm_id",
-                                                                    "medadm_encounter_calculated_ref",
-                                                                    "medadm_patient_ref",
-                                                                    "medadm_medicationreference_ref",
-                                                                    "medadm_medicationcodeableconcept_system",
-                                                                    "medadm_medicationcodeableconcept_code",
-                                                                    "medadm_medicationcodeableconcept_display",
-                                                                    "medadm_effectivedatetime",
-                                                                    "medadm_effectiveperiod_start",
-                                                                    "medadm_effectiveperiod_end"),
-                                                   patient_references = patient_references,
-                                                   status_exclusion = c("not-done", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831577
+  medication_administrations <- getResourcesFromDB(
+    resource_name = "MedicationAdministration",
+    column_names = c(
+      "medadm_id",
+      "medadm_encounter_calculated_ref",
+      "medadm_patient_ref",
+      "medadm_medicationreference_ref",
+      "medadm_medicationcodeableconcept_system",
+      "medadm_medicationcodeableconcept_code",
+      "medadm_medicationcodeableconcept_display",
+      "medadm_effectivedatetime",
+      "medadm_effectiveperiod_start",
+      "medadm_effectiveperiod_end"
+    ),
+    patient_references = patient_references,
+    status_exclusion = c("not-done", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831577
   )
   medication_administrations <- addMedicationIdColumn(medication_administrations)
   medication_administrations[, start_datetime := pmin(medadm_effectivedatetime, medadm_effectiveperiod_start, na.rm = TRUE)]
@@ -424,19 +446,22 @@ getMedicationAdministrationsFromDB <- function(patient_references) {
 # MedicationStatement
 #
 getMedicationStatementsFromDB <- function(patient_references) {
-  medication_statements <- getResourcesFromDB(resource_name = "MedicationStatement",
-                                              column_names = c("medstat_id",
-                                                               "medstat_encounter_calculated_ref",
-                                                               "medstat_patient_ref",
-                                                               "medstat_medicationreference_ref",
-                                                               "medstat_medicationcodeableconcept_system",
-                                                               "medstat_medicationcodeableconcept_code",
-                                                               "medstat_medicationcodeableconcept_display",
-                                                               "medstat_effectivedatetime",
-                                                               "medstat_effectiveperiod_start",
-                                                               "medstat_effectiveperiod_end"),
-                                              patient_references = patient_references,
-                                              status_exclusion = c("entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834331
+  medication_statements <- getResourcesFromDB(
+    resource_name = "MedicationStatement",
+    column_names = c(
+      "medstat_id",
+      "medstat_encounter_calculated_ref",
+      "medstat_patient_ref",
+      "medstat_medicationreference_ref",
+      "medstat_medicationcodeableconcept_system",
+      "medstat_medicationcodeableconcept_code",
+      "medstat_medicationcodeableconcept_display",
+      "medstat_effectivedatetime",
+      "medstat_effectiveperiod_start",
+      "medstat_effectiveperiod_end"
+    ),
+    patient_references = patient_references,
+    status_exclusion = c("entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834331
   )
   medication_statements <- addMedicationIdColumn(medication_statements)
   medication_statements[, start_datetime := pmin(medstat_effectivedatetime, medstat_effectiveperiod_start, na.rm = TRUE)]
@@ -452,30 +477,42 @@ getMedicationStatementsFromDB <- function(patient_references) {
 #
 # Medication (filtered by Medications with ATC)
 #
-getATCMedicationsFromDB <- function(medication_request, medication_administrations, medication_statements) {
-
+getATCMedicationsFromDB <- function(
+  medication_request,
+  medication_administrations,
+  medication_statements,
+  lock_id_prefix = "getATCMedicationsFromDB()"
+) {
+  get_lock_id <- function(suffix) {
+    if (is.null(lock_id_prefix)) NULL else paste0(lock_id_prefix, suffix)
+  }
   medication_ids <- etlutils::fhirdataExtractIDs(unique(c(
     medication_request$medreq_medicationreference_ref,
     medication_administrations$medadm_medicationreference_ref,
-    medication_statements$medstat_medicationreference_ref)))
+    medication_statements$medstat_medicationreference_ref
+  )))
 
   medication_ids <- etlutils::fhirdbGetQueryList(medication_ids)
-  where_clause <- paste0("WHERE med_id IN ", medication_ids, "\n",
-                         "AND (med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n",
-                         "    OR med_ingredient_itemreference_ref LIKE 'Medication/%')\n")
+  where_clause <- paste0(
+    "WHERE med_id IN ", medication_ids, "\n",
+    "AND (med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n",
+    "    OR med_ingredient_itemreference_ref LIKE 'Medication/%')\n"
+  )
 
   query <- getQueryToLoadResourcesLastVersionFromDB(
     resource_name = "Medication",
-    column_names = c("med_id",
-                     "med_code_code",
-                     "med_code_display",
-                     "med_ingredient_itemreference_ref"),
+    column_names = c(
+      "med_id",
+      "med_code_code",
+      "med_code_display",
+      "med_ingredient_itemreference_ref"
+    ),
     filter = where_clause
   )
 
   medications_with_atc_OR_with_reference <- etlutils::dbGetReadOnlyQuery(
     query,
-    lock_id = "getATCMedicationsFromDB()#atc_OR_reference"
+    lock_id = get_lock_id("#atc_OR_reference")
   )
 
   # extract medications with ATC codes
@@ -489,20 +526,24 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
     ingredient_medication_ids <- etlutils::fhirdataExtractIDs(medications_with_reference$med_ingredient_itemreference_ref)
     ingredient_medication_ids <- etlutils::fhirdbGetQueryList(ingredient_medication_ids)
 
-    where_clause <- paste0("WHERE med_id IN ", ingredient_medication_ids, "\n",
-                           "AND med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n")
+    where_clause <- paste0(
+      "WHERE med_id IN ", ingredient_medication_ids, "\n",
+      "AND med_code_system = 'http://fhir.de/CodeSystem/bfarm/atc'\n"
+    )
 
     query <- getQueryToLoadResourcesLastVersionFromDB(
       resource_name = "Medication",
-      column_names = c("med_id",
-                       "med_code_code",
-                       "med_code_display"),
+      column_names = c(
+        "med_id",
+        "med_code_code",
+        "med_code_display"
+      ),
       filter = where_clause
     )
 
     referenced_medications_with_atc <- etlutils::dbGetReadOnlyQuery(
       query,
-      lock_id = "getATCMedicationsFromDB()#referenced_medications_with_atc"
+      lock_id = get_lock_id("#referenced_medications_with_atc")
     )
   } else {
     referenced_medications_with_atc <- data.table::data.table(
@@ -540,29 +581,38 @@ getATCMedicationsFromDB <- function(medication_request, medication_administratio
 #
 # Observation
 #
-getObservationsFromDB <- function(patient_references) {
-  observations <- getResourcesFromDB(resource_name = "Observation",
-                                     column_names = c("obs_id",
-                                                      "obs_encounter_calculated_ref",
-                                                      "obs_patient_ref",
-                                                      "obs_code_system",
-                                                      "obs_code_code",
-                                                      "obs_code_display",
-                                                      "obs_effectivedatetime",
-                                                      "obs_valuequantity_value",
-                                                      "obs_valuequantity_code",
-                                                      "obs_valuequantity_unit",
-                                                      "obs_referencerange_low_value",
-                                                      "obs_referencerange_high_value",
-                                                      "obs_referencerange_low_code",
-                                                      "obs_referencerange_high_code",
-                                                      "obs_referencerange_low_system",
-                                                      "obs_referencerange_high_system",
-                                                      "obs_referencerange_type_code"),
-                                     patient_references = patient_references,
-                                     status_exclusion = c("on-hold", "registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2999037
-                                     additional_conditions = c("obs_category_code = 'laboratory'",
-                                                               "obs_code_system = 'http://loinc.org'")
+getObservationsFromDB <- function(
+  patient_references,
+  lock_id = "getResourcesFromDB(Observation)"
+) {
+  observations <- getResourcesFromDB(
+    resource_name = "Observation",
+    column_names = c(
+      "obs_id",
+      "obs_encounter_calculated_ref",
+      "obs_patient_ref",
+      "obs_code_system",
+      "obs_code_code",
+      "obs_code_display",
+      "obs_effectivedatetime",
+      "obs_valuequantity_value",
+      "obs_valuequantity_code",
+      "obs_valuequantity_unit",
+      "obs_referencerange_low_value",
+      "obs_referencerange_high_value",
+      "obs_referencerange_low_code",
+      "obs_referencerange_high_code",
+      "obs_referencerange_low_system",
+      "obs_referencerange_high_system",
+      "obs_referencerange_type_code"
+    ),
+    patient_references = patient_references,
+    status_exclusion = c("on-hold", "registered", "cancelled", "entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2999037
+    additional_conditions = c(
+      "obs_category_code = 'laboratory'",
+      "obs_code_system = 'http://loinc.org'"
+    ),
+    lock_id = lock_id
   )
   observations[, start_datetime := obs_effectivedatetime]
   return(observations)
@@ -571,20 +621,27 @@ getObservationsFromDB <- function(patient_references) {
 #
 # Procedure
 #
-getProceduresFromDB <- function(patient_references) {
-  procedures <- getResourcesFromDB(resource_name = "Procedure",
-                                   column_names = c("proc_id",
-                                                    "proc_encounter_calculated_ref",
-                                                    "proc_patient_ref",
-                                                    "proc_code_code",
-                                                    "proc_code_display",
-                                                    "proc_code_system",
-                                                    "proc_performeddatetime",
-                                                    "proc_performedperiod_start",
-                                                    "proc_performedperiod_end"),
-                                   patient_references = patient_references,
-                                   status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
-                                   additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'"
+getProceduresFromDB <- function(
+  patient_references,
+  lock_id = "getResourcesFromDB(Procedure)"
+) {
+  procedures <- getResourcesFromDB(
+    resource_name = "Procedure",
+    column_names = c(
+      "proc_id",
+      "proc_encounter_calculated_ref",
+      "proc_patient_ref",
+      "proc_code_code",
+      "proc_code_display",
+      "proc_code_system",
+      "proc_performeddatetime",
+      "proc_performedperiod_start",
+      "proc_performedperiod_end"
+    ),
+    patient_references = patient_references,
+    status_exclusion = c("entered-in-error"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2834739
+    additional_conditions = "proc_code_system = 'http://fhir.de/CodeSystem/bfarm/ops'",
+    lock_id = lock_id
   )
   procedures[, start_datetime := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
   procedures <- procedures[!is.na(start_datetime)]
@@ -599,23 +656,32 @@ getProceduresFromDB <- function(patient_references) {
 #
 # Condition
 #
-getConditionsFromDB <- function(patient_references) {
-  conditions <- getResourcesFromDB(resource_name = "Condition",
-                                   column_names = c("con_id",
-                                                    "con_encounter_calculated_ref",
-                                                    "con_patient_ref",
-                                                    "con_code_code",
-                                                    "con_code_system",
-                                                    "con_code_display",
-                                                    "con_onsetperiod_start",
-                                                    "con_recordeddate"),
-                                   patient_references = patient_references,
-                                   status_exclusion = NULL, # Status is considered in additional_conditions
-                                   # clinical_status c("inactive") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2833668
-                                   # verification status c("refuted", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831601
-                                   additional_conditions = c("con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm'",
-                                                             #"(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
-                                                             "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))")
+getConditionsFromDB <- function(
+  patient_references,
+  lock_id = "getResourcesFromDB(Condition)"
+) {
+  conditions <- getResourcesFromDB(
+    resource_name = "Condition",
+    column_names = c(
+      "con_id",
+      "con_encounter_calculated_ref",
+      "con_patient_ref",
+      "con_code_code",
+      "con_code_system",
+      "con_code_display",
+      "con_onsetperiod_start",
+      "con_recordeddate"
+    ),
+    patient_references = patient_references,
+    status_exclusion = NULL, # Status is considered in additional_conditions
+    # clinical_status c("inactive") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2833668
+    # verification status c("refuted", "entered-in-error") # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2831601
+    additional_conditions = c(
+      "con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm'",
+      # "(con_clinicalstatus_code IS NULL OR con_clinicalstatus_code <> 'inactive')",
+      "(con_verificationstatus_code IS NULL OR con_verificationstatus_code NOT IN ('refuted', 'entered-in-error'))"
+    ),
+    lock_id = lock_id
   )
   conditions[, start_datetime := pmin(con_onsetperiod_start, con_recordeddate, na.rm = TRUE)]
   return(conditions)
@@ -625,7 +691,6 @@ getConditionsFromDB <- function(patient_references) {
 # Extract ATC code of referenced Medication. If not exists then remove the resource.
 #
 appendATCColumns <- function(medication_resources, medications) {
-
   system_col <- grep("_medicationcodeableconcept_system$", names(medication_resources), value = TRUE)
   medication_resource_prefix <- sub("_medicationcodeableconcept_system$", "", system_col)
   code_col <- paste0(medication_resource_prefix, "_medicationcodeableconcept_code")
@@ -732,7 +797,6 @@ appendATCColumns <- function(medication_resources, medications) {
 #########################################
 
 getResourcesForMRPCalculation <- function(main_encounters) {
-
   if (!nrow(main_encounters)) {
     etlutils::catWarningMessage(paste0(
       "No Einrichtungskontakt encounters found that ended at least ",
@@ -751,7 +815,6 @@ getResourcesForMRPCalculation <- function(main_encounters) {
   # 4.) For each Encounter ID, keep only the very first medication analyses
   encounters_first_medication_analysis <- list()
   for (row in seq_len(nrow(main_encounters))) {
-
     # Get the encounter
     main_encounter <- main_encounters[row]
 
@@ -813,7 +876,8 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     query <- paste0(
       "SELECT DISTINCT meda_id, ret_id, ret_redcap_repeat_instance\n",
       "FROM v_dp_mrp_calculations\n",
-      "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids), "\n")
+      "WHERE ret_id IS NOT NULL AND meda_id IN ", etlutils::fhirdbGetQueryList(medication_analyses_ids), "\n"
+    )
     return(etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingRetrolectiveMRPEvaluationIDs()"))
   }
   medication_analyses_ids <- unlist(lapply(encounters_first_medication_analysis, function(dt) if (!is.null(dt)) dt$meda_id else NULL), use.names = FALSE)
@@ -824,7 +888,8 @@ getResourcesForMRPCalculation <- function(main_encounters) {
     query <- paste0(
       "SELECT DISTINCT fall_fhir_enc_id, fall_station\n",
       "FROM v_fall_fe\n",
-      "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(encounter_ids), "\n")
+      "WHERE fall_fhir_enc_id IN ", etlutils::fhirdbGetQueryList(encounter_ids), "\n"
+    )
     ward_names <- etlutils::dbGetReadOnlyQuery(query, lock_id = "getExistingRetrolectiveMRPEvaluationIDs()")
     names(ward_names) <- c("main_enc_id", "ward_name")
     return(ward_names)
@@ -872,10 +937,11 @@ getResourcesForMRPCalculation <- function(main_encounters) {
 #'
 #' @export
 getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end, meda_datetime) {
-
   # ensure medreq_authoredon is filled with a non NA value
-  medication_requests[is.na(medreq_authoredon),
-                      medreq_authoredon := pmin(start_datetime, meda_datetime, na.rm = TRUE)]
+  medication_requests[
+    is.na(medreq_authoredon),
+    medreq_authoredon := pmin(start_datetime, meda_datetime, na.rm = TRUE)
+  ]
 
   # ensure medreq_authoredon is not after start_datetime (can be if MedicationRequest is changed after first application)
   medication_requests[medreq_authoredon > start_datetime, medreq_authoredon := start_datetime]
@@ -942,10 +1008,10 @@ getActiveATCs <- function(medication_requests, enc_period_start, enc_period_end,
 #' @return A \code{data.table} of conditions that match the patient and date criteria.
 #'
 getRelevantConditions <- function(conditions, patient_id, meda_datetime) {
-
   # Filter conditions by patient ID and ensure recorded date is before or on meda_datetime
   relevant_conditions <- conditions[
-    con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime]
+    con_patient_ref == paste0("Patient/", patient_id) & !is.na(start_datetime) & start_datetime <= meda_datetime
+  ]
 
   relevant_cols <- c("con_id", "con_patient_ref", "con_code_code", "con_code_system", "con_code_display", "start_datetime")
   relevant_conditions <- relevant_conditions[, ..relevant_cols]

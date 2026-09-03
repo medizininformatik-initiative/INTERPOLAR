@@ -63,7 +63,6 @@
 #' @export
 #'
 filterResources <- function(resources, filter_patterns, return_removed = FALSE) {
-
   # nothing todo
   if (!length(filter_patterns)) {
     return(resources)

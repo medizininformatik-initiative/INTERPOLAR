@@ -10,5 +10,4 @@ if (isDebugDay()) {
     patient_ids = pat_ids,
     day_offset = 0.5
   )
-
 }

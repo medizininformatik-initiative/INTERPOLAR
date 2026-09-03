@@ -1,0 +1,13 @@
+utils::globalVariables(c(
+  ".",
+  "..non_fhir_output_columns",
+  "..output_columns",
+  "COLUMN_DESCRIPTION",
+  "COLUMN_NAME",
+  "MODULE_DIRS",
+  "ORDINAL_POSITION",
+  "TABLE_FAMILY",
+  "TABLE_NAME",
+  "VIEW_NAME",
+  "VIEW_SCHEMA"
+))

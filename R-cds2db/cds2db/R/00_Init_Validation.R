@@ -99,7 +99,6 @@ validateConfig <- function() {
   # Validate data import parameters
   ###
   if (isProcess("DataImport")) {
-
     ###
     # Remove all DEBUG parameters from global context if the data export is running to prevent any side effects
     # but not if the developers start an debug run via BuildAndStartDebugRun.R (then the parameter "DEBUG_VM_INDEX" is set)
@@ -158,15 +157,16 @@ validateConfig <- function() {
       invalid_resource_types <- setdiff(tolower(DATA_IMPORT_RESOURCE_TYPES), tolower(allowed_resource_types))
       if (length(invalid_resource_types)) {
         invalid_resource_types <- DATA_IMPORT_RESOURCE_TYPES[tolower(DATA_IMPORT_RESOURCE_TYPES) %in% invalid_resource_types]
-        stop("DATA_IMPORT_RESOURCE_TYPES contains invalid or unsupported resource types: ",
-             paste(invalid_resource_types, collapse = ", "))
+        stop(
+          "DATA_IMPORT_RESOURCE_TYPES contains invalid or unsupported resource types: ",
+          paste(invalid_resource_types, collapse = ", ")
+        )
       }
     }
 
     if (has_data_import_fhir_pids && (has_data_import_range_start || has_data_import_range_end || has_data_import_resource_types)) {
       stop("DATA_IMPORT_FHIR_PIDS must be defined alone and must not be combined with DATA_IMPORT_RANGE_START, DATA_IMPORT_RANGE_END or DATA_IMPORT_RESOURCE_TYPES.")
     }
-
   }
 
   ###
@@ -177,5 +177,4 @@ validateConfig <- function() {
       stop("FHIR_SEARCH_ENCOUNTER_ADDITIONAL_PARAMETERS can not contain '&date=' if degub encouter start dates are defined.")
     }
   }
-
 }

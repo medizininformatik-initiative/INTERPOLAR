@@ -29,7 +29,7 @@
 DEBUG_DAYS_COUNT <- 3
 
 # Activate if only a specific debug day should be run
-#DEBUG_RUN_SINGLE_DAY_ONLY <- 2
+# DEBUG_RUN_SINGLE_DAY_ONLY <- 2
 
 # Immediate MRP calculation after encounter end so the effect of day 2 is visible.
 DAYS_AFTER_ENCOUNTER_END_TO_CHECK_FOR_MRPS <- 0
@@ -48,7 +48,6 @@ DEBUG_PATH_TO_RAW_RDATA_FILES <- "./R-cds2db/test/tables/"
 
 
 if (exists("TOOLCHAIN_DAY")) {
-
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
   testSetResourceTables(resource_tables)
 

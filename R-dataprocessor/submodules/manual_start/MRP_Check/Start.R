@@ -1,5 +1,4 @@
 etlutils::runLevel2("Calculate MRPs", {
-
   command_arguments <- NULL
 
   # # use this for debugging
@@ -21,5 +20,4 @@ etlutils::runLevel2("Calculate MRPs", {
   }
 
   mrpCheck(command_arguments$start_date, command_arguments$end_date)
-
 })

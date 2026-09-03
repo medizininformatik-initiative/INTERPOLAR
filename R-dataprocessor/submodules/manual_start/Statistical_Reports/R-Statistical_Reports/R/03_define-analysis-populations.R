@@ -1,76 +1,70 @@
-#' Define Full Analysis Set 1 (FAS1): Filter Adult Inpatient INTERPOLAR Encounters
+#' Filter Data for Full Analysis Set 1
 #'
-#' This function filters a dataset of encounters to define the Full Analysis Set 1 (FAS1) group,
-#' consisting of inpatient encounters occurring in INTERPOLAR wards and involving adult patients.
+#' Filters front-end summary data to retain only records belonging to the
+#' first analysis set according to the earliest encounter period start and
+#' the first medication analysis per sub-encounter.
 #'
-#' @param complete_table A data frame containing comprehensive encounter data. It must include the
-#' following columns: `enc_type_code_Kontaktebene`, `enc_class_code`, `main_enc_id`, `ward_name`,
-#' and `age_at_hospitalization`.
+#' The function keeps only records where the encounter period start matches
+#' the first encounter period start of the corresponding main encounter.
+#' Within each main and sub-encounter combination, the medication analysis
+#' identifier is parsed to determine the earliest medication analysis number.
+#' If medication analyses are available, only records belonging to the
+#' earliest analysis are retained. Duplicate rows are removed afterwards.
 #'
-#' @return A data frame representing the Full Analysis Set 1 (FAS1) group, including only those
-#' inpatient encounters from INTERPOLAR wards involving patients aged 18 and over.
+#' @param data A data frame containing encounter and medication analysis
+#'   information.
+#' @param main_enc_id The column identifying main encounters. The column
+#'   should be supplied unquoted.
+#' @param sub_enc_id The column identifying sub-encounters. The column
+#'   should be supplied unquoted.
+#' @param enc_period_start The date or date-time column containing the
+#'   encounter period start. The column should be supplied unquoted.
+#' @param meda_id The medication analysis identifier column used to determine
+#'   the first medication analysis. The column should be supplied unquoted.
+#' @param first_enc_period_start_col The column containing the first encounter
+#'   period start per main encounter. The column should be supplied unquoted.
 #'
-#' @details
-#' The function applies a series of filters to identify the Full Analysis Set 1 (FAS1) group:
-#' - inpatient INTERPOLAR Encounters must be classified as defined in FRONTEND_DISPLAYED_ENCOUNTER_CLASS
-#' - Encounters must have a non-missing `ward_name`, denoting an INTERPOLAR encounter obtainen
-#'   from the Versorgungsstellenkontakte in the `pids_per_ward` table.
-#' - Patients in these encounters must be adults, defined as individuals aged 18 or over
-#'   (`age_at_hospitalization >= 18`).
+#' @return A data frame containing records assigned to full analysis set 1,
+#'   including only the earliest encounter period and earliest medication
+#'   analysis per sub-encounter where available.
 #'
+#' @importFrom dplyr distinct
+#' @importFrom dplyr filter
+#' @importFrom dplyr group_by
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom dplyr ungroup
+#' @importFrom stringr str_extract
 #'
-#' @seealso
-#' \code{\link[dplyr]{filter}}, \code{\link[dplyr]{mutate}}, \code{\link[dplyr]{select}},
-#' \code{\link[dplyr]{distinct}}, \code{\link[data.table]{isoweek}}
-#'
-#' @importFrom dplyr filter pull mutate select distinct
-#' @importFrom data.table isoweek
 #' @export
-# TODO: check each FHIR item for the possible values and include this into filtering --------
-
-defineFullAnalysisSet1 <- function(complete_table) {
-  inpatient_encounters <- complete_table |>
-    dplyr::filter(enc_class_code %in% FRONTEND_DISPLAYED_ENCOUNTER_CLASS) |>
-    dplyr::distinct(main_enc_id) |>
-    dplyr::arrange(main_enc_id) |>
-    dplyr::pull(main_enc_id)
-
-  INTERPOLAR_encounters <- complete_table |>
-    dplyr::filter(!is.na(ward_name)) |>
-    dplyr::distinct(main_enc_id) |>
-    dplyr::arrange(main_enc_id) |>
-    dplyr::pull(main_enc_id)
-
-  full_analysis_set_1_raw <- complete_table |>
-    dplyr::filter(main_enc_id %in% inpatient_encounters) |> # only IMP patients
-    dplyr::filter(main_enc_id %in% INTERPOLAR_encounters) |> # only encounters with any INTERPOLAR ward visit
-    dplyr::filter(age_at_hospitalization >= 18) |> # only adults
+# TODO: test and add warnings for missing meda_id or _meda_dat (already exclusion reason) --------------
+filterFullAnalysisSet1 <- function(
+  data = frontend_summary_prep,
+  main_enc_id = main_enc_id,
+  sub_enc_id = enc_id,
+  enc_period_start = enc_period_start,
+  meda_id = meda_id,
+  first_enc_period_start_col = first_enc_period_start_per_main_enc
+) {
+  full_analysis_set_1 <- data |>
+    dplyr::filter({{ enc_period_start }} == {{ first_enc_period_start_col }}) |>
+    dplyr::group_by({{ main_enc_id }}, {{ sub_enc_id }}) |>
+    dplyr::mutate(meda_number = as.integer(stringr::str_extract({{ meda_id }}, "(?<=-)\\d+$"))) |>
+    dplyr::filter(
+      if (any(!is.na(meda_number))) {
+        meda_number == min(meda_number, na.rm = TRUE)
+      } else {
+        TRUE
+      }
+    ) |>
+    dplyr::ungroup() |>
+    dplyr::select(-meda_number) |>
     dplyr::distinct()
-
-  full_analysis_set_1 <- full_analysis_set_1_raw |>
-    dplyr::select(-c(
-      enc_partof_calculated_ref, enc_class_code
-    ))
 
   return(full_analysis_set_1)
 }
 
 #------------------------------------------------------------------------------#
 
-# TODO: identify first interpolar ward contact and its proper lenght --------
-# TODO: implement rules for combining short absences? -------
-# TODO: include all patients with documented medication analysis within the first 7 days -------------
+# TODO: implement rules for combining short absences for determining length of first interpolar ward contact? -------
 # TODO: handle NA end-dates properly (e.g. deceased) -------------
-
-defineFAS2_1 <- function(full_analysis_set_1, report_period_end) {
-  FAS2_1 <- full_analysis_set_1 |>
-    dplyr::filter(dplyr::case_when(
-      !is.na(enc_period_end) ~
-        as.numeric(enc_period_end - enc_period_start) >= 7,
-      is.na(enc_period_end) & enc_status == "in-progress" ~
-        as.numeric(as.POSIXct(report_period_end) - enc_period_start) >= 7
-    )) |>
-    dplyr::distinct()
-
-  return(FAS2_1)
-}

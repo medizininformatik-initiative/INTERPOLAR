@@ -8,38 +8,41 @@
 #' @return Invisibly returns a list with elements `branch` and `commit`, and prints them to the console along with the current time.
 #'
 getGitInfo <- function(git_dir = ".git") {
-  tryCatch({
-    # Path to HEAD file
-    head_path <- file.path(git_dir, "HEAD")
-    if (!file.exists(head_path)) {
-      stop("HEAD file not found. Is this a valid .git directory?")
-    }
-    head_content <- readLines(head_path, warn = FALSE)
-    # Check if HEAD points to a ref or is a detached commit
-    if (grepl("^ref:", head_content)) {
-      ref_rel_path <- sub("^ref: ", "", head_content)
-      ref_path <- file.path(git_dir, ref_rel_path)
-      if (!file.exists(ref_path)) {
-        stop("Reference file not found: ", ref_path)
+  tryCatch(
+    {
+      # Path to HEAD file
+      head_path <- file.path(git_dir, "HEAD")
+      if (!file.exists(head_path)) {
+        stop("HEAD file not found. Is this a valid .git directory?")
       }
-      commit_id <- readLines(ref_path, warn = FALSE)
-      branch_name <- basename(ref_rel_path)
-    } else {
-      commit_id <- head_content
-      branch_name <- "-"
+      head_content <- readLines(head_path, warn = FALSE)
+      # Check if HEAD points to a ref or is a detached commit
+      if (grepl("^ref:", head_content)) {
+        ref_rel_path <- sub("^ref: ", "", head_content)
+        ref_path <- file.path(git_dir, ref_rel_path)
+        if (!file.exists(ref_path)) {
+          stop("Reference file not found: ", ref_path)
+        }
+        commit_id <- readLines(ref_path, warn = FALSE)
+        branch_name <- basename(ref_rel_path)
+      } else {
+        commit_id <- head_content
+        branch_name <- "-"
+      }
+
+      info <- paste0(
+        "Branch: ", branch_name, "\n",
+        "Commit: ", commit_id, "\n",
+        "Current Time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n"
+      )
+
+      return(info)
+
+    },
+    error = function(e) {
+      paste0("Git info could not be retrieved: ", e$message, "\n")
     }
-
-    info <- paste0(
-      "Branch: ", branch_name, "\n",
-      "Commit: ", commit_id, "\n",
-      "Current Time: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n"
-    )
-
-    return(info)
-
-  }, error = function(e) {
-    paste0("Git info could not be retrieved: ", e$message, "\n")
-  })
+  )
 }
 
 #' Initialize Module Context
@@ -52,14 +55,17 @@ getGitInfo <- function(git_dir = ".git") {
 #' @param mandatory_parameters (Optional) A character vector containing the names
 #' of mandatory parameters. If these parameters are not found in the configuration
 #' file, an error is thrown.
+#' @param defaults (Optional) A named list containing default values for
+#' configuration parameters that may be omitted from the TOML file.
 #'
 #' @export
-initModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = NA, mandatory_parameters = c()) {
+initModule <- function(module_name, db_schema_base_name = NULL, path_to_toml = NA, mandatory_parameters = c(), defaults = list()) {
   # Init module constants
   config <- initModuleConstants(
     module_name = module_name,
     db_schema_base_name = db_schema_base_name,
-    path_to_toml = path_to_toml
+    path_to_toml = path_to_toml,
+    defaults = defaults
   )
   # Check for mandatory parameters
   checkMandatoryParameters(mandatory_parameters)
@@ -111,7 +117,6 @@ startModule <- function(config, hide_value_pattern = "") {
 #' @return This function does not return a value. It saves log data as a side effect.
 #'
 storeFinishData <- function(finish_message, error_message) {
-
   module_log <- data.table::data.table(
     module_name = as.character(dbGetModuleName()),
     message = as.character(finish_message),

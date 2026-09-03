@@ -260,8 +260,14 @@ testthat::test_that("createReferencesForResource keeps the legacy filtering of e
     enc_patient_ref = "Patient/p1",
     enc_type_code = "einrichtungskontakt",
     enc_class_code = "IMP",
-    enc_period_start = as.POSIXct("2026-01-01 00:00:00", tz = "UTC"),
-    enc_period_end = as.POSIXct("2026-01-10 00:00:00", tz = "UTC"),
+    enc_period_start = as.POSIXct(
+      "2026-01-01 00:00:00",
+      tz = "UTC"
+    ),
+    enc_period_end = as.POSIXct(
+      "2026-01-10 00:00:00",
+      tz = "UTC"
+    ),
     enc_partof_calculated_ref = NA_character_,
     enc_main_encounter_calculated_ref = "Encounter/main-1"
   )
@@ -308,8 +314,14 @@ testthat::test_that("createReferencesForResource recalculates invalid calculated
     enc_patient_ref = "Patient/p1",
     enc_type_code = "einrichtungskontakt",
     enc_class_code = "IMP",
-    enc_period_start = as.POSIXct("2026-01-01 00:00:00", tz = "UTC"),
-    enc_period_end = as.POSIXct("2026-01-10 00:00:00", tz = "UTC"),
+    enc_period_start = as.POSIXct(
+      "2026-01-01 00:00:00",
+      tz = "UTC"
+    ),
+    enc_period_end = as.POSIXct(
+      "2026-01-10 00:00:00",
+      tz = "UTC"
+    ),
     enc_partof_calculated_ref = NA_character_,
     enc_main_encounter_calculated_ref = "Encounter/main-1"
   )

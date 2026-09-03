@@ -7,8 +7,8 @@ library(db2frontend)
 # etlutils::setProcess("DeleteDBAndREDCap")
 
 # chance the working directory to the main directory
-if (grepl('/cdstoolchain$', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain$', getwd())) setwd("../")
+if (grepl("/cdstoolchain$", getwd())) setwd("../..")
+if (grepl("/R-cdstoolchain$", getwd())) setwd("../")
 
 
 # Reset error status
@@ -30,7 +30,6 @@ if (interactive()) {
   # delete REDCap
   config_db2frontend <- db2frontend::initFrontend2DB()
   db2frontend::deleteRedcapContent()
-
 }
 
 end_full <- Sys.time()

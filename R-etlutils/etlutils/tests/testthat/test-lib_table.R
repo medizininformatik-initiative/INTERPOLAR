@@ -2,12 +2,12 @@
 # isValidTable #
 ################
 
-test_that('Test isValidTable()', {
+test_that("Test isValidTable()", {
   expect_false(isValidTable(NA))
   expect_false(isValidTable(NULL))
   expect_false(isValidTable(data.table()))
   expect_false(isValidTable(data.table(col1 = c(NA, NA))))
-  expect_true(isValidTable(data.table(col1 = 'AAA')))
+  expect_true(isValidTable(data.table(col1 = "AAA")))
 })
 
 ###############
@@ -213,10 +213,10 @@ test_that("readExcelFileAsTableList imports Excel sheets correctly", {
   # Verify: Check if the result is as expected
   expect_true(is.list(result), info = "The result should be a list.")
   expect_equal(length(result), 2, info = "The result list should contain two data.tables for the two sheets.")
-  expect_equal(names(result), c('mtcars_with_description_lines', 'mtcars_without_description_line'))
+  expect_equal(names(result), c("mtcars_with_description_lines", "mtcars_without_description_line"))
 
   # reading non existing files returns an empty list
-  result <- readExcelFileAsTableList('not_existing_file_path')
+  result <- readExcelFileAsTableList("not_existing_file_path")
   expect_true(length(result) == 0 && is.list(result))
 })
 
@@ -372,12 +372,8 @@ test_that("trimTableValues ignores non-character columns", {
 
 # Test with NA and empty strings
 test_that("trimTableValues handles NA and empty strings correctly", {
-  dt <- data.table(
-    col1 = c("  ", NA, "  C  ")
-  )
-  expected_dt <- data.table(
-    col1 = c("", NA, "C")
-  )
+  dt <- data.table(col1 = c("  ", NA, "  C  "))
+  expected_dt <- data.table(col1 = c("", NA, "C"))
   trimTableValues(dt)
   expect_equal(dt, expected_dt)
 })
@@ -603,47 +599,47 @@ test_that("removeRowsWithNAorEmpty handles mixed data types and correctly remove
 # Test for basic functionality with exact match (grep = FALSE)
 test_that("getFirstRowWithPatterns returns correct index with exact match", {
   table <- data.table(
-    col1 = c('AAAA', 'A', 'AA', 'AAA'),
-    col2 = c('BBBB', 'B', 'BB', 'BBB'),
-    col3 = c('CCCC', 'C', 'CC', 'CCC'),
-    col4 = c('DDDD', 'D', 'DD', 'DDD')
+    col1 = c("AAAA", "A", "AA", "AAA"),
+    col2 = c("BBBB", "B", "BB", "BBB"),
+    col3 = c("CCCC", "C", "CC", "CCC"),
+    col4 = c("DDDD", "D", "DD", "DDD")
   )
-  index <- getFirstRowWithPatterns(table, c('BBB', 'DDD'), grep = FALSE)
+  index <- getFirstRowWithPatterns(table, c("BBB", "DDD"), grep = FALSE)
   expect_equal(index, 4)
 })
 
 # Test for using grepl for pattern matching (grep = TRUE)
 test_that("getFirstRowWithPatterns returns correct index using grepl", {
   table <- data.table(
-    col1 = c('AAAA', 'A', 'AA', 'AAA'),
-    col2 = c('BBBB', 'B', 'BB', 'BBB'),
-    col3 = c('CCCC', 'C', 'CC', 'CCC'),
-    col4 = c('DDDD', 'D', 'DD', 'DDD')
+    col1 = c("AAAA", "A", "AA", "AAA"),
+    col2 = c("BBBB", "B", "BB", "BBB"),
+    col3 = c("CCCC", "C", "CC", "CCC"),
+    col4 = c("DDDD", "D", "DD", "DDD")
   )
-  index <- getFirstRowWithPatterns(table, c('BB', 'DD'), grep = TRUE)
+  index <- getFirstRowWithPatterns(table, c("BB", "DD"), grep = TRUE)
   expect_equal(index, 1)
 })
 
 # Test when no match is found
 test_that("getFirstRowWithPatterns returns -1 when no match is found", {
   table <- data.table(
-    col1 = c('AAAA', 'A', 'AA', 'AAA'),
-    col2 = c('BBBB', 'B', 'BB', 'BBB'),
-    col3 = c('CCCC', 'C', 'CC', 'CCC'),
-    col4 = c('DDDD', 'D', 'DD', 'DDD')
+    col1 = c("AAAA", "A", "AA", "AAA"),
+    col2 = c("BBBB", "B", "BB", "BBB"),
+    col3 = c("CCCC", "C", "CC", "CCC"),
+    col4 = c("DDDD", "D", "DD", "DDD")
   )
-  index <- getFirstRowWithPatterns(table, c('ZZZ', 'XXX'), grep = FALSE)
+  index <- getFirstRowWithPatterns(table, c("ZZZ", "XXX"), grep = FALSE)
   expect_equal(index, -1)
 })
 
 # Test when the number of patterns is greater than the number of columns
 test_that("getFirstRowWithPatterns returns -1 when the number of patterns is greater than the number of columns", {
   table <- data.table(
-    col1 = c('AAAA', 'A', 'AA', 'AAA'),
-    col2 = c('BBBB', 'B', 'BB', 'BBB'),
-    col3 = c('CCCC', 'C', 'CC', 'CCC')
+    col1 = c("AAAA", "A", "AA", "AAA"),
+    col2 = c("BBBB", "B", "BB", "BBB"),
+    col3 = c("CCCC", "C", "CC", "CCC")
   )
-  index <- getFirstRowWithPatterns(table, c('A', 'B', 'C', 'D', 'E'), grep = FALSE)
+  index <- getFirstRowWithPatterns(table, c("A", "B", "C", "D", "E"), grep = FALSE)
   expect_equal(index, -1)
 })
 
@@ -983,7 +979,7 @@ test_that("collapseRowsByGroup handles columns with all NAs correctly", {
 
 test_that("printTableSummary prints a summary for a table", {
   # Capture the output of printTableSummary
-  temp_output <- capture.output(printTableSummary(table = mtcars, table_name = 'mtcars'))
+  temp_output <- capture.output(printTableSummary(table = mtcars, table_name = "mtcars"))
 
   # Check if the table name is present in the output
   expect_match(temp_output[2], "Table: mtcars")
@@ -1061,9 +1057,7 @@ test_that("dataTableAsCharacter handles single column data.table with header and
 # define class TableDescription
 setClass(
   "TableDescription",
-  slots = list(
-    cols = "list"
-  )
+  slots = list(cols = "list")
 )
 # example table description
 table_description <- new("TableDescription", cols = list(a = "character", b = "character", c = "character"))

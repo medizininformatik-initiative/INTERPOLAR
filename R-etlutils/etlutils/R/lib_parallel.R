@@ -7,8 +7,8 @@
 parallelGetOperationSystem <- function() {
   sysinf <- Sys.info()
   if (!is.null(sysinf)) {
-    os <- sysinf[['sysname']]
-    if (os == 'Darwin') os <- "osx"
+    os <- sysinf[["sysname"]]
+    if (os == "Darwin") os <- "osx"
   } else { ## mystery machine
     os <- .Platform$OS.type
     if (grepl("^darwin", R.version$os))
@@ -60,7 +60,6 @@ parallelNormalizeCoreNumber <- function(n_cores, max_cores = 0) {
 #'
 #' @export
 parallelGetAvailableCoreNumber <- function(os = NULL, max_cores = 0) {
-
   if (is.null(os)) {
     os <- parallelGetOperationSystem()
   }

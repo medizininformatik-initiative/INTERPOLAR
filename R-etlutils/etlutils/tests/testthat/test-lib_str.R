@@ -139,14 +139,14 @@ test_that("removeLastCharsIfNotAlphanumeric handles strings with spaces", {
 
 # Test with various strings containing slashes
 test_that("getAfterLastSlash extracts everything after the last slash", {
-  strings <- c('Patient/PID_001', 'Encounter/EID_001', 'Condition/CID_001', 'aaa/bbb/ccc', 'aaa')
-  expected <- c('PID_001', 'EID_001', 'CID_001', 'ccc', 'aaa')
+  strings <- c("Patient/PID_001", "Encounter/EID_001", "Condition/CID_001", "aaa/bbb/ccc", "aaa")
+  expected <- c("PID_001", "EID_001", "CID_001", "ccc", "aaa")
   expect_equal(getAfterLastSlash(strings), expected)
 })
 
 # Test with strings that do not contain slashes
 test_that("getAfterLastSlash handles strings without slashes", {
-  strings <- c('PatientPID001', 'EncounterEID001', 'ConditionCID001', 'aaa')
+  strings <- c("PatientPID001", "EncounterEID001", "ConditionCID001", "aaa")
   expect_equal(getAfterLastSlash(strings), strings)
 })
 
@@ -157,8 +157,8 @@ test_that("getAfterLastSlash returns an empty string if input is empty", {
 
 # Test with a single string containing multiple slashes
 test_that("getAfterLastSlash extracts correctly from a string with multiple slashes", {
-  string <- 'a/b/c/d/e/f'
-  expect_equal(getAfterLastSlash(string), 'f')
+  string <- "a/b/c/d/e/f"
+  expect_equal(getAfterLastSlash(string), "f")
 })
 
 # Test with a vector of empty strings

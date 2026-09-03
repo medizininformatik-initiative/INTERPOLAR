@@ -176,9 +176,11 @@ test_that("convertTimeFormat retains original data table structure", {
 
 test_that("convertDateTimeFormat function converts datetime columns correctly", {
   # Test case 1: Valid time representation
-  dt <- data.table(datetime_column = c("2018", "1973-06", "1905-08-23",
-                                       "2015-02-07T13:28:17+01:00", "2015-02-07T13:28:17+03:00",
-                                       "2017-01-01T00:00:00.000Z", NA))
+  dt <- data.table(datetime_column = c(
+    "2018", "1973-06", "1905-08-23",
+    "2015-02-07T13:28:17+01:00", "2015-02-07T13:28:17+03:00",
+    "2017-01-01T00:00:00.000Z", NA
+  ))
   suppressMessages(convertDateTimeFormat(dt, "datetime_column"))
   # Check if the datetime columns are converted properly
   expect_equal(dt$datetime_column[1], as.POSIXct("2018-01-01 00:00:00", tz = "Europe/Berlin"))
