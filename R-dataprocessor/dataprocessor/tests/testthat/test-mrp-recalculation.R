@@ -120,6 +120,8 @@ test_that("MRP recalculation subtracts legacy rows by key cardinality", {
   )
 
   expect_equal(nrow(result), 1L)
+  expect_equal(result$ret_id, "temporary-r2")
+  expect_false(any(c("ret_id.x", "ret_id.y") %in% names(result)))
   expect_equal(result$ret_kurzbeschr, "Newly triggered fixed rule")
 })
 

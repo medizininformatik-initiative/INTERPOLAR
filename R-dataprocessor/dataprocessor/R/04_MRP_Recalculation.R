@@ -47,7 +47,7 @@ filterExistingMRPRows <- function(current_table, existing_table, key_cols, exact
 
   existing_identity_cols <- c(".mrp_recalculation_key", intersect("ret_id", names(existing_table)))
   existing_counts <- unique(existing_table[, ..existing_identity_cols])[
-    , .mrp_recalculation_existing_count := .N,
+    , .(.mrp_recalculation_existing_count = .N),
     by = .mrp_recalculation_key
   ]
   current_table <- merge(
@@ -148,7 +148,6 @@ recalculateMRPs <- function(start_date,
   renumberNewMRPs <- function(mrp_tables, existing_ret_rows) {
     ret_table <- mrp_tables$retrolektive_mrpbewertung_fe
     dp_table <- mrp_tables$dp_mrp_calculations
-
     if (!nrow(ret_table)) {
       return(mrp_tables)
     }
@@ -251,7 +250,6 @@ recalculateMRPs <- function(start_date,
       buildRenumberMap(.SD, existing_ret_rows[record_id == .BY$record_id], .BY$ret_meda_id),
       by = .(record_id, ret_meda_id)
     ]
-
     updated_tables <- applyRenumberMap(ret_table, dp_table, renumber_map)
     ret_table <- updated_tables$ret_table
     dp_table <- updated_tables$dp_table
