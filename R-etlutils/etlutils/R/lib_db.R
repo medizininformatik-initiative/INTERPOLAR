@@ -1,21 +1,121 @@
 # Environment for saving everything but the connections
 .lib_db_env <- new.env()
 
+DB_COORDINATION_MODE_NONE <- "none"
+DB_COORDINATION_MODE_TRANSFER <- "transfer"
+
+#' Initialize a module database context
+#'
+#' Loads the database connection settings for one module into the internal
+#' `etlutils` database environment. Unlike [initModuleConstants()], this does
+#' not assign module configuration values to `.GlobalEnv`.
+#'
+#' @param module_name Character. Base name used to select the module-specific
+#' database user and schemas from the database configuration.
+#' @param path_to_db_toml Character. Path to the database configuration TOML.
+#' @param log Logical. Whether database operations should be logged.
+#'
+#' @return No return value, called for its side effect.
+#'
+#' @export
 dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
   constants <- initConstants(path_to_db_toml, envir = .lib_db_env)
-  module_name_upper <- toupper(module_name)
+  dbSetModuleContext(
+    module_name = module_name,
+    db_config = constants,
+    log = log
+  )
+}
+
+#' Read Database Configuration with Project Overrides
+#'
+#' Loads the normal database configuration and overlays values from an optional
+#' project-specific TOML file. Project values must use the same parameter names
+#' as the normal database configuration.
+#'
+#' @param path_to_db_toml Character path to the normal database TOML file.
+#' @param path_to_override_toml Optional character path to a project-specific
+#'   database TOML file.
+#' @param mandatory_override_parameters Character vector of parameters that must
+#'   be explicitly set to a non-empty value in the project TOML file.
+#'
+#' @return Named list of database configuration values.
+#'
+#' @export
+dbReadConfigWithOverrides <- function(
+  path_to_db_toml,
+  path_to_override_toml = NULL,
+  mandatory_override_parameters = character()
+) {
+  db_config <- readTomlAsNamedList(path_to_db_toml)
+  if (is.null(path_to_override_toml)) {
+    return(db_config)
+  }
+
+  override_config <- readTomlAsNamedList(path_to_override_toml)
+  is_non_empty <- function(value) {
+    length(value) &&
+      !is.na(value[[1]]) &&
+      nzchar(as.character(value[[1]]))
+  }
+  for (parameter_name in mandatory_override_parameters) {
+    parameter_value <- override_config[[parameter_name]]
+    if (is.null(parameter_value) || !is_non_empty(parameter_value)) {
+      stop(
+        "Project database configuration must define a non-empty ",
+        parameter_name, ": ", path_to_override_toml,
+        call. = FALSE
+      )
+    }
+  }
+
+  unknown_parameters <- setdiff(names(override_config), names(db_config))
+  if (length(unknown_parameters)) {
+    stop(
+      "Unknown project database configuration parameter",
+      if (length(unknown_parameters) > 1L) "s" else "",
+      ": ", paste(unknown_parameters, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  override_config <- override_config[vapply(
+    override_config,
+    is_non_empty,
+    logical(1)
+  )]
+  db_config[names(override_config)] <- override_config
+  db_config
+}
+
+#' Set a Module Database Context from Configuration Values
+#'
+#' @param module_name Character module name used for the DB context.
+#' @param db_config Named list containing the database configuration.
+#' @param db_schema_base_name Optional schema/user prefix. Defaults to module name.
+#' @param log Logical flag for DB logging.
+#'
+#' @return No return value, called for its side effect.
+#'
+#' @export
+dbSetModuleContext <- function(
+  module_name,
+  db_config,
+  db_schema_base_name = module_name,
+  log = FALSE
+) {
+  module_name_upper <- toupper(db_schema_base_name)
   dbSetContext(
     module_name = module_name,
-    dbname = constants[["DB_NAME"]],
-    host = constants[["DB_HOST"]],
-    port = constants[["DB_PORT"]],
-    user = constants[[paste0("DB_", module_name_upper, "_USER")]],
-    password = constants[[paste0("DB_", module_name_upper, "_PASSWORD")]],
-    schema_in = constants[[paste0("DB_", module_name_upper, "_SCHEMA_IN")]],
-    schema_out = constants[[paste0("DB_", module_name_upper, "_SCHEMA_OUT")]],
-    admin_user = constants[["DB_ADMIN_USER"]],
-    admin_password = constants[["DB_ADMIN_PASSWORD"]],
-    admin_schemas = constants[["DB_ADMIN_SCHEMAS"]],
+    dbname = db_config[["DB_NAME"]],
+    host = db_config[["DB_HOST"]],
+    port = db_config[["DB_PORT"]],
+    user = db_config[[paste0("DB_", module_name_upper, "_USER")]],
+    password = db_config[[paste0("DB_", module_name_upper, "_PASSWORD")]],
+    schema_in = db_config[[paste0("DB_", module_name_upper, "_SCHEMA_IN")]],
+    schema_out = db_config[[paste0("DB_", module_name_upper, "_SCHEMA_OUT")]],
+    admin_user = db_config[["DB_ADMIN_USER"]],
+    admin_password = db_config[["DB_ADMIN_PASSWORD"]],
+    admin_schemas = db_config[["DB_ADMIN_SCHEMAS"]],
     log = log
   )
 }
@@ -79,6 +179,70 @@ dbSetContext <- function(module_name,
   .lib_db_env[["DB_ADMIN_USER"]] <- admin_user
   .lib_db_env[["DB_ADMIN_PASSWORD"]] <- admin_password
   .lib_db_env[["DB_ADMIN_SCHEMAS"]] <- admin_schemas
+  .lib_db_env[["DB_COORDINATION_MODE"]] <- NULL
+}
+
+#' Detect the Database Coordination Mode
+#'
+#' Transfer coordination is only used for writable databases that provide at
+#' least one of the INTERPOLAR transfer control functions. Read-only databases
+#' and databases without those functions do not need database locks for
+#' analyses.
+#'
+#' @return One of `none` or `transfer`.
+dbDetectCoordinationMode <- function() {
+  statement <- paste0(
+    "SELECT\n",
+    "  current_setting('transaction_read_only') = 'on' AS transaction_read_only,\n",
+    "  EXISTS (\n",
+    "    SELECT 1\n",
+    "    FROM pg_catalog.pg_proc AS p\n",
+    "    INNER JOIN pg_catalog.pg_namespace AS n ON n.oid = p.pronamespace\n",
+    "    WHERE n.nspname = 'db'\n",
+    "      AND p.proname IN (\n",
+    "        'data_transfer_status',\n",
+    "        'data_transfer_stop',\n",
+    "        'data_transfer_start',\n",
+    "        'data_transfer_reset_lock'\n",
+    "      )\n",
+    "  ) AS has_transfer_functions"
+  )
+  capabilities <- dbWithRetry(
+    db_call = function(db_connection) {
+      DBI::dbGetQuery(db_connection, statement)
+    },
+    call_label = "DBI::dbGetQuery",
+    sql = statement,
+    readonly = TRUE
+  )
+
+  if (isTRUE(capabilities[["transaction_read_only"]][1])) {
+    return(DB_COORDINATION_MODE_NONE)
+  }
+  if (isTRUE(capabilities[["has_transfer_functions"]][1])) {
+    return(DB_COORDINATION_MODE_TRANSFER)
+  }
+  DB_COORDINATION_MODE_NONE
+}
+
+#' Get the Cached Database Coordination Mode
+#'
+#' @return One of `none` or `transfer`.
+dbGetCoordinationMode <- function() {
+  coordination_mode <- .lib_db_env[["DB_COORDINATION_MODE"]]
+  if (is.null(coordination_mode)) {
+    coordination_mode <- dbDetectCoordinationMode()
+    .lib_db_env[["DB_COORDINATION_MODE"]] <- coordination_mode
+  }
+  coordination_mode
+}
+
+#' Check Whether Database Transfer Coordination Is Available
+#'
+#' @return `TRUE` for a database with active transfer coordination and `FALSE`
+#'   for an analysis database without it.
+dbUsesTransferCoordination <- function() {
+  identical(dbGetCoordinationMode(), DB_COORDINATION_MODE_TRANSFER)
 }
 
 #' Check if Database Logging is Enabled
@@ -95,7 +259,9 @@ dbSetContext <- function(module_name,
 #' dbIsLog()
 #'
 #' @export
-dbIsLog <- function() {.lib_db_env[["DB_LOG"]]}
+dbIsLog <- function() {
+  .lib_db_env[["DB_LOG"]]
+}
 
 #' Get the Module Name from the Database Context
 #'
@@ -111,7 +277,9 @@ dbIsLog <- function() {.lib_db_env[["DB_LOG"]]}
 #' dbGetModuleName()
 #'
 #' @export
-dbGetModuleName <- function() {.lib_db_env[["MODULE_NAME"]]}
+dbGetModuleName <- function() {
+  .lib_db_env[["MODULE_NAME"]]
+}
 
 #' If true, the database cron job will be started by R code immediately if necessary.
 #' This should prevent unnecessary waiting times if the cron job is only started once
@@ -178,6 +346,49 @@ dbGetAdminPassword <- function() {
   return(if (exists("DEBUG_DB_ADMIN_PASSWORD")) DEBUG_DB_ADMIN_PASSWORD else .lib_db_env[["DB_ADMIN_PASSWORD"]])
 }
 
+#' Create a PostgreSQL Database Connection
+#'
+#' Creates a database connection with the shared INTERPOLAR driver and session
+#' settings. Callers provide connection values explicitly so that workflows can
+#' use multiple databases without changing the module database context.
+#'
+#' @param dbname Database name.
+#' @param host Database host.
+#' @param port Database port.
+#' @param user Database user.
+#' @param password Database password.
+#' @param schema Optional schema used as the connection `search_path`.
+#'
+#' @return A DBI database connection.
+#'
+#' @export
+dbCreateConnection <- function(dbname, host, port, user, password, schema = NULL) {
+  connection_arguments <- list(
+    drv = RPostgres::Postgres(),
+    dbname = dbname,
+    host = host,
+    port = port,
+    user = user,
+    password = password,
+    timezone = GLOBAL_TIMEZONE
+  )
+  if (!is.null(schema) && !is.na(schema) && nzchar(schema)) {
+    connection_arguments[["options"]] <- paste0("-c search_path=", schema)
+  }
+
+  db_connection <- do.call(DBI::dbConnect, connection_arguments)
+  connection_ready <- FALSE
+  on.exit({
+    if (!connection_ready) {
+      invisible(try(suppressWarnings(DBI::dbDisconnect(db_connection)), silent = TRUE))
+    }
+  })
+
+  DBI::dbExecute(db_connection, "set work_mem to '32MB';")
+  connection_ready <- TRUE
+  db_connection
+}
+
 #' Get a Fresh PostgreSQL Database Connection
 #'
 #' This function establishes and returns a new PostgreSQL database connection
@@ -203,21 +414,14 @@ dbGetConnection <- function(readonly = FALSE) {
     dont_repeat_key = "dbGetConnection()"
   )
 
-  db_connection <- DBI::dbConnect(
-    RPostgres::Postgres(),
+  dbCreateConnection(
     dbname = .lib_db_env[["DB_NAME"]],
     host = dbGetHost(),
     port = dbGetPort(),
     user = .lib_db_env[["DB_USER"]],
     password = .lib_db_env[["DB_PASSWORD"]],
-    options = paste0("-c search_path=", schema_name),
-    timezone = "Europe/Berlin"
+    schema = schema_name
   )
-
-  # Increase memory allocation
-  DBI::dbExecute(db_connection, "set work_mem to '32MB';")
-
-  return(db_connection)
 }
 
 #' Establish a PostgreSQL admin connection
@@ -238,20 +442,13 @@ dbGetAdminConnection <- function() {
     " user=", .lib_db_env[["DB_ADMIN_USER"]], "\n"
   )
 
-  admin_connection <- DBI::dbConnect(
-    RPostgres::Postgres(),
+  dbCreateConnection(
     dbname = .lib_db_env[["DB_NAME"]],
     host = dbGetHost(),
     port = dbGetPort(),
     user = .lib_db_env[["DB_ADMIN_USER"]],
-    password = dbGetAdminPassword(),
-    timezone = "Europe/Berlin"
+    password = dbGetAdminPassword()
   )
-
-  # Increase memory allocation
-  DBI::dbExecute(admin_connection, "set work_mem to '32MB';")
-
-  return(admin_connection)
 }
 
 #' Execute a Query and Retrieve a Single Value
@@ -396,7 +593,7 @@ dbCreateLockID <- function(...) {
 #'         of retries.
 #'
 dbLock <- function(lock_id) {
-  if (!is.null(lock_id)) {
+  if (!is.null(lock_id) && dbUsesTransferCoordination()) {
     full_lock_id <- dbCreateLockID(lock_id)
     # increase the recursive call counter 'db_lock_depth'
     db_lock_depth <- .lib_db_env[[lock_id]]
@@ -432,7 +629,6 @@ dbLock <- function(lock_id) {
 
     # decrease the recursive call counter 'db_lock_depth'
     .lib_db_env[[lock_id]] <- .lib_db_env[[lock_id]] - 1
-
   }
 }
 
@@ -474,33 +670,38 @@ dbTransferDataInternal <- function() {
 #'         was successful.
 #'
 dbUnlock <- function(lock_id, readonly = FALSE) {
-  unlock_successful = FALSE
-  if (!is.null(lock_id)) {
+  unlock_successful <- FALSE
+  if (!is.null(lock_id) && dbUsesTransferCoordination()) {
     full_lock_id <- dbCreateLockID(lock_id)
     dbLog("Try to unlock database with lock_id: '", full_lock_id, "' and readonly: ", readonly)
     unlock_request <- paste0("SELECT db.data_transfer_start('", dbGetModuleName(), "', '", full_lock_id, "', ", readonly, ");")
     unlock_successful <- dbGetSingleValue(unlock_request)
     if (dbLog()) {
-      tryCatch({
-        status <- dbGetStatus()
-        cat("Current database status after lock request:", status, "\n")
-      }, error = function(error) {
-        etlutils::catErrorMessage(
-          paste0(
-            "Could not retrieve database status after unlock request.\n",
-            "Lock ID: ", full_lock_id, "\n",
-            "Readonly: ", readonly, "\n",
-            "Error:\n", conditionMessage(error), "\n"
+      tryCatch(
+        {
+          status <- dbGetStatus()
+          cat("Current database status after lock request:", status, "\n")
+        },
+        error = function(error) {
+          etlutils::catErrorMessage(
+            paste0(
+              "Could not retrieve database status after unlock request.\n",
+              "Lock ID: ", full_lock_id, "\n",
+              "Readonly: ", readonly, "\n",
+              "Error:\n", conditionMessage(error), "\n"
+            )
           )
-        )
-      })
+        }
+      )
     }
     if (!unlock_successful) {
       status <- dbGetStatus()
-      stop("Could not unlock the database for lock_id:\n",
-           full_lock_id, "\n",
-           "The current status is: " , status, "\n",
-           dbGetInfo(readonly))
+      stop(
+        "Could not unlock the database for lock_id:\n",
+        full_lock_id, "\n",
+        "The current status is: ", status, "\n",
+        dbGetInfo(readonly)
+      )
     }
     if (!readonly && dbIsRunCronJobImmediately()) {
       dbTransferDataInternal()
@@ -523,8 +724,12 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
 #' @return A logical value (`TRUE` or `FALSE`), indicating whether the
 #'         reset was successful.
 #'
-#'@export
+#' @export
 dbResetLock <- function() {
+  if (!dbUsesTransferCoordination()) {
+    dbLog("Database transfer lock is disabled for this database context")
+    return(FALSE)
+  }
   module_name <- dbGetModuleName()
   unlock_successful <- FALSE
   if (dbIsLockedByModule()) {
@@ -532,10 +737,12 @@ dbResetLock <- function() {
     unlock_successful <- dbGetSingleValue(unlock_request)
     if (!unlock_successful) {
       status <- dbGetStatus()
-      stop("Could not reset database lock for module:\n",
-           module_name, "\n",
-           "The current status is: " , status, "\n",
-           dbGetInfo())
+      stop(
+        "Could not reset database lock for module:\n",
+        module_name, "\n",
+        "The current status is: ", status, "\n",
+        dbGetInfo()
+      )
     }
   }
   if (unlock_successful) {
@@ -640,7 +847,7 @@ dbCheckColumsWidthBeforeWrite <- function(table_name, table, allow_truncate = FA
   dbLog("dbCheckColumsWidthBeforeWrite:\n", sql_query)
 
   # Retrieve column widths
-  #there is no need to check the column width for read connections
+  # there is no need to check the column width for read connections
   column_widths <- dbGetQuery(sql_query, readonly = FALSE)
   column_widths <- unique(column_widths)
 
@@ -683,7 +890,6 @@ dbCheckColumsWidthBeforeWrite <- function(table_name, table, allow_truncate = FA
   if (STOP) {
     stop("Some columns exceed their maximum allowed length (see error messages above).")
   }
-
 }
 
 dbGetReadOnlyColumns <- function(table_name) {
@@ -739,7 +945,8 @@ dbAddContent <- function(table_name, table, lock_id = NULL) {
     char_cols <- names(table)[sapply(table, is.character)]
     if (length(char_cols)) {
       table[, (char_cols) := lapply(.SD, function(x) data.table::fifelse(x == "", NA_character_, x)),
-            .SDcols = char_cols]
+        .SDcols = char_cols
+      ]
     }
 
     # Lock + connection with guaranteed cleanup
@@ -783,7 +990,7 @@ dbDeleteContent <- function(table_name, lock_id = NULL) {
   # Convert table name to lowercase for PostgreSQL compatibility
   table_name <- tolower(table_name)
   # Create DELETE SQL statement
-  statement <- paste0('DELETE FROM ', table_name, ';')
+  statement <- paste0("DELETE FROM ", table_name, ";")
   # Execute the DELETE statement and get the number of affected rows
   deleted_rows <- dbExecute(statement, lock_id)
   # Log the number of deleted rows
@@ -959,9 +1166,11 @@ dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
 dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
   dbLock(lock_id)
   on.exit(dbUnlock(lock_id, readonly), add = TRUE)
-  dbLog("dbGetQuery:\n", query,
-        if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")),
-        dont_repeat_key = "dbGetQuery()")
+  dbLog(
+    "dbGetQuery:\n", query,
+    if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")),
+    dont_repeat_key = "dbGetQuery()"
+  )
   table <- dbWithRetry(
     db_call = function(db_connection) {
       data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
@@ -1131,8 +1340,10 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
       dbIsTableEmptyBeforeWrite(table_name)
     })]
     if (length(non_empty_tables) > 0) {
-      stop("The following tables are not empty:\n",
-           paste(non_empty_tables, collapse = "\n"))
+      stop(
+        "The following tables are not empty:\n",
+        paste(non_empty_tables, collapse = "\n")
+      )
     }
   }
 
@@ -1182,9 +1393,11 @@ dbWriteTable <- function(table, table_name = NA, lock_id = NULL, stop_if_table_n
   tables <- list(table)
   names(tables) <- table_name
   # Call the dbWriteTables function to perform the writing operation
-  dbWriteTables(tables,
-                lock_id = lock_id,
-                stop_if_table_not_empty = stop_if_table_not_empty)
+  dbWriteTables(
+    tables,
+    lock_id = lock_id,
+    stop_if_table_not_empty = stop_if_table_not_empty
+  )
 }
 
 #' Read Multiple Tables from a PostgreSQL Database
@@ -1341,6 +1554,7 @@ dbGetCurrentSchema <- function(readonly = FALSE) {
 #' @details
 #' - Retrieves column metadata from `information_schema.columns` for the current schema.
 #'
+#' @export
 dbGetTableColumnTypes <- function(table_name, readonly = FALSE) {
   schema <- dbGetCurrentSchema(readonly)
   # SQL query to retrieve column names and data types
@@ -1405,8 +1619,10 @@ dbConvertToDBTypes <- function(dt, table_name) {
       } else if (db_type == "boolean") {
         dt[, (col_name) := as.logical(get(col_name))]
       } else {
-        dbLog("Unknown PostgreSQL type for column '", col_name,
-              "': ", db_type, ". No conversion applied.")
+        dbLog(
+          "Unknown PostgreSQL type for column '", col_name,
+          "': ", db_type, ". No conversion applied."
+        )
       }
     }
   }
@@ -1513,7 +1729,7 @@ dbGetInfo <- function(readonly = TRUE) {
 #' @export
 dbReset <- function(tables_with_schema = NULL) {
   con <- dbGetAdminConnection()
-  on.exit(  invisible(try(suppressWarnings(DBI::dbDisconnect(con)), silent = TRUE)), add = TRUE)
+  on.exit(invisible(try(suppressWarnings(DBI::dbDisconnect(con)), silent = TRUE)), add = TRUE)
 
   lock_id <- "Clear database"
   dbLock(lock_id)
@@ -1528,7 +1744,8 @@ dbReset <- function(tables_with_schema = NULL) {
     tables <- DBI::dbGetQuery(con, query)
   } else {
     tables <- data.table::data.table(full = tables_with_schema)[
-      , c("schemaname", "tablename") := data.table::tstrsplit(full, ".", fixed = TRUE)][, !"full"]
+      , c("schemaname", "tablename") := data.table::tstrsplit(full, ".", fixed = TRUE)
+    ][, !"full"]
   }
 
   # Clear all tables in the provided schemas
@@ -1538,12 +1755,15 @@ dbReset <- function(tables_with_schema = NULL) {
 
     truncate_statement <- paste0("TRUNCATE TABLE ", schema, ".", table_name, " RESTART IDENTITY CASCADE;")
 
-    tryCatch({
-      DBI::dbExecute(con, truncate_statement)
-    }, error = function(e) {
-      message("Error truncating table: ", schema, ".", table_name)
-      message("Error message: ", e$message)
-    })
+    tryCatch(
+      {
+        DBI::dbExecute(con, truncate_statement)
+      },
+      error = function(e) {
+        message("Error truncating table: ", schema, ".", table_name)
+        message("Error message: ", e$message)
+      }
+    )
   }
 
   # Check if tables still contain data after truncation

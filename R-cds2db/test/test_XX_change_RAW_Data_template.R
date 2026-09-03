@@ -11,7 +11,6 @@ DEBUG_DAYS_COUNT <- 3
 # execution if this test will be sourced in the StartDebugCDSToolChain.R file
 # to get the value of DEBUG_DAYS_COUNT only.
 if (exists("TOOLCHAIN_DAY")) {
-
   # Load the necessary libraries
   source("./R-cds2db/test/test_common_data_preparation.R", local = TRUE)
 
@@ -24,5 +23,4 @@ if (exists("TOOLCHAIN_DAY")) {
   } else if (TOOLCHAIN_DAY == 3) {
     # ...
   }
-
 }

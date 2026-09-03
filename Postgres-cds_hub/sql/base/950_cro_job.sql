@@ -1,12 +1,16 @@
 -- Script is not automatically generated
-DO
-$$
+DO $$
 BEGIN
     IF EXISTS ( -- do migration
-        SELECT 1 FROM db_config.db_parameter WHERE parameter_name='current_migration_flag' AND parameter_value='1'
-    ) THEN
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EXECUTE $f$
+        SELECT
+            1
+        FROM
+            db_config.db_parameter
+        WHERE
+            parameter_name = 'current_migration_flag'
+            AND parameter_value = '1') THEN
+        ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        EXECUTE $f$
 ------------------------
 CREATE OR REPLACE FUNCTION db.cron_job_data_transfer()
 RETURNS VOID
@@ -409,22 +413,24 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql; -- db.cron_job_data_transfer
 $f$;
-------------------------
-
-DO
-$inner$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM cron.job j WHERE j.active IS TRUE AND command='SELECT db.cron_job_data_transfer();'
-    ) THEN
+    ------------------------
+    DO $inner$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT
+                1
+            FROM
+                cron.job j
+            WHERE
+                j.active IS TRUE
+                AND command = 'SELECT db.cron_job_data_transfer();') THEN
         -- Datatransfer Job anlegen
-        PERFORM cron.schedule('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
+        PERFORM
+            cron.schedule ('*/1 * * * *', 'SELECT db.cron_job_data_transfer();');
     END IF;
-END
-$inner$;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EXECUTE $f$
+END $inner$;
+    ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    EXECUTE $f$
 ------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Anhalten
 CREATE OR REPLACE FUNCTION db.data_transfer_stop(module VARCHAR DEFAULT 'Interpolar_Module_bitte_angeben', msg VARCHAR DEFAULT 'Interpolar_Aufrufposition_bitte_angeben')
@@ -512,7 +518,7 @@ BEGIN
             END LOOP;
         END IF;
 
-    	RETURN TRUE; -- semaphore set successfully
+	RETURN TRUE; -- semaphore set successfully
     ELSE
         err_section:='db.data_transfer_stop-20';    err_schema:='db_config';    err_table:='db_process_control';
         RETURN FALSE;
@@ -538,15 +544,13 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql; -- db.data_transfer_stop
 $f$;
-------------------------
-
-GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_stop(VARCHAR, VARCHAR) TO db_user;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EXECUTE $f$
+    ------------------------
+    GRANT EXECUTE ON FUNCTION db.data_transfer_stop (VARCHAR, VARCHAR) TO cds2db_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_stop (VARCHAR, VARCHAR) TO db2dataprocessor_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_stop (VARCHAR, VARCHAR) TO db2frontend_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_stop (VARCHAR, VARCHAR) TO db_user;
+    ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    EXECUTE $f$
 ------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Starten
 CREATE OR REPLACE FUNCTION db.data_transfer_start(module VARCHAR DEFAULT 'Interpolar_Module_bitte_angeben', msg VARCHAR DEFAULT 'Interpolar_Aufrufposition_bitte_angeben', read_only BOOLEAN DEFAULT FALSE)
@@ -664,15 +668,13 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql; -- db.data_transfer_start
 $f$;
-------------------------
-
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(VARCHAR,VARCHAR,BOOLEAN) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(VARCHAR,VARCHAR,BOOLEAN) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(VARCHAR,VARCHAR,BOOLEAN) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_start(VARCHAR,VARCHAR,BOOLEAN) TO db_user;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EXECUTE $f$
+    ------------------------
+    GRANT EXECUTE ON FUNCTION db.data_transfer_start (VARCHAR, VARCHAR, BOOLEAN) TO cds2db_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_start (VARCHAR, VARCHAR, BOOLEAN) TO db2dataprocessor_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_start (VARCHAR, VARCHAR, BOOLEAN) TO db2frontend_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_start (VARCHAR, VARCHAR, BOOLEAN) TO db_user;
+    ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    EXECUTE $f$
 ------------------------
 -- Funktion um das Modul auszugeben welches die letzte Semaphore gespeert hat
 CREATE OR REPLACE FUNCTION db.data_transfer_get_lock_module()
@@ -708,15 +710,13 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql; -- db.data_transfer_get_lock_module
 $f$;
-------------------------
-
-GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module() TO db_user;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EXECUTE $f$
+    ------------------------
+    GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module () TO cds2db_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module () TO db2dataprocessor_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module () TO db2frontend_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_get_lock_module () TO db_user;
+    ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    EXECUTE $f$
 ------------------------
 -- Funktion zum steuern des cron-jobs für Externe - Starten im Fehlerfall - schreiben eines Errorlog EINTrages
 CREATE OR REPLACE FUNCTION db.data_transfer_reset_lock(module VARCHAR DEFAULT 'Interpolar_Module_bitte_angeben')
@@ -835,15 +835,13 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql; -- db.data_transfer_reset_lock
 $f$;
-------------------------
-
-GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock(VARCHAR) TO db_user;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EXECUTE $f$
+    ------------------------
+    GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock (VARCHAR) TO cds2db_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock (VARCHAR) TO db2dataprocessor_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock (VARCHAR) TO db2frontend_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_reset_lock (VARCHAR) TO db_user;
+    ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    EXECUTE $f$
 ------------------------
 -- Funktion um aktuellen Status zu erfahren
 CREATE OR REPLACE FUNCTION db.data_transfer_status()
@@ -895,24 +893,21 @@ EXCEPTION
 END;
 $inner$ LANGUAGE plpgsql; --db.data_transfer_status
 $f$;
-------------------------
-
-GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.data_transfer_status() TO db_user;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Funktion um aktuellen Status zu erfahren
--- CREATE OR REPLACE FUNCTION db.get_last_processing_nr_typed()
-
--- Vergabe der Berechtigungen zur generierten Funktion
-GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO cds2db_user;
-GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO db2dataprocessor_user;
-GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO db2frontend_user;
-GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed() TO db_user;
-
---------------------------------------------------------------------
-    END IF; -- do migration
+    ------------------------
+    GRANT EXECUTE ON FUNCTION db.data_transfer_status () TO cds2db_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_status () TO db2dataprocessor_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_status () TO db2frontend_user;
+    GRANT EXECUTE ON FUNCTION db.data_transfer_status () TO db_user;
+    ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    -- Funktion um aktuellen Status zu erfahren
+    -- CREATE OR REPLACE FUNCTION db.get_last_processing_nr_typed()
+    -- Vergabe der Berechtigungen zur generierten Funktion
+    GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed () TO cds2db_user;
+    GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed () TO db2dataprocessor_user;
+    GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed () TO db2frontend_user;
+    GRANT EXECUTE ON FUNCTION db.get_last_processing_nr_typed () TO db_user;
+    --------------------------------------------------------------------
+END IF;
+    -- do migration
 END
 $$;

@@ -8,7 +8,11 @@ domain-specific MRP key.
 
 Existing data is not deleted from the database or from REDCap. Already existing
 retrospective MRP evaluations are identified using patient/record, medication
-analysis, reference timestamp, short description, ATC values, and MRP class.
+analysis, ATC values, and MRP class. The generated short description and its
+reference timestamp are deliberately excluded: additional source evidence can
+change these presentation values without creating a clinically new MRP. The
+comparison retains the number of MRPs per key, because different fixed WP7 rules
+can legitimately share the same visible values.
 
 ## Flow
 
@@ -37,10 +41,13 @@ in `R-cdstoolchain`, while the actual dataprocessor logic stays inside the
 3. Re-run the normal retrospective MRP calculation for these encounters.
 
 4. Compare the resulting MRP candidates with already existing rows in
-   `v_retrolektive_mrpbewertung_fe`.
+   `v_retrolektive_mrpbewertung_fe`. Existing rows are loaded in bounded
+   `record_id` chunks, with one query per chunk rather than one query per MRP.
 
-5. Keep only clinically new retrospective MRP evaluations and reduce the
-   matching `dp_mrp_calculations` rows to the same `ret_id` set.
+5. Subtract the existing MRP count per comparison key from the recalculated
+   candidates and reduce the matching `dp_mrp_calculations` rows to the
+   surviving `ret_id` set. Exact legacy matches are subtracted first when
+   several fixed WP7 rules share a visible key.
 
 6. Reassign `redcap_repeat_instance` per `record_id` so that new rows continue
    the current REDCap repeat sequence without collisions.

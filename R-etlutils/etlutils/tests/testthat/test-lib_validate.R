@@ -52,13 +52,7 @@ testthat::test_that("parseStructuredConfigDefinitions uses fallback names for un
 })
 
 testthat::test_that("parseStructuredConfigDefinitions preserves whitespace inside values", {
-  definitions <- list(
-    list(
-      PHASES_WARD_1 = c(
-        "ward_name = 'Station 1 West'"
-      )
-    )
-  )
+  definitions <- list(list(PHASES_WARD_1 = c("ward_name = 'Station 1 West'")))
 
   parsed_records <- parseStructuredConfigDefinitions(
     definitions = definitions,
@@ -140,9 +134,7 @@ testthat::test_that("parseStructuredConfigDefinitions rejects plus when allow_pl
 testthat::test_that("parseStructuredConfigDefinitions rejects trailing plus", {
   definitions <- list(
     list(
-      ENCOUNTER_FILTER_PATTERN_1 = c(
-        "location/location/reference = 'Location/location_id_1' + "
-      )
+      ENCOUNTER_FILTER_PATTERN_1 = c("location/location/reference = 'Location/location_id_1' + ")
     )
   )
 
@@ -159,9 +151,7 @@ testthat::test_that("parseStructuredConfigDefinitions rejects trailing plus", {
 testthat::test_that("parseStructuredConfigDefinitions rejects leading plus", {
   definitions <- list(
     list(
-      ENCOUNTER_FILTER_PATTERN_1 = c(
-        " + location/location/reference = 'Location/location_id_1'"
-      )
+      ENCOUNTER_FILTER_PATTERN_1 = c(" + location/location/reference = 'Location/location_id_1'")
     )
   )
 
@@ -195,13 +185,7 @@ testthat::test_that("parseStructuredConfigDefinitions rejects double plus", {
 })
 
 testthat::test_that("parseStructuredConfigDefinitions rejects invalid keys", {
-  definitions <- list(
-    list(
-      PHASES_WARD_1 = c(
-        "phase_c_start = '2026-01-11 10:00:00'"
-      )
-    )
-  )
+  definitions <- list(list(PHASES_WARD_1 = c("phase_c_start = '2026-01-11 10:00:00'")))
 
   testthat::expect_error(
     parseStructuredConfigDefinitions(
@@ -214,13 +198,7 @@ testthat::test_that("parseStructuredConfigDefinitions rejects invalid keys", {
 })
 
 testthat::test_that("parseStructuredConfigDefinitions rejects invalid syntax without equals sign", {
-  definitions <- list(
-    list(
-      PHASES_WARD_1 = c(
-        "phase_a_start '2026-01-11 10:00:00'"
-      )
-    )
-  )
+  definitions <- list(list(PHASES_WARD_1 = c("phase_a_start '2026-01-11 10:00:00'")))
 
   testthat::expect_error(
     parseStructuredConfigDefinitions(
@@ -233,13 +211,7 @@ testthat::test_that("parseStructuredConfigDefinitions rejects invalid syntax wit
 })
 
 testthat::test_that("parseStructuredConfigDefinitions rejects unmatched single quotes", {
-  definitions <- list(
-    list(
-      PHASES_WARD_1 = c(
-        "ward_name = 'Station 1"
-      )
-    )
-  )
+  definitions <- list(list(PHASES_WARD_1 = c("ward_name = 'Station 1")))
 
   testthat::expect_error(
     parseStructuredConfigDefinitions(

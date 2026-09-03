@@ -111,8 +111,10 @@ loadInitialPatientsAndEncountersFromFiles <- function(path_to_files) {
   # Parse Patient_id from text file is deactivated. The code below this hunk is deactivated.
   # DIC should go the way of assigning the encounter/patients to the wards via the 3-stage encounter system.
   if (TRUE || endsWith(path_to_PID_list_file, ".RData")) {
-    return(list(pids_per_ward = readRDS(path_to_PID_list_file),
-                initial_encounters = readRDS(path_to_encounter_file)))
+    return(list(
+      pids_per_ward = readRDS(path_to_PID_list_file),
+      initial_encounters = readRDS(path_to_encounter_file)
+    ))
   }
 
   # Helper function to process the PIDs of a single ward
@@ -157,7 +159,6 @@ loadInitialPatientsAndEncountersFromFiles <- function(path_to_files) {
 #' @return A named list where each element is a data.table with `pid` and `encounter_id` for a specific ward.
 #'
 extractPIDsSplittedByWard <- function(encounters, all_wards_filter_patterns) {
-
   pids_splitted_by_ward <- list()
 
   for (i in seq_along(all_wards_filter_patterns)) {
@@ -212,16 +213,13 @@ extractPIDsSplittedByWard <- function(encounters, all_wards_filter_patterns) {
 #' saved as RData files.
 #'
 getEncounters <- function(table_description, current_datetime) {
-
   runLevel3("Get Enconters", {
-
     # Refresh token, if defined
     etlutils::fhirsearchRefreshToken()
 
     resource <- "Encounter"
 
     runLevel3("Download and Crack Encounters", {
-
       # current_date_time contains the NA value with the name period_start_is_set_by_param
       # if the start date is not Sys.time() but explicitly set by a toml parameter like
       # DEBUG_ENCOUNTER_STARTS_AFTER or DATA_IMPORT_RANGE_START
@@ -286,7 +284,8 @@ getEncounters <- function(table_description, current_datetime) {
         encounter_dates,
         "status" = encounter_status,
         "class" = encounter_class,
-        "location" = encounter_locations)
+        "location" = encounter_locations
+      )
 
       selected_encounter_pids <- NULL
       if (etlutils::isDefinedAndNotEmpty("DEBUG_ENCOUNTER_ACCEPTED_PIDS")) {
@@ -320,28 +319,37 @@ getEncounters <- function(table_description, current_datetime) {
       # stop the execution and print the current result of FHIR search request (DEBUG)
       etlutils::checkDebugTestError("FHIR_SEARCH_ENCOUNTER_REQUEST_TEST", request_encounter)
 
-      table_enc <- etlutils::fhirsearchDownloadAndCrackResources(request = request_encounter,
-                                                                 table_description = table_description,
-                                                                 max_bundles = MAX_ENCOUNTER_BUNDLES,
-                                                                 log_errors  = "enc_error.xml")
+      table_enc <- etlutils::fhirsearchDownloadAndCrackResources(
+        request = request_encounter,
+        table_description = table_description,
+        log_errors  = "enc_error.xml"
+      )
 
       if (etlutils::isSimpleNA(table_enc) || !nrow(table_enc)) {
-        stop("The FHIR request did not return any available Encounter bundles.\nRequest: ",
-             etlutils::formatStringStyle(request_encounter[[1]], fg = 2, underline = TRUE))
+        stop(
+          "The FHIR request did not return any available Encounter bundles.\nRequest: ",
+          etlutils::formatStringStyle(request_encounter[[1]], fg = 2, underline = TRUE)
+        )
       }
-
     })
 
     runLevel3Line("Validate encounter subject reference", {
       invalid_encounters <- table_enc[is.na(subject.reference)]
       table_enc <- table_enc[!is.na(subject.reference)]
       if (!nrow(table_enc)) {
-        stop("No valid Encounter found. All found encounters have no valid subject reference.\n",
-             "Request: ", etlutils::formatStringStyle(request_encounter[[1]], fg = 2, underline = TRUE), "\n",
-             "Encounters: ", paste0(invalid_encounters$id, collapse = ", "), "\n")
+        stop(
+          "No valid Encounter found. All found encounters have no valid subject reference.\n",
+          "Request: ", etlutils::formatStringStyle(
+            request_encounter[[1]],
+            fg = 2, underline = TRUE
+          ), "\n",
+          "Encounters: ", paste0(invalid_encounters$id, collapse = ", "), "\n"
+        )
       } else if (nrow(invalid_encounters)) {
-        etlutils::catWarningMessage(paste0("The following encounters have no valid subject reference:\n",
-                                           paste0(invalid_encounters$id, collapse = ", ")), "\n")
+        etlutils::catWarningMessage(paste0(
+          "The following encounters have no valid subject reference:\n",
+          paste0(invalid_encounters$id, collapse = ", ")
+        ), "\n")
       }
     })
 
@@ -368,10 +376,13 @@ getEncounters <- function(table_description, current_datetime) {
 #' @return the relevant patient IDs per ward
 #'
 getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encounter_start_date = NULL, log_result = TRUE) {
-
   read_pids_from_file <- exists("DEBUG_PATH_TO_RAW_RDATA_FILES")
 
   if (read_pids_from_file) {
+    path_to_PID_list_file <- fhircrackr::paste_paths(
+      DEBUG_PATH_TO_RAW_RDATA_FILES,
+      "pids_per_ward_raw.RData"
+    )
     etlutils::runLevel3(paste("Get Patient IDs by file from path ", DEBUG_PATH_TO_RAW_RDATA_FILES), {
       file_data <- loadInitialPatientsAndEncountersFromFiles(DEBUG_PATH_TO_RAW_RDATA_FILES)
       pids_splitted_by_ward <- split(file_data$pids_per_ward[, !("ward_name"), with = FALSE], file_data$pids_per_ward$ward_name)
@@ -384,13 +395,15 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
         # the subject reference is needed in every case to extract them if the encounter matches the pattern
         # the period end is needed to check if the Encounter is still finished
         # maybe some other columns (state or something like this) could be important, so we had to add them here in future
-        filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(filter_patterns,
-                                                                                     "id",
-                                                                                     "subject/reference",
-                                                                                     "period/start",
-                                                                                     "period/end",
-                                                                                     "status",
-                                                                                     "meta/lastUpdated")
+        filter_enc_table_description <- getTableDescriptionColumnsFromFilterPatterns(
+          filter_patterns,
+          "id",
+          "subject/reference",
+          "period/start",
+          "period/end",
+          "status",
+          "meta/lastUpdated"
+        )
         # Get current or debug datetime
         current_datetime <- getQueryDatetime()
         # Replace space with 'T' in timestamp for correct time format
@@ -411,12 +424,17 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
           sapply(encounters[, ..cols_to_check], function(col) all(is.na(col)))
         ]
         if (length(na_columns)) {
-          warning_message <- paste0("The following columns have only NA values:\n",
-                                    paste(na_columns, collapse = ", "), "\n",
-                                    "Please check the filter patterns in the toml file.\n",
-                                    "This may indicate that invalid column names are specified in",
-                                    " ENCOUNTER_FILTER_PATTERNS. Wards with such invalid Encounter",
-                                    " column names will never be able to contain patients.\n")
+          warning_message <- paste0(
+            "The following columns have only NA values:\n",
+            paste(
+              na_columns,
+              collapse = ", "
+            ), "\n",
+            "Please check the filter patterns in the toml file.\n",
+            "This may indicate that invalid column names are specified in",
+            " ENCOUNTER_FILTER_PATTERNS. Wards with such invalid Encounter",
+            " column names will never be able to contain patients.\n"
+          )
           etlutils::catWarningMessage(warning_message)
         }
       })
@@ -436,7 +454,9 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
     # Join encounter info (start + meta) to combined table
     pids_per_ward_with_encounter_details <- merge(
       pids_per_ward,
-      encounters[, .(encounter_id = id, `period/start`, `meta/lastUpdated`)],
+      encounters[, .(
+        encounter_id = id, `period/start`, `meta/lastUpdated`
+      )],
       by = "encounter_id",
       all.x = TRUE
     )
@@ -456,6 +476,14 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
     return(dt) # return the filtered pids_per_ward_with_encounter_details
   }
 
+  addCaseSequenceNumberPerPatient <- function(pids_per_ward_with_encounter_details) {
+    # Sort by patient_id and encounter start time
+    data.table::setorder(pids_per_ward_with_encounter_details, patient_id, `period/start`)
+    # Add sequence number per patient (1st case, 2nd case, ...)
+    pids_per_ward_with_encounter_details[, case_sequence := seq_len(.N), by = patient_id]
+    return(pids_per_ward_with_encounter_details)
+  }
+
   splitPidsPerWardByWard <- function(pids_per_ward_with_encounter_details) {
     # Re-split into station-wise list
     pids_splitted_by_ward <- split(pids_per_ward_with_encounter_details[, .(patient_id, encounter_id, ward_name)], by = "ward_name")
@@ -465,32 +493,24 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
   }
 
   splitPidsPerWardByWardForUniquePidsAndEncounterStart <- function(pids_per_ward_with_encounter_details) {
-    # Sort by patient and start time
-    data.table::setorder(pids_per_ward_with_encounter_details, `period/start`, patient_id)
+    # Add case sequence numbers per patient (based on chronological order of encounters)
+    pids_per_ward_with_encounter_details <- addCaseSequenceNumberPerPatient(pids_per_ward_with_encounter_details)
+
+    # Sort by case sequence to process cases in order
+    data.table::setorder(pids_per_ward_with_encounter_details, case_sequence, patient_id, `period/start`)
 
     list_of_pids_splitted_by_wards <- list()
-    single_pids_per_ward <- pids_per_ward_with_encounter_details[0]
 
-    row_count <- nrow(pids_per_ward_with_encounter_details)
+    # Iterate over each case sequence number and create batches
+    max_sequence <- pids_per_ward_with_encounter_details[, max(case_sequence)]
 
-    for (i in seq_len(row_count)) {
-      row <- pids_per_ward_with_encounter_details[i]
+    for (seq_num in seq_len(max_sequence)) {
+      # Get all cases with this sequence number (ensures max. 1 case per patient per batch)
+      cases_for_sequence <- pids_per_ward_with_encounter_details[case_sequence == seq_num]
 
-      # Set to TRUE when the same patient already exists in the current subset
-      # with an earlier encounter start.
-      contains_row <- single_pids_per_ward[patient_id == row[["patient_id"]] & `period/start` < row[["period/start"]], .N] > 0
-
-      if (contains_row) {
-        single_pids_per_ward <- removeMultipleEncountersForPid(single_pids_per_ward)
-        single_pids_splitted_by_ward <- splitPidsPerWardByWard(single_pids_per_ward)
-        list_of_pids_splitted_by_wards[[length(list_of_pids_splitted_by_wards) + 1]] <- single_pids_splitted_by_ward
-        single_pids_per_ward <- pids_per_ward_with_encounter_details[0]
-      }
-
-      single_pids_per_ward <- data.table::rbindlist(list(single_pids_per_ward, row), use.names = TRUE)
-
-      if (i == row_count) {
-        single_pids_splitted_by_ward <- splitPidsPerWardByWard(single_pids_per_ward)
+      if (nrow(cases_for_sequence) > 0) {
+        # Split by ward and add to list of batches
+        single_pids_splitted_by_ward <- splitPidsPerWardByWard(cases_for_sequence)
         list_of_pids_splitted_by_wards[[length(list_of_pids_splitted_by_wards) + 1]] <- single_pids_splitted_by_ward
       }
     }
@@ -522,7 +542,6 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
   })
 
   etlutils::runLevel3("Warn if Encounter/Patient ID is assigned more than one ward", {
-
     # Find patient IDs that appear in multiple different wards
     multi_ward_patients <- unique(pids_per_ward[, .(patient_id, ward_name)])[, .N, by = patient_id][N > 1, patient_id]
     # Keep only rows where patient_id appears in multiple different wards
@@ -534,13 +553,15 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
       } else {
         error_message_part <- "Please fix the variables 'ENCOUNTER_FILTER_PATTERN' in the toml file.\n"
       }
-      error_message <- paste0("Invalid patient_ids: The following patient_ids are assigned more than in one ward.\n",
-                              error_message_part,
-                              etlutils::getPrintString(duplicates_pids_per_ward), "\n",
-                              "Hint: To ensure that a patient only has exactly one Encounter assigned to exactly one ward, all but one Encounter will be removed.\n",
-                              "      Only the encounters with the latest start date are left.\n",
-                              "      If there are several, then the lastUpdateDate of the Encounter is checked.\n",
-                              "      If there are still several, the first Encounter in the list is simply left.\n")
+      error_message <- paste0(
+        "Invalid patient_ids: The following patient_ids are assigned more than in one ward.\n",
+        error_message_part,
+        etlutils::getPrintString(duplicates_pids_per_ward), "\n",
+        "Hint: To ensure that a patient only has exactly one Encounter assigned to exactly one ward, all but one Encounter will be removed.\n",
+        "      Only the encounters with the latest start date are left.\n",
+        "      If there are several, then the lastUpdateDate of the Encounter is checked.\n",
+        "      If there are still several, the first Encounter in the list is simply left.\n"
+      )
       etlutils::catWarningMessage(error_message) # first this was an stop error but now it is a warning
     }
   })

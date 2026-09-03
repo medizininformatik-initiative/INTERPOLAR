@@ -7,6 +7,8 @@ Der detaillierte Datenfluss zwischen den und innerhalb der Module ist in der Dat
 
 Der gesamte Ablauf der CDS Toolchain ist in der Datei [full_toolchain_description](full_toolchain_description) beschrieben.
 
+Hinweise fuer Entwicklung und Beitraege stehen in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Bestandteile der CDS tool chain
 
 Hier werden alle verwendeten Bestandteile bzw. CDS-Module aufgelistet. Detaillierte Beschreibungen sind in den jeweiligen Ordnern zu finden. Ein Modul ist eine eigenständige Softwarekomponente mit klar definierten Funktionalitäten. Die Module kommunizieren über Schnittstellen miteinander und sind austauschbar.
@@ -85,9 +87,9 @@ Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwen
 
 ## Verwendung
 
-Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) ausgeführt werden, siehe Hinweise unter [Discussions #750](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/750). Der folgende Aufruf führt die CDS Tool Chain komplett aus:
+Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) ausgeführt werden, siehe Hinweise unter [Discussions #750](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/750). Der folgende Aufruf führt die CDS Tool Chain komplett aus und startet anschließend bei erfolgreichem Lauf `VACUUM (ANALYZE)` für die CDS_HUB-Datenbank:
 ```console
-docker compose run --rm --no-deps r-env Rscript R-cdstoolchain/StartCDSToolChain.R
+R-cdstoolchain/StartCDSToolChainWithVacuum.sh
 ```
 **Hinweis:** Um eine sinnvolles Intervall für die zeitgesteuerte Ausführung der CDS Tool Chain zu wählen, sollten die initialen Aufrufe (z.B. die ersten 3 Tage der Verwendung) manuell erfolgen, um die typischen Laufzeiten am Standort zu ermitteln. Der initiale Lauf dauert länger, spätere Läufe entsprechend kürzer, da nur noch Änderungen verarbeitet werden. Es wird empfohlen die CDS Tool Chain in der Projektlaufzeit mehrfach täglich auszuführen, mind. jedoch einmal am Tag. Bei der Wahl des Ausführungsintervals sollte darauf geachtet werden, dass ein typischer Durchlauf innerhalb des Intervalls erfolgen kann. Wird z.B. ermittelt, dass ein Lauf mit den typischen Änderungen bei den Patientendaten auf den INTERPOLAR-Stationen ca. 1h dauert, kann die CDS Tool Chain via cron 2-stündlich laufen.
 
@@ -110,33 +112,13 @@ Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der h
     docker compose run --rm --no-deps r-env Rscript R-db2frontend/Start2_DB2Frontend.R
     ```
 
-## Datenbank Snapshot
+## Snapshot-Dateien, Pseudonymisierung und Broad Consent
 
-Zur Erstellung, Löschung, Aktivierung, De-Aktivierung und Auflistung von Snapshots kann das Bash-Script ```ip_snapshot.sh``` verwenden. 
-Das Script muss direkt im Hauptverzeichnis ausgeführt werden.
-
-Beim Erstellen (_create_) wird ein Dump der _cds_hb_db_ Datenbank gemacht und im Verzeichnis _Snapshots_ gespeichert. 
-```cmd
-./ip-snapshot.sh create snap01
-```
-
-Erstellte Snapshots können aktiviert (_activate_), d.h. in eine Snapshot Datenbank geladen werden.
-```cmd
-./ip-snapshot.sh activate snap01_20251002
-```
-
-Beim De-Aktivieren (_deactivate_) wird diese Datenbank wieder gelöscht.
-```cmd
-./ip-snapshot.sh deactivate snap01_20251002
-```
-
-Erstellte sowie aktivierte Snapshots können mit _list_ angezeit werden.
-
-```cmd
-./ip-snapshot.sh list
-```
-
-Eine ausführliche Beschreibung liefert der Aufruf von ```./ip-snapshot.sh``` ohne Paramter.
+Mit Snapshot-Dateien kann der aktuelle Stand der CDS_HUB-Datenbank gesichert und
+pseudonymisiert werden. Snapshot-Dateien können außerdem als schreibgeschützte
+Snapshot-Datenbanken bereitgestellt und als Grundlage für einen separaten
+Broad-Consent-Snapshot verwendet werden. Die vollständige Anleitung steht in
+[Database_Snapshot.md](Database_Snapshot.md).
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)

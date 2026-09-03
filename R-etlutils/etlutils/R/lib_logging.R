@@ -80,7 +80,9 @@ logBlockHeader <- function(verbose = VERBOSE, len = 104) {
   if (verbose) {
     cat(paste0(
       # print a bold underlined line of len spaces
-      formatStringStyle(paste0(rep(" ", len), collapse = ""), fg = 7, bold = TRUE, underline = TRUE), "\n",
+      formatStringStyle(paste0(rep(
+        " ", len
+      ), collapse = ""), fg = 7, bold = TRUE, underline = TRUE), "\n",
       formatStringStyle("START", fg = 7, bold = TRUE), "\n"
     ))
   }
@@ -97,9 +99,12 @@ logBlockFooter <- function(verbose = VERBOSE, len = 104) {
   if (verbose) {
     cat(paste0(
       # print bold underlined word END
-      formatStringStyle("END", fg = 7, bold = TRUE, underline = TRUE),
+      formatStringStyle(
+        "END",
+        fg = 7, bold = TRUE, underline = TRUE
+      ),
       # fill up to length len with bold unerlined spaces
-      formatStringStyle(paste0(rep(" ", len - 3), collapse = ""), fg = 7, bold = TRUE, underline = TRUE),"\n"
+      formatStringStyle(paste0(rep(" ", len - 3), collapse = ""), fg = 7, bold = TRUE, underline = TRUE), "\n"
     ))
   }
 }
@@ -230,11 +235,11 @@ getErrorMessage <- function() {
 #' @return The value process returns.
 #'
 runProcessInternal <- function(
-    message,
-    process,
-    single_line = TRUE,
-    throw_exception = TRUE,
-    verbose = VERBOSE
+  message,
+  process,
+  single_line = TRUE,
+  throw_exception = TRUE,
+  verbose = VERBOSE
 ) {
   # This function is called recursively when the functions runLevel1(), runLevel2() and runLevel3()
   # are nested within each other. If an inner function generates an error, no further runLevelX()
@@ -246,7 +251,7 @@ runProcessInternal <- function(
       st <- Sys.time()
       cat("[TIME]", round(as.numeric(st), 0), format(st), "\n")
 
-      cat(paste0(message, ':', if (single_line) ' ' else paste0(colourise(text = ' RUNNING ...', fg = 'blue'), '\n')))
+      cat(paste0(message, ":", if (single_line) " " else paste0(colourise(text = " RUNNING ...", fg = "blue"), "\n")))
     }
     # This is the return value of the transferred process. This can be an error or a regular process
     # result.
@@ -254,20 +259,20 @@ runProcessInternal <- function(
       message = message,
       process = process
     )
-    if (!single_line && VERBOSE) cat(paste0(message, ': ' ))
+    if (!single_line && VERBOSE) cat(paste0(message, ": "))
 
     # Check whether the process result is an error or a regular (non-error) result
     checkError(
       potencial_error = process_result,
       expr_ok = {
-        if (single_line) catOkMessage() else catColourised('OK\n', fg = 'light blue')
+        if (single_line) catOkMessage() else catColourised("OK\n", fg = "light blue")
         logBlockFooter()
         return(process_result)
       },
       expr_err = {
         if (!isDebugTestError(process_result)) {
           error_message <- catErrorMessage(process_result)
-        } else if (single_line) catOkMessage() else catColourised('OK\n', fg = 'light blue')
+        } else if (single_line) catOkMessage() else catColourised("OK\n", fg = "light blue")
         error_message <- process_result
         logBlockFooter()
         if (throw_exception) {
@@ -303,7 +308,8 @@ runLevel1 <- function(message, process) {
     message = message,
     process = process,
     verbose = VL_20_OUTER_SCRIPTS
-  )}
+  )
+}
 
 #' Execute an inner script with a specified message and process
 #'
@@ -319,7 +325,8 @@ runLevel2 <- function(message, process) {
     message = message,
     process = process,
     verbose = VL_30_INNER_SCRIPTS
-  )}
+  )
+}
 
 #' Execute an inner script info with a specified message and process
 #'
@@ -335,7 +342,8 @@ runLevel3 <- function(message, process) {
     message = message,
     process = process,
     verbose = VL_40_INNER_SCRIPTS_INFOS
-  )}
+  )
+}
 
 #' Execute an inner script info with a specified message and process
 #'
@@ -352,7 +360,8 @@ runLevel3IgnoreError <- function(message, process) {
     process = process,
     verbose = VL_40_INNER_SCRIPTS_INFOS,
     throw_exception = FALSE
-  )}
+  )
+}
 
 #' Execute a script with specified message, process, and verbosity level
 #'
@@ -372,7 +381,8 @@ run <- function(message, process, verbose, throw_exception = TRUE) {
     verbose = VERBOSE - verbose + 1,
     single_line = VERBOSE <= verbose,
     throw_exception = throw_exception
-  )}
+  )
+}
 
 #' Execute an outer script with specified message and process (single line)
 #'
@@ -389,7 +399,8 @@ runLevel1Line <- function(message, process) {
     message = message,
     process = process,
     verbose = VL_20_OUTER_SCRIPTS
-  )}
+  )
+}
 
 #' Execute an inner script with specified message and process (single line)
 #'
@@ -406,7 +417,8 @@ runLevel2Line <- function(message, process) {
     message = message,
     process = process,
     verbose = VL_30_INNER_SCRIPTS
-  )}
+  )
+}
 
 #' Execute an inner script info with specified message and process (single line)
 #'
@@ -423,7 +435,8 @@ runLevel3Line <- function(message, process) {
     message = message,
     process = process,
     verbose = VL_40_INNER_SCRIPTS_INFOS
-  )}
+  )
+}
 
 #' Execute a script with specified message, process, and verbosity level (single line)
 #'
@@ -442,7 +455,8 @@ runs <- function(message, process, verbose) {
     process = process,
     verbose = VERBOSE - verbose + 1,
     single_line = TRUE
-  )}
+  )
+}
 
 #' Remove ANSI Escape Sequences from a Log File
 #'
@@ -464,7 +478,7 @@ removeAnsiEscapeSequences <- function(filename) {
   content <- readLines(file, warn = FALSE)
   close(file)
   # append all single line strings to one large string
-  content <- paste0(content, collapse = '\n')
+  content <- paste0(content, collapse = "\n")
   # Function to remove ANSI escape sequences from a text
   remove_ansi <- function(text) {
     gsub("\033\\[[0-9;]*m", "", text, perl = TRUE)
@@ -487,7 +501,7 @@ removeAnsiEscapeSequences <- function(filename) {
 #' @export
 catByVerbose <- function(...) {
   if (VL_50_TABLES <= VERBOSE) {
-    cat(..., '\n')
+    cat(..., "\n")
   }
 }
 
@@ -509,42 +523,42 @@ catByVerbose <- function(...) {
 #'
 #' @export
 createFrameString <- function(
-    text = formatStringStyle('\nHello !!!\n\n\nIs\nthere\n\nA N Y O N E\n\nout\nthere\n???\n '),
-    pos  = c('left', 'center', 'right')[1],
-    edge = ' ',
-    hori = '-',
-    vert = '|') {
+  text = formatStringStyle("\nHello !!!\n\n\nIs\nthere\n\nA N Y O N E\n\nout\nthere\n???\n "),
+  pos  = c("left", "center", "right")[1],
+  edge = " ",
+  hori = "-",
+  vert = "|") {
   # own strpad function
   # strpad("Hello", 10, "right", "-")
   # "-----Hello"
-  strpad <- function(string, width, pos = c('left', 'right'), pad) {
+  strpad <- function(string, width, pos = c("left", "right"), pad) {
     # duplicate char count times
-    n_chars <- function(char, count) paste0(rep_len(char, count), collapse = '')
+    n_chars <- function(char, count) paste0(rep_len(char, count), collapse = "")
     # remove utf codes from string and count characters
-    w <- nchar(gsub('\033\\[[0-9;]*m', '', string))
-    if (pos == 'left') {
+    w <- nchar(gsub("\033\\[[0-9;]*m", "", string))
+    if (pos == "left") {
       paste0(string, n_chars(pad, width - w))
-    } else if (pos == 'right') {
+    } else if (pos == "right") {
       paste0(n_chars(pad, width - w), string)
     } else {
       paste0(n_chars(pad, (width - w) %/% 2), string, n_chars(pad, width - w - (width - w) %/% 2))
     }
   }
   # get all 4 edges strings
-  edge <- rep_len(strsplit(edge, '')[[1]], 4)[1 : 4]
-  r <- ''
-  s <- strsplit(text, '\n')[[1]]
+  edge <- rep_len(strsplit(edge, "")[[1]], 4)[1:4]
+  r <- ""
+  s <- strsplit(text, "\n")[[1]]
   # get height of frame
   h <- length(s)
   # get width of frame
-  w <- max(sapply(s, function(x) nchar(gsub('\033\\[[0-9;]*m', '', x))))
+  w <- max(sapply(s, function(x) nchar(gsub("\033\\[[0-9;]*m", "", x))))
   # build top and botton lines
-  hbt <- paste0(edge[1], paste0(rep_len(hori, w + 2), collapse = ''), edge[2], '\n')
-  hbb <- paste0(edge[3], paste0(rep_len(hori, w + 2), collapse = ''), edge[4], '\n')
+  hbt <- paste0(edge[1], paste0(rep_len(hori, w + 2), collapse = ""), edge[2], "\n")
+  hbb <- paste0(edge[3], paste0(rep_len(hori, w + 2), collapse = ""), edge[4], "\n")
   # construct frame with text in it
   r <- hbt
-  for (s_ in s) {# s_ <- s
-    r <- paste0(r, vert, ' ', strpad(string = s_, width = w, pos = pos, pad = ' '), ' ', vert, '\n')
+  for (s_ in s) { # s_ <- s
+    r <- paste0(r, vert, " ", strpad(string = s_, width = w, pos = pos, pad = " "), " ", vert, "\n")
   }
   r <- paste0(r, hbb)
   r
@@ -744,7 +758,7 @@ generateFinishMessage <- function() {
     error_message <- as.character(etlutils::getErrorMessage())
 
     # Remove irrelevant part from the error message
-    #error_message <- sub("^[^\n]*\n?", "", error_message)
+    # error_message <- sub("^[^\n]*\n?", "", error_message)
 
     finish_message <- paste0(finish_message, error_message)
 

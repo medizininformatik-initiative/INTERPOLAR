@@ -281,17 +281,17 @@ convertTimeFormat <- function(dt, columns) {
 convertDateFormat <- function(dt, columns) {
   for (column in columns) {
     dt[, (column) := as.character(get(column))]
-    dt[, (column) := gsub('T.+$', '', get(column))]
-    dt[, (column) := gsub('/', '-', get(column))]
+    dt[, (column) := gsub("T.+$", "", get(column))]
+    dt[, (column) := gsub("/", "-", get(column))]
     # Set a regular expression pattern for matching YYYY format
-    incomplete_date_pattern <- '^[0-9]{4}$'
+    incomplete_date_pattern <- "^[0-9]{4}$"
     years <- grepl(incomplete_date_pattern, dt[[column]])
-    dt[years, (column) := paste0(dt[years, get(column)], '-01-01')]
+    dt[years, (column) := paste0(dt[years, get(column)], "-01-01")]
 
     # Set a regular expression pattern for matching YYYY-MM format
-    incomplete_date_pattern <- '^[0-9]{4}-[0-9]{2}$'
+    incomplete_date_pattern <- "^[0-9]{4}-[0-9]{2}$"
     months <- grepl(incomplete_date_pattern, dt[[column]])
-    dt[months, (column) := paste0(dt[months, get(column)], '-01')]
+    dt[months, (column) := paste0(dt[months, get(column)], "-01")]
 
     dt[, (column) := lubridate::as_date(get(column))]
   }

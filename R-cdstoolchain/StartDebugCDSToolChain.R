@@ -1,9 +1,9 @@
 # Activate this only if you know what you are doing!
-I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE
+I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED <- TRUE
 
 # change the working directory to the main directory
-if (grepl('/cdstoolchain', getwd())) setwd("../..")
-if (grepl('/R-cdstoolchain', getwd())) setwd("../")
+if (grepl("/cdstoolchain", getwd())) setwd("../..")
+if (grepl("/R-cdstoolchain", getwd())) setwd("../")
 
 if (!I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED) {
   stop("You must set I_KNOW_THAT_THE_DATABASE_AND_REDCAP_WILL_BE_DELETED = TRUE to run this script!")
@@ -118,7 +118,7 @@ for (debug_day_index in seq_along(DEBUG_DATES)) {
   diff <- capture.output(print(end_day - start_day))
   day_times <- append(day_times, paste("Day", debug_day_index, "took", diff))
   print(day_times[debug_day_index])
-  #browser()
+  # browser()
 }
 .start_debug_env$end_full <- Sys.time()
 

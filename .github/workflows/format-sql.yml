@@ -1,0 +1,45 @@
+name: Format SQL
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch to format"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  format-sql:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+
+      - name: Install pgFormatter
+        run: sudo tools/install-pgformatter.sh
+
+      - name: Format SQL
+        run: pg_format --version && tools/format-sql.sh
+
+      - name: Commit formatted SQL
+        run: |
+          if git diff --quiet; then
+            echo "SQL files are already formatted."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Postgres-cds_hub/sql
+          git commit -m "Format SQL files"
+          git push origin "HEAD:${{ inputs.ref || github.ref_name }}"

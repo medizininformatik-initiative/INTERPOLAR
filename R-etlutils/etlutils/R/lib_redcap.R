@@ -1,11 +1,13 @@
 # Environment for saving everything but the connections
 .lib_redcap_env <- new.env()
-.lib_redcap_env[["ESCAPE_SIGNS"]] <- c("PLUS" = "+",
-                                       "POUND" = "#",
-                                       "AMPER" = "&",
-                                       "APOS" = "'",
-                                       "LINE" = "\n",
-                                       "QUOTE" = "\"")
+.lib_redcap_env[["ESCAPE_SIGNS"]] <- c(
+  "PLUS" = "+",
+  "POUND" = "#",
+  "AMPER" = "&",
+  "APOS" = "'",
+  "LINE" = "\n",
+  "QUOTE" = "\""
+)
 
 #' Encode special characters for REDCap import using ESCAPE_SIGNS vector
 #'

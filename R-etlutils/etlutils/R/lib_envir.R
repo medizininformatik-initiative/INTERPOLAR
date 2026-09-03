@@ -50,7 +50,7 @@ initConstants <- function(path_to_toml, defaults = c(), envir = .GlobalEnv) {
   for (i in seq_along(defaults)) {
     variable_name <- names(defaults)[i]
     if (!exists(variable_name, envir = envir)) {
-      assign(variable_name, defaults[i], envir = envir)
+      assign(variable_name, defaults[[i]], envir = envir)
     }
   }
 
@@ -106,7 +106,6 @@ addConstants <- function(path_to_toml, existing_constants = list(), envir = .Glo
 #'
 #' @export
 initModuleConstants <- function(module_name, db_schema_base_name = NULL, path_to_toml, defaults = c(), envir = .GlobalEnv, init_constants_only) {
-
   # Set the project name in the specified environment
   assign("MODULE_NAME", module_name, envir = envir)
   assign("MODULE_NAME", module_name, envir = .GlobalEnv)
@@ -478,7 +477,6 @@ checkMandatoryParameters <- function(mandatory_parameters, envir = .GlobalEnv) {
   for (param in mandatory_parameters) {
     # Check for exact match
     if (!exists(param, envir = envir, inherits = FALSE)) {
-
       # Check for variables starting with the given string
       starts_with_match <- any(startsWith(existing_objects, param))
 
@@ -592,16 +590,22 @@ initCommandLineArguments <- function(argument2global_variable_name = c(),
   parseValue <- function(value_raw, timezone) {
     if (grepl("[ T]", value_raw) && grepl(":", value_raw)) {
       # Likely a timestamp
-      tryCatch({
-        val <- as.POSIXct(value_raw, tz = timezone)
-        if (!is.na(val)) return(val)
-      }, error = function(e) NULL)
+      tryCatch(
+        {
+          val <- as.POSIXct(value_raw, tz = timezone)
+          if (!is.na(val)) return(val)
+        },
+        error = function(e) NULL
+      )
     } else {
       # Likely a date
-      tryCatch({
-        val <- as.Date(value_raw)
-        if (!is.na(val)) return(val)
-      }, error = function(e) NULL)
+      tryCatch(
+        {
+          val <- as.Date(value_raw)
+          if (!is.na(val)) return(val)
+        },
+        error = function(e) NULL
+      )
     }
 
     if (grepl("^\\d+$", value_raw)) {
@@ -746,7 +750,8 @@ getReleaseVersion <- function() {
 #' version expected by the R project and enforces compatibility rules.
 #'
 #' If the database version is older than the release version, execution is
-#' stopped and the user is instructed to run the required database migrations.
+#' stopped and the user is instructed to run the required database migrations,
+#' unless historical database analysis was explicitly enabled by the caller.
 #'
 #' If the database version is newer than the release version, execution is
 #' stopped unless explicitly allowed. Allowing newer database versions is
@@ -760,34 +765,55 @@ getReleaseVersion <- function() {
 #'   version. If \code{FALSE}, execution is stopped and the user is instructed
 #'   to explicitly force the run. If \code{TRUE}, newer database versions are
 #'   accepted.
+#' @param allow_older_db_version Logical flag indicating whether execution
+#'   should continue with a warning when the database version is older than the
+#'   release version. This is intended for analyses of historical snapshots.
+#'   Default is \code{FALSE}.
 #'
 #' @return Invisibly returns \code{NULL}. This function is called for its side
 #'   effects and will stop execution with an error if version compatibility
 #'   requirements are not met.
 #'
 #' @export
-checkVersion <- function(ignore_newer_db_version) {
+checkVersion <- function(ignore_newer_db_version, allow_older_db_version = FALSE) {
   if (!isDefinedAndTrue("VERSION_ALREADY_CHECKED", .lib_envir_env)) {
     db_version <- dbGetVersion()
     # read the first line of the release-version.txt file in the main directory
     release_version <- getReleaseVersion()
     compare_result <- compareVersionsSemver(db_version, release_version)
-    if (compare_result < 0L) { # DB is older than release version -> stop execution
-      stop(paste0("The database version '", db_version, "' is older than the release version '", release_version, "'. Please update the database via migration.\n",
-                  "  See https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."))
+    if (compare_result < 0L) { # DB is older than release version
+      version_message <- paste0(
+        "The database version '", db_version,
+        "' is older than the release version '", release_version, "'."
+      )
+      if (allow_older_db_version) {
+        warning(
+          version_message,
+          " Continuing with the manual analysis of this historical database.",
+          call. = FALSE
+        )
+      } else {
+        stop(paste0(
+          version_message,
+          " Please update the database via migration.\n",
+          "  See https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/749 for more details."
+        ))
+      }
     } else if (compare_result > 0L) { # DB is newer than release version -> allow force run
       if (!ignore_newer_db_version) {
-        stop(paste0("The database version '", db_version, "' is newer than the release version '", release_version, "'. If you know what you are doing:",
-                    " You can force the run anyway, if you start the full toolchain with the parameter '--ignoreNewerDBVersion'. This works not for single modules!"))
+        stop(paste0(
+          "The database version '", db_version, "' is newer than the release version '", release_version, "'. If you know what you are doing:",
+          " You can force the run anyway, if you start the full toolchain with the parameter '--ignoreNewerDBVersion'. This works not for single modules!"
+        ))
       }
     }
     .lib_envir_env[["VERSION_ALREADY_CHECKED"]] <- TRUE
   }
 }
 
-###---###---###---##
+### ---###---###---##
 # TOOL_CHAIN_STATE #
-###---###---###---##
+### ---###---###---##
 
 # Environment for saving process states
 .penv <- new.env()

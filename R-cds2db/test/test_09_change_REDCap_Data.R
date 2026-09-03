@@ -8,7 +8,7 @@ if (isDebugDay(1)) {
   data_to_import[["medikationsanalyse"]] <- addREDCapMedikationsanalyse(
     dt_med_ana = data_to_import[["medikationsanalyse"]],
     patient_ids = pat_ids,
-    #Annahme: Drugs und Observations + Conditions + Procedures sind alle an Tag 1 bis 5 ( = + 0 bis 4.5)
+    # Annahme: Drugs und Observations + Conditions + Procedures sind alle an Tag 1 bis 5 ( = + 0 bis 4.5)
     day_offset = 4.4 # alle MRP müssen berechnet werden, weil MedAna-Datum damit nach allem anderen liegt
   )
 }

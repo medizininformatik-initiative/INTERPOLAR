@@ -174,7 +174,7 @@ addTextHeaderToTable <- function(dt, header, insert_column_names_below_header = 
 #'
 #' @export
 toMatrix <- function(list, colCount, fill = NA) {
-  while(length(list) %% colCount != 0) list <- c(list, fill)
+  while (length(list) %% colCount != 0) list <- c(list, fill)
   matrix(list, nrow = length(list) / colCount, byrow = TRUE)
 }
 
@@ -255,7 +255,6 @@ readExcelFileAsTableList <- function(excelFile, maxSheetIndex = 1000) {
 #' @seealso \code{\link[openxlsx]{write.xlsx}} for the underlying function used to write Excel files.
 #' @export
 writeExcelFile <- function(table_or_tables_list, file_name, with_column_names) {
-
   # Convert list columns to character columns by concatenating list elements with a separator.
   # Excel cannot save list columns, so we need to convert them to character columns before writing the file.
   convertListColumns <- function(dt, sep = "\n") {
@@ -334,8 +333,10 @@ readFirstExcelFileSheet <- function(path, namePattern, columnNames) {
     sheet <- etlutils::removeTableHeader(excel_sheets$excel_file_content[[i]], columnNames)
     # Return first valid sheet
     if (etlutils::isValidTable(sheet)) {
-      return(list(excel_file_name = excel_sheets$excel_file_name[[i]],
-                  excel_file_content = sheet))
+      return(list(
+        excel_file_name = excel_sheets$excel_file_name[[i]],
+        excel_file_content = sheet
+      ))
     }
   }
   return(NULL)
@@ -442,7 +443,7 @@ replacePatternsInColumn <- function(dt, column_name, patterns_to_replace, replac
 #'
 #' @export
 trimTableValues <- function(dt, colnames = NA) {
-  isDataFrame <- !'data.table' %in% class(dt)
+  isDataFrame <- !"data.table" %in% class(dt)
   if (isDataFrame) {
     setDT(dt) # Convert to data.table if it's a data.frame
   }
@@ -955,8 +956,10 @@ moveColumnBefore <- function(dt, column_to_move, target_column) {
 addRowsWithColumn <- function(table, values, column) {
   if (is.character(column)) {
     if (!(column %in% names(table))) {
-      stop(sprintf("Column name '%s' not found in table. Available columns are: %s.",
-                   column, paste(names(table), collapse = ", ")))
+      stop(sprintf(
+        "Column name '%s' not found in table. Available columns are: %s.",
+        column, paste(names(table), collapse = ", ")
+      ))
     }
     col_index <- which(names(table) == column)
   } else if (is.numeric(column)) {
@@ -1002,13 +1005,13 @@ addRowsWithColumn <- function(table, values, column) {
 #' printTableSummary(table = mtcars, table_name = 'mtcars')
 #'
 #' @export
-printTableSummary <- function(table, table_name = '') {
+printTableSummary <- function(table, table_name = "") {
   dt <- data.table::as.data.table(
     cbind(
-      class      = sapply(names(table), function(n) class(table[[n]])[1]), #shows only the first specified class
+      class      = sapply(names(table), function(n) class(table[[n]])[1]), # shows only the first specified class
       type       = sapply(names(table), function(n) typeof(table[[n]])),
       available  = sapply(names(table), function(n) sum(!is.na(table[[n]]))),
-      missing    = sapply(names(table), function(n) sum( is.na(table[[n]])))
+      missing    = sapply(names(table), function(n) sum(is.na(table[[n]])))
     ),
     keep.rownames = TRUE
   )
@@ -1016,30 +1019,32 @@ printTableSummary <- function(table, table_name = '') {
     cat(
       createFrameString(
         text = paste0(
-          'Table: ', table_name, '\n\n  # Rows:    ', nrow(table), '\n  # Columns: ', ncol(table), '\n\n',
+          "Table: ", table_name, "\n\n  # Rows:    ", nrow(table), "\n  # Columns: ", ncol(
+            table
+          ), "\n\n",
           dataTableAsCharacter(
             data.table::setnames(
               x = dt,
-              new = c('Column', 'Class', 'Type', 'Available', 'Missing')
+              new = c("Column", "Class", "Type", "Available", "Missing")
             ),
             header = TRUE,
             footer = TRUE
           )
         ),
-        edge = c('\u231c\u231d\u231e\u231f'),
-        hori = ' ',
-        vert = ' '
+        edge = c("\u231c\u231d\u231e\u231f"),
+        hori = " ",
+        vert = " "
       )
     )
   } else {
     cat(
       createFrameString(
         text = paste0(
-          'Table: ', table_name, '\n\n  # Rows:    ', nrow(table), '\n  # Columns: ', ncol(table), '\n\n'
+          "Table: ", table_name, "\n\n  # Rows:    ", nrow(table), "\n  # Columns: ", ncol(table), "\n\n"
         ),
-        edge = c('\u231c\u231d\u231e\u231f'),
-        hori = ' ',
-        vert = ' '
+        edge = c("\u231c\u231d\u231e\u231f"),
+        hori = " ",
+        vert = " "
       )
     )
   }
@@ -1068,18 +1073,18 @@ dataTableAsCharacter <- function(dt, header = FALSE, footer = FALSE) {
   d <- if (header) rbind(as.list(names(dt)), dt) else dt
   if (footer) d <- rbind(d, as.list(names(dt)))
   if (nrow(d) == 0) {
-    return(paste(names(dt), collapse = '  '))
+    return(paste(names(dt), collapse = "  "))
   }
   l <- d[, lapply(.SD, function(x) max(nchar(as.character(x))))]
-  d <- data.table::as.data.table(lapply(seq_along(d), function(i) stringr::str_pad(string = as.character(d[[i]]), width = l[[i]], side = 'left', pad = ' ')))
+  d <- data.table::as.data.table(lapply(seq_along(d), function(i) stringr::str_pad(string = as.character(d[[i]]), width = l[[i]], side = "left", pad = " ")))
   paste0(
     sapply(
       seq_len(nrow(d)),
       function(i) {
-        paste0(d[i, ], collapse = '  ')
+        paste0(d[i, ], collapse = "  ")
       }
     ),
-    collapse = '\n'
+    collapse = "\n"
   )
 }
 
@@ -1380,7 +1385,8 @@ dtFilterRows <- function(dt, column_name, pattern) {
 #' @export
 dtRemoveCommentRows <- function(dt, comment_marker = "#", remove_empty = TRUE) {
   rows_to_remove <- dt[
-    , {
+    ,
+    {
       row_values <- trimws(as.character(unlist(.SD)))
       row_values <- row_values[!is.na(row_values) & row_values != ""]
       should_remove <- FALSE
@@ -1424,4 +1430,3 @@ renameColsInLists <- function(tbl_list, old, new) {
     tbl
   })
 }
-

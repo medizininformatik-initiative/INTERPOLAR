@@ -14,15 +14,19 @@
 #' into REDCap and does not return a value.
 #'
 importDB2Redcap <- function() {
-
   tryRedcap <- function(redcap_process) {
-    tryCatch({
-      redcap_process()
-    }, error = function(e) {
-      message("This error may have occurred because the user preferences in the Redcap project ",
-              "have been changed. Use the default values if possible.")
-      stop(e$message)
-    })
+    tryCatch(
+      {
+        redcap_process()
+      },
+      error = function(e) {
+        message(
+          "This error may have occurred because the user preferences in the Redcap project ",
+          "have been changed. Use the default values if possible."
+        )
+        stop(e$message)
+      }
+    )
   }
 
   writeTablesAsExcel <- function(tables, suffix = "") {
@@ -34,7 +38,6 @@ importDB2Redcap <- function() {
   }
 
   etlutils::runLevel2Line("Update frontend data from DB", {
-
     # Connect to REDCap
     frontend_connection <- getRedcapConnection()
 
@@ -53,7 +56,6 @@ importDB2Redcap <- function() {
     ret_ids_to_empty <- integer(0)
 
     if (is_phaseB_active) {
-
       # Get ret_ids of all PhaseBTest MRPs which are not new in this run
       ret_ids_to_clear <- etlutils::dbGetReadOnlyQuery(
         "SELECT DISTINCT ret_id
@@ -74,7 +76,6 @@ importDB2Redcap <- function() {
         mrp_instances <- mrp_instances[ret_id %in% ret_ids_to_clear]
 
         if (nrow(mrp_instances)) {
-
           # Keep only the ID columns and the _complete column, set all other columns to NA
           needed_cols <- c("record_id", "redcap_repeat_instrument", "redcap_repeat_instance", "retrolektive_mrpbewertung_complete")
           mrp_instances[, (setdiff(names(mrp_instances), c(needed_cols))) := NA]
@@ -120,7 +121,6 @@ importDB2Redcap <- function() {
     data_to_import <- list()
     # Iterate over tables and columns to fetch and send data
     for (i in seq_along(table_names)) {
-
       table_name <- table_names[i]
 
       db_generated_id_col_name <- paste0(table_name, "_fe_id")
@@ -142,7 +142,7 @@ importDB2Redcap <- function() {
         # redcap can sometimes misinterpret double quotation marks, even if they are CSV-compliant
         # escaped. Therefore, we replace them with single quotation marks in all text fields.
         if (!(col_name %in% toml_cols)) {
-          data_from_db[[col_name]] <- gsub('"', '\'', data_from_db[[col_name]], fixed = TRUE)
+          data_from_db[[col_name]] <- gsub('"', "'", data_from_db[[col_name]], fixed = TRUE)
         } else {
           # Additional_value fields are toml files that require double quotation marks, so it is
           # important to ensure that these are retained.
@@ -152,13 +152,13 @@ importDB2Redcap <- function() {
 
       # If PhaseB is active, exclude all new PhaseBTest MRPs from the data to import
       if (is_phaseB_active && table_name == "retrolektive_mrpbewertung") {
-
         # Get ret_ids of all PhaseBTest MRPs which are new in this run
         ret_ids_to_delete <- etlutils::dbGetReadOnlyQuery(
           "SELECT DISTINCT ret_id
           FROM v_retrolektive_mrpbewertung_fe_last_version
           WHERE ret_kurzbeschr ILIKE '*TEST%'",
-          lock_id = "importDB2Redcap_phaseBTestMRP")$ret_id
+          lock_id = "importDB2Redcap_phaseBTestMRP"
+        )$ret_id
 
         # Filter out these ret_ids from the data to import
         data_from_db <- data_from_db[!ret_id %in% ret_ids_to_delete]
@@ -194,9 +194,7 @@ importDB2Redcap <- function() {
   })
 
   etlutils::runLevel2Line("Update data access groups", {
-
     if (exists("record_ids_with_data_access_group") && nrow(record_ids_with_data_access_group)) {
-
       ward_names <- unique(record_ids_with_data_access_group$fall_station)
 
       # Get all data access groups from Redcap
@@ -235,6 +233,5 @@ importDB2Redcap <- function() {
       # Set the data access groups in Redcap
       suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group))
     })
-
   })
 }

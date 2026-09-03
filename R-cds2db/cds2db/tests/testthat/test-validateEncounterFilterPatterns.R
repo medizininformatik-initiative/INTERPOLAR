@@ -23,11 +23,7 @@ testthat::test_that("validateEncounterFilterPatterns returns TRUE for valid defi
 
 testthat::test_that("validateEncounterFilterPatterns accepts definition with only ward_name", {
   encounter_filter_patterns <- list(
-    list(
-      ENCOUNTER_FILTER_PATTERN_1 = c(
-        "ward_name = 'Station 1'"
-      )
-    ),
+    list(ENCOUNTER_FILTER_PATTERN_1 = c("ward_name = 'Station 1'")),
     list(
       ENCOUNTER_FILTER_PATTERN_2 = c(
         "ward_name = 'Station 2'",
@@ -47,11 +43,7 @@ testthat::test_that("validateEncounterFilterPatterns accepts whitespace variatio
         " location/location/reference   =   'Location/location_id_1'  +  type/coding/code = 'Y' "
       )
     ),
-    list(
-      ENCOUNTER_FILTER_PATTERN_2 = c(
-        "ward_name='Station 2'"
-      )
-    )
+    list(ENCOUNTER_FILTER_PATTERN_2 = c("ward_name='Station 2'"))
   )
 
   testthat::expect_true(isTRUE(validateEncounterFilterPatterns(encounter_filter_patterns)))
@@ -63,9 +55,7 @@ testthat::test_that("validateEncounterFilterPatterns accepts unnamed outer and i
       "ward_name = 'Station 1'",
       "location/location/reference = 'Location/location_id_1'"
     )),
-    list(c(
-      "ward_name = 'Station 2'"
-    ))
+    list(c("ward_name = 'Station 2'"))
   )
 
   testthat::expect_true(isTRUE(validateEncounterFilterPatterns(encounter_filter_patterns)))
@@ -129,9 +119,7 @@ testthat::test_that("validateEncounterFilterPatterns accepts plus in values of k
     )
   )
 
-  testthat::expect_true(
-    isTRUE(validateEncounterFilterPatterns(encounter_filter_patterns))
-  )
+  testthat::expect_true(isTRUE(validateEncounterFilterPatterns(encounter_filter_patterns)))
 })
 
 testthat::test_that("validateEncounterFilterPatterns rejects empty subcondition caused by double plus", {
@@ -167,11 +155,7 @@ testthat::test_that("validateEncounterFilterPatterns rejects ward_name combined 
 
 testthat::test_that("validateEncounterFilterPatterns rejects missing ward_name", {
   encounter_filter_patterns <- list(
-    list(
-      ENCOUNTER_FILTER_PATTERN_1 = c(
-        "location/location/reference = 'Location/location_id_1'"
-      )
-    )
+    list(ENCOUNTER_FILTER_PATTERN_1 = c("location/location/reference = 'Location/location_id_1'"))
   )
 
   testthat::expect_error(
@@ -197,13 +181,7 @@ testthat::test_that("validateEncounterFilterPatterns rejects multiple ward_name 
 })
 
 testthat::test_that("validateEncounterFilterPatterns rejects empty ward_name", {
-  encounter_filter_patterns <- list(
-    list(
-      ENCOUNTER_FILTER_PATTERN_1 = c(
-        "ward_name = ''"
-      )
-    )
-  )
+  encounter_filter_patterns <- list(list(ENCOUNTER_FILTER_PATTERN_1 = c("ward_name = ''")))
 
   testthat::expect_error(
     validateEncounterFilterPatterns(encounter_filter_patterns),

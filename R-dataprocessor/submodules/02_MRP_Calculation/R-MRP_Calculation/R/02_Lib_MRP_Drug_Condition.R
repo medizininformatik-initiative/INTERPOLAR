@@ -91,7 +91,6 @@ getOrCreateMrpIndex <- function(match_proxy_row, drug_condition_list_rows) {
 #'         of the contraindication).
 #'
 matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_codes, meda_datetime, patient_id) {
-
   # Initialize empty result data.table
   matched_rows <- data.table::data.table(
     mrp_index = integer(),
@@ -111,7 +110,6 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
 
   # Function to check if validity days match any patient Condition
   patientValidityDayMatches <- function(validity_days, patient_conditions, meda_datetime) {
-
     condition_start <- patient_conditions$start_datetime
     isresult <- FALSE
     if (!is.na(validity_days)) {
@@ -140,7 +138,6 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
   icds <- intersect(names(mrp_tables_by_icd), used_icds)
 
   for (mrp_icd in icds) {
-
     # Find matching ICD conditions for this specific ICD
     patient_conditions <- all_patient_conditions[
       con_code_code %in% mrp_icd &
@@ -156,8 +153,10 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
     if (!nrow(mrp_table_list_rows)) next
 
     # Keep only relevant columns
-    keep_cols <- c("ATC_DISPLAY", "ATC_FOR_CALCULATION", "ICD_VALIDITY_DAYS", "CONDITION_DISPLAY_CLUSTER",
-                   "ATC_FULL_LIST", "ICD_FULL_LIST")
+    keep_cols <- c(
+      "ATC_DISPLAY", "ATC_FOR_CALCULATION", "ICD_VALIDITY_DAYS", "CONDITION_DISPLAY_CLUSTER",
+      "ATC_FULL_LIST", "ICD_FULL_LIST"
+    )
     mrp_table_list_rows <- unique(mrp_table_list_rows[, ..keep_cols])
 
     # Filter MRP rows based on validity days and patient conditions
@@ -220,7 +219,10 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
       mrp_table_list_rows <- mrp_table_list_rows[
         order(
           sapply(CONDITION_DISPLAY_CLUSTER, function(x)
-            any(grepl(x, matched_clusters, fixed = TRUE))),
+            any(grepl(
+              x, matched_clusters,
+              fixed = TRUE
+            ))),
           decreasing = TRUE
         )
       ]
@@ -256,7 +258,8 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
       ][
         order(-start_datetime)
       ][
-        , .SD[1], by = atc_code
+        , .SD[1],
+        by = atc_code
       ][
         , .(atc_code, fhir_id)
       ]
@@ -278,8 +281,11 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
         )
 
         # Add start_datetime of the matched ATC code
-        new_row <- unique(merge(new_row, match_atc_codes[, .(atc_code, start_datetime)],
-                                by = "atc_code", all.x = TRUE))
+        new_row <- unique(merge(new_row, match_atc_codes[, .(
+          atc_code, start_datetime
+        )],
+        by = "atc_code", all.x = TRUE
+        ))
 
         new_row[, icd_display := {
           displays <- relevant_conditions[con_code_code %in% icd_code, con_code_display]
@@ -287,12 +293,16 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
           if (length(displays) == 0) NA_character_ else paste(displays, collapse = "; ")
         }]
 
-        new_row[, kurzbeschr_drug := paste0(mrp_table_list_row$ATC_DISPLAY, " - ", atc_code,
-                                            "  (", format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
+        new_row[, kurzbeschr_drug := paste0(
+          mrp_table_list_row$ATC_DISPLAY, " - ", atc_code,
+          "  (", format(start_datetime, "%Y-%m-%d %H:%M:%S"), ")"
+        )]
         new_row[, kurzbeschr_suffix := paste0("  [", diagnosis_cluster, "] kontraindiziert.\n")]
         new_row[, kurzbeschr_type := "Diagnose"]
-        new_row[, kurzbeschr_item2 := paste0(icd_display, " - ", icd_code, "   (",
-                                             format(condition_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
+        new_row[, kurzbeschr_item2 := paste0(
+          icd_display, " - ", icd_code, "   (",
+          format(condition_start_datetime, "%Y-%m-%d %H:%M:%S"), ")"
+        )]
 
         matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
       }
@@ -326,11 +336,10 @@ matchICDCodes <- function(relevant_conditions, mrp_tables_by_icd, match_atc_code
 #' The function is called for its side effect — printing a warning message
 #' to the console.
 catInvalidObservationsWarning <- function(invalid_obs) {
+  invalid_obs <- data.table::as.data.table(invalid_obs)
   if (nrow(invalid_obs)) {
     # --- Create unique identifier for each (code, value, unit) combination ---
-    invalid_obs_unique <- unique(
-      invalid_obs[, .(code, value, unit)]
-    )
+    invalid_obs_unique <- unique(invalid_obs[, c("code", "value", "unit"), with = FALSE])
 
     # --- Build message details ---
     details <- character(nrow(invalid_obs_unique))
@@ -383,6 +392,10 @@ catInvalidObservationsWarning <- function(invalid_obs) {
 #' # invalid_obs <- data.table()
 #' # obs_filtered <- filterObservations(obs, "reference_range_high_value", invalid_obs)
 filterObservations <- function(obs, reference_value_col, invalid_obs) {
+  obs <- data.table::as.data.table(obs)
+  invalid_obs <- data.table::as.data.table(invalid_obs)
+  row_id_column <- ".filter_observation_row_id"
+  obs[[row_id_column]] <- seq_len(nrow(obs))
 
   # Derive the corresponding unit and system columns from the reference value column
   reference_unit_col   <- sub("_value$", "_code", reference_value_col)
@@ -390,100 +403,103 @@ filterObservations <- function(obs, reference_value_col, invalid_obs) {
 
   # Identify columns that define unique observations, excluding reference columns
   non_ref_cols <- setdiff(names(obs), grep("^reference_", names(obs), value = TRUE))
+  non_ref_cols <- setdiff(non_ref_cols, row_id_column)
 
   # Step 1: Filter observations based on reference_range_type and unit convertibility
-  valid_obs <- obs[
-    ,
-    {
-      # --- Helper function to test whether a unit can be converted ---
-      isConvertibleUnit <- function(unit_from, unit_to) {
-        # Missing reference unit counts as convertible
-        if (is.na(unit_to)) return(TRUE)
-        !is.na(etlutils::convertLabUnits(1, unit_from, unit_to))
-      }
-      # --- 1.1: Try to use rows where reference_range_type == "normal" ---
-      preferred <- .SD[reference_range_type == "normal"]
-      # --- 1.2: If no "normal" rows exist, try those with missing type ---
-      if (!nrow(preferred)) {
-        preferred <- .SD[is.na(reference_range_type)]
-      }
-      # --- 1.3: If neither "normal" nor NA exists → mark as invalid ---
-      if (!nrow(preferred)) {
-        NULL
-      } else {
-        # Determine which rows have convertible or missing reference units
-        # preferred[, is_convertible := mapply(isConvertibleUnit, unit, get(reference_unit_col))]
-        #
-        # convertible <- preferred[is_convertible == TRUE]
-        convertible <- preferred[
-          mapply(isConvertibleUnit, unit, get(reference_unit_col))
-        ]
-        # --- 1.1.2: If no convertible rows exist → mark as invalid ---
-        if (!nrow(convertible)) {
-          NULL
-        } else {
-          # --- 1.1.1: Keep the first convertible row ---
-          convertible[1]
-        }
-      }
-    },
-    by = non_ref_cols
-  ]
+  isConvertibleUnit <- function(unit_from, unit_to) {
+    # Missing reference unit counts as convertible
+    if (is.na(unit_to)) return(TRUE)
+    !is.na(etlutils::convertLabUnits(1, unit_from, unit_to))
+  }
+  valid_obs_rows <- lapply(split(obs, by = non_ref_cols, keep.by = TRUE), function(group_rows) {
+    group_rows <- data.table::as.data.table(group_rows)
+    preferred <- data.table::as.data.table(
+      as.data.frame(group_rows)[which(group_rows[["reference_range_type"]] == "normal"), , drop = FALSE]
+    )
+    if (!nrow(preferred)) {
+      preferred <- data.table::as.data.table(
+        as.data.frame(group_rows)[which(is.na(group_rows[["reference_range_type"]])), , drop = FALSE]
+      )
+    }
+    if (!nrow(preferred)) {
+      return(NULL)
+    }
+
+    convertible_rows <- vapply(
+      preferred[[reference_unit_col]],
+      function(unit_to) isConvertibleUnit(group_rows[["unit"]][1], unit_to),
+      logical(1)
+    )
+    convertible <- data.table::as.data.table(
+      as.data.frame(preferred)[which(convertible_rows), , drop = FALSE]
+    )
+    if (!nrow(convertible)) {
+      return(NULL)
+    }
+    convertible[1, ]
+  })
+  valid_obs <- data.table::rbindlist(valid_obs_rows, fill = TRUE)
 
   if (nrow(valid_obs)) {
-    # Sort column order before fsetdiff
-    data.table::setcolorder(obs, sort(names(obs)))
-    data.table::setcolorder(valid_obs, sort(names(valid_obs)))
-    # Invalid observations are those that were dropped
-    invalid_obs <- data.table::fsetdiff(obs, valid_obs)
-    obs <- valid_obs
+    obs_frame <- as.data.frame(obs)
+    valid_obs_frame <- as.data.frame(valid_obs)
+    invalid_obs <- data.table::as.data.table(
+      obs_frame[!obs_frame[[row_id_column]] %in% valid_obs_frame[[row_id_column]], , drop = FALSE]
+    )
+    valid_obs_frame[[row_id_column]] <- NULL
+    invalid_obs[[row_id_column]] <- NULL
 
     # Step 2: Split observations into convertible and non-convertible
-    obs_to_convert_unit <- obs[!is.na(get(reference_unit_col)) & !is.na(unit)]
-    obs_no_convert_unit <- obs[is.na(get(reference_unit_col)) | is.na(unit)]
-    obs_no_convert_unit[, converted_value := value]  # Non-convertible → value unchanged
-    obs_to_convert_unit[, converted_value := NA_real_]  # Initialize converted values
-    obs_no_convert_unit[, converted_unit := unit]  # Non-convertible → value unchanged
-    obs_to_convert_unit[, converted_unit := NA_real_]  # Initialize converted values
+    rows_with_conversion_unit <- !is.na(valid_obs_frame[[reference_unit_col]]) &
+      !is.na(valid_obs_frame[["unit"]])
+    obs_to_convert_unit <- valid_obs_frame[rows_with_conversion_unit, , drop = FALSE]
+    obs_no_convert_unit <- valid_obs_frame[!rows_with_conversion_unit, , drop = FALSE]
+    obs_no_convert_unit[["converted_value"]] <- obs_no_convert_unit[["value"]]
+    obs_to_convert_unit[["converted_value"]] <- rep(NA_real_, nrow(obs_to_convert_unit))
+    obs_no_convert_unit[["converted_unit"]] <- obs_no_convert_unit[["unit"]]
+    obs_to_convert_unit[["converted_unit"]] <- rep(NA_character_, nrow(obs_to_convert_unit))
 
     # Step 3: Perform unit conversion row by row
     invalid_idx <- c()
     for (i in seq_len(nrow(obs_to_convert_unit))) {
-      unit_from <- obs_to_convert_unit$unit[i]
+      unit_from <- obs_to_convert_unit[["unit"]][i]
       unit_target <- obs_to_convert_unit[[reference_unit_col]][i]
-      obs_row <- obs_to_convert_unit[i]
 
       # Attempt conversion
       converted_val <- etlutils::convertLabUnits(
-        measured_value = obs_row$value,
+        measured_value = obs_to_convert_unit[["value"]][i],
         measured_unit = unit_from,
         target_unit = unit_target,
-        additional_error_message = paste0(" for LOINC code ", obs_row$code)
+        additional_error_message = paste0(" for LOINC code ", obs_to_convert_unit[["code"]][i])
       )
       if (is.na(converted_val)) {
+        obs_row <- data.table::as.data.table(obs_to_convert_unit[i, , drop = FALSE])
         invalid_obs <- if (nrow(invalid_obs) > 0) rbind(invalid_obs, obs_row, fill = TRUE) else obs_row
         invalid_idx <- c(invalid_idx, i)
       } else {
-        obs_to_convert_unit$converted_value[i] <- converted_val
-        obs_to_convert_unit$converted_unit[i] <- unit_target
+        obs_to_convert_unit[["converted_value"]][i] <- converted_val
+        obs_to_convert_unit[["converted_unit"]][i] <- unit_target
       }
     }
     # Remove invalid observations after the loop
     if (length(invalid_idx) > 0) {
-      obs_to_convert_unit <- obs_to_convert_unit[-invalid_idx]
+      rows_to_keep <- setdiff(seq_len(nrow(obs_to_convert_unit)), invalid_idx)
+      obs_to_convert_unit <- obs_to_convert_unit[rows_to_keep, , drop = FALSE]
     }
 
     # Step 4: Warn for observations whose units were converted
-    changed_rows <- obs_to_convert_unit[
-      !is.na(converted_value) & !is.na(value) & converted_value != value
-    ]
+    changed_row_index <- !is.na(obs_to_convert_unit[["converted_value"]]) &
+      !is.na(obs_to_convert_unit[["value"]]) &
+      obs_to_convert_unit[["converted_value"]] != obs_to_convert_unit[["value"]]
+    changed_rows <- obs_to_convert_unit[changed_row_index, , drop = FALSE]
     if (nrow(changed_rows)) {
       details <- character(nrow(changed_rows))
       for (i in seq_len(nrow(changed_rows))) {
         details[i] <- paste0(
-          "  code=", changed_rows$code[i],
-          ", value=", changed_rows$value[i], " ", changed_rows$unit[i],
-          " changed to ", changed_rows$converted_value[i], " ", changed_rows[[reference_unit_col]][i]
+          "  code=", changed_rows[["code"]][i],
+          ", value=", changed_rows[["value"]][i], " ", changed_rows[["unit"]][i],
+          " changed to ", changed_rows[["converted_value"]][i], " ",
+          changed_rows[[reference_unit_col]][i]
         )
       }
       etlutils::catWarningMessage(
@@ -494,9 +510,16 @@ filterObservations <- function(obs, reference_value_col, invalid_obs) {
       )
     }
     # Step 5: Combine converted and non-converted observations
-    obs <- rbind(obs_to_convert_unit, obs_no_convert_unit)
+    obs <- data.table::rbindlist(
+      list(
+        data.table::as.data.table(obs_to_convert_unit),
+        data.table::as.data.table(obs_no_convert_unit)
+      ),
+      fill = TRUE
+    )
   } else {
     invalid_obs <- obs
+    invalid_obs[[row_id_column]] <- NULL
     obs <- data.table::data.table()
   }
 
@@ -524,7 +547,6 @@ filterObservations <- function(obs, reference_value_col, invalid_obs) {
 #' @return A character string containing a formatted summary of matched observations,
 #'   grouped by reference range and unit.
 generateMatchDescriptionReferenceCutoff <- function(obs, match_found, loinc_mapping_table) {
-
   # Filter matched observations and extract relevant columns
   matched_obs <- data.table::data.table(
     matched_values = obs$converted_value[match_found],
@@ -606,27 +628,30 @@ generateMatchDescriptionReferenceCutoff <- function(obs, match_found, loinc_mapp
 #'   corresponding values relative to the specified cutoff.
 generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, primary_loinc, cutoff_absolute, cutoff_unit) {
   # Build description entries for each LOINC code
-  desc_list <- obs[, {
-    loinc_name <- loinc_mapping_table[LOINC %in% code, GERMAN_NAME_LOINC_PRIMARY]
+  desc_list <- obs[,
+    {
+      loinc_name <- loinc_mapping_table[LOINC %in% code, GERMAN_NAME_LOINC_PRIMARY]
 
-    converted_text <- ifelse(
-      as.character(converted_value) != as.character(value),
-      paste0(" (", converted_value, " ", cutoff_unit, ")"),
-      ""
-    )
-    lines <- sprintf(
-      "%s %s %s%s   (%s)",
-      ifelse(seq_len(.N) == 1, "  ", " "),
-      value, unit,
-      converted_text,
-      format(start_datetime, "%Y-%m-%d %H:%M:%S")
-    )
-    entry <- paste0(
-      "\n (", loinc_name, ") ", cutoff_absolute, " ", cutoff_unit, ":\n",
-      paste(lines, collapse = "\n ")
-    )
-    list(text = entry)
-  }, by = code]
+      converted_text <- ifelse(
+        as.character(converted_value) != as.character(value),
+        paste0(" (", converted_value, " ", cutoff_unit, ")"),
+        ""
+      )
+      lines <- sprintf(
+        "%s %s %s%s   (%s)",
+        ifelse(seq_len(.N) == 1, "  ", " "),
+        value, unit,
+        converted_text,
+        format(start_datetime, "%Y-%m-%d %H:%M:%S")
+      )
+      entry <- paste0(
+        "\n (", loinc_name, ") ", cutoff_absolute, " ", cutoff_unit, ":\n",
+        paste(lines, collapse = "\n ")
+      )
+      list(text = entry)
+    },
+    by = code
+  ]
 
   # Combine all entries into one final formatted text block
   full_text <- paste0(paste(desc_list$text, collapse = "\n"), "\n")
@@ -673,7 +698,6 @@ generateMatchDescriptionAbsoluteCutoff <- function(obs, loinc_mapping_table, pri
 #' @return A character string describing the match if the cutoff was met, otherwise `NA_character_`.
 #'
 matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mapping_table) {
-
   data.table::setorder(observation_resources, "start_datetime")
   match_description <- NA_character_
   cutoff_reference <- trimws(match_proxy_row$LOINC_CUTOFF_REFERENCE)
@@ -726,7 +750,6 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
         )
 
         if (nrow(obs)) {
-
           obs <- filterObservations(
             obs = obs,
             reference_value_col = reference_value_col,
@@ -738,8 +761,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
             threshold <- obs[[reference_value_col]] * cutoff$multiplier
 
             # Vectorized comparison of lab values to threshold using specified operator
-            match_found <- switch(
-              cutoff$operator,
+            match_found <- switch(cutoff$operator,
               ">"  = obs$converted_value >  threshold,
               ">=" = obs$converted_value >= threshold,
               "<"  = obs$converted_value <  threshold,
@@ -781,13 +803,11 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
       # Get parsed cutoff components
       cutoff <- parseCutoffAbsolute(cutoff_absolute)
       if (!is.null(cutoff) && !any(is.na(cutoff))) {
-
         # Split observation_resources in valid and invalid ones
         invalid_obs <- observation_resources[is.na(suppressWarnings(as.numeric(value))) | !etlutils::isValidUnit(unit)]
         obs <- data.table::fsetdiff(observation_resources, invalid_obs)
 
         if (nrow(obs)) {
-
           mapping_rows <- loinc_mapping_table[LOINC %in% obs$code]
           mapping_row  <- unique(mapping_rows[, c("LOINC_PRIMARY", "UNIT", "CONVERSION_FACTOR", "CONVERSION_UNIT")])
           if (nrow(mapping_row) == 1) { # no row would be an error and more than one row would be ambiguous
@@ -828,8 +848,7 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
               threshold <- cutoff$threshold
 
               # Vectorized comparison of lab values to threshold using specified operator
-              match_found <- switch(
-                cutoff$operator,
+              match_found <- switch(cutoff$operator,
                 ">"  = obs_value_converted_to_threshold_unit >  threshold,
                 ">=" = obs_value_converted_to_threshold_unit >= threshold,
                 "<"  = obs_value_converted_to_threshold_unit <  threshold,
@@ -840,7 +859,6 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
 
               # we must find any match and the last must be true
               if (any(match_found) && match_found[length(match_found)]) {
-
                 obs <- obs[match_found][, converted_value := obs_value_converted_to_threshold_unit[match_found]]
 
                 match_description <- generateMatchDescriptionAbsoluteCutoff(
@@ -937,18 +955,17 @@ matchLOINCCutoff <- function(observation_resources, match_proxy_row, loinc_mappi
 #'   `loinc_matching_function`.
 #'
 matchICDProxies <- function(
-    medication_resources = NULL,
-    procedure_resources  = NULL,
-    observation_resources = NULL,
-    drug_condition_mrp_tables_by_atc_proxy   = NULL,
-    drug_condition_mrp_tables_by_ops_proxy   = NULL,
-    drug_condition_mrp_tables_by_loinc_proxy = NULL,
-    meda_datetime,
-    match_atc_codes,
-    loinc_mapping_table = NULL,
-    loinc_matching_function = NULL
+  medication_resources = NULL,
+  procedure_resources  = NULL,
+  observation_resources = NULL,
+  drug_condition_mrp_tables_by_atc_proxy   = NULL,
+  drug_condition_mrp_tables_by_ops_proxy   = NULL,
+  drug_condition_mrp_tables_by_loinc_proxy = NULL,
+  meda_datetime,
+  match_atc_codes,
+  loinc_mapping_table = NULL,
+  loinc_matching_function = NULL
 ) {
-
   all_matches <- list()
 
   matchProxy <- function(proxy_type, all_items, splitted_proxy_table) {
@@ -1016,7 +1033,6 @@ matchICDProxies <- function(
           # Select all items where the code matches any of the relevant secondary codes
           resources_with_proxy <- all_items[code %in% relevant_secondary_codes]
           if (nrow(resources_with_proxy)) {
-
             for (i in seq_len(nrow(match_proxy_rows))) {
               match_proxy_row <- match_proxy_rows[i]
               proxy_validity_days <- match_proxy_row[["ICD_PROXY_VALIDITY_DAYS"]]
@@ -1063,9 +1079,13 @@ matchICDProxies <- function(
                   proxy_type = proxy_type,
                   proxy_fhir_id = proxy_fhir_id,
                   diagnosis_cluster = match_proxy_row$CONDITION_DISPLAY_CLUSTER,
-                  kurzbeschr_drug = paste0(match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION,
-                                           "  (", format(atc_start, "%Y-%m-%d %H:%M:%S"), ")"),
-                  kurzbeschr_suffix = paste0("  [", match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontraindiziert.\n"),
+                  kurzbeschr_drug = paste0(
+                    match_proxy_row$ATC_DISPLAY, " - ", match_proxy_row$ATC_FOR_CALCULATION,
+                    "  (", format(atc_start, "%Y-%m-%d %H:%M:%S"), ")"
+                  ),
+                  kurzbeschr_suffix = paste0(
+                    "  [", match_proxy_row$CONDITION_DISPLAY_CLUSTER, "] kontraindiziert.\n"
+                  ),
                   kurzbeschr_type = type_code_to_display[[proxy_type]],
                   kurzbeschr_item2 = paste0(proxy_display, " - ", proxy_code),
                   kurzbeschr_additional = NA_character_
@@ -1075,7 +1095,8 @@ matchICDProxies <- function(
                   new_row[, kurzbeschr_item2 := paste0(
                     kurzbeschr_item2,
                     "   (",
-                    format(proxy_start_datetime, "%Y-%m-%d %H:%M:%S"), ")")]
+                    format(proxy_start_datetime, "%Y-%m-%d %H:%M:%S"), ")"
+                  )]
                   matched_rows <- rbind(matched_rows, new_row, fill = TRUE)
                 } else {
                   # Call the external custom function
@@ -1099,13 +1120,21 @@ matchICDProxies <- function(
     return(matched_rows)
   }
 
-  if (!is.null(medication_resources) &&
-      !is.null(drug_condition_mrp_tables_by_atc_proxy)) {
+  if (
+    !is.null(medication_resources) &&
+    !is.null(drug_condition_mrp_tables_by_atc_proxy)
+  ) {
     #  Combine all medication rows
     all_medications <- rbind(
-      medication_resources$medication_requests[, .(fhir_id = medreq_id, code = atc_code, display = atc_display, start_datetime, end_datetime)],
-      medication_resources$medication_statements[, .(fhir_id = medstat_id, code = atc_code, display = atc_display, start_datetime, end_datetime)],
-      medication_resources$medication_administrations[, .(fhir_id = medadm_id, code = atc_code, display = atc_display, start_datetime, end_datetime)],
+      medication_resources$medication_requests[, .(
+        fhir_id = medreq_id, code = atc_code, display = atc_display, start_datetime, end_datetime
+      )],
+      medication_resources$medication_statements[, .(
+        fhir_id = medstat_id, code = atc_code, display = atc_display, start_datetime, end_datetime
+      )],
+      medication_resources$medication_administrations[, .(
+        fhir_id = medadm_id, code = atc_code, display = atc_display, start_datetime, end_datetime
+      )],
       fill = TRUE
     )
     # ATC-Proxy-Matching
@@ -1117,8 +1146,10 @@ matchICDProxies <- function(
     all_matches[["ATC"]] <- atc_matches
   }
 
-  if (!is.null(procedure_resources) &&
-      !is.null(drug_condition_mrp_tables_by_ops_proxy)) {
+  if (
+    !is.null(procedure_resources) &&
+    !is.null(drug_condition_mrp_tables_by_ops_proxy)
+  ) {
     #  Combine all procedures rows
     all_procedures <- procedure_resources[, .(fhir_id = proc_id, code = proc_code_code, display = proc_code_display, start_datetime, end_datetime)]
     # OPS-Proxy-Matching
@@ -1130,25 +1161,31 @@ matchICDProxies <- function(
     all_matches[["OPS"]] <- ops_matches
   }
 
-  if (!is.null(observation_resources) &&
-      !is.null(drug_condition_mrp_tables_by_loinc_proxy) &&
-      !is.null(loinc_matching_function) &&
-      !is.null(loinc_mapping_table)) {
+  if (
+    !is.null(observation_resources) &&
+    !is.null(drug_condition_mrp_tables_by_loinc_proxy) &&
+    !is.null(loinc_matching_function) &&
+    !is.null(loinc_mapping_table)
+  ) {
     #  Combine all observation rows
-    all_observations <- observation_resources[, .(fhir_id = obs_id,
-                                                  code = obs_code_code,
-                                                  display = obs_code_display,
-                                                  value = obs_valuequantity_value,
-                                                  unit = data.table::fifelse(etlutils::isValidUnit(obs_valuequantity_code), obs_valuequantity_code, obs_valuequantity_unit),
-                                                  reference_range_low_value = obs_referencerange_low_value,
-                                                  reference_range_high_value = obs_referencerange_high_value,
-                                                  reference_range_low_system = obs_referencerange_low_system,
-                                                  reference_range_high_system = obs_referencerange_high_system,
-                                                  reference_range_low_code = obs_referencerange_low_code,
-                                                  reference_range_high_code = obs_referencerange_high_code,
-                                                  reference_range_type = obs_referencerange_type_code,
-                                                  start_datetime = start_datetime,
-                                                  end_datetime = as.POSIXct(NA))] # Observations don't have an end datetime
+    all_observations <- observation_resources[, .(
+      fhir_id = obs_id,
+      code = obs_code_code,
+      display = obs_code_display,
+      value = obs_valuequantity_value,
+      unit = data.table::fifelse(etlutils::isValidUnit(
+        obs_valuequantity_code
+      ), obs_valuequantity_code, obs_valuequantity_unit),
+      reference_range_low_value = obs_referencerange_low_value,
+      reference_range_high_value = obs_referencerange_high_value,
+      reference_range_low_system = obs_referencerange_low_system,
+      reference_range_high_system = obs_referencerange_high_system,
+      reference_range_low_code = obs_referencerange_low_code,
+      reference_range_high_code = obs_referencerange_high_code,
+      reference_range_type = obs_referencerange_type_code,
+      start_datetime = start_datetime,
+      end_datetime = as.POSIXct(NA)
+    )] # Observations don't have an end datetime
 
     # LOINC-Proxy-Matching
     loinc_matches <- matchProxy(
