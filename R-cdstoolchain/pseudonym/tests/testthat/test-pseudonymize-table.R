@@ -171,6 +171,37 @@ test_that("conditional rules honor explicit keep and redact fallbacks", {
   expect_true(is.na(result$identifier_value[2]))
 })
 
+test_that("identifier type fields use the enclosing identifier for conditions", {
+  source_table <- data.table::data.table(
+    identifier_type_system = c("https://example.test", "https://example.test"),
+    identifier_type_code = c("MR", "OTHER"),
+    identifier_value = c("record-1", "record-2")
+  )
+  rule <- paste0(
+    "keepIf(type.coding.system == \"https://example.test\" & ",
+    "type.coding.code == \"MR\"); redact"
+  )
+  table_description <- data.table::data.table(
+    RESOURCE = c("Patient", NA, NA),
+    COLUMN_NAME = names(source_table),
+    FHIR_EXPRESSION = c(
+      "identifier/type/coding/system",
+      "identifier/type/coding/code",
+      "identifier/value"
+    ),
+    PSEUDONYMIZATION_RULE = rule
+  )
+
+  result <- pseudonymizeTable(source_table, table_description, "Patient")
+
+  expect_equal(result$identifier_type_system[1], source_table$identifier_type_system[1])
+  expect_equal(result$identifier_type_code[1], source_table$identifier_type_code[1])
+  expect_equal(result$identifier_value[1], source_table$identifier_value[1])
+  expect_true(is.na(result$identifier_type_system[2]))
+  expect_true(is.na(result$identifier_type_code[2]))
+  expect_true(is.na(result$identifier_value[2]))
+})
+
 test_that("conditional rules treat NA conditions as not matched", {
   source_table <- data.table::data.table(
     identifier_type_system = NA_character_,
@@ -366,6 +397,14 @@ test_that("default rules retain approved logical reference identifiers", {
   result <- pseudonymizeTable(source_table, table_description, "Encounter")
 
   expect_equal(
+    result$enc_subject_identifier_type_coding_system[1:2],
+    source_table$enc_subject_identifier_type_coding_system[1:2]
+  )
+  expect_equal(
+    result$enc_subject_identifier_type_coding_code[1:2],
+    source_table$enc_subject_identifier_type_coding_code[1:2]
+  )
+  expect_equal(
     result$enc_subject_identifier_system[1:4],
     source_table$enc_subject_identifier_system[1:4]
   )
@@ -379,6 +418,8 @@ test_that("default rules retain approved logical reference identifiers", {
     source_table$enc_subject_identifier_value[3:4]
   )
   expect_true(is.na(result$enc_subject_identifier_system[5]))
+  expect_true(is.na(result$enc_subject_identifier_type_coding_system[5]))
+  expect_true(is.na(result$enc_subject_identifier_type_coding_code[5]))
   expect_true(is.na(result$enc_subject_identifier_value[5]))
 })
 
