@@ -206,6 +206,40 @@ calculateBmi <- function(weight_values, weight_units, height_values, height_unit
   result
 }
 
+enrichSnapshotBmiColumn <- function(
+  table,
+  target_column,
+  weight_column,
+  weight_unit_column,
+  height_column,
+  height_unit_column,
+  enrichment_columns,
+  source_columns
+) {
+  if (!target_column %in% enrichment_columns) {
+    return(table)
+  }
+  if (!target_column %in% names(table)) {
+    table[[target_column]] <- rep(NA_real_, nrow(table))
+  }
+
+  bmi_columns <- c(
+    weight_column,
+    weight_unit_column,
+    height_column,
+    height_unit_column
+  )
+  if (all(bmi_columns %in% source_columns) && all(bmi_columns %in% names(table))) {
+    table[[target_column]] <- calculateBmi(
+      table[[weight_column]],
+      table[[weight_unit_column]],
+      table[[height_column]],
+      table[[height_unit_column]]
+    )
+  }
+  table
+}
+
 enrichSnapshotFallChunk <- function(
   fall_fe,
   birthdates = NULL,
@@ -219,10 +253,6 @@ enrichSnapshotFallChunk <- function(
   ) {
     fall_fe[["fall_age_at_admission"]] <- rep(NA_integer_, nrow(fall_fe))
   }
-  if ("fall_bmi" %in% enrichment_columns && !"fall_bmi" %in% names(fall_fe)) {
-    fall_fe[["fall_bmi"]] <- rep(NA_real_, nrow(fall_fe))
-  }
-
   if (
     "fall_age_at_admission" %in% enrichment_columns &&
     "fall_aufn_dat" %in% source_columns &&
@@ -235,26 +265,16 @@ enrichSnapshotFallChunk <- function(
     )
   }
 
-  bmi_columns <- c(
-    "fall_gewicht_aktuell",
-    "fall_gewicht_aktl_einheit",
-    "fall_groesse",
-    "fall_groesse_einheit"
+  enrichSnapshotBmiColumn(
+    fall_fe,
+    target_column = "fall_bmi",
+    weight_column = "fall_gewicht_aktuell",
+    weight_unit_column = "fall_gewicht_aktl_einheit",
+    height_column = "fall_groesse",
+    height_unit_column = "fall_groesse_einheit",
+    enrichment_columns = enrichment_columns,
+    source_columns = source_columns
   )
-  if (
-    "fall_bmi" %in% enrichment_columns &&
-    all(bmi_columns %in% source_columns) &&
-    all(bmi_columns %in% names(fall_fe))
-  ) {
-    fall_fe[["fall_bmi"]] <- calculateBmi(
-      fall_fe[["fall_gewicht_aktuell"]],
-      fall_fe[["fall_gewicht_aktl_einheit"]],
-      fall_fe[["fall_groesse"]],
-      fall_fe[["fall_groesse_einheit"]]
-    )
-  }
-
-  fall_fe
 }
 
 enrichSnapshotEncounterChunk <- function(
@@ -282,6 +302,25 @@ enrichSnapshotEncounterChunk <- function(
     )
   }
   encounter
+}
+
+enrichSnapshotMedicationAnalysisChunk <- function(
+  medikationsanalyse_fe,
+  birthdates = NULL,
+  enrichment_columns = getSnapshotCaseEnrichmentSpec("medikationsanalyse_fe")[["enrichment_columns"]],
+  source_columns = names(medikationsanalyse_fe)
+) {
+  medikationsanalyse_fe <- data.table::as.data.table(data.table::copy(medikationsanalyse_fe))
+  enrichSnapshotBmiColumn(
+    medikationsanalyse_fe,
+    target_column = "meda_bmi",
+    weight_column = "meda_gewicht_aktuell",
+    weight_unit_column = "meda_gewicht_aktl_einheit",
+    height_column = "meda_groesse",
+    height_unit_column = "meda_groesse_einheit",
+    enrichment_columns = enrichment_columns,
+    source_columns = source_columns
+  )
 }
 
 # Case enrichment cannot be derived from column naming alone. Keep its schema
@@ -315,5 +354,10 @@ SNAPSHOT_CASE_ENRICHMENT_SPECS <- list(
     review_patient_column = "enc_patient_ref",
     review_patient_reference_type = "Patient",
     review_encounter_column = "enc_id"
+  ),
+  medikationsanalyse_fe = list(
+    enrichment_function = enrichSnapshotMedicationAnalysisChunk,
+    enrichment_columns = "meda_bmi",
+    age_column = NULL
   )
 )

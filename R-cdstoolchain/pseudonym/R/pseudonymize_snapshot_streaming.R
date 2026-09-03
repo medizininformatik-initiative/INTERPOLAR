@@ -717,6 +717,7 @@ getSnapshotStreamingSourceQuery <- function(
   case_spec <- getSnapshotCaseEnrichmentSpec(base_table_name)
   if (
     !is.null(case_spec) &&
+    !is.null(case_spec[["age_column"]]) &&
     case_spec[["age_column"]] %in% described_columns
   ) {
     patient_relation_name <- paste0(
@@ -1099,7 +1100,8 @@ streamSnapshotMaterializedTable <- function(
           query_info[["medication_spec"]]
         )
       }
-      age_review <- if (!is.null(getSnapshotCaseEnrichmentSpec(base_table_name))) {
+      case_spec <- getSnapshotCaseEnrichmentSpec(base_table_name)
+      age_review <- if (!is.null(case_spec) && !is.null(case_spec[["age_column"]])) {
         birthdates <- if (SNAPSHOT_STREAMING_BIRTHDATE_COLUMN %in% names(chunk)) {
           chunk[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]]
         } else {

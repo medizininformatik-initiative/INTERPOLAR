@@ -479,6 +479,26 @@ test_that("streaming case enrichment keeps lookup columns until review", {
   expect_equal(result[[SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN]], "patient-1")
 })
 
+test_that("streaming enrichment calculates medication analysis BMI", {
+  context <- newSnapshotStreamingContext(NULL)
+  medication_analysis <- data.table::data.table(
+    meda_gewicht_aktuell = 80,
+    meda_gewicht_aktl_einheit = "kg",
+    meda_groesse = 2,
+    meda_groesse_einheit = "m",
+    meda_bmi = NA_real_
+  )
+
+  result <- enrichSnapshotStreamingChunk(
+    medication_analysis,
+    "medikationsanalyse_fe",
+    context,
+    described_columns = names(medication_analysis)
+  )
+
+  expect_equal(result$meda_bmi, 20)
+})
+
 test_that("streaming enrichment only creates columns described by table description", {
   context <- newSnapshotStreamingContext(NULL)
   fall <- data.table::data.table(
@@ -542,6 +562,7 @@ test_that("snapshot enrichments preserve typed columns for empty partitions", {
   enriched_observation <- enrichObservationWithLoincMapping(observation, mapping)
   enriched_fall <- enrichSnapshotFallChunk(data.table::data.table())
   enriched_encounter <- enrichSnapshotEncounterChunk(data.table::data.table())
+  enriched_medication_analysis <- enrichSnapshotMedicationAnalysisChunk(data.table::data.table())
   enriched_medication <- enrichSnapshotStreamingChunk(
     data.table::data.table(),
     "medicationrequest",
@@ -557,6 +578,7 @@ test_that("snapshot enrichments preserve typed columns for empty partitions", {
   expect_type(enriched_fall$fall_age_at_admission, "integer")
   expect_type(enriched_fall$fall_bmi, "double")
   expect_type(enriched_encounter$enc_age_at_admission, "integer")
+  expect_type(enriched_medication_analysis$meda_bmi, "double")
   expect_true(all(vapply(enriched_medication, is.character, logical(1))))
 })
 

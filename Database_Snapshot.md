@@ -432,6 +432,9 @@ der pseudonymisierten Snapshot-Datenbank:
   `enc_age_at_admission`.
 - `fall_bmi` wird befüllt, wenn Gewicht und Größe in unterstützten Einheiten
   vorliegen. Unterstützt werden `kg`, `g`, `mg`, `m`, `cm` und `mm`.
+- `medikationsanalyse_fe` erhält analog `meda_bmi` aus
+  `meda_gewicht_aktuell` und `meda_groesse`, wenn beide Werte in unterstützten
+  Einheiten vorliegen.
 - `observation_old_versions` und `observation_last_version` erhalten
   `analysis_loinc_code`, `analysis_unit`, `analysis_value` und
   `analysis_value_status`. Wenn die
