@@ -33,7 +33,7 @@ services:
   redcap_db:
     profiles:
       - redcap
-    image: mariadb:11
+    image: mariadb:12
     restart: unless-stopped
     environment:
       TZ: Europe/Berlin
