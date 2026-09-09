@@ -57,88 +57,56 @@ getLastCaseDateInFe <- function(frontend_summary_data) {
   return(last_case_date_in_fe)
 }
 
-#' Get Earliest Start Date of Defined INTERPOLAR Wards
+#' Get First Ward Start Date
 #'
-#' Determines the earliest start date among all INTERPOLAR wards defined via
-#' global environment variables.
+#' Retrieves the earliest INTERPOLAR ward start date from the configured
+#' phase variables.
 #'
-#' @return A `Date` value representing the earliest start date found in the
-#'   ward phase definitions.
+#' The function extracts configured ward start dates from the ETL variable
+#' list and returns the earliest valid date. If no valid ward start date is
+#' available, a warning is issued and `NA` is returned.
 #'
-#' @details
-#' The function searches the global environment for objects matching the
-#' pattern `"^PHASES_WARD_"`. For each matching object, it checks whether the
-#' definition is available and non-empty using `etlutils::isDefinedAndNotEmpty()`.
-#'
-#' The start date is extracted from the second element of each valid ward
-#' definition and parsed using `stringr::str_split_i()`. All extracted dates
-#' are converted to `Date` format, and the earliest date is returned.
-#'
-#' @importFrom etlutils isDefinedAndNotEmpty
-#' @importFrom stringr str_split_i
+#' @return A Date object containing the earliest configured ward start date,
+#'   or `NA` if no valid date is available.
 #'
 #' @export
 getFirstWardStart <- function() {
-  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
-  interpolar_ward_starts <- c()
-  for (i in seq_along(interpolar_wards_definition)) {
-    ward_phase_defintion <- interpolar_wards_definition[i]
-    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
-      ward_start <- get(ward_phase_defintion, envir = .GlobalEnv)[2] |>
-        stringr::str_split_i("'", 2)
-      interpolar_ward_starts <- c(interpolar_ward_starts, ward_start)
-    }
-  }
+  interpolar_ward_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start")
   minimum_start_date <- min(as.Date(interpolar_ward_starts), na.rm = TRUE)
-
+  if (is.infinite(minimum_start_date)) {
+    warning("No valid minimum ward start date found. Returning NA. Please check the PHASES_WARD definitions.")
+    return(as.Date(NA))
+  }
   return(minimum_start_date)
 }
 
-#' Get INTERPOLAR Ward Start and End Dates
+#' Get Ward Start and End Dates
 #'
-#' Creates a data frame containing the configured start and end dates for
-#' each defined INTERPOLAR ward.
+#' Retrieves configured INTERPOLAR ward names and their corresponding start
+#' and end dates from the phase definitions.
 #'
-#' @return A data frame with one row per defined INTERPOLAR ward and the
-#'   following columns:
-#'   \itemize{
-#'     \item `ward_name`: Name of the INTERPOLAR ward.
-#'     \item `ward_start`: Start date of the ward phase as a `Date`.
-#'     \item `ward_end`: End date of the ward phase as a `Date`.
-#'   }
+#' The function extracts ward names, phase A start dates, and phase B end
+#' dates from the `PHASES_WARD` configuration and combines them into a data
+#' frame. Warnings are issued if missing start or end dates are detected.
 #'
-#' @details
-#' The function searches the global environment for objects matching the
-#' pattern `"^PHASES_WARD_"`. For each defined and non-empty ward phase
-#' definition, the ward name, start date, and end date are extracted from
-#' the corresponding definition.
-#'
-#' The extracted start and end dates are converted to `Date` objects and
-#' combined with the ward names into a data frame.
-#'
-#' @importFrom etlutils isDefinedAndNotEmpty
-#' @importFrom stringr str_split_i
+#' @return A data frame containing the ward names and their corresponding
+#'   start and end dates with the columns `ward_name`, `ward_start`, and
+#'   `ward_end`.
 #'
 #' @export
 getWardStartsAndEnds <- function() {
-  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
-  interpolar_ward_names <- c()
-  interpolar_ward_starts <- c()
-  interpolar_ward_ends <- c()
-  for (i in seq_along(interpolar_wards_definition)) {
-    ward_phase_defintion <- interpolar_wards_definition[i]
-    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
-      ward_start <- get(ward_phase_defintion, envir = .GlobalEnv)[2] |>
-        stringr::str_split_i("'", 2)
-      interpolar_ward_starts <- c(interpolar_ward_starts, ward_start)
-      ward_end <- get(ward_phase_defintion, envir = .GlobalEnv)[4] |>
-        stringr::str_split_i("'", 2)
-      interpolar_ward_ends <- c(interpolar_ward_ends, ward_end)
-      ward_name_i <- get(ward_phase_defintion, envir = .GlobalEnv)[1] |>
-        stringr::str_split_i("'", 2)
-      interpolar_ward_names <- c(interpolar_ward_names, ward_name_i)
-    }
+  interpolar_ward_names <- etlutils::extractVariablesListValues("PHASES_WARD", "ward_name")
+  interpolar_ward_starts <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_a_start")
+  interpolar_ward_ends <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_b_end")
+
+  if (any(is.na(interpolar_ward_starts))) {
+    warning("Some phase_a_start dates are NA. Please check the PHASES_WARD definitions.")
   }
+
+  if (any(is.na(interpolar_ward_ends))) {
+    warning("Some phase_b_end are NA. Please check the PHASES_WARD definitions.")
+  }
+
   interpolar_wards_start_end_data <- data.frame(
     ward_name = interpolar_ward_names,
     ward_start = as.Date(interpolar_ward_starts),
@@ -148,101 +116,69 @@ getWardStartsAndEnds <- function() {
   return(interpolar_wards_start_end_data)
 }
 
-#' Merge INTERPOLAR Ward Start and End Dates
+#' Merge Ward Start and End Dates
 #'
-#' Adds the configured start and end dates of each INTERPOLAR ward to a
-#' data frame based on the ward name.
+#' Adds configured INTERPOLAR ward start and end dates to a data frame based
+#' on matching ward names.
 #'
-#' @param data A data frame containing a column identifying the ward.
-#' @param ward_name_col Column in `data` containing the ward names. Defaults
-#'   to `ward_name`.
+#' The function retrieves ward start and end dates from the configured
+#' `PHASES_WARD` definitions and joins them to the input data using the
+#' specified ward name column. A warning is issued if records cannot be
+#' matched to a defined ward period.
 #'
-#' @return A data frame containing the original data enriched with
-#'   `ward_start` and `ward_end` columns containing the configured start
-#'   and end dates for each matching INTERPOLAR ward.
+#' @param data A data frame containing ward information.
+#' @param ward_name_col A character string specifying the column containing
+#'   ward names used for matching with the configured ward definitions.
+#'   Defaults to `"ward_name"`.
 #'
-#' @details
-#' The function searches the global environment for objects matching the
-#' pattern `"^PHASES_WARD_"`. For each defined and non-empty ward phase
-#' definition, the ward name, start date, and end date are extracted.
-#'
-#' A lookup table containing the ward names and corresponding start and end
-#' dates is constructed and joined to `data` using the column specified by
-#' `ward_name_col`. The extracted dates are converted to `Date` objects
-#' before the join.
+#' @return A data frame containing the original data with additional
+#'   `ward_start` and `ward_end` columns containing the corresponding ward
+#'   start and end dates.
 #'
 #' @importFrom dplyr left_join
-#' @importFrom etlutils isDefinedAndNotEmpty
-#' @importFrom stringr str_split_i
+#'
 #' @export
-mergeWardStartsAndEnds <- function(data, ward_name_col = ward_name) {
-  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
-  interpolar_ward_names <- c()
-  interpolar_ward_starts <- c()
-  interpolar_ward_ends <- c()
-  for (i in seq_along(interpolar_wards_definition)) {
-    ward_phase_defintion <- interpolar_wards_definition[i]
-    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
-      ward_start <- get(ward_phase_defintion, envir = .GlobalEnv)[2] |>
-        stringr::str_split_i("'", 2)
-      interpolar_ward_starts <- c(interpolar_ward_starts, ward_start)
-      ward_end <- get(ward_phase_defintion, envir = .GlobalEnv)[4] |>
-        stringr::str_split_i("'", 2)
-      interpolar_ward_ends <- c(interpolar_ward_ends, ward_end)
-      ward_name_i <- get(ward_phase_defintion, envir = .GlobalEnv)[1] |>
-        stringr::str_split_i("'", 2)
-      interpolar_ward_names <- c(interpolar_ward_names, ward_name_i)
-    }
-  }
-  interpolar_wards_start_end_data <- data.frame(
-    ward_name = interpolar_ward_names,
-    ward_start = as.Date(interpolar_ward_starts),
-    ward_end = as.Date(interpolar_ward_ends)
-  )
+mergeWardStartsAndEnds <- function(data, ward_name_col = "ward_name") {
+  interpolar_wards_start_end_data <- getWardStartsAndEnds()
 
   data <- data |>
     dplyr::left_join(
       interpolar_wards_start_end_data,
-      by = setNames("ward_name", deparse(substitute(ward_name_col)))
+      by = setNames("ward_name", ward_name_col)
     )
+
+  if (any(is.na(data$ward_start) | is.na(data$ward_end))) {
+    warning(paste0(
+      "Some records could not be matched to a defined ward start/end period. ",
+      "Run the statistical report with local output and inspect the generated frontend_table_XXX.html ",
+      "files in outputLocal to check whether all records have a matched fall_station value."
+    ))
+  }
 
   return(data)
 }
 
-#' Get Latest End Date of Defined INTERPOLAR Wards
+#' Get Last Ward End Date
 #'
-#' Determines the latest end date among all INTERPOLAR wards defined via
-#' global environment variables.
+#' Retrieves the latest INTERPOLAR ward end date from the configured phase
+#' variables.
 #'
-#' @return A `Date` value representing the latest end date found in the
-#'   ward phase definitions.
+#' The function extracts configured ward end dates from the ETL variable list
+#' and returns the latest valid date. If no valid ward end date is available,
+#' a warning is issued and `NA` is returned.
 #'
-#' @details
-#' The function searches the global environment for objects matching the
-#' pattern `"^PHASES_WARD_"`. For each matching object, it checks whether
-#' the definition is available and non-empty using
-#' `etlutils::isDefinedAndNotEmpty()`.
-#'
-#' The end date is extracted from the fourth element of each valid ward
-#' definition and parsed using `stringr::str_split_i()`. All extracted
-#' dates are converted to `Date` format, and the latest date is returned.
-#'
-#' @importFrom etlutils isDefinedAndNotEmpty
-#' @importFrom stringr str_split_i
+#' @return A Date object containing the latest configured ward end date, or
+#'   `NA` if no valid date is available.
 #'
 #' @export
 getLastWardEnd <- function() {
-  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
-  interpolar_ward_ends <- c()
-  for (i in seq_along(interpolar_wards_definition)) {
-    ward_phase_defintion <- interpolar_wards_definition[i]
-    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
-      ward_end <- get(ward_phase_defintion, envir = .GlobalEnv)[4] |>
-        stringr::str_split_i("'", 2)
-      interpolar_ward_ends <- c(interpolar_ward_ends, ward_end)
-    }
-  }
+  interpolar_ward_ends <- etlutils::extractVariablesListValues("PHASES_WARD", "phase_b_end")
   maximum_end_date <- max(as.Date(interpolar_ward_ends), na.rm = TRUE)
+
+  if (is.infinite(maximum_end_date)) {
+    warning("No valid maximum ward end date found. Returning NA. Please check the PHASES_WARD definitions.")
+    return(as.Date(NA))
+  }
 
   return(maximum_end_date)
 }
@@ -649,44 +585,35 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
 }
 
 #------------------------------------------------------------------------------#
-#' Restrict Front-End Fall Data to Dynamically Defined INTERPOLAR Wards
+#' Restrict Data to Defined Wards
 #'
-#' Filters the merged patient and fall front-end data to include only rows
-#' belonging to INTERPOLAR wards defined via global environment variables.
+#' Filters a front-end dataset to retain only records belonging to configured
+#' INTERPOLAR wards.
 #'
-#' @param merged_pat_fall_fe_table A data frame containing merged patient and
-#'   fall front-end data, including a `fall_station` column identifying the ward.
+#' The function retrieves the defined ward names from the `PHASES_WARD`
+#' configuration and keeps only records whose `fall_station` value matches
+#' one of these wards. Duplicate rows are removed. A warning is issued if
+#' any records have a missing `fall_station` value.
 #'
-#' @return A data frame containing only rows whose `fall_station` matches one of
-#'   the dynamically defined INTERPOLAR wards. Duplicate rows are removed.
+#' @param merged_pat_fall_fe_table A data frame containing front-end patient
+#'   and encounter information, including the `fall_station` column.
 #'
-#' @details
-#' The function searches the global environment for objects with names matching
-#' the pattern `"^PHASES_WARD_"`. For each matching object, it checks whether it
-#' is defined and non-empty using `etlutils::isDefinedAndNotEmpty()`.
+#' @return A data frame containing only records assigned to defined
+#'   INTERPOLAR wards, with duplicate rows removed.
 #'
-#' The first element of each valid object is extracted and processed to derive
-#' the ward name using `stringr::str_split_i()`. All extracted ward names are
-#' combined into a vector of valid INTERPOLAR wards.
-#'
-#' The input table is then filtered to retain only rows where `fall_station`
-#' matches one of these wards. Duplicate rows are removed using `distinct()`.
-#'
-#' @importFrom dplyr filter distinct
-#' @importFrom etlutils isDefinedAndNotEmpty
-#' @importFrom stringr str_split_i
+#' @importFrom dplyr distinct
+#' @importFrom dplyr filter
 #'
 #' @export
 restrictToDefinedWards <- function(merged_pat_fall_fe_table) {
-  interpolar_wards_definition <- ls(pattern = "^PHASES_WARD_", envir = .GlobalEnv)
-  interpolar_wards <- c()
-  for (i in seq_along(interpolar_wards_definition)) {
-    ward_phase_defintion <- interpolar_wards_definition[i]
-    if (etlutils::isDefinedAndNotEmpty(ward_phase_defintion)) {
-      ward_name <- get(ward_phase_defintion, envir = .GlobalEnv)[1] |>
-        stringr::str_split_i("'", 2)
-      interpolar_wards <- c(interpolar_wards, ward_name)
-    }
+  interpolar_wards <- etlutils::extractVariablesListValues("PHASES_WARD", "ward_name")
+
+  if (any(is.na(merged_pat_fall_fe_table$fall_station))) {
+    warning(paste0(
+      "Some fall_station values are NA. Please check the data. ",
+      "Run the statistical report with local output and inspect the generated frontend_table_XXX.html ",
+      "files in outputLocal to check whether all records have a matched fall_station value."
+    ))
   }
 
   merged_pat_fall_fe_table_restricted_to_defined_wards <- merged_pat_fall_fe_table |>
