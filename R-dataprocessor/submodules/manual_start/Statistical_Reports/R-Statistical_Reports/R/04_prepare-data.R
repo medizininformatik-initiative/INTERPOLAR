@@ -233,6 +233,10 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #'     distinct patients are present within the ward.
 #'   \item `ward_week_count_less_than_5`: Indicates whether fewer than five
 #'     distinct patients are present within the ward and calendar week.
+#'   \item `FAS2_1_inclusion`: Indicates whether the encounter is included in
+#'   the first full analysis set (FAS2.1) based on ward stay duration and completed medication analysis.
+#'   \item `valid_for_counting`: Indicates whether the encounter is valid for counting based on processing
+#'   exclusions and verification status.
 #' }
 #'
 #' For `report_period_boundary = "hospital_stay"`, observations are retained
@@ -334,13 +338,6 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       ), TRUE, FALSE, missing = FALSE
     )) |>
     dplyr::ungroup() |>
-    dplyr::mutate(overall_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
-    dplyr::group_by(fall_station) |>
-    dplyr::mutate(ward_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
-    dplyr::ungroup() |>
-    dplyr::group_by(fall_station, calendar_week) |>
-    dplyr::mutate(ward_week_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
-    dplyr::ungroup() |>
     dplyr::mutate(eligible_for_algorithmic_MRP_calculation = dplyr::if_else(
       ((as.POSIXct(report_period_end) - fall_ent_dat) > 14) &
         sub_enc_any_completed_medication_analysis &
@@ -394,6 +391,28 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
         )
       )
   }
+
+    frontend_summary_prep <- frontend_summary_prep |>
+      dplyr::mutate(valid_for_counting = !main_enc_any_processing_exclusion_fe &
+        !sub_enc_any_processing_exclusion_fe &
+        !main_enc_not_in_inclusion_criteria &
+        !unverified_pat_or_sub_enc) |>
+      dplyr::mutate(overall_count_less_than_5 = dplyr::n_distinct(
+        pat_id[valid_for_counting],
+        na.rm = TRUE
+      ) < 5) |>
+      dplyr::group_by(ward_name) |>
+      dplyr::mutate(ward_count_less_than_5 = dplyr::n_distinct(
+        pat_id[valid_for_counting],
+        na.rm = TRUE
+      ) < 5) |>
+      dplyr::ungroup() |>
+      dplyr::group_by(ward_name, calendar_week) |>
+      dplyr::mutate(ward_week_count_less_than_5 = dplyr::n_distinct(
+        pat_id[valid_for_counting],
+        na.rm = TRUE
+      ) < 5) |>
+      dplyr::ungroup()
 
   return(frontend_summary_prep)
 }
