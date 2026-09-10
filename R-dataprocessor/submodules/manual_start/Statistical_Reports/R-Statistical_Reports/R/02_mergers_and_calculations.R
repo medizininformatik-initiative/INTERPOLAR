@@ -572,7 +572,6 @@ addMainEncPeriodStart <- function(encounter_table_with_main_enc) {
           level = "sub_encounter",
           type = "data_issues"
         ),
-        "encounter_without_main_enc_period_start",
         processing_exclusion_reason
       ))
     print(encounter_table_with_MainEncPeriodStart |>
