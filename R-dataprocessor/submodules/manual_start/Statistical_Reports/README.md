@@ -42,9 +42,9 @@ Es wird eine html Datei in OutputGlobal ((../outputGlobal/dataprocessor/reports/
 
   - Anzahl der abgeschlossenen Medikationsanalysen = status: "completed" (completed medication analyses)
 
-  - Anzahl der abgeschlossenen Medikationsanalysen für die makriert wurde, dass ein MRP gefunden wurde (completed medication analyses with detected MRP)
+  - Anzahl der abgeschlossenen Medikationsanalysen für die markiert wurde, dass ein MRP gefunden wurde (completed medication analyses with detected MRP)
 
-  - Anzahl der Fälle mit abgeschlossender MRP-Dokumentation im Frontend = Status: "completed" (encounters with completed MRP documentation)
+  - Anzahl der Fälle mit abgeschlossener MRP-Dokumentation im Frontend = Status: "completed" (encounters with completed MRP documentation)
 
   - Anzahl der dokumentierten MRP (MRP documented)
 
