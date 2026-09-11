@@ -29,6 +29,8 @@ Usage: ${0##*/} <action> <name>
              "pseudonymize" – creates a pseudonymized snapshot <name_date>_pseud.sql.gz
              "create-broad-consent"
                            – creates a Broad Consent snapshot from an activated snapshot database
+             "review-broad-consent"
+                           – reviews Consent decisions without creating a snapshot
              "delete"      – deletes only a snapshot file <name_date>.sql.gz;
                               expects the file name without the database prefix "ip_"
              "activate"    – activates a snapshot <name_date>.sql.gz by creating a database for it
@@ -42,9 +44,10 @@ Usage: ${0##*/} <action> <name>
              only for "create": also creates the pseudonymized snapshot and
              <name_date>_pseud_broad_consent.sql.gz
   --chunk-size <rows>
-             only for "pseudonymize", "create-broad-consent", or
+             only for "pseudonymize", "create-broad-consent", "review-broad-consent", or
              "create --with-pseudonymized|--with-broad-consent":
-             number of rows read per processing chunk (default: 5000)
+             number of rows read per processing chunk (default: 5000);
+             for "review-broad-consent": number of patients per block
 
 Examples:
   $0 list                            → lists all .sql.gz files without extensions in Snapshots
@@ -56,6 +59,8 @@ Examples:
   $0 pseudonymize  snapshot_20250929 → creates snapshot_20250929_pseud.sql.gz
   $0 pseudonymize  snapshot_20250929 --chunk-size 10000
                                       → processes at most 10000 rows per chunk
+  $0 review-broad-consent  snapshot_20250929_pseud
+                                      → reviews Consent decisions without creating a snapshot
   $0 create-broad-consent  snapshot_20250929_pseud
                                       → creates snapshot_20250929_pseud_broad_consent.sql.gz
   $0 delete  snapshot_20250929       → deletes snapshot_20250929.sql.gz
@@ -124,7 +129,7 @@ if [[ "$action" == "create" ]]; then
         echo "Error: --chunk-size requires --with-pseudonymized or --with-broad-consent." >&2
         exit 3
     fi
-elif [[ "$action" =~ ^(pseudonymize|create-broad-consent)$ ]]; then
+elif [[ "$action" =~ ^(pseudonymize|create-broad-consent|review-broad-consent)$ ]]; then
     if [[ "$with_pseudonymized" == "true" || "$with_broad_consent" == "true" ]]; then
         echo "Error: --with-pseudonymized and --with-broad-consent are only allowed with \"create\"." >&2
         exit 3
@@ -135,7 +140,7 @@ elif [[ "$with_pseudonymized" == "true" || "$with_broad_consent" == "true" || "$
 fi
 
 # Nur einfache Dateinamen/DB-Namen zulassen, weil der Name auch in SQL-DB-Namen verwendet wird.
-if [[ "$action" =~ ^(create|pseudonymize|create-broad-consent|delete|activate|deactivate)$ && ! "$name" =~ ^[A-Za-z0-9_]+$ ]]; then
+if [[ "$action" =~ ^(create|pseudonymize|create-broad-consent|review-broad-consent|delete|activate|deactivate)$ && ! "$name" =~ ^[A-Za-z0-9_]+$ ]]; then
     echo "Error: the name may only contain letters, numbers, and underscores." >&2
     exit 2
 fi
@@ -782,6 +787,15 @@ case "$action" in
         create_pseudonymized_snapshot "${name}" "${chunk_size}"
         ;;
 
+    review-broad-consent)
+        if ! database_exists "ip_${name}" ; then
+            echo "Error: source snapshot database 'ip_${name}' is not activated." >&2
+            exit 1
+        fi
+        docker compose run --rm --no-deps r-env \
+            Rscript R-cdstoolchain/StartBroadConsentSnapshot.R \
+            source-db="ip_${name}" review-only=true chunk-size="${chunk_size}"
+        ;;
     create-broad-consent)
         create_broad_consent_snapshot "${name}" "${chunk_size}"
         ;;
@@ -924,7 +938,7 @@ case "$action" in
         #fi
         ;;
     *)
-        echo "Error: unknown action \"$action\". Allowed actions are \"create\", \"pseudonymize\", \"create-broad-consent\", \"list\", \"activate\", \"deactivate\", and \"delete\"." >&2
+        echo "Error: unknown action \"$action\". Allowed actions are \"create\", \"pseudonymize\", \"create-broad-consent\", \"review-broad-consent\", \"list\", \"activate\", \"deactivate\", and \"delete\"." >&2
         print_usage
         exit 3
         ;;

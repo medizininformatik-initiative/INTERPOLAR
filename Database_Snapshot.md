@@ -135,6 +135,34 @@ Der aktuelle technische Rahmen übernimmt alle Patienten und alle übrigen
 Snapshot-Zeilen. Die so erzeugte Datei darf noch nicht als nach Broad Consent
 gefilterter Datenbestand weitergegeben werden.
 
+### Consent-Auswertung ohne Snapshot-Erzeugung prüfen
+
+```bash
+./ip-snapshot.sh review-broad-consent snap01_20251002_pseud
+```
+
+Der Prüflauf verwendet die aktuelle Version der Consent- und Encounter-Ressourcen
+aus einer bereits aktivierten Snapshot-Datenbank. Er legt keine Ziel-Datenbank
+und keine Snapshot-Datei an. Das aktuelle Bewertungsdatum wird am Start einmalig
+festgehalten. Die detaillierten CSV-Berichte liegen in einem eigenen Verzeichnis
+unter `outputLocal/broad_consent_review`. Eine `README.txt` erläutert die Dateien;
+erst die Datei `COMPLETE` kennzeichnet eine vollständig abgeschlossene Auswertung.
+
+Die Berichte enthalten die Patientenzulassung, ursprüngliche Consent-Provisionen,
+nachvollziehbare Änderungen durch Widerrufe und Encounter sowie die endgültigen
+Datenintervalle. Patienten- und Consent-IDs entsprechen dem Quellsnapshot. Der
+Prüflauf wertet keine einzelnen klinischen Ressourcen aus und bestätigt deshalb
+noch keine tatsächlichen Ressourcen-Einschlusszahlen.
+
+`--chunk-size` begrenzt bei diesem Prüflauf die Zahl der Patienten je Leseblock.
+Alle Consent-Provisionen und benötigten Encounter eines Blocks werden gemeinsam
+gelesen. Der Speicherbedarf hängt daher zusätzlich von der Zahl dieser Einträge
+pro Patient ab.
+
+Der reine Prüflauf ist von der noch bestehenden technischen Kopierhülle für
+`create-broad-consent` zu unterscheiden; deren Warnung bleibt bis zur Anbindung
+der Ressourcenfilterung gültig.
+
 ### Chunkgröße anpassen
 
 Standardmäßig verarbeiten die Pseudonymisierung und die Erstellung eines

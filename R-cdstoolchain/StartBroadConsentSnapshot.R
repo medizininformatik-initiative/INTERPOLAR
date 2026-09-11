@@ -15,11 +15,13 @@ command_arguments <- etlutils::initCommandLineArguments(
     target_table_schema = "db_log",
     target_view_schema = "db2dataprocessor_out",
     chunk_size = NULL,
-    report_file = NA_character_
+    report_file = NA_character_,
+    review_only = FALSE
   )
 )
 
-required_arguments <- c("source_db", "target_db")
+review_only <- tolower(as.character(command_arguments[["review_only"]])) == "true"
+required_arguments <- if (review_only) "source_db" else c("source_db", "target_db")
 missing_arguments <- required_arguments[
   !required_arguments %in% names(command_arguments) |
     !nzchar(as.character(command_arguments[required_arguments]))
@@ -80,23 +82,33 @@ invisible(tryCatch(
       user = dbConfigValue("source_db_user", dbConfigValue("db_dataprocessor_user")),
       password = dbConfigValue("source_db_password", dbConfigValue("db_dataprocessor_password"))
     )
-    target_connection <- connectSnapshotDatabase(
-      dbname = command_arguments[["target_db"]],
-      user = dbConfigValue("target_db_user", dbConfigValue("db_dataprocessor_user")),
-      password = dbConfigValue("target_db_password", dbConfigValue("db_dataprocessor_password"))
-    )
+    if (review_only) {
+      broad_consent_result <- pseudonym::reviewBroadConsentSnapshot(
+        source_connection = source_connection,
+        project_root = command_arguments[["project_root"]],
+        source_schema = command_arguments[["source_schema"]],
+        chunk_size = command_arguments[["chunk_size"]]
+      )
+      message("Consent review written to: ", broad_consent_result$directory)
+    } else {
+      target_connection <- connectSnapshotDatabase(
+        dbname = command_arguments[["target_db"]],
+        user = dbConfigValue("target_db_user", dbConfigValue("db_dataprocessor_user")),
+        password = dbConfigValue("target_db_password", dbConfigValue("db_dataprocessor_password"))
+      )
 
-    broad_consent_result <- pseudonym::createBroadConsentSnapshotDatabase(
-      source_connection = source_connection,
-      target_connection = target_connection,
-      project_root = command_arguments[["project_root"]],
-      source_schema = command_arguments[["source_schema"]],
-      target_table_schema = command_arguments[["target_table_schema"]],
-      target_view_schema = command_arguments[["target_view_schema"]],
-      chunk_size = command_arguments[["chunk_size"]],
-      report_file = command_arguments[["report_file"]],
-      log_steps = TRUE
-    )
+      broad_consent_result <- pseudonym::createBroadConsentSnapshotDatabase(
+        source_connection = source_connection,
+        target_connection = target_connection,
+        project_root = command_arguments[["project_root"]],
+        source_schema = command_arguments[["source_schema"]],
+        target_table_schema = command_arguments[["target_table_schema"]],
+        target_view_schema = command_arguments[["target_view_schema"]],
+        chunk_size = command_arguments[["chunk_size"]],
+        report_file = command_arguments[["report_file"]],
+        log_steps = TRUE
+      )
+    }
     invisible(broad_consent_result)
   },
   error = function(error) {
