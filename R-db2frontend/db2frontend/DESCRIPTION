@@ -20,4 +20,6 @@ Imports:
     data.table,
     etlutils,
     redcapAPI
+Suggests:
+    testthat (>= 3.2.0)
 Config/roxygen2/version: 8.0.0
