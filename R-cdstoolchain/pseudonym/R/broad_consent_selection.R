@@ -1,12 +1,13 @@
 BROAD_CONSENT_MASKED_TABLE <- "broad_consent_masked_reference"
 
-# Version-qualified medication references still identify the same patientless
-# resource; its empty date mapping does not restrict historical versions.
-broadConsentMedicationReferenceExpression <- function(connection, column, alias = NULL) {
-  normalized <- snapshotNormalizedReferenceExpression(connection, column, alias)
+# Patient ownership and the patientless Medication graph use logical IDs.
+# A valid relative version reference retains that identity; masking still
+# checks the explicitly referenced version separately.
+broadConsentReferenceIdExpression <- function(connection, column, alias = NULL, resource_type = "Medication") {
+  normalized <- snapshotNormalizedReferenceExpression(connection, column, alias, resource_type)
   raw <- paste0("regexp_replace(", snapshotQuotedColumn(connection, column, alias), "::text, '^\\[[^]]+\\]', '')")
   paste0(
-    "CASE WHEN ", raw, " ~ '^Medication/[A-Za-z0-9.-]+/_history/[A-Za-z0-9.-]+$' ",
+    "CASE WHEN ", raw, " ~ '^", resource_type, "/[A-Za-z0-9.-]+/_history/[A-Za-z0-9.-]+$' ",
     "THEN split_part(", normalized, ", '/', 1) ELSE ", normalized, " END"
   )
 }
@@ -20,13 +21,13 @@ buildBroadConsentNonFhirDecisionQuery <- function(connection, relation, base_tab
     " owner WHERE owner.owner_key = s.", source_key, "::text)"
   )
   patient <- if (base_table == "patient_fe") {
-    snapshotNormalizedReferenceExpression(connection, "pat_id", "s", "Patient")
+    broadConsentReferenceIdExpression(connection, "pat_id", "s", "Patient")
   } else if (endsWith(base_table, "_fe")) {
     owner("patient_fe", "record_id")
   } else if (base_table == "dp_mrp_calculations") {
     owner("encounter", "enc_id")
   } else if (base_table == "pids_per_ward") {
-    snapshotNormalizedReferenceExpression(connection, "patient_id", "s", "Patient")
+    broadConsentReferenceIdExpression(connection, "patient_id", "s", "Patient")
   } else {
     "NULL::text"
   }
@@ -88,7 +89,7 @@ prepareBroadConsentResourceSelection <- function(connection, materialization_pla
     if (!needed) next
     relation <- snapshotQualifiedName(connection, paste0(source_view_prefix, base), source_schema)
     key <- if (base == "patient_fe") "record_id" else "enc_id"
-    patient <- snapshotNormalizedReferenceExpression(connection,
+    patient <- broadConsentReferenceIdExpression(connection,
       if (base == "patient_fe") "pat_id" else "enc_patient_ref",
       resource_type = "Patient"
     )
@@ -148,7 +149,7 @@ prepareBroadConsentResourceSelection <- function(connection, materialization_pla
       reference <- reference_spec$reference_column
       if (!reference %in% selection$fields) next
       roots <- c(roots, paste0(
-        "SELECT ", broadConsentMedicationReferenceExpression(connection, reference, "s"),
+        "SELECT ", broadConsentReferenceIdExpression(connection, reference, "s"),
         " AS resource_id FROM ", selection$relation, " s WHERE EXISTS (SELECT 1 FROM ",
         snapshotQualifiedName(connection, selection$table_name), " d WHERE d.row_id = ",
         snapshotQuotedColumn(connection, selection$row_column, "s"), "::text AND d.reason = 'included')"
@@ -157,7 +158,7 @@ prepareBroadConsentResourceSelection <- function(connection, materialization_pla
     if (length(roots)) {
       ingredient <- SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN
       edges <- if (ingredient %in% medication$fields) paste0(
-        "SELECT med_id::text AS resource_id, ", broadConsentMedicationReferenceExpression(connection, ingredient),
+        "SELECT med_id::text AS resource_id, ", broadConsentReferenceIdExpression(connection, ingredient),
         " AS ingredient_id FROM ", medication$relation
       ) else "SELECT NULL::text AS resource_id, NULL::text AS ingredient_id WHERE FALSE"
       table <- snapshotQualifiedName(connection, medication$table_name)

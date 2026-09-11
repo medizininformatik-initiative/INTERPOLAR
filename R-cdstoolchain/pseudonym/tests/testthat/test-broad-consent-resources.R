@@ -31,7 +31,7 @@ test_that("resource periods and patient ownership are checked across flattened v
   data <- data.frame(
     encounter_id = 1:7, enc_id = c("main", "ward", "bad", "mixed", "mixed", "old", "old"),
     enc_meta_versionid = c("1", "1", "1", "1", "1", "1", "2"),
-    enc_patient_ref = c("Patient/p1", "p1", "p1", "p1", "p2", "p1", "p1"),
+    enc_patient_ref = c("Patient/p1", "Patient/p1/_history/2", "p1", "p1", "p2", "p1", "p1"),
     enc_period_start = as.POSIXct(rep("2026-03-05", 7), tz = "UTC"),
     enc_period_end = as.POSIXct(c("2026-03-20", "2026-03-10", NA, "2026-03-10", "2026-03-10", "2026-03-20", "2026-03-10"), tz = "UTC")
   )

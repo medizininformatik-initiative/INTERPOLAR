@@ -8,6 +8,8 @@ getBroadConsentCurrentRelation <- function(connection, table_name, source_schema
 }
 
 normalizeBroadConsentReference <- function(values, resource_type = "Patient") {
+  values <- sub("^\\[[^]]+\\]", "", as.character(values))
+  values <- sub(paste0("^(", resource_type, "/[A-Za-z0-9.-]+)/_history/[A-Za-z0-9.-]+$"), "\\1", values)
   values <- extractFhirReferenceId(values, resource_type)
   valid <- !is.na(values) & grepl("^[A-Za-z0-9.-]+$", values)
   values[!valid] <- NA_character_
@@ -47,7 +49,7 @@ prepareBroadConsentSelection <- function(
   consent_relation <- getBroadConsentCurrentRelation(connection, "consent", source_schema, source_view_prefix, last_version_suffix)
   encounter_relation <- getBroadConsentCurrentRelation(connection, "encounter", source_schema, source_view_prefix, last_version_suffix)
   patient_relation <- getBroadConsentCurrentRelation(connection, "patient", source_schema, source_view_prefix, last_version_suffix)
-  reference <- snapshotNormalizedReferenceExpression(connection, "cons_patient_ref", resource_type = "Patient")
+  reference <- broadConsentReferenceIdExpression(connection, "cons_patient_ref", resource_type = "Patient")
   invalid_references <- DBI::dbGetQuery(connection, paste0(
     "SELECT COUNT(*) AS n FROM ", consent_relation,
     " WHERE (cons_status NOT IN ('draft', 'proposed', 'rejected', 'inactive', 'entered-in-error') ",
@@ -107,7 +109,7 @@ prepareBroadConsentSelection <- function(
       "cons_provision_provision_period_end FROM ", consent_relation,
       " WHERE ", reference, " IN (", values, ")"
     ))
-    encounter_reference <- snapshotNormalizedReferenceExpression(connection, "enc_patient_ref", resource_type = "Patient")
+    encounter_reference <- broadConsentReferenceIdExpression(connection, "enc_patient_ref", resource_type = "Patient")
     encounter_rows <- DBI::dbGetQuery(connection, paste0(
       "SELECT DISTINCT enc_id, enc_patient_ref, enc_period_start, enc_period_end FROM ", encounter_relation,
       " WHERE ", encounter_reference, " IN (", values, ")"

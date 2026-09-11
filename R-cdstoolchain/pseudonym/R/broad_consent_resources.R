@@ -78,7 +78,7 @@ buildBroadConsentFhirDecisionQuery <- function(connection, relation, row_column,
     if (is.na(name)) return("NULL::text")
     paste0(snapshotQuotedColumn(connection, name, alias), "::text")
   }
-  patient <- if (is.na(spec$patient)) "NULL::text" else snapshotNormalizedReferenceExpression(
+  patient <- if (is.na(spec$patient)) "NULL::text" else broadConsentReferenceIdExpression(
     connection, spec$patient, "source", "Patient"
   )
   id <- quoted(spec$id)

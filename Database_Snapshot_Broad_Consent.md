@@ -101,6 +101,11 @@ Unklarheit nicht auf. Kann eine potenziell wirksame Consent-Referenz überhaupt
 keinem Patienten sicher zugeordnet werden, bricht der Lauf ab: Ein möglicher
 Widerruf dürfte sonst unbemerkt für den falschen Patienten entfallen.
 
+Für die Patientenzuordnung bezeichnet auch eine relative versionierte Referenz
+wie `Patient/p1/_history/2` den Patienten `p1`. Die Versionsangabe ändert diese
+Zuordnung nicht; bei der späteren Referenzmaskierung wird die angegebene
+Zielversion weiterhin geprüft.
+
 Pro Patient werden danach die Angaben geprüft:
 
 - Nur `active`-Dokumente tragen zur Berechnung bei. Bekannte andere Statuswerte

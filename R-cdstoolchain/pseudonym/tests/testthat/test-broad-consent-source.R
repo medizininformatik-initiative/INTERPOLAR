@@ -63,6 +63,14 @@ test_that("Consent selection runs against PostgreSQL without changing source dat
   expect_equal(result$summary, selection$summary)
   expect_equal(result$summary$patients[result$summary$reason == "included"], 1L)
   expect_true(file.exists(file.path(review_dir, "patients.csv")))
+  # A version suffix changes the Patient version, not the patient's identity.
+  DBI::dbExecute(connection, paste0("UPDATE ", snapshotQualifiedName(connection, "consents", schema), " SET cons_patient_ref = 'Patient/p1/_history/2'"))
+  DBI::dbExecute(connection, paste0("UPDATE ", snapshotQualifiedName(connection, "encounters", schema), " SET enc_patient_ref = 'Patient/p1/_history/1'"))
+  version_review <- newBroadConsentReview(tempfile(), as.Date("2026-09-08"), schema, TRUE)
+  on.exit(unlink(version_review$directory, recursive = TRUE), add = TRUE)
+  version_selection <- prepareBroadConsentSelection(connection, schema, as.Date("2026-09-08"), 1L, version_review)
+  expect_equal(DBI::dbReadTable(connection, version_selection$table_name), outputs[[1L]])
+  DBI::dbRemoveTable(connection, version_selection$table_name)
   # Invalid references must not silently hide an unassignable revocation.
   DBI::dbExecute(connection, paste0(
     "UPDATE ", snapshotQualifiedName(connection, "consents", schema),
@@ -91,4 +99,19 @@ test_that("Consent selection runs against PostgreSQL without changing source dat
   selection <- prepareBroadConsentSelection(connection, schema, as.Date("2026-09-08"), 2L, invalid_review)
   expect_equal(sum(selection$summary$patients), 2L)
   DBI::dbRemoveTable(connection, selection$table_name)
+})
+
+test_that("Patient normalization accepts relative versions without guessing remote identities", {
+  connection <- getOption("interpolar.test.postgres_connection")
+  skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")
+  values <- c("p1", "Patient/p1", "Patient/p1/_history/2", "[1]Patient/p1/_history/v-2", "Patient/p1/_history/", "Patient/p1/_history/2/extra", "Encounter/p1/_history/2", "https://other.example/Patient/p1/_history/2", NA)
+  expected <- c(rep("p1", 4), rep(NA_character_, 5))
+  expect_identical(normalizeBroadConsentReference(values), expected)
+  name <- basename(tempfile("bc_patient_references_"))
+  DBI::dbWriteTable(connection, name, data.frame(reference = values), temporary = TRUE)
+  on.exit(DBI::dbRemoveTable(connection, name), add = TRUE)
+  expr <- broadConsentReferenceIdExpression(connection, "reference", resource_type = "Patient")
+  actual <- DBI::dbGetQuery(connection, paste0("SELECT ", expr, " AS id FROM ", snapshotQualifiedName(connection, name)))$id
+  actual[is.na(actual) | !grepl("^[A-Za-z0-9.-]+$", actual)] <- NA_character_
+  expect_identical(actual, expected)
 })
