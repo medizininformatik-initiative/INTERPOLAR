@@ -43,6 +43,9 @@ Usage: ${0##*/} <action> <name>
   --with-broad-consent
              only for "create": also creates the pseudonymized snapshot and
              <name_date>_pseud_broad_consent.sql.gz
+  --consent-details
+             with "create-broad-consent" or "create --with-broad-consent":
+             also writes detailed patient-level Consent CSV reports
   --chunk-size <rows>
              only for "pseudonymize", "create-broad-consent", "review-broad-consent", or
              "create --with-pseudonymized|--with-broad-consent":
@@ -84,6 +87,7 @@ name=$2
 DIR=Snapshots
 with_pseudonymized=false
 with_broad_consent=false
+consent_details=false
 chunk_size=5000
 chunk_size_set=false
 
@@ -108,6 +112,10 @@ while [[ $# -gt 0 ]]; do
             with_pseudonymized=true
             shift
             ;;
+        --consent-details)
+            consent_details=true
+            shift
+            ;;
         --chunk-size)
             if [[ $# -lt 2 || ! "$2" =~ ^[1-9][0-9]*$ ]]; then
                 echo "Error: --chunk-size expects a positive integer." >&2
@@ -123,6 +131,11 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if [[ "$consent_details" == "true" && "$action" != "create-broad-consent" && !( "$action" == "create" && "$with_broad_consent" == "true" ) ]]; then
+    echo "Error: --consent-details requires create-broad-consent or create --with-broad-consent." >&2
+    exit 3
+fi
 
 if [[ "$action" == "create" ]]; then
     if [[ "$chunk_size_set" == "true" && "$with_pseudonymized" != "true" ]]; then
@@ -620,7 +633,7 @@ create_broad_consent_snapshot() {
         Rscript R-cdstoolchain/StartBroadConsentSnapshot.R \
         source-db="${source_database_name}" \
         target-db="${target_build_db}" \
-        chunk-size="${chunk_size}" ; then
+        chunk-size="${chunk_size}" consent-details="${consent_details}" ; then
         echo "Broad Consent snapshot data created."
     else
         echo "Error: creating Broad Consent snapshot data failed."
@@ -668,10 +681,6 @@ create_broad_consent_snapshot() {
     echo "To remove the database:"
     echo "  ./ip-snapshot.sh deactivate ${broad_consent_snapshot_name}"
     echo
-    echo "======================================================================"
-    echo "WARNING: Broad Consent filtering is not implemented yet."
-    echo "The current technical workflow copies every snapshot row."
-    echo "======================================================================"
 }
 
 create_requested_snapshot_derivatives() {

@@ -16,7 +16,8 @@ command_arguments <- etlutils::initCommandLineArguments(
     target_view_schema = "db2dataprocessor_out",
     chunk_size = NULL,
     report_file = NA_character_,
-    review_only = FALSE
+    review_only = FALSE,
+    consent_details = FALSE
   )
 )
 
@@ -106,7 +107,8 @@ invisible(tryCatch(
         target_view_schema = command_arguments[["target_view_schema"]],
         chunk_size = command_arguments[["chunk_size"]],
         report_file = command_arguments[["report_file"]],
-        log_steps = TRUE
+        log_steps = TRUE,
+        consent_details = tolower(as.character(command_arguments[["consent_details"]])) == "true"
       )
     }
     invisible(broad_consent_result)

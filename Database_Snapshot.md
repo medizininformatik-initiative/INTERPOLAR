@@ -130,10 +130,19 @@ pseudonymisierte Snapshot-Datenbank als Quelle verwendet werden:
 ./ip-snapshot.sh create-broad-consent snap01_20251002
 ```
 
-**Achtung:** Die fachliche Broad-Consent-Auswahl ist noch nicht implementiert.
-Der aktuelle technische Rahmen übernimmt alle Patienten und alle übrigen
-Snapshot-Zeilen. Die so erzeugte Datei darf noch nicht als nach Broad Consent
-gefilterter Datenbestand weitergegeben werden.
+Die Auswahl verwendet die aktuellen Consent-Fassungen der Quelldatenbank. Eine
+zum einmalig festgehaltenen Bewertungsdatum wirksame `.8` ist Voraussetzung;
+klinische Daten müssen zusätzlich vollständig in den wirksamen `.6`-Zeiträumen
+liegen. Retrospektive Freigaben und Widerrufe werden dabei berücksichtigt.
+
+Optional schreibt `--consent-details` die patientenbezogenen CSV-Berichte:
+
+```bash
+./ip-snapshot.sh create-broad-consent snap01_20251002_pseud --consent-details
+```
+
+Der Parameter ist auch bei `create --with-broad-consent` zulässig. Ohne ihn
+werden nur die Zusammenfassung und die dauerhaften Maskierungsnachweise erzeugt.
 
 ### Consent-Auswertung ohne Snapshot-Erzeugung prüfen
 
@@ -159,9 +168,9 @@ Alle Consent-Provisionen und benötigten Encounter eines Blocks werden gemeinsam
 gelesen. Der Speicherbedarf hängt daher zusätzlich von der Zahl dieser Einträge
 pro Patient ab.
 
-Der reine Prüflauf ist von der noch bestehenden technischen Kopierhülle für
-`create-broad-consent` zu unterscheiden; deren Warnung bleibt bis zur Anbindung
-der Ressourcenfilterung gültig.
+Prüflauf und Snapshot-Erzeugung verwenden dieselbe Consent-Auswertung. Nur die
+Snapshot-Erzeugung prüft darüber hinaus die klinischen Ressourcen und maskiert
+Referenzen auf ausgeschlossene Ziele.
 
 ### Chunkgröße anpassen
 
@@ -269,9 +278,9 @@ angegeben werden.
    nötig.
 7. Mit `create --with-broad-consent` wird anschließend automatisch die
    pseudonymisierte Snapshot-Datenbank verarbeitet. Alternativ kann dieser
-   Schritt mit `create-broad-consent` einzeln ausgeführt werden. Derzeit bildet
-   er nur den technischen Datenbank- und Dateilebenszyklus ab und filtert noch
-   keine Patienten.
+   Schritt mit `create-broad-consent` einzeln ausgeführt werden. Er wählt die
+   consentierten Patienten und Ressourcen aus und erzeugt die gefilterte
+   Snapshot-Datenbank samt Dump.
 
 ## Prüfung vor der Weitergabe
 
@@ -301,10 +310,37 @@ angegeben werden.
 
 Ein Broad-Consent-Snapshot enthält dieselben für Auswertungen vorgesehenen
 Relationen und Versionspartitionen wie die gewählte Snapshot-Datenbank. Die
-Tabellen werden in Chunks gelesen und unverändert in eine neue Datenbank
-geschrieben. Der Filter-Einstiegspunkt ist von Datenbankaufbau, Dump und
-Lebenszyklus getrennt. Aktuell ist dort ausdrücklich ein Durchlassfilter
-eingesetzt; die fachliche Patientenauswahl wird separat ergänzt.
+Tabellen werden in Chunks gelesen und in eine neue Datenbank geschrieben.
+Patientenzuordnung und maßgebliche Datumswerte werden je vollständiger
+FHIR-Ressourcenfassung geprüft; widersprüchliche oder fehlende benötigte Werte
+führen zum Ausschluss. Für die Datumsfelder gilt das TORCH-Mapping aus Commit
+`b12757d09a525ae1a3309e4aded999b209b1d600`. Explizit leere Einträge benötigen keine
+zeitliche Prüfung; fehlende Einträge führen zum Ausschluss (derzeit etwa
+`Location`). Medikamentenressourcen bleiben erhalten, wenn sie von behaltenen
+Medikationsereignissen direkt oder über Zutaten referenziert werden.
+
+Nicht-FHIR-Tabellen werden anhand der Patientenzulassung eingeschränkt. Ihre
+Zuordnung erfolgt gegen die Quelle, unabhängig vom zeitlichen Encounter-Filter.
+Ein vollständig abgedeckter Stationskontakt oder Laborwert bleibt deshalb auch
+dann erhalten, wenn sein Einrichtungskontakt zeitlich nicht vollständig
+abgedeckt ist. Encounter-Hierarchien dürfen dadurch unvollständig werden.
+
+Referenzen auf durch die Auswahl ausgeschlossene Ziele werden im Ziel auf SQL
+`NULL` gesetzt. Das umfasst auch die berechneten Referenzspalten und bekannte
+FHIR-Zuordnungsspalten in Nicht-FHIR-Tabellen. Bereits leere, ungültige oder in
+der Quelle ins Leere zeigende Referenzen erhalten keinen erfundenen Grund.
+Unversionierte Referenzen werden gegen die aktuelle Zielfassung geprüft;
+explizite `/_history/`-Referenzen gegen die genannte Version.
+
+`db_log.broad_consent_masked_reference` gehört dauerhaft zur Snapshot-Datenbank
+und zum Dump. Sie enthält Tabellenname, technische Zeilen-ID, Ressourcen-ID,
+Version, Patienten-ID, Spaltenname und den Grund `masked`, aber nicht den
+entfernten Referenzwert. Die Patienten-ID erlaubt bei erneutem Filtern die
+Zuordnung bereits maskierter MRP-Berechnungen; ihre Consent-Berechtigung wird
+neu geprüft. Bestehende Nachweise werden nur für weiterhin behaltene Zeilen
+übernommen. Die View `db2dataprocessor_out.v_broad_consent_masked_reference`
+macht diese Nachweise für Auswertungen zugänglich. `db_log.broad_consent_run`
+hält Quelle, Bewertungsdatum, TORCH-Stand und Abschlusszeitpunkt fest.
 
 ### Auswertungen ohne Datenbank-Cronjob
 
@@ -540,8 +576,14 @@ Snapshot-Datenbank:
 Der Broad-Consent-Prozess schreibt zusätzlich den lokalen Bericht
 `outputLocal/broad_consent_snapshot/reports/broad_consent_snapshot_report.xlsx`.
 Er enthält für jede Relation insbesondere Ein- und Ausgabezeilen,
-Versionspartition, Chunk-Anzahl, Laufzeiten und die derzeit aktive
-Filteraktion. Auch dieser Bericht ist nicht Bestandteil der Snapshot-Datei.
+Versionspartition, Chunk-Anzahl, Laufzeiten und Filteraktion sowie die
+Patientenentscheidungen und zeilenbezogenen Ausschlussgründe. Dieser lokale
+Bericht ist nicht Bestandteil der Snapshot-Datei. Die dauerhafte
+Maskierungsnachweistabelle wird dagegen immer mitgesichert, auch ohne
+`--consent-details`. Detaillierte CSV-Berichte liegen bei Aktivierung in einem
+eigenen Laufverzeichnis unter `outputLocal/broad_consent_snapshot`.
+Dort kennzeichnet `COMPLETE` den Abschluss der Consent-Berechnung; erst ein
+erfolgreicher CLI-Abschluss bestätigt auch die Snapshot- und Dump-Erzeugung.
 
 Eine kompakte CLI-Hilfe liefert:
 
