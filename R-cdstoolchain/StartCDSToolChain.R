@@ -259,10 +259,7 @@ tryCatch(
     if (any(grepl(allowed_pattern, error_lines))) {
       message("Ignoring expected error: ", e$message)
 
-      # Execute `next` only if not in the last iteration of the loop
-      if (i < length(DEBUG_DATES)) {
-        next
-      }
+      # Return to the caller; the debug runner controls its own day loop.
     } else {
       # the submodules log their errors itself -> we must check
       # if etlutils::isErrorOccured() and if TRUE then do nothing
