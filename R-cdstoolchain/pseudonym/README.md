@@ -10,9 +10,10 @@ pseudonymisierten Snapshots.
 Datenbanklebenszyklus. Für seine Vorprüfung und Pseudonymisierung ruft es
 [`StartSnapshotPseudonymizationPreflight.R`](../StartSnapshotPseudonymizationPreflight.R) und
 [`StartSnapshotPseudonymization.R`](../StartSnapshotPseudonymization.R) auf; diese übergeben die
-eigentliche Verarbeitung an `pseudonym`. Der technische Broad-Consent-Schritt läuft entsprechend
-über [`StartBroadConsentSnapshot.R`](../StartBroadConsentSnapshot.R) und filtert derzeit noch keine
-Daten.
+eigentliche Verarbeitung an `pseudonym`. Die Broad-Consent-Auswahl läuft entsprechend
+über [`StartBroadConsentSnapshot.R`](../StartBroadConsentSnapshot.R) und übernimmt nur
+die durch die Consent-Auswertung zugelassenen Patienten und Ressourcen. Referenzen auf dabei
+ausgeschlossene Ressourcen werden entfernt und als maskiert dokumentiert.
 
 FHIR-Import, reguläre fachliche Verarbeitung und Frontend-Synchronisation gehören nicht zu diesem
 Paket. Den vollständigen Snapshot-Ablauf, die Regeln und die erzeugten Berichte beschreibt
@@ -20,4 +21,4 @@ Paket. Den vollständigen Snapshot-Ablauf, die Regeln und die erzeugten Berichte
 
 Die paketbezogenen `testthat`-Tests liegen unter [`tests/testthat`](tests/testthat). Sie prüfen
 insbesondere Regelübersetzung, Mapping-Abdeckung, chunkweise Verarbeitung, Anreicherungen,
-Snapshot-Materialisierung und den technischen Broad-Consent-Ablauf.
+Snapshot-Materialisierung und die Broad-Consent-Auswahl.
