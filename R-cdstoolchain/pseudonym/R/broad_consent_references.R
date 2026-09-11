@@ -5,15 +5,19 @@ prepareBroadConsentReferenceTargets <- function(connection, selections, material
     if (is.null(selection$spec)) next
     last <- materialization_plan[materialization_plan$BASE_TABLE_NAME == base &
       materialization_plan$SNAPSHOT_RELATION_TYPE == SNAPSHOT_RELATION_TYPE_LAST, ]
-    current <- if (nrow(last)) paste0(
-      "EXISTS (SELECT 1 FROM ",
-      snapshotQualifiedName(connection, last$SOURCE_RELATION, source_schema), " current_source WHERE ",
-      snapshotQuotedColumn(connection, selection$row_column, "current_source"), "::text = d.row_id)"
-    ) else "TRUE"
+    # Join current row identities once. A correlated text-cast lookup can
+    # degrade to a full source scan per row when its hash subplan no longer fits.
+    current_join <- if (nrow(last)) paste0(
+      " LEFT JOIN (SELECT DISTINCT ",
+      snapshotQuotedColumn(connection, selection$row_column), "::text AS row_id FROM ",
+      snapshotQualifiedName(connection, last$SOURCE_RELATION, source_schema),
+      ") current_rows ON current_rows.row_id = d.row_id"
+    ) else ""
+    current <- if (nrow(last)) "current_rows.row_id IS NOT NULL" else "TRUE"
     queries <- c(queries, paste0(
       "SELECT ", DBI::dbQuoteString(connection, selection$spec$resource),
       "::text AS resource_type, resource_id, version_id, reason = 'included' AS retained, ",
-      current, " AS is_current FROM ", snapshotQualifiedName(connection, selection$table_name), " d"
+      current, " AS is_current FROM ", snapshotQualifiedName(connection, selection$table_name), " d", current_join
     ))
   }
   name <- basename(tempfile("broad_consent_targets_"))
