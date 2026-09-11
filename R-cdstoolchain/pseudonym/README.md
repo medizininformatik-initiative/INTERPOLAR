@@ -16,8 +16,11 @@ die durch die Consent-Auswertung zugelassenen Patienten und Ressourcen. Referenz
 ausgeschlossene Ressourcen werden entfernt und als maskiert dokumentiert.
 
 FHIR-Import, reguläre fachliche Verarbeitung und Frontend-Synchronisation gehören nicht zu diesem
-Paket. Den vollständigen Snapshot-Ablauf, die Regeln und die erzeugten Berichte beschreibt
-[`Database_Snapshot.md`](../../Database_Snapshot.md).
+Paket. Die Dokumentation ist entsprechend dem Ablauf gegliedert:
+
+- [Bedienung und Befehle](../../Database_Snapshot.md)
+- [Pseudonymisierungsregeln und Anreicherungen](../../Database_Snapshot_Pseudonymization.md)
+- [Broad-Consent-Regeln und Berechnung](../../Database_Snapshot_Broad_Consent.md)
 
 Die paketbezogenen `testthat`-Tests liegen unter [`tests/testthat`](tests/testthat). Sie prüfen
 insbesondere Regelübersetzung, Mapping-Abdeckung, chunkweise Verarbeitung, Anreicherungen,
