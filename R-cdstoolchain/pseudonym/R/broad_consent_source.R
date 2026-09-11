@@ -1,5 +1,6 @@
-getBroadConsentCurrentRelation <- function(connection, table_name, source_schema) {
-  last <- paste0("v_", table_name, SNAPSHOT_LAST_VERSION_SUFFIX)
+getBroadConsentCurrentRelation <- function(connection, table_name, source_schema,
+  source_view_prefix = "v_", last_version_suffix = SNAPSHOT_LAST_VERSION_SUFFIX) {
+  last <- paste0(source_view_prefix, table_name, last_version_suffix)
   if (!snapshotRelationExists(connection, last, source_schema)) {
     stop("Consent evaluation requires a current-version view: ", last)
   }
@@ -40,11 +41,12 @@ readBroadConsentProvisions <- function(rows) {
 # Current-version source views prevent superseded Consent versions from
 # resurrecting permissions. Temporary results are connection-local only.
 prepareBroadConsentSelection <- function(
-  connection, source_schema, evaluation_date, chunk_size, review
+  connection, source_schema, evaluation_date, chunk_size, review,
+  source_view_prefix = "v_", last_version_suffix = SNAPSHOT_LAST_VERSION_SUFFIX
 ) {
-  consent_relation <- getBroadConsentCurrentRelation(connection, "consent", source_schema)
-  encounter_relation <- getBroadConsentCurrentRelation(connection, "encounter", source_schema)
-  patient_relation <- getBroadConsentCurrentRelation(connection, "patient", source_schema)
+  consent_relation <- getBroadConsentCurrentRelation(connection, "consent", source_schema, source_view_prefix, last_version_suffix)
+  encounter_relation <- getBroadConsentCurrentRelation(connection, "encounter", source_schema, source_view_prefix, last_version_suffix)
+  patient_relation <- getBroadConsentCurrentRelation(connection, "patient", source_schema, source_view_prefix, last_version_suffix)
   reference <- snapshotNormalizedReferenceExpression(connection, "cons_patient_ref", resource_type = "Patient")
   invalid_references <- DBI::dbGetQuery(connection, paste0(
     "SELECT COUNT(*) AS n FROM ", consent_relation,
