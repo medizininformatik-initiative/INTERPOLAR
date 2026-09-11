@@ -223,17 +223,30 @@ getTableFromList <- function(list, colNames) {
 #'
 #' @return A list of imported sheets as data.tables.
 #'
+#' @details Errors reading the workbook or a sheet stop the import and include the file path,
+#' sheet name where available, and the original error message. No partial result is returned.
+#'
 #' @export
 readExcelFileAsTableList <- function(excelFile, maxSheetIndex = 1000) {
+  sheet_names <- tryCatch(
+    openxlsx::getSheetNames(excelFile),
+    error = function(error) {
+      stop("Could not read Excel workbook '", excelFile, "': ", conditionMessage(error), call. = FALSE)
+    }
+  )
+  sheet_names <- sheet_names[seq_len(min(length(sheet_names), maxSheetIndex))]
   tables <- list()
-  for (excelSheetIndex in 1:maxSheetIndex) {
-    excelSheet <- try(setDT(openxlsx::read.xlsx(excelFile, excelSheetIndex, skipEmptyRows = FALSE, colNames = TRUE)), silent = TRUE)
-    if (isError(excelSheet)) break
-    tables <- append(tables, list(excelSheet))
-  }
-  sheetNames <- try(openxlsx::getSheetNames(excelFile), silent = TRUE)
-  if (!isError(sheetNames)) {
-    names(tables) <- sheetNames
+  for (sheet_name in sheet_names) {
+    tables[[sheet_name]] <- tryCatch(
+      data.table::as.data.table(openxlsx::read.xlsx(excelFile, sheet_name, skipEmptyRows = FALSE, colNames = TRUE)),
+      error = function(error) {
+        stop(
+          "Could not read Excel workbook '", excelFile, "', sheet '", sheet_name, "': ",
+          conditionMessage(error),
+          call. = FALSE
+        )
+      }
+    )
   }
   tables
 }
