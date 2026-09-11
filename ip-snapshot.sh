@@ -146,6 +146,7 @@ file="${name}.sql.gz"
 # Vollständiger Pfad zur Datei
 file_path="${DIR}/${file}"
 
+# SQL-Datenbanknamen werden unten doppelt quotiert, damit PostgreSQL die Großschreibung erhält.
 # Name der Snapshot-Datenbank. Bei "deactivate" darf auch der vollständige,
 # von "list" ausgegebene Datenbankname übergeben werden.
 if [[ "$action" == "deactivate" && "$name" == ip_* ]]; then
@@ -274,7 +275,7 @@ set_database_snapshot_checksum() {
     local database_name="$1"
     local checksum="$2"
     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
-        "COMMENT ON DATABASE ${database_name} IS 'INTERPOLAR snapshot SHA-256: ${checksum}';"
+        "COMMENT ON DATABASE \"${database_name}\" IS 'INTERPOLAR snapshot SHA-256: ${checksum}';"
 }
 
 database_matches_snapshot() {
@@ -288,21 +289,21 @@ database_matches_snapshot() {
 set_database_read_only() {
     local database_name="$1"
     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
-        "ALTER DATABASE ${database_name} SET default_transaction_read_only=on;"
+        "ALTER DATABASE \"${database_name}\" SET default_transaction_read_only=on;"
 }
 
 rename_database() {
     local database_name="$1"
     local target_database_name="$2"
     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
-        "ALTER DATABASE ${database_name} RENAME TO ${target_database_name};"
+        "ALTER DATABASE \"${database_name}\" RENAME TO \"${target_database_name}\";"
 }
 
 drop_database_if_exists() {
     local database_name="$1"
     if database_exists "${database_name}" ; then
         docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
-            "DROP DATABASE ${database_name} WITH (FORCE);"
+            "DROP DATABASE \"${database_name}\" WITH (FORCE);"
     fi
 }
 
@@ -359,7 +360,7 @@ prepare_snapshot_analysis_target_database() {
     dataprocessor_user="$(toml_value DB_DATAPROCESSOR_USER)"
 
     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
-        "CREATE DATABASE ${target_database_name} WITH OWNER=${dataprocessor_user};"
+        "CREATE DATABASE \"${target_database_name}\" WITH OWNER=${dataprocessor_user};"
     docker compose exec -T cds_hub psql -U cds_hub_db_admin -d "${target_database_name}" -c \
         "CREATE SCHEMA db_log AUTHORIZATION ${dataprocessor_user};
          CREATE SCHEMA db2dataprocessor_out AUTHORIZATION ${dataprocessor_user};"
@@ -460,7 +461,7 @@ create_pseudonymized_snapshot() {
     if ! database_exists "${source_database}" ; then
         echo "Creating temporary source database '${source_build_db}'..."
         docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
-            "CREATE DATABASE ${source_build_db} WITH OWNER=cds_hub_db_admin;"
+            "CREATE DATABASE \"${source_build_db}\" WITH OWNER=cds_hub_db_admin;"
         if gzip -cd "${source_file_path}" | docker compose exec -T cds_hub \
             psql -d "${source_build_db}" cds_hub_db_admin ; then
             echo "Temporary source database '${source_build_db}' restored."
@@ -845,7 +846,7 @@ case "$action" in
             SECONDS=0;
 
             # Snapshot-Datenbank anlegen
-            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE ${db_name} WITH OWNER=cds_hub_db_admin;" > "${logfile}" 2>&1 ; then
+            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE \"${db_name}\" WITH OWNER=cds_hub_db_admin;" > "${logfile}" 2>&1 ; then
                 echo "Snapshot database '${db_name}' created."
             else
                 echo "Error: creating snapshot database '${db_name}' failed."
@@ -897,7 +898,7 @@ case "$action" in
                             # ------------------------------------------------
                             # 3. Snapshot-Datenbank deaktivieren und Ergebnis prüfen
                             # ------------------------------------------------
-                            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "DROP DATABASE ${db_name} WITH (FORCE);" ; then
+                            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "DROP DATABASE \"${db_name}\" WITH (FORCE);" ; then
                                 echo "Snapshot database \"${db_name}\" deactivated."
                             else
                                 echo "Error: snapshot database \"${db_name}\" could not be deactivated." >&2
