@@ -319,6 +319,12 @@ zeitliche Prüfung; fehlende Einträge führen zum Ausschluss (derzeit etwa
 `Location`). Medikamentenressourcen bleiben erhalten, wenn sie von behaltenen
 Medikationsereignissen direkt oder über Zutaten referenziert werden.
 
+Die Patientenzuordnung aktueller Consent-Dokumente wird vor der blockweisen
+Auswertung über die gesamte Quelle geprüft. Ist ein potenziell wirksames
+Consent-Dokument mehreren Patienten zugeordnet, werden alle betroffenen
+Patienten vollständig ausgeschlossen, auch wenn weitere gültige Dokumente
+vorliegen. Der Bericht nennt dafür `ambiguous_consent_patient`.
+
 Nicht-FHIR-Tabellen werden anhand der Patientenzulassung eingeschränkt. Ihre
 Zuordnung erfolgt gegen die Quelle, unabhängig vom zeitlichen Encounter-Filter.
 Ein vollständig abgedeckter Stationskontakt oder Laborwert bleibt deshalb auch

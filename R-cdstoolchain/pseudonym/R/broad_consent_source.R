@@ -58,6 +58,22 @@ prepareBroadConsentSelection <- function(
     stop("Potentially effective Consent resources have unresolvable patient references; restrictions cannot be assigned safely.")
   }
   snapshotAllowTemporarySourceTables(connection)
+  # Validate ownership across the entire current Consent relation before
+  # splitting patients into blocks. Other valid documents cannot cure ambiguity.
+  ambiguous_name <- basename(tempfile("broad_consent_ambiguous_patients_"))
+  ambiguous_table <- snapshotQualifiedName(connection, ambiguous_name)
+  DBI::dbExecute(connection, paste0(
+    "CREATE TEMP TABLE ", ambiguous_table, " AS WITH owners AS (SELECT DISTINCT cons_id, ",
+    reference, " AS patient_id, (cons_status NOT IN ('draft', 'proposed', 'rejected', 'inactive', 'entered-in-error') ",
+    "OR cons_status IS NULL) AS potentially_effective FROM ", consent_relation,
+    "), ambiguous AS (SELECT cons_id FROM owners GROUP BY cons_id ",
+    "HAVING bool_or(potentially_effective) AND (COUNT(DISTINCT patient_id) > 1 ",
+    "OR bool_or(patient_id IS NULL OR patient_id !~ '^[A-Za-z0-9.-]+$'))) ",
+    "SELECT DISTINCT patient_id FROM owners JOIN ambiguous USING (cons_id) WHERE patient_id IS NOT NULL"
+  ))
+  on.exit(DBI::dbRemoveTable(connection, ambiguous_name), add = TRUE)
+  DBI::dbExecute(connection, paste0("CREATE UNIQUE INDEX ON ", ambiguous_table, " (patient_id)"))
+  DBI::dbExecute(connection, paste0("ANALYZE ", ambiguous_table))
   table_name <- basename(tempfile("broad_consent_intervals_"))
   table <- snapshotQualifiedName(connection, table_name)
   DBI::dbExecute(connection, paste0(
@@ -81,6 +97,9 @@ prepareBroadConsentSelection <- function(
     if (anyNA(normalizeBroadConsentReference(ids))) stop("Invalid Patient resource ID in source.")
     last_id <- tail(ids, 1L)
     values <- paste(DBI::dbQuoteString(connection, ids), collapse = ", ")
+    ambiguous_ids <- DBI::dbGetQuery(connection, paste0(
+      "SELECT patient_id FROM ", ambiguous_table, " WHERE patient_id IN (", values, ")"
+    ))$patient_id
     source_rows <- DBI::dbGetQuery(connection, paste0(
       "SELECT DISTINCT cons_id, cons_datetime, cons_status, cons_patient_ref, ",
       "cons_provision_provision_code_system, cons_provision_provision_code_code, ",
@@ -107,6 +126,12 @@ prepareBroadConsentSelection <- function(
         end = as.Date(encounters$enc_period_end, tz = "UTC")
       )
       result <- calculateBroadConsentPatient(provisions, encounters, evaluation_date)
+      if (patient_id %in% ambiguous_ids) {
+        result$included <- FALSE
+        result$reason <- "ambiguous_consent_patient"
+        result$periods <- emptyBroadConsentPeriods()
+        result$changes <- result$changes[0, ]
+      }
       count <- counts[result$reason]
       counts[result$reason] <- if (is.na(count)) 1L else count + 1L
       if (isTRUE(review$details)) {
