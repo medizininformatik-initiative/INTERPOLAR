@@ -121,3 +121,20 @@ copyBroadConsentPriorEvidence <- function(source_connection, target_connection, 
   }
   invisible(NULL)
 }
+
+finalizeBroadConsentMaskedReferences <- function(connection, target_schema) {
+  original <- snapshotQualifiedName(connection, BROAD_CONSENT_MASKED_TABLE, target_schema)
+  name <- basename(tempfile("broad_consent_evidence_"))
+  distinct <- snapshotQualifiedName(connection, name, target_schema)
+  complete <- FALSE
+  on.exit(if (!complete) DBI::dbExecute(connection, paste0("DROP TABLE IF EXISTS ", distinct)), add = TRUE)
+  # The same reference can be masked on several enriched rows and in separate
+  # chunks. Collapse full identical records in PostgreSQL, not the data rows.
+  DBI::dbExecute(connection, paste0("CREATE TABLE ", distinct, " AS SELECT DISTINCT * FROM ", original))
+  # Conflicting provenance must still fail instead of silently keeping a row.
+  DBI::dbExecute(connection, paste0("CREATE UNIQUE INDEX ON ", distinct, " (table_name, row_id, column_name)"))
+  DBI::dbExecute(connection, paste0("DROP TABLE ", original))
+  DBI::dbExecute(connection, paste0("ALTER TABLE ", distinct, " RENAME TO ", DBI::dbQuoteIdentifier(connection, BROAD_CONSENT_MASKED_TABLE)))
+  complete <- TRUE
+  invisible(NULL)
+}

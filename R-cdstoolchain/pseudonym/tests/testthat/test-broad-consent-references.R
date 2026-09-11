@@ -83,3 +83,28 @@ test_that("reference catalog resolves flattened current rows with bounded query 
   on.exit(DBI::dbRemoveTable(connection, fallback), add = TRUE)
   expect_true(all(DBI::dbReadTable(connection, fallback)$is_current))
 })
+
+test_that("duplicate decisions collapse only when their complete identities agree", {
+  connection <- getOption("interpolar.test.postgres_connection")
+  skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")
+  query <- "SELECT '1'::text AS row_id, 'r1'::text AS resource_id, '1'::text AS version_id, 'p1'::text AS patient_id, 'included'::text AS reason"
+  name <- createBroadConsentDecisionTable(connection, paste(query, "UNION ALL", query))
+  on.exit(DBI::dbRemoveTable(connection, name), add = TRUE)
+  expect_equal(nrow(DBI::dbReadTable(connection, name)), 1L)
+  for (replacement in c("r1", "1'::text AS version_id", "p1", "included")) {
+    conflicting <- sub(replacement, paste0("other_", replacement), query, fixed = TRUE)
+    expect_error(createBroadConsentDecisionTable(connection, paste(query, "UNION ALL", conflicting), "v_example"), "v_example")
+  }
+})
+
+test_that("duplicate evidence never hides conflicting provenance", {
+  connection <- getOption("interpolar.test.postgres_connection")
+  skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")
+  schema <- basename(tempfile("bc_conflicting_evidence_"))
+  snapshotEnsureSchema(connection, schema)
+  on.exit(DBI::dbExecute(connection, paste0("DROP SCHEMA ", DBI::dbQuoteIdentifier(connection, schema), " CASCADE")), add = TRUE)
+  evidence <- data.frame(table_name = "medicationrequest_last_version", row_id = "1", resource_type = "MedicationRequest", resource_id = "r", version_id = NA_character_, patient_id = c("p1", "p2"), column_name = "medreq_encounter_ref", reason = "masked")
+  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = BROAD_CONSENT_MASKED_TABLE), evidence)
+  expect_error(finalizeBroadConsentMaskedReferences(connection, schema), "unique index")
+  expect_equal(DBI::dbReadTable(connection, DBI::Id(schema = schema, table = BROAD_CONSENT_MASKED_TABLE)), evidence)
+})

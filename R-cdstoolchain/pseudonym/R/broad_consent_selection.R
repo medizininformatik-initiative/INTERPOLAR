@@ -54,15 +54,23 @@ buildBroadConsentNonFhirDecisionQuery <- function(connection, relation, base_tab
   )
 }
 
-createBroadConsentDecisionTable <- function(connection, query) {
+createBroadConsentDecisionTable <- function(connection, query, source_relation = "source") {
   name <- basename(tempfile("broad_consent_rows_"))
   table <- snapshotQualifiedName(connection, name)
   complete <- FALSE
   on.exit(if (!complete) DBI::dbExecute(connection, paste0("DROP TABLE IF EXISTS ", table)), add = TRUE)
-  DBI::dbExecute(connection, paste0("CREATE TEMP TABLE ", table, " AS ", query))
-  # Technical IDs identify flattened rows, including version and repeated fields.
+  # Medication enrichment can repeat a source row ID for different code pairs.
+  # Only identical decisions collapse; the source data rows remain untouched.
+  DBI::dbExecute(connection, paste0("CREATE TEMP TABLE ", table, " AS SELECT DISTINCT * FROM (", query, ") decisions"))
   DBI::dbExecute(connection, paste0("ALTER TABLE ", table, " ALTER COLUMN row_id SET NOT NULL"))
-  DBI::dbExecute(connection, paste0("CREATE UNIQUE INDEX ON ", table, " (row_id)"))
+  tryCatch(
+    DBI::dbExecute(connection, paste0("CREATE UNIQUE INDEX ON ", table, " (row_id)")),
+    error = function(error) stop(
+      "Could not create unique Broad Consent decision index for source relation ", source_relation,
+      ": ", conditionMessage(error),
+      call. = FALSE
+    )
+  )
   DBI::dbExecute(connection, paste0("CREATE INDEX ON ", table, " (resource_id, version_id, reason)"))
   DBI::dbExecute(connection, paste0("ANALYZE ", table))
   complete <- TRUE
@@ -124,7 +132,7 @@ prepareBroadConsentResourceSelection <- function(connection, materialization_pla
       )
     }
     selections[[base]] <- list(
-      table_name = createBroadConsentDecisionTable(connection, query),
+      table_name = createBroadConsentDecisionTable(connection, query, relation),
       relation = relation, row_column = row_column, fields = fields, spec = spec, rules = table_rules
     )
   }

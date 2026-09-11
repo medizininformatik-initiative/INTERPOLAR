@@ -96,3 +96,64 @@ test_that("snapshot retains covered children and records every masked reference 
   }
   for (base in names(tables)) expect_equal(DBI::dbReadTable(source, DBI::Id(schema = source_schema, table = base)), tables[[base]])
 })
+
+test_that("enriched source rows survive selection with unique evidence across chunks", {
+  source <- getOption("interpolar.test.postgres_connection")
+  target <- getOption("interpolar.test.postgres_target_connection")
+  skip_if(is.null(source) || is.null(target), "Two isolated PostgreSQL test connections were not supplied.")
+  source_schema <- basename(tempfile("bc_enriched_source_"))
+  output_root <- tempfile("bc_enriched_output_")
+  dir.create(output_root)
+  on.exit(unlink(output_root, recursive = TRUE), add = TRUE)
+  snapshotEnsureSchema(source, source_schema)
+  on.exit(DBI::dbExecute(source, paste0("DROP SCHEMA ", DBI::dbQuoteIdentifier(source, source_schema), " CASCADE")), add = TRUE)
+  tables <- writeBroadConsentSnapshotFixture(source, source_schema)
+  relation <- snapshotQualifiedName(source, "medicationrequest", source_schema)
+  DBI::dbExecute(source, paste0("ALTER TABLE ", relation, " ADD COLUMN medreq_medication_code text, ADD COLUMN medreq_encounter_ref text"))
+  DBI::dbExecute(source, paste0("UPDATE ", relation, " SET medreq_medication_code = 'A01AA01', medreq_encounter_ref = 'Encounter/main'"))
+  DBI::dbExecute(source, paste0("INSERT INTO ", relation, " SELECT * FROM ", relation))
+  DBI::dbExecute(source, paste0("UPDATE ", relation, " SET medreq_medication_code = 'B01AA01' WHERE ctid IN (SELECT max(ctid) FROM ", relation, " GROUP BY medicationrequest_id)"))
+  for (suffix in c("", SNAPSHOT_LAST_VERSION_SUFFIX)) {
+    DBI::dbExecute(source, paste0("CREATE OR REPLACE VIEW ", snapshotQualifiedName(source, paste0("v_medicationrequest", suffix), source_schema), " AS SELECT * FROM ", relation))
+  }
+  original <- DBI::dbReadTable(source, DBI::Id(schema = source_schema, table = "medicationrequest"))
+  rule_sources <- getDefaultSnapshotPseudonymizationRuleSources(testthat::test_path("../../../.."))
+  testthat::local_mocked_bindings(getDefaultSnapshotPseudonymizationRuleSources = function(project_root) rule_sources)
+  target_schemas <- character()
+  on.exit(for (schema in target_schemas) DBI::dbExecute(target, paste0("DROP SCHEMA IF EXISTS ", DBI::dbQuoteIdentifier(target, schema), " CASCADE")), add = TRUE)
+  for (chunk_size in c(1L, 8L)) {
+    target_schema <- basename(tempfile("bc_enriched_target_"))
+    target_schemas <- c(target_schemas, target_schema)
+    result <- createBroadConsentSnapshotDatabase(source, target,
+      project_root = output_root,
+      source_schema = source_schema, target_table_schema = target_schema, target_view_schema = target_schema,
+      tables = names(tables), chunk_size = chunk_size, evaluation_date = as.Date("2026-09-11"),
+      report_file = file.path(output_root, paste0(target_schema, ".xlsx")), log_steps = FALSE
+    )
+    actual <- DBI::dbReadTable(target, DBI::Id(schema = target_schema, table = "v_medicationrequest"))
+    expect_equal(nrow(actual), 2L)
+    expect_equal(actual$medicationrequest_id, c(1L, 1L))
+    expect_setequal(actual$medreq_medication_code, c("A01AA01", "B01AA01"))
+    expect_true(all(is.na(actual$medreq_encounter_ref)))
+    summary <- result$summary[result$summary$BASE_TABLE_NAME == "medicationrequest", ]
+    expect_equal(sum(summary$INPUT_ROWS), 4)
+    expect_equal(sum(summary$OUTPUT_ROWS), 2)
+    evidence <- DBI::dbReadTable(target, DBI::Id(schema = target_schema, table = BROAD_CONSENT_MASKED_TABLE))
+    expect_equal(nrow(evidence), 11L)
+    expect_equal(nrow(unique(evidence)), 11L)
+    next_schema <- basename(tempfile("bc_enriched_repeat_"))
+    target_schemas <- c(target_schemas, next_schema)
+    createBroadConsentSnapshotDatabase(source, target,
+      project_root = output_root,
+      source_schema = target_schema, target_table_schema = next_schema, target_view_schema = next_schema,
+      tables = names(tables), chunk_size = 1L, evaluation_date = as.Date("2026-09-11"),
+      report_file = file.path(output_root, paste0(next_schema, ".xlsx")), log_steps = FALSE
+    )
+    repeated <- DBI::dbReadTable(target, DBI::Id(schema = next_schema, table = "v_medicationrequest"))
+    expect_equal(nrow(repeated), 2L)
+    expect_setequal(repeated$medreq_medication_code, actual$medreq_medication_code)
+    repeated_evidence <- DBI::dbReadTable(target, DBI::Id(schema = next_schema, table = BROAD_CONSENT_MASKED_TABLE))
+    expect_equal(data.table::setorderv(data.table::as.data.table(repeated_evidence), names(evidence)), data.table::setorderv(data.table::as.data.table(evidence), names(evidence)))
+  }
+  expect_equal(DBI::dbReadTable(source, DBI::Id(schema = source_schema, table = "medicationrequest")), original)
+})

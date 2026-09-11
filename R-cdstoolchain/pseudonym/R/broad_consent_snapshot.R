@@ -442,11 +442,7 @@ createBroadConsentSnapshotDatabase <- function(
     log_steps = log_steps
   )
 
-  DBI::dbExecute(target_connection, paste0(
-    "CREATE UNIQUE INDEX ON ",
-    snapshotQualifiedName(target_connection, BROAD_CONSENT_MASKED_TABLE, target_table_schema),
-    " (table_name, row_id, column_name)"
-  ))
+  finalizeBroadConsentMaskedReferences(target_connection, target_table_schema)
   DBI::dbExecute(target_connection, paste0(
     "CREATE VIEW ",
     snapshotQualifiedName(target_connection, paste0(source_view_prefix, BROAD_CONSENT_MASKED_TABLE), target_view_schema),

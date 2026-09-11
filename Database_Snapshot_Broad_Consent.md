@@ -289,6 +289,12 @@ Referenzen; er erfasst nicht allgemein alle durch die Pseudonymisierungsregel
 
 Der Eintrag benennt Tabelle, technische Zeilen-ID, Ressourcen-ID, Version,
 Patienten-ID und Spalte. Der entfernte Referenzwert selbst wird nicht gespeichert.
+Durch die Anreicherung mit Medikamentencodes können mehrere Datenzeilen dieselbe
+technische Zeilen-ID haben. Diese Datenzeilen bleiben erhalten, sofern sie die
+BC-Auswahl bestehen. Identische Entscheidungen und Maskierungsnachweise werden
+jeweils einmal gespeichert, auch wenn die Zeilen in verschiedenen Blöcken
+verarbeitet werden. Widersprüchliche Zuordnungen derselben technischen Zeilen-ID
+führen weiterhin zum Abbruch.
 Die Nachweistabelle liegt dauerhaft im Schema `db_log` und wird mit dem Snapshot
 als Dump gesichert, unabhängig von `--consent-details`. Über die View
 `db2dataprocessor_out.v_broad_consent_masked_reference` ist sie für Auswertungen
