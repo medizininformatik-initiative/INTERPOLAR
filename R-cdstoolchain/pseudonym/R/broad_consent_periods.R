@@ -85,6 +85,11 @@ calculateBroadConsentPatient <- function(provisions, encounters, evaluation_date
     is.na(provisions$declared_at) | is.na(provisions$start) | is.na(provisions$end) |
     !provisions$type %in% c("permit", "deny") | provisions$start > provisions$end
   if (any(invalid)) return(finish("invalid_relevant_provision"))
+  # The evaluation is day-based; same-day declarations are valid regardless
+  # of time of day. A future declaration cannot grant or restore rights today.
+  if (any(as.Date(provisions$declared_at, tz = "UTC") > evaluation_date)) {
+    return(finish("future_consent_declaration"))
+  }
   declaration_counts <- unique(provisions[, c("consent_id", "declared_at"), with = FALSE])
   if (anyDuplicated(declaration_counts$consent_id)) return(finish("inconsistent_declaration_time"))
   data.table::setorder(provisions, declared_at, consent_id, code, type, start, end)

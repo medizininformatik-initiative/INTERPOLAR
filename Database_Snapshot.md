@@ -325,6 +325,11 @@ Consent-Dokument mehreren Patienten zugeordnet, werden alle betroffenen
 Patienten vollständig ausgeschlossen, auch wenn weitere gültige Dokumente
 vorliegen. Der Bericht nennt dafür `ambiguous_consent_patient`.
 
+Ein aktives relevantes Consent-Dokument mit Erklärungsdatum nach dem
+Bewertungsdatum führt ebenfalls zum Ausschluss des Patienten
+(`future_consent_declaration`). Verglichen werden UTC-Kalendertage;
+Erklärungen am Bewertungstag bleiben zulässig.
+
 Nicht-FHIR-Tabellen werden anhand der Patientenzulassung eingeschränkt. Ihre
 Zuordnung erfolgt gegen die Quelle, unabhängig vom zeitlichen Encounter-Filter.
 Ein vollständig abgedeckter Stationskontakt oder Laborwert bleibt deshalb auch

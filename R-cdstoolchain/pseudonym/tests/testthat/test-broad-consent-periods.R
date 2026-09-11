@@ -105,3 +105,43 @@ test_that("interval normalization retains gaps and merges adjacent days", {
   expect_equal(result$start, as.Date(c("2020-01-01", "2020-01-20")))
   expect_equal(result$end, as.Date(c("2020-01-15", "2020-01-25")))
 })
+
+test_that("future declarations cannot grant rights or leave other grants effective", {
+  evaluation_date <- as.Date("2026-09-11")
+  future <- "2026-09-12 00:00:00"
+  result <- calculateBroadConsentPatient(consentDocumentFixture(declared_at = future), NULL, evaluation_date)
+  expect_false(result$included)
+  expect_identical(result$reason, "future_consent_declaration")
+  expect_equal(nrow(result$periods), 0L)
+  for (type in c("permit", "deny")) {
+    for (code in c("6", "8", "45", "46")) {
+      rows <- data.table::rbindlist(list(consentDocumentFixture(), consentProvisionFixture(
+        code, type,
+        consent_id = "future", declared_at = future
+      )))
+      result <- calculateBroadConsentPatient(rows, NULL, evaluation_date)
+      expect_identical(result$reason, "future_consent_declaration")
+      expect_false(result$included)
+      expect_equal(nrow(result$periods), 0L)
+      expect_equal(nrow(result$changes), 0L)
+    }
+  }
+  # Evaluation is daily, with the same UTC conversion used by the DB adapter.
+  for (declared_at in c("2026-09-10 23:59:59", "2026-09-11 23:59:59")) {
+    expect_true(calculateBroadConsentPatient(
+      consentDocumentFixture(declared_at = declared_at), NULL, evaluation_date
+    )$included)
+  }
+  same_utc_day <- consentDocumentFixture()
+  same_utc_day$declared_at <- as.POSIXct("2026-09-12 00:30:00", tz = "Europe/Berlin")
+  expect_true(calculateBroadConsentPatient(same_utc_day, NULL, evaluation_date)$included)
+  ignored <- consentProvisionFixture("6", "deny", consent_id = "inactive", declared_at = future, status = "inactive")
+  expect_true(calculateBroadConsentPatient(
+    data.table::rbindlist(list(consentDocumentFixture(), ignored)), NULL, evaluation_date
+  )$included)
+  ignored$status <- "active"
+  ignored$code <- "unrelated-policy"
+  expect_true(calculateBroadConsentPatient(
+    data.table::rbindlist(list(consentDocumentFixture(), ignored)), NULL, evaluation_date
+  )$included)
+})
