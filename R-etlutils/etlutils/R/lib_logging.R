@@ -40,6 +40,7 @@ startLogging <- function(prefix) {
 #' @details
 #' The function stops the redirection of console output and messages to the log file initiated by \code{startLogging}.
 #' It closes the log file, ensuring that no further entries are appended to it.
+#' Afterwards, it prints the absolute log file path to the console for further information.
 #'
 #' @export
 endLogging <- function() {
@@ -65,6 +66,7 @@ endLogging <- function() {
   closeAllConnections()
 
   removeAnsiEscapeSequences(log_filename)
+  cat("For more information, check the log file: ", normalizePath(log_filename, mustWork = FALSE), "\n", sep = "")
 }
 
 #' Logs a Header for the Whole Process
