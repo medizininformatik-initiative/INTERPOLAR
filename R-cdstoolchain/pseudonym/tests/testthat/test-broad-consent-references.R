@@ -108,3 +108,33 @@ test_that("duplicate evidence never hides conflicting provenance", {
   expect_error(finalizeBroadConsentMaskedReferences(connection, schema), "unique index")
   expect_equal(DBI::dbReadTable(connection, DBI::Id(schema = schema, table = BROAD_CONSENT_MASKED_TABLE)), evidence)
 })
+
+test_that("conflict diagnostics contain counts and reasons but no source values", {
+  connection <- getOption("interpolar.test.postgres_connection")
+  skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")
+  rows <- data.frame(
+    row_id = rep(c("PRIVATE-ROW-A", "PRIVATE-ROW-B", "PRIVATE-ROW-C"), each = 2),
+    resource_id = c(rep("PRIVATE-RESOURCE-A", 4), "PRIVATE-RESOURCE-B", "PRIVATE-RESOURCE-C"),
+    version_id = c("PRIVATE-V1", "PRIVATE-V1", "PRIVATE-V1", "PRIVATE-V2", NA, NA),
+    patient_id = c("PRIVATE-P1", "PRIVATE-P2", rep("PRIVATE-P1", 3), NA),
+    reason = c("unresolved_patient", "unresolved_patient", "included", "outside_consent_period", "PRIVATE-REASON", "PRIVATE-REASON")
+  )
+  name <- basename(tempfile("bc_diagnostic_"))
+  DBI::dbWriteTable(connection, name, rows, temporary = TRUE)
+  on.exit(DBI::dbRemoveTable(connection, name), add = TRUE)
+  query <- paste0("SELECT * FROM ", snapshotQualifiedName(connection, name))
+  error <- tryCatch(createBroadConsentDecisionTable(connection, query, "v_encounter"), error = identity)
+  expect_s3_class(error, "error")
+  message <- conditionMessage(error)
+  expect_false(grepl("PRIVATE|Key \\(row_id\\)", message))
+  for (expected in c(
+    "conflicting_row_ids=3", "distinct_decisions=6", "resource_id_conflicts=1",
+    "version_id_conflicts=1", "patient_id_conflicts=2", "reason_conflicts=1",
+    "all_excluded_conflicts=2", "mixed_included_excluded_conflicts=1",
+    "decision_reasons=included, other, outside_consent_period, unresolved_patient"
+  )) {
+    expect_match(message, expected, fixed = TRUE)
+  }
+  testthat::local_mocked_bindings(getBroadConsentDecisionConflictDiagnostic = function(...) stop("PRIVATE-DATABASE-ERROR"))
+  expect_error(createBroadConsentDecisionTable(connection, query), "Conflict diagnostic unavailable; no source values logged.", fixed = TRUE)
+})

@@ -55,6 +55,42 @@ buildBroadConsentNonFhirDecisionQuery <- function(connection, relation, base_tab
   )
 }
 
+# Query only the already materialized decisions, and only after index failure.
+# Never return source identifiers or the PostgreSQL DETAIL (which contains keys).
+getBroadConsentDecisionConflictDiagnostic <- function(connection, table) {
+  reasons <- c(
+    "included", "invalid_resource_identity", "unresolved_patient", "patient_not_permitted",
+    "invalid_resource_date", "outside_consent_period", "missing_resource_date_mapping"
+  )
+  safe_reason <- paste0(
+    "CASE WHEN d.reason IN (", paste(DBI::dbQuoteString(connection, reasons), collapse = ", "),
+    ") THEN d.reason ELSE 'other' END"
+  )
+  query <- paste0(
+    "WITH conflicts AS (SELECT row_id, COUNT(*) AS decisions, ",
+    "COUNT(DISTINCT jsonb_build_array(resource_id)) AS resources, ",
+    "COUNT(DISTINCT jsonb_build_array(version_id)) AS versions, ",
+    "COUNT(DISTINCT jsonb_build_array(patient_id)) AS patients, ",
+    "COUNT(DISTINCT jsonb_build_array(reason)) AS reasons, ",
+    "bool_and(reason IS NOT NULL AND reason <> 'included') AS all_excluded, ",
+    "bool_or(reason = 'included') AND bool_or(reason <> 'included') AS mixed ",
+    "FROM ", table, " GROUP BY row_id HAVING COUNT(*) > 1) ",
+    "SELECT COUNT(*) AS conflicting_row_ids, COALESCE(SUM(decisions), 0) AS distinct_decisions, ",
+    "COUNT(*) FILTER (WHERE resources > 1) AS resource_id_conflicts, ",
+    "COUNT(*) FILTER (WHERE versions > 1) AS version_id_conflicts, ",
+    "COUNT(*) FILTER (WHERE patients > 1) AS patient_id_conflicts, ",
+    "COUNT(*) FILTER (WHERE reasons > 1) AS reason_conflicts, ",
+    "COUNT(*) FILTER (WHERE all_excluded) AS all_excluded_conflicts, ",
+    "COUNT(*) FILTER (WHERE mixed) AS mixed_included_excluded_conflicts, ",
+    "(SELECT string_agg(DISTINCT ", safe_reason, ", ', ' ORDER BY ", safe_reason, ") ",
+    "FROM ", table, " d JOIN conflicts c ON c.row_id = d.row_id) AS decision_reasons FROM conflicts"
+  )
+  result <- DBI::dbGetQuery(connection, query)
+  paste(paste0(names(result), "=", vapply(result, function(value) {
+    if (is.na(value[1])) "none" else as.character(value[1])
+  }, character(1))), collapse = "\n")
+}
+
 createBroadConsentDecisionTable <- function(connection, query, source_relation = "source") {
   name <- basename(tempfile("broad_consent_rows_"))
   table <- snapshotQualifiedName(connection, name)
@@ -66,11 +102,16 @@ createBroadConsentDecisionTable <- function(connection, query, source_relation =
   DBI::dbExecute(connection, paste0("ALTER TABLE ", table, " ALTER COLUMN row_id SET NOT NULL"))
   tryCatch(
     DBI::dbExecute(connection, paste0("CREATE UNIQUE INDEX ON ", table, " (row_id)")),
-    error = function(error) stop(
-      "Could not create unique Broad Consent decision index for source relation ", source_relation,
-      ": ", conditionMessage(error),
-      call. = FALSE
-    )
+    error = function(error) {
+      diagnostic <- tryCatch(getBroadConsentDecisionConflictDiagnostic(connection, table),
+        error = function(diagnostic_error) "Conflict diagnostic unavailable; no source values logged."
+      )
+      stop(
+        "Could not create unique Broad Consent decision index for source relation ", source_relation,
+        ".\nBroad Consent decision conflict diagnostic (counts after deduplication):\n", diagnostic,
+        call. = FALSE
+      )
+    }
   )
   DBI::dbExecute(connection, paste0("CREATE INDEX ON ", table, " (resource_id, version_id, reason)"))
   DBI::dbExecute(connection, paste0("ANALYZE ", table))

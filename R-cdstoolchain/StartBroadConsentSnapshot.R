@@ -48,7 +48,7 @@ dataprocessor_config <- etlutils::initModule(
   ),
   mandatory_parameters = "PATH_TO_DB_CONFIG_TOML"
 )
-etlutils::startModule(dataprocessor_config, hide_value_pattern = "TOKEN|PASSWORD|SALT")
+etlutils::startModule(dataprocessor_config, hide_value_pattern = ".*")
 
 db_config <- etlutils::readTomlAsNamedList(command_arguments[["path_to_db_config_toml"]])
 
@@ -128,6 +128,9 @@ invisible(tryCatch(
     }
   }
 ))
+
+# Flush the module log and remove terminal colour sequences before exiting.
+etlutils::endLogging()
 
 if (!interactive()) {
   quit(status = status, save = "no")
