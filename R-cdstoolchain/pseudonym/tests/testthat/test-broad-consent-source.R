@@ -6,6 +6,7 @@ test_that("Consent selection runs against PostgreSQL without changing source dat
   on.exit(DBI::dbExecute(connection, paste0("DROP SCHEMA ", DBI::dbQuoteIdentifier(connection, schema), " CASCADE")))
   rows <- data.table::rbindlist(list(
     consentDocumentFixture(), consentProvisionFixture("45"),
+    consentDocumentFixture("b", "2021-01-01 12:00:00"),
     consentProvisionFixture("46", "deny", consent_id = "b", declared_at = "2021-01-01 12:00:00")
   ))
   source <- as.data.frame(rows)

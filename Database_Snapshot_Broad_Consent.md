@@ -63,7 +63,7 @@ Provision-Zeilen werden für die Berechnung zusammengefasst.
 Das Bewertungsdatum ist der einmalig am Start festgehaltene UTC-Kalendertag.
 Provision-Zeiträume werden ebenfalls als UTC-Kalendertage verglichen;
 Anfangs- und Endtag gehören jeweils zum Zeitraum. Für die Reihenfolge
-retrospektiver Erklärungen wird dagegen der vollständige Erklärungszeitpunkt
+aller relevanten Erklärungen wird dagegen der vollständige Erklärungszeitpunkt
 verwendet.
 
 ## Bedeutung der vier Codes
@@ -132,14 +132,14 @@ berechnet werden kann.
 
 ### 2. Beginn der `.6`-Zeiträume an Encounter anpassen
 
-Liegt der Beginn einer `.6`-Provision innerhalb eines bereits begonnenen
+Liegt der Beginn einer `.6`-Erlaubnis innerhalb eines bereits begonnenen
 Encounters desselben Patienten, wird dieser Beginn auf den früheren
 Encounter-Beginn zurückgesetzt. Bei mehreren passenden Encountern zählt der
 früheste Beginn. Der Encounter muss einen gültigen Anfang und ein gültiges Ende
 haben; offene Encounter werden für diese Anpassung nicht verwendet.
 
-Das Ende der Provision bleibt unverändert. Die Anpassung betrifft im aktuellen
-INTERPOLAR-Code sowohl `.6`-Erlaubnisse als auch `.6`-Ablehnungen. Sie gilt für
+Das Ende der Provision bleibt unverändert. Die Anpassung betrifft nur
+`.6`-Erlaubnisse; `.6`-Ablehnungen behalten ihren angegebenen Beginn. Sie gilt für
 alle passenden Encounter, nicht nur für Einrichtungskontakte. `.8`, `.45` und
 `.46` werden in diesem Schritt nicht verändert.
 
@@ -156,53 +156,56 @@ berücksichtigt. Ein reines Widerrufsdokument braucht keine eigenen Erlaubnisse.
 
 ### 4. Aktuelle Datennutzung mit `.8` prüfen
 
-Die `.8`-Erlaubniszeiträume der vollständigen Dokumente werden vereinigt.
-Davon werden sämtliche `.8`-Ablehnungszeiträume abgezogen. Der Bewertungstag
-muss in einem verbleibenden Zeitraum liegen. Andernfalls wird der Patient mit
-`no_current_usage_permission` ausgeschlossen.
+Die Dokumente werden nach ihrem vollständigen `Consent.dateTime` aufsteigend
+verarbeitet. Eine neue `.8`-Erlaubnis fügt ihren Zeitraum hinzu; eine neue
+`.8`-Ablehnung zieht ihren Zeitraum ab. Eine spätere ausdrückliche Erlaubnis
+kann damit eine frühere Ablehnung für ihren Zeitraum überstimmen. Bei exakt
+gleichen Erklärungszeitpunkten gewinnt die Ablehnung, unabhängig von Dokument-ID
+und Zeilenreihenfolge.
 
-Hier zählt die zeitliche Abdeckung durch die Provisions, nicht ein allgemeines
-„das neueste Dokument gewinnt“. Ein späteres `.8 permit` entfernt daher keine
-weiterhin überlappende `.8 deny`-Provision aus der Berechnung.
-
-Der verbleibende `.8`-Zeitraum wird **nicht** mit den `.6`-Datenzeiträumen
-geschnitten. `.8` beantwortet die Frage, ob die Nutzung heute zulässig ist;
-`.6` beantwortet, aus welchen Zeiträumen die Daten stammen dürfen.
+Nach Verarbeitung aller Erklärungen muss der Bewertungstag in einem verbleibenden
+`.8`-Zeitraum liegen. Andernfalls wird der Patient mit
+`no_current_usage_permission` ausgeschlossen. Der verbleibende `.8`-Zeitraum
+wird **nicht** mit den `.6`-Datenzeiträumen geschnitten: `.8` prüft die heutige
+Nutzung, `.6` bestimmt die erlaubten Datenzeiträume.
 
 ### 5. Retrospektive Freigaben aus `.45` und `.46` berechnen
 
-Zuerst wird geprüft, ob retrospektive Freigaben widerrufen wurden. Der zeitlich
-neueste `deny` für `.45` oder `.46` hebt alle früher oder gleichzeitig erklärten
-retrospektiven `permit`-Provisions des Patienten auf. Das gilt über
-Dokumentgrenzen und über beide Codes hinweg: Ein `.46 deny` kann auch eine
-frühere `.45 permit`-Provision aufheben. Bei gleichem Erklärungszeitpunkt gewinnt
-die Ablehnung. Eine danach erklärte retrospektive Erlaubnis kann erneut wirken.
-Die Ablehnung hebt dabei die betreffende Erweiterung insgesamt auf; ihr Zeitraum
-wird nicht als einzelne Lücke aus dem erweiterten Datenzeitraum ausgeschnitten.
+Eine retrospektive Erlaubnis erweitert eine `.6`-Erlaubnis nur, wenn beide im
+selben vollständigen Consent-Dokument stehen und sich ihre Zeiträume mindestens
+an einem Tag überschneiden. Verglichen wird der in Schritt 2 bereits an Encounter
+angepasste `.6`-Zeitraum. Die Erweiterung beginnt am **01.01.1900** und endet am
+unveränderten `.6`-Ende. Ein alleinstehendes Retro-Permit erweitert keine anderen
+Dokumente und entfernt keine bestehenden Freigaben.
 
-Eine verbliebene retrospektive Erlaubnis erweitert eine `.6`-Erlaubnis nur, wenn
-beide im selben vollständigen Consent-Dokument stehen und sich ihre Zeiträume
-mindestens an einem Tag überschneiden. Verglichen wird der in Schritt 2 bereits
-an Encounter angepasste `.6`-Zeitraum.
+Ein späteres `.45 deny` oder `.46 deny` setzt dagegen die **gesamten bisher
+angesammelten `.6`-Freigaben** zurück, einschließlich regulärer Freigaben und
+unabhängig von einer Überschneidung mit dem angegebenen Widerrufszeitraum.
+Das gilt dokument- und codeübergreifend. Eigene `.6`-Erlaubnisse im neuen
+vollständigen Dokument bleiben erhalten. Ein reines Retro-Widerrufsdokument
+hinterlässt daher zunächst keinen erlaubten Datenzeitraum. Spätere vollständige
+Erlaubnisdokumente können erneut Freigaben erteilen.
 
-Bei einer solchen Überschneidung wird der `.6`-Beginn auf **01.01.1900** gesetzt;
-das `.6`-Ende bleibt unverändert. Die Überschneidung ist also die Voraussetzung
-für die Erweiterung, nicht der neue erlaubte Datenzeitraum. Wurde eine
-retrospektive Erlaubnis widerrufen, bleibt die zugehörige `.6`-Erlaubnis mit ihrem
-ursprünglichen beziehungsweise an Encounter angepassten Beginn bestehen.
+Enthält das zurücksetzende Dokument selbst eine passende Retro-Erlaubnis, werden
+seine Retro-Ablehnungszeiträume aus deren Erweiterung ausgeschnitten; die eigenen
+regulären `.6`-Erlaubnisse bleiben erhalten. Bei gleichzeitig erklärten Dokumenten
+hat die Einschränkung Vorrang: Ein Reset verwirft auch Beiträge anderer
+Dokumente dieses Zeitpunkts ohne eigenen Reset. Eine Retro-Ablehnung in einem
+anderen gleichzeitigen Dokument verhindert die Retro-Erweiterung. Reguläre
+Erlaubnisse aus den zurücksetzenden Dokumenten werden zusammengeführt.
+
+Der Reset betrifft die Berechnung der Freigaben für den abgeleiteten BC-Snapshot;
+er löscht keine gespeicherten Datenversionen aus dem Quellsnapshot.
 
 ### 6. Endgültige Datenzeiträume aus `.6` bilden
 
-Die `.6`-Erlaubnisse werden für diesen Schritt in zwei Gruppen aufgeteilt:
-
-- Von den **nicht retrospektiv erweiterten** Zeiträumen werden sämtliche
-  `.6`-Ablehnungszeiträume abgezogen, einschließlich der in Schritt 2
-  angepassten Ablehnungen. Ein späteres `.6 permit` hebt eine vorhandene
-  überlappende `.6 deny`-Provision dabei nicht automatisch auf.
-- **Retrospektiv erweiterte** Zeiträume werden unverändert hinzugefügt.
-  Sie werden entsprechend der übernommenen TORCH-Semantik nicht durch
-  `.6 deny` gekürzt. Ihre Erweiterung wird über `.45`/`.46`-Widerrufe gesteuert;
-  die `.8`-Prüfung bleibt trotzdem Voraussetzung.
+Auch `.6` wird chronologisch verarbeitet. Nach dem gegebenenfalls erforderlichen
+Reset werden die eigenen regulären und retrospektiv erweiterten Erlaubnisse
+hinzugefügt und anschließend die `.6`-Ablehnungszeiträume abgezogen. **Eine
+Retro-Erweiterung ist nicht gegen `.6`-Widerrufe geschützt.** Eine spätere
+Erlaubnis kann einen zuvor gesperrten Zeitraum wieder freigeben, jedoch nur im
+Umfang ihrer eigenen regulären beziehungsweise retrospektiven Freigabe.
+Bei gleichem Erklärungszeitpunkt werden alle `.6`-Ablehnungen zuletzt angewendet.
 
 Anschließend werden die verbleibenden Zeiträume vereinigt. Überlappende
 Zeiträume und direkt aufeinanderfolgende Tage werden zusammengefasst; echte
@@ -225,11 +228,13 @@ die einen Provision-Beginn verschieben.
 | Fall | Ausgangslage | Ergebnis |
 |---|---|---|
 | Historische Daten bei heutiger Nutzungsberechtigung | `.6 permit`: 2020–2025; `.8 permit`: 2026–2050, im selben Dokument | Patient zugelassen; Datenzeitraum bleibt 2020–2025. Die fehlende zeitliche Überschneidung mit `.8` entfernt diese Daten nicht. |
-| Lücke durch `.6 deny` | `.6 permit`: 2020–2025; separates `.6 deny`: Kalenderjahr 2022 | Datenzeiträume 2020–2021 und 2023–2025. |
-| Retrospektive Erweiterung | Zusätzlich zum vorigen Fall: passende `.45 permit` im vollständigen Erlaubnisdokument | Datenzeitraum 01.01.1900–31.12.2025; die `.6`-Ablehnung erzeugt in der retrospektiven Erweiterung keine Lücke. |
-| Dokumentübergreifender Retro-Widerruf | Erweiterung durch `.45 permit`, erklärt 2020; `.46 deny` in einem anderen Dokument, erklärt 2021 | Erweiterung entfällt. Die reguläre `.6`-Erlaubnis und ihre `.6`-Ablehnungen bestimmen wieder die Datenzeiträume. |
+| Lücke durch `.6 deny` | `.6 permit`: 2020–2025; später erklärtes separates `.6 deny`: Kalenderjahr 2022 | Datenzeiträume 2020–2021 und 2023–2025. |
+| Retrospektive Erweiterung | Zusätzlich zum vorigen Fall: passende `.45 permit` im vollständigen Erlaubnisdokument | Datenzeiträume 01.01.1900–31.12.2021 und 01.01.2023–31.12.2025; die später erklärte `.6`-Ablehnung bleibt wirksam. |
+| Dokumentübergreifender Retro-Widerruf | Erweiterung durch `.45 permit`, erklärt 2020; `.46 deny` in einem anderen Dokument, erklärt 2021 | Alle bisherigen `.6`-Freigaben entfallen; ohne neue eigene Erlaubnisse wird der Patient ausgeschlossen. |
 | Erneute Retro-Erlaubnis | Nach dem Retro-Widerruf folgt 2022 ein neues vollständiges Dokument mit `.6`, `.8` und passender `.45 permit` | Die spätere retrospektive Erlaubnis kann wieder bis 01.01.1900 erweitern. |
-| Aktuelle Nutzung widerrufen | `.8 deny` deckt den 11.09.2026 ab | Patient vollständig ausgeschlossen, auch bei wirksamer retrospektiver Erweiterung. |
+| Wiederfreigabe | `.6 deny` für 2024, danach vollständiges Dokument mit `.6 permit` für 2024 | 2024 wird erneut freigegeben. |
+| Reset mit neuer regulärer Freigabe | Alte Freigabe 2020–2023; neues vollständiges Dokument mit `.6 permit` für 2025–2028 und `.45 deny` | Nur 2025–2028 bleibt erlaubt. |
+| Aktuelle Nutzung widerrufen | Letzte wirksame Erklärung für den 11.09.2026 ist `.8 deny` | Patient vollständig ausgeschlossen, auch bei wirksamer retrospektiver Erweiterung. |
 | Encounter-Anpassung | `.6 permit`: 05.–15.03.2026; Encounter: 01.–20.03.2026 | `.6` wird auf 01.–15.03. erweitert. Der Encounter selbst wird nicht übernommen, weil sein Ende außerhalb liegt; ein Laborwert vom 08.03. kann bleiben. |
 
 ## Zeitliche Prüfung der Ressourcen
@@ -360,14 +365,15 @@ Schritte und die zugehörigen Tests maßgeblich. Insbesondere:
   Auswahloption berücksichtigt.
 - Die globale Prüfung der Patientenzuordnung und der Ausschluss zukünftiger
   Erklärungen verhindern Freigaben bei diesen widersprüchlichen Quelldaten.
-- Retrospektive Widerrufe gelten in INTERPOLAR nach ihrer Erklärungsreihenfolge
-  dokument- und codeübergreifend, wie in Schritt 5 beschrieben. Die
-  TORCH-Dokumentation dieses Referenzstands beschreibt dagegen eine
-  dokumentinterne Verrechnung der Retro-Widerrufszeiträume. Diese Passage darf
-  deshalb nicht unverändert als Beschreibung des INTERPOLAR-Verhaltens gelesen
-  werden.
-- Die Encounter-Anpassung des `.6`-Beginns betrifft im INTERPOLAR-Code sowohl
-  `permit` als auch `deny` und ist nicht über einen Schalter abschaltbar.
+- Die chronologische Verrechnung, Aufhebung der `.6`-Widerrufsimmunität und der
+  Retro-Historienreset orientieren sich am noch offenen
+  [TORCH-PR #1258, Stand `8a7bee63`](https://github.com/medizininformatik-initiative/torch/blob/8a7bee63c79403040fc9723cf3d20123256593d4/src/main/java/de/medizininformatikinitiative/torch/consent/ConsentCalculator.java)
+  (geprüft am 15.09.2026). TORCH `main` enthielt diese Änderungen zu diesem
+  Zeitpunkt noch nicht. Bei identischen Erklärungszeitpunkten entscheidet
+  INTERPOLAR ausdrücklich zugunsten der Ablehnung; der PR sortiert nach Dokument-ID.
+- Die Encounter-Anpassung des `.6`-Beginns betrifft wie in TORCH nur `permit`.
+  INTERPOLAR berücksichtigt weiterhin alle passenden Encounter, nicht nur das
+  TORCH-Profil „KontaktGesundheitseinrichtung“.
 - Referenzen auf ausgeschlossene Ziele werden in erhaltenen Zeilen maskiert.
   Abhängige gültige Ressourcen dürfen dadurch auch bei einer unvollständigen
   Encounter-Hierarchie erhalten bleiben.

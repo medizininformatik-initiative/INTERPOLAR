@@ -12,8 +12,8 @@ newBroadConsentReview <- function(output_dir, evaluation_date, source_name, deta
     "IDs are taken from the source snapshot; no depseudonymization is performed.",
     "The consent-only review does not validate individual clinical resources.",
     "Original intervals remain in provisions.csv; changes.csv records adjusted intervals.",
-    "retrospective_permit_revoked: a later or simultaneous .45/.46 deny wins.",
-    "retrospective_start_applied: a surviving modifier extends .6 to 1900-01-01.",
+    "retrospective_history_reset: .45/.46 deny discards prior .6 grants, not just the stated period.",
+    "retrospective_start_applied: a modifier extends .6; subsequent restrictions can reduce it.",
     "encounter_start_applied: .6 starts at the earlier enclosing Encounter start."
   ), file.path(output_dir, "README.txt"))
   list(directory = output_dir, details = details)

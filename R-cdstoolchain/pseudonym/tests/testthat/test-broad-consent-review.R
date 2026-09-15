@@ -8,7 +8,7 @@ test_that("review preserves source evidence and records final intervals", {
   review <- newBroadConsentReview(tempfile(), as.Date("2026-09-08"), "synthetic", TRUE)
   on.exit(unlink(review$directory, recursive = TRUE))
   writeBroadConsentPatientReview(review, "p1", rows, result)
-  finishBroadConsentReview(review, data.table::data.table(reason = "included", patients = 1L))
+  finishBroadConsentReview(review, data.table::data.table(reason = result$reason, patients = 1L))
   expect_true(file.exists(file.path(review$directory, "COMPLETE")))
   expect_equal(rows, original)
   expect_equal(calculateBroadConsentPatient(rows, NULL, as.Date("2026-09-08")), result)
@@ -16,9 +16,9 @@ test_that("review preserves source evidence and records final intervals", {
   expect_equal(as.Date(intervals$start), result$periods$start)
   expect_equal(as.Date(intervals$end), result$periods$end)
   changes <- data.table::fread(file.path(review$directory, "changes.csv"))
-  revoked <- changes[changes$action == "retrospective_permit_revoked", ]
-  expect_equal(revoked$consent_id, "a")
-  expect_equal(revoked$related_id, "b")
+  revoked <- changes[changes$action == "retrospective_history_reset", ]
+  expect_equal(revoked$consent_id, "b")
+  expect_true(is.na(revoked$related_id))
 })
 
 test_that("summary-only review does not write patient details", {

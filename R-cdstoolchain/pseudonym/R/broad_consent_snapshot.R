@@ -485,7 +485,7 @@ createBroadConsentSnapshotDatabase <- function(
     target_connection, snapshotRelationId("broad_consent_run", target_table_schema),
     data.frame(
       source_database = source_name, evaluation_date = evaluation_date,
-      torch_commit = "b12757d09a525ae1a3309e4aded999b209b1d600", completed_at = Sys.time()
+      torch_commit = "8a7bee63c79403040fc9723cf3d20123256593d4", completed_at = Sys.time()
     )
   )
   result

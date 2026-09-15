@@ -28,9 +28,9 @@ test_that("cross-document retrospective revocation and renewed permits respect c
         consent_id = "b", declared_at = "2021-01-01 12:00:00"
       )))
       result <- calculate(rows)
-      expect_equal(result$periods$start, as.Date("2020-01-01"))
-      expect_equal(result$periods$end, as.Date("2025-12-31"))
-      expect_true("retrospective_permit_revoked" %in% result$changes$action)
+      expect_false(result$included)
+      expect_equal(nrow(result$periods), 0L)
+      expect_true("retrospective_history_reset" %in% result$changes$action)
       rows <- data.table::rbindlist(list(
         rows,
         consentDocumentFixture("c", "2022-01-01 12:00:00"),
@@ -43,7 +43,7 @@ test_that("cross-document retrospective revocation and renewed permits respect c
         deny_code, "deny",
         consent_id = "d", declared_at = "2022-01-01 12:00:00"
       )))
-      expect_equal(calculate(rows)$periods$start, as.Date("2020-01-01"))
+      expect_false(calculate(rows)$included)
       expect_equal(calculate(rows[nrow(rows):1L, ])$periods, calculate(rows)$periods)
     }
   }
@@ -59,7 +59,7 @@ test_that("regular denies cut intervals and global usage deny excludes the patie
   rows <- data.table::rbindlist(list(rows, consentProvisionFixture("45")))
   expect_equal(
     calculateBroadConsentPatient(rows, NULL, as.Date("2026-09-08"))$periods$start,
-    as.Date("1900-01-01")
+    as.Date(c("1900-01-01", "2023-01-01"))
   )
   rows <- data.table::rbindlist(list(rows, consentProvisionFixture(
     "8", "deny", "2026-01-01", "2050-01-01", "d", "2026-01-01 12:00:00"
@@ -77,6 +77,26 @@ test_that("encounter adjustment changes only start and ignores open encounters",
   expect_equal(result$periods$start, as.Date("2019-12-20"))
   expect_equal(result$periods$end, as.Date("2025-12-31"))
   expect_equal(result$changes$related_id, "earliest")
+})
+
+test_that("encounters extend permits without moving later collection deny boundaries", {
+  rows <- consentDocumentFixture("a", "2026-03-10 12:00:00")
+  rows$start[rows$code == paste0(BROAD_CONSENT_CODE_PREFIX, "6")] <- as.Date("2026-03-10")
+  rows$end[rows$code == paste0(BROAD_CONSENT_CODE_PREFIX, "6")] <- as.Date("2026-03-20")
+  rows <- data.table::rbindlist(list(rows, consentProvisionFixture(
+    "6", "deny", "2026-03-10", "2026-03-15", "b", "2026-03-11 12:00:00"
+  )))
+  encounters <- data.table::data.table(
+    encounter_id = "stay", start = as.Date("2026-03-01"), end = as.Date("2026-03-20")
+  )
+  result <- calculateBroadConsentPatient(rows, encounters, as.Date("2026-09-15"))
+  expect_true(result$included)
+  expect_equal(result$periods, data.table::data.table(
+    start = as.Date(c("2026-03-01", "2026-03-16")),
+    end = as.Date(c("2026-03-09", "2026-03-20"))
+  ))
+  expect_equal(result$changes$action, "encounter_start_applied")
+  expect_equal(result$changes$consent_id, "a")
 })
 
 test_that("incomplete restrictions cannot leave a patient permitted", {
@@ -144,4 +164,119 @@ test_that("future declarations cannot grant rights or leave other grants effecti
   expect_true(calculateBroadConsentPatient(
     data.table::rbindlist(list(consentDocumentFixture(), ignored)), NULL, evaluation_date
   )$included)
+})
+
+
+test_that("later collection and usage declarations replace earlier decisions in their periods", {
+  for (code in c("6", "8")) {
+    rows <- data.table::rbindlist(list(consentDocumentFixture(), consentProvisionFixture(
+      code, "deny", "2023-01-01", "2050-01-01", "b", "2023-01-01 00:00:00"
+    )))
+    calculate <- function(x) calculateBroadConsentPatient(x, NULL, as.Date("2026-09-15"))
+    if (code == "6") {
+      expect_equal(calculate(rows)$periods$end, as.Date("2022-12-31"))
+    } else {
+      expect_false(calculate(rows)$included)
+    }
+    renewed <- consentDocumentFixture("c", "2024-01-01 00:00:00")
+    rows <- data.table::rbindlist(list(rows, renewed))
+    expect_true(calculate(rows)$included)
+    expect_equal(calculate(rows)$periods, calculate(consentDocumentFixture())$periods)
+    expect_equal(calculate(rows[nrow(rows):1L, ]), calculate(rows))
+  }
+})
+
+test_that("collection deny cuts retro grants and later partial grants restore only their own period", {
+  rows <- data.table::rbindlist(list(
+    consentDocumentFixture(), consentProvisionFixture("45"),
+    consentProvisionFixture("6", "deny", "2023-01-01", "2025-12-31", "b", "2023-01-01 00:00:00")
+  ))
+  calculate <- function(x) calculateBroadConsentPatient(x, NULL, as.Date("2026-09-15"))
+  expect_equal(calculate(rows)$periods, data.table::data.table(
+    start = as.Date("1900-01-01"), end = as.Date("2022-12-31")
+  ))
+  renewed <- consentDocumentFixture("c", "2024-01-01 00:00:00")
+  renewed$start[renewed$code == paste0(BROAD_CONSENT_CODE_PREFIX, "6")] <- as.Date("2024-01-01")
+  renewed$end[renewed$code == paste0(BROAD_CONSENT_CODE_PREFIX, "6")] <- as.Date("2024-12-31")
+  rows <- data.table::rbindlist(list(rows, renewed))
+  expect_equal(calculate(rows)$periods, data.table::data.table(
+    start = as.Date(c("1900-01-01", "2024-01-01")),
+    end = as.Date(c("2022-12-31", "2024-12-31"))
+  ))
+})
+
+test_that("retro deny resets regular history and retains only the new document's grants", {
+  for (code in c("45", "46")) {
+    original <- consentDocumentFixture()
+    original$end[original$code == paste0(BROAD_CONSENT_CODE_PREFIX, "6")] <- as.Date("2023-12-31")
+    restriction <- consentProvisionFixture(
+      code, "deny", "2025-01-01", "2028-12-31", "b", "2025-01-01 00:00:00"
+    )
+    calculate <- function(x) calculateBroadConsentPatient(x, NULL, as.Date("2026-09-15"))
+    rows <- data.table::rbindlist(list(original, restriction))
+    expect_false(calculate(rows)$included)
+    renewed <- consentDocumentFixture("b", "2025-01-01 00:00:00")
+    renewed$start[renewed$code == paste0(BROAD_CONSENT_CODE_PREFIX, "6")] <- as.Date("2025-01-01")
+    renewed$end[renewed$code == paste0(BROAD_CONSENT_CODE_PREFIX, "6")] <- as.Date("2028-12-31")
+    rows <- data.table::rbindlist(list(rows, renewed))
+    expect_equal(calculate(rows)$periods, data.table::data.table(
+      start = as.Date("2025-01-01"), end = as.Date("2028-12-31")
+    ))
+    expect_equal(calculate(rows[nrow(rows):1L, ]), calculate(rows))
+  }
+})
+
+test_that("a standalone retro permit never resets or extends another document", {
+  rows <- data.table::rbindlist(list(consentDocumentFixture(), consentProvisionFixture(
+    "45",
+    consent_id = "b", declared_at = "2021-01-01 00:00:00"
+  )))
+  result <- calculateBroadConsentPatient(rows, NULL, as.Date("2026-09-15"))
+  expect_equal(result$periods, data.table::data.table(
+    start = as.Date("2020-01-01"), end = as.Date("2025-12-31")
+  ))
+})
+
+test_that("simultaneous denies win independently of document IDs and row order", {
+  for (code in c("6", "8", "45", "46")) {
+    for (deny_id in c("0", "z")) {
+      rows <- data.table::rbindlist(list(
+        consentDocumentFixture(), consentProvisionFixture("45"),
+        consentProvisionFixture(code, "deny", "1900-01-01", "2050-01-01", deny_id)
+      ))
+      result <- calculateBroadConsentPatient(rows, NULL, as.Date("2026-09-15"))
+      expect_false(result$included)
+      expect_equal(calculateBroadConsentPatient(rows[nrow(rows):1L, ], NULL, as.Date("2026-09-15")), result)
+    }
+  }
+})
+
+test_that("same-document retro restriction reduces extension but preserves all regular grants", {
+  rows <- data.table::rbindlist(list(
+    consentDocumentFixture(), consentProvisionFixture("45"),
+    consentProvisionFixture("46", "deny", "1900-01-01", "2018-12-31"),
+    consentProvisionFixture("6", start = "2027-01-01", end = "2027-12-31")
+  ))
+  result <- calculateBroadConsentPatient(rows, NULL, as.Date("2026-09-15"))
+  expect_equal(result$periods, data.table::data.table(
+    start = as.Date(c("2019-01-01", "2027-01-01")),
+    end = as.Date(c("2025-12-31", "2027-12-31"))
+  ))
+  rows <- data.table::rbindlist(list(rows, consentProvisionFixture("6", "deny", "2022-01-01", "2022-12-31")))
+  result <- calculateBroadConsentPatient(rows, NULL, as.Date("2026-09-15"))
+  expect_equal(result$periods, data.table::data.table(
+    start = as.Date(c("2019-01-01", "2023-01-01", "2027-01-01")),
+    end = as.Date(c("2021-12-31", "2025-12-31", "2027-12-31"))
+  ))
+})
+
+test_that("incomplete later documents cannot restore collection or usage permissions", {
+  for (code in c("6", "8")) {
+    rows <- data.table::rbindlist(list(
+      consentDocumentFixture(),
+      consentProvisionFixture(code, "deny", "1900-01-01", "2050-01-01", "b", "2021-01-01 00:00:00"),
+      consentProvisionFixture(code, "permit", "1900-01-01", "2050-01-01", "c", "2022-01-01 00:00:00")
+    ))
+    expect_false(calculateBroadConsentPatient(rows, NULL, as.Date("2026-09-15"))$included)
+  }
 })
