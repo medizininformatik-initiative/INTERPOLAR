@@ -163,7 +163,7 @@ reportNewLoincUnitConversionIssues <- function(context, review) {
   }
   for (row_index in new_rows) {
     message(
-      "WARNING: Laboreinheit nicht umrechenbar: LOINC ",
+      "INFO: Laborwert und Quelleinheit beibehalten: LOINC ",
       review[["LOINC_CODE"]][row_index],
       "; verwendete Einheit ",
       formatLoincUnitReviewValue(review[["USED_SOURCE_UNIT"]][row_index]),

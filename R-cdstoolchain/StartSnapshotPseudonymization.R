@@ -89,25 +89,21 @@ invisible(tryCatch(
       medication_issue_summary <- issue_report[["medication_issue_summary"]]
       age_issue_summary <- issue_report[["age_issue_summary"]]
       loinc_unit_issues <- issue_report[["loinc_unit_conversion_issues"]]
-      issue_count <- sum(
-        medication_issue_summary[["UNMATCHED_ROWS"]],
-        age_issue_summary[["AFFECTED_ROWS"]],
-        loinc_unit_issues[["AFFECTED_ROWS"]],
-        na.rm = TRUE
-      )
+      summary <- pseudonymization_result[["pseudonymization"]][["summary"]]
       issue_report_file <- file.path(report_dir, "snapshot_pseudonymization_issues.xlsx")
-      if (issue_count > 0) {
-        message(
-          "\nWARNING: ", issue_count,
-          " pseudonymization issues were detected.",
-          "\nISSUE REPORT: ", issue_report_file
-        )
-      } else {
-        message(
-          "\nNo pseudonymization issues were detected.",
-          "\nISSUE REPORT: ", issue_report_file
-        )
-      }
+      etlutils::catInfoMessage(paste0(
+        "INFO: Snapshot pseudonymization completed successfully: ",
+        sum(summary[["INPUT_ROWS"]]), " input rows processed, ",
+        sum(summary[["OUTPUT_ROWS"]]), " output rows written.\n",
+        "INFO: Additional data enrichment: ",
+        sum(loinc_unit_issues[["AFFECTED_ROWS"]], na.rm = TRUE),
+        " lab values retained with source value and unit; ",
+        sum(medication_issue_summary[["UNMATCHED_ROWS"]], na.rm = TRUE),
+        " medication reference issues; ",
+        sum(age_issue_summary[["AFFECTED_ROWS"]], na.rm = TRUE),
+        " age values could not be calculated.\n",
+        "INFO: Enrichment report: ", issue_report_file, "\n"
+      ))
       invisible(pseudonymization_result)
     }
   },

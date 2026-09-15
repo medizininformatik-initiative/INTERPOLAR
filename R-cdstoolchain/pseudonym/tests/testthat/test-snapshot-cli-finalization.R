@@ -33,6 +33,11 @@ test_that("snapshot CLIs finalize logs and performance on success and failure", 
         timings <- utils::read.delim(performance)
         expect_true("Synthetic snapshot phase" %in% timings$msg, info = info)
       }
+      if (script == "StartSnapshotPseudonymization.R" && scenario == "success") {
+        expect_true(any(grepl("INFO: Snapshot pseudonymization completed successfully: 1000 input rows processed, 1200 output rows written.", log, fixed = TRUE)))
+        expect_true(any(grepl("20 lab values retained with source value and unit; 3 medication reference issues; 2 age values could not be calculated.", log, fixed = TRUE)))
+        expect_false(any(grepl("WARNING:", log, fixed = TRUE)))
+      }
       if (scenario == "error") {
         expect_true(any(grepl("Synthetic workload failure", log, fixed = TRUE)), info = info)
       }

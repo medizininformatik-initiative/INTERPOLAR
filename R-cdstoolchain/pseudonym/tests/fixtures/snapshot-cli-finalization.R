@@ -42,10 +42,10 @@ runCli <- function() {
     # The CLI catches this error, but the logger has no ERROR state. Its
     # successful finalization must not turn the CLI exit status back to zero.
     if (scenario == "error") stop("Synthetic workload failure")
-    list(issue_report = list(
-      medication_issue_summary = list(UNMATCHED_ROWS = 0L),
-      age_issue_summary = list(AFFECTED_ROWS = 0L),
-      loinc_unit_conversion_issues = list(AFFECTED_ROWS = 0L)
+    list(pseudonymization = list(summary = list(INPUT_ROWS = 1000L, OUTPUT_ROWS = 1200L)), issue_report = list(
+      medication_issue_summary = list(UNMATCHED_ROWS = 3L),
+      age_issue_summary = list(AFFECTED_ROWS = 2L),
+      loinc_unit_conversion_issues = list(AFFECTED_ROWS = 20L)
     ))
   }
   testthat::local_mocked_bindings(
