@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -o pipefail
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/tools/snapshot-progress.sh"
 #====================================================================
 #  script‑name : ip-snapshot.sh
 #  Zweck      : Erzeugt oder löscht eine Datei, deren Name als
@@ -249,7 +250,8 @@ check_live_database_pseudonym_mapping() {
     done < <(container_input_repo_mount_args)
 
     echo "Checking pseudonym mapping against the current database before creating the snapshot..."
-    if ! docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
+    if ! run_with_snapshot_progress "Snapshot mapping check" cds_hub_db "" "" \
+        docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
         source-db=cds_hub_db ; then
         echo "Fix the pseudonym mapping and run the create command again."
@@ -507,7 +509,8 @@ create_pseudonymized_snapshot() {
     fi
 
     echo "Starting pseudonymization from '${source_database}' to '${target_build_db}'..."
-    if docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
+    if run_with_snapshot_progress "Snapshot pseudonymization" "${source_database}" "${target_build_db}" "" \
+        docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
         source-db="${source_database}" \
         target-db="${target_build_db}" \
@@ -525,7 +528,8 @@ create_pseudonymized_snapshot() {
     fi
 
     echo "Creating pseudonymized snapshot '${pseudonymized_file_path}'..."
-    if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
+    if run_with_snapshot_progress "Pseudonymized snapshot export" "${target_build_db}" "" "${pseudonymized_file_path}" \
+        docker compose exec -T cds_hub pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
         --format=plain --compress=gzip > "${pseudonymized_file_path}" ; then
         echo "File \"${pseudonymized_file_path}\" created."
         ls -ho "${pseudonymized_file_path}"
@@ -629,7 +633,8 @@ create_broad_consent_snapshot() {
     fi
 
     echo "Creating Broad Consent snapshot data from '${source_database_name}'..."
-    if docker compose run --rm --no-deps r-env \
+    if run_with_snapshot_progress "Broad Consent snapshot selection" "${source_database_name}" "${target_build_db}" "" \
+        docker compose run --rm --no-deps r-env \
         Rscript R-cdstoolchain/StartBroadConsentSnapshot.R \
         source-db="${source_database_name}" \
         target-db="${target_build_db}" \
@@ -642,7 +647,8 @@ create_broad_consent_snapshot() {
     fi
 
     echo "Creating Broad Consent snapshot file '${broad_consent_file_path}'..."
-    if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
+    if run_with_snapshot_progress "Broad Consent snapshot export" "${target_build_db}" "" "${broad_consent_file_path}" \
+        docker compose exec -T cds_hub pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
         --format=plain --compress=gzip > "${broad_consent_file_path}" ; then
         echo "File \"${broad_consent_file_path}\" created."
         ls -ho "${broad_consent_file_path}"
@@ -772,7 +778,8 @@ case "$action" in
         # Snapshot erstellen
         SECONDS=0;
         check_live_database_pseudonym_mapping "${chunk_size}"
-        if docker compose exec cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table=db_config.v_cron_jobs --exclude-table='*.*_raw*' --compress=gzip > $file_date_path; then
+        if run_with_snapshot_progress "Snapshot export" cds_hub_db "" "$file_date_path" \
+            docker compose exec -T cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table=db_config.v_cron_jobs --exclude-table='*.*_raw*' --compress=gzip > "$file_date_path"; then
             echo "File \"${file_date_path}\" created."
             ls -ho ${file_date_path}
         else

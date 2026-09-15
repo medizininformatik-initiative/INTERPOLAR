@@ -330,6 +330,9 @@ angegeben werden.
 
 ## Verhalten bei Fehlern
 
+Den Pfad zum ausführlichen R-Log nennt der Prozess am Ende. Zusätzliche
+Statusmeldungen stehen in `Snapshots/snapshot-progress.log`.
+
 - Die Fehlermeldung prüfen.
 - Ergänzt das Script `pseudo_mapping.xlsx`, die leeren `PSEUDONYM`-Zellen
   ausfüllen und denselben Befehl erneut starten.

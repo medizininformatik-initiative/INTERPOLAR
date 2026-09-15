@@ -6,7 +6,8 @@ test_dir="$(mktemp -d)"
 trap 'rm -rf "${test_dir}"' EXIT
 
 cp "${repo_root}/ip-snapshot.sh" "${test_dir}/ip-snapshot.sh"
-mkdir "${test_dir}/Snapshots"
+mkdir "${test_dir}/Snapshots" "${test_dir}/tools"
+cp "${repo_root}/tools/snapshot-progress.sh" "${test_dir}/tools/"
 
 snapshot_script="${test_dir}/ip-snapshot.sh"
 database_name="ip_snapshot_20260903_pseud"
