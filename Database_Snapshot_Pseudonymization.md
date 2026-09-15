@@ -6,7 +6,7 @@ Die Pseudonymisierung verarbeitet einen vorhandenen Rohsnapshot und erzeugt
 seine pseudonymisierte Fassung. Sie ergänzt zunächst die für Auswertungen
 benötigten Werte und wendet dann die Regeln für die einzelnen Spalten an.
 Im Standardablauf folgt darauf die Broad-Consent-Auswahl.
-Befehle und Voraussetzungen stehen in der [Bedienungsanleitung](Database_Snapshot.md).
+Befehle stehen in der [Bedienungsanleitung](Database_Snapshot.md).
 
 ## Inhalt
 
@@ -34,10 +34,9 @@ direkt durch. Die für Auswertungen unverändert benannte View
 damit weiterhin alle Versionen. Tabellen ohne Last-Version-View bleiben als
 einzelne Tabelle mit einer durchgereichten `v_<table>`-View erhalten.
 
-Die Zuordnung erfolgt über die technische Zeilen-ID `<table>_id`, die sowohl
-die normale als auch die Last-Version-View bereitstellen muss. Damit übernimmt
-der Snapshot dieselbe Zuordnung zu aktuellen und historischen Zeilen wie die Quelle. Er berechnet nicht selbst, welche Version
-die neueste ist.
+Die aktuellen Zeilen bestimmt die Last-Version-View der Quelle. Bei
+Frontend-Tabellen bleiben auch ältere Bearbeitungsstände mit derselben ID
+in der historischen Partition erhalten.
 
 Aufgenommen werden Tabellen, die über die maßgeblichen Table Descriptions für
 die pseudonymisierte Snapshot-Datenbank ausgewählt sind. Innerhalb dieser
@@ -108,35 +107,15 @@ nicht leer sein. Doppelte Keys sind nicht erlaubt.
 
 ## Vorprüfung und Wiederaufnahme
 
-Vor der Pseudonymisierung prüft das Script die Regeln, Spaltendefinitionen und
-Mapping-Voraussetzungen. Bei einem Problem bricht es mit einer Fehlermeldung
-ab.
+Die Vorprüfung kontrolliert Regeln und Mapping-Werte vor dem Schreiben.
+Fehlende Zuordnungen werden in `Input-Repo/pseudo_mapping.xlsx` ergänzt;
+den Befehl nach dem Ausfüllen erneut starten. Bei kombinierter Snapshot-Erzeugung
+läuft diese Prüfung bereits vor dem Rohsnapshot und nochmals gegen dessen
+konkreten Inhalt.
 
-Bei `create --with-pseudonymized` und `create --with-broad-consent` ergänzt das
-Script fehlende Werte in `Input-Repo/pseudo_mapping.xlsx` bereits vor dem
-normalen Snapshot und bricht ab. Nach dem manuellen Ausfüllen kann derselbe
-Befehl erneut gestartet werden. Direkt im R-Start der eigentlichen
-Pseudonymisierung wird dieselbe Prüfung gegen die konkrete
-Snapshot-Quelldatenbank wiederholt. Wenn dabei zusätzliche Werte gefunden
-werden, wird `pseudo_mapping.xlsx` erneut ergänzt und der Lauf bricht vor dem
-Schreiben der pseudonymisierten Daten ab.
-
-Bei späteren Fehlern bleibt die Quelldatenbank erhalten. Beim nächsten Lauf wird
-sie nur wiederverwendet, wenn ihr vermerkter SHA-256-Wert zur normalen
-Snapshot-Datei passt. Eine unvollständige Zieldatenbank wird entfernt und bei
-der Fortsetzung neu erstellt.
-
-Nach einem erfolgreichen Lauf werden die normale und die pseudonymisierte
-Snapshot-Datenbank in PostgreSQL innerhalb des Docker-Compose-Service `cds_hub`
-schreibgeschützt unter ihren endgültigen Namen bereitgestellt:
-
-```text
-ip_<name>_<Datum>
-ip_<name>_<Datum>_pseud
-```
-
-Mit `deactivate` werden nicht mehr benötigte Snapshot-Datenbanken entfernt. Die
-Snapshot-Dateien bleiben erhalten.
+Bei einem späteren Fehler kann der Lauf erneut gestartet werden. Eine vorhandene
+Quelldatenbank wird nur wiederverwendet, wenn ihre Prüfsumme zur Snapshot-Datei
+passt. Eine unvollständige Zieldatenbank wird neu erstellt.
 
 ## Fachliche Anreicherungen
 
@@ -197,7 +176,7 @@ Snapshot-Datenbank:
 - `pseudonymization_rule_review.xlsx` enthält die technische Prüfung der
   geladenen Regeln. Das Tabellenblatt `README` erklärt die weiteren
   Tabellenblätter. Regelprobleme werden vom INTERPOLAR-Team behoben.
-- `snapshot_pseudonymization_issues.xlsx` ist der Fehlerbericht für fehlende
+- `snapshot_pseudonymization_issues.xlsx` enthält Hinweise auf fehlende
   direkt oder transitiv referenzierte `Medication`-Ressourcen, Referenzketten
   ohne erreichbares Code-/System-Paar, nicht berechenbare Alterswerte und nicht
   umrechenbare Laboreinheiten. Er kann nicht pseudonymisierte Identifikatoren
@@ -208,9 +187,8 @@ Snapshot-Datenbank:
   Öffnen der Quelle, Lesen, Anreichern, Prüfen, Pseudonymisieren und Schreiben
   jeder Tabelle.
 
-Nach erfolgreicher Pseudonymisierung endet die Ausgabe mit einem deutlich
-hervorgehobenen Hinweis auf `snapshot_pseudonymization_issues.xlsx`. Wenn der
-Prozess Probleme gefunden hat, nennt die direkte R-Ausgabe außerdem deren
-Gesamtzahl.
+Die Abschlussmeldung nennt die verarbeiteten Ein- und Ausgabezeilen sowie
+Hinweise je Anreicherungskategorie. Nicht umrechenbare Laborwerte bleiben mit
+Originalwert und Quelleinheit erhalten; der Bericht erklärt den jeweiligen Grund.
 
 Weiter mit der [Broad-Consent-Auswahl](Database_Snapshot_Broad_Consent.md).

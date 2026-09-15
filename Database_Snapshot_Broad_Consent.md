@@ -23,7 +23,6 @@ welche Besonderheiten bei der Übertragung auf Snapshot-Daten gelten.
 - [Zeitliche Prüfung der Ressourcen](#zeitliche-prüfung-der-ressourcen)
 - [Abhängige Tabellen und Encounter-Hierarchien](#abhängige-tabellen-und-encounter-hierarchien)
 - [Entfernte Referenzen und Maskierungsnachweise](#entfernte-referenzen-und-maskierungsnachweise)
-- [Fehlerdiagnose im Log](#fehlerdiagnose-im-log)
 - [Prüfberichte](#prüfberichte)
 - [Abgrenzung zu TORCH und Codequellen](#abgrenzung-zu-torch-und-codequellen)
 
@@ -313,35 +312,6 @@ Nachweis die Patienten-ID für die Prüfung. Nur weiterhin zugelassene Zeilen
 und deren Nachweise werden übernommen.
 `db_log.broad_consent_run` dokumentiert dazu die Quelldatenbank, das
 Bewertungsdatum, den verwendeten TORCH-Stand und den Abschlusszeitpunkt.
-
-## Fehlerdiagnose im Log
-
-Das R-Modullog liegt unter
-`outputLocal/broad_consent_snapshot/log/broad_consent_snapshot-log.txt`.
-Bei kollidierenden technischen Zeilen-IDs enthält es eine zusammengefasste
-Konfliktdiagnose: Anzahl betroffener IDs und unterschiedlicher Entscheidungen,
-Anzahl der Konflikte in Ressourcen-ID, Version, Patientenzuordnung und
-Entscheidungsgrund sowie die vorkommenden Entscheidungsgründe. Zusätzlich wird
-gezählt, wie viele Konflikte ausschließlich ausgeschlossene Zeilen oder eine
-Mischung aus erlaubten und ausgeschlossenen Zeilen betreffen. Die Zählung bezieht
-sich auf Entscheidungssätze nach dem Zusammenfassen identischer Entscheidungen,
-nicht auf die Anzahl ursprünglicher Datenzeilen. Fehlende und befüllte Werte
-werden als unterschiedliche Varianten gezählt.
-
-Diese Diagnose enthält keine konkreten technischen IDs, Patienten- oder
-Ressourcen-IDs, Datumswerte oder Quellzeilen. Auch die PostgreSQL-Fehlerdetails
-mit dem kollidierenden Schlüssel werden für diesen Indexfehler nicht übernommen.
-Konfigurationswerte werden im BC-Log ausgeblendet. Die zusätzliche Auswertung
-läuft nur beim Indexfehler; die Auswahlregeln bleiben unverändert.
-
-Konsole und Log enthalten unterschiedliche Teile des Prozesses: Normale
-R-Textausgaben werden in beide geschrieben, R-Meldungen und Warnungen werden vom
-bestehenden Logger in die Datei umgeleitet. Shell-, Docker- und Dump-Ausgaben
-gehören nicht zum R-Modullog. Die Konfliktdiagnose erscheint über die
-Fehlerausgabe sowohl in der Konsole als auch in der Datei. Beim Abschluss werden
-Terminal-Farbcodes aus der Datei entfernt. Detaillierte Consent-CSV-Berichte
-enthalten dagegen Einzelangaben und sind nicht mit dieser aggregierten
-Fehlerdiagnose gleichzusetzen.
 
 ## Prüfberichte
 
