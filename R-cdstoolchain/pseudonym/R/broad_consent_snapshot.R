@@ -118,7 +118,8 @@ streamBroadConsentSnapshotTable <- function(
   chunk_size,
   version_key_tables,
   selections,
-  reference_targets
+  reference_targets,
+  review
 ) {
   materialized_table_name <- plan_row[["MATERIALIZED_TABLE_NAME"]]
   source_relation_name <- plan_row[["SOURCE_RELATION"]]
@@ -197,10 +198,7 @@ streamBroadConsentSnapshotTable <- function(
       )
       chunk <- masked$chunk
       if (nrow(masked$evidence)) {
-        DBI::dbAppendTable(
-          target_connection,
-          snapshotRelationId(BROAD_CONSENT_MASKED_TABLE, target_table_schema), masked$evidence
-        )
+        appendBroadConsentReviewTable(review, "masked_references", masked$evidence)
       }
       if (isTRUE(first_chunk)) {
         DBI::dbWriteTable(
@@ -255,8 +253,9 @@ writeBroadConsentSnapshotReport <- function(summary, file_name = NA, patients = 
 #'
 #' Materializes the analysis relations of a compatible snapshot database into
 #' a separate target database using current Consent permissions and the resource
-#' date mapping. References to excluded targets become SQL NULL with permanent
-#' masking evidence. The source database is not modified.
+#' date mapping. References to excluded targets become SQL NULL. Masking evidence
+#' and run metadata are written to external reports, not the target database.
+#' The source database is not modified.
 #'
 #' @param source_connection Source DBI connection.
 #' @param target_connection Target DBI connection.
@@ -391,18 +390,7 @@ createBroadConsentSnapshotDatabase <- function(
     log_steps = log_steps
   )
   on.exit(DBI::dbRemoveTable(source_connection, reference_targets), add = TRUE)
-  DBI::dbWriteTable(target_connection, snapshotRelationId(BROAD_CONSENT_MASKED_TABLE, target_table_schema),
-    emptyBroadConsentMaskedReferences(),
-    overwrite = FALSE
-  )
-  runPseudonymizationLogStep(2L,
-    "Copy prior Broad Consent masking evidence",
-    copyBroadConsentPriorEvidence(
-      source_connection, target_connection, selections, result$materialization_plan,
-      source_schema, target_table_schema, source_view_prefix, chunk_size
-    ),
-    log_steps = log_steps
-  )
+  appendBroadConsentReviewTable(review, "masked_references", emptyBroadConsentMaskedReferences())
   result$patient_summary <- consent_selection$summary
   result$evaluation_date <- evaluation_date
   result$review_directory <- review$directory
@@ -424,7 +412,8 @@ createBroadConsentSnapshotDatabase <- function(
             chunk_size = chunk_size,
             version_key_tables = version_key_tables,
             selections = selections,
-            reference_targets = reference_targets
+            reference_targets = reference_targets,
+            review = review
           ),
           log_steps = log_steps
         )
@@ -471,22 +460,8 @@ createBroadConsentSnapshotDatabase <- function(
     log_steps = log_steps
   )
 
-  runPseudonymizationLogStep(2L,
-    "Finalize Broad Consent masking evidence",
-    finalizeBroadConsentMaskedReferences(target_connection, target_table_schema),
-    log_steps = log_steps
-  )
-  DBI::dbExecute(target_connection, paste0(
-    "CREATE VIEW ",
-    snapshotQualifiedName(target_connection, paste0(source_view_prefix, BROAD_CONSENT_MASKED_TABLE), target_view_schema),
-    " AS SELECT * FROM ", snapshotQualifiedName(target_connection, BROAD_CONSENT_MASKED_TABLE, target_table_schema)
+  appendBroadConsentReviewTable(review, "run", data.frame(
+    source_database = source_name, evaluation_date = evaluation_date, completed_at = Sys.time()
   ))
-  DBI::dbWriteTable(
-    target_connection, snapshotRelationId("broad_consent_run", target_table_schema),
-    data.frame(
-      source_database = source_name, evaluation_date = evaluation_date,
-      torch_commit = "8a7bee63c79403040fc9723cf3d20123256593d4", completed_at = Sys.time()
-    )
-  )
   result
 }

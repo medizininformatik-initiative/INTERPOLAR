@@ -1,4 +1,4 @@
-test_that("snapshot retains covered children and records every masked reference permanently", {
+test_that("snapshot retains covered children and writes masking evidence only to external reports", {
   source <- getOption("interpolar.test.postgres_connection")
   target <- getOption("interpolar.test.postgres_target_connection")
   skip_if(is.null(source) || is.null(target), "Two isolated PostgreSQL test connections were not supplied.")
@@ -37,7 +37,7 @@ test_that("snapshot retains covered children and records every masked reference 
   expect_true(is.na(read("pids_per_ward")$encounter_id))
   expect_setequal(read("medication")$med_id, c("m1", "ingredient"))
   expect_equal(nrow(read("location")), 0L)
-  evidence <- DBI::dbReadTable(target, DBI::Id(schema = target_schema, table = BROAD_CONSENT_MASKED_TABLE))
+  evidence <- data.table::fread(file.path(result$review_directory, "masked_references.csv"))
   expect_equal(nrow(evidence), 10L)
   expect_true(all(evidence$reason == "masked"))
   expect_false(any(evidence$row_id == "4" & grepl("observation", evidence$table_name)))
@@ -49,8 +49,12 @@ test_that("snapshot retains covered children and records every masked reference 
     function(base) ncol(tables[[base]]), integer(1)
   )))
   expect_true(any(result$resource_decisions$reason == "missing_resource_date_mapping"))
-  metadata <- DBI::dbReadTable(target, DBI::Id(schema = target_schema, table = "broad_consent_run"))
-  expect_equal(metadata$evaluation_date, as.Date("2026-09-11"))
+  for (name in c("broad_consent_run", "broad_consent_masked_reference", "v_broad_consent_masked_reference")) {
+    expect_false(snapshotRelationExists(target, name, target_schema))
+  }
+  metadata <- data.table::fread(file.path(result$review_directory, "run.csv"))
+  expect_setequal(names(metadata), c("source_database", "evaluation_date", "completed_at"))
+  expect_equal(as.Date(metadata$evaluation_date), as.Date("2026-09-11"))
   review <- reviewBroadConsentSnapshot(
     source,
     project_root = output_root, source_schema = source_schema,
@@ -63,15 +67,19 @@ test_that("snapshot retains covered children and records every masked reference 
       data.table::fread(file.path(result$review_directory, paste0(name, ".csv")))
     )
   }
-  # Details cannot change the selected data. Re-selection must also retain
-  # earlier masking evidence whose original reference value is already NULL.
-  for (input_schema in c(source_schema, target_schema)) {
+  # Both supported source types yield the same selected data without detail reports.
+  for (content_type in c("snapshot", "pseudonymized_snapshot")) {
+    DBI::dbExecute(source, paste0(
+      "UPDATE ", snapshotQualifiedName(source, "v_db_parameter", source_schema),
+      " SET parameter_value = ", DBI::dbQuoteString(source, content_type),
+      " WHERE parameter_name = 'database_content_type'"
+    ))
     next_schema <- basename(tempfile("bc_repeat_"))
     tryCatch(
       {
         repeated <- createBroadConsentSnapshotDatabase(source, target,
           project_root = output_root,
-          source_schema = input_schema, target_table_schema = next_schema, target_view_schema = next_schema,
+          source_schema = source_schema, target_table_schema = next_schema, target_view_schema = next_schema,
           tables = names(tables), chunk_size = 3L, consent_details = FALSE, evaluation_date = as.Date("2026-09-11"),
           report_file = file.path(output_root, paste0(next_schema, ".xlsx")), log_steps = FALSE
         )
@@ -81,12 +89,15 @@ test_that("snapshot retains covered children and records every masked reference 
           key <- snapshotTechnicalRowIdColumn(base)
           expect_equal(actual[order(actual[[key]]), ], expected[order(expected[[key]]), ])
         }
-        repeated_evidence <- DBI::dbReadTable(target, DBI::Id(schema = next_schema, table = BROAD_CONSENT_MASKED_TABLE))
+        repeated_evidence <- data.table::fread(file.path(repeated$review_directory, "masked_references.csv"))
         expect_equal(
           data.table::setorderv(data.table::as.data.table(repeated_evidence), names(evidence)),
           data.table::setorderv(data.table::as.data.table(evidence), names(evidence))
         )
         expect_false(file.exists(file.path(repeated$review_directory, "patients.csv")))
+        expect_identical(repeated$database_content_type, content_type)
+        expect_false(snapshotRelationExists(target, "broad_consent_run", next_schema))
+        expect_false(snapshotRelationExists(target, "broad_consent_masked_reference", next_schema))
       },
       finally = DBI::dbExecute(target, paste0(
         "DROP SCHEMA IF EXISTS ",
@@ -97,7 +108,7 @@ test_that("snapshot retains covered children and records every masked reference 
   for (base in names(tables)) expect_equal(DBI::dbReadTable(source, DBI::Id(schema = source_schema, table = base)), tables[[base]])
 })
 
-test_that("enriched source rows survive selection with unique evidence across chunks", {
+test_that("enriched source rows survive selection with external evidence across chunks", {
   source <- getOption("interpolar.test.postgres_connection")
   target <- getOption("interpolar.test.postgres_target_connection")
   skip_if(is.null(source) || is.null(target), "Two isolated PostgreSQL test connections were not supplied.")
@@ -138,22 +149,13 @@ test_that("enriched source rows survive selection with unique evidence across ch
     summary <- result$summary[result$summary$BASE_TABLE_NAME == "medicationrequest", ]
     expect_equal(sum(summary$INPUT_ROWS), 4)
     expect_equal(sum(summary$OUTPUT_ROWS), 2)
-    evidence <- DBI::dbReadTable(target, DBI::Id(schema = target_schema, table = BROAD_CONSENT_MASKED_TABLE))
-    expect_equal(nrow(evidence), 11L)
+    evidence <- data.table::fread(file.path(result$review_directory, "masked_references.csv"))
+    expect_equal(nrow(evidence), 12L)
     expect_equal(nrow(unique(evidence)), 11L)
-    next_schema <- basename(tempfile("bc_enriched_repeat_"))
-    target_schemas <- c(target_schemas, next_schema)
-    createBroadConsentSnapshotDatabase(source, target,
-      project_root = output_root,
-      source_schema = target_schema, target_table_schema = next_schema, target_view_schema = next_schema,
-      tables = names(tables), chunk_size = 1L, evaluation_date = as.Date("2026-09-11"),
-      report_file = file.path(output_root, paste0(next_schema, ".xlsx")), log_steps = FALSE
-    )
-    repeated <- DBI::dbReadTable(target, DBI::Id(schema = next_schema, table = "v_medicationrequest"))
-    expect_equal(nrow(repeated), 2L)
-    expect_setequal(repeated$medreq_medication_code, actual$medreq_medication_code)
-    repeated_evidence <- DBI::dbReadTable(target, DBI::Id(schema = next_schema, table = BROAD_CONSENT_MASKED_TABLE))
-    expect_equal(data.table::setorderv(data.table::as.data.table(repeated_evidence), names(evidence)), data.table::setorderv(data.table::as.data.table(evidence), names(evidence)))
+    expect_false("value" %in% names(evidence))
+    expect_false(snapshotRelationExists(target, "broad_consent_masked_reference", target_schema))
+    expect_false(snapshotRelationExists(target, "v_broad_consent_masked_reference", target_schema))
+    expect_false(snapshotRelationExists(target, "broad_consent_run", target_schema))
   }
   expect_equal(DBI::dbReadTable(source, DBI::Id(schema = source_schema, table = "medicationrequest")), original)
 })

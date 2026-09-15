@@ -87,7 +87,8 @@ und prüft keine einzelnen klinischen Ressourcen.
 
 Bei einer vollständigen BC-Erzeugung ergänzt `--consent-details` dieselben
 Detailberichte. Ohne diesen Schalter entstehen die Zusammenfassung und die
-Maskierungsnachweise. Inhalt und Dateinamen stehen unter
+Maskierungsnachweise als externe Dateien; die BC-Datenbank enthält keine
+Nachweistabellen. Inhalt und Dateinamen stehen unter
 [BC-Prüfberichte](Database_Snapshot_Broad_Consent.md#prüfberichte).
 
 ## Probleme beheben

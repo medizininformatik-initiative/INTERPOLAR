@@ -97,18 +97,6 @@ test_that("duplicate decisions collapse only when their complete identities agre
   }
 })
 
-test_that("duplicate evidence never hides conflicting provenance", {
-  connection <- getOption("interpolar.test.postgres_connection")
-  skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")
-  schema <- basename(tempfile("bc_conflicting_evidence_"))
-  snapshotEnsureSchema(connection, schema)
-  on.exit(DBI::dbExecute(connection, paste0("DROP SCHEMA ", DBI::dbQuoteIdentifier(connection, schema), " CASCADE")), add = TRUE)
-  evidence <- data.frame(table_name = "medicationrequest_last_version", row_id = "1", resource_type = "MedicationRequest", resource_id = "r", version_id = NA_character_, patient_id = c("p1", "p2"), column_name = "medreq_encounter_ref", reason = "masked")
-  DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = BROAD_CONSENT_MASKED_TABLE), evidence)
-  expect_error(finalizeBroadConsentMaskedReferences(connection, schema), "unique index")
-  expect_equal(DBI::dbReadTable(connection, DBI::Id(schema = schema, table = BROAD_CONSENT_MASKED_TABLE)), evidence)
-})
-
 test_that("conflict diagnostics contain counts and reasons but no source values", {
   connection <- getOption("interpolar.test.postgres_connection")
   skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")

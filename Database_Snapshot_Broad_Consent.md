@@ -293,34 +293,18 @@ Referenzspalten und bekannte FHIR-Zuordnungsspalten in Nicht-FHIR-Tabellen.
 Eine Referenz ohne Versionsangabe wird anhand der aktuellen Fassung des Ziels
 geprüft; bei einer Referenz mit `/_history/` ist die angegebene Version maßgeblich.
 
-Für jeden so entfernten Referenzwert entsteht zusätzlich ein Eintrag in
-`db_log.broad_consent_masked_reference` mit dem Grund `masked`. Damit kann eine
-Auswertung unterscheiden, ob eine Referenz durch die BC-Auswahl entfernt wurde
-oder bereits in der Quelle fehlte. Ein `NULL`-Wert allein reicht für diese
-Unterscheidung nicht aus. Der Nachweis bezieht sich auf die BC-Maskierung von
-Referenzen; er erfasst nicht allgemein alle durch die Pseudonymisierungsregel
-`redact` entfernten Werte.
+Die Maskierungsnachweise werden ausschließlich als `masked_references.csv` im
+externen Laufverzeichnis geschrieben. Ein Eintrag benennt Tabelle, technische
+Zeilen-ID, Ressourcen-ID, Version, Patienten-ID, Spalte und den Grund `masked`.
+Der entfernte Referenzwert selbst wird nicht gespeichert. Bei angereicherten
+Mehrfachzeilen können identische Nachweise mehrfach im Bericht vorkommen.
+Widersprüchliche Zuordnungen derselben technischen Zeilen-ID führen bereits bei
+der Auswahl zum Abbruch.
 
-Der Eintrag benennt Tabelle, technische Zeilen-ID, Ressourcen-ID, Version,
-Patienten-ID und Spalte. Der entfernte Referenzwert selbst wird nicht gespeichert.
-Durch die Anreicherung mit Medikamentencodes können mehrere Datenzeilen dieselbe
-technische Zeilen-ID haben. Diese Datenzeilen bleiben erhalten, sofern sie die
-BC-Auswahl bestehen. Identische Entscheidungen und Maskierungsnachweise werden
-jeweils einmal gespeichert, auch wenn die Zeilen in verschiedenen Blöcken
-verarbeitet werden. Widersprüchliche Zuordnungen derselben technischen Zeilen-ID
-führen weiterhin zum Abbruch.
-Die Nachweistabelle liegt dauerhaft im Schema `db_log` und wird mit dem Snapshot
-als Dump gesichert, unabhängig von `--consent-details`. Über die View
-`db2dataprocessor_out.v_broad_consent_masked_reference` ist sie für Auswertungen
-zugänglich.
-
-Wird aus einem BC-Snapshot erneut ein BC-Snapshot erzeugt, wird die
-Patientenzulassung erneut geprüft. Bei einer MRP-Berechnung kann die dafür
-benötigte Encounter-Referenz bereits maskiert sein. In diesem Fall liefert der
-Nachweis die Patienten-ID für die Prüfung. Nur weiterhin zugelassene Zeilen
-und deren Nachweise werden übernommen.
-`db_log.broad_consent_run` dokumentiert dazu die Quelldatenbank, das
-Bewertungsdatum, den verwendeten TORCH-Stand und den Abschlusszeitpunkt.
+Die Ergebnisdatenbank enthält weder eine BC-Nachweistabelle noch eine zugehörige
+View oder BC-Laufprotokolltabelle. Für eine erneute BC-Erzeugung wird wieder der
+zugrunde liegende normale oder pseudonymisierte Snapshot verwendet. Bereits
+gefilterte BC-Snapshots sind nicht als Quelle für eine erneute Filterung vorgesehen.
 
 ## Prüfberichte
 
@@ -329,10 +313,12 @@ Der Broad-Consent-Prozess schreibt zusätzlich den lokalen Bericht
 Er enthält für jede Relation insbesondere Ein- und Ausgabezeilen,
 Versionspartition, Chunk-Anzahl, Laufzeiten und Filteraktion sowie die
 Anzahl der Patienten und Ressourcenzeilen je Entscheidungsgrund. Dieser lokale
-Bericht ist nicht Bestandteil der Snapshot-Datei. Die dauerhafte
-Maskierungsnachweistabelle wird dagegen immer mitgesichert, auch ohne
-`--consent-details`. Detaillierte CSV-Berichte liegen bei Aktivierung in einem
-eigenen Laufverzeichnis unter `outputLocal/broad_consent_snapshot`.
+Bericht ist nicht Bestandteil der Snapshot-Datei. In einem eigenen Laufverzeichnis
+unter `outputLocal/broad_consent_snapshot` entstehen immer `masked_references.csv`
+und `run.csv` mit Quelldatenbank, Bewertungsdatum und Abschlusszeit der
+Datenbankerzeugung. Mit `--consent-details` kommen die detaillierten
+patientenbezogenen CSV-Berichte hinzu. Keiner dieser Berichte wird in der
+Ergebnisdatenbank oder deren Dump gespeichert.
 Die Datei `COMPLETE` zeigt an, dass die Consent-Berichte vollständig geschrieben
 sind. Das Schreiben der Snapshot-Daten und des Dumps ist damit noch nicht
 bestätigt. Für die Weitergabe des Snapshots muss deshalb der gesamte Befehl

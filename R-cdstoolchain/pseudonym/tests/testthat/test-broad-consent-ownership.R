@@ -58,7 +58,8 @@ test_that("ambiguous Consent ownership excludes every affected patient across ba
           )
           expect_equal(nrow(DBI::dbReadTable(target, DBI::Id(schema = target_schema, table = paste0("v_", base)))), expected_rows)
         }
-        expect_equal(nrow(DBI::dbReadTable(target, DBI::Id(schema = target_schema, table = BROAD_CONSENT_MASKED_TABLE))), 0L)
+        expect_equal(nrow(data.table::fread(file.path(result$review_directory, "masked_references.csv"))), 0L)
+        expect_false(snapshotRelationExists(target, "broad_consent_masked_reference", target_schema))
       },
       finally = DBI::dbExecute(target, paste0("DROP SCHEMA IF EXISTS ", DBI::dbQuoteIdentifier(target, target_schema), " CASCADE"))
     )

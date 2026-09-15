@@ -1,5 +1,3 @@
-BROAD_CONSENT_MASKED_TABLE <- "broad_consent_masked_reference"
-
 # Patient ownership and the patientless Medication graph use logical IDs.
 # A valid relative version reference retains that identity; masking still
 # checks the explicitly referenced version separately.
@@ -14,8 +12,7 @@ broadConsentReferenceIdExpression <- function(connection, column, alias = NULL, 
 
 # Non-FHIR rows use patient permission only. Resolve their owner against the
 # source, before any Encounter is removed by the resource date selection.
-buildBroadConsentNonFhirDecisionQuery <- function(connection, relation, base_table, fields, source_schema,
-  source_view_prefix, interval_table, owner_tables, materialized_names) {
+buildBroadConsentNonFhirDecisionQuery <- function(connection, relation, base_table, fields, interval_table, owner_tables) {
   owner <- function(table, source_key) paste0(
     "(SELECT owner.patient_id FROM ", snapshotQualifiedName(connection, owner_tables[[table]]),
     " owner WHERE owner.owner_key = s.", source_key, "::text)"
@@ -30,17 +27,6 @@ buildBroadConsentNonFhirDecisionQuery <- function(connection, relation, base_tab
     broadConsentReferenceIdExpression(connection, "patient_id", "s", "Patient")
   } else {
     "NULL::text"
-  }
-  prior_view <- paste0(source_view_prefix, BROAD_CONSENT_MASKED_TABLE)
-  if (base_table == "dp_mrp_calculations" && snapshotRelationExists(connection, prior_view, source_schema)) {
-    prior_owner <- paste0(
-      "(SELECT MIN(e.patient_id) FROM ",
-      snapshotQualifiedName(connection, prior_view, source_schema),
-      " e WHERE e.row_id = s.dp_mrp_calculations_id::text AND e.column_name = 'enc_id' AND e.reason = 'masked' ",
-      "AND e.table_name IN (", paste(DBI::dbQuoteString(connection, materialized_names), collapse = ", "), ") ",
-      "HAVING COUNT(DISTINCT e.patient_id) = 1 AND bool_and(e.patient_id IS NOT NULL))"
-    )
-    patient <- paste0("CASE WHEN s.enc_id IS NULL THEN ", prior_owner, " ELSE ", patient, " END")
   }
   consistency <- if (base_table == "fall_fe" && "fall_pat_id" %in% fields) {
     " AND (s.fall_pat_id IS NULL OR s.fall_pat_id::text = s.bc_patient_id)"
@@ -171,9 +157,7 @@ prepareBroadConsentResourceSelection <- function(connection, materialization_pla
       buildBroadConsentFhirDecisionQuery(connection, relation, row_column, spec, interval_table)
     } else {
       buildBroadConsentNonFhirDecisionQuery(
-        connection, relation, base, fields,
-        source_schema, source_view_prefix, interval_table, owner_tables,
-        materialization_plan$MATERIALIZED_TABLE_NAME[materialization_plan$BASE_TABLE_NAME == base]
+        connection, relation, base, fields, interval_table, owner_tables
       )
     }
     selections[[base]] <- list(
