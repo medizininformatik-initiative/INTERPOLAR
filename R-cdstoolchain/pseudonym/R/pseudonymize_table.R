@@ -794,6 +794,14 @@ pseudonymizeTable <- function(
   table
 }
 
+# stdout is mirrored to the console and the existing etlutils log. message()
+# goes only to the log while the CLI message sink is active. Log counts and
+# technical table names here, never resource values or query text.
+snapshotProgress <- function(...) {
+  cat(..., "\n", sep = "")
+  flush.console()
+}
+
 runPseudonymizationLogStep <- function(level = 2L, message, process, log_steps = TRUE) {
   process_clock <- try(etlutils::getClock(), silent = TRUE)
   logging_available <- exists("VERBOSE", envir = .GlobalEnv) &&

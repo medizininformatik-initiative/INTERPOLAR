@@ -84,9 +84,9 @@ copyBroadConsentChunkStream <- function(
     input_rows <- input_rows + nrow(chunk)
     output_rows <- output_rows + nrow(chunk)
     output_columns <- ncol(chunk)
-    message(
+    snapshotProgress(
       "Copied Broad Consent snapshot chunk ", chunk_number,
-      " for ", table_name, ": ", nrow(chunk), " rows"
+      " for ", table_name, ": ", nrow(chunk), " rows; copied total=", output_rows
     )
     rm(chunk)
 
@@ -139,6 +139,7 @@ streamBroadConsentSnapshotTable <- function(
 
   table_started <- proc.time()[["elapsed"]]
   source_open_started <- proc.time()[["elapsed"]]
+  snapshotProgress("Preparing Broad Consent source query for ", materialized_table_name)
   query_info <- buildBroadConsentRelationQuery(
     source_connection,
     plan_row,
@@ -148,6 +149,7 @@ streamBroadConsentSnapshotTable <- function(
     selections,
     reference_targets
   )
+  snapshotProgress("Opening Broad Consent source stream for ", materialized_table_name)
   source_result <- tryCatch(
     DBI::dbSendQuery(source_connection, query_info[["query"]]),
     error = function(error) {
@@ -168,7 +170,7 @@ streamBroadConsentSnapshotTable <- function(
     add = TRUE
   )
 
-  message(
+  snapshotProgress(
     "Streaming Broad Consent source relation ",
     snapshotQualifiedName(source_connection, source_relation_name, source_schema),
     " as ", materialized_table_name, " in chunks of ", chunk_size, " rows"
@@ -331,8 +333,14 @@ createBroadConsentSnapshotDatabase <- function(
     log_steps = log_steps
   )
 
-  snapshotEnsureSchema(target_connection, target_table_schema)
-  snapshotAllowTemporarySourceTables(source_connection)
+  runPseudonymizationLogStep(2L,
+    "Prepare snapshot database schemas and session",
+    {
+      snapshotEnsureSchema(target_connection, target_table_schema)
+      snapshotAllowTemporarySourceTables(source_connection)
+    },
+    log_steps = log_steps
+  )
   version_key_tables <- list()
   runPseudonymizationLogStep(2L,
     "Prepare Broad Consent snapshot version partitions",
@@ -355,28 +363,45 @@ createBroadConsentSnapshotDatabase <- function(
     evaluation_date, source_name,
     details = consent_details
   )
-  consent_selection <- prepareBroadConsentSelection(
-    source_connection, source_schema, evaluation_date, chunk_size, review,
-    source_view_prefix, last_version_suffix
+  consent_selection <- runPseudonymizationLogStep(2L,
+    "Evaluate Broad Consent patient blocks",
+    prepareBroadConsentSelection(
+      source_connection, source_schema, evaluation_date, chunk_size, review,
+      source_view_prefix, last_version_suffix
+    ),
+    log_steps = log_steps
   )
   on.exit(DBI::dbRemoveTable(source_connection, consent_selection$table_name), add = TRUE)
-  selections <- prepareBroadConsentResourceSelection(
-    source_connection, result$materialization_plan, rules,
-    source_schema, source_view_prefix, snapshotQualifiedName(source_connection, consent_selection$table_name)
+  selections <- runPseudonymizationLogStep(2L,
+    "Select Broad Consent resource rows",
+    prepareBroadConsentResourceSelection(
+      source_connection, result$materialization_plan, rules,
+      source_schema, source_view_prefix, snapshotQualifiedName(source_connection, consent_selection$table_name),
+      log_steps = log_steps
+    ),
+    log_steps = log_steps
   )
   on.exit(dropSnapshotVersionKeyTables(source_connection, lapply(selections, `[[`, "table_name")), add = TRUE)
-  reference_targets <- prepareBroadConsentReferenceTargets(
-    source_connection, selections,
-    result$materialization_plan, source_schema
+  reference_targets <- runPseudonymizationLogStep(2L,
+    "Prepare Broad Consent reference targets",
+    prepareBroadConsentReferenceTargets(
+      source_connection, selections,
+      result$materialization_plan, source_schema
+    ),
+    log_steps = log_steps
   )
   on.exit(DBI::dbRemoveTable(source_connection, reference_targets), add = TRUE)
   DBI::dbWriteTable(target_connection, snapshotRelationId(BROAD_CONSENT_MASKED_TABLE, target_table_schema),
     emptyBroadConsentMaskedReferences(),
     overwrite = FALSE
   )
-  copyBroadConsentPriorEvidence(
-    source_connection, target_connection, selections, result$materialization_plan,
-    source_schema, target_table_schema, source_view_prefix, chunk_size
+  runPseudonymizationLogStep(2L,
+    "Copy prior Broad Consent masking evidence",
+    copyBroadConsentPriorEvidence(
+      source_connection, target_connection, selections, result$materialization_plan,
+      source_schema, target_table_schema, source_view_prefix, chunk_size
+    ),
+    log_steps = log_steps
   )
   result$patient_summary <- consent_selection$summary
   result$evaluation_date <- evaluation_date
@@ -387,17 +412,21 @@ createBroadConsentSnapshotDatabase <- function(
     "Stream Broad Consent snapshot tables",
     {
       for (i in seq_len(nrow(result[["materialization_plan"]]))) {
-        summary_rows[[length(summary_rows) + 1L]] <- streamBroadConsentSnapshotTable(
-          source_connection = source_connection,
-          target_connection = target_connection,
-          plan_row = result[["materialization_plan"]][i, ],
-          source_schema = source_schema,
-          target_table_schema = target_table_schema,
-          source_view_prefix = source_view_prefix,
-          chunk_size = chunk_size,
-          version_key_tables = version_key_tables,
-          selections = selections,
-          reference_targets = reference_targets
+        summary_rows[[length(summary_rows) + 1L]] <- runPseudonymizationLogStep(3L,
+          paste0("Broad Consent table ", result[["materialization_plan"]]$MATERIALIZED_TABLE_NAME[i]),
+          streamBroadConsentSnapshotTable(
+            source_connection = source_connection,
+            target_connection = target_connection,
+            plan_row = result[["materialization_plan"]][i, ],
+            source_schema = source_schema,
+            target_table_schema = target_table_schema,
+            source_view_prefix = source_view_prefix,
+            chunk_size = chunk_size,
+            version_key_tables = version_key_tables,
+            selections = selections,
+            reference_targets = reference_targets
+          ),
+          log_steps = log_steps
         )
       }
     },
@@ -442,7 +471,11 @@ createBroadConsentSnapshotDatabase <- function(
     log_steps = log_steps
   )
 
-  finalizeBroadConsentMaskedReferences(target_connection, target_table_schema)
+  runPseudonymizationLogStep(2L,
+    "Finalize Broad Consent masking evidence",
+    finalizeBroadConsentMaskedReferences(target_connection, target_table_schema),
+    log_steps = log_steps
+  )
   DBI::dbExecute(target_connection, paste0(
     "CREATE VIEW ",
     snapshotQualifiedName(target_connection, paste0(source_view_prefix, BROAD_CONSENT_MASKED_TABLE), target_view_schema),

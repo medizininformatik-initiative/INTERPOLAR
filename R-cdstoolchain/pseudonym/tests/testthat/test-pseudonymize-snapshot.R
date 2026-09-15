@@ -143,6 +143,7 @@ test_that("pseudonym exports only external workflow entry points", {
       "createBroadConsentSnapshotDatabase",
       "preflightSnapshotPseudonymization",
       "pseudonymizeSnapshotDatabase",
+      "reviewBroadConsentSnapshot",
       "setFhirPseudonymizationRules"
     )
   )

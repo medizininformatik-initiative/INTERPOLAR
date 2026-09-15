@@ -55,6 +55,7 @@ prepareSnapshotVersionKeyTables <- function(
   ])
   key_tables <- list()
   for (base_table_name in partitioned_tables) {
+    snapshotProgress("Preparing version keys for ", base_table_name)
     last_rows <- materialization_plan[
       materialization_plan[["BASE_TABLE_NAME"]] == base_table_name &
         materialization_plan[["SNAPSHOT_RELATION_TYPE"]] ==
@@ -90,12 +91,13 @@ prepareSnapshotVersionKeyTables <- function(
         " ", source_alias
       )
     )
+    snapshotProgress("Indexing version keys for ", base_table_name, ": ", created_rows, " key rows")
     DBI::dbExecute(
       connection,
       paste0("CREATE INDEX ON ", key_table, " (", snapshotQuotedColumn(connection, "row_id"), ")")
     )
     DBI::dbExecute(connection, paste0("ANALYZE ", key_table))
-    message("Prepared version keys for ", base_table_name, ": ", created_rows, " key rows")
+    snapshotProgress("Prepared version keys for ", base_table_name, ": ", created_rows, " key rows")
     key_tables[[base_table_name]] <- key_table_name
   }
   key_tables
@@ -641,7 +643,7 @@ prepareSnapshotMedicationResolutionTables <- function(
       paste0("CREATE INDEX ON ", resolution_table, " (root_medication_id)")
     )
     DBI::dbExecute(connection, paste0("ANALYZE ", resolution_table))
-    message(
+    snapshotProgress(
       "Prepared shared Medication resolution for ", relation_type,
       ": ", created_rows, " root/code rows"
     )
@@ -920,10 +922,11 @@ processSnapshotChunkStream <- function(
     }
     summary[["INPUT_ROWS"]] <- summary[["INPUT_ROWS"]] + nrow(chunk)
     summary[["OUTPUT_ROWS"]] <- summary[["OUTPUT_ROWS"]] + nrow(output)
-    message(
+    snapshotProgress(
       "Processed snapshot chunk ", chunk_number,
       " for ", table_name,
-      ": ", nrow(chunk), " input rows, ", nrow(output), " output rows"
+      ": ", nrow(chunk), " input rows, ", nrow(output), " output rows; processed total=",
+      summary[["INPUT_ROWS"]]
     )
     rm(chunk, output, table_result)
     if (has_completed()) {
@@ -1002,6 +1005,7 @@ streamSnapshotMaterializedTable <- function(
 
   table_started <- proc.time()[["elapsed"]]
   source_open_started <- proc.time()[["elapsed"]]
+  snapshotProgress("Preparing snapshot source query for ", materialized_table_name)
   query_info <- getSnapshotStreamingSourceQuery(
     source_connection,
     plan_row,
@@ -1013,7 +1017,7 @@ streamSnapshotMaterializedTable <- function(
       streaming_context$medication_resolution_tables,
     version_key_tables = streaming_context$version_key_tables
   )
-  message(
+  snapshotProgress(
     "Streaming snapshot source relation ",
     snapshotQualifiedName(source_connection, source_relation_name, source_schema),
     " as ", materialized_table_name,
@@ -1164,7 +1168,7 @@ streamSnapshotMaterializedTable <- function(
     summary[[timing_name]] <- timing[[timing_name]]
   }
   summary[["TOTAL_SECONDS"]] <- total_seconds
-  message(
+  snapshotProgress(
     sprintf(
       paste0(
         "Snapshot timing for %s: source open %.3fs, fetch %.3fs, ",

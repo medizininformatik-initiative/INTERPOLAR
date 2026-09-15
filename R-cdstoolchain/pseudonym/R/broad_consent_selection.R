@@ -92,6 +92,7 @@ getBroadConsentDecisionConflictDiagnostic <- function(connection, table) {
 }
 
 createBroadConsentDecisionTable <- function(connection, query, source_relation = "source") {
+  snapshotProgress("Preparing Broad Consent decisions for ", source_relation)
   name <- basename(tempfile("broad_consent_rows_"))
   table <- snapshotQualifiedName(connection, name)
   complete <- FALSE
@@ -99,6 +100,7 @@ createBroadConsentDecisionTable <- function(connection, query, source_relation =
   # Medication enrichment can repeat a source row ID for different code pairs.
   # Only identical decisions collapse; the source data rows remain untouched.
   DBI::dbExecute(connection, paste0("CREATE TEMP TABLE ", table, " AS SELECT DISTINCT * FROM (", query, ") decisions"))
+  snapshotProgress("Indexing Broad Consent decisions for ", source_relation)
   DBI::dbExecute(connection, paste0("ALTER TABLE ", table, " ALTER COLUMN row_id SET NOT NULL"))
   tryCatch(
     DBI::dbExecute(connection, paste0("CREATE UNIQUE INDEX ON ", table, " (row_id)")),
@@ -120,7 +122,7 @@ createBroadConsentDecisionTable <- function(connection, query, source_relation =
 }
 
 prepareBroadConsentResourceSelection <- function(connection, materialization_plan, rules,
-  source_schema, source_view_prefix, interval_table) {
+  source_schema, source_view_prefix, interval_table, log_steps = TRUE) {
   owner_tables <- list()
   on.exit(dropSnapshotVersionKeyTables(connection, owner_tables), add = TRUE)
   needed_tables <- materialization_plan$BASE_TABLE_NAME
@@ -128,6 +130,7 @@ prepareBroadConsentResourceSelection <- function(connection, materialization_pla
     needed <- if (base == "patient_fe") any(endsWith(needed_tables, "_fe") & needed_tables != "patient_fe") else
       "dp_mrp_calculations" %in% needed_tables
     if (!needed) next
+    snapshotProgress("Preparing Broad Consent ownership for ", base)
     relation <- snapshotQualifiedName(connection, paste0(source_view_prefix, base), source_schema)
     key <- if (base == "patient_fe") "record_id" else "enc_id"
     patient <- broadConsentReferenceIdExpression(connection,
@@ -174,13 +177,17 @@ prepareBroadConsentResourceSelection <- function(connection, materialization_pla
       )
     }
     selections[[base]] <- list(
-      table_name = createBroadConsentDecisionTable(connection, query, relation),
+      table_name = runPseudonymizationLogStep(3L, paste0("Broad Consent decisions for ", base),
+        createBroadConsentDecisionTable(connection, query, relation),
+        log_steps = log_steps
+      ),
       relation = relation, row_column = row_column, fields = fields, spec = spec, rules = table_rules
     )
   }
   # Medication has no patient field. Keep the graph reachable from retained
   # medication events, reusing the existing event/reference specifications.
   if ("medication" %in% names(selections)) {
+    snapshotProgress("Resolving retained Broad Consent Medication references")
     medication <- selections$medication
     roots <- character()
     for (base in names(selections)) {

@@ -50,6 +50,7 @@ prepareBroadConsentSelection <- function(
   encounter_relation <- getBroadConsentCurrentRelation(connection, "encounter", source_schema, source_view_prefix, last_version_suffix)
   patient_relation <- getBroadConsentCurrentRelation(connection, "patient", source_schema, source_view_prefix, last_version_suffix)
   reference <- broadConsentReferenceIdExpression(connection, "cons_patient_ref", resource_type = "Patient")
+  snapshotProgress("Checking Broad Consent patient references")
   invalid_references <- DBI::dbGetQuery(connection, paste0(
     "SELECT COUNT(*) AS n FROM ", consent_relation,
     " WHERE (cons_status NOT IN ('draft', 'proposed', 'rejected', 'inactive', 'entered-in-error') ",
@@ -62,6 +63,7 @@ prepareBroadConsentSelection <- function(
   snapshotAllowTemporarySourceTables(connection)
   # Validate ownership across the entire current Consent relation before
   # splitting patients into blocks. Other valid documents cannot cure ambiguity.
+  snapshotProgress("Checking Broad Consent document ownership")
   ambiguous_name <- basename(tempfile("broad_consent_ambiguous_patients_"))
   ambiguous_table <- snapshotQualifiedName(connection, ambiguous_name)
   DBI::dbExecute(connection, paste0(
@@ -84,6 +86,9 @@ prepareBroadConsentSelection <- function(
   ))
   complete <- FALSE
   on.exit(if (!complete) DBI::dbExecute(connection, paste0("DROP TABLE IF EXISTS ", table)), add = TRUE)
+  block_number <- 0L
+  processed_patients <- 0
+  snapshotProgress("Reading Broad Consent patient blocks")
   last_id <- NULL
   counts <- integer()
   names(counts) <- character()
@@ -96,6 +101,8 @@ prepareBroadConsentSelection <- function(
       " WHERE pat_id IS NOT NULL", predicate, " ORDER BY patient_id LIMIT ", as.integer(chunk_size)
     ))$patient_id
     if (!length(ids)) break
+    block_number <- block_number + 1L
+    snapshotProgress("Evaluating Broad Consent patient block ", block_number, ": ", length(ids), " patients")
     if (anyNA(normalizeBroadConsentReference(ids))) stop("Invalid Patient resource ID in source.")
     last_id <- tail(ids, 1L)
     values <- paste(DBI::dbQuoteString(connection, ids), collapse = ", ")
@@ -147,7 +154,13 @@ prepareBroadConsentSelection <- function(
     }
     writeBroadConsentReviewBatch(review, patient_reviews)
     if (length(intervals)) DBI::dbAppendTable(connection, table_name, data.table::rbindlist(intervals))
+    processed_patients <- processed_patients + length(ids)
+    snapshotProgress(
+      "Completed Broad Consent patient block ", block_number,
+      "; patients processed=", processed_patients
+    )
   }
+  snapshotProgress("Indexing Broad Consent patient intervals")
   DBI::dbExecute(connection, paste0("CREATE INDEX ON ", table, " (patient_id, start, \"end\")"))
   DBI::dbExecute(connection, paste0("ANALYZE ", table))
   summary <- data.table::data.table(reason = names(counts), patients = unname(counts))

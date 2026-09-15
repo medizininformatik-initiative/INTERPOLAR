@@ -557,8 +557,14 @@ pseudonymizeSnapshotDatabase <- function(
     )
   }
 
-  snapshotEnsureSchema(target_connection, target_table_schema)
-  snapshotAllowTemporarySourceTables(source_connection)
+  runPseudonymizationLogStep(2L,
+    "Prepare snapshot database schemas and session",
+    {
+      snapshotEnsureSchema(target_connection, target_table_schema)
+      snapshotAllowTemporarySourceTables(source_connection)
+    },
+    log_steps = log_steps
+  )
   version_key_tables <- list()
   runPseudonymizationLogStep(2L,
     "Prepare snapshot version partitions",
