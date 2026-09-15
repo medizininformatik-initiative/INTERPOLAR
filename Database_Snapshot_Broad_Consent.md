@@ -28,6 +28,10 @@ welche Besonderheiten bei der Übertragung auf Snapshot-Daten gelten.
 
 ## Daten aus der Consent-Ressource
 
+Jeder reguläre CDS2DB-Lauf lädt Consents für alle bekannten Patienten erneut,
+auch wenn deren übrige Ressourcen gerade nicht aktualisiert werden. Ein bereits
+erzeugter Snapshot behält dagegen seinen damaligen Datenstand.
+
 Verwendet werden die aktuellen Fassungen aus
 `db2dataprocessor_out.v_consent_last_version`. Frühere Consent-Versionen erteilen
 keine zusätzlichen Rechte. Mehrere unterschiedliche aktuelle Consent-Dokumente

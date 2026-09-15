@@ -171,7 +171,8 @@ getDataImportResourceTypes <- function(allowed_resource_types = getDataImportAll
 #' @return Filtered grouped FHIR table descriptions.
 filterFhirTableDescriptionsForDataImport <- function(fhir_table_descriptions) {
   data_import_resource_types <- getDataImportResourceTypes()
-  pid_dependant_resource_types <- intersect(data_import_resource_types, names(fhir_table_descriptions$pid_dependant))
+  # Consent is refreshed for all known patients in every CDS2DB run.
+  pid_dependant_resource_types <- intersect(c(data_import_resource_types, "Consent"), names(fhir_table_descriptions$pid_dependant))
   pid_independant_resource_types <- intersect(data_import_resource_types, names(fhir_table_descriptions$pid_independant))
 
   fhir_table_descriptions$pid_dependant <- fhir_table_descriptions$pid_dependant[pid_dependant_resource_types]
