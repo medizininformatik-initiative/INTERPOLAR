@@ -15,8 +15,7 @@ eigentliche Verarbeitung an `pseudonym`. Die Broad-Consent-Auswahl läuft entspr
 die durch die Consent-Auswertung zugelassenen Patienten und Ressourcen. Referenzen auf dabei
 ausgeschlossene Ressourcen werden entfernt und als maskiert dokumentiert.
 
-FHIR-Import, reguläre fachliche Verarbeitung und Frontend-Synchronisation gehören nicht zu diesem
-Paket. Die Dokumentation ist entsprechend dem Ablauf gegliedert:
+Die Dokumentation ist nach dem Ablauf gegliedert:
 
 - [Bedienung und Befehle](../../Database_Snapshot.md)
 - [Pseudonymisierungsregeln und Anreicherungen](../../Database_Snapshot_Pseudonymization.md)

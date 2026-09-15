@@ -7,19 +7,14 @@ Jede Zuführung von Daten in den Schnittstellen wird gespeichert und jede Datena
 
 #### Voraussetzungen / Vorbereitung
 
-Die nun beschriebene Initialisierung wurde vom Entwicklerteam einmalig bzw. immer wenn sich an der Struktur der Datenbank etwas geändert hat, ausgeführt. Dieser Abschnitt dient nur der Vollständigkeit und die darin beschriebenen Abläufe werden nur einmal beim Initialisieren der SQL-Skripte zum Anlegen der Datenbank ("CDS Hub DB") ausgeführt. Im Betrieb, also dem eigentlichen Ausführen der "CDS tool chain", werden sie nicht benötigt.
+Die Datenbankstruktur und FHIR-Abfragen werden aus
+[Table_Description_Definition.xlsx](R-cds2db/cds2db/inst/extdata/Table_Description_Definition.xlsx)
+abgeleitet. Daraus entstehen die vollständige Table Description sowie SQL-Dateien
+für Tabellen, Views und Funktionen. Die generierten Dateien werden beim Anlegen
+und Aktualisieren der CDS_HUB-Datenbank verwendet.
 
-Zur Initialisierung des Prozesses musste die Excel-Datei [Table_Description_Definition.xlsx](R-cds2db/cds2db/inst/extdata/Table_Description_Definition.xlsx) definiert werden. Sie bildet den tatsächlichen COI und gibt vor, wie die FHIR-Abfragen gestellt werden und wie die Datenbank zur Speicherung der Ergebnisse dieser Abfragen aufgebaut ist.
-
-Mithilfe eines [R-Generatorskriptes](R-cds2db/cds2db/R/Init_01_Expand_TableDescription.R) wird aus der wesentlich übersichtlicheren "Table_Description_Definition.xlsx" die vollständige [Table_Description.xlsx](R-cds2db/cds2db/inst/extdata/Table_Description.xlsx) expandiert. In dieser generierten Datei stehen alle abgefragten FHIR-Ressourcen sowie alle absoluten XML-Pfade dieser Ressourcen, die am Ende als Spalten in die jeweilige Tabelle in die Datenbank geschrieben werden.
-
-Nachdem die vollständige "Table_Description.xlsx" vorliegt, werden mit einem weiteren [Generatorskript](R-cds2db/cds2db/R/Init_02_Create_TableStatements.R) unter Benutzung vorher definierter [SQL-Templates](Postgres-cds_hub/init/template) wesentliche Teile der [Datenbankskripte](Postgres-cds_hub/init) generiert, die die Tabellen der Postgres-Datenbank zur Speicherung der FHIR-Abfragen und Funktionen innerhalb der Datenbank anlegen.
-
-Diese beiden Generatorskripte liegen auch im R-Verzeichnis des im folgenden beschriebenen Moduls "cds2db". Die SQL-Templates sowie die fertigen SQL-Skripte befinden sich im "init"-Verzeichnis des Moduls "cds_hub".
-
-Das Vorgehen stellt sicher, dass die umfangreichen FHIR-Abfragen und Strukturen immer genau zur Datenbank passen und sich bei Bedarf einfach anpassen lassen.
-
-Analog werden die Strukturen und Überführungsfunktionen für das Frontend mit SQL-Skripten bei der Initialisierung angelegt. Derzeit werden diese Skripte nicht über Templates generiert, sondern sind statisch hinterlegt.
+Die Anleitung zur Pflege und Generierung steht unter
+[SQL-Entwicklung](Postgres-cds_hub/SQL_development.md).
 
 #### Übersicht über alle Module
 

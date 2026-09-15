@@ -25,14 +25,13 @@ enthalten die für Auswertungen relevanten Schemata `db_log` und
 `db2dataprocessor_out`. Wenn für eine Quelltabelle eine Last-Version-View
 existiert, liegen in `db_log` zwei disjunkte pseudonymisierte Tabellen:
 `<table>_old_versions` enthält nur frühere Versionen und
-`<table>_last_version` nur die letzten Versionen. Die letzten Versionen werden
-dadurch nicht zusätzlich in einer materialisierten Gesamttabelle gespeichert.
+`<table>_last_version` nur die letzten Versionen.
 
 `db2dataprocessor_out.v_<table>_old_versions` und
 `db2dataprocessor_out.v_<table>_last_version` reichen die jeweilige Tabelle
-direkt durch. Die für Auswertungen unverändert benannte View
+direkt durch. Die View
 `db2dataprocessor_out.v_<table>` vereinigt beide Views mit `UNION ALL` und zeigt
-damit weiterhin alle Versionen. Tabellen ohne Last-Version-View bleiben als
+damit alle Versionen. Tabellen ohne Last-Version-View bleiben als
 einzelne Tabelle mit einer durchgereichten `v_<table>`-View erhalten.
 
 Die aktuellen Zeilen bestimmt die Last-Version-View der Quelle. Bei
@@ -44,15 +43,14 @@ die pseudonymisierte Snapshot-Datenbank ausgewählt sind. Innerhalb dieser
 Tabellen bleiben alle Spalten der Originaltabellen erhalten. Für beschriebene
 Spalten muss eine Regel angegeben sein; `keep` übernimmt eine Spalte
 ausdrücklich unverändert. Technische Originalspalten wie `hash_index_col`,
-RAW-Referenzen und Einfügezeitpunkte werden nicht entfernt. Zeilen werden nicht
-mit `unique()` zusammengefasst.
+RAW-Referenzen und Einfügezeitpunkte sowie sämtliche Ausgabezeilen bleiben erhalten.
 
 ## Verarbeitung großer Tabellen
 
 Die Tabellen werden nacheinander verarbeitet. Innerhalb einer Tabelle wird
 jeder Chunk angereichert, pseudonymisiert und unmittelbar in die Zieldatenbank
-geschrieben. Erst danach wird der nächste Chunk gelesen. So muss R die Tabelle
-nicht vollständig im Speicher halten. Die Chunkgröße begrenzt die gleichzeitig verarbeiteten Quellzeilen; zusätzliche
+geschrieben. Erst danach wird der nächste Chunk gelesen. Die Chunkgröße begrenzt
+die gleichzeitig verarbeiteten Quellzeilen; zusätzliche
 Auswertungsspalten und durch Anreicherungen vervielfachte Zeilen benötigen
 weiteren Speicher.
 
@@ -71,13 +69,11 @@ im Rohsnapshot. Mehrdeutige Zuordnungen führen zu einer Fehlermeldung.
 
 Pro Patient gilt genau eine Quelle: Liefert der Server mindestens einen Consent,
 werden alle dort gefundenen Dokumente verwendet, einschließlich inaktiver
-Dokumente und Widerrufe. Seine bisherigen Snapshot-Consents werden nicht
-übernommen. Ohne Treffer bleibt der Snapshot-Bestand erhalten.
+Dokumente und Widerrufe. Ohne Treffer bleibt der Snapshot-Bestand erhalten.
 
 Der so zusammengestellte aktuelle Bestand liegt pseudonymisiert in
-`db_log.consent_updated`. Die bestehenden Consent-Views verwenden diese Tabelle;
-die BC-Erstellung bleibt unverändert. `db_log.snapshot_consent_refresh` enthält
-Abrufzeitraum, Herkunft und Anzahlen. Der Rohsnapshot wird nicht verändert.
+`db_log.consent_updated`. Die Consent-Views verwenden diese Tabelle.
+`db_log.snapshot_consent_refresh` enthält Abrufzeitraum, Herkunft und Anzahlen.
 Für einen späteren Consent-Stand muss die Pseudonymisierung erneut laufen.
 
 ## Pseudonymisierungsregeln
@@ -113,14 +109,12 @@ ID-Anteil hinter dem Schrägstrich wird gehasht.
 
 Die Regel `generalize(format = "YYYY-MM")` erhält Jahr und Monat eines Datums.
 In der pseudonymisierten Snapshot-Datenbank wird das Ergebnis als Text im Format
-`YYYY-MM` gespeichert. Es wird kein Tag ergänzt, damit der Wert nicht mit einem
-tatsächlichen Geburtsdatum verwechselt werden kann. Alters- und
+`YYYY-MM` gespeichert. Alters- und
 Volljährigkeitsprüfungen müssen die vor der Pseudonymisierung aus dem
 vollständigen Originaldatum berechneten Altersspalten verwenden.
 
 Die Regel `redact` entfernt den ursprünglichen Wert vollständig. Das Ergebnis
-ist `NA` in R und wird als `NULL` in PostgreSQL gespeichert. Es wird kein
-Platzhaltertext wie `redacted` eingetragen.
+ist `NA` in R und wird als `NULL` in PostgreSQL gespeichert.
 
 Mapping-Regeln der Form `pseudonym(sheet = "Sheetname")` lesen das angegebene
 Sheet aus `Input-Repo/pseudo_mapping.xlsx`. Jedes verwendete Sheet enthält die
@@ -180,7 +174,7 @@ wenn das Geburtsdatum am oder nach dem 01.01.1910 liegt und das jeweilige
 Aufnahme- beziehungsweise Encounter-Datum nicht vor dem Geburtsdatum liegt.
 Andernfalls bleibt das Altersfeld leer und der Grund wird als Prüfproblem
 protokolliert. Neu ergänzte Altersspalten stehen am Ende der Tabelle. Die
-bereits vorhandene Spalte `fall_bmi` wird nicht verschoben.
+vorhandene Spalte `fall_bmi` behält ihre Position.
 
 ## Prüfberichte
 
@@ -190,10 +184,6 @@ Der Pseudonymisierungslauf schreibt lokale Prüfberichte in diese Verzeichnisse:
 outputLocal/snapshot_pseudonymization_preflight/reports
 outputLocal/snapshot_pseudonymization/reports
 ```
-
-Die Prüfberichte werden nicht in die pseudonymisierte Snapshot-Datei aufgenommen
-und sind kein Bestandteil der auswertbaren, pseudonymisierten
-Snapshot-Datenbank:
 
 - `pseudonymization_rule_review.xlsx` enthält die technische Prüfung der
   geladenen Regeln. Das Tabellenblatt `README` erklärt die weiteren

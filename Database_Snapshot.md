@@ -71,9 +71,8 @@ Snapshot-Datei lässt sich bei Bedarf aktivieren:
 `deactivate` entfernt die aktivierte Datenbank, die Datei bleibt erhalten.
 `delete` löscht die Snapshot-Datei; die genauen Optionen zeigt `./ip-snapshot.sh`.
 
-Die BC-Auswahl kann auch auf einem nicht pseudonymisierten Snapshot laufen.
-Sie pseudonymisiert dessen Inhalte nicht nachträglich. Ohne gesonderte
-Aktualisierung verwendet sie die Consent-Daten der Quelle.
+Die BC-Auswahl verwendet die Consent-Daten eines normalen oder pseudonymisierten
+Snapshots. Bei einer normalen Quelle enthält das Ergebnis weiterhin Originaldaten.
 
 ## Consent-Auswertung ohne Snapshot-Erzeugung prüfen
 
@@ -82,13 +81,11 @@ Aktualisierung verwendet sie die Consent-Daten der Quelle.
 ```
 
 Der Prüflauf zeigt Patientenzulassung, Consent-Provisionen und erlaubte
-Datenzeiträume unter `outputLocal/broad_consent_review`. Er erzeugt keinen Snapshot
-und prüft keine einzelnen klinischen Ressourcen.
+Datenzeiträume unter `outputLocal/broad_consent_review`.
 
-Bei einer vollständigen BC-Erzeugung ergänzt `--consent-details` dieselben
-Detailberichte. Ohne diesen Schalter entstehen die Zusammenfassung und die
-Maskierungsnachweise als externe Dateien; die BC-Datenbank enthält keine
-Nachweistabellen. Inhalt und Dateinamen stehen unter
+Die BC-Erzeugung schreibt Zusammenfassung und Maskierungsnachweise unter
+`outputLocal/broad_consent_snapshot`. `--consent-details` ergänzt die
+patientenbezogenen Detailberichte. Inhalt und Dateinamen stehen unter
 [BC-Prüfberichte](Database_Snapshot_Broad_Consent.md#prüfberichte).
 
 ## Probleme beheben
@@ -99,7 +96,7 @@ Nachweistabellen. Inhalt und Dateinamen stehen unter
 | Mappingdatei wird im alten Verzeichnis gefunden | Die vorhandene Datei nach `Input-Repo/pseudo_mapping.xlsx` verschieben; vorhandene Zuordnungen erhalten. |
 | Eingabedatei fehlt oder wird mehrfach gefunden | `INPUT_REPO_PATH` in `R-dataprocessor/dataprocessor_config.toml` und die gemeldeten Fundstellen prüfen. |
 | Quelle für BC nicht aktiviert | Mit `list` prüfen und den gewünschten Snapshot mit `activate` laden. |
-| Hinweise zur Datenanreicherung | Im genannten Bericht nachsehen. Nicht umgerechnete Laborwerte behalten Originalwert und Quelleinheit; das sind keine fehlgeschlagenen Kennungspseudonymisierungen. |
+| Hinweise zur Datenanreicherung | Im genannten Bericht nachsehen. Nicht umgerechnete Laborwerte behalten Originalwert und Quelleinheit. |
 | BC meldet widersprüchliche technische IDs | Die aggregierte Konfliktdiagnose im angegebenen Log prüfen; insbesondere prüfen, ob der Quelldump in eine leere Datenbank eingespielt wurde. |
 | Zu hoher Speicherbedarf | `--chunk-size` verkleinern; Standard sind 5.000 Zeilen. |
 | Ein späterer Schritt bricht ab | Bereits fertige Snapshots bleiben erhalten. Pseudonymisierung oder `create-broad-consent` separat erneut starten. |

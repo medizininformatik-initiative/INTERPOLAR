@@ -2,17 +2,17 @@
 
 [Bedienung](Database_Snapshot.md) → [Pseudonymisierung](Database_Snapshot_Pseudonymization.md) → Broad Consent
 
-Die BC-Auswahl verarbeitet im Standardablauf den bereits pseudonymisierten
-Snapshot. Sie berechnet zunächst pro Patient, ob Daten genutzt werden dürfen
+Die BC-Auswahl verarbeitet einen normalen oder pseudonymisierten Snapshot.
+Im Standardablauf folgt sie auf die Pseudonymisierung. Sie berechnet zunächst
+pro Patient, ob Daten genutzt werden dürfen
 und welche Datenzeiträume erlaubt sind. Anschließend wählt sie die dazu passenden
 Ressourcen aus und entfernt Referenzen auf ausgeschlossene Ressourcen.
 Die Quelle bleibt unverändert; das Ergebnis wird in eine eigene Datenbank und
 Snapshot-Datei geschrieben.
 
-Die folgenden Schritte beschreiben die Implementierung in INTERPOLAR.
-Grundlage ist der TORCH-Stand `b12757d09a525ae1a3309e4aded999b209b1d600`.
-Die [Abgrenzung zu TORCH](#abgrenzung-zu-torch-und-codequellen) erläutert,
-welche Besonderheiten bei der Übertragung auf Snapshot-Daten gelten.
+Die folgenden Schritte beschreiben die Consent-Regeln in INTERPOLAR.
+[Fachliche Referenzen und Codequellen](#fachliche-referenzen-und-codequellen)
+stehen am Ende dieser Beschreibung.
 
 ## Inhalt
 
@@ -24,7 +24,7 @@ welche Besonderheiten bei der Übertragung auf Snapshot-Daten gelten.
 - [Abhängige Tabellen und Encounter-Hierarchien](#abhängige-tabellen-und-encounter-hierarchien)
 - [Entfernte Referenzen und Maskierungsnachweise](#entfernte-referenzen-und-maskierungsnachweise)
 - [Prüfberichte](#prüfberichte)
-- [Abgrenzung zu TORCH und Codequellen](#abgrenzung-zu-torch-und-codequellen)
+- [Fachliche Referenzen und Codequellen](#fachliche-referenzen-und-codequellen)
 
 ## Daten aus der Consent-Ressource
 
@@ -33,9 +33,8 @@ auch wenn deren übrige Ressourcen gerade nicht aktualisiert werden. Ein bereits
 erzeugter Snapshot behält dagegen seinen damaligen Datenstand.
 
 Verwendet werden die aktuellen Fassungen aus
-`db2dataprocessor_out.v_consent_last_version`. Frühere Consent-Versionen erteilen
-keine zusätzlichen Rechte. Mehrere unterschiedliche aktuelle Consent-Dokumente
-eines Patienten werden dagegen gemeinsam ausgewertet. Patient und Encounter
+`db2dataprocessor_out.v_consent_last_version`. Mehrere unterschiedliche aktuelle
+Consent-Dokumente eines Patienten werden gemeinsam ausgewertet. Patient und Encounter
 werden ebenfalls aus ihren aktuellen Views gelesen.
 
 Eine Consent-Ressource kann mehrere einzelne Festlegungen enthalten, die FHIR
@@ -80,11 +79,10 @@ im Folgenden stehen nur ihre Endungen.
 | `.46` | MDAT retrospektiv wissenschaftlich nutzen EU DSGVO NIVEAU | Kann ebenfalls einen `.6`-Zeitraum rückwirkend erweitern. |
 
 `.45` und `.46` werden als alternative retrospektive Erweiterungen behandelt:
-Eine passende Erlaubnis für einen der beiden Codes genügt. Sie ersetzen weder
-die erforderliche `.6`-Erlaubnis noch die aktuelle Nutzungsberechtigung aus `.8`.
+Eine passende Erlaubnis für einen der beiden Codes genügt; Voraussetzung sind
+die `.6`-Erlaubnis und die aktuelle Nutzungsberechtigung aus `.8`.
 
-Die Zeiträume werden aus den Provisions übernommen. Der Prozess leitet aus dem
-Erklärungsdatum keine pauschale Laufzeit von etwa fünf oder dreißig Jahren ab.
+Beginn und Ende der Zeiträume werden aus den Provisions übernommen.
 
 ## Berechnung der Patientenzulassung und Datenzeiträume
 
@@ -106,9 +104,8 @@ keinem Patienten sicher zugeordnet werden, bricht der Lauf ab: Ein möglicher
 Widerruf dürfte sonst unbemerkt für den falschen Patienten entfallen.
 
 Für die Patientenzuordnung bezeichnet auch eine relative versionierte Referenz
-wie `Patient/p1/_history/2` den Patienten `p1`. Die Versionsangabe ändert diese
-Zuordnung nicht; bei der späteren Referenzmaskierung wird die angegebene
-Zielversion weiterhin geprüft.
+wie `Patient/p1/_history/2` den Patienten `p1`. Bei der späteren Referenzmaskierung
+wird die angegebene Zielversion geprüft.
 
 Pro Patient werden danach die Angaben geprüft:
 
@@ -126,22 +123,17 @@ Pro Patient werden danach die Angaben geprüft:
   Patient mit `future_consent_declaration` ausgeschlossen. Erklärungen am
   selben UTC-Kalendertag sind zulässig.
 
-Es werden auch unvollständige Ablehnungen als Fehler behandelt. Sie einfach zu
-ignorieren könnte eine Freigabe stehen lassen, deren Einschränkung nicht sicher
-berechnet werden kann.
-
 ### 2. Beginn der `.6`-Zeiträume an Encounter anpassen
 
 Liegt der Beginn einer `.6`-Erlaubnis innerhalb eines bereits begonnenen
 Encounters desselben Patienten, wird dieser Beginn auf den früheren
 Encounter-Beginn zurückgesetzt. Bei mehreren passenden Encountern zählt der
 früheste Beginn. Der Encounter muss einen gültigen Anfang und ein gültiges Ende
-haben; offene Encounter werden für diese Anpassung nicht verwendet.
+haben.
 
 Das Ende der Provision bleibt unverändert. Die Anpassung betrifft nur
 `.6`-Erlaubnisse; `.6`-Ablehnungen behalten ihren angegebenen Beginn. Sie gilt für
-alle passenden Encounter, nicht nur für Einrichtungskontakte. `.8`, `.45` und
-`.46` werden in diesem Schritt nicht verändert.
+alle passenden Encounter.
 
 ### 3. Vollständige Dokumente als Grundlage der Erlaubnisse bestimmen
 
@@ -175,8 +167,7 @@ Eine retrospektive Erlaubnis erweitert eine `.6`-Erlaubnis nur, wenn beide im
 selben vollständigen Consent-Dokument stehen und sich ihre Zeiträume mindestens
 an einem Tag überschneiden. Verglichen wird der in Schritt 2 bereits an Encounter
 angepasste `.6`-Zeitraum. Die Erweiterung beginnt am **01.01.1900** und endet am
-unveränderten `.6`-Ende. Ein alleinstehendes Retro-Permit erweitert keine anderen
-Dokumente und entfernt keine bestehenden Freigaben.
+unveränderten `.6`-Ende.
 
 Ein späteres `.45 deny` oder `.46 deny` setzt dagegen die **gesamten bisher
 angesammelten `.6`-Freigaben** zurück, einschließlich regulärer Freigaben und
@@ -194,15 +185,11 @@ Dokumente dieses Zeitpunkts ohne eigenen Reset. Eine Retro-Ablehnung in einem
 anderen gleichzeitigen Dokument verhindert die Retro-Erweiterung. Reguläre
 Erlaubnisse aus den zurücksetzenden Dokumenten werden zusammengeführt.
 
-Der Reset betrifft die Berechnung der Freigaben für den abgeleiteten BC-Snapshot;
-er löscht keine gespeicherten Datenversionen aus dem Quellsnapshot.
-
 ### 6. Endgültige Datenzeiträume aus `.6` bilden
 
 Auch `.6` wird chronologisch verarbeitet. Nach dem gegebenenfalls erforderlichen
 Reset werden die eigenen regulären und retrospektiv erweiterten Erlaubnisse
-hinzugefügt und anschließend die `.6`-Ablehnungszeiträume abgezogen. **Eine
-Retro-Erweiterung ist nicht gegen `.6`-Widerrufe geschützt.** Eine spätere
+hinzugefügt und anschließend die `.6`-Ablehnungszeiträume abgezogen. Eine spätere
 Erlaubnis kann einen zuvor gesperrten Zeitraum wieder freigeben, jedoch nur im
 Umfang ihrer eigenen regulären beziehungsweise retrospektiven Freigabe.
 Bei gleichem Erklärungszeitpunkt werden alle `.6`-Ablehnungen zuletzt angewendet.
@@ -215,8 +202,8 @@ Grenztage wird entfernt: Aus 01.–31.03. mit Ablehnung 10.–12.03. entstehen
 
 Bleibt kein Zeitraum übrig, wird der Patient mit `no_permitted_data_period`
 ausgeschlossen. Andernfalls lautet die Patientenentscheidung `included`.
-Dies bedeutet noch nicht, dass jede Ressource des Patienten übernommen wird:
-Es folgt die Prüfung ihrer eigenen Datumswerte.
+Für zugelassene Patienten folgt die Prüfung der einzelnen Ressourcen anhand
+ihrer Datumswerte.
 
 ## Rechenbeispiele
 
@@ -227,7 +214,7 @@ die einen Provision-Beginn verschieben.
 
 | Fall | Ausgangslage | Ergebnis |
 |---|---|---|
-| Historische Daten bei heutiger Nutzungsberechtigung | `.6 permit`: 2020–2025; `.8 permit`: 2026–2050, im selben Dokument | Patient zugelassen; Datenzeitraum bleibt 2020–2025. Die fehlende zeitliche Überschneidung mit `.8` entfernt diese Daten nicht. |
+| Historische Daten bei heutiger Nutzungsberechtigung | `.6 permit`: 2020–2025; `.8 permit`: 2026–2050, im selben Dokument | Patient zugelassen; Datenzeitraum bleibt 2020–2025. Die aktuelle `.8`-Erlaubnis deckt die Nutzung dieser historischen Daten ab. |
 | Lücke durch `.6 deny` | `.6 permit`: 2020–2025; später erklärtes separates `.6 deny`: Kalenderjahr 2022 | Datenzeiträume 2020–2021 und 2023–2025. |
 | Retrospektive Erweiterung | Zusätzlich zum vorigen Fall: passende `.45 permit` im vollständigen Erlaubnisdokument | Datenzeiträume 01.01.1900–31.12.2021 und 01.01.2023–31.12.2025; die später erklärte `.6`-Ablehnung bleibt wirksam. |
 | Dokumentübergreifender Retro-Widerruf | Erweiterung durch `.45 permit`, erklärt 2020; `.46 deny` in einem anderen Dokument, erklärt 2021 | Alle bisherigen `.6`-Freigaben entfallen; ohne neue eigene Erlaubnisse wird der Patient ausgeschlossen. |
@@ -253,26 +240,20 @@ Zeitraum müssen Anfang, Ende und alle dazwischenliegenden Tage abgedeckt sein;
 eine bloße Überschneidung reicht nicht aus. Fehlen dafür benötigte Datumswerte
 oder sind die Angaben widersprüchlich, wird die Ressourcenfassung ausgeschlossen.
 
-Für `Patient` und `Medication` ist ausdrücklich keine eigene zeitliche Prüfung
-vorgesehen: Patientendaten werden anhand der Patientenzulassung ausgewählt.
+Patientendaten werden anhand der Patientenzulassung ausgewählt.
 Medikamentenressourcen werden übernommen, wenn sie von einem behaltenen
 Medikationsereignis direkt oder über eine Zutatenreferenz benötigt werden.
-Ein leeres Datumsfeld in einer anderen Ressource hebt deren zeitliche Prüfung
-jedoch nicht auf.
 
-Für `Location` ist in der verwendeten Regelzuordnung keine Auswahlregel
-hinterlegt. Deshalb werden `Location`-Ressourcen derzeit vollständig
-ausgeschlossen. Eine fehlende Regel wird nicht als Freigabe behandelt. Die
-Zuordnung der Datumsfelder folgt dem TORCH-Stand
-`b12757d09a525ae1a3309e4aded999b209b1d600` und ist im Code in
+`Location`-Ressourcen werden vollständig ausgeschlossen. Die Zuordnung der
+Datumsfelder ist im Code in
 [`BROAD_CONSENT_RESOURCE_DATES`](R-cdstoolchain/pseudonym/R/broad_consent_resources.R)
 festgehalten.
 
 ## Abhängige Tabellen und Encounter-Hierarchien
 
 Nicht-FHIR-Tabellen, etwa Frontend-Daten und MRP-Berechnungen, werden anhand ihrer
-Patientenzuordnung gefiltert. Für sie wird kein eigener Datenzeitraum geprüft.
-Die Zuordnung erfolgt anhand der Quelldaten, bevor Encounter ausgeschlossen und
+Patientenzuordnung und der Patientenzulassung gefiltert. Die Zuordnung erfolgt
+anhand der Quelldaten, bevor Encounter ausgeschlossen und
 Referenzen entfernt werden. Dadurch bleibt zum Beispiel eine MRP-Berechnung
 einem zugelassenen Patienten zugeordnet, auch wenn der zugehörige
 Einrichtungskontakt nicht übernommen werden darf.
@@ -293,18 +274,13 @@ Referenzspalten und bekannte FHIR-Zuordnungsspalten in Nicht-FHIR-Tabellen.
 Eine Referenz ohne Versionsangabe wird anhand der aktuellen Fassung des Ziels
 geprüft; bei einer Referenz mit `/_history/` ist die angegebene Version maßgeblich.
 
-Die Maskierungsnachweise werden ausschließlich als `masked_references.csv` im
-externen Laufverzeichnis geschrieben. Ein Eintrag benennt Tabelle, technische
+Die Maskierungsnachweise stehen in `masked_references.csv` im Laufverzeichnis.
+Ein Eintrag benennt Tabelle, technische
 Zeilen-ID, Ressourcen-ID, Version, Patienten-ID, Spalte und den Grund `masked`.
-Der entfernte Referenzwert selbst wird nicht gespeichert. Bei angereicherten
-Mehrfachzeilen können identische Nachweise mehrfach im Bericht vorkommen.
+Bei angereicherten Mehrfachzeilen können identische Nachweise mehrfach im
+Bericht vorkommen.
 Widersprüchliche Zuordnungen derselben technischen Zeilen-ID führen bereits bei
 der Auswahl zum Abbruch.
-
-Die Ergebnisdatenbank enthält weder eine BC-Nachweistabelle noch eine zugehörige
-View oder BC-Laufprotokolltabelle. Für eine erneute BC-Erzeugung wird wieder der
-zugrunde liegende normale oder pseudonymisierte Snapshot verwendet. Bereits
-gefilterte BC-Snapshots sind nicht als Quelle für eine erneute Filterung vorgesehen.
 
 ## Prüfberichte
 
@@ -312,23 +288,18 @@ Der Broad-Consent-Prozess schreibt zusätzlich den lokalen Bericht
 `outputLocal/broad_consent_snapshot/reports/broad_consent_snapshot_report.xlsx`.
 Er enthält für jede Relation insbesondere Ein- und Ausgabezeilen,
 Versionspartition, Chunk-Anzahl, Laufzeiten und Filteraktion sowie die
-Anzahl der Patienten und Ressourcenzeilen je Entscheidungsgrund. Dieser lokale
-Bericht ist nicht Bestandteil der Snapshot-Datei. In einem eigenen Laufverzeichnis
-unter `outputLocal/broad_consent_snapshot` entstehen immer `masked_references.csv`
+Anzahl der Patienten und Ressourcenzeilen je Entscheidungsgrund. In einem
+Laufverzeichnis unter `outputLocal/broad_consent_snapshot` entstehen immer `masked_references.csv`
 und `run.csv` mit Quelldatenbank, Bewertungsdatum und Abschlusszeit der
 Datenbankerzeugung. Mit `--consent-details` kommen die detaillierten
-patientenbezogenen CSV-Berichte hinzu. Keiner dieser Berichte wird in der
-Ergebnisdatenbank oder deren Dump gespeichert.
-Die Datei `COMPLETE` zeigt an, dass die Consent-Berichte vollständig geschrieben
-sind. Das Schreiben der Snapshot-Daten und des Dumps ist damit noch nicht
-bestätigt. Für die Weitergabe des Snapshots muss deshalb der gesamte Befehl
-erfolgreich beendet
-sein; `COMPLETE` allein bestätigt noch keinen fertigen Snapshot.
+patientenbezogenen CSV-Berichte hinzu.
+
+`COMPLETE` kennzeichnet den Abschluss der Patientenprüfung. Für die Weitergabe
+des Snapshots muss der gesamte Befehl einschließlich Datenbankerzeugung und
+Export erfolgreich beendet sein.
 
 Der [reine Consent-Prüflauf](Database_Snapshot.md#consent-auswertung-ohne-snapshot-erzeugung-prüfen)
-verwendet dieselbe Patientenberechnung. Er schreibt die Details, erzeugt aber
-keinen Snapshot und prüft noch keine klinischen Ressourcen. Die Detaildateien
-machen die oben beschriebenen Schritte nachvollziehbar:
+verwendet dieselbe Patientenberechnung und schreibt folgende Detaildateien:
 
 | Datei | Inhalt |
 |---|---|
@@ -338,31 +309,13 @@ machen die oben beschriebenen Schritte nachvollziehbar:
 | `intervals.csv` | Endgültige erlaubte Datenzeiträume |
 | `summary.csv` | Anzahl der Patienten je Entscheidungsgrund |
 
-## Abgrenzung zu TORCH und Codequellen
+## Fachliche Referenzen und Codequellen
 
-Die [TORCH-Beschreibung im verwendeten Referenzstand](https://github.com/medizininformatik-initiative/torch/blob/b12757d09a525ae1a3309e4aded999b209b1d600/docs/implementation/consent.md)
-erläutert die Trennung von aktueller Nutzungsberechtigung und Datenzeiträumen
-sowie die retrospektive Erweiterung. Für INTERPOLAR sind die hier beschriebenen
-Schritte und die zugehörigen Tests maßgeblich. Insbesondere:
-
-- INTERPOLAR liest die bereits importierten Snapshot-Views. Es führt in diesem
-  Schritt weder einen FHIR-Abruf noch eine CRTDL-Auswertung aus. Die vier Codes
-  sind fest vorgegeben; vorhandene `.45`/`.46`-Provisions werden ohne zusätzliche
-  Auswahloption berücksichtigt.
-- Die globale Prüfung der Patientenzuordnung und der Ausschluss zukünftiger
-  Erklärungen verhindern Freigaben bei diesen widersprüchlichen Quelldaten.
-- Die chronologische Verrechnung, Aufhebung der `.6`-Widerrufsimmunität und der
-  Retro-Historienreset orientieren sich am noch offenen
-  [TORCH-PR #1258, Stand `8a7bee63`](https://github.com/medizininformatik-initiative/torch/blob/8a7bee63c79403040fc9723cf3d20123256593d4/src/main/java/de/medizininformatikinitiative/torch/consent/ConsentCalculator.java)
-  (geprüft am 15.09.2026). TORCH `main` enthielt diese Änderungen zu diesem
-  Zeitpunkt noch nicht. Bei identischen Erklärungszeitpunkten entscheidet
-  INTERPOLAR ausdrücklich zugunsten der Ablehnung; der PR sortiert nach Dokument-ID.
-- Die Encounter-Anpassung des `.6`-Beginns betrifft wie in TORCH nur `permit`.
-  INTERPOLAR berücksichtigt weiterhin alle passenden Encounter, nicht nur das
-  TORCH-Profil „KontaktGesundheitseinrichtung“.
-- Referenzen auf ausgeschlossene Ziele werden in erhaltenen Zeilen maskiert.
-  Abhängige gültige Ressourcen dürfen dadurch auch bei einer unvollständigen
-  Encounter-Hierarchie erhalten bleiben.
+Die Consent-Berechnung orientiert sich an
+[TORCHs ConsentCalculator, Stand `8a7bee63`](https://github.com/medizininformatik-initiative/torch/blob/8a7bee63c79403040fc9723cf3d20123256593d4/src/main/java/de/medizininformatikinitiative/torch/consent/ConsentCalculator.java).
+Die Datumszuordnung folgt
+[`type_to_consent.json`, Stand `b12757d0`](https://github.com/medizininformatik-initiative/torch/blob/b12757d09a525ae1a3309e4aded999b209b1d600/mappings/type_to_consent.json).
+Für INTERPOLAR sind die oben beschriebenen Regeln und die zugehörigen Tests maßgeblich.
 
 Die Implementierung ist auf folgende Stellen verteilt:
 
@@ -370,7 +323,7 @@ Die Implementierung ist auf folgende Stellen verteilt:
 - [Berechnung der Patientenentscheidung und Zeiträume](R-cdstoolchain/pseudonym/R/broad_consent_periods.R)
 - [Datumsfelder und Ressourcenprüfung](R-cdstoolchain/pseudonym/R/broad_consent_resources.R)
 - [Indirekte Patientenzuordnung und Medikamentenreferenzen](R-cdstoolchain/pseudonym/R/broad_consent_selection.R)
-- [Referenzmaskierung und dauerhafte Nachweise](R-cdstoolchain/pseudonym/R/broad_consent_references.R)
+- [Referenzmaskierung und Berichtsdaten](R-cdstoolchain/pseudonym/R/broad_consent_references.R)
 - [Tests der Zeitraum- und Widerrufsregeln](R-cdstoolchain/pseudonym/tests/testthat/test-broad-consent-periods.R)
 
 Zurück zur [Bedienungsanleitung](Database_Snapshot.md).
