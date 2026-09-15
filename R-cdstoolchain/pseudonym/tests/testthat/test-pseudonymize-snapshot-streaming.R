@@ -718,7 +718,14 @@ test_that("observation enrichment aggregates incompatible units without warnings
   )
 
   output <- utils::capture.output(result <- enrichObservationWithLoincMapping(observation, mapping))
-  review <- getLoincUnitConversionReview(result, "observation")
+  unit_cache <- new.env(parent = emptyenv())
+  cached_result <- enrichObservationWithLoincMapping(observation, mapping, unit_cache = unit_cache)
+  expect_equal(cached_result, result)
+  testthat::local_mocked_bindings(
+    parseConvertibleUnitUncached = function(...) stop("Unexpected repeated parsing"),
+    .package = "etlutils"
+  )
+  review <- getLoincUnitConversionReview(cached_result, "observation", unit_cache)
   context <- newLoincUnitConversionReview()
   expect_message(
     recordLoincUnitConversionReview(context, review),

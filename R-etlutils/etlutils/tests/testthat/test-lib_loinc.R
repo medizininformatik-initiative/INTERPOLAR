@@ -67,3 +67,19 @@ test_that("isValidUnit accepts units supported by convertLabUnits", {
   expect_false(etlutils::isValidUnit("foo"))
   expect_false(etlutils::isValidUnit("mM/"))
 })
+
+
+test_that("unit caches reuse successful and unsuccessful parses across calls", {
+  cache <- new.env(parent = emptyenv())
+  values <- c("mg/dL", "U/L", "unsupportedunit", NA_character_, "", "mg/dL")
+  expected <- etlutils::isValidUnit(values)
+  expect_identical(etlutils::isValidUnit(values, cache), expected)
+  expect_length(ls(cache), 3L)
+  testthat::local_mocked_bindings(
+    parseConvertibleUnitUncached = function(...) stop("Unexpected repeated parsing"),
+    .package = "etlutils"
+  )
+  expect_identical(etlutils::isValidUnit(rev(values), cache), rev(expected))
+  expect_equal(etlutils::convertLabUnits(c(1, NA, 3), "mg/dL", "mg/dL", unit_cache = cache), c(1, NA, 3))
+  expect_true(is.na(etlutils::convertLabUnits(1, "unsupportedunit", "mg/dL", unit_cache = cache)))
+})

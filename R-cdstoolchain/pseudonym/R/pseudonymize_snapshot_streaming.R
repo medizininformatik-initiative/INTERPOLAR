@@ -781,6 +781,7 @@ newSnapshotStreamingContext <- function(
   context$medication_resolution_tables <- medication_resolution_tables
   context$version_key_tables <- version_key_tables
   context$loinc_mapping <- NULL
+  context$unit_cache <- new.env(parent = emptyenv())
   context$mapping_context <- newPseudonymMappingContext(input_repo_path)
   context$medication_review <- newBoundedMedicationReferenceReview(
     SNAPSHOT_MEDICATION_REVIEW_DETAIL_LIMIT
@@ -834,7 +835,8 @@ enrichSnapshotStreamingChunk <- function(
       table,
       context$loinc_mapping,
       enrichment_columns,
-      described_columns
+      described_columns,
+      unit_cache = context$unit_cache
     ))
   }
   medication_spec <- getMedicationReferenceSpec(base_table_name)
@@ -1129,7 +1131,7 @@ streamSnapshotMaterializedTable <- function(
         emptyAgeCalculationReview()
       }
       loinc_unit_review <- if (identical(base_table_name, "observation")) {
-        getLoincUnitConversionReview(chunk, materialized_table_name)
+        getLoincUnitConversionReview(chunk, materialized_table_name, streaming_context$unit_cache)
       } else {
         emptyLoincUnitConversionReview()
       }

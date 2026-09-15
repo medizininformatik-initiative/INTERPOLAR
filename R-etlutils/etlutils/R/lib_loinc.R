@@ -65,6 +65,7 @@ asUnit <- function(unit) {
 #' the same length: `TRUE` for supported unit strings, `FALSE` otherwise.
 #'
 #' @param u Character vector. Unit strings (e.g., `"mmol/L"`, `"mg/dL"`).
+#' @param unit_cache Optional environment for parsed units, scoped to one processing run.
 #'
 #' @return Logical vector of the same length as `u`.
 #'
@@ -77,10 +78,14 @@ asUnit <- function(unit) {
 #' isValidUnit("m[iU]/L")                # TRUE
 #'
 #' @export
-isValidUnit <- function(u) {
-  vapply(u, function(x) {
-    !is.null(parseConvertibleUnit(x))
-  }, logical(1))
+isValidUnit <- function(u, unit_cache = NULL) {
+  distinct_units <- unique(u)
+  valid <- vapply(distinct_units, function(x) {
+    !is.null(parseConvertibleUnit(x, unit_cache))
+  }, logical(1), USE.NAMES = FALSE)
+  result <- valid[match(u, distinct_units)]
+  names(result) <- if (is.null(names(u)) && is.character(u)) u else names(u)
+  result
 }
 
 parseSimpleInternationalUnitQuotient <- function(unit) {
@@ -122,7 +127,22 @@ convertSimpleInternationalUnitQuotient <- function(measured_value, measured_unit
   measured_value * measured_unit$factor / target_unit$factor
 }
 
-parseConvertibleUnit <- function(unit) {
+parseConvertibleUnit <- function(unit, unit_cache = NULL) {
+  if (isMissingUnit(unit)) {
+    return(NULL)
+  }
+  cache_key <- paste0("unit:", unit)
+  if (!is.null(unit_cache) && exists(cache_key, envir = unit_cache, inherits = FALSE)) {
+    return(get(cache_key, envir = unit_cache, inherits = FALSE))
+  }
+  parsed <- parseConvertibleUnitUncached(unit)
+  if (!is.null(unit_cache)) {
+    assign(cache_key, parsed, envir = unit_cache)
+  }
+  parsed
+}
+
+parseConvertibleUnitUncached <- function(unit) {
   parsed_units <- asUnit(unit)
   if (!is.na(parsed_units)) {
     return(list(type = "units", value = parsed_units))
@@ -149,6 +169,7 @@ isMissingUnit <- function(unit) {
 #' Otherwise, it uses an intermediate conversion unit and a user-provided
 #' mapping factor.
 #'
+#' @param unit_cache Optional environment for parsed units, scoped to one processing run.
 #' @param measured_value Numeric. The raw measurement value.
 #' @param measured_unit Character. The unit of the input value
 #'   (e.g., `"mg/dl"`, `"mmol/l"`).
@@ -224,7 +245,8 @@ convertLabUnits <- function(measured_value,
                             conversion_factor = NA_real_,
                             conversion_unit = NA,
                             ignore_errors = TRUE,
-                            additional_error_message = NA) {
+                            additional_error_message = NA,
+                            unit_cache = NULL) {
   # Default is "symbols" but we need "standard", because "symbols" does'nt work in our cases
   # To set this globally outside this function doesnt work
   # This option is relevant for units::set_units() function
@@ -242,8 +264,8 @@ convertLabUnits <- function(measured_value,
         return(measured_value)
       }
 
-      measured_unit <- parseConvertibleUnit(measured_unit_raw)
-      target_unit <- parseConvertibleUnit(target_unit_raw)
+      measured_unit <- parseConvertibleUnit(measured_unit_raw, unit_cache)
+      target_unit <- parseConvertibleUnit(target_unit_raw, unit_cache)
 
       # Invalid FHIR units produce missing conversion results
       if (is.null(measured_unit) || is.null(target_unit)) {

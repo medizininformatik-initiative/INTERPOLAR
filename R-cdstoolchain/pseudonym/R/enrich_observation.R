@@ -69,7 +69,7 @@ loadSnapshotLoincMapping <- function(input_repo_path) {
   mapping
 }
 
-getObservationValueUnit <- function(observation) {
+getObservationValueUnit <- function(observation, unit_cache = NULL) {
   if ("obs_valuequantity_code" %in% names(observation)) {
     unit_code <- observation[["obs_valuequantity_code"]]
   } else {
@@ -80,7 +80,7 @@ getObservationValueUnit <- function(observation) {
   } else {
     unit_display <- rep(NA_character_, nrow(observation))
   }
-  use_code <- !is.na(unit_code) & nzchar(unit_code) & etlutils::isValidUnit(unit_code)
+  use_code <- !is.na(unit_code) & nzchar(unit_code) & etlutils::isValidUnit(unit_code, unit_cache = unit_cache)
   data.table::fifelse(use_code, unit_code, unit_display)
 }
 
@@ -103,7 +103,7 @@ emptyLoincUnitConversionReview <- function() {
   )
 }
 
-getLoincUnitConversionReview <- function(table, table_name) {
+getLoincUnitConversionReview <- function(table, table_name, unit_cache = NULL) {
   table <- data.table::as.data.table(table)
   if (!SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN %in% names(table)) {
     return(emptyLoincUnitConversionReview())
@@ -117,7 +117,7 @@ getLoincUnitConversionReview <- function(table, table_name) {
     LOINC_CODE = as.character(table[["obs_code_code"]][issue_rows]),
     SOURCE_UNIT_CODE = as.character(table[["obs_valuequantity_code"]][issue_rows]),
     SOURCE_UNIT_DISPLAY = as.character(table[["obs_valuequantity_unit"]][issue_rows]),
-    USED_SOURCE_UNIT = as.character(getObservationValueUnit(table)[issue_rows]),
+    USED_SOURCE_UNIT = as.character(getObservationValueUnit(table[issue_rows, ], unit_cache)),
     MAPPING_CONVERSION_UNIT = as.character(table[[SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN]][issue_rows]),
     TARGET_UNIT = as.character(table[[SNAPSHOT_LOINC_TARGET_UNIT_COLUMN]][issue_rows]),
     N = 1L
@@ -209,7 +209,8 @@ enrichObservationWithLoincMapping <- function(
   observation,
   loinc_mapping,
   enrichment_columns = SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS,
-  source_columns = names(observation)
+  source_columns = names(observation),
+  unit_cache = NULL
 ) {
   observation <- data.table::copy(data.table::as.data.table(observation))
   enrichment_columns <- intersect(enrichment_columns, SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS)
@@ -258,7 +259,7 @@ enrichObservationWithLoincMapping <- function(
   row_id_column <- ".snapshot_pseudonym_row_id"
   source_unit_column <- ".snapshot_pseudonym_source_unit"
   loinc_row_indices <- which(observation[["obs_code_system"]] == "http://loinc.org")
-  source_units <- getObservationValueUnit(observation)
+  source_units <- getObservationValueUnit(observation, unit_cache)
   observation[["analysis_loinc_code"]][loinc_row_indices] <-
     observation[["obs_code_code"]][loinc_row_indices]
   observation[["analysis_unit"]][loinc_row_indices] <- source_units[loinc_row_indices]
@@ -334,6 +335,7 @@ enrichObservationWithLoincMapping <- function(
           target_unit = group_target_unit,
           conversion_factor = group_conversion_factor,
           conversion_unit = group_conversion_unit,
+          unit_cache = unit_cache,
           additional_error_message = paste0(
             " for LOINC code ",
             matched_rows[["obs_code_code"]][first_group_row]
