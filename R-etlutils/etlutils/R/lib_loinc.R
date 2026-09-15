@@ -60,8 +60,9 @@ asUnit <- function(unit) {
 #' Check if unit strings are supported for lab unit conversion (vectorized)
 #'
 #' This helper function tests whether each element of a given character vector
-#' can be parsed by the `units` package or by a narrow INTERPOLAR fallback for
-#' international-unit quotients such as `"mU/L"`. It returns a logical vector of
+#' can be parsed by the `units` package or the supported UCUM families (pressure
+#' columns, osmoles, annotations and international-unit quotients). This tests
+#' converter support, not complete UCUM validity. It returns a logical vector of
 #' the same length: `TRUE` for supported unit strings, `FALSE` otherwise.
 #'
 #' @param u Character vector. Unit strings (e.g., `"mmol/L"`, `"mg/dL"`).
@@ -88,33 +89,60 @@ isValidUnit <- function(u, unit_cache = NULL) {
   result
 }
 
+# UCUM metric prefixes, shared by the bounded unit-family translations below.
+LAB_UNIT_PREFIX_FACTORS <- stats::setNames(
+  10^c(0, 24, 21, 18, 15, 12, 9, 6, 3, 2, 1, -1, -2, -3, -6, -9, -12, -15, -18, -21, -24),
+  c("", "Y", "Z", "E", "P", "T", "G", "M", "k", "h", "da", "d", "c", "m", "u", "n", "p", "f", "a", "z", "y")
+)
+LAB_UNIT_PREFIX_PATTERN <- "(da|[YZEPTGMkhdcmunpfazy]?)"
+
 parseSimpleInternationalUnitQuotient <- function(unit) {
   unit <- cleanUnit(unit)
   unit <- gsub("\u00b5", "u", unit, fixed = TRUE)
-  matches <- regexec("^([mu]?)(U|IU|\\[IU\\]|\\[iU\\])/(L|dL|mL)$", unit)
+  matches <- regexec(paste0(
+    "^", LAB_UNIT_PREFIX_PATTERN, "(U|IU|\\[IU\\]|\\[iU\\])/",
+    LAB_UNIT_PREFIX_PATTERN, "[Ll]$"
+  ), unit)
   parts <- regmatches(unit, matches)[[1]]
   if (length(parts) != 4) {
     return(NULL)
   }
-
-  numerator_prefix_factor <- stats::setNames(
-    c(1, 1e-3, 1e-6),
-    c("", "m", "u")
-  )
-  denominator_factor_in_liter <- c(
-    "L" = 1,
-    "dL" = 1e-1,
-    "mL" = 1e-3
-  )
-
-  numerator_prefix_index <- match(parts[2], names(numerator_prefix_factor))
-  denominator_index <- match(parts[4], names(denominator_factor_in_liter))
-
   list(
     atom = "IU",
-    factor = numerator_prefix_factor[[numerator_prefix_index]] /
-      denominator_factor_in_liter[[denominator_index]]
+    factor = unname(LAB_UNIT_PREFIX_FACTORS[match(parts[2], names(LAB_UNIT_PREFIX_FACTORS))] /
+      LAB_UNIT_PREFIX_FACTORS[match(parts[4], names(LAB_UNIT_PREFIX_FACTORS))])
   )
+}
+
+# This is a translation of selected UCUM families, not a general UCUM parser.
+# Definitions: https://ucum.org/ucum, sections 6, 27, 44 and 45.
+parseLabUcumUnit <- function(unit) {
+  pressure <- regmatches(unit, regexec(paste0(
+    "^", LAB_UNIT_PREFIX_PATTERN, "m\\[(Hg|H2O)\\]$"
+  ), unit))[[1]]
+  if (length(pressure) == 3) {
+    prefix_factor <- unname(LAB_UNIT_PREFIX_FACTORS[match(pressure[2], names(LAB_UNIT_PREFIX_FACTORS))])
+    # Reuse UDUNITS' existing mmHg definition so aliases have identical values.
+    definition <- if (pressure[3] == "Hg") {
+      paste(format(prefix_factor * 1000, scientific = FALSE, trim = TRUE, digits = 22), "mmHg")
+    } else {
+      paste(format(prefix_factor * 9806.65, scientific = FALSE, trim = TRUE, digits = 22), "Pa")
+    }
+    return(asUnit(definition))
+  }
+  if (grepl("^\\{[^{}]+\\}$", unit)) {
+    return(asUnit("1"))
+  }
+  if (grepl("^%\\{[^{}]+\\}$", unit)) {
+    return(asUnit("%"))
+  }
+  osmole <- regmatches(unit, regexec(paste0(
+    "^", LAB_UNIT_PREFIX_PATTERN, "osm(/(", LAB_UNIT_PREFIX_PATTERN, "[Ll]|kg|g))?$"
+  ), unit))[[1]]
+  if (length(osmole) > 0) {
+    return(asUnit(sub("osm", "mol", unit, fixed = TRUE)))
+  }
+  NA
 }
 
 convertSimpleInternationalUnitQuotient <- function(measured_value, measured_unit, target_unit) {
@@ -146,6 +174,11 @@ parseConvertibleUnitUncached <- function(unit) {
   parsed_units <- asUnit(unit)
   if (!is.na(parsed_units)) {
     return(list(type = "units", value = parsed_units))
+  }
+
+  parsed_ucum <- parseLabUcumUnit(unit)
+  if (!is.na(parsed_ucum)) {
+    return(list(type = "units", value = parsed_ucum))
   }
 
   parsed_iu_quotient <- parseSimpleInternationalUnitQuotient(unit)
@@ -282,6 +315,19 @@ convertLabUnits <- function(measured_value,
         ) {
           result <- measured_value * measured_unit$value$factor / target_unit$value$factor
         }
+        if (
+          measured_unit$type != target_unit$type &&
+          !etlutils::isSimpleNAorNULL(conversion_factor) &&
+          !isMissingUnit(conversion_unit)
+        ) {
+          # Only the explicitly supplied mapping factor may bridge unit families.
+          result <- convertLabUnits(
+            measured_value, measured_unit_raw, conversion_unit,
+            ignore_errors = ignore_errors,
+            additional_error_message = additional_error_message,
+            unit_cache = unit_cache
+          ) * conversion_factor
+        }
         return(result)
       }
 
@@ -303,19 +349,13 @@ convertLabUnits <- function(measured_value,
         !etlutils::isSimpleNAorNULL(conversion_factor) &&
           !etlutils::isSimpleNAorNULL(conversion_unit)
       ) {
-        # Create unit object for conversion unit
-        u_conversion <- suppressWarnings(units::set_units(1, conversion_unit))
-
-        # Case 2: Indirect conversion via mapping unit and factor
-        result_u_conversion <- suppressWarnings(units::set_units(u_measured, u_conversion))
-
-        # Drop the unit before applying the mapping factor
-        numeric_value <- units::drop_units(result_u_conversion)
-        converted_value <- numeric_value * conversion_factor
-
-        # Assign the target unit to the converted values
-        result <- suppressWarnings(units::set_units(converted_value, u_target))
-        result <- units::drop_units(result)
+        # Resolve the mapping input with the same UCUM support and numeric scaling.
+        result <- convertLabUnits(
+          measured_value, measured_unit_raw, conversion_unit,
+          ignore_errors = ignore_errors,
+          additional_error_message = additional_error_message,
+          unit_cache = unit_cache
+        ) * conversion_factor
       }
     },
     error = function(e) {
