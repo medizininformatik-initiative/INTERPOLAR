@@ -605,6 +605,41 @@ pseudonymizeSnapshotDatabase <- function(
     medication_resolution_tables,
     version_key_tables
   )
+  consent_config <- readSnapshotConsentConfig(project_root)
+  if (!is.null(consent_config)) {
+    runPseudonymizationLogStep(2L,
+      "Refresh snapshot Consents from FHIR",
+      {
+        refresh_started <- Sys.time()
+        patient_map <- snapshotConsentPatientMap(source_connection, source_schema, source_view_prefix, consent_config)
+        consent_rows <- fetchSnapshotConsentRows(consent_config, patient_map)
+        current_consent <- result[["materialization_plan"]]$BASE_TABLE_NAME == "consent" &
+          result[["materialization_plan"]]$SNAPSHOT_RELATION_TYPE != SNAPSHOT_RELATION_TYPE_OLD
+        result[["materialization_plan"]]$MATERIALIZED_TABLE_NAME[current_consent] <- "consent_updated"
+        consent_refresh <- prepareSnapshotConsentRefresh(
+          source_connection, source_schema, source_view_prefix, version_key_tables,
+          result[["materialization_plan"]], consent_rows
+        )
+        streaming_context$source_queries <- consent_refresh$queries
+        on.exit(dropSnapshotVersionKeyTables(source_connection, consent_refresh$tables), add = TRUE)
+        DBI::dbWriteTable(
+          target_connection,
+          snapshotRelationId("snapshot_consent_refresh", target_table_schema),
+          data.frame(
+            started_at = refresh_started, finished_at = Sys.time(),
+            source_endpoint = consent_config[["FHIR_SERVER_ENDPOINT"]],
+            mapped_patients = nrow(patient_map), refreshed_patients = consent_refresh$patients,
+            downloaded_rows = consent_refresh$rows
+          )
+        )
+        snapshotProgress(
+          "Consent source replaced for ", consent_refresh$patients,
+          " patients; other patients retain their snapshot Consents"
+        )
+      },
+      log_steps = log_steps
+    )
+  }
   summary_rows <- list()
   write_summary_rows <- list()
   runPseudonymizationLogStep(2L,

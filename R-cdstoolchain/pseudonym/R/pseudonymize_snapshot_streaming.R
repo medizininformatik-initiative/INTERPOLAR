@@ -802,6 +802,7 @@ newSnapshotStreamingContext <- function(
 ) {
   context <- new.env(parent = emptyenv())
   context$input_repo_path <- input_repo_path
+  context$source_queries <- list()
   context$medication_resolution_tables <- medication_resolution_tables
   context$version_key_tables <- version_key_tables
   context$loinc_mapping <- NULL
@@ -1032,17 +1033,22 @@ streamSnapshotMaterializedTable <- function(
   table_started <- proc.time()[["elapsed"]]
   source_open_started <- proc.time()[["elapsed"]]
   snapshotProgress("Preparing snapshot source query for ", materialized_table_name)
-  query_info <- getSnapshotStreamingSourceQuery(
-    source_connection,
-    plan_row,
-    source_schema,
-    source_view_prefix,
-    last_version_suffix,
-    described_columns,
-    medication_resolution_tables =
-      streaming_context$medication_resolution_tables,
-    version_key_tables = streaming_context$version_key_tables
-  )
+  source_query <- streaming_context$source_queries[[materialized_table_name]]
+  query_info <- if (!is.null(source_query)) {
+    list(query = source_query, medication_spec = NULL)
+  } else {
+    query_info <- getSnapshotStreamingSourceQuery(
+      source_connection,
+      plan_row,
+      source_schema,
+      source_view_prefix,
+      last_version_suffix,
+      described_columns,
+      medication_resolution_tables =
+        streaming_context$medication_resolution_tables,
+      version_key_tables = streaming_context$version_key_tables
+    )
+  }
   snapshotProgress(
     "Streaming snapshot source relation ",
     snapshotQualifiedName(source_connection, source_relation_name, source_schema),

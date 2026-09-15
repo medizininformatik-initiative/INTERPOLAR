@@ -508,9 +508,13 @@ create_pseudonymized_snapshot() {
         exit 1
     fi
 
+    local consent_mount_args=()
+    if [[ -f "R-cdstoolchain/consent_config.toml" ]]; then
+        consent_mount_args=(-v "${PWD}/R-cdstoolchain/consent_config.toml:/src/R-cdstoolchain/consent_config.toml:ro")
+    fi
     echo "Starting pseudonymization from '${source_database}' to '${target_build_db}'..."
     if run_with_snapshot_progress "Snapshot pseudonymization" "${source_database}" "${target_build_db}" "" \
-        docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
+        docker compose run --rm --no-deps "${input_repo_mount_args[@]}" "${consent_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
         source-db="${source_database}" \
         target-db="${target_build_db}" \
