@@ -270,7 +270,7 @@ writeBroadConsentSnapshotReport <- function(summary, file_name = NA, patients = 
 #' @param report_file Optional explicit report path. If `NA`, the report is
 #'   written below `outputLocal`.
 #' @param consent_details Write optional patient-level CSV evidence.
-#' @param evaluation_date Date captured once for the complete selection.
+#' @param evaluation_date Date in Europe/Berlin captured once for the complete selection.
 #' @param log_steps If `TRUE` and module logging is initialized, wrap major
 #'   steps in the existing logging helpers.
 #'
@@ -292,7 +292,7 @@ createBroadConsentSnapshotDatabase <- function(
   report_file = NA,
   log_steps = TRUE,
   consent_details = FALSE,
-  evaluation_date = Sys.Date()
+  evaluation_date = etlutils::as.DateWithTimezone(Sys.time())
 ) {
   force(evaluation_date)
   chunk_size <- validateSnapshotChunkSize(chunk_size)

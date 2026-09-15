@@ -7,6 +7,8 @@ Im Standardablauf folgt sie auf die Pseudonymisierung. Sie berechnet zunächst
 pro Patient, ob Daten genutzt werden dürfen
 und welche Datenzeiträume erlaubt sind. Anschließend wählt sie die dazu passenden
 Ressourcen aus und entfernt Referenzen auf ausgeschlossene Ressourcen.
+Alle Kalendertagsvergleiche für Consent, Encounter und Ressourcen sowie das
+Bewertungsdatum verwenden die Projektzeitzone `Europe/Berlin`.
 Die Quelle bleibt unverändert; das Ergebnis wird in eine eigene Datenbank und
 Snapshot-Datei geschrieben.
 

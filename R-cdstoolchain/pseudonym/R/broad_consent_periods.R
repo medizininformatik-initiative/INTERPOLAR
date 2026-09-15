@@ -87,7 +87,7 @@ calculateBroadConsentPatient <- function(provisions, encounters, evaluation_date
   if (any(invalid)) return(finish("invalid_relevant_provision"))
   # The evaluation is day-based; same-day declarations are valid regardless
   # of time of day. A future declaration cannot grant or restore rights today.
-  if (any(as.Date(provisions$declared_at, tz = "UTC") > evaluation_date)) {
+  if (any(etlutils::as.DateWithTimezone(provisions$declared_at) > evaluation_date)) {
     return(finish("future_consent_declaration"))
   }
   declaration_counts <- unique(provisions[, c("consent_id", "declared_at"), with = FALSE])

@@ -48,6 +48,12 @@ buildBroadConsentDatePredicate <- function(connection, spec, interval_table) {
     if (is.na(name)) return("NULL::timestamp")
     snapshotQuotedColumn(connection, name, "s")
   }
+  # Match the project calendar used when importing FHIR dates.
+  date <- function(expression) paste0(
+    "CASE WHEN pg_typeof(", expression, ") = 'timestamp with time zone'::regtype THEN (",
+    expression, " AT TIME ZONE ", DBI::dbQuoteString(connection, etlutils::GLOBAL_TIMEZONE),
+    ")::date ELSE ", expression, "::date END"
+  )
   point <- column(spec$point)
   start <- column(spec$start)
   end <- column(spec$end)
@@ -56,11 +62,11 @@ buildBroadConsentDatePredicate <- function(connection, spec, interval_table) {
   point_valid <- paste0(point, " IS NOT NULL AND ", start, " IS NULL AND ", end, " IS NULL")
   period_valid <- paste0(
     point, " IS NULL AND ", start, " IS NOT NULL AND ", end,
-    " IS NOT NULL AND ", start, "::date <= ", end, "::date"
+    " IS NOT NULL AND ", date(start), " <= ", date(end)
   )
   contains <- function(from, to) paste0(
     "EXISTS (SELECT 1 FROM ", interval_table, " i WHERE i.patient_id = s.bc_patient_id ",
-    "AND i.start <= ", from, "::date AND i.\"end\" >= ", to, "::date)"
+    "AND i.start <= ", date(from), " AND i.\"end\" >= ", date(to), ")"
   )
   list(
     valid = paste0("((", point_valid, ") OR (", period_valid, "))"),

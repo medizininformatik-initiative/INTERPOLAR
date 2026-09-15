@@ -146,15 +146,15 @@ test_that("future declarations cannot grant rights or leave other grants effecti
       expect_equal(nrow(result$changes), 0L)
     }
   }
-  # Evaluation is daily, with the same UTC conversion used by the DB adapter.
-  for (declared_at in c("2026-09-10 23:59:59", "2026-09-11 23:59:59")) {
+  # Evaluation uses the project calendar, including declarations near midnight.
+  for (declared_at in c("2026-09-10 23:59:59", "2026-09-11 21:59:59")) {
     expect_true(calculateBroadConsentPatient(
       consentDocumentFixture(declared_at = declared_at), NULL, evaluation_date
     )$included)
   }
-  same_utc_day <- consentDocumentFixture()
-  same_utc_day$declared_at <- as.POSIXct("2026-09-12 00:30:00", tz = "Europe/Berlin")
-  expect_true(calculateBroadConsentPatient(same_utc_day, NULL, evaluation_date)$included)
+  next_berlin_day <- consentDocumentFixture()
+  next_berlin_day$declared_at <- as.POSIXct("2026-09-12 00:30:00", tz = "Europe/Berlin")
+  expect_false(calculateBroadConsentPatient(next_berlin_day, NULL, evaluation_date)$included)
   ignored <- consentProvisionFixture("6", "deny", consent_id = "inactive", declared_at = future, status = "inactive")
   expect_true(calculateBroadConsentPatient(
     data.table::rbindlist(list(consentDocumentFixture(), ignored)), NULL, evaluation_date

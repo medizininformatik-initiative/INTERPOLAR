@@ -34,8 +34,8 @@ readBroadConsentProvisions <- function(rows) {
   ) {
     stop("Expected timestamp columns in the Consent source.")
   }
-  result$start <- as.Date(result$start, tz = "UTC")
-  result$end <- as.Date(result$end, tz = "UTC")
+  result$start <- etlutils::as.DateWithTimezone(result$start)
+  result$end <- etlutils::as.DateWithTimezone(result$end)
   result
 }
 
@@ -131,8 +131,8 @@ prepareBroadConsentSelection <- function(
       encounters <- encounter_rows[encounter_indices[[patient_id]], , drop = FALSE]
       encounters <- data.table::data.table(
         encounter_id = encounters$enc_id,
-        start = as.Date(encounters$enc_period_start, tz = "UTC"),
-        end = as.Date(encounters$enc_period_end, tz = "UTC")
+        start = etlutils::as.DateWithTimezone(encounters$enc_period_start),
+        end = etlutils::as.DateWithTimezone(encounters$enc_period_end)
       )
       result <- calculateBroadConsentPatient(provisions, encounters, evaluation_date)
       if (patient_id %in% ambiguous_ids) {
@@ -182,13 +182,13 @@ prepareBroadConsentSelection <- function(
 #' @param report_dir New output directory. If `NULL`, creates a unique directory
 #'   below `outputLocal/broad_consent_review`.
 #' @param evaluation_date Explicit evaluation date, defaulting to the current
-#'   date captured once at the start of this invocation.
+#'   date in Europe/Berlin captured once at the start of this invocation.
 #'
 #' @return The review directory, evaluation date and patient summary.
 #' @export
 reviewBroadConsentSnapshot <- function(
   source_connection, project_root = ".", source_schema = "db2dataprocessor_out",
-  chunk_size = DEFAULT_SNAPSHOT_CHUNK_SIZE, report_dir = NULL, evaluation_date = Sys.Date()
+  chunk_size = DEFAULT_SNAPSHOT_CHUNK_SIZE, report_dir = NULL, evaluation_date = etlutils::as.DateWithTimezone(Sys.time())
 ) {
   force(evaluation_date)
   chunk_size <- validateSnapshotChunkSize(chunk_size)

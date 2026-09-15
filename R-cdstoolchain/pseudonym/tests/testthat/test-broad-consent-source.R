@@ -24,8 +24,8 @@ test_that("Consent selection runs against PostgreSQL without changing source dat
   DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "patients"), data.frame(pat_id = c("p1", "p2")))
   DBI::dbWriteTable(connection, DBI::Id(schema = schema, table = "encounters"), data.frame(
     enc_id = "e1", enc_patient_ref = "Patient/p1",
-    enc_period_start = as.POSIXct("2019-12-20", tz = "UTC"),
-    enc_period_end = as.POSIXct("2020-01-05", tz = "UTC")
+    enc_period_start = as.POSIXct("2019-12-19 23:00:00", tz = "UTC"),
+    enc_period_end = as.POSIXct("2020-01-04 23:00:00", tz = "UTC")
   ))
   for (table in c("consent", "patient", "encounter")) {
     DBI::dbExecute(connection, paste0(
