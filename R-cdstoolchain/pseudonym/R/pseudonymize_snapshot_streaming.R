@@ -79,23 +79,35 @@ prepareSnapshotVersionKeyTables <- function(
       snapshotQuotedColumn(connection, row_id_column, source_alias),
       " AS ", snapshotQuotedColumn(connection, "row_id")
     )
+    frontend <- endsWith(base_table_name, "_fe")
+    if (frontend) {
+      # FE IDs survive REDCap round trips and identify more than one stored row.
+      old_relation <- materialization_plan[["SOURCE_RELATION"]][
+        materialization_plan[["BASE_TABLE_NAME"]] == base_table_name &
+          materialization_plan[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_OLD
+      ][1L]
+      old_fields <- snapshotRelationFields(connection, old_relation, source_schema)
+      key_select <- snapshotSelectColumns(connection, old_fields, source_alias)
+    }
     key_table_name <- basename(tempfile(pattern = "snapshot_version_keys_"))
     key_table <- snapshotQualifiedName(connection, key_table_name)
     created_rows <- DBI::dbExecute(
       connection,
       paste0(
         "CREATE TEMP TABLE ", key_table, " AS\n",
-        "SELECT DISTINCT ", key_select, "\n",
+        if (frontend) "SELECT " else "SELECT DISTINCT ", key_select, "\n",
         "FROM ",
         snapshotQualifiedName(connection, source_relation_name, source_schema),
         " ", source_alias
       )
     )
     snapshotProgress("Indexing version keys for ", base_table_name, ": ", created_rows, " key rows")
-    DBI::dbExecute(
-      connection,
-      paste0("CREATE INDEX ON ", key_table, " (", snapshotQuotedColumn(connection, "row_id"), ")")
-    )
+    if (!frontend) {
+      DBI::dbExecute(
+        connection,
+        paste0("CREATE INDEX ON ", key_table, " (", snapshotQuotedColumn(connection, "row_id"), ")")
+      )
+    }
     DBI::dbExecute(connection, paste0("ANALYZE ", key_table))
     snapshotProgress("Prepared version keys for ", base_table_name, ": ", created_rows, " key rows")
     key_tables[[base_table_name]] <- key_table_name
@@ -161,6 +173,18 @@ getSnapshotPartitionSource <- function(
   }
   if (is.null(key_table_name)) {
     stop("Missing prepared version keys for: ", base_table_name)
+  }
+  if (endsWith(base_table_name, "_fe")) {
+    # Multiset subtraction retains old contents and the original multiplicity.
+    # NULLs compare equal here; no fabricated per-source-row ID is required.
+    return(list(
+      relation = paste0(
+        "(SELECT ", source_columns, " FROM ", source_relation, " ", source_alias,
+        " EXCEPT ALL SELECT ", source_columns, " FROM ",
+        snapshotQualifiedName(connection, key_table_name), " ", source_alias, ")"
+      ),
+      fields = all_fields
+    ))
   }
   key_alias <- "snapshot_version_keys"
   key_predicate <- paste0(
