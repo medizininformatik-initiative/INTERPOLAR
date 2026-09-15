@@ -776,6 +776,7 @@ case "$action" in
         #} > "$file_path"
 
         # Snapshot erstellen
+        snapshot_started_at=$(date +%s)
         SECONDS=0;
         check_live_database_pseudonym_mapping "${chunk_size}"
         if run_with_snapshot_progress "Snapshot export" cds_hub_db "" "$file_date_path" \
@@ -797,6 +798,7 @@ case "$action" in
             "${snapshot_name_date}" \
             "${chunk_size}" \
             false
+        printf "Total snapshot duration: %s s\n" "$(( $(date +%s) - snapshot_started_at ))"
         ;;
 
     pseudonymize)
