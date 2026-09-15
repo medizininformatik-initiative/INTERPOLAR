@@ -48,4 +48,7 @@ invisible(tryCatch(
   }
 ))
 
+# Preserve errors caught outside runLevel while using the standard module finalization.
+status <- max(status, etlutils::finalize())
+
 quit(save = "no", status = status)

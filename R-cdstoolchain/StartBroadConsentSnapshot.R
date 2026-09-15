@@ -129,8 +129,8 @@ invisible(tryCatch(
   }
 ))
 
-# Flush the module log and remove terminal colour sequences before exiting.
-etlutils::endLogging()
+# Preserve errors caught outside runLevel while using the standard module finalization.
+status <- max(status, etlutils::finalize())
 
 if (!interactive()) {
   quit(status = status, save = "no")
