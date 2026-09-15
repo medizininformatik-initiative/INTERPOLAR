@@ -12,6 +12,7 @@ Befehle stehen in der [Bedienungsanleitung](Database_Snapshot.md).
 
 - [Tabellen und Versionen](#inhalt-der-pseudonymisierten-snapshot-datei-und-snapshot-datenbank)
 - [Verarbeitung großer Tabellen](#verarbeitung-großer-tabellen)
+- [Consent-Aktualisierung](#consent-aktualisierung)
 - [Pseudonymisierungsregeln](#pseudonymisierungsregeln)
 - [Vorprüfung und Wiederaufnahme](#vorprüfung-und-wiederaufnahme)
 - [Fachliche Anreicherungen](#fachliche-anreicherungen)
@@ -57,6 +58,27 @@ weiteren Speicher.
 
 Kontrollsummen und Prüfergebnisse werden über alle Chunks hinweg
 zusammengeführt.
+
+## Consent-Aktualisierung
+
+Eine Serveradresse in `R-cdstoolchain/consent_config.toml` aktiviert das Nachladen
+während der Pseudonymisierung. Die Datei enthält eigene FHIR-Zugangsdaten;
+Vorlage ist `consent_config_example.toml` im selben Verzeichnis.
+
+Ohne `PATIENT_IDENTIFIER_SYSTEM` werden die ursprünglichen FHIR-Patienten-IDs
+verwendet. Mit Angabe erfolgt die Zuordnung über die Identifier dieses Systems
+im Rohsnapshot. Mehrdeutige Zuordnungen führen zu einer Fehlermeldung.
+
+Pro Patient gilt genau eine Quelle: Liefert der Server mindestens einen Consent,
+werden alle dort gefundenen Dokumente verwendet, einschließlich inaktiver
+Dokumente und Widerrufe. Seine bisherigen Snapshot-Consents werden nicht
+übernommen. Ohne Treffer bleibt der Snapshot-Bestand erhalten.
+
+Der so zusammengestellte aktuelle Bestand liegt pseudonymisiert in
+`db_log.consent_updated`. Die bestehenden Consent-Views verwenden diese Tabelle;
+die BC-Erstellung bleibt unverändert. `db_log.snapshot_consent_refresh` enthält
+Abrufzeitraum, Herkunft und Anzahlen. Der Rohsnapshot wird nicht verändert.
+Für einen späteren Consent-Stand muss die Pseudonymisierung erneut laufen.
 
 ## Pseudonymisierungsregeln
 

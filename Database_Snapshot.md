@@ -40,6 +40,11 @@ Ergänzen von `Input-Repo/pseudo_mapping.xlsx` anhalten. Die leeren Zellen in
 `PSEUDONYM` ausfüllen und denselben Befehl erneut starten. Vorhandene Zuordnungen
 für spätere Läufe beibehalten.
 
+Optional vor der Pseudonymisierung Consents aktualisieren:
+`R-cdstoolchain/consent_config_example.toml` nach `consent_config.toml` im selben
+Verzeichnis kopieren und FHIR-Zugangsdaten eintragen. Ohne Serveradresse bleibt
+der Snapshot-Consent erhalten. Details: [Consent-Aktualisierung](Database_Snapshot_Pseudonymization.md#consent-aktualisierung).
+
 Vor einer Weitergabe das erzeugte Ergebnis auf die vorgesehenen
 Pseudonymisierungs- und Consent-Regeln prüfen. Ein Rohsnapshot enthält Originaldaten.
 
