@@ -61,8 +61,8 @@ erhalten, damit zusammengehörige Erlaubnisse und spätere Widerrufe zugeordnet
 werden können. Identische, durch die Tabellenaufbereitung mehrfach vorhandene
 Provision-Zeilen werden für die Berechnung zusammengefasst.
 
-Das Bewertungsdatum ist der einmalig am Start festgehaltene UTC-Kalendertag.
-Provision-Zeiträume werden ebenfalls als UTC-Kalendertage verglichen;
+Das Bewertungsdatum ist der einmalig am Start festgehaltene Kalendertag in
+`Europe/Berlin`. Provision-Zeiträume werden in derselben Zeitzone verglichen;
 Anfangs- und Endtag gehören jeweils zum Zeitraum. Für die Reihenfolge
 aller relevanten Erklärungen wird dagegen der vollständige Erklärungszeitpunkt
 verwendet.
@@ -123,7 +123,7 @@ Pro Patient werden danach die Angaben geprüft:
   Erklärungszeitpunkt haben.
 - Liegt eine aktive relevante Erklärung nach dem Bewertungstag, wird der
   Patient mit `future_consent_declaration` ausgeschlossen. Erklärungen am
-  selben UTC-Kalendertag sind zulässig.
+  selben Kalendertag in `Europe/Berlin` sind zulässig.
 
 ### 2. Beginn der `.6`-Zeiträume an Encounter anpassen
 
