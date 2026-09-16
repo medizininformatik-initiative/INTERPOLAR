@@ -33,7 +33,8 @@ importDB2Redcap <- function() {
     table_names <- names(tables)
     for (i in seq_along(table_names)) {
       table_filename_prefix <- if (exists("TOOLCHAIN_DAY")) paste0("TOOLCHAIN_DAY_", TOOLCHAIN_DAY, "_") else ""
-      etlutils::writeDebugExcelFile(data_from_db, paste0(table_filename_prefix, "db2frontend_", table_names[i], suffix))
+      table_name <- table_names[i]
+      etlutils::writeDebugExcelFile(tables[[table_name]], paste0(table_filename_prefix, "db2frontend_", table_name, suffix))
     }
   }
 
@@ -88,14 +89,7 @@ importDB2Redcap <- function() {
           mrp_instances[, retrolektive_mrpbewertung_complete := "Unverified"]
 
           # Import the cleared instances back to REDCap
-          return_count <- suppressWarnings(
-            redcapAPI::importRecords(
-              rcon = frontend_connection,
-              data = mrp_instances,
-              overwriteBehavior = "overwrite",
-              returnContent = "count"
-            )
-          )
+          return_ids <- importRecordsToRedcap(frontend_connection, "retrolektive_mrpbewertung_cleared", mrp_instances, overwriteBehavior = "overwrite")
         }
       }
     }
@@ -189,7 +183,7 @@ importDB2Redcap <- function() {
   etlutils::runLevel2Line("Import data into frontend", {
     # Import data into REDCap
     for (table_name in names(data_to_import)) {
-      tryRedcap(function() suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = data_to_import[[table_name]])))
+      tryRedcap(function() importRecordsToRedcap(frontend_connection, table_name, data_to_import[[table_name]]))
     }
   })
 
@@ -231,7 +225,8 @@ importDB2Redcap <- function() {
 
     etlutils::runLevel2Line("Write data to Redcap", {
       # Set the data access groups in Redcap
-      suppressWarnings(redcapAPI::importRecords(rcon = frontend_connection, data = record_ids_with_data_access_group))
+      etlutils::writeDebugExcelFile(record_ids_with_data_access_group, "db2frontend_record_ids_with_data_access_group")
+      importRecordsToRedcap(frontend_connection, "record_ids_with_data_access_group", record_ids_with_data_access_group)
     })
   })
 }
