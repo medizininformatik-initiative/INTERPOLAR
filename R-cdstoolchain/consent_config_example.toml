@@ -1,4 +1,5 @@
-# Copy to consent_config.toml. An empty endpoint disables refresh.
+# Copy to consent_config.toml. An empty endpoint disables the
+# refresh of the consents just before the pseudonymization.
 FHIR_SERVER_ENDPOINT = ""
 FHIR_SERVER_USER = ""
 FHIR_SERVER_PASS = ""
