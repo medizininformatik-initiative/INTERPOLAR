@@ -2,10 +2,11 @@
 
 [Bedienung](Database_Snapshot.md) → [Pseudonymisierung](Database_Snapshot_Pseudonymization.md) → [Broad Consent](Database_Snapshot_Broad_Consent.md)
 
-Die Pseudonymisierung verarbeitet einen vorhandenen Rohsnapshot und erzeugt
+Die Pseudonymisierung und die im Standardablauf darauf folgende
+[Broad-Consent-Auswahl](Database_Snapshot_Broad_Consent.md) basieren auf den
+in der MII abgestimmten Regeln. Die Pseudonymisierung verarbeitet einen vorhandenen Rohsnapshot und erzeugt
 seine pseudonymisierte Fassung. Sie ergänzt zunächst die für Auswertungen
 benötigten Werte und wendet dann die Regeln für die einzelnen Spalten an.
-Im Standardablauf folgt darauf die Broad-Consent-Auswahl.
 Befehle stehen in der [Bedienungsanleitung](Database_Snapshot.md).
 
 ## Inhalt
@@ -88,8 +89,11 @@ behandelt wird. Maßgeblich sind folgende Tabellenblätter:
 - `frontend_table_description` in
   `R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx`
 
-Die FHIR-Regeln in `Table_Description.xlsx` werden aus der mitgelieferten
-DIMP-DUP-Basis-YAML erzeugt. Nicht von der YAML erfasste Spalten erhalten dabei
+Die FHIR-Regeln in `Table_Description.xlsx` werden aus der
+[mitgelieferten DIMP-DUP-Basis-YAML](R-cdstoolchain/pseudonym/inst/extdata/dimp_dup_base.yaml)
+erzeugt. Grundlage sind die in der MII abgestimmten Regeln der
+[DIMP-DUP-Basiskonfiguration im Dataportal-Framework](https://github.com/medizininformatik-initiative/dataportal/blob/main/data-node/aether/dimp_dup_base.yaml).
+Nicht von der YAML erfasste Spalten erhalten dabei
 ausdrücklich die Regel `keep`. Leere Regeln sind ungültig. Die Dateien werden
 vom INTERPOLAR-Team gepflegt.
 
