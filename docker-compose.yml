@@ -162,7 +162,7 @@ services:
       - ./R-db2frontend/db2frontend_config.toml:/src/R-db2frontend/db2frontend_config.toml
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
       - ./release-version.txt:/src/release-version.txt
-      #- <Path_to_Input-Repo_folder>:/src/Input-Repo
+      #- <Path_to_Input-Repo_folder>:/src/Input-Repo/INTERPOLAR-WP7
       # Include certificates, e.g. self-signed certificates of the FHIR-Server,
       # incl. root-CA or CHAIN if needed. See also section 'environment' above.
       #- <self-signed_cert_FHIR-Server.pem>:/etc/ssl/certs/<self-signed_cert_FHIR-Server.pem>
