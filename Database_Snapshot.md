@@ -14,7 +14,10 @@ und sind schreibgeschützt.
 ## Quickstart
 
 Im INTERPOLAR-Hauptverzeichnis ausführen. `snap01` ist ein frei wählbarer Name;
-Datum und Dateiendung werden ergänzt.
+Datum und Dateiendung werden ergänzt. Der Docker-Compose-Service `cds_hub` muss laufen;
+für einen Rohsnapshot wird die Datenbank `cds_hub_db` verwendet.
+Snapshotnamen bestehen aus Buchstaben, Zahlen und Unterstrichen. Groß- und
+Kleinschreibung bleibt erhalten und muss bei Folgeaufrufen übereinstimmen.
 
 ```bash
 # Nur Rohsnapshot

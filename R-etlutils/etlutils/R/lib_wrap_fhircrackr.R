@@ -34,6 +34,8 @@ getFhirSearchCurlTimeout <- function() {
 #' of the search result, i.e. between downloading the current bundle and the next bundle.
 #' This can be used to avoid choking a weak server with too many requests to quickly. Defaults to zero.
 #' @return A fhir_bundle_list when save_to_disc = NULL (the default), else NULL.
+#' @details If an in-memory search returns no bundles, the function stops with an error
+#'   indicating a failed FHIR retrieval. A valid bundle containing zero matches is accepted.
 #' @export
 executeFHIRSearchVariation <- function(
   request                = fhircrackr::fhir_current_request(),
@@ -52,6 +54,8 @@ executeFHIRSearchVariation <- function(
     low_speed_limit = 1,
     low_speed_time = getFhirSearchCurlTimeout()
   ))
+
+  on.exit(httr::reset_config(), add = TRUE)
 
   result <- if (isDefinedAndNotEmpty("FHIR_TOKEN", envir = .GlobalEnv)) {
     fhircrackr::fhir_search(
@@ -91,8 +95,19 @@ executeFHIRSearchVariation <- function(
     )
   }
 
-  # Reset httr config to defaults
-  httr::reset_config()
+  # fhircrackr can warn and return no bundles after failed download attempts.
+  # This differs from a valid FHIR bundle containing zero matching resources.
+  if (is.null(save_to_disc) && length(result) == 0L) {
+    stop(
+      "FHIR retrieval failed: no FHIR bundles were received. ",
+      "The FHIR server may be unavailable or the request may have failed. ",
+      "Check server availability, network connectivity, authentication and the FHIR endpoint. ",
+      "See the preceding FHIR/HTTP warnings",
+      if (!is.null(log_errors)) " and the configured HTTP error log",
+      " for details.",
+      call. = FALSE
+    )
+  }
 
   return(result)
 }
