@@ -15,7 +15,8 @@ LOINC-basierter Einheitenumrechnung.
 - Alle Befehle müssen im Hauptverzeichnis von INTERPOLAR ausgeführt werden.
 - Der Docker-Compose-Service `cds_hub` muss laufen.
 - Namen von Snapshot-Dateien und Snapshot-Datenbanken dürfen nur Buchstaben,
-  Zahlen und Unterstriche enthalten.
+  Zahlen und Unterstriche enthalten. Groß- und Kleinschreibung bleibt in
+  Dateinamen und Datenbanknamen erhalten und muss bei Folgeaufrufen übereinstimmen.
   Pfadangaben sind nicht erlaubt.
 - Zum Erstellen einer Snapshot-Datei muss die Datenbank `cds_hub_db` verfügbar
   sein.
