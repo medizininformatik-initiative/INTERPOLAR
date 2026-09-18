@@ -6,7 +6,8 @@ test_dir="$(mktemp -d)"
 trap 'rm -rf "${test_dir}"' EXIT
 
 cp "${repo_root}/ip-snapshot.sh" "${test_dir}/ip-snapshot.sh"
-mkdir "${test_dir}/Snapshots"
+mkdir "${test_dir}/Snapshots" "${test_dir}/tools"
+cp "${repo_root}/tools/snapshot-progress.sh" "${test_dir}/tools/"
 
 snapshot_script="${test_dir}/ip-snapshot.sh"
 database_name="ip_snapshot_20260903_pseud"
@@ -126,6 +127,8 @@ for snapshot_name in snapshot_20260903 MiXeD_20260903 SNAPSHOT_20260903; do
         run_snapshot deactivate "${snapshot_name}${suffix}" <<< 'y'
         [[ ! -e "${SNAPSHOT_TEST_DATABASES}/ip_${snapshot_name}${suffix}" ]]
         [[ -f "${test_dir}/Snapshots/${snapshot_name}${suffix}.sql.gz" ]]
+        # Isolate cases on filesystems that ignore filename case.
+        rm "${test_dir}/Snapshots/${snapshot_name}${suffix}.sql.gz"
     done
 done
 

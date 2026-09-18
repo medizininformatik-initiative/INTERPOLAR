@@ -117,8 +117,11 @@ Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der h
 Mit Snapshot-Dateien kann der aktuelle Stand der CDS_HUB-Datenbank gesichert und
 pseudonymisiert werden. Snapshot-Dateien können außerdem als schreibgeschützte
 Snapshot-Datenbanken bereitgestellt und als Grundlage für einen separaten
-Broad-Consent-Snapshot verwendet werden. Die vollständige Anleitung steht in
-[Database_Snapshot.md](Database_Snapshot.md).
+Broad-Consent-Snapshot verwendet werden. Die Dokumentation folgt diesem Ablauf:
+
+- [Bedienung und Befehle](Database_Snapshot.md)
+- [Pseudonymisierung](Database_Snapshot_Pseudonymization.md)
+- [Broad-Consent-Regeln und Berechnung](Database_Snapshot_Broad_Consent.md)
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)

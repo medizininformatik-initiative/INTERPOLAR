@@ -1,0 +1,11 @@
+# Copy to consent_config.toml and configure the FHIR server used to
+# refresh snapshot Consents before applying pseudonymization.
+# An empty endpoint keeps the snapshot's existing Consents.
+FHIR_SERVER_ENDPOINT = ""
+FHIR_SERVER_USER = ""
+FHIR_SERVER_PASS = ""
+FHIR_TOKEN = ""
+
+# Empty: use the original FHIR patient IDs from the snapshot.
+# Otherwise resolve patients by this exact Patient.identifier.system.
+PATIENT_IDENTIFIER_SYSTEM = ""

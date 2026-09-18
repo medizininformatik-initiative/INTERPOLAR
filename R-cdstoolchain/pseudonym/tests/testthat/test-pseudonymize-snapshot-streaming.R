@@ -718,7 +718,14 @@ test_that("observation enrichment aggregates incompatible units without warnings
   )
 
   output <- utils::capture.output(result <- enrichObservationWithLoincMapping(observation, mapping))
-  review <- getLoincUnitConversionReview(result, "observation")
+  unit_cache <- new.env(parent = emptyenv())
+  cached_result <- enrichObservationWithLoincMapping(observation, mapping, unit_cache = unit_cache)
+  expect_equal(cached_result, result)
+  testthat::local_mocked_bindings(
+    parseConvertibleUnitUncached = function(...) stop("Unexpected repeated parsing"),
+    .package = "etlutils"
+  )
+  review <- getLoincUnitConversionReview(cached_result, "observation", unit_cache)
   context <- newLoincUnitConversionReview()
   expect_message(
     recordLoincUnitConversionReview(context, review),
@@ -985,4 +992,32 @@ test_that("snapshot chunk size must be positive", {
   expect_equal(validateSnapshotChunkSize("25000"), 25000L)
   expect_error(validateSnapshotChunkSize(0), "positive integer")
   expect_error(validateSnapshotChunkSize(NA), "positive integer")
+})
+
+test_that("UCUM enrichment preserves source columns and reuses units across chunks", {
+  mapping <- data.table::data.table(
+    LOINC = c("2021-4", "1742-6", "6301-6", "unknown"),
+    LOINC_PRIMARY = c("2021-4", "1742-6", "6301-6", "unknown"),
+    UNIT = c("mmHg", "ukat/L", "1", "mg/L"),
+    CONVERSION_FACTOR = c(NA_real_, 1 / 60, NA_real_, NA_real_),
+    CONVERSION_UNIT = c(NA_character_, "U/L", NA_character_, NA_character_)
+  )
+  unit_cache <- new.env(parent = emptyenv())
+  for (multiplier in c(1, 2)) {
+    observation <- data.table::data.table(
+      obs_code_system = "http://loinc.org",
+      obs_code_code = mapping$LOINC,
+      obs_valuequantity_value = c(40, 60, 1, 7) * multiplier,
+      obs_valuequantity_code = c("mm[Hg]", "U/L", "{INR}", "unsupportedunit"),
+      obs_valuequantity_unit = c("mm[Hg]", "U/L", "{INR}", "unsupportedunit")
+    )
+    result <- enrichObservationWithLoincMapping(observation, mapping, unit_cache = unit_cache)
+    expect_equal(result[, names(observation), with = FALSE], observation)
+    expect_equal(result$analysis_value, c(40, 1, 1, 7) * multiplier)
+    expect_equal(result$analysis_unit, c("mmHg", "ukat/L", "1", "unsupportedunit"))
+    expect_equal(result$analysis_value_status, c(rep("converted", 3), "source_conversion_failed"))
+    review <- getLoincUnitConversionReview(result, "observation", unit_cache)
+    expect_equal(review$LOINC_CODE, "unknown")
+    expect_equal(review$AFFECTED_ROWS, 1)
+  }
 })

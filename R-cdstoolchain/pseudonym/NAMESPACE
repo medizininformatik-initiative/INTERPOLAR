@@ -3,4 +3,5 @@
 export(createBroadConsentSnapshotDatabase)
 export(preflightSnapshotPseudonymization)
 export(pseudonymizeSnapshotDatabase)
+export(reviewBroadConsentSnapshot)
 export(setFhirPseudonymizationRules)
