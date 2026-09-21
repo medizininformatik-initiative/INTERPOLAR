@@ -203,6 +203,7 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #' @param fhir_table_descriptions A named list of all relevant FHIR table descriptions (named with
 #'                                resource name).
 #' @param resource_tables_suffix A suffix for resource_tables, default: "_raw_diff".
+#' @param write_debug_files Whether to write local raw-data debug workbooks.
 #'
 #' @details This function takes a list of data tables \code{resource_tables} as input.
 #' It converts the data types of columns in these tables based on predefined mappings:
@@ -215,7 +216,7 @@ convertType <- function(resource_tables, convert_columns, convert_type_function)
 #'
 #' @return This function modifies the input resource tables by converting the data types of columns.
 #'
-convertTypes <- function(resource_tables, fhir_table_descriptions, resource_tables_suffix = "_raw_diff") {
+convertTypes <- function(resource_tables, fhir_table_descriptions, resource_tables_suffix = "_raw_diff", write_debug_files = TRUE) {
   # remove _raw_diff suffix in resource_table names
   names(resource_tables) <- sub(resource_tables_suffix, "", names(resource_tables))
   # rename the database column names in style of something like 'con_identifier_code' back
@@ -248,7 +249,7 @@ convertTypes <- function(resource_tables, fhir_table_descriptions, resource_tabl
     pattern <- paste0("^", tablename, "_id$")
     raw_id_column <- grep(pattern, colnames(resource_tables[[i]])) # should be only 1 column
     colnames(resource_tables[[i]])[raw_id_column] <- paste0(tablename, "_raw_id")
-    etlutils::writeDebugExcelFile(resource_tables[[i]], tolower(names(resource_tables)[i]))
+    if (write_debug_files) etlutils::writeDebugExcelFile(resource_tables[[i]], tolower(names(resource_tables)[i]))
   }
   return(resource_tables)
 }
@@ -282,4 +283,16 @@ replaceTablesColumnNames <- function(resource_tables, fhir_table_descriptions, n
     }
   }
   return(resource_tables)
+}
+
+#' Convert downloaded Consent bundles using the standard CDS2DB table description
+#'
+#' @param bundles FHIR bundles returned by fhircrackr.
+#' @return A typed Consent data.table without generated database columns.
+#' @export
+convertSnapshotConsentBundles <- function(bundles) {
+  description <- getFhircrackrTableDescriptions()$pid_dependant["Consent"]
+  raw <- fhircrackr::fhir_crack(bundles, description[[1]], data.table = TRUE, verbose = 0)
+  if (is.null(raw) || !nrow(raw)) return(data.table::data.table())
+  convertTypes(list(consent = raw), description, resource_tables_suffix = "", write_debug_files = FALSE)$consent
 }
