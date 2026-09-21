@@ -711,6 +711,26 @@ dbUnlock <- function(lock_id, readonly = FALSE) {
 }
 
 
+# Run a locked operation while retaining its original error if cleanup also fails.
+# Unlock failures after successful operations must still propagate as errors.
+dbWithLock <- function(lock_id, readonly, process) {
+  dbLock(lock_id)
+  original_error <- NULL
+  on.exit(
+    {
+      tryCatch(
+        dbUnlock(lock_id, readonly),
+        error = function(error) {
+          if (is.null(original_error)) stop(error)
+          message("Additionally failed to unlock database: ", conditionMessage(error))
+        }
+      )
+    },
+    add = TRUE
+  )
+  withCallingHandlers(process, error = function(error) original_error <<- error)
+}
+
 #' Forcefully Reset a Database Lock for a Project
 #'
 #' This function forcibly resets the database lock for a specified project
@@ -950,21 +970,19 @@ dbAddContent <- function(table_name, table, lock_id = NULL) {
     }
 
     # Lock + connection with guaranteed cleanup
-    dbLock(lock_id)
-    on.exit(dbUnlock(lock_id), add = TRUE)
-
-    dbWithRetry(
-      db_call = function(db_connection) {
-        RPostgres::dbAppendTable(db_connection, table_name, table)
-      },
-      call_label = "RPostgres::dbAppendTable",
-      sql = paste0("APPEND TABLE ", table_name),
-      readonly = FALSE
-    )
+    dbWithLock(lock_id, readonly = FALSE, {
+      dbWithRetry(
+        db_call = function(db_connection) {
+          RPostgres::dbAppendTable(db_connection, table_name, table)
+        },
+        call_label = "RPostgres::dbAppendTable",
+        sql = paste0("APPEND TABLE ", table_name),
+        readonly = FALSE
+      )
+      duration <- difftime(Sys.time(), time0, units = "secs")
+      dbLog("Inserted in ", table_name, ", ", row_count, " rows (took ", duration, " seconds)")
+    })
   }
-
-  duration <- difftime(Sys.time(), time0, units = "secs")
-  dbLog("Inserted in ", table_name, ", ", row_count, " rows (took ", duration, " seconds)")
 }
 
 #' Delete All Rows from a PostgreSQL Table
@@ -1126,17 +1144,17 @@ dbWithRetry <- function(db_call,
 #' @seealso \code{\link[DBI]{dbExecute}} for executing SQL statements.
 #'
 dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
-  dbLock(lock_id)
-  on.exit(dbUnlock(lock_id, readonly), add = TRUE)
-  dbLog("dbExecute:\n", statement, dont_repeat_key = "dbExecute()")
-  dbWithRetry(
-    db_call = function(db_connection) {
-      DBI::dbExecute(db_connection, statement)
-    },
-    call_label = "DBI::dbExecute",
-    sql = statement,
-    readonly = readonly
-  )
+  dbWithLock(lock_id, readonly = readonly, {
+    dbLog("dbExecute:\n", statement, dont_repeat_key = "dbExecute()")
+    dbWithRetry(
+      db_call = function(db_connection) {
+        DBI::dbExecute(db_connection, statement)
+      },
+      call_label = "DBI::dbExecute",
+      sql = statement,
+      readonly = readonly
+    )
+  })
 }
 
 #' Execute a SQL Query on a PostgreSQL Database
@@ -1164,24 +1182,24 @@ dbExecute <- function(statement, lock_id = NULL, readonly = FALSE) {
 #'
 #' @export
 dbGetQuery <- function(query, params = NULL, lock_id = NULL, readonly = FALSE) {
-  dbLock(lock_id)
-  on.exit(dbUnlock(lock_id, readonly), add = TRUE)
-  dbLog(
-    "dbGetQuery:\n", query,
-    if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")),
-    dont_repeat_key = "dbGetQuery()"
-  )
-  table <- dbWithRetry(
-    db_call = function(db_connection) {
-      data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
-    },
-    call_label = "DBI::dbGetQuery",
-    sql = query,
-    readonly = readonly,
-    params = params
-  )
+  dbWithLock(lock_id, readonly = readonly, {
+    dbLog(
+      "dbGetQuery:\n", query,
+      if (!is.null(params)) paste0("\n with params: ", paste0(names(params), "=", unlist(params), collapse = ", ")),
+      dont_repeat_key = "dbGetQuery()"
+    )
+    table <- dbWithRetry(
+      db_call = function(db_connection) {
+        data.table::as.data.table(DBI::dbGetQuery(db_connection, query, params = params))
+      },
+      call_label = "DBI::dbGetQuery",
+      sql = query,
+      readonly = readonly,
+      params = params
+    )
 
-  return(table)
+    return(table)
+  })
 }
 
 #' Execute a Read-Only SQL Query on a PostgreSQL Database
@@ -1228,18 +1246,18 @@ dbGetReadOnlyQuery <- function(query, params = NULL, lock_id = NULL) {
 dbReadTable <- function(table_name, lock_id = NULL) {
   # Postgres only accepts lower case names -> convert them hard here
   table_name <- tolower(table_name)
-  dbLock(lock_id)
-  on.exit(dbUnlock(lock_id, readonly = TRUE), add = TRUE)
-  dbLog("dbReadTable: ", table_name)
-  table <- dbWithRetry(
-    db_call = function(db_connection) {
-      data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
-    },
-    call_label = "DBI::dbReadTable",
-    sql = paste0("READ TABLE ", table_name),
-    readonly = TRUE
-  )
-  return(table)
+  dbWithLock(lock_id, readonly = TRUE, {
+    dbLog("dbReadTable: ", table_name)
+    table <- dbWithRetry(
+      db_call = function(db_connection) {
+        data.table::as.data.table(DBI::dbReadTable(db_connection, table_name))
+      },
+      call_label = "DBI::dbReadTable",
+      sql = paste0("READ TABLE ", table_name),
+      readonly = TRUE
+    )
+    return(table)
+  })
 }
 
 
@@ -1348,14 +1366,13 @@ dbWriteTables <- function(tables, lock_id = NULL, stop_if_table_not_empty = FALS
   }
 
   # Write tables (lock guaranteed to be released)
-  dbLock(lock_id)
-  on.exit(dbUnlock(lock_id), add = TRUE)
-
-  for (table_name in table_names) {
-    table <- tables[[table_name]]
-    dbCheckColumsWidthBeforeWrite(table_name, table)
-    dbAddContent(table_name, table)
-  }
+  dbWithLock(lock_id, readonly = FALSE, {
+    for (table_name in table_names) {
+      table <- tables[[table_name]]
+      dbCheckColumsWidthBeforeWrite(table_name, table)
+      dbAddContent(table_name, table)
+    }
+  })
 }
 
 #' Write a Single Table to a PostgreSQL Database
@@ -1433,26 +1450,25 @@ dbReadTables <- function(table_names = NA, lock_id = NULL) {
   tables <- list()
 
   # Lock the database before reading; guarantee unlock even on error
-  dbLock(lock_id)
-  on.exit(dbUnlock(lock_id, readonly = TRUE), add = TRUE)
-
-  # Loop through each requested table
-  for (table_name in table_names) {
-    # Handle views prefixed with "v_"
-    if (!table_name %in% db_table_names) {
-      table_name <- paste0("v_", table_name)
+  dbWithLock(lock_id, readonly = TRUE, {
+    # Loop through each requested table
+    for (table_name in table_names) {
+      # Handle views prefixed with "v_"
+      if (!table_name %in% db_table_names) {
+        table_name <- paste0("v_", table_name)
+      }
+      # Extract the corresponding resource table name
+      resource_table_name <- if (grepl("^v_", table_name)) {
+        sub("^v_", "", table_name)
+      } else {
+        table_name
+      }
+      # Read the table via wrapper (does its own logging etc.)
+      tables[[resource_table_name]] <- dbReadTable(table_name)
     }
-    # Extract the corresponding resource table name
-    resource_table_name <- if (grepl("^v_", table_name)) {
-      sub("^v_", "", table_name)
-    } else {
-      table_name
-    }
-    # Read the table via wrapper (does its own logging etc.)
-    tables[[resource_table_name]] <- dbReadTable(table_name)
-  }
 
-  return(tables)
+    return(tables)
+  })
 }
 
 #' Print Database Timezone and Current Time
@@ -1732,61 +1748,60 @@ dbReset <- function(tables_with_schema = NULL) {
   on.exit(invisible(try(suppressWarnings(DBI::dbDisconnect(con)), silent = TRUE)), add = TRUE)
 
   lock_id <- "Clear database"
-  dbLock(lock_id)
-  on.exit(dbUnlock(lock_id), add = TRUE)
+  dbWithLock(lock_id, readonly = FALSE, {
+    if (is.null(tables_with_schema)) {
+      # Convert schemas vector into SQL-friendly format
+      schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
+      query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")
 
-  if (is.null(tables_with_schema)) {
-    # Convert schemas vector into SQL-friendly format
-    schema_list <- paste0("'", .lib_db_env[["DB_ADMIN_SCHEMAS"]], "'", collapse = ", ")
-    query <- paste0("SELECT schemaname, tablename FROM pg_tables WHERE schemaname IN (", schema_list, ");")
-
-    # Get all tables to clear
-    tables <- DBI::dbGetQuery(con, query)
-  } else {
-    tables <- data.table::data.table(full = tables_with_schema)[
-      , c("schemaname", "tablename") := data.table::tstrsplit(full, ".", fixed = TRUE)
-    ][, !"full"]
-  }
-
-  # Clear all tables in the provided schemas
-  for (i in seq_len(nrow(tables))) {
-    schema <- tables$schemaname[i]
-    table_name <- tables$tablename[i]
-
-    truncate_statement <- paste0("TRUNCATE TABLE ", schema, ".", table_name, " RESTART IDENTITY CASCADE;")
-
-    tryCatch(
-      {
-        DBI::dbExecute(con, truncate_statement)
-      },
-      error = function(e) {
-        message("Error truncating table: ", schema, ".", table_name)
-        message("Error message: ", e$message)
-      }
-    )
-  }
-
-  # Check if tables still contain data after truncation
-  remaining_data <- data.table()
-  for (i in seq_len(nrow(tables))) {
-    schema <- tables$schemaname[i]
-    table_name <- tables$tablename[i]
-
-    query <- paste0("SELECT COUNT(*) AS row_count FROM ", schema, ".", table_name, ";")
-    row_count <- DBI::dbGetQuery(con, query)$row_count
-
-    if (row_count > 0) {
-      remaining_data <- data.table::rbindlist(list(remaining_data, data.table(SCHEMA = schema, TABLE = table_name, ROWS = row_count)))
+      # Get all tables to clear
+      tables <- DBI::dbGetQuery(con, query)
+    } else {
+      tables <- data.table::data.table(full = tables_with_schema)[
+        , c("schemaname", "tablename") := data.table::tstrsplit(full, ".", fixed = TRUE)
+      ][, !"full"]
     }
-  }
 
-  # Print results
-  if (nrow(remaining_data) > 0) {
-    print("The following tables still contain data after truncation:")
-    print(remaining_data)
-  } else {
-    print("All tables have been successfully truncated.")
-  }
+    # Clear all tables in the provided schemas
+    for (i in seq_len(nrow(tables))) {
+      schema <- tables$schemaname[i]
+      table_name <- tables$tablename[i]
+
+      truncate_statement <- paste0("TRUNCATE TABLE ", schema, ".", table_name, " RESTART IDENTITY CASCADE;")
+
+      tryCatch(
+        {
+          DBI::dbExecute(con, truncate_statement)
+        },
+        error = function(e) {
+          message("Error truncating table: ", schema, ".", table_name)
+          message("Error message: ", e$message)
+        }
+      )
+    }
+
+    # Check if tables still contain data after truncation
+    remaining_data <- data.table()
+    for (i in seq_len(nrow(tables))) {
+      schema <- tables$schemaname[i]
+      table_name <- tables$tablename[i]
+
+      query <- paste0("SELECT COUNT(*) AS row_count FROM ", schema, ".", table_name, ";")
+      row_count <- DBI::dbGetQuery(con, query)$row_count
+
+      if (row_count > 0) {
+        remaining_data <- data.table::rbindlist(list(remaining_data, data.table(SCHEMA = schema, TABLE = table_name, ROWS = row_count)))
+      }
+    }
+
+    # Print results
+    if (nrow(remaining_data) > 0) {
+      print("The following tables still contain data after truncation:")
+      print(remaining_data)
+    } else {
+      print("All tables have been successfully truncated.")
+    }
+  })
 }
 
 #' Remove Special Characters from a SQL comment.

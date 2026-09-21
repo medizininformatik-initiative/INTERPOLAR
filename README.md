@@ -89,7 +89,7 @@ Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwen
 
 Die Ausführung kann manuell durch DIZ Mitarbeitende oder in regelmäßigen Abständen zeitgesteuert (cron) ausgeführt werden, siehe Hinweise unter [Discussions #750](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/750). Der folgende Aufruf führt die CDS Tool Chain komplett aus und startet anschließend bei erfolgreichem Lauf `VACUUM (ANALYZE)` für die CDS_HUB-Datenbank:
 ```console
-R-cdstoolchain/StartCDSToolChainWithVacuum.sh
+./StartCDSToolChainWithVacuum.sh
 ```
 **Hinweis:** Um eine sinnvolles Intervall für die zeitgesteuerte Ausführung der CDS Tool Chain zu wählen, sollten die initialen Aufrufe (z.B. die ersten 3 Tage der Verwendung) manuell erfolgen, um die typischen Laufzeiten am Standort zu ermitteln. Der initiale Lauf dauert länger, spätere Läufe entsprechend kürzer, da nur noch Änderungen verarbeitet werden. Es wird empfohlen die CDS Tool Chain in der Projektlaufzeit mehrfach täglich auszuführen, mind. jedoch einmal am Tag. Bei der Wahl des Ausführungsintervals sollte darauf geachtet werden, dass ein typischer Durchlauf innerhalb des Intervalls erfolgen kann. Wird z.B. ermittelt, dass ein Lauf mit den typischen Änderungen bei den Patientendaten auf den INTERPOLAR-Stationen ca. 1h dauert, kann die CDS Tool Chain via cron 2-stündlich laufen.
 
@@ -117,8 +117,11 @@ Um die Teilschritte einzeln auszuführen, können die folgenden Aufrufe in der h
 Mit Snapshot-Dateien kann der aktuelle Stand der CDS_HUB-Datenbank gesichert und
 pseudonymisiert werden. Snapshot-Dateien können außerdem als schreibgeschützte
 Snapshot-Datenbanken bereitgestellt und als Grundlage für einen separaten
-Broad-Consent-Snapshot verwendet werden. Die vollständige Anleitung steht in
-[Database_Snapshot.md](Database_Snapshot.md).
+Broad-Consent-Snapshot verwendet werden. Die Dokumentation folgt diesem Ablauf:
+
+- [Bedienung und Befehle](Database_Snapshot.md)
+- [Pseudonymisierung](Database_Snapshot_Pseudonymization.md)
+- [Broad-Consent-Regeln und Berechnung](Database_Snapshot_Broad_Consent.md)
 
 ## Hilfe und Unterstützung
 - [Frequently Asked Questions (FAQ)](https://github.com/medizininformatik-initiative/INTERPOLAR/wiki/Frequently-Asked-Questions-%E2%80%90-FAQ)

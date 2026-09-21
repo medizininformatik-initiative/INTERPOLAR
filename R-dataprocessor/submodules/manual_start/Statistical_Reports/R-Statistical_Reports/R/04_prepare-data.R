@@ -104,48 +104,46 @@ prepareF1data <- function(full_analysis_set_1, report_period_start, report_perio
 #------------------------------------------------------------------------------#
 #' Combine Wards for Analysis
 #'
-#' Standardizes ward names in the front-end dataset by replacing specified
-#' groups of wards with a common reference ward for analysis purposes.
+#' Replaces configured additional ward names with their corresponding
+#' combined analysis ward names.
+#'
+#' The function searches for ward combination definitions in the global
+#' environment, extracts the regular ward and associated additional wards,
+#' and replaces matching `fall_station` values with the regular ward name.
+#' This allows multiple wards to be grouped under a common analysis ward.
 #'
 #' @param frontend_table A data frame containing front-end data with a
-#'   `fall_station` column representing ward names.
+#'   `fall_station` column containing ward names.
 #'
-#' @return A data frame in which specified ward names have been replaced by
-#'   their corresponding reference ward names.
+#' @return A data frame containing the original data with updated
+#'   `fall_station` values according to the configured ward combinations.
 #'
-#' @details
-#' The function dynamically identifies ward combination definitions from the
-#' global environment by searching for objects matching the pattern
-#' `"^COMBINE_WARDS_FOR_ANALYSIS_"`.
-#'
-#' Each definition is expected to contain:
-#' \itemize{
-#'   \item A reference ward (first element)
-#'   \item A set of ward names to be replaced (second element)
-#' }
-#'
-#' The reference ward is extracted and cleaned using
-#' `stringr::str_split_i()`. The additional wards are parsed by splitting
-#' and cleaning the definition string using `stringr` functions.
-#'
-#' For each definition, the function updates the `fall_station` column by
-#' replacing any occurrence of the specified wards with the corresponding
-#' reference ward.
-#'
-#' @importFrom dplyr mutate case_when
+#' @importFrom dplyr case_when
+#' @importFrom dplyr mutate
+#' @importFrom stringr str_detect
+#' @importFrom stringr str_remove_all
+#' @importFrom stringr str_split
+#' @importFrom stringr str_split_i
 #' @importFrom etlutils isDefinedAndNotEmpty
-#' @importFrom stringr str_split_i str_remove_all str_split
 #'
 #' @export
 CombineWardsForAnalysis <- function(frontend_table) {
   combined_wards_definition <- ls(pattern = "^COMBINE_WARDS_FOR_ANALYSIS_", envir = .GlobalEnv)
+
   frontend_table_combined_wards <- frontend_table
   for (i in seq_along(combined_wards_definition)) {
     ward_definition_information <- combined_wards_definition[i]
     if (etlutils::isDefinedAndNotEmpty(ward_definition_information)) {
-      regular_ward <- get(ward_definition_information, envir = .GlobalEnv)[1] |>
+      ward_definition_information_i <- get(ward_definition_information, envir = .GlobalEnv)
+      regular_ward <- ward_definition_information_i[stringr::str_detect(
+        ward_definition_information_i,
+        "regular_ward"
+      )] |>
         stringr::str_split_i("'", 2)
-      additional_wards <- get(ward_definition_information, envir = .GlobalEnv)[2] |>
+      additional_wards <- ward_definition_information_i[stringr::str_detect(
+        ward_definition_information_i,
+        "additional_wards"
+      )] |>
         stringr::str_split_i("=", 2) |>
         stringr::str_remove_all(" '") |>
         stringr::str_remove_all("' ") |>
@@ -235,6 +233,10 @@ CombineWardsForAnalysis <- function(frontend_table) {
 #'     distinct patients are present within the ward.
 #'   \item `ward_week_count_less_than_5`: Indicates whether fewer than five
 #'     distinct patients are present within the ward and calendar week.
+#'   \item `FAS2_1_inclusion`: Indicates whether the encounter is included in
+#'   the first full analysis set (FAS2.1) based on ward stay duration and completed medication analysis.
+#'   \item `valid_for_counting`: Indicates whether the encounter is valid for counting based on processing
+#'   exclusions and verification status.
 #' }
 #'
 #' For `report_period_boundary = "hospital_stay"`, observations are retained
@@ -336,15 +338,8 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
       ), TRUE, FALSE, missing = FALSE
     )) |>
     dplyr::ungroup() |>
-    dplyr::mutate(overall_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
-    dplyr::group_by(fall_station) |>
-    dplyr::mutate(ward_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
-    dplyr::ungroup() |>
-    dplyr::group_by(fall_station, calendar_week) |>
-    dplyr::mutate(ward_week_count_less_than_5 = dplyr::n_distinct(pat_id) < 5) |>
-    dplyr::ungroup() |>
     dplyr::mutate(eligible_for_algorithmic_MRP_calculation = dplyr::if_else(
-      ((as.POSIXct(report_period_end) - fall_ent_dat) > 14) &
+      ((as.Date(report_period_end) - as.Date(fall_ent_dat)) > 14) &
         sub_enc_any_completed_medication_analysis &
         actual_fall_studienphase == "PhaseB",
       TRUE, FALSE, missing = FALSE
@@ -361,14 +356,14 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
     # (as approximation the hospital stay is used and therefore the fall_ent_dat is used to determine if the encounter
     # is on the ward within the reporting period)
     frontend_summary_prep <- frontend_summary_prep |>
-      dplyr::filter(is.na(fall_ent_dat) | fall_ent_dat >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
-      dplyr::filter(fall_aufn_dat < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
+      dplyr::filter(is.na(fall_ent_dat) | fall_ent_dat >= pmax(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
+      dplyr::filter(fall_aufn_dat < pmin(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
       dplyr::distinct()
   } else if (report_period_boundary == "ward_stay") {
     # Filter for encounters that start within the reporting period based on enc_period_start and curated_enc_period_end
     frontend_summary_prep <- frontend_summary_prep |>
-      dplyr::filter(enc_period_start >= max(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
-      dplyr::filter(enc_period_start < min(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
+      dplyr::filter(enc_period_start >= pmax(as.POSIXct(ward_start), as.POSIXct(report_period_start))) |>
+      dplyr::filter(enc_period_start < pmin(as.POSIXct(ward_end), as.POSIXct(report_period_end))) |>
       dplyr::distinct()
   }
 
@@ -396,6 +391,28 @@ prepareFeSummaryData <- function(frontend_table, report_period_start, report_per
         )
       )
   }
+
+  frontend_summary_prep <- frontend_summary_prep |>
+    dplyr::mutate(valid_for_counting = !main_enc_any_processing_exclusion_fe &
+      !sub_enc_any_processing_exclusion_fe &
+      !main_enc_not_in_inclusion_criteria &
+      !unverified_pat_or_sub_enc) |>
+    dplyr::mutate(overall_count_less_than_5 = dplyr::n_distinct(
+      pat_id[valid_for_counting],
+      na.rm = TRUE
+    ) < 5) |>
+    dplyr::group_by(ward_name) |>
+    dplyr::mutate(ward_count_less_than_5 = dplyr::n_distinct(
+      pat_id[valid_for_counting],
+      na.rm = TRUE
+    ) < 5) |>
+    dplyr::ungroup() |>
+    dplyr::group_by(ward_name, calendar_week) |>
+    dplyr::mutate(ward_week_count_less_than_5 = dplyr::n_distinct(
+      pat_id[valid_for_counting],
+      na.rm = TRUE
+    ) < 5) |>
+    dplyr::ungroup()
 
   return(frontend_summary_prep)
 }
