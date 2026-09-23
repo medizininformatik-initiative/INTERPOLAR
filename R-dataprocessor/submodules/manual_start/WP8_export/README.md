@@ -1,5 +1,8 @@
 # WP8-Export (Fallvignetten)
 
+[DataProcessor-Submodulübersicht](../../../README.md#submodule-auf-einen-blick)
+· [INTERPOLAR](../../../../README.md)
+
 Dieses manuell gestartete Dataprocessor-Submodul erzeugt die Importdatei für
 das eigenständige REDCap-Projekt zur Prozessevaluation der WP8-Fallvignetten.
 Es liest geeignete Fälle aus der pseudonymisierten Analysedatenbank, ergänzt
@@ -36,7 +39,8 @@ Start aus dem Repository-Stamm:
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R wp8-export
 ```
 
-Der Ablauf ist:
+[Start.R](Start.R) ruft `runFallvignetteProcessEvaluation()` aus dem
+[R-Subprojekt](R-WP8_export/R/05_Run_Process_Evaluation.R) auf. Der Ablauf ist:
 
 1. Projekt-Datenbank auswählen und deren Version prüfen.
 2. Mapping-Arbeitsmappe und lokale WP7-/LOINC-Definitionen laden.
@@ -69,25 +73,15 @@ Die `fall_station` aus der Datenbank muss exakt einem konfigurierten
 Export übernommen. `ward_type` wird validiert, aber derzeit nicht als eigenes
 Feld in die Fallvignetten-Datei geschrieben.
 
-Eine beispielhafte Konfiguration befindet sich in
-`R-dataprocessor/dataprocessor_config_example.toml`.
+Eine [Beispielkonfiguration](../../../dataprocessor_config_example.toml)
+erläutert die Standort- und Stationsparameter.
 
 ### Datenbankverbindung
 
-Der absichtlich leere `DB_NAME` in der `database.toml` des WP8-Projektordners
-muss auf die gewünschte pseudonymisierte Datenbank gesetzt werden. Weitere
-Werte werden aus der normalen, über `PATH_TO_DB_CONFIG_TOML` referenzierten
-Datenbankkonfiguration geerbt. Nur nicht leere gleichnamige Werte in
-`database.toml` überschreiben sie. Die gemeinsame Vorlage für neue Projekte
-liegt unter `R-dataprocessor/submodules/manual_start/database_example.toml`.
-
-Die lokale Datei wird automatisch read-only in den R-Container eingebunden;
-ein Neubau des Images ist nach einer Änderung nicht erforderlich.
-
-Der Data Processor wählt diese Datenbank vor Lock- und Versionsprüfung aus.
-Ohne zusätzliches Argument startet das Projekt nur auf einer pseudonymisierten
-Snapshot-Datenbank. Für jede andere kompatible Datenbank ist bewusst zusätzlich
-`--force` erforderlich.
+Für `database.toml`, die Vererbung der Verbindungswerte, Snapshot-Anforderungen
+und Versionsprüfungen gelten die
+[gemeinsamen Regeln für manuelle Projekte](../../../README.md#datenbank-für-manuelle-projekte).
+`DB_NAME` muss im WP8-Projektordner ausdrücklich auf die Auswertedatenbank gesetzt werden.
 
 ### Mapping-Arbeitsmappe
 

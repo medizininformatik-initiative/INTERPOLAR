@@ -1,5 +1,8 @@
 # "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienfortschritts
 
+[DataProcessor-Submodulübersicht](../../../README.md#submodule-auf-einen-blick)
+· [INTERPOLAR](../../../../README.md)
+
 ## Version 0.6 (02.09.2026)
 
 ### Funktion

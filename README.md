@@ -2,10 +2,29 @@
 
 Dieses Repository enthält die Bestandteile der CDS tool chain zur Verarbeitung von [`MII KDS FHIR Ressourcen`](https://www.medizininformatik-initiative.de/de/basismodule-des-kerndatensatzes-der-mii). Es handelt sich um eine modular aufgebaute Referenzimplementierung, welche z.B. Datenintegrationszentren (DIZ) der MII eingesetzt werden kann. Hierbei werden FHIR-Ressourcen vom KDS (Kerndatensatz) FHIR Server / Endpunkt heruntergeladen, in eine Tabellenstruktur überführt  ([CDS2DB](#cds2db)) und in eine Posgres-Datenbank (CDS_HUB) geschrieben. In einen nächsten Schritt werden die Daten geprüft, harmonisiert und können mit Hilfe von Algorithmen weiter verarbeitet werden (DataProcessor). Anschließend werden die Daten über ein Frontend (z.B. Redcap) auf einer Benutzeroberfläche sichtbar gemacht (DB2Frontend, Frontend).
 
-![CDS tool chain](./doc/CDS_Tool_Chain_architecture.png?raw=true)
-Der detaillierte Datenfluss zwischen den und innerhalb der Module ist in der Datei [Dataflow](Dataflow) beschrieben.
+## Module auf einen Blick
 
-Der gesamte Ablauf der CDS Toolchain ist in der Datei [full_toolchain_description](full_toolchain_description) beschrieben.
+| Modul / Bestandteil | Aufgabe und Dokumentation |
+| --- | --- |
+| [CDS2DB](R-cds2db/README.md) | Importiert MII-KDS-FHIR-Ressourcen und überführt sie in Datenbanktabellen. |
+| [CDS_HUB](Postgres-cds_hub/DB_description.md) | PostgreSQL-Datenbank als gemeinsame Datenbasis der Toolchain. |
+| [DataProcessor](R-dataprocessor/README.md) | Bereitet Daten für das Frontend auf und berechnet MRPs. Die [Submodulübersicht](R-dataprocessor/README.md#submodule-auf-einen-blick) beschreibt auch manuelle Qualitätsberichte, statistische Auswertungen und Exporte. |
+| [DB2Frontend](R-db2frontend/README.md) | Synchronisiert Daten zwischen CDS_HUB und REDCap in beide Richtungen. |
+| [Frontend / REDCap](Install.md) | Benutzeroberfläche für Medikationsanalysen und Rückmeldungen; besteht aus [Web-Anwendung](REDCap-app) und [MariaDB-Datenbank](REDCap-db). |
+| [CDS Toolchain](R-cdstoolchain/cdstoolchain/README.md) | Orchestriert Initialisierung und Modulläufe sowie besondere Abläufe wie die MRP-Neuberechnung. |
+| [Pseudonymisierung](R-cdstoolchain/pseudonym/README.md) | Bereitet Datenbank-Snapshots für Auswertungen auf. |
+| [etlutils](R-etlutils/README.md) | Gemeinsame R-Hilfsfunktionen für Konfiguration, Datenbankzugriff, Logging und Dateiausgabe. |
+| [Input-Repo / WP7-Regeln](R-dataprocessor/submodules/02_MRP_Calculation/README.md) | Fachliche Regel- und Mappingdateien für die MRP-Berechnung; der lokale Pfad wird über `INPUT_REPO_PATH` konfiguriert. |
+
+Die Toolchain-Module sind die ausführbaren Komponenten des Gesamtablaufs.
+Ihre R-Pakete enthalten die Implementierung; die **DataProcessor-Submodule**
+ergänzen einzelne Verarbeitungsschritte oder manuelle Auswertungen.
+Der FHIR-Server wird vom Standort bereitgestellt und ist die externe Datenquelle.
+
+![CDS tool chain](./doc/CDS_Tool_Chain_architecture.png?raw=true)
+Der detaillierte Datenfluss zwischen den und innerhalb der Module ist in der Datei [Dataflow](Dataflow.md) beschrieben.
+
+Der gesamte Ablauf der CDS Toolchain ist in der Datei [full_toolchain_description](full_toolchain_description.md) beschrieben.
 
 Hinweise fuer Entwicklung und Beitraege stehen in [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -29,18 +48,22 @@ Eine Beschreibung zur Konfiguration und Ausführung befindet sich in [R-cds2db](
 
 Beim CDS_HUB handelt es sich um eine relationale Datenbank (Postgres). Im Ordner [Postgres-cds_hub](./Postgres-cds_hub) befinden sich Dateien für die Konfiguration und Initialisierung.
 
-Eine Beschreibung der Datenbankstruktur befindet sich unter [Postgres-cds_hub/DB_description](./Postgres-cds_hub/DB_description). \
+Eine Beschreibung der Datenbankstruktur befindet sich unter [Postgres-cds_hub/DB_description](./Postgres-cds_hub/DB_description.md). \
 Eine Beschreibung, wie der Zugriff erfolgt befindet sich unter [Postgres-cds_hub](./Postgres-cds_hub) .
 
 ### DataProcessor
 
 Der DataProcessor verarbeitet die Daten des CDS_HUB. Diese Verarbeitung kann z.B. eine Filterung von zuvor importierten Daten für die Anzeige im Frontend sein.
 
-Weitere Informationen zum DataProcessor befinden sich im Ordner [R-dataprocessor](./R-dataprocessor).
+Die [DataProcessor-Dokumentation](R-dataprocessor/README.md) enthält eine
+[Übersicht aller Submodule](R-dataprocessor/README.md#submodule-auf-einen-blick)
+mit Zweck, Ausführungsart und Links zu den jeweiligen Anleitungen.
 
 ### Input-Repo
 
-Das Input-Repo wird in zukünftigen Releases für den Zugriff auf Algorithmen zur Berechnung, z.B. von Scores, verwendet.
+Das Input-Repo stellt die WP7-Regel- und Mappingdateien für die
+[MRP-Berechnung](R-dataprocessor/submodules/02_MRP_Calculation/README.md) bereit.
+Der Zugriff erfolgt über den konfigurierten lokalen Pfad `INPUT_REPO_PATH`.
 
 ### DB2Frontend
 
@@ -58,7 +81,9 @@ Die REDCap-app benötigt eine Datenbank (mariadb), welche sich im Verzeichnis [R
 
 ### R-etlutils
 
-Dieser Ordner ist eine Sammlung von R Funktionen, die von den R-Modulen (CDS2DB, DataProcessor, DB2Frontend) der CDS tool chain genutzt werden.
+[R-etlutils](R-etlutils/README.md) enthält gemeinsame R-Funktionen für die
+Toolchain-Module. Die [Orchestrierung](R-cdstoolchain/cdstoolchain/README.md)
+verbindet diese Module zu den ausführbaren Abläufen.
 
 
 ## Anforderungen / Voraussetzungen
@@ -83,7 +108,7 @@ Es handelt sich dabei um eine Schätzung. Je nach Datenbestand kann es erforderl
 
 ## Installation
 
-Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwenden: [Install](Install)
+Folgende Anweisungen müssen ausgeführt werden, um die CDS tool chain zu verwenden: [Install](Install.md)
 
 ## Verwendung
 

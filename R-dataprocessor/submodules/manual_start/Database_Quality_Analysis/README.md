@@ -1,5 +1,8 @@
 # Database Quality Analysis
 
+[DataProcessor submodule overview](../../../README.md#submodule-auf-einen-blick)
+· [INTERPOLAR](../../../../README.md)
+
 `Database_Quality_Analysis` creates reports for checking data availability in
 the dataprocessor output views. The module does not change source data. It reads
 view and column metadata from the Data Processor output schema configured as
@@ -16,12 +19,21 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 
 The main configuration is
 `R-dataprocessor/submodules/manual_start/Database_Quality_Analysis/database_quality_analysis_config.toml`.
-Set `DB_NAME` in this project's `database.toml` to the pseudonymized snapshot
-database. Other connection values are inherited from the normal database
-configuration. Non-empty values in `database.toml` override them; missing or
-empty optional values leave them unchanged. The file is mounted into `r-env`
-automatically; rebuilding the image is not needed. The shared template for new
-projects is `R-dataprocessor/submodules/manual_start/database_example.toml`.
+Set `DB_NAME` in this project's `database.toml` to the analysis database.
+The shared [manual-project database setup](../../../README.md#datenbank-für-manuelle-projekte)
+describes connection inheritance, snapshot requirements, and version checks.
+
+## Prerequisites and configuration
+
+Complete the [DataProcessor setup](../../../README.md#voraussetzungen) first.
+The selected database must contain the output views and metadata to be analyzed;
+filtered INTERPOLAR scopes additionally use ward and encounter assignments.
+The module runs manually and is not part of the regular DataProcessor run.
+
+Its `database_quality_analysis_config.toml` controls view selection, resource detail
+sheets, filtered scopes, availability exceptions, and value-summary suppression.
+The sections below explain the settings and report contents. [Start.R](Start.R)
+calls `createReport()` from the [R subproject](R-Database_Quality_Analysis/R).
 
 ## Output Files
 
