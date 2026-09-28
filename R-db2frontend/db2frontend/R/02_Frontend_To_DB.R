@@ -38,7 +38,9 @@ importRedcap2DB <- function() {
           # fallback: In case of problems with the delimiters in REDCap, extend form names to "name,Name" and try again
           # extract allowed values from error message
           msg <- conditionMessage(e)
-          allowed_strings <- regmatches(msg, gregexpr("\\{([^}]*)\\}", msg))[[1]][[1]]
+          allowed_strings <- regmatches(msg, gregexpr("\\{([^}]*)\\}", msg))[[1]]
+          # Other export errors may not contain a list of allowed form names.
+          if (length(allowed_strings)) allowed_strings <- allowed_strings[[1]]
           allowed_strings <- gsub("^\\{|\\}$", "", allowed_strings)
           allowed_strings <- unlist(strsplit(allowed_strings, "','", fixed = TRUE))
           allowed_strings <- gsub("^'|'$", "", allowed_strings)
@@ -47,7 +49,7 @@ importRedcap2DB <- function() {
           if (length(match_val)) {
             return(data.table::setDT(suppressWarnings(redcapAPI::exportRecordsTyped(rcon = frontend_connection, forms = match_val))))
           }
-          stop("Error exporting records for REDCap form name '", form_name, "': ", e$message)
+          stop("Error exporting records for REDCap form name '", form_name, "': ", msg)
         }
       )
 

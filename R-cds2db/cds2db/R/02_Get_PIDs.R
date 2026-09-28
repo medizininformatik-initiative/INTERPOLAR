@@ -609,23 +609,12 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
 #' @return A named list with one data.table containing existing FHIR patient IDs.
 getDataImportPIDsFromDB <- function() {
   etlutils::runLevel3("Get data import Patient IDs from patient table", {
-    query <- paste0(
-      "SELECT DISTINCT pat_id AS patient_id\n",
-      "FROM v_patient\n",
-      "WHERE pat_id IS NOT NULL;"
-    )
-    patient_ids <- etlutils::dbGetReadOnlyQuery(
-      query,
-      lock_id = "getDataImportPIDsFromDB()"
-    )
-
-    patient_ids <- data.table::as.data.table(patient_ids)
+    patient_ids <- getKnownPatientIDsFromDB()
     if (!nrow(patient_ids)) {
       stop("No FHIR PIDs found in v_patient. PID-dependent data import requires PIDs that already exist in the patient table.")
     }
 
-    patient_ids[, patient_id := etlutils::getAfterLastSlash(patient_id)]
-    pids_splitted_by_ward <- list(DataImport = unique(patient_ids))
+    pids_splitted_by_ward <- list(DataImport = patient_ids)
   })
 
   etlutils::runLevel3("Log getDataImportPIDsFromDB() result", {
@@ -634,4 +623,16 @@ getDataImportPIDsFromDB <- function() {
   })
 
   pids_splitted_by_ward
+}
+
+#' Read all known patients, including patients outside the current ward selection
+#'
+#' @return A data.table with normalized patient_id values; possibly empty.
+getKnownPatientIDsFromDB <- function() {
+  patient_ids <- data.table::as.data.table(etlutils::dbGetReadOnlyQuery(
+    "SELECT DISTINCT pat_id AS patient_id FROM v_patient WHERE pat_id IS NOT NULL;",
+    lock_id = "getKnownPatientIDsFromDB()"
+  ))
+  patient_ids[, patient_id := etlutils::getAfterLastSlash(patient_id)]
+  unique(patient_ids)
 }

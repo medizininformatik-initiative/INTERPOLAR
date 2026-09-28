@@ -152,7 +152,8 @@ retrieve <- function(
         # ensuring that every PID is present at most 1 time.
         pids_splitted_by_ward <- getPIDsSplittedByWard(create_single_pids_per_ward = TRUE, wards_min_encounter_start_date = phase_a_starts)
       }
-      all_wards_empty <- !length(unlist(pids_splitted_by_ward))
+      known_patient_ids <- getKnownPatientIDsFromDB()[["patient_id"]]
+      all_wards_empty <- !length(unlist(pids_splitted_by_ward)) && !length(known_patient_ids)
     })
 
     if (!all_wards_empty) {
@@ -170,7 +171,7 @@ retrieve <- function(
         # the pids_per_ward table. But it contains only tables which have at least 1 row. Tables
         # for resources which could not be downloaded (generally missing or not present for the
         # current date) are not included here.
-        resource_tables <- loadResourcesFromFHIRServer(pids_splitted_by_ward, fhir_table_descriptions)
+        resource_tables <- loadResourcesFromFHIRServer(pids_splitted_by_ward, fhir_table_descriptions, known_patient_ids)
         all_empty_fhir <- all(sapply(names(resource_tables), function(name) {
           if (name == "pids_per_ward") TRUE else nrow(resource_tables[[name]]) == 0
         }))

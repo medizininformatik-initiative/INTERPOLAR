@@ -28,3 +28,5 @@ Postgres-cds_hub/generated/
 .agents/
 /bin/
 /profiling/
+
+R-cdstoolchain/consent_config.toml

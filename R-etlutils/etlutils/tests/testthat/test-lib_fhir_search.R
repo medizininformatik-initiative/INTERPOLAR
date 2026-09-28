@@ -310,3 +310,20 @@ test_that("fhirsearchAddGlobalParams correctly adds common parameters", {
   expect_false("_count" %in% names(result))
   expect_false("_sort" %in% names(result))
 })
+
+
+test_that("availability checks with no bundles report failure instead of indexing an empty list", {
+  for (empty_result in list(NULL, list(), fhircrackr::fhir_bundle_list(list()))) {
+    testthat::local_mocked_bindings(
+      executeFHIRSearchVariation = function(...) empty_result,
+      .package = "etlutils"
+    )
+    expect_output(
+      expect_true(is.na(fhirsearchResourceHasEntries(
+        "https://example.test/fhir", "Observation",
+        verbose = 1
+      ))),
+      "FHIR server may be unavailable"
+    )
+  }
+})

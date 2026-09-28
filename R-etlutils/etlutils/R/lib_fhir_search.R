@@ -97,11 +97,13 @@ fhirsearchResourceHasEntries <- function(endpoint, resource, verbose = 0) {
     silent = TRUE
   )
 
-  if (isError(bundles)) {
+  if (isError(bundles) || length(bundles) == 0L) {
     if (verbose > 0) {
       catWarningMessage(paste(
         "Availability check for", resource,
-        "failed. Continue with the filtered FHIR searches."
+        "failed; the FHIR server may be unavailable or the request may have failed.",
+        "See the preceding FHIR/HTTP warnings or the configured HTTP error log.",
+        "Continue with the filtered FHIR searches."
       ))
     }
     return(NA)

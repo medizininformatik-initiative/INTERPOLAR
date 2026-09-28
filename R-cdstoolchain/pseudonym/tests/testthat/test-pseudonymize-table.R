@@ -790,3 +790,31 @@ test_that("pseudonym mapping validation rejects duplicate keys", {
     "duplicate KEY"
   )
 })
+
+test_that("hashing preserves values and reference identity across repeated and missing inputs", {
+  values <- c(NA, "", "abc", "äöü", "abc", NA, "")
+  expected <- c(
+    NA_character_, digest::digest("", algo = "sha256", serialize = FALSE),
+    digest::digest("abc", algo = "sha256", serialize = FALSE),
+    digest::digest("äöü", algo = "sha256", serialize = FALSE)
+  )[c(1, 2, 3, 4, 3, 1, 2)]
+  for (max_length in c(NA_integer_, 8L, 32L)) {
+    hashes <- if (is.na(max_length)) expected else substr(expected, 1, max_length)
+    expect_identical(pseudonymizationHash(values, max_length), hashes)
+    expect_identical(pseudonymizationHash(factor(values), max_length), hashes)
+    expect_identical(pseudonymizationHash(character(), max_length), character())
+    expect_identical(pseudonymizationHash(c(NA, NA), max_length), c(NA_character_, NA_character_))
+    references <- c("Patient/abc", "Encounter/abc", "abc", "Patient/abc", NA, "", "Patient/")
+    expected_references <- c(
+      paste0("Patient/", hashes[3]), paste0("Encounter/", hashes[3]), hashes[3],
+      paste0("Patient/", hashes[3]), NA_character_, hashes[2],
+      substr(
+        digest::digest("Patient/", algo = "sha256", serialize = FALSE), 1,
+        if (is.na(max_length)) 64L else max_length
+      )
+    )
+    expect_identical(pseudonymizationHashReference(references, max_length), expected_references)
+    expect_identical(pseudonymizationHashReference(character(), max_length), character())
+    expect_identical(pseudonymizationHashReference(c(NA, NA), max_length), c(NA_character_, NA_character_))
+  }
+})

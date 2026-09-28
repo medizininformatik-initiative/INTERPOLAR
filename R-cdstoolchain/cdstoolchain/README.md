@@ -15,10 +15,6 @@ Importvarianten; [`StartMRPRecalculation.R`](../StartMRPRecalculation.R) koordin
 MRP-Neuberechnung. Die Snapshot-Skripte binden das separate
 [`pseudonym`](../pseudonym/README.md)-Paket ein.
 
-Das Paketverzeichnis `R-cdstoolchain/cdstoolchain` enthält derzeit nur das R-Paketgerüst; die
-operative Orchestrierung liegt in den genannten Skripten im übergeordneten Verzeichnis. Der
-vorhandene `testthat`-Test unter [`tests/testthat`](tests/testthat) ist ebenfalls noch ein Gerüsttest.
-
 Die projektweite Ausführung ist in der [zentralen README](../../README.md) beschrieben. Weitere
 Details stehen in [`Install.md`](../../Install.md), [`Operation.md`](../../Operation.md) und für die
 MRP-Neuberechnung in [`README_MRP_Recalculation.md`](../README_MRP_Recalculation.md).

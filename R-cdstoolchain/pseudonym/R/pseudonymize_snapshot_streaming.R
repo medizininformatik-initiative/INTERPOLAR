@@ -55,6 +55,7 @@ prepareSnapshotVersionKeyTables <- function(
   ])
   key_tables <- list()
   for (base_table_name in partitioned_tables) {
+    snapshotProgress("Preparing version keys for ", base_table_name)
     last_rows <- materialization_plan[
       materialization_plan[["BASE_TABLE_NAME"]] == base_table_name &
         materialization_plan[["SNAPSHOT_RELATION_TYPE"]] ==
@@ -78,24 +79,37 @@ prepareSnapshotVersionKeyTables <- function(
       snapshotQuotedColumn(connection, row_id_column, source_alias),
       " AS ", snapshotQuotedColumn(connection, "row_id")
     )
+    frontend <- endsWith(base_table_name, "_fe")
+    if (frontend) {
+      # FE IDs survive REDCap round trips and identify more than one stored row.
+      old_relation <- materialization_plan[["SOURCE_RELATION"]][
+        materialization_plan[["BASE_TABLE_NAME"]] == base_table_name &
+          materialization_plan[["SNAPSHOT_RELATION_TYPE"]] == SNAPSHOT_RELATION_TYPE_OLD
+      ][1L]
+      old_fields <- snapshotRelationFields(connection, old_relation, source_schema)
+      key_select <- snapshotSelectColumns(connection, old_fields, source_alias)
+    }
     key_table_name <- basename(tempfile(pattern = "snapshot_version_keys_"))
     key_table <- snapshotQualifiedName(connection, key_table_name)
     created_rows <- DBI::dbExecute(
       connection,
       paste0(
         "CREATE TEMP TABLE ", key_table, " AS\n",
-        "SELECT DISTINCT ", key_select, "\n",
+        if (frontend) "SELECT " else "SELECT DISTINCT ", key_select, "\n",
         "FROM ",
         snapshotQualifiedName(connection, source_relation_name, source_schema),
         " ", source_alias
       )
     )
-    DBI::dbExecute(
-      connection,
-      paste0("CREATE INDEX ON ", key_table, " (", snapshotQuotedColumn(connection, "row_id"), ")")
-    )
+    snapshotProgress("Indexing version keys for ", base_table_name, ": ", created_rows, " key rows")
+    if (!frontend) {
+      DBI::dbExecute(
+        connection,
+        paste0("CREATE INDEX ON ", key_table, " (", snapshotQuotedColumn(connection, "row_id"), ")")
+      )
+    }
     DBI::dbExecute(connection, paste0("ANALYZE ", key_table))
-    message("Prepared version keys for ", base_table_name, ": ", created_rows, " key rows")
+    snapshotProgress("Prepared version keys for ", base_table_name, ": ", created_rows, " key rows")
     key_tables[[base_table_name]] <- key_table_name
   }
   key_tables
@@ -159,6 +173,18 @@ getSnapshotPartitionSource <- function(
   }
   if (is.null(key_table_name)) {
     stop("Missing prepared version keys for: ", base_table_name)
+  }
+  if (endsWith(base_table_name, "_fe")) {
+    # Multiset subtraction retains old contents and the original multiplicity.
+    # NULLs compare equal here; no fabricated per-source-row ID is required.
+    return(list(
+      relation = paste0(
+        "(SELECT ", source_columns, " FROM ", source_relation, " ", source_alias,
+        " EXCEPT ALL SELECT ", source_columns, " FROM ",
+        snapshotQualifiedName(connection, key_table_name), " ", source_alias, ")"
+      ),
+      fields = all_fields
+    ))
   }
   key_alias <- "snapshot_version_keys"
   key_predicate <- paste0(
@@ -641,7 +667,7 @@ prepareSnapshotMedicationResolutionTables <- function(
       paste0("CREATE INDEX ON ", resolution_table, " (root_medication_id)")
     )
     DBI::dbExecute(connection, paste0("ANALYZE ", resolution_table))
-    message(
+    snapshotProgress(
       "Prepared shared Medication resolution for ", relation_type,
       ": ", created_rows, " root/code rows"
     )
@@ -776,9 +802,11 @@ newSnapshotStreamingContext <- function(
 ) {
   context <- new.env(parent = emptyenv())
   context$input_repo_path <- input_repo_path
+  context$source_queries <- list()
   context$medication_resolution_tables <- medication_resolution_tables
   context$version_key_tables <- version_key_tables
   context$loinc_mapping <- NULL
+  context$unit_cache <- new.env(parent = emptyenv())
   context$mapping_context <- newPseudonymMappingContext(input_repo_path)
   context$medication_review <- newBoundedMedicationReferenceReview(
     SNAPSHOT_MEDICATION_REVIEW_DETAIL_LIMIT
@@ -832,7 +860,8 @@ enrichSnapshotStreamingChunk <- function(
       table,
       context$loinc_mapping,
       enrichment_columns,
-      described_columns
+      described_columns,
+      unit_cache = context$unit_cache
     ))
   }
   medication_spec <- getMedicationReferenceSpec(base_table_name)
@@ -920,10 +949,11 @@ processSnapshotChunkStream <- function(
     }
     summary[["INPUT_ROWS"]] <- summary[["INPUT_ROWS"]] + nrow(chunk)
     summary[["OUTPUT_ROWS"]] <- summary[["OUTPUT_ROWS"]] + nrow(output)
-    message(
+    snapshotProgress(
       "Processed snapshot chunk ", chunk_number,
       " for ", table_name,
-      ": ", nrow(chunk), " input rows, ", nrow(output), " output rows"
+      ": ", nrow(chunk), " input rows, ", nrow(output), " output rows; processed total=",
+      summary[["INPUT_ROWS"]]
     )
     rm(chunk, output, table_result)
     if (has_completed()) {
@@ -1002,18 +1032,24 @@ streamSnapshotMaterializedTable <- function(
 
   table_started <- proc.time()[["elapsed"]]
   source_open_started <- proc.time()[["elapsed"]]
-  query_info <- getSnapshotStreamingSourceQuery(
-    source_connection,
-    plan_row,
-    source_schema,
-    source_view_prefix,
-    last_version_suffix,
-    described_columns,
-    medication_resolution_tables =
-      streaming_context$medication_resolution_tables,
-    version_key_tables = streaming_context$version_key_tables
-  )
-  message(
+  snapshotProgress("Preparing snapshot source query for ", materialized_table_name)
+  source_query <- streaming_context$source_queries[[materialized_table_name]]
+  query_info <- if (!is.null(source_query)) {
+    list(query = source_query, medication_spec = NULL)
+  } else {
+    query_info <- getSnapshotStreamingSourceQuery(
+      source_connection,
+      plan_row,
+      source_schema,
+      source_view_prefix,
+      last_version_suffix,
+      described_columns,
+      medication_resolution_tables =
+        streaming_context$medication_resolution_tables,
+      version_key_tables = streaming_context$version_key_tables
+    )
+  }
+  snapshotProgress(
     "Streaming snapshot source relation ",
     snapshotQualifiedName(source_connection, source_relation_name, source_schema),
     " as ", materialized_table_name,
@@ -1125,7 +1161,7 @@ streamSnapshotMaterializedTable <- function(
         emptyAgeCalculationReview()
       }
       loinc_unit_review <- if (identical(base_table_name, "observation")) {
-        getLoincUnitConversionReview(chunk, materialized_table_name)
+        getLoincUnitConversionReview(chunk, materialized_table_name, streaming_context$unit_cache)
       } else {
         emptyLoincUnitConversionReview()
       }
@@ -1164,7 +1200,7 @@ streamSnapshotMaterializedTable <- function(
     summary[[timing_name]] <- timing[[timing_name]]
   }
   summary[["TOTAL_SECONDS"]] <- total_seconds
-  message(
+  snapshotProgress(
     sprintf(
       paste0(
         "Snapshot timing for %s: source open %.3fs, fetch %.3fs, ",

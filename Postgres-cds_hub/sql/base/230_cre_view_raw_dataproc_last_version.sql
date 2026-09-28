@@ -3,11 +3,11 @@
 -- This file is generated. Changes should only be made by regenerating the file.
 --
 -- Rights definition file             : Postgres-cds_hub/sql/template/User_Schema_Rights_Definition.xlsx
--- Rights definition file last update : 2026-06-18 14:50:31
+-- Rights definition file last update : 2026-06-25 10:26:49
 -- Rights definition file size        : 13564 Byte
 --
 -- Create SQL Tables in Schema "db2dataprocessor_out"
--- Create time: 2026-06-18 16:06:19
+-- Create time: 2026-09-18 13:06:53
 -- TABLE_DESCRIPTION:  ./R-cds2db/cds2db/inst/extdata/Table_Description.xlsx[table_description]
 -- SCRIPTNAME:  base/230_cre_view_raw_dataproc_last_version.sql
 -- TEMPLATE:  template_cre_view_last_version.sql
@@ -1941,9 +1941,6 @@ END $innerview$;
     COMMENT ON COLUMN db2dataprocessor_out.v_location_raw_last_version.loc_physicaltype_display IS 'physicalType/coding/display (varchar)';
     COMMENT ON COLUMN db2dataprocessor_out.v_location_raw_last_version.loc_physicaltype_text IS 'physicalType/text (varchar)';
     -------- COMMENTS db2dataprocessor_out.v_pids_per_ward_raw_last_version ------------
-    COMMENT ON COLUMN db2dataprocessor_out.v_pids_per_ward_raw_last_version.ward_name IS 'ward_name (varchar)';
-    COMMENT ON COLUMN db2dataprocessor_out.v_pids_per_ward_raw_last_version.patient_id IS 'patient_id (varchar)';
-    COMMENT ON COLUMN db2dataprocessor_out.v_pids_per_ward_raw_last_version.encounter_id IS 'encounter_id (varchar)';
     --SQL Role for Views in Schema db2dataprocessor_out
     GRANT SELECT ON TABLE db2dataprocessor_out.v_encounter_raw_last_version TO db2dataprocessor_user;
     GRANT USAGE ON SCHEMA db2dataprocessor_out TO db2dataprocessor_user;

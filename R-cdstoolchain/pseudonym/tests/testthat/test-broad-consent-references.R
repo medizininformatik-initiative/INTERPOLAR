@@ -1,0 +1,128 @@
+test_that("masking distinguishes excluded current and explicitly referenced historical versions", {
+  connection <- getOption("interpolar.test.postgres_connection")
+  skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")
+  targets <- basename(tempfile("bc_targets_"))
+  sources <- basename(tempfile("bc_references_"))
+  on.exit(DBI::dbRemoveTable(connection, targets), add = TRUE)
+  on.exit(DBI::dbRemoveTable(connection, sources), add = TRUE)
+  DBI::dbWriteTable(connection, targets, data.frame(
+    resource_type = "Encounter", resource_id = "e",
+    version_id = c("1", "2"), retained = c(TRUE, FALSE), is_current = c(FALSE, TRUE)
+  ), temporary = TRUE)
+  values <- c(
+    NA, "invalid", "Encounter/absent", "Encounter/e", "e", "[1]Encounter/e",
+    "Encounter/e/_history/1", "Encounter/e/_history/2", "Encounter/e/_history/2/invalid"
+  )
+  DBI::dbWriteTable(connection, sources, data.frame(row = seq_along(values), obs_encounter_ref = values), temporary = TRUE)
+  predicate <- buildBroadConsentReferenceMaskPredicate(
+    connection, "obs_encounter_ref", "Observation",
+    snapshotQualifiedName(connection, targets)
+  )
+  masked <- DBI::dbGetQuery(connection, paste0(
+    "SELECT ", predicate, " AS masked FROM ",
+    snapshotQualifiedName(connection, sources), " s ORDER BY s.row"
+  ))$masked
+  expect_equal(which(masked %in% TRUE), c(4L, 5L, 6L, 8L))
+  expect_equal(DBI::dbReadTable(connection, sources)$obs_encounter_ref, values)
+})
+
+test_that("calculated hierarchy references use the same target types", {
+  expect_equal(getBroadConsentReferenceType("enc_main_encounter_calculated_ref", "Encounter"), "Encounter")
+  expect_equal(getBroadConsentReferenceType("enc_partof_calculated_ref", "Encounter"), "Encounter")
+  expect_equal(getBroadConsentReferenceType("enc_diagnosis_condition_calculated_ref", "Encounter"), "Condition")
+  expect_equal(getBroadConsentReferenceType("obs_encounter_calculated_ref", "Observation"), "Encounter")
+})
+
+test_that("reference catalog resolves flattened current rows with bounded query memory", {
+  connection <- getOption("interpolar.test.postgres_connection")
+  skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")
+  decisions <- basename(tempfile("bc_decisions_"))
+  current <- basename(tempfile("bc_current_"))
+  on.exit(DBI::dbRemoveTable(connection, decisions), add = TRUE)
+  on.exit(DBI::dbRemoveTable(connection, current), add = TRUE)
+  # Each resource has one historical row and two flattened current rows.
+  ids <- seq_len(30000L)
+  resources <- (ids + 2L) %/% 3L
+  DBI::dbWriteTable(connection, decisions, data.frame(
+    row_id = as.character(ids), resource_id = paste0("obs", resources),
+    version_id = ifelse(ids %% 3L == 1L, "1", "2"),
+    reason = ifelse(resources %% 2L == 0L, "included", "outside_consent_period")
+  ), temporary = TRUE)
+  current_ids <- ids[ids %% 3L != 1L]
+  DBI::dbWriteTable(connection, current, data.frame(
+    observation_id = c(current_ids, current_ids)
+  ), temporary = TRUE)
+  for (table in c(decisions, current)) {
+    DBI::dbExecute(connection, paste("ANALYZE", snapshotQualifiedName(connection, table)))
+  }
+  old_memory <- DBI::dbGetQuery(connection, "SHOW work_mem")[[1L]]
+  old_timeout <- DBI::dbGetQuery(connection, "SHOW statement_timeout")[[1L]]
+  on.exit(DBI::dbExecute(connection, paste("SET work_mem TO", DBI::dbQuoteString(connection, old_memory))), add = TRUE)
+  on.exit(DBI::dbExecute(connection, paste("SET statement_timeout TO", DBI::dbQuoteString(connection, old_timeout))), add = TRUE)
+  # Reproduce the large-input planner boundary without millions of test rows.
+  # A spilling join remains bounded; a repeated full scan exceeds this guard.
+  DBI::dbExecute(connection, "SET work_mem TO '64kB'")
+  DBI::dbExecute(connection, "SET statement_timeout TO '10s'")
+  selections <- list(observation = list(
+    spec = list(resource = "Observation"), row_column = "observation_id", table_name = decisions
+  ))
+  plan <- data.frame(
+    BASE_TABLE_NAME = "observation", SNAPSHOT_RELATION_TYPE = SNAPSHOT_RELATION_TYPE_LAST,
+    SOURCE_RELATION = current
+  )
+  targets <- prepareBroadConsentReferenceTargets(connection, selections, plan, "pg_temp")
+  on.exit(DBI::dbRemoveTable(connection, targets), add = TRUE)
+  actual <- DBI::dbReadTable(connection, targets)
+  expect_equal(nrow(actual), 20000L)
+  expect_equal(sum(actual$is_current), 10000L)
+  expect_true(all(actual$is_current == (actual$version_id == "2")))
+  expect_true(all(actual$retained == (as.integer(sub("obs", "", actual$resource_id)) %% 2L == 0L)))
+  expect_equal(unique(actual$resource_type), "Observation")
+  # Relations without a separate current-version view retain the existing default.
+  fallback <- prepareBroadConsentReferenceTargets(connection, selections, plan[0, ], "pg_temp")
+  on.exit(DBI::dbRemoveTable(connection, fallback), add = TRUE)
+  expect_true(all(DBI::dbReadTable(connection, fallback)$is_current))
+})
+
+test_that("duplicate decisions collapse only when their complete identities agree", {
+  connection <- getOption("interpolar.test.postgres_connection")
+  skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")
+  query <- "SELECT '1'::text AS row_id, 'r1'::text AS resource_id, '1'::text AS version_id, 'p1'::text AS patient_id, 'included'::text AS reason"
+  name <- createBroadConsentDecisionTable(connection, paste(query, "UNION ALL", query))
+  on.exit(DBI::dbRemoveTable(connection, name), add = TRUE)
+  expect_equal(nrow(DBI::dbReadTable(connection, name)), 1L)
+  for (replacement in c("r1", "1'::text AS version_id", "p1", "included")) {
+    conflicting <- sub(replacement, paste0("other_", replacement), query, fixed = TRUE)
+    expect_error(createBroadConsentDecisionTable(connection, paste(query, "UNION ALL", conflicting), "v_example"), "v_example")
+  }
+})
+
+test_that("conflict diagnostics contain counts and reasons but no source values", {
+  connection <- getOption("interpolar.test.postgres_connection")
+  skip_if(is.null(connection), "An isolated PostgreSQL test connection was not supplied.")
+  rows <- data.frame(
+    row_id = rep(c("PRIVATE-ROW-A", "PRIVATE-ROW-B", "PRIVATE-ROW-C"), each = 2),
+    resource_id = c(rep("PRIVATE-RESOURCE-A", 4), "PRIVATE-RESOURCE-B", "PRIVATE-RESOURCE-C"),
+    version_id = c("PRIVATE-V1", "PRIVATE-V1", "PRIVATE-V1", "PRIVATE-V2", NA, NA),
+    patient_id = c("PRIVATE-P1", "PRIVATE-P2", rep("PRIVATE-P1", 3), NA),
+    reason = c("unresolved_patient", "unresolved_patient", "included", "outside_consent_period", "PRIVATE-REASON", "PRIVATE-REASON")
+  )
+  name <- basename(tempfile("bc_diagnostic_"))
+  DBI::dbWriteTable(connection, name, rows, temporary = TRUE)
+  on.exit(DBI::dbRemoveTable(connection, name), add = TRUE)
+  query <- paste0("SELECT * FROM ", snapshotQualifiedName(connection, name))
+  error <- tryCatch(createBroadConsentDecisionTable(connection, query, "v_encounter"), error = identity)
+  expect_s3_class(error, "error")
+  message <- conditionMessage(error)
+  expect_false(grepl("PRIVATE|Key \\(row_id\\)", message))
+  for (expected in c(
+    "conflicting_row_ids=3", "distinct_decisions=6", "resource_id_conflicts=1",
+    "version_id_conflicts=1", "patient_id_conflicts=2", "reason_conflicts=1",
+    "all_excluded_conflicts=2", "mixed_included_excluded_conflicts=1",
+    "decision_reasons=included, other, outside_consent_period, unresolved_patient"
+  )) {
+    expect_match(message, expected, fixed = TRUE)
+  }
+  testthat::local_mocked_bindings(getBroadConsentDecisionConflictDiagnostic = function(...) stop("PRIVATE-DATABASE-ERROR"))
+  expect_error(createBroadConsentDecisionTable(connection, query), "Conflict diagnostic unavailable; no source values logged.", fixed = TRUE)
+})

@@ -1,0 +1,210 @@
+# Pseudonymisierung von Snapshot-Daten
+
+[Bedienung](Database_Snapshot.md) → [Pseudonymisierung](Database_Snapshot_Pseudonymization.md) → [Broad Consent](Database_Snapshot_Broad_Consent.md)
+
+Die Pseudonymisierung und die im Standardablauf darauf folgende
+[Broad-Consent-Auswahl](Database_Snapshot_Broad_Consent.md) basieren auf den
+in der MII abgestimmten Regeln. Die Pseudonymisierung verarbeitet einen vorhandenen Rohsnapshot und erzeugt
+seine pseudonymisierte Fassung. Sie ergänzt zunächst die für Auswertungen
+benötigten Werte und wendet dann die Regeln für die einzelnen Spalten an.
+Befehle stehen in der [Bedienungsanleitung](Database_Snapshot.md).
+
+## Inhalt
+
+- [Tabellen und Versionen](#inhalt-der-pseudonymisierten-snapshot-datei-und-snapshot-datenbank)
+- [Verarbeitung großer Tabellen](#verarbeitung-großer-tabellen)
+- [Consent-Aktualisierung](#consent-aktualisierung)
+- [Pseudonymisierungsregeln](#pseudonymisierungsregeln)
+- [Vorprüfung und Wiederaufnahme](#vorprüfung-und-wiederaufnahme)
+- [Fachliche Anreicherungen](#fachliche-anreicherungen)
+- [Prüfberichte](#prüfberichte)
+
+## Inhalt der pseudonymisierten Snapshot-Datei und Snapshot-Datenbank
+
+Die pseudonymisierte Snapshot-Datei und die pseudonymisierte Snapshot-Datenbank
+enthalten die für Auswertungen relevanten Schemata `db_log` und
+`db2dataprocessor_out`. Wenn für eine Quelltabelle eine Last-Version-View
+existiert, liegen in `db_log` zwei disjunkte pseudonymisierte Tabellen:
+`<table>_old_versions` enthält nur frühere Versionen und
+`<table>_last_version` nur die letzten Versionen.
+
+`db2dataprocessor_out.v_<table>_old_versions` und
+`db2dataprocessor_out.v_<table>_last_version` reichen die jeweilige Tabelle
+direkt durch. Die View
+`db2dataprocessor_out.v_<table>` vereinigt beide Views mit `UNION ALL` und zeigt
+damit alle Versionen. Tabellen ohne Last-Version-View bleiben als
+einzelne Tabelle mit einer durchgereichten `v_<table>`-View erhalten.
+
+Die aktuellen Zeilen bestimmt die Last-Version-View der Quelle. Bei
+Frontend-Tabellen bleiben auch ältere Bearbeitungsstände mit derselben ID
+in der historischen Partition erhalten.
+
+Aufgenommen werden Tabellen, die über die maßgeblichen Table Descriptions für
+die pseudonymisierte Snapshot-Datenbank ausgewählt sind. Innerhalb dieser
+Tabellen bleiben alle Spalten der Originaltabellen erhalten. Für beschriebene
+Spalten muss eine Regel angegeben sein; `keep` übernimmt eine Spalte
+ausdrücklich unverändert. Technische Originalspalten wie `hash_index_col`,
+RAW-Referenzen und Einfügezeitpunkte sowie sämtliche Ausgabezeilen bleiben erhalten.
+
+## Verarbeitung großer Tabellen
+
+Die Tabellen werden nacheinander verarbeitet. Innerhalb einer Tabelle wird
+jeder Chunk angereichert, pseudonymisiert und unmittelbar in die Zieldatenbank
+geschrieben. Erst danach wird der nächste Chunk gelesen. Die Chunkgröße begrenzt
+die gleichzeitig verarbeiteten Quellzeilen; zusätzliche
+Auswertungsspalten und durch Anreicherungen vervielfachte Zeilen benötigen
+weiteren Speicher.
+
+Kontrollsummen und Prüfergebnisse werden über alle Chunks hinweg
+zusammengeführt.
+
+## Consent-Aktualisierung
+
+Eine Serveradresse in `R-cdstoolchain/consent_config.toml` aktiviert das Nachladen
+während der Pseudonymisierung. Die Datei enthält eigene FHIR-Zugangsdaten;
+Vorlage ist `consent_config_example.toml` im selben Verzeichnis.
+
+Ohne `PATIENT_IDENTIFIER_SYSTEM` werden die ursprünglichen FHIR-Patienten-IDs
+verwendet. Mit Angabe erfolgt die Zuordnung über die Identifier dieses Systems
+im Rohsnapshot. Mehrdeutige Zuordnungen führen zu einer Fehlermeldung.
+
+Pro Patient gilt genau eine Quelle: Liefert der Server mindestens einen Consent,
+werden alle dort gefundenen Dokumente verwendet, einschließlich inaktiver
+Dokumente und Widerrufe. Ohne Treffer bleibt der Snapshot-Bestand erhalten.
+
+Der so zusammengestellte aktuelle Bestand liegt pseudonymisiert in
+`db_log.consent_updated`. Die Consent-Views verwenden diese Tabelle.
+`db_log.snapshot_consent_refresh` enthält Abrufzeitraum, Herkunft und Anzahlen.
+Für einen späteren Consent-Stand muss die Pseudonymisierung erneut laufen.
+
+## Pseudonymisierungsregeln
+
+Für jede beschriebene Spalte legt `PSEUDONYMIZATION_RULE` fest, wie sie
+behandelt wird. Maßgeblich sind folgende Tabellenblätter:
+
+- `table_description` und `snapshot_extension` in
+  `R-cds2db/cds2db/inst/extdata/Table_Description.xlsx`
+- `table_description` in
+  `R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx`
+- `frontend_table_description` in
+  `R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx`
+
+Die FHIR-Regeln in `Table_Description.xlsx` werden aus der
+[mitgelieferten DIMP-DUP-Basis-YAML](R-cdstoolchain/pseudonym/inst/extdata/dimp_dup_base.yaml)
+erzeugt. Grundlage sind die in der MII abgestimmten Regeln der
+[DIMP-DUP-Basiskonfiguration im Dataportal-Framework](https://github.com/medizininformatik-initiative/dataportal/blob/main/data-node/aether/dimp_dup_base.yaml).
+Nicht von der YAML erfasste Spalten erhalten dabei
+ausdrücklich die Regel `keep`. Leere Regeln sind ungültig. Die Dateien werden
+vom INTERPOLAR-Team gepflegt.
+
+Bei `Observation.code` bleiben LOINC- und SNOMED-Codes samt `display` und
+`text` erhalten. Bei `Observation.valueCodeableConcept` gilt dies für ATC, PZN,
+SNOMED und ASK. Codes anderer oder fehlender Systeme werden gehasht; ihr
+`display` und `text` werden entfernt. Das jeweilige `system` bleibt erhalten.
+
+`cryptoHash` und `pseudonymize(...)` werden bei der DB-Pseudonymisierung als
+deterministischer SHA-256-Hash ohne Salt umgesetzt. Der gleiche Originalwert
+ergibt immer den gleichen Hash.
+
+`pseudonymize(...)` dient in der Table Description als fachlich lesbare
+Regelnotation. Ein `domain = ...`-Parameter verändert den erzeugten Hash nicht.
+Bei FHIR-Referenzen wie `Encounter/<id>` bleibt der Prefix erhalten; nur der
+ID-Anteil hinter dem Schrägstrich wird gehasht.
+
+Die Regel `generalize(format = "YYYY-MM")` erhält Jahr und Monat eines Datums.
+In der pseudonymisierten Snapshot-Datenbank wird das Ergebnis als Text im Format
+`YYYY-MM` gespeichert. Alters- und
+Volljährigkeitsprüfungen müssen die vor der Pseudonymisierung aus dem
+vollständigen Originaldatum berechneten Altersspalten verwenden.
+
+Die Regel `redact` entfernt den ursprünglichen Wert vollständig. Das Ergebnis
+ist `NA` in R und wird als `NULL` in PostgreSQL gespeichert.
+
+Mapping-Regeln der Form `pseudonym(sheet = "Sheetname")` lesen das angegebene
+Sheet aus `Input-Repo/pseudo_mapping.xlsx`. Jedes verwendete Sheet enthält die
+Spalten `KEY` und `PSEUDONYM`. Beide Werte dürfen Leerzeichen enthalten, aber
+nicht leer sein. Doppelte Keys sind nicht erlaubt.
+
+## Vorprüfung und Wiederaufnahme
+
+Die Vorprüfung kontrolliert Regeln und Mapping-Werte vor dem Schreiben.
+Fehlende Zuordnungen werden in `Input-Repo/pseudo_mapping.xlsx` ergänzt;
+den Befehl nach dem Ausfüllen erneut starten. Bei kombinierter Snapshot-Erzeugung
+läuft diese Prüfung bereits vor dem Rohsnapshot und nochmals gegen dessen
+konkreten Inhalt.
+
+Bei einem späteren Fehler kann der Lauf erneut gestartet werden. Eine vorhandene
+Quelldatenbank wird nur wiederverwendet, wenn ihre Prüfsumme zur Snapshot-Datei
+passt. Eine unvollständige Zieldatenbank wird neu erstellt.
+
+## Fachliche Anreicherungen
+
+Vor der Pseudonymisierung ergänzt der Prozess zusätzliche Auswertungsspalten in
+der pseudonymisierten Snapshot-Datenbank:
+
+- `fall_fe_old_versions` und `fall_fe_last_version` erhalten
+  `fall_age_at_admission`.
+- `encounter_old_versions` und `encounter_last_version` erhalten
+  `enc_age_at_admission`.
+- `fall_bmi` wird befüllt, wenn Gewicht und Größe in unterstützten Einheiten
+  vorliegen. Unterstützt werden `kg`, `g`, `mg`, `m`, `cm` und `mm`.
+- `medikationsanalyse_fe` erhält analog `meda_bmi` aus
+  `meda_gewicht_aktuell` und `meda_groesse`, wenn beide Werte in unterstützten
+  Einheiten vorliegen.
+- `observation_old_versions` und `observation_last_version` erhalten
+  `analysis_loinc_code`, `analysis_unit`, `analysis_value` und
+  `analysis_value_status`. Wenn die
+  LOINC-Mapping-Datei eine Referenzeinheit enthält und die Umrechnung gelingt,
+  stehen dort der Primary-LOINC, die Referenzeinheit und der umgerechnete Wert.
+  Andernfalls werden für LOINC-Observations der gemappte Primary-LOINC, soweit
+  vorhanden, sowie die ursprüngliche Einheit und der ursprüngliche Wert
+  übernommen. `analysis_value_status` enthält `converted`,
+  `already_reference_unit`, `source_conversion_failed`, `source_missing_unit`,
+  `source_mapping_missing_unit`, `source_no_mapping`,
+  `source_no_mapping_missing_unit` oder `missing_value`. Damit ist für jeden
+  Analysewert erkennbar, ob Referenz- oder Quelldaten verwendet wurden. Die
+  ursprünglichen Observation-Spalten bleiben unverändert erhalten.
+- `medicationrequest`, `medicationadministration` und `medicationstatement`
+  erhalten die Code-/System-Paare aller `Medication`-Einträge, die über die
+  direkte Referenz und rekursiv über
+  `med_ingredient_itemreference_ref` erreichbar sind. Mehrere unterschiedliche
+  Paare erzeugen entsprechend mehrere Ausgabezeilen; Duplikate werden entfernt.
+  Auch zyklische Referenzen werden sicher beendet. Fehlende referenzierte
+  Medications und Referenzketten ohne erreichbaren Code bleiben erhalten und
+  werden als Prüfproblem erfasst.
+
+Das Alter wird in abgeschlossenen Jahren berechnet. Die Berechnung erfolgt nur,
+wenn das Geburtsdatum am oder nach dem 01.01.1910 liegt und das jeweilige
+Aufnahme- beziehungsweise Encounter-Datum nicht vor dem Geburtsdatum liegt.
+Andernfalls bleibt das Altersfeld leer und der Grund wird als Prüfproblem
+protokolliert. Neu ergänzte Altersspalten stehen am Ende der Tabelle. Die
+vorhandene Spalte `fall_bmi` behält ihre Position.
+
+## Prüfberichte
+
+Der Pseudonymisierungslauf schreibt lokale Prüfberichte in diese Verzeichnisse:
+
+```text
+outputLocal/snapshot_pseudonymization_preflight/reports
+outputLocal/snapshot_pseudonymization/reports
+```
+
+- `pseudonymization_rule_review.xlsx` enthält die technische Prüfung der
+  geladenen Regeln. Das Tabellenblatt `README` erklärt die weiteren
+  Tabellenblätter. Regelprobleme werden vom INTERPOLAR-Team behoben.
+- `snapshot_pseudonymization_issues.xlsx` enthält Hinweise auf fehlende
+  direkt oder transitiv referenzierte `Medication`-Ressourcen, Referenzketten
+  ohne erreichbares Code-/System-Paar, nicht berechenbare Alterswerte und nicht
+  umrechenbare Laboreinheiten. Er kann nicht pseudonymisierte Identifikatoren
+  für die lokale Fehlersuche enthalten und darf deshalb nicht weitergegeben
+  werden.
+- `snapshot_postprocessing_report.xlsx` enthält die technische Zusammenfassung,
+  insbesondere Zeilen- und Spaltenzahlen, Chunk-Zahlen sowie Laufzeiten für das
+  Öffnen der Quelle, Lesen, Anreichern, Prüfen, Pseudonymisieren und Schreiben
+  jeder Tabelle.
+
+Die Abschlussmeldung nennt die verarbeiteten Ein- und Ausgabezeilen sowie
+Hinweise je Anreicherungskategorie. Nicht umrechenbare Laborwerte bleiben mit
+Originalwert und Quelleinheit erhalten; der Bericht erklärt den jeweiligen Grund.
+
+Weiter mit der [Broad-Consent-Auswahl](Database_Snapshot_Broad_Consent.md).

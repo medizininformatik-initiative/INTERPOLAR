@@ -215,9 +215,11 @@ test_that("readExcelFileAsTableList imports Excel sheets correctly", {
   expect_equal(length(result), 2, info = "The result list should contain two data.tables for the two sheets.")
   expect_equal(names(result), c("mtcars_with_description_lines", "mtcars_without_description_line"))
 
-  # reading non existing files returns an empty list
-  result <- readExcelFileAsTableList("not_existing_file_path")
-  expect_true(length(result) == 0 && is.list(result))
+  expect_error(
+    readExcelFileAsTableList("not_existing_file_path"),
+    "Could not read Excel workbook 'not_existing_file_path':",
+    fixed = TRUE
+  )
 })
 
 ##################

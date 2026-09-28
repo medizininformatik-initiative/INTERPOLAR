@@ -183,20 +183,16 @@ pseudonymizationHash <- function(values, max_length = NA_integer_) {
   values_chr <- as.character(values)
   result <- rep(NA_character_, length(values_chr))
   has_value <- !is.na(values_chr)
-  result[has_value] <- vapply(
-    values_chr[has_value],
-    function(value) {
-      digest::digest(
-        value,
-        algo = "sha256",
-        serialize = FALSE
-      )
-    },
+  unique_values <- unique(values_chr[has_value])
+  hashes <- vapply(
+    unique_values,
+    function(value) digest::digest(value, algo = "sha256", serialize = FALSE),
     character(1)
   )
   if (!is.na(max_length)) {
-    result[has_value] <- substr(result[has_value], 1, max_length)
+    hashes <- substr(hashes, 1, max_length)
   }
+  result[has_value] <- hashes[match(values_chr[has_value], unique_values)]
   result
 }
 
@@ -216,19 +212,19 @@ pseudonymizationHashReference <- function(values, max_length = NA_integer_) {
     return(result)
   }
 
-  relative_reference_match <- regexec("^([A-Za-z][A-Za-z0-9]*/)(.+)$", values_chr[has_value])
-  reference_parts <- regmatches(values_chr[has_value], relative_reference_match)
-  result[has_value] <- vapply(seq_along(reference_parts), function(i) {
-    parts <- reference_parts[[i]]
-    value <- values_chr[has_value][i]
-    if (length(parts) < 3) {
-      return(pseudonymizationHash(value, max_length = max_length))
-    }
-    paste0(
-      parts[2],
-      pseudonymizationHash(parts[3], max_length = max_length)
-    )
-  }, character(1))
+  # Resolve repeated references once per block, keeping the resource prefix intact.
+  unique_values <- unique(values_chr[has_value])
+  relative_reference_match <- regexec("^([A-Za-z][A-Za-z0-9]*/)(.+)$", unique_values)
+  reference_parts <- regmatches(unique_values, relative_reference_match)
+  relative <- lengths(reference_parts) >= 3L
+  payloads <- unique_values
+  payloads[relative] <- vapply(reference_parts[relative], `[[`, character(1), 3L)
+  hashes <- pseudonymizationHash(payloads, max_length = max_length)
+  hashes[relative] <- paste0(
+    vapply(reference_parts[relative], `[[`, character(1), 2L),
+    hashes[relative]
+  )
+  result[has_value] <- hashes[match(values_chr[has_value], unique_values)]
   result
 }
 
@@ -792,6 +788,14 @@ pseudonymizeTable <- function(
 
   assertNoMissingPseudonymMappingValues(mapping_context)
   table
+}
+
+# stdout is mirrored to the console and the existing etlutils log. message()
+# goes only to the log while the CLI message sink is active. Log counts and
+# technical table names here, never resource values or query text.
+snapshotProgress <- function(...) {
+  cat(..., "\n", sep = "")
+  flush.console()
 }
 
 runPseudonymizationLogStep <- function(level = 2L, message, process, log_steps = TRUE) {

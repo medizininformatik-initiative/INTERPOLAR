@@ -216,11 +216,12 @@ addDataImportFHIRDateSearchParameters <- function(table_descriptions,
 #'
 #' @param pids_splitted_by_ward A list of patient IDs, where each element corresponds to a ward.
 #' @param table_descriptions the fhircrackr table descriptions of the result tables
+#' @param known_patient_ids All patient IDs already stored in the database.
 #' @return A list of data.tables, each containing FHIR resources for a specific patient,
 #'   and the last element is a table representing the ward and patient ID per date.
 #'
-loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_descriptions) {
-  patient_ids <- unique(unlist(data.table::rbindlist(pids_splitted_by_ward, use.names = TRUE, fill = TRUE)[, .(patient_id)]))
+loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_descriptions, known_patient_ids = character()) {
+  patient_ids <- unique(data.table::rbindlist(pids_splitted_by_ward, use.names = TRUE, fill = TRUE)[["patient_id"]])
 
   if (!isProcess("DataImport")) {
     # Load all encounters from the database which, according to the database, have not yet ended on the
@@ -323,12 +324,26 @@ loadResourcesByPatientIDFromFHIRServer <- function(pids_splitted_by_ward, table_
   # Load all data of relevant patients from FHIR server
   resource_tables_fhir <- etlutils::fhirsearchMultipleResourcesByPID(
     pids_with_last_updated,
-    table_descriptions,
+    table_descriptions[setdiff(names(table_descriptions), "Consent")],
     id_param_str,
     resources_add_search_parameter
   )
 
   raw_fhir_resources <- resource_tables_fhir$raw_fhir_resources
+  if ("Consent" %in% names(table_descriptions)) {
+    # Consent updates must not depend on ward membership, patient age or the
+    # last Patient check date: withdrawals may concern previously treated patients.
+    consent_patient_ids <- unique(etlutils::getAfterLastSlash(c(known_patient_ids, patient_ids)))
+    etlutils::runLevel3("Reload Consents for all known patients", {
+      consent_result <- etlutils::fhirsearchMultipleResourcesByPID(
+        stats::setNames(as.list(consent_patient_ids), rep(NA_character_, length(consent_patient_ids))),
+        table_descriptions["Consent"],
+        id_param_str,
+        patient_age_at_enc_start = 0L
+      )
+      raw_fhir_resources[["Consent"]] <- consent_result$raw_fhir_resources[["Consent"]]
+    })
+  }
   # The pids_with_last_updated now only contains persons who were older than MIN_PATIENT_AGE at
   # enc_period_start if the parameter MIN_PATIENT_AGE is specified.
   pids_with_last_updated <- resource_tables_fhir$pids_with_last_updated
@@ -741,11 +756,13 @@ loadReferencedResourcesByOwnIDFromFHIRServer <- function(table_descriptions, res
 #'   `pid_independant`, each of which describes table structures for resources that are dependent
 #'   and independent of patient IDs, respectively.
 #'
+#' @param known_patient_ids All patient IDs already stored in the database.
+#'
 #' @details The function iterates through all resources loaded in both steps and saves them as
 #'   RData files using `writeRData`. The filenames are derived by converting the names of the
 #'   resources in the `resource_tables` list to lowercase.
 #'
-loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_descriptions) {
+loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_descriptions, known_patient_ids = character()) {
   ### DEBUG START ###
   # Load Resources from RData files
   if (exists("DEBUG_PATH_TO_RAW_RDATA_FILES")) {
@@ -761,7 +778,7 @@ loadResourcesFromFHIRServer <- function(pids_splitted_by_ward, table_description
     resource_tables[["pids_per_ward"]] <- rbindPidsSplittedByWard(pids_splitted_by_ward)
     ### DEBUG END ###
   } else {
-    resource_tables <- loadResourcesByPatientIDFromFHIRServer(pids_splitted_by_ward, table_descriptions$pid_dependant)
+    resource_tables <- loadResourcesByPatientIDFromFHIRServer(pids_splitted_by_ward, table_descriptions$pid_dependant, known_patient_ids)
     resource_tables <- loadDataImportReferencedResourcesFromDB(table_descriptions, resource_tables)
     resource_tables <- loadReferencedResourcesByOwnIDFromFHIRServer(table_descriptions, resource_tables)
   }
