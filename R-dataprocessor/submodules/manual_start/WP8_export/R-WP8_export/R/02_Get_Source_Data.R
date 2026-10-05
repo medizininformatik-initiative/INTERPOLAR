@@ -102,13 +102,6 @@ buildFallvignetteSourceQuery <- function(mapping) {
     "  )\n",
     "  AND ret_fe.ret_id NOT LIKE '%-TEST-%'\n",
     "  AND COALESCE(ret_fe.ret_kurzbeschr, '') NOT ILIKE '%*TEST*%'\n",
-    "  AND EXISTS (\n",
-    "    SELECT 1\n",
-    "    FROM v_mrpdokumentation_validierung_fe_last_version AS mrp_fe\n",
-    "    WHERE mrp_fe.record_id = ret_fe.record_id\n",
-    "      AND mrp_fe.mrp_meda_id = ret_fe.ret_meda_id\n",
-    "      AND mrp_fe.mrp_id IS NOT NULL\n",
-    "  )\n",
     "ORDER BY source_record_id, ret_fe.ret_meda_id, ret_fe.ret_id"
   )
 }
