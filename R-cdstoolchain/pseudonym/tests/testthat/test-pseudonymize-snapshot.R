@@ -192,7 +192,7 @@ test_that("blocking mapping review error reports deduplicated details and workbo
   expect_match(message, report_file, fixed = TRUE)
 })
 
-test_that("incomplete mapping error only reports the required user action", {
+test_that("incomplete mapping error explains the user action and Docker file access", {
   input_repo_path <- newPseudonymTestInputRepoPath("incomplete-mapping-")
   mapping_file <- getPseudonymMappingFilePath(input_repo_path)
   etlutils::writeExcelFile(
@@ -234,6 +234,11 @@ test_that("incomplete mapping error only reports the required user action", {
   expect_match(message, "not a technical error", fixed = TRUE)
   expect_match(message, "manually complete the generated mapping file", fixed = TRUE)
   expect_match(message, mapping_file, fixed = TRUE)
+  expect_match(message, "inside the R container", fixed = TRUE)
+  expect_match(message, "not visible on the host", fixed = TRUE)
+  expect_match(message, "entire local Input-Repo directory writable", fixed = TRUE)
+  expect_match(message, "./Input-Repo:/src/Input-Repo", fixed = TRUE)
+  expect_match(message, "rerun the command to generate the mapping file on the host", fixed = TRUE)
   expect_match(message, 'Sheet "frontend_users"', fixed = TRUE)
   expect_match(message, "- site_admin", fixed = TRUE)
   expect_match(message, "enter a PSEUDONYM for every listed KEY", fixed = TRUE)

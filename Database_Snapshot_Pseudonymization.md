@@ -127,6 +127,11 @@ nicht leer sein. Doppelte Keys sind nicht erlaubt.
 
 ## Vorprüfung und Wiederaufnahme
 
+Der R-Container benötigt einen beschreibbaren Mount des gesamten `Input-Repo`,
+da die Mappingdatei außerhalb des WP7-Unterordners liegt. Einrichtung,
+Migration bestehender Zuordnungen und Fortsetzung mit einem vorhandenen
+Rohsnapshot stehen unter [Input-Repo einbinden und Pseudonymisierung fortsetzen](Database_Snapshot.md#input-repo-einbinden-und-pseudonymisierung-fortsetzen).
+
 Die Vorprüfung kontrolliert Regeln und Mapping-Werte vor dem Schreiben.
 Fehlende Zuordnungen werden in `Input-Repo/pseudo_mapping.xlsx` ergänzt;
 den Befehl nach dem Ausfüllen erneut starten. Bei kombinierter Snapshot-Erzeugung
