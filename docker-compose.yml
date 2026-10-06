@@ -163,7 +163,7 @@ services:
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml
       - ./release-version.txt:/src/release-version.txt
       # Mount the entire Input-Repo writable so pseudo_mapping.xlsx persists.
-      #- <Path_to_Input-Repo_directory>:/src/Input-Repo
+      #- ./<Path_to_Input-Repo_directory>:/src/Input-Repo
       # Include certificates, e.g. self-signed certificates of the FHIR-Server,
       # incl. root-CA or CHAIN if needed. See also section 'environment' above.
       #- <self-signed_cert_FHIR-Server.pem>:/etc/ssl/certs/<self-signed_cert_FHIR-Server.pem>
