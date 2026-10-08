@@ -9,6 +9,15 @@ seine pseudonymisierte Fassung. Sie ergänzt zunächst die für Auswertungen
 benötigten Werte und wendet dann die Regeln für die einzelnen Spalten an.
 Befehle stehen in der [Bedienungsanleitung](Database_Snapshot.md).
 
+Das Fallnummernsystem aus `MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM` in
+`R-dataprocessor/dataprocessor_config.toml` wird zusätzlich zu den Typregeln
+berücksichtigt. Bei passenden `Encounter.identifier.system` gelten für jede Identifier-Spalte
+dieselben Aktionen und Argumente wie in ihrer VN-Regel, auch wenn die VN-Typcodierung
+fehlt. Die aktuellen VN-Regeln hashen die Werte konsistent zu den Frontend-Fallnummern
+und erhalten das Identifier-System. Fehlt eine eindeutige VN-Regel für eine
+Identifier-Spalte, bricht die Regelprüfung ab. Vorprüfung und Verarbeitung verwenden diese
+ergänzten Regeln. Ohne konfiguriertes Fallnummernsystem gelten die Typregeln.
+
 ## Inhalt
 
 - [Tabellen und Versionen](#inhalt-der-pseudonymisierten-snapshot-datei-und-snapshot-datenbank)

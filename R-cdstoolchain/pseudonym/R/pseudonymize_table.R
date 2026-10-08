@@ -51,7 +51,7 @@ splitRuleList <- function(rule) {
   c(parts, paste0(current, collapse = ""))
 }
 
-splitRuleArguments <- function(arguments) {
+splitRuleArguments <- function(arguments, separator = ";") {
   chars <- strsplit(arguments, "", fixed = TRUE)[[1]]
   in_quotes <- FALSE
   current <- character()
@@ -62,7 +62,7 @@ splitRuleArguments <- function(arguments) {
       in_quotes <- !in_quotes
     }
 
-    if (!in_quotes && char == ";") {
+    if (!in_quotes && char == separator) {
       parts <- c(parts, paste0(current, collapse = ""))
       current <- character()
     } else {
@@ -104,7 +104,7 @@ getRuleCondition <- function(parsed_rule) {
     return(paste(parsed_rule$arguments, collapse = "; "))
   }
 
-  conditions <- parsed_rule$arguments[!grepl("^[A-Za-z]+\\s*=", parsed_rule$arguments)]
+  conditions <- parsed_rule$arguments[!grepl("^[A-Za-z]+\\s*=([^=]|$)", parsed_rule$arguments)]
   if (
     parsed_rule$action == "pseudonym" && length(conditions) > 0 &&
     grepl("^\".*\"$", conditions[1])
@@ -546,7 +546,7 @@ evaluateRuleCondition <- function(condition, table, table_description, fhir_expr
     return(rep(TRUE, nrow(table)))
   }
 
-  parts <- trimws(strsplit(condition, "&", fixed = TRUE)[[1]])
+  parts <- splitRuleArguments(condition, separator = "&")
   Reduce(`&`, lapply(parts, evaluateSingleCondition,
     table = table,
     table_description = table_description,

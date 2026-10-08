@@ -415,85 +415,28 @@ addCuratedEncPeriodEnd <- function(encounter_table) {
 
 #------------------------------------------------------------------------------#
 
-#' Add Main Encounter ID to Encounter Table
+#' Add Main Encounter ID from the Calculated FHIR Reference
 #'
-#' This function adds a new column `main_enc_id` to the encounter table, identifying
-#' the top-level inpatient encounter (e.g., a facility-level "einrichtungskontakt" encounter)
-#' for each record. It determines the main encounter by walking up the encounter hierarchy
-#' based on encounter type and `enc_partof_calculated_ref` relationships. If part-of references are not
-#' available, it uses the unique`enc_identifier_value` to identify top-level encounters.
-#' Update: The function now also uses the pre-calculated `enc_main_encounter_calculated_ref` column
-#' from the cds-toolchain to determine the main encounter ID, falling back to the original logic if necessary.
+#' Identifies the top-level encounter for each row, used to determine the main
+#' encounter's admission date and to map encounters to frontend data.
+#' Uses the main encounter reference prepared by cds2db for each row. A valid
+#' relative reference of the form `Encounter/<id>` supplies `main_enc_id`.
+#' Missing, blank or invalid references yield `NA`, trigger a warning and add
+#' `encounter_without_main_enc_id` to the processing exclusion reasons.
 #'
-#' @param encounter_table A data frame or tibble containing FHIR-based encounter data.
-#'   Must include the following columns:
-#'   - `enc_id`: Unique identifier of the encounter.
-#'   - `enc_partof_calculated_ref`: Reference to the parent encounter (e.g., "Encounter/123").
-#'   - `enc_type_code_Kontaktebene`: Type of the encounter (e.g., "einrichtungskontakt",
-#'                                   "abteilungskontakt", "versorgungsstellenkontakt").
-#'   - `enc_class_code`: Class of the encounter (e.g., "IMP" for inpatient).
-#'   - `enc_identifier_value`: Identifier value for the encounter, used to identify top-level
-#'                             encounters.
+#' @param encounter_table Encounter data with `enc_id`,
+#'   `enc_main_encounter_calculated_ref` and `processing_exclusion_reason` columns.
 #'
-#' @return A data frame or tibble identical to the input but with an additional column:
-#'   - `main_enc_id`: The ID of the top-level (main) encounter associated with each record.
-#'     For top-level encounters themselves, this is simply their own `enc_id`.
-#'
-#' @details
-#' The main encounter ID is determined using the following logic:
-#' 1. If the encounter has no parent (`enc_partof_calculated_ref` is `NA`), is of type `"einrichtungskontakt"`,
-#' it is considered a top-level encounter, and its own `enc_id` is used.
-#' 2. If the encounter is of type `"abteilungskontakt"` (departmental contact), its parent is
-#'    assumed to be the main encounter.
-#' 3. If the encounter is of type `"versorgungsstellenkontakt"` (sub-departmental contact), the
-#'    function extracts the parent encounter's `enc_id`, finds its parent, and uses that as the
-#'    top-level `main_enc_id`.
-#' The function also handles cases where encounters may not have a parent reference but have a
-#' unique identifier value. The function also checks for the presence of `enc_identifier_value` for
-#' top-level encounters and ensures that there are no multiple `einrichtungskontakt` encounters with
-#' the same identifier value. If any inconsistencies are found (e.g., multiple top-level encounters
-#' for the same identifier), an error is raised. Update: The function now also uses the pre-calculated
-#' `enc_main_encounter_calculated_ref` column from the cds-toolchain to determine the main encounter ID,
-#' falling back to the original logic if necessary.
-#' If any encounters cannot be assigned a `main_enc_id`, a warning is issued, and those records
-#' are printed for review. The `processing_exclusion_reason` column is updated to indicate
-#' these cases: "encounter_without_main_enc_id".
-#'
-#' @importFrom dplyr mutate case_when relocate
+#' @return Distinct rows with `main_enc_id` added and exclusion reasons updated.
 #' @export
 addMainEncId <- function(encounter_table) {
   encounter_table_with_main_enc <- encounter_table |>
-    dplyr::left_join(
-      encounter_table |>
-        dplyr::filter(enc_type_code_Kontaktebene == "einrichtungskontakt") |>
-        dplyr::distinct(enc_id, enc_identifier_value),
-      by = "enc_identifier_value",
-      suffix = c("", "_einrichtungskontakt")
-    ) |>
-    dplyr::mutate(main_enc_id = dplyr::case_when(
-      is.na(enc_partof_calculated_ref) &
-        enc_type_code_Kontaktebene != "einrichtungskontakt" ~ enc_id_einrichtungskontakt,
-
-      # Top-level: einrichtungskontakt
-      is.na(enc_partof_calculated_ref) &
-        enc_type_code_Kontaktebene == "einrichtungskontakt" ~ enc_id,
-
-      # Middle-level: abteilungskontakt
-      enc_type_code_Kontaktebene == "abteilungskontakt" ~ sub("^Encounter/", "", enc_partof_calculated_ref),
-
-      # Bottom-level: versorgungsstellenkontakt
-      enc_type_code_Kontaktebene == "versorgungsstellenkontakt" ~ {
-        parent_id <- sub("^Encounter/", "", enc_partof_calculated_ref)
-        grandparent_ref <- encounter_table$enc_partof_calculated_ref[match(parent_id, encounter_table$enc_id)]
-        sub("^Encounter/", "", grandparent_ref)
-      }
+    dplyr::mutate(main_enc_id = dplyr::if_else(
+      grepl("^Encounter/[^/[:space:]]+$", enc_main_encounter_calculated_ref),
+      sub("^Encounter/", "", enc_main_encounter_calculated_ref),
+      NA_character_
     )) |>
-    dplyr::select(-enc_id_einrichtungskontakt) |>
-    # use new calculation from cds-toolchain
-    dplyr::rename(main_enc_id_initial_try = main_enc_id) |>
-    dplyr::mutate(main_enc_id = sub("^Encounter/", "", enc_main_encounter_calculated_ref)) |>
-    dplyr::mutate(main_enc_id = dplyr::if_else(is.na(main_enc_id), main_enc_id_initial_try, main_enc_id)) |>
-    dplyr::relocate(main_enc_id, main_enc_id_initial_try, .after = enc_id) |>
+    dplyr::relocate(main_enc_id, .after = enc_id) |>
     dplyr::distinct()
 
   if (any(is.na(encounter_table_with_main_enc$main_enc_id))) {
