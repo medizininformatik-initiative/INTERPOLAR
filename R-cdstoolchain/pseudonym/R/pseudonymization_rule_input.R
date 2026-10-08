@@ -241,6 +241,9 @@ loadPseudonymizationRuleSources <- function(sources, source_type, default_sheet_
 #' @param default_snapshot_extension_sheet Default sheet for entries in
 #'   `snapshot_extensions`.
 #'
+#' @param encounter_identifier_system Optional configured case-number identifier systems.
+#'   Matching Encounter identifiers follow the existing VN rules.
+#'
 #' @return A data.table with normalized source metadata, table/resource,
 #'   column metadata, raw and normalized `PSEUDONYMIZATION_RULE`, and
 #'   `SOURCE_TYPE` set to `table_description` or `snapshot_extension`.
@@ -249,7 +252,8 @@ loadPseudonymizationRules <- function(
   table_descriptions,
   snapshot_extensions = NULL,
   default_table_description_sheet = "table_description",
-  default_snapshot_extension_sheet = DEFAULT_SNAPSHOT_EXTENSION_SHEET
+  default_snapshot_extension_sheet = DEFAULT_SNAPSHOT_EXTENSION_SHEET,
+  encounter_identifier_system = NULL
 ) {
   table_rules <- loadPseudonymizationRuleSources(
     table_descriptions,
@@ -262,7 +266,58 @@ loadPseudonymizationRules <- function(
     default_sheet_name = default_snapshot_extension_sheet
   )
 
-  data.table::rbindlist(list(table_rules, extension_rules), fill = TRUE)
+  rules <- data.table::rbindlist(list(table_rules, extension_rules), fill = TRUE)
+  addConfiguredEncounterIdentifierRules(rules, encounter_identifier_system)
+}
+
+# Keep configuration-dependent rules in the same plan used by review and streaming.
+addConfiguredEncounterIdentifierRules <- function(rules, encounter_identifier_system) {
+  systems <- unique(as.character(encounter_identifier_system))
+  systems <- systems[!is.na(systems) & nzchar(systems)]
+  if (!length(systems)) return(rules)
+  if (any(grepl('["\\r\\n]', systems, perl = TRUE))) {
+    stop("Encounter identifier systems must not contain quotes or line breaks.")
+  }
+  rules <- data.table::copy(rules)
+  rows <- which(tolower(rules$TABLE_OR_RESOURCE) == "encounter" &
+    grepl("^identifier/", rules$FHIR_EXPRESSION))
+  for (row in rows) {
+    rule_parts <- trimws(splitRuleList(rules[["PSEUDONYMIZATION_RULE"]][row]))
+    conditions <- vapply(rule_parts, function(part) {
+      getRuleCondition(parsePseudonymizationRuleCall(part))
+    }, character(1))
+    condition_parts <- lapply(conditions, function(condition) {
+      if (is.na(condition)) character() else splitRuleArguments(condition, separator = "&")
+    })
+    # Replace only the VN selector; preserve actions, arguments and other constraints.
+    vn_selectors <- lapply(condition_parts, function(parts) {
+      system_part <- grepl(
+        '^type[.]coding[.]system\\s*==\\s*"http://terminology.hl7.org/CodeSystem/v2-0203"$', parts
+      )
+      code_part <- grepl('^type[.]coding[.]code\\s*==\\s*"VN"$', parts)
+      if (sum(system_part) == 1L && sum(code_part) == 1L) {
+        which(system_part | code_part)
+      } else {
+        integer()
+      }
+    })
+    vn_index <- which(lengths(vn_selectors) == 2L)
+    if (length(vn_index) != 1L) {
+      stop(
+        "Expected exactly one VN rule for configured Encounter identifier column: ",
+        rules[["COLUMN_NAME"]][row]
+      )
+    }
+    remaining_conditions <- condition_parts[[vn_index]][-vn_selectors[[vn_index]]]
+    additional_rules <- vapply(systems, function(system) {
+      condition <- paste(c(paste0('system == "', system, '"'), remaining_conditions), collapse = " & ")
+      sub(conditions[vn_index], condition, rule_parts[vn_index], fixed = TRUE)
+    }, character(1))
+    # Keep the original rule order, including any rules preceding the VN branch.
+    effective_rules <- append(rule_parts, additional_rules, after = vn_index)
+    data.table::set(rules, row, "PSEUDONYMIZATION_RULE", paste(effective_rules, collapse = "; "))
+  }
+  rules
 }
 
 emptyRuleReviewTable <- function(extra_columns = character()) {

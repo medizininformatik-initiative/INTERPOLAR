@@ -443,6 +443,9 @@ writeSnapshotPostprocessingReport <- function(summary, file_name = NA) {
 #' @param log_steps If `TRUE` and module logging is initialized, wrap major
 #'   steps in the existing `etlutils::runLevel...` logging.
 #'
+#' @param encounter_identifier_system Optional configured Encounter case-number systems.
+#'   Matching identifiers follow the existing VN rules, including their arguments.
+#'
 #' @return A list with rules, reports, the materialization plan, and write and
 #'   view summaries. Full source and target tables are not returned because the
 #'   database pipeline processes them incrementally.
@@ -465,7 +468,8 @@ pseudonymizeSnapshotDatabase <- function(
   issue_report_file = NA,
   postprocessing_report_file = NA,
   mapping_preflight_completed = FALSE,
-  log_steps = TRUE
+  log_steps = TRUE,
+  encounter_identifier_system = NULL
 ) {
   chunk_size <- validateSnapshotChunkSize(chunk_size)
   if (is.null(table_descriptions)) {
@@ -490,7 +494,8 @@ pseudonymizeSnapshotDatabase <- function(
     {
       result[["rules"]] <- loadPseudonymizationRules(
         table_descriptions = table_descriptions,
-        snapshot_extensions = snapshot_extensions
+        snapshot_extensions = snapshot_extensions,
+        encounter_identifier_system = encounter_identifier_system
       )
     },
     log_steps = log_steps
