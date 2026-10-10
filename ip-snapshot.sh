@@ -1,6 +1,144 @@
 #!/usr/bin/env bash
 set -o pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/tools/snapshot-progress.sh"
+
+# Docker-Modus: "compose" (lokal) oder "swarm" (Docker Swarm)
+DOCKER_MODE="compose"
+
+# Lese Version aus release-version.txt
+CDS_TOOL_CHAIN_VERSION_TAG=""
+if [[ -f "release-version.txt" ]]; then
+    CDS_TOOL_CHAIN_VERSION_TAG=$(cat release-version.txt 2>/dev/null | tr -d '\n' | tr -d ' ')
+    if [[ -z "${CDS_TOOL_CHAIN_VERSION_TAG}" ]]; then
+        echo "Warning: release-version.txt is empty." >&2
+    fi
+fi
+
+# Erkennt automatisch den aktuellen Docker-Modus
+detect_docker_mode() {
+    local swarm_state
+    swarm_state=$(docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null)
+    local node_count
+    node_count=$(docker info --format '{{.Swarm.ControlAvailable}}' 2>/dev/null)
+    
+    if [[ "${swarm_state}" == "active" && -n "${node_count}" ]]; then
+        local nodes
+        nodes=$(docker node ls 2>/dev/null | tail -n +2 | grep -c .)
+        if [[ ${nodes} -ge 1 ]]; then
+            echo "swarm"
+            return
+        fi
+    fi
+    if docker-compose version >/dev/null 2>&1; then
+        echo "compose"
+        return
+    fi
+    if docker compose version >/dev/null 2>&1; then
+        echo "compose"
+        return
+    fi
+    echo "unknown"
+}
+
+# Prüft ob der angegebene Modus mit dem erkannten Modus übereinstimmt
+validate_docker_mode() {
+    local requested_mode="$1"
+    local detected_mode
+    detected_mode=$(detect_docker_mode)
+    if [[ "${detected_mode}" == "unknown" ]]; then
+        echo "Warning: could not detect Docker environment. Using requested mode '${requested_mode}'." >&2
+        return 0
+    fi
+    if [[ "${requested_mode}" != "${detected_mode}" ]]; then
+        echo "Warning: requested Docker mode '${requested_mode}' does not match detected mode '${detected_mode}'." >&2
+        echo "         This may cause command failures. Please verify your Docker setup." >&2
+        return 0
+    fi
+    return 0
+}
+
+# Gibt den Docker-Befehl zurück (compose oder swarm)
+docker_cmd() {
+    if [[ "${DOCKER_MODE}" == "swarm" ]]; then
+        echo "docker"
+    else
+        echo "docker compose"
+    fi
+}
+
+# Gibt den Container-Namen zurück
+docker_container_name() {
+    if [[ "${DOCKER_MODE}" == "swarm" ]]; then
+        echo "interpolar_cds_hub"
+    else
+        echo "cds_hub"
+    fi
+}
+
+# Hilft beim Erhalten des Container-Namens in swarm-Modus
+get_swarm_container_name() {
+    if [[ "${DOCKER_MODE}" != "swarm" ]]; then
+        return 1
+    fi
+    if [[ -z "${CDS_TOOL_CHAIN_VERSION_TAG}" ]]; then
+        docker ps -q -f name=interpolar_cds_hub
+    else
+        docker ps -q -f name=interpolar_cds_hub -f ancestor=interpolar-cds_hub:"${CDS_TOOL_CHAIN_VERSION_TAG}"
+    fi
+}
+
+# Hilfsfunktion für pg_dump mit Redirect (unterscheidet compose/swarm)
+run_pg_dump_with_redirect() {
+    local database="$1"
+    local output_file="$2"
+    if [[ "${DOCKER_MODE}" == "swarm" ]]; then
+        local container_id
+        container_id=$(get_swarm_container_name)
+        if [[ -z "$container_id" ]]; then
+            echo "Error: could not find container in swarm mode." >&2
+            return 1
+        fi
+        docker exec -t "$container_id" bash -c "pg_dump -U cds_hub_db_admin -d $database --format=plain --exclude-extension=pg_cron --exclude-table=db_config.v_cron_jobs --exclude-table='*.*_raw*' --compress=gzip > $output_file"
+    else
+        $(docker_cmd) exec -T $(docker_container_name) pg_dump -U cds_hub_db_admin -d "$database" --format=plain --exclude-extension=pg_cron --exclude-table=db_config.v_cron_jobs --exclude-table='*.*_raw*' --compress=gzip > "$output_file"
+    fi
+}
+
+# Hilfsfunktion für psql mit Redirect (für Snapshot-Checksummen)
+run_psql_with_redirect() {
+    local database="$1"
+    local query="$2"
+    local output_file="$3"
+    if [[ "${DOCKER_MODE}" == "swarm" ]]; then
+        local container_id
+        container_id=$(get_swarm_container_name)
+        if [[ -z "$container_id" ]]; then
+            echo "Error: could not find container in swarm mode." >&2
+            return 1
+        fi
+        docker exec -t "$container_id" bash -c "psql -U cds_hub_db_admin -d $database -tAc \"$query\" > $output_file"
+    else
+        $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d "$database" -tAc "$query" > "$output_file"
+    fi
+}
+
+# Hilfsfunktion für psql ohne Redirect ( direkte Ausgabe)
+run_psql() {
+    local db="${1:-postgres}"
+    local query="$2"
+    if [[ "${DOCKER_MODE}" == "swarm" ]]; then
+        local container_id
+        container_id=$(get_swarm_container_name)
+        if [[ -z "$container_id" ]]; then
+            echo "Error: could not find container in swarm mode." >&2
+            return 1
+        fi
+        docker exec -t "$container_id" psql -U cds_hub_db_admin -d "$db" -tAc "$query"
+    else
+        $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d "$db" -tAc "$query"
+    fi
+}
+
 #====================================================================
 #  script‑name : ip-snapshot.sh
 #  Zweck      : Erzeugt oder löscht eine Datei, deren Name als
@@ -23,7 +161,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/tools/snapshot-progress.sh
 # ---------- Hilfetext ----------
 print_usage() {
     cat <<EOF
-Usage: ${0##*/} <action> <name>
+Usage: ${0##*/} [--docker-mode compose|swarm] <action> <name>
 
   <action>   "list"        – lists all snapshots
              "create"      – creates a snapshot <name>.sql.gz
@@ -82,6 +220,15 @@ EOF
 #    exit 1
 #fi
 
+# Parse --docker-mode before action if it's the first argument
+if [[ $# -ge 1 && "$1" == "--docker-mode" ]]; then
+    if [[ $# -lt 2 || ! "$2" =~ ^(compose|swarm)$ ]]; then
+        echo "Error: --docker-mode expects 'compose' or 'swarm'." >&2
+        exit 3
+    fi
+    docker_mode="$2"
+    shift 2
+fi
 
 action=$1
 name=$2
@@ -97,6 +244,26 @@ if [[ -z "$action" ]]; then
     exit 1
 fi
 
+# Parse remaining options (including --docker-mode if after action)
+# Store args first to handle --docker-mode in any position
+temp_args=()
+while [[ $# -gt 0 ]]; do
+    if [[ "$1" == "--docker-mode" ]]; then
+        if [[ $# -lt 2 || ! "$2" =~ ^(compose|swarm)$ ]]; then
+            echo "Error: --docker-mode expects 'compose' or 'swarm'." >&2
+            exit 3
+        fi
+        docker_mode="$2"
+        shift 2
+    else
+        temp_args+=("$1")
+        shift
+    fi
+done
+
+# Restore remaining args
+set -- "${temp_args[@]}"
+
 if [[ $# -ge 2 ]]; then
     shift 2
 else
@@ -104,6 +271,22 @@ else
 fi
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --docker-mode)
+            if [[ $# -lt 2 || ! "$2" =~ ^(compose|swarm)$ ]]; then
+                echo "Error: --docker-mode expects 'compose' or 'swarm'." >&2
+                exit 3
+            fi
+            docker_mode="$2"
+            shift 2
+            ;;
+        --docker-mode)
+            if [[ $# -lt 2 || ( "$2" != "compose" && "$2" != "swarm" ) ]]; then
+                echo "Error: --docker-mode expects 'compose' or 'swarm'." >&2
+                exit 3
+            fi
+            docker_mode="$2"
+            shift 2
+            ;;
         --with-pseudonymized)
             with_pseudonymized=true
             shift
@@ -132,6 +315,17 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Docker-Modus konfigurieren
+if [[ -n "${docker_mode}" ]]; then
+    if ! validate_docker_mode "${docker_mode}"; then
+        exit 3
+    fi
+else
+    docker_mode=$(detect_docker_mode)
+    DOCKER_MODE="${docker_mode}"
+    echo "Docker mode auto-detected: ${docker_mode}"
+fi
 
 if [[ "$consent_details" == "true" && "$action" != "create-broad-consent" && !( "$action" == "create" && "$with_broad_consent" == "true" ) ]]; then
     echo "Error: --consent-details requires create-broad-consent or create --with-broad-consent." >&2
@@ -252,7 +446,7 @@ check_live_database_pseudonym_mapping() {
 
     echo "Checking pseudonym mapping against the current database before creating the snapshot..."
     if ! run_with_snapshot_progress "Snapshot mapping check" cds_hub_db "" "" \
-        docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
+        $(docker_cmd) run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
         source-db=cds_hub_db ; then
         echo "Fix the pseudonym mapping and run the create command again."
@@ -269,7 +463,7 @@ check_live_database_pseudonym_mapping() {
 
 database_exists() {
     local database_name="$1"
-    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -tAc \
+    $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -tAc \
         "SELECT 1 FROM pg_database WHERE datname = '${database_name}';" | grep -q 1
 }
 
@@ -287,14 +481,14 @@ snapshot_file_checksum() {
 
 database_snapshot_checksum() {
     local database_name="$1"
-    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -tAc \
+    $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -tAc \
         "SELECT shobj_description(oid, 'pg_database') FROM pg_database WHERE datname = '${database_name}';"
 }
 
 set_database_snapshot_checksum() {
     local database_name="$1"
     local checksum="$2"
-    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+    $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -c \
         "COMMENT ON DATABASE \"${database_name}\" IS 'INTERPOLAR snapshot SHA-256: ${checksum}';"
 }
 
@@ -308,21 +502,21 @@ database_matches_snapshot() {
 
 set_database_read_only() {
     local database_name="$1"
-    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+    $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -c \
         "ALTER DATABASE \"${database_name}\" SET default_transaction_read_only=on;"
 }
 
 rename_database() {
     local database_name="$1"
     local target_database_name="$2"
-    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+    $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -c \
         "ALTER DATABASE \"${database_name}\" RENAME TO \"${target_database_name}\";"
 }
 
 drop_database_if_exists() {
     local database_name="$1"
     if database_exists "${database_name}" ; then
-        docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+        $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -c \
             "DROP DATABASE \"${database_name}\" WITH (FORCE);"
     fi
 }
@@ -379,9 +573,9 @@ prepare_snapshot_analysis_target_database() {
     local dataprocessor_user
     dataprocessor_user="$(toml_value DB_DATAPROCESSOR_USER)"
 
-    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+    $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -c \
         "CREATE DATABASE \"${target_database_name}\" WITH OWNER=${dataprocessor_user};"
-    docker compose exec -T cds_hub psql -U cds_hub_db_admin -d "${target_database_name}" -c \
+    $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d "${target_database_name}" -c \
         "CREATE SCHEMA db_log AUTHORIZATION ${dataprocessor_user};
          CREATE SCHEMA db2dataprocessor_out AUTHORIZATION ${dataprocessor_user};"
 }
@@ -408,7 +602,7 @@ create_pseudonymized_snapshot() {
         input_repo_mount_args+=("${mount_arg}")
     done < <(container_input_repo_mount_args)
     echo "Checking pseudonymization rules and mapping files..."
-    if ! docker compose run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
+    if ! $(docker_cmd) run --rm --no-deps "${input_repo_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymizationPreflight.R ; then
         echo "Continue afterwards with:"
         echo "  ./ip-snapshot.sh pseudonymize ${snapshot_name} --chunk-size ${chunk_size}"
@@ -480,9 +674,9 @@ create_pseudonymized_snapshot() {
     SECONDS=0
     if ! database_exists "${source_database}" ; then
         echo "Creating temporary source database '${source_build_db}'..."
-        docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c \
+        $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -c \
             "CREATE DATABASE \"${source_build_db}\" WITH OWNER=cds_hub_db_admin;"
-        if gzip -cd "${source_file_path}" | docker compose exec -T cds_hub \
+        if gzip -cd "${source_file_path}" | $(docker_cmd) exec -T $(docker_container_name) \
             psql -d "${source_build_db}" cds_hub_db_admin ; then
             echo "Temporary source database '${source_build_db}' restored."
             if ! set_database_snapshot_checksum "${source_build_db}" "${source_file_checksum}" ; then
@@ -515,7 +709,7 @@ create_pseudonymized_snapshot() {
     fi
     echo "Starting pseudonymization from '${source_database}' to '${target_build_db}'..."
     if run_with_snapshot_progress "Snapshot pseudonymization" "${source_database}" "${target_build_db}" "" \
-        docker compose run --rm --no-deps "${input_repo_mount_args[@]}" "${consent_mount_args[@]}" r-env \
+        $(docker_cmd) run --rm --no-deps "${input_repo_mount_args[@]}" "${consent_mount_args[@]}" r-env \
         Rscript R-cdstoolchain/StartSnapshotPseudonymization.R \
         source-db="${source_database}" \
         target-db="${target_build_db}" \
@@ -534,7 +728,7 @@ create_pseudonymized_snapshot() {
 
     echo "Creating pseudonymized snapshot '${pseudonymized_file_path}'..."
     if run_with_snapshot_progress "Pseudonymized snapshot export" "${target_build_db}" "" "${pseudonymized_file_path}" \
-        docker compose exec -T cds_hub pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
+        $(docker_cmd) exec -T $(docker_container_name) pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
         --format=plain --compress=gzip > "${pseudonymized_file_path}" ; then
         echo "File \"${pseudonymized_file_path}\" created."
         ls -ho "${pseudonymized_file_path}"
@@ -639,7 +833,7 @@ create_broad_consent_snapshot() {
 
     echo "Creating Broad Consent snapshot data from '${source_database_name}'..."
     if run_with_snapshot_progress "Broad Consent snapshot selection" "${source_database_name}" "${target_build_db}" "" \
-        docker compose run --rm --no-deps r-env \
+        $(docker_cmd) run --rm --no-deps r-env \
         Rscript R-cdstoolchain/StartBroadConsentSnapshot.R \
         source-db="${source_database_name}" \
         target-db="${target_build_db}" \
@@ -653,7 +847,7 @@ create_broad_consent_snapshot() {
 
     echo "Creating Broad Consent snapshot file '${broad_consent_file_path}'..."
     if run_with_snapshot_progress "Broad Consent snapshot export" "${target_build_db}" "" "${broad_consent_file_path}" \
-        docker compose exec -T cds_hub pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
+        $(docker_cmd) exec -T $(docker_container_name) pg_dump -U cds_hub_db_admin -d "${target_build_db}" \
         --format=plain --compress=gzip > "${broad_consent_file_path}" ; then
         echo "File \"${broad_consent_file_path}\" created."
         ls -ho "${broad_consent_file_path}"
@@ -729,7 +923,7 @@ case "$action" in
         fi
         echo "---"
         echo "Listing all activated snapshot databases:"
-        if ! docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "
+        if ! $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -c "
             SELECT   d.datname                                    AS database,
                      pg_size_pretty(pg_database_size(d.datname))  AS size
             FROM pg_database d
@@ -785,7 +979,7 @@ case "$action" in
         SECONDS=0;
         check_live_database_pseudonym_mapping "${chunk_size}"
         if run_with_snapshot_progress "Snapshot export" cds_hub_db "" "$file_date_path" \
-            docker compose exec -T cds_hub pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table=db_config.v_cron_jobs --exclude-table='*.*_raw*' --compress=gzip > "$file_date_path"; then
+            $(docker_cmd) exec -T $(docker_container_name) pg_dump -U cds_hub_db_admin -d cds_hub_db --format=plain --exclude-extension=pg_cron --exclude-table=db_config.v_cron_jobs --exclude-table='*.*_raw*' --compress=gzip > "$file_date_path"; then
             echo "File \"${file_date_path}\" created."
             ls -ho ${file_date_path}
         else
@@ -815,7 +1009,7 @@ case "$action" in
             echo "Error: source snapshot database 'ip_${name}' is not activated." >&2
             exit 1
         fi
-        docker compose run --rm --no-deps r-env \
+        $(docker_cmd) run --rm --no-deps r-env \
             Rscript R-cdstoolchain/StartBroadConsentSnapshot.R \
             source-db="ip_${name}" review-only=true chunk-size="${chunk_size}"
         ;;
@@ -882,7 +1076,7 @@ case "$action" in
             SECONDS=0;
 
             # Snapshot-Datenbank anlegen
-            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE \"${db_name}\" WITH OWNER=cds_hub_db_admin;" > "${logfile}" 2>&1 ; then
+            if $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -c "CREATE DATABASE \"${db_name}\" WITH OWNER=cds_hub_db_admin;" > "${logfile}" 2>&1 ; then
                 echo "Snapshot database '${db_name}' created."
             else
                 echo "Error: creating snapshot database '${db_name}' failed."
@@ -890,7 +1084,7 @@ case "$action" in
             fi
 
             # Snapshot-Datei in zuvor angelegte Snapshot-Datenbank einspielen
-            if gzip -cd "${file_path}" | docker compose exec -T cds_hub psql -d "${db_name}" cds_hub_db_admin >> "${logfile}" 2>&1 ; then
+            if gzip -cd "${file_path}" | $(docker_cmd) exec -T $(docker_container_name) psql -d "${db_name}" cds_hub_db_admin >> "${logfile}" 2>&1 ; then
                 echo "Snapshot database '${db_name}' restored."
                 if ! snapshot_checksum="$(snapshot_file_checksum "${file_path}")" ; then
                     exit 1
@@ -934,7 +1128,7 @@ case "$action" in
                             # ------------------------------------------------
                             # 3. Snapshot-Datenbank deaktivieren und Ergebnis prüfen
                             # ------------------------------------------------
-                            if docker compose exec -T cds_hub psql -U cds_hub_db_admin -d postgres -c "DROP DATABASE \"${db_name}\" WITH (FORCE);" ; then
+                            if $(docker_cmd) exec -T $(docker_container_name) psql -U cds_hub_db_admin -d postgres -c "DROP DATABASE \"${db_name}\" WITH (FORCE);" ; then
                                 echo "Snapshot database \"${db_name}\" deactivated."
                             else
                                 echo "Error: snapshot database \"${db_name}\" could not be deactivated." >&2
