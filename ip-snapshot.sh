@@ -2,7 +2,24 @@
 set -o pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/tools/snapshot-progress.sh"
 
-# Docker-Modus: "compose" (lokal) oder "swarm" (Docker Swarm)
+# script-name : ip-snapshot.sh
+# Zweck      : Erzeugt oder löscht eine Datei, deren Name als
+#              Argument übergeben wird.
+#
+#  Aufruf:
+#      ./ip-snapshot.sh list
+#      ./ip-snapshot.sh create  <name> [--with-pseudonymized|--with-broad-consent]
+#                                      [--chunk-size <rows>]
+#      ./ip-snapshot.sh pseudonymize  <name_date> [--chunk-size <rows>]
+#      ./ip-snapshot.sh create-broad-consent  <name_date> [--chunk-size <rows>]
+#      ./ip-snapshot.sh delete  <name_date>
+#      ./ip-snapshot.sh activate  <name_date>
+#      ./ip-snapshot.sh deactivate  <name_date>|ip_<name_date>
+#
+#  Hinweis: Der Dateiname darf **keine** Pfadangaben (/, ..) enthalten,
+#           sonst wird das Skript mit einer Fehlermeldung beendet.
+
+# ========== Von Nutzer zu setzende Variablen ==========
 DOCKER_MODE="compose"
 
 # Lese Version aus release-version.txt
@@ -14,7 +31,70 @@ if [[ -f "release-version.txt" ]]; then
     fi
 fi
 
-# Erkennt automatisch den aktuellen Docker-Modus
+DIR=Snapshots
+with_pseudonymized=false
+with_broad_consent=false
+consent_details=false
+chunk_size=5000
+chunk_size_set=false
+docker_mode=""
+
+# ---------- Hilfetext ----------
+print_usage() {
+    cat <<EOF
+Usage: ${0##*/} [--docker-mode compose|swarm] <action> <name>
+
+  <action>   "list"         – lists all snapshots
+             "create"       – creates a snapshot <name>.sql.gz
+             "pseudonymize" – creates a pseudonymized snapshot <name_date>_pseud.sql.gz
+             "create-broad-consent"
+                            – creates a Broad Consent snapshot from an activated snapshot database
+             "review-broad-consent"
+                            – reviews Consent decisions without creating a snapshot
+             "delete"       – deletes only a snapshot file <name_date>.sql.gz;
+                              expects the file name without the database prefix "ip_"
+             "activate"     – activates a snapshot <name_date>.sql.gz by creating a database for it
+             "deactivate"   – deactivates a snapshot database; accepts <name_date> and the
+                              ip_<name_date> name printed by "list"
+
+  <name>     any string without path components, <name> | <name_date>
+  --with-pseudonymized
+             only for "create": also creates <name_date>_pseud.sql.gz
+  --with-broad-consent
+             only for "create": also creates the pseudonymized snapshot and
+             <name_date>_pseud_broad_consent.sql.gz
+  --consent-details
+             with "create-broad-consent" or "create --with-broad-consent":
+             also writes detailed patient-level Consent CSV reports
+  --chunk-size <rows>
+             only for "pseudonymize", "create-broad-consent", "review-broad-consent", or
+             "create --with-pseudonymized|--with-broad-consent":
+             number of rows read per processing chunk (default: 5000);
+             for "review-broad-consent": number of patients per block
+
+Examples:
+  $0 list                            → lists all .sql.gz files without extensions in Snapshots
+  $0 create  snapshot                → creates snapshot_<date>.sql.gz
+  $0 create  snapshot --with-pseudonymized
+                                       → creates snapshot_<date>.sql.gz and snapshot_<date>_pseud.sql.gz
+  $0 create  snapshot --with-broad-consent
+                                       → additionally creates snapshot_<date>_pseud_broad_consent.sql.gz
+  $0 pseudonymize  snapshot_20250929 → creates snapshot_20250929_pseud.sql.gz
+  $0 pseudonymize  snapshot_20250929 --chunk-size 10000
+                                       → processes at most 10000 rows per chunk
+  $0 review-broad-consent  snapshot_20250929_pseud
+                                       → reviews Consent decisions without creating a snapshot
+  $0 create-broad-consent  snapshot_20250929_pseud
+                                       → creates snapshot_20250929_pseud_broad_consent.sql.gz
+  $0 delete  snapshot_20250929       → deletes snapshot_20250929.sql.gz
+  $0 activate  snapshot_20250929     → creates database 'ip_snapshot_20250929'
+  $0 deactivate  snapshot_20250929   → drops database 'ip_snapshot_20250929'
+  $0 deactivate  ip_snapshot_20250929
+                                       → drops the same database
+EOF
+}
+
+# ========== Helper Functions ==========
 detect_docker_mode() {
     local swarm_state
     swarm_state=$(docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null)
@@ -139,148 +219,43 @@ run_psql() {
     fi
 }
 
-#====================================================================
-#  script‑name : ip-snapshot.sh
-#  Zweck      : Erzeugt oder löscht eine Datei, deren Name als
-#               Argument übergeben wird.
-#
-#  Aufruf:
-#      ./ip-snapshot.sh list
-#      ./ip-snapshot.sh create  <name> [--with-pseudonymized|--with-broad-consent]
-#                                      [--chunk-size <rows>]
-#      ./ip-snapshot.sh pseudonymize  <name_date> [--chunk-size <rows>]
-#      ./ip-snapshot.sh create-broad-consent  <name_date> [--chunk-size <rows>]
-#      ./ip-snapshot.sh delete  <name_date>
-#      ./ip-snapshot.sh activate  <name_date>
-#      ./ip-snapshot.sh deactivate  <name_date>|ip_<name_date>
-#
-#  Hinweis: Der Dateiname darf **keine** Pfadangaben (/, ..) enthalten,
-#           sonst wird das Skript mit einer Fehlermeldung beendet.
-#====================================================================
-
-# ---------- Hilfetext ----------
-print_usage() {
-    cat <<EOF
-Usage: ${0##*/} [--docker-mode compose|swarm] <action> <name>
-
-  <action>   "list"        – lists all snapshots
-             "create"      – creates a snapshot <name>.sql.gz
-             "pseudonymize" – creates a pseudonymized snapshot <name_date>_pseud.sql.gz
-             "create-broad-consent"
-                           – creates a Broad Consent snapshot from an activated snapshot database
-             "review-broad-consent"
-                           – reviews Consent decisions without creating a snapshot
-             "delete"      – deletes only a snapshot file <name_date>.sql.gz;
-                              expects the file name without the database prefix "ip_"
-             "activate"    – activates a snapshot <name_date>.sql.gz by creating a database for it
-             "deactivate"  – deactivates a snapshot database; accepts <name_date> and the
-                              ip_<name_date> name printed by "list"
-
-  <name>     any string without path components, <name> | <name_date>
-  --with-pseudonymized
-             only for "create": also creates <name_date>_pseud.sql.gz
-  --with-broad-consent
-             only for "create": also creates the pseudonymized snapshot and
-             <name_date>_pseud_broad_consent.sql.gz
-  --consent-details
-             with "create-broad-consent" or "create --with-broad-consent":
-             also writes detailed patient-level Consent CSV reports
-  --chunk-size <rows>
-             only for "pseudonymize", "create-broad-consent", "review-broad-consent", or
-             "create --with-pseudonymized|--with-broad-consent":
-             number of rows read per processing chunk (default: 5000);
-             for "review-broad-consent": number of patients per block
-
-Examples:
-  $0 list                            → lists all .sql.gz files without extensions in Snapshots
-  $0 create  snapshot                → creates snapshot_<date>.sql.gz
-  $0 create  snapshot --with-pseudonymized
-                                      → creates snapshot_<date>.sql.gz and snapshot_<date>_pseud.sql.gz
-  $0 create  snapshot --with-broad-consent
-                                      → additionally creates snapshot_<date>_pseud_broad_consent.sql.gz
-  $0 pseudonymize  snapshot_20250929 → creates snapshot_20250929_pseud.sql.gz
-  $0 pseudonymize  snapshot_20250929 --chunk-size 10000
-                                      → processes at most 10000 rows per chunk
-  $0 review-broad-consent  snapshot_20250929_pseud
-                                      → reviews Consent decisions without creating a snapshot
-  $0 create-broad-consent  snapshot_20250929_pseud
-                                      → creates snapshot_20250929_pseud_broad_consent.sql.gz
-  $0 delete  snapshot_20250929       → deletes snapshot_20250929.sql.gz
-  $0 activate  snapshot_20250929     → creates database 'ip_snapshot_20250929'
-  $0 deactivate  snapshot_20250929   → drops database 'ip_snapshot_20250929'
-  $0 deactivate  ip_snapshot_20250929
-                                      → drops the same database
-EOF
-}
-
 # ---------- Eingaben prüfen ----------
-#if [[ $# -lt 1 ]]; then
-#    echo "Error: at least one argument is required." >&2
-#    print_usage
-#    exit 1
-#fi
+# Store original args to handle --docker-mode in any position
+original_args=("$@")
+args=()
 
-# Parse --docker-mode before action if it's the first argument
-if [[ $# -ge 1 && "$1" == "--docker-mode" ]]; then
-    if [[ $# -lt 2 || ! "$2" =~ ^(compose|swarm)$ ]]; then
-        echo "Error: --docker-mode expects 'compose' or 'swarm'." >&2
-        exit 3
+# First pass: extract --docker-mode if present at the start
+i=0
+while [[ $i -lt $# ]]; do
+    if [[ "${original_args[$i]}" == "--docker-mode" ]]; then
+        if [[ $((i + 1)) -ge $# ]] || ! [[ "${original_args[$((i + 1))]}" =~ ^(compose|swarm)$ ]]; then
+            echo "Error: --docker-mode expects 'compose' or 'swarm'." >&2
+            exit 3
+        fi
+        docker_mode="${original_args[$((i + 1))]}"
+        i=$((i + 2))
+    else
+        args+=("${original_args[$i]}")
+        i=$((i + 1))
     fi
-    docker_mode="$2"
-    shift 2
-fi
+done
+
+set -- "${args[@]}"
 
 action=$1
 name=$2
-DIR=Snapshots
-with_pseudonymized=false
-with_broad_consent=false
-consent_details=false
-chunk_size=5000
-chunk_size_set=false
 
 if [[ -z "$action" ]]; then
     print_usage
     exit 1
 fi
 
-# Parse remaining options (including --docker-mode if after action)
-# Store args first to handle --docker-mode in any position
-temp_args=()
-while [[ $# -gt 0 ]]; do
-    if [[ "$1" == "--docker-mode" ]]; then
-        if [[ $# -lt 2 || ! "$2" =~ ^(compose|swarm)$ ]]; then
-            echo "Error: --docker-mode expects 'compose' or 'swarm'." >&2
-            exit 3
-        fi
-        docker_mode="$2"
-        shift 2
-    else
-        temp_args+=("$1")
-        shift
-    fi
-done
-
-# Restore remaining args
-set -- "${temp_args[@]}"
-
-if [[ $# -ge 2 ]]; then
-    shift 2
-else
-    shift "$#"
-fi
+# Second pass: extract remaining options
+shift 2 2>/dev/null || shift "$#"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --docker-mode)
             if [[ $# -lt 2 || ! "$2" =~ ^(compose|swarm)$ ]]; then
-                echo "Error: --docker-mode expects 'compose' or 'swarm'." >&2
-                exit 3
-            fi
-            docker_mode="$2"
-            shift 2
-            ;;
-        --docker-mode)
-            if [[ $# -lt 2 || ( "$2" != "compose" && "$2" != "swarm" ) ]]; then
                 echo "Error: --docker-mode expects 'compose' or 'swarm'." >&2
                 exit 3
             fi
