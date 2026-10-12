@@ -43,6 +43,45 @@ Ergänzen von `Input-Repo/pseudo_mapping.xlsx` anhalten. Die leeren Zellen in
 `PSEUDONYM` ausfüllen und denselben Befehl erneut starten. Vorhandene Zuordnungen
 für spätere Läufe beibehalten.
 
+### Input-Repo einbinden und Pseudonymisierung fortsetzen
+
+Für die Snapshot-Pseudonymisierung das gesamte lokale `Input-Repo` beschreibbar
+in den R-Container einbinden. Im `r-env`-Service in `docker-compose.yml` den
+bisherigen WP7-Mount durch den Elternordner-Mount ersetzen:
+
+```yaml
+- ./Input-Repo:/src/Input-Repo
+```
+
+Dabei muss lokal `Input-Repo/INTERPOLAR-WP7` vorhanden sein. Bei einem externen
+Input-Repo den lokalen Pfad zu dessen Elternordner entsprechend anpassen;
+das Containerziel bleibt `/src/Input-Repo`. Nur den WP7-Unterordner einzubinden
+reicht nicht aus, da die Mappingdatei direkt unter `Input-Repo/pseudo_mapping.xlsx`
+liegt. Derselbe Mount muss auch für manuell gestartete Data-Processor-Module
+im verwendeten Compose-Service gelten.
+
+`INPUT_REPO_PATH` darf weiterhin auf `./Input-Repo/INTERPOLAR-WP7` zeigen oder
+auf `./Input-Repo`. Wenn eine Mappingdatei mit bestehenden Zuordnungen im
+WP7-Unterordner liegt, diese nach der Mount-Änderung und vor dem nächsten Aufruf
+einmalig nach `Input-Repo/pseudo_mapping.xlsx` verschieben. Ist keine vorhanden,
+wird sie beim nächsten Lauf mit fehlenden Zuordnungen erzeugt.
+
+Ein gemeldeter Pfad wie `/src/Input-Repo/pseudo_mapping.xlsx` liegt im Container.
+Bei obigem Mount ist die Datei lokal unter `Input-Repo/pseudo_mapping.xlsx`
+zugänglich. Ist sie dort nicht sichtbar, Mount und lokalen Input-Pfad prüfen.
+Das Snapshot-Skript ergänzt den Elternordner-Mount automatisch, wenn der
+konfigurierte lokale Input-Pfad vorhanden ist.
+
+Wenn der Rohsnapshot bereits existiert, muss er nicht erneut gebaut werden:
+
+```bash
+./ip-snapshot.sh list
+./ip-snapshot.sh pseudonymize snap01_20260915
+```
+
+Den tatsächlichen Rohsnapshotnamen aus `list` ohne `.sql.gz` verwenden. Nach dem
+Ausfüllen der Mappingdatei denselben `pseudonymize`-Befehl erneut ausführen.
+
 Optional vor der Pseudonymisierung Consents aktualisieren:
 `R-cdstoolchain/consent_config_example.toml` nach `consent_config.toml` im selben
 Verzeichnis kopieren und FHIR-Zugangsdaten eintragen. Ohne Serveradresse bleibt
@@ -96,6 +135,7 @@ patientenbezogenen Detailberichte. Inhalt und Dateinamen stehen unter
 | Meldung oder Situation | Vorgehen |
 |---|---|
 | Pseudonymzuordnungen fehlen | Angegebene `pseudo_mapping.xlsx` ergänzen, Befehl wiederholen. |
+| Mappingdatei ist lokal nicht sichtbar | Gesamtes `Input-Repo` beschreibbar nach `/src/Input-Repo` einbinden; siehe [Mount und Fortsetzung](#input-repo-einbinden-und-pseudonymisierung-fortsetzen). |
 | Mappingdatei wird im alten Verzeichnis gefunden | Die vorhandene Datei nach `Input-Repo/pseudo_mapping.xlsx` verschieben; vorhandene Zuordnungen erhalten. |
 | Eingabedatei fehlt oder wird mehrfach gefunden | `INPUT_REPO_PATH` in `R-dataprocessor/dataprocessor_config.toml` und die gemeldeten Fundstellen prüfen. |
 | Quelle für BC nicht aktiviert | Mit `list` prüfen und den gewünschten Snapshot mit `activate` laden. |
