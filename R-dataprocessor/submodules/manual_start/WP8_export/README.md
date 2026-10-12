@@ -128,10 +128,12 @@ alle folgenden Bedingungen erfüllt sind:
   `ret_gewiss_grund2_abl_01` den Datenbankwert
   `MRP sachlich richtig, aber klinisch nicht relevant` enthält. Das entspricht
   in REDCap dem Code `3`.
-- Für dieselbe Medikationsanalyse existiert mindestens eine
-  MRP-Dokumentation mit einer `mrp_id`.
 - Es handelt sich nicht um eine Test-MRP. IDs mit `-TEST-` und
   Kurzbeschreibungen mit `*TEST*` werden ausgeschlossen.
+
+Eine MRP-Dokumentation durch die Apotheker:innen ist keine Voraussetzung. Auf
+diese Weise werden auch vom Algorithmus erkannte und retrospektiv bewertete
+MRPs exportiert, die zuvor nicht pharmazeutisch dokumentiert wurden.
 
 Sind beide retrospektiven Bewertungen entsprechend gekennzeichnet,
 entstehen zwei
@@ -269,9 +271,8 @@ WP8-REDCap-Projekt importiert werden.
   Überschreibungen in der projektbezogenen `database.toml` sowie
   `PATH_TO_DB_CONFIG_TOML` in der `dataprocessor_config.toml` prüfen.
 - **Leerer Export:** Prüfen, ob geeignete Bewertungen mit dem Datenbankwert
-  `MRP sachlich richtig, aber klinisch nicht relevant`, eine
-  passende MRP-Dokumentation und zugehörige Fall-/Patientendaten vorhanden
-  sind.
+  `MRP sachlich richtig, aber klinisch nicht relevant` und zugehörige
+  Medikationsanalyse-, Fall- und Patientendaten vorhanden sind.
 
 ## Tests
 
