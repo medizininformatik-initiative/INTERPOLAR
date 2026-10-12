@@ -10,7 +10,8 @@ test_that("preflight checks rules without running database pseudonymization", {
       snapshot_extensions = "snapshot-extension"
     )
   }
-  mockLoadRules <- function(table_descriptions, snapshot_extensions) {
+  mockLoadRules <- function(table_descriptions, snapshot_extensions, encounter_identifier_system) {
+    captured$encounter_identifier_system <- encounter_identifier_system
     captured$table_descriptions <- table_descriptions
     captured$snapshot_extensions <- snapshot_extensions
     rules
@@ -43,12 +44,14 @@ test_that("preflight checks rules without running database pseudonymization", {
 
   result <- preflightSnapshotPseudonymization(
     project_root = "/project",
+    encounter_identifier_system = "urn:case-number",
     input_repo_path = input_repo_path,
     review_report_file = "/reports/review.xlsx",
     log_steps = FALSE
   )
 
   expect_equal(captured$project_root, "/project")
+  expect_equal(captured$encounter_identifier_system, "urn:case-number")
   expect_equal(captured$table_descriptions, "table-description")
   expect_equal(captured$snapshot_extensions, "snapshot-extension")
   expect_false(captured$review_arguments$validate_mapping_files)
@@ -110,7 +113,7 @@ test_that("preflight validates existing mappings and database coverage before a 
     getDefaultSnapshotPseudonymizationRuleSources = function(project_root) {
       list(table_descriptions = "table-description", snapshot_extensions = "snapshot-extension")
     },
-    loadPseudonymizationRules = function(table_descriptions, snapshot_extensions) rules,
+    loadPseudonymizationRules = function(table_descriptions, snapshot_extensions, encounter_identifier_system) rules,
     reviewPseudonymizationRules = mockReviewRules,
     getExistingSnapshotMaterializationPlan = mockPlan,
     ensurePseudonymMappingCoverage = mockCoverage,
