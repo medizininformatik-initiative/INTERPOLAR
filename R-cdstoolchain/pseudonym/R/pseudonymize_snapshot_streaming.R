@@ -973,8 +973,11 @@ processSnapshotChunkStream <- function(
 
 stripSnapshotStreamingReviewColumns <- function(table) {
   table <- data.table::as.data.table(table)
+  # Original lookup values are needed by the review, but must never reach the snapshot writer.
   review_columns <- intersect(
     c(
+      SNAPSHOT_STREAMING_BIRTHDATE_COLUMN,
+      SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN,
       SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN,
       SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN,
       SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN,
