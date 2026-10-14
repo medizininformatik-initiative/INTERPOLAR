@@ -2,7 +2,7 @@
 loadGlobalAnalysisInputs <- function(config_file, input_dir) {
   if (!file.exists(config_file)) {
     stop("Export selection not found: ", config_file,
-      ". Copy config/sites_example.csv to config/sites.csv and select the exports.",
+      ". Copy the analysis config/sites_example.csv to config/sites.csv and select the exports.",
       call. = FALSE
     )
   }

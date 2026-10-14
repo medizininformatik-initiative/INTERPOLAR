@@ -56,27 +56,28 @@ runTests <- function(test_root) {
   project_analysis <- file.path(project_dir, "global-analysis")
   dir.create(project_analysis)
   stopifnot(file.copy("global-analysis/R", project_analysis, recursive = TRUE))
-  stopifnot(file.copy("global-analysis/analyses", project_analysis, recursive = TRUE))
-  dir.create(file.path(project_analysis, "config"))
-  dir.create(file.path(project_analysis, "data", "input"), recursive = TRUE, showWarnings = FALSE)
-  stopifnot(file.copy(file.path(input_dir, "SITE_A"), file.path(project_analysis, "data", "input"), recursive = TRUE))
+  central_dir <- file.path(project_analysis, "central", "mrp-check")
+  dir.create(file.path(central_dir, "config"), recursive = TRUE)
+  stopifnot(file.copy("global-analysis/central/mrp-check/Start.R", central_dir))
+  dir.create(file.path(project_dir, "inputGlobal"), recursive = TRUE, showWarnings = FALSE)
+  stopifnot(file.copy(file.path(input_dir, "SITE_A"), file.path(project_dir, "inputGlobal"), recursive = TRUE))
   writeLines("synthetic input", file.path(
-    project_analysis, "data", "input", "SITE_A", "export_1", "outputGlobal", "tables", "mrp.xlsx"
+    project_dir, "inputGlobal", "SITE_A", "export_1", "outputGlobal", "tables", "mrp.xlsx"
   ))
-  file.copy(config_file, file.path(project_analysis, "config", "sites.csv"), overwrite = TRUE)
+  file.copy(config_file, file.path(project_analysis, "central", "mrp-check", "config", "sites.csv"), overwrite = TRUE)
   previous_wd <- getwd()
   on.exit(setwd(previous_wd), add = TRUE)
   setwd(project_dir)
-  script <- "global-analysis/analyses/mrp-check/run.R"
+  script <- "global-analysis/central/mrp-check/Start.R"
   stopifnot(system2(file.path(R.home("bin"), "Rscript"), c(script, "--help")) == 0L)
   stopifnot(system2(file.path(R.home("bin"), "Rscript"), script) == 0L)
   stopifnot(system2(file.path(R.home("bin"), "Rscript"), script) == 0L)
-  manifests <- list.files("global-analysis/data/results", "input-manifest.csv", recursive = TRUE, full.names = TRUE)
+  manifests <- list.files("outputCentral", "input-manifest.csv", recursive = TRUE, full.names = TRUE)
   stopifnot(length(manifests) == 2L)
   manifest <- utils::read.csv(manifests[[1L]])
   stopifnot(nrow(manifest) == 1L, manifest$site_id == "SITE_A", nzchar(manifest$source_md5))
   stopifnot(system2(file.path(R.home("bin"), "Rscript"), c(script, "missing.csv"), stdout = FALSE, stderr = FALSE) != 0L)
-  stopifnot(length(list.files("global-analysis/data/results", "input-manifest.csv", recursive = TRUE)) == 2L)
+  stopifnot(length(list.files("outputCentral", "input-manifest.csv", recursive = TRUE)) == 2L)
 }
 
 tryCatch(runTests(test_root), finally = unlink(test_root, recursive = TRUE))

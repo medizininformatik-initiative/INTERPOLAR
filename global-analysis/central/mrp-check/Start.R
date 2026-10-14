@@ -1,7 +1,7 @@
 # Run from the repository root, on the host or in the r-env container.
 arguments <- commandArgs(trailingOnly = TRUE)
 if (identical(arguments, "--help")) {
-  cat("Usage: Rscript global-analysis/analyses/mrp-check/run.R [selection.csv]\n",
+  cat("Usage: Rscript global-analysis/central/mrp-check/Start.R [selection.csv]\n",
     "Checks selected input files and writes an input manifest; does not aggregate MRPs.\n",
     sep = ""
   )
@@ -14,11 +14,10 @@ if (length(arguments) > 1L || any(startsWith(arguments, "--"))) {
 analysis_dir <- file.path("global-analysis")
 source(file.path(analysis_dir, "R", "input.R"))
 config_file <- if (length(arguments)) arguments[[1L]] else {
-  file.path(analysis_dir, "config", "sites.csv")
+  file.path(analysis_dir, "central", "mrp-check", "config", "sites.csv")
 }
-input_dir <- file.path(analysis_dir, "data", "input")
-results_dir <- file.path(analysis_dir, "data", "results", "mrp-check")
-dir.create(input_dir, recursive = TRUE, showWarnings = FALSE)
+input_dir <- "inputGlobal"
+results_dir <- file.path("outputCentral", "mrp-check")
 
 manifest <- loadGlobalAnalysisInputs(config_file, input_dir)
 manifest$checked_at_utc <- format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")

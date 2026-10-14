@@ -31,6 +31,9 @@ Postgres-cds_hub/generated/
 
 R-cdstoolchain/consent_config.toml
 
-# Central analysis: site exports, results and the local export selection.
+# Analysis data and local configuration (including the previous draft layout).
+/inputGlobal/
+/outputCentral/
 /global-analysis/data/
 /global-analysis/config/sites.csv
+/global-analysis/**/config/sites.csv

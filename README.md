@@ -40,9 +40,9 @@ Weitere Informationen zum DataProcessor befinden sich im Ordner [R-dataprocessor
 
 ### Standortübergreifende Auswertungen
 
-Das Grundgerüst für konsolenbasierte Auswertungen der Standortexporte befindet sich
-unter [global-analysis](./global-analysis/README.md). Analysecode wird versioniert;
-Standortdateien, lokale Konfiguration und Ergebnisse bleiben lokal.
+Der Bereich [global-analysis](./global-analysis/README.md) trennt dezentrale
+Analysen an den Standorten von zentralen Auswertungen ihrer Exporte.
+Analysecode wird versioniert; Eingaben, lokale Konfiguration und Ergebnisse bleiben lokal.
 
 ### Input-Repo
 
