@@ -5,3 +5,5 @@ backup/
 download/
 Snapshots/
 R-cdstoolchain/consent_config.toml
+global-analysis/data/
+global-analysis/config/sites.csv
