@@ -53,16 +53,12 @@ testthat::test_that("buildFallvignetteSourceQuery restricts the eligible populat
     ),
     fixed = TRUE
   )
-  testthat::expect_match(
-    query,
+  testthat::expect_false(grepl(
     "v_mrpdokumentation_validierung_fe_last_version",
-    fixed = TRUE
-  )
-  testthat::expect_match(
     query,
-    "mrp_fe.mrp_meda_id = ret_fe.ret_meda_id",
     fixed = TRUE
-  )
+  ))
+  testthat::expect_false(grepl("mrp_fe.", query, fixed = TRUE))
   testthat::expect_false(grepl("v_consent_last_version", query, fixed = TRUE))
   testthat::expect_match(
     query,

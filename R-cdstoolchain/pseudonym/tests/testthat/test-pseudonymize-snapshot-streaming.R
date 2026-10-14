@@ -945,6 +945,9 @@ test_that("streaming review columns are removed before pseudonymization", {
   chunk <- data.table::data.table(value = 1L)
   chunk[[SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN]] <-
     "missing_medication\tmissing"
+  chunk[[SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN]] <- TRUE
+  chunk[[SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN]] <- "source-unit"
+  chunk[[SNAPSHOT_LOINC_TARGET_UNIT_COLUMN]] <- "target-unit"
 
   processSnapshotChunkStream(
     fetch_chunk = function(chunk_size) {
@@ -985,6 +988,66 @@ test_that("streaming review columns are removed before pseudonymization", {
   expect_equal(captured$reviewed_issue, "missing_medication\tmissing")
   expect_equal(pseudonymized_names, "value")
   expect_equal(written_names, "value")
+})
+
+test_that("age lookup data reaches review but never the snapshot writer", {
+  for (base_table_name in c("encounter", "fall_fe")) {
+    spec <- getSnapshotCaseEnrichmentSpec(base_table_name)
+    chunk <- data.table::data.table(
+      .snapshot_pseudonym_birthdate = as.Date(c("1986-07-22", "1900-01-01")),
+      .snapshot_pseudonym_patient_key = c("synthetic-patient-1", "synthetic-patient-2")
+    )
+    chunk[[spec$reference_date_column]] <- as.Date(c("2026-07-22", "2026-07-22"))
+    described_columns <- c(spec$reference_date_column, spec$age_column)
+    context <- newSnapshotStreamingContext(NULL)
+    chunk_number <- 0L
+    reviews <- list()
+    outputs <- list()
+
+    processSnapshotChunkStream(
+      fetch_chunk = function(chunk_size) {
+        chunk_number <<- chunk_number + 1L
+        data.table::copy(chunk[chunk_number, ])
+      },
+      has_completed = function() chunk_number == nrow(chunk),
+      enrich_chunk = function(table) {
+        enrichSnapshotStreamingChunk(table, base_table_name, context, described_columns)
+      },
+      review_chunk = function(table) {
+        expect_equal(table[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]], chunk[[1]][chunk_number])
+        expect_equal(table[[SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN]], chunk[[2]][chunk_number])
+        getAgeCalculationReview(
+          table, base_table_name, base_table_name,
+          table[[SNAPSHOT_STREAMING_BIRTHDATE_COLUMN]],
+          table[[SNAPSHOT_STREAMING_PATIENT_KEY_COLUMN]]
+        )
+      },
+      write_review_chunk = function(review) {
+        reviews[[length(reviews) + 1L]] <<- data.table::copy(review)
+      },
+      pseudonymize_chunk = function(table, chunk_number) {
+        expect_setequal(names(table), described_columns)
+        list(
+          table = table,
+          summary = data.table::data.table(INPUT_ROWS = nrow(table), OUTPUT_ROWS = nrow(table))
+        )
+      },
+      write_chunk = function(output, first_chunk) {
+        outputs[[length(outputs) + 1L]] <<- data.table::copy(output)
+      },
+      chunk_size = 1L,
+      table_name = base_table_name,
+      strip_review_columns = stripSnapshotStreamingReviewColumns
+    )
+
+    output <- data.table::rbindlist(outputs)
+    review <- data.table::rbindlist(reviews)
+    expect_setequal(names(output), described_columns)
+    expect_equal(output[[spec$age_column]], c(40L, NA_integer_))
+    expect_equal(review$ISSUE_TYPE, "birthdate_before_1910_01_01")
+    expect_equal(review$BIRTHDATE, as.Date("1900-01-01"))
+    expect_equal(review$PATIENT_LOOKUP_KEY, "synthetic-patient-2")
+  }
 })
 
 test_that("snapshot chunk size must be positive", {

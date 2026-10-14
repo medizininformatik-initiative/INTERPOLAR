@@ -40,7 +40,7 @@ Weitere Informationen zum DataProcessor befinden sich im Ordner [R-dataprocessor
 
 ### Input-Repo
 
-Das Input-Repo wird in zukünftigen Releases für den Zugriff auf Algorithmen zur Berechnung, z.B. von Scores, verwendet.
+Das Input-Repo wird für den Zugriff auf Algorithmen zur Berechnung, z.B. von Scores, verwendet. Eine Anleitung zur Einbindung befindet sich in der Discussion [#811](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/811).
 
 ### DB2Frontend
 

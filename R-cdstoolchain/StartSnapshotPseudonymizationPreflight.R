@@ -38,6 +38,7 @@ invisible(tryCatch(
     pseudonym::preflightSnapshotPseudonymization(
       project_root = command_arguments[["project_root"]],
       input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
+      encounter_identifier_system = dataprocessor_config[["MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM"]],
       review_report_file = command_arguments[["review_report_file"]],
       log_steps = FALSE
     )

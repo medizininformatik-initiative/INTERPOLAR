@@ -55,6 +55,12 @@ getIncompletePseudonymMappingMessage <- function(sheets, input_repo_path) {
     "You must manually complete the generated mapping file for your data.",
     paste0('Mapping file: "', mapping_file, '"'),
     "",
+    "When running in Docker, the mapping file path above is inside the R container.",
+    "If the file is not visible on the host, check docker-compose.yml:",
+    "Mount the entire local Input-Repo directory writable at /src/Input-Repo.",
+    "Example: ./Input-Repo:/src/Input-Repo (not only the WP7 subdirectory).",
+    "After correcting the mount, rerun the command to generate the mapping file on the host.",
+    "",
     "Missing pseudonyms:",
     paste(missing_keys, collapse = "\n"),
     "",
@@ -264,6 +270,9 @@ reviewPseudonymizationRules <- function(
 #' @param log_steps If `TRUE` and module logging is initialized, wrap the
 #'   process in the existing `etlutils::runLevel...` logging.
 #'
+#' @param encounter_identifier_system Optional configured Encounter case-number systems.
+#'   Matching identifiers follow the existing VN rules, including their arguments.
+#'
 #' @return A list containing the loaded `rules` and their `review_report`.
 #' @export
 preflightSnapshotPseudonymization <- function(
@@ -275,7 +284,8 @@ preflightSnapshotPseudonymization <- function(
   last_version_suffix = SNAPSHOT_LAST_VERSION_SUFFIX,
   tables = NULL,
   review_report_file = NA,
-  log_steps = TRUE
+  log_steps = TRUE,
+  encounter_identifier_system = NULL
 ) {
   rule_sources <- getDefaultSnapshotPseudonymizationRuleSources(project_root)
   result <- list()
@@ -285,7 +295,8 @@ preflightSnapshotPseudonymization <- function(
     {
       result[["rules"]] <- loadPseudonymizationRules(
         table_descriptions = rule_sources[["table_descriptions"]],
-        snapshot_extensions = rule_sources[["snapshot_extensions"]]
+        snapshot_extensions = rule_sources[["snapshot_extensions"]],
+        encounter_identifier_system = encounter_identifier_system
       )
     },
     log_steps = log_steps

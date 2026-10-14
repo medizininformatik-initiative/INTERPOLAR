@@ -192,13 +192,11 @@ Ziel: Ergänzen der Falldaten um ein kuratiertes Enddatum für fehlende Enddaten
 
 Ziel: Ergänzen der Falldaten um die ID des Haupt-Encounters in der 3-Stufen-Encounter-Hierarchie (wichtig z.B. zur Ermittlung des Aufnahmedatums des Haupt-Falls, sowie für weiteres Mapping zu Frontend Daten)
 
--   Extrahiere die main_enc_id aus enc_main_encounter_calculated_ref (löst frühere Logik (`main_enc_id_initial_try`) ab)
--   falls enc_main_encounter_calculated_ref nicht verfügbar, dann wird die frühere Logik verwendet (`main_enc_id_initial_try`):
-    -   wenn es keine `enc_partof_calculated_ref`gibt, wird die Beziehung über einen gemeinsamen `enc_identifier_value` hergestellt:
-        -   wenn der Encounter vom Typ `"einrichtungskontakt"` ist, wird dieser als oberster Encounter betrachtet und seine eigene `enc_id` verwendet.
-        -   wenn der Encounter vom Typ `"abteilungskontakt"` ist, wird dessen übergeordneter Encounter als Haupt-Encounter angenommen.
-        -   wenn der Encounter vom Typ `"versorgungsstellenkontakt"` ist, wird die `enc_id` des übergeordneten Encounters extrahiert, dessen übergeordneter Encounter gefunden und dieser als oberster `main_enc_id` verwendet.
--   falls `main_enc_id` nach diesen Schritten immer noch nicht zugewiesen werden konnte, wird eine Warnung generiert und der betroffene Datensatz ausgegeben
--   der `processing_exclusion_reason` wird für diese Fälle auf "encounter_without_main_enc_id" gesetzt
+-   Leitet `main_enc_id` aus der von cds2db bereitgestellten Referenz
+    `enc_main_encounter_calculated_ref` im Format `Encounter/<id>` ab.
+-   Entfernt vollständig identische Zeilen.
+-   Bei fehlenden, leeren oder ungültigen Referenzen bleibt `main_enc_id` fehlend.
+    Die Funktion warnt, gibt die betroffenen Datensätze aus und setzt den
+    Ausschlussgrund `encounter_without_main_enc_id` in `processing_exclusion_reason`.
 
 ... Fortsetzung folgt
