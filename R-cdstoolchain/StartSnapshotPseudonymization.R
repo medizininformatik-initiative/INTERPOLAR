@@ -58,6 +58,7 @@ invisible(tryCatch(
       pseudonym::preflightSnapshotPseudonymization(
         project_root = command_arguments[["project_root"]],
         input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
+        encounter_identifier_system = dataprocessor_config[["MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM"]],
         source_connection = source_connection,
         source_schema = command_arguments[["source_schema"]],
         review_report_file = command_arguments[["review_report_file"]],
@@ -77,6 +78,7 @@ invisible(tryCatch(
         target_connection = target_connection,
         project_root = command_arguments[["project_root"]],
         input_repo_path = dataprocessor_config[["INPUT_REPO_PATH"]],
+        encounter_identifier_system = dataprocessor_config[["MEDICAL_CASE_ID_ENCOUNTER_FHIR_IDENTIFIER_SYSTEM"]],
         source_schema = command_arguments[["source_schema"]],
         target_table_schema = command_arguments[["target_table_schema"]],
         target_view_schema = command_arguments[["target_view_schema"]],
