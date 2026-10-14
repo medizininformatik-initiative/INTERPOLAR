@@ -5,6 +5,7 @@ source("tools/styler-style.R")
 style_transformer <- interpolarStylerStyle()
 
 style_paths <- c(
+  "global-analysis",
   "R-cds2db",
   "R-cdstoolchain",
   "R-dataprocessor",

@@ -38,6 +38,12 @@ Der DataProcessor verarbeitet die Daten des CDS_HUB. Diese Verarbeitung kann z.B
 
 Weitere Informationen zum DataProcessor befinden sich im Ordner [R-dataprocessor](./R-dataprocessor).
 
+### Standortübergreifende Auswertungen
+
+Der Bereich [global-analysis](./global-analysis/README.md) trennt dezentrale
+Analysen an den Standorten von zentralen Auswertungen ihrer Exporte.
+Analysecode wird versioniert; Eingaben, lokale Konfiguration und Ergebnisse bleiben lokal.
+
 ### Input-Repo
 
 Das Input-Repo wird für den Zugriff auf Algorithmen zur Berechnung, z.B. von Scores, verwendet. Eine Anleitung zur Einbindung befindet sich in der Discussion [#811](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/811).

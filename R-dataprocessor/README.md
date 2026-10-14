@@ -69,3 +69,15 @@ Submodul, üblicherweise in ein eigenes R-Subprojekt unterhalb des
 Submodul-Ordners. Tests im Hauptpaket dürfen nur generische Loader- oder
 Konventionslogik prüfen und sollen keine konkreten Submodule wie
 `Database_Quality_Analysis`, `MRP_Check` oder andere namentlich voraussetzen.
+
+## Eigenständige Analysen
+
+Neue eigenständige Fragestellungen auf Snapshots oder Dateien werden unter
+[global-analysis](../global-analysis/README.md) eingeordnet: dezentral am Standort
+oder zentral auf eingesammelten Standortexporten. Sie haben einen eigenen
+Konsoleneinstieg und initialisieren den DataProcessor nicht. Neue Submodule bleiben
+für Erweiterungen seiner Verarbeitung vorgesehen.
+
+Die vorhandenen manuellen Auswertungsmodule behalten zunächst ihre Startbefehle
+und Ausgabepfade. Ihre spätere Überführung in den dezentralen Analysebereich erfolgt
+gesondert, mit Wiederverwendung der Fachlogik und Prüfung der Ergebnisgleichheit.

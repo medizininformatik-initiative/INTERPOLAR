@@ -30,3 +30,10 @@ Postgres-cds_hub/generated/
 /profiling/
 
 R-cdstoolchain/consent_config.toml
+
+# Analysis data and local configuration (including the previous draft layout).
+/inputGlobal/
+/outputCentral/
+/global-analysis/data/
+/global-analysis/config/sites.csv
+/global-analysis/**/config/sites.csv
