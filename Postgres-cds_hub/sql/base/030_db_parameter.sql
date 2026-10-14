@@ -4,11 +4,11 @@ DO $$
 DECLARE
     ---------------------------------------------------------------------------------------
     -- >>>> WICHTIG Standort / Zeitabhängig <<<< -- Hier bitte Variablen setzen
-    release_version varchar := '2.2.0';
+    release_version varchar := '2.2.1';
     -- GitHup release version
-    release_version_nr int := 220;
+    release_version_nr int := 221;
     -- version number - first 3 digits as integer for comparison
-    release_version_date varchar := '2026-09-18';
+    release_version_date varchar := '2026-10-14';
     -- GitHup (likely) release version date
     pause_after_process_execution varchar := '10';
     -- Pause after copy process execution in second [5-30 sec] - ready to connect
