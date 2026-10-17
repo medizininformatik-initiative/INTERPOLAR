@@ -111,7 +111,10 @@ Snapshot-Datei lässt sich bei Bedarf aktivieren:
 ```
 
 `deactivate` entfernt die aktivierte Datenbank, die Datei bleibt erhalten.
-`delete` löscht die Snapshot-Datei; die genauen Optionen zeigt `./ip-snapshot.sh`.
+`delete` löscht die Snapshot-Datei; die genauen Optionen zeigt `./ip-snapshot.sh --help`.
+Mit `--docker-mode compose|swarm` wird die Docker-Aufrufvariante gewählt
+(Standard: Auto-Erkennung mit Fallback auf compose); `-y`/`--yes` beantwortet
+alle Rückfragen mit "ja".
 
 Die BC-Auswahl verwendet die Consent-Daten eines normalen oder pseudonymisierten
 Snapshots. Bei einer normalen Quelle enthält das Ergebnis weiterhin Originaldaten.
