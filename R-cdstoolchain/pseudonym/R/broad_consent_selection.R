@@ -12,7 +12,7 @@ broadConsentReferenceIdExpression <- function(connection, column, alias = NULL, 
 
 # Non-FHIR rows use patient permission only. Resolve their owner against the
 # source, before any Encounter is removed by the resource date selection.
-buildBroadConsentNonFhirDecisionQuery <- function(connection, relation, base_table, fields, interval_table, owner_tables) {
+buildBroadConsentNonFhirDecisionQuery <- function(connection, relation, base_table, fields, interval_table, owner_tables, diagnostic = FALSE) {
   owner <- function(table, source_key) paste0(
     "(SELECT owner.patient_id FROM ", snapshotQualifiedName(connection, owner_tables[[table]]),
     " owner WHERE owner.owner_key = s.", source_key, "::text)"
@@ -31,12 +31,29 @@ buildBroadConsentNonFhirDecisionQuery <- function(connection, relation, base_tab
   consistency <- if (base_table == "fall_fe" && "fall_pat_id" %in% fields) {
     " AND (s.fall_pat_id IS NULL OR s.fall_pat_id::text = s.bc_patient_id)"
   } else ""
+  evidence <- ""
+  if (diagnostic) {
+    columns <- intersect(fields, c(
+      "record_id", "pat_id", "fall_pat_id", "patient_id_fk", "fall_fhir_enc_id",
+      "enc_id", "redcap_repeat_instrument", "redcap_repeat_instance",
+      "input_datetime", "last_check_datetime", "input_processing_nr", "last_processing_nr"
+    ))
+    evidence <- paste0(
+      ", EXISTS (SELECT 1 FROM ", interval_table,
+      " i WHERE i.patient_id = s.bc_patient_id) AS patient_has_consent",
+      ", ", if (nzchar(consistency)) sub("^ AND ", "", consistency) else "TRUE",
+      " AS patient_reference_consistent",
+      paste0(vapply(columns, function(column) paste0(
+        ", ", snapshotQuotedColumn(connection, column, "s"), " AS source_", column
+      ), character(1)), collapse = "")
+    )
+  }
   paste0(
     "SELECT ", snapshotQuotedColumn(connection, snapshotTechnicalRowIdColumn(base_table), "s"),
     "::text AS row_id, NULL::text AS resource_id, NULL::text AS version_id, s.bc_patient_id AS patient_id, ",
     "CASE WHEN s.bc_patient_id IS NULL THEN 'unresolved_patient' ",
     "WHEN EXISTS (SELECT 1 FROM ", interval_table, " i WHERE i.patient_id = s.bc_patient_id)", consistency,
-    " THEN 'included' ELSE 'patient_not_permitted' END AS reason ",
+    " THEN 'included' ELSE 'patient_not_permitted' END AS reason ", evidence, " ",
     "FROM (SELECT s.*, ", patient, " AS bc_patient_id FROM ", relation, " s) s"
   )
 }
@@ -77,7 +94,7 @@ getBroadConsentDecisionConflictDiagnostic <- function(connection, table) {
   }, character(1))), collapse = "\n")
 }
 
-createBroadConsentDecisionTable <- function(connection, query, source_relation = "source") {
+createBroadConsentDecisionTable <- function(connection, query, source_relation = "source", conflict_evidence = NULL) {
   snapshotProgress("Preparing Broad Consent decisions for ", source_relation)
   name <- basename(tempfile("broad_consent_rows_"))
   table <- snapshotQualifiedName(connection, name)
@@ -94,9 +111,13 @@ createBroadConsentDecisionTable <- function(connection, query, source_relation =
       diagnostic <- tryCatch(getBroadConsentDecisionConflictDiagnostic(connection, table),
         error = function(diagnostic_error) "Conflict diagnostic unavailable; no source values logged."
       )
+      evidence <- if (is.null(conflict_evidence)) "" else tryCatch(
+        suppressWarnings(conflict_evidence(table)),
+        error = function(evidence_error) "\nLocal conflict evidence could not be completed; no source values logged."
+      )
       stop(
         "Could not create unique Broad Consent decision index for source relation ", source_relation,
-        ".\nBroad Consent decision conflict diagnostic (counts after deduplication):\n", diagnostic,
+        ".\nBroad Consent decision conflict diagnostic (counts after deduplication):\n", diagnostic, evidence,
         call. = FALSE
       )
     }
@@ -108,7 +129,7 @@ createBroadConsentDecisionTable <- function(connection, query, source_relation =
 }
 
 prepareBroadConsentResourceSelection <- function(connection, materialization_plan, rules,
-  source_schema, source_view_prefix, interval_table, log_steps = TRUE) {
+  source_schema, source_view_prefix, interval_table, log_steps = TRUE, review = NULL) {
   owner_tables <- list()
   on.exit(dropSnapshotVersionKeyTables(connection, owner_tables), add = TRUE)
   needed_tables <- materialization_plan$BASE_TABLE_NAME
@@ -162,7 +183,22 @@ prepareBroadConsentResourceSelection <- function(connection, materialization_pla
     }
     selections[[base]] <- list(
       table_name = runPseudonymizationLogStep(3L, paste0("Broad Consent decisions for ", base),
-        createBroadConsentDecisionTable(connection, query, relation),
+        createBroadConsentDecisionTable(connection, query, relation, conflict_evidence = if (!is.null(review)) function(table) {
+          conflict_rows <- paste0("SELECT row_id FROM ", table, " GROUP BY row_id HAVING COUNT(*) > 1")
+          evidence_query <- if (is_fhir) {
+            paste0("SELECT * FROM ", table, " WHERE row_id IN (", conflict_rows, ")")
+          } else {
+            source <- paste0(
+              "(SELECT * FROM ", relation, " WHERE ",
+              snapshotQuotedColumn(connection, row_column), "::text IN (", conflict_rows, "))"
+            )
+            buildBroadConsentNonFhirDecisionQuery(
+              connection, source, base, fields, interval_table, owner_tables,
+              diagnostic = TRUE
+            )
+          }
+          writeBroadConsentConflictEvidence(connection, evidence_query, review, base, relation)
+        }),
         log_steps = log_steps
       ),
       relation = relation, row_column = row_column, fields = fields, spec = spec, rules = table_rules

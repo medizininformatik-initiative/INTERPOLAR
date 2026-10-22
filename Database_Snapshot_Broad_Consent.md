@@ -286,6 +286,20 @@ der Auswahl zum Abbruch.
 
 ## Prüfberichte
 
+Bei widersprüchlichen Entscheidungen für dieselbe technische Zeilen-ID bricht die
+Erstellung ab. Das Log nennt Konfliktzahlen und den Pfad zu
+`outputLocal/broad_consent_snapshot/<Lauf>/decision_conflicts_<Tabelle>.csv`.
+Die Datei enthält die betroffenen Originalkennungen und Entscheidungen. Für
+Frontend-Tabellen enthält sie zusätzlich die Zuordnung über `record_id`, vorhandene
+Historienzeitpunkte und Verarbeitungsnummern sowie die Prüfwerte
+`patient_has_consent` und `patient_reference_consistent`. Damit lässt sich erkennen,
+ob eine Patientenfreigabe fehlt oder die Fall-Patientenreferenz abweicht.
+Die Diagnose entsteht automatisch im Fehlerfall, auch ohne `--consent-details`.
+Sie enthält sensible Quelldaten und bleibt ausschließlich in `outputLocal` beim
+Standort. Für die Weitergabe ist das aggregierte Log vorgesehen. Die Diagnose wird
+weder nach `outputGlobal` noch in die Snapshot-Datenbank oder deren Dump geschrieben.
+
+
 Der Broad-Consent-Prozess schreibt zusätzlich den lokalen Bericht
 `outputLocal/broad_consent_snapshot/reports/broad_consent_snapshot_report.xlsx`.
 Er enthält für jede Relation insbesondere Ein- und Ausgabezeilen,

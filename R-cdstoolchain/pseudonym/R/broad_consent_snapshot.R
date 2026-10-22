@@ -376,7 +376,7 @@ createBroadConsentSnapshotDatabase <- function(
     prepareBroadConsentResourceSelection(
       source_connection, result$materialization_plan, rules,
       source_schema, source_view_prefix, snapshotQualifiedName(source_connection, consent_selection$table_name),
-      log_steps = log_steps
+      log_steps = log_steps, review = review
     ),
     log_steps = log_steps
   )

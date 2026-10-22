@@ -66,3 +66,46 @@ finishBroadConsentReview <- function(review, summary) {
   writeLines("Consent calculation completed.", file.path(review$directory, "COMPLETE"))
   invisible(review$directory)
 }
+
+# Only the failing decision group is read. Identifiers stay in the local review
+# directory; the error message contains aggregate conditions and a file path.
+writeBroadConsentConflictEvidence <- function(connection, query, review, base_table, relation) {
+  name <- paste0("decision_conflicts_", base_table)
+  partial_name <- paste0(name, "_incomplete")
+  partial <- file.path(review$directory, paste0(partial_name, ".csv"))
+  destination <- file.path(review$directory, paste0(name, ".csv"))
+  on.exit(unlink(partial), add = TRUE)
+  if (!file.create(partial) || !Sys.chmod(partial, mode = "0600")) {
+    stop("Could not prepare local conflict evidence.")
+  }
+  result <- DBI::dbSendQuery(connection, paste0(query, " ORDER BY row_id, patient_id, reason"))
+  on.exit(DBI::dbClearResult(result), add = TRUE)
+  rows <- 0L
+  missing_consent <- 0L
+  inconsistent_reference <- 0L
+  repeat {
+    chunk <- DBI::dbFetch(result, n = DEFAULT_SNAPSHOT_CHUNK_SIZE)
+    chunk$source_relation <- rep(relation, nrow(chunk))
+    # The existing writer appends to an existing file, so write the first header explicitly.
+    if (rows == 0L) {
+      data.table::fwrite(chunk, partial, dateTimeAs = "ISO", na = "NA")
+    } else {
+      appendBroadConsentReviewTable(review, partial_name, chunk)
+    }
+    rows <- rows + nrow(chunk)
+    missing_consent <- missing_consent + sum(chunk$patient_has_consent %in% FALSE)
+    inconsistent_reference <- inconsistent_reference + sum(chunk$patient_reference_consistent %in% FALSE)
+    if (DBI::dbHasCompleted(result)) break
+  }
+  if (!file.rename(partial, destination)) stop("Could not complete local conflict evidence.")
+  paste0(
+    "\nConflicting source/decision rows exported=", rows,
+    if ("patient_has_consent" %in% names(chunk)) paste0(
+      "\nRows without patient consent=", missing_consent,
+      "\nRows with inconsistent patient reference=", inconsistent_reference
+    ) else "",
+    "\nConflicting identities cannot share one selection decision. Snapshot creation stopped.",
+    "\nLocal conflict evidence: ", destination,
+    "\nContains source identifiers; keep this file local and do not include it in data exports."
+  )
+}
