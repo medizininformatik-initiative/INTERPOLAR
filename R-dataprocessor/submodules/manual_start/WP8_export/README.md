@@ -170,8 +170,14 @@ Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
   unbeschränkt.
 - Die Diagnosebezeichnung stammt ausschließlich aus
   `Condition.code.coding.display`. Fehlt sie, wird `NA` ausgegeben.
-- Identische Ausgabezeilen werden entfernt und alphabetisch sortiert. Ein
-  vorhandener Diagnosezeitpunkt wird mit ausgegeben.
+- Diagnosen werden nach ICD-Code zusammengefasst und alphabetisch nach Bezeichnung
+  sortiert. Bei unterschiedlichen Bezeichnungen wird die alphabetisch erste
+  vorhandene Bezeichnung verwendet.
+- Ausgegeben werden erstes und letztes Datum sowie die Anzahl der Auftreten,
+  zum Beispiel `Essentielle Hypertonie (ICD: I10.90) [03.08.2026–12.08.2026] [3 Auftreten]`.
+- Identische Kombinationen aus ICD-Code, Bezeichnung und Zeitstempel zählen einmal.
+  Bei nur einem Datum wird dieses einmal angezeigt. Fehlende Zeitstempel zählen
+  mit, gehen aber nicht in den Zeitraum ein; fehlen alle, entfällt die Datumsangabe.
 
 ### Medikationen
 

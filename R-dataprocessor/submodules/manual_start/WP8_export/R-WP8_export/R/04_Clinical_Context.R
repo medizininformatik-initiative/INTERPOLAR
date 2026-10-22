@@ -6,8 +6,9 @@
 #' previous encounters are included only if their ICD code occurs in the
 #' processed WP7 Drug-Disease or Drug-Niereninsuffizienz rules and their
 #' configured validity period covers the medication analysis timestamp.
-#' Identical formatted lines are removed; the same diagnosis with different
-#' timestamps is retained.
+#' Diagnoses are grouped by ICD code with first and last dates and occurrence counts.
+#' Identical display/timestamp combinations are counted once. Missing timestamps
+#' contribute to the count but not to the date range.
 #'
 #' @param source_data Fallvignette source rows. Required columns are pat_id,
 #'   fall_fhir_enc_id and meda_dat.
@@ -15,14 +16,14 @@
 #'   getConditionsFromDB() helper.
 #' @param diagnosis_rules Combined processed WP7 Drug-Disease and
 #'   Drug-Niereninsuffizienz rules containing ICD and ICD_VALIDITY_DAYS.
-#' @param datetime_format Format used for available diagnosis timestamps.
+#' @param datetime_format Format used for the first and last diagnosis dates.
 #'
 #' @return A copy of source_data with the wp8_fv_diagnosen column.
 addFallvignetteDiagnoses <- function(
   source_data,
   conditions,
   diagnosis_rules,
-  datetime_format = "%Y-%m-%d %H:%M:%S"
+  datetime_format = "%d.%m.%Y"
 ) {
   if (!data.table::is.data.table(source_data)) {
     stop("source_data must be a data.table.")
@@ -169,32 +170,39 @@ addFallvignetteDiagnoses <- function(
       diagnosis_displays <- trimws(included_conditions[["con_code_display"]])
       diagnosis_codes <- trimws(included_conditions[["con_code_code"]])
 
-      diagnosis_lines <- diagnosis_displays
-      has_code <- !is.na(diagnosis_codes) & nzchar(diagnosis_codes)
-      diagnosis_lines[has_code] <- paste0(
-        diagnosis_lines[has_code],
-        " (ICD: ",
-        diagnosis_codes[has_code],
-        ")"
-      )
-      has_datetime <- !is.na(included_datetimes)
-      diagnosis_lines[has_datetime] <- paste0(
-        diagnosis_lines[has_datetime],
-        " [",
-        format(
-          included_datetimes[has_datetime],
-          datetime_format,
-          tz = "UTC"
-        ),
-        "]"
-      )
+      # Preserve duplicate removal before counting occurrences per ICD code.
+      diagnoses <- unique(data.table::data.table(
+        code = diagnosis_codes,
+        display = diagnosis_displays,
+        datetime = included_datetimes
+      ))
+      diagnosis_codes <- unique(diagnoses[["code"]])
+      diagnosis_groups <- lapply(seq_along(diagnosis_codes), function(code_index) {
+        which(match(diagnoses[["code"]], diagnosis_codes) == code_index)
+      })
+      diagnosis_displays <- vapply(diagnosis_groups, function(indices) {
+        displays <- diagnoses[["display"]][indices]
+        available <- displays[!is.na(displays) & nzchar(displays)]
+        if (length(available)) sort(available)[1L] else NA_character_
+      }, character(1))
+      diagnosis_lines <- vapply(seq_along(diagnosis_groups), function(group_index) {
+        indices <- diagnosis_groups[[group_index]]
+        dates <- diagnoses[["datetime"]][indices]
+        dates <- dates[!is.na(dates)]
+        line <- paste0(
+          diagnosis_displays[group_index],
+          " (ICD: ", diagnoses[["code"]][indices[1L]], ")"
+        )
+        if (length(dates)) {
+          date_range <- format(range(dates), datetime_format, tz = "UTC")
+          line <- paste0(line, " [", paste(unique(date_range), collapse = "–"), "]")
+        }
+        paste0(line, " [", length(indices), " Auftreten]")
+      }, character(1))
       diagnosis_order <- order(
-        tolower(diagnosis_displays),
-        diagnosis_codes,
-        included_datetimes,
-        na.last = TRUE
+        tolower(diagnosis_displays), diagnosis_codes, na.last = TRUE
       )
-      paste(unique(diagnosis_lines[diagnosis_order]), collapse = "\n")
+      paste(diagnosis_lines[diagnosis_order], collapse = "\n")
     },
     character(1)
   )

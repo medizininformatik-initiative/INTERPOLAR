@@ -76,12 +76,11 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
     result$wp8_fv_diagnosen,
     paste(
       c(
-        "Alpha historisch (ICD: A01) [2020-01-01 08:00:00]",
-        "Doppelte Diagnose (ICD: D01) [2026-01-29 10:00:00]",
-        "Doppelte Diagnose (ICD: D01) [2026-01-30 10:00:00]",
-        "Gamma gueltig (ICD: C03) [2026-01-15 09:00:00]",
-        "Zeta aktuell (ICD: Z99) [2026-01-31 11:00:00]",
-        "NA (ICD: X01)"
+        "Alpha historisch (ICD: A01) [01.01.2020] [1 Auftreten]",
+        "Doppelte Diagnose (ICD: D01) [29.01.2026–30.01.2026] [2 Auftreten]",
+        "Gamma gueltig (ICD: C03) [15.01.2026] [1 Auftreten]",
+        "Zeta aktuell (ICD: Z99) [31.01.2026] [1 Auftreten]",
+        "NA (ICD: X01) [1 Auftreten]"
       ),
       collapse = "\n"
     )
@@ -90,6 +89,36 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
     "Nicht aufnehmen|Abgelaufen|Zukuenftig",
     result$wp8_fv_diagnosen
   )))
+})
+
+testthat::test_that("diagnoses show the requested range and count distinct timestamps", {
+  source_data <- data.table::data.table(
+    pat_id = "patient-1",
+    fall_fhir_enc_id = "case-1",
+    meda_dat = as.POSIXct("2026-08-15", tz = "UTC")
+  )
+  conditions <- data.table::data.table(
+    con_patient_ref = "Patient/patient-1",
+    con_encounter_calculated_ref = "Encounter/case-1",
+    con_code_code = "I10.90",
+    con_code_system = "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+    con_code_display = "Essentielle Hypertonie",
+    start_datetime = as.POSIXct(c(
+      "2026-08-03 08:00:00", "2026-08-03 12:00:00", "2026-08-12 08:00:00"
+    ), tz = "UTC")
+  )
+  diagnosis_rules <- data.table::data.table(ICD = character(), ICD_VALIDITY_DAYS = character())
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(
+    result$wp8_fv_diagnosen,
+    "Essentielle Hypertonie (ICD: I10.90) [03.08.2026–12.08.2026] [3 Auftreten]"
+  )
+  conditions[3L, start_datetime := as.POSIXct(NA, tz = "UTC")]
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(
+    result$wp8_fv_diagnosen,
+    "Essentielle Hypertonie (ICD: I10.90) [03.08.2026] [3 Auftreten]"
+  )
 })
 
 testthat::test_that("addFallvignetteDiagnoses does not modify source data", {
