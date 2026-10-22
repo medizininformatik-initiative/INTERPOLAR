@@ -47,6 +47,59 @@ generateFallvignetteRecordIdMapping <- function(row_count, site_code) {
   )
 }
 
+#' Generate random IDs for identical MRPs within one medication analysis
+#'
+#' Uses the clinical identity columns from MRP recalculation plus the complete
+#' stored description to distinguish diagnosis and laboratory criteria. ret_id
+#' and individual evaluations are excluded from the key unless clinical identity
+#' is incomplete. IDs are random per export and contain no source identifiers.
+#'
+#' @param source_data Fallvignette source rows.
+#'
+#' @return A character vector of random group IDs, one per source row.
+generateFallvignetteMrpGroupIds <- function(source_data) {
+  key_columns <- c(
+    "source_record_id", "fall_id", "meda_id", "ret_atc1",
+    "ret_ip_klasse_01", "ret_ip_klasse_disease", "ret_atc2", "ret_kurzbeschr"
+  )
+  validateFallvignetteClinicalData(source_data, "source_data", c(key_columns, "ret_id"))
+  if (!nrow(source_data)) {
+    return(character())
+  }
+  group_keys <- data.table::copy(source_data)[, key_columns, with = FALSE]
+  for (column_name in key_columns) {
+    data.table::set(
+      group_keys,
+      j = column_name,
+      value = trimws(as.character(group_keys[[column_name]]))
+    )
+  }
+  for (column_name in c("source_record_id", "fall_id", "meda_id", "ret_id")) {
+    values <- trimws(as.character(source_data[[column_name]]))
+    if (any(is.na(values) | !nzchar(values))) {
+      stop("source_data must contain non-empty ", column_name, " values for MRP grouping.")
+    }
+  }
+  # Missing clinical identity must not merge distinct retrospective MRPs.
+  incomplete <- Reduce(`|`, lapply(c("ret_atc1", "ret_ip_klasse_01", "ret_kurzbeschr"), function(column_name) {
+    is.na(group_keys[[column_name]]) | !nzchar(group_keys[[column_name]])
+  }))
+  data.table::set(
+    group_keys,
+    j = "unresolved_ret_id",
+    value = ifelse(incomplete, as.character(source_data[["ret_id"]]), NA_character_)
+  )
+  # Dense ranks group equal rows without concatenation or sentinel collisions.
+  group_indices <- data.table::frankv(group_keys, ties.method = "dense")
+  group_ids <- vapply(seq_len(max(group_indices)), function(group_index) {
+    paste(format(openssl::rand_bytes(16L)), collapse = "")
+  }, character(1))
+  if (anyDuplicated(group_ids)) {
+    stop("Random MRP group IDs must be unique.")
+  }
+  group_ids[group_indices]
+}
+
 #' Create a ward-to-department mapping
 #'
 #' @param ward_definitions Environment or named list containing the
@@ -121,6 +174,7 @@ hashFallvignetteSiteCode <- function(site_code) {
 #' If both evaluations are marked as factually correct but clinically irrelevant,
 #' two rows are created. Fields with only one mapping source are repeated in the
 #' second row, while duplicated target fields use their second mapping source.
+#' Identical MRPs in the same analysis receive a shared random group ID per export.
 #' Calculated fallvignette fields remain empty for subsequent processing.
 #'
 #' @param source_data Source rows returned by [getFallvignetteSourceData()].
@@ -410,6 +464,14 @@ createFallvignetteImportData <- function(
       ])
     )
   }
+  if ("wp8_mrp_gruppen_id" %in% names(export_data)) {
+    group_ids <- if (output_count) generateFallvignetteMrpGroupIds(source_data) else character()
+    data.table::set(
+      export_data,
+      j = "wp8_mrp_gruppen_id",
+      value = group_ids[output_rows[["source_row"]]]
+    )
+  }
   traceability_columns <- intersect(
     c(
       "source_record_id",
@@ -433,6 +495,9 @@ createFallvignetteImportData <- function(
     j = "evaluation_index",
     value = output_rows[["evaluation_index"]]
   )
+  if ("wp8_mrp_gruppen_id" %in% names(export_data)) {
+    data.table::set(local_mapping, j = "wp8_mrp_gruppen_id", value = export_data[["wp8_mrp_gruppen_id"]])
+  }
   for (column_name in traceability_columns) {
     data.table::set(
       local_mapping,

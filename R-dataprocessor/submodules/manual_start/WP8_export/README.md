@@ -242,9 +242,23 @@ Beispiel `UKB0001`. In die REDCap-Datei gelangt ausschließlich der SHA-256-Hash
 dieser ID als `record_id`. `wp8_standort_id` enthält den SHA-256-Hash des reinen
 `SITE_CODE`.
 
+`wp8_mrp_gruppen_id` verknüpft identische MRP derselben Medikationsanalyse für
+die WP8-Sichtprüfung. Gruppiert wird nach Quelldatensatz, Fall, MedA, ATC1,
+MRP-Klasse, Diagnosecluster, ATC2 und vollständiger gespeicherter Kurzbeschreibung.
+So bleiben unterschiedliche Diagnose-/Laborkriterien getrennt. Unterschiedliche
+`ret_id` und Bewertungen verhindern die Gruppierung nicht; beide Bewertungszeilen
+desselben MRP erhalten dieselbe Gruppen-ID. Fehlen ATC1, MRP-Klasse oder Beschreibung,
+werden unterschiedliche `ret_id` vorsichtshalber nicht zusammengefasst.
+
+Die Gruppen-ID besteht aus 16 zufälligen Bytes als 32-stelligem Hex-String und
+wird je Export neu erzeugt. Sie wird nicht aus Fall-/MedA- oder Snapshot-IDs
+abgeleitet. Die Zuordnung bleibt über die lokale Rückverfolgungsdatei nachvollziehbar.
+Das Feld ist für die WP8-Sichtprüfung vorgesehen und vor Weitergabe an die
+bewertenden Apothekerinnen und Apotheker zu entfernen.
+
 Die lokale Rückverfolgungsdatei enthält je nach Verfügbarkeit:
 
-- `record_id`, `local_record_id`, `site_code` und `evaluation_index`
+- `record_id`, `local_record_id`, `site_code`, `evaluation_index` und `wp8_mrp_gruppen_id`
 - Quell-, Patienten-, Fall-, Medikationsanalyse- und retrospektive MRP-IDs
 
 Diese Datei muss am exportierenden Standort verbleiben. Sie darf weder in das

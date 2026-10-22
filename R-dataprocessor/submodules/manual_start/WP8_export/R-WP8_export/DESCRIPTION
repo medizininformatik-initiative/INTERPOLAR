@@ -21,7 +21,8 @@ Imports:
     ICD10gm,
     data.table,
     digest,
-    etlutils
+    etlutils,
+    openssl
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
