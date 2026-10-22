@@ -197,7 +197,10 @@ addFallvignetteDiagnoses <- function(
           date_range <- format(range(dates), datetime_format, tz = "UTC")
           line <- paste0(line, " [", paste(unique(date_range), collapse = "–"), "]")
         }
-        paste0(line, " [", length(indices), " Auftreten]")
+        if (length(indices) > 1L) {
+          line <- paste0(line, " [", length(indices), " Auftreten]")
+        }
+        line
       }, character(1))
       diagnosis_order <- order(
         tolower(diagnosis_displays), diagnosis_codes, na.last = TRUE

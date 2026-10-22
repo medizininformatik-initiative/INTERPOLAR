@@ -176,6 +176,7 @@ Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
 - Ausgegeben werden erstes und letztes Datum sowie die Anzahl der Auftreten,
   zum Beispiel `Essentielle Hypertonie (ICD: I10.90) [03.08.2026–12.08.2026] [3 Auftreten]`.
 - Identische Kombinationen aus ICD-Code, Bezeichnung und Zeitstempel zählen einmal.
+  Bei nur einem Auftreten entfällt die Anzahl.
   Bei nur einem Datum wird dieses einmal angezeigt. Fehlende Zeitstempel zählen
   mit, gehen aber nicht in den Zeitraum ein; fehlen alle, entfällt die Datumsangabe.
 

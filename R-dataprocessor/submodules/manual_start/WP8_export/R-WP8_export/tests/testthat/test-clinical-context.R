@@ -76,11 +76,11 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
     result$wp8_fv_diagnosen,
     paste(
       c(
-        "Alpha historisch (ICD: A01) [01.01.2020] [1 Auftreten]",
+        "Alpha historisch (ICD: A01) [01.01.2020]",
         "Doppelte Diagnose (ICD: D01) [29.01.2026–30.01.2026] [2 Auftreten]",
-        "Gamma gueltig (ICD: C03) [15.01.2026] [1 Auftreten]",
-        "Zeta aktuell (ICD: Z99) [31.01.2026] [1 Auftreten]",
-        "NA (ICD: X01) [1 Auftreten]"
+        "Gamma gueltig (ICD: C03) [15.01.2026]",
+        "Zeta aktuell (ICD: Z99) [31.01.2026]",
+        "NA (ICD: X01)"
       ),
       collapse = "\n"
     )
