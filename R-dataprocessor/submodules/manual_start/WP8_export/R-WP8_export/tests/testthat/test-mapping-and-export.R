@@ -31,6 +31,8 @@ testthat::test_that("loadFallvignetteMapping reads the WP8 mapping", {
     "wp8_ret_id",
     "wp8_standort_id",
     "wp8_mrp_fachbereich",
+    "wp8_meda_dat",
+    "wp8_mrp_gruppen_id",
     "wp8_ret_gewissheit",
     "wp8_ret_gewiss_grund_abl_01",
     "mrp_auswahl_complete"
@@ -38,6 +40,10 @@ testthat::test_that("loadFallvignetteMapping reads the WP8 mapping", {
   testthat::expect_equal(
     mapping[["source_field"]][mapping[["target_field"]] == "wp8_ret_id"],
     "ret_id"
+  )
+  testthat::expect_equal(
+    mapping$source_field[mapping$target_field == "wp8_meda_dat"],
+    "meda_dat"
   )
   testthat::expect_false(any(grepl(
     "^wp8_ret_massn_(am|orga)___",

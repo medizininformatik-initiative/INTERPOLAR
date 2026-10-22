@@ -72,7 +72,7 @@ buildFallvignetteSourceQuery <- function(mapping) {
     "fall_fe.fall_aufn_dat",
     "fall_fe.fall_ent_dat",
     "meda_fe.meda_id",
-    "meda_fe.meda_dat",
+    "meda_fe.meda_dat AS meda_dat",
     "ret_fe.ret_id",
     "ret_fe.ret_meda_id"
   )

@@ -454,3 +454,26 @@ testthat::test_that("import fills missing diagnosis names only in exported short
   )
   testthat::expect_identical(source_data, original_source)
 })
+
+testthat::test_that("import copies medication analysis timestamps for each evaluation", {
+  mapping <- getTestFallvignetteMapping()
+  source_data <- getTestFallvignetteSourceData(mapping)
+  timestamps <- c("2026-08-03 10:15:37", "2026-08-12 00:00:00")
+  data.table::set(source_data, j = "meda_dat", value = timestamps)
+  result <- createFallvignetteImportData(
+    source_data, mapping, getTestWardDefinitions(),
+    site_code = "UKB"
+  )
+  testthat::expect_equal(
+    result$wp8_meda_dat,
+    c("2026-08-03 10:15:37", "2026-08-12 00:00:00", "2026-08-12 00:00:00")
+  )
+  testthat::expect_identical(source_data$meda_dat, timestamps)
+
+  data.table::set(source_data, j = "meda_dat", value = c("2026-08-03 08:15:37", NA_character_))
+  result <- createFallvignetteImportData(
+    source_data, mapping, getTestWardDefinitions(),
+    site_code = "UKB"
+  )
+  testthat::expect_equal(result$wp8_meda_dat, c("2026-08-03 08:15:37", NA_character_, NA_character_))
+})

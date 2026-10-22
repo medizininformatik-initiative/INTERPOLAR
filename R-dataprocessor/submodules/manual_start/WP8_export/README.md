@@ -159,6 +159,13 @@ Alle klinischen Ressourcen werden aus der pseudonymisierten Analysedatenbank
 gelesen. Die bestehenden Loader der regulären MRP-Toolchain werden für
 Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
 
+### Zeitpunkt der Medikationsanalyse
+
+`wp8_meda_dat` wird aus `meda_dat` der zugehörigen Medikationsanalyse befüllt.
+Der Zeitstempel wird über das direkte Mapping übernommen.
+Bei zwei Bewertungen desselben MRP erhalten beide Exportzeilen denselben
+Zeitstempel. Fehlende Zeitstempel bleiben leer.
+
 ### Diagnosen
 
 - Alle ICD-10-GM-Diagnosen des aktuellen Hauptencounters werden übernommen,
