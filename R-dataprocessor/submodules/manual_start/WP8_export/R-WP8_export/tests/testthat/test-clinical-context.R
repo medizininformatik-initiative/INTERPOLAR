@@ -91,6 +91,87 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
   )))
 })
 
+testthat::test_that("diagnosis labels prefer the occurrence year and exact codes", {
+  icd_labels <- data.frame(
+    year = c(2019L, 2021L, 2021L),
+    icd_code = c("I10.90", "I10.90", "I10.-"),
+    icd_normcode = c("I10.90", "I10.90", "I10"),
+    label = c("Bezeichnung 2019", "Bezeichnung 2021", "Oberkategorie")
+  )
+  testthat::expect_equal(
+    getFallvignetteDiagnosisLabel("I10.90", as.POSIXct("2019-06-01", tz = "UTC"), icd_labels),
+    "Bezeichnung 2019"
+  )
+  for (date in c("2026-06-01", "2018-06-01", NA_character_)) {
+    testthat::expect_equal(
+      getFallvignetteDiagnosisLabel("I10.90", as.POSIXct(date, tz = "UTC"), icd_labels),
+      "Bezeichnung 2021"
+    )
+  }
+  testthat::expect_equal(
+    getFallvignetteDiagnosisLabel(
+      "I10.90", as.POSIXct(c("2019-06-01", "2021-06-01", NA), tz = "UTC"), icd_labels
+    ),
+    "Bezeichnung 2021"
+  )
+  invalid_label <- rawToChar(as.raw(c(0x53, 0x82)))
+  Encoding(invalid_label) <- "UTF-8"
+  icd_labels$label[2L] <- invalid_label
+  testthat::expect_equal(
+    getFallvignetteDiagnosisLabel("I10.90", as.POSIXct(NA, tz = "UTC"), icd_labels),
+    "Bezeichnung 2019"
+  )
+  for (code in c("I10.999", "UNKNOWN", "", NA_character_)) {
+    testthat::expect_identical(
+      getFallvignetteDiagnosisLabel(code, as.POSIXct(NA, tz = "UTC"), icd_labels),
+      NA_character_
+    )
+  }
+})
+
+testthat::test_that("diagnoses fill missing labels while retaining FHIR names and counts", {
+  source_data <- data.table::data.table(
+    pat_id = "patient-1",
+    fall_fhir_enc_id = "case-1",
+    meda_dat = as.POSIXct("2026-08-15", tz = "UTC")
+  )
+  conditions <- data.table::data.table(
+    con_patient_ref = "Patient/patient-1",
+    con_encounter_calculated_ref = "Encounter/case-1",
+    con_code_code = "I10.90",
+    con_code_system = "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+    con_code_display = c(NA_character_, "  "),
+    start_datetime = as.POSIXct(c("2019-08-03", "2020-08-12"), tz = "UTC")
+  )
+  original_conditions <- data.table::copy(conditions)
+  diagnosis_rules <- data.table::data.table(ICD = character(), ICD_VALIDITY_DAYS = character())
+  labels <- ICD10gm::get_icd_labels(year = 2020, icd3 = "I10")
+  expected_label <- labels$label[labels$icd_normcode == "I10.90"][1L]
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(
+    result$wp8_fv_diagnosen,
+    paste0(expected_label, " (ICD: I10.90) [03.08.2019–12.08.2020] [2 Auftreten]")
+  )
+  testthat::expect_identical(conditions, original_conditions)
+
+  data.table::set(conditions, i = 2L, j = "con_code_display", value = "Bezeichnung vom FHIR-Server")
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(
+    result$wp8_fv_diagnosen,
+    "Bezeichnung vom FHIR-Server (ICD: I10.90) [03.08.2019–12.08.2020] [2 Auftreten]"
+  )
+  data.table::set(conditions, j = "con_code_display", value = NA_character_)
+  data.table::set(conditions, j = "start_datetime", value = as.POSIXct(NA, tz = "UTC"))
+  labels <- ICD10gm::get_icd_labels(icd3 = "I10")
+  labels <- labels[labels$icd_normcode == "I10.90", ]
+  expected_label <- labels$label[which.max(labels$year)]
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(result$wp8_fv_diagnosen, paste0(expected_label, " (ICD: I10.90)"))
+  data.table::set(conditions, j = "con_code_code", value = "UNKNOWN")
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(result$wp8_fv_diagnosen, "NA (ICD: UNKNOWN)")
+})
+
 testthat::test_that("diagnoses show the requested range and count distinct timestamps", {
   source_data <- data.table::data.table(
     pat_id = "patient-1",
@@ -113,7 +194,7 @@ testthat::test_that("diagnoses show the requested range and count distinct times
     result$wp8_fv_diagnosen,
     "Essentielle Hypertonie (ICD: I10.90) [03.08.2026–12.08.2026] [3 Auftreten]"
   )
-  conditions[3L, start_datetime := as.POSIXct(NA, tz = "UTC")]
+  data.table::set(conditions, i = 3L, j = "start_datetime", value = as.POSIXct(NA, tz = "UTC"))
   result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
   testthat::expect_equal(
     result$wp8_fv_diagnosen,

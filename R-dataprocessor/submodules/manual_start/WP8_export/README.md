@@ -168,8 +168,12 @@ Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
   und `ICD_VALIDITY_DAYS` am Analysezeitpunkt erfüllt ist.
 - `unbegrenzt` sowie ein leerer Gültigkeitswert gelten als zeitlich
   unbeschränkt.
-- Die Diagnosebezeichnung stammt ausschließlich aus
-  `Condition.code.coding.display`. Fehlt sie, wird `NA` ausgegeben.
+- Die Diagnosebezeichnung stammt bevorzugt aus `Condition.code.coding.display`.
+  Fehlen für einen ICD-Code alle Bezeichnungen oder sind sie leer, wird der Name
+  aus dem Paket `ICD10gm` ergänzt. Verwendet wird das Jahr des letzten bekannten
+  Auftretens; fehlt diese Jahresversion oder der Zeitstempel, wird die jüngste
+  verfügbare Version für den exakten Code verwendet. Ohne Treffer bleibt `NA`.
+  Übergeordnete ICD-Codes werden nicht als Ersatz verwendet.
 - Diagnosen werden nach ICD-Code zusammengefasst und alphabetisch nach Bezeichnung
   sortiert. Bei unterschiedlichen Bezeichnungen wird die alphabetisch erste
   vorhandene Bezeichnung verwendet.

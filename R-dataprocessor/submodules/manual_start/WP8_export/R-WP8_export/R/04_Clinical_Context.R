@@ -8,7 +8,9 @@
 #' configured validity period covers the medication analysis timestamp.
 #' Diagnoses are grouped by ICD code with first and last dates and occurrence counts.
 #' Identical display/timestamp combinations are counted once. Missing timestamps
-#' contribute to the count but not to the date range.
+#' contribute to the count but not to the date range. Missing display names are
+#' resolved through ICD10gm using the latest occurrence year, or the latest
+#' available version for the exact code if that year is unavailable.
 #'
 #' @param source_data Fallvignette source rows. Required columns are pat_id,
 #'   fall_fhir_enc_id and meda_dat.
@@ -106,6 +108,14 @@ addFallvignetteDiagnoses <- function(
     )
   }
 
+  # Load the package mapping once, only when a display name might need a fallback.
+  condition_displays <- trimws(conditions[["con_code_display"]])
+  icd_labels <- if (any(is.na(condition_displays) | !nzchar(condition_displays))) {
+    ICD10gm::get_icd_labels()
+  } else {
+    NULL
+  }
+
   result <- data.table::copy(source_data)
   diagnosis_texts <- vapply(
     seq_len(nrow(result)),
@@ -183,7 +193,14 @@ addFallvignetteDiagnoses <- function(
       diagnosis_displays <- vapply(diagnosis_groups, function(indices) {
         displays <- diagnoses[["display"]][indices]
         available <- displays[!is.na(displays) & nzchar(displays)]
-        if (length(available)) sort(available)[1L] else NA_character_
+        if (length(available)) {
+          return(sort(available)[1L])
+        }
+        getFallvignetteDiagnosisLabel(
+          icd_code = diagnoses[["code"]][indices[1L]],
+          diagnosis_datetimes = diagnoses[["datetime"]][indices],
+          icd_labels = icd_labels
+        )
       }, character(1))
       diagnosis_lines <- vapply(seq_along(diagnosis_groups), function(group_index) {
         indices <- diagnosis_groups[[group_index]]
@@ -203,7 +220,8 @@ addFallvignetteDiagnoses <- function(
         line
       }, character(1))
       diagnosis_order <- order(
-        tolower(diagnosis_displays), diagnosis_codes, na.last = TRUE
+        tolower(diagnosis_displays), diagnosis_codes,
+        na.last = TRUE
       )
       paste(diagnosis_lines[diagnosis_order], collapse = "\n")
     },
@@ -215,6 +233,48 @@ addFallvignetteDiagnoses <- function(
     value = diagnosis_texts
   )
   result[]
+}
+
+#' Look up a missing diagnosis label for an exact ICD-10-GM code
+#'
+#' Prefers the year of the latest known occurrence within a diagnosis group.
+#' If that year or all timestamps are missing, uses the latest available year
+#' for this code. Unknown codes remain NA; parent codes are not substituted.
+#'
+#' @param icd_code A single ICD-10-GM code.
+#' @param diagnosis_datetimes Diagnosis timestamps for the grouped code.
+#' @param icd_labels Mapping returned by ICD10gm::get_icd_labels().
+#'
+#' @return A diagnosis label or NA_character_ if no exact match exists.
+getFallvignetteDiagnosisLabel <- function(icd_code, diagnosis_datetimes, icd_labels) {
+  if (is.na(icd_code) || !nzchar(icd_code) || is.null(icd_labels)) {
+    return(NA_character_)
+  }
+  matches <- which(
+    (icd_labels[["icd_normcode"]] == icd_code | icd_labels[["icd_code"]] == icd_code) &
+      !is.na(icd_labels[["year"]])
+  )
+  # Some historical package labels contain invalid UTF-8; treat these as missing.
+  labels <- trimws(iconv(icd_labels[["label"]][matches], from = "UTF-8", to = "UTF-8"))
+  has_label <- !is.na(labels) & nzchar(labels)
+  matches <- matches[has_label]
+  labels <- labels[has_label]
+  if (!length(matches)) {
+    return(NA_character_)
+  }
+  dates <- diagnosis_datetimes[!is.na(diagnosis_datetimes)]
+  diagnosis_year <- if (length(dates)) {
+    as.integer(format(max(dates), "%Y", tz = "UTC"))
+  } else {
+    NA_integer_
+  }
+  years <- icd_labels[["year"]][matches]
+  selected_year <- if (!is.na(diagnosis_year) && diagnosis_year %in% years) {
+    diagnosis_year
+  } else {
+    max(years, na.rm = TRUE)
+  }
+  labels[which(years == selected_year)[1L]]
 }
 
 #' Add active medication to fallvignette source rows
