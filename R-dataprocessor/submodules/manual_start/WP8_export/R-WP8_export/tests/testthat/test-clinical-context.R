@@ -457,3 +457,32 @@ testthat::test_that("addFallvignetteOperationStatus combines Encounter and OPS",
 
   testthat::expect_equal(result$wp8_fv_op, c("1", "1", "0", "0"))
 })
+
+testthat::test_that("short descriptions replace only missing diagnosis names", {
+  labels <- data.frame(
+    year = c(2019L, 2021L),
+    icd_code = "I10.90",
+    icd_normcode = "I10.90",
+    label = c("Name 2019", "Name 2021")
+  )
+  description <- paste0(
+    "NA - C09AA05 (2019-08-03 08:00:00) ist mit\n",
+    "  [NA] kontraindiziert.\n",
+    "Diagnose: NA - I10.90   (2019-08-03 08:00:00)\n",
+    "                   NA - I10.90   (2026-08-03 08:00:00)\n",
+    "                   NA - I10.90   (NA)\n",
+    "                   FHIR-Name - I10.90   (2019-08-03 08:00:00)\n",
+    "                   NA - I10.99   (2019-08-03 08:00:00)\n\n"
+  )
+  expected <- sub("Diagnose: NA", "Diagnose: Name 2019", description, fixed = TRUE)
+  expected <- gsub("                   NA - I10.90", "                   Name 2021 - I10.90", expected, fixed = TRUE)
+  testthat::expect_equal(fillFallvignetteDescriptionDiagnoses(description, labels), expected)
+  testthat::expect_identical(
+    fillFallvignetteDescriptionDiagnoses(c(NA_character_, "", "Unverändert\r\n"), labels),
+    c(NA_character_, "", "Unverändert\r\n")
+  )
+  testthat::expect_equal(
+    fillFallvignetteDescriptionDiagnoses("NA - I10.90 (2019-08-03 08:00:00)", labels),
+    "Name 2019 - I10.90 (2019-08-03 08:00:00)"
+  )
+})

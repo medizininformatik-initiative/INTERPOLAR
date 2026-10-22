@@ -435,3 +435,22 @@ testthat::test_that("hashFallvignetteSiteCode uses pseudonymization SHA-256", {
     "f64bca78aea5629a60d34fba5940dfe3a544e71a54955cad2ac1f2c3ebc3bb66"
   )
 })
+
+testthat::test_that("import fills missing diagnosis names only in exported short descriptions", {
+  mapping <- getTestFallvignetteMapping()
+  source_data <- getTestFallvignetteSourceData(mapping)
+  description <- "Diagnose: NA - I10.90   (2020-08-03 08:00:00)"
+  data.table::set(source_data, i = 2L, j = "ret_kurzbeschr", value = description)
+  original_source <- data.table::copy(source_data)
+  result <- createFallvignetteImportData(
+    source_data, mapping, getTestWardDefinitions(),
+    site_code = "UKB"
+  )
+  labels <- ICD10gm::get_icd_labels(year = 2020, icd3 = "I10")
+  label <- labels$label[labels$icd_normcode == "I10.90"][1L]
+  testthat::expect_equal(
+    result$wp8_ret_kurzbeschr,
+    c("MRP A", rep(paste0("Diagnose: ", label, " - I10.90   (2020-08-03 08:00:00)"), 2L))
+  )
+  testthat::expect_identical(source_data, original_source)
+})

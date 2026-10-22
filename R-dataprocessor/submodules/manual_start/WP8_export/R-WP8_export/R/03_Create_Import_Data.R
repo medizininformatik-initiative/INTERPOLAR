@@ -338,6 +338,9 @@ createFallvignetteImportData <- function(
       },
       character(1)
     )
+    if (identical(target_field, "wp8_ret_kurzbeschr")) {
+      target_values <- fillFallvignetteDescriptionDiagnoses(target_values)
+    }
     if (target_field %in% names(redcap_code_values)) {
       target_values[] <- redcap_code_values[[target_field]]
     }

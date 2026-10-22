@@ -174,6 +174,10 @@ Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
   Auftretens; fehlt diese Jahresversion oder der Zeitstempel, wird die jüngste
   verfügbare Version für den exakten Code verwendet. Ohne Treffer bleibt `NA`.
   Übergeordnete ICD-Codes werden nicht als Ersatz verwendet.
+- Im exportierten Feld `wp8_ret_kurzbeschr` werden fehlende Diagnosenamen in
+  generierten Zeilen wie `Diagnose: NA - I10.90 (2026-08-03 08:00:00)` ebenfalls
+  aus `ICD10gm` ergänzt. Dafür gilt das Jahr des Zeitstempels in dieser Zeile,
+  ansonsten die jüngste verfügbare Version. Gespeicherte Quelldaten bleiben unverändert.
 - Diagnosen werden nach ICD-Code zusammengefasst und alphabetisch nach Bezeichnung
   sortiert. Bei unterschiedlichen Bezeichnungen wird die alphabetisch erste
   vorhandene Bezeichnung verwendet.

@@ -277,6 +277,49 @@ getFallvignetteDiagnosisLabel <- function(icd_code, diagnosis_datetimes, icd_lab
   labels[which(years == selected_year)[1L]]
 }
 
+#' Fill missing diagnosis names in exported MRP short descriptions
+#'
+#' Recognizes generated diagnosis lines containing NA, an exact ICD code and
+#' a timestamp. Existing names and other description content are preserved.
+#'
+#' @param descriptions Character vector of stored MRP short descriptions.
+#' @param icd_labels Mapping returned by ICD10gm::get_icd_labels().
+#'
+#' @return Descriptions with resolvable NA diagnosis names replaced.
+fillFallvignetteDescriptionDiagnoses <- function(
+  descriptions,
+  icd_labels = ICD10gm::get_icd_labels()
+) {
+  diagnosis_pattern <- paste0(
+    "^(?:[ \t]*Diagnose:[ \t]*|[ \t]*)NA[ \t]+-[ \t]+",
+    "([A-Z][0-9]{2}(?:\\.[0-9]{1,2})?)[ \t]+\\(",
+    "([0-9]{4}-[0-9]{2}-[0-9]{2}(?: [0-9]{2}:[0-9]{2}:[0-9]{2})?|NA)",
+    "\\)[ \t\r]*$"
+  )
+  vapply(descriptions, function(description) {
+    if (is.na(description)) {
+      return(description)
+    }
+    # A sentinel preserves trailing newlines when splitting and joining the text.
+    lines <- strsplit(paste0(description, "\n."), "\n", fixed = TRUE)[[1L]]
+    lines <- lines[-length(lines)]
+    for (line_index in seq_along(lines)) {
+      parts <- regmatches(lines[line_index], regexec(diagnosis_pattern, lines[line_index], perl = TRUE))[[1L]]
+      if (!length(parts)) {
+        next
+      }
+      diagnosis_datetime <- asFallvignetteDatetime(if (parts[3L] == "NA") NA_character_ else parts[3L])
+      label <- getFallvignetteDiagnosisLabel(parts[2L], diagnosis_datetime, icd_labels)
+      if (!is.na(label)) {
+        line <- lines[line_index]
+        regmatches(line, regexpr("\\bNA\\b", line, perl = TRUE)) <- label
+        lines[line_index] <- line
+      }
+    }
+    paste(lines, collapse = "\n")
+  }, character(1), USE.NAMES = FALSE)
+}
+
 #' Add active medication to fallvignette source rows
 #'
 #' Includes MedicationRequest resources active at the medication analysis.
