@@ -210,6 +210,8 @@ Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
   Medikationsanalyse. Spätere Werte werden ausgeschlossen.
 - Die Bezeichnung stammt ausschließlich aus `Observation.code.display`.
   Fehlt sie, wird `NA` ausgegeben.
+- Numerische Laborwerte werden auf genau zwei Nachkommastellen mit Dezimalpunkt
+  formatiert, einschließlich nachgestellter Nullen, zum Beispiel `4.00` oder `4.50`.
 - Wert, Einheit, LOINC-Code und vorhandener Beobachtungszeitpunkt werden
   ausgegeben. Identische Ausgabezeilen werden entfernt und alphabetisch
   sortiert.

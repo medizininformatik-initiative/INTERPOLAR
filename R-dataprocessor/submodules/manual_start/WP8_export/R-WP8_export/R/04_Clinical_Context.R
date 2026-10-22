@@ -521,7 +521,8 @@ formatFallvignetteTimestamp <- function(value, datetime_format) {
 #' Add recent WP7 laboratory values to fallvignette source rows
 #'
 #' Includes every matching LOINC observation from the seven days up to and
-#' including the medication analysis timestamp.
+#' including the medication analysis timestamp. Numeric values are rounded and
+#' displayed with exactly two decimal places and a decimal point.
 #'
 #' @param source_data Source rows containing pat_id and meda_dat.
 #' @param observations Laboratory observations from getObservationsFromDB().
@@ -603,6 +604,12 @@ addFallvignetteLaboratoryValues <- function(
     display <- trimws(as.character(observations[["obs_code_display"]][included_indices]))
 
     value <- as.character(observations[["obs_valuequantity_value"]][included_indices])
+    numeric_value <- suppressWarnings(as.numeric(value))
+    has_numeric_value <- is.finite(numeric_value)
+    value[has_numeric_value] <- formatC(
+      numeric_value[has_numeric_value],
+      format = "f", digits = 2L, decimal.mark = "."
+    )
     unit <- trimws(as.character(observations[["obs_valuequantity_unit"]][included_indices]))
     unit_code <- trimws(as.character(observations[["obs_valuequantity_code"]][included_indices]))
     missing_unit <- is.na(unit) | !nzchar(unit)

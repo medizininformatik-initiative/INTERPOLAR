@@ -393,12 +393,45 @@ testthat::test_that("addFallvignetteLaboratoryValues applies WP7 and time window
     result$wp8_fv_laborparameter,
     paste(
       c(
-        "Haemoglobin (LOINC: 718-7): 12.5 g/dL [2026-02-06 08:00:00]",
-        "NA (LOINC: 2160-0): 1.2 mg/dL [2026-02-07 09:00:00]"
+        "Haemoglobin (LOINC: 718-7): 12.50 g/dL [2026-02-06 08:00:00]",
+        "NA (LOINC: 2160-0): 1.20 mg/dL [2026-02-07 09:00:00]"
       ),
       collapse = "\n"
     )
   )
+})
+
+testthat::test_that("laboratory values always show two decimal places", {
+  source_data <- data.table::data.table(
+    pat_id = "patient-1",
+    meda_dat = as.POSIXct("2026-02-08 12:00:00", tz = "UTC")
+  )
+  observations <- data.table::data.table(
+    obs_patient_ref = "Patient/patient-1",
+    obs_code_system = "http://loinc.org",
+    obs_code_code = "2160-0",
+    obs_code_display = "Laborwert",
+    obs_valuequantity_value = c("4", "4.5", "4.5678", "0", "-1.234", "1e-5", NA, "kein Wert"),
+    obs_valuequantity_code = "mg/dL",
+    obs_valuequantity_unit = NA_character_,
+    start_datetime = as.POSIXct("2026-02-07 08:00:00", tz = "UTC") + seq_len(8L)
+  )
+  original_observations <- data.table::copy(observations)
+  loinc_mapping <- data.table::data.table(LOINC = "2160-0", LOINC_PRIMARY = "2160-0")
+  result <- addFallvignetteLaboratoryValues(
+    source_data, observations, loinc_mapping,
+    relevant_loinc_codes = "2160-0"
+  )
+  expected_values <- c("4.00", "4.50", "4.57", "0.00", "-1.23", "0.00", "NA", "kein Wert")
+  testthat::expect_equal(
+    result$wp8_fv_laborparameter,
+    paste0(
+      "Laborwert (LOINC: 2160-0): ", expected_values,
+      " mg/dL [2026-02-07 08:00:0", seq_len(8L), "]",
+      collapse = "\n"
+    )
+  )
+  testthat::expect_identical(observations, original_observations)
 })
 
 testthat::test_that("addFallvignetteOperationStatus combines Encounter and OPS", {
