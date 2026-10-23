@@ -77,7 +77,7 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
     paste(
       c(
         "Alpha historisch (ICD: A01) [01.01.2020]",
-        "Doppelte Diagnose (ICD: D01) [29.01.2026–30.01.2026] [2 Auftreten]",
+        "Doppelte Diagnose (ICD: D01) [29.01.2026 – 30.01.2026 2 Diagnosen]",
         "Gamma gueltig (ICD: C03) [15.01.2026]",
         "Zeta aktuell (ICD: Z99) [31.01.2026]",
         "NA (ICD: X01)"
@@ -150,7 +150,7 @@ testthat::test_that("diagnoses fill missing labels while retaining FHIR names an
   result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
   testthat::expect_equal(
     result$wp8_fv_diagnosen,
-    paste0(expected_label, " (ICD: I10.90) [03.08.2019–12.08.2020] [2 Auftreten]")
+    paste0(expected_label, " (ICD: I10.90) [03.08.2019 – 12.08.2020 2 Diagnosen]")
   )
   testthat::expect_identical(conditions, original_conditions)
 
@@ -158,7 +158,7 @@ testthat::test_that("diagnoses fill missing labels while retaining FHIR names an
   result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
   testthat::expect_equal(
     result$wp8_fv_diagnosen,
-    "Bezeichnung vom FHIR-Server (ICD: I10.90) [03.08.2019–12.08.2020] [2 Auftreten]"
+    "Bezeichnung vom FHIR-Server (ICD: I10.90) [03.08.2019 – 12.08.2020 2 Diagnosen]"
   )
   data.table::set(conditions, j = "con_code_display", value = NA_character_)
   data.table::set(conditions, j = "start_datetime", value = as.POSIXct(NA, tz = "UTC"))
@@ -192,13 +192,13 @@ testthat::test_that("diagnoses show the requested range and count distinct times
   result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
   testthat::expect_equal(
     result$wp8_fv_diagnosen,
-    "Essentielle Hypertonie (ICD: I10.90) [03.08.2026–12.08.2026] [3 Auftreten]"
+    "Essentielle Hypertonie (ICD: I10.90) [03.08.2026 – 12.08.2026 3 Diagnosen]"
   )
   data.table::set(conditions, i = 3L, j = "start_datetime", value = as.POSIXct(NA, tz = "UTC"))
   result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
   testthat::expect_equal(
     result$wp8_fv_diagnosen,
-    "Essentielle Hypertonie (ICD: I10.90) [03.08.2026] [3 Auftreten]"
+    "Essentielle Hypertonie (ICD: I10.90) [03.08.2026 3 Diagnosen]"
   )
 })
 

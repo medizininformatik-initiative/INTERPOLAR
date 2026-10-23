@@ -210,12 +210,16 @@ addFallvignetteDiagnoses <- function(
           diagnosis_displays[group_index],
           " (ICD: ", diagnoses[["code"]][indices[1L]], ")"
         )
+        details <- character()
         if (length(dates)) {
           date_range <- format(range(dates), datetime_format, tz = "UTC")
-          line <- paste0(line, " [", paste(unique(date_range), collapse = "–"), "]")
+          details <- paste(unique(date_range), collapse = " – ")
         }
         if (length(indices) > 1L) {
-          line <- paste0(line, " [", length(indices), " Auftreten]")
+          details <- c(details, paste(length(indices), "Diagnosen"))
+        }
+        if (length(details)) {
+          line <- paste0(line, " [", paste(details, collapse = " "), "]")
         }
         line
       }, character(1))
