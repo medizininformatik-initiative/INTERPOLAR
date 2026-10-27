@@ -15,6 +15,16 @@ TOP_STUDY_IMAGE=$(cat "$tool_dir/image.txt")
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 out="$root/outputLocal/top-study/$run_id"
 mkdir -p "$out"
+docker_tool_dir="$tool_dir"
+docker_out="$out"
+case "$OSTYPE" in
+  msys*|cygwin*)
+    # Git Bash must leave container paths alone; convert only host mount paths.
+    export MSYS_NO_PATHCONV=1
+    docker_tool_dir=$(cygpath -m "$tool_dir")
+    docker_out=$(cygpath -m "$out")
+    ;;
+esac
 started=$(date -u +%FT%TZ)
 start_seconds=$(date +%s)
 phase=initialization
@@ -61,7 +71,7 @@ phase=prepare
 container="top-study-prepare-$run_id"
 echo "[$(date -u +%FT%TZ)] Studienadapter vorbereiten"
 docker compose run --rm --no-deps --name "$container" \
-  --volume "$tool_dir:/runner:ro" --volume "$out:/run" \
+  --volume "$docker_tool_dir:/runner:ro" --volume "$docker_out:/run" \
   --entrypoint Rscript r-env /runner/prepare.R > "$out/preparation.log" 2>&1 &
 command_pid=$!
 wait_for_command || {
@@ -74,7 +84,7 @@ container="top-study-run-$run_id"
 echo "[$(date -u +%FT%TZ)] Vollständige TOP-Studienanalyse starten"
 # A pipe streams progress; pipefail preserves the container exit status.
 docker compose -f docker-compose.yml -f R-cdstoolchain/top-study/compose.yml run --rm --no-deps \
-  --name "$container" --volume "$tool_dir:/runner:ro" --volume "$out:/run" top-study \
+  --name "$container" --volume "$docker_tool_dir:/runner:ro" --volume "$docker_out:/run" top-study \
   2>&1 | tee "$out/progress.log" &
 command_pid=$!
 wait_for_command
