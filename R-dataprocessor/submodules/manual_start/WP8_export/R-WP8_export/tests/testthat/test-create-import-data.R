@@ -435,3 +435,105 @@ testthat::test_that("hashFallvignetteSiteCode uses pseudonymization SHA-256", {
     "f64bca78aea5629a60d34fba5940dfe3a544e71a54955cad2ac1f2c3ebc3bb66"
   )
 })
+
+testthat::test_that("import fills missing diagnosis names only in exported short descriptions", {
+  mapping <- getTestFallvignetteMapping()
+  source_data <- getTestFallvignetteSourceData(mapping)
+  description <- "Diagnose: NA - I10.90   (2020-08-03 08:00:00)"
+  data.table::set(source_data, i = 2L, j = "ret_kurzbeschr", value = description)
+  original_source <- data.table::copy(source_data)
+  result <- createFallvignetteImportData(
+    source_data, mapping, getTestWardDefinitions(),
+    site_code = "UKB"
+  )
+  labels <- ICD10gm::get_icd_labels(year = 2020, icd3 = "I10")
+  label <- labels$label[labels$icd_normcode == "I10.90"][1L]
+  testthat::expect_equal(
+    result$wp8_ret_kurzbeschr,
+    c("MRP A", rep(paste0("Diagnose: ", label, " - I10.90   (2020-08-03 08:00:00)"), 2L))
+  )
+  testthat::expect_identical(source_data, original_source)
+})
+
+testthat::test_that("import copies medication analysis timestamps for each evaluation", {
+  mapping <- getTestFallvignetteMapping()
+  source_data <- getTestFallvignetteSourceData(mapping)
+  timestamps <- c("2026-08-03 10:15:37", "2026-08-12 00:00:00")
+  data.table::set(source_data, j = "meda_dat", value = timestamps)
+  result <- createFallvignetteImportData(
+    source_data, mapping, getTestWardDefinitions(),
+    site_code = "UKB"
+  )
+  testthat::expect_equal(
+    result$wp8_meda_dat,
+    c("2026-08-03 10:15:37", "2026-08-12 00:00:00", "2026-08-12 00:00:00")
+  )
+  testthat::expect_identical(source_data$meda_dat, timestamps)
+
+  data.table::set(source_data, j = "meda_dat", value = c("2026-08-03 08:15:37", NA_character_))
+  result <- createFallvignetteImportData(
+    source_data, mapping, getTestWardDefinitions(),
+    site_code = "UKB"
+  )
+  testthat::expect_equal(result$wp8_meda_dat, c("2026-08-03 08:15:37", NA_character_, NA_character_))
+})
+
+testthat::test_that("MRP group IDs link identical MRPs only within the same analysis", {
+  source_data <- data.table::data.table(
+    source_record_id = "record-1",
+    fall_id = "fall-1",
+    meda_id = "meda-1",
+    ret_id = c("mrp-1", "mrp-2", "mrp-3"),
+    ret_atc1 = "J05AF06",
+    ret_ip_klasse_01 = "Drug-Disease",
+    ret_ip_klasse_disease = "Diagnosecluster",
+    ret_atc2 = NA_character_,
+    ret_kurzbeschr = "Gleiche Diagnose- und Laborkriterien"
+  )
+  original_source <- data.table::copy(source_data)
+  ids <- generateFallvignetteMrpGroupIds(source_data)
+  testthat::expect_equal(length(unique(ids)), 1L)
+  testthat::expect_match(ids[1L], "^[0-9a-f]{32}$")
+  testthat::expect_identical(source_data, original_source)
+  testthat::expect_false(identical(ids, generateFallvignetteMrpGroupIds(source_data)))
+
+  changes <- list(
+    source_record_id = "record-2", fall_id = "fall-2", meda_id = "meda-2",
+    ret_atc1 = "J05AF07", ret_atc2 = "C09AA05", ret_ip_klasse_01 = "Drug-Drug",
+    ret_ip_klasse_disease = "Anderer Diagnosecluster", ret_kurzbeschr = "Andere Kriterien"
+  )
+  for (column_name in names(changes)) {
+    changed_source <- data.table::copy(source_data)
+    data.table::set(changed_source, i = 2L, j = column_name, value = changes[[column_name]])
+    ids <- generateFallvignetteMrpGroupIds(changed_source)
+    testthat::expect_equal(ids[1L], ids[3L], info = column_name)
+    testthat::expect_false(ids[1L] == ids[2L], info = column_name)
+  }
+  data.table::set(source_data, j = "ret_kurzbeschr", value = NA_character_)
+  testthat::expect_equal(length(unique(generateFallvignetteMrpGroupIds(source_data))), 3L)
+  testthat::expect_identical(generateFallvignetteMrpGroupIds(source_data[integer(), ]), character())
+  data.table::set(source_data, i = 1L, j = "meda_id", value = NA_character_)
+  testthat::expect_error(generateFallvignetteMrpGroupIds(source_data), "non-empty meda_id")
+})
+
+testthat::test_that("export preserves both evaluations and distinct MRP IDs in a group", {
+  mapping <- getTestFallvignetteMapping()
+  source_data <- getTestFallvignetteSourceData(mapping)
+  source_data <- data.table::rbindlist(rep(list(source_data), 2L))
+  # Rows 2 and 4 describe the same MRP in the same MedA, with different ret_id.
+  data.table::set(source_data, i = 4L, j = "ret_id", value = "ret-duplicate")
+  original_source <- data.table::copy(source_data)
+  result <- createFallvignetteImportData(
+    source_data, mapping, getTestWardDefinitions(),
+    site_code = "UKB"
+  )
+  group_ids <- result$wp8_mrp_gruppen_id
+  testthat::expect_length(group_ids, 6L)
+  testthat::expect_equal(length(unique(group_ids)), 2L)
+  testthat::expect_equal(length(unique(result$record_id)), 6L)
+  testthat::expect_equal(group_ids[c(2L, 3L, 5L, 6L)], rep(group_ids[2L], 4L))
+  testthat::expect_equal(result$wp8_ret_id[c(2L, 3L, 5L, 6L)], c("ret-2", "ret-2", "ret-duplicate", "ret-duplicate"))
+  local_mapping <- attr(result, "fallvignette_id_mapping")
+  testthat::expect_identical(local_mapping$wp8_mrp_gruppen_id, group_ids)
+  testthat::expect_identical(source_data, original_source)
+})

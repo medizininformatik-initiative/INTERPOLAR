@@ -159,6 +159,13 @@ Alle klinischen Ressourcen werden aus der pseudonymisierten Analysedatenbank
 gelesen. Die bestehenden Loader der regulären MRP-Toolchain werden für
 Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
 
+### Zeitpunkt der Medikationsanalyse
+
+`wp8_meda_dat` wird aus `meda_dat` der zugehörigen Medikationsanalyse befüllt.
+Der Zeitstempel wird über das direkte Mapping übernommen.
+Bei zwei Bewertungen desselben MRP erhalten beide Exportzeilen denselben
+Zeitstempel. Fehlende Zeitstempel bleiben leer.
+
 ### Diagnosen
 
 - Alle ICD-10-GM-Diagnosen des aktuellen Hauptencounters werden übernommen,
@@ -168,10 +175,25 @@ Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
   und `ICD_VALIDITY_DAYS` am Analysezeitpunkt erfüllt ist.
 - `unbegrenzt` sowie ein leerer Gültigkeitswert gelten als zeitlich
   unbeschränkt.
-- Die Diagnosebezeichnung stammt ausschließlich aus
-  `Condition.code.coding.display`. Fehlt sie, wird `NA` ausgegeben.
-- Identische Ausgabezeilen werden entfernt und alphabetisch sortiert. Ein
-  vorhandener Diagnosezeitpunkt wird mit ausgegeben.
+- Die Diagnosebezeichnung stammt bevorzugt aus `Condition.code.coding.display`.
+  Fehlen für einen ICD-Code alle Bezeichnungen oder sind sie leer, wird der Name
+  aus dem Paket `ICD10gm` ergänzt. Verwendet wird das Jahr des letzten bekannten
+  Auftretens; fehlt diese Jahresversion oder der Zeitstempel, wird die jüngste
+  verfügbare Version für den exakten Code verwendet. Ohne Treffer bleibt `NA`.
+  Übergeordnete ICD-Codes werden nicht als Ersatz verwendet.
+- Im exportierten Feld `wp8_ret_kurzbeschr` werden fehlende Diagnosenamen in
+  generierten Zeilen wie `Diagnose: NA - I10.90 (2026-08-03 08:00:00)` ebenfalls
+  aus `ICD10gm` ergänzt. Dafür gilt das Jahr des Zeitstempels in dieser Zeile,
+  ansonsten die jüngste verfügbare Version. Gespeicherte Quelldaten bleiben unverändert.
+- Diagnosen werden nach ICD-Code zusammengefasst und alphabetisch nach Bezeichnung
+  sortiert. Bei unterschiedlichen Bezeichnungen wird die alphabetisch erste
+  vorhandene Bezeichnung verwendet.
+- Ausgegeben werden erstes und letztes Datum sowie die Anzahl der Diagnosen,
+  zum Beispiel `Essentielle Hypertonie (ICD: I10.90) [03.08.2026 – 12.08.2026 3 Diagnosen]`.
+- Identische Kombinationen aus ICD-Code, Bezeichnung und Zeitstempel zählen einmal.
+  Bei nur einem Auftreten entfällt die Anzahl.
+  Bei nur einem Datum wird dieses einmal angezeigt. Fehlende Zeitstempel zählen
+  mit, gehen aber nicht in den Zeitraum ein; fehlen alle, entfällt die Datumsangabe.
 
 ### Medikationen
 
@@ -195,6 +217,8 @@ Conditions, MedicationRequests, Observations und Procedures wiederverwendet.
   Medikationsanalyse. Spätere Werte werden ausgeschlossen.
 - Die Bezeichnung stammt ausschließlich aus `Observation.code.display`.
   Fehlt sie, wird `NA` ausgegeben.
+- Numerische Laborwerte werden auf genau zwei Nachkommastellen mit Dezimalpunkt
+  formatiert, einschließlich nachgestellter Nullen, zum Beispiel `4.00` oder `4.50`.
 - Wert, Einheit, LOINC-Code und vorhandener Beobachtungszeitpunkt werden
   ausgegeben. Identische Ausgabezeilen werden entfernt und alphabetisch
   sortiert.
@@ -218,9 +242,23 @@ Beispiel `UKB0001`. In die REDCap-Datei gelangt ausschließlich der SHA-256-Hash
 dieser ID als `record_id`. `wp8_standort_id` enthält den SHA-256-Hash des reinen
 `SITE_CODE`.
 
+`wp8_mrp_gruppen_id` verknüpft identische MRP derselben Medikationsanalyse für
+die WP8-Sichtprüfung. Gruppiert wird nach Quelldatensatz, Fall, MedA, ATC1,
+MRP-Klasse, Diagnosecluster, ATC2 und vollständiger gespeicherter Kurzbeschreibung.
+So bleiben unterschiedliche Diagnose-/Laborkriterien getrennt. Unterschiedliche
+`ret_id` und Bewertungen verhindern die Gruppierung nicht; beide Bewertungszeilen
+desselben MRP erhalten dieselbe Gruppen-ID. Fehlen ATC1, MRP-Klasse oder Beschreibung,
+werden unterschiedliche `ret_id` vorsichtshalber nicht zusammengefasst.
+
+Die Gruppen-ID besteht aus 16 zufälligen Bytes als 32-stelligem Hex-String und
+wird je Export neu erzeugt. Sie wird nicht aus Fall-/MedA- oder Snapshot-IDs
+abgeleitet. Die Zuordnung bleibt über die lokale Rückverfolgungsdatei nachvollziehbar.
+Das Feld ist für die WP8-Sichtprüfung vorgesehen und vor Weitergabe an die
+bewertenden Apothekerinnen und Apotheker zu entfernen.
+
 Die lokale Rückverfolgungsdatei enthält je nach Verfügbarkeit:
 
-- `record_id`, `local_record_id`, `site_code` und `evaluation_index`
+- `record_id`, `local_record_id`, `site_code`, `evaluation_index` und `wp8_mrp_gruppen_id`
 - Quell-, Patienten-, Fall-, Medikationsanalyse- und retrospektive MRP-IDs
 
 Diese Datei muss am exportierenden Standort verbleiben. Sie darf weder in das

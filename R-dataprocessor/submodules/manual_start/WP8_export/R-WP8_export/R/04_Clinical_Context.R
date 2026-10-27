@@ -6,8 +6,11 @@
 #' previous encounters are included only if their ICD code occurs in the
 #' processed WP7 Drug-Disease or Drug-Niereninsuffizienz rules and their
 #' configured validity period covers the medication analysis timestamp.
-#' Identical formatted lines are removed; the same diagnosis with different
-#' timestamps is retained.
+#' Diagnoses are grouped by ICD code with first and last dates and occurrence counts.
+#' Identical display/timestamp combinations are counted once. Missing timestamps
+#' contribute to the count but not to the date range. Missing display names are
+#' resolved through ICD10gm using the latest occurrence year, or the latest
+#' available version for the exact code if that year is unavailable.
 #'
 #' @param source_data Fallvignette source rows. Required columns are pat_id,
 #'   fall_fhir_enc_id and meda_dat.
@@ -15,14 +18,14 @@
 #'   getConditionsFromDB() helper.
 #' @param diagnosis_rules Combined processed WP7 Drug-Disease and
 #'   Drug-Niereninsuffizienz rules containing ICD and ICD_VALIDITY_DAYS.
-#' @param datetime_format Format used for available diagnosis timestamps.
+#' @param datetime_format Format used for the first and last diagnosis dates.
 #'
 #' @return A copy of source_data with the wp8_fv_diagnosen column.
 addFallvignetteDiagnoses <- function(
   source_data,
   conditions,
   diagnosis_rules,
-  datetime_format = "%Y-%m-%d %H:%M:%S"
+  datetime_format = "%d.%m.%Y"
 ) {
   if (!data.table::is.data.table(source_data)) {
     stop("source_data must be a data.table.")
@@ -105,6 +108,14 @@ addFallvignetteDiagnoses <- function(
     )
   }
 
+  # Load the package mapping once, only when a display name might need a fallback.
+  condition_displays <- trimws(conditions[["con_code_display"]])
+  icd_labels <- if (any(is.na(condition_displays) | !nzchar(condition_displays))) {
+    ICD10gm::get_icd_labels()
+  } else {
+    NULL
+  }
+
   result <- data.table::copy(source_data)
   diagnosis_texts <- vapply(
     seq_len(nrow(result)),
@@ -169,32 +180,54 @@ addFallvignetteDiagnoses <- function(
       diagnosis_displays <- trimws(included_conditions[["con_code_display"]])
       diagnosis_codes <- trimws(included_conditions[["con_code_code"]])
 
-      diagnosis_lines <- diagnosis_displays
-      has_code <- !is.na(diagnosis_codes) & nzchar(diagnosis_codes)
-      diagnosis_lines[has_code] <- paste0(
-        diagnosis_lines[has_code],
-        " (ICD: ",
-        diagnosis_codes[has_code],
-        ")"
-      )
-      has_datetime <- !is.na(included_datetimes)
-      diagnosis_lines[has_datetime] <- paste0(
-        diagnosis_lines[has_datetime],
-        " [",
-        format(
-          included_datetimes[has_datetime],
-          datetime_format,
-          tz = "UTC"
-        ),
-        "]"
-      )
+      # Preserve duplicate removal before counting occurrences per ICD code.
+      diagnoses <- unique(data.table::data.table(
+        code = diagnosis_codes,
+        display = diagnosis_displays,
+        datetime = included_datetimes
+      ))
+      diagnosis_codes <- unique(diagnoses[["code"]])
+      diagnosis_groups <- lapply(seq_along(diagnosis_codes), function(code_index) {
+        which(match(diagnoses[["code"]], diagnosis_codes) == code_index)
+      })
+      diagnosis_displays <- vapply(diagnosis_groups, function(indices) {
+        displays <- diagnoses[["display"]][indices]
+        available <- displays[!is.na(displays) & nzchar(displays)]
+        if (length(available)) {
+          return(sort(available)[1L])
+        }
+        getFallvignetteDiagnosisLabel(
+          icd_code = diagnoses[["code"]][indices[1L]],
+          diagnosis_datetimes = diagnoses[["datetime"]][indices],
+          icd_labels = icd_labels
+        )
+      }, character(1))
+      diagnosis_lines <- vapply(seq_along(diagnosis_groups), function(group_index) {
+        indices <- diagnosis_groups[[group_index]]
+        dates <- diagnoses[["datetime"]][indices]
+        dates <- dates[!is.na(dates)]
+        line <- paste0(
+          diagnosis_displays[group_index],
+          " (ICD: ", diagnoses[["code"]][indices[1L]], ")"
+        )
+        details <- character()
+        if (length(dates)) {
+          date_range <- format(range(dates), datetime_format, tz = "UTC")
+          details <- paste(unique(date_range), collapse = " – ")
+        }
+        if (length(indices) > 1L) {
+          details <- c(details, paste(length(indices), "Diagnosen"))
+        }
+        if (length(details)) {
+          line <- paste0(line, " [", paste(details, collapse = " "), "]")
+        }
+        line
+      }, character(1))
       diagnosis_order <- order(
-        tolower(diagnosis_displays),
-        diagnosis_codes,
-        included_datetimes,
+        tolower(diagnosis_displays), diagnosis_codes,
         na.last = TRUE
       )
-      paste(unique(diagnosis_lines[diagnosis_order]), collapse = "\n")
+      paste(diagnosis_lines[diagnosis_order], collapse = "\n")
     },
     character(1)
   )
@@ -204,6 +237,91 @@ addFallvignetteDiagnoses <- function(
     value = diagnosis_texts
   )
   result[]
+}
+
+#' Look up a missing diagnosis label for an exact ICD-10-GM code
+#'
+#' Prefers the year of the latest known occurrence within a diagnosis group.
+#' If that year or all timestamps are missing, uses the latest available year
+#' for this code. Unknown codes remain NA; parent codes are not substituted.
+#'
+#' @param icd_code A single ICD-10-GM code.
+#' @param diagnosis_datetimes Diagnosis timestamps for the grouped code.
+#' @param icd_labels Mapping returned by ICD10gm::get_icd_labels().
+#'
+#' @return A diagnosis label or NA_character_ if no exact match exists.
+getFallvignetteDiagnosisLabel <- function(icd_code, diagnosis_datetimes, icd_labels) {
+  if (is.na(icd_code) || !nzchar(icd_code) || is.null(icd_labels)) {
+    return(NA_character_)
+  }
+  matches <- which(
+    (icd_labels[["icd_normcode"]] == icd_code | icd_labels[["icd_code"]] == icd_code) &
+      !is.na(icd_labels[["year"]])
+  )
+  # Some historical package labels contain invalid UTF-8; treat these as missing.
+  labels <- trimws(iconv(icd_labels[["label"]][matches], from = "UTF-8", to = "UTF-8"))
+  has_label <- !is.na(labels) & nzchar(labels)
+  matches <- matches[has_label]
+  labels <- labels[has_label]
+  if (!length(matches)) {
+    return(NA_character_)
+  }
+  dates <- diagnosis_datetimes[!is.na(diagnosis_datetimes)]
+  diagnosis_year <- if (length(dates)) {
+    as.integer(format(max(dates), "%Y", tz = "UTC"))
+  } else {
+    NA_integer_
+  }
+  years <- icd_labels[["year"]][matches]
+  selected_year <- if (!is.na(diagnosis_year) && diagnosis_year %in% years) {
+    diagnosis_year
+  } else {
+    max(years, na.rm = TRUE)
+  }
+  labels[which(years == selected_year)[1L]]
+}
+
+#' Fill missing diagnosis names in exported MRP short descriptions
+#'
+#' Recognizes generated diagnosis lines containing NA, an exact ICD code and
+#' a timestamp. Existing names and other description content are preserved.
+#'
+#' @param descriptions Character vector of stored MRP short descriptions.
+#' @param icd_labels Mapping returned by ICD10gm::get_icd_labels().
+#'
+#' @return Descriptions with resolvable NA diagnosis names replaced.
+fillFallvignetteDescriptionDiagnoses <- function(
+  descriptions,
+  icd_labels = ICD10gm::get_icd_labels()
+) {
+  diagnosis_pattern <- paste0(
+    "^(?:[ \t]*Diagnose:[ \t]*|[ \t]*)NA[ \t]+-[ \t]+",
+    "([A-Z][0-9]{2}(?:\\.[0-9]{1,2})?)[ \t]+\\(",
+    "([0-9]{4}-[0-9]{2}-[0-9]{2}(?: [0-9]{2}:[0-9]{2}:[0-9]{2})?|NA)",
+    "\\)[ \t\r]*$"
+  )
+  vapply(descriptions, function(description) {
+    if (is.na(description)) {
+      return(description)
+    }
+    # A sentinel preserves trailing newlines when splitting and joining the text.
+    lines <- strsplit(paste0(description, "\n."), "\n", fixed = TRUE)[[1L]]
+    lines <- lines[-length(lines)]
+    for (line_index in seq_along(lines)) {
+      parts <- regmatches(lines[line_index], regexec(diagnosis_pattern, lines[line_index], perl = TRUE))[[1L]]
+      if (!length(parts)) {
+        next
+      }
+      diagnosis_datetime <- asFallvignetteDatetime(if (parts[3L] == "NA") NA_character_ else parts[3L])
+      label <- getFallvignetteDiagnosisLabel(parts[2L], diagnosis_datetime, icd_labels)
+      if (!is.na(label)) {
+        line <- lines[line_index]
+        regmatches(line, regexpr("\\bNA\\b", line, perl = TRUE)) <- label
+        lines[line_index] <- line
+      }
+    }
+    paste(lines, collapse = "\n")
+  }, character(1), USE.NAMES = FALSE)
 }
 
 #' Add active medication to fallvignette source rows
@@ -407,7 +525,8 @@ formatFallvignetteTimestamp <- function(value, datetime_format) {
 #' Add recent WP7 laboratory values to fallvignette source rows
 #'
 #' Includes every matching LOINC observation from the seven days up to and
-#' including the medication analysis timestamp.
+#' including the medication analysis timestamp. Numeric values are rounded and
+#' displayed with exactly two decimal places and a decimal point.
 #'
 #' @param source_data Source rows containing pat_id and meda_dat.
 #' @param observations Laboratory observations from getObservationsFromDB().
@@ -489,6 +608,12 @@ addFallvignetteLaboratoryValues <- function(
     display <- trimws(as.character(observations[["obs_code_display"]][included_indices]))
 
     value <- as.character(observations[["obs_valuequantity_value"]][included_indices])
+    numeric_value <- suppressWarnings(as.numeric(value))
+    has_numeric_value <- is.finite(numeric_value)
+    value[has_numeric_value] <- formatC(
+      numeric_value[has_numeric_value],
+      format = "f", digits = 2L, decimal.mark = "."
+    )
     unit <- trimws(as.character(observations[["obs_valuequantity_unit"]][included_indices]))
     unit_code <- trimws(as.character(observations[["obs_valuequantity_code"]][included_indices]))
     missing_unit <- is.na(unit) | !nzchar(unit)
