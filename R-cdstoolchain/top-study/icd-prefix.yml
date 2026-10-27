@@ -1,0 +1,40 @@
+---
+condition:
+  baseQuery: "WITH model_codes AS (\n  SELECT DISTINCT\n    CASE\n      WHEN LEFT(code,
+    LENGTH('http://fhir.de/CodeSystem/bfarm/icd-10-gm|')) = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm|'\n
+    \     THEN REGEXP_SUBSTR(\n        SUBSTRING(code FROM LENGTH('http://fhir.de/CodeSystem/bfarm/icd-10-gm|')
+    + 1),\n        '^[A-Z][0-9]{2}(\\.[0-9]{1,2})?')\n      ELSE code\n    END AS
+    code\n  -- The typed NULL lets H2 infer the array type before JDBC parameters
+    are bound.\n  FROM UNNEST(ARRAY[CAST(NULL AS VARCHAR), {codes}]) AS model(code)\n
+    \ WHERE code IS NOT NULL\n)\nSELECT\n  SUBSTRING(con.con_encounter_calculated_ref
+    FROM 11) AS enc_id,\n  con.con_onsetperiod_start AS start_date_time,\n  con.con_onsetperiod_end
+    AS end_date_time,\n  CASE\n    WHEN con.con_onsetperiod_start IS NULL AND con.con_onsetperiod_end
+    IS NULL AND con.con_onsetdatetime IS NULL\n    THEN con.con_recordeddate\n    ELSE
+    con.con_onsetdatetime\n  END\n  AS date_time \nFROM\n  db2dataprocessor_out.v_condition_last_version
+    con\nWHERE\n  -- ICD prefixes have length 3, 5 or 6. Uncorrelated IN subqueries
+    allow\n  -- hashed lookups instead of testing every model prefix for every row.\n
+    \ -- Normalize only model codes; suffixes on data codes are ignored.\n  CASE WHEN
+    con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm' THEN\n    LEFT(con_code_code,
+    3) IN (SELECT code FROM model_codes)\n    OR LEFT(con_code_code, 5) IN (SELECT
+    code FROM model_codes)\n    OR LEFT(con_code_code, 6) IN (SELECT code FROM model_codes)\n
+    \ ELSE\n    con_code_system || '|' || con_code_code IN (SELECT code FROM model_codes)\n
+    \ END\n"
+  startDateTimeIntervalPart: |
+    AND
+    CASE
+      WHEN con.con_onsetperiod_start IS NOT NULL OR (con.con_onsetperiod_start IS NULL AND con.con_onsetperiod_end IS NULL)
+        THEN COALESCE(con.con_onsetperiod_start, con.con_onsetdatetime, con.con_recordeddate) {operator} {value}
+      ELSE true
+    END
+  endDateTimeIntervalPart: |
+    AND
+    CASE
+      WHEN con.con_onsetperiod_end IS NOT NULL OR (con.con_onsetperiod_start IS NULL AND con.con_onsetperiod_end IS NULL)
+        THEN COALESCE(con.con_onsetperiod_end, con.con_onsetdatetime, con.con_recordeddate) {operator} {value}
+      ELSE true
+    END
+  output:
+    subject: enc_id
+    startDateTime: start_date_time
+    endDateTime: end_date_time
+    dateTime: date_time

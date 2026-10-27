@@ -1,0 +1,13 @@
+services:
+  top-study:
+    image: ${TOP_STUDY_IMAGE:?Run via run-top-study.sh}
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    working_dir: /opt/app
+    entrypoint: ["/bin/bash", "/runner/execute.sh"]
+    environment:
+      TZ: Europe/Berlin
+    networks:
+      - internal

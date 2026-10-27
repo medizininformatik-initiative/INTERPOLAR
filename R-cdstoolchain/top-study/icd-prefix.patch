@@ -1,0 +1,42 @@
+diff --git a/src/main/resources/default_adapter_configuration/Default_Interpolar_Adapter.yml b/src/main/resources/default_adapter_configuration/Default_Interpolar_Adapter.yml
+index a5dfd3c..e1e06fa 100644
+--- a/src/main/resources/default_adapter_configuration/Default_Interpolar_Adapter.yml
++++ b/src/main/resources/default_adapter_configuration/Default_Interpolar_Adapter.yml
+@@ -70,6 +70,19 @@ phenotypeQueries:
+       dateTime: da
+   condition:
+     baseQuery: |
++      WITH model_codes AS (
++        SELECT DISTINCT
++          CASE
++            WHEN LEFT(code, LENGTH('http://fhir.de/CodeSystem/bfarm/icd-10-gm|')) = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm|'
++            THEN REGEXP_SUBSTR(
++              SUBSTRING(code FROM LENGTH('http://fhir.de/CodeSystem/bfarm/icd-10-gm|') + 1),
++              '^[A-Z][0-9]{2}(\.[0-9]{1,2})?')
++            ELSE code
++          END AS code
++        -- The typed NULL lets H2 infer the array type before JDBC parameters are bound.
++        FROM UNNEST(ARRAY[CAST(NULL AS VARCHAR), {codes}]) AS model(code)
++        WHERE code IS NOT NULL
++      )
+       SELECT
+         SUBSTRING(con.con_encounter_calculated_ref FROM 11) AS enc_id,
+         con.con_onsetperiod_start AS start_date_time,
+@@ -83,7 +96,16 @@ phenotypeQueries:
+       FROM
+         db2dataprocessor_out.v_condition_last_version con
+       WHERE
+-        con_code_system || '|' || con_code_code IN ({codes})
++        -- ICD prefixes have length 3, 5 or 6. Uncorrelated IN subqueries allow
++        -- hashed lookups instead of testing every model prefix for every row.
++        -- Normalize only model codes; suffixes on data codes are ignored.
++        CASE WHEN con_code_system = 'http://fhir.de/CodeSystem/bfarm/icd-10-gm' THEN
++          LEFT(con_code_code, 3) IN (SELECT code FROM model_codes)
++          OR LEFT(con_code_code, 5) IN (SELECT code FROM model_codes)
++          OR LEFT(con_code_code, 6) IN (SELECT code FROM model_codes)
++        ELSE
++          con_code_system || '|' || con_code_code IN (SELECT code FROM model_codes)
++        END
+     startDateTimeIntervalPart: |
+       AND
+       CASE

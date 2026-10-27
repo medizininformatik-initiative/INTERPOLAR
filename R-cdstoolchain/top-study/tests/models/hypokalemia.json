@@ -1,0 +1,905 @@
+[
+  {
+    "entityType": "category",
+    "id": "726605e1-2101-47b4-b96a-3c2000c9e85e",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Algorithmen"
+      },
+      {
+        "lang": "en",
+        "text": "Algorithms"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 1,
+    "createdAt": 1666008525.833846,
+    "superCategories": [
+
+    ]
+  },
+  {
+    "entityType": "category",
+    "id": "bf711e27-d67b-4868-8898-bfb045c01c8f",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Parameter"
+      },
+      {
+        "lang": "en",
+        "text": "Parameters"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 1,
+    "createdAt": 1666008535.650098,
+    "superCategories": [
+
+    ]
+  },
+  {
+    "entityType": "composite_phenotype",
+    "id": "b14a55cc-5e99-4a74-95f2-ca1a109d0cd2",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Algorithmus 1 A"
+      },
+      {
+        "lang": "en",
+        "text": "Algorithm 1 A"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "Algorithmus zur Identifikation von Hypokaliämie. Der Algorithmus basiert ausschließlich auf der Kaliumkonzentration im Serum/Plasma. Kodierung: LOINC 2823-3 (Kalium Serum/Plasma)"
+      },
+      {
+        "lang": "en",
+        "text": "Algorithm for the identification of hypokalaemia. The algorithm is based exclusively on the potassium level in serum/plasma. Coding: LOINC 2823-3 (Potassium Serum/Plasma)"
+      }
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 9,
+    "author": "top",
+    "createdAt": 1716804613.324112,
+    "superCategories": [
+      {
+        "entityType": "category",
+        "id": "726605e1-2101-47b4-b96a-3c2000c9e85e"
+      }
+    ],
+    "phenotypes": [
+
+    ],
+    "dataType": "boolean",
+    "expression": {
+      "entityId": "b97b4953-3c12-4019-964b-30a40fa13a0d",
+      "arguments": [
+
+      ],
+      "values": [
+
+      ]
+    }
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "b97b4953-3c12-4019-964b-30a40fa13a0d",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "< 3,5 mmol/L"
+      },
+      {
+        "lang": "en",
+        "text": "< 3.5 mmol/L"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "LOINC 2823-3 unterscheidet nicht zwischen Probenart (Serum oder Plasma) trotz unterschiedlicher Grenzwerte. Grenzwert < 3,5 mmol/L bezieht sich auf Bestimmung im Plasma. Bei Grentwert < 3,5 mmol/L sind falsch-negative Ergebnisse für Serumproben enthalten (da Grenzwert Serum < 3,7 mmol/L)."
+      },
+      {
+        "lang": "en",
+        "text": "LOINC 2823-3 does not distinguish between sample type (serum or plasma) despite different limits. Limit value < 3.5 mmol/L refers to determination in plasma. Limit value < 3.5 mmol/L includes false-negative results for serum samples (because limit value serum < 3.7 mmol/L)."
+      }
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 5,
+    "author": "Christoph Beger",
+    "createdAt": 1680082005.947082,
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "maxOperator": "<",
+      "values": [
+        null,
+        3.5
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "ff27c2f0-df39-4d9c-bc7a-424e5ee5da58",
+      "titles": [
+        {
+          "lang": "de",
+          "text": "Kaliumkonzentration in Serum/Plasma"
+        },
+        {
+          "lang": "en",
+          "text": "Potassium level in serum/plasma"
+        }
+      ]
+    }
+  },
+  {
+    "entityType": "category",
+    "id": "a61f204a-6037-4081-8064-98c1b1bf77c7",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Laborwerte"
+      },
+      {
+        "lang": "en",
+        "text": "Laboratory values "
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 1,
+    "author": "top",
+    "createdAt": 1715088939.741952,
+    "superCategories": [
+      {
+        "entityType": "category",
+        "id": "bf711e27-d67b-4868-8898-bfb045c01c8f"
+      }
+    ]
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "55f1e633-6c83-41ad-bb0f-5431ac204642",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "< 3 - 2,5 mmol/L"
+      },
+      {
+        "lang": "en",
+        "text": "< 3 - 2.5 mmol/L"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "CTCAE Grad 3; Hospitalisierung indiziert"
+      },
+      {
+        "lang": "en",
+        "text": "CTCAE Grade 3; Hospitalization indicated"
+      }
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 4,
+    "author": "top",
+    "createdAt": 1715089083.165806,
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "maxOperator": "<",
+      "values": [
+        2.5,
+        3
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "ce25c8bb-2db6-432e-8d62-c6f0381a6b73",
+      "titles": [
+        {
+          "lang": "de",
+          "text": "Kaliumkonzentration (ohne Serum/Plasma)"
+        },
+        {
+          "lang": "en",
+          "text": "Potassium level (without serum/plasma)"
+        }
+      ]
+    }
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "c59da5a0-c3ad-4c10-a7af-60d5afd83505",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "< 3 - 2,5 mmol/L"
+      },
+      {
+        "lang": "en",
+        "text": "< 3 - 2.5 mmol/L"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "CTCAE Grad 3; Hospitalisierung indiziert"
+      },
+      {
+        "lang": "en",
+        "text": "CTCAE Grade 3; Hospitalization indicated"
+      }
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 4,
+    "author": "top",
+    "createdAt": 1715089115.889309,
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "maxOperator": "<",
+      "values": [
+        2.5,
+        3
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "ff27c2f0-df39-4d9c-bc7a-424e5ee5da58",
+      "titles": [
+        {
+          "lang": "de",
+          "text": "Kaliumkonzentration in Serum/Plasma"
+        },
+        {
+          "lang": "en",
+          "text": "Potassium level in serum/plasma"
+        }
+      ]
+    }
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "48a48311-4037-48ac-a0ae-944d83ada443",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "< LLN - 3 mmol/L"
+      },
+      {
+        "lang": "en",
+        "text": "< LLN - 3 mmol/L"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "CTCAE Grad 1/2, da keine Unterscheidung zwischen symptomatisch oder nicht möglich. Der LLN-Wert variiert von Klinikum zu Klinikum. Hier wurde beispielsweise 3,5 mmol/L als unterer Grenzwert gewählt."
+      },
+      {
+        "lang": "en",
+        "text": "CTCAE Grade 1/2, as no distinction between symptomatic or not possible. The LLN value varies from hospital to hospital. Here, for example, 3.5 mmol/L was chosen as the lower limit."
+      }
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 4,
+    "author": "top",
+    "createdAt": 1715089089.431099,
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "maxOperator": "<",
+      "values": [
+        3,
+        3.5
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "ce25c8bb-2db6-432e-8d62-c6f0381a6b73",
+      "titles": [
+        {
+          "lang": "de",
+          "text": "Kaliumkonzentration (ohne Serum/Plasma)"
+        },
+        {
+          "lang": "en",
+          "text": "Potassium level (without serum/plasma)"
+        }
+      ]
+    }
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "3a74020a-7447-486a-8fc4-ba345f55f246",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "< LLN - 3 mmol/L"
+      },
+      {
+        "lang": "en",
+        "text": "< LLN - 3 mmol/L"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "CTCAE Grad 1/2, da keine Unterscheidung zwischen symptomatisch oder nicht möglich. Der LLN-Wert variiert von Klinikum zu Klinikum. Hier wurde beispielsweise 3,5 mmol/L als unterer Grenzwert gewählt."
+      },
+      {
+        "lang": "en",
+        "text": "CTCAE Grade 1/2, as no distinction between symptomatic or not possible. The LLN value varies from hospital to hospital. Here, for example, 3.5 mmol/L was chosen as the lower limit."
+      }
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 4,
+    "author": "top",
+    "createdAt": 1715089120.974419,
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "minOperator": ">=",
+      "maxOperator": "<",
+      "values": [
+        3,
+        3.5
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "ff27c2f0-df39-4d9c-bc7a-424e5ee5da58",
+      "titles": [
+        {
+          "lang": "de",
+          "text": "Kaliumkonzentration in Serum/Plasma"
+        },
+        {
+          "lang": "en",
+          "text": "Potassium level in serum/plasma"
+        }
+      ]
+    }
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "56a8798c-1fa5-43b3-ac05-635868373cef",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "< 3,5 mmol/L"
+      },
+      {
+        "lang": "en",
+        "text": "< 3.5 mmol/L"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "Der LLN-Wert variiert von Klinikum zu Klinikum. Hier wurde beispielsweise 3,5 mmol/L als unterer Grenzwert gewählt."
+      },
+      {
+        "lang": "en",
+        "text": "The LLN value varies from hospital to hospital. Here, for example, 3.5 mmol/L was chosen as the lower limit.\n"
+      }
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 3,
+    "author": "top",
+    "createdAt": 1716818946.108314,
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "maxOperator": "<",
+      "values": [
+        null,
+        3.5
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "ce25c8bb-2db6-432e-8d62-c6f0381a6b73",
+      "titles": [
+        {
+          "lang": "de",
+          "text": "Kaliumkonzentration (ohne Serum/Plasma)"
+        },
+        {
+          "lang": "en",
+          "text": "Potassium level (without serum/plasma)"
+        }
+      ]
+    }
+  },
+  {
+    "entityType": "single_phenotype",
+    "id": "ff27c2f0-df39-4d9c-bc7a-424e5ee5da58",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Kaliumkonzentration in Serum/Plasma"
+      },
+      {
+        "lang": "en",
+        "text": "Potassium level in serum/plasma"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+
+    ],
+    "codes": [
+      {
+        "uri": "http://loinc.org/2823-3",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc",
+          "latest": false
+        },
+        "code": "2823-3",
+        "children": [
+
+        ],
+        "name": "Potassium [Moles/Vol]",
+        "synonyms": [
+
+        ]
+      }
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 5,
+    "author": "Alexandr Uciteli",
+    "createdAt": 1740064108.21842,
+    "superCategories": [
+      {
+        "entityType": "category",
+        "id": "a61f204a-6037-4081-8064-98c1b1bf77c7"
+      }
+    ],
+    "dataType": "number",
+    "itemType": "observation",
+    "unit": "mmol/L"
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "bab18bbd-5ee5-45ee-b918-75bae89c0681",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "< 2,5 mmol/L"
+      },
+      {
+        "lang": "en",
+        "text": "< 2.5 mmol/L"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "CTCAE Grad 4; lebensbedrohliche Folgen"
+      },
+      {
+        "lang": "en",
+        "text": "CTCAE Grade 4; life-threatening consequences"
+      }
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 1,
+    "author": "top",
+    "createdAt": 1685998163.791418,
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "maxOperator": "<",
+      "values": [
+        null,
+        2.5
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "ff27c2f0-df39-4d9c-bc7a-424e5ee5da58",
+      "titles": [
+        {
+          "lang": "de",
+          "text": "Kaliumkonzentration in Serum/Plasma"
+        },
+        {
+          "lang": "en",
+          "text": "Potassium level in serum/plasma"
+        }
+      ]
+    }
+  },
+  {
+    "entityType": "single_restriction",
+    "id": "9cfd3eef-1b2a-4864-aae6-4a9e8f980751",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "< 2,5 mmol/L"
+      },
+      {
+        "lang": "en",
+        "text": "< 2.5 mmol/L"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "CTCAE Grad 4; lebensbedrohliche Folgen"
+      },
+      {
+        "lang": "en",
+        "text": "CTCAE Grade 4; life-threatening consequences"
+      }
+    ],
+    "codes": [
+
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 1,
+    "author": "top",
+    "createdAt": 1685998117.355088,
+    "dataType": "boolean",
+    "restriction": {
+      "type": "number",
+      "quantifier": "min",
+      "cardinality": 1,
+      "maxOperator": "<",
+      "values": [
+        null,
+        2.5
+      ]
+    },
+    "superPhenotype": {
+      "entityType": "single_phenotype",
+      "id": "ce25c8bb-2db6-432e-8d62-c6f0381a6b73",
+      "titles": [
+        {
+          "lang": "de",
+          "text": "Kaliumkonzentration (ohne Serum/Plasma)"
+        },
+        {
+          "lang": "en",
+          "text": "Potassium level (without serum/plasma)"
+        }
+      ]
+    }
+  },
+  {
+    "entityType": "single_phenotype",
+    "id": "ce25c8bb-2db6-432e-8d62-c6f0381a6b73",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Kaliumkonzentration (ohne Serum/Plasma)"
+      },
+      {
+        "lang": "en",
+        "text": "Potassium level (without serum/plasma)"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+      {
+        "lang": "de",
+        "text": "LOINC-Codes ohne den von Kaliumkonzentration im Serum/Plasma"
+      },
+      {
+        "lang": "en",
+        "text": "LOINC Codes without the one of potassium level in serum/plasma"
+      }
+    ],
+    "codes": [
+      {
+        "uri": "http://loinc.org/32713-0",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc",
+          "latest": false
+        },
+        "code": "32713-0",
+        "children": [
+
+        ],
+        "name": "Potassium [Moles/volume] in Arterial blood",
+        "synonyms": [
+
+        ]
+      },
+      {
+        "uri": "http://loinc.org/6298-4",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc",
+          "latest": false
+        },
+        "code": "6298-4",
+        "children": [
+
+        ],
+        "name": "Potassium (Bld) [Moles/Vol]",
+        "synonyms": [
+
+        ]
+      },
+      {
+        "uri": "http://loinc.org/39790-1",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc",
+          "latest": false
+        },
+        "code": "39790-1",
+        "children": [
+
+        ],
+        "name": "Potassium [Moles/volume] in Capillary blood",
+        "synonyms": [
+
+        ]
+      },
+      {
+        "uri": "http://loinc.org/39789-3",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc",
+          "latest": false
+        },
+        "code": "39789-3",
+        "children": [
+
+        ],
+        "name": "Potassium (BldV) [Moles/Vol]",
+        "synonyms": [
+
+        ]
+      },
+      {
+        "uri": "http://loinc.org/41656-0",
+        "codeSystem": {
+          "uri": "http://loinc.org",
+          "name": "Logical Observation Identifier Names and Codes",
+          "shortName": "LOINC",
+          "externalId": "loinc",
+          "latest": false
+        },
+        "code": "41656-0",
+        "children": [
+
+        ],
+        "name": "Potassium BldMV-sCnc",
+        "synonyms": [
+
+        ]
+      }
+    ],
+    "repository": {
+      "id": "hypokaliaemie",
+      "name": "Hypokalaemia",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "version": 5,
+    "author": "Alexandr Uciteli",
+    "createdAt": 1740064056.73852,
+    "superCategories": [
+      {
+        "entityType": "category",
+        "id": "a61f204a-6037-4081-8064-98c1b1bf77c7"
+      }
+    ],
+    "dataType": "number",
+    "itemType": "observation",
+    "unit": "mmol/L"
+  }
+]

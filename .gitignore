@@ -30,3 +30,6 @@ Postgres-cds_hub/generated/
 /profiling/
 
 R-cdstoolchain/consent_config.toml
+
+# Local snapshot target for the standalone TOP study analysis.
+R-cdstoolchain/top-study/database.toml

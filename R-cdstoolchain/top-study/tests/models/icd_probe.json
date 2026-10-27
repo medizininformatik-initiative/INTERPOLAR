@@ -1,0 +1,90 @@
+[
+  {
+    "version": 4,
+    "author": "Alexandr Uciteli",
+    "createdAt": 1756126381.648841,
+    "entityType": "single_phenotype",
+    "id": "52640782-f029-461a-88a3-c48380d071cd",
+    "titles": [
+      {
+        "lang": "de",
+        "text": "Expliziter ICD-10-Code"
+      },
+      {
+        "lang": "en",
+        "text": "Explicit ICD-10 code"
+      }
+    ],
+    "synonyms": [
+
+    ],
+    "descriptions": [
+
+    ],
+    "codes": [
+      {
+        "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm/F05.-",
+        "codeSystem": {
+          "uri": "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+          "name": "International Classification of Diseases Version 10",
+          "shortName": "ICD10GM",
+          "externalId": "icd10gm",
+          "latest": false
+        },
+        "code": "F05.-",
+        "children": [
+
+        ],
+        "name": "Delir, nicht durch Alkohol oder andere psychotrope Substanzen bedingt",
+        "synonyms": [
+
+        ]
+      }
+    ],
+    "repository": {
+      "id": "delir",
+      "name": "Delirium",
+      "primary": true,
+      "organisation": {
+        "id": "polar"
+      }
+    },
+    "superCategories": [
+      {
+        "entityType": "category",
+        "id": "e0fa465b-43ea-4ffd-ad61-8e05baa53211"
+      }
+    ],
+    "phenotypes": [
+
+    ],
+    "dataType": "boolean",
+    "itemType": "condition"
+  },
+  {
+    "entityType": "composite_phenotype",
+    "id": "study-icd-probe",
+    "dataType": "boolean",
+    "titles": [
+      {
+        "lang": "en",
+        "text": "ICD prefix probe"
+      }
+    ],
+    "codes": [
+
+    ],
+    "phenotypes": [
+
+    ],
+    "expression": {
+      "entityId": "52640782-f029-461a-88a3-c48380d071cd",
+      "arguments": [
+
+      ],
+      "values": [
+
+      ]
+    }
+  }
+]
