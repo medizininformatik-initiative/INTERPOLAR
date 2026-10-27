@@ -36,6 +36,12 @@ Start aus dem Repository-Stamm:
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R wp8-export
 ```
 
+Auf einem nicht pseudonymisierten Snapshot ist zusätzlich `--force` erforderlich:
+
+```console
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R wp8-export --force
+```
+
 Der Ablauf ist:
 
 1. Projekt-Datenbank auswählen und deren Version prüfen.
@@ -75,7 +81,7 @@ Eine beispielhafte Konfiguration befindet sich in
 ### Datenbankverbindung
 
 Der absichtlich leere `DB_NAME` in der `database.toml` des WP8-Projektordners
-muss auf die gewünschte pseudonymisierte Datenbank gesetzt werden. Weitere
+muss auf die gewünschte Snapshot-Datenbank gesetzt werden. Weitere
 Werte werden aus der normalen, über `PATH_TO_DB_CONFIG_TOML` referenzierten
 Datenbankkonfiguration geerbt. Nur nicht leere gleichnamige Werte in
 `database.toml` überschreiben sie. Die gemeinsame Vorlage für neue Projekte
@@ -292,6 +298,19 @@ ist bei Bedarf anzulegen.
 Die lokale Datei `WP8_Fallvignetten_ID_Mapping.xlsx` verbleibt am
 Standort. Sie darf weder in die Nextcloud hochgeladen noch in das
 WP8-REDCap-Projekt importiert werden.
+
+## Testbetrieb auf einem normalen Snapshot
+
+Fehlt `fall_age_at_admission`, berechnet die WP8-Abfrage das Alter bei Aufnahme
+aus `patient_fe.pat_gebdat` und `fall_fe.fall_aufn_dat`. Die Berechnung entspricht
+der Snapshot-Pseudonymisierung (abgerundete Tagesdifferenz geteilt durch 365,25).
+Geburtsdaten vor 1910, fehlende Datumswerte oder eine Aufnahme vor der Geburt
+ergeben ein leeres Alter. Ist die Altersspalte vorhanden, wird ihr Wert übernommen,
+auch wenn er leer ist. Die Snapshot-Datenbank wird dabei nicht verändert.
+
+Die lokale Rückverfolgungsdatei enthält die IDs der ausgewählten Datenbank.
+Auf einem normalen Snapshot sind das die ursprünglichen lokalen IDs; auf einem
+pseudonymisierten Snapshot bleiben es die pseudonymisierten IDs.
 
 ## Typische Fehler
 

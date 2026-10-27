@@ -19,7 +19,7 @@ testthat::test_that("buildFallvignetteSourceQuery selects the mapped source fiel
   )
   testthat::expect_match(
     query,
-    "fall_fe.fall_age_at_admission AS fall_age_at_admission",
+    "ELSE NULL END AS fall_age_at_admission",
     fixed = TRUE
   )
   testthat::expect_length(

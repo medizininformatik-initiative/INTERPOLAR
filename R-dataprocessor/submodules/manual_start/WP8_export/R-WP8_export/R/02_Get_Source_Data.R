@@ -2,6 +2,9 @@
 #'
 #' Builds the database query for retrospective MRPs that are eligible for the
 #' WP8 fallvignette export. Source fields are derived from the mapping workbook.
+#' Existing snapshot ages are retained. If the age column is absent, age at
+#' admission is derived from the original frontend birthdate, using the same
+#' day-based calculation and minimum birthdate as snapshot pseudonymization.
 #'
 #' @param mapping Normalized mapping returned by [loadFallvignetteMapping()].
 #'
@@ -45,7 +48,19 @@ buildFallvignetteSourceQuery <- function(mapping) {
 
   get_source_expression <- function(source_field) {
     if (source_field == "fall_age_at_admission") {
-      return("fall_fe.fall_age_at_admission AS fall_age_at_admission")
+      # JSON field access supports both schemas without querying absent columns.
+      # Match calculateCompletedYears() from snapshot pseudonymization, including
+      # its 365.25-day year and exclusion of birthdates before 1910.
+      birthdate <- "NULLIF(to_jsonb(patient_fe)->>'pat_gebdat', '')::date"
+      admission_date <- "fall_fe.fall_aufn_dat::date"
+      return(paste0(
+        "CASE WHEN to_jsonb(fall_fe) ? 'fall_age_at_admission' ",
+        "THEN (to_jsonb(fall_fe)->>'fall_age_at_admission')::integer ",
+        "WHEN ", birthdate, " >= DATE '1910-01-01' ",
+        "AND ", admission_date, " >= ", birthdate, " ",
+        "THEN FLOOR((", admission_date, " - ", birthdate, ") / 365.25)::integer ",
+        "ELSE NULL END AS fall_age_at_admission"
+      ))
     }
 
     source_alias <- if (startsWith(source_field, "pat_")) {
