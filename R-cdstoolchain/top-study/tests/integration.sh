@@ -61,6 +61,7 @@ bash "$work/run-top-study.sh"
 output=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d)
 docker run --rm --network none --read-only --tmpfs /tmp \
   --mount "type=bind,src=$output,dst=/run,readonly" \
+  --mount "type=bind,src=$work/outputGlobal/top-study/$(basename "$output"),dst=/global,readonly" \
   --mount "type=bind,src=$root/R-cdstoolchain/top-study,dst=/runner,readonly" \
   --entrypoint Rscript interpolar-r-env:latest /runner/tests/verify.R
 # Other data errors still block preparation, even with ignored missing encounters.
@@ -71,6 +72,8 @@ bash "$work/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
 last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
 grep -q '"invalid_contacts": 8' "$last/preparation.json"
+grep -q '"missing_start_contacts": 1' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
+grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
 grep -q '"ignored_missing_encounter_contacts": 7' "$last/preparation.json"
 [[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
 docker exec "$database" psql -U probe -d probe -c \
@@ -84,6 +87,7 @@ bash "$work/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
 last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
+grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
 grep -q $'\tfailed\t' "$last/algorithms.tsv"
 [[ ! -f "$last/private/adapter.yml" ]]
 [[ $(find "$last/results" -name '*.csv' | wc -l) -eq 0 ]]
@@ -109,6 +113,7 @@ wait "$launcher_pid" || code=$?
 [[ "$code" -eq 143 ]]
 last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
+grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
 grep -q $'\tinterrupted\t' "$last/algorithms.tsv"
 [[ ! -f "$last/private/adapter.yml" ]]
 # Stop only the synthetic lock holder; container cleanup removes its transaction.
@@ -134,6 +139,8 @@ code=0
 wait "$launcher_pid" || code=$?
 [[ "$code" -eq 143 ]]
 grep -q $'\tfailed_or_interrupted\tprepare' "$last/run-summary.tsv"
+grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
+grep -q 'Zahlen nicht verfügbar' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
 [[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
 [[ -z $(docker ps -q --filter "name=top-study-prepare-$(basename "$last")") ]]
 printf 'PASS: preparation interruption recorded and container stopped.\n'

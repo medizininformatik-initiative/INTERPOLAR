@@ -29,13 +29,6 @@ Fortschritt und Laufzeiten erscheinen im Terminal und in `progress.log` im ausge
 
 ## 4. Rückmeldedateien hochladen
 
-Nach Erfolg oder Abbruch diese Dateien aus dem Laufordner hochladen, soweit vorhanden:
+Nach Erfolg oder Abbruch den Gesamtbericht aus `outputGlobal/top-study/<Lauf>/report.txt` hochladen. Er enthält Algorithmus-Ergebnisse mit Trefferzahlen und Laufzeiten, Gesamtstatus, Studienfallzahl, Gesamtzahl der Krankenhausfälle, ignorierte Stationszuordnungen und weitere Zuordnungsprobleme sowie die verwendeten Versionen.
 
-- `run-summary.tsv`
-- `algorithms.tsv`
-- `preparation.json` (enthält unter `ignored_missing_encounter_contacts` die Zahl ignorierter Stationszuordnungszeilen ohne Encounter; diese stoppen den Lauf nicht)
-- `versions.json`
-- `model-checksums.txt`
-- `revision.txt`
-
-Bei einem Abbruch kurz die Ursache angeben. Bei Fehlern zusätzlich den relevanten Ausschnitt aus `preparation.log` oder `logs/` mitsenden, bereinigt um Zugangsdaten und Patienten-/Fallangaben. Fallbezogene CSV-Ergebnisse und Adapterdateien bleiben am DIZ.
+`outputLocal/top-study/` enthält fallbezogene Ergebnisse, Adapterdateien und Rohlogs für die lokale Fehlersuche am Standort.

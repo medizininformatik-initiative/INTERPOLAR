@@ -50,6 +50,16 @@ checkAssociations <- function() {
     DBI::dbExecute(con, "TRUNCATE db2dataprocessor_out.v_pids_per_ward")
     DBI::dbAppendTable(con, DBI::Id(schema = "db2dataprocessor_out", table = "v_pids_per_ward"), cases[i, c("encounter_id", "ward_name")])
     check(cases$invalid[i], as.integer(is.na(cases$encounter_id[i]) || cases$encounter_id[i] == "absent"))
+    details <- DBI::dbGetQuery(con, new_sql)
+    id <- cases$encounter_id[i]
+    stopifnot(
+      details$total_hospital_cases == 1, details$total_ward_contact_rows == 1,
+      details$missing_start_contacts == as.integer(id %in% "no_start"),
+      details$missing_main_reference_contacts == as.integer(id %in% "no_ref"),
+      details$missing_hospital_case_contacts == (if (id %in% "duplicate_bad") 2 else as.integer(id %in% c("missing_main", "wrong_type", "malformed", "empty_ref"))),
+      details$unknown_ward_contacts == as.integer(is.na(cases$ward_name[i]) || cases$ward_name[i] == "unknown"),
+      details$missing_encounter_id_contacts == as.integer(is.na(id))
+    )
   }
   DBI::dbExecute(con, "TRUNCATE db2dataprocessor_out.v_pids_per_ward")
   repeated <- cases[rep(seq_len(nrow(cases)), each = 3), c("encounter_id", "ward_name")]

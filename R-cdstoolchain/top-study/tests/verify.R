@@ -41,3 +41,20 @@ path <- tempfile(fileext = ".toml")
 writeLines('[analyse]\nPHASES_WARD_1 = ["ward_name = \'A\'", "phase_a_start = \'2026-01-10\'"]', path)
 stopifnot(inherits(try(readPeriods(path), silent = TRUE), "try-error"))
 cat("PASS: exact laboratory and ICD case sets, completed logs, preserved restrictions and secret cleanup.\n")
+
+# The only public artifact contains aggregates, never the private result rows.
+report <- readLines("/global/report.txt")
+stopifnot(
+  identical(list.files("/global", all.files = FALSE), "report.txt"),
+  any(grepl('"ignored_missing_encounter_contacts": 7', report, fixed = TRUE)),
+  any(grepl('"total_hospital_cases": 9', report, fixed = TRUE)),
+  any(grepl("hypokalemia", report, fixed = TRUE)),
+  any(grepl("icd_probe", report, fixed = TRUE)),
+  !any(grepl("early_hospital|Patient/P|password|jdbc:", report))
+)
+stopifnot(
+  health$ignored_distinct_encounter_ids == 5, health$missing_encounter_id_contacts == 1,
+  health$missing_start_contacts == 0, health$missing_main_reference_contacts == 0,
+  health$missing_hospital_case_contacts == 0, health$unknown_ward_contacts == 0
+)
+cat("PASS: outputGlobal report contains aggregate results and diagnostic counts, without private artifacts.\n")
