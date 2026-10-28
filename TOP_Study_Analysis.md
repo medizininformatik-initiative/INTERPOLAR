@@ -25,7 +25,7 @@ In `R-cdstoolchain/top-study/database.toml` den Wert `DB_NAME` auf die pseudonym
 ./run-top-study.sh
 ```
 
-Fortschritt und Laufzeiten erscheinen im Terminal und in `progress.log` im ausgegebenen Laufordner unter `outputLocal/top-study/`. Während einer Berechnung erscheint alle 60 Sekunden ein Lebenszeichen.
+Fortschritt und Laufzeiten erscheinen im Terminal und in `progress.log` im ausgegebenen Laufordner unter `outputLocal/top-study/`. Während einer TOP-Berechnung erscheint alle 60 Sekunden ein Lebenszeichen. Die Schritte der Vorbereitung stehen mit Zeitstempel in `preparation.log`.
 
 ## 4. Rückmeldedateien hochladen
 
