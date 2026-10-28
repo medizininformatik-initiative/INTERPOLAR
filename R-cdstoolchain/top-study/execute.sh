@@ -3,12 +3,13 @@
 # Run the image's boolean composite phenotypes with the unchanged TOP CLI.
 set -euo pipefail
 umask 077
-mkdir -p /run/results /run/logs
-printf 'model\tphenotype_id\tstarted_utc\tfinished_utc\tduration_seconds\texit_code\tstatus\tmatched_cases\n' > /run/algorithms.tsv
+mkdir -p /run/results /run/logs /export/results
+printf 'model\tphenotype_id\tphenotype_name\tentry_type\tstarted_utc\tfinished_utc\tduration_seconds\texit_code\tstatus\tmatched_cases\n' > /run/algorithms.tsv
 sha256sum models/*.json > /run/model-checksums.txt
 active=false
 java_pid=''
 heartbeat_pid=''
+publish_tmp=''
 finish() {
   status=$?
   trap - EXIT INT TERM
@@ -20,9 +21,10 @@ finish() {
     kill "$heartbeat_pid" 2>/dev/null || true
     wait "$heartbeat_pid" 2>/dev/null || true
   fi
+  if [[ -n "$publish_tmp" ]]; then rm -f "$publish_tmp"; fi
   if [[ "$active" == true ]]; then
-    printf '%s\t%s\t%s\t%s\t%s\t%s\tinterrupted\t\n' \
-      "$model" "$id" "$started" "$(date -u +%FT%TZ)" "$(( $(date +%s) - start_seconds ))" "$status" >> /run/algorithms.tsv
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tinterrupted\t\n' \
+      "$model" "$id" "$name" "$entry_type" "$started" "$(date -u +%FT%TZ)" "$(( $(date +%s) - start_seconds ))" "$status" >> /run/algorithms.tsv
   fi
   exit "$status"
 }
@@ -35,27 +37,22 @@ trap 'exit 143' TERM
 for model_file in models/*.json; do
   model=$(basename "$model_file" .json)
   jq -er 'type == "array"' "$model_file" >/dev/null
-  jq -r '[.[] | select(.entityType == "composite_phenotype" and .dataType == "boolean")]
-    | sort_by((.titles[] | select(.lang == "en") | .text) // .titles[0].text)
-    | .[] | .id' "$model_file" > /tmp/top-ids
-  while IFS= read -r id; do
-    [[ "$id" =~ ^[A-Za-z0-9_-]+$ ]] || { echo 'Ungültige Phänotyp-ID.' >&2; exit 1; }
-    printf '%s\t%s\n' "$model" "$id" >> /run/algorithm-list.tsv
-  done < /tmp/top-ids
+  jq -r --arg model "$model" -f /runner/algorithm-list.jq "$model_file" >> /run/algorithm-list.tsv
 done
 [[ -s /run/algorithm-list.tsv ]] || { echo 'Keine Algorithmen gefunden.' >&2; exit 1; }
 total=$(wc -l < /run/algorithm-list.tsv)
 index=0
-while IFS=$'\t' read -r model id; do
+while IFS=$'\t' read -r model id name entry_type; do
+  [[ "$id" =~ ^[A-Za-z0-9_-]+$ ]] || { echo 'Ungültige Phänotyp-ID.' >&2; exit 1; }
   index=$((index + 1))
   started=$(date -u +%FT%TZ)
   start_seconds=$(date +%s)
   active=true
   log_file="/run/logs/${model}_${id}.log"
-  result_file="/run/results/${model}_${id}.csv"
-  partial_file="/run/results/${model}_${id}.partial.csv"
-  printf '[%s] START %s/%s %s %s\n' "$started" "$index" "$total" "$model" "$id"
-  /opt/java/openjdk/bin/java -jar top-phenotypic-query.jar query -fn --slim \
+  result_file="/export/results/${model}_${id}.zip"
+  partial_file="/run/results/${model}_${id}.partial.zip"
+  printf '[%s] START %s/%s %s %s [%s] %s\n' "$started" "$index" "$total" "$model" "$id" "$entry_type" "$name"
+  /opt/java/openjdk/bin/java -jar top-phenotypic-query.jar query -fn \
     -p "$id" "models/$model.json" /run/private/adapter.yml -o "$partial_file" > "$log_file" 2>&1 &
   java_pid=$!
   (
@@ -75,14 +72,19 @@ while IFS=$'\t' read -r model id; do
     code=1
   fi
   if [[ "$code" -eq 0 ]]; then
-    mv "$partial_file" "$result_file"
+    # Publish only completed exports; copying between bind mounts is not atomic.
+    publish_tmp="$result_file.tmp"
+    cp "$partial_file" "$publish_tmp"
+    mv "$publish_tmp" "$result_file"
+    publish_tmp=''
+    rm "$partial_file"
     result_status=completed
   else
     result_status=failed
     count=''
   fi
   duration=$(( $(date +%s) - start_seconds ))
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$model" "$id" "$started" \
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$model" "$id" "$name" "$entry_type" "$started" \
     "$(date -u +%FT%TZ)" "$duration" "$code" "$result_status" "$count" >> /run/algorithms.tsv
   active=false
   printf '[%s] %s %s %s Dauer=%ss Treffer=%s Exit=%s\n' \

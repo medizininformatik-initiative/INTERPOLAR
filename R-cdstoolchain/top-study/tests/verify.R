@@ -1,9 +1,20 @@
 source("/runner/adapter.R")
 expected <- sort(c("at_start", "early_hospital", "ended", "multiple", "ward_b_inside"))
-files <- list.files("/run/results", pattern = "[.]csv$", full.names = TRUE)
+files <- list.files("/global/results", pattern = "[.]zip$", full.names = TRUE)
 stopifnot(length(files) == 2L)
 for (file in files) {
-  result <- utils::read.csv(file, sep = ";", check.names = FALSE)
+  stopifnot(setequal(
+    utils::unzip(file, list = TRUE)$Name,
+    c("data_subjects.csv", "data_phenotypes.csv", "metadata.csv")
+  ))
+  result <- utils::read.csv(unz(file, "data_subjects.csv"), sep = ";", check.names = FALSE)
+  phenotypes <- utils::read.csv(unz(file, "data_phenotypes.csv"), sep = ";", check.names = FALSE)
+  metadata <- utils::read.csv(unz(file, "metadata.csv"), sep = ";", check.names = FALSE)
+  stopifnot(
+    setequal(phenotypes$subject, expected), nrow(metadata) > 0,
+    # TOP names projected values <parent>_values_<restriction>.
+    all(unlist(strsplit(phenotypes$phenotype, "_values_", fixed = TRUE)) %in% metadata$phenotype)
+  )
   stopifnot(identical(sort(result$Id), expected))
 }
 status <- utils::read.delim("/run/run-summary.tsv")
@@ -11,6 +22,7 @@ algorithms <- utils::read.delim("/run/algorithms.tsv")
 stopifnot(
   status$status == "completed", status$exit_code == 0,
   nrow(algorithms) == 2L, all(algorithms$status == "completed"),
+  all(nzchar(algorithms$phenotype_name)), all(algorithms$entry_type == "Algorithmus"),
   all(algorithms$matched_cases == 5), all(algorithms$duration_seconds >= 0),
   !file.exists("/run/private/adapter.yml")
 )
@@ -42,10 +54,13 @@ writeLines('[analyse]\nPHASES_WARD_1 = ["ward_name = \'A\'", "phase_a_start = \'
 stopifnot(inherits(try(readPeriods(path), silent = TRUE), "try-error"))
 cat("PASS: exact laboratory and ICD case sets, completed logs, preserved restrictions and secret cleanup.\n")
 
-# The only public artifact contains aggregates, never the private result rows.
+# The report contains aggregates; detailed result rows are confined to the TOP ZIPs.
 report <- readLines("/global/report.txt")
 stopifnot(
-  identical(list.files("/global", all.files = FALSE), "report.txt"),
+  setequal(list.files("/global", all.files = FALSE), c("report.txt", "results")),
+  length(list.files("/global/results")) == 2L,
+  any(grepl("Zwischenkriterium", report, fixed = TRUE)),
+  all(vapply(algorithms$phenotype_name, function(name) any(grepl(name, report, fixed = TRUE)), logical(1))),
   any(grepl('"ignored_missing_encounter_contacts": 7', report, fixed = TRUE)),
   any(grepl('"total_hospital_cases": 9', report, fixed = TRUE)),
   any(grepl("hypokalemia", report, fixed = TRUE)),
@@ -57,4 +72,4 @@ stopifnot(
   health$missing_start_contacts == 0, health$missing_main_reference_contacts == 0,
   health$missing_hospital_case_contacts == 0, health$unknown_ward_contacts == 0
 )
-cat("PASS: outputGlobal report contains aggregate results and diagnostic counts, without private artifacts.\n")
+cat("PASS: outputGlobal contains complete TOP ZIPs and a named aggregate report, without credentials or raw logs.\n")

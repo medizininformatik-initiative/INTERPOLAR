@@ -29,6 +29,9 @@ Fortschritt und Laufzeiten erscheinen im Terminal und in `progress.log` im ausge
 
 ## 4. Rückmeldedateien hochladen
 
-Nach Erfolg oder Abbruch den Gesamtbericht aus `outputGlobal/top-study/<Lauf>/report.txt` hochladen. Er enthält Algorithmus-Ergebnisse mit Trefferzahlen und Laufzeiten, Gesamtstatus, Studienfallzahl, Gesamtzahl der Krankenhausfälle, ignorierte Stationszuordnungen und weitere Zuordnungsprobleme sowie die verwendeten Versionen.
+Nach Erfolg oder Abbruch den gesamten Laufordner `outputGlobal/top-study/<Lauf>/` hochladen:
 
-`outputLocal/top-study/` enthält fallbezogene Ergebnisse, Adapterdateien und Rohlogs für die lokale Fehlersuche am Standort.
+- `report.txt`: Namen und Kennzeichnung als Algorithmus oder Zwischenkriterium, Trefferzahlen, Laufzeiten, Gesamtstatus und Fallauswahl-/Fehlerzahlen.
+- `results/*.zip`: vollständige TOP-Ergebnisse je Algorithmus oder Zwischenkriterium mit `data_subjects.csv` (fallweise Ergebnisse), `data_phenotypes.csv` (einzelne Phänotypwerte) und `metadata.csv` (Modellbeschreibungen). Die Fall-IDs stammen aus dem pseudonymisierten Snapshot.
+
+Zwischenkriterien sind keine eigenständigen Krankheitsnachweise. Bei einem Abbruch bleiben die ZIPs der abgeschlossenen Berechnungen verfügbar. `outputLocal/top-study/` enthält Adapterdateien, Rohlogs und gegebenenfalls unvollständige Exporte für die lokale Fehlersuche.

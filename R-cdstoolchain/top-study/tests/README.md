@@ -26,4 +26,10 @@ ignored in the end-to-end run. A separate missing start date still blocks TOP.
 
 The public `outputGlobal/top-study/<run>/report.txt` includes aggregate results
 and separate diagnostic counts. Tests cover success, preparation/query failure
-and interruptions, and check that private case data is not included.
+and interruptions, and check that credentials and raw logs are not included.
+
+The full TOP ZIPs are exported to `outputGlobal/.../results/`. Tests inspect all
+three CSV members, exact case IDs and phenotype/metadata consistency. The report
+remains aggregate-only. `check-catalog.sh` checks all 73 entries in the pinned
+image and the explicit classification of the two intermediate criteria. Revisit
+these reviewed IDs in `algorithm-list.jq` when updating the TOP models.

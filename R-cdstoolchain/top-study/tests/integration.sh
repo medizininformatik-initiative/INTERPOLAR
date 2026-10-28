@@ -38,6 +38,9 @@ networks:
     external: true
     name: $network
 EOF
+docker run --rm --network none --read-only --tmpfs /tmp \
+  --mount "type=bind,src=$root/R-cdstoolchain/top-study,dst=/runner,readonly" \
+  --entrypoint bash "$(cat "$root/R-cdstoolchain/top-study/image.txt")" /runner/tests/check-catalog.sh
 git -C "$work" init -q
 git -C "$work" -c user.name=Test -c user.email=test@example.invalid commit -q --allow-empty -m fixture
 docker network create --internal "$network" >/dev/null
@@ -90,7 +93,7 @@ grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
 grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
 grep -q $'\tfailed\t' "$last/algorithms.tsv"
 [[ ! -f "$last/private/adapter.yml" ]]
-[[ $(find "$last/results" -name '*.csv' | wc -l) -eq 0 ]]
+[[ $(find "$work/outputGlobal/top-study/$(basename "$last")/results" -type f | wc -l) -eq 0 ]]
 printf 'PASS: completed study-only run and controlled failure. Artifacts: %s\n' "$work"
 # Exercise a user interruption while TOP is waiting for a database lock.
 docker exec "$database" psql -U probe -d probe -c \
@@ -115,6 +118,7 @@ last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
 grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
 grep -q $'\tinterrupted\t' "$last/algorithms.tsv"
+[[ $(find "$work/outputGlobal/top-study/$(basename "$last")/results" -type f | wc -l) -eq 0 ]]
 [[ ! -f "$last/private/adapter.yml" ]]
 # Stop only the synthetic lock holder; container cleanup removes its transaction.
 docker exec "$database" psql -U probe -d probe -c \
