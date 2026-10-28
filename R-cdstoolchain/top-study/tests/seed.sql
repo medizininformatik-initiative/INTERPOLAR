@@ -135,3 +135,8 @@ INSERT INTO db2dataprocessor_out.v_condition_last_version
 SELECT 'c_'||enc_id,'Encounter/'||enc_id,'Patient/P',
 'http://fhir.de/CodeSystem/bfarm/icd-10-gm','F05.1','2026-01-16'
 FROM db2dataprocessor_out.v_encounter_last_version WHERE enc_type_code='einrichtungskontakt';
+
+-- Missing station encounters are reported and ignored, including repeated rows.
+INSERT INTO db2dataprocessor_out.v_pids_per_ward VALUES
+('absent','A'), ('absent','A'), ('absent2','A'), ('absent3','A'),
+('absent4','A'), ('absent5','A'), (NULL,'A');

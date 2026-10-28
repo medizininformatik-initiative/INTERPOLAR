@@ -38,23 +38,26 @@ checkAssociations <- function() {
     ward_name = c(rep("A", 9), "unknown", NA, "A"),
     invalid = c(0, rep(1, 7), 2, 1, 1, 1)
   )
-  check <- function(expected_invalid) {
+  check <- function(expected_invalid, expected_ignored) {
     old <- DBI::dbGetQuery(con, old_sql)
     new <- DBI::dbGetQuery(con, new_sql)
-    stopifnot(identical(old, new), as.numeric(new$invalid_contacts) == expected_invalid)
+    stopifnot(
+      identical(old, new[names(old)]), as.numeric(new$invalid_contacts) == expected_invalid,
+      as.numeric(new$ignored_missing_encounter_contacts) == expected_ignored
+    )
   }
   for (i in seq_len(nrow(cases))) {
     DBI::dbExecute(con, "TRUNCATE db2dataprocessor_out.v_pids_per_ward")
     DBI::dbAppendTable(con, DBI::Id(schema = "db2dataprocessor_out", table = "v_pids_per_ward"), cases[i, c("encounter_id", "ward_name")])
-    check(cases$invalid[i])
+    check(cases$invalid[i], as.integer(is.na(cases$encounter_id[i]) || cases$encounter_id[i] == "absent"))
   }
   DBI::dbExecute(con, "TRUNCATE db2dataprocessor_out.v_pids_per_ward")
   repeated <- cases[rep(seq_len(nrow(cases)), each = 3), c("encounter_id", "ward_name")]
   DBI::dbAppendTable(con, DBI::Id(schema = "db2dataprocessor_out", table = "v_pids_per_ward"), repeated)
-  check(3 * sum(cases$invalid))
+  check(3 * sum(cases$invalid), 6)
   # Conflicting wards must remain visible, despite duplicate imported rows.
   DBI::dbExecute(con, "INSERT INTO db2dataprocessor_out.v_pids_per_ward VALUES ('good','B'), ('good','B')")
-  check(3 * sum(cases$invalid))
+  check(3 * sum(cases$invalid), 6)
   stopifnot(as.numeric(DBI::dbGetQuery(con, new_sql)$ambiguous_first_contacts) == 1)
   cat("PASS: equal counts for missing, malformed, unknown and duplicate associations; conflicting wards preserved.\n")
 }

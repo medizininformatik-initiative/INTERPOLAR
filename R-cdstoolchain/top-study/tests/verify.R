@@ -20,7 +20,12 @@ stopifnot(
   versions$original_adapter_sha256 == digest::digest(file = "/run/original.yml", algo = "sha256")
 )
 health <- jsonlite::read_json("/run/preparation.json", simplifyVector = TRUE)
-stopifnot(health$study_cases == 5)
+stopifnot(
+  health$study_cases == 5, health$invalid_contacts == 7,
+  health$ignored_missing_encounter_contacts == 7
+)
+log <- readLines("/run/preparation.log")
+stopifnot(any(grepl("Ignorierte Stationszuordnungszeilen ohne Encounter: 7", log, fixed = TRUE)))
 original <- yaml::read_yaml("/run/original.yml", eval.expr = FALSE)
 actual <- yaml::read_yaml("/run/adapter.yml", eval.expr = FALSE)
 condition <- yaml::read_yaml("/runner/icd-prefix.yml", eval.expr = FALSE)$condition

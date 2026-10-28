@@ -63,6 +63,19 @@ docker run --rm --network none --read-only --tmpfs /tmp \
   --mount "type=bind,src=$output,dst=/run,readonly" \
   --mount "type=bind,src=$root/R-cdstoolchain/top-study,dst=/runner,readonly" \
   --entrypoint Rscript interpolar-r-env:latest /runner/tests/verify.R
+# Other data errors still block preparation, even with ignored missing encounters.
+docker exec "$database" psql -U probe -d probe -c \
+  "UPDATE db2dataprocessor_out.v_encounter_last_version SET enc_period_start=NULL WHERE enc_id='early_hospital_w0'" >/dev/null
+code=0
+bash "$work/run-top-study.sh" || code=$?
+[[ "$code" -ne 0 ]]
+last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+grep -q '"invalid_contacts": 8' "$last/preparation.json"
+grep -q '"ignored_missing_encounter_contacts": 7' "$last/preparation.json"
+[[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
+docker exec "$database" psql -U probe -d probe -c \
+  "UPDATE db2dataprocessor_out.v_encounter_last_version SET enc_period_start='2026-01-15' WHERE enc_id='early_hospital_w0'" >/dev/null
+printf 'PASS: missing encounters are ignored, but missing contact dates still block the run.\n'
 # A data-query failure must stop the runner and preserve a non-success summary.
 docker exec "$database" psql -U probe -d probe -c \
   'ALTER TABLE db2dataprocessor_out.v_observation_last_version RENAME TO missing_observation' >/dev/null

@@ -20,3 +20,6 @@ Thus F05.1 matches demonstrate the adapter prefix change. The lab fixture uses
 the bundled hypokalemia Algorithm 1 A. A missing observation relation then
 verifies fail-fast behavior, a failed summary, and credential cleanup.
 Interruptions during TOP execution and R preparation verify cleanup and status reporting.
+
+Seven missing-contact rows (including duplicates and a null ID) are logged and
+ignored in the end-to-end run. A separate missing start date still blocks TOP.

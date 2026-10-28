@@ -39,7 +39,11 @@ prepareStudyRun <- function() {
   logProgress("Fallauswahl und Zuordnungsprüfung abgeschlossen.")
   health <- lapply(health, as.numeric)
   jsonlite::write_json(health, file.path(out, "preparation.json"), auto_unbox = TRUE, pretty = TRUE)
-  if (health$invalid_contacts > 0 || health$ambiguous_first_contacts > 0) {
+  if (health$ignored_missing_encounter_contacts > 0) {
+    logProgress(paste("Hinweis: Ignorierte Stationszuordnungszeilen ohne Encounter:", health$ignored_missing_encounter_contacts))
+  }
+  # Missing encounters are already excluded by the inner join in scopeSql.
+  if (health$invalid_contacts > health$ignored_missing_encounter_contacts || health$ambiguous_first_contacts > 0) {
     stop("Fallauswahl nicht eindeutig; aggregierte Angaben stehen in preparation.json.")
   }
   logProgress("Studienadapter und Versionsprotokoll schreiben.")

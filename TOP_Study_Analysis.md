@@ -33,7 +33,7 @@ Nach Erfolg oder Abbruch diese Dateien aus dem Laufordner hochladen, soweit vorh
 
 - `run-summary.tsv`
 - `algorithms.tsv`
-- `preparation.json`
+- `preparation.json` (enthält unter `ignored_missing_encounter_contacts` die Zahl ignorierter Stationszuordnungszeilen ohne Encounter; diese stoppen den Lauf nicht)
 - `versions.json`
 - `model-checksums.txt`
 - `revision.txt`
