@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Keep LF line endings: this script is mounted into a Linux container.
 # Run the image's boolean composite phenotypes with the unchanged TOP CLI.
 set -euo pipefail
 umask 077
