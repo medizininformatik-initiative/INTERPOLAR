@@ -8,6 +8,12 @@ including a prior hospital admission, a first ward contact before the study,
 start/end boundaries, duplicate contacts, separate ward periods, completed
 contacts and other cases of the same patient.
 
+The association regression test compares the complete preparation counts with
+`legacy-health.sql`, including missing encounters, missing dates/references,
+malformed references, wrong encounter types, unknown/null wards, duplicate
+contacts and duplicate hospital cases. Repeated imports retain the original
+diagnostic counts; distinct encounter/ward pairs define study eligibility.
+
 The ICD fixture derives its single phenotype from the bundled delirium model,
 retains only F05.- without pre-expanded child codes and adds a boolean wrapper.
 Thus F05.1 matches demonstrate the adapter prefix change. The lab fixture uses

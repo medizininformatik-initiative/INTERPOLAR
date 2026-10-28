@@ -54,6 +54,9 @@ for _attempt in $(seq 1 30); do
   sleep 1
 done
 [[ "$ready" == true ]]
+(cd "$work" && docker compose run --rm --no-deps \
+  --volume "$work/R-cdstoolchain/top-study:/runner:ro" \
+  --entrypoint Rscript r-env /runner/tests/check-associations.R)
 bash "$work/run-top-study.sh"
 output=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d)
 docker run --rm --network none --read-only --tmpfs /tmp \
