@@ -57,9 +57,11 @@ stopifnot(inherits(try(readPeriods(path), silent = TRUE), "try-error"))
 cat("PASS: exact laboratory and ICD case sets, completed logs, preserved restrictions and secret cleanup.\n")
 
 # Only the aggregate report is public; all ZIP members including metadata stay local.
-report <- readLines("/global/report.txt")
+report_files <- list.files("/global", pattern = "^TOP_Report_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}[.]txt$")
+stopifnot(length(report_files) == 1L)
+report <- readLines(file.path("/global", report_files))
 stopifnot(
-  identical(list.files("/global", all.files = FALSE), "report.txt"),
+  identical(list.files("/global", all.files = FALSE), report_files),
   length(list.files("/run/results", pattern = "[.]zip$")) == 13L,
   any(grepl("Zwischenkriterium", report, fixed = TRUE)),
   all(vapply(algorithms$phenotype_name, function(name) any(grepl(name, report, fixed = TRUE)), logical(1))),

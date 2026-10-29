@@ -9,6 +9,9 @@ cleanup() {
   docker network rm "$network" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
+report_file() {
+  printf '%s\n' "$work/outputGlobal/top-study/$(basename "$1")"/TOP_Report_*.txt
+}
 mkdir -p "$work/R-cdstoolchain" "$work/R-dataprocessor"
 cp -R "$root/R-cdstoolchain/top-study" "$work/R-cdstoolchain/"
 cp "$root/run-top-study.sh" "$work/"
@@ -74,7 +77,8 @@ done
   --entrypoint Rscript r-env /runner/tests/check-associations.R)
 bash "$work/run-top-study.sh"
 output=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d)
-grep -q 'optimization_commit=e7d5f286b5a7f401a97d8e93fbd022f24000f4f3' "$work/outputGlobal/top-study/$(basename "$output")/report.txt"
+[[ $(basename "$(report_file "$output")") =~ ^TOP_Report_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}[.]txt$ ]]
+grep -q 'optimization_commit=e7d5f286b5a7f401a97d8e93fbd022f24000f4f3' "$(report_file "$output")"
 [[ $(cat "$output/image-id.txt") == $(docker image inspect --format '{{.Id}}' "$(cat "$root/R-cdstoolchain/top-study/image.txt")") ]]
 awk -F '\t' 'NR == 2 {if ($1 < 0 || $2 != 0) exit 1; found=1} END {if (!found) exit 1}' "$output/image-build.tsv"
 docker run --rm --network none --read-only --tmpfs /tmp \
@@ -93,7 +97,7 @@ bash "$work/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
 last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
 grep -q $'\tfailed_or_interrupted\tplausibility' "$last/run-summary.tsv"
-grep -q 'ABGLEICH DER FALLAUSWAHL' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
+grep -q 'ABGLEICH DER FALLAUSWAHL' "$(report_file "$last")"
 [[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
 [[ $(find "$last/results" -name '*.zip' | wc -l) -eq 13 ]]
 docker exec "$database" psql -U probe -d probe -c \
@@ -107,8 +111,8 @@ bash "$work/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
 last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
 grep -q '"invalid_contacts": 8' "$last/preparation.json"
-grep -q '"missing_start_contacts": 1' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
-grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
+grep -q '"missing_start_contacts": 1' "$(report_file "$last")"
+grep -q 'failed_or_interrupted' "$(report_file "$last")"
 grep -q '"ignored_missing_encounter_contacts": 7' "$last/preparation.json"
 [[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
 docker exec "$database" psql -U probe -d probe -c \
@@ -122,7 +126,7 @@ bash "$work/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
 last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
-grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
+grep -q 'failed_or_interrupted' "$(report_file "$last")"
 grep -q $'\tfailed\t' "$last/algorithms.tsv"
 [[ ! -f "$last/private/adapter.yml" ]]
 [[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
@@ -148,7 +152,7 @@ wait "$launcher_pid" || code=$?
 [[ "$code" -eq 143 ]]
 last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
-grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
+grep -q 'failed_or_interrupted' "$(report_file "$last")"
 grep -q $'\tinterrupted\t' "$last/algorithms.tsv"
 [[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
 [[ ! -f "$last/private/adapter.yml" ]]
@@ -175,10 +179,11 @@ code=0
 wait "$launcher_pid" || code=$?
 [[ "$code" -eq 143 ]]
 grep -q $'\tfailed_or_interrupted\tprepare' "$last/run-summary.tsv"
-grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
-grep -q 'Zahlen nicht verfügbar' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
+grep -q 'failed_or_interrupted' "$(report_file "$last")"
+grep -q 'Zahlen nicht verfügbar' "$(report_file "$last")"
 [[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
 [[ -z $(docker ps -q --filter "name=top-study-prepare-$(basename "$last")") ]]
+[[ $(basename "$(report_file "$last")") =~ ^TOP_Report_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}[.]txt$ ]]
 printf 'PASS: preparation interruption recorded and container stopped.\n'
 # A failed build must not fall back to the previously built image with the same tag.
 printf '\nRUN false\n' >> "$work/R-cdstoolchain/top-study/optimization/Dockerfile"

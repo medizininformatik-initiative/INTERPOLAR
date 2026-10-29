@@ -13,6 +13,7 @@ tool_dir="$root/R-cdstoolchain/top-study"
 export TOP_STUDY_IMAGE
 TOP_STUDY_IMAGE=$(cat "$tool_dir/image.txt")
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+report_name="TOP_Report_$(date +%Y-%m-%d_%H-%M-%S).txt"
 out="$root/outputLocal/top-study/$run_id"
 report_dir="$root/outputGlobal/top-study/$run_id"
 mkdir -p "$out" "$report_dir"
@@ -59,8 +60,8 @@ write_report() {
       if [[ -f "$out/$file" ]]; then printf '\n%s\n' "$file"; cat "$out/$file"; fi
     done
     printf '\n'
-  } > "$report_dir/report.txt.tmp"
-  mv "$report_dir/report.txt.tmp" "$report_dir/report.txt"
+  } > "$report_dir/$report_name.tmp"
+  mv "$report_dir/$report_name.tmp" "$report_dir/$report_name"
 }
 finalize() {
   status=$?
@@ -81,7 +82,7 @@ finalize() {
   } > "$out/run-summary.tsv"
   write_report
   echo "Laufstatus: $outcome (Exit $status). Ausgabe: $out"
-  echo "Ausleitung: $report_dir (report.txt)"
+  echo "Ausleitung: $report_dir/$report_name"
   exit "$status"
 }
 # Waiting on a background command lets Bash handle Ctrl+C/TERM immediately.
