@@ -57,15 +57,26 @@ runDatabaseDiagnosticJobs <- function(tasks, timeout, poll_seconds = 0.2) {
   results[names(tasks)]
 }
 
-databaseDiagnosticConnection <- function(config, target = FALSE) {
-  # Use exactly the snapshot connection path, including etlutils session setup.
-  # The supervising process supplies the deadline without modifying libpq options.
-  connectSnapshotPseudonymizationDatabase(
+databaseDiagnosticConnection <- function(config, target = FALSE,
+                                         execute = DBI::dbExecute, disconnect = DBI::dbDisconnect) {
+  # Keep the snapshot connection path; change only the diagnostic session's
+  # server-side TCP keepalive idle interval for this controlled comparison.
+  connection <- connectSnapshotPseudonymizationDatabase(
     command_arguments = list(), db_config = config,
     dbname = snapshotPseudonymizationConfigValue(list(), config, "db_name", "cds_hub_db"),
     user_argument = if (target) "target_db_user" else "source_db_user",
     password_argument = if (target) "target_db_password" else "source_db_password"
   )
+  ready <- FALSE
+  on.exit(
+    {
+      if (!ready) try(disconnect(connection), silent = TRUE)
+    },
+    add = TRUE
+  )
+  execute(connection, "SET tcp_keepalives_idle = 600")
+  ready <- TRUE
+  connection
 }
 
 probeDatabaseDiagnosticConnection <- function(connection) {
@@ -227,6 +238,7 @@ runDatabaseConnectionDiagnostics <- function(project_root, wait_seconds = 1020L)
   writeReport("INTERPOLAR – Datenbank-Verbindungsdiagnose")
   writeReport("Beginn (UTC)", format(Sys.time(), tz = "UTC"))
   writeReport("R-Version", R.version.string)
+  writeReport("Testvariante", "tcp_keepalives_idle = 600 Sekunden auf jeder Diagnoseverbindung (Sitzungseinstellung).")
   writeReport("Grenzen", c(
     "Test verwendet DB_NAME und Dataprocessor-Zugang aus der vorhandenen DB-Konfiguration.",
     "Snapshot-spezifische CLI-Verbindungsparameter werden nicht übernommen.",
@@ -235,7 +247,7 @@ runDatabaseConnectionDiagnostics <- function(project_root, wait_seconds = 1020L)
     "Client-Kernelwerte sind keine Messung der Socketoptionen oder der Server-Kernelwerte.",
     "pg_sleep simuliert eine lange stille Abfrage, keine hohe Datenbanklast.",
     "Streaming verwendet getrennte Quell-/Zielverbindungen und synthetische Daten in einer TEMP-Zieltabelle.",
-    "Verbindungsaufbau und Session-Setup entsprechen dem Snapshot; die Zeitgrenze gilt im Überwachungsprozess.",
+    "Snapshot-Verbindungshelfer mit tcp_keepalives_idle = 600 für diesen Test; Zeitgrenze im Überwachungsprozess.",
     "Bericht enthält interne Adressen, Rollen und DB-Namen; keine fachlichen Daten."
   ))
   tryCatch(

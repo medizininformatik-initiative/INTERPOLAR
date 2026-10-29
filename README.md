@@ -1,5 +1,7 @@
 # INTERPOLAR – Standorttest für Datenbank-Verbindungsabbrüche
 
+**Aktueller Test: TCP-Keepalives nach 600 Sekunden (10 Minuten).**
+
 Dieser Standortbranch enthält die Swarm-Anpassungen aus #1463 und zusätzlich
 die Diagnose unerwarteter Verbindungsabbrüche bei der Snapshot-Pseudonymisierung.
 Die Diagnose-Ergänzung dient ausschließlich dem Standorttest und ist nicht zum
@@ -49,9 +51,14 @@ ohne diese Vorgabe gilt `cds_hub_db_config.toml` im Projektverzeichnis.
 
 Der Verbindungsaufbau läuft über denselben Helfer wie beim Snapshot:
 `connectSnapshotPseudonymizationDatabase()` → `etlutils::dbCreateConnection()`.
-Damit gelten auch dieselben Session-Einstellungen. Die Diagnose setzt keine
-zusätzlichen Verbindungs-, Abfrage- oder Keepalive-Parameter. Eine separate
-Prozessüberwachung begrenzt die Laufzeit hängender Tests.
+Anschließend setzt die Diagnose auf **jeder Testverbindung**
+`tcp_keepalives_idle = 600`. Damit sendet PostgreSQL bei Netzwerkinaktivität
+bereits nach zehn Minuten einen TCP-Keepalive. Die Einstellung gilt nur für
+die jeweilige Diagnosesitzung; die PostgreSQL-Konfiguration und normale
+Snapshot-Läufe bleiben unverändert. Weitere Einstellungen sind am Standort
+nicht erforderlich. Der Bericht kennzeichnet diese Testvariante und zeigt den
+wirksamen Wert. Eine separate Prozessüberwachung begrenzt die Laufzeit
+hängender Tests.
 
 Drei Tests laufen parallel:
 
@@ -85,8 +92,10 @@ Der Bericht enthält interne Adressen, Rollen und Datenbanknamen.
 - **`statement timeout`:** Ein PostgreSQL-Abfragezeitlimit hat gegriffen.
 - **Auch die neue Verbindung fehlgeschlagen:** Erreichbarkeit und DB-/Servicezustand
   zum Testzeitpunkt sind zu prüfen.
-- **Alle Tests erfolgreich:** Der Fehler wurde unter diesen Bedingungen nicht
-  reproduziert. Das schließt einen Abbruch im vollständigen Snapshot-Lauf nicht aus.
+- **Alle Tests erfolgreich:** Gegenüber dem bereits fehlgeschlagenen Test mit
+  7.200 Sekunden spricht das für einen Zusammenhang mit Netzwerkinaktivität und
+  Keepalive-Einstellungen. Es beweist noch nicht die genaue Netzwerkkomponente
+  und schließt einen Abbruch im vollständigen Snapshot-Lauf nicht aus.
 
 Die Tests verwenden `DB_NAME` aus der Konfiguration für beide Verbindungen und
 standardmäßig den Dataprocessor-Zugang. Vorhandene `SOURCE_DB_USER`/

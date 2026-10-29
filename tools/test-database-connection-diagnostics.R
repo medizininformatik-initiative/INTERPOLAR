@@ -2,8 +2,9 @@ library(testthat)
 source("R-cdstoolchain/Snapshot_Pseudonymization_Cli.R")
 source("R-cdstoolchain/Database_Connection_Diagnostics.R")
 
-test_that("diagnostics use the snapshot connector without extra driver options", {
+test_that("diagnostics use the snapshot connector and set keepalives on both sessions", {
   calls <- list()
+  statements <- character()
   scope <- new.env(parent = globalenv())
   scope$connectSnapshotPseudonymizationDatabase <- function(...) {
     calls[[length(calls) + 1L]] <<- list(...)
@@ -12,14 +13,25 @@ test_that("diagnostics use the snapshot connector without extra driver options",
   connect <- databaseDiagnosticConnection
   environment(connect) <- scope
   config <- list(DB_NAME = "snapshot", DB_HOST = "cds_hub")
-  expect_identical(connect(config), "connection")
-  expect_identical(connect(config, target = TRUE), "connection")
+  execute <- function(connection, sql) {
+    expect_identical(connection, "connection")
+    statements <<- c(statements, sql)
+  }
+  expect_identical(connect(config, execute = execute), "connection")
+  expect_identical(connect(config, target = TRUE, execute = execute), "connection")
+  expect_identical(statements, rep("SET tcp_keepalives_idle = 600", 2))
   expect_identical(calls[[1]]$command_arguments, list())
   expect_identical(calls[[1]]$db_config, config)
   expect_identical(calls[[1]]$dbname, "snapshot")
   expect_identical(calls[[1]]$user_argument, "source_db_user")
   expect_identical(calls[[2]]$user_argument, "target_db_user")
   expect_identical(calls[[2]]$password_argument, "target_db_password")
+  closed <- FALSE
+  expect_error(connect(config,
+    execute = function(...) stop("setting failed"),
+    disconnect = function(connection) { closed <<- TRUE }
+  ), "setting failed")
+  expect_true(closed)
 })
 
 test_that("parallel workers preserve success and error results", {
@@ -129,6 +141,11 @@ test_that("PostgreSQL produces a complete report and distinguishes a query timeo
   expect_false(grepl("diagnostic-test-secret", content, fixed = TRUE))
   settings <- readDatabaseDiagnosticSettings(config)$settings
   expect_identical(settings$setting[settings$name == "work_mem"], "32768")
+  expect_identical(settings$setting[settings$name == "tcp_keepalives_idle"], "600")
+  expect_identical(settings$source[settings$name == "tcp_keepalives_idle"], "session")
+  target <- databaseDiagnosticConnection(config, target = TRUE)
+  expect_identical(DBI::dbGetQuery(target, "SHOW tcp_keepalives_idle")[[1]], "600")
+  DBI::dbDisconnect(target)
   expect_identical(settings$setting[settings$name == "TimeZone"],
     getFromNamespace("GLOBAL_TIMEZONE", "etlutils"))
   streamed <- testDatabaseDiagnosticConnection(config, "stream", 0)
