@@ -1,6 +1,6 @@
 source("/runner/adapter.R")
 expected <- sort(c("at_start", "early_hospital", "ended", "multiple", "ward_b_inside"))
-files <- list.files("/global/results", pattern = "[.]zip$", full.names = TRUE)
+files <- list.files("/run/results", pattern = "^(hypokalemia|icd_probe).*[.]zip$", full.names = TRUE)
 stopifnot(length(files) == 2L)
 for (file in files) {
   stopifnot(setequal(
@@ -21,9 +21,9 @@ status <- utils::read.delim("/run/run-summary.tsv")
 algorithms <- utils::read.delim("/run/algorithms.tsv")
 stopifnot(
   status$status == "completed", status$exit_code == 0,
-  nrow(algorithms) == 2L, all(algorithms$status == "completed"),
+  nrow(algorithms) == 8L, all(algorithms$status == "completed"),
   all(nzchar(algorithms$phenotype_name)), all(algorithms$entry_type == "Algorithmus"),
-  all(algorithms$matched_cases == 5), all(algorithms$duration_seconds >= 0),
+  all(algorithms$matched_cases[algorithms$model != "anaemia"] == 5), all(algorithms$duration_seconds >= 0),
   !file.exists("/run/private/adapter.yml")
 )
 versions <- jsonlite::read_json("/run/versions.json", simplifyVector = TRUE)
@@ -54,11 +54,11 @@ writeLines('[analyse]\nPHASES_WARD_1 = ["ward_name = \'A\'", "phase_a_start = \'
 stopifnot(inherits(try(readPeriods(path), silent = TRUE), "try-error"))
 cat("PASS: exact laboratory and ICD case sets, completed logs, preserved restrictions and secret cleanup.\n")
 
-# The report contains aggregates; detailed result rows are confined to the TOP ZIPs.
+# Only the aggregate report is public; all ZIP members including metadata stay local.
 report <- readLines("/global/report.txt")
 stopifnot(
-  setequal(list.files("/global", all.files = FALSE), c("report.txt", "results")),
-  length(list.files("/global/results")) == 2L,
+  identical(list.files("/global", all.files = FALSE), "report.txt"),
+  length(list.files("/run/results", pattern = "[.]zip$")) == 8L,
   any(grepl("Zwischenkriterium", report, fixed = TRUE)),
   all(vapply(algorithms$phenotype_name, function(name) any(grepl(name, report, fixed = TRUE)), logical(1))),
   any(grepl('"ignored_missing_encounter_contacts": 7', report, fixed = TRUE)),
@@ -72,4 +72,46 @@ stopifnot(
   health$missing_start_contacts == 0, health$missing_main_reference_contacts == 0,
   health$missing_hospital_case_contacts == 0, health$unknown_ward_contacts == 0
 )
-cat("PASS: outputGlobal contains complete TOP ZIPs and a named aggregate report, without credentials or raw logs.\n")
+cat("PASS: outputGlobal contains only the aggregate report; ZIPs, metadata, credentials and raw logs are not exported.\n")
+
+source("/runner/tests/read-audit.R")
+audit <- "/run/plausibility.txt"
+cohort <- auditTable(audit, "ABGLEICH DER FALLAUSWAHL")
+stopifnot(
+  cohort$independent_cases == 5, cohort$adapter_cases == 5,
+  cohort$independent_only == 0, cohort$adapter_only == 0
+)
+selection <- auditTable(audit, "FALLAUSWAHL NACH ERSTER IP-STATION (Studienende exklusiv)")
+stopifnot(
+  sum(selection$cases) == 9,
+  sum(selection$cases[selection$selection == "selected"]) == 5,
+  sum(selection$cases[selection$selection == "before_study"]) == 2,
+  sum(selection$cases[selection$selection == "after_study"]) == 1,
+  sum(selection$cases[selection$selection == "no_resolvable_ip_contact"]) == 1
+)
+comparison <- auditTable(audit, "ANÄMIE-KONTROLLVERGLEICH: Algorithmus 1")
+stopifnot(
+  comparison$comparison_status == "match", comparison$both_positive == 3,
+  comparison$both_negative == 2, comparison$top_only == 0, comparison$control_only == 0,
+  comparison$control_positive_without_confirmed_unit == 1
+)
+coverage <- auditTable(audit, "ANÄMIE: DATENABDECKUNG UND ZEITLICHE LAGE POSITIVER BEFUNDE (Fallzahlen, Zeitgruppen überlappen)")
+female <- coverage[coverage$sex == "female", ]
+stopifnot(
+  female$positive_before_first_ip == 1, female$positive_after_study == 1,
+  female$positive_with_confirmed_units == 2,
+  coverage$cases[coverage$sex == "unknown_or_conflicting"] == 1
+)
+duplicates <- auditTable(audit, "MÖGLICHE MESSWERTDUBLETTEN (gleicher Fall, Code, Zeitpunkt, Wert und Einheit; kein Beweis einer Dublette)")
+stopifnot(
+  duplicates$analysis_loinc_code == "59260-0", duplicates$extra_rows == 1,
+  duplicates$affected_cases == 1
+)
+exclusions <- auditTable(audit, "ANÄMIE: AUSSCHLUSSDIAGNOSEN UND FEHLENDE LABORNACHWEISE (Diagnosen werden hier nur gezählt, nicht ausgeschlossen)")
+stopifnot(
+  exclusions$with_exclusion_diagnosis[exclusions$algorithm == "Algorithmus 2 A"] == 1,
+  exclusions$unknown_or_conflicting_sex[exclusions$algorithm == "Algorithmus 1 - CTCAE Grad 3"] == 1,
+  file.exists("/run/model-limits.tsv"), !file.exists("/global/model-limits.tsv"),
+  !any(grepl("hb1|source_conversion_failed.*Encounter/|P_unknown|hb_outside|< 7.76", report))
+)
+cat("PASS: independent cohort, anaemia counts, unit risk, duplicate measurements, exclusion diagnoses and event timing.\n")

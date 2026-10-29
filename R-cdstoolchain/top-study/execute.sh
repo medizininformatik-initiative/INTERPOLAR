@@ -3,13 +3,13 @@
 # Run the image's boolean composite phenotypes with the unchanged TOP CLI.
 set -euo pipefail
 umask 077
-mkdir -p /run/results /run/logs /export/results
+mkdir -p /run/results /run/logs /run/models
+cp models/*.json /run/models/
 printf 'model\tphenotype_id\tphenotype_name\tentry_type\tstarted_utc\tfinished_utc\tduration_seconds\texit_code\tstatus\tmatched_cases\n' > /run/algorithms.tsv
 sha256sum models/*.json > /run/model-checksums.txt
 active=false
 java_pid=''
 heartbeat_pid=''
-publish_tmp=''
 finish() {
   status=$?
   trap - EXIT INT TERM
@@ -21,7 +21,6 @@ finish() {
     kill "$heartbeat_pid" 2>/dev/null || true
     wait "$heartbeat_pid" 2>/dev/null || true
   fi
-  if [[ -n "$publish_tmp" ]]; then rm -f "$publish_tmp"; fi
   if [[ "$active" == true ]]; then
     printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tinterrupted\t\n' \
       "$model" "$id" "$name" "$entry_type" "$started" "$(date -u +%FT%TZ)" "$(( $(date +%s) - start_seconds ))" "$status" >> /run/algorithms.tsv
@@ -49,7 +48,7 @@ while IFS=$'\t' read -r model id name entry_type; do
   start_seconds=$(date +%s)
   active=true
   log_file="/run/logs/${model}_${id}.log"
-  result_file="/export/results/${model}_${id}.zip"
+  result_file="/run/results/${model}_${id}.zip"
   partial_file="/run/results/${model}_${id}.partial.zip"
   printf '[%s] START %s/%s %s %s [%s] %s\n' "$started" "$index" "$total" "$model" "$id" "$entry_type" "$name"
   /opt/java/openjdk/bin/java -jar top-phenotypic-query.jar query -fn \
@@ -72,12 +71,7 @@ while IFS=$'\t' read -r model id name entry_type; do
     code=1
   fi
   if [[ "$code" -eq 0 ]]; then
-    # Publish only completed exports; copying between bind mounts is not atomic.
-    publish_tmp="$result_file.tmp"
-    cp "$partial_file" "$publish_tmp"
-    mv "$publish_tmp" "$result_file"
-    publish_tmp=''
-    rm "$partial_file"
+    mv "$partial_file" "$result_file"
     result_status=completed
   else
     result_status=failed

@@ -41,6 +41,14 @@ EOF
 docker run --rm --network none --read-only --tmpfs /tmp \
   --mount "type=bind,src=$root/R-cdstoolchain/top-study,dst=/runner,readonly" \
   --entrypoint bash "$(cat "$root/R-cdstoolchain/top-study/image.txt")" /runner/tests/check-catalog.sh
+# Use the original anaemia model for the independent laboratory comparison.
+docker run --rm --network none --read-only --entrypoint cat \
+  "$(cat "$root/R-cdstoolchain/top-study/image.txt")" /opt/app/models/anaemia.json \
+  > "$work/R-cdstoolchain/top-study/tests/models/anaemia.json"
+mkdir "$work/reference-models"
+docker run --rm --network none --read-only --entrypoint tar \
+  "$(cat "$root/R-cdstoolchain/top-study/image.txt")" -C /opt/app -cf - models \
+  | tar -C "$work/reference-models" -xf -
 git -C "$work" init -q
 git -C "$work" -c user.name=Test -c user.email=test@example.invalid commit -q --allow-empty -m fixture
 docker network create --internal "$network" >/dev/null
@@ -51,7 +59,7 @@ docker run -d --name "$database" --network "$network" \
 ready=false
 for _attempt in $(seq 1 30); do
   if docker exec "$database" psql -U probe -d probe -Atc \
-    'SELECT count(*) FROM db2dataprocessor_out.v_condition_last_version' 2>/dev/null | grep -qx 9; then
+    'SELECT count(*) FROM db2dataprocessor_out.v_condition_last_version' 2>/dev/null | grep -qx 12; then
     ready=true; break
   fi
   sleep 1
@@ -67,6 +75,23 @@ docker run --rm --network none --read-only --tmpfs /tmp \
   --mount "type=bind,src=$work/outputGlobal/top-study/$(basename "$output"),dst=/global,readonly" \
   --mount "type=bind,src=$root/R-cdstoolchain/top-study,dst=/runner,readonly" \
   --entrypoint Rscript interpolar-r-env:latest /runner/tests/verify.R
+(cd "$work" && docker compose run --rm --no-deps \
+  --volume "$work/R-cdstoolchain/top-study:/runner:ro" --volume "$output:/baseline:ro" \
+  --volume "$work/reference-models/models:/reference-models:ro" \
+  --entrypoint Rscript r-env /runner/tests/check-plausibility.R)
+docker exec "$database" psql -U probe -d probe -c \
+  'ALTER TABLE db2dataprocessor_out.v_observation_last_version RENAME COLUMN analysis_unit TO missing_unit' >/dev/null
+code=0
+bash "$work/run-top-study.sh" || code=$?
+[[ "$code" -ne 0 ]]
+last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+grep -q $'\tfailed_or_interrupted\tplausibility' "$last/run-summary.tsv"
+grep -q 'ABGLEICH DER FALLAUSWAHL' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
+[[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
+[[ $(find "$last/results" -name '*.zip' | wc -l) -eq 8 ]]
+docker exec "$database" psql -U probe -d probe -c \
+  'ALTER TABLE db2dataprocessor_out.v_observation_last_version RENAME COLUMN missing_unit TO analysis_unit' >/dev/null
+printf 'PASS: failed audit keeps partial aggregates and complete TOP ZIPs locally.\n'
 # Other data errors still block preparation, even with ignored missing encounters.
 docker exec "$database" psql -U probe -d probe -c \
   "UPDATE db2dataprocessor_out.v_encounter_last_version SET enc_period_start=NULL WHERE enc_id='early_hospital_w0'" >/dev/null
@@ -93,7 +118,7 @@ grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
 grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
 grep -q $'\tfailed\t' "$last/algorithms.tsv"
 [[ ! -f "$last/private/adapter.yml" ]]
-[[ $(find "$work/outputGlobal/top-study/$(basename "$last")/results" -type f | wc -l) -eq 0 ]]
+[[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
 printf 'PASS: completed study-only run and controlled failure. Artifacts: %s\n' "$work"
 # Exercise a user interruption while TOP is waiting for a database lock.
 docker exec "$database" psql -U probe -d probe -c \
@@ -118,7 +143,7 @@ last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
 grep -q 'failed_or_interrupted' "$work/outputGlobal/top-study/$(basename "$last")/report.txt"
 grep -q $'\tinterrupted\t' "$last/algorithms.tsv"
-[[ $(find "$work/outputGlobal/top-study/$(basename "$last")/results" -type f | wc -l) -eq 0 ]]
+[[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
 [[ ! -f "$last/private/adapter.yml" ]]
 # Stop only the synthetic lock holder; container cleanup removes its transaction.
 docker exec "$database" psql -U probe -d probe -c \

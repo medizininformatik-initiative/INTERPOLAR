@@ -140,3 +140,25 @@ FROM db2dataprocessor_out.v_encounter_last_version WHERE enc_type_code='einricht
 INSERT INTO db2dataprocessor_out.v_pids_per_ward VALUES
 ('absent','A'), ('absent','A'), ('absent2','A'), ('absent3','A'),
 ('absent4','A'), ('absent5','A'), (NULL,'A');
+
+-- Audit fixtures: successful/failed conversions, duplicates, dates and unknown sex.
+ALTER TABLE db2dataprocessor_out.v_observation_last_version ADD analysis_unit varchar;
+ALTER TABLE db2dataprocessor_out.v_observation_last_version ADD analysis_value_status varchar;
+UPDATE db2dataprocessor_out.v_observation_last_version
+SET analysis_unit='mmol/L', analysis_value_status='already_reference_unit';
+INSERT INTO db2dataprocessor_out.v_patient_last_version VALUES ('P_unknown','1980-01-01',NULL);
+UPDATE db2dataprocessor_out.v_encounter_last_version SET enc_patient_ref='Patient/P_unknown' WHERE enc_id='ward_b_inside';
+INSERT INTO db2dataprocessor_out.v_observation_last_version
+(obs_id,obs_encounter_calculated_ref,analysis_loinc_code,obs_effectivedatetime,analysis_value,analysis_unit,analysis_value_status) VALUES
+('hb1','Encounter/early_hospital','59260-0','2026-01-02',7.0,'mmol/L','converted'),
+('hb1_duplicate','Encounter/early_hospital','59260-0','2026-01-02',7.0,'mmol/L','converted'),
+('hb2','Encounter/at_start','59260-0','2026-02-05',4.8,'g/dL','source_conversion_failed'),
+('hb3','Encounter/ended','59260-0','2026-01-15',6.0,'mmol/L','already_reference_unit'),
+('hb4','Encounter/multiple','59260-0','2026-01-15',8.0,'mmol/L','already_reference_unit'),
+('hb5','Encounter/ward_b_inside','59260-0',NULL,4.5,'mmol/L','already_reference_unit'),
+('hb_outside','Encounter/no_ip','59260-0','2026-01-15',1.0,'mmol/L','already_reference_unit');
+INSERT INTO db2dataprocessor_out.v_condition_last_version
+(con_id,con_encounter_calculated_ref,con_code_system,con_code_code) VALUES
+('anaemia1','Encounter/multiple','http://fhir.de/CodeSystem/bfarm/icd-10-gm','D50.9'),
+('anaemia2','Encounter/ward_b_inside','http://fhir.de/CodeSystem/bfarm/icd-10-gm','D50.9'),
+('exclude1','Encounter/multiple','http://fhir.de/CodeSystem/bfarm/icd-10-gm','D56.0');

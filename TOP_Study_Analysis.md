@@ -25,13 +25,10 @@ In `R-cdstoolchain/top-study/database.toml` den Wert `DB_NAME` auf die pseudonym
 ./run-top-study.sh
 ```
 
-Fortschritt und Laufzeiten erscheinen im Terminal und in `progress.log` im ausgegebenen Laufordner unter `outputLocal/top-study/`. Während einer TOP-Berechnung erscheint alle 60 Sekunden ein Lebenszeichen. Die Schritte der Vorbereitung stehen mit Zeitstempel in `preparation.log`.
+Fortschritt und Laufzeiten erscheinen im Terminal und in `outputLocal/top-study/<Lauf>/progress.log`. Während einer TOP-Berechnung erscheint alle 60 Sekunden ein Lebenszeichen. Die Vorbereitung steht in `preparation.log`, die anschließende aggregierte Prüfung in `plausibility.log`.
 
-## 4. Rückmeldedateien hochladen
+## 4. Rückmeldung hochladen
 
-Nach Erfolg oder Abbruch den gesamten Laufordner `outputGlobal/top-study/<Lauf>/` hochladen:
+Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/<Lauf>/report.txt` hochladen. Der Bericht enthält Trefferzahlen und Laufzeiten, Fallauswahl nach Station und Studiengrenzen, Laborabdeckung und Einheitenstatus sowie den Anämie-Kontrollvergleich. Zwischenkriterien sind ausdrücklich gekennzeichnet.
 
-- `report.txt`: Namen und Kennzeichnung als Algorithmus oder Zwischenkriterium, Trefferzahlen, Laufzeiten, Gesamtstatus und Fallauswahl-/Fehlerzahlen.
-- `results/*.zip`: vollständige TOP-Ergebnisse je Algorithmus oder Zwischenkriterium mit `data_subjects.csv` (fallweise Ergebnisse), `data_phenotypes.csv` (einzelne Phänotypwerte) und `metadata.csv` (Modellbeschreibungen). Die Fall-IDs stammen aus dem pseudonymisierten Snapshot.
-
-Zwischenkriterien sind keine eigenständigen Krankheitsnachweise. Bei einem Abbruch bleiben die ZIPs der abgeschlossenen Berechnungen verfügbar. `outputLocal/top-study/` enthält Adapterdateien, Rohlogs und gegebenenfalls unvollständige Exporte für die lokale Fehlersuche.
+Die vollständigen TOP-ZIPs einschließlich `metadata.csv`, Modellkopien und Rohlogs bleiben unter `outputLocal/top-study/<Lauf>/` für die lokale Prüfung. Die Kontrollanalyse verändert weder Laborgrenzen noch TOP-Ergebnisse. Für die fachliche Bewertung müssen die lokalen Hämoglobin- und Glukose-Referenzgrenzen noch bestätigt werden.

@@ -18,14 +18,12 @@ report_dir="$root/outputGlobal/top-study/$run_id"
 mkdir -p "$out" "$report_dir"
 docker_tool_dir="$tool_dir"
 docker_out="$out"
-docker_report_dir="$report_dir"
 case "$OSTYPE" in
   msys*|cygwin*)
     # Git Bash must leave container paths alone; convert only host mount paths.
     export MSYS_NO_PATHCONV=1
     docker_tool_dir=$(cygpath -m "$tool_dir")
     docker_out=$(cygpath -m "$out")
-    docker_report_dir=$(cygpath -m "$report_dir")
     ;;
 esac
 started=$(date -u +%FT%TZ)
@@ -33,7 +31,7 @@ start_seconds=$(date +%s)
 phase=initialization
 container=''
 command_pid=''
-# The report contains aggregates; completed TOP ZIPs are published separately.
+# Only allowlisted aggregate files enter the public report. TOP ZIPs stay local.
 write_report() {
   {
     printf 'TOP-Studienanalyse — Lauf %s\n\n' "$run_id"
@@ -41,7 +39,6 @@ write_report() {
     if [[ -f "$out/run-summary.tsv" ]]; then cat "$out/run-summary.tsv"; else echo 'Lauf noch nicht abgeschlossen.'; fi
     printf '\nERGEBNISSE JE ALGORITHMUS\n'
     echo 'entry_type unterscheidet Algorithmus und Zwischenkriterium; Zwischenkriterien sind keine eigenständigen Krankheitsnachweise.'
-    echo 'Vollständige TOP-Ergebnisse: results/<model>_<phenotype_id>.zip (nur abgeschlossene Exporte).'
     if [[ -f "$out/algorithms.tsv" ]]; then cat "$out/algorithms.tsv"; else echo 'Noch keine Algorithmus-Ergebnisse verfügbar.'; fi
     printf '\nFALLAUSWAHL UND DATENQUALITÄT\n'
     echo 'study_cases: ausgewählte Studienfälle; total_hospital_cases: unterschiedliche Krankenhausfälle im Snapshot.'
@@ -53,6 +50,8 @@ write_report() {
     echo 'unknown_ward_contacts: unbekannte Station; ambiguous_first_contacts: Hauptfälle mit mehrdeutigem Erstkontakt.'
     echo 'invalid_contacts: alle beanstandeten Zuordnungszeilen, einschließlich ignorierter Zeilen. Fehlerkategorien können sich überschneiden.'
     if [[ -f "$out/preparation.json" ]]; then cat "$out/preparation.json"; else echo 'Prüfung noch nicht abgeschlossen; Zahlen nicht verfügbar.'; fi
+    printf '\nPLAUSIBILITÄTSPRÜFUNG\n'
+    if [[ -f "$out/plausibility.txt" ]]; then cat "$out/plausibility.txt"; else echo 'Prüfung noch nicht abgeschlossen; Zahlen nicht verfügbar.'; fi
     printf '\nVERSIONEN\n'
     for file in revision.txt versions.json model-checksums.txt; do
       if [[ -f "$out/$file" ]]; then printf '\n%s\n' "$file"; cat "$out/$file"; fi
@@ -76,7 +75,7 @@ finalize() {
   } > "$out/run-summary.tsv"
   write_report
   echo "Laufstatus: $outcome (Exit $status). Ausgabe: $out"
-  echo "Ausleitung: $report_dir (report.txt und results/*.zip)"
+  echo "Ausleitung: $report_dir (report.txt)"
   exit "$status"
 }
 # Waiting on a background command lets Bash handle Ctrl+C/TERM immediately.
@@ -117,8 +116,20 @@ container="top-study-run-$run_id"
 echo "[$(date -u +%FT%TZ)] Vollständige TOP-Studienanalyse starten"
 # A pipe streams progress; pipefail preserves the container exit status.
 docker compose -f docker-compose.yml -f R-cdstoolchain/top-study/compose.yml run --rm --no-deps \
-  --name "$container" --volume "$docker_tool_dir:/runner:ro" --volume "$docker_out:/run" --volume "$docker_report_dir:/export" top-study \
+  --name "$container" --volume "$docker_tool_dir:/runner:ro" --volume "$docker_out:/run" top-study \
   2>&1 | tee "$out/progress.log" &
 command_pid=$!
 wait_for_command
+phase=plausibility
+container="top-study-plausibility-$run_id"
+echo "[$(date -u +%FT%TZ)] Aggregierte Plausibilitätsprüfung starten"
+docker compose run --rm --no-deps --name "$container" \
+  --volume "$docker_tool_dir:/runner:ro" --volume "$docker_out:/run" \
+  --entrypoint Rscript r-env /runner/plausibility.R > "$out/plausibility.log" 2>&1 &
+command_pid=$!
+wait_for_command || {
+  code=$?
+  echo 'Plausibilitätsprüfung fehlgeschlagen; Details stehen lokal in plausibility.log.' >&2
+  exit "$code"
+}
 phase=finished
