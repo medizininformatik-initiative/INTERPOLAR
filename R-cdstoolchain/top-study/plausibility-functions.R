@@ -274,7 +274,7 @@ runPlausibility <- function(con, periods, out, logProgress) {
     parent <- entities[[entity$superPhenotype$id]]
     data.frame(
       criterion = Filter(function(t) t$lang == "de", entity$titles)[[1]]$text,
-      unit = parent$unit, lower = if (is.null(r$minOperator)) "" else paste(r$minOperator, r$values[[1]]),
+      unit = if (is.null(parent$unit)) "not_declared" else parent$unit, lower = if (is.null(r$minOperator)) "" else paste(r$minOperator, r$values[[1]]),
       upper = if (is.null(r$maxOperator)) "" else paste(r$maxOperator, r$values[[2]])
     )
   }))

@@ -38,8 +38,9 @@ write_report() {
     printf 'GESAMTSTATUS UND LAUFZEIT\n'
     if [[ -f "$out/run-summary.tsv" ]]; then cat "$out/run-summary.tsv"; else echo 'Lauf noch nicht abgeschlossen.'; fi
     printf '\nERGEBNISSE JE ALGORITHMUS\n'
-    echo 'entry_type unterscheidet Algorithmus und Zwischenkriterium; Zwischenkriterien sind keine eigenständigen Krankheitsnachweise.'
+    echo 'entry_type unterscheidet Algorithmus, Zwischenkriterium und Fallzählung; Zwischenkriterien sind keine eigenständigen Krankheitsnachweise.'
     if [[ -f "$out/algorithms.tsv" ]]; then cat "$out/algorithms.tsv"; else echo 'Noch keine Algorithmus-Ergebnisse verfügbar.'; fi
+    echo 'Non-AE-Algorithmen folgen eigenen Modellbedingungen; sie sind nicht automatisch die Restmenge der Studienfälle.'
     printf '\nFALLAUSWAHL UND DATENQUALITÄT\n'
     echo 'study_cases: ausgewählte Studienfälle; total_hospital_cases: unterschiedliche Krankenhausfälle im Snapshot.'
     echo 'total_ward_contact_rows: alle Stationszuordnungszeilen, einschließlich Dubletten.'
@@ -53,7 +54,7 @@ write_report() {
     printf '\nPLAUSIBILITÄTSPRÜFUNG\n'
     if [[ -f "$out/plausibility.txt" ]]; then cat "$out/plausibility.txt"; else echo 'Prüfung noch nicht abgeschlossen; Zahlen nicht verfügbar.'; fi
     printf '\nVERSIONEN\n'
-    for file in revision.txt versions.json model-checksums.txt; do
+    for file in revision.txt versions.json framework-version.txt model-checksums.txt; do
       if [[ -f "$out/$file" ]]; then printf '\n%s\n' "$file"; cat "$out/$file"; fi
     done
     printf '\n'

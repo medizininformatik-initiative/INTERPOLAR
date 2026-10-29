@@ -1,1 +1,1 @@
-ghcr.io/onto-med/top-interpolar-algorithms@sha256:45b806d11a01c0109e080691db4fb4f7a934c0b4dd15d983d9bcbc706790a21f
+ghcr.io/onto-med/top-interpolar-algorithms:1.1.1@sha256:37f1c73baedbd4962c61b70107fcef061542e8f8405ad6d1e5fbf3d4cc29a8a7

@@ -1,6 +1,6 @@
 # TOP-Analyse der Studienfälle
 
-Alle Befehle im INTERPOLAR-Hauptverzeichnis ausführen.
+Alle Befehle im INTERPOLAR-Hauptverzeichnis ausführen. Verwendet wird das TOP-Modellpaket 1.1.1 mit TOP-Framework 2.0.0; das Image wird beim ersten Lauf automatisch heruntergeladen.
 
 ## 1. Branch auschecken und bauen
 
@@ -29,6 +29,6 @@ Fortschritt und Laufzeiten erscheinen im Terminal und in `outputLocal/top-study/
 
 ## 4. Rückmeldung hochladen
 
-Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/<Lauf>/report.txt` hochladen. Der Bericht enthält Trefferzahlen und Laufzeiten, Fallauswahl nach Station und Studiengrenzen, Laborabdeckung und Einheitenstatus sowie den Anämie-Kontrollvergleich. Zwischenkriterien sind ausdrücklich gekennzeichnet.
+Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/<Lauf>/report.txt` hochladen. Der Bericht enthält Trefferzahlen und Laufzeiten, Fallauswahl nach Station und Studiengrenzen, Laborabdeckung und Einheitenstatus sowie den Anämie-Kontrollvergleich. Zwischenkriterien und Fallzählung sind ausdrücklich gekennzeichnet. Die Non-AE-Algorithmen stehen mit ihren Modellnamen im Bericht; ihre Bedingungen definieren nicht automatisch die Restmenge der Studienfälle.
 
 Die vollständigen TOP-ZIPs einschließlich `metadata.csv`, Modellkopien und Rohlogs bleiben unter `outputLocal/top-study/<Lauf>/` für die lokale Prüfung. Die Kontrollanalyse verändert weder Laborgrenzen noch TOP-Ergebnisse. Für die fachliche Bewertung müssen die lokalen Hämoglobin- und Glukose-Referenzgrenzen noch bestätigt werden.

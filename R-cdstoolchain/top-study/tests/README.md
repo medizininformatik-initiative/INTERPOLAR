@@ -3,8 +3,8 @@
 Run `bash R-cdstoolchain/top-study/tests/integration.sh` from the checkout.
 The TOP image is defined once in `../image.txt`; rerun this test after updating it.
 The test uses the existing R runtime and the pinned TOP image with two small
-model fixtures and the original anaemia model. It verifies five selected
-hospital cases from nine candidates,
+model fixtures and the original anaemia and encounter models. It verifies five
+selected hospital cases from nine candidates,
 including a prior hospital admission, a first ward contact before the study,
 start/end boundaries, duplicate contacts, separate ward periods, completed
 contacts and other cases of the same patient.
@@ -32,9 +32,8 @@ and interruptions, and check that credentials and raw logs are not included.
 The full TOP ZIPs stay in `outputLocal/.../results/`, including metadata. Tests
 inspect all three CSV members, exact case IDs and phenotype/metadata consistency.
 The public folder contains only the aggregate report. `check-catalog.sh` checks
-all 73 entries in the pinned
-image and the explicit classification of the two intermediate criteria. Revisit
-these reviewed IDs in `algorithm-list.jq` when updating the TOP models.
+all 118 entries in the pinned image and the explicit classification of the three
+intermediate criteria and encounter count. Revisit these reviewed IDs in `algorithm-list.jq` when updating the TOP models.
 
 The independent audit groups first ward contacts separately from the adapter's
 window query. Synthetic haemoglobin rows include duplicated measurements,
@@ -45,4 +44,4 @@ A failed audit has its own run phase and retains completed aggregate sections.
 
 The audit regression deliberately swaps one positive case for another while
 retaining equal totals, checks missing laboratory/patient data and reads all
-15 original model files. Model limits are saved locally in `model-limits.tsv`.
+16 original model files. Model limits are saved locally in `model-limits.tsv`.

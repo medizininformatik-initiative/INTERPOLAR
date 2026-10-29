@@ -21,14 +21,16 @@ status <- utils::read.delim("/run/run-summary.tsv")
 algorithms <- utils::read.delim("/run/algorithms.tsv")
 stopifnot(
   status$status == "completed", status$exit_code == 0,
-  nrow(algorithms) == 8L, all(algorithms$status == "completed"),
-  all(nzchar(algorithms$phenotype_name)), all(algorithms$entry_type == "Algorithmus"),
+  nrow(algorithms) == 13L, all(algorithms$status == "completed"),
+  all(nzchar(algorithms$phenotype_name)), sum(algorithms$entry_type == "Fallzählung") == 1L,
   all(algorithms$matched_cases[algorithms$model != "anaemia"] == 5), all(algorithms$duration_seconds >= 0),
   !file.exists("/run/private/adapter.yml")
 )
 versions <- jsonlite::read_json("/run/versions.json", simplifyVector = TRUE)
 stopifnot(
   versions$top_image == readLines("/runner/image.txt"),
+  readLines("/run/framework-version.txt") == "top_framework_version=2.0.0",
+  algorithms$matched_cases[algorithms$phenotype_id == "3fcabb96-0d3e-4798-a088-2778bcf0268d"] == 1,
   versions$original_adapter_sha256 == digest::digest(file = "/run/original.yml", algo = "sha256")
 )
 health <- jsonlite::read_json("/run/preparation.json", simplifyVector = TRUE)
@@ -58,7 +60,7 @@ cat("PASS: exact laboratory and ICD case sets, completed logs, preserved restric
 report <- readLines("/global/report.txt")
 stopifnot(
   identical(list.files("/global", all.files = FALSE), "report.txt"),
-  length(list.files("/run/results", pattern = "[.]zip$")) == 8L,
+  length(list.files("/run/results", pattern = "[.]zip$")) == 13L,
   any(grepl("Zwischenkriterium", report, fixed = TRUE)),
   all(vapply(algorithms$phenotype_name, function(name) any(grepl(name, report, fixed = TRUE)), logical(1))),
   any(grepl('"ignored_missing_encounter_contacts": 7', report, fixed = TRUE)),
@@ -109,7 +111,7 @@ stopifnot(
 )
 exclusions <- auditTable(audit, "ANÄMIE: AUSSCHLUSSDIAGNOSEN UND FEHLENDE LABORNACHWEISE (Diagnosen werden hier nur gezählt, nicht ausgeschlossen)")
 stopifnot(
-  exclusions$with_exclusion_diagnosis[exclusions$algorithm == "Algorithmus 2 A"] == 1,
+  exclusions$with_exclusion_diagnosis[exclusions$algorithm == "Algorithmus 2 A"] == 0,
   exclusions$unknown_or_conflicting_sex[exclusions$algorithm == "Algorithmus 1 - CTCAE Grad 3"] == 1,
   file.exists("/run/model-limits.tsv"), !file.exists("/global/model-limits.tsv"),
   !any(grepl("hb1|source_conversion_failed.*Encounter/|P_unknown|hb_outside|< 7.76", report))
