@@ -25,7 +25,7 @@ Interruptions during TOP execution and R preparation verify cleanup and status r
 Seven missing-contact rows (including duplicates and a null ID) are logged and
 ignored in the end-to-end run. A separate missing start date still blocks TOP.
 
-The public `outputGlobal/top-study/<run>/report.txt` includes aggregate results
+The public `outputGlobal/top-study/<run>/TOP_Report_YYYY-MM-DD_HH-MM-SS.txt` includes aggregate results
 and separate diagnostic counts. Tests cover success, preparation/query failure
 and interruptions, and check that credentials and raw logs are not included.
 

@@ -29,6 +29,8 @@ Fortschritt und Laufzeiten erscheinen im Terminal und in `outputLocal/top-study/
 
 ## 4. Rückmeldung hochladen
 
-Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/<Lauf>/report.txt` hochladen. Der Bericht enthält Trefferzahlen und Laufzeiten, Fallauswahl nach Station und Studiengrenzen, Laborabdeckung und Einheitenstatus sowie den Anämie-Kontrollvergleich. Zwischenkriterien und Fallzählung sind ausdrücklich gekennzeichnet. Die Non-AE-Algorithmen stehen mit ihren Modellnamen im Bericht; ihre Bedingungen definieren nicht automatisch die Restmenge der Studienfälle.
+Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/<Lauf>/TOP_Report_YYYY-MM-DD_HH-MM-SS.txt` hochladen. Der Bericht enthält Trefferzahlen und Laufzeiten, Fallauswahl nach Station und Studiengrenzen, Laborabdeckung und Einheitenstatus sowie den Anämie-Kontrollvergleich. Zwischenkriterien und Fallzählung sind ausdrücklich gekennzeichnet. Die Non-AE-Algorithmen stehen mit ihren Modellnamen im Bericht; ihre Bedingungen definieren nicht automatisch die Restmenge der Studienfälle.
 
 Die vollständigen TOP-ZIPs einschließlich `metadata.csv`, Modellkopien und Rohlogs bleiben unter `outputLocal/top-study/<Lauf>/` für die lokale Prüfung. Die Kontrollanalyse verändert weder Laborgrenzen noch TOP-Ergebnisse. Für die fachliche Bewertung müssen die lokalen Hämoglobin- und Glukose-Referenzgrenzen noch bestätigt werden.
+
+Der Dateiname enthält die lokale Startzeit am Standort, zum Beispiel `TOP_Report_2026-10-29_14-35-22.txt`.
