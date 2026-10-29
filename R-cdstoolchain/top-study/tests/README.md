@@ -45,3 +45,10 @@ A failed audit has its own run phase and retains completed aggregate sections.
 The audit regression deliberately swaps one positive case for another while
 retaining equal totals, checks missing laboratory/patient data and reads all
 16 original model files. Model limits are saved locally in `model-limits.tsv`.
+
+Laboratory summaries group by LOINC, actual unit and status, listing the models
+jointly. Counts refer to FHIR Observations; minimum, median and maximum use numeric
+values. Regression tests cover unequal flattened multiplicities, distinct resources
+with equal values, absent values, failed/unknown statuses and ambiguous identities.
+The generated adapter still preserves distinct resources and excludes unsuccessful
+statuses. Only aggregate clinical summaries appear in the public report.

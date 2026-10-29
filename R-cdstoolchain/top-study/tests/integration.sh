@@ -85,8 +85,8 @@ docker run --rm --network none --read-only --tmpfs /tmp \
   --volume "$work/R-cdstoolchain/top-study:/runner:ro" --volume "$output:/baseline:ro" \
   --volume "$work/reference-models/models:/reference-models:ro" \
   --entrypoint Rscript r-env /runner/tests/check-plausibility.R)
-docker exec "$database" psql -U probe -d probe -c \
-  'ALTER TABLE db2dataprocessor_out.v_observation_last_version RENAME COLUMN analysis_unit TO missing_unit' >/dev/null
+cp "$work/R-cdstoolchain/top-study/plausibility-functions.R" "$work/audit-original.R"
+sed -i.bak 's/logProgress("Laborabdeckung, Einheiten und Umrechnungsstatus zählen.")/stop("Synthetic audit failure")/' "$work/R-cdstoolchain/top-study/plausibility-functions.R"
 code=0
 bash "$work/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
@@ -95,8 +95,7 @@ grep -q $'\tfailed_or_interrupted\tplausibility' "$last/run-summary.tsv"
 grep -q 'ABGLEICH DER FALLAUSWAHL' "$(report_file "$last")"
 [[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
 [[ $(find "$last/results" -name '*.zip' | wc -l) -eq 13 ]]
-docker exec "$database" psql -U probe -d probe -c \
-  'ALTER TABLE db2dataprocessor_out.v_observation_last_version RENAME COLUMN missing_unit TO analysis_unit' >/dev/null
+cp "$work/audit-original.R" "$work/R-cdstoolchain/top-study/plausibility-functions.R"
 printf 'PASS: failed audit keeps partial aggregates and complete TOP ZIPs locally.\n'
 # Other data errors still block preparation, even with ignored missing encounters.
 docker exec "$database" psql -U probe -d probe -c \

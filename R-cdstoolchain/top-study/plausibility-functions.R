@@ -45,11 +45,11 @@ auditPopulationSql <- function(periods) {
 
 # Translate only the simple laboratory definitions used by anaemia 1 and its grades.
 # Unexpected structures fail visibly instead of silently approximating a new model.
-anaemiaExpression <- function(expression, entities, valid_units = FALSE) {
+anaemiaExpression <- function(expression, entities) {
   if (!is.null(expression$entityId)) {
     entity <- entities[[expression$entityId]]
     if (is.null(entity)) stop("Anämie-Modell: referenzierter Phänotyp fehlt.")
-    if (!is.null(entity$expression)) return(anaemiaExpression(entity$expression, entities, valid_units))
+    if (!is.null(entity$expression)) return(anaemiaExpression(entity$expression, entities))
     restriction <- entity$restriction
     if (is.null(restriction) || restriction$quantifier != "min" || restriction$cardinality != 1) {
       stop("Anämie-Modell: unerwartete Laborrestriktion.")
@@ -59,7 +59,7 @@ anaemiaExpression <- function(expression, entities, valid_units = FALSE) {
       if (!all(unlist(restriction$values) %in% c("male", "female"))) stop("Unbekannte Geschlechtsbedingung.")
       return(paste0("s.sex IN (", sqlList(unlist(restriction$values)), ")"))
     }
-    if (!identical(restriction$type, "number") || is.null(parent$unit)) stop("Unbekannte Laborbedingung.")
+    if (!identical(restriction$type, "number")) stop("Unbekannte Laborbedingung.")
     parts <- paste0("o.analysis_loinc_code IN (", sqlList(modelCodes(parent)), ")")
     for (bound in c("min", "max")) {
       operator <- restriction[[paste0(bound, "Operator")]]
@@ -70,13 +70,7 @@ anaemiaExpression <- function(expression, entities, valid_units = FALSE) {
         parts <- c(parts, paste("o.analysis_value", operator, format(value, scientific = FALSE, trim = TRUE)))
       }
     }
-    if (valid_units) {
-      # Exact unit labels are deliberately conservative; unmatched labels require local review.
-      parts <- c(
-        parts, paste0("o.analysis_unit=", quoteSql(parent$unit)),
-        "o.analysis_value_status IN ('converted','already_reference_unit')"
-      )
-    }
+    parts <- c(parts, "o.analysis_value_status IN ('converted','already_reference_unit')")
     return(paste0("(", paste(parts, collapse = " AND "), ")"))
   }
   operator <- switch(
@@ -87,7 +81,7 @@ anaemiaExpression <- function(expression, entities, valid_units = FALSE) {
   )
   if (is.null(operator) || !length(expression$arguments)) stop("Anämie-Modell: unerwarteter Ausdruck.")
   paste0("(", paste(vapply(expression$arguments, anaemiaExpression, character(1),
-    entities = entities, valid_units = valid_units
+    entities = entities
   ), collapse = operator), ")")
 }
 
@@ -102,18 +96,46 @@ readTopCaseIds <- function(path) {
   unique(result$Id)
 }
 
+# Summarize FHIR resources before computing distributions; equal values from
+# different resources remain independent observations. Reject ambiguous identity
+# or analysis data rather than selecting an arbitrary value for a resource.
+laboratorySummarySql <- function(observations) {
+  paste0(observations, ", resources AS MATERIALIZED (
+    SELECT DISTINCT obs_id, enc_id, analysis_loinc_code, analysis_unit,
+      analysis_value_status, analysis_value FROM observations
+  ), invalid_resources AS (
+    SELECT obs_id FROM resources GROUP BY obs_id
+    HAVING NULLIF(obs_id, '') IS NULL OR COUNT(*) > 1
+  )
+  SELECT analysis_loinc_code, analysis_unit, analysis_value_status,
+    CASE WHEN analysis_value IS NOT NULL
+      AND analysis_value_status IN ('converted','already_reference_unit')
+      THEN 'Ja' ELSE 'Nein' END AS evaluable,
+    COUNT(*) AS observations, COUNT(DISTINCT enc_id) AS cases,
+    MIN(analysis_value) AS minimum,
+    percentile_cont(0.5) WITHIN GROUP (ORDER BY analysis_value) AS median,
+    MAX(analysis_value) AS maximum,
+    (SELECT COUNT(*) FROM invalid_resources) AS invalid_resources
+  FROM resources
+  GROUP BY analysis_loinc_code, analysis_unit, analysis_value_status, evaluable
+  ORDER BY analysis_loinc_code, analysis_unit, analysis_value_status, evaluable")
+}
+
 runPlausibility <- function(con, periods, out, logProgress) {
   report <- file.path(out, "plausibility.txt")
   writeLines(c(
     "Aggregierte Standortprüfung. Bezugsgröße sind Krankenhausfälle, nicht Personen.",
     "Die Fallauswahl verlangt den ersten auflösbaren IP-Kontakt im Stations-Studienzeitraum.",
     "TOP verwendet anschließend die Daten des gesamten ausgewählten Krankenhausfalls.",
-    "Fehlende Daten und nicht bestätigte Einheiten sind keine negativen klinischen Befunde.",
-    "Tabellenzeilen können sich bei Laborcodes, Fehlermerkmalen und Befundzeiten überschneiden.",
-    "not_declared: Das Modell nennt für diesen Laborparameter keine Einheit. Alter wird aus Encounter-Daten bezogen und nicht als Laborwert gezählt."
+    "Nicht auswertbare Laborwerte sind keine negativen klinischen Befunde. Hb-Abdeckung und Anämie-Nachrechnung verwenden nur auswertbare Werte.",
+    "Auswertbar: Zahlenwert vorhanden und Status converted oder already_reference_unit; Referenzeinheit gemäß WP7.",
+    "Die Laborübersicht zählt FHIR-Observations, einschließlich Befunden ohne Zahlenwert. Minimum, Median und Maximum beziehen sich auf vorhandene Zahlenwerte in der angegebenen Einheit.",
+    "Fälle können in mehreren Einheiten- und Statusgruppen vorkommen; ihre Anzahlen sind nicht addierbar.",
+    "Verwendende Modelle führen den LOINC als Parameter; nicht jeder Algorithmus muss ihn verwenden. Alter stammt aus Encounter-Daten."
   ), report)
-  section <- function(title, data) {
+  section <- function(title, data, context = NULL) {
     cat("\n", title, "\n", file = report, append = TRUE, sep = "")
+    if (!is.null(context)) cat(context, "\n", file = report, append = TRUE, sep = "")
     if (is.null(data) || !nrow(data)) {
       cat("Keine Einträge.\n", file = report, append = TRUE)
       return(invisible(NULL))
@@ -151,43 +173,46 @@ runPlausibility <- function(con, periods, out, logProgress) {
       codes <- setdiff(modelCodes(entity), "29553-5")
       systems <- vapply(entity$codes, function(code) code$codeSystem$uri, character(1))
       if (!identical(entity$dataType, "number") || !length(codes) || !all(systems == "http://loinc.org")) return(NULL)
-      unit <- if (is.null(entity$unit) || !nzchar(entity$unit)) "not_declared" else entity$unit
-      data.frame(model = model$name, code = codes, expected_unit = unit)
+      data.frame(model = model$name, code = codes)
     }))
   }))
   inputs <- unique(inputs)
   if (is.null(inputs) || !nrow(inputs)) stop("Keine Laborparameter in TOP-Modellen gefunden.")
-  values <- paste(sprintf("(%s,%s,%s)", quoteSql(inputs$model), quoteSql(inputs$code), quoteSql(inputs$expected_unit)), collapse = ",")
-  observations <- paste0(population, ", model_inputs(model,code,expected_unit) AS (VALUES ", values, "),
+  values <- paste(sprintf("(%s,%s)", quoteSql(inputs$model), quoteSql(inputs$code)), collapse = ",")
+  observations <- paste0(population, ", model_inputs(model,code) AS (VALUES ", values, "),
     observations AS MATERIALIZED (
-      SELECT s.enc_id, o.analysis_loinc_code, o.analysis_unit, o.analysis_value_status,
-        o.analysis_value, o.obs_effectivedatetime
+      SELECT s.enc_id, o.obs_id, o.analysis_loinc_code, o.analysis_unit, o.analysis_value_status,
+        o.analysis_value
       FROM selected s JOIN db2dataprocessor_out.v_observation_last_version o
         ON o.obs_encounter_calculated_ref='Encounter/'||s.enc_id
       WHERE EXISTS (SELECT 1 FROM model_inputs i WHERE i.code=o.analysis_loinc_code)
     )")
   logProgress("Laborabdeckung, Einheiten und Umrechnungsstatus zählen.")
-  section("LABORABDECKUNG (Modellparameter, auch wenn nicht jeder Algorithmus sie verwendet)", query(paste0(observations, "
-    SELECT i.model, i.code AS analysis_loinc_code, i.expected_unit,
-      COUNT(DISTINCT o.enc_id) AS cases_with_rows,
-      COUNT(DISTINCT o.enc_id) FILTER (WHERE o.analysis_value IS NOT NULL) AS cases_with_nonnull_values,
-      COUNT(DISTINCT o.enc_id) FILTER (WHERE o.analysis_value IS NOT NULL AND o.analysis_unit=i.expected_unit
-        AND o.analysis_value_status IN ('converted','already_reference_unit')) AS cases_with_confirmed_unit
-    FROM model_inputs i LEFT JOIN observations o ON o.analysis_loinc_code=i.code
-    GROUP BY i.model,i.code,i.expected_unit ORDER BY i.model,i.code,i.expected_unit")))
-  # Report unit/status categories only, no individual values or timestamps.
-  section("LABOR-EINHEITEN UND KONVERTIERUNG", query(paste0(observations, "
-    SELECT analysis_loinc_code, analysis_unit, analysis_value_status,
-      COUNT(*) AS rows, COUNT(DISTINCT enc_id) AS cases,
-      COUNT(*) FILTER (WHERE analysis_value IS NOT NULL) AS nonnull_values
-    FROM observations GROUP BY analysis_loinc_code,analysis_unit,analysis_value_status
-    ORDER BY analysis_loinc_code,analysis_unit,analysis_value_status")))
-  section("MÖGLICHE MESSWERTDUBLETTEN (gleicher Fall, Code, Zeitpunkt, Wert und Einheit; kein Beweis einer Dublette)", query(paste0(observations, ", duplicates AS (
-    SELECT enc_id, analysis_loinc_code, obs_effectivedatetime, analysis_value, analysis_unit, COUNT(*) AS n
-    FROM observations WHERE analysis_value IS NOT NULL AND obs_effectivedatetime IS NOT NULL
-    GROUP BY enc_id,analysis_loinc_code,obs_effectivedatetime,analysis_value,analysis_unit HAVING COUNT(*)>1
-  ) SELECT analysis_loinc_code, COUNT(*) AS duplicate_groups, SUM(n-1) AS extra_rows,
-    COUNT(DISTINCT enc_id) AS affected_cases FROM duplicates GROUP BY analysis_loinc_code ORDER BY analysis_loinc_code")))
+  labs <- query(laboratorySummarySql(observations))
+  if (any(labs$invalid_resources > 0)) {
+    stop("Laborübersicht: Observations ohne eindeutige Identität oder mit widersprüchlichen Analyseangaben.")
+  }
+  model_names <- vapply(split(inputs$model, inputs$code), function(names) {
+    paste(sort(unique(names)), collapse = ", ")
+  }, character(1))
+  for (code in unique(labs$analysis_loinc_code)) {
+    entries <- labs[labs$analysis_loinc_code == code, c(
+      "analysis_unit", "analysis_value_status", "evaluable", "observations",
+      "cases", "minimum", "median", "maximum"
+    )]
+    names(entries) <- c(
+      "Einheit", "Status", "Für TOP auswertbar", "Observations",
+      "Fälle", "Minimum", "Median", "Maximum"
+    )
+    section(
+      paste("LABORÜBERSICHT: LOINC", code), entries,
+      paste("Verwendende Modelle:", model_names[[code]])
+    )
+  }
+  missing_codes <- setdiff(names(model_names), labs$analysis_loinc_code)
+  section("LABORPARAMETER OHNE OBSERVATIONS", data.frame(
+    LOINC = missing_codes, Modelle = unname(model_names[missing_codes])
+  ))
   anaemia <- Filter(function(model) model$name == "anaemia", models)
   if (length(anaemia) != 1) stop("Anämie-Modell für die Standortprüfung fehlt.")
   entities <- setNames(anaemia[[1]]$entities, vapply(anaemia[[1]]$entities, function(x) x$id, character(1)))
@@ -196,16 +221,15 @@ runPlausibility <- function(con, periods, out, logProgress) {
     "8fd0d50c-2fb7-4cb7-980f-c814fd15f229", "dbc2c1af-2280-4691-b372-0ea320534937"
   )
   expressions <- vapply(algorithm_ids, function(id) anaemiaExpression(list(entityId = id), entities), character(1))
-  valid_expressions <- vapply(algorithm_ids, function(id) anaemiaExpression(list(entityId = id), entities, TRUE), character(1))
-  hb_codes <- unique(unlist(lapply(entities, function(x) if (!is.null(x$unit)) modelCodes(x))))
-  control_columns <- paste(c(
+  hb_codes <- unique(inputs$code[inputs$model == "anaemia"])
+  control_columns <- paste(
     sprintf("COALESCE(BOOL_OR(%s),FALSE) AS a%s", expressions, seq_along(expressions)),
-    sprintf("COALESCE(BOOL_OR(%s),FALSE) AS valid_a%s", valid_expressions, seq_along(expressions))
-  ), collapse = ",\n")
+    collapse = ",\n"
+  )
   logProgress("Anämie-Regeln unabhängig auswerten und mit lokalen TOP-Ergebnissen vergleichen.")
   controls <- query(paste0(population, "
-    SELECT s.enc_id, s.sex, COUNT(o.obs_id) AS hb_rows,
-      COUNT(o.analysis_value) AS hb_values, ", control_columns, ",
+    SELECT s.enc_id, s.sex,
+      COUNT(o.analysis_value) FILTER (WHERE o.analysis_value_status IN ('converted','already_reference_unit')) AS hb_values, ", control_columns, ",
       COALESCE(BOOL_OR((", expressions[1], ") AND o.obs_effectivedatetime < s.first_ip_start),FALSE) AS positive_before_first_ip,
       COALESCE(BOOL_OR((", expressions[1], ") AND o.obs_effectivedatetime >= s.first_ip_start),FALSE) AS positive_from_first_ip,
       COALESCE(BOOL_OR((", expressions[1], ") AND o.obs_effectivedatetime >= s.end_date),FALSE) AS positive_after_study,
@@ -217,7 +241,6 @@ runPlausibility <- function(con, periods, out, logProgress) {
     data.frame(
       sex = rows$sex[1], cases = nrow(rows), with_hb_values = sum(rows$hb_values > 0),
       without_hb_values = sum(rows$hb_values == 0), positive_algorithm_1 = sum(rows$a1),
-      positive_with_confirmed_units = sum(rows$valid_a1),
       positive_before_first_ip = sum(rows$positive_before_first_ip), positive_from_first_ip = sum(rows$positive_from_first_ip),
       positive_after_study = sum(rows$positive_after_study), positive_without_time = sum(rows$positive_without_time)
     )
@@ -227,14 +250,12 @@ runPlausibility <- function(con, periods, out, logProgress) {
     id <- algorithm_ids[index]
     top <- readTopCaseIds(file.path(out, "results", paste0("anaemia_", id, ".zip")))
     expected <- controls$enc_id[controls[[paste0("a", index)]]]
-    valid <- controls$enc_id[controls[[paste0("valid_a", index)]]]
     name <- Filter(function(t) t$lang == "de", entities[[id]]$titles)[[1]]$text
     section(paste("ANÄMIE-KONTROLLVERGLEICH:", name), data.frame(
       comparison_status = if (setequal(top, expected)) "match" else "difference",
       both_positive = length(intersect(top, expected)), top_only = length(setdiff(top, expected)),
       control_only = length(setdiff(expected, top)), both_negative = sum(!controls$enc_id %in% union(top, expected)),
-      top_outside_study_cases = length(setdiff(top, controls$enc_id)),
-      control_positive_without_confirmed_unit = length(setdiff(expected, valid))
+      top_outside_study_cases = length(setdiff(top, controls$enc_id))
     ))
   }
   exclusion <- entities[["9dc14968-d483-4987-9a7a-46c0601b29e1"]]

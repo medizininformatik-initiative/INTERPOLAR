@@ -95,21 +95,14 @@ stopifnot(
 )
 comparison <- auditTable(audit, "ANÄMIE-KONTROLLVERGLEICH: Algorithmus 1")
 stopifnot(
-  comparison$comparison_status == "match", comparison$both_positive == 3,
-  comparison$both_negative == 2, comparison$top_only == 0, comparison$control_only == 0,
-  comparison$control_positive_without_confirmed_unit == 1
+  comparison$comparison_status == "match", comparison$both_positive == 2,
+  comparison$both_negative == 3, comparison$top_only == 0, comparison$control_only == 0
 )
 coverage <- auditTable(audit, "ANÄMIE: DATENABDECKUNG UND ZEITLICHE LAGE POSITIVER BEFUNDE (Fallzahlen, Zeitgruppen überlappen)")
 female <- coverage[coverage$sex == "female", ]
 stopifnot(
-  female$positive_before_first_ip == 1, female$positive_after_study == 1,
-  female$positive_with_confirmed_units == 2,
+  female$positive_before_first_ip == 1, female$positive_after_study == 0,
   coverage$cases[coverage$sex == "unknown_or_conflicting"] == 1
-)
-duplicates <- auditTable(audit, "MÖGLICHE MESSWERTDUBLETTEN (gleicher Fall, Code, Zeitpunkt, Wert und Einheit; kein Beweis einer Dublette)")
-stopifnot(
-  duplicates$analysis_loinc_code == "59260-0", duplicates$extra_rows == 1,
-  duplicates$affected_cases == 1
 )
 exclusions <- auditTable(audit, "ANÄMIE: AUSSCHLUSSDIAGNOSEN UND FEHLENDE LABORNACHWEISE (Diagnosen werden hier nur gezählt, nicht ausgeschlossen)")
 stopifnot(
@@ -119,3 +112,18 @@ stopifnot(
   !any(grepl("hb1|source_conversion_failed.*Encounter/|P_unknown|hb_outside|< 7.76", report))
 )
 cat("PASS: independent cohort, anaemia counts, unit risk, duplicate measurements, exclusion diagnoses and event timing.\n")
+
+labs <- auditTable(audit, "LABORÜBERSICHT: LOINC 59260-0")
+failed <- labs[labs$Status == "source_conversion_failed", ]
+converted <- labs[labs$Status == "converted", ]
+stopifnot(
+  nrow(failed) == 1, failed$Observations == 1,
+  failed[["Für TOP auswertbar"]] == "Nein", failed$Minimum == 4.8,
+  failed$Median == 4.8, failed$Maximum == 4.8,
+  converted$Observations == 2, converted$Fälle == 1, converted$Median == 7,
+  identical(names(labs), c(
+    "Einheit", "Status", "Für TOP auswertbar", "Observations",
+    "Fälle", "Minimum", "Median", "Maximum"
+  )),
+  !any(grepl("Deduplizierung|Quellzeilen|same_fhir_observation|MESSWERTWIEDERHOLUNGEN|MESSWERTZEILEN|Tabellenzeilen", report))
+)
