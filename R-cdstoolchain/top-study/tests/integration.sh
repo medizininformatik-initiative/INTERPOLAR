@@ -38,6 +38,8 @@ networks:
     external: true
     name: $network
 EOF
+docker build --tag "$(cat "$root/R-cdstoolchain/top-study/image.txt")" \
+  "$root/R-cdstoolchain/top-study/optimization" > "$work/image-build.log" 2>&1
 docker run --rm --network none --read-only --tmpfs /tmp \
   --mount "type=bind,src=$root/R-cdstoolchain/top-study,dst=/runner,readonly" \
   --entrypoint bash "$(cat "$root/R-cdstoolchain/top-study/image.txt")" /runner/tests/check-catalog.sh
@@ -72,6 +74,9 @@ done
   --entrypoint Rscript r-env /runner/tests/check-associations.R)
 bash "$work/run-top-study.sh"
 output=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d)
+grep -q 'optimization_commit=e7d5f286b5a7f401a97d8e93fbd022f24000f4f3' "$work/outputGlobal/top-study/$(basename "$output")/report.txt"
+[[ $(cat "$output/image-id.txt") == $(docker image inspect --format '{{.Id}}' "$(cat "$root/R-cdstoolchain/top-study/image.txt")") ]]
+awk -F '\t' 'NR == 2 {if ($1 < 0 || $2 != 0) exit 1; found=1} END {if (!found) exit 1}' "$output/image-build.tsv"
 docker run --rm --network none --read-only --tmpfs /tmp \
   --mount "type=bind,src=$output,dst=/run,readonly" \
   --mount "type=bind,src=$work/outputGlobal/top-study/$(basename "$output"),dst=/global,readonly" \
@@ -175,3 +180,31 @@ grep -q 'Zahlen nicht verfügbar' "$work/outputGlobal/top-study/$(basename "$las
 [[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
 [[ -z $(docker ps -q --filter "name=top-study-prepare-$(basename "$last")") ]]
 printf 'PASS: preparation interruption recorded and container stopped.\n'
+# A failed build must not fall back to the previously built image with the same tag.
+printf '\nRUN false\n' >> "$work/R-cdstoolchain/top-study/optimization/Dockerfile"
+code=0
+bash "$work/run-top-study.sh" || code=$?
+[[ "$code" -ne 0 ]]
+last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+grep -q $'\tfailed_or_interrupted\tbuild_image' "$last/run-summary.tsv"
+[[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
+awk -F '\t' 'NR == 2 {if ($2 == 0) exit 1; found=1} END {if (!found) exit 1}' "$last/image-build.tsv"
+printf 'PASS: failed image build stops before preparation and TOP execution.\n'
+cp "$root/R-cdstoolchain/top-study/optimization/Dockerfile" "$work/R-cdstoolchain/top-study/optimization/Dockerfile"
+printf '\nRUN sleep 120\n' >> "$work/R-cdstoolchain/top-study/optimization/Dockerfile"
+bash "$work/run-top-study.sh" > "$work/build-interruption.log" 2>&1 &
+launcher_pid=$!
+found=false
+for _attempt in $(seq 1 200); do
+  last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+  if grep -q 'RUN sleep 120' "$last/image-build.log" 2>/dev/null; then found=true; break; fi
+  sleep 0.1
+done
+[[ "$found" == true ]]
+kill -TERM "$launcher_pid"
+code=0
+wait "$launcher_pid" || code=$?
+[[ "$code" -eq 143 ]]
+grep -q $'\tfailed_or_interrupted\tbuild_image' "$last/run-summary.tsv"
+[[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
+printf 'PASS: image-build interruption returns promptly and records the failed phase.\n'

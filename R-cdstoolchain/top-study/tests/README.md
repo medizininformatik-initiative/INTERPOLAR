@@ -45,3 +45,8 @@ A failed audit has its own run phase and retains completed aggregate sections.
 The audit regression deliberately swaps one positive case for another while
 retaining equal totals, checks missing laboratory/patient data and reads all
 16 original model files. Model limits are saved locally in `model-limits.tsv`.
+
+The optimized comparison branch automatically builds its local image before each
+run, using Docker's cache. The integration test checks PR provenance, image ID,
+build timing, and failure/interruption during the build. A failed build cannot
+fall back to a previously built image. The reference branch remains unchanged.

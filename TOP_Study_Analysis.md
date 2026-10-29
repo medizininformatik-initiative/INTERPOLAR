@@ -1,34 +1,20 @@
-# TOP-Analyse der Studienfälle
+# TOP-Vergleichslauf mit Optimierung
 
-Alle Befehle im INTERPOLAR-Hauptverzeichnis ausführen. Verwendet wird das TOP-Modellpaket 1.1.1 mit TOP-Framework 2.0.0; das Image wird beim ersten Lauf automatisch heruntergeladen.
-
-## 1. Branch auschecken und bauen
+Nach Abschluss des Referenzlaufs im INTERPOLAR-Hauptverzeichnis:
 
 ```bash
 git fetch origin
-git switch top-study-analysis
+git switch top-study-analysis-optimized
 git pull --ff-only
-docker compose build r-env
-```
-
-## 2. Datenbank-TOML setzen
-
-```bash
-cp R-cdstoolchain/top-study/database.example.toml R-cdstoolchain/top-study/database.toml
-```
-
-In `R-cdstoolchain/top-study/database.toml` den Wert `DB_NAME` auf die pseudonymisierte Snapshot-Datenbank setzen. Die übrigen Verbindungswerte kommen aus `cds_hub_db_config.toml`.
-
-## 3. Vollständigen Studienlauf starten
-
-```bash
 ./run-top-study.sh
 ```
 
-Fortschritt und Laufzeiten erscheinen im Terminal und in `outputLocal/top-study/<Lauf>/progress.log`. Während einer TOP-Berechnung erscheint alle 60 Sekunden ein Lebenszeichen. Die Vorbereitung steht in `preparation.log`, die anschließende aggregierte Prüfung in `plausibility.log`.
+Denselben Snapshot und dieselben TOML-Dateien unverändert weiterverwenden. Beide Läufe nacheinander bei möglichst ähnlicher Systemlast ausführen und ihre lokalen Ausgabeordner behalten.
 
-## 4. Rückmeldung hochladen
+Der Aufruf baut automatisch ein lokales Image mit TOP 2.0.0, Modellpaket 1.1.1 und der Codehierarchie-Optimierung aus [TOP-PR #158](https://github.com/Onto-Med/top-phenotypic-query/pull/158). Der erste Bau lädt zusätzlich das Java-Compiler-Image und den festgelegten PR-Quelltext herunter; weitere Aufrufe nutzen den Docker-Build-Cache. Das offizielle TOP-Image bleibt erhalten.
 
-Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/<Lauf>/report.txt` hochladen. Der Bericht enthält Trefferzahlen und Laufzeiten, Fallauswahl nach Station und Studiengrenzen, Laborabdeckung und Einheitenstatus sowie den Anämie-Kontrollvergleich. Zwischenkriterien und Fallzählung sind ausdrücklich gekennzeichnet. Die Non-AE-Algorithmen stehen mit ihren Modellnamen im Bericht; ihre Bedingungen definieren nicht automatisch die Restmenge der Studienfälle.
+Fortschritt: `outputLocal/top-study/<Lauf>/image-build.log` beim Bau, danach Terminal und `progress.log`. Vorbereitung und Plausibilitätsprüfung stehen in `preparation.log` und `plausibility.log`.
 
-Die vollständigen TOP-ZIPs einschließlich `metadata.csv`, Modellkopien und Rohlogs bleiben unter `outputLocal/top-study/<Lauf>/` für die lokale Prüfung. Die Kontrollanalyse verändert weder Laborgrenzen noch TOP-Ergebnisse. Für die fachliche Bewertung müssen die lokalen Hämoglobin- und Glukose-Referenzgrenzen noch bestätigt werden.
+Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/<Lauf>/report.txt` hochladen. Der Bericht enthält Algorithmuslaufzeiten, Fallauswahl, Plausibilitätsprüfung und den Optimierungsstand. Die Bauzeit steht separat in `image-build.tsv` im Bericht: Sie ist in der Gesamtlaufzeit enthalten und muss beim Vergleich abgezogen werden. Die Algorithmuslaufzeiten enthalten sie bereits nicht.
+
+ZIPs einschließlich Metadaten, Modellkopien und Rohlogs bleiben unter `outputLocal` für den lokalen Ergebnisvergleich. Es werden dieselben 118 Auswertungen wie im Referenzlauf ausgeführt.

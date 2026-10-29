@@ -54,7 +54,8 @@ write_report() {
     printf '\nPLAUSIBILITÄTSPRÜFUNG\n'
     if [[ -f "$out/plausibility.txt" ]]; then cat "$out/plausibility.txt"; else echo 'Prüfung noch nicht abgeschlossen; Zahlen nicht verfügbar.'; fi
     printf '\nVERSIONEN\n'
-    for file in revision.txt versions.json framework-version.txt model-checksums.txt; do
+    echo 'image-build.tsv: Bauzeit ist in der Gesamtlaufzeit enthalten, nicht in den Algorithmuslaufzeiten.'
+    for file in revision.txt versions.json framework-version.txt optimization.txt image-id.txt image-build.tsv model-checksums.txt; do
       if [[ -f "$out/$file" ]]; then printf '\n%s\n' "$file"; cat "$out/$file"; fi
     done
     printf '\n'
@@ -65,7 +66,11 @@ finalize() {
   status=$?
   trap - EXIT INT TERM
   if [[ -n "$container" ]]; then docker stop -t 10 "$container" >/dev/null 2>&1 || true; fi
-  if [[ -n "$command_pid" ]]; then wait "$command_pid" 2>/dev/null || true; fi
+  if [[ -n "$command_pid" ]]; then
+    # Also cancel Docker builds, which have no running-container name to stop.
+    kill -TERM "$command_pid" 2>/dev/null || true
+    wait "$command_pid" 2>/dev/null || true
+  fi
   # Credentials are temporary; raw TOP logs and results remain local.
   rm -f "$out/private/adapter.yml"
   if [[ "$phase" == finished && "$status" -eq 0 ]]; then outcome=completed; else outcome=failed_or_interrupted; fi
@@ -95,6 +100,19 @@ git rev-parse HEAD > "$out/revision.txt"
 if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
   printf 'Working tree has tracked modifications.\n' >> "$out/revision.txt"
 fi
+phase=build_image
+echo "[$(date -u +%FT%TZ)] Optimiertes TOP-Image bauen (Protokoll: $out/image-build.log)"
+build_started=$(date +%s)
+build_code=0
+docker build --progress=plain --tag "$TOP_STUDY_IMAGE" "$docker_tool_dir/optimization" > "$out/image-build.log" 2>&1 &
+command_pid=$!
+wait_for_command || build_code=$?
+printf 'duration_seconds\texit_code\n%s\t%s\n' "$(( $(date +%s) - build_started ))" "$build_code" > "$out/image-build.tsv"
+if [[ "$build_code" -ne 0 ]]; then
+  echo "Image-Bau fehlgeschlagen; Details: $out/image-build.log" >&2
+  exit "$build_code"
+fi
+docker image inspect --format '{{.Id}}' "$TOP_STUDY_IMAGE" > "$out/image-id.txt"
 phase=extract_template
 echo "[$(date -u +%FT%TZ)] TOP-Vorlage auslesen"
 docker run --rm --network none --read-only --entrypoint /usr/bin/unzip "$TOP_STUDY_IMAGE" \

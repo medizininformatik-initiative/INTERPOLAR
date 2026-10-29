@@ -5,6 +5,7 @@ set -euo pipefail
 umask 077
 mkdir -p /run/results /run/logs /run/models
 cp models/*.json /run/models/
+cp /opt/app/optimization.txt /run/optimization.txt
 # Read the framework version from the bundled JAR, independently of the model package tag.
 unzip -p /opt/app/top-phenotypic-query.jar META-INF/maven/care.smith.top/top-phenotypic-query/pom.properties \
   | sed -n 's/^version=/top_framework_version=/p' > /run/framework-version.txt
