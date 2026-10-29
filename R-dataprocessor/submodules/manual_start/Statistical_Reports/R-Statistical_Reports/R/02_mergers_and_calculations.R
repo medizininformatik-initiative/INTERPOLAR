@@ -1545,6 +1545,8 @@ addMRPDokuData <- function(merged_fe_pat_fall_meda_table_with_enc_id,
   # ============================================================
 
   unmatched_mrps <- mrp_dokumentation_validierung_fe_table |>
+    # include filter here to remove non documented MRP rows
+    dplyr::filter(!is.na(mrp_id)) |>
     dplyr::anti_join(
       merged_fe_pat_fall_meda_table_with_enc_id_mrp_doku |>
         dplyr::filter(!is.na(mrp_id)) |>
