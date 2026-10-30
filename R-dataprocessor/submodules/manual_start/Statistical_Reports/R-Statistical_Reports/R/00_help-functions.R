@@ -284,14 +284,29 @@ detectMultipleEntries <- function(data, grouping_vars, variable_to_check,
 #' @export
 parseNamedArgs <- function() {
   command_arguments <- commandArgs(trailingOnly = TRUE)
+  parsed <- list()
 
-  named_args <- command_arguments[grepl("=", command_arguments)]
+  for (arg in command_arguments) {
+    if (grepl("^--", arg)) {
+      cleaned <- sub("^--", "", arg)
+      if (grepl("=", cleaned, fixed = TRUE)) {
+        parts <- strsplit(cleaned, "=", fixed = TRUE)[[1]]
+        if (length(parts) >= 2) {
+          parsed[[parts[1]]] <- paste(parts[-1], collapse = "=")
+        }
+      } else {
+        parsed[[cleaned]] <- TRUE
+      }
+      next
+    }
 
-  # Convert to named character vector
-  parsed <- sapply(named_args, function(arg) {
-    parts <- strsplit(arg, "=", fixed = TRUE)[[1]]
-    parts <- stats::setNames(parts[2], parts[1])
-  }, USE.NAMES = FALSE)
+    if (grepl("=", arg, fixed = TRUE)) {
+      parts <- strsplit(arg, "=", fixed = TRUE)[[1]]
+      if (length(parts) >= 2) {
+        parsed[[parts[1]]] <- paste(parts[-1], collapse = "=")
+      }
+    }
+  }
 
   return(parsed)
 }
@@ -816,7 +831,7 @@ CheckImpFinishedWithoutEndDate <- function(encounter_table) {
       width = 1000
     )
     warning("The encounter table contains finished IMP encounters without an end date.
-         Please check the data.")
+          Please check the data.")
   }
   return(encounter_table)
 }
@@ -1548,3 +1563,4 @@ if (DEBUG_TEST_REPORTING_WARNINGS) {
     return(fall_fe_table)
   }
 }
+
