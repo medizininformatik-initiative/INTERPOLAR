@@ -76,11 +76,10 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
     result$wp8_fv_diagnosen,
     paste(
       c(
-        "Alpha historisch (ICD: A01) [2020-01-01 08:00:00]",
-        "Doppelte Diagnose (ICD: D01) [2026-01-29 10:00:00]",
-        "Doppelte Diagnose (ICD: D01) [2026-01-30 10:00:00]",
-        "Gamma gueltig (ICD: C03) [2026-01-15 09:00:00]",
-        "Zeta aktuell (ICD: Z99) [2026-01-31 11:00:00]",
+        "Alpha historisch (ICD: A01) [01.01.2020]",
+        "Doppelte Diagnose (ICD: D01) [29.01.2026 – 30.01.2026 2 Diagnosen]",
+        "Gamma gueltig (ICD: C03) [15.01.2026]",
+        "Zeta aktuell (ICD: Z99) [31.01.2026]",
         "NA (ICD: X01)"
       ),
       collapse = "\n"
@@ -90,6 +89,117 @@ testthat::test_that("addFallvignetteDiagnoses applies case and WP7 rules", {
     "Nicht aufnehmen|Abgelaufen|Zukuenftig",
     result$wp8_fv_diagnosen
   )))
+})
+
+testthat::test_that("diagnosis labels prefer the occurrence year and exact codes", {
+  icd_labels <- data.frame(
+    year = c(2019L, 2021L, 2021L),
+    icd_code = c("I10.90", "I10.90", "I10.-"),
+    icd_normcode = c("I10.90", "I10.90", "I10"),
+    label = c("Bezeichnung 2019", "Bezeichnung 2021", "Oberkategorie")
+  )
+  testthat::expect_equal(
+    getFallvignetteDiagnosisLabel("I10.90", as.POSIXct("2019-06-01", tz = "UTC"), icd_labels),
+    "Bezeichnung 2019"
+  )
+  for (date in c("2026-06-01", "2018-06-01", NA_character_)) {
+    testthat::expect_equal(
+      getFallvignetteDiagnosisLabel("I10.90", as.POSIXct(date, tz = "UTC"), icd_labels),
+      "Bezeichnung 2021"
+    )
+  }
+  testthat::expect_equal(
+    getFallvignetteDiagnosisLabel(
+      "I10.90", as.POSIXct(c("2019-06-01", "2021-06-01", NA), tz = "UTC"), icd_labels
+    ),
+    "Bezeichnung 2021"
+  )
+  invalid_label <- rawToChar(as.raw(c(0x53, 0x82)))
+  Encoding(invalid_label) <- "UTF-8"
+  icd_labels$label[2L] <- invalid_label
+  testthat::expect_equal(
+    getFallvignetteDiagnosisLabel("I10.90", as.POSIXct(NA, tz = "UTC"), icd_labels),
+    "Bezeichnung 2019"
+  )
+  for (code in c("I10.999", "UNKNOWN", "", NA_character_)) {
+    testthat::expect_identical(
+      getFallvignetteDiagnosisLabel(code, as.POSIXct(NA, tz = "UTC"), icd_labels),
+      NA_character_
+    )
+  }
+})
+
+testthat::test_that("diagnoses fill missing labels while retaining FHIR names and counts", {
+  source_data <- data.table::data.table(
+    pat_id = "patient-1",
+    fall_fhir_enc_id = "case-1",
+    meda_dat = as.POSIXct("2026-08-15", tz = "UTC")
+  )
+  conditions <- data.table::data.table(
+    con_patient_ref = "Patient/patient-1",
+    con_encounter_calculated_ref = "Encounter/case-1",
+    con_code_code = "I10.90",
+    con_code_system = "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+    con_code_display = c(NA_character_, "  "),
+    start_datetime = as.POSIXct(c("2019-08-03", "2020-08-12"), tz = "UTC")
+  )
+  original_conditions <- data.table::copy(conditions)
+  diagnosis_rules <- data.table::data.table(ICD = character(), ICD_VALIDITY_DAYS = character())
+  labels <- ICD10gm::get_icd_labels(year = 2020, icd3 = "I10")
+  expected_label <- labels$label[labels$icd_normcode == "I10.90"][1L]
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(
+    result$wp8_fv_diagnosen,
+    paste0(expected_label, " (ICD: I10.90) [03.08.2019 – 12.08.2020 2 Diagnosen]")
+  )
+  testthat::expect_identical(conditions, original_conditions)
+
+  data.table::set(conditions, i = 2L, j = "con_code_display", value = "Bezeichnung vom FHIR-Server")
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(
+    result$wp8_fv_diagnosen,
+    "Bezeichnung vom FHIR-Server (ICD: I10.90) [03.08.2019 – 12.08.2020 2 Diagnosen]"
+  )
+  data.table::set(conditions, j = "con_code_display", value = NA_character_)
+  data.table::set(conditions, j = "start_datetime", value = as.POSIXct(NA, tz = "UTC"))
+  labels <- ICD10gm::get_icd_labels(icd3 = "I10")
+  labels <- labels[labels$icd_normcode == "I10.90", ]
+  expected_label <- labels$label[which.max(labels$year)]
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(result$wp8_fv_diagnosen, paste0(expected_label, " (ICD: I10.90)"))
+  data.table::set(conditions, j = "con_code_code", value = "UNKNOWN")
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(result$wp8_fv_diagnosen, "NA (ICD: UNKNOWN)")
+})
+
+testthat::test_that("diagnoses show the requested range and count distinct timestamps", {
+  source_data <- data.table::data.table(
+    pat_id = "patient-1",
+    fall_fhir_enc_id = "case-1",
+    meda_dat = as.POSIXct("2026-08-15", tz = "UTC")
+  )
+  conditions <- data.table::data.table(
+    con_patient_ref = "Patient/patient-1",
+    con_encounter_calculated_ref = "Encounter/case-1",
+    con_code_code = "I10.90",
+    con_code_system = "http://fhir.de/CodeSystem/bfarm/icd-10-gm",
+    con_code_display = "Essentielle Hypertonie",
+    start_datetime = as.POSIXct(c(
+      "2026-08-03 08:00:00", "2026-08-03 12:00:00", "2026-08-12 08:00:00"
+    ), tz = "UTC")
+  )
+  diagnosis_rules <- data.table::data.table(ICD = character(), ICD_VALIDITY_DAYS = character())
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(
+    result$wp8_fv_diagnosen,
+    "Essentielle Hypertonie (ICD: I10.90) [03.08.2026 – 12.08.2026 3 Diagnosen]"
+  )
+  data.table::set(conditions, i = 3L, j = "start_datetime", value = as.POSIXct(NA, tz = "UTC"))
+  result <- addFallvignetteDiagnoses(source_data, conditions, diagnosis_rules)
+  testthat::expect_equal(
+    result$wp8_fv_diagnosen,
+    "Essentielle Hypertonie (ICD: I10.90) [03.08.2026 3 Diagnosen]"
+  )
 })
 
 testthat::test_that("addFallvignetteDiagnoses does not modify source data", {
@@ -283,12 +393,45 @@ testthat::test_that("addFallvignetteLaboratoryValues applies WP7 and time window
     result$wp8_fv_laborparameter,
     paste(
       c(
-        "Haemoglobin (LOINC: 718-7): 12.5 g/dL [2026-02-06 08:00:00]",
-        "NA (LOINC: 2160-0): 1.2 mg/dL [2026-02-07 09:00:00]"
+        "Haemoglobin (LOINC: 718-7): 12.50 g/dL [2026-02-06 08:00:00]",
+        "NA (LOINC: 2160-0): 1.20 mg/dL [2026-02-07 09:00:00]"
       ),
       collapse = "\n"
     )
   )
+})
+
+testthat::test_that("laboratory values always show two decimal places", {
+  source_data <- data.table::data.table(
+    pat_id = "patient-1",
+    meda_dat = as.POSIXct("2026-02-08 12:00:00", tz = "UTC")
+  )
+  observations <- data.table::data.table(
+    obs_patient_ref = "Patient/patient-1",
+    obs_code_system = "http://loinc.org",
+    obs_code_code = "2160-0",
+    obs_code_display = "Laborwert",
+    obs_valuequantity_value = c("4", "4.5", "4.5678", "0", "-1.234", "1e-5", NA, "kein Wert"),
+    obs_valuequantity_code = "mg/dL",
+    obs_valuequantity_unit = NA_character_,
+    start_datetime = as.POSIXct("2026-02-07 08:00:00", tz = "UTC") + seq_len(8L)
+  )
+  original_observations <- data.table::copy(observations)
+  loinc_mapping <- data.table::data.table(LOINC = "2160-0", LOINC_PRIMARY = "2160-0")
+  result <- addFallvignetteLaboratoryValues(
+    source_data, observations, loinc_mapping,
+    relevant_loinc_codes = "2160-0"
+  )
+  expected_values <- c("4.00", "4.50", "4.57", "0.00", "-1.23", "0.00", "NA", "kein Wert")
+  testthat::expect_equal(
+    result$wp8_fv_laborparameter,
+    paste0(
+      "Laborwert (LOINC: 2160-0): ", expected_values,
+      " mg/dL [2026-02-07 08:00:0", seq_len(8L), "]",
+      collapse = "\n"
+    )
+  )
+  testthat::expect_identical(observations, original_observations)
 })
 
 testthat::test_that("addFallvignetteOperationStatus combines Encounter and OPS", {
@@ -346,4 +489,33 @@ testthat::test_that("addFallvignetteOperationStatus combines Encounter and OPS",
   )
 
   testthat::expect_equal(result$wp8_fv_op, c("1", "1", "0", "0"))
+})
+
+testthat::test_that("short descriptions replace only missing diagnosis names", {
+  labels <- data.frame(
+    year = c(2019L, 2021L),
+    icd_code = "I10.90",
+    icd_normcode = "I10.90",
+    label = c("Name 2019", "Name 2021")
+  )
+  description <- paste0(
+    "NA - C09AA05 (2019-08-03 08:00:00) ist mit\n",
+    "  [NA] kontraindiziert.\n",
+    "Diagnose: NA - I10.90   (2019-08-03 08:00:00)\n",
+    "                   NA - I10.90   (2026-08-03 08:00:00)\n",
+    "                   NA - I10.90   (NA)\n",
+    "                   FHIR-Name - I10.90   (2019-08-03 08:00:00)\n",
+    "                   NA - I10.99   (2019-08-03 08:00:00)\n\n"
+  )
+  expected <- sub("Diagnose: NA", "Diagnose: Name 2019", description, fixed = TRUE)
+  expected <- gsub("                   NA - I10.90", "                   Name 2021 - I10.90", expected, fixed = TRUE)
+  testthat::expect_equal(fillFallvignetteDescriptionDiagnoses(description, labels), expected)
+  testthat::expect_identical(
+    fillFallvignetteDescriptionDiagnoses(c(NA_character_, "", "Unverändert\r\n"), labels),
+    c(NA_character_, "", "Unverändert\r\n")
+  )
+  testthat::expect_equal(
+    fillFallvignetteDescriptionDiagnoses("NA - I10.90 (2019-08-03 08:00:00)", labels),
+    "Name 2019 - I10.90 (2019-08-03 08:00:00)"
+  )
 })

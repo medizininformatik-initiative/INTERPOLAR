@@ -22,6 +22,11 @@ testthat::test_that("buildFallvignetteSourceQuery selects the mapped source fiel
     "fall_fe.fall_age_at_admission AS fall_age_at_admission",
     fixed = TRUE
   )
+  testthat::expect_length(
+    regmatches(query, gregexpr("meda_fe.meda_dat", query, fixed = TRUE))[[1L]],
+    1L
+  )
+  testthat::expect_match(query, "meda_fe.meda_dat AS meda_dat", fixed = TRUE)
   testthat::expect_false(grepl("EXTRACT(YEAR FROM age", query, fixed = TRUE))
   testthat::expect_match(
     query,
