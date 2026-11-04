@@ -1,0 +1,8 @@
+# Optional additions to database_quality_analysis_config.toml.
+INCLUDE_CODE_SUMMARY = true
+# Sources, systems and fields are configured in code_summary.toml in this folder.
+# To use a different file, select it here (relative to the repository root or absolute).
+# CODE_SUMMARY_CONFIG_FILE = "path/to/code_summary.toml"
+
+# Optional alternative Table Description (normally the installed cds2db file).
+# CODE_SUMMARY_TABLE_DESCRIPTION = "path/to/Table_Description.xlsx"

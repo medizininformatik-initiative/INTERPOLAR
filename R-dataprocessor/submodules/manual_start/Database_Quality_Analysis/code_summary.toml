@@ -1,0 +1,84 @@
+# Maintained code-report configuration alongside the other DQA module TOMLs.
+# Select another file with CODE_SUMMARY_CONFIG_FILE in the module configuration.
+# System URIs are exact filters. WHO ATC is deliberately not included.
+# SNOMED CT is deferred until its resource and Coding-field scope is defined.
+[systems]
+LOINC = ["http://loinc.org"]
+ICD = ["http://fhir.de/CodeSystem/bfarm/icd-10-gm"]
+OPS = ["http://fhir.de/CodeSystem/bfarm/ops"]
+ATC = ["http://fhir.de/CodeSystem/bfarm/atc"]
+PZN = ["http://fhir.de/CodeSystem/ifa/pzn"]
+ASK = ["http://fhir.de/CodeSystem/ask"]
+
+# FHIR paths resolved using the Table Description, not DB-column naming guesses.
+# {coding} is replaced with the source-specific Coding path.
+# Candidate arrays select the first available path.
+[fields]
+resource_id = "id"
+system = "{coding}/system"
+version = "{coding}/version"
+code = "{coding}/code"
+pid = "subject/reference"
+case_id = ["encounter/calculated_ref", "context/calculated_ref"]
+value = "valueQuantity/value"
+unit = "valueQuantity/code"
+unit_system = "valueQuantity/system"
+low = "referenceRange/low/value"
+high = "referenceRange/high/value"
+range_type = "referenceRange/type/coding/code"
+
+[normal_range]
+code = "normal"
+# Match the MRP selection: prefer the type code, regardless of its system.
+# Use untyped ranges only when no explicitly normal range exists for the measurement.
+fallback_to_missing_type = true
+
+# Only these Coding fields are included; coded observation results are separate.
+[[sources]]
+resource = "Observation"
+coding = "code/coding"
+reports = ["LOINC"]
+
+[[sources]]
+resource = "Condition"
+coding = "code/coding"
+reports = ["ICD"]
+
+[[sources]]
+resource = "Procedure"
+coding = "code/coding"
+reports = ["OPS"]
+
+[[sources]]
+resource = "Medication"
+coding = "code/coding"
+reports = ["ATC", "PZN"]
+
+[[sources]]
+resource = "Medication"
+coding = "ingredient/itemCodeableConcept/coding"
+reports = ["ASK"]
+
+# Sources can override common paths in a [sources.fields] table, or use actual
+# DB columns in [sources.columns] when a FHIR-path mapping is ambiguous.
+# For example, directly below an Observation source:
+# [sources.columns]
+# unit = "obs_valuequantity_code"
+
+[[medication_links]]
+resource = "MedicationRequest"
+[medication_links.fields]
+medication_ref = "medicationReference/reference"
+case_id = "encounter/calculated_ref"
+
+[[medication_links]]
+resource = "MedicationAdministration"
+[medication_links.fields]
+medication_ref = "medicationReference/reference"
+case_id = "context/calculated_ref"
+
+[[medication_links]]
+resource = "MedicationStatement"
+[medication_links.fields]
+medication_ref = "medicationReference/reference"
+case_id = "context/calculated_ref"

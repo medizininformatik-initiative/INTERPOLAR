@@ -9,5 +9,9 @@ utils::globalVariables(c(
   "TABLE_FAMILY",
   "TABLE_NAME",
   "VIEW_NAME",
-  "VIEW_SCHEMA"
+  "VIEW_SCHEMA",
+  "RESOURCE",
+  "FHIR_EXPRESSION",
+  "report",
+  "no_reference_count_to_medication"
 ))

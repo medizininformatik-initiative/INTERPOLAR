@@ -71,6 +71,12 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     default
   }
 
+  code_summary_file <- getConfigValue(
+    "CODE_SUMMARY_CONFIG_FILE",
+    getCodeSummaryConfigPath()
+  )
+  code_summary <- loadCodeSummaryConfig(code_summary_file)
+
   list(
     view_prefix = getConfigValue("VIEW_PREFIX", "v_"),
     view_postfix = getConfigValue("VIEW_POSTFIX", "_last_version"),
@@ -79,6 +85,14 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
       getConfigValue("INCLUDE_VALUE_DATETIME_COLUMNS", TRUE)
     ),
     output_filename = getConfigValue("OUTPUT_FILENAME", "Database_Quality_Analysis"),
+    include_code_summary = as.logical(getConfigValue("INCLUDE_CODE_SUMMARY", TRUE)),
+    code_summary_config_file = code_summary_file,
+    code_summary_sources = code_summary$sources,
+    code_summary_systems = code_summary$systems,
+    code_summary_fields = code_summary$fields,
+    code_summary_medication_links = code_summary$medication_links,
+    code_summary_normal_range = code_summary$normal_range,
+    code_summary_table_description = getConfigValue("CODE_SUMMARY_TABLE_DESCRIPTION", NA_character_),
     count_batch_size = as.integer(getConfigValue("COUNT_BATCH_SIZE", 100)),
     use_database_locks = as.logical(getConfigValue("USE_DATABASE_LOCKS", FALSE)),
     boolean_group_table_families = getConfigValue("BOOLEAN_GROUP_TABLE_FAMILIES", "Frontend"),
