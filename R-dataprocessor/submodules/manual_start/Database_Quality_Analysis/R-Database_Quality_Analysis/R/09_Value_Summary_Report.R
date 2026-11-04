@@ -846,7 +846,9 @@ writeValueSummaryArchive <- function(
   filename_without_extension,
   timestamp = Sys.time(),
   subdir = "reports",
-  target = c("global", "local")
+  target = c("global", "local"),
+  suffix = DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_SUFFIX,
+  description = NULL
 ) {
   target <- match.arg(target)
   module_sub_dir <- file.path(
@@ -861,7 +863,7 @@ writeValueSummaryArchive <- function(
     paste0(
       filename_without_extension,
       "_",
-      DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_SUFFIX,
+      suffix,
       "_",
       formatFilenameTimestamp(timestamp),
       ".zip"
@@ -903,14 +905,19 @@ writeValueSummaryArchive <- function(
     )
   }
 
+  if (!is.null(description)) {
+    writeLines(description, file.path(temp_dir, "README.txt"), useBytes = TRUE)
+    csv_files <- c(csv_files, "README.txt")
+  }
+
   if (file.exists(archive_name)) {
     file.remove(archive_name)
   }
   old_wd <- getwd()
   on.exit(setwd(old_wd), add = TRUE)
   setwd(temp_dir)
-  logProgress("Writing value summary archive to ", archive_name, ".")
+  logProgress("Writing ", suffix, " archive to ", archive_name, ".")
   utils::zip(archive_name, files = csv_files, flags = "-q")
-  logProgress("Value summary archive written to ", archive_name, ".")
+  logProgress(suffix, " archive written to ", archive_name, ".")
   invisible(archive_name)
 }

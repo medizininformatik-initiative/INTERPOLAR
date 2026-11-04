@@ -584,13 +584,26 @@ createReport <- function(config = getConfig()) {
   if (!file.exists(value_summary_file)) {
     stop("Value summary archive was not created: ", value_summary_file, call. = FALSE)
   }
+  code_summary_file <- NULL
+  if (isTRUE(config$include_code_summary)) {
+    logProgress("Calculating database quality analysis code summary.")
+    code_summaries <- createCodeSummaryReports(metadata, config)
+    code_summary_file <- writeCodeSummaryArchive(
+      code_summaries, config$output_filename,
+      timestamp = analysis_start_time
+    )
+    if (!file.exists(code_summary_file)) {
+      stop("Code summary archive was not created: ", code_summary_file, call. = FALSE)
+    }
+  }
   logProgress(
     "Finished report in ",
     formatDuration(analysis_start_time),
     ". Outputs: ",
     output_file,
     ", ",
-    value_summary_file
+    value_summary_file,
+    if (!is.null(code_summary_file)) paste0(", ", code_summary_file)
   )
 
   invisible(result)
