@@ -10,13 +10,23 @@ snapshot_progress_message() {
     fi
 }
 
+# Runs a command in the cds_hub database container. When this file is sourced
+# by ip-snapshot.sh, its db_exec helper (compose/swarm aware) is reused;
+# standalone use falls back to docker compose.
+snapshot_db_exec() {
+    if declare -F db_exec >/dev/null 2>&1; then
+        db_exec "$@"
+    else
+        docker compose exec -T cds_hub "$@"
+    fi
+}
+
 snapshot_database_status() {
     local result
     # Only aggregate wait states; never retrieve query texts, IDs or row values.
     # This covers all sessions in the involved databases, including other jobs.
-    result=$(docker compose exec -T \
-        -e PGOPTIONS='-c statement_timeout=2000 -c default_transaction_read_only=on' \
-        -e PGCONNECT_TIMEOUT=5 cds_hub \
+    result=$(snapshot_db_exec \
+        env PGOPTIONS='-c statement_timeout=2000 -c default_transaction_read_only=on' PGCONNECT_TIMEOUT=5 \
         psql -X -A -t -U cds_hub_db_admin -d postgres \
         -v ON_ERROR_STOP=1 -v source_db="$1" -v target_db="$2" 2>/dev/null <<'SQL'
 SELECT count(*) FILTER (WHERE state = 'active'),
@@ -48,7 +58,7 @@ run_with_snapshot_progress() (
     snapshot_progress_message "$label: started; progress log: ${snapshot_progress_log:-unavailable}"
     (
         # Killing the observer also stops its current sleep/status subprocess.
-        child_pid=""
+        local child_pid=""
         trap 'if [[ -n "$child_pid" ]]; then kill "$child_pid" 2>/dev/null || :; wait "$child_pid" 2>/dev/null || :; fi; exit' TERM INT
         while true; do
             sleep 30 &
