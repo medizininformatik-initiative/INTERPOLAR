@@ -154,19 +154,27 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     medication_sources <- Filter(function(source) source$resource == "Medication", sources)
     if (length(medication_sources)) {
       medication_source <- medication_sources[[1]]
-      medication_ids <- paste0(
-        "SELECT ", quoteIdentifier(medication_source$fields[["resource_id"]]),
-        "::text FROM ", sourceName(medication_source)
+      # Resolve once against all Medication IDs, including medications without
+      # report codes. Reuse the materialized result for every medication report.
+      ctes <- c(
+        ctes,
+        paste0(
+          "medication_ids AS MATERIALIZED (SELECT DISTINCT ",
+          quoteIdentifier(medication_source$fields[["resource_id"]]), "::text AS id FROM ",
+          sourceName(medication_source), ")"
+        ),
+        paste0(
+          "unresolved_links AS MATERIALIZED (SELECT DISTINCT l.* FROM links l ",
+          "WHERE l.own_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM medication_ids m ",
+          "WHERE l.medication_ref = 'Medication/' || m.id))"
+        )
       )
-      reports <- medication_reports
-      for (report in reports) {
-        events <- c(events, paste0(
-          "SELECT ", quoteSqlString(report), ", NULL, NULL, NULL, NULL, NULL, NULL, NULL, ",
-          "l.kind || '/' || l.own_id, l.kind, l.pid, l.case_id, NULL::double precision, true ",
-          "FROM links l WHERE l.own_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM (", medication_ids,
-          ") m(id) WHERE l.medication_ref = 'Medication/' || m.id)"
-        ))
-      }
+      report_values <- paste0("(", vapply(medication_reports, quoteSqlString, character(1)), ")")
+      events <- c(events, paste0(
+        "SELECT r.report, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ",
+        "l.kind || '/' || l.own_id, l.kind, l.pid, l.case_id, NULL::double precision, true ",
+        "FROM unresolved_links l CROSS JOIN (VALUES ", paste(report_values, collapse = ", "), ") r(report)"
+      ))
     }
   }
   ctes <- c(ctes, paste0("raw_events AS (", paste(events, collapse = " UNION ALL "), ")"))
