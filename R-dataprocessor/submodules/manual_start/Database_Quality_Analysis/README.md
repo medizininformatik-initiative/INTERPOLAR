@@ -208,17 +208,33 @@ been explicitly scoped; it is not included in the default code report.
 
 The maintained configuration is `code_summary.toml` in this module directory,
 alongside `database_quality_analysis_config.toml` and `database.toml`.
-It defines `[systems]`, `[[sources]]`, shared `[fields]`,
+It defines `[systems]`, `[report_types]`, `[[sources]]`, shared `[fields]`,
 `[[medication_links]]` and the `[normal_range]` rule. R code reads these settings
 with `etlutils::tomlParseString()` without flattening the nested tables.
 ATC selects only the BfArM system; `http://www.whocc.no/atc` is not included.
+
+Every system/report name must have exactly one entry in `[report_types]`:
+
+- `coding`: distinct resource, patient and case counts.
+- `measurement`: those counts plus quantity/unit/reference-range groups and statistics.
+- `medication`: Medication counts plus directly linked Requests, Administrations,
+  Statements and unresolved Medication-reference counts. Sources for this type
+  must be Medication resources.
+
+The standard reports use `measurement` for LOINC, `coding` for ICD/OPS and
+`medication` for ATC/PZN/ASK. Behavior follows this type, not the report name.
+To add another medication code system, add its URI in `[systems]`, its type in
+`[report_types]`, and its name to the appropriate source's `reports` array. No R
+change is needed to obtain the medication-specific columns. Measurement fields
+are likewise selected by report type and their configured paths, rather than by
+the report or source resource name.
 
 To customize the report, edit `code_summary.toml`. Optionally select another file
 with `CODE_SUMMARY_CONFIG_FILE` in the module configuration (absolute path or
 relative to the repository root). See `code_summary_config_example.toml` for the
 module settings. The selected file replaces the complete report configuration;
 there are no fallback systems or source fields hardcoded in R.
-For a LOINC-only report, retain only LOINC in `[systems]` and one Observation source
+For a LOINC-only report, retain only LOINC in `[systems]` and `[report_types]` and one Observation source
 with `reports = ["LOINC"]`; the other sections can remain present.
 The existing Table Description maps resource/FHIR paths to actual DB columns.
 `CODE_SUMMARY_TABLE_DESCRIPTION` optionally selects another description file.
@@ -349,6 +365,11 @@ Each source view is projected once into a materialized CTE; non-medication views
 are filtered to the configured systems. Only aggregate results leave the DB.
 Integer group keys permit equality joins for counts and statistics. This avoids
 an individual query per code, field or result row.
+Unresolved Medication references are identified once against all Medication IDs,
+including medications without a report code. A shared materialized result is
+reused across all medication-type reports, instead of repeating the reference
+lookup for each report. With coding/measurement reports only, medication-link
+sources are not read.
 
 Run focused tests with the project R environment:
 
