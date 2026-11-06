@@ -89,6 +89,7 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     code_summary_config_file = code_summary_file,
     code_summary_sources = code_summary$sources,
     code_summary_systems = code_summary$systems,
+    code_summary_report_types = code_summary$report_types,
     code_summary_fields = code_summary$fields,
     code_summary_medication_links = code_summary$medication_links,
     code_summary_normal_range = code_summary$normal_range,

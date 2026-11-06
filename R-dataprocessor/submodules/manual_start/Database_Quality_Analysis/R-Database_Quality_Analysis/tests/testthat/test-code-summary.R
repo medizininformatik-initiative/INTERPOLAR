@@ -90,7 +90,10 @@ test_that("PostgreSQL deduplicates measurements and independently aggregates rar
   fixture <- codeSummaryFixture()
   sources <- resolveCodeSummarySources(fixture$metadata, fixture$config, fixture$description)
   links <- resolveCodeSummaryMedicationLinks(fixture$metadata, fixture$description, fixture$config)
-  query <- buildCodeSummaryQuery(sources, links, fixture$config$code_summary_systems, fixture$config$code_summary_normal_range)
+  query <- buildCodeSummaryQuery(
+    sources, links, fixture$config$code_summary_systems,
+    fixture$config$code_summary_normal_range, fixture$config$code_summary_report_types
+  )
   rows <- runCodeSummaryFixtureQuery(fixture, query)
   loinc <- rows[report == "LOINC" & row_type == "detail"]
   expect_equal(loinc$count, 6)

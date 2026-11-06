@@ -10,6 +10,17 @@ ATC = ["http://fhir.de/CodeSystem/bfarm/atc"]
 PZN = ["http://fhir.de/CodeSystem/ifa/pzn"]
 ASK = ["http://fhir.de/CodeSystem/ask"]
 
+# Behavior depends on the report type, not its name.
+# coding: resource/patient/case counts; measurement: quantity/range statistics;
+# medication: Medication counts and linked Requests/Administrations/Statements.
+[report_types]
+LOINC = "measurement"
+ICD = "coding"
+OPS = "coding"
+ATC = "medication"
+PZN = "medication"
+ASK = "medication"
+
 # FHIR paths resolved using the Table Description, not DB-column naming guesses.
 # {coding} is replaced with the source-specific Coding path.
 # Candidate arrays select the first available path.

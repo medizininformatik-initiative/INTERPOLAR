@@ -20,8 +20,17 @@ codeSummaryReferenceSql <- function(expression, resource) {
 #' Each source view is projected once into a materialized CTE. Coding fields are
 #' expanded from these projections, so configured coding fields and code systems
 #' do not trigger separate requests. Only aggregates leave the database.
-buildCodeSummaryQuery <- function(sources, links, systems, normal_range) {
+buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_types) {
   if (!length(sources)) return(NA_character_)
+  report_types <- parseCodeSummaryReportTypes(report_types, names(systems))
+  measurement_reports <- names(report_types)[report_types == "measurement"]
+  medication_reports <- names(report_types)[report_types == "medication"]
+  if (!length(medication_reports)) links <- list()
+  measurement_condition <- if (length(measurement_reports)) {
+    paste0("report IN (", paste(vapply(measurement_reports, quoteSqlString, character(1)), collapse = ", "), ")")
+  } else {
+    "false"
+  }
   ctes <- character()
   views <- unique(vapply(c(sources, links), function(source) quoteTable(source$schema, source$view), character(1)))
   for (index in seq_along(views)) {
@@ -29,7 +38,11 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range) {
     columns <- unique(unlist(lapply(view_sources, function(source) unname(source$fields))))
     columns <- columns[!is.na(columns)]
     filters <- character()
-    if (!any(vapply(view_sources, function(source) startsWith(source$resource, "Medication"), logical(1)))) {
+    coding_view <- all(vapply(view_sources, function(source) !is.null(source$coding), logical(1)))
+    requires_all_medication_ids <- length(links) > 0L && any(vapply(view_sources, function(source) {
+      source$resource == "Medication" && any(source$reports %in% medication_reports)
+    }, logical(1)))
+    if (coding_view && !requires_all_medication_ids) {
       filters <- vapply(view_sources, function(source) {
         paste0(
           quoteIdentifier(source$fields[["system"]]), "::text IN (",
@@ -56,7 +69,17 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range) {
         ") THEN ", quoteSqlString(report)
       )
     }, character(1))
-    is_observation <- identical(source$resource, "Observation")
+    measurement_systems <- unique(unlist(systems[intersect(source$reports, measurement_reports)], use.names = FALSE))
+    source_measurement_condition <- if (length(measurement_systems)) {
+      paste0(fieldSql("system"), " IN (", paste(vapply(measurement_systems, quoteSqlString, character(1)), collapse = ", "), ")")
+    } else {
+      "false"
+    }
+    measurementFieldSql <- function(name, numeric = FALSE) {
+      expression <- fieldSql(name)
+      if (numeric) expression <- paste0("(", expression, ")::double precision")
+      paste0("CASE WHEN ", source_measurement_condition, " THEN ", expression, " END")
+    }
     # Reproduce MRP type priority in SQL, without converting units or selecting
     # just one range: all ranges at the preferred priority remain visible.
     range_priority <- paste0(
@@ -71,12 +94,12 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range) {
       paste0(fieldSql("resource_id"), " AS own_id"),
       paste0(codeSummaryReferenceSql(fieldSql("pid"), "Patient"), " AS pid"),
       paste0(codeSummaryReferenceSql(fieldSql("case_id"), "Encounter"), " AS case_id"),
-      paste0(if (is_observation) fieldSql("unit") else "NULL::text", " AS unit"),
-      paste0(if (is_observation) fieldSql("unit_system") else "NULL::text", " AS unit_system"),
-      paste0(if (is_observation) fieldSql("low") else "NULL::text", " AS low"),
-      paste0(if (is_observation) fieldSql("high") else "NULL::text", " AS high"),
-      paste0(if (is_observation) paste0("(", fieldSql("value"), ")::double precision") else "NULL::double precision", " AS value"),
-      paste0(if (is_observation) range_priority else "0", " AS range_priority")
+      paste0(measurementFieldSql("unit"), " AS unit"),
+      paste0(measurementFieldSql("unit_system"), " AS unit_system"),
+      paste0(measurementFieldSql("low"), " AS low"),
+      paste0(measurementFieldSql("high"), " AS high"),
+      paste0(measurementFieldSql("value", numeric = TRUE), " AS value"),
+      paste0("CASE WHEN ", source_measurement_condition, " THEN ", range_priority, " ELSE 0 END AS range_priority")
     )
     paste0("SELECT ", paste(parts, collapse = ", "), " FROM ", sourceName(source), " s")
   })
@@ -103,13 +126,13 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range) {
   )
 
   events <- paste0(
-    "SELECT report, version, code, CASE WHEN report = 'LOINC' THEN unit END AS unit, ",
-    "CASE WHEN report = 'LOINC' THEN unit_system END AS unit_system, ",
-    "CASE WHEN report = 'LOINC' THEN low END AS low, CASE WHEN report = 'LOINC' THEN high END AS high, ",
+    "SELECT report, version, code, CASE WHEN ", measurement_condition, " THEN unit END AS unit, ",
+    "CASE WHEN ", measurement_condition, " THEN unit_system END AS unit_system, ",
+    "CASE WHEN ", measurement_condition, " THEN low END AS low, CASE WHEN ", measurement_condition, " THEN high END AS high, ",
     "kind || '/' || own_id AS count_key, kind || '/' || own_id AS event_key, kind, pid, case_id, ",
-    "CASE WHEN report = 'LOINC' THEN value END AS value, false AS unresolved FROM codings"
+    "CASE WHEN ", measurement_condition, " THEN value END AS value, false AS unresolved FROM codings"
   )
-  if (length(links)) {
+  if (length(links) && length(medication_reports)) {
     link_selects <- lapply(links, function(source) {
       fieldSql <- function(name) codeSummaryFieldSql(source$fields, name)
       paste0(
@@ -124,7 +147,8 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range) {
       "SELECT c.report, c.version, c.code, NULL, NULL, NULL, NULL, 'Medication/' || c.own_id, ",
       "l.kind || '/' || l.own_id, l.kind, l.pid, l.case_id, NULL::double precision, false ",
       "FROM links l JOIN codings c ON c.kind = 'Medication' ",
-      "AND l.medication_ref = 'Medication/' || c.own_id WHERE l.own_id IS NOT NULL"
+      "AND l.medication_ref = 'Medication/' || c.own_id WHERE l.own_id IS NOT NULL ",
+      "AND c.report IN (", paste(vapply(medication_reports, quoteSqlString, character(1)), collapse = ", "), ")"
     ))
     # Resolve against all Medication IDs, including medications without a report code.
     medication_sources <- Filter(function(source) source$resource == "Medication", sources)
@@ -134,7 +158,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range) {
         "SELECT ", quoteIdentifier(medication_source$fields[["resource_id"]]),
         "::text FROM ", sourceName(medication_source)
       )
-      reports <- intersect(c("ATC", "PZN", "ASK"), names(systems))
+      reports <- medication_reports
       for (report in reports) {
         events <- c(events, paste0(
           "SELECT ", quoteSqlString(report), ", NULL, NULL, NULL, NULL, NULL, NULL, NULL, ",
@@ -206,7 +230,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range) {
     # and repeated flattened reference/coding rows from weighting statistics.
     paste0(
       "measurements AS (SELECT DISTINCT summary_id,count_key,value ",
-      "FROM grouped WHERE report = 'LOINC' AND row_type = 'detail' AND value IS NOT NULL ",
+      "FROM grouped WHERE ", measurement_condition, " AND row_type = 'detail' AND value IS NOT NULL ",
       "AND value NOT IN ('NaN'::double precision, 'Infinity'::double precision, '-Infinity'::double precision))"
     ),
     paste0(

@@ -24,11 +24,12 @@ loadCodeSummaryConfig <- function(path) {
     stop("Code summary TOML file not found: ", path, call. = FALSE)
   }
   config <- etlutils::tomlParseString(paste(readLines(path, warn = FALSE), collapse = "\n"))
-  required <- c("systems", "sources", "fields", "medication_links", "normal_range")
+  required <- c("systems", "report_types", "sources", "fields", "medication_links", "normal_range")
   missing <- setdiff(required, names(config))
   if (length(missing)) {
     stop("Missing code summary TOML sections: ", paste(missing, collapse = ", "), call. = FALSE)
   }
+  config$report_types <- parseCodeSummaryReportTypes(config$report_types, names(config$systems))
   required_fields <- c(
     "resource_id", "system", "version", "code", "pid", "case_id", "value",
     "unit", "unit_system", "low", "high", "range_type"
@@ -47,6 +48,27 @@ loadCodeSummaryConfig <- function(path) {
     stop("normal_range.fallback_to_missing_type must be a TOML boolean.", call. = FALSE)
   }
   config
+}
+
+#' Validate and normalize configured report types
+#'
+#' Used for TOML input and programmatically supplied report configurations.
+parseCodeSummaryReportTypes <- function(report_types, report_names) {
+  if (
+    is.null(names(report_types)) || anyDuplicated(names(report_types)) ||
+    !setequal(names(report_types), report_names) ||
+    any(lengths(report_types) != 1L)
+  ) {
+    stop("report_types must define exactly one type for every configured report.", call. = FALSE)
+  }
+  types <- unlist(report_types, use.names = TRUE)
+  if (
+    !is.character(types) || anyNA(types) ||
+    !all(types %in% c("coding", "measurement", "medication"))
+  ) {
+    stop("Report types must be coding, measurement or medication.", call. = FALSE)
+  }
+  types[report_names]
 }
 
 #' Resolve one FHIR path to an available database column
@@ -105,6 +127,7 @@ resolveCodeSummarySources <- function(metadata, config, table_description = NULL
   etlutils::fillNAWithLastRowValue(table_description, "RESOURCE")
   sources <- config$code_summary_sources
   systems <- config$code_summary_systems
+  report_types <- parseCodeSummaryReportTypes(config$code_summary_report_types, names(systems))
   if (is.null(sources) || is.null(systems) || !length(systems)) {
     stop("Code summary requires sources and code systems.", call. = FALSE)
   }
@@ -132,6 +155,9 @@ resolveCodeSummarySources <- function(metadata, config, table_description = NULL
       stop("Unknown code report in source configuration: ", source$resource, call. = FALSE)
     }
     resource_name <- source$resource
+    if (any(report_types[source$reports] == "medication") && resource_name != "Medication") {
+      stop("Medication reports require a Medication source: ", resource_name, call. = FALSE)
+    }
     table_metadata <- metadata[TABLE_FAMILY == "FHIR" & TABLE_NAME == tolower(resource_name)]
     if (!nrow(table_metadata)) {
       skipped <- c(skipped, paste(resource_name, source$coding, "view unavailable"))
@@ -139,6 +165,9 @@ resolveCodeSummarySources <- function(metadata, config, table_description = NULL
     }
     resource_description <- table_description[RESOURCE == resource_name]
     fields <- resolveCodeSummaryFields(source, resource_description, table_metadata, config$code_summary_fields)
+    if (!any(report_types[source$reports] == "measurement")) {
+      fields[c("value", "unit", "unit_system", "low", "high", "range_type")] <- NA_character_
+    }
     if (anyNA(fields[c("resource_id", "system", "code")])) {
       skipped <- c(skipped, paste(resource_name, source$coding, "required columns unavailable"))
       next
