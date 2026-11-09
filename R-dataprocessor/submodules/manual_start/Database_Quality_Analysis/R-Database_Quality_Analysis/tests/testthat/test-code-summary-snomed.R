@@ -26,10 +26,10 @@ test_that("synthetic SNOMED data produce visible detail rows in all four reports
   expect_equal(measurement$patient_count, 6)
   expect_equal(measurement$case_count, 3)
   expect_equal(measurement$unit, "Cel")
-  method <- summaries$Observation[coding_path == "method/coding" & row_type == "detail"]
-  expect_equal(method$count, 6)
-  expect_true(is.na(method$mean))
+  expect_false(any(summaries$Observation$coding_path == "method/coding", na.rm = TRUE))
+  expect_false(any(summaries$Observation$code == "414564002", na.rm = TRUE))
   med <- summaries$Medication[system == "http://snomed.info/sct"]
+  expect_false(any(med$coding_path == "ingredient/itemCodeableConcept/coding", na.rm = TRUE))
   direct <- med[row_type == "detail" & coding_path == "MedicationStatement/medicationCodeableConcept/coding"]
   expect_equal(direct$medication_count, 0)
   expect_equal(direct$medication_statement_count, 5)

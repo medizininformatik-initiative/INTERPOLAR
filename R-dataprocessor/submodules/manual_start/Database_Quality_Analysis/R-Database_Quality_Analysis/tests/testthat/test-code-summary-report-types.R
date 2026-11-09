@@ -1,7 +1,7 @@
 test_that("report types require an explicit supported type for every configured report", {
   fixture <- codeSummaryFixture()
   config <- fixture$config
-  expect_identical(config$code_summary_report_types[["LOINC"]], "measurement")
+  expect_identical(config$code_summary_report_types[["LOINC"]], "coding")
   expect_identical(config$code_summary_report_types[["ICD"]], "coding")
   expect_identical(config$code_summary_report_types[["PZN"]], "medication")
   expect_error(parseCodeSummaryReportTypes(list(LOINC = "unknown"), "LOINC"), "Report types must be")
@@ -24,8 +24,8 @@ test_that("new medication and coding reports and renamed measurements use config
     fixed = TRUE
   )
   toml <- sub("[fields]", 'ProductCodes = "medication"\nLocalDiagnoses = "coding"\n\n[fields]', toml, fixed = TRUE)
-  toml <- sub('reports = ["ATC", "PZN"]', 'reports = ["ATC", "PZN", "ProductCodes"]', toml, fixed = TRUE)
-  toml <- sub('reports = ["ICD"]', 'reports = ["ICD", "LocalDiagnoses"]', toml, fixed = TRUE)
+  toml <- sub('reports = ["ATC", "PZN", "SNOMED"]', 'reports = ["ATC", "PZN", "SNOMED", "ProductCodes"]', toml, fixed = TRUE)
+  toml <- sub('reports = ["ICD", "SNOMED"]', 'reports = ["ICD", "SNOMED", "LocalDiagnoses"]', toml, fixed = TRUE)
   config_file <- tempfile(fileext = ".toml")
   on.exit(unlink(config_file), add = TRUE)
   writeLines(toml, config_file)
@@ -82,6 +82,9 @@ test_that("plain coding sources do not read unrelated medication views or measur
 
 test_that("wildcards expand only imported Coding fields and explicit mappings take precedence", {
   fixture <- codeSummaryFixture()
+  fixture$config$code_summary_sources <- c(fixture$config$code_summary_sources, list(
+    list(resource = "Observation", coding = "*", reports = "SNOMED", measurement = FALSE)
+  ))
   sources <- resolveCodeSummarySources(fixture$metadata, fixture$config, fixture$description)
   primary <- Filter(function(source) source$resource == "Observation" && source$coding == "code/coding", sources)
   expect_length(primary, 1L)

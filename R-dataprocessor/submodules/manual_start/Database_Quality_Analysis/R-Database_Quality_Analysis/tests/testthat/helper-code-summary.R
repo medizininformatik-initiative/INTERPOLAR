@@ -63,7 +63,8 @@ codeSummaryFixture <- function() {
   description <- data.table::rbindlist(descriptions)
   metadata <- description[, .(
     TABLE_FAMILY = "FHIR", TABLE_NAME = tolower(RESOURCE), VIEW_SCHEMA = "pg_temp",
-    VIEW_NAME = tolower(RESOURCE), COLUMN_NAME
+    VIEW_NAME = tolower(RESOURCE), COLUMN_NAME,
+    DATA_TYPE = ifelse(COLUMN_NAME == "obs_value", "double precision", "text")
   )]
   config <- getConfig(envir = new.env(parent = emptyenv()), command_arguments = character())
   list(description = description, metadata = metadata, config = config)
@@ -73,7 +74,7 @@ codeSummaryFixtureSql <- function(fixture) {
   tables <- split(fixture$metadata, fixture$metadata$TABLE_NAME)
   definitions <- vapply(tables, function(table) {
     columns <- vapply(table$COLUMN_NAME, function(column) {
-      paste(quoteIdentifier(column), if (column == "obs_value") "double precision" else "text")
+      paste(quoteIdentifier(column), table[COLUMN_NAME == column, DATA_TYPE][[1]])
     }, character(1))
     paste0(
       "CREATE TEMP TABLE ", quoteIdentifier(table$TABLE_NAME[[1]]), " (",

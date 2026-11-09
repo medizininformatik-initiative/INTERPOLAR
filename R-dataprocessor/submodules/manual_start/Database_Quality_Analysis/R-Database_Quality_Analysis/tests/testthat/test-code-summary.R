@@ -15,7 +15,7 @@ test_that("code report settings are loaded from the module or selected TOML", {
     loadCodeSummaryConfig(config$code_summary_config_file)$sources
   )
   expect_equal(medication_sources[[1]]$coding, "code/coding")
-  expect_setequal(medication_sources[[1]]$reports, c("ATC", "PZN"))
+  expect_setequal(medication_sources[[1]]$reports, c("ATC", "PZN", "SNOMED"))
   expect_equal(medication_sources[[2]]$coding, "ingredient/itemCodeableConcept/coding")
   expect_identical(medication_sources[[2]]$reports, "ASK")
   expect_error(loadCodeSummaryConfig(tempfile()), "TOML file not found")
@@ -144,6 +144,7 @@ test_that("SNOMED separates Coding roles, preserves resource boundaries and dedu
   fixture <- codeSummaryFixture()
   # Other resource types remain configurable, but are outside the default report.
   fixture$config$code_summary_sources <- c(fixture$config$code_summary_sources, list(
+    list(resource = "Observation", coding = "*", reports = "SNOMED", measurement = FALSE),
     list(resource = "Patient", coding = "*", reports = "SNOMED"),
     list(resource = "Encounter", coding = "*", reports = "SNOMED")
   ))
