@@ -1,7 +1,7 @@
 # Maintained code-report configuration alongside the other DQA module TOMLs.
 # Select another file with CODE_SUMMARY_CONFIG_FILE in the module configuration.
 # System URIs are exact filters. WHO ATC is deliberately not included.
-# SNOMED CT includes imported Coding paths only on the four report resources below.
+# SNOMED CT uses primary code/coding and direct medicationCodeableConcept/coding only.
 [systems]
 LOINC = ["http://loinc.org"]
 ICD = ["http://fhir.de/CodeSystem/bfarm/icd-10-gm"]
@@ -11,11 +11,12 @@ PZN = ["http://fhir.de/CodeSystem/ifa/pzn"]
 ASK = ["http://fhir.de/CodeSystem/ask"]
 SNOMED = ["http://snomed.info/sct"]
 
-# Behavior depends on the report type, not its name.
-# coding: resource/patient/case counts; measurement: quantity/range statistics;
+# Statistics are detected from the mapped value column and its numeric DB type.
+# coding: resource/patient/case counts with automatic measurement statistics;
 # medication: codes on Medication or a configured medication-link resource.
+# The legacy type "measurement" remains accepted, with the same automatic detection.
 [report_types]
-LOINC = "measurement"
+LOINC = "coding"
 ICD = "coding"
 OPS = "coding"
 ATC = "medication"
@@ -46,54 +47,32 @@ code = "normal"
 # Use untyped ranges only when no explicitly normal range exists for the measurement.
 fallback_to_missing_type = true
 
-# Explicit sources take precedence over wildcard sources for the same system/path.
-# measurement enables quantity statistics for all systems on this source.
+# A mapped numeric value enables statistics for all systems on the source.
+# Optional measurement = true/false overrides automatic detection for that source.
 [[sources]]
 resource = "Observation"
 coding = "code/coding"
 reports = ["LOINC", "SNOMED"]
-measurement = true
 
 [[sources]]
 resource = "Condition"
 coding = "code/coding"
-reports = ["ICD"]
+reports = ["ICD", "SNOMED"]
 
 [[sources]]
 resource = "Procedure"
 coding = "code/coding"
-reports = ["OPS"]
+reports = ["OPS", "SNOMED"]
 
 [[sources]]
 resource = "Medication"
 coding = "code/coding"
-reports = ["ATC", "PZN"]
+reports = ["ATC", "PZN", "SNOMED"]
 
 [[sources]]
 resource = "Medication"
 coding = "ingredient/itemCodeableConcept/coding"
 reports = ["ASK"]
-
-# Coding paths are discovered via Table Description, within this explicit scope.
-[[sources]]
-resource = "Observation"
-coding = "*"
-reports = ["SNOMED"]
-
-[[sources]]
-resource = "Condition"
-coding = "*"
-reports = ["SNOMED"]
-
-[[sources]]
-resource = "Procedure"
-coding = "*"
-reports = ["SNOMED"]
-
-[[sources]]
-resource = "Medication"
-coding = "*"
-reports = ["SNOMED"]
 
 # Direct medication codes feed Medication.csv, alongside Medication codes and linked counts.
 # ASK remains restricted to Medication ingredients.

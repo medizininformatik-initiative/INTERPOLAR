@@ -53,6 +53,8 @@ loadCodeSummaryConfig <- function(path) {
 #' Validate and normalize configured report types
 #'
 #' Used for TOML input and programmatically supplied report configurations.
+#' The legacy measurement label is accepted; sources detect numeric values
+#' independently of their report type unless explicitly overridden.
 parseCodeSummaryReportTypes <- function(report_types, report_names) {
   if (
     is.null(names(report_types)) || anyDuplicated(names(report_types)) ||
@@ -84,12 +86,14 @@ resolveCodeSummaryPath <- function(resource_description, table_metadata, path) {
 }
 
 #' Resolve configured FHIR fields and explicit DB-column overrides for one source
-resolveCodeSummaryFields <- function(source, resource_description, table_metadata, paths) {
+resolveCodeSummaryFields <- function(source, resource_description, table_metadata, paths,
+                                     exclude_fields = character()) {
   paths <- utils::modifyList(paths, if (is.null(source$fields)) list() else source$fields)
   if (!all(names(source$columns) %in% names(paths))) {
     stop("Unknown code source column override for ", source$resource, call. = FALSE)
   }
-  fields <- stats::setNames(vapply(names(paths), function(name) {
+  field_names <- setdiff(names(paths), exclude_fields)
+  fields <- stats::setNames(vapply(field_names, function(name) {
     if (name %in% names(source$columns)) return(as.character(source$columns[[name]]))
     candidates <- paths[[name]]
     if (!is.null(source$coding)) candidates <- gsub("{coding}", source$coding, candidates, fixed = TRUE)
@@ -98,7 +102,7 @@ resolveCodeSummaryFields <- function(source, resource_description, table_metadat
       if (!is.na(column)) return(column)
     }
     NA_character_
-  }, character(1)), names(paths))
+  }, character(1)), field_names)
   # Calculated main-encounter columns take precedence over path candidates.
   main_column <- paste0(sub("_id$", "", fields[["resource_id"]]), "_main_encounter_calculated_ref")
   if (main_column %in% table_metadata$COLUMN_NAME && !"case_id" %in% names(source$columns)) {
@@ -155,7 +159,8 @@ expandCodeSummarySources <- function(sources, table_description) {
 #'
 #' Reuses the shared loader and fill-down helper. Missing optional fields are
 #' represented as NULL in SQL; absent required fields skip that source with a
-#' warning and are recorded in the archive description.
+#' warning and are recorded in the archive description. Measurement statistics
+#' default to an available mapped numeric value field, with optional overrides.
 resolveCodeSummarySources <- function(metadata, config, table_description = NULL) {
   if (is.null(table_description)) {
     table_description <- etlutils::loadTableDescriptionFile(
@@ -204,19 +209,33 @@ resolveCodeSummarySources <- function(metadata, config, table_description = NULL
       next
     }
     resource_description <- table_description[RESOURCE == resource_name]
+    measurement_override <- source[["measurement"]]
     if (
-      !is.null(source$measurement) && (!is.logical(source$measurement) ||
-          length(source$measurement) != 1L || is.na(source$measurement))
+      !is.null(measurement_override) && (!is.logical(measurement_override) ||
+          length(measurement_override) != 1L || is.na(measurement_override))
     ) {
       stop("Source measurement must be a TOML boolean.", call. = FALSE)
     }
-    source$measurement <- if (is.null(source$measurement)) {
-      any(report_types[source$reports] == "measurement")
-    } else source$measurement
     measurement_fields <- c("value", "unit", "unit_system", "low", "high", "range_type")
     paths <- config$code_summary_fields
-    if (!source$measurement) paths[measurement_fields] <- NULL
-    fields <- resolveCodeSummaryFields(source, resource_description, table_metadata, paths)
+    # Resolve the mapped value first. Unrelated or ambiguous optional unit/range
+    # paths must not prevent an ordinary coding source from being counted.
+    fields <- resolveCodeSummaryFields(
+      source, resource_description, table_metadata, paths,
+      exclude_fields = if (isFALSE(measurement_override)) measurement_fields else setdiff(measurement_fields, "value")
+    )
+    source$measurement_mode <- if (is.null(measurement_override)) "auto" else "explicit"
+    if (is.null(measurement_override)) {
+      value_column <- fields[["value"]]
+      value_types <- if (length(value_column) == 1L && !is.na(value_column) && "DATA_TYPE" %in% names(table_metadata)) {
+        unique(table_metadata[COLUMN_NAME == value_column, DATA_TYPE])
+      } else character()
+      source$measurement <- length(value_types) == 1L && !is.na(value_types) &&
+        getValueSummaryType(value_types[[1]]) == "numeric"
+    }
+    if (source$measurement) {
+      fields <- resolveCodeSummaryFields(source, resource_description, table_metadata, paths)
+    }
     if (!source$measurement) fields[measurement_fields] <- NA_character_
     if (anyNA(fields[c("resource_id", "system", "code")])) {
       skipped <- c(skipped, paste(resource_name, source$coding, "required columns unavailable"))

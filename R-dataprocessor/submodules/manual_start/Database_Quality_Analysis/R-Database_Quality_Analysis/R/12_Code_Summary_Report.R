@@ -70,7 +70,8 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
   source_lines <- vapply(sources, function(source) {
     paste0(
       source$resource, ": ", source$coding, " -> ", source$schema, ".", source$view, "; ",
-      paste(names(source$fields), source$fields, sep = "=", collapse = ", ")
+      paste(names(source$fields), source$fields, sep = "=", collapse = ", "),
+      "; measurement=", source$measurement, " (", source$measurement_mode, ")"
     )
   }, character(1))
   link_lines <- vapply(links, function(source) {
