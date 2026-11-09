@@ -1,7 +1,7 @@
 # Maintained code-report configuration alongside the other DQA module TOMLs.
 # Select another file with CODE_SUMMARY_CONFIG_FILE in the module configuration.
 # System URIs are exact filters. WHO ATC is deliberately not included.
-# SNOMED CT is deferred until its resource and Coding-field scope is defined.
+# SNOMED CT includes imported Coding paths only on the four report resources below.
 [systems]
 LOINC = ["http://loinc.org"]
 ICD = ["http://fhir.de/CodeSystem/bfarm/icd-10-gm"]
@@ -9,10 +9,11 @@ OPS = ["http://fhir.de/CodeSystem/bfarm/ops"]
 ATC = ["http://fhir.de/CodeSystem/bfarm/atc"]
 PZN = ["http://fhir.de/CodeSystem/ifa/pzn"]
 ASK = ["http://fhir.de/CodeSystem/ask"]
+SNOMED = ["http://snomed.info/sct"]
 
 # Behavior depends on the report type, not its name.
 # coding: resource/patient/case counts; measurement: quantity/range statistics;
-# medication: Medication counts and linked Requests/Administrations/Statements.
+# medication: codes on Medication or a configured medication-link resource.
 [report_types]
 LOINC = "measurement"
 ICD = "coding"
@@ -20,6 +21,7 @@ OPS = "coding"
 ATC = "medication"
 PZN = "medication"
 ASK = "medication"
+SNOMED = "coding"
 
 # FHIR paths resolved using the Table Description, not DB-column naming guesses.
 # {coding} is replaced with the source-specific Coding path.
@@ -29,7 +31,7 @@ resource_id = "id"
 system = "{coding}/system"
 version = "{coding}/version"
 code = "{coding}/code"
-pid = "subject/reference"
+pid = ["subject/reference", "patient/reference"]
 case_id = ["encounter/calculated_ref", "context/calculated_ref"]
 value = "valueQuantity/value"
 unit = "valueQuantity/code"
@@ -44,11 +46,13 @@ code = "normal"
 # Use untyped ranges only when no explicitly normal range exists for the measurement.
 fallback_to_missing_type = true
 
-# Only these Coding fields are included; coded observation results are separate.
+# Explicit sources take precedence over wildcard sources for the same system/path.
+# measurement enables quantity statistics for all systems on this source.
 [[sources]]
 resource = "Observation"
 coding = "code/coding"
-reports = ["LOINC"]
+reports = ["LOINC", "SNOMED"]
+measurement = true
 
 [[sources]]
 resource = "Condition"
@@ -69,6 +73,44 @@ reports = ["ATC", "PZN"]
 resource = "Medication"
 coding = "ingredient/itemCodeableConcept/coding"
 reports = ["ASK"]
+
+# Coding paths are discovered via Table Description, within this explicit scope.
+[[sources]]
+resource = "Observation"
+coding = "*"
+reports = ["SNOMED"]
+
+[[sources]]
+resource = "Condition"
+coding = "*"
+reports = ["SNOMED"]
+
+[[sources]]
+resource = "Procedure"
+coding = "*"
+reports = ["SNOMED"]
+
+[[sources]]
+resource = "Medication"
+coding = "*"
+reports = ["SNOMED"]
+
+# Direct medication codes feed Medication.csv, alongside Medication codes and linked counts.
+# ASK remains restricted to Medication ingredients.
+[[sources]]
+resource = "MedicationRequest"
+coding = "medicationCodeableConcept/coding"
+reports = ["ATC", "PZN", "SNOMED"]
+
+[[sources]]
+resource = "MedicationAdministration"
+coding = "medicationCodeableConcept/coding"
+reports = ["ATC", "PZN", "SNOMED"]
+
+[[sources]]
+resource = "MedicationStatement"
+coding = "medicationCodeableConcept/coding"
+reports = ["ATC", "PZN", "SNOMED"]
 
 # Sources can override common paths in a [sources.fields] table, or use actual
 # DB columns in [sources.columns] when a FHIR-path mapping is ambiguous.

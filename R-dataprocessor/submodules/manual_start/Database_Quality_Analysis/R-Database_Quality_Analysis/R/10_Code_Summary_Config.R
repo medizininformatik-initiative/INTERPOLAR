@@ -112,6 +112,45 @@ resolveCodeSummaryFields <- function(source, resource_description, table_metadat
   fields
 }
 
+#' Expand configured wildcard Coding sources from the maintained Table Description
+#'
+#' Only imported FHIR resources and Coding paths with system/code mappings qualify.
+#' Explicit sources take precedence for the same resource/path/system family.
+expandCodeSummarySources <- function(sources, table_description) {
+  explicit_sources <- Filter(function(source) source$resource != "*" && source$coding != "*", sources)
+  result <- explicit_sources
+  coding_paths <- unique(table_description[
+    grepl("^[A-Z]", RESOURCE) & grepl("/system$", FHIR_EXPRESSION),
+    .(RESOURCE, coding = sub("/system$", "", FHIR_EXPRESSION))
+  ])
+  # Direct Coding elements such as Encounter.class have no /coding suffix.
+  # Their code plus version/display mappings distinguish them from Quantities.
+  coding_paths <- coding_paths[vapply(seq_len(nrow(coding_paths)), function(index) {
+    paths <- table_description[RESOURCE == coding_paths$RESOURCE[[index]], FHIR_EXPRESSION]
+    path <- coding_paths$coding[[index]]
+    paste0(path, "/code") %in% paths && (endsWith(path, "/coding") ||
+      any(paste0(path, c("/version", "/display")) %in% paths))
+  }, logical(1))]
+  for (source in sources) {
+    if (source$resource != "*" && source$coding != "*") next
+    candidates <- coding_paths[
+      (source$resource == "*" | RESOURCE == source$resource) &
+        (source$coding == "*" | coding == source$coding)
+    ]
+    for (index in seq_len(nrow(candidates))) {
+      expanded <- source
+      expanded$resource <- candidates$RESOURCE[[index]]
+      expanded$coding <- candidates$coding[[index]]
+      configured <- Filter(function(other) {
+        other$resource == expanded$resource && other$coding == expanded$coding
+      }, result)
+      expanded$reports <- setdiff(expanded$reports, unlist(lapply(configured, `[[`, "reports")))
+      if (length(expanded$reports)) result[[length(result) + 1L]] <- expanded
+    }
+  }
+  result
+}
+
 #' Resolve code-report source fields against the maintained Table Description
 #'
 #' Reuses the shared loader and fill-down helper. Missing optional fields are
@@ -125,7 +164,7 @@ resolveCodeSummarySources <- function(metadata, config, table_description = NULL
   }
   table_description <- data.table::copy(table_description)
   etlutils::fillNAWithLastRowValue(table_description, "RESOURCE")
-  sources <- config$code_summary_sources
+  sources <- expandCodeSummarySources(config$code_summary_sources, table_description)
   systems <- config$code_summary_systems
   report_types <- parseCodeSummaryReportTypes(config$code_summary_report_types, names(systems))
   if (is.null(sources) || is.null(systems) || !length(systems)) {
@@ -155,8 +194,9 @@ resolveCodeSummarySources <- function(metadata, config, table_description = NULL
       stop("Unknown code report in source configuration: ", source$resource, call. = FALSE)
     }
     resource_name <- source$resource
-    if (any(report_types[source$reports] == "medication") && resource_name != "Medication") {
-      stop("Medication reports require a Medication source: ", resource_name, call. = FALSE)
+    medication_resources <- c("Medication", vapply(config$code_summary_medication_links, `[[`, character(1), "resource"))
+    if (any(report_types[source$reports] == "medication") && !resource_name %in% medication_resources) {
+      stop("Medication reports require a Medication source or configured medication link: ", resource_name, call. = FALSE)
     }
     table_metadata <- metadata[TABLE_FAMILY == "FHIR" & TABLE_NAME == tolower(resource_name)]
     if (!nrow(table_metadata)) {
@@ -164,10 +204,20 @@ resolveCodeSummarySources <- function(metadata, config, table_description = NULL
       next
     }
     resource_description <- table_description[RESOURCE == resource_name]
-    fields <- resolveCodeSummaryFields(source, resource_description, table_metadata, config$code_summary_fields)
-    if (!any(report_types[source$reports] == "measurement")) {
-      fields[c("value", "unit", "unit_system", "low", "high", "range_type")] <- NA_character_
+    if (
+      !is.null(source$measurement) && (!is.logical(source$measurement) ||
+          length(source$measurement) != 1L || is.na(source$measurement))
+    ) {
+      stop("Source measurement must be a TOML boolean.", call. = FALSE)
     }
+    source$measurement <- if (is.null(source$measurement)) {
+      any(report_types[source$reports] == "measurement")
+    } else source$measurement
+    measurement_fields <- c("value", "unit", "unit_system", "low", "high", "range_type")
+    paths <- config$code_summary_fields
+    if (!source$measurement) paths[measurement_fields] <- NULL
+    fields <- resolveCodeSummaryFields(source, resource_description, table_metadata, paths)
+    if (!source$measurement) fields[measurement_fields] <- NA_character_
     if (anyNA(fields[c("resource_id", "system", "code")])) {
       skipped <- c(skipped, paste(resource_name, source$coding, "required columns unavailable"))
       next

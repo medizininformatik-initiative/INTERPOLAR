@@ -917,7 +917,10 @@ writeValueSummaryArchive <- function(
   on.exit(setwd(old_wd), add = TRUE)
   setwd(temp_dir)
   logProgress("Writing ", suffix, " archive to ", archive_name, ".")
-  utils::zip(archive_name, files = csv_files, flags = "-q")
+  zip_status <- utils::zip(archive_name, files = csv_files, flags = "-q")
+  if (!identical(as.integer(zip_status), 0L) || !file.exists(archive_name)) {
+    stop("Could not write ", suffix, " archive: ", archive_name, call. = FALSE)
+  }
   logProgress(suffix, " archive written to ", archive_name, ".")
   invisible(archive_name)
 }

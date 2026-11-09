@@ -12,6 +12,8 @@ utils::globalVariables(c(
   "VIEW_SCHEMA",
   "RESOURCE",
   "FHIR_EXPRESSION",
+  "coding",
+  "export_target",
   "report",
   "no_reference_count_to_medication"
 ))
