@@ -34,6 +34,10 @@ Each run writes three artifacts to `outputGlobal/dataprocessor/reports`:
 - `Database_Quality_Analysis_Code_Summary_<analysis-start>.zip`: code-based CSV
   reports and a description of the configured systems and resolved source fields.
 
+The Code Summary ZIP is also written to `outputLocal/dataprocessor/reports`,
+with the same filename. The local version contains all aggregate combinations,
+including `count < 5`; the global version pools these rare combinations.
+
 ## Excel Sheets
 
 The workbook can contain these sheets:
@@ -182,196 +186,168 @@ The following columns or values are handled specially:
 ## Code Summary ZIP
 
 The code report implements #1495 and is enabled by default. Set
-`INCLUDE_CODE_SUMMARY = false` to disable it. It reads the configured FHIR
+`INCLUDE_CODE_SUMMARY = false` to disable it. It reads configured FHIR
 last-version views without an additional date, status or INTERPOLAR scope filter.
-The additional global quality summary from #1462 is not part of this report.
+The additional global quality summary from #1462 and clinical categorization
+remain outside this report. The availability workbook and Value Summary ZIP
+keep their previous content.
 
-The archive contains six CSVs: `Codes/LOINC.csv`, `ICD.csv`, `OPS.csv`,
-`ATC.csv`, `PZN.csv` and `ASK.csv`, all below `Codes/`, plus `README.txt` with
-system URIs, source views, resolved columns, skipped sources and counting rules.
-Empty reports still contain CSV headers. These are additional outputs; the
-availability workbook and existing Value Summary ZIP keep their previous content.
+The ZIP contains exactly four default reports: `Codes/Observation.csv`,
+`Codes/Condition.csv`, `Codes/Procedure.csv` and `Codes/Medication.csv`, plus
+`README.txt`. Medication usage resources contribute to Medication.csv only.
+Resources with an available configured source but no selected codes still get
+CSV headers. Unavailable sources are documented with their resolved fields.
+No resource, patient or case IDs or individual measurement values are exported.
 
-Default sources are explicit, not all Coding fields found in a resource:
+Both output folders receive the four code CSVs. Local CSVs retain every code,
+version, unit, reference range and available statistic, even for counts below
+five. Such combinations have `row_type = detail` locally. Global CSVs retain
+their existing rare-group suppression. Missing source fields stay empty; a
+single measurement has a mean/median but no sample SD. Totals remain deduplicated
+independently in both versions. Both exports share one aggregate SQL query.
 
-| Report | Resource and Coding field | System URI |
+### Configuration and Coding fields
+
+The maintained configuration is `code_summary.toml` alongside the other module
+TOMLs. It defines `[systems]`, `[report_types]`, `[[sources]]`, shared `[fields]`,
+`[[medication_links]]` and `[normal_range]`. The shared
+`etlutils::tomlParseString()` parser retains nested source/field tables.
+
+| System family | Resource and Coding field | Exact system URI |
 | --- | --- | --- |
 | LOINC | Observation: `code/coding` | `http://loinc.org` |
 | ICD | Condition: `code/coding` | `http://fhir.de/CodeSystem/bfarm/icd-10-gm` |
 | OPS | Procedure: `code/coding` | `http://fhir.de/CodeSystem/bfarm/ops` |
-| ATC | Medication: `code/coding` | `http://fhir.de/CodeSystem/bfarm/atc` |
-| PZN | Medication: `code/coding` | `http://fhir.de/CodeSystem/ifa/pzn` |
+| ATC | Medication: `code/coding`; medication usage: `medicationCodeableConcept/coding` | `http://fhir.de/CodeSystem/bfarm/atc` |
+| PZN | Same primary medication fields as ATC | `http://fhir.de/CodeSystem/ifa/pzn` |
 | ASK | Medication: `ingredient/itemCodeableConcept/coding` | `http://fhir.de/CodeSystem/ask` |
+| SNOMED CT | Imported Coding fields on the four report resources, plus direct medication codes | `http://snomed.info/sct` |
 
-SNOMED CT is deferred until the relevant resource types and Coding fields have
-been explicitly scoped; it is not included in the default code report.
+WHO ATC (`http://www.whocc.no/atc`) is deliberately excluded. ASK is excluded
+from Medication.code; ATC/PZN are excluded from Medication ingredients.
 
-The maintained configuration is `code_summary.toml` in this module directory,
-alongside `database_quality_analysis_config.toml` and `database.toml`.
-It defines `[systems]`, `[report_types]`, `[[sources]]`, shared `[fields]`,
-`[[medication_links]]` and the `[normal_range]` rule. R code reads these settings
-with `etlutils::tomlParseString()` without flattening the nested tables.
-ATC selects only the BfArM system; `http://www.whocc.no/atc` is not included.
+The default report scope is Observation, Condition, Procedure and Medication.
+MedicationRequest, MedicationAdministration and MedicationStatement supply links
+and direct medicationCodeableConcept codes; they have no separate CSVs. Other
+resources such as Location, Patient or Encounter are not part of the code report.
+Within these resources, `coding = "*"` expands using the maintained Table Description,
+not raw FHIR JSON or guessed database column names. Explicit sources take
+precedence for the same resource/path/system family. Consequently SNOMED may
+describe a resource's primary code, category, method or other Coding role.
+`coding_path` keeps those roles separate. Only fields actually imported into the
+database can be analyzed. The archive documents every resolved source and field.
 
-Every system/report name must have exactly one entry in `[report_types]`:
+`[report_types]` defines `coding`, `measurement` or `medication` for each system
+family. Source-level `measurement = true/false` overrides the measurement default
+for that source. The default Observation `code/coding` source enables statistics
+for LOINC and SNOMED; SNOMED method/category/result Coding fields remain ordinary
+coding counts. Behavior follows configuration rather than family names.
 
-- `coding`: distinct resource, patient and case counts.
-- `measurement`: those counts plus quantity/unit/reference-range groups and statistics.
-- `medication`: Medication counts plus directly linked Requests, Administrations,
-  Statements and unresolved Medication-reference counts. Sources for this type
-  must be Medication resources.
-
-The standard reports use `measurement` for LOINC, `coding` for ICD/OPS and
-`medication` for ATC/PZN/ASK. Behavior follows this type, not the report name.
-To add another medication code system, add its URI in `[systems]`, its type in
-`[report_types]`, and its name to the appropriate source's `reports` array. No R
-change is needed to obtain the medication-specific columns. Measurement fields
-are likewise selected by report type and their configured paths, rather than by
-the report or source resource name.
-
-To customize the report, edit `code_summary.toml`. Optionally select another file
-with `CODE_SUMMARY_CONFIG_FILE` in the module configuration (absolute path or
-relative to the repository root). See `code_summary_config_example.toml` for the
-module settings. The selected file replaces the complete report configuration;
-there are no fallback systems or source fields hardcoded in R.
-For a LOINC-only report, retain only LOINC in `[systems]` and `[report_types]` and one Observation source
-with `reports = ["LOINC"]`; the other sections can remain present.
-The existing Table Description maps resource/FHIR paths to actual DB columns.
-`CODE_SUMMARY_TABLE_DESCRIPTION` optionally selects another description file.
-`{coding}` in shared field paths is replaced by the source Coding path. Arrays of
-candidate paths use the first available mapping. A `[sources.fields]` table can
-override shared paths for one source. `[sources.columns]` overrides individual DB
-columns directly; corresponding tables are also supported for medication links.
-Required columns are checked against the actual view metadata. Missing optional
-fields become empty values. Sources without required ID/system/code columns are
-skipped with a warning and recorded in the archive description.
-Unavailable medication link sources are also documented. Their dedicated counts
-are empty rather than zero; the combined reference-issue count is left empty if
-any of the three link sources is unavailable.
-
-Medication system URIs and ingredient Coding fields follow the
-[MII Medication profile](https://www.medizininformatik-initiative.de/Kerndatensatz/KDS_Medikation_V2025/MIIIGModulMedikation-TechnischeImplementierung-FHIR-Profile-Medication.html).
-
-### Resolved source fields
-
-The mapping below was checked against the repository Table Description. Actual
-view availability is checked at report runtime; this mapping check does not imply
-that a particular snapshot database contains every field.
-
-| Reports | Resource | Code column | Version column |
-| --- | --- | --- | --- |
-| LOINC | Observation | `obs_code_code` | `obs_code_version` |
-| ICD | Condition | `con_code_code` | `con_code_version` |
-| OPS | Procedure | `proc_code_code` | `proc_code_version` |
-| ATC, PZN | Medication | `med_code_code` | `med_code_version` |
-| ASK | Medication ingredient | `med_ingredient_itemcodeableconcept_code` | `med_ingredient_itemcodeableconcept_version` |
-
-System columns have the corresponding `_system` suffix. Observations, Conditions
-and Procedures use their own `*_patient_ref` and `*_encounter_calculated_ref`
-columns. The import reference calculation populates the latter from the
-Encounter main-case reference; the original encounter reference is not used.
-
-Medication itself has no patient or case reference in the Table Description.
-These counts come from directly linked resources:
-
-| Linked resource | Medication reference | Patient reference | Main-case reference |
-| --- | --- | --- | --- |
-| MedicationRequest | `medreq_medicationreference_ref` | `medreq_patient_ref` | `medreq_encounter_calculated_ref` |
-| MedicationAdministration | `medadm_medicationreference_ref` | `medadm_patient_ref` | `medadm_encounter_calculated_ref` |
-| MedicationStatement | `medstat_medicationreference_ref` | `medstat_patient_ref` | `medstat_encounter_calculated_ref` |
-
-For LOINC, measurement values use `obs_valuequantity_value`, unit codes use
-`obs_valuequantity_code`, and unit systems use `obs_valuequantity_system`.
-Reference limits use `obs_referencerange_low_value` and
-`obs_referencerange_high_value`; their type is read from
-`obs_referencerange_type_code`, matching the MRP type-selection rule.
+To select another complete configuration, use `CODE_SUMMARY_CONFIG_FILE` (absolute
+or repository-relative); see `code_summary_config_example.toml`.
+`CODE_SUMMARY_TABLE_DESCRIPTION` optionally selects another description workbook.
+`{coding}` in shared field paths expands to the source Coding path. Candidate
+arrays choose the first available mapping. `[sources.fields]` overrides FHIR
+paths; `[sources.columns]` overrides individual actual DB columns. Corresponding
+overrides are available for medication links. Missing optional fields are empty;
+sources without required ID/system/code columns are skipped with a warning.
 
 ### Counts and result rows
 
-Each CSV includes `row_type`, `version`, `code`, `count`, `patient_count`,
-`case_count` and `no_case_count`. System URIs are documented centrally rather than
-repeated in the code rows.
+Each CSV includes `row_type`, `system`, `coding_path`, `version`, `code`, `count`,
+`patient_count`, `case_count` and `no_case_count`. `system` is the exact Coding
+system URI, not the system family label.
 
-- `detail`: a combination present in at least five distinct resources.
-- `other (count < 5)`: all rare combinations pooled, with identifying combination
-  fields and statistics left empty. Distinct IDs are deduplicated again when
-  pooling; counts are not added from already aggregated rows.
-- `total`: independently deduplicated totals over resources with a selected code,
-  including rare combinations. A resource with multiple codes counts once in this
-  total, so summing detail rows does not necessarily reproduce it.
-- `unresolved medication reference`: a separate unassigned-code row in the three
-  medication-code reports. It has an empty `count` and counts reference problems
-  in `no_reference_count_to_medication`. These same problem totals repeat in the
-  three reports and must not be added together. Missing or unresolvable references
-  cannot be attributed to a particular code. No individual code is exposed here.
-  In this row `no_case_count` counts the unlinked Request/Administration/Statement
-  IDs without a valid main-case reference.
+- `detail`: a combination present in at least five distinct resources. Groups use
+  resource type, system, Coding path, version and code; measurement sources add
+  unit code, unit system and selected reference limits.
+- `other (count < 5)`: in the global output, rare combinations pooled per resource, system
+  and Coding path. IDs are deduplicated again. Code/version/measurement fields
+  and statistics are empty.
+- `total`: independently deduplicated per resource and system, across all Coding
+  paths. `coding_path` is empty. Resources with multiple codes or Coding roles
+  count once in this total; detail/rare counts must not simply be added.
+- `unresolved medication reference`: one diagnostic row in Medication.csv, with empty system/path/version/code. `count` and
+  `no_reference_count_to_medication` count affected resource IDs. It is excluded
+  from coded system totals.
 
-`count` uses resource type plus FHIR ID and never DB-row counts. For ATC, PZN and
-ASK it counts distinct Medication IDs. Repeated rows with the same resource and
-combination count once. Patient/case counts deduplicate valid references across
-all associated events. `no_case_count` counts resources without any valid case
-reference in that group; it is not a fallback within `case_count`. Only calculated
-main-encounter references are used (`*_main_encounter_calculated_ref` if present,
-otherwise the imported `encounter/calculated_ref` or `context/calculated_ref`).
-The original encounter reference is never substituted. Relative and absolute
-unversioned Patient/Encounter/Medication references are normalized to type/ID.
+`count` counts distinct resource identities, never DB rows. In Medication.csv it
+counts Medication IDs plus fallback usage IDs for direct medication codes without
+a matching referenced Medication code/version. This same count determines the
+rare-combination threshold. `medication_count` always counts actual Medication
+IDs: five directly coded Requests without Medication yield `count = 5`,
+`medication_count = 0` and `medication_request_count = 5`.
 
-### LOINC statistics
+`medication_request_count`, `medication_administration_count` and
+`medication_statement_count` independently count those resource types' IDs.
+One Medication referenced by two Requests yields `count = 1`,
+`medication_count = 1`, `medication_request_count = 2` within its code group.
+Missing link-source views produce empty counts rather than a measured zero;
+reference-issue counts are also empty when any link source is unavailable.
 
-LOINC rows group by version, code, `unit` (only `valueQuantity.code`), unit system
-and normal reference limits. `unit_system` is the measurement unit system, not the
-LOINC coding system; it prevents distinct groups with the same unit code from
-becoming indistinguishable. The human-readable `valueQuantity.unit` is not read.
+Patient/case counts deduplicate valid references per result group. Medication
+obtains patient/case associations from linked and directly coded usage resources;
+other report resources use their own mapped references.
+`no_case_count` counts resources without any valid case in that group; it does
+not replace `case_count`. Case mapping prefers `*_main_encounter_calculated_ref`
+if present, otherwise imported `encounter/calculated_ref` or
+`context/calculated_ref`. Original encounter references are never substituted.
+Relative and absolute unversioned references normalize to resource type/ID.
 
-`low` and `high` use the MRP selection priority per observation/coding/measurement:
-prefer reference ranges with type code `normal`, regardless of the type system.
-Only when none is explicitly normal, use ranges without a type code. This fallback
-is controlled by `[normal_range].fallback_to_missing_type = true` in the TOML;
-`code` defines the preferred type code. Blank type codes count as missing.
-Other types, such as therapeutic ranges, do not supply reference limits. A coded
-observation without eligible ranges still contributes to counts and measurement
-statistics with empty limits.
+### Observation statistics
 
-Unlike the MRP calculation, DQA retains all ranges at the preferred priority and
-does not convert their units or choose a single candidate. Multiple selected
-ranges may place an observation in several groups; totals remain deduplicated.
-Missing measurement values do not exclude the coded resource from counts.
+`unit` is exclusively `valueQuantity.code`; `unit_system` is
+`valueQuantity.system`. Human-readable `valueQuantity.unit` is not read.
+Finite numeric `valueQuantity.value` measurements supply `median`, `q1`, `q3`,
+`mean`, `sd`, `minimum` and `maximum`. Quartiles use continuous interpolation;
+SD is the sample standard deviation. Distinct resource/value pairs prevent
+flattened Coding/reference rows from weighting statistics. Totals and rare
+groups in the global output have no statistics because they may mix units and
+analytes. Local rare combinations remain separate detail groups with statistics;
+totals have no statistics in either export.
 
-`median`, `q1`, `q3`, `mean`, `sd`, `minimum` and `maximum` summarize finite numeric
-`valueQuantity.value` measurements per detail group. Quartiles use continuous
-interpolation and SD is the sample standard deviation. Distinct observation/value
-pairs prevent repeated flattened coding/reference rows from weighting statistics.
-Totals and rare groups have no statistics because they may mix units and analytes.
+`low`/`high` retain the MRP reference-range priority per resource/Coding/measurement:
+prefer type code `normal`, regardless of its system, otherwise missing type when
+`[normal_range].fallback_to_missing_type = true`. Blank types count as missing.
+Other range types do not supply limits. Observations without eligible limits
+still contribute to counts and statistics. DQA retains all ranges at the
+preferred priority and does not convert units; totals remain deduplicated.
 
-### Medication links
+### Direct and referenced medication codes
 
-The report counts distinct directly linked MedicationRequest,
-MedicationAdministration and MedicationStatement IDs in dedicated columns,
-alongside `medication_count`. One Medication linked by two Requests and three
-Administrations yields `count = 1`, `medication_count = 1`, request count 2 and
-administration count 3. It therefore belongs to the rare-combination group.
+Medication.csv contains codes on Medication itself and configured direct
+`medicationCodeableConcept/coding` codes from Request, Administration and Statement.
+Medication codes retain their own Coding path. Linked usage counts join that
+same path. Direct usage codes have a resource-type prefix such as
+`MedicationRequest/medicationCodeableConcept/coding` to preserve their origin.
 
-Links resolve against all Medication IDs, including medications without a selected
-code. Missing and unresolvable references are counted together in the separate
-unassigned row. Ingredient CodeableConcepts are supported by the explicit source
-configuration; ingredient Medication references are not traversed recursively.
-Embedded or contained medications are not resolved by this initial report.
+A direct code whose reference resolves to the same primary Medication code and
+version shares that Medication's counting identity. Otherwise its own usage ID
+is the fallback. System totals deduplicate these identities across Coding paths;
+matching direct and referenced codes therefore do not increase the total twice.
+Reference resolution includes all Medication IDs, including medications without
+selected codes. Ingredient references are not traversed recursively; contained
+medications are not resolved.
+
+`no_reference_count_to_medication` counts missing or unresolvable references,
+including on directly coded rows. Directly coded resources remain assigned to
+their code group and are not repeated in the unresolved-code diagnostic row.
+The diagnostic row contains only usage resources with neither a selected direct
+medicationCodeableConcept code nor a resolvable Medication reference. It appears
+once in Medication.csv, with empty system/path/code and actual Medication count 0.
+If the Medication source is unavailable, reference diagnostics are unavailable
+and their counts are empty rather than reported as zero.
 
 ### Query batching and tests
 
-One additional aggregate query covers all code reports and medication links.
-Each source view is projected once into a materialized CTE; non-medication views
-are filtered to the configured systems. Only aggregate results leave the DB.
-Integer group keys permit equality joins for counts and statistics. This avoids
-an individual query per code, field or result row.
-Unresolved Medication references are identified once against all Medication IDs,
-including medications without a report code. A shared materialized result is
-reused across all medication-type reports, instead of repeating the reference
-lookup for each report. With coding/measurement reports only, medication-link
-sources are not read.
+One aggregate query covers all configured resources, Coding fields, systems and
+medication links. Each source view is projected once into a materialized CTE;
+Coding fields expand together with a lateral query, rather than rescanning the
+projection for each Coding path. Where reference resolution does not require
+all resources, projections filter to configured systems. Only aggregates leave
+the database. Integer group keys permit equality joins for counts/statistics.
 
-Run focused tests with the project R environment:
+Run package tests with the project R environment:
 
 ```r
 testthat::test_local(
@@ -380,11 +356,13 @@ testthat::test_local(
 )
 ```
 
-SQL integration tests additionally accept `DQA_TEST_POSTGRES_CONTAINER`, naming an
-isolated PostgreSQL container reachable via `docker exec`. They use temporary
-tables only and need a local `postgres` database/user. Without this variable the
-SQL integration tests are skipped; configuration and archive tests still run.
-Medication test data include multiple ingredients per product, repeated flattened
-rows, versioned product codes with leading zeroes, all three linked resource types
-and codes intentionally placed in the wrong Coding field. Product/ingredient
-counts and patient/case totals are deduplicated independently.
+SQL integration tests accept `DQA_TEST_POSTGRES_CONTAINER`, naming an isolated
+PostgreSQL container reachable via `docker exec`. They use temporary tables and
+need a `postgres` database/user. Without it, SQL tests are skipped.
+Coverage includes wildcard/override mappings, resource/system/Coding-role
+separation, direct/reference deduplication, all three medication usage types,
+leading-zero codes, rare groups, main cases and MRP reference-range priority.
+The shared `codeSummarySnomedFixture()` test fixture adds visible SNOMED detail
+groups in all four CSVs, measurement statistics, different Coding roles, rare
+codes and directly coded medications without a Medication entry. All resources,
+values and links in this fixture are synthetic; `demo-v1` is a test version label.
