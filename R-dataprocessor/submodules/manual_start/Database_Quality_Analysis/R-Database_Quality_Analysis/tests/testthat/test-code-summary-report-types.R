@@ -43,56 +43,55 @@ test_that("new medication and coding reports and renamed measurements use config
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
       calls <<- calls + 1L
-      expect_equal(sum(gregexpr("NOT EXISTS", query, fixed = TRUE)[[1]] > 0L), 1L)
+      expect_equal(sum(gregexpr("unresolved_links AS MATERIALIZED", query, fixed = TRUE)[[1]] > 0L), 1L)
       expect_match(query, "unresolved_links AS MATERIALIZED", fixed = TRUE)
       runCodeSummaryFixtureQuery(fixture, query)
     }
   )
   expect_equal(calls, 1L)
-  expect_false("LOINC" %in% names(summaries))
-  lab <- summaries$Laboratory[row_type == "detail"]
+  lab <- summaries$Observation[row_type == "detail"]
   expect_equal(lab$count, 6)
   expect_equal(lab$mean, 3.5)
   expect_equal(lab$median, 3.5)
-  product <- summaries$ProductCodes[row_type == "detail"]
+  product <- summaries$Medication[system == "urn:example:product-codes" & row_type == "detail"]
   expect_equal(product$count, 5)
-  expect_equal(product$medication_count, 5)
-  expect_equal(product$medication_request_count, 1)
   expect_equal(product$case_count, 1)
   expect_equal(product$no_case_count, 4)
-  expect_equal(summaries$ProductCodes[row_type == "unresolved medication reference", no_reference_count_to_medication], 2)
-  diagnosis <- summaries$LocalDiagnoses[row_type == "detail"]
+  expect_equal(summaries$Medication[system == "urn:example:product-codes" & row_type == "total", medication_request_count], 1)
+  diagnosis <- summaries$Condition[row_type == "detail"]
   expect_equal(diagnosis$count, 5)
   expect_false(any(c("mean", "unit", "medication_count") %in% names(diagnosis)))
-  # Reference-issue totals are shared, including for the newly configured report.
-  for (report_name in c("ATC", "PZN", "ASK", "ProductCodes")) {
-    expect_equal(summaries[[report_name]][row_type == "unresolved medication reference", no_reference_count_to_medication], 2)
-  }
+  expect_equal(summaries$Medication[row_type == "unresolved medication reference", count], 2)
 })
 
-test_that("plain coding reports do not read medication links or calculate measurement statistics", {
+test_that("plain coding sources do not read unrelated medication views or measurements", {
   fixture <- codeSummaryFixture()
-  fixture$config$code_summary_report_types[] <- "coding"
-  sources <- resolveCodeSummarySources(fixture$metadata, fixture$config, fixture$description)
-  expect_true(is.na(sources[[1]]$fields[["value"]]))
-  expect_true(is.na(sources[[1]]$fields[["unit"]]))
-  links <- resolveCodeSummaryMedicationLinks(fixture$metadata, fixture$description, fixture$config)
-  query <- buildCodeSummaryQuery(
-    sources, links, fixture$config$code_summary_systems,
-    fixture$config$code_summary_normal_range, fixture$config$code_summary_report_types
-  )
-  expect_false(grepl("unresolved_links", query, fixed = TRUE))
-  expect_false(grepl('"pg_temp"."medicationrequest"', query, fixed = TRUE))
+  fixture$config$code_summary_sources <- fixture$config$code_summary_sources[2:3]
   summaries <- createCodeSummaryReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
       expect_false(grepl('"pg_temp"."medicationrequest"', query, fixed = TRUE))
+      expect_false(grepl("unresolved_links", query, fixed = TRUE))
       runCodeSummaryFixtureQuery(fixture, query)
     }
   )
-  expect_equal(summaries$ATC[row_type == "total", count], 6)
-  expect_equal(summaries$ATC[row_type == "total", case_count], 0)
-  expect_false(any(c("medication_count", "no_reference_count_to_medication") %in% names(summaries$ATC)))
-  expect_false(any(c("mean", "unit", "low") %in% names(summaries$LOINC)))
+  expect_named(summaries, c("Condition", "Procedure"))
+  expect_false(any(c("mean", "unit", "low") %in% names(summaries$Condition)))
+})
+
+test_that("wildcards expand only imported Coding fields and explicit mappings take precedence", {
+  fixture <- codeSummaryFixture()
+  sources <- resolveCodeSummarySources(fixture$metadata, fixture$config, fixture$description)
+  primary <- Filter(function(source) source$resource == "Observation" && source$coding == "code/coding", sources)
+  expect_length(primary, 1L)
+  expect_setequal(primary[[1]]$reports, c("LOINC", "SNOMED"))
+  expect_true(primary[[1]]$measurement)
+  method <- Filter(function(source) source$resource == "Observation" && source$coding == "method/coding", sources)
+  expect_length(method, 1L)
+  expect_false(method[[1]]$measurement)
+  # Runtime validation checks the real view; missing required fields are reported.
+  expect_warning(resolveCodeSummarySources(
+    fixture$metadata[COLUMN_NAME != "obs_method_code"], fixture$config, fixture$description
+  ), "required columns unavailable")
 })

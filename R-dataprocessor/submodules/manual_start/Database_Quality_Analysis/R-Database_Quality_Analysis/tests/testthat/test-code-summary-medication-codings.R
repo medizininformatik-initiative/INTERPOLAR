@@ -30,37 +30,80 @@ test_that("PZN and ASK use their own Coding fields and deduplicate linked medica
     }
   )
   expect_equal(calls, 1L)
-  expected_counts <- c(
-    count = 5, medication_count = 5, patient_count = 3, case_count = 2,
-    no_case_count = 3, medication_request_count = 3,
-    medication_administration_count = 1, medication_statement_count = 2
-  )
-  for (report_name in c("PZN", "ASK")) {
-    detail <- summaries[[report_name]][row_type == "detail"]
-    expect_equal(nrow(detail), 1L, info = report_name)
-    expect_equal(detail$version, "2025", info = report_name)
-    for (column in names(expected_counts)) {
-      expect_equal(detail[[column]], expected_counts[[column]], info = paste(report_name, column))
-    }
-    missing <- summaries[[report_name]][row_type == "unresolved medication reference"]
-    # A resolvable reference to a medication with no report code is not an error.
-    expect_equal(missing$no_reference_count_to_medication, 2)
-    expect_false(any(grepl("wrong-", summaries[[report_name]]$code), na.rm = TRUE))
+  med <- summaries$Medication
+  pzn <- med[system == "http://fhir.de/CodeSystem/ifa/pzn"]
+  ask <- med[system == "http://fhir.de/CodeSystem/ask"]
+  for (report in list(pzn, ask)) {
+    detail <- report[row_type == "detail"]
+    expect_equal(nrow(detail), 1L)
+    expect_equal(detail$version, "2025")
+    expect_equal(detail$count, 5)
+    expect_equal(detail$patient_count, 3)
+    expect_equal(detail$case_count, 2)
+    expect_equal(detail$no_case_count, 3)
+    expect_false(any(grepl("wrong-", report$code), na.rm = TRUE))
   }
-  expect_identical(summaries$PZN[row_type == "detail", code], "00123456")
-  expect_identical(summaries$ASK[row_type == "detail", code], "00001")
-  expect_equal(summaries$PZN[row_type == "other (count < 5)", count], 1)
-  expect_equal(summaries$PZN[row_type == "total", count], 6)
-  expect_equal(summaries$PZN[row_type == "total", no_case_count], 4)
-  ask_rare <- summaries$ASK[row_type == "other (count < 5)"]
-  expect_equal(ask_rare$count, 2)
-  expect_equal(ask_rare$case_count, 2)
-  expect_equal(ask_rare$patient_count, 3)
-  expect_equal(ask_rare$no_case_count, 1)
-  expect_true(is.na(ask_rare$code))
-  expect_equal(summaries$ASK[row_type == "total", count], 5)
-  expect_equal(summaries$ASK[row_type == "total", case_count], 2)
-  expect_equal(summaries$ASK[row_type == "total", no_case_count], 3)
-  # ATC from an ingredient field is excluded even with five matching medications.
-  expect_equal(summaries$ATC[row_type == "total", count], 6)
+  expect_identical(pzn[row_type == "detail", code], "00123456")
+  expect_identical(ask[row_type == "detail", code], "00001")
+  expect_equal(pzn[row_type == "other (count < 5)", count], 1)
+  expect_equal(pzn[row_type == "total", count], 6)
+  expect_equal(pzn[row_type == "total", no_case_count], 4)
+  expect_equal(ask[row_type == "other (count < 5)", count], 2)
+  expect_equal(ask[row_type == "other (count < 5)", case_count], 2)
+  expect_equal(ask[row_type == "other (count < 5)", no_case_count], 1)
+  expect_equal(ask[row_type == "total", count], 5)
+  expect_equal(med[system == "http://fhir.de/CodeSystem/bfarm/atc" & row_type == "total", count], 6)
+  for (report in list(pzn, ask)) {
+    expect_equal(report[row_type == "total", medication_request_count], 3)
+    expect_equal(report[row_type == "total", medication_administration_count], 1)
+    expect_equal(report[row_type == "total", medication_statement_count], 2)
+    expect_equal(report[row_type == "detail", medication_count], 5)
+  }
+  expect_equal(med[row_type == "unresolved medication reference", count], 2)
+})
+
+test_that("inline medication codes and references count owning IDs once", {
+  fixture <- codeSummaryFixture()
+  fixture$extra_sql <- c(
+    "INSERT INTO medicationrequest (medreq_id,medreq_patient_ref,medreq_encounter_calculated_ref,medreq_medicationreference_ref,medreq_direct_system,medreq_direct_code) SELECT 'inline'||n,'Patient/p'||n,'Encounter/e'||n,CASE WHEN n=1 THEN 'Medication/m1' END,'http://fhir.de/CodeSystem/bfarm/atc','A01' FROM generate_series(1,5) n;",
+    "INSERT INTO medicationadministration (medadm_id,medadm_direct_system,medadm_direct_code) SELECT 'inline'||n,'http://fhir.de/CodeSystem/bfarm/atc','A01' FROM generate_series(1,5) n;",
+    "INSERT INTO medicationstatement (medstat_id,medstat_direct_system,medstat_direct_code) SELECT 'inline'||n,'http://fhir.de/CodeSystem/ifa/pzn','00123456' FROM generate_series(1,5) n;",
+    "INSERT INTO medicationrequest SELECT * FROM medicationrequest WHERE medreq_id LIKE 'inline%';"
+  )
+  summaries <- createCodeSummaryReports(
+    fixture$metadata, fixture$config,
+    table_description = fixture$description,
+    query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
+  )
+  med <- summaries$Medication
+  paths <- c(
+    MedicationRequest = "medication_request_count",
+    MedicationAdministration = "medication_administration_count", MedicationStatement = "medication_statement_count"
+  )
+  for (resource in names(paths)) {
+    detail <- med[row_type == "detail" & coding_path == paste0(resource, "/medicationCodeableConcept/coding")]
+    expect_equal(detail$count, 5, info = resource)
+    expect_equal(detail[[paths[[resource]]]], 5, info = resource)
+    expect_equal(detail$medication_count, if (resource == "MedicationRequest") 1 else 0)
+    expect_equal(detail$no_reference_count_to_medication, if (resource == "MedicationRequest") 4 else 5)
+  }
+  expect_equal(med[row_type == "unresolved medication reference", count], 2)
+  atc <- med[system == "http://fhir.de/CodeSystem/bfarm/atc" & row_type == "total"]
+  expect_equal(atc$count, 15)
+  expect_equal(atc$medication_count, 6)
+  expect_equal(atc$medication_request_count, 7)
+  expect_equal(atc$medication_administration_count, 8)
+  expect_identical(med[row_type == "detail" & medication_statement_count == 5, code], "00123456")
+  expect_named(summaries, c("Observation", "Condition", "Procedure", "Medication"))
+})
+
+test_that("missing link views are unavailable rather than measured zero counts", {
+  fixture <- codeSummaryFixture()
+  expect_warning(expect_warning(summaries <- createCodeSummaryReports(
+    fixture$metadata[TABLE_NAME != "medicationstatement"], fixture$config,
+    table_description = fixture$description,
+    query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
+  ), "Skipped code summary sources"), "Skipped medication link sources")
+  expect_true(all(is.na(summaries$Medication$medication_statement_count)))
+  expect_true(all(is.na(summaries$Medication$no_reference_count_to_medication)))
 })

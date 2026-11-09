@@ -5,7 +5,11 @@ test_that("code report settings are loaded from the module or selected TOML", {
   expect_equal(basename(dirname(config$code_summary_config_file)), "Database_Quality_Analysis")
   expect_identical(config$code_summary_systems$ATC, "http://fhir.de/CodeSystem/bfarm/atc")
   expect_false("http://www.whocc.no/atc" %in% config$code_summary_systems$ATC)
-  expect_false("SNOMED CT" %in% names(config$code_summary_systems))
+  expect_identical(config$code_summary_systems$SNOMED, "http://snomed.info/sct")
+  expect_setequal(unique(vapply(config$code_summary_sources, `[[`, character(1), "resource")), c(
+    "Observation", "Condition", "Procedure", "Medication", "MedicationRequest",
+    "MedicationAdministration", "MedicationStatement"
+  ))
   medication_sources <- Filter(
     function(source) source$resource == "Medication",
     loadCodeSummaryConfig(config$code_summary_config_file)$sources
@@ -67,35 +71,38 @@ test_that("code sources resolve FHIR paths and never fall back to raw encounter 
   expect_silent(resolveCodeSummarySources(fixture$metadata, fixture$config, ambiguous))
 })
 
-test_that("code reports batch source reads and keep archive columns free of IDs", {
+test_that("resource reports batch source reads and keep archive columns free of IDs", {
   fixture <- codeSummaryFixture()
   calls <- 0L
   summaries <- createCodeSummaryReports(
     fixture$metadata, fixture$config,
     query_fun = function(query, lock_id) {
       calls <<- calls + 1L
-      expect_equal(length(gregexpr('FROM "pg_temp"."observation"', query, fixed = TRUE)[[1]]), 1L)
-      expect_match(query, "COUNT(DISTINCT g.count_key)", fixed = TRUE)
+      for (view in setdiff(unique(fixture$metadata$VIEW_NAME), c("patient", "encounter", "location"))) {
+        expect_equal(sum(gregexpr(paste0('FROM "pg_temp"."', view, '"'), query, fixed = TRUE)[[1]] > 0L), 1L)
+      }
+      for (view in c("patient", "encounter", "location")) {
+        expect_false(grepl(paste0('FROM "pg_temp"."', view, '"'), query, fixed = TRUE))
+      }
       data.table::data.table()
     }, table_description = fixture$description
   )
   expect_equal(calls, 1L)
-  expect_named(summaries, names(fixture$config$code_summary_systems))
-  expect_false(any(c("value", "system", "resource_id", "pid", "case_id") %in% names(summaries$LOINC)))
-  expect_true("unit" %in% names(summaries$LOINC))
-  expect_true("no_reference_count_to_medication" %in% names(summaries$ATC))
+  expect_setequal(names(summaries), c("Observation", "Condition", "Procedure", "Medication"))
+  expect_false(any(c("value", "resource_id", "pid", "case_id") %in% names(summaries$Observation)))
+  expect_true(all(c("system", "coding_path", "unit") %in% names(summaries$Observation)))
+  expect_true("no_reference_count_to_medication" %in% names(summaries$Medication))
+  expect_false("MedicationRequest" %in% names(summaries))
 })
 
-test_that("PostgreSQL deduplicates measurements and independently aggregates rare groups and totals", {
+test_that("PostgreSQL deduplicates measurements, rare groups, systems and owning resources", {
   fixture <- codeSummaryFixture()
-  sources <- resolveCodeSummarySources(fixture$metadata, fixture$config, fixture$description)
-  links <- resolveCodeSummaryMedicationLinks(fixture$metadata, fixture$description, fixture$config)
-  query <- buildCodeSummaryQuery(
-    sources, links, fixture$config$code_summary_systems,
-    fixture$config$code_summary_normal_range, fixture$config$code_summary_report_types
+  summaries <- createCodeSummaryReports(
+    fixture$metadata, fixture$config,
+    table_description = fixture$description,
+    query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
-  rows <- runCodeSummaryFixtureQuery(fixture, query)
-  loinc <- rows[report == "LOINC" & row_type == "detail"]
+  loinc <- summaries$Observation[row_type == "detail"]
   expect_equal(loinc$count, 6)
   expect_equal(loinc$patient_count, 1)
   expect_equal(loinc$case_count, 1)
@@ -106,73 +113,75 @@ test_that("PostgreSQL deduplicates measurements and independently aggregates rar
   expect_equal(loinc$q1, 2.25)
   expect_equal(loinc$q3, 4.75)
   expect_equal(loinc$low, 1)
-  rare <- rows[report == "LOINC" & row_type == "other (count < 5)"]
+  expect_equal(loinc$coding_path, "code/coding")
+  rare <- summaries$Observation[row_type == "other (count < 5)"]
   expect_equal(rare$count, 2)
   expect_equal(rare$case_count, 1)
   expect_true(is.na(rare$mean))
   expect_true(is.na(rare$code))
-  total <- rows[report == "LOINC" & row_type == "total"]
-  expect_equal(total$count, 8)
-  expect_equal(total$case_count, 1)
-  atc <- rows[report == "ATC" & row_type == "other (count < 5)"]
-  expect_equal(atc$count, 1)
-  expect_equal(atc$medication_count, 1)
-  expect_equal(atc$medication_request_count, 2)
-  expect_equal(atc$medication_administration_count, 3)
-  expect_equal(atc$case_count, 1)
-  expect_equal(atc$no_case_count, 0)
-  missing <- rows[report == "ATC" & row_type == "unresolved medication reference"]
+  expect_equal(summaries$Observation[row_type == "total", count], 8)
+  med <- summaries$Medication
+  expect_equal(med[row_type == "detail", count], 5)
+  expect_equal(med[row_type == "total", count], 6)
+  expect_equal(med[row_type == "total", case_count], 1)
+  expect_equal(med[row_type == "total", no_case_count], 5)
+  rare_med <- med[row_type == "other (count < 5)"]
+  expect_equal(rare_med$count, 1)
+  expect_equal(rare_med$medication_count, 1)
+  expect_equal(rare_med$medication_request_count, 2)
+  expect_equal(rare_med$medication_administration_count, 3)
+  missing <- med[row_type == "unresolved medication reference"]
+  expect_equal(missing$count, 2)
+  expect_equal(missing$medication_count, 0)
   expect_equal(missing$no_reference_count_to_medication, 2)
   expect_equal(missing$no_case_count, 2)
-  expect_true(is.na(missing$count))
-  expect_equal(rows[report == "ATC" & row_type == "detail", count], 5)
-  expect_equal(rows[report == "ATC" & row_type == "total", count], 6)
-  expect_equal(rows[report == "ATC" & row_type == "total", patient_count], 1)
-  expect_equal(rows[report == "ATC" & row_type == "total", case_count], 1)
-  expect_equal(rows[report == "ATC" & row_type == "total", medication_request_count], 2)
-  partial <- NULL
-  expect_warning(partial <- createCodeSummaryReports(
-    fixture$metadata[TABLE_NAME != "medicationstatement"], fixture$config,
-    table_description = fixture$description, query_fun = function(...) data.table::copy(rows)
-  ), "Skipped medication link sources")
-  expect_true(all(is.na(partial$ATC$medication_statement_count)))
-  expect_true(all(is.na(partial$ATC$no_reference_count_to_medication)))
+  expect_true(is.na(missing$system))
+  expect_equal(med[row_type == "total", medication_request_count], 2)
+  expect_equal(med[row_type == "total", medication_administration_count], 3)
 })
 
-test_that("absolute references, unit systems, rare memberships and unconfigured systems are handled", {
+test_that("SNOMED separates Coding roles, preserves resource boundaries and deduplicates totals", {
   fixture <- codeSummaryFixture()
+  # Other resource types remain configurable, but are outside the default report.
+  fixture$config$code_summary_sources <- c(fixture$config$code_summary_sources, list(
+    list(resource = "Patient", coding = "*", reports = "SNOMED"),
+    list(resource = "Encounter", coding = "*", reports = "SNOMED")
+  ))
   fixture$extra_sql <- c(
     "UPDATE medicationrequest SET medreq_medicationreference_ref='https://example.org/fhir/Medication/example' WHERE medreq_id='q1';",
-    "UPDATE medicationadministration SET medadm_encounter_calculated_ref='https://example.org/fhir/Encounter/e1';",
     "INSERT INTO observation (obs_id,obs_patient_ref,obs_encounter_calculated_ref,obs_code_system,obs_code_code,obs_value,obs_unit) VALUES ('rare1','Patient/p1','Encounter/e1','http://loinc.org','r2',100,'g/L');",
-    "INSERT INTO observation (obs_id,obs_code_system,obs_code_version,obs_code_code,obs_value,obs_unit,obs_unit_system,obs_low,obs_high,obs_range_type,obs_range_system) SELECT 'new'||n,'http://loinc.org','v1','common',1,'mg/dL','https://example.org/other-unit-system','1','10','normal','http://terminology.hl7.org/CodeSystem/referencerange-meaning' FROM generate_series(1,5) n;",
-    "INSERT INTO condition (con_id,con_code_system,con_code_code) VALUES ('same-id','http://snomed.info/sct','123');",
-    "INSERT INTO observation (obs_id,obs_code_system,obs_code_code) VALUES ('same-id','http://snomed.info/sct','123');"
+    "INSERT INTO observation (obs_id,obs_code_system,obs_code_code,obs_value,obs_unit,obs_method_system,obs_method_code) SELECT 'snomed'||n,'http://snomed.info/sct','123',n,'mg','http://snomed.info/sct','123' FROM generate_series(1,5) n;",
+    "INSERT INTO condition (con_id,con_code_system,con_code_code) SELECT 'snomed'||n,'http://snomed.info/sct','123' FROM generate_series(1,5) n;",
+    "INSERT INTO observation (obs_id,obs_method_system,obs_method_code) VALUES ('method-rare','http://snomed.info/sct','rare');",
+    "INSERT INTO condition (con_id,con_code_system,con_code_code) VALUES ('unknown','urn:unconfigured','123');",
+    "INSERT INTO patient (pat_id,pat_code_system,pat_code_code) SELECT 'p'||n,'http://snomed.info/sct','123' FROM generate_series(1,5) n;",
+    "INSERT INTO encounter (enc_id,enc_code_system,enc_code_code,enc_main_encounter_calculated_ref) SELECT 'e'||n,'http://snomed.info/sct','123','Encounter/main1' FROM generate_series(1,5) n;"
   )
-  rows <- NULL
   summaries <- createCodeSummaryReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
-    query_fun = function(query, lock_id) {
-      rows <<- runCodeSummaryFixtureQuery(fixture, query)
-      rows
-    }
+    query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
-  loinc <- summaries$LOINC[row_type == "detail"]
-  expect_equal(nrow(loinc), 2L)
-  expect_setequal(loinc$unit_system, c("http://unitsofmeasure.org", "https://example.org/other-unit-system"))
-  expect_equal(loinc[unit_system == "https://example.org/other-unit-system", mean], 1)
-  expect_equal(summaries$LOINC[row_type == "other (count < 5)", count], 2)
-  expect_equal(summaries$LOINC[row_type == "total", count], 13)
-  expect_equal(summaries$ATC[row_type == "other (count < 5)", medication_request_count], 2)
-  expect_equal(summaries$ATC[row_type == "other (count < 5)", case_count], 1)
-  expect_equal(summaries$ATC[row_type == "unresolved medication reference", no_reference_count_to_medication], 2)
-  expect_false("SNOMED CT" %in% names(summaries))
-  expect_false(any(rows$report == "SNOMED CT"))
-  expect_false(any(c("summary_id", "event_key", "count_key") %in% names(summaries$LOINC)))
+  obs <- summaries$Observation
+  snomed <- obs[system == "http://snomed.info/sct" & row_type == "detail"]
+  expect_setequal(snomed$coding_path, c("code/coding", "method/coding"))
+  expect_equal(snomed$count, c(5, 5))
+  expect_equal(snomed[coding_path == "code/coding", mean], 3)
+  expect_true(is.na(snomed[coding_path == "method/coding", mean]))
+  expect_equal(obs[system == "http://snomed.info/sct" & row_type == "total", count], 6)
+  expect_equal(obs[system == "http://loinc.org" & row_type == "total", count], 8)
+  expect_equal(obs[system == "http://snomed.info/sct" & row_type == "other (count < 5)", coding_path], "method/coding")
+  expect_equal(summaries$Condition[row_type == "total", count], 5)
+  expect_equal(summaries$Patient[row_type == "total", patient_count], 5)
+  expect_equal(summaries$Patient[row_type == "total", case_count], 0)
+  expect_equal(summaries$Encounter[row_type == "detail", coding_path], "class")
+  expect_equal(summaries$Encounter[row_type == "total", count], 5)
+  expect_equal(summaries$Encounter[row_type == "total", case_count], 1)
+  expect_equal(summaries$Medication[row_type == "total", medication_request_count], 2)
+  expect_false(any(c("summary_id", "event_key", "count_key", "report") %in% names(obs)))
 })
 
-test_that("code ZIP includes six CSVs and system/source documentation", {
+test_that("code ZIP includes one CSV per resource and system/source documentation", {
   fixture <- codeSummaryFixture()
   summaries <- createCodeSummaryReports(
     fixture$metadata, fixture$config,
@@ -190,9 +199,30 @@ test_that("code ZIP includes six CSVs and system/source documentation", {
     add = TRUE
   )
   file <- writeCodeSummaryArchive(summaries, "DQA", timestamp = as.POSIXct("2026-11-04", tz = "UTC"))
-  expect_match(basename(file), "_Code_Summary_")
   contents <- utils::unzip(file, list = TRUE)$Name
-  expect_equal(sum(endsWith(contents, ".csv")), 6)
-  expect_false("Codes/SNOMED_CT.csv" %in% contents)
+  expect_setequal(contents[endsWith(contents, ".csv")], paste0("Codes/", names(summaries), ".csv"))
   expect_true("README.txt" %in% contents)
+  utils::unzip(file, exdir = file.path(root, "extracted"))
+  header <- data.table::fread(file.path(root, "extracted", "Codes", "Observation.csv"))
+  expect_true(all(c("system", "coding_path", "unit") %in% names(header)))
+  testthat::local_mocked_bindings(zip = function(...) 1L, .package = "utils")
+  expect_error(writeCodeSummaryArchive(summaries, "FailedArchive"), "Could not write Code_Summary archive")
+})
+
+test_that("direct medication codes survive unavailable Medication reference sources", {
+  fixture <- codeSummaryFixture()
+  available_metadata <- fixture$metadata[TABLE_NAME != "medication"]
+  fixture$extra_sql <- paste0(
+    "INSERT INTO medicationrequest (medreq_id,medreq_direct_system,medreq_direct_code) ",
+    "SELECT 'inline'||n,'http://fhir.de/CodeSystem/bfarm/atc','direct' FROM generate_series(1,5) n;"
+  )
+  expect_warning(summaries <- createCodeSummaryReports(
+    available_metadata, fixture$config,
+    table_description = fixture$description,
+    query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
+  ), "Skipped code summary sources")
+  expect_equal(summaries$Medication[row_type == "detail", count], 5)
+  expect_equal(summaries$Medication[row_type == "detail", medication_count], 0)
+  expect_equal(summaries$Medication[row_type == "detail", medication_request_count], 5)
+  expect_true(all(is.na(summaries$Medication$no_reference_count_to_medication)))
 })
