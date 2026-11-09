@@ -1,6 +1,8 @@
 # Optional additions to database_quality_analysis_config.toml.
 INCLUDE_CODE_SUMMARY = true
 # Sources, systems, report types and fields are configured in code_summary.toml here.
+# A mapped numeric value column enables measurement statistics automatically.
+# Optional source-level measurement = true/false overrides this detection there.
 # To use a different file, select it here (relative to the repository root or absolute).
 # CODE_SUMMARY_CONFIG_FILE = "path/to/code_summary.toml"
 

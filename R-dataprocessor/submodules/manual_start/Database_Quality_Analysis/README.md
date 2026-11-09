@@ -19,13 +19,45 @@ The main configuration is
 Set `DB_NAME` in this project's `database.toml` to the pseudonymized snapshot
 database. Other connection values are inherited from the normal database
 configuration. Non-empty values in `database.toml` override them; missing or
-empty optional values leave them unchanged. The file is mounted into `r-env`
-automatically; rebuilding the image is not needed. The shared template for new
-projects is `R-dataprocessor/submodules/manual_start/database_example.toml`.
+empty optional values leave them unchanged. The repository Compose configuration
+mounts `manual_start` into `r-env`, including this file, the DQA code and its
+TOMLs. Changes to those mounted files need no image rebuild. The installed R
+packages in the image must still match the checkout; rebuild the R image after
+package changes. With a customized Compose file, check that the `manual_start`
+mount and both output mounts are present. The shared template for new projects
+is `R-dataprocessor/submodules/manual_start/database_example.toml`.
+
+The database must be reachable and normally have
+`database_content_type = pseudonymized_snapshot`. The manual-start framework
+checks the configured database and its required views before running DQA.
+For an intentional analysis of another database, including a compatible legacy
+snapshot without that marker, the command accepts `--force`. This bypasses the
+snapshot-type requirement, not missing database objects or invalid credentials.
+
+### Processing sequence
+
+1. Select the manual DQA project and read the base database configuration with
+   overrides from its `database.toml`.
+2. Validate the selected database, then load the DQA module configuration and
+   `code_summary.toml`.
+3. Read view/column metadata and calculate availability counts for the existing
+   Excel sheets, including configured scope/detail sheets.
+4. Calculate the existing Value Summary from the configured table families.
+5. Resolve the code sources against the Table Description and actual view
+   columns, and detect measurement statistics from mapped numeric value fields.
+   This selects the four code-report resources and medication inputs;
+   it does not restrict the existing availability and Value Summary reports.
+6. Execute one shared code-aggregation query: collect Coding combinations,
+   resolve medication links, deduplicate IDs and calculate counts/statistics.
+   From the same events, calculate complete local groups and globally pooled
+   rare groups. IDs are deduplicated again for pooled groups and totals.
+7. Write the files listed below. Each code ZIP contains the four CSVs and a
+   README describing its actual sources, fields and counting rules.
 
 ## Output Files
 
-Each run writes three artifacts to `outputGlobal/dataprocessor/reports`:
+With the default configuration, each run writes three artifacts to
+`outputGlobal/dataprocessor/reports`:
 
 - `Database_Quality_Analysis_Count_Summary_<analysis-start>.xlsx`: Excel workbook with
   availability counts.
@@ -37,6 +69,12 @@ Each run writes three artifacts to `outputGlobal/dataprocessor/reports`:
 The Code Summary ZIP is also written to `outputLocal/dataprocessor/reports`,
 with the same filename. The local version contains all aggregate combinations,
 including `count < 5`; the global version pools these rare combinations.
+
+The filename timestamp is the analysis start time, shared by the run's outputs.
+The normal toolchain start archives existing `dataprocessor` output directories
+with a timestamp and applies `MAX_DIR_COUNT` retention. Check the current
+`dataprocessor/reports` folders for the latest run. Progress and errors are logged
+under `outputLocal/dataprocessor/log`.
 
 ## Excel Sheets
 
@@ -221,7 +259,7 @@ TOMLs. It defines `[systems]`, `[report_types]`, `[[sources]]`, shared `[fields]
 | ATC | Medication: `code/coding`; medication usage: `medicationCodeableConcept/coding` | `http://fhir.de/CodeSystem/bfarm/atc` |
 | PZN | Same primary medication fields as ATC | `http://fhir.de/CodeSystem/ifa/pzn` |
 | ASK | Medication: `ingredient/itemCodeableConcept/coding` | `http://fhir.de/CodeSystem/ask` |
-| SNOMED CT | Imported Coding fields on the four report resources, plus direct medication codes | `http://snomed.info/sct` |
+| SNOMED CT | Primary `code/coding` on the four report resources, plus direct medication codes | `http://snomed.info/sct` |
 
 WHO ATC (`http://www.whocc.no/atc`) is deliberately excluded. ASK is excluded
 from Medication.code; ATC/PZN are excluded from Medication ingredients.
@@ -230,18 +268,41 @@ The default report scope is Observation, Condition, Procedure and Medication.
 MedicationRequest, MedicationAdministration and MedicationStatement supply links
 and direct medicationCodeableConcept codes; they have no separate CSVs. Other
 resources such as Location, Patient or Encounter are not part of the code report.
-Within these resources, `coding = "*"` expands using the maintained Table Description,
-not raw FHIR JSON or guessed database column names. Explicit sources take
-precedence for the same resource/path/system family. Consequently SNOMED may
-describe a resource's primary code, category, method or other Coding role.
-`coding_path` keeps those roles separate. Only fields actually imported into the
-database can be analyzed. The archive documents every resolved source and field.
+SNOMED uses only `code/coding` on the four report resources and
+`medicationCodeableConcept/coding` on the three medication input resources.
+Method, category, body-site and coded-result fields are outside this default
+scope. Ingredient Coding is included for ASK only. `coding_path` identifies
+these configured origins; the Table Description resolves them to actual imported
+DB columns. The archive documents every resolved source and field.
 
-`[report_types]` defines `coding`, `measurement` or `medication` for each system
-family. Source-level `measurement = true/false` overrides the measurement default
-for that source. The default Observation `code/coding` source enables statistics
-for LOINC and SNOMED; SNOMED method/category/result Coding fields remain ordinary
-coding counts. Behavior follows configuration rather than family names.
+`[report_types]` defines `coding` or `medication` for each system family. Measurement
+statistics are detected per source, independently of the resource or code-system
+name: the configured `value` path must resolve to an available column with a
+numeric database type. Detection reuses the already loaded view metadata and
+does not issue another SQL query. An unrelated numeric column is not sufficient.
+Missing or non-numeric value fields, or unknown type metadata, leave the source
+as ordinary code counts. Unit and reference-range fields are optional.
+
+The standard `value = "valueQuantity/value"` mapping therefore enables statistics
+for both LOINC and SNOMED in Observation. Another resource can get the same
+statistics by configuring its numeric value path in `[sources.fields]` or its
+actual value column in `[sources.columns]`. No resource-name special case is
+needed. The old `measurement` report-type label remains accepted for existing
+configurations and uses the same automatic detection as `coding`.
+
+Optional source-level `measurement = false` disables statistics, while
+`measurement = true` forces them, for example for numeric values stored in a text
+column. Forced values must be convertible to numbers. Without that override,
+numeric-looking text is not treated as a numeric database type. The README in
+each ZIP records the resolved fields and whether measurement handling was
+automatic or explicitly configured.
+
+For a deliberately broader custom report, `coding = "*"` can discover imported
+Coding fields from the Table Description. Explicit sources take precedence for
+the same resource/path/system family. The default configuration uses only
+explicit paths and does not enable these wildcards. For roles that should not
+describe the resource's quantitative value, such as method codes, set
+`measurement = false` on the custom source.
 
 To select another complete configuration, use `CODE_SUMMARY_CONFIG_FILE` (absolute
 or repository-relative); see `code_summary_config_example.toml`.
@@ -258,16 +319,19 @@ Each CSV includes `row_type`, `system`, `coding_path`, `version`, `code`, `count
 `patient_count`, `case_count` and `no_case_count`. `system` is the exact Coding
 system URI, not the system family label.
 
-- `detail`: a combination present in at least five distinct resources. Groups use
-  resource type, system, Coding path, version and code; measurement sources add
-  unit code, unit system and selected reference limits.
-- `other (count < 5)`: in the global output, rare combinations pooled per resource, system
-  and Coding path. IDs are deduplicated again. Code/version/measurement fields
-  and statistics are empty.
+- `detail`: globally, a combination with `count >= 5`; locally, every coded
+  combination, including counts from 1 to 4. Groups use resource type, system,
+  Coding path, version and code; measurement sources add unit code, unit system
+  and selected reference limits.
+- `other (count < 5)`: in the global output, rare combinations pooled per
+  resource, system and Coding path. IDs are deduplicated again.
+  Code/version/measurement fields and statistics are empty. These rows do not
+  occur in the local output.
 - `total`: independently deduplicated per resource and system, across all Coding
   paths. `coding_path` is empty. Resources with multiple codes or Coding roles
   count once in this total; detail/rare counts must not simply be added.
-- `unresolved medication reference`: one diagnostic row in Medication.csv, with empty system/path/version/code. `count` and
+- `unresolved medication reference`: one diagnostic row in Medication.csv,
+  with empty system/path/version/code. `count` and
   `no_reference_count_to_medication` count affected resource IDs. It is excluded
   from coded system totals.
 
@@ -363,6 +427,61 @@ Coverage includes wildcard/override mappings, resource/system/Coding-role
 separation, direct/reference deduplication, all three medication usage types,
 leading-zero codes, rare groups, main cases and MRP reference-range priority.
 The shared `codeSummarySnomedFixture()` test fixture adds visible SNOMED detail
-groups in all four CSVs, measurement statistics, different Coding roles, rare
+groups in all four CSVs, measurement statistics, direct medication origins, rare
 codes and directly coded medications without a Medication entry. All resources,
 values and links in this fixture are synthetic; `demo-v1` is a test version label.
+
+### Inspecting a synthetic SNOMED example
+
+A normal DQA run reads the selected database only; it never inserts example
+codes. If that database contains no selected SNOMED codes, its CSVs contain no
+SNOMED detail rows. The tests use a separate PostgreSQL container and temporary
+tables. Their fixture covers visible detail groups as well as counts below five.
+
+In a development environment with the local `interpolar-cds_hub:latest` image,
+start an isolated test database:
+
+```sh
+docker run -d --rm --network none --name dqa-test-postgres \
+  --user postgres --entrypoint sh interpolar-cds_hub:latest \
+  -c 'initdb -D /tmp/dqa-pg -A trust >/tmp/dqa-init.log && exec postgres -D /tmp/dqa-pg -c listen_addresses='
+docker exec dqa-test-postgres pg_isready -U postgres
+```
+
+Wait until `pg_isready` reports that the server accepts connections. Then run
+the following from the repository root in the development R environment, with
+`pkgload`, the package dependencies, the Docker CLI and write access to the two
+output directories available. It reuses the test fixture and production exporter:
+
+```r
+Sys.setenv(DQA_TEST_POSTGRES_CONTAINER = "dqa-test-postgres")
+dqa_package <- paste0(
+  "R-dataprocessor/submodules/manual_start/Database_Quality_Analysis/",
+  "R-Database_Quality_Analysis"
+)
+pkgload::load_all(dqa_package, quiet = TRUE)
+source(file.path(dqa_package, "tests/testthat/helper-code-summary.R"))
+fixture <- codeSummarySnomedFixture()
+reports <- createCodeSummaryReports(
+  fixture$metadata, fixture$config, table_description = fixture$description,
+  query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
+)
+attr(reports, "description") <- c("SYNTHETIC TEST DATA", attr(reports, "description"))
+local_reports <- attr(reports, "local_reports", exact = TRUE)
+attr(local_reports, "description") <- c("SYNTHETIC TEST DATA", attr(local_reports, "description"))
+attr(reports, "local_reports") <- local_reports
+MODULE_DIRS <- etlutils::getModuleDirNames("dataprocessor")
+timestamp <- Sys.time()
+for (target in c("global", "local")) {
+  writeCodeSummaryArchive(
+    reports, "Database_Quality_Analysis_SYNTHETIC_SNOMED",
+    timestamp = timestamp, target = target
+  )
+}
+```
+
+The two example ZIPs appear in the normal global/local report directories, with
+`SYNTHETIC_SNOMED` in their names. No existing snapshot is read or changed.
+Expect 9 SNOMED detail rows globally and 12 locally: the local files also show
+the rare SNOMED codes with counts of two or four.
+Remove the test container afterwards with `docker stop dqa-test-postgres`.
