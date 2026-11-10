@@ -33,7 +33,9 @@ testthat::test_that("convertFilterPatterns returns one final entry per ward", {
     envir = .GlobalEnv
   )
 
-  converted_filter_patterns <- convertFilterPatterns("TEST_ENCOUNTER_FILTER_PATTERN")
+  converted_filter_patterns <- etlutils::convertFilterPatterns(
+    etlutils::getGlobalVariablesByPrefix("TEST_ENCOUNTER_FILTER_PATTERN")
+  )
 
   testthat::expect_named(
     converted_filter_patterns,
@@ -69,7 +71,9 @@ testthat::test_that("convertFilterPatterns keeps plus signs inside quoted values
     envir = .GlobalEnv
   )
 
-  converted_filter_patterns <- convertFilterPatterns("TEST_PLUS_ENCOUNTER_FILTER_PATTERN")
+  converted_filter_patterns <- etlutils::convertFilterPatterns(
+    etlutils::getGlobalVariablesByPrefix("TEST_PLUS_ENCOUNTER_FILTER_PATTERN")
+  )
 
   testthat::expect_named(converted_filter_patterns, "Station 1+")
 })
