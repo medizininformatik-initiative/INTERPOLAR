@@ -18,8 +18,21 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
   } else {
     list()
   }
+  case_scope_query <- NULL
+  scope_note <- "Filtered code export disabled: FHIR is not configured in FILTERED_SCOPE_SHEET_NAMES."
+  if (isFilteredScopeSheetConfigured("FHIR", config)) {
+    candidate <- getFilteredScopeMainEncounterSubquery(metadata)
+    if (is.na(candidate)) {
+      scope_note <- "Filtered code export skipped: required Encounter/pids_per_ward metadata unavailable."
+      warning(scope_note, call. = FALSE)
+    } else {
+      case_scope_query <- candidate
+      scope_note <- "Filtered code export enabled: main cases selected through Encounter and pids_per_ward."
+    }
+  }
   query <- buildCodeSummaryQuery(
-    sources, links, config$code_summary_systems, config$code_summary_normal_range, report_types
+    sources, links, config$code_summary_systems, config$code_summary_normal_range, report_types,
+    case_scope_query = case_scope_query
   )
   rows <- if (is.na(query)) data.table::data.table() else data.table::as.data.table(query_fun(
     query,
@@ -42,7 +55,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     for (column in missing_columns) rows[, (column) := NA_real_]
     if (length(missing_columns)) rows[, no_reference_count_to_medication := NA_real_]
   }
-  buildReports <- function(output_target) {
+  buildReports <- function(output_target, output_scope = "all") {
     result <- lapply(report_names, function(report_name) {
       resource_sources <- Filter(function(source) source$resource == report_name, sources)
       output_columns <- c(
@@ -51,7 +64,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
         if (report_name == "Medication") medication_columns
       )
       if (nrow(rows)) {
-        report <- rows[export_target == output_target & report == report_name, ..output_columns]
+        report <- rows[report_scope == output_scope & export_target == output_target & report == report_name, ..output_columns]
       } else {
         report <- data.table::as.data.table(stats::setNames(
           lapply(output_columns, function(column) {
@@ -84,6 +97,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     "Database Quality Analysis: Code Summary",
     paste0("Configuration: ", config$code_summary_config_file),
     "Scope: configured FHIR last-version views, unfiltered; no additional date/status filter.",
+    scope_note,
     "Systems (exact URI filters):",
     vapply(names(config$code_summary_systems), function(name) {
       paste0(name, ": ", paste(config$code_summary_systems[[name]], collapse = "; "))
@@ -124,6 +138,29 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     attr(result, "description")
   )
   attr(result, "local_reports") <- local_reports
+  if (!is.null(case_scope_query)) {
+    scope_label <- getFilteredScopeLabel(config)
+    if (length(scope_label) != 1L || is.na(scope_label) || !nzchar(scope_label)) scope_label <- "FILTERED"
+    filtered <- buildReports("global", "filtered")
+    filtered_local <- buildReports("local", "filtered")
+    scope_description <- c(
+      paste0("Scope: ", scope_label, "; main cases selected through Encounter and pids_per_ward."),
+      "Only events with a matching main-case reference contribute; other cases of the same patient are excluded.",
+      "Medication codes contribute through their selected usage events; patient/case/usage counts use those events only."
+    )
+    description <- c(
+      scope_description,
+      attr(result, "description")[!startsWith(attr(result, "description"), "Scope:")]
+    )
+    attr(filtered, "description") <- description
+    attr(filtered_local, "description") <- c(
+      "LOCAL CODE SUMMARY: includes all aggregate combinations, including counts below five.", description
+    )
+    attr(filtered, "local_reports") <- filtered_local
+    attr(filtered, "scope_label") <- scope_label
+    attr(filtered, "scope_description") <- scope_description
+    attr(result, "filtered_reports") <- filtered
+  }
   result
 }
 
@@ -131,16 +168,36 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
 writeCodeSummaryArchive <- function(code_summaries, filename_without_extension,
                                     timestamp = Sys.time(), subdir = "reports", target = c("global", "local")) {
   target <- match.arg(target)
+  filtered <- attr(code_summaries, "filtered_reports", exact = TRUE)
+  scope_label <- if (!is.null(filtered)) sanitizeValueSummaryFileName(attr(filtered, "scope_label", exact = TRUE))
+  scope_description <- attr(filtered, "scope_description", exact = TRUE)
   if (target == "local") {
     code_summaries <- attr(code_summaries, "local_reports", exact = TRUE)
     if (is.null(code_summaries)) {
       stop("Local code details unavailable; regenerate the code summaries.", call. = FALSE)
     }
+    if (!is.null(filtered)) {
+      filtered <- attr(filtered, "local_reports", exact = TRUE)
+      if (is.null(filtered)) stop("Local filtered code details unavailable; regenerate the code summaries.", call. = FALSE)
+    }
+  }
+  description <- attr(code_summaries, "description")
+  if (!is.null(filtered)) {
+    names(filtered) <- paste0(names(filtered), "_", scope_label)
+    if (any(names(filtered) %in% names(code_summaries))) {
+      stop("Filtered code CSV names collide with complete-database report names.", call. = FALSE)
+    }
+    code_summaries <- c(code_summaries, filtered)
+    description <- c(
+      "CSV layout: plain resource names describe the complete database.",
+      paste0("CSV names ending in _", scope_label, " describe the selected main cases."),
+      description, "", "Filtered CSV scope:", scope_description
+    )
   }
   writeValueSummaryArchive(
     code_summaries, filename_without_extension,
     timestamp = timestamp, subdir = subdir,
     target = target, suffix = "Code_Summary",
-    description = attr(code_summaries, "description")
+    description = description
   )
 }

@@ -64,7 +64,8 @@ codeSummaryFixture <- function() {
   metadata <- description[, .(
     TABLE_FAMILY = "FHIR", TABLE_NAME = tolower(RESOURCE), VIEW_SCHEMA = "pg_temp",
     VIEW_NAME = tolower(RESOURCE), COLUMN_NAME,
-    DATA_TYPE = ifelse(COLUMN_NAME == "obs_value", "double precision", "text")
+    DATA_TYPE = ifelse(COLUMN_NAME == "obs_value", "double precision", "text"),
+    ORDINAL_POSITION = seq_len(.N)
   )]
   config <- getConfig(envir = new.env(parent = emptyenv()), command_arguments = character())
   list(description = description, metadata = metadata, config = config)
@@ -120,6 +121,26 @@ codeSummarySnomedFixture <- function() {
     "INSERT INTO medicationrequest SELECT * FROM medicationrequest WHERE medreq_id LIKE 'snomed-%';",
     "INSERT INTO medicationadministration SELECT * FROM medicationadministration WHERE medadm_id LIKE 'snomed-%';",
     "INSERT INTO medicationstatement SELECT * FROM medicationstatement WHERE medstat_id LIKE 'snomed-%';"
+  )
+  fixture
+}
+
+codeSummaryFilteredFixture <- function() {
+  fixture <- codeSummaryFixture()
+  fixture$metadata <- data.table::rbindlist(list(fixture$metadata, data.table::data.table(
+    TABLE_FAMILY = "Other", TABLE_NAME = "pids_per_ward", VIEW_SCHEMA = "pg_temp",
+    VIEW_NAME = "pids_per_ward", COLUMN_NAME = "encounter_id", DATA_TYPE = "text", ORDINAL_POSITION = 1L
+  )))
+  fixture$config$filtered_scope_sheet_names <- "FHIR"
+  fixture$config$filtered_scope_detail_sheet_suffix <- "INTERPOLAR"
+  fixture$extra_sql <- c(
+    "INSERT INTO encounter (enc_id,enc_patient_ref,enc_main_encounter_calculated_ref) VALUES ('ward1','Patient/p1','Encounter/e2'),('ward2','Patient/p1','https://example.org/fhir/Encounter/e2'),('bad-ward','Patient/p1','invalid');",
+    "INSERT INTO pids_per_ward VALUES ('ward1'),('ward1'),('ward2'),('bad-ward'),('not-an-encounter');",
+    "UPDATE observation SET obs_encounter_calculated_ref=CASE WHEN obs_id='o1' THEN 'https://example.org/fhir/Encounter/e2' ELSE 'Encounter/e2' END WHERE obs_id IN ('o1','o2');",
+    "INSERT INTO observation (obs_id,obs_patient_ref,obs_encounter_calculated_ref,obs_code_system,obs_code_code,obs_value) SELECT 'outside'||n,'Patient/p1','Encounter/e1','http://loinc.org','outside-only',100 FROM generate_series(1,6) n;",
+    "INSERT INTO medicationrequest (medreq_id,medreq_patient_ref,medreq_encounter_calculated_ref,medreq_medicationreference_ref) VALUES ('ip-request','Patient/p1','Encounter/e2','https://example.org/fhir/Medication/example'),('ip-broken','Patient/p1','Encounter/e2','Medication/missing'),('outside-broken','Patient/p1','Encounter/e1','Medication/missing');",
+    "INSERT INTO medicationadministration (medadm_id,medadm_patient_ref,medadm_encounter_calculated_ref,medadm_medicationreference_ref) VALUES ('ip-administration','Patient/p1','Encounter/e2','Medication/example');",
+    "INSERT INTO medicationstatement (medstat_id,medstat_patient_ref,medstat_encounter_calculated_ref,medstat_direct_system,medstat_direct_code) SELECT 'ip-inline'||n,'Patient/p1','Encounter/e2','http://fhir.de/CodeSystem/bfarm/atc','direct-ip' FROM generate_series(1,5) n;"
   )
   fixture
 }

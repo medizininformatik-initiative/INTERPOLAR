@@ -20,7 +20,8 @@ codeSummaryReferenceSql <- function(expression, resource) {
 #' Each source view is projected once into a materialized CTE. Coding fields are
 #' expanded from these projections, so configured coding fields and code systems
 #' do not trigger separate requests. Only aggregates leave the database.
-buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_types) {
+buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_types,
+                                  case_scope_query = NULL) {
   if (!length(sources)) return(NA_character_)
   report_types <- parseCodeSummaryReportTypes(report_types, names(systems))
   medication_reports <- unique(unlist(lapply(Filter(function(source) {
@@ -210,7 +211,22 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     ))
   }
   ctes <- c(ctes, paste0("raw_events AS (", paste(events, collapse = " UNION ALL "), ")"))
-  dimensions <- "report, system, coding_path, version, code, unit, unit_system, low, high"
+  scoped_events <- "SELECT 'all'::text AS report_scope,e.* FROM raw_events e"
+  if (!is.null(case_scope_query)) {
+    ctes <- c(ctes, paste0(
+      "scope_cases AS MATERIALIZED (SELECT DISTINCT ",
+      codeSummaryReferenceSql(codeSummaryFieldSql(
+        c(case_id = "enc_main_encounter_calculated_ref"), "case_id", "scope_input"
+      ), "Encounter"),
+      " AS case_id FROM (", case_scope_query, ") scope_input)"
+    ))
+    scoped_events <- paste0(
+      scoped_events,
+      " UNION ALL SELECT 'filtered',e.* FROM raw_events e JOIN scope_cases s ON s.case_id=e.case_id"
+    )
+  }
+  ctes <- c(ctes, paste0("scoped_events AS (", scoped_events, ")"))
+  dimensions <- "report_scope, report, system, coding_path, version, code, unit, unit_system, low, high"
   # Both exports share the expensive source/event CTEs. Local groups retain
   # every combination; global rare groups must deduplicate their IDs again.
   export_targets <- "(VALUES ('global'), ('local')) AS t(export_target)"
@@ -218,7 +234,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     ctes,
     paste0(
       "events AS MATERIALIZED (SELECT *, dense_rank() OVER (ORDER BY ", dimensions,
-      ") AS combination_id FROM raw_events)"
+      ") AS combination_id FROM scoped_events)"
     ),
     paste0(
       "frequencies AS (SELECT combination_id, COUNT(DISTINCT count_key) AS n ",
@@ -231,7 +247,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       "FROM events e LEFT JOIN frequencies f USING (combination_id) CROSS JOIN ", export_targets, ")"
     ),
     paste0(
-      "group_labels AS (SELECT export_target, report, system, coding_path, row_type, ",
+      "group_labels AS (SELECT report_scope,export_target, report, system, coding_path, row_type, ",
       "CASE WHEN row_type = 'detail' THEN version END AS version, ",
       "CASE WHEN row_type = 'detail' THEN code END AS code, ",
       "CASE WHEN row_type = 'detail' THEN unit END AS unit, ",
@@ -240,7 +256,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       "CASE WHEN row_type = 'detail' THEN high END AS high, ",
       "count_key, event_key, kind, pid, case_id, ",
       "CASE WHEN row_type = 'detail' THEN value END AS value, missing_medication,unresolved FROM labelled ",
-      "UNION ALL SELECT t.export_target,report, system, NULL::text, 'total', NULL,NULL,NULL,NULL,NULL,NULL, ",
+      "UNION ALL SELECT report_scope,t.export_target,report, system, NULL::text, 'total', NULL,NULL,NULL,NULL,NULL,NULL, ",
       "count_key,event_key,kind,pid,case_id,NULL::double precision,missing_medication,false ",
       "FROM events CROSS JOIN ", export_targets, " WHERE NOT unresolved)"
     ),
@@ -248,7 +264,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     # across every dimension, which PostgreSQL would execute as nested loops.
     paste0(
       "grouped AS MATERIALIZED (SELECT *, COALESCE(count_key,event_key) AS resource_key, ",
-      "dense_rank() OVER (ORDER BY export_target,report,system,coding_path,row_type,version,code,unit,unit_system,low,high) AS summary_id ",
+      "dense_rank() OVER (ORDER BY report_scope,export_target,report,system,coding_path,row_type,version,code,unit,unit_system,low,high) AS summary_id ",
       "FROM group_labels)"
     ),
     paste0(
@@ -257,7 +273,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       "summary_id,resource_key)"
     ),
     paste0(
-      "counts AS (SELECT g.summary_id,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high, ",
+      "counts AS (SELECT g.summary_id,g.report_scope,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high, ",
       "COUNT(DISTINCT g.count_key) AS count, ",
       "COUNT(DISTINCT g.pid) AS patient_count, COUNT(DISTINCT g.case_id) AS case_count, ",
       "CASE WHEN g.row_type = 'unresolved medication reference' THEN ",
@@ -270,7 +286,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       "CASE WHEN BOOL_OR(g.missing_medication IS NOT NULL) THEN ",
       "COUNT(DISTINCT g.event_key) FILTER (WHERE g.missing_medication) END AS no_reference_count_to_medication ",
       "FROM grouped g JOIN case_presence p USING (summary_id,resource_key) ",
-      "GROUP BY g.summary_id,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high)"
+      "GROUP BY g.summary_id,g.report_scope,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high)"
     ),
     # A separate DISTINCT observation/value projection prevents medication joins
     # and repeated flattened reference/coding rows from weighting statistics.
@@ -292,6 +308,6 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     "WITH ", paste(ctes, collapse = ",\n"),
     "\nSELECT c.*, s.median,s.q1,s.q3,s.mean,s.sd,s.minimum,s.maximum FROM counts c LEFT JOIN statistics s ",
     "USING (summary_id) ",
-    "ORDER BY c.export_target,c.report,c.system,c.coding_path,c.row_type,c.version,c.code,c.unit,c.unit_system,c.low,c.high"
+    "ORDER BY c.report_scope,c.export_target,c.report,c.system,c.coding_path,c.row_type,c.version,c.code,c.unit,c.unit_system,c.low,c.high"
   )
 }

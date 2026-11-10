@@ -76,7 +76,7 @@ test_that("a configured numeric value enables statistics on another resource and
   )))
   fixture$metadata <- data.table::rbindlist(list(fixture$metadata, data.table::data.table(
     TABLE_FAMILY = "FHIR", TABLE_NAME = "condition", VIEW_SCHEMA = "pg_temp", VIEW_NAME = "condition",
-    COLUMN_NAME = "con_score", DATA_TYPE = "double precision"
+    COLUMN_NAME = "con_score", DATA_TYPE = "double precision", ORDINAL_POSITION = 999L
   )))
   fixture$config$code_summary_sources[[2]]$fields <- list(value = "score/value")
   fixture$extra_sql <- paste0(

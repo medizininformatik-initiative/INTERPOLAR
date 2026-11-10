@@ -8,3 +8,7 @@ INCLUDE_CODE_SUMMARY = true
 
 # Optional alternative Table Description (normally the installed cds2db file).
 # CODE_SUMMARY_TABLE_DESCRIPTION = "path/to/Table_Description.xlsx"
+
+# The existing FHIR filtered scope also enables additional IP-case CSVs in the same code ZIP.
+# FILTERED_SCOPE_SHEET_NAMES = ["FHIR", "FHIR Encounter"]
+# FILTERED_SCOPE_DETAIL_SHEET_SUFFIX = "INTERPOLAR"

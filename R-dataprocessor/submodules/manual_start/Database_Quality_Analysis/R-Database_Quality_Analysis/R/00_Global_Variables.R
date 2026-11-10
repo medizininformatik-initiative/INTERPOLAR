@@ -14,6 +14,7 @@ utils::globalVariables(c(
   "FHIR_EXPRESSION",
   "coding",
   "export_target",
+  "report_scope",
   "report",
   "no_reference_count_to_medication"
 ))

@@ -49,10 +49,11 @@ snapshot-type requirement, not missing database objects or invalid credentials.
    it does not restrict the existing availability and Value Summary reports.
 6. Execute one shared code-aggregation query: collect Coding combinations,
    resolve medication links, deduplicate IDs and calculate counts/statistics.
-   From the same events, calculate complete local groups and globally pooled
-   rare groups. IDs are deduplicated again for pooled groups and totals.
-7. Write the files listed below. Each code ZIP contains the four CSVs and a
-   README describing its actual sources, fields and counting rules.
+   From the same events, calculate the complete database and the configured IP
+   case subset, each with complete local groups and globally pooled rare groups.
+   IDs are deduplicated again for pooled groups and totals in each scope.
+7. Write the files listed below. Each code ZIP contains the resource CSVs for
+   both scopes and a README describing its actual sources, fields and counting rules.
 
 ## Output Files
 
@@ -64,11 +65,15 @@ With the default configuration, each run writes three artifacts to
 - `Database_Quality_Analysis_Value_Summary_<analysis-start>.zip`: ZIP archive
   with value summary CSV files grouped in `FHIR/` and `Frontend/` folders.
 - `Database_Quality_Analysis_Code_Summary_<analysis-start>.zip`: code-based CSV
-  reports and a description of the configured systems and resolved source fields.
+  reports for the complete database, additional CSVs restricted to the selected
+  IP main cases, and a description of the configured sources.
 
 The Code Summary ZIP is also written to `outputLocal/dataprocessor/reports`,
-with the same filename. The local version contains all aggregate combinations,
-including `count < 5`; the global version pools these rare combinations.
+with the same filename. Its local version contains all aggregate
+combinations, including `count < 5`; its global version pools rare combinations.
+The additional IP CSVs are enabled when `FILTERED_SCOPE_SHEET_NAMES` contains `FHIR`.
+Their filename suffix follows `FILTERED_SCOPE_DETAIL_SHEET_SUFFIX` (default
+`INTERPOLAR`). Disabling that scope keeps only the complete-database CSVs in each ZIP.
 
 The filename timestamp is the analysis start time, shared by the run's outputs.
 The normal toolchain start archives existing `dataprocessor` output directories
@@ -224,25 +229,58 @@ The following columns or values are handled specially:
 ## Code Summary ZIP
 
 The code report implements #1495 and is enabled by default. Set
-`INCLUDE_CODE_SUMMARY = false` to disable it. It reads configured FHIR
-last-version views without an additional date, status or INTERPOLAR scope filter.
+`INCLUDE_CODE_SUMMARY = false` to disable both code scopes. The complete-database
+variant reads configured FHIR last-version views without an additional date or
+status filter. A separate variant restricts events to the selected IP main cases.
 The additional global quality summary from #1462 and clinical categorization
 remain outside this report. The availability workbook and Value Summary ZIP
 keep their previous content.
 
-The ZIP contains exactly four default reports: `Codes/Observation.csv`,
+The ZIP contains four complete-database reports: `Codes/Observation.csv`,
 `Codes/Condition.csv`, `Codes/Procedure.csv` and `Codes/Medication.csv`, plus
-`README.txt`. Medication usage resources contribute to Medication.csv only.
+`README.txt`. With the default IP scope enabled, the same ZIP also contains
+`Codes/Observation_INTERPOLAR.csv`, `Codes/Condition_INTERPOLAR.csv`,
+`Codes/Procedure_INTERPOLAR.csv` and `Codes/Medication_INTERPOLAR.csv`.
+Medication usage resources contribute to Medication.csv only.
 Resources with an available configured source but no selected codes still get
 CSV headers. Unavailable sources are documented with their resolved fields.
 No resource, patient or case IDs or individual measurement values are exported.
 
-Both output folders receive the four code CSVs. Local CSVs retain every code,
-version, unit, reference range and available statistic, even for counts below
+Both output folders receive one code ZIP containing these CSVs. Local CSVs retain
+every code, version, unit, reference range and available statistic, even for counts below
 five. Such combinations have `row_type = detail` locally. Global CSVs retain
 their existing rare-group suppression. Missing source fields stay empty; a
 single measurement has a mean/median but no sample SD. Totals remain deduplicated
 independently in both versions. Both exports share one aggregate SQL query.
+
+### Complete database and IP cases
+
+The additional `*_INTERPOLAR.csv` files reuse the existing filtered Excel scope: join
+`pids_per_ward.encounter_id` to `Encounter.enc_id`, then select the distinct
+`enc_main_encounter_calculated_ref` values. Relative and absolute references are
+normalized before matching the code events to those main cases.
+
+Filtering is by case, not just by patient. Another case of the same patient is
+excluded if it is outside the selected set. Events without a usable main-case
+reference contribute only to the complete-database report. Consequently
+`no_case_count` is zero for the selected IP events.
+
+Medication has no own patient/case association. Its codes enter the IP report
+through the Requests, Administrations and Statements assigned to selected cases.
+Only those usage events supply patient, case and usage counts. Direct medication
+codes and unresolved-reference rows use their owning usage resource's case.
+An unlinked Medication therefore contributes only to the complete-database report.
+
+Counts, statistics, totals and the rare-combination threshold are calculated
+independently for each scope. A code can be a visible detail globally for the
+complete database and a pooled rare combination globally for IP cases. The local
+IP file still shows that combination in full.
+
+All four code variants (complete/IP cases, global/local) share one aggregate SQL
+query and the same projected source data. No separate query is issued per scope.
+An empty IP selection produces CSV headers without fabricated zero totals.
+If the required Encounter or `pids_per_ward` metadata is unavailable, the module
+warns and omits the IP code CSVs; it never substitutes unfiltered results.
 
 ### Configuration and Coding fields
 
@@ -404,8 +442,8 @@ and their counts are empty rather than reported as zero.
 
 ### Query batching and tests
 
-One aggregate query covers all configured resources, Coding fields, systems and
-medication links. Each source view is projected once into a materialized CTE;
+One aggregate query covers all configured resources, Coding fields, systems,
+medication links, output targets and case scopes. Each source view is projected once into a materialized CTE;
 Coding fields expand together with a lateral query, rather than rescanning the
 projection for each Coding path. Where reference resolution does not require
 all resources, projections filter to configured systems. Only aggregates leave
