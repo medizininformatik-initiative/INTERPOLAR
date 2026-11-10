@@ -147,6 +147,11 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 
 - optional Ausgabe der zu Grunde liegenden Datentabellen in outputLocal über das Argument `WRITE_TABLE_LOCAL=TRUE`
 
+Die 14 Kontrolltabellen liegen unter `outputLocal/dataprocessor/reports/`, jeweils
+als einzelne HTML-Datei mit allen Tabellenzeilen, Suche, Filtern und CSV-/Excel-Downloads.
+Jede Datei enthält auch die benötigten Browserbibliotheken und lässt sich direkt im
+Browser öffnen.
+
 ``` console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R statistical-reports REPORT_PERIOD_START=2025-09-01 REPORT_PERIOD_END=2025-09-08 WRITE_TABLE_LOCAL=TRUE
 ```
