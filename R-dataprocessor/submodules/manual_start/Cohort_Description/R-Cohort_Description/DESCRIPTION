@@ -1,0 +1,16 @@
+Package: CohortDescription
+Title: Prepare the INTERPOLAR Cohort Description
+Version: 0.0.0.9000
+Authors@R:
+    person("Alexander", "Strübing", , "alexander.struebing@imise.uni-leipzig.de", role = c("aut", "cre"))
+Description: Initializes the manual INTERPOLAR cohort description workflow and
+    loads known INTERPOLAR station assignments from the selected database.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    etlutils
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
