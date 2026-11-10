@@ -120,3 +120,78 @@ test_that("lost data placeholders fail before publishing", {
   )
   expect_length(list.files(output_dir), 0L)
 })
+
+test_that("URL dependencies are embedded together with local dependencies", {
+  skip_if_not(rmarkdown::pandoc_available("2.0"))
+  output_dir <- withr::local_tempdir()
+  writeLines("window.interpolarUrlDependency = true;", file.path(output_dir, "remote.js"))
+  writeLines(".url-dependency { color: rgb(1, 2, 3); }", file.path(output_dir, "remote.css"))
+  # A file URL exercises href-only dependencies without requiring network access.
+  dependency <- htmltools::htmlDependency(
+    "url-dependency", "1.0",
+    src = list(href = paste0("file://", output_dir)),
+    script = "remote.js", stylesheet = "remote.css"
+  )
+  widget <- DT::datatable(data.frame(id = 1:3), elementId = "url-table")
+  widget$dependencies <- c(widget$dependencies, list(dependency))
+  output <- file.path(output_dir, "single.html")
+  saveHtmlWidgetPage(widget, output, "URL dependencies")
+  document <- xml2::read_html(output)
+  expect_match(paste(xml2::xml_text(xml2::xml_find_all(document, "//script")), collapse = "\n"),
+    "window.interpolarUrlDependency = true;",
+    fixed = TRUE
+  )
+  expect_match(paste(xml2::xml_text(xml2::xml_find_all(document, "//style")), collapse = "\n"),
+    ".url-dependency",
+    fixed = TRUE
+  )
+  expect_length(xml2::xml_find_all(document, "//script[@src] | //link[@href]"), 0L)
+  expect_length(xml2::xml_find_all(
+    document,
+    "//script[@type='application/json' and @data-for='url-table']"
+  ), 1L)
+})
+
+test_that("payload extraction and restoration preserve multiple data blocks", {
+  output_dir <- withr::local_tempdir()
+  input <- file.path(output_dir, "input.md")
+  embedded <- file.path(output_dir, "embedded.html")
+  output <- file.path(output_dir, "output.html")
+  scripts <- c(
+    '<script type="application/json" data-for="first">{"text":"Größe \\u003c/script>"}</script>',
+    '<script type="application/json" data-for="second">{"value":null}</script>'
+  )
+  payloads <- extractHtmlWidgetPayloads(paste(scripts, collapse = "\n"), output_dir, input)
+  expect_length(payloads$markers, 2L)
+  expect_identical(vapply(payloads$files, readLines, character(1), USE.NAMES = FALSE), scripts)
+  expect_false(any(grepl('"text"|"value"', readLines(input))))
+  writeLines(c("<body>", payloads$markers, "</body>"), embedded)
+  restoreHtmlWidgetPayloads(embedded, output, payloads)
+  expect_identical(readLines(output), c("<body>", scripts, "</body>"))
+
+  writeLines(rep(payloads$markers, each = 2L), embedded)
+  expect_error(
+    restoreHtmlWidgetPayloads(embedded, output, payloads),
+    "did not preserve all widget data"
+  )
+  writeLines(payloads$markers[1], embedded)
+  expect_error(
+    restoreHtmlWidgetPayloads(embedded, output, payloads),
+    "did not preserve all widget data"
+  )
+})
+
+test_that("payload helpers support plain HTML and reject unterminated widget scripts", {
+  output_dir <- withr::local_tempdir()
+  input <- file.path(output_dir, "input.md")
+  embedded <- file.path(output_dir, "embedded.html")
+  output <- file.path(output_dir, "output.html")
+  payloads <- extractHtmlWidgetPayloads("<p>Plain HTML</p>", output_dir, input)
+  expect_identical(payloads, list(markers = character(), files = character()))
+  writeLines("<p>Plain HTML</p>", embedded)
+  restoreHtmlWidgetPayloads(embedded, output, payloads)
+  expect_identical(readLines(output), "<p>Plain HTML</p>")
+  expect_error(extractHtmlWidgetPayloads(
+    '<script type="application/json" data-for="broken">{}', output_dir, input
+  ), "no closing tag")
+})

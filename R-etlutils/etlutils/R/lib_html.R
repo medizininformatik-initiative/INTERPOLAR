@@ -8,53 +8,17 @@ saveHtmlWidgetPage <- function(widget, output_file, title) {
 
   rendered <- htmltools::renderTags(htmltools::as.tags(widget, standalone = TRUE))
   dependencies <- lapply(rendered$dependencies, function(dependency) {
-    htmltools::copyDependencyToDir(dependency, work_dir, mustWork = TRUE)
+    htmltools::copyDependencyToDir(dependency, work_dir, mustWork = FALSE)
   })
   header_file <- file.path(work_dir, "header.html")
   writeLines(c(
     as.character(htmltools::tags$title(title)),
-    as.character(htmltools::renderDependencies(dependencies, srcType = "file")),
+    as.character(htmltools::renderDependencies(dependencies, srcType = c("href", "file"))),
     rendered$head
   ), header_file, useBytes = TRUE)
 
-  # htmlwidgets emits escaped JSON in these script elements, so a closing script
-  # tag cannot occur inside a payload, including when a cell contains HTML text.
-  matches <- gregexpr(
-    '<script type="application/json" data-for="[^"]+">',
-    rendered$html,
-    perl = TRUE
-  )[[1]]
-  if (matches[1] == -1L) matches <- integer()
-  # Search closing tags literally: matching a whole large JSON block with PCRE
-  # can exceed its match limit and accidentally send the data through Pandoc.
-  closing_tags <- gregexpr("</script>", rendered$html, fixed = TRUE)[[1]]
-  ends <- closing_tags[findInterval(matches, closing_tags) + 1L] + 8L
-  if (anyNA(ends)) stop("Widget data script has no closing tag.")
-  marker_prefix <- paste0("INTERPOLAR_WIDGET_", basename(work_dir), "_")
-  if (grepl(marker_prefix, rendered$html, fixed = TRUE)) {
-    stop("HTML export marker conflicts with page content.")
-  }
-  payload_files <- file.path(work_dir, paste0("payload-", seq_along(matches), ".html"))
   input_file <- file.path(work_dir, "page.md")
-  input_con <- file(input_file, "wb")
-  tryCatch(
-    {
-      writeLines("``````````{=html}", input_con)
-      start <- 1L
-      for (i in seq_along(matches)) {
-        writeLines(substr(rendered$html, start, matches[i] - 1L), input_con, useBytes = TRUE)
-        writeLines(paste0("<!--", marker_prefix, i, "-->"), input_con)
-        writeLines(substr(rendered$html, matches[i], ends[i]),
-          payload_files[i],
-          useBytes = TRUE
-        )
-        start <- ends[i] + 1L
-      }
-      writeLines(substring(rendered$html, start), input_con, useBytes = TRUE)
-      writeLines("``````````", input_con)
-    },
-    finally = close(input_con)
-  )
+  payloads <- extractHtmlWidgetPayloads(rendered$html, work_dir, input_file)
   rm(rendered)
 
   template_file <- file.path(work_dir, "template.html")
@@ -74,16 +38,71 @@ saveHtmlWidgetPage <- function(widget, output_file, title) {
   )
 
   result_file <- file.path(work_dir, "complete.html")
+  restoreHtmlWidgetPayloads(embedded_file, result_file, payloads)
+  # Publish only a complete document; failed exports leave the previous file intact.
+  if (!file.rename(result_file, output_file)) stop("Could not publish HTML page: ", output_file)
+  invisible(NULL)
+}
+
+# Move widget data to separate files and return the placeholders used by Pandoc.
+extractHtmlWidgetPayloads <- function(html, work_dir, input_file) {
+  # htmlwidgets emits escaped JSON in these script elements, so a closing script
+  # tag cannot occur inside a payload, including when a cell contains HTML text.
+  matches <- gregexpr(
+    '<script type="application/json" data-for="[^"]+">',
+    html,
+    perl = TRUE
+  )[[1]]
+  if (matches[1] == -1L) matches <- integer()
+  # Search closing tags literally: matching a whole large JSON block with PCRE
+  # can exceed its match limit and accidentally send the data through Pandoc.
+  closing_tags <- gregexpr("</script>", html, fixed = TRUE)[[1]]
+  ends <- closing_tags[findInterval(matches, closing_tags) + 1L] + 8L
+  if (anyNA(ends)) stop("Widget data script has no closing tag.")
+  marker_prefix <- paste0("INTERPOLAR_WIDGET_", basename(work_dir), "_")
+  if (grepl(marker_prefix, html, fixed = TRUE)) {
+    stop("HTML export marker conflicts with page content.")
+  }
+  markers <- vapply(seq_along(matches), function(i) {
+    paste0("<!--", marker_prefix, i, "-->")
+  }, character(1))
+  payload_files <- vapply(seq_along(matches), function(i) {
+    file.path(work_dir, paste0("payload-", i, ".html"))
+  }, character(1))
+  input_con <- file(input_file, "wb")
+  tryCatch(
+    {
+      writeLines("``````````{=html}", input_con)
+      start <- 1L
+      for (i in seq_along(matches)) {
+        writeLines(substr(html, start, matches[i] - 1L), input_con, useBytes = TRUE)
+        writeLines(markers[i], input_con)
+        writeLines(substr(html, matches[i], ends[i]),
+          payload_files[i],
+          useBytes = TRUE
+        )
+        start <- ends[i] + 1L
+      }
+      writeLines(substring(html, start), input_con, useBytes = TRUE)
+      writeLines("``````````", input_con)
+    },
+    finally = close(input_con)
+  )
+  list(markers = markers, files = payload_files)
+}
+
+# Restore each payload exactly once, streaming its bytes to bound copy memory.
+restoreHtmlWidgetPayloads <- function(embedded_file, result_file, payloads) {
   result_con <- file(result_file, "wb")
-  restored <- integer(length(matches))
+  restored <- integer(length(payloads$markers))
   tryCatch(
     {
       for (line in readLines(embedded_file, warn = FALSE, encoding = "UTF-8")) {
-        index <- match(trimws(line), paste0("<!--", marker_prefix, seq_along(matches), "-->"))
+        index <- match(trimws(line), payloads$markers)
         if (is.na(index)) {
           writeLines(line, result_con, useBytes = TRUE)
         } else {
-          payload_con <- file(payload_files[index], "rb")
+          payload_con <- file(payloads$files[index], "rb")
           tryCatch(repeat {
             chunk <- readBin(payload_con, "raw", n = 1048576L)
             if (!length(chunk)) break
@@ -96,7 +115,5 @@ saveHtmlWidgetPage <- function(widget, output_file, title) {
     finally = close(result_con)
   )
   if (any(restored != 1L)) stop("Pandoc did not preserve all widget data placeholders.")
-  # Publish only a complete document; failed exports leave the previous file intact.
-  if (!file.rename(result_file, output_file)) stop("Could not publish HTML page: ", output_file)
   invisible(NULL)
 }
