@@ -83,11 +83,11 @@ mögliche Optimierungen:
 -   werden die richtigen Codes herausgefiltert? Finden sie sich auf alle Encounter-Ebenen wider oder nur auf bestimmten?
 -   sind die Stopps und Warnungen so plausibel?
 
-#### `getPidsPerWardData` (`v_pids_per_ward`) --\> pids_per_ward_table
+#### `etlutils::getPidsPerWardData` (`v_pids_per_ward`) --\> pids_per_ward_table
 
 Ziel: Erkennen, auf welcher INTERPOLAR-Station ein Fall aufgenommen wurde (Erkennen eines Falls auf einer INTERPOLAR-Station über die CDS-Toolchain konfigurierbar) und zu welchem Versorgungsstellenkontakt dieser INTERPOLAR-Fall gehört.
 
--   lädt die Tabelle pids_per_ward, die bei jedem Durchlauf der CDS-Toolchain erfasst, welche Patienten sich aktuell auf einer INTERPOLAR-Station befinden
+-   lädt eindeutige Kombinationen aus Station, Patient und Encounter aus `v_pids_per_ward`; Deduplizierung und Sortierung nach Patient und Encounter erfolgen in SQL
 -   Variablen:
     -   `ward_name` (Name der Station)
     -   `patient_id` (FHIR Patienten ID)
