@@ -68,6 +68,9 @@ codeSummaryFixture <- function() {
     ORDINAL_POSITION = seq_len(.N)
   )]
   config <- getConfig(envir = new.env(parent = emptyenv()), command_arguments = character())
+  # Existing query-builder fixtures exercise the combined mode. Dedicated batch
+  # tests compare resource mode against these results for the same input data.
+  config$code_summary_query_batching <- "all"
   list(description = description, metadata = metadata, config = config)
 }
 

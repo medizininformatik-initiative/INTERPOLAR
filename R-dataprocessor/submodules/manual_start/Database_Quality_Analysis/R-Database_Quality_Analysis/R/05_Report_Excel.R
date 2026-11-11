@@ -57,8 +57,10 @@ fillCountAndDateRangeColumns <- function(
     config = config
   )
   if (!is.na(count_query$query)) {
-    count_result <- query_fun(
+    count_result <- runLoggedQuery(
       count_query$query,
+      query_fun = query_fun, config = config,
+      label = paste0("Availability counts ", lock_label, "; ", length(data_column_batch), " columns"),
       lock_id = getDatabaseQualityAnalysisLockId(
         config,
         paste0("calculate database quality analysis counts for ", lock_label)
@@ -76,8 +78,10 @@ fillCountAndDateRangeColumns <- function(
       row_filter_condition = row_filter_condition
     )
     if (!is.na(date_range_query$query)) {
-      date_range_result <- query_fun(
+      date_range_result <- runLoggedQuery(
         date_range_query$query,
+        query_fun = query_fun, config = config,
+        label = paste0("Value date ranges ", lock_label, "; ", length(data_column_batch), " columns"),
         lock_id = getDatabaseQualityAnalysisLockId(
           config,
           paste0(
@@ -470,6 +474,7 @@ writeExcelFile <- function(
       ".xlsx"
     )
   )
+  write_started <- Sys.time()
   logProgress("Writing Excel report to ", file_name, ".")
 
   workbook <- openxlsx::createWorkbook()
@@ -502,7 +507,7 @@ writeExcelFile <- function(
     )
   }
   openxlsx::saveWorkbook(workbook, file_name, overwrite = TRUE)
-  logProgress("Excel report written to ", file_name, ".")
+  logProgress("Excel report written to ", file_name, " in ", formatDuration(write_started), ".")
   invisible(file_name)
 }
 

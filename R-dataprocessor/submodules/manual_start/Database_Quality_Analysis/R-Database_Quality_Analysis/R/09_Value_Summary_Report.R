@@ -706,8 +706,10 @@ createValueSummaryReports <- function(
             suppressed_columns,
             resource_id_column
           )
-          suppressed_result <- query_fun(
+          suppressed_result <- runLoggedQuery(
             suppressed_query$query,
+            query_fun = query_fun, config = config,
+            label = paste0("Value summary ", table_name, ": batch ", batch_index, "/", length(column_batches), "; ", "suppressed text"),
             lock_id = getDatabaseQualityAnalysisLockId(
               config,
               paste0(
@@ -734,8 +736,10 @@ createValueSummaryReports <- function(
             text_columns,
             resource_id_column
           )
-          text_counts <- query_fun(
+          text_counts <- runLoggedQuery(
             text_query,
+            query_fun = query_fun, config = config,
+            label = paste0("Value summary ", table_name, ": batch ", batch_index, "/", length(column_batches), "; ", "text"),
             lock_id = getDatabaseQualityAnalysisLockId(
               config,
               paste0(
@@ -765,8 +769,10 @@ createValueSummaryReports <- function(
             value_type,
             resource_id_column
           )
-          statistic_result <- query_fun(
+          statistic_result <- runLoggedQuery(
             statistic_query$query,
+            query_fun = query_fun, config = config,
+            label = paste0("Value summary ", table_name, ": batch ", batch_index, "/", length(column_batches), "; ", value_type),
             lock_id = getDatabaseQualityAnalysisLockId(
               config,
               paste0(
@@ -850,7 +856,9 @@ writeValueSummaryArchive <- function(
   suffix = DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_SUFFIX,
   description = NULL
 ) {
+  write_started <- Sys.time()
   target <- match.arg(target)
+  logProgress("Preparing ", suffix, " archive for ", target, ": ", length(value_summaries), " CSV tables.")
   module_sub_dir <- file.path(
     if (identical(target, "global")) MODULE_DIRS$global_dir else MODULE_DIRS$local_dir,
     subdir
@@ -882,6 +890,7 @@ writeValueSummaryArchive <- function(
     )
     file_name <- file.path(temp_dir, relative_file_name)
     dir.create(dirname(file_name), recursive = TRUE, showWarnings = FALSE)
+    logProgress("Writing CSV ", relative_file_name, ": ", nrow(value_summaries[[table_name]]), " summary rows.")
     data.table::fwrite(
       value_summaries[[table_name]],
       file = file_name,
@@ -921,6 +930,6 @@ writeValueSummaryArchive <- function(
   if (!identical(as.integer(zip_status), 0L) || !file.exists(archive_name)) {
     stop("Could not write ", suffix, " archive: ", archive_name, call. = FALSE)
   }
-  logProgress(suffix, " archive written to ", archive_name, ".")
+  logProgress(suffix, " archive written to ", archive_name, " in ", formatDuration(write_started), ".")
   invisible(archive_name)
 }

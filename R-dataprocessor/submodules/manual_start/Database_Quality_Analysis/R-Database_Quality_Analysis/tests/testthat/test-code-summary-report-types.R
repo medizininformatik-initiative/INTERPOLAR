@@ -38,17 +38,18 @@ test_that("new medication and coding reports and renamed measurements use config
     "INSERT INTO condition (con_id,con_code_system,con_code_code) SELECT 'custom-diagnosis'||n,'urn:example:diagnoses','custom-condition' FROM generate_series(1,5) n;"
   )
   calls <- 0L
+  unresolved_queries <- 0L
   summaries <- createCodeSummaryReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
       calls <<- calls + 1L
-      expect_equal(sum(gregexpr("unresolved_links AS MATERIALIZED", query, fixed = TRUE)[[1]] > 0L), 1L)
-      expect_match(query, "unresolved_links AS MATERIALIZED", fixed = TRUE)
+      unresolved_queries <<- unresolved_queries + as.integer(grepl("unresolved_links AS MATERIALIZED", query, fixed = TRUE))
       runCodeSummaryFixtureQuery(fixture, query)
     }
   )
-  expect_equal(calls, 1L)
+  expect_equal(calls, 4L)
+  expect_equal(unresolved_queries, 1L)
   lab <- summaries$Observation[row_type == "detail"]
   expect_equal(lab$count, 6)
   expect_equal(lab$mean, 3.5)

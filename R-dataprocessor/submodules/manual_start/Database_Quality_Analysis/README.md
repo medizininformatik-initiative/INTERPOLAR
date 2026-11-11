@@ -47,10 +47,11 @@ snapshot-type requirement, not missing database objects or invalid credentials.
    columns, and detect measurement statistics from mapped numeric value fields.
    This selects the four code-report resources and medication inputs;
    it does not restrict the existing availability and Value Summary reports.
-6. Execute one shared code-aggregation query: collect Coding combinations,
+6. Execute a code-aggregation query per resource report: collect Coding combinations,
    resolve medication links, deduplicate IDs and calculate counts/statistics.
    From the same events, calculate the complete database and the configured IP
    case subset, each with complete local groups and globally pooled rare groups.
+   Medication and all three medication usage resources remain in one batch.
    IDs are deduplicated again for pooled groups and totals in each scope.
 7. Write the files listed below. Each code ZIP contains the resource CSVs for
    both scopes and a README describing its actual sources, fields and counting rules.
@@ -80,6 +81,43 @@ The normal toolchain start archives existing `dataprocessor` output directories
 with a timestamp and applies `MAX_DIR_COUNT` retention. Check the current
 `dataprocessor/reports` folders for the latest run. Progress and errors are logged
 under `outputLocal/dataprocessor/log`.
+
+## Progress logs and long-running queries
+
+Every DQA progress line includes date, local time and timezone. Query messages
+identify the table, batch and query type, and report start, elapsed duration and
+aggregate row count on completion. The Code Summary also lists resolved Coding
+sources and measurement handling before submitting SQL. Each query identifies its
+resource report and batch number, for example `Observation (1/4)` or
+`Medication (4/4)`. CSV/Excel/ZIP writing
+has its own messages and elapsed times.
+
+On Linux/Docker, a separate timer emits a status line every 60 seconds while a
+query is running. Set `PROGRESS_INTERVAL_SECONDS` in
+`database_quality_analysis_config.toml` to change that interval; `0` disables the
+periodic timer. The timer runs no SQL and opens no database connection. It is
+stopped when the query returns or fails. Other platforms still log start/end
+and duration. Status lines report elapsed waiting time, not a percentage or a
+claim that PostgreSQL is actively using the CPU. An executing query can also be
+waiting for I/O or a lock.
+
+For currently running queries, including older DQA versions, a database operator can inspect their state
+without rerunning the expensive report (visibility depends on database privileges):
+
+```sql
+SELECT pid, application_name, clock_timestamp() - query_start AS elapsed,
+       state, wait_event_type, wait_event, pg_blocking_pids(pid) AS blocking_pids
+FROM pg_stat_activity
+WHERE datname = current_database()
+  AND pid <> pg_backend_pid()
+  AND state IS DISTINCT FROM 'idle';
+```
+
+For this version, `query LIKE '/* INTERPOLAR DQA code summary */%'` can be added
+to the WHERE conditions to select its Code Summary specifically.
+The query tag identifies runs using this version. An already running older query
+will retain its old SQL and logging until that run ends. The existing console
+and `outputLocal/dataprocessor/log` outputs remain the log destinations.
 
 ## Excel Sheets
 
@@ -251,7 +289,7 @@ every code, version, unit, reference range and available statistic, even for cou
 five. Such combinations have `row_type = detail` locally. Global CSVs retain
 their existing rare-group suppression. Missing source fields stay empty; a
 single measurement has a mean/median but no sample SD. Totals remain deduplicated
-independently in both versions. Both exports share one aggregate SQL query.
+independently in both versions. Both exports share the aggregate SQL query of their resource batch.
 
 ### Complete database and IP cases
 
@@ -276,8 +314,9 @@ independently for each scope. A code can be a visible detail globally for the
 complete database and a pooled rare combination globally for IP cases. The local
 IP file still shows that combination in full.
 
-All four code variants (complete/IP cases, global/local) share one aggregate SQL
-query and the same projected source data. No separate query is issued per scope.
+All four code variants (complete/IP cases, global/local) share the aggregate SQL
+query and projected source data within each resource batch. No separate query is
+issued per scope or export target.
 An empty IP selection produces CSV headers without fabricated zero totals.
 If the required Encounter or `pids_per_ward` metadata is unavailable, the module
 warns and omits the IP code CSVs; it never substitutes unfiltered results.
@@ -442,12 +481,75 @@ and their counts are empty rather than reported as zero.
 
 ### Query batching and tests
 
-One aggregate query covers all configured resources, Coding fields, systems,
-medication links, output targets and case scopes. Each source view is projected once into a materialized CTE;
+The default `CODE_SUMMARY_QUERY_BATCHING = "resource"` uses one query per
+resource report: normally four queries for Observation, Condition, Procedure and
+Medication. The Medication query includes all configured usage resources. All
+Coding fields, systems, output targets and case scopes of a resource share its
+query. Each actual Coding/medication source view is projected once into a CTE;
 Coding fields expand together with a lateral query, rather than rescanning the
 projection for each Coding path. Where reference resolution does not require
 all resources, projections filter to configured systems. Only aggregates leave
-the database. Integer group keys permit equality joins for counts/statistics.
+the database. NULL-safe array keys permit equality joins for counts/statistics
+without ranking the complete event stream. Summary keys are constructed after
+aggregation. Non-measurement codings skip reference-range ranking entirely. Non-measurement
+batches also omit the redundant UNION/DISTINCT that previously sorted already
+deduplicated codings again. They omit the empty measurement-statistics pass and
+can stream count inputs without caching them for that unused pass. Measurement-only
+batches omit the unused ordinary coding branch. Explicit materialization boundaries
+are retained for measurement normalization, where removing them regressed the
+large-volume plan. Reused source projections remain shared.
+
+Measurement statistics are a subset of the count groups, using identical keys.
+Their final merge uses a FULL join after expanding the count output targets. This
+preserves the same rows while requiring a hash/merge join even if PostgreSQL
+underestimates the number of statistic groups; a nested-loop final join produced
+millions of pair comparisons in the large-volume test. No statistic merge runs
+for batches without measurement sources.
+
+Medication links are deduplicated before joining. Direct-code resolution joins
+only the medication usage codings against distinct primary Medication code keys;
+unrelated resources do not enter that join. Normalized empty versions use a
+non-null equality key, preserving the existing NULL-version matching rule.
+The main-case and no-case counts use distinct keys; no-case counts are obtained
+by subtracting keys with a case from all keys instead of joining a second large
+per-resource aggregation. Common detail groups, unresolved rows and totals are
+computed once for global/local output; only rare groups require separate labels.
+The final small result is expanded to both targets. Resource batching releases
+large intermediate results between queries instead of retaining all resources
+until one combined query finishes. The Encounter/pids_per_ward scope lookup is
+repeated per batch; Coding source views are not rescanned for each scope.
+`CODE_SUMMARY_QUERY_BATCHING = "all"` retains the shared-query mode for controlled
+comparisons. Resource batching remains the default for large databases.
+CSV layouts, thresholds,
+reference-range priority and counting semantics are unchanged.
+
+For performance investigation, use PostgreSQL
+[`EXPLAIN (ANALYZE, BUFFERS)`](https://www.postgresql.org/docs/17/using-explain.html) in
+an isolated development database with representative synthetic cardinalities.
+It executes the query and should not be started alongside an expensive site
+report just to obtain its plan. The operator status query above is suitable for
+observing an ongoing run. A synthetic speedup is not a site runtime guarantee.
+
+A local large-volume check on 2026-11-11 used PostgreSQL 17.11 with
+`work_mem = 4MB`: 2,000,000 additional Observation rows and 1,000,000 rows each
+for Medication, MedicationRequest, MedicationAdministration and MedicationStatement.
+The workload used 100,000 main-case IDs, 50,000 patient references and 2,000 codes
+per system, with half the main cases selected for the IP scope. Both global/local
+and complete/IP variants were calculated. Condition and Procedure were empty in
+this particular load test; their semantics are covered by the integration tests.
+
+| Resource batch | Additional source rows | SQL execution time |
+| --- | ---: | ---: |
+| Observation | 2,000,000 | 296.7 s |
+| Medication and all three usage types | 4,000,000 | 622.1 s |
+
+These times exclude synthetic-data loading and report-file writing. Analytical
+checks verified exact totals, IP selection, case/no-case and reference diagnostics,
+direct/reference identity deduplication, and measurement mean/SD/median/min/max.
+The full Docker report also retained byte-identical Code and Value Summary CSVs
+on the existing snapshot. These are local synthetic results, not site runtime
+guarantees: code/reference fan-out, flattened duplicates, view definitions,
+aggregate-group cardinality, storage and server resources affect the workload.
 
 Run package tests with the project R environment:
 

@@ -1,5 +1,12 @@
 # Optional additions to database_quality_analysis_config.toml.
 INCLUDE_CODE_SUMMARY = true
+
+# One query per resource report bounds intermediate data and logs resource progress.
+# Medication and its usage resources stay together; scopes/targets share each query.
+# CODE_SUMMARY_QUERY_BATCHING = "resource"  # "all" is available for comparison.
+
+# Shared DQA logging: periodic elapsed-time messages while SQL is running.
+# PROGRESS_INTERVAL_SECONDS = 60  # 0 disables the periodic timer.
 # Sources, systems, report types and fields are configured in code_summary.toml here.
 # A mapped numeric value column enables measurement statistics automatically.
 # Optional source-level measurement = true/false overrides this detection there.

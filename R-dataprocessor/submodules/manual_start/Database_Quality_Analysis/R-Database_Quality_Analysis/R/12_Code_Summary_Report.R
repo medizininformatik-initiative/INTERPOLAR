@@ -1,10 +1,12 @@
 #' Create the code-report tables and their source description
 #'
-#' Executes one aggregate query for all configured coding sources. No individual
+#' Executes one aggregate query per resource report, sharing all output scopes. No individual
 #' IDs or raw observations are transferred to R or exported. Global tables pool
 #' rare combinations; the local_reports attribute retains all aggregate details.
 createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbGetReadOnlyQuery,
                                      table_description = NULL) {
+  started <- Sys.time()
+  logProgress("Code summary: resolving configured sources and available database columns.")
   if (is.null(table_description)) {
     table_description <- etlutils::loadTableDescriptionFile(
       table_description_path = config$code_summary_table_description
@@ -30,20 +32,55 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
       scope_note <- "Filtered code export enabled: main cases selected through Encounter and pids_per_ward."
     }
   }
-  query <- buildCodeSummaryQuery(
-    sources, links, config$code_summary_systems, config$code_summary_normal_range, report_types,
-    case_scope_query = case_scope_query
+  logProgress(
+    "Code summary: resolved ", length(sources), " Coding sources and ", length(links),
+    " medication link sources in ", formatDuration(started), ". ", scope_note
   )
-  rows <- if (is.na(query)) data.table::data.table() else data.table::as.data.table(query_fun(
-    query,
-    lock_id = getDatabaseQualityAnalysisLockId(config, "calculate code summary")
-  ))
+  for (source in sources) {
+    logProgress(
+      "Code source ", source$resource, ": ", source$schema, ".", source$view,
+      "; Coding=", source$coding, "; systems=", paste(source$reports, collapse = ","),
+      "; measurement=", source$measurement, "."
+    )
+  }
+  source_resources <- vapply(sources, `[[`, character(1), "resource")
+  source_reports <- ifelse(source_resources %in% link_resources, "Medication", source_resources)
+  report_names <- unique(source_reports)
+  batching <- config$code_summary_query_batching
+  if (is.null(batching)) batching <- "resource"
+  if (length(batching) != 1L || is.na(batching) || !batching %in% c("resource", "all")) {
+    stop("CODE_SUMMARY_QUERY_BATCHING must be 'resource' or 'all'.", call. = FALSE)
+  }
+  batches <- if (batching == "all" && length(sources)) {
+    list(All = sources)
+  } else {
+    lapply(stats::setNames(report_names, report_names), function(report) sources[source_reports == report])
+  }
+  query_rows <- lapply(seq_along(batches), function(index) {
+    batch_sources <- batches[[index]]
+    # Medication and its usage sources stay together. Other resources never
+    # scan medication views; each actual resource view is read by one batch.
+    batch_links <- if (any(vapply(batch_sources, function(source) source$resource %in% c("Medication", link_resources), logical(1)))) links else list()
+    query <- buildCodeSummaryQuery(
+      batch_sources, batch_links, config$code_summary_systems, config$code_summary_normal_range, report_types,
+      case_scope_query = case_scope_query
+    )
+    if (is.na(query)) return(data.table::data.table())
+    data.table::as.data.table(runLoggedQuery(
+      query,
+      query_fun = query_fun, config = config,
+      label = paste0(
+        "Code summary SQL ", names(batches)[[index]], " (", index, "/", length(batches),
+        "; global/local and configured case scopes)"
+      ),
+      lock_id = getDatabaseQualityAnalysisLockId(config, "calculate code summary")
+    ))
+  })
+  rows <- data.table::rbindlist(query_rows, use.names = TRUE, fill = TRUE)
   columns <- c(
     "row_type", "system", "coding_path", "version", "code", "count", "patient_count", "case_count", "no_case_count"
   )
   measurement_columns <- c("unit", "unit_system", "median", "q1", "q3", "mean", "sd", "minimum", "maximum", "low", "high")
-  source_resources <- vapply(sources, `[[`, character(1), "resource")
-  report_names <- unique(ifelse(source_resources %in% link_resources, "Medication", source_resources))
   medication_columns <- c(
     "medication_count", "medication_request_count", "medication_administration_count",
     "medication_statement_count", "no_reference_count_to_medication"
@@ -161,6 +198,13 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     attr(filtered, "scope_description") <- scope_description
     attr(result, "filtered_reports") <- filtered
   }
+  for (resource in report_names) {
+    logProgress(
+      "Code summary ", resource, ": ", nrow(result[[resource]]), " global rows, ",
+      nrow(local_reports[[resource]]), " local rows (complete database)."
+    )
+  }
+  logProgress("Code summary: finished in ", formatDuration(started), ".")
   result
 }
 

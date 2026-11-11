@@ -15,16 +15,23 @@ DATABASE_QUALITY_ANALYSIS_GROUPING_ROLE_COLUMN <- "USED_AS_GROUPING_FOR"
 
 #' Print a database quality analysis progress message
 #'
-#' Prefixes a message with the module label and writes it to the console.
+#' Prefixes messages with local time, timezone and module label; flushes console output.
 logProgress <- function(...) {
-  cat("[Database Quality Analysis] ", ..., "\n", sep = "")
+  cat("[", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), "] [Database Quality Analysis] ", ..., "\n", sep = "")
+  flush.console()
 }
 
 #' Format an elapsed duration
 #'
-#' Converts a start and end timestamp into a compact seconds label.
+#' Formats an elapsed duration in hours, minutes and fractional seconds.
 formatDuration <- function(start_time, end_time = Sys.time()) {
-  paste0(round(as.numeric(difftime(end_time, start_time, units = "secs")), 2), "s")
+  elapsed <- round(as.numeric(difftime(end_time, start_time, units = "secs")), 2)
+  hours <- floor(elapsed / 3600)
+  minutes <- floor((elapsed %% 3600) / 60)
+  paste0(
+    if (hours > 0) paste0(hours, "h "),
+    if (minutes > 0 || hours > 0) paste0(minutes, "m "), round(elapsed %% 60, 2), "s"
+  )
 }
 
 #' Format a count with a singular or plural label
@@ -44,4 +51,58 @@ getDatabaseQualityAnalysisLockId <- function(config, lock_id) {
     return(lock_id)
   }
   NULL
+}
+
+#' Run a timed read-only report query with periodic status messages
+#'
+#' Reuses the supplied database helper, including its locks and retry handling.
+#' A separate Unix timer prints elapsed time while R waits in the blocking DB call;
+#' it never opens a database connection or runs SQL. Other platforms keep timing logs.
+runLoggedQuery <- function(query, query_fun = etlutils::dbGetReadOnlyQuery,
+                           lock_id = NULL, label = "Database query", config = list()) {
+  interval <- config$progress_interval_seconds
+  if (is.null(interval)) interval <- 60
+  if (length(interval) != 1L || !is.numeric(interval) || !is.finite(interval) || interval < 0) {
+    stop("PROGRESS_INTERVAL_SECONDS must be a finite non-negative number.", call. = FALSE)
+  }
+  started <- Sys.time()
+  completed <- FALSE
+  heartbeat <- NULL
+  logProgress(label, ": started.")
+  on.exit(
+    {
+      if (!is.null(heartbeat)) {
+        if (is.null(parallel::mccollect(heartbeat, wait = FALSE))) {
+          tools::pskill(heartbeat$pid)
+          suppressWarnings(parallel::mccollect(heartbeat))
+        }
+      }
+      if (!completed) logProgress(label, ": stopped after ", formatDuration(started), ".")
+    },
+    add = TRUE
+  )
+  if (.Platform$OS.type == "unix" && interval > 0) {
+    parent_pid <- Sys.getpid()
+    heartbeat <- parallel::mcparallel(
+      {
+        repeat {
+          Sys.sleep(interval)
+          if (!tools::pskill(parent_pid, signal = 0L)) break
+          logProgress(
+            label, ": still running after ", formatDuration(started),
+            "; waiting for database/result processing, no percentage available."
+          )
+        }
+        NULL
+      },
+      mc.set.seed = FALSE
+    )
+  }
+  result <- query_fun(query, lock_id = lock_id)
+  completed <- TRUE
+  logProgress(
+    label, ": finished in ", formatDuration(started),
+    if (!is.null(nrow(result))) paste0("; ", nrow(result), " aggregate rows"), "."
+  )
+  result
 }
