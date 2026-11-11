@@ -29,6 +29,7 @@ loadCodeSummaryConfig <- function(path) {
   if (length(missing)) {
     stop("Missing code summary TOML sections: ", paste(missing, collapse = ", "), call. = FALSE)
   }
+  config$exports <- parseCodeSummaryExports(config$exports)
   config$report_types <- parseCodeSummaryReportTypes(config$report_types, names(config$systems))
   required_fields <- c(
     "resource_id", "system", "version", "code", "pid", "case_id", "value",
@@ -48,6 +49,39 @@ loadCodeSummaryConfig <- function(path) {
     stop("normal_range.fallback_to_missing_type must be a TOML boolean.", call. = FALSE)
   }
   config
+}
+
+#' Validate the requested CSV variants and the main-encounter age column
+#'
+#' Older TOMLs without an exports section retain the two original variants.
+parseCodeSummaryExports <- function(exports = NULL) {
+  defaults <- list(variants = c("all", "filtered"), age_column = "enc_age_at_admission", fallback_to_birthdate = TRUE)
+  if (is.null(exports)) return(defaults)
+  if (!is.list(exports) || length(setdiff(names(exports), names(defaults)))) {
+    stop("Unknown code summary exports setting.", call. = FALSE)
+  }
+  exports <- utils::modifyList(defaults, exports)
+  allowed <- c("all", "all_age_ge18", "all_age_lt18", "filtered", "filtered_age_ge18", "filtered_age_lt18")
+  variants <- exports$variants
+  if (
+    !is.character(variants) || !length(variants) || anyNA(variants) ||
+    anyDuplicated(variants) || !all(variants %in% allowed)
+  ) {
+    stop("exports.variants must contain unique CSV variants from: ", paste(allowed, collapse = ", "), call. = FALSE)
+  }
+  if (
+    !is.character(exports$age_column) || length(exports$age_column) != 1L ||
+    is.na(exports$age_column) || !nzchar(trimws(exports$age_column))
+  ) {
+    stop("exports.age_column must be a non-empty database column name.", call. = FALSE)
+  }
+  if (
+    !is.logical(exports$fallback_to_birthdate) || length(exports$fallback_to_birthdate) != 1L ||
+    is.na(exports$fallback_to_birthdate)
+  ) {
+    stop("exports.fallback_to_birthdate must be a TOML boolean.", call. = FALSE)
+  }
+  exports
 }
 
 #' Validate and normalize configured report types

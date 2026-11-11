@@ -20,9 +20,13 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
   } else {
     list()
   }
+  exports <- parseCodeSummaryExports(config$code_summary_exports)
+  export_variants <- exports$variants
   case_scope_query <- NULL
-  scope_note <- "Filtered code export disabled: FHIR is not configured in FILTERED_SCOPE_SHEET_NAMES."
-  if (isFilteredScopeSheetConfigured("FHIR", config)) {
+  scope_note <- if (any(startsWith(export_variants, "filtered"))) {
+    "Filtered code export disabled: FHIR is not configured in FILTERED_SCOPE_SHEET_NAMES."
+  } else "Filtered code export disabled by exports.variants."
+  if (any(startsWith(export_variants, "filtered")) && isFilteredScopeSheetConfigured("FHIR", config)) {
     candidate <- getFilteredScopeMainEncounterSubquery(metadata)
     if (is.na(candidate)) {
       scope_note <- "Filtered code export skipped: required Encounter/pids_per_ward metadata unavailable."
@@ -32,6 +36,21 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
       scope_note <- "Filtered code export enabled: main cases selected through Encounter and pids_per_ward."
     }
   }
+  if (is.null(case_scope_query)) export_variants <- export_variants[!startsWith(export_variants, "filtered")]
+  case_groups_query <- NULL
+  age_source <- paste0("main Encounter.", exports$age_column)
+  if (any(grepl("_age_", export_variants, fixed = TRUE))) {
+    candidate <- buildCodeSummaryCaseGroupsQuery(metadata, exports, !is.null(case_scope_query), table_description)
+    if (is.na(candidate)) {
+      warning("Age-specific code exports skipped: Encounter age/birthdate metadata unavailable (", exports$age_column, ").", call. = FALSE)
+      export_variants <- export_variants[!grepl("_age_", export_variants, fixed = TRUE)]
+    } else {
+      case_groups_query <- candidate
+      age_source <- attr(candidate, "age_source", exact = TRUE)
+      logProgress("Code summary age source: ", age_source, ".")
+    }
+  }
+  logProgress("Code summary CSV variants: ", paste(export_variants, collapse = ", "), ".")
   logProgress(
     "Code summary: resolved ", length(sources), " Coding sources and ", length(links),
     " medication link sources in ", formatDuration(started), ". ", scope_note
@@ -63,7 +82,8 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     batch_links <- if (any(vapply(batch_sources, function(source) source$resource %in% c("Medication", link_resources), logical(1)))) links else list()
     query <- buildCodeSummaryQuery(
       batch_sources, batch_links, config$code_summary_systems, config$code_summary_normal_range, report_types,
-      case_scope_query = case_scope_query
+      case_scope_query = if (is.null(case_groups_query)) case_scope_query else NULL,
+      case_groups_query = case_groups_query, export_variants = export_variants
     )
     if (is.na(query)) return(data.table::data.table())
     data.table::as.data.table(runLoggedQuery(
@@ -137,6 +157,8 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     paste0("Configuration: ", config$code_summary_config_file),
     "Scope: configured FHIR last-version views, unfiltered; no additional date/status filter.",
     scope_note,
+    paste0("Requested CSV variants: ", paste(exports$variants, collapse = ", ")),
+    paste0("Available CSV variants: ", paste(export_variants, collapse = ", ")),
     "Systems (exact URI filters):",
     vapply(names(config$code_summary_systems), function(name) {
       paste0(name, ": ", paste(config$code_summary_systems[[name]], collapse = "; "))
@@ -181,7 +203,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     attr(result, "description")
   )
   attr(result, "local_reports") <- local_reports
-  if (!is.null(case_scope_query)) {
+  if ("filtered" %in% export_variants) {
     scope_label <- getFilteredScopeLabel(config)
     if (length(scope_label) != 1L || is.na(scope_label) || !nzchar(scope_label)) scope_label <- "FILTERED"
     filtered <- buildReports("global", "filtered")
@@ -204,11 +226,44 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     attr(filtered, "scope_description") <- scope_description
     attr(result, "filtered_reports") <- filtered
   }
-  for (resource in report_names) {
-    logProgress(
-      "Code summary ", resource, ": ", nrow(result[[resource]]), " global rows, ",
-      nrow(local_reports[[resource]]), " local rows (complete database)."
+  scope_label <- getFilteredScopeLabel(config)
+  if (length(scope_label) != 1L || is.na(scope_label) || !nzchar(scope_label)) scope_label <- "FILTERED"
+  age_variants <- export_variants[grepl("_age_", export_variants, fixed = TRUE)]
+  variant_reports <- lapply(age_variants, function(variant) {
+    filtered <- startsWith(variant, "filtered")
+    adult <- endsWith(variant, "ge18")
+    suffix <- paste0(if (filtered) paste0(scope_label, "_") else "", if (adult) "AGE_GE18" else "AGE_LT18")
+    description <- c(
+      paste0("Scope: ", if (filtered) paste0(scope_label, "; ") else "", "main-case age at admission ", if (adult) ">=18" else "<18", "."),
+      paste0("Age source: ", age_source, "; missing, negative or invalid ages and conflicting age groups are excluded from age-specific CSVs."),
+      "Only events linked to the matching main case contribute; Medication codes use their associated usage events.",
+      attr(result, "description")[!startsWith(attr(result, "description"), "Scope:")]
     )
+    reports <- buildReports("global", variant)
+    local <- buildReports("local", variant)
+    attr(reports, "description") <- description
+    attr(local, "description") <- c("LOCAL CODE SUMMARY: includes all aggregate combinations, including counts below five.", description)
+    attr(reports, "local_reports") <- local
+    attr(reports, "scope_label") <- suffix
+    attr(reports, "scope_description") <- description[1:3]
+    reports
+  })
+  names(variant_reports) <- age_variants
+  attr(result, "variant_reports") <- variant_reports
+  attr(result, "export_variants") <- export_variants
+  scoped_reports <- c(
+    if ("all" %in% export_variants) list(all = result),
+    if ("filtered" %in% export_variants) list(filtered = attr(result, "filtered_reports", exact = TRUE)),
+    variant_reports
+  )
+  for (scope in names(scoped_reports)) {
+    scoped <- scoped_reports[[scope]]
+    for (resource in report_names) {
+      logProgress(
+        "Code summary ", resource, " [", scope, "]: ", nrow(scoped[[resource]]), " global rows, ",
+        nrow(attr(scoped, "local_reports", exact = TRUE)[[resource]]), " local rows."
+      )
+    }
   }
   logProgress("Code summary: finished in ", formatDuration(started), ".")
   result
@@ -218,32 +273,30 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
 writeCodeSummaryArchive <- function(code_summaries, filename_without_extension,
                                     timestamp = Sys.time(), subdir = "reports", target = c("global", "local")) {
   target <- match.arg(target)
+  export_variants <- attr(code_summaries, "export_variants", exact = TRUE)
   filtered <- attr(code_summaries, "filtered_reports", exact = TRUE)
-  scope_label <- if (!is.null(filtered)) sanitizeValueSummaryFileName(attr(filtered, "scope_label", exact = TRUE))
-  scope_description <- attr(filtered, "scope_description", exact = TRUE)
-  if (target == "local") {
-    code_summaries <- attr(code_summaries, "local_reports", exact = TRUE)
-    if (is.null(code_summaries)) {
-      stop("Local code details unavailable; regenerate the code summaries.", call. = FALSE)
-    }
-    if (!is.null(filtered)) {
-      filtered <- attr(filtered, "local_reports", exact = TRUE)
-      if (is.null(filtered)) stop("Local filtered code details unavailable; regenerate the code summaries.", call. = FALSE)
-    }
+  variants <- attr(code_summaries, "variant_reports", exact = TRUE)
+  if (!is.null(filtered)) variants <- c(list(filtered = filtered), variants)
+  base <- if (target == "local") attr(code_summaries, "local_reports", exact = TRUE) else code_summaries
+  if (is.null(base)) stop("Local code details unavailable; regenerate the code summaries.", call. = FALSE)
+  description <- attr(base, "description")
+  if (!is.null(export_variants) && !"all" %in% export_variants) {
+    description <- description[!startsWith(description, "Scope:")]
   }
-  description <- attr(code_summaries, "description")
-  if (!is.null(filtered)) {
-    names(filtered) <- paste0(names(filtered), "_", scope_label)
-    if (any(names(filtered) %in% names(code_summaries))) {
-      stop("Filtered code CSV names collide with complete-database report names.", call. = FALSE)
+  reports <- if (is.null(export_variants) || "all" %in% export_variants) base else list()
+  for (variant in variants) {
+    scope_label <- sanitizeValueSummaryFileName(attr(variant, "scope_label", exact = TRUE))
+    scope_description <- attr(variant, "scope_description", exact = TRUE)
+    tables <- if (target == "local") attr(variant, "local_reports", exact = TRUE) else variant
+    if (is.null(tables)) stop("Local scoped code details unavailable; regenerate the code summaries.", call. = FALSE)
+    names(tables) <- paste0(names(tables), "_", scope_label)
+    if (any(names(tables) %in% names(reports))) {
+      stop("Scoped code CSV names collide with other report names.", call. = FALSE)
     }
-    code_summaries <- c(code_summaries, filtered)
-    description <- c(
-      "CSV layout: plain resource names describe the complete database.",
-      paste0("CSV names ending in _", scope_label, " describe the selected main cases."),
-      description, "", "Filtered CSV scope:", scope_description
-    )
+    reports <- c(reports, tables)
+    description <- c(description, "", paste0("CSV suffix _", scope_label, ":"), scope_description)
   }
+  code_summaries <- reports
   writeValueSummaryArchive(
     code_summaries, filename_without_extension,
     timestamp = timestamp, subdir = subdir,

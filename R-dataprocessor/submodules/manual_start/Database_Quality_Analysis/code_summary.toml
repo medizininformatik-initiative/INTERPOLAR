@@ -2,6 +2,21 @@
 # Select another file with CODE_SUMMARY_CONFIG_FILE in the module configuration.
 # System URIs are exact filters. WHO ATC is deliberately not included.
 # SNOMED CT uses primary code/coding and direct medicationCodeableConcept/coding only.
+# Select only the CSV variants needed. Age groups refer to the main-case admission.
+# filtered variants additionally require the existing FHIR/IP scope configuration.
+[exports]
+variants = [
+            #"all",
+            #"all_age_ge18",
+            #"all_age_lt18",
+            #"filtered",
+            "filtered_age_ge18",
+            #"filtered_age_lt18"
+            ]
+age_column = "enc_age_at_admission"
+# If the column is absent, derive completed years from period/start and birthDate.
+fallback_to_birthdate = true
+
 [systems]
 LOINC = ["http://loinc.org"]
 ICD = ["http://fhir.de/CodeSystem/bfarm/icd-10-gm"]

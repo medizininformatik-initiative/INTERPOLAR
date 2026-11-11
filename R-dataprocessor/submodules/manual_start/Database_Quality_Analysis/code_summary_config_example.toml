@@ -16,6 +16,10 @@ INCLUDE_CODE_SUMMARY = true
 # Optional alternative Table Description (normally the installed cds2db file).
 # CODE_SUMMARY_TABLE_DESCRIPTION = "path/to/Table_Description.xlsx"
 
-# The existing FHIR filtered scope also enables additional IP-case CSVs in the same code ZIP.
+# Select the CSV variants in [exports] in code_summary.toml, for example:
+# variants = ["all", "all_age_ge18", "all_age_lt18", "filtered", "filtered_age_ge18", "filtered_age_lt18"]
+# Age uses enc_age_at_admission on the main Encounter if present; otherwise the
+# default birthdate fallback derives completed years from period/start and birthDate.
+# The existing FHIR filtered scope enables the selected IP variants in the same code ZIP.
 # FILTERED_SCOPE_SHEET_NAMES = ["FHIR", "FHIR Encounter"]
 # FILTERED_SCOPE_DETAIL_SHEET_SUFFIX = "INTERPOLAR"

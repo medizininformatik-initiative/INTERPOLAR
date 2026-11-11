@@ -94,6 +94,7 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     code_summary_fields = code_summary$fields,
     code_summary_medication_links = code_summary$medication_links,
     code_summary_normal_range = code_summary$normal_range,
+    code_summary_exports = code_summary$exports,
     code_summary_table_description = getConfigValue("CODE_SUMMARY_TABLE_DESCRIPTION", NA_character_),
     progress_interval_seconds = as.numeric(getConfigValue("PROGRESS_INTERVAL_SECONDS", 60)),
     count_batch_size = as.integer(getConfigValue("COUNT_BATCH_SIZE", 100)),

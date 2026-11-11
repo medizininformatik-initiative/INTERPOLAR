@@ -901,7 +901,9 @@ writeValueSummaryArchive <- function(
     relative_file_name
   }, character(1))
 
-  if (!length(csv_files)) {
+  # A scoped archive with a README can intentionally contain no available CSVs.
+  # Keep the legacy placeholder for the value report without a description.
+  if (!length(csv_files) && is.null(description)) {
     csv_files <- file.path("FHIR", "FHIR_Value_Summary.csv")
     file_name <- file.path(temp_dir, csv_files)
     dir.create(dirname(file_name), recursive = TRUE, showWarnings = FALSE)

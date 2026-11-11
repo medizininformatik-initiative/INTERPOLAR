@@ -71,6 +71,7 @@ codeSummaryFixture <- function() {
   # Existing query-builder fixtures exercise the combined mode. Dedicated batch
   # tests compare resource mode against these results for the same input data.
   config$code_summary_query_batching <- "all"
+  config$code_summary_exports$variants <- c("all", "filtered")
   list(description = description, metadata = metadata, config = config)
 }
 

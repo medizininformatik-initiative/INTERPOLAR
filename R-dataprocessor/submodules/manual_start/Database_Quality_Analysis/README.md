@@ -49,12 +49,12 @@ snapshot-type requirement, not missing database objects or invalid credentials.
    it does not restrict the existing availability and Value Summary reports.
 6. Execute a code-aggregation query per resource report: collect Coding combinations,
    resolve medication links, deduplicate IDs and calculate counts/statistics.
-   From the same events, calculate the complete database and the configured IP
-   case subset, each with complete local groups and globally pooled rare groups.
+   From the same events, calculate the selected case and age variants, each
+   with complete local groups and globally pooled rare groups.
    Medication and all three medication usage resources remain in one batch.
    IDs are deduplicated again for pooled groups and totals in each scope.
 7. Write the files listed below. Each code ZIP contains the resource CSVs for
-   both scopes and a README describing its actual sources, fields and counting rules.
+   the selected variants and a README describing its actual sources, fields and counting rules.
 
 ## Output Files
 
@@ -72,9 +72,10 @@ With the default configuration, each run writes three artifacts to
 The Code Summary ZIP is also written to `outputLocal/dataprocessor/reports`,
 with the same filename. Its local version contains all aggregate
 combinations, including `count < 5`; its global version pools rare combinations.
-The additional IP CSVs are enabled when `FILTERED_SCOPE_SHEET_NAMES` contains `FHIR`.
-Their filename suffix follows `FILTERED_SCOPE_DETAIL_SHEET_SUFFIX` (default
-`INTERPOLAR`). Disabling that scope keeps only the complete-database CSVs in each ZIP.
+Selected IP variants require `FHIR` in `FILTERED_SCOPE_SHEET_NAMES`.
+Their IP filename suffix follows `FILTERED_SCOPE_DETAIL_SHEET_SUFFIX` (default
+`INTERPOLAR`). If that scope is disabled, selected IP variants are omitted.
+Only variants selected in `[exports].variants` are calculated and written.
 
 The filename timestamp is the analysis start time, shared by the run's outputs.
 The normal toolchain start archives existing `dataprocessor` output directories
@@ -267,18 +268,22 @@ The following columns or values are handled specially:
 ## Code Summary ZIP
 
 The code report implements #1495 and is enabled by default. Set
-`INCLUDE_CODE_SUMMARY = false` to disable both code scopes. The complete-database
+`INCLUDE_CODE_SUMMARY = false` to disable all code scopes. The complete-database
 variant reads configured FHIR last-version views without an additional date or
 status filter. A separate variant restricts events to the selected IP main cases.
 The additional global quality summary from #1462 and clinical categorization
 remain outside this report. The availability workbook and Value Summary ZIP
 keep their previous content.
 
-The ZIP contains four complete-database reports: `Codes/Observation.csv`,
-`Codes/Condition.csv`, `Codes/Procedure.csv` and `Codes/Medication.csv`, plus
-`README.txt`. With the default IP scope enabled, the same ZIP also contains
-`Codes/Observation_INTERPOLAR.csv`, `Codes/Condition_INTERPOLAR.csv`,
-`Codes/Procedure_INTERPOLAR.csv` and `Codes/Medication_INTERPOLAR.csv`.
+The current `[exports].variants = ["filtered_age_ge18"]` selection produces
+`Codes/Observation_INTERPOLAR_AGE_GE18.csv`, `Codes/Condition_INTERPOLAR_AGE_GE18.csv`,
+`Codes/Procedure_INTERPOLAR_AGE_GE18.csv` and `Codes/Medication_INTERPOLAR_AGE_GE18.csv`,
+plus `README.txt`. These files contain only events assigned to selected IP main
+cases with an admission age of at least 18 years.
+
+Selecting all six supported variants produces six CSVs per resource (24 total)
+in that same ZIP. `[exports].variants` in `code_summary.toml` selects which
+variants are calculated and written; see the selection table below.
 Medication usage resources contribute to Medication.csv only.
 Resources with an available configured source but no selected codes still get
 CSV headers. Unavailable sources are documented with their resolved fields.
@@ -314,17 +319,77 @@ independently for each scope. A code can be a visible detail globally for the
 complete database and a pooled rare combination globally for IP cases. The local
 IP file still shows that combination in full.
 
-All four code variants (complete/IP cases, global/local) share the aggregate SQL
+All configured case/age variants and both export targets share the aggregate SQL
 query and projected source data within each resource batch. No separate query is
 issued per scope or export target.
 An empty IP selection produces CSV headers without fabricated zero totals.
 If the required Encounter or `pids_per_ward` metadata is unavailable, the module
 warns and omits the IP code CSVs; it never substitutes unfiltered results.
 
+### Age at main-case admission and CSV selection
+
+The current selection in `code_summary.toml` is `variants = ["filtered_age_ge18"]`.
+To request all six code ZIP variants, configure:
+
+```toml
+[exports]
+variants = ["all", "all_age_ge18", "all_age_lt18", "filtered", "filtered_age_ge18", "filtered_age_lt18"]
+age_column = "enc_age_at_admission"
+fallback_to_birthdate = true
+```
+
+| Variant | CSV example | Included events |
+| --- | --- | --- |
+| `all` | `Observation.csv` | Complete database, including events without case/age |
+| `all_age_ge18` | `Observation_AGE_GE18.csv` | Main-case admission age >=18 |
+| `all_age_lt18` | `Observation_AGE_LT18.csv` | Main-case admission age <18 |
+| `filtered` | `Observation_INTERPOLAR.csv` | Selected IP main cases, regardless of known age |
+| `filtered_age_ge18` | `Observation_INTERPOLAR_AGE_GE18.csv` | Selected IP main cases with admission age >=18 |
+| `filtered_age_lt18` | `Observation_INTERPOLAR_AGE_LT18.csv` | Selected IP main cases with admission age <18 |
+
+Any non-empty subset is supported; omitted variants are neither aggregated nor
+written. For example, `variants = ["all_age_ge18", "filtered_age_ge18"]` writes
+only the adult reports. The IP suffix follows `FILTERED_SCOPE_DETAIL_SHEET_SUFFIX`;
+filtered variants still require `FHIR` in `FILTERED_SCOPE_SHEET_NAMES`.
+Older custom TOMLs without `[exports]` retain the original `all`/`filtered` layout.
+
+The age lookup matches the event's normalized main-case reference to the main
+Encounter's own `enc_id`. A ward Encounter's admission age does not replace the
+age at main-case admission. The configured age column takes precedence when it
+exists; missing or invalid values in that column do not trigger a per-row fallback.
+This column is added by snapshot enrichment and is not part of the regular
+maintained Encounter schema. If it is absent and `fallback_to_birthdate = true`,
+SQL derives completed calendar years from the main Encounter's `period/start`
+and its Patient's `birthDate`, using the Table Description to resolve columns.
+This fallback requires typed date/timestamp fields; it does not cast raw text dates.
+A case beginning on the patient's 18th birthday belongs to `AGE_GE18`.
+
+Missing, negative or invalid ages, dates before birth, unknown cases and
+conflicting age groups for duplicate main Encounter IDs do not enter either age
+group. They remain in the corresponding report without an age filter. Newborns
+(age zero) belong to `AGE_LT18`. A patient with cases in both age groups can be
+counted once in each group. Medication codes enter age groups through their
+case-linked usage events, so the same Medication ID can occur in both age groups.
+These are event selections, not additive partitions of all distinct resource IDs.
+
+An unavailable age column and unavailable/disabled birthdate fallback produce a
+warning and omit only age-specific CSVs. No unfiltered data is substituted.
+An available age source with no matching cases produces header-only CSVs.
+The ZIP README records the actual age source and each selected scope.
+
+Encounter rows are scanned once per resource query and reduced to one compact
+lookup row per case. IP membership and age are combined there; requested CSV
+buckets are assigned once per case. Each code/usage event joins this lookup once
+and expands only into its preselected buckets. The birthdate fallback adds one
+deduplicated Patient scan per resource query, not one query per case or CSV.
+No case lists or birthdates are transferred to R. Query batching remains normally
+four SQL requests, with the existing global suppression applied independently
+within each variant and full aggregate details in the local ZIP.
+
 ### Configuration and Coding fields
 
 The maintained configuration is `code_summary.toml` alongside the other module
-TOMLs. It defines `[systems]`, `[report_types]`, `[[sources]]`, shared `[fields]`,
+TOMLs. It defines `[exports]`, `[systems]`, `[report_types]`, `[[sources]]`, shared `[fields]`,
 `[[medication_links]]` and `[normal_range]`. The shared
 `etlutils::tomlParseString()` parser retains nested source/field tables.
 
@@ -572,6 +637,18 @@ The full Docker report also retained byte-identical Code and Value Summary CSVs
 on the existing snapshot. These are local synthetic results, not site runtime
 guarantees: code/reference fan-out, flattened duplicates, view definitions,
 aggregate-group cardinality, storage and server resources affect the workload.
+
+A separate check of all six age/case variants used 250,000 additional Observations,
+100,000 main cases and `work_mem = 4MB`. The Observation query, including all
+statistics and both export targets, completed in 75.3 seconds; the shared case
+bucket lookup took about 2.3 seconds. EXPLAIN confirmed one scan each of the
+Observation, Encounter and ward tables and a hash join for event/case matching.
+Independent analytical checks matched all six distinct-resource totals. A run
+with 1,000,000 additional Observations reached the deliberately configured
+five-minute statement timeout and did not provide a completed timing/plan.
+These checks exercise the existing age-column path; the typed birthdate fallback,
+18th-birthday boundary, unavailable ages, Medication usage selection, empty scopes
+and configurable ZIP contents are covered by PostgreSQL integration tests.
 
 Run package tests with the project R environment:
 

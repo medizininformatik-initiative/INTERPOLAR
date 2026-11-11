@@ -21,7 +21,9 @@ codeSummaryReferenceSql <- function(expression, resource) {
 #' are materialized; plain one-pass projections can be inlined. Coding fields and systems
 #' do not trigger separate requests. Only aggregates leave the database.
 buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_types,
-                                  case_scope_query = NULL) {
+                                  case_scope_query = NULL, case_groups_query = NULL,
+                                  export_variants = c("all", "filtered")) {
+  if (!length(export_variants)) return(NA_character_)
   if (!length(sources)) return(NA_character_)
   report_types <- parseCodeSummaryReportTypes(report_types, names(systems))
   measurement_sources <- vapply(sources, function(source) isTRUE(source$measurement), logical(1))
@@ -246,8 +248,11 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     ))
   }
   ctes <- c(ctes, paste0("raw_events AS (", paste(events, collapse = " UNION ALL "), ")"))
-  scoped_events <- "SELECT 'all'::text AS report_scope,e.* FROM raw_events e"
-  if (!is.null(case_scope_query)) {
+  # Classify each event once via a compact case lookup. Expand only requested
+  # buckets, avoiding a separate source/event scan for each CSV variant.
+  if (!is.null(case_groups_query)) {
+    ctes <- c(ctes, paste0("case_groups AS (", case_groups_query, ")"))
+  } else if (!is.null(case_scope_query)) {
     ctes <- c(ctes, paste0(
       "scope_cases AS MATERIALIZED (SELECT DISTINCT ",
       codeSummaryReferenceSql(codeSummaryFieldSql(
@@ -255,10 +260,38 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       ), "Encounter"),
       " AS case_id FROM (", case_scope_query, ") scope_input)"
     ))
-    scoped_events <- paste0(
-      scoped_events,
-      " UNION ALL SELECT 'filtered',e.* FROM raw_events e JOIN scope_cases s ON s.case_id=e.case_id"
+  }
+  conditions <- c(all = "true")
+  if (!is.null(case_groups_query)) {
+    conditions <- c(
+      conditions,
+      all_age_ge18 = "s.age_group='ge18'", all_age_lt18 = "s.age_group='lt18'",
+      filtered = "s.is_filtered", filtered_age_ge18 = "s.is_filtered AND s.age_group='ge18'",
+      filtered_age_lt18 = "s.is_filtered AND s.age_group='lt18'"
     )
+  } else if (!is.null(case_scope_query)) {
+    conditions <- c(conditions, filtered = "s.case_id IS NOT NULL")
+  }
+  conditions <- conditions[intersect(export_variants, names(conditions))]
+  if (!length(conditions)) return(NA_character_)
+  if (!is.null(case_groups_query) || !is.null(case_scope_query)) {
+    # Assign CSV buckets once per case, rather than re-evaluating every scope
+    # condition for each Observation/usage event in a multi-million-row source.
+    buckets <- vapply(names(conditions), function(scope) {
+      paste0("CASE WHEN ", conditions[[scope]], " THEN ", quoteSqlString(scope), " END")
+    }, character(1))
+    ctes <- c(ctes, paste0(
+      "scope_buckets AS MATERIALIZED (SELECT s.case_id, ARRAY_REMOVE(ARRAY[",
+      paste(buckets, collapse = ","), "]::text[],NULL) AS report_scopes FROM ",
+      if (!is.null(case_groups_query)) "case_groups" else "scope_cases", " s)"
+    ))
+    fallback_scopes <- if ("all" %in% names(conditions)) "ARRAY['all']::text[]" else "ARRAY[]::text[]"
+    scoped_events <- paste0(
+      "SELECT v.report_scope,e.* FROM raw_events e LEFT JOIN scope_buckets s ON s.case_id=e.case_id ",
+      "CROSS JOIN LATERAL unnest(COALESCE(s.report_scopes,", fallback_scopes, ")) v(report_scope)"
+    )
+  } else {
+    scoped_events <- "SELECT 'all'::text AS report_scope,e.* FROM raw_events e"
   }
   ctes <- c(ctes, paste0("scoped_events AS (", scoped_events, ")"))
   dimensions <- "report_scope, report, system, coding_path, version, code, unit, unit_system, low, high"
