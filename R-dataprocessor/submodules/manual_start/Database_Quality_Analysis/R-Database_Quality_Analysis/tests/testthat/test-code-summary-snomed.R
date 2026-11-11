@@ -39,6 +39,6 @@ test_that("synthetic SNOMED data produce visible detail rows in all four reports
   expect_equal(total$medication_request_count, 11)
   expect_equal(total$medication_administration_count, 11)
   expect_equal(total$medication_statement_count, 5)
-  expect_equal(total$no_reference_count_to_medication, 15)
+  expect_equal(total$unreferenced_medication_count, 4)
   expect_equal(med[row_type == "other (count < 5)", count], 4)
 })

@@ -27,7 +27,7 @@ test_that("flattened medication links preserve direct-code identities and null-v
     expect_equal(direct[is.na(version), medication_request_count], 6)
     expect_equal(direct[version == "v2", count], 1)
     expect_equal(direct[version == "v2", medication_count], 0)
-    expect_true(all(direct$no_reference_count_to_medication == 0))
+    expect_true(all(direct$unreferenced_medication_count == 0))
     expect_true(nrow(total) == 1L)
   }
 })

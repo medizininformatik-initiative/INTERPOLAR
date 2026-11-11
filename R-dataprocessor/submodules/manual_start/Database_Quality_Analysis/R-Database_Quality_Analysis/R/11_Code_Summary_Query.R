@@ -173,23 +173,44 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       "WHERE kind='Medication' AND coding_path='code/coding')"
     ))
   }
+  if (medication_available && length(links)) {
+    # Reference existence belongs to the Medication ID, independently of the
+    # code, case association or presence of direct usage codes. Deduplicate
+    # before joining so repeated usage rows cannot multiply Medication events.
+    ctes <- c(ctes, paste0(
+      "referenced_medication_ids AS MATERIALIZED (SELECT DISTINCT medication_ref FROM links ",
+      "WHERE medication_ref IS NOT NULL)"
+    ))
+  }
   event_columns <- paste0(
     "c.system, CASE WHEN ", usage_condition, " THEN c.kind || '/' || c.coding_path ELSE c.coding_path END AS coding_path, ",
     "c.version,c.code,c.unit,c.unit_system,c.low,c.high, "
   )
   event_tail <- "c.kind || '/' || c.own_id AS event_key, c.kind,c.pid,c.case_id,c.value, "
-  events <- paste0(
+  base_event_select <- paste0(
     "SELECT c.kind AS report, ", event_columns,
     "c.kind || '/' || c.own_id AS count_key, ", event_tail,
-    if (length(links) && medication_available) "false" else "NULL::boolean",
-    " AS missing_medication,false AS unresolved FROM codings c WHERE NOT (", usage_condition, ")"
+    "false AS unresolved, "
   )
+  events <- paste0(
+    base_event_select,
+    "false AS unreferenced_medication FROM codings c WHERE NOT (", usage_condition, ") AND c.kind<>'Medication'"
+  )
+  if (medication_available) {
+    # Keep this lookup out of unrelated resource streams in the combined mode.
+    events <- c(events, paste0(
+      base_event_select,
+      if (length(links)) "(u.medication_ref IS NULL)" else "NULL::boolean",
+      " AS unreferenced_medication FROM codings c",
+      if (length(links)) " LEFT JOIN referenced_medication_ids u ON u.medication_ref='Medication/' || c.own_id",
+      " WHERE c.kind='Medication'"
+    ))
+  }
   if (length(links)) {
     direct_joins <- if (medication_available) paste0(
       " LEFT JOIN links l ON l.kind=c.kind AND l.own_id=c.own_id ",
       "LEFT JOIN primary_medication_codes m ON l.medication_ref=m.medication_ref ",
-      "AND m.system=c.system AND m.code=c.code AND m.version_key=COALESCE(c.version,'') ",
-      "LEFT JOIN medication_ids r ON l.medication_ref='Medication/' || r.id"
+      "AND m.system=c.system AND m.code=c.code AND m.version_key=COALESCE(c.version,'') "
     ) else ""
     # Empty versions have already been normalized to NULL. The non-null key
     # above preserves null equality while allowing an ordinary equijoin.
@@ -198,8 +219,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     } else "c.kind || '/' || c.own_id"
     events <- c(events, paste0(
       "SELECT 'Medication' AS report, ", event_columns, count_key, " AS count_key, ", event_tail,
-      if (medication_available) "(r.id IS NULL)" else "NULL::boolean",
-      " AS missing_medication,false AS unresolved FROM codings c", direct_joins,
+      "false AS unresolved,false AS unreferenced_medication FROM codings c", direct_joins,
       " WHERE ", usage_condition
     ))
   }
@@ -222,7 +242,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     events <- c(events, paste0(
       "SELECT 'Medication', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ",
       "l.kind || '/' || l.own_id, l.kind || '/' || l.own_id, l.kind, l.pid, l.case_id, ",
-      "NULL::double precision, true, true FROM unresolved_links l"
+      "NULL::double precision,true,false FROM unresolved_links l"
     ))
   }
   ctes <- c(ctes, paste0("raw_events AS (", paste(events, collapse = " UNION ALL "), ")"))
@@ -272,9 +292,9 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       "CASE WHEN row_type = 'detail' THEN low END AS low, ",
       "CASE WHEN row_type = 'detail' THEN high END AS high, ",
       "count_key, event_key, kind, pid, case_id, ",
-      "CASE WHEN row_type = 'detail' THEN value END AS value, missing_medication,unresolved FROM labelled ",
+      "CASE WHEN row_type = 'detail' THEN value END AS value,unresolved,unreferenced_medication FROM labelled ",
       "UNION ALL SELECT report_scope,'both',report, system, NULL::text, 'total', NULL,NULL,NULL,NULL,NULL,NULL, ",
-      "count_key,event_key,kind,pid,case_id,NULL::double precision,missing_medication,false ",
+      "count_key,event_key,kind,pid,case_id,NULL::double precision,false,unreferenced_medication ",
       "FROM events WHERE NOT unresolved)"
     ),
     # NULL-safe array keys avoid ranking the full event stream. Summary keys
@@ -291,8 +311,8 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       "COUNT(DISTINCT g.event_key) FILTER (WHERE g.kind = 'MedicationRequest') AS medication_request_count, ",
       "COUNT(DISTINCT g.event_key) FILTER (WHERE g.kind = 'MedicationAdministration') AS medication_administration_count, ",
       "COUNT(DISTINCT g.event_key) FILTER (WHERE g.kind = 'MedicationStatement') AS medication_statement_count, ",
-      "CASE WHEN BOOL_OR(g.missing_medication IS NOT NULL) THEN ",
-      "COUNT(DISTINCT g.event_key) FILTER (WHERE g.missing_medication) END AS no_reference_count_to_medication ",
+
+      "COUNT(DISTINCT g.count_key) FILTER (WHERE g.unreferenced_medication) AS unreferenced_medication_count ",
       "FROM grouped g ",
       "GROUP BY g.report_scope,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high)"
     )
@@ -338,7 +358,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     "/* INTERPOLAR DQA code summary */\nWITH ", paste(ctes, collapse = ",\n"),
     "\nSELECT c.summary_id,c.report_scope,c.output_target AS export_target,c.report,c.system,c.coding_path,c.row_type,c.version,c.code,",
     "c.unit,c.unit_system,c.low,c.high,c.count,c.patient_count,c.case_count,c.no_case_count,c.medication_count,",
-    "c.medication_request_count,c.medication_administration_count,c.medication_statement_count,c.no_reference_count_to_medication,",
+    "c.medication_request_count,c.medication_administration_count,c.medication_statement_count,c.unreferenced_medication_count,",
     statistics_select, " FROM counts_outputs c", statistics_join,
     "ORDER BY c.report_scope,c.output_target,c.report,c.system,c.coding_path,c.row_type,c.version,c.code,c.unit,c.unit_system,c.low,c.high"
   )

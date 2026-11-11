@@ -16,5 +16,5 @@ utils::globalVariables(c(
   "export_target",
   "report_scope",
   "report",
-  "no_reference_count_to_medication"
+  "unreferenced_medication_count"
 ))

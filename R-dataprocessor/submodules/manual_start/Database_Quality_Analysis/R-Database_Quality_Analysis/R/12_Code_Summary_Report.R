@@ -83,14 +83,16 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
   measurement_columns <- c("unit", "unit_system", "median", "q1", "q3", "mean", "sd", "minimum", "maximum", "low", "high")
   medication_columns <- c(
     "medication_count", "medication_request_count", "medication_administration_count",
-    "medication_statement_count", "no_reference_count_to_medication"
+    "medication_statement_count", "unreferenced_medication_count"
   )
   if (nrow(rows) && "Medication" %in% report_names) {
     count_columns <- stats::setNames(medication_columns[2:4], c("MedicationRequest", "MedicationAdministration", "MedicationStatement"))
     available_links <- vapply(links, `[[`, character(1), "resource")
     missing_columns <- unname(count_columns[!names(count_columns) %in% available_links])
     for (column in missing_columns) rows[, (column) := NA_real_]
-    if (length(missing_columns)) rows[, no_reference_count_to_medication := NA_real_]
+    if (length(missing_columns) || !any(source_resources == "Medication")) {
+      rows[, unreferenced_medication_count := NA_real_]
+    }
   }
   buildReports <- function(output_target, output_scope = "all") {
     result <- lapply(report_names, function(report_name) {
@@ -162,6 +164,10 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     "Medication.csv combines Medication codes, linked usage counts and direct medicationCodeableConcept codes.",
     "Direct usage Coding paths have a resource-type prefix; linked counts use the Medication Coding path.",
     "medication_count counts actual Medication IDs; direct codes without Medication have medication_count=0.",
+    "unreferenced_medication_count: actual Medication IDs without a recognized incoming reference from the configured usage resources.",
+    "Reference existence is independent of usage codes and case assignment; identical codes without a reference do not link IDs.",
+    "With default mappings, unreferenced Medications have no case association and occur only in complete-database CSVs.",
+    "Unreferenced counts are unavailable (empty) if the Medication source or a required usage source is unavailable.",
     "Request/Administration/Statement counts use their own IDs; patient/case counts include those direct and linked resources.",
     "The rare threshold uses count, including direct usage fallback IDs; matching direct/reference identities deduplicate in totals.",
     "Unresolved medication reference: no selected direct medicationCodeableConcept code and missing/unresolvable Medication reference.",

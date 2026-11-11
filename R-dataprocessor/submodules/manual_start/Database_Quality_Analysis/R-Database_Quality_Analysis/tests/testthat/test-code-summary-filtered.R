@@ -36,7 +36,7 @@ test_that("all and IP case code reports share one query and aggregate independen
   expect_equal(total$medication_request_count, 1)
   expect_equal(total$medication_administration_count, 1)
   expect_equal(total$medication_statement_count, 5)
-  expect_equal(total$no_reference_count_to_medication, 5)
+  expect_equal(total$unreferenced_medication_count, 0)
   expect_equal(total$no_case_count, 0)
   detail <- filtered$Medication[row_type == "detail"]
   expect_equal(detail$code, "direct-ip")
@@ -49,7 +49,7 @@ test_that("all and IP case code reports share one query and aggregate independen
   missing <- filtered$Medication[row_type == "unresolved medication reference"]
   expect_equal(missing$count, 1)
   expect_equal(missing$medication_request_count, 1)
-  expect_equal(missing$no_reference_count_to_medication, 1)
+  expect_equal(missing$unreferenced_medication_count, 0)
   expect_true(any(grepl("pids_per_ward", attr(filtered, "description"), fixed = TRUE)))
 })
 

@@ -85,7 +85,7 @@ test_that("inline medication codes and references count owning IDs once", {
     expect_equal(detail$count, 5, info = resource)
     expect_equal(detail[[paths[[resource]]]], 5, info = resource)
     expect_equal(detail$medication_count, if (resource == "MedicationRequest") 1 else 0)
-    expect_equal(detail$no_reference_count_to_medication, if (resource == "MedicationRequest") 4 else 5)
+    expect_equal(detail$unreferenced_medication_count, 0)
   }
   expect_equal(med[row_type == "unresolved medication reference", count], 2)
   atc <- med[system == "http://fhir.de/CodeSystem/bfarm/atc" & row_type == "total"]
@@ -105,5 +105,5 @@ test_that("missing link views are unavailable rather than measured zero counts",
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   ), "Skipped code summary sources"), "Skipped medication link sources")
   expect_true(all(is.na(summaries$Medication$medication_statement_count)))
-  expect_true(all(is.na(summaries$Medication$no_reference_count_to_medication)))
+  expect_true(all(is.na(summaries$Medication$unreferenced_medication_count)))
 })

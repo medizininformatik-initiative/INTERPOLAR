@@ -91,7 +91,8 @@ test_that("resource reports batch source reads and keep archive columns free of 
   expect_setequal(names(summaries), c("Observation", "Condition", "Procedure", "Medication"))
   expect_false(any(c("value", "resource_id", "pid", "case_id") %in% names(summaries$Observation)))
   expect_true(all(c("system", "coding_path", "unit") %in% names(summaries$Observation)))
-  expect_true("no_reference_count_to_medication" %in% names(summaries$Medication))
+  expect_true("unreferenced_medication_count" %in% names(summaries$Medication))
+  expect_false("no_reference_count_to_medication" %in% names(summaries$Medication))
   expect_false("MedicationRequest" %in% names(summaries))
 })
 
@@ -133,7 +134,7 @@ test_that("PostgreSQL deduplicates measurements, rare groups, systems and owning
   missing <- med[row_type == "unresolved medication reference"]
   expect_equal(missing$count, 2)
   expect_equal(missing$medication_count, 0)
-  expect_equal(missing$no_reference_count_to_medication, 2)
+  expect_equal(missing$unreferenced_medication_count, 0)
   expect_equal(missing$no_case_count, 2)
   expect_true(is.na(missing$system))
   expect_equal(med[row_type == "total", medication_request_count], 2)
@@ -225,5 +226,5 @@ test_that("direct medication codes survive unavailable Medication reference sour
   expect_equal(summaries$Medication[row_type == "detail", count], 5)
   expect_equal(summaries$Medication[row_type == "detail", medication_count], 0)
   expect_equal(summaries$Medication[row_type == "detail", medication_request_count], 5)
-  expect_true(all(is.na(summaries$Medication$no_reference_count_to_medication)))
+  expect_true(all(is.na(summaries$Medication$unreferenced_medication_count)))
 })

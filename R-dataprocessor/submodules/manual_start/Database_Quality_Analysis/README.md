@@ -409,7 +409,7 @@ system URI, not the system family label.
   count once in this total; detail/rare counts must not simply be added.
 - `unresolved medication reference`: one diagnostic row in Medication.csv,
   with empty system/path/version/code. `count` and
-  `no_reference_count_to_medication` count affected resource IDs. It is excluded
+  the usage-count columns describe affected resource IDs. It is excluded
   from coded system totals.
 
 `count` counts distinct resource identities, never DB rows. In Medication.csv it
@@ -423,8 +423,8 @@ IDs: five directly coded Requests without Medication yield `count = 5`,
 `medication_statement_count` independently count those resource types' IDs.
 One Medication referenced by two Requests yields `count = 1`,
 `medication_count = 1`, `medication_request_count = 2` within its code group.
-Missing link-source views produce empty counts rather than a measured zero;
-reference-issue counts are also empty when any link source is unavailable.
+Missing usage views leave their corresponding usage counts unavailable. The
+unreferenced-Medication count is unavailable when any required source is missing.
 
 Patient/case counts deduplicate valid references per result group. Medication
 obtains patient/case associations from linked and directly coded usage resources;
@@ -470,14 +470,35 @@ Reference resolution includes all Medication IDs, including medications without
 selected codes. Ingredient references are not traversed recursively; contained
 medications are not resolved.
 
-`no_reference_count_to_medication` counts missing or unresolvable references,
-including on directly coded rows. Directly coded resources remain assigned to
-their code group and are not repeated in the unresolved-code diagnostic row.
+`unreferenced_medication_count` counts actual Medication IDs without a recognized
+incoming reference from Request, Administration or Statement in the configured
+data. The reference lookup uses the same normalization as the existing report.
+A reference counts even if its usage row has no case, no direct code or no usable
+own ID.
+
+For example, a Medication with code `A02AH01` and no recognized usage contributes
+`unreferenced_medication_count = 1`. An inline Request with the same code and no
+Medication reference contributes its own usage ID and request count; equal codes
+alone do not connect resource IDs or make the Medication referenced.
+The unreferenced count deduplicates Medication IDs independently in detail,
+pooled and total rows. A Medication with multiple codes/ingredients can occur in several detail
+rows but contributes once to each corresponding system total. Inline-only and
+unresolved-reference rows contribute zero to the unreferenced-Medication count.
+
+With the default mapping, Medication has no own patient/case reference. An
+unreferenced Medication cannot enter the IP subset through a usage event, so its
+count occurs only in the complete-database CSV; IP rows have zero. Missing
+Medication or required usage sources produce empty/unavailable unreferenced
+counts, rather than asserting that partially observed Medications are unused.
+The lookup reuses the projected medication-link data and adds no SQL requests.
+
+Directly coded rows with missing or unresolvable references remain assigned to
+their code group. They are not repeated in the unresolved-code diagnostic row.
 The diagnostic row contains only usage resources with neither a selected direct
 medicationCodeableConcept code nor a resolvable Medication reference. It appears
 once in Medication.csv, with empty system/path/code and actual Medication count 0.
-If the Medication source is unavailable, reference diagnostics are unavailable
-and their counts are empty rather than reported as zero.
+If the Medication source is unavailable, no unresolved-reference diagnostic row
+is calculated.
 
 ### Query batching and tests
 
@@ -530,7 +551,8 @@ It executes the query and should not be started alongside an expensive site
 report just to obtain its plan. The operator status query above is suitable for
 observing an ongoing run. A synthetic speedup is not a site runtime guarantee.
 
-A local large-volume check on 2026-11-11 used PostgreSQL 17.11 with
+A local large-volume check on 2026-11-11, before adding the unreferenced-Medication
+counter, used PostgreSQL 17.11 with
 `work_mem = 4MB`: 2,000,000 additional Observation rows and 1,000,000 rows each
 for Medication, MedicationRequest, MedicationAdministration and MedicationStatement.
 The workload used 100,000 main-case IDs, 50,000 patient references and 2,000 codes
