@@ -1,6 +1,6 @@
 # "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienfortschritts
 
-## Version 0.6 (02.09.2026)
+## Version 0.7 (12.11.2026)
 
 ### Funktion
 
@@ -124,8 +124,6 @@ bei Bedarf Ausgabe der zu Grunde liegenden Datentabellen (outputLocal)
 
 - zur besseren Nachvollziehbarkeit können bei Bedarf die den Berechnungen zu Grunde liegenden Datentabellen in outputLocal ausgegeben werden
 
-- dies wird nur empfohlen für nach Zeitraum gefilterte Anfragen, da die Generierung der Tabellen sonst zu memory-Problemen führen kann
-
 ### Ausführung
 
 Vor der Ausführung muss in der [`database.toml`](database.toml) des Submoduls
@@ -135,35 +133,16 @@ oder nicht vorhandene optionale Verbindungsparameter werden aus der regulären
 Zugangsdaten und Datenbankschemata wie der reguläre Data Processor, greifen aber auf
 die explizit ausgewählte Datenbank zu.
 
-Das Modul wird mit `statistical-reports` gestartet. Ohne weitere Argumente beginnt
-der Berichtszeitraum mit dem frühesten definierten Stationsstart und endet mit dem
-früheren Datum aus letztem definierten Stationsende und aktuellem Datum.
-Mit `start-date=YYYY-MM-DD` und `end-date=YYYY-MM-DD` lässt sich der Zeitraum anpassen.
-Der Schalter `--local` aktiviert zusätzlich die vollständigen lokalen Kontrolltabellen.
+Das Modul wird mit `statistical-reports` gestartet:
 
-Der folgende Ablauf ist aus dem Projektverzeichnis ausführbar. Zeitraum und lokale
-Tabellenausgabe lassen sich im Einstellungsblock anpassen:
+``` console
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R statistical-reports
+```
 
-```bash
-# Settings: leave dates empty to use the reporting defaults.
-start_date="2025-09-01"
-end_date="2025-09-08"
-write_local=false
+Ohne weitere Argumente beginnt der Berichtszeitraum mit dem frühesten definierten Stationsstart und endet mit dem früheren Datum aus letztem definierten Stationsende und aktuellem Datum. Mit `start-date=YYYY-MM-DD` und `end-date=YYYY-MM-DD` lässt sich der Zeitraum anpassen. Der Schalter `--local` aktiviert zusätzlich die vollständigen lokalen Kontrolltabellen:
 
-args=(statistical-reports)
-if [ -n "$start_date" ]; then args+=("start-date=$start_date"); fi
-if [ -n "$end_date" ]; then args+=("end-date=$end_date"); fi
-if [ "$write_local" = true ]; then args+=(--local); fi
-
-if docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R "${args[@]}"; then
-  echo "Reporting completed. Reports: outputGlobal/dataprocessor/reports/"
-  if [ "$write_local" = true ]; then
-    echo "Local control tables: outputLocal/dataprocessor/reports/"
-  fi
-else
-  echo "Reporting failed. Check the error output above." >&2
-  exit 1
-fi
+``` console
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R statistical-reports --local
 ```
 
 Die 14 Kontrolltabellen liegen bei aktivierter lokaler Ausgabe unter
