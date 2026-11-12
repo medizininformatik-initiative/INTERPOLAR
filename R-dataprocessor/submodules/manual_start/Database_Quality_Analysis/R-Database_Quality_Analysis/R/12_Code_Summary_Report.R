@@ -51,6 +51,9 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     }
   }
   logProgress("Code summary CSV variants: ", paste(export_variants, collapse = ", "), ".")
+  if (length(export_variants) && !"all" %in% export_variants) {
+    logProgress("Code summary: filtering source rows by selected cases before materialization and Coding/range processing; retaining narrow global Medication identities.")
+  }
   logProgress(
     "Code summary: resolved ", length(sources), " Coding sources and ", length(links),
     " medication link sources in ", formatDuration(started), ". ", scope_note

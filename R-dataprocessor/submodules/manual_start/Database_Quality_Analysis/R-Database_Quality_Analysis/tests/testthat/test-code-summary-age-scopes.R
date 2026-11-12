@@ -1,23 +1,3 @@
-codeSummaryAgeFixture <- function() {
-  fixture <- codeSummaryFilteredFixture()
-  fixture$config$code_summary_exports$variants <- c(
-    "all", "all_age_ge18", "all_age_lt18", "filtered", "filtered_age_ge18", "filtered_age_lt18"
-  )
-  fixture$metadata <- data.table::rbindlist(list(fixture$metadata, data.table::data.table(
-    TABLE_FAMILY = "FHIR", TABLE_NAME = "encounter", VIEW_SCHEMA = "pg_temp", VIEW_NAME = "encounter",
-    COLUMN_NAME = "enc_age_at_admission", DATA_TYPE = "text", ORDINAL_POSITION = 7L
-  )))
-  fixture$extra_sql <- c(
-    fixture$extra_sql,
-    "UPDATE encounter SET enc_age_at_admission='2';",
-    "INSERT INTO encounter (enc_id,enc_main_encounter_calculated_ref,enc_age_at_admission) VALUES ('e1','Encounter/e1','17'),('e2','Encounter/e2','18'),('e3','Encounter/e3',NULL),('e4','Encounter/e4','0'),('e5','Encounter/e5','-1'),('e6','Encounter/e6','unknown'),('e7','Encounter/e7','17'),('e7','Encounter/e7','19');",
-    "INSERT INTO pids_per_ward VALUES ('e1'),('e1'),('e4');",
-    "INSERT INTO observation (obs_id,obs_patient_ref,obs_encounter_calculated_ref,obs_code_system,obs_code_code,obs_value) SELECT 'age'||n,'Patient/p1','Encounter/e'||n,'http://loinc.org','age-check',n FROM generate_series(1,8) n;",
-    "INSERT INTO observation SELECT * FROM observation WHERE obs_id LIKE 'age%';"
-  )
-  fixture
-}
-
 test_that("all six code scopes share classification and preserve counts, ages and measurements", {
   fixture <- codeSummaryAgeFixture()
   queries <- character()
@@ -196,6 +176,20 @@ test_that("absent age columns use calendar age at main-case admission with one P
     expect_equal(detail$count, if (endsWith(name, "ge18")) 1 else 2)
     expect_equal(detail$mean, if (endsWith(name, "ge18")) 2 else 2.5)
   }
+  expected <- variants$filtered_age_ge18
+  fixture$config$code_summary_exports$variants <- "filtered_age_ge18"
+  selected <- createCodeSummaryReports(metadata, fixture$config,
+    table_description = fixture$description,
+    query_fun = function(query, lock_id) {
+      prefix <- strsplit(query, "\nSELECT c.summary_id", fixed = TRUE)[[1]][[1]]
+      stage <- runCodeSummaryFixtureQuery(fixture, paste0(prefix, "\nSELECT count(*) AS n FROM source_1"))
+      expect_equal(stage$n, 6)
+      runCodeSummaryFixtureQuery(fixture, query)
+    }
+  )
+  actual <- attr(selected, "variant_reports")$filtered_age_ge18
+  expect_equal(lapply(actual, identity), lapply(expected, identity))
+  expect_equal(lapply(attr(actual, "local_reports"), identity), lapply(attr(expected, "local_reports"), identity))
   fixture$config$code_summary_exports$fallback_to_birthdate <- FALSE
   expect_warning(createCodeSummaryReports(metadata, fixture$config,
     table_description = fixture$description,

@@ -17,9 +17,9 @@ codeSummaryReferenceSql <- function(expression, resource) {
 
 #' Build a batched, database-aggregated code summary
 #'
-#' Each source view is projected once. Reused and measurement-stage projections
-#' are materialized; plain one-pass projections can be inlined. Coding fields and systems
-#' do not trigger separate requests. Only aggregates leave the database.
+#' Clinical sources are filtered before materialization and Coding/range processing
+#' when no complete-database CSV is requested. Medication additionally retains narrow
+#' global identity projections for correct reference resolution. Only aggregates leave SQL.
 buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_types,
                                   case_scope_query = NULL, case_groups_query = NULL,
                                   export_variants = c("all", "filtered")) {
@@ -31,7 +31,60 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     source$resource == "Medication"
   }, sources), `[[`, "reports"), use.names = FALSE))
   ctes <- character()
+  # Build case buckets before sources so restricted exports can filter before
+  # materialization, Coding deduplication and reference-range ranking.
+  if (!is.null(case_groups_query)) {
+    ctes <- c(ctes, paste0("case_groups AS (", case_groups_query, ")"))
+  } else if (!is.null(case_scope_query)) {
+    ctes <- c(ctes, paste0(
+      "scope_cases AS MATERIALIZED (SELECT DISTINCT ",
+      codeSummaryReferenceSql(codeSummaryFieldSql(
+        c(case_id = "enc_main_encounter_calculated_ref"), "case_id", "scope_input"
+      ), "Encounter"),
+      " AS case_id FROM (", case_scope_query, ") scope_input)"
+    ))
+  }
+  conditions <- c(all = "true")
+  if (!is.null(case_groups_query)) {
+    conditions <- c(
+      conditions,
+      all_age_ge18 = "s.age_group='ge18'", all_age_lt18 = "s.age_group='lt18'",
+      filtered = "s.is_filtered", filtered_age_ge18 = "s.is_filtered AND s.age_group='ge18'",
+      filtered_age_lt18 = "s.is_filtered AND s.age_group='lt18'"
+    )
+  } else if (!is.null(case_scope_query)) {
+    conditions <- c(conditions, filtered = "s.case_id IS NOT NULL")
+  }
+  conditions <- conditions[intersect(export_variants, names(conditions))]
+  if (!length(conditions)) return(NA_character_)
+  if (!is.null(case_groups_query) || !is.null(case_scope_query)) {
+    # Assign CSV buckets once per case, rather than re-evaluating every scope
+    # condition for each Observation/usage event in a multi-million-row source.
+    buckets <- vapply(names(conditions), function(scope) {
+      paste0("CASE WHEN ", conditions[[scope]], " THEN ", quoteSqlString(scope), " END")
+    }, character(1))
+    ctes <- c(ctes, paste0(
+      "scope_buckets AS MATERIALIZED (SELECT s.case_id, ARRAY_REMOVE(ARRAY[",
+      paste(buckets, collapse = ","), "]::text[],NULL) AS report_scopes FROM ",
+      if (!is.null(case_groups_query)) "case_groups" else "scope_cases", " s WHERE (",
+      paste(conditions, collapse = ") OR ("), "))"
+    ))
+  }
+  filter_cases <- !"all" %in% names(conditions)
+  link_kinds <- vapply(links, `[[`, character(1), "resource")
+  medication_sources <- Filter(function(source) source$resource == "Medication", sources)
+  medication_available <- length(medication_sources) > 0L
+  global_identities <- filter_cases && medication_available && length(links) > 0L
+  caseFilterSql <- function(source, alias = "s") {
+    reference <- codeSummaryReferenceSql(codeSummaryFieldSql(source$fields, "case_id", alias), "Encounter")
+    paste0("EXISTS (SELECT 1 FROM scope_buckets selected_case WHERE selected_case.case_id=", reference, ")")
+  }
+  if (global_identities) {
+    ctes <- c(ctes, buildCodeSummaryUsageIdentityCtes(sources, links, systems))
+  }
   views <- unique(vapply(c(sources, links), function(source) quoteTable(source$schema, source$view), character(1)))
+  source_ctes <- character(length(views))
+  medication_views <- logical(length(views))
   for (index in seq_along(views)) {
     view_sources <- Filter(function(source) quoteTable(source$schema, source$view) == views[[index]], c(sources, links))
     columns <- unique(unlist(lapply(view_sources, function(source) unname(source$fields))))
@@ -49,16 +102,61 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
         )
       }, character(1))
     }
-    ctes <- c(ctes, paste0(
+    medication_views[[index]] <- any(vapply(view_sources, function(source) source$resource == "Medication", logical(1)))
+    if (filter_cases) {
+      selected_cases <- unique(vapply(view_sources, caseFilterSql, character(1)))
+      case_filter <- paste0("(", paste(selected_cases, collapse = " OR "), ")")
+      if (medication_views[[index]] && global_identities) {
+        ids <- unique(vapply(view_sources, function(source) {
+          paste0("'Medication/' || ", codeSummaryFieldSql(source$fields, "resource_id"))
+        }, character(1)))
+        case_filter <- paste0(case_filter, " OR EXISTS (SELECT 1 FROM selected_medication_refs r WHERE r.medication_ref IN (", paste(ids, collapse = ","), "))")
+      }
+      filters <- c(if (length(filters)) paste0("(", paste(filters, collapse = " OR "), ")"), paste0("(", case_filter, ")"))
+    }
+    source_ctes[[index]] <- paste0(
       "source_", index, " AS ", if (any(measurement_sources)) "MATERIALIZED ", "(SELECT ",
       paste(vapply(columns, quoteIdentifier, character(1)), collapse = ", "),
-      " FROM ", views[[index]],
-      if (length(filters)) paste0(" WHERE ", paste(filters, collapse = " OR ")), ")"
-    ))
+      " FROM ", views[[index]], " s",
+      if (length(filters)) paste0(" WHERE ", paste(filters, collapse = if (filter_cases) " AND " else " OR ")), ")"
+    )
   }
   sourceName <- function(source) {
     paste0("source_", match(quoteTable(source$schema, source$view), views))
   }
+  ctes <- c(ctes, if (filter_cases) source_ctes[!medication_views] else source_ctes)
+  if (length(links)) {
+    link_selects <- lapply(links, function(source) {
+      fieldSql <- function(name) codeSummaryFieldSql(source$fields, name)
+      paste0(
+        "SELECT ", quoteSqlString(source$resource), " AS kind, ", fieldSql("resource_id"), " AS own_id, ",
+        codeSummaryReferenceSql(fieldSql("medication_ref"), "Medication"), " AS medication_ref, ",
+        codeSummaryReferenceSql(fieldSql("pid"), "Patient"), " AS pid, ",
+        codeSummaryReferenceSql(fieldSql("case_id"), "Encounter"), " AS case_id FROM ", sourceName(source), " s",
+        if (filter_cases) paste0(" WHERE ", caseFilterSql(source))
+      )
+    })
+    ctes <- c(ctes, paste0("links AS MATERIALIZED (SELECT DISTINCT * FROM (", paste(link_selects, collapse = " UNION ALL "), ") linked_resources)"))
+  }
+  if (global_identities) {
+    # An ID can occur in several cases. Retain all reference identities for any
+    # selected usage ID, including references stored on another row of that ID.
+    usage_sources <- Filter(function(source) source$resource %in% link_kinds, c(sources, links))
+    usage_ids <- unique(vapply(usage_sources, function(source) {
+      paste0(
+        "SELECT ", quoteSqlString(source$resource), " AS kind, ",
+        codeSummaryFieldSql(source$fields, "resource_id"), " AS own_id FROM ", sourceName(source), " s"
+      )
+    }, character(1)))
+    ctes <- c(ctes, paste0(
+      "selected_usage_ids AS MATERIALIZED (SELECT DISTINCT kind,own_id FROM (",
+      paste(usage_ids, collapse = " UNION ALL "), ") ids WHERE own_id IS NOT NULL)"
+    ), paste0(
+      "selected_medication_refs AS MATERIALIZED (SELECT DISTINCT r.medication_ref FROM reference_links r ",
+      "JOIN selected_usage_ids u ON u.kind=r.kind AND u.own_id=r.own_id WHERE r.medication_ref IS NOT NULL)"
+    ))
+  }
+  if (filter_cases) ctes <- c(ctes, source_ctes[medication_views])
   code_selects <- lapply(sources, function(source) {
     fieldSql <- function(name) codeSummaryFieldSql(source$fields, name)
     report_cases <- vapply(source$reports, function(report) {
@@ -104,7 +202,8 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     )
     paste0(
       "SELECT ", paste(parts, collapse = ", "), " WHERE ", fieldSql("system"), " IN (",
-      paste(vapply(unique(unlist(systems[source$reports])), quoteSqlString, character(1)), collapse = ", "), ")"
+      paste(vapply(unique(unlist(systems[source$reports])), quoteSqlString, character(1)), collapse = ", "), ")",
+      if (filter_cases && source$resource != "Medication") paste0(" AND ", caseFilterSql(source))
     )
   })
   # Expand all Coding fields in one pass over each projected resource view.
@@ -143,24 +242,9 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     ))
   }
 
-  link_kinds <- vapply(links, `[[`, character(1), "resource")
-  medication_sources <- Filter(function(source) source$resource == "Medication", sources)
-  medication_available <- length(medication_sources) > 0L
   usage_condition <- if (length(link_kinds)) {
     paste0("c.kind IN (", paste(vapply(link_kinds, quoteSqlString, character(1)), collapse = ", "), ")")
   } else "false"
-  if (length(links)) {
-    link_selects <- lapply(links, function(source) {
-      fieldSql <- function(name) codeSummaryFieldSql(source$fields, name)
-      paste0(
-        "SELECT ", quoteSqlString(source$resource), " AS kind, ", fieldSql("resource_id"), " AS own_id, ",
-        codeSummaryReferenceSql(fieldSql("medication_ref"), "Medication"), " AS medication_ref, ",
-        codeSummaryReferenceSql(fieldSql("pid"), "Patient"), " AS pid, ",
-        codeSummaryReferenceSql(fieldSql("case_id"), "Encounter"), " AS case_id FROM ", sourceName(source), " s"
-      )
-    })
-    ctes <- c(ctes, paste0("links AS MATERIALIZED (SELECT DISTINCT * FROM (", paste(link_selects, collapse = " UNION ALL "), ") linked_resources)"))
-  }
   # Only usage codings need reference resolution. Joining every Observation to
   # all Medication codings produced quadratic nested loops on large databases.
   if (medication_available && length(links)) {
@@ -168,7 +252,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     ctes <- c(ctes, paste0(
       "medication_ids AS MATERIALIZED (SELECT DISTINCT ",
       quoteIdentifier(medication_source$fields[["resource_id"]]), "::text AS id FROM ",
-      sourceName(medication_source), ")"
+      if (global_identities) quoteTable(medication_source$schema, medication_source$view) else sourceName(medication_source), ")"
     ), paste0(
       "primary_medication_codes AS MATERIALIZED (SELECT DISTINCT 'Medication/' || own_id AS medication_ref, ",
       "own_id,system,code,COALESCE(version,'') AS version_key FROM codings ",
@@ -180,7 +264,8 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     # code, case association or presence of direct usage codes. Deduplicate
     # before joining so repeated usage rows cannot multiply Medication events.
     ctes <- c(ctes, paste0(
-      "referenced_medication_ids AS MATERIALIZED (SELECT DISTINCT medication_ref FROM links ",
+      "referenced_medication_ids AS MATERIALIZED (SELECT DISTINCT medication_ref FROM ",
+      if (global_identities) "reference_links " else "links ",
       "WHERE medication_ref IS NOT NULL)"
     ))
   }
@@ -210,7 +295,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
   }
   if (length(links)) {
     direct_joins <- if (medication_available) paste0(
-      " LEFT JOIN links l ON l.kind=c.kind AND l.own_id=c.own_id ",
+      " LEFT JOIN ", if (global_identities) "reference_links" else "links", " l ON l.kind=c.kind AND l.own_id=c.own_id ",
       "LEFT JOIN primary_medication_codes m ON l.medication_ref=m.medication_ref ",
       "AND m.system=c.system AND m.code=c.code AND m.version_key=COALESCE(c.version,'') "
     ) else ""
@@ -238,8 +323,9 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       "unresolved_links AS MATERIALIZED (SELECT DISTINCT l.* FROM links l ",
       "WHERE l.own_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM medication_ids m ",
       "WHERE l.medication_ref = 'Medication/' || m.id) ",
-      "AND NOT EXISTS (SELECT 1 FROM codings d WHERE d.kind = l.kind AND d.own_id = l.own_id ",
-      "AND d.coding_path = 'medicationCodeableConcept/coding'))"
+      "AND NOT EXISTS (SELECT 1 FROM ", if (global_identities) "direct_coding_ids" else "codings",
+      " d WHERE d.kind = l.kind AND d.own_id = l.own_id ",
+      if (!global_identities) "AND d.coding_path = 'medicationCodeableConcept/coding'", "))"
     ))
     events <- c(events, paste0(
       "SELECT 'Medication', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ",
@@ -248,47 +334,17 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     ))
   }
   ctes <- c(ctes, paste0("raw_events AS (", paste(events, collapse = " UNION ALL "), ")"))
-  # Classify each event once via a compact case lookup. Expand only requested
-  # buckets, avoiding a separate source/event scan for each CSV variant.
-  if (!is.null(case_groups_query)) {
-    ctes <- c(ctes, paste0("case_groups AS (", case_groups_query, ")"))
-  } else if (!is.null(case_scope_query)) {
-    ctes <- c(ctes, paste0(
-      "scope_cases AS MATERIALIZED (SELECT DISTINCT ",
-      codeSummaryReferenceSql(codeSummaryFieldSql(
-        c(case_id = "enc_main_encounter_calculated_ref"), "case_id", "scope_input"
-      ), "Encounter"),
-      " AS case_id FROM (", case_scope_query, ") scope_input)"
-    ))
-  }
-  conditions <- c(all = "true")
-  if (!is.null(case_groups_query)) {
-    conditions <- c(
-      conditions,
-      all_age_ge18 = "s.age_group='ge18'", all_age_lt18 = "s.age_group='lt18'",
-      filtered = "s.is_filtered", filtered_age_ge18 = "s.is_filtered AND s.age_group='ge18'",
-      filtered_age_lt18 = "s.is_filtered AND s.age_group='lt18'"
-    )
-  } else if (!is.null(case_scope_query)) {
-    conditions <- c(conditions, filtered = "s.case_id IS NOT NULL")
-  }
-  conditions <- conditions[intersect(export_variants, names(conditions))]
-  if (!length(conditions)) return(NA_character_)
   if (!is.null(case_groups_query) || !is.null(case_scope_query)) {
-    # Assign CSV buckets once per case, rather than re-evaluating every scope
-    # condition for each Observation/usage event in a multi-million-row source.
-    buckets <- vapply(names(conditions), function(scope) {
-      paste0("CASE WHEN ", conditions[[scope]], " THEN ", quoteSqlString(scope), " END")
-    }, character(1))
-    ctes <- c(ctes, paste0(
-      "scope_buckets AS MATERIALIZED (SELECT s.case_id, ARRAY_REMOVE(ARRAY[",
-      paste(buckets, collapse = ","), "]::text[],NULL) AS report_scopes FROM ",
-      if (!is.null(case_groups_query)) "case_groups" else "scope_cases", " s)"
-    ))
     fallback_scopes <- if ("all" %in% names(conditions)) "ARRAY['all']::text[]" else "ARRAY[]::text[]"
+    # Restricted bucket counts can be severely underestimated. A FULL equality
+    # join requires a hash/merge plan instead of a quadratic nested loop. Cases
+    # without an event emit an empty array, preserving the LEFT-join result.
+    scope_array <- paste0("COALESCE(s.report_scopes,", fallback_scopes, ")")
+    if (filter_cases) scope_array <- paste0("CASE WHEN e.count_key IS NULL THEN ARRAY[]::text[] ELSE ", scope_array, " END")
     scoped_events <- paste0(
-      "SELECT v.report_scope,e.* FROM raw_events e LEFT JOIN scope_buckets s ON s.case_id=e.case_id ",
-      "CROSS JOIN LATERAL unnest(COALESCE(s.report_scopes,", fallback_scopes, ")) v(report_scope)"
+      "SELECT v.report_scope,e.* FROM raw_events e ", if (filter_cases) "FULL" else "LEFT",
+      " JOIN scope_buckets s ON s.case_id=e.case_id ",
+      "CROSS JOIN LATERAL unnest(", scope_array, ") v(report_scope)"
     )
   } else {
     scoped_events <- "SELECT 'all'::text AS report_scope,e.* FROM raw_events e"

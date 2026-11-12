@@ -571,7 +571,7 @@ The default `CODE_SUMMARY_QUERY_BATCHING = "resource"` uses one query per
 resource report: normally four queries for Observation, Condition, Procedure and
 Medication. The Medication query includes all configured usage resources. All
 Coding fields, systems, output targets and case scopes of a resource share its
-query. Each actual Coding/medication source view is projected once into a CTE;
+query. Clinical source fields are projected once into a CTE;
 Coding fields expand together with a lateral query, rather than rescanning the
 projection for each Coding path. Where reference resolution does not require
 all resources, projections filter to configured systems. Only aggregates leave
@@ -584,6 +584,30 @@ can stream count inputs without caching them for that unused pass. Measurement-o
 batches omit the unused ordinary coding branch. Explicit materialization boundaries
 are retained for measurement normalization, where removing them regressed the
 large-volume plan. Reused source projections remain shared.
+
+When `all` is not requested, the union of selected case buckets filters source
+rows **before** materialization, Coding expansion/deduplication, numeric casts and
+reference-range ranking. The filter uses normalized main-case references and
+never substitutes a patient cohort. Different case-field mappings on the same
+view are retained separately. Source/normalized-stage row counts and an excluded
+non-numeric measurement are checked in integration tests.
+
+Restricted Medication reports also need global identity information: an incoming
+reference or direct Coding on another row/case of the same usage ID can affect
+reference matching and unresolved-reference diagnostics. One extra narrow scan
+of each usage view retains only resource type, IDs/references and a Coding-presence
+flag, without patient, case, unit, version or measurement columns. Global Medication
+ID existence is read separately, including Medications without selected codes.
+Only codes for relevant referenced Medication IDs or Medications with their own
+selected case enter Coding preparation. Wide usage rows are filtered first.
+All of this stays in the same resource query; the normal four SQL requests remain.
+If `all` is selected, full-database processing remains necessary and these extra
+restricted-report identity projections are not used.
+
+Restricted case/event joins use the same FULL-equality-join pattern as the
+count/statistics merge below. Cases without events emit no output buckets. This
+preserves the selected events while avoiding quadratic nested loops when
+PostgreSQL underestimates the number of selected cases after the early filter.
 
 Measurement statistics are a subset of the count groups, using identical keys.
 Their final merge uses a FULL join after expanding the count output targets. This
@@ -649,6 +673,37 @@ five-minute statement timeout and did not provide a completed timing/plan.
 These checks exercise the existing age-column path; the typed birthdate fallback,
 18th-birthday boundary, unavailable ages, Medication usage selection, empty scopes
 and configurable ZIP contents are covered by PostgreSQL integration tests.
+
+The early source filter was compared directly with the preceding query builder
+(`0a1b97d3`), requesting only `filtered_age_ge18` in both runs. These synthetic
+checks used 100,000 cases, approximately 20% selected events, both export targets
+and `work_mem = 4MB`. All aggregate columns matched exactly (`EXCEPT ALL` in both
+directions), including reference diagnostics and measurement statistics.
+
+| Workload | Late filter SQL time | Early filter SQL time | Late filter sampled temp peak | Early filter sampled temp peak |
+| --- | ---: | ---: | ---: | ---: |
+| 250,000 additional Observations | 10.3 s | 6.8 s | 309 MiB | 139 MiB |
+| 100,000 each Medication/Request/Administration/Statement | 19.7 s | 17.4 s | 310 MiB | 196 MiB |
+
+For Observations, the first source materialization decreased from 250,036 to
+50,000 rows, and normalized Codings from 250,022 to 49,997 rows. In the Medication
+batch, prepared Codings decreased from 200,011 to 40,002, and full clinical usage
+links from 300,018 to 60,002; global narrow identities remain available.
+
+The optimized single-variant query also completed with 1,000,000 additional
+Observations in 25.6 seconds, with a sampled temp-file peak of 555 MiB. Its total
+of 199,983 selected distinct observations across 19,999 cases matched analytical
+expected values. This uses one requested variant, unlike the earlier six-variant
+million-row timeout test above.
+
+Temp peaks were sampled approximately every 0.2 seconds from allocated files in
+PostgreSQL's isolated `base/pgsql_tmp` directory. They describe the sampled
+concurrent SQL temporary-file footprint, not output ZIP sizes or a guaranteed
+upper bound. EXPLAIN's `Temp Written Blocks` measures cumulative writes instead;
+for the paired Observation runs these were 309 versus 143 MiB, and for Medication
+400 versus 229 MiB. Real site workloads may differ in selected-case fraction,
+flattened row multiplicity, reference fan-out and row width. This correction does
+not impose a fixed disk-space cap or change the existing Value Summary queries.
 
 Run package tests with the project R environment:
 
