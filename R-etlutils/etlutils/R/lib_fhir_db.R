@@ -15,6 +15,34 @@ resource_to_abbreviation <- list(
   servicerequest = "servreq"
 )
 
+#' Retrieve medication analyses from a front-end relation
+#'
+#' Reads each analysis once, retaining record_id, fall_meda_id, meda_id, meda_dat,
+#' medikationsanalyse_complete and meda_mrp_detekt. Technical version columns are
+#' discarded before deduplication, except redcap_repeat_instance, which preserves
+#' form creation order for tied clinical timestamps. No time filter is applied.
+#' Use v_medikationsanalyse_fe_last_version when current form states are required;
+#' this function does not select the latest version itself.
+#'
+#' @param lock_id Identifier for the shared read-only database access.
+#' @param table_name Source table/view name.
+#' @return A data.table sorted by record_id, fall_meda_id and meda_dat, with missing
+#'   sort values last. An empty result emits a warning.
+#' @export
+getMedikationsanalyseFeData <- function(lock_id, table_name) {
+  query <- paste0(
+    "SELECT record_id, fall_meda_id, meda_id, meda_dat, ",
+    "medikationsanalyse_complete, meda_mrp_detekt, last_processing_nr, redcap_repeat_instance FROM ",
+    table_name, "\n"
+  )
+  result <- data.table::as.data.table(dbGetReadOnlyQuery(query, lock_id = lock_id))
+  result[, last_processing_nr := NULL]
+  result <- unique(result)
+  data.table::setorderv(result, c("record_id", "fall_meda_id", "meda_dat"), na.last = TRUE)
+  if (!nrow(result)) warning("The medikationsanalyse_fe table is empty. Please check the data.")
+  result
+}
+
 #' Retrieve known INTERPOLAR station assignments
 #'
 #' Reads distinct station, patient and Encounter combinations in the database and
@@ -24,14 +52,24 @@ resource_to_abbreviation <- list(
 #'
 #' @param lock_id A character string identifying the database read operation.
 #' @param table_name Name of the database table or view containing the assignments.
+#' @param column_names Columns to retrieve. Include input_datetime and
+#'   pids_per_ward_id when original registration order is needed.
 #'
 #' @return A data.table with `ward_name`, `patient_id` and `encounter_id`.
 #'   An empty result raises an error.
 #'
 #' @export
-getPidsPerWardData <- function(lock_id, table_name) {
+getPidsPerWardData <- function(lock_id, table_name,
+                               column_names = c("ward_name", "patient_id", "encounter_id")) {
+  if (
+    !is.character(column_names) || !length(column_names) || anyNA(column_names) ||
+    any(!grepl("^[a-z][a-z0-9_]*$", column_names))
+  ) {
+    stop("Invalid station assignment column selection.")
+  }
+  column_names <- unique(c("ward_name", "patient_id", "encounter_id", column_names))
   query <- paste0(
-    "SELECT DISTINCT ward_name, patient_id, encounter_id FROM ", table_name,
+    "SELECT DISTINCT ", paste(column_names, collapse = ", "), " FROM ", table_name,
     " ORDER BY patient_id, encounter_id"
   )
   pids_per_ward_table <- dbGetReadOnlyQuery(query, lock_id = lock_id)

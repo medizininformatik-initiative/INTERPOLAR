@@ -14,6 +14,9 @@ Description: More about what it does (maybe more than one line).
 License: Apache License (>= 2)
 Encoding: UTF-8
 LazyData: true
+Imports:
+    data.table,
+    etlutils
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

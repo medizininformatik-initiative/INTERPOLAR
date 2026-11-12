@@ -68,6 +68,98 @@ expandICD <- function(icd, minyear = NA, maxyear = NA, fullExpanded = TRUE, norm
   sort(unique(icd_codes))
 }
 
+#' Load Official Terminal OPS Codes by Catalogue Year
+#'
+#' Loads the complete terminal-code ValueSet expansions from the unmodified BfArM
+#' FHIR packages bundled in inst/extdata/ops. No network or global configuration is
+#' used. Load once and reuse the result across tables and population groups.
+#'
+#' @param years Catalogue years to load, as integers or four-digit strings.
+#'   The bundled catalogues cover 2023 through 2026.
+#' @return A data.frame with year (integer), code and display (character).
+#' @export
+loadOPSCatalogues <- function(years = 2023:2026) {
+  years <- as.character(years)
+  if (!length(years) || anyNA(years) || any(!years %in% as.character(2023:2026))) {
+    stop("OPS catalogues are available for 2023, 2024, 2025 and 2026 only.")
+  }
+  years <- sort(unique(as.integer(years)))
+  directory <- system.file("extdata", "ops", package = "etlutils", mustWork = TRUE)
+  manifest <- jsonlite::fromJSON(file.path(directory, "sources.json"))$catalogues
+  temporary <- tempfile("ops-catalogue-")
+  dir.create(temporary)
+  on.exit(unlink(temporary, recursive = TRUE), add = TRUE)
+  result <- lapply(years, function(year) {
+    entry <- manifest[manifest$year == year, ]
+    if (nrow(entry) != 1L) stop("Missing or ambiguous OPS catalogue manifest entry.")
+    member <- paste0("package/ValueSet-ops-terminale-kodes-", year, ".json")
+    archive <- file.path(directory, entry$file)
+    utils::untar(archive, files = member, exdir = temporary, tar = "internal")
+    resource <- jsonlite::fromJSON(file.path(temporary, member))
+    expansion <- resource$expansion
+    codes <- expansion$contains
+    if (
+      !identical(resource$resourceType, "ValueSet") ||
+      !identical(resource$url, "https://terminologien.bfarm.de/fhir/ValueSet/ops-terminale-kodes") ||
+      !identical(resource$version, as.character(year)) ||
+      !is.data.frame(codes) || !all(c("system", "version", "code", "display") %in% names(codes))
+    ) {
+      stop("Unexpected OPS terminal ValueSet structure for ", year, ".")
+    }
+    if (
+      anyNA(codes$code) || any(!nzchar(codes$code)) || anyDuplicated(codes$code) ||
+      anyNA(codes$version) || any(codes$version != as.character(year)) ||
+      anyNA(codes$system) || any(codes$system != "http://fhir.de/CodeSystem/bfarm/ops") ||
+      !identical(expansion$offset, 0L) ||
+      !identical(expansion$total, as.integer(nrow(codes))) ||
+      nrow(codes) != entry$terminal_count
+    ) {
+      stop("Incomplete or inconsistent OPS terminal ValueSet for ", year, ".")
+    }
+    data.frame(
+      year = rep(year, nrow(codes)), code = codes$code, display = codes$display,
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, result)
+}
+
+#' Check OPS Endständigkeit Against the Applicable Annual Catalogue
+#'
+#' Uses exact code/year membership, not code length or prefix matching. FALSE means
+#' the code is not in that year's terminal list (it may be a parent or nonexistent
+#' code). This does not validate clinical coding rules or additional side markers.
+#'
+#' @param codes Character vector of documented OPS codes in canonical notation.
+#' @param years Catalogue year per code, or one year for all codes. Missing years
+#'   remain unknown; year selection belongs to the calling analysis.
+#' @param catalogue Output of loadOPSCatalogues(), loaded once by the caller.
+#' @return Logical vector aligned with codes. Missing/blank codes or years yield NA.
+#'   Malformed years and years absent from catalogue raise an error.
+#' @export
+isTerminalOPS <- function(codes, years, catalogue) {
+  if (!is.character(codes)) stop("OPS codes must be a character vector.")
+  if (length(years) != 1L && length(years) != length(codes)) {
+    stop("Provide one catalogue year or one year per OPS code.")
+  }
+  if (!is.data.frame(catalogue) || !all(c("year", "code") %in% names(catalogue))) {
+    stop("catalogue must contain year and code columns.")
+  }
+  years <- rep(as.character(years), length.out = length(codes))
+  missing_year <- is.na(years) | !nzchar(trimws(years))
+  if (any(!missing_year & !grepl("^[0-9]{4}$", years))) {
+    stop("OPS catalogue years must be four-digit years.")
+  }
+  if (any(!missing_year & !years %in% as.character(catalogue$year))) {
+    stop("Requested OPS catalogue year has not been loaded.")
+  }
+  known <- !missing_year & !is.na(codes) & nzchar(trimws(codes))
+  result <- rep(NA, length(codes))
+  result[known] <- paste(years[known], codes[known], sep = ":") %in%
+    paste(catalogue$year, catalogue$code, sep = ":")
+  result
+}
+
 #' Expand the given ICD Codes.
 #'
 #' This function expands ICD codes by retrieving corresponding labels for the provided ICD codes.
