@@ -4,23 +4,34 @@ test_that("preparation reads known assignments through the shared read-only util
     patient_id = c("patient-1", "patient-1"),
     encounter_id = c("encounter-1", "encounter-2")
   )
+  encounters <- data.table::data.table(
+    enc_id = assignments$encounter_id,
+    enc_patient_ref = "Patient/patient-1",
+    enc_main_encounter_calculated_ref = "Encounter/main-1",
+    enc_period_start = as.POSIXct(c("2026-01-02", "2026-01-01"), tz = "UTC"),
+    enc_period_end = as.POSIXct("2026-01-10", tz = "UTC"),
+    enc_type_system = "http://fhir.de/CodeSystem/Kontaktebene",
+    enc_type_code = "versorgungsstellenkontakt",
+    enc_class_code = "IMP"
+  )
   testthat::local_mocked_bindings(
-    dbGetReadOnlyQuery = function(query, lock_id) {
-      expect_identical(query, paste(
-        "SELECT DISTINCT ward_name, patient_id, encounter_id FROM v_pids_per_ward",
-        "ORDER BY patient_id, encounter_id"
-      ))
-      expect_identical(lock_id, "Cohort Description: load known station assignments")
+    dbGetTableColumnTypes = function(...) data.frame(column_name = names(encounters)),
+    getPidsPerWardData = function(lock_id, table_name, column_names) {
+      expect_identical(table_name, "v_pids_per_ward")
       assignments
+    },
+    fhirdataGetAllEncounters = function(encounter_ids, lock_id_extension, column_names) {
+      expect_identical(encounter_ids, assignments$encounter_id)
+      expect_identical(column_names, names(encounters))
+      encounters
     },
     .package = "etlutils"
   )
-  expect_message(
-    result <- withVisible(prepareCohortDescription()),
-    "2 distinct station/patient/Encounter assignments loaded"
-  )
-  expect_identical(result$value, assignments)
+  expect_message(result <- withVisible(prepareCohortDescription()), "2 distinct")
   expect_false(result$visible)
+  expect_equal(result$value$encounters, encounters)
+  expect_setequal(result$value$known_ip_contacts$encounter_id, assignments$encounter_id)
+  expect_true(all(result$value$known_ip_contacts$encounter_found))
 })
 
 test_that("preparation stops early for an empty assignment table", {
