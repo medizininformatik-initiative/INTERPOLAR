@@ -40,7 +40,7 @@ RUN /rocker_scripts/bin/install2.r -n $NCPUS units
 
 # Install R packages for interactive HTML tables
 RUN apt-get update && apt-get install -y pandoc libuv1-dev
-RUN /rocker_scripts/bin/install2.r -n $NCPUS htmlwidgets htmltools DT jsonlite
+RUN /rocker_scripts/bin/install2.r -n $NCPUS htmlwidgets htmltools DT jsonlite rmarkdown
 
 WORKDIR /src
 

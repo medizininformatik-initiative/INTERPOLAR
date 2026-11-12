@@ -357,6 +357,45 @@ buildHtmlTable <- function(table, caption = NA, footnote = "", colnames = NULL,
     colnames = colnames,
     filter = "top",
     extensions = c("Buttons", "Scroller"),
+    callback = htmlwidgets::JS("
+      var container = table.table().container();
+      var scrollBody = container.querySelector('.dataTables_scrollBody');
+      var frame = null;
+      function resizeTable() {
+        frame = null;
+        if (!document.documentElement.contains(container)) return;
+        var widget = container.closest('.html-widget');
+        var note = widget ? widget.nextElementSibling : null;
+        var noteHeight = note && note.classList.contains('etl-table-note')
+          ? $(note).outerHeight(true) : 0;
+        var bodyStyle = window.getComputedStyle(document.body);
+        var pageSpacing = ['marginTop', 'marginBottom', 'paddingTop', 'paddingBottom']
+          .reduce(function(total, property) {
+            return total + (parseFloat(bodyStyle[property]) || 0);
+          }, 0);
+        // Measure controls, column headers and the information below the scrolling rows.
+        var controlsHeight = container.getBoundingClientRect().height -
+          scrollBody.getBoundingClientRect().height;
+        var height = Math.max(1, Math.floor(window.innerHeight - controlsHeight -
+          noteHeight - pageSpacing));
+        var value = height + 'px';
+        if (scrollBody.style.maxHeight === value) return;
+        table.settings()[0].oScroll.sY = value;
+        scrollBody.style.maxHeight = value;
+        // Scroller must recalculate how many rows fit after changing its viewport.
+        table.scroller.measure();
+      }
+      function scheduleResize() {
+        if (frame === null) frame = window.requestAnimationFrame(resizeTable);
+      }
+      window.addEventListener('resize', scheduleResize);
+      table.on('draw.dt.availableHeight', scheduleResize);
+      table.on('destroy.dt.availableHeight', function() {
+        window.removeEventListener('resize', scheduleResize);
+        if (frame !== null) window.cancelAnimationFrame(frame);
+      });
+      scheduleResize();
+    "),
     options = list(
       dom = "Bfrtip",
       buttons = list(list(
@@ -382,14 +421,17 @@ buildHtmlTable <- function(table, caption = NA, footnote = "", colnames = NULL,
       autoWidth = TRUE,
       deferRender = TRUE,
       scroller = TRUE,
-      scrollY = 400,
+      scrollY = "100vh",
+      scrollCollapse = TRUE,
       scrollX = TRUE
     )
   )
   note <- htmltools::tags$p(
+    class = "etl-table-note",
     style = "font-size: 1em; color: #000;",
     htmltools::HTML(paste(footnote, collapse = "<br>"))
   )
+  if (identical(footnote, "")) note <- NULL
   html_table <- htmltools::tagList(
     tbl,
     note
@@ -413,6 +455,8 @@ buildHtmlTable <- function(table, caption = NA, footnote = "", colnames = NULL,
 #' the global directory. The function ensures that the target directory exists and creates it if
 #' necessary. The resulting HTML file is self-contained, and any accompanying files (like images or
 #' stylesheets) are removed after saving since they are embedded within the HTML.
+#' Widget data are written in full, separately from the Pandoc resource embedding step, to reduce
+#' peak memory usage while retaining all rows and interactive table features.
 #'
 #' @importFrom htmlwidgets createWidget prependContent saveWidget
 #' @importFrom htmltools tags tagList
@@ -453,16 +497,7 @@ writeHtmlPage <- function(html_content_list, output_location = "local",
 
     widget <- htmlwidgets::prependContent(widget, page)
     output_html <- fhircrackr::pastep(module_sub_dir, pagename, ext = paste0("_", Sys.Date(), ".html"))
-    htmlwidgets::saveWidget(
-      widget = widget,
-      file = output_html,
-      selfcontained = TRUE
-    )
-    # remove the accompanying _files directory if it exists (because everything is self-contained in the html)
-    files_dir <- sub("\\.html$", "_files", output_html)
-    if (dir.exists(files_dir)) {
-      unlink(files_dir, recursive = TRUE, force = TRUE)
-    }
+    saveHtmlWidgetPage(widget, output_html, pagename)
   } else {
     warning(paste0(
       "The html content creation was not succuessful or the output_location '",

@@ -1,6 +1,6 @@
 # "Statistical_Reports" - kumulative Kennzahlen zur Qualitätssicherung des Studienfortschritts
 
-## Version 0.6 (02.09.2026)
+## Version 0.7 (12.11.2026)
 
 ### Funktion
 
@@ -115,16 +115,14 @@ abgefragter Zeitraum konfigurierbar
 
 - die Filterung der Zeiträume erfolgt stationsspezifisch:
 
-  - Maximum aus Startdatum der Station und REPORT_PERIOD_START
-  - Minimum aus Enddatum der Station und REPORT_PERIOD_END
+  - Maximum aus Startdatum der Station und `start-date`
+  - Minimum aus Enddatum der Station und `end-date`
 
   --\> Dies ermöglicht eine Begrenzung des abgefragten Zeitraumes, schließt aber höchstens alle Fälle ab Start und bis Ende der Station ein
 
 bei Bedarf Ausgabe der zu Grunde liegenden Datentabellen (outputLocal)
 
 - zur besseren Nachvollziehbarkeit können bei Bedarf die den Berechnungen zu Grunde liegenden Datentabellen in outputLocal ausgegeben werden
-
-- dies wird nur empfohlen für nach Zeitraum gefilterte Anfragen, da die Generierung der Tabellen sonst zu memory-Problemen führen kann
 
 ### Ausführung
 
@@ -135,21 +133,22 @@ oder nicht vorhandene optionale Verbindungsparameter werden aus der regulären
 Zugangsdaten und Datenbankschemata wie der reguläre Data Processor, greifen aber auf
 die explizit ausgewählte Datenbank zu.
 
-Aufruf des dataprocessors mit folgenden Argumenten:
-
-- `statistical-reports` (= Name des Submoduls im Ordner `manual_start`) als Argument anhängen
+Das Modul wird mit `statistical-reports` gestartet:
 
 ``` console
 docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R statistical-reports
 ```
 
-- optional Anpassung des Zeitraumes über die Argumente `REPORT_PERIOD_START`und `REPORT_PERIOD_END`mit Name=Wert (ohne Leerzeichen zwischen Name und Wert) und Wert im Format YYYY-MM-DD oder YYYY/MM/DD
-
-- optional Ausgabe der zu Grunde liegenden Datentabellen in outputLocal über das Argument `WRITE_TABLE_LOCAL=TRUE`
+Ohne weitere Argumente beginnt der Berichtszeitraum mit dem frühesten definierten Stationsstart und endet mit dem früheren Datum aus letztem definierten Stationsende und aktuellem Datum. Mit `start-date=YYYY-MM-DD` und `end-date=YYYY-MM-DD` lässt sich der Zeitraum anpassen. Der Schalter `--local` aktiviert zusätzlich die vollständigen lokalen Kontrolltabellen:
 
 ``` console
-docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R statistical-reports REPORT_PERIOD_START=2025-09-01 REPORT_PERIOD_END=2025-09-08 WRITE_TABLE_LOCAL=TRUE
+docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R statistical-reports --local
 ```
+
+Die 14 Kontrolltabellen liegen bei aktivierter lokaler Ausgabe unter
+`outputLocal/dataprocessor/reports/`, jeweils als einzelne HTML-Datei mit allen
+Tabellenzeilen, Suche, Filtern und CSV-/Excel-Downloads. Jede Datei enthält auch die
+benötigten Browserbibliotheken und lässt sich direkt im Browser öffnen.
 
 ### Annahmen/Erläuterungen
 
@@ -173,7 +172,7 @@ docker compose run --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcess
 - stationäre INTERPOLAR-Kontakte tragen enc_class_code entsprechend der Definition in FRONTEND_DISPLAYED_ENCOUNTER_CLASS (e.g. "IMP"", ggf. "SS")
 - Kontakte mit Kontaktart "begleitperson" werden in den Zählungen nicht berücksichtigt. Die Kontaktarten "vorstationaer", "nachstationaer", "ub", "konsil" und "operation" könnten als Sekundärkontakte für komplexere Analysen benötigt werden, werden aber aktuell nicht in die Berechnungen einbezogen. Die Kontaktarten "teilstationaer", "tagesklinik", "nachtklinik", "normalstationaer", "intensivstationaer" im Versorgungsstellenkontakt werden für INTERPOLAR Stationskontakte in den Zählungen berücksichtigt.
 - Wenn fall_studienphase in fall_fe leer ist, wird diese durch 'PhaseA' ersetzt (für Daten vor Einführung der Befüllung der Spalte Studienphase)
-- Encounter-Altdaten (die ggf. in den lokalen Tabellen erscheinen) werden ressourcensparend aktuell gefiltert auf ein Startdatum(enc_period_start) von 1 Jahr vor REPORT_PERIOD_START
+- Encounter-Altdaten (die ggf. in den lokalen Tabellen erscheinen) werden ressourcensparend aktuell gefiltert auf ein Startdatum(enc_period_start) von 1 Jahr vor `start-date`
 - Dateneinträge mit processing_exclusion_reason waren betroffen von einem der Datenqualitätschecks und werden nicht weiter verarbeitet (siehe warnings)
 - dokumentierte Medikationsanalysen müssen mit einem Fall verknüpft sein (im Frontend Fall-ID setzen); falls dies fehlt und es mehrere Fälle für einen Patienten gibt, fehlen die zugehörigen Analysen u.U. im Reporting, da sie keinem Fall zugeordnet werden können falls das Matching über den Zeitraum des Falls fehlschlägt
 - Einträge mit RedCap-Status "unverified" werden in der Zählung nicht beachtet
