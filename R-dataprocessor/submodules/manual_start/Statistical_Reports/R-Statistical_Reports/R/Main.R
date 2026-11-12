@@ -8,8 +8,8 @@
 #'
 #' By default, the reporting period starts at the earliest defined INTERPOLAR
 #' ward start date and ends at the earlier of the latest defined INTERPOLAR
-#' ward end date and the current date. REPORT_PERIOD_START and
-#' REPORT_PERIOD_END can be set via command line arguments.
+#' ward end date and the current date. Set the period with `start-date=YYYY-MM-DD`
+#' and `end-date=YYYY-MM-DD`; use `--local` to also write the local control tables.
 #'
 #' @param REPORT_PERIOD_START Character string in "YYYY-MM-DD" format.
 #' Start date of the reporting period. Defaults to the earliest start date

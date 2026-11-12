@@ -266,34 +266,34 @@ detectMultipleEntries <- function(data, grouping_vars, variable_to_check,
 }
 #------------------------------------------------------------------------------#
 
-#' Parse Named Command-Line Arguments
+#' Parse Reporting Command-Line Arguments
 #'
-#' Extracts and parses named command-line arguments passed in the format `name=value`
-#' when the R script is executed from the command line.
+#' Accepts `start-date=YYYY-MM-DD`, `end-date=YYYY-MM-DD` and `--local`.
+#' Uses the shared argument conversion used by MRP_Check.
 #'
-#' @return A named character vector where each element corresponds to a parsed
-#' command-line argument, with argument names as the vector names.
+#' @param command_arguments Character vector of command-line arguments.
+#'
+#' @return A named character vector keyed by the reporting function arguments.
 #'
 #' @details
-#' This function is useful for command-line R scripts where parameters
-#' are passed as `name=value` pairs (e.g., `Rscript script.R param1=value1 param2=value2`).
+#' The last supplied value for a reporting date takes precedence. `--local`
+#' explicitly enables local table output. Positional module names are ignored.
 #'
-#' Arguments without an `=` sign are ignored.
-#'
-#' @importFrom stats setNames
 #' @export
-parseNamedArgs <- function() {
-  command_arguments <- commandArgs(trailingOnly = TRUE)
-
-  named_args <- command_arguments[grepl("=", command_arguments)]
-
-  # Convert to named character vector
-  parsed <- sapply(named_args, function(arg) {
-    parts <- strsplit(arg, "=", fixed = TRUE)[[1]]
-    parts <- stats::setNames(parts[2], parts[1])
-  }, USE.NAMES = FALSE)
-
-  return(parsed)
+parseNamedArgs <- function(command_arguments = commandArgs(trailingOnly = TRUE)) {
+  parsed <- etlutils::initCommandLineArguments(
+    argument2global_variable_name = list(
+      start_date = "REPORT_PERIOD_START",
+      end_date = "REPORT_PERIOD_END",
+      report_period_start = "REPORT_PERIOD_START",
+      report_period_end = "REPORT_PERIOD_END",
+      write_table_local = "WRITE_TABLE_LOCAL"
+    ),
+    command_arguments = command_arguments[grepl("=", command_arguments, fixed = TRUE)],
+    store_as_global = FALSE
+  )
+  if ("--local" %in% command_arguments) parsed$WRITE_TABLE_LOCAL <- TRUE
+  vapply(parsed, as.character, character(1))
 }
 
 
