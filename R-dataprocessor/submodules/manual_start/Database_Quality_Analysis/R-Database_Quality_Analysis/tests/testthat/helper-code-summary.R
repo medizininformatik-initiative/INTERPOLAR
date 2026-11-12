@@ -71,6 +71,7 @@ codeSummaryFixture <- function() {
   # Existing query-builder fixtures exercise the combined mode. Dedicated batch
   # tests compare resource mode against these results for the same input data.
   config$code_summary_query_batching <- "all"
+  config$code_summary_processing$enabled <- FALSE
   config$code_summary_exports$variants <- c("all", "filtered")
   list(description = description, metadata = metadata, config = config)
 }
@@ -184,5 +185,9 @@ runCodeSummaryFixtureQuery <- function(fixture, query) {
     "-U", "postgres", "-d", "postgres"
   ), stdin = sql_file, stdout = TRUE, stderr = error_file)
   if (!is.null(attr(output, "status"))) stop(paste(readLines(error_file), collapse = "\n"))
-  data.table::fread(text = paste0(paste(output, collapse = "\n"), "\n"), na.strings = "")
+  header <- names(data.table::fread(text = paste0(output[[1]], "\n"), nrows = 0L))
+  text_columns <- intersect(header, c("summary_id", "report_scope", "export_target", "report", "system", "coding_path", "row_type", "version", "code", "unit", "unit_system", "low", "high"))
+  # Match PostgreSQL/DBI text types, including formatted limits and leading zeros.
+  classes <- if (length(text_columns)) stats::setNames(rep("character", length(text_columns)), text_columns)
+  data.table::fread(text = paste0(paste(output, collapse = "\n"), "\n"), na.strings = "", keepLeadingZeros = TRUE, colClasses = classes)
 }

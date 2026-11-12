@@ -642,7 +642,9 @@ createValueSummaryReports <- function(
   value_summary_table_families <- getValueSummaryTableFamilies(config)
   metadata <- metadata[TABLE_FAMILY %in% value_summary_table_families]
   table_names <- unique(metadata$TABLE_NAME)
-  count_batch_size <- if (is.null(config$count_batch_size)) 100L else config$count_batch_size
+  count_batch_size <- config$value_summary_column_batch_size
+  if (is.null(count_batch_size)) count_batch_size <- if (is.null(config$count_batch_size)) 100L else config$count_batch_size
+  count_batch_size <- validatePositiveIntegerConfig(count_batch_size, "VALUE_SUMMARY_COLUMN_BATCH_SIZE")
   result <- list()
 
   for (table_name in table_names) {

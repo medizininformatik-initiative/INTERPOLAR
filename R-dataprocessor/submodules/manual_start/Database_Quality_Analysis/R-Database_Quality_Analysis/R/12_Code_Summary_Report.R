@@ -1,7 +1,7 @@
 #' Create the code-report tables and their source description
 #'
-#' Executes one aggregate query per resource report, sharing all output scopes. No individual
-#' IDs or raw observations are transferred to R or exported. Global tables pool
+#' Executes serial code-group and cross-code passes, sharing the requested output scopes.
+#' No individual IDs or raw observations are transferred to R or exported. Global tables pool
 #' rare combinations; the local_reports attribute retains all aggregate details.
 createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbGetReadOnlyQuery,
                                      table_description = NULL) {
@@ -83,6 +83,13 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     # Medication and its usage sources stay together. Other resources never
     # scan medication views; each actual resource view is read by one batch.
     batch_links <- if (any(vapply(batch_sources, function(source) source$resource %in% c("Medication", link_resources), logical(1)))) links else list()
+    if (!is.null(config$code_summary_processing) && isTRUE(parseCodeSummaryProcessing(config$code_summary_processing)$enabled)) {
+      return(runCodeSummaryChunks(batch_sources, batch_links, config, report_types,
+        case_scope_query = if (is.null(case_groups_query)) case_scope_query else NULL,
+        case_groups_query = case_groups_query, export_variants = export_variants,
+        label = paste0(names(batches)[[index]], " (", index, "/", length(batches), ")"), query_fun = query_fun
+      ))
+    }
     query <- buildCodeSummaryQuery(
       batch_sources, batch_links, config$code_summary_systems, config$code_summary_normal_range, report_types,
       case_scope_query = if (is.null(case_groups_query)) case_scope_query else NULL,
@@ -162,6 +169,12 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     scope_note,
     paste0("Requested CSV variants: ", paste(exports$variants, collapse = ", ")),
     paste0("Available CSV variants: ", paste(export_variants, collapse = ", ")),
+    if (!is.null(config$code_summary_processing)) paste0(
+      "Code-group processing: enabled=", config$code_summary_processing$enabled,
+      "; target rows=", config$code_summary_processing$target_rows_per_chunk,
+      "; max codes=", config$code_summary_processing$max_codes_per_chunk,
+      "; hot codes remain intact; counts and quantiles are exact."
+    ),
     "Systems (exact URI filters):",
     vapply(names(config$code_summary_systems), function(name) {
       paste0(name, ": ", paste(config$code_summary_systems[[name]], collapse = "; "))

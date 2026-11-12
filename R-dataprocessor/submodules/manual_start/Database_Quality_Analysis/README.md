@@ -47,8 +47,9 @@ snapshot-type requirement, not missing database objects or invalid credentials.
    columns, and detect measurement statistics from mapped numeric value fields.
    This selects the four code-report resources and medication inputs;
    it does not restrict the existing availability and Value Summary reports.
-6. Execute a code-aggregation query per resource report: collect Coding combinations,
-   resolve medication links, deduplicate IDs and calculate counts/statistics.
+6. Plan serial code-group batches per resource from a narrow catalog, then execute
+   separate count/statistic passes and exact cross-code totals/rare pools.
+   Resolve medication links and deduplicate IDs within each requested output group.
    From the same events, calculate the selected case and age variants, each
    with complete local groups and globally pooled rare groups.
    Medication and all three medication usage resources remain in one batch.
@@ -294,7 +295,7 @@ every code, version, unit, reference range and available statistic, even for cou
 five. Such combinations have `row_type = detail` locally. Global CSVs retain
 their existing rare-group suppression. Missing source fields stay empty; a
 single measurement has a mean/median but no sample SD. Totals remain deduplicated
-independently in both versions. Both exports share the aggregate SQL query of their resource batch.
+independently in both versions. Both exports share the passes of their resource/code batch.
 
 ### Complete database and IP cases
 
@@ -320,8 +321,9 @@ complete database and a pooled rare combination globally for IP cases. The local
 IP file still shows that combination in full.
 
 All configured case/age variants and both export targets share the aggregate SQL
-query and projected source data within each resource batch. No separate query is
-issued per scope or export target.
+query and projected source data within each resource batch. No separate detail/statistic query is
+issued per scope or export target. Rare pools are calculated independently for
+each scope/resource/system/Coding path to retain exact cross-code deduplication.
 An empty IP selection produces CSV headers without fabricated zero totals.
 If the required Encounter or `pids_per_ward` metadata is unavailable, the module
 warns and omits the IP code CSVs; it never substitutes unfiltered results.
@@ -382,14 +384,15 @@ lookup row per case. IP membership and age are combined there; requested CSV
 buckets are assigned once per case. Each code/usage event joins this lookup once
 and expands only into its preselected buckets. The birthdate fallback adds one
 deduplicated Patient scan per resource query, not one query per case or CSV.
-No case lists or birthdates are transferred to R. Query batching remains normally
-four SQL requests, with the existing global suppression applied independently
-within each variant and full aggregate details in the local ZIP.
+No case lists or birthdates are transferred to R. Resource/code batches execute
+serially, with global suppression applied independently within each variant and
+full aggregate details in the local ZIP. Aggregate code catalogs and rare-group
+metadata may be transferred to R; individual IDs and measurement values are not.
 
 ### Configuration and Coding fields
 
 The maintained configuration is `code_summary.toml` alongside the other module
-TOMLs. It defines `[exports]`, `[systems]`, `[report_types]`, `[[sources]]`, shared `[fields]`,
+TOMLs. It defines `[processing]`, `[exports]`, `[systems]`, `[report_types]`, `[[sources]]`, shared `[fields]`,
 `[[medication_links]]` and `[normal_range]`. The shared
 `etlutils::tomlParseString()` parser retains nested source/field tables.
 
@@ -567,23 +570,86 @@ is calculated.
 
 ### Query batching and tests
 
-The default `CODE_SUMMARY_QUERY_BATCHING = "resource"` uses one query per
-resource report: normally four queries for Observation, Condition, Procedure and
-Medication. The Medication query includes all configured usage resources. All
-Coding fields, systems, output targets and case scopes of a resource share its
-query. Clinical source fields are projected once into a CTE;
-Coding fields expand together with a lateral query, rather than rescanning the
-projection for each Coding path. Where reference resolution does not require
-all resources, projections filter to configured systems. Only aggregates leave
-the database. NULL-safe array keys permit equality joins for counts/statistics
-without ranking the complete event stream. Summary keys are constructed after
-aggregation. Non-measurement codings skip reference-range ranking entirely. Non-measurement
-batches also omit the redundant UNION/DISTINCT that previously sorted already
-deduplicated codings again. They omit the empty measurement-statistics pass and
-can stream count inputs without caching them for that unused pass. Measurement-only
-batches omit the unused ordinary coding branch. Explicit materialization boundaries
-are retained for measurement normalization, where removing them regressed the
-large-volume plan. Reused source projections remain shared.
+The default `CODE_SUMMARY_QUERY_BATCHING = "resource"` separates Observation,
+Condition, Procedure and Medication. Medication and its usage resources stay
+together. This selects resource batches, not the number of SQL queries.
+
+#### Spaltenbatches der Value Summary
+
+The production default `VALUE_SUMMARY_COLUMN_BATCH_SIZE = 1` processes one column
+at a time. Configure it independently of `COUNT_BATCH_SIZE` (availability counts)
+in `database_quality_analysis_config.toml`; the documented example is
+`code_summary_config_example.toml`. For example, `5` allows five columns per
+batch. Smaller batches repeat table reads but reduce simultaneous distinct/sort
+state. This prevents a 100-text-column lateral expansion of 30 million rows into
+up to three billion intermediate rows in a single query. Resource/value counting,
+statistics and suppression rules remain unchanged. Programmatic configurations
+without the new field retain their existing `count_batch_size` fallback.
+
+#### Complete code groups and narrow summary passes
+
+`code_summary.toml` enables code-group processing by default:
+
+```toml
+[processing]
+enabled = true
+target_rows_per_chunk = 500000
+max_codes_per_chunk = 500
+```
+
+A narrow catalog estimates projected Coding rows per exact system/code pair,
+including linked Medication usages without a direct code. Groups are processed
+serially, with each complete system/code pair assigned to exactly one chunk.
+Version, Coding path, units and reference ranges remain separate detail groups
+inside that chunk. The code predicate is applied before source materialization,
+numeric conversion and reference-range ranking. Only aggregate metadata leaves
+SQL for planning; IDs and individual values stay in PostgreSQL.
+
+Each resource batch performs:
+
+1. The code/volume catalog and an independent, narrow total/diagnostic pass.
+   Ordinary totals omit measurement values, units, limits and actual code/version
+   dimensions. Distinct resource, patient and case totals are computed globally
+   in SQL and never added from partial counts.
+2. A count pass for each code chunk and, only for chunks with measurements, a
+   separate exact statistic pass. Counts are aggregated once per complete detail
+   group; global suppression is applied afterwards. No event/frequency/label
+   caches are retained in these detail passes. The statistic pass also avoids
+   those caches. A single percentile-array
+   aggregate computes Q1/median/Q3 from the full deduplicated resource/value
+   stream. R joins these aggregate results by nullable detail-group metadata;
+   it does not average medians, quartiles, means or standard deviations.
+3. An exact rare-pool pass per scope/resource/system/Coding path. The local
+   detail counts identify groups below five. The corresponding group metadata
+   filters normalized code events, and PostgreSQL deduplicates IDs across all
+   rare codes in that pool. Chunk-level `other` rows are never summed.
+
+Medication chunks retain all reference identities needed for their selected
+usage IDs and incoming-reference markers for their Medication IDs. Out-of-chunk
+clinical code rows are excluded; unrelated incoming usage IDs collapse to NULL
+markers before DISTINCT. Global Medication existence and diagnostic rules remain
+available in the independent summary pass, including references to Medications
+without selected codes.
+
+**A row target is not a disk-space cap.** A code larger than the target runs alone
+and is logged explicitly. Its exact quantiles require all of that code's values;
+we do not split resource-ID ranges and combine partial medians. The independent
+totals pass also needs the selected ID population. Flattened multiplicity,
+reference fan-out, case selection and row widths still affect peak disk use.
+Changing data between catalog and execution passes can invalidate a plan; run
+against the intended unchanged snapshot.
+
+More small queries are intentional. Case lookups and source reads may repeat;
+log labels identify catalogs, totals, each chunk's counts/statistics and rare
+pools, with the existing timestamps, duration and periodic status messages.
+All requested variants and both export targets share each chunk's computation.
+The CSV layout/counting rules are unchanged. Chunked rows use deterministic
+client sorting; their order can differ from a database's locale-based ordering.
+
+`[processing].enabled = false` retains the former combined query for comparisons.
+`CODE_SUMMARY_QUERY_BATCHING = "all"` remains supported but combines resources;
+`"resource"` is preferable for large data. The descriptions below also document
+the shared mechanics and the combined reference mode.
 
 When `all` is not requested, the union of selected case buckets filters source
 rows **before** materialization, Coding expansion/deduplication, numeric casts and
@@ -600,7 +666,8 @@ flag, without patient, case, unit, version or measurement columns. Global Medica
 ID existence is read separately, including Medications without selected codes.
 Only codes for relevant referenced Medication IDs or Medications with their own
 selected case enter Coding preparation. Wide usage rows are filtered first.
-All of this stays in the same resource query; the normal four SQL requests remain.
+All of this stays in the corresponding resource/chunk passes; identity projections
+may require additional narrow scans. There is no longer a fixed four-query target.
 If `all` is selected, full-database processing remains necessary and these extra
 restricted-report identity projections are not used.
 
@@ -630,7 +697,7 @@ until one combined query finishes. The Encounter/pids_per_ward scope lookup is
 repeated per batch; Coding source views are not rescanned for each scope.
 `CODE_SUMMARY_QUERY_BATCHING = "all"` retains the shared-query mode for controlled
 comparisons. Resource batching remains the default for large databases.
-CSV layouts, thresholds,
+CSV columns, thresholds,
 reference-range priority and counting semantics are unchanged.
 
 For performance investigation, use PostgreSQL
@@ -702,8 +769,39 @@ concurrent SQL temporary-file footprint, not output ZIP sizes or a guaranteed
 upper bound. EXPLAIN's `Temp Written Blocks` measures cumulative writes instead;
 for the paired Observation runs these were 309 versus 143 MiB, and for Medication
 400 versus 229 MiB. Real site workloads may differ in selected-case fraction,
-flattened row multiplicity, reference fan-out and row width. This correction does
-not impose a fixed disk-space cap or change the existing Value Summary queries.
+flattened row multiplicity, reference fan-out and row width. That early-filter
+correction did not impose a fixed disk-space cap or change the Value Summary queries.
+
+The subsequent serial-batching implementation was compared with that early-filter
+version on isolated PostgreSQL 17 with `work_mem = 4MB`. Both implementations
+returned the same aggregate values (floating-point statistics compared with a
+relative tolerance of `1e-12`). These benchmarks requested `filtered_age_ge18`;
+all added clinical resources belonged to selected adult IP cases, so the
+improvement does not depend on discarding most resources through the case filter.
+The code benchmarks explicitly used a 250,000-row target and 50 codes per chunk;
+the production defaults are 500,000 and 500 respectively.
+
+| Workload | Previous SQL time | Batched SQL time | Previous sampled temp peak | Batched sampled temp peak |
+| --- | ---: | ---: | ---: | ---: |
+| 2 million additional Observations and 500,000 Conditions | 294 s | 391 s | 5,499 MiB | 621 MiB |
+| 100,000 each Medication/Request/Administration/Statement | 45.6 s | 104.9 s | 693 MiB | 386 MiB |
+| Value Summary: 100,000 rows, 23 columns; column batch 100 versus 1 | 13.7 s | 10.2 s | 184 MiB | 7.8 MiB |
+
+One million Observations shared a single code, exercising the oversized-code
+path. The code comparisons needed 19 instead of two queries for
+Observation/Condition and six instead of one for Medication. Repeated scans can
+increase runtime; this change prioritizes lower concurrent temporary disk usage.
+The peaks use the same sampling method described above and are not disk-space
+limits. Exact statistics for a frequent code and exact cross-code distinct
+counts still need their complete populations. A 30-million-Observation site
+workload has not been reproduced locally.
+
+All 111 package tests passed. A complete Docker report using the production
+settings and a read-only historical local snapshot also completed successfully:
+all four selected resource CSVs retained their aggregate values, all 20 Value
+Summary CSVs were byte-identical, and the seven non-runtime availability sheets
+were unchanged. The existing query builder, source/reference resolution,
+`runLoggedQuery()` and archive writers are reused by the new serial passes.
 
 Run package tests with the project R environment:
 

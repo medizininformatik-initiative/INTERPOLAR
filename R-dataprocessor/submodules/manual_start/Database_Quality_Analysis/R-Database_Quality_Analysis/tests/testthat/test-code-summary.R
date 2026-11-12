@@ -113,7 +113,7 @@ test_that("PostgreSQL deduplicates measurements, rare groups, systems and owning
   expect_equal(loinc$sd, stats::sd(1:6))
   expect_equal(loinc$q1, 2.25)
   expect_equal(loinc$q3, 4.75)
-  expect_equal(loinc$low, 1)
+  expect_equal(loinc$low, "1")
   expect_equal(loinc$coding_path, "code/coding")
   rare <- summaries$Observation[row_type == "other (count < 5)"]
   expect_equal(rare$count, 2)

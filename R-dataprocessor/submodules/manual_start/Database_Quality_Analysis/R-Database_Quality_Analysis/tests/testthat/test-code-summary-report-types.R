@@ -32,6 +32,7 @@ test_that("new medication and coding reports and renamed measurements use config
   config_envir <- new.env(parent = emptyenv())
   config_envir$CODE_SUMMARY_CONFIG_FILE <- config_file
   fixture$config <- getConfig(envir = config_envir, command_arguments = character())
+  fixture$config$code_summary_processing$enabled <- FALSE
   fixture$config$code_summary_exports$variants <- c("all", "filtered")
   fixture$extra_sql <- c(
     "INSERT INTO medication (med_id,med_code_system,med_code_code) SELECT 'custom-product'||n,'urn:example:product-codes','custom-med' FROM generate_series(1,5) n;",

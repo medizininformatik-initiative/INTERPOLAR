@@ -30,6 +30,7 @@ loadCodeSummaryConfig <- function(path) {
     stop("Missing code summary TOML sections: ", paste(missing, collapse = ", "), call. = FALSE)
   }
   config$exports <- parseCodeSummaryExports(config$exports)
+  config$processing <- parseCodeSummaryProcessing(config$processing)
   config$report_types <- parseCodeSummaryReportTypes(config$report_types, names(config$systems))
   required_fields <- c(
     "resource_id", "system", "version", "code", "pid", "case_id", "value",
@@ -49,6 +50,26 @@ loadCodeSummaryConfig <- function(path) {
     stop("normal_range.fallback_to_missing_type must be a TOML boolean.", call. = FALSE)
   }
   config
+}
+
+#' Validate code-group execution limits without changing report semantics
+parseCodeSummaryProcessing <- function(processing = NULL) {
+  defaults <- list(enabled = TRUE, target_rows_per_chunk = 500000, max_codes_per_chunk = 500L)
+  if (is.null(processing)) return(defaults)
+  if (
+    !is.list(processing) || (length(processing) && is.null(names(processing))) || anyDuplicated(names(processing)) ||
+    length(setdiff(names(processing), names(defaults)))
+  ) {
+    stop("Unknown code summary processing setting.", call. = FALSE)
+  }
+  processing <- utils::modifyList(defaults, processing)
+  if (!is.logical(processing$enabled) || length(processing$enabled) != 1L || is.na(processing$enabled)) {
+    stop("processing.enabled must be a TOML boolean.", call. = FALSE)
+  }
+  for (name in c("target_rows_per_chunk", "max_codes_per_chunk")) {
+    processing[[name]] <- validatePositiveIntegerConfig(processing[[name]], paste0("processing.", name))
+  }
+  processing
 }
 
 #' Validate the requested CSV variants and the main-encounter age column

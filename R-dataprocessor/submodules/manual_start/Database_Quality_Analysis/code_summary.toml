@@ -17,6 +17,13 @@ age_column = "enc_age_at_admission"
 # If the column is absent, derive completed years from period/start and birthDate.
 fallback_to_birthdate = true
 
+# Serial batches keep whole system/code groups together; very common codes run alone.
+# The target counts projected source rows, not bytes, and is not a hard disk cap.
+[processing]
+enabled = true
+target_rows_per_chunk = 500000
+max_codes_per_chunk = 500
+
 [systems]
 LOINC = ["http://loinc.org"]
 ICD = ["http://fhir.de/CodeSystem/bfarm/icd-10-gm"]
