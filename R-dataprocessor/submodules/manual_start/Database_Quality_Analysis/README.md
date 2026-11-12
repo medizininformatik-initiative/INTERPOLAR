@@ -48,7 +48,7 @@ snapshot-type requirement, not missing database objects or invalid credentials.
    This selects the four code-report resources and medication inputs;
    it does not restrict the existing availability and Value Summary reports.
 6. Plan serial code-group batches per resource from a narrow catalog, then execute
-   separate count/statistic passes and exact cross-code totals.
+   shared count/statistic passes and independent exact cross-code totals.
    Resolve medication links and deduplicate IDs within each requested output group.
    From the same events, calculate the selected case and age variants, each
    with all detail groups; global CSVs mask positive counts below five as `<5`.
@@ -611,14 +611,16 @@ Each resource batch performs:
    Ordinary totals omit measurement values, units, limits and actual code/version
    dimensions. Distinct resource, patient and case totals are computed globally
    in SQL and never added from partial counts.
-2. A count pass for each code chunk and, only for chunks with measurements, a
-   separate exact statistic pass. Counts are aggregated once per complete detail
-   group; small counts are masked only during global CSV export. No event/frequency/label
-   caches are retained in these detail passes. The statistic pass also avoids
-   those caches. A single percentile-array
-   aggregate computes Q1/median/Q3 from the full deduplicated resource/value
-   stream. R joins these aggregate results by nullable detail-group metadata;
-   it does not average medians, quartiles, means or standard deviations.
+2. One detail query per code chunk. For measurement chunks, counts and exact
+   statistics share a single materialized `scoped_events` CTE containing only
+   that chunk's resolved, case-selected events. Source reads, Coding expansion
+   and reference-range selection therefore run once for both aggregations.
+   No additional wide source/Coding/frequency/label caches are explicitly retained
+   by this shared mode. A single percentile-array aggregate computes Q1/median/Q3
+   from the full deduplicated resource/value stream. SQL joins statistics and
+   counts by the existing null-safe summary key after expanding counts to both
+   export targets. Chunks without measurement sources need only the counts.
+   No partial counts or medians are combined in R.
 
 Both exports retain all detail groups. The shared archive writer masks each
 eligible small positive count in global CSVs after all SQL aggregation and statistics.
@@ -640,7 +642,8 @@ Changing data between catalog and execution passes can invalidate a plan; run
 against the intended unchanged snapshot.
 
 More small queries are intentional. Case lookups and source reads may repeat;
-log labels identify catalogs, totals and each chunk's counts/statistics, with the existing timestamps, duration and periodic status messages.
+log labels identify catalogs, totals and each chunk's counts or shared
+counts/statistics, with the existing timestamps, duration and periodic status messages.
 All requested variants and both export targets share each chunk's computation.
 The CSV layout/counting rules are unchanged. Chunked rows use deterministic
 client sorting; their order can differ from a database's locale-based ordering.
@@ -794,6 +797,17 @@ The peaks use the same sampling method described above and are not disk-space
 limits. Exact statistics for a frequent code and exact cross-code distinct
 counts still need their complete populations. A 30-million-Observation site
 workload has not been reproduced locally.
+
+Those timings predate removal of rare-pool queries and the subsequent shared
+count/statistic preparation. The shared mode was checked with small integration
+fixtures covering all six CSV variants and against the original combined-query
+results. A separate plan check with 2,000 Observation IDs and 4,000 added flattened
+rows confirmed one source scan instead of two and identical aggregates. With
+`work_mem = 64kB`, the two separate queries took 0.198 seconds in total and the
+shared query took 0.125 seconds; cumulative temporary writes were 5.84 versus
+3.73 MiB. These are small-fixture timings and cumulative writes, not a large-site
+speedup or a measurement of concurrent temporary-file peaks. The shared chunk
+CTE can itself spill to disk; the row target remains an estimate, not a byte cap.
 
 Before the subsequent CSV count-masking change, all 111 package tests passed.
 A complete Docker report using the production

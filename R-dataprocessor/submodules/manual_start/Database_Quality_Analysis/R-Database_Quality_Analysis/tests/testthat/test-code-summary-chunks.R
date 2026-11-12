@@ -103,3 +103,38 @@ test_that("chunked automatic SNOMED statistics preserve non-finite values and un
   expect_equal(local[code == "386661006" & unit_system == "http://unitsofmeasure.org" & row_type == "detail", count], 7)
   expect_equal(local[code == "386661006" & unit_system == "urn:other-units" & row_type == "detail", low], "36.0")
 })
+
+test_that("measurement chunks share preparation and keep all counts and exact statistics", {
+  fixture <- codeSummarySnomedFixture()
+  fixture$config$code_summary_exports$variants <- "all"
+  fixture$config$code_summary_query_batching <- "resource"
+  fixture$extra_sql <- c(
+    fixture$extra_sql,
+    "INSERT INTO observation (obs_id,obs_code_system,obs_code_version,obs_code_code,obs_value,obs_unit,obs_unit_system,obs_low,obs_high,obs_range_type) VALUES ('nonfinite','http://snomed.info/sct','demo-v1','386661006','Infinity','Cel','http://unitsofmeasure.org','36','38','normal'),('other-unit','http://snomed.info/sct','demo-v1','386661006',37,'Cel','urn:other-units','36.0','38.0','normal'),('missing-value','http://loinc.org',NULL,'empty',NULL,'mg',NULL,NULL,NULL,NULL);"
+  )
+  queries <- character()
+  run <- function() createCodeSummaryReports(fixture$metadata, fixture$config,
+    table_description = fixture$description,
+    query_fun = function(query, lock_id) {
+      queries <<- c(queries, query)
+      runCodeSummaryFixtureQuery(fixture, query)
+    }
+  )
+  reference <- run()
+  fixture$config$code_summary_processing <- list(enabled = TRUE, target_rows_per_chunk = 1000, max_codes_per_chunk = 500L)
+  queries <- character()
+  actual <- run()
+  expectCodeSummaryTablesEqual(actual, reference)
+  # Four populated resources each need catalog, totals and one detail query.
+  # Observation counts and statistics share that query instead of adding a 13th.
+  expect_length(queries, 12L)
+  shared <- queries[grepl("scoped_events AS MATERIALIZED", queries, fixed = TRUE)]
+  expect_length(shared, 1L)
+  expect_equal(lengths(regmatches(shared, gregexpr('FROM "pg_temp"."observation"', shared, fixed = TRUE))), 1L)
+  expect_false(any(grepl("/* INTERPOLAR DQA code statistics */", queries, fixed = TRUE)))
+  expect_false(any(grepl("raw_codings AS MATERIALIZED|labelled AS MATERIALIZED|frequencies AS", shared)))
+  empty <- actual$Observation[row_type == "detail" & code == "empty"]
+  expect_equal(empty$count, 1)
+  expect_true(is.na(empty$mean))
+  expect_true(is.na(empty$median))
+})

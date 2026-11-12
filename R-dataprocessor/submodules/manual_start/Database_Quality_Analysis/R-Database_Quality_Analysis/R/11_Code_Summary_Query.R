@@ -23,7 +23,7 @@ codeSummaryReferenceSql <- function(expression, resource) {
 buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_types,
                                   case_scope_query = NULL, case_groups_query = NULL,
                                   export_variants = c("all", "filtered"),
-                                  query_mode = c("combined", "catalog", "details", "statistics", "totals", "rare"),
+                                  query_mode = c("combined", "catalog", "details", "statistics", "totals", "rare", "details_statistics"),
                                   code_keys = NULL, rare_groups = NULL) {
   query_mode <- match.arg(query_mode)
   if (!is.null(code_keys) && !nrow(code_keys)) return(NA_character_)
@@ -350,7 +350,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
   )
   event_tail <- paste0(
     "c.kind || '/' || c.own_id AS event_key, c.kind,c.pid,c.case_id,",
-    if (query_mode %in% c("combined", "statistics")) "c.value" else "NULL::double precision", " AS value, "
+    if (query_mode %in% c("combined", "statistics", "details_statistics")) "c.value" else "NULL::double precision", " AS value, "
   )
   base_event_select <- paste0(
     "SELECT c.kind AS report, ", event_columns,
@@ -429,7 +429,16 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
   } else {
     scoped_events <- "SELECT 'all'::text AS report_scope,e.* FROM raw_events e"
   }
-  ctes <- c(ctes, paste0("scoped_events AS (", scoped_events, ")"))
+  # Reuse only the selected chunk's resolved events for counts and statistics.
+  # Materializing here avoids repeating source reads and range selection, without
+  # keeping separate wide source/Coding/label caches as in the combined mode.
+  ctes <- c(ctes, paste0(
+    "scoped_events AS ", if (query_mode == "details_statistics") "MATERIALIZED ",
+    "(", scoped_events, ")"
+  ))
+  if (query_mode == "details_statistics") {
+    return(buildCodeSummaryDetailQuery(ctes, collect_statistics = any(measurement_sources)))
+  }
   if (query_mode == "details") return(buildCodeSummaryDetailQuery(ctes))
   if (query_mode == "statistics") return(buildCodeSummaryStatisticsQuery(ctes))
   if (query_mode %in% c("totals", "rare")) {

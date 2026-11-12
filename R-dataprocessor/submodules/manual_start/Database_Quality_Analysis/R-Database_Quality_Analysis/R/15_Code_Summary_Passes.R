@@ -79,16 +79,28 @@ buildCodeSummaryChunkMedicationCte <- function(sources) {
   paste0("chunk_medication_ids AS MATERIALIZED (SELECT DISTINCT id FROM (", paste(selects, collapse = " UNION ALL "), ") ids WHERE id IS NOT NULL)")
 }
 
-#' Compute exact quantiles from one deduplicated value stream, without count caches
+#' Reuse the exact deduplicated resource/value stream and quartile calculation
+buildCodeSummaryStatisticsCtes <- function() {
+  dimensions <- "report_scope,report,system,coding_path,version,code,unit,unit_system,low,high"
+  c(
+    paste0(
+      "measurements AS (SELECT DISTINCT ", dimensions, ",count_key,value FROM scoped_events WHERE NOT unresolved AND value IS NOT NULL ",
+      "AND value NOT IN ('NaN'::double precision,'Infinity'::double precision,'-Infinity'::double precision))"
+    ),
+    paste0(
+      "measurement_statistics AS (SELECT ", dimensions, ",percentile_cont(ARRAY[0.25,0.5,0.75]) WITHIN GROUP (ORDER BY value) AS quartiles, ",
+      "AVG(value) AS mean,STDDEV_SAMP(value) AS sd,MIN(value) AS minimum,MAX(value) AS maximum FROM measurements GROUP BY ", dimensions, ")"
+    )
+  )
+}
+
+#' Compute exact quantiles independently, retaining the separate-pass query API
 buildCodeSummaryStatisticsQuery <- function(ctes) {
   dimensions <- "report_scope,report,system,coding_path,version,code,unit,unit_system,low,high"
+  ctes <- c(ctes, buildCodeSummaryStatisticsCtes())
   paste0(
     "/* INTERPOLAR DQA code statistics */\nWITH ", paste(ctes, collapse = ",\n"),
-    ", measurements AS (SELECT DISTINCT ", dimensions, ",count_key,value FROM scoped_events WHERE NOT unresolved AND value IS NOT NULL ",
-    "AND value NOT IN ('NaN'::double precision,'Infinity'::double precision,'-Infinity'::double precision)), ",
-    "statistics AS (SELECT ", dimensions, ",percentile_cont(ARRAY[0.25,0.5,0.75]) WITHIN GROUP (ORDER BY value) AS quartiles, ",
-    "AVG(value) AS mean,STDDEV_SAMP(value) AS sd,MIN(value) AS minimum,MAX(value) AS maximum FROM measurements GROUP BY ", dimensions, ") ",
-    "SELECT ", dimensions, ",'detail'::text AS row_type,quartiles[2] AS median,quartiles[1] AS q1,quartiles[3] AS q3,mean,sd,minimum,maximum FROM statistics"
+    " SELECT ", dimensions, ",'detail'::text AS row_type,quartiles[2] AS median,quartiles[1] AS q1,quartiles[3] AS q3,mean,sd,minimum,maximum FROM measurement_statistics"
   )
 }
 
@@ -125,11 +137,18 @@ buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL) {
 #'
 #' Both outputs retain every code. Small counts are masked only during global
 #' CSV export, so no frequency/event/label caches or rare-pool passes are needed.
-buildCodeSummaryDetailQuery <- function(ctes) {
+#' Measurement chunks reuse their resolved events for exact statistics in SQL.
+buildCodeSummaryDetailQuery <- function(ctes, collect_statistics = FALSE) {
   ctes <- c(ctes, paste0(
     "grouped AS (SELECT e.report_scope,'both'::text AS export_target,e.report,e.system,e.coding_path,",
     "'detail'::text AS row_type,e.version,e.code,e.unit,e.unit_system,e.low,e.high,",
     "e.count_key,e.event_key,e.kind,e.pid,e.case_id,e.unreferenced_medication FROM scoped_events e)"
   ), buildCodeSummaryCountsCte())
-  buildCodeSummaryResultQuery(ctes)
+  if (collect_statistics) {
+    ctes <- c(ctes, buildCodeSummaryStatisticsCtes(), paste0(
+      "statistics AS (SELECT ARRAY[report_scope,'both',report,system,coding_path,'detail',version,code,unit,unit_system,low,high] AS summary_id,",
+      "quartiles[2] AS median,quartiles[1] AS q1,quartiles[3] AS q3,mean,sd,minimum,maximum FROM measurement_statistics)"
+    ))
+  }
+  buildCodeSummaryResultQuery(ctes, collect_statistics)
 }

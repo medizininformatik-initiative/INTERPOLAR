@@ -34,12 +34,11 @@ normalizeCodeSummaryGroupKeys <- function(rows, columns) {
 #'
 #' Reuses source/reference resolution and all exact SQL aggregation rules. Only
 #' aggregate code/group metadata leaves SQL. No partial medians or ID counts are
-#' combined in R. A hot code stays intact and runs in its own count/statistic passes.
+#' combined in R. A hot code stays intact and runs in its own shared detail pass.
 runCodeSummaryChunks <- function(sources, links, config, report_types, case_scope_query,
                                  case_groups_query, export_variants, label, query_fun) {
   processing <- parseCodeSummaryProcessing(config$code_summary_processing)
   dimensions <- c("report_scope", "report", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high")
-  statistics_columns <- c("median", "q1", "q3", "mean", "sd", "minimum", "maximum")
   runPass <- function(mode, keys = NULL, pass_label = mode) {
     query <- buildCodeSummaryQuery(sources, links, config$code_summary_systems,
       config$code_summary_normal_range, report_types,
@@ -74,20 +73,14 @@ runCodeSummaryChunks <- function(sources, links, config, report_types, case_scop
         " runs alone; its exact statistics require all values of this code."
       )
     }
-    detail <- runPass("details", chunk, pass_label = paste0(chunk_label, "; counts"))
+    has_measurements <- measurements && (!"measurement" %in% names(chunk) || any(chunk$measurement == 1L))
+    detail <- runPass(
+      if (has_measurements) "details_statistics" else "details", chunk,
+      pass_label = paste0(chunk_label, if (has_measurements) "; counts and exact statistics (shared preparation)" else "; counts")
+    )
     if (!nrow(detail)) next
     detail <- detail[row_type == "detail"]
     if (!nrow(detail)) next
-    if (measurements && (!"measurement" %in% names(chunk) || any(chunk$measurement == 1L))) {
-      stats <- runPass("statistics", chunk, pass_label = paste0(chunk_label, "; exact statistics"))
-      if (nrow(stats)) {
-        keys <- c(dimensions, "row_type")
-        stats <- stats[, c(keys, statistics_columns), with = FALSE]
-        # One metadata group can feed both exports. NA keys match just as in SQL.
-        detail[, (statistics_columns) := NULL]
-        detail <- merge(detail, stats, by = keys, all.x = TRUE, sort = FALSE)
-      }
-    }
     rows[[length(rows) + 1L]] <- detail
   }
   result <- data.table::rbindlist(rows, use.names = TRUE, fill = TRUE)
