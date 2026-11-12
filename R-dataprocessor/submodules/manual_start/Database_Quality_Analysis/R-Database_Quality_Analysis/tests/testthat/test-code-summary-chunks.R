@@ -17,7 +17,7 @@ expectCodeSummaryTablesEqual <- function(actual, expected) {
   }
 }
 
-test_that("code chunks preserve every count, rare pool and statistic across report variants", {
+test_that("code chunks preserve every detail count and statistic across report variants", {
   fixture <- codeSummaryAgeFixture()
   fixture$extra_sql <- c(
     fixture$extra_sql,

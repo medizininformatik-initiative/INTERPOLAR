@@ -1,4 +1,4 @@
-test_that("one query returns global suppression and complete local counts and statistics", {
+test_that("one query retains complete global and local counts and statistics", {
   fixture <- codeSummaryFixture()
   fixture$extra_sql <- paste0(
     "INSERT INTO observation (obs_id,obs_patient_ref,obs_encounter_calculated_ref,",
@@ -18,10 +18,10 @@ test_that("one query returns global suppression and complete local counts and st
   expect_equal(calls, 1L)
   local <- attr(reports, "local_reports", exact = TRUE)
   expect_named(local, names(reports))
-  global_rare <- reports$Observation[row_type == "other (count < 5)"]
-  expect_equal(global_rare$count, 2)
-  expect_true(is.na(global_rare$code))
-  expect_true(is.na(global_rare$mean))
+  global_rare <- reports$Observation[row_type == "detail" & code %in% c("r1", "r2")]
+  expect_equal(global_rare$count, c(1, 2))
+  expect_equal(global_rare$mean, c(100, 150))
+  expect_false(any(reports$Observation$row_type == "other (count < 5)"))
   expect_false(any(local$Observation$row_type == "other (count < 5)"))
   rare <- local$Observation[row_type == "detail" & code %in% c("r1", "r2")]
   expect_equal(rare[code == "r1", count], 1)
@@ -60,7 +60,7 @@ test_that("local SNOMED detail retains codes and measurements below five", {
   expect_false(any(vapply(local, function(rows) any(rows$row_type == "other (count < 5)"), logical(1))))
 })
 
-test_that("archive target selects local details without exposing them in the global ZIP", {
+test_that("archive target masks global counts while retaining codes and exact local data", {
   fixture <- codeSummaryFixture()
   reports <- createCodeSummaryReports(
     fixture$metadata, fixture$config,
@@ -88,8 +88,14 @@ test_that("archive target selects local details without exposing them in the glo
     folder <- file.path(root, paste0(target, "-extracted"))
     utils::unzip(archive, exdir = folder)
     rows <- data.table::fread(file.path(folder, "Codes", "Observation.csv"), na.strings = "")
-    expect_equal(any(rows$code == "r1", na.rm = TRUE), target == "local")
-    expect_equal(any(rows$row_type == "other (count < 5)"), target == "global")
+    expect_true(any(rows$code == "r1", na.rm = TRUE))
+    expect_false(any(rows$row_type == "other (count < 5)"))
+    if (target == "global") {
+      expect_equal(rows[code == "r1", count], "<5")
+      expect_equal(rows[code == "r1", patient_count], "<5")
+      expect_equal(rows[code == "r1", case_count], "<5")
+      expect_equal(rows[code == "common", count], "6")
+    }
     if (target == "local") expect_equal(rows[code == "r1", mean], 100)
   }
   attr(reports, "local_reports") <- NULL

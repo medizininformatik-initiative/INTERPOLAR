@@ -22,8 +22,8 @@ test_that("all and IP case code reports share one query and aggregate independen
   expect_equal(filtered$Observation[row_type == "total", patient_count], 1)
   expect_equal(filtered$Observation[row_type == "total", case_count], 1)
   expect_equal(filtered$Observation[row_type == "total", no_case_count], 0)
-  expect_false(any(filtered$Observation$row_type == "detail"))
-  expect_equal(filtered$Observation[row_type == "other (count < 5)", count], 2)
+  expect_true(any(filtered$Observation$row_type == "detail"))
+  expect_equal(filtered$Observation[row_type == "detail", count], 2)
   local <- attr(filtered, "local_reports", exact = TRUE)
   expect_equal(local$Observation[row_type == "detail", code], "common")
   expect_equal(local$Observation[row_type == "detail", count], 2)
@@ -38,7 +38,7 @@ test_that("all and IP case code reports share one query and aggregate independen
   expect_equal(total$medication_statement_count, 5)
   expect_equal(total$unreferenced_medication_count, 0)
   expect_equal(total$no_case_count, 0)
-  detail <- filtered$Medication[row_type == "detail"]
+  detail <- filtered$Medication[row_type == "detail" & code == "direct-ip"]
   expect_equal(detail$code, "direct-ip")
   expect_equal(detail$medication_count, 0)
   expect_equal(detail$medication_statement_count, 5)
@@ -155,5 +155,5 @@ test_that("one archive contains separate CSVs for complete database and IP cases
   expect_equal(all_observations[row_type == "total", count], 14)
   utils::unzip(global, exdir = file.path(root, "global-extracted"))
   global_ip <- data.table::fread(file.path(root, "global-extracted", "Codes", "Observation_INTERPOLAR.csv"))
-  expect_equal(global_ip[row_type == "other (count < 5)", count], 2)
+  expect_equal(global_ip[row_type == "detail", count], "<5")
 })

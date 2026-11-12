@@ -436,9 +436,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     return(buildCodeSummaryCompactQuery(ctes, query_mode, rare_groups))
   }
   dimensions <- "report_scope, report, system, coding_path, version, code, unit, unit_system, low, high"
-  # Both exports share the expensive source/event CTEs. Local groups retain
-  # every combination; global rare groups must deduplicate their IDs again.
-  export_targets <- "(VALUES ('global'), ('local')) AS t(export_target)"
+  # Both exports retain every combination; masking is applied during CSV export.
   ctes <- c(
     ctes,
     paste0(
@@ -446,16 +444,8 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       "] AS combination_id FROM scoped_events)"
     ),
     paste0(
-      "frequencies AS (SELECT combination_id, COUNT(DISTINCT count_key) AS n ",
-      "FROM events WHERE NOT unresolved GROUP BY combination_id)"
-    ),
-    paste0(
-      "labelled AS ", if (collect_statistics) "MATERIALIZED ", "(SELECT e.*, t.export_target,t.row_type ",
-      "FROM events e LEFT JOIN frequencies f USING (combination_id) CROSS JOIN LATERAL (",
-      "SELECT 'both'::text AS export_target, CASE WHEN e.unresolved THEN 'unresolved medication reference' ELSE 'detail' END AS row_type ",
-      "WHERE e.unresolved OR f.n >= 5 UNION ALL ",
-      "SELECT 'local','detail' WHERE NOT e.unresolved AND f.n < 5 UNION ALL ",
-      "SELECT 'global','other (count < 5)' WHERE NOT e.unresolved AND f.n < 5) t)"
+      "labelled AS ", if (collect_statistics) "MATERIALIZED ", "(SELECT e.*, 'both'::text AS export_target, ",
+      "CASE WHEN e.unresolved THEN 'unresolved medication reference' ELSE 'detail' END AS row_type FROM events e)"
     ),
     paste0(
       "group_labels AS (SELECT report_scope,export_target, report, system, coding_path, row_type, ",

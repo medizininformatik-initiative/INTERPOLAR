@@ -30,7 +30,7 @@ normalizeCodeSummaryGroupKeys <- function(rows, columns) {
   rows
 }
 
-#' Execute code-group counts/statistics and independent cross-code summaries
+#' Execute code-group counts/statistics and independent cross-code totals
 #'
 #' Reuses source/reference resolution and all exact SQL aggregation rules. Only
 #' aggregate code/group metadata leaves SQL. No partial medians or ID counts are
@@ -40,12 +40,12 @@ runCodeSummaryChunks <- function(sources, links, config, report_types, case_scop
   processing <- parseCodeSummaryProcessing(config$code_summary_processing)
   dimensions <- c("report_scope", "report", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high")
   statistics_columns <- c("median", "q1", "q3", "mean", "sd", "minimum", "maximum")
-  runPass <- function(mode, keys = NULL, rare = NULL, pass_label = mode) {
+  runPass <- function(mode, keys = NULL, pass_label = mode) {
     query <- buildCodeSummaryQuery(sources, links, config$code_summary_systems,
       config$code_summary_normal_range, report_types,
       case_scope_query = case_scope_query, case_groups_query = case_groups_query,
-      export_variants = if (mode == "rare") unique(rare$report_scope) else export_variants,
-      query_mode = mode, code_keys = keys, rare_groups = rare
+      export_variants = export_variants,
+      query_mode = mode, code_keys = keys
     )
     if (is.na(query)) return(data.table::data.table())
     rows <- data.table::as.data.table(runLoggedQuery(
@@ -63,7 +63,6 @@ runCodeSummaryChunks <- function(sources, links, config, report_types, case_scop
     " serial chunks; target ", processing$target_rows_per_chunk, " source rows, at most ", processing$max_codes_per_chunk, " codes per chunk."
   )
   rows <- list(runPass("totals", pass_label = "exact cross-code totals and diagnostics"))
-  rare_rows <- list()
   measurements <- any(vapply(sources, function(source) isTRUE(source$measurement), logical(1)))
   for (index in seq_along(chunks)) {
     chunk <- chunks[[index]]
@@ -79,7 +78,6 @@ runCodeSummaryChunks <- function(sources, links, config, report_types, case_scop
     if (!nrow(detail)) next
     detail <- detail[row_type == "detail"]
     if (!nrow(detail)) next
-    rare_rows[[length(rare_rows) + 1L]] <- unique(detail[export_target == "local" & count < 5, ..dimensions])
     if (measurements && (!"measurement" %in% names(chunk) || any(chunk$measurement == 1L))) {
       stats <- runPass("statistics", chunk, pass_label = paste0(chunk_label, "; exact statistics"))
       if (nrow(stats)) {
@@ -91,19 +89,6 @@ runCodeSummaryChunks <- function(sources, links, config, report_types, case_scop
       }
     }
     rows[[length(rows) + 1L]] <- detail
-  }
-  rare <- data.table::rbindlist(rare_rows, use.names = TRUE, fill = TRUE)
-  if (nrow(rare)) {
-    rare <- unique(rare)
-    pools <- unique(rare[, c("report_scope", "report", "system", "coding_path"), with = FALSE])
-    for (index in seq_len(nrow(pools))) {
-      pool <- rare[pools[index], on = c("report_scope", "report", "system", "coding_path"), nomatch = 0L]
-      keys <- unique(pool[, c("system", "code"), with = FALSE])
-      rows[[length(rows) + 1L]] <- runPass(
-        "rare", keys, pool,
-        paste0("exact rare pool ", index, "/", nrow(pools))
-      )
-    }
   }
   result <- data.table::rbindlist(rows, use.names = TRUE, fill = TRUE)
   if (nrow(result)) {

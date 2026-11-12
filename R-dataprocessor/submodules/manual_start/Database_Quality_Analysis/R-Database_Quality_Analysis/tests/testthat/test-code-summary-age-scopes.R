@@ -24,7 +24,7 @@ test_that("all six code scopes share classification and preserve counts, ages an
     expect_equal(detail$no_case_count, 0)
     expect_equal(detail$mean, if (adults) 2 else 2.5)
     expect_equal(detail$median, if (adults) 2 else 2.5)
-    expect_equal(variants[[name]]$Observation[row_type == "other (count < 5)", count], if (adults) 3 else 7)
+    expect_equal(variants[[name]]$Observation, local$Observation)
     expect_true(all(local$Medication$unreferenced_medication_count == 0))
     linked <- local$Medication[row_type == "detail" & code == "B01"]
     expect_equal(linked$medication_count, 1)

@@ -34,7 +34,7 @@ test_that("PZN and ASK use their own Coding fields and deduplicate linked medica
   pzn <- med[system == "http://fhir.de/CodeSystem/ifa/pzn"]
   ask <- med[system == "http://fhir.de/CodeSystem/ask"]
   for (report in list(pzn, ask)) {
-    detail <- report[row_type == "detail"]
+    detail <- report[row_type == "detail" & count >= 5]
     expect_equal(nrow(detail), 1L)
     expect_equal(detail$version, "2025")
     expect_equal(detail$count, 5)
@@ -43,21 +43,21 @@ test_that("PZN and ASK use their own Coding fields and deduplicate linked medica
     expect_equal(detail$no_case_count, 3)
     expect_false(any(grepl("wrong-", report$code), na.rm = TRUE))
   }
-  expect_identical(pzn[row_type == "detail", code], "00123456")
-  expect_identical(ask[row_type == "detail", code], "00001")
-  expect_equal(pzn[row_type == "other (count < 5)", count], 1)
+  expect_identical(pzn[row_type == "detail" & version == "2025", code], "00123456")
+  expect_identical(ask[row_type == "detail" & code == "00001", code], "00001")
+  expect_equal(pzn[row_type == "detail" & version == "2026", count], 1)
   expect_equal(pzn[row_type == "total", count], 6)
   expect_equal(pzn[row_type == "total", no_case_count], 4)
-  expect_equal(ask[row_type == "other (count < 5)", count], 2)
-  expect_equal(ask[row_type == "other (count < 5)", case_count], 2)
-  expect_equal(ask[row_type == "other (count < 5)", no_case_count], 1)
+  expect_equal(ask[row_type == "detail" & code == "00002", count], 2)
+  expect_equal(ask[row_type == "detail" & code == "00002", case_count], 2)
+  expect_equal(ask[row_type == "detail" & code == "00002", no_case_count], 1)
   expect_equal(ask[row_type == "total", count], 5)
   expect_equal(med[system == "http://fhir.de/CodeSystem/bfarm/atc" & row_type == "total", count], 6)
   for (report in list(pzn, ask)) {
     expect_equal(report[row_type == "total", medication_request_count], 3)
     expect_equal(report[row_type == "total", medication_administration_count], 1)
     expect_equal(report[row_type == "total", medication_statement_count], 2)
-    expect_equal(report[row_type == "detail", medication_count], 5)
+    expect_equal(report[row_type == "detail" & count >= 5, medication_count], 5)
   }
   expect_equal(med[row_type == "unresolved medication reference", count], 2)
 })

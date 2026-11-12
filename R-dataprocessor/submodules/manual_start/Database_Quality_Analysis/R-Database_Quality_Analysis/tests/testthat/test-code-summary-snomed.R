@@ -15,7 +15,7 @@ test_that("synthetic SNOMED data produce visible detail rows in all four reports
   for (resource in names(totals)) {
     rows <- summaries[[resource]][system == "http://snomed.info/sct"]
     expect_true(nrow(rows[row_type == "detail"]) > 0L, info = resource)
-    expect_true(all(rows[row_type == "detail", count] >= 5), info = resource)
+    expect_true(all(rows[row_type == "detail", count] > 0), info = resource)
     expect_equal(rows[row_type == "total", count], totals[[resource]], info = resource)
   }
   measurement <- summaries$Observation[system == "http://snomed.info/sct" &
@@ -40,5 +40,5 @@ test_that("synthetic SNOMED data produce visible detail rows in all four reports
   expect_equal(total$medication_administration_count, 11)
   expect_equal(total$medication_statement_count, 5)
   expect_equal(total$unreferenced_medication_count, 4)
-  expect_equal(med[row_type == "other (count < 5)", count], 4)
+  expect_equal(med[row_type == "detail" & code == "372507007", count], 4)
 })

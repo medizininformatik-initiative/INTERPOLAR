@@ -44,7 +44,7 @@ test_that("unreferenced Medications are counted independently of usage codes and
     expect_equal(ask[row_type == "detail", unreferenced_medication_count], c(1, 1))
     expect_equal(ask[row_type == "total", unreferenced_medication_count], 1)
     global_ask <- reports$Medication[system == "http://fhir.de/CodeSystem/ask"]
-    expect_equal(global_ask[row_type == "other (count < 5)", unreferenced_medication_count], 1)
+    expect_equal(global_ask[row_type == "detail", unreferenced_medication_count], c(1, 1))
     expect_equal(local[system == "http://fhir.de/CodeSystem/bfarm/atc" & row_type == "total", unreferenced_medication_count], 6)
     expect_true(all(local[row_type == "unresolved medication reference", unreferenced_medication_count] == 0))
     ip <- attr(reports, "filtered_reports", exact = TRUE)

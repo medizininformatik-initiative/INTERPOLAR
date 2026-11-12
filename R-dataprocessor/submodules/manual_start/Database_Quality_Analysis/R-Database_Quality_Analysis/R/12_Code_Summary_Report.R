@@ -1,8 +1,8 @@
 #' Create the code-report tables and their source description
 #'
 #' Executes serial code-group and cross-code passes, sharing the requested output scopes.
-#' No individual IDs or raw observations are transferred to R or exported. Global tables pool
-#' rare combinations; the local_reports attribute retains all aggregate details.
+#' No individual IDs or raw observations are transferred to R or exported. Both outputs
+#' retain every combination; small counts are masked only during global CSV export.
 createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbGetReadOnlyQuery,
                                      table_description = NULL) {
   started <- Sys.time()
@@ -187,7 +187,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     "Patient/case counts are deduplicated; cases use calculated main-encounter references only.",
     "no_case_count: counted resources with no valid case in any associated event of this group.",
     "total: independently deduplicated per resource/system, across all Coding paths; coding_path is empty.",
-    "Global other (count < 5): pooled per resource/system/Coding path; IDs deduplicated again; no statistics exported.",
+    "Global CSVs retain all detail rows; positive counts below five are written as <5, except no_case_count and unreferenced_medication_count; zero and unavailable counts remain unchanged.",
     "Local output: every coded combination is a detail row, including count < 5, with its available statistics.",
     "Detail groups: resource, system, coding_path, version, code; measurement sources also group by unit and limits.",
     "unit_system describes the measurement unit (not the coding system); it prevents ambiguous unit groups.",
@@ -207,7 +207,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     "With default mappings, unreferenced Medications have no case association and occur only in complete-database CSVs.",
     "Unreferenced counts are unavailable (empty) if the Medication source or a required usage source is unavailable.",
     "Request/Administration/Statement counts use their own IDs; patient/case counts include those direct and linked resources.",
-    "The rare threshold uses count, including direct usage fallback IDs; matching direct/reference identities deduplicate in totals.",
+    "Matching direct/reference identities deduplicate in totals; masking is applied independently to each eligible count column.",
     "Unresolved medication reference: no selected direct medicationCodeableConcept code and missing/unresolvable Medication reference.",
     "Unresolved rows occur once in Medication.csv with empty system/code/path; count is the affected usage resource count.",
     "A reference resolving to a Medication without a matching code is not an unresolved reference.",
@@ -311,6 +311,21 @@ writeCodeSummaryArchive <- function(code_summaries, filename_without_extension,
     }
     reports <- c(reports, tables)
     description <- c(description, "", paste0("CSV suffix _", scope_label, ":"), scope_description)
+  }
+  if (target == "global") {
+    # Format a copy only at the export boundary: local tables and SQL aggregate
+    # values remain numeric and exact, including counts used by statistics.
+    reports <- lapply(reports, function(report) {
+      report <- data.table::copy(report)
+      count_columns <- setdiff(grep("^count$|_count$", names(report), value = TRUE), c("no_case_count", "unreferenced_medication_count"))
+      for (column in count_columns) {
+        values <- report[[column]]
+        masked <- as.character(values)
+        masked[!is.na(values) & values > 0 & values < 5] <- "<5"
+        data.table::set(report, j = column, value = masked)
+      }
+      report
+    })
   }
   code_summaries <- reports
   writeValueSummaryArchive(

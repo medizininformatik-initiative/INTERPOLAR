@@ -103,7 +103,7 @@ test_that("PostgreSQL deduplicates measurements, rare groups, systems and owning
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
-  loinc <- summaries$Observation[row_type == "detail"]
+  loinc <- summaries$Observation[row_type == "detail" & code == "common"]
   expect_equal(loinc$count, 6)
   expect_equal(loinc$patient_count, 1)
   expect_equal(loinc$case_count, 1)
@@ -115,18 +115,18 @@ test_that("PostgreSQL deduplicates measurements, rare groups, systems and owning
   expect_equal(loinc$q3, 4.75)
   expect_equal(loinc$low, "1")
   expect_equal(loinc$coding_path, "code/coding")
-  rare <- summaries$Observation[row_type == "other (count < 5)"]
-  expect_equal(rare$count, 2)
-  expect_equal(rare$case_count, 1)
-  expect_true(is.na(rare$mean))
-  expect_true(is.na(rare$code))
+  rare <- summaries$Observation[row_type == "detail" & code %in% c("r1", "r2")]
+  expect_equal(rare$count, c(1, 1))
+  expect_equal(rare$case_count, c(1, 1))
+  expect_equal(rare$mean, c(100, 200))
+  expect_setequal(rare$code, c("r1", "r2"))
   expect_equal(summaries$Observation[row_type == "total", count], 8)
   med <- summaries$Medication
-  expect_equal(med[row_type == "detail", count], 5)
+  expect_equal(med[row_type == "detail" & code == "A01", count], 5)
   expect_equal(med[row_type == "total", count], 6)
   expect_equal(med[row_type == "total", case_count], 1)
   expect_equal(med[row_type == "total", no_case_count], 5)
-  rare_med <- med[row_type == "other (count < 5)"]
+  rare_med <- med[row_type == "detail" & code == "B01"]
   expect_equal(rare_med$count, 1)
   expect_equal(rare_med$medication_count, 1)
   expect_equal(rare_med$medication_request_count, 2)
@@ -165,14 +165,14 @@ test_that("SNOMED separates Coding roles, preserves resource boundaries and dedu
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
   obs <- summaries$Observation
-  snomed <- obs[system == "http://snomed.info/sct" & row_type == "detail"]
+  snomed <- obs[system == "http://snomed.info/sct" & row_type == "detail" & code == "123"]
   expect_setequal(snomed$coding_path, c("code/coding", "method/coding"))
   expect_equal(snomed$count, c(5, 5))
   expect_equal(snomed[coding_path == "code/coding", mean], 3)
   expect_true(is.na(snomed[coding_path == "method/coding", mean]))
   expect_equal(obs[system == "http://snomed.info/sct" & row_type == "total", count], 6)
   expect_equal(obs[system == "http://loinc.org" & row_type == "total", count], 8)
-  expect_equal(obs[system == "http://snomed.info/sct" & row_type == "other (count < 5)", coding_path], "method/coding")
+  expect_equal(obs[system == "http://snomed.info/sct" & row_type == "detail" & code == "rare", coding_path], "method/coding")
   expect_equal(summaries$Condition[row_type == "total", count], 5)
   expect_equal(summaries$Patient[row_type == "total", patient_count], 5)
   expect_equal(summaries$Patient[row_type == "total", case_count], 0)

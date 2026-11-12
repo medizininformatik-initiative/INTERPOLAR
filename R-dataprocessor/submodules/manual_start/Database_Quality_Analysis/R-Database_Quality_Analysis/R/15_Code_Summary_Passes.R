@@ -19,12 +19,11 @@ buildCodeSummaryCountsCte <- function() {
 }
 
 #' Reuse count output expansion and the existing null-safe statistics merge
-buildCodeSummaryResultQuery <- function(ctes, collect_statistics = FALSE, details_only = FALSE) {
+buildCodeSummaryResultQuery <- function(ctes, collect_statistics = FALSE) {
   export_targets <- "(VALUES ('global'), ('local')) AS t(export_target)"
   ctes <- c(ctes, paste0(
     "counts_outputs AS (SELECT c.*,t.export_target AS output_target FROM counts c CROSS JOIN ",
-    export_targets, " WHERE c.export_target IN ('both',t.export_target)",
-    if (details_only) " AND (t.export_target='local' OR c.count>=5)", ")"
+    export_targets, " WHERE c.export_target IN ('both',t.export_target))"
   ))
   # Statistics contain a subset of the count groups, keyed identically. FULL
   # therefore has the same rows as LEFT here, while requiring a hash/merge join
@@ -122,15 +121,15 @@ buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL) {
   buildCodeSummaryResultQuery(ctes)
 }
 
-#' Count complete detail groups once, applying suppression after aggregation
+#' Count every complete detail group once for both output targets
 #'
-#' Local details and common global details share the same distinct counts. Rare
-#' global pooling is a separate pass, so no frequency/event/label caches are needed.
+#' Both outputs retain every code. Small counts are masked only during global
+#' CSV export, so no frequency/event/label caches or rare-pool passes are needed.
 buildCodeSummaryDetailQuery <- function(ctes) {
   ctes <- c(ctes, paste0(
     "grouped AS (SELECT e.report_scope,'both'::text AS export_target,e.report,e.system,e.coding_path,",
     "'detail'::text AS row_type,e.version,e.code,e.unit,e.unit_system,e.low,e.high,",
     "e.count_key,e.event_key,e.kind,e.pid,e.case_id,e.unreferenced_medication FROM scoped_events e)"
   ), buildCodeSummaryCountsCte())
-  buildCodeSummaryResultQuery(ctes, details_only = TRUE)
+  buildCodeSummaryResultQuery(ctes)
 }

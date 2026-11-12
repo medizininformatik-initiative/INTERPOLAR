@@ -48,12 +48,12 @@ snapshot-type requirement, not missing database objects or invalid credentials.
    This selects the four code-report resources and medication inputs;
    it does not restrict the existing availability and Value Summary reports.
 6. Plan serial code-group batches per resource from a narrow catalog, then execute
-   separate count/statistic passes and exact cross-code totals/rare pools.
+   separate count/statistic passes and exact cross-code totals.
    Resolve medication links and deduplicate IDs within each requested output group.
    From the same events, calculate the selected case and age variants, each
-   with complete local groups and globally pooled rare groups.
+   with all detail groups; global CSVs mask positive counts below five as `<5`.
    Medication and all three medication usage resources remain in one batch.
-   IDs are deduplicated again for pooled groups and totals in each scope.
+   IDs are deduplicated independently for totals in each scope.
 7. Write the files listed below. Each code ZIP contains the resource CSVs for
    the selected variants and a README describing its actual sources, fields and counting rules.
 
@@ -72,7 +72,8 @@ With the default configuration, each run writes three artifacts to
 
 The Code Summary ZIP is also written to `outputLocal/dataprocessor/reports`,
 with the same filename. Its local version contains all aggregate
-combinations, including `count < 5`; its global version pools rare combinations.
+combinations, including `count < 5`; its global version retains those combinations
+and writes small positive counts as `<5`.
 Selected IP variants require `FHIR` in `FILTERED_SCOPE_SHEET_NAMES`.
 Their IP filename suffix follows `FILTERED_SCOPE_DETAIL_SHEET_SUFFIX` (default
 `INTERPOLAR`). If that scope is disabled, selected IP variants are omitted.
@@ -292,8 +293,12 @@ No resource, patient or case IDs or individual measurement values are exported.
 
 Both output folders receive one code ZIP containing these CSVs. Local CSVs retain
 every code, version, unit, reference range and available statistic, even for counts below
-five. Such combinations have `row_type = detail` locally. Global CSVs retain
-their existing rare-group suppression. Missing source fields stay empty; a
+five. Such combinations have `row_type = detail` in both outputs. In global CSVs,
+the resource, patient, case, Medication and medication usage count columns
+independently show `<5` for values from 1 to 4. `no_case_count` and
+`unreferenced_medication_count` retain their exact values. Zero stays `0`, counts
+of at least five remain exact, and unavailable counts remain empty. No
+`other (count < 5)` rows are produced. Missing source fields stay empty; a
 single measurement has a mean/median but no sample SD. Totals remain deduplicated
 independently in both versions. Both exports share the passes of their resource/code batch.
 
@@ -315,15 +320,15 @@ Only those usage events supply patient, case and usage counts. Direct medication
 codes and unresolved-reference rows use their owning usage resource's case.
 An unlinked Medication therefore contributes only to the complete-database report.
 
-Counts, statistics, totals and the rare-combination threshold are calculated
-independently for each scope. A code can be a visible detail globally for the
-complete database and a pooled rare combination globally for IP cases. The local
-IP file still shows that combination in full.
+Counts, statistics and totals are calculated independently for each scope.
+The same code may have an exact count of at least five for the complete database
+and a masked `<5` count for IP cases. Both scopes retain its detail row; local
+CSV counts remain exact.
 
 All configured case/age variants and both export targets share the aggregate SQL
 query and projected source data within each resource batch. No separate detail/statistic query is
-issued per scope or export target. Rare pools are calculated independently for
-each scope/resource/system/Coding path to retain exact cross-code deduplication.
+issued per scope or export target. Small counts are masked only during global
+CSV export; this requires no additional database queries.
 An empty IP selection produces CSV headers without fabricated zero totals.
 If the required Encounter or `pids_per_ward` metadata is unavailable, the module
 warns and omits the IP code CSVs; it never substitutes unfiltered results.
@@ -385,8 +390,8 @@ buckets are assigned once per case. Each code/usage event joins this lookup once
 and expands only into its preselected buckets. The birthdate fallback adds one
 deduplicated Patient scan per resource query, not one query per case or CSV.
 No case lists or birthdates are transferred to R. Resource/code batches execute
-serially, with global suppression applied independently within each variant and
-full aggregate details in the local ZIP. Aggregate code catalogs and rare-group
+serially, with global count masking applied independently within each variant and
+full aggregate details in the local ZIP. Aggregate code catalogs and group
 metadata may be transferred to R; individual IDs and measurement values are not.
 
 ### Configuration and Coding fields
@@ -464,17 +469,14 @@ Each CSV includes `row_type`, `system`, `coding_path`, `version`, `code`, `count
 `patient_count`, `case_count` and `no_case_count`. `system` is the exact Coding
 system URI, not the system family label.
 
-- `detail`: globally, a combination with `count >= 5`; locally, every coded
-  combination, including counts from 1 to 4. Groups use resource type, system,
-  Coding path, version and code; measurement sources add unit code, unit system
-  and selected reference limits.
-- `other (count < 5)`: in the global output, rare combinations pooled per
-  resource, system and Coding path. IDs are deduplicated again.
-  Code/version/measurement fields and statistics are empty. These rows do not
-  occur in the local output.
+- `detail`: every coded combination in both outputs, including counts from 1 to 4.
+  Groups use resource type, system, Coding path, version and code; measurement
+  sources add unit code, unit system and selected reference limits. Global CSVs
+  mask small positive counts as `<5`, except `no_case_count` and
+  `unreferenced_medication_count`; local CSVs retain all exact counts.
 - `total`: independently deduplicated per resource and system, across all Coding
   paths. `coding_path` is empty. Resources with multiple codes or Coding roles
-  count once in this total; detail/rare counts must not simply be added.
+  count once in this total; detail counts must not simply be added.
 - `unresolved medication reference`: one diagnostic row in Medication.csv,
   with empty system/path/version/code. `count` and
   the usage-count columns describe affected resource IDs. It is excluded
@@ -482,8 +484,7 @@ system URI, not the system family label.
 
 `count` counts distinct resource identities, never DB rows. In Medication.csv it
 counts Medication IDs plus fallback usage IDs for direct medication codes without
-a matching referenced Medication code/version. This same count determines the
-rare-combination threshold. `medication_count` always counts actual Medication
+a matching referenced Medication code/version. `medication_count` always counts actual Medication
 IDs: five directly coded Requests without Medication yield `count = 5`,
 `medication_count = 0` and `medication_request_count = 5`.
 
@@ -510,10 +511,9 @@ Relative and absolute unversioned references normalize to resource type/ID.
 Finite numeric `valueQuantity.value` measurements supply `median`, `q1`, `q3`,
 `mean`, `sd`, `minimum` and `maximum`. Quartiles use continuous interpolation;
 SD is the sample standard deviation. Distinct resource/value pairs prevent
-flattened Coding/reference rows from weighting statistics. Totals and rare
-groups in the global output have no statistics because they may mix units and
-analytes. Local rare combinations remain separate detail groups with statistics;
-totals have no statistics in either export.
+flattened Coding/reference rows from weighting statistics. All detail groups
+retain their statistics in both outputs, including those with masked counts.
+Totals have no statistics because they may mix units and analytes.
 
 `low`/`high` retain the MRP reference-range priority per resource/Coding/measurement:
 prefer type code `normal`, regardless of its system, otherwise missing type when
@@ -548,8 +548,8 @@ For example, a Medication with code `A02AH01` and no recognized usage contribute
 `unreferenced_medication_count = 1`. An inline Request with the same code and no
 Medication reference contributes its own usage ID and request count; equal codes
 alone do not connect resource IDs or make the Medication referenced.
-The unreferenced count deduplicates Medication IDs independently in detail,
-pooled and total rows. A Medication with multiple codes/ingredients can occur in several detail
+The unreferenced count deduplicates Medication IDs independently in detail
+and total rows. A Medication with multiple codes/ingredients can occur in several detail
 rows but contributes once to each corresponding system total. Inline-only and
 unresolved-reference rows contribute zero to the unreferenced-Medication count.
 
@@ -613,16 +613,16 @@ Each resource batch performs:
    in SQL and never added from partial counts.
 2. A count pass for each code chunk and, only for chunks with measurements, a
    separate exact statistic pass. Counts are aggregated once per complete detail
-   group; global suppression is applied afterwards. No event/frequency/label
+   group; small counts are masked only during global CSV export. No event/frequency/label
    caches are retained in these detail passes. The statistic pass also avoids
    those caches. A single percentile-array
    aggregate computes Q1/median/Q3 from the full deduplicated resource/value
    stream. R joins these aggregate results by nullable detail-group metadata;
    it does not average medians, quartiles, means or standard deviations.
-3. An exact rare-pool pass per scope/resource/system/Coding path. The local
-   detail counts identify groups below five. The corresponding group metadata
-   filters normalized code events, and PostgreSQL deduplicates IDs across all
-   rare codes in that pool. Chunk-level `other` rows are never summed.
+
+Both exports retain all detail groups. The shared archive writer masks each
+eligible small positive count in global CSVs after all SQL aggregation and statistics.
+No rare-code catalog or rare-pool query is needed.
 
 Medication chunks retain all reference identities needed for their selected
 usage IDs and incoming-reference markers for their Medication IDs. Out-of-chunk
@@ -640,8 +640,7 @@ Changing data between catalog and execution passes can invalidate a plan; run
 against the intended unchanged snapshot.
 
 More small queries are intentional. Case lookups and source reads may repeat;
-log labels identify catalogs, totals, each chunk's counts/statistics and rare
-pools, with the existing timestamps, duration and periodic status messages.
+log labels identify catalogs, totals and each chunk's counts/statistics, with the existing timestamps, duration and periodic status messages.
 All requested variants and both export targets share each chunk's computation.
 The CSV layout/counting rules are unchanged. Chunked rows use deterministic
 client sorting; their order can differ from a database's locale-based ordering.
@@ -690,7 +689,7 @@ non-null equality key, preserving the existing NULL-version matching rule.
 The main-case and no-case counts use distinct keys; no-case counts are obtained
 by subtracting keys with a case from all keys instead of joining a second large
 per-resource aggregation. Common detail groups, unresolved rows and totals are
-computed once for global/local output; only rare groups require separate labels.
+computed once for global/local output; only CSV count formatting differs.
 The final small result is expanded to both targets. Resource batching releases
 large intermediate results between queries instead of retaining all resources
 until one combined query finishes. The Encounter/pids_per_ward scope lookup is
@@ -796,7 +795,8 @@ limits. Exact statistics for a frequent code and exact cross-code distinct
 counts still need their complete populations. A 30-million-Observation site
 workload has not been reproduced locally.
 
-All 111 package tests passed. A complete Docker report using the production
+Before the subsequent CSV count-masking change, all 111 package tests passed.
+A complete Docker report using the production
 settings and a read-only historical local snapshot also completed successfully:
 all four selected resource CSVs retained their aggregate values, all 20 Value
 Summary CSVs were byte-identical, and the seven non-runtime availability sheets
@@ -874,6 +874,6 @@ for (target in c("global", "local")) {
 
 The two example ZIPs appear in the normal global/local report directories, with
 `SYNTHETIC_SNOMED` in their names. No existing snapshot is read or changed.
-Expect 9 SNOMED detail rows globally and 12 locally: the local files also show
-the rare SNOMED codes with counts of two or four.
+Expect 12 SNOMED detail rows in both outputs. Counts of two or four are shown
+as `<5` globally and as exact numbers locally.
 Remove the test container afterwards with `docker stop dqa-test-postgres`.
