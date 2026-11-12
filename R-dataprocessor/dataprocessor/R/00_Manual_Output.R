@@ -1,7 +1,7 @@
 #' Read provenance for a manual analysis run
 #'
 #' Uses the running toolchain version, rather than the source database version.
-#' Snapshot dates follow ip-snapshot.sh's YYYYMMDD database-name convention.
+#' Snapshot types follow ip-snapshot.sh's database-name convention.
 getManualOutputContext <- function() {
   metadata <- etlutils::dbGetReadOnlyQuery(
     paste0(
@@ -44,21 +44,15 @@ buildManualOutputContext <- function(database_name, database_content_type,
   if (!content_type %in% c("live", "pseudonymized_snapshot", "unpseudonymized_snapshot")) {
     content_type <- "unknown"
   }
-  snapshot_date <- "unknown"
-  if (snapshot_name && grepl("snapshot$", content_type)) {
-    date_text <- sub(snapshot_pattern, "\\1", database_name)
-    parsed_date <- as.Date(date_text, format = "%Y%m%d")
-    if (!is.na(parsed_date) && identical(format(parsed_date, "%Y%m%d"), date_text)) {
-      snapshot_date <- format(parsed_date, "%Y-%m-%d")
-    }
+  if (identical(content_type, "unpseudonymized_snapshot")) {
+    content_type <- "snapshot"
   }
   if (!grepl("^[[:alnum:]][[:alnum:].+-]*$", release_version)) {
     stop("Invalid toolchain release version for output naming.", call. = FALSE)
   }
   paste0(
     "run-", format(run_time, "%Y-%m-%d_%H-%M-%SZ", tz = "UTC"),
-    "_toolchain-", release_version, "_", content_type,
-    if (grepl("snapshot$", content_type)) paste0("_snapshot-", snapshot_date) else ""
+    "_toolchain-", release_version, "_", content_type
   )
 }
 
