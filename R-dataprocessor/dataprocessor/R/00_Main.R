@@ -112,6 +112,13 @@ runSubmodules <- function(command_line_args = NULL) {
     submodule_name <- basename(dir)
     etlutils::setSubmoduleName(submodule_name)
 
+    # Capture only this manual run's reports; automatic module outputs keep their names.
+    manual_output_context <- NULL
+    if (dir %in% manual_start_submodule_dirs) {
+      manual_output_context <- getManualOutputContext()
+      previous_outputs <- getManualOutputFiles(MODULE_DIRS)
+    }
+
     # Source all R scripts in the directory
     etlutils::runLevel1(paste0("Run Dataprocessor submodule ", submodule_name), {
       # Load all submodule config.toml files
@@ -129,6 +136,10 @@ runSubmodules <- function(command_line_args = NULL) {
         source(start_script)
       }
     })
+
+    if (!is.null(manual_output_context)) {
+      nameManualOutputs(previous_outputs, MODULE_DIRS, manual_output_context)
+    }
 
     etlutils::removeSubmoduleName()
   }
