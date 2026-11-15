@@ -26,7 +26,7 @@ matchCohortEvents <- function(cases, events, end_column) {
 
 #' Calculate all code-based case features once for reuse across FAS and periods
 #' @param cases One row per case with patient_id, age and code_cutoff.
-#' @param diagnoses Normalised ICD events with code.
+#' @param diagnoses Normalised ICD events with code and annual icd_terminal status.
 #' @param medications Normalised ATC events with code.
 #' @param observations Normalised laboratory events with code, relevant, unit_ok,
 #'   numeric_ok, abnormal, normal, egfr and value_reference.
@@ -49,12 +49,13 @@ calculateCohortCodeFeatures <- function(cases, diagnoses, medications, observati
   }
   icd <- matchCohortEvents(cases, diagnoses, "hospital_end")
   icd <- icd[!is.na(code) & grepl("^[A-Z][0-9]{2}([.][0-9A-Z]{1,2})?[!+*]?$", code)]
-  full <- count(icd, rep(TRUE, nrow(icd)))
+  any_diagnosis <- count(icd, rep(TRUE, nrow(icd)))
+  full <- count(icd, icd$icd_terminal %in% TRUE, !is.na(icd$icd_terminal))
   put(65, full > 0)
   put(67, full)
   truncated <- data.table::copy(icd)
   truncated[, code := substr(code, 1, 3)]
-  put(69, full > 0)
+  put(69, any_diagnosis > 0)
   put(71, count(truncated, rep(TRUE, nrow(truncated))))
   # Reuse the complete diagnoses for the established Charlson implementation.
   cci <- rep(NA_real_, nrow(cases))

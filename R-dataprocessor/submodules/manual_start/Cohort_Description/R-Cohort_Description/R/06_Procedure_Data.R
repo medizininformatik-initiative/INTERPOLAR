@@ -24,12 +24,21 @@ loadCohortProcedureData <- function(patient_ids, encounters, catalogue, timezone
     lock_id = "Cohort Description: patient OPS"
   ))
   procedures[, start_datetime := pmin(proc_performeddatetime, proc_performedperiod_start, na.rm = TRUE)]
-  origins <- etlutils::fhirdataExtractIDs(procedures$proc_encounter_calculated_ref)
+  encounters <- loadCohortOriginEncounters(procedures$proc_encounter_calculated_ref, encounters)
+  list(
+    procedures = prepareCohortOPS(procedures, encounters, catalogue, timezone),
+    encounters = encounters
+  )
+}
+
+# Reuse already loaded origins across diagnoses and procedures, including parallel cases.
+loadCohortOriginEncounters <- function(references, encounters) {
+  origins <- etlutils::fhirdataExtractIDs(references)
   missing_origins <- setdiff(origins[!is.na(origins) & nzchar(origins)], encounters$enc_id)
   if (length(missing_origins)) {
     more <- etlutils::fhirdataGetAllEncounters(
       missing_origins,
-      lock_id_extension = "Cohort Description: OPS origin encounters",
+      lock_id_extension = "Cohort Description: coding origin encounters",
       column_names = c(
         "enc_id", "enc_patient_ref", "enc_main_encounter_calculated_ref",
         "enc_class_code", "enc_period_start", "enc_period_end"
@@ -37,8 +46,5 @@ loadCohortProcedureData <- function(patient_ids, encounters, catalogue, timezone
     )
     encounters <- unique(data.table::rbindlist(list(encounters, more), use.names = TRUE, fill = TRUE))
   }
-  list(
-    procedures = prepareCohortOPS(procedures, encounters, catalogue, timezone),
-    encounters = encounters
-  )
+  encounters
 }

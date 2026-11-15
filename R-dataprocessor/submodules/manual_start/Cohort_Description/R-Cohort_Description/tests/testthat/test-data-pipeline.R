@@ -48,7 +48,8 @@ test_that("database preparation feeds case features without per-row resource rea
   }
   environment$getConditionsFromDB <- function(...) data.table::data.table(
     con_patient_ref = "Patient/p",
-    con_code_code = "Z00.0", start_datetime = time
+    con_code_code = "Z00.0", con_code_version = "2025",
+    con_encounter_calculated_ref = "Encounter/case", start_datetime = time
   )
   environment$getMedicationRequestsFromDB <- function(..., status_exclusion) {
     expect_false("stopped" %in% status_exclusion)

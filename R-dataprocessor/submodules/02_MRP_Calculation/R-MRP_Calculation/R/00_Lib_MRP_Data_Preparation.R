@@ -676,6 +676,7 @@ getConditionsFromDB <- function(
       "con_encounter_calculated_ref",
       "con_patient_ref",
       "con_code_code",
+      "con_code_version",
       "con_code_system",
       "con_code_display",
       "con_onsetperiod_start",

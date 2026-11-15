@@ -15,6 +15,5 @@ docker compose run --build --rm --no-deps r-env Rscript R-dataprocessor/StartDat
 Results are written to `outputLocal/dataprocessor/reports/cohort_description/`.
 Each workbook contains the expanded local sheet with aggregate results.
 `cohort_manifest.csv` lists all files and population sizes; `cohort_quality.csv`
-contains aggregate data-quality counts. `open_questions.md` lists the remaining
-scientific questions. `NA` denotes an unavailable statistic.
-The calculation notes in the workbooks mark questions awaiting clarification.
+contains aggregate data-quality counts. `open_questions.md` documents the agreed
+calculation rules and any remaining scientific questions. `NA` denotes an unavailable statistic.

@@ -22,7 +22,7 @@ cohortFixture <- function() {
   cases <- calculateCohortMedAFeatures(cases, analyses, contacts, validations)
   diagnoses <- data.table::data.table(
     patient_id = c("p", "p", "q"),
-    start_datetime = time + c(0, 10, 1) * 86400, code = c("E11.9", "E11.9", "Z00.0")
+    start_datetime = time + c(0, 10, 1) * 86400, code = c("E11.90", "E11.90", "Z00.0"), icd_terminal = TRUE
   )
   medications <- data.table::data.table(
     patient_id = "p", start_datetime = time + c(1, 2, 3) * 86400,

@@ -1,0 +1,38 @@
+{
+  "retrieved": "2026-11-14",
+  "conditions_source": "https://terminologien.bfarm.de/files/conditions/bfarm.terminologien.icd10gm-conditions.xml",
+  "catalogues": [
+    {
+      "year": 2023,
+      "package_version": "2023.0.0",
+      "file": "icd10gm-2023.0.0.tar.gz",
+      "source": "https://terminologien.bfarm.de/packages/bfarm.terminologien.icd10gm/2023.0.0",
+      "sha256": "aabe411ff34e6ab219525c4f42c2ce816357afb7fbdadbd41417e127b9889839",
+      "terminal_count": 14261
+    },
+    {
+      "year": 2024,
+      "package_version": "2024.0.0",
+      "file": "icd10gm-2024.0.0.tar.gz",
+      "source": "https://terminologien.bfarm.de/packages/bfarm.terminologien.icd10gm/2024.0.0",
+      "sha256": "e42aaea0a414a7ed8d5a01459f79d46ec1d02c5f7b8e353420644f28660e7bbe",
+      "terminal_count": 14290
+    },
+    {
+      "year": 2025,
+      "package_version": "2025.0.0",
+      "file": "icd10gm-2025.0.0.tar.gz",
+      "source": "https://terminologien.bfarm.de/packages/bfarm.terminologien.icd10gm/2025.0.0",
+      "sha256": "ad05fe838d875b86eb35bbdfa8a915a5ea001f6aa384e39a86a2120ac4b53858",
+      "terminal_count": 14309
+    },
+    {
+      "year": 2026,
+      "package_version": "2026.0.0",
+      "file": "icd10gm-2026.0.0.tar.gz",
+      "source": "https://terminologien.bfarm.de/packages/bfarm.terminologien.icd10gm/2026.0.0",
+      "sha256": "f4f25cd3b68e75413c100270bba8104032f5edbcfeeb36a78c8f86e452b28c0e",
+      "terminal_count": 14370
+    }
+  ]
+}

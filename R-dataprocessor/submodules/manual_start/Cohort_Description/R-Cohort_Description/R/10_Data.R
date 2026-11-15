@@ -112,6 +112,10 @@ loadCohortAnalysisData <- function(prepared, timezone) {
   cases[previous$case_row, m360 := previous$n]
   patient_ids <- unique(cases$patient_id)
   diagnoses <- getConditionsFromDB(patient_ids)
+  encounters <- loadCohortOriginEncounters(diagnoses$con_encounter_calculated_ref, prepared$encounters)
+  diagnoses <- prepareCohortCoding(
+    diagnoses, encounters, etlutils::loadICDCatalogues(), timezone, "con", "icd"
+  )
   diagnoses[, `:=`(
     patient_id = etlutils::fhirdataExtractIDs(con_patient_ref, unique = FALSE),
     code = con_code_code
@@ -121,17 +125,18 @@ loadCohortAnalysisData <- function(prepared, timezone) {
   medications <- appendATCColumns(requests, medications)
   medications[, `:=`(patient_id = etlutils::fhirdataExtractIDs(medreq_patient_ref, unique = FALSE), code = atc_code)]
   observations <- prepareCohortLaboratory(getObservationsFromDB(patient_ids), getLOINCMapping()$processed_content)
-  ops <- loadCohortProcedureData(patient_ids, prepared$encounters, etlutils::loadOPSCatalogues(), timezone)
+  ops <- loadCohortProcedureData(patient_ids, encounters, etlutils::loadOPSCatalogues(), timezone)
   quality <- data.table::data.table(
     check = c(
       "known_ip_contacts", "cases_before_eligibility", "cases_missing_hospital_start",
       "cases_missing_hospital_end", "cases_missing_age", "ops_catalogue_approximated",
-      "ops_catalogue_unresolved", "observations_missing_event_start", "diagnoses_missing_event_start"
+      "ops_catalogue_unresolved", "icd_catalogue_approximated", "icd_catalogue_unresolved", "observations_missing_event_start", "diagnoses_missing_event_start"
     ),
     count = c(
       data.table::uniqueN(contacts, by = c("patient_id", "encounter_id")), nrow(cases),
       sum(is.na(cases$hospital_start)), sum(is.na(cases$hospital_end)), sum(is.na(cases$age)),
       sum(ops$procedures$ops_year_approximated), sum(is.na(ops$procedures$ops_catalogue_year)),
+      sum(diagnoses$icd_year_approximated), sum(is.na(diagnoses$icd_catalogue_year)),
       sum(is.na(observations$start_datetime)), sum(is.na(diagnoses$start_datetime))
     )
   )
