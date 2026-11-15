@@ -71,7 +71,31 @@ selectFirstCohortContacts <- function(contacts) {
     !nzchar(contacts$case_id) | is.na(contacts$enc_period_start) |
     is.na(contacts$input_datetime) | is.na(contacts$pids_per_ward_id)
   if (any(invalid)) {
-    stop(sum(invalid), " known IP assignment row(s) lack data required for first-contact selection.")
+    affected <- contacts[which(invalid)]
+    missing_case <- is.na(affected$case_id) | !nzchar(affected$case_id)
+    # Counts describe linked rows, so causes can overlap and codings can repeat contacts.
+    counts <- c(
+      encounter_not_found = sum(!affected$encounter_found),
+      missing_case_id = sum(missing_case),
+      missing_contact_start = sum(is.na(affected$enc_period_start)),
+      missing_input_datetime = sum(is.na(affected$input_datetime)),
+      missing_pids_per_ward_id = sum(is.na(affected$pids_per_ward_id))
+    )
+    known_contacts <- affected[!is.na(patient_id) & nzchar(patient_id) &
+      !is.na(encounter_id) & nzchar(encounter_id)]
+    known_cases <- affected[!missing_case & !is.na(patient_id) & nzchar(patient_id)]
+    stop(
+      sum(invalid), " known IP assignment row(s) lack data required for first-contact selection.\n",
+      "Affected distinct contacts (patient/Encounter): ",
+      data.table::uniqueN(known_contacts, by = c("patient_id", "encounter_id")),
+      "; rows without complete contact key: ", nrow(affected) - nrow(known_contacts), "\n",
+      "Affected identifiable cases (patient/case): ",
+      data.table::uniqueN(known_cases, by = c("patient_id", "case_id")),
+      "; rows without complete case key: ", nrow(affected) - nrow(known_cases), "\n",
+      "Causes (linked row counts; may overlap): ",
+      paste(names(counts), counts, sep = "=", collapse = ", "),
+      call. = FALSE
+    )
   }
   # Codings do not identify distinct contacts. Conflicting contact intervals do.
   columns <- c(
