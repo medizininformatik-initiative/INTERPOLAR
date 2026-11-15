@@ -17,3 +17,12 @@ Each workbook contains the expanded local sheet with aggregate results.
 `cohort_manifest.csv` lists all files and population sizes; `cohort_quality.csv`
 contains aggregate data-quality counts. `open_questions.md` documents the agreed
 calculation rules and any remaining scientific questions. `NA` denotes an unavailable statistic.
+
+`cohort_run_metrics.csv` records run status, elapsed analysis time in seconds and
+peak R-process resident memory in KiB (Linux). Divide KiB by 1048576 for GiB.
+The peak covers the R process since startup; database memory is separate.
+A completed export has status `completed`. `failed` indicates a handled failure;
+`running` without a final update indicates that the run has not completed.
+An unavailable measurement is written as `NA`.
+
+Return the report directory, including the Excel workbooks and aggregate CSV files.
