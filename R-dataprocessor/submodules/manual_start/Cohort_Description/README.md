@@ -12,6 +12,9 @@ the normal WP7 input repository. Run from the repository root:
 docker compose run --build --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R cohort-description
 ```
 
+The console shows each loading/calculation step and its duration. During export,
+it shows file x of y, station, study period and FAS.
+
 Results are written to `outputLocal/dataprocessor/reports/cohort_description/`.
 Each workbook contains the expanded local sheet with aggregate results.
 `cohort_manifest.csv` lists all files and population sizes; `cohort_quality.csv`

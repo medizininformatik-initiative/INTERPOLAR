@@ -65,12 +65,12 @@ createCohortDescription <- function() {
   }
   # Validate dates before loading clinical data.
   buildCohortPeriods(wards)
-  prepared <- prepareCohortDescription()
+  prepared <- runCohortStep("Link known INTERPOLAR contacts", prepareCohortDescription())
   data <- loadCohortAnalysisData(prepared, timezone)
-  manifest <- exportCohortDescription(
+  manifest <- runCohortStep("Export expanded workbooks", exportCohortDescription(
     data$cases, wards, timezone,
     etlutils::getVarByNameOrDefaultIfMissing("SITE_CODE"), directory
-  )
+  ))
   data.table::fwrite(data$quality, file.path(directory, "cohort_quality.csv"))
   message("Cohort Description completed: ", nrow(manifest), " expanded workbooks in ", directory)
   status <- "completed"
