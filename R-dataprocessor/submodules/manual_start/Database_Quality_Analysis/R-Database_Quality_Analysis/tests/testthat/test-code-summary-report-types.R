@@ -52,7 +52,7 @@ test_that("new medication and coding reports and renamed measurements use config
   )
   expect_equal(calls, 4L)
   expect_equal(unresolved_queries, 1L)
-  lab <- summaries$Observation[row_type == "detail"]
+  lab <- summaries$Observation[row_type == "detail" & code == "common"]
   expect_equal(lab$count, 6)
   expect_equal(lab$mean, 3.5)
   expect_equal(lab$median, 3.5)

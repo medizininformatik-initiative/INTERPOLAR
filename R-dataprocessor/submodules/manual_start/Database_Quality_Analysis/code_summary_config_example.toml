@@ -1,11 +1,11 @@
-# Separate from COUNT_BATCH_SIZE (availability counts). Use 1 for large databases.
-VALUE_SUMMARY_COLUMN_BATCH_SIZE = 1
+# Column batches share source reads; separate from availability COUNT_BATCH_SIZE.
+VALUE_SUMMARY_COLUMN_BATCH_SIZE = 100
 # Code-group batch targets are in [processing] in code_summary.toml.
 
 # Optional additions to database_quality_analysis_config.toml.
 INCLUDE_CODE_SUMMARY = true
 
-# Process resources separately; serial code chunks limit the active Coding data.
+# Process resources separately and share prepared data within each query.
 # Medication and its usage resources stay together; scopes/targets share each pass.
 # CODE_SUMMARY_QUERY_BATCHING = "resource"  # "all" is available for comparison.
 

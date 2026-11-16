@@ -12,7 +12,7 @@ test_that("restricted sources discard measurements before materialization, casti
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
       # Query the actual SQL stages, rather than just checking for a WHERE string.
-      prefix <- strsplit(query, "\nSELECT c.summary_id", fixed = TRUE)[[1]][[1]]
+      prefix <- strsplit(query, "\nSELECT c.", fixed = TRUE)[[1]][[1]]
       stage_query <- paste0(
         prefix,
         "\nSELECT 'source' AS stage,count(*) AS n FROM source_1 UNION ALL ",
@@ -24,7 +24,7 @@ test_that("restricted sources discard measurements before materialization, casti
     }
   )
   expect_equal(stages[stage == "source", n], 6)
-  expect_equal(stages[stage == "raw", n], 3)
+  expect_equal(stages[stage == "raw", n], 6)
   expect_equal(stages[stage == "normalized", n], 3)
   local <- attr(attr(reports, "variant_reports")$filtered_age_ge18, "local_reports")$Observation
   expect_setequal(local[row_type == "detail", code], c("common", "age-check"))
@@ -94,4 +94,35 @@ test_that("restricted exports respect different coding and link case fields and 
     expect_equal(lapply(attr(actual, "local_reports"), identity), lapply(attr(expected, "local_reports"), identity))
     expect_true(nrow(attr(actual, "local_reports")$Medication[code == "B01" & row_type == "detail"]) > 0L)
   }
+})
+
+test_that("large adult case selections do not repeat a nested-loop case membership check", {
+  fixture <- codeSummaryAgeFixture()
+  fixture$extra_sql <- c(
+    fixture$extra_sql,
+    "INSERT INTO encounter (enc_id,enc_main_encounter_calculated_ref,enc_age_at_admission) SELECT 'plan-e'||n,'Encounter/plan-e'||n,'40' FROM generate_series(1,10000) n;",
+    "INSERT INTO pids_per_ward SELECT 'plan-e'||n FROM generate_series(1,10000) n;",
+    "INSERT INTO observation (obs_id,obs_encounter_calculated_ref,obs_code_system,obs_code_code) SELECT 'plan-o'||n,'Encounter/plan-e'||((n-1)%10000+1),'http://loinc.org','plan-code' FROM generate_series(1,100000) n;",
+    "ANALYZE encounter; ANALYZE pids_per_ward; ANALYZE observation;"
+  )
+  sources <- resolveCodeSummarySources(fixture$metadata, fixture$config, fixture$description)
+  sources <- Filter(function(source) source$resource == "Observation", sources)
+  case_query <- buildCodeSummaryCaseGroupsQuery(
+    fixture$metadata, parseCodeSummaryExports(fixture$config$code_summary_exports),
+    include_filtered = TRUE, table_description = fixture$description
+  )
+  query <- buildCodeSummaryQuery(
+    sources, list(), fixture$config$code_summary_systems, fixture$config$code_summary_normal_range,
+    fixture$config$code_summary_report_types,
+    case_groups_query = case_query,
+    export_variants = "filtered_age_ge18", query_mode = "catalog"
+  )
+  fixture$extra_sql <- c(fixture$extra_sql, paste0(
+    "CREATE TEMP TABLE query_plan (line text); DO $plan$ DECLARE line text; BEGIN ",
+    "FOR line IN EXECUTE ", quoteSqlString(paste0("EXPLAIN (COSTS OFF) ", query)),
+    " LOOP INSERT INTO query_plan VALUES (line); END LOOP; END $plan$;"
+  ))
+  plan <- runCodeSummaryFixtureQuery(fixture, "SELECT row_number() OVER () AS entry, line FROM query_plan")
+  expect_false(any(grepl("Nested Loop Semi", plan$line, fixed = TRUE)))
+  expect_true(any(grepl("scope_buckets", plan$line, fixed = TRUE)))
 })

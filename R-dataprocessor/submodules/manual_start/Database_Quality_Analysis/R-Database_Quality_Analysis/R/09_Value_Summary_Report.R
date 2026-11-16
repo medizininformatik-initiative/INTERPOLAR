@@ -241,120 +241,52 @@ buildTextValueSummaryQuery <- function(table_metadata, data_columns, resource_id
     return(NA_character_)
   }
 
-  table_alias <- "source_row"
-  value_alias <- "value_summary"
-  filled_alias <- "filled_resources"
-  resource_values_alias <- "resource_values"
   table_ref <- quoteTable(
     table_metadata$VIEW_SCHEMA[[1]],
     table_metadata$VIEW_NAME[[1]]
   )
-  resource_id_ref <- quoteQualifiedIdentifier(table_alias, resource_id_column)
-  value_rows <- vapply(data_columns, function(column_name) {
-    column_ref <- quoteQualifiedIdentifier(table_alias, column_name)
+  resource_id_ref <- quoteQualifiedIdentifier("s", resource_id_column)
+  value_aliases <- paste0("value_", seq_along(data_columns))
+  source_projections <- vapply(seq_along(data_columns), function(index) {
     paste0(
-      "(",
-      quoteSqlString(column_name),
-      ", CASE WHEN ",
-      column_ref,
-      " IS NULL OR ",
-      column_ref,
-      "::text = '' THEN NULL ELSE ",
-      column_ref,
-      "::text END)"
+      quoteQualifiedIdentifier("s", data_columns[[index]]), "::text AS ",
+      quoteIdentifier(value_aliases[[index]])
     )
   }, character(1))
+  value_rows <- vapply(seq_along(data_columns), function(index) {
+    paste0("(", index, ", NULLIF(", quoteQualifiedIdentifier("s", value_aliases[[index]]), ", ''))")
+  }, character(1))
+  column_rows <- vapply(seq_along(data_columns), function(index) {
+    paste0("(", index, ", ", quoteSqlString(data_columns[[index]]), ")")
+  }, character(1))
 
+  # Rank resource IDs once so the expanded value stream sorts compact integer
+  # keys instead of repeating long IDs and column names. NULL IDs stay uncounted;
+  # NULLS LAST makes the largest non-NULL rank equal the distinct resource count.
+  # The second grouping set counts filled resources independently of their values,
+  # preserving resources that contain both empty and filled rows for a field.
   paste0(
-    "WITH ",
-    quoteIdentifier(resource_values_alias),
-    " AS (\n  SELECT\n    ",
-    resource_id_ref,
-    " AS ",
-    quoteIdentifier("resource_id"),
-    ",\n    ",
-    quoteQualifiedIdentifier(value_alias, "column_name"),
-    " AS ",
-    quoteIdentifier("column_name"),
-    ",\n    ",
-    quoteQualifiedIdentifier(value_alias, "value"),
-    " AS ",
-    quoteIdentifier("value"),
-    "\n  FROM ",
-    table_ref,
-    " ",
-    quoteIdentifier(table_alias),
-    "\n  CROSS JOIN LATERAL (\n    VALUES\n      ",
-    paste(value_rows, collapse = ",\n      "),
-    "\n  ) AS ",
-    quoteIdentifier(value_alias),
-    "(",
-    paste(vapply(c("column_name", "value"), quoteIdentifier, character(1)), collapse = ", "),
-    ")\n  GROUP BY ",
-    resource_id_ref,
-    ", ",
-    quoteQualifiedIdentifier(value_alias, "column_name"),
-    ", ",
-    quoteQualifiedIdentifier(value_alias, "value"),
-    "\n), ",
-    quoteIdentifier(filled_alias),
-    " AS (\n  SELECT DISTINCT ",
-    quoteIdentifier("resource_id"),
-    ", ",
-    quoteIdentifier("column_name"),
-    "\n  FROM ",
-    quoteIdentifier(resource_values_alias),
-    "\n  WHERE ",
-    quoteIdentifier("value"),
-    " IS NOT NULL\n)\nSELECT\n  ",
-    quoteSqlString(table_metadata$TABLE_FAMILY[[1]]),
-    " AS ",
-    quoteIdentifier("TABLE_FAMILY"),
-    ",\n  ",
-    quoteSqlString(table_metadata$TABLE_NAME[[1]]),
-    " AS ",
-    quoteIdentifier("TABLE_NAME"),
-    ",\n  ",
-    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
-    " AS ",
-    quoteIdentifier("COLUMN_NAME"),
-    ",\n  ",
-    quoteQualifiedIdentifier(resource_values_alias, "value"),
-    " AS ",
-    quoteIdentifier("VALUE"),
-    ",\n  CASE WHEN ",
-    quoteQualifiedIdentifier(resource_values_alias, "value"),
-    " IS NULL THEN\n    COUNT(DISTINCT ",
-    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
-    ") FILTER (WHERE ",
-    quoteQualifiedIdentifier(filled_alias, "resource_id"),
-    " IS NULL)::integer\n  ELSE\n    COUNT(DISTINCT ",
-    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
-    ")::integer\n  END AS ",
-    quoteIdentifier("COUNT"),
-    "\nFROM ",
-    quoteIdentifier(resource_values_alias),
-    "\nLEFT JOIN ",
-    quoteIdentifier(filled_alias),
-    " ON ",
-    quoteQualifiedIdentifier(filled_alias, "resource_id"),
-    " = ",
-    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
-    " AND ",
-    quoteQualifiedIdentifier(filled_alias, "column_name"),
-    " = ",
-    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
-    "\nGROUP BY ",
-    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
-    ", ",
-    quoteQualifiedIdentifier(resource_values_alias, "value"),
-    "\nORDER BY ",
-    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
-    " ASC, COUNT(DISTINCT ",
-    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
-    ") DESC, ",
-    quoteQualifiedIdentifier(resource_values_alias, "value"),
-    " ASC"
+    "WITH source_rows AS MATERIALIZED (SELECT CASE WHEN ", resource_id_ref,
+    " IS NOT NULL THEN DENSE_RANK() OVER (ORDER BY ", resource_id_ref,
+    " NULLS LAST) END AS resource_key, ", paste(source_projections, collapse = ", "),
+    " FROM ", table_ref, " s), ",
+    "resource_total AS (SELECT COALESCE(MAX(resource_key), 0) AS total FROM source_rows), ",
+    "value_counts AS MATERIALIZED (SELECT v.column_id, v.value, ",
+    "COUNT(DISTINCT s.resource_key) AS count, GROUPING(v.value) AS is_total ",
+    "FROM source_rows s CROSS JOIN LATERAL (VALUES ", paste(value_rows, collapse = ", "),
+    ") v(column_id, value) WHERE v.value IS NOT NULL ",
+    "GROUP BY GROUPING SETS ((v.column_id, v.value), (v.column_id))), ",
+    "counts AS (SELECT column_id, value, count FROM value_counts WHERE is_total = 0 ",
+    "UNION ALL SELECT c.column_id, NULL::text, t.total - COALESCE(v.count, 0) ",
+    "FROM (VALUES ", paste(column_rows, collapse = ", "), ") c(column_id, column_name) ",
+    "CROSS JOIN resource_total t LEFT JOIN value_counts v ",
+    "ON c.column_id = v.column_id AND v.is_total = 1) SELECT ",
+    quoteSqlString(table_metadata$TABLE_FAMILY[[1]]), " AS ", quoteIdentifier("TABLE_FAMILY"), ", ",
+    quoteSqlString(table_metadata$TABLE_NAME[[1]]), " AS ", quoteIdentifier("TABLE_NAME"), ", ",
+    "c.column_name AS ", quoteIdentifier("COLUMN_NAME"), ", value AS ", quoteIdentifier("VALUE"), ", ",
+    "count::integer AS ", quoteIdentifier("COUNT"), " FROM counts JOIN (VALUES ",
+    paste(column_rows, collapse = ", "), ") c(column_id, column_name) USING (column_id) ",
+    "ORDER BY column_name, count DESC, value"
   )
 }
 

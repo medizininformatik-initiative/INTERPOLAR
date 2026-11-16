@@ -40,8 +40,6 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
   if (!length(sources)) return(NA_character_)
   report_types <- parseCodeSummaryReportTypes(report_types, names(systems))
   measurement_sources <- vapply(sources, function(source) isTRUE(source$measurement), logical(1))
-  collect_statistics <- any(measurement_sources) && query_mode == "combined"
-  cache_measurements <- any(measurement_sources) && query_mode == "combined"
   chunked_codes <- !is.null(code_keys) && nrow(code_keys) > 0L
   include_diagnostics <- query_mode %in% c("combined", "totals")
   medication_reports <- unique(unlist(lapply(Filter(function(source) {
@@ -97,10 +95,17 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     paste0("EXISTS (SELECT 1 FROM scope_buckets selected_case WHERE selected_case.case_id=", reference, ")")
   }
   codeFilterSql <- function(source, alias = "s") {
-    paste0(
-      "EXISTS (SELECT 1 FROM code_keys k WHERE k.system=", codeSummaryFieldSql(source$fields, "system", alias),
-      " AND k.code=", codeSummaryFieldSql(source$fields, "code", alias), ")"
-    )
+    # Constant membership lists avoid a nested-loop semi join over the chunk
+    # catalog for every source row when PostgreSQL underestimates source sizes.
+    system_filters <- vapply(unique(code_keys$system), function(system) {
+      codes <- code_keys$code[code_keys$system == system]
+      paste0(
+        "(", codeSummaryFieldSql(source$fields, "system", alias), " = ", quoteSqlString(system),
+        " AND ", codeSummaryFieldSql(source$fields, "code", alias), " IN (",
+        paste(vapply(codes, quoteSqlString, character(1)), collapse = ","), "))"
+      )
+    }, character(1))
+    paste0("(", paste(system_filters, collapse = " OR "), ")")
   }
   if (chunked_codes) {
     ctes <- c(ctes, buildCodeSummaryKeyCte(code_keys))
@@ -113,12 +118,14 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
   }
   views <- unique(vapply(c(sources, links), function(source) quoteTable(source$schema, source$view), character(1)))
   source_ctes <- character(length(views))
+  case_filtered_views <- character()
   medication_views <- logical(length(views))
   for (index in seq_along(views)) {
     view_sources <- Filter(function(source) quoteTable(source$schema, source$view) == views[[index]], c(sources, links))
     columns <- unique(unlist(lapply(view_sources, function(source) unname(source$fields))))
     columns <- columns[!is.na(columns)]
     filters <- character()
+    shared_case_filter <- FALSE
     coding_view <- all(vapply(view_sources, function(source) !is.null(source$coding), logical(1)))
     requires_all_medication_ids <- length(links) > 0L && any(vapply(view_sources, function(source) {
       source$resource == "Medication" && any(source$reports %in% medication_reports)
@@ -134,6 +141,11 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     medication_views[[index]] <- any(vapply(view_sources, function(source) source$resource == "Medication", logical(1)))
     if (filter_cases) {
       selected_cases <- unique(vapply(view_sources, caseFilterSql, character(1)))
+      # Share one case join when every Coding/link uses the same case field.
+      shared_case_filter <- length(selected_cases) == 1L && !medication_views[[index]]
+      if (shared_case_filter) {
+        case_filtered_views <- c(case_filtered_views, views[[index]])
+      }
       case_filter <- paste0("(", paste(selected_cases, collapse = " OR "), ")")
       if (medication_views[[index]] && global_identities) {
         ids <- unique(vapply(view_sources, function(source) {
@@ -141,7 +153,8 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
         }, character(1)))
         case_filter <- paste0(case_filter, " OR EXISTS (SELECT 1 FROM selected_medication_refs r WHERE r.medication_ref IN (", paste(ids, collapse = ","), "))")
       }
-      filters <- c(if (length(filters)) paste0("(", paste(filters, collapse = " OR "), ")"), paste0("(", case_filter, ")"))
+      filters <- if (length(filters)) paste0("(", paste(filters, collapse = " OR "), ")") else character()
+      if (!shared_case_filter) filters <- c(filters, paste0("(", case_filter, ")"))
     }
     if (chunked_codes) {
       coding_sources <- Filter(function(source) !is.null(source$coding), view_sources)
@@ -160,15 +173,30 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
         paste0("(", paste(key_filters, collapse = " OR "), ")")
       )
     }
-    source_ctes[[index]] <- paste0(
-      "source_", index, " AS ", if (cache_measurements) "MATERIALIZED ", "(SELECT ",
-      paste(vapply(columns, quoteIdentifier, character(1)), collapse = ", "),
-      " FROM ", views[[index]], " s",
-      if (length(filters)) paste0(" WHERE ", paste(filters, collapse = if (filter_cases || chunked_codes) " AND " else " OR ")), ")"
+    source_columns <- paste(vapply(columns, function(column) quoteQualifiedIdentifier("s", column), character(1)), collapse = ", ")
+    source_query <- paste0(
+      "SELECT ", source_columns, " FROM ", views[[index]], " s",
+      if (length(filters)) paste0(" WHERE ", paste(filters, collapse = if (filter_cases || chunked_codes) " AND " else " OR "))
     )
+    if (shared_case_filter) {
+      case_field <- codeSummaryFieldSql(view_sources[[1]]$fields, "case_id")
+      # Reuse the scope join pattern below: FULL requires a spillable hash/merge
+      # join even when the grouped case population is estimated as one row.
+      # Empty arrays discard unmatched rows without reducing FULL to INNER.
+      source_query <- paste0(
+        "SELECT ", source_columns, " FROM (", source_query, ") s FULL JOIN scope_buckets selected_case ON selected_case.case_id=",
+        codeSummaryReferenceSql(case_field, "Encounter"),
+        " CROSS JOIN LATERAL unnest(CASE WHEN selected_case.case_id IS NOT NULL AND ", case_field,
+        " IS NOT NULL THEN ARRAY[1] ELSE ARRAY[]::integer[] END) selected_match(flag)"
+      )
+    }
+    source_ctes[[index]] <- paste0("source_", index, " AS ", "(", source_query, ")")
   }
   sourceName <- function(source) {
     paste0("source_", match(quoteTable(source$schema, source$view), views))
+  }
+  needsCaseFilter <- function(source) {
+    filter_cases && !quoteTable(source$schema, source$view) %in% case_filtered_views
   }
   ctes <- c(ctes, if (global_identities || filter_cases) source_ctes[!medication_views] else source_ctes)
   if (length(links)) {
@@ -179,7 +207,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
         codeSummaryReferenceSql(fieldSql("medication_ref"), "Medication"), " AS medication_ref, ",
         codeSummaryReferenceSql(fieldSql("pid"), "Patient"), " AS pid, ",
         codeSummaryReferenceSql(fieldSql("case_id"), "Encounter"), " AS case_id FROM ", sourceName(source), " s",
-        if (filter_cases) paste0(" WHERE ", caseFilterSql(source))
+        if (needsCaseFilter(source)) paste0(" WHERE ", caseFilterSql(source))
       )
     })
     ctes <- c(ctes, paste0("links AS MATERIALIZED (SELECT DISTINCT * FROM (", paste(link_selects, collapse = " UNION ALL "), ") linked_resources)"))
@@ -257,7 +285,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     paste0(
       "SELECT ", paste(parts, collapse = ", "), " WHERE ", fieldSql("system"), " IN (",
       paste(vapply(unique(unlist(systems[source$reports])), quoteSqlString, character(1)), collapse = ", "), ")",
-      if (filter_cases && source$resource != "Medication") paste0(" AND ", caseFilterSql(source)),
+      if (needsCaseFilter(source) && source$resource != "Medication") paste0(" AND ", caseFilterSql(source)),
       if (chunked_codes) paste0(" AND ", codeFilterSql(source)),
       if (slim_total) paste0(" AND ", fieldSql("code"), " IS NOT NULL")
     )
@@ -291,8 +319,10 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       catalog_counts, ") counts GROUP BY system,code ORDER BY system,code"
     ))
   }
+  # Measurement rows are deduplicated after range selection. Duplicates do
+  # not change MAX(range_priority), so sorting them once beforehand is redundant.
   ctes <- c(ctes, paste0(
-    "raw_codings AS ", if (cache_measurements) "MATERIALIZED ", "(SELECT DISTINCT * FROM (",
+    "raw_codings AS (SELECT ", if (!any(measurement_sources)) "DISTINCT ", "* FROM (",
     paste(code_selects, collapse = " UNION ALL "),
     ") codes WHERE report IS NOT NULL AND code IS NOT NULL AND own_id IS NOT NULL)"
   ))
@@ -300,7 +330,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
   if (!any(measurement_sources)) {
     # All omitted raw columns are constant here. raw_codings already deduplicated
     # these rows; an extra UNION/DISTINCT or range window would only sort them again.
-    ctes <- c(ctes, paste0("codings AS ", if (query_mode == "combined") "MATERIALIZED ", "(SELECT ", coding_columns, " FROM raw_codings)"))
+    ctes <- c(ctes, paste0("codings AS (SELECT ", coding_columns, " FROM raw_codings)"))
   } else {
     ctes <- c(ctes, paste0(
       "ranked_codings AS (SELECT *, MAX(range_priority) OVER (PARTITION BY ",
@@ -309,7 +339,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     ))
     # Priority zero preserves coded observations without eligible limits.
     ctes <- c(ctes, paste0(
-      "codings AS ", if (query_mode == "combined") "MATERIALIZED ", "(SELECT DISTINCT report,system,coding_path,version,code,kind,own_id,pid,case_id,unit,unit_system, ",
+      "codings AS (SELECT DISTINCT report,system,coding_path,version,code,kind,own_id,pid,case_id,unit,unit_system, ",
       "CASE WHEN range_priority > 0 THEN low END AS low, ",
       "CASE WHEN range_priority > 0 THEN high END AS high, value FROM ranked_codings ",
       "WHERE range_priority = preferred_range_priority",
@@ -430,10 +460,10 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     scoped_events <- "SELECT 'all'::text AS report_scope,e.* FROM raw_events e"
   }
   # Reuse only the selected chunk's resolved events for counts and statistics.
-  # Materializing here avoids repeating source reads and range selection, without
-  # keeping separate wide source/Coding/label caches as in the combined mode.
+  # Share the resolved event stream across counts, measurements and totals
+  # without materializing additional wide source or Coding copies.
   ctes <- c(ctes, paste0(
-    "scoped_events AS ", if (query_mode == "details_statistics") "MATERIALIZED ",
+    "scoped_events AS ", if (query_mode %in% c("combined", "details_statistics")) "MATERIALIZED ",
     "(", scoped_events, ")"
   ))
   if (query_mode == "details_statistics") {
@@ -444,59 +474,5 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
   if (query_mode %in% c("totals", "rare")) {
     return(buildCodeSummaryCompactQuery(ctes, query_mode, rare_groups))
   }
-  dimensions <- "report_scope, report, system, coding_path, version, code, unit, unit_system, low, high"
-  # Both exports retain every combination; masking is applied during CSV export.
-  ctes <- c(
-    ctes,
-    paste0(
-      "events AS MATERIALIZED (SELECT *, ARRAY[", dimensions,
-      "] AS combination_id FROM scoped_events)"
-    ),
-    paste0(
-      "labelled AS ", if (collect_statistics) "MATERIALIZED ", "(SELECT e.*, 'both'::text AS export_target, ",
-      "CASE WHEN e.unresolved THEN 'unresolved medication reference' ELSE 'detail' END AS row_type FROM events e)"
-    ),
-    paste0(
-      "group_labels AS (SELECT report_scope,export_target, report, system, coding_path, row_type, ",
-      "CASE WHEN row_type = 'detail' THEN version END AS version, ",
-      "CASE WHEN row_type = 'detail' THEN code END AS code, ",
-      "CASE WHEN row_type = 'detail' THEN unit END AS unit, ",
-      "CASE WHEN row_type = 'detail' THEN unit_system END AS unit_system, ",
-      "CASE WHEN row_type = 'detail' THEN low END AS low, ",
-      "CASE WHEN row_type = 'detail' THEN high END AS high, ",
-      "count_key, event_key, kind, pid, case_id, ",
-      "CASE WHEN row_type = 'detail' THEN value END AS value,unresolved,unreferenced_medication FROM labelled ",
-      if (query_mode == "combined") paste0(
-        "UNION ALL SELECT report_scope,'both',report, system, NULL::text, 'total', NULL,NULL,NULL,NULL,NULL,NULL, ",
-        "count_key,event_key,kind,pid,case_id,NULL::double precision,false,unreferenced_medication ",
-        "FROM events WHERE NOT unresolved"
-      ), ")"
-    ),
-    # NULL-safe array keys avoid ranking the full event stream. Summary keys
-    # are built only after aggregation, not stored beside every input event.
-    paste0("grouped AS ", if (collect_statistics) "MATERIALIZED ", "(SELECT * FROM group_labels)"),
-    buildCodeSummaryCountsCte()
-  )
-  if (collect_statistics) {
-    ctes <- c(
-      ctes,
-      # A separate DISTINCT observation/value projection prevents medication joins
-      # and repeated flattened reference/coding rows from weighting statistics.
-      paste0(
-        "measurements AS (SELECT DISTINCT report_scope,export_target,report,system,coding_path,row_type,version,code,unit,unit_system,low,high,count_key,value ",
-        "FROM grouped WHERE row_type = 'detail' AND value IS NOT NULL ",
-        "AND value NOT IN ('NaN'::double precision, 'Infinity'::double precision, '-Infinity'::double precision))"
-      ),
-      paste0(
-        "statistics AS (SELECT ARRAY[report_scope,export_target,report,system,coding_path,row_type,version,code,unit,unit_system,low,high] AS summary_id, ",
-        "percentile_cont(0.5) WITHIN GROUP (ORDER BY value) AS median, ",
-        "percentile_cont(0.25) WITHIN GROUP (ORDER BY value) AS q1, ",
-        "percentile_cont(0.75) WITHIN GROUP (ORDER BY value) AS q3, ",
-        "AVG(value) AS mean, STDDEV_SAMP(value) AS sd, MIN(value) AS minimum, MAX(value) AS maximum ",
-        "FROM measurements GROUP BY report_scope,export_target,report,system,coding_path,row_type,version,code,unit,unit_system,low,high)"
-      )
-    )
-  }
-
-  buildCodeSummaryResultQuery(ctes, collect_statistics)
+  buildCodeSummarySharedQuery(ctes, collect_statistics = any(measurement_sources))
 }

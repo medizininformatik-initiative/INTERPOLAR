@@ -74,7 +74,7 @@ test_that("measurement unit systems remain separate for the same code and unit",
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
-  detail <- summaries$Observation[row_type == "detail"]
+  detail <- summaries$Observation[row_type == "detail" & code == "common"]
   expect_equal(nrow(detail), 2L)
   expect_setequal(detail$unit_system, c("http://unitsofmeasure.org", "urn:other-units"))
   expect_equal(detail[unit_system == "urn:other-units", mean], 1)

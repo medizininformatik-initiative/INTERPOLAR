@@ -64,7 +64,7 @@ test_that("explicit measurement overrides remain available", {
     }
   )
   expect_equal(calls, 1L)
-  expect_equal(reports$Observation[row_type == "detail", mean], 3.5)
+  expect_equal(reports$Observation[row_type == "detail" & code == "common", mean], 3.5)
   fixture$config$code_summary_sources[[1]]$measurement <- "auto"
   expect_error(resolveCodeSummarySources(fixture$metadata, fixture$config, fixture$description), "TOML boolean")
 })

@@ -142,7 +142,7 @@ buildCodeSummaryDetailQuery <- function(ctes, collect_statistics = FALSE) {
   ctes <- c(ctes, paste0(
     "grouped AS (SELECT e.report_scope,'both'::text AS export_target,e.report,e.system,e.coding_path,",
     "'detail'::text AS row_type,e.version,e.code,e.unit,e.unit_system,e.low,e.high,",
-    "e.count_key,e.event_key,e.kind,e.pid,e.case_id,e.unreferenced_medication FROM scoped_events e)"
+    "e.count_key,e.event_key,e.kind,e.pid,e.case_id,e.unreferenced_medication FROM scoped_events e WHERE NOT e.unresolved)"
   ), buildCodeSummaryCountsCte())
   if (collect_statistics) {
     ctes <- c(ctes, buildCodeSummaryStatisticsCtes(), paste0(
@@ -151,4 +151,21 @@ buildCodeSummaryDetailQuery <- function(ctes, collect_statistics = FALSE) {
     ))
   }
   buildCodeSummaryResultQuery(ctes, collect_statistics)
+}
+
+#' Share resolved events across detail statistics and independent system totals
+#'
+#' The shared event CTE reads each source view once per resource query. Detail
+#' statistics and totals retain their independent deduplication rules; unresolved
+#' medication references are emitted only by the diagnostic/total branch.
+buildCodeSummarySharedQuery <- function(ctes, collect_statistics = FALSE) {
+  detail_query <- buildCodeSummaryDetailQuery(character(), collect_statistics)
+  total_query <- buildCodeSummaryCompactQuery(character(), "totals")
+  paste0(
+    "/* INTERPOLAR DQA shared summary */\nWITH ", paste(ctes, collapse = ",\n"),
+    "\nSELECT c.* FROM ((", detail_query, ") UNION ALL (",
+    total_query, ")) c ",
+    "ORDER BY c.report_scope,c.export_target,c.report,c.system,c.coding_path,c.row_type,",
+    "c.version,c.code,c.unit,c.unit_system,c.low,c.high"
+  )
 }

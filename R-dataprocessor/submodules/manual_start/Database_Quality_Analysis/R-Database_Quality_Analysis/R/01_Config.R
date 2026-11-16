@@ -109,7 +109,7 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     progress_interval_seconds = as.numeric(getConfigValue("PROGRESS_INTERVAL_SECONDS", 60)),
     count_batch_size = as.integer(getConfigValue("COUNT_BATCH_SIZE", 100)),
     value_summary_column_batch_size = validatePositiveIntegerConfig(
-      getConfigValue("VALUE_SUMMARY_COLUMN_BATCH_SIZE", 1L), "VALUE_SUMMARY_COLUMN_BATCH_SIZE"
+      getConfigValue("VALUE_SUMMARY_COLUMN_BATCH_SIZE", 100L), "VALUE_SUMMARY_COLUMN_BATCH_SIZE"
     ),
     use_database_locks = as.logical(getConfigValue("USE_DATABASE_LOCKS", FALSE)),
     boolean_group_table_families = getConfigValue("BOOLEAN_GROUP_TABLE_FAMILIES", "Frontend"),

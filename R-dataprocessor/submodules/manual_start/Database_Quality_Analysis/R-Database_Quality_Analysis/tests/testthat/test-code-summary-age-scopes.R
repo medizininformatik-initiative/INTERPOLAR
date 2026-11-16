@@ -131,7 +131,7 @@ test_that("missing age and disabled IP metadata skip only unavailable variants",
 test_that("export settings accept legacy TOMLs and reject ambiguous selections", {
   expect_equal(parseCodeSummaryExports()$variants, c("all", "filtered"))
   config <- getConfig(envir = new.env(parent = emptyenv()), command_arguments = character())
-  expect_equal(config$code_summary_exports$variants, "filtered_age_ge18")
+  expect_equal(config$code_summary_exports$variants, c("all_age_ge18", "filtered_age_ge18"))
   for (variants in list(character(), c("all", "all"), "adults", NA_character_, TRUE)) {
     expect_error(parseCodeSummaryExports(list(variants = variants)), "unique CSV variants")
   }
@@ -181,7 +181,7 @@ test_that("absent age columns use calendar age at main-case admission with one P
   selected <- createCodeSummaryReports(metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
-      prefix <- strsplit(query, "\nSELECT c.summary_id", fixed = TRUE)[[1]][[1]]
+      prefix <- strsplit(query, "\nSELECT c.", fixed = TRUE)[[1]][[1]]
       stage <- runCodeSummaryFixtureQuery(fixture, paste0(prefix, "\nSELECT count(*) AS n FROM source_1"))
       expect_equal(stage$n, 6)
       runCodeSummaryFixtureQuery(fixture, query)

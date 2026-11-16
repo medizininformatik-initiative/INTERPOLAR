@@ -54,7 +54,7 @@ loadCodeSummaryConfig <- function(path) {
 
 #' Validate code-group execution limits without changing report semantics
 parseCodeSummaryProcessing <- function(processing = NULL) {
-  defaults <- list(enabled = TRUE, target_rows_per_chunk = 500000, max_codes_per_chunk = 500L)
+  defaults <- list(enabled = FALSE, target_rows_per_chunk = 500000, max_codes_per_chunk = 500L)
   if (is.null(processing)) return(defaults)
   if (
     !is.list(processing) || (length(processing) && is.null(names(processing))) || anyDuplicated(names(processing)) ||

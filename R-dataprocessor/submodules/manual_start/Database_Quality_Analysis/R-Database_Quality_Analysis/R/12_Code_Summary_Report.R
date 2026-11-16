@@ -1,6 +1,6 @@
 #' Create the code-report tables and their source description
 #'
-#' Executes serial code-group and cross-code passes, sharing the requested output scopes.
+#' Shares prepared resource data across counts, statistics and requested output scopes.
 #' No individual IDs or raw observations are transferred to R or exported. Both outputs
 #' retain every combination; small counts are masked only during global CSV export.
 createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbGetReadOnlyQuery,
@@ -187,7 +187,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     "Patient/case counts are deduplicated; cases use calculated main-encounter references only.",
     "no_case_count: counted resources with no valid case in any associated event of this group.",
     "total: independently deduplicated per resource/system, across all Coding paths; coding_path is empty.",
-    "Global CSVs retain all detail rows; positive counts below five are written as <5, except no_case_count and unreferenced_medication_count; zero and unavailable counts remain unchanged.",
+    "Global CSVs retain all detail rows; all positive counts below five are written as <5; zero remains 0 and unavailable counts remain empty. Measurement statistics are empty when count is below five.",
     "Local output: every coded combination is a detail row, including count < 5, with its available statistics.",
     "Detail groups: resource, system, coding_path, version, code; measurement sources also group by unit and limits.",
     "unit_system describes the measurement unit (not the coding system); it prevents ambiguous unit groups.",
@@ -317,7 +317,12 @@ writeCodeSummaryArchive <- function(code_summaries, filename_without_extension,
     # values remain numeric and exact, including counts used by statistics.
     reports <- lapply(reports, function(report) {
       report <- data.table::copy(report)
-      count_columns <- setdiff(grep("^count$|_count$", names(report), value = TRUE), c("no_case_count", "unreferenced_medication_count"))
+      rare_rows <- which(!is.na(report$count) & report$count < 5)
+      statistic_columns <- intersect(c("median", "q1", "q3", "mean", "sd", "minimum", "maximum"), names(report))
+      for (column in statistic_columns) {
+        data.table::set(report, i = rare_rows, j = column, value = NA_real_)
+      }
+      count_columns <- grep("^count$|_count$", names(report), value = TRUE)
       for (column in count_columns) {
         values <- report[[column]]
         masked <- as.character(values)

@@ -5,22 +5,15 @@
 # Select only the CSV variants needed. Age groups refer to the main-case admission.
 # filtered variants additionally require the existing FHIR/IP scope configuration.
 [exports]
-variants = [
-            #"all",
-            #"all_age_ge18",
-            #"all_age_lt18",
-            #"filtered",
-            "filtered_age_ge18",
-            #"filtered_age_lt18"
-            ]
+variants = ["all_age_ge18", "filtered_age_ge18"]
 age_column = "enc_age_at_admission"
 # If the column is absent, derive completed years from period/start and birthDate.
 fallback_to_birthdate = true
 
-# Serial batches keep whole system/code groups together; very common codes run alone.
-# The target counts projected source rows, not bytes, and is not a hard disk cap.
+# Share prepared data within each resource query by default.
+# Optional code-group batches keep each system/code pair together.
 [processing]
-enabled = true
+enabled = false
 target_rows_per_chunk = 500000
 max_codes_per_chunk = 500
 
