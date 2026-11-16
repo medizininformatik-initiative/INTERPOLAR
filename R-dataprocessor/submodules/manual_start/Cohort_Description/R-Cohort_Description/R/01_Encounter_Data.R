@@ -117,3 +117,24 @@ selectFirstCohortContacts <- function(contacts) {
   )
   contacts[!duplicated(contacts, by = c("patient_id", "case_id"))]
 }
+
+
+#' Save unlinked assignments locally and retain linked contacts for analysis
+#'
+#' Identifiers belong in this local diagnostic file, outside aggregate reports.
+#' An unmatched assignment does not prove that the source resource was deleted.
+#' @param contacts Linked station assignments.
+#' @param directory Local diagnostic output directory.
+#' @return Contacts with a successful patient/Encounter link, in original order.
+retainLinkedCohortContacts <- function(contacts, directory) {
+  unmatched <- contacts[encounter_found == FALSE]
+  dir.create(directory, recursive = TRUE, showWarnings = FALSE)
+  path <- file.path(directory, "unlinked_station_contacts.csv")
+  # Rewrite even for zero rows so an earlier run cannot leave stale identifiers.
+  data.table::fwrite(unmatched, path, na = "NA")
+  message(
+    "Cohort Description: excluded ", nrow(unmatched),
+    " unlinked station assignment row(s); local diagnostic file: ", path
+  )
+  contacts[encounter_found == TRUE]
+}

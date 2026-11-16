@@ -29,3 +29,9 @@ A completed export has status `completed`. `failed` indicates a handled failure;
 An unavailable measurement is written as `NA`.
 
 Return the report directory, including the Excel workbooks and aggregate CSV files.
+
+Unlinked station assignments are excluded from the analysis. Their identifiers
+and available assignment details are written locally to
+`outputLocal/dataprocessor/diagnostics/cohort_description/unlinked_station_contacts.csv`.
+This diagnostic file is separate from the aggregate report directory and is for
+local investigation. The log records only the excluded row count and file path.

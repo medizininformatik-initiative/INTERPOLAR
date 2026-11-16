@@ -20,12 +20,17 @@ test_that("normal cohort start writes metrics on success and on an analysis erro
       expect_identical(initial$status, "running")
       expect_true(is.na(initial$elapsed_seconds))
       if (fail) stop("simulated analysis failure")
-      list()
+      list(known_ip_contacts = data.table::data.table(
+        encounter_id = c("missing", "present"), encounter_found = c(FALSE, TRUE)
+      ))
     },
-    loadCohortAnalysisData = function(...) list(
-      cases = data.table::data.table(),
-      quality = data.table::data.table(check = "example", count = 0L)
-    ),
+    loadCohortAnalysisData = function(prepared, timezone) {
+      expect_identical(prepared$known_ip_contacts$encounter_id, "present")
+      list(
+        cases = data.table::data.table(),
+        quality = data.table::data.table(check = "example", count = 0L)
+      )
+    },
     exportCohortDescription = function(...) data.table::data.table(file = "example.xlsx"),
     .package = "CohortDescription"
   )

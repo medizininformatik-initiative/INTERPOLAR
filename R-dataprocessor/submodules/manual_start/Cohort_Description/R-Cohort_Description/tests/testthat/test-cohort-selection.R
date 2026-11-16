@@ -126,3 +126,40 @@ test_that("invalid first contacts report aggregate causes without exposing ident
   message <- conditionMessage(tryCatch(selectFirstCohortContacts(contacts), error = identity))
   expect_match(message, "rows without complete contact key: 1", fixed = TRUE)
 })
+
+
+test_that("unlinked contacts are excluded with identifiers only in a local diagnostic file", {
+  directory <- tempfile("cohort-diagnostics-")
+  on.exit(unlink(directory, recursive = TRUE), add = TRUE)
+  time <- as.POSIXct("2026-01-01", tz = "UTC")
+  contacts <- data.table::data.table(
+    patient_id = "private-patient", encounter_id = c("private-missing", "private-present"),
+    ward_name = "ward", encounter_found = c(FALSE, TRUE),
+    enc_main_encounter_calculated_ref = c(NA, "Encounter/case"),
+    enc_period_start = c(as.POSIXct(NA), time), enc_period_end = time + 86400,
+    input_datetime = time, pids_per_ward_id = 1:2
+  )
+  before <- data.table::copy(contacts)
+  messages <- character()
+  output <- capture.output(result <- withCallingHandlers(
+    retainLinkedCohortContacts(contacts, directory),
+    message = function(m) {
+      messages <<- c(messages, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  ))
+  expect_equal(result, contacts[2])
+  expect_equal(contacts, before)
+  expect_false(any(grepl("private-", c(messages, output), fixed = TRUE)))
+  expect_match(messages[1], "excluded 1")
+  path <- file.path(directory, "unlinked_station_contacts.csv")
+  expect_equal(data.table::fread(path)$encounter_id, "private-missing")
+  expect_equal(selectFirstCohortContacts(result)$encounter_id, "private-present")
+  # Linked contacts with missing chronology still fail the existing validation.
+  result[, enc_period_start := as.POSIXct(NA)]
+  expect_error(selectFirstCohortContacts(result), "lack data")
+  expect_message(retainLinkedCohortContacts(contacts[2], directory), "excluded 0")
+  expect_equal(nrow(data.table::fread(path)), 0L)
+  expect_message(empty <- retainLinkedCohortContacts(contacts[1], directory), "excluded 1")
+  expect_equal(nrow(empty), 0L)
+})
