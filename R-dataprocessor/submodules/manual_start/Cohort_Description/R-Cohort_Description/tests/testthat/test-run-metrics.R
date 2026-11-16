@@ -1,13 +1,16 @@
 test_that("normal cohort start writes metrics on success and on an analysis error", {
   directory <- tempfile("cohort-metrics-")
   on.exit(unlink(directory, recursive = TRUE), add = TRUE)
-  output <- file.path(directory, "reports", "cohort_description", "cohort_run_metrics.csv")
+  global_dir <- file.path(directory, "outputGlobal", "dataprocessor")
+  local_dir <- file.path(directory, "outputLocal", "dataprocessor")
+  report_dir <- file.path(global_dir, "reports", "cohort_description")
+  output <- file.path(report_dir, "cohort_run_metrics.csv")
   values <- list(
     ward_name = "A", phase_a_start = "2025-01-01", phase_b_start = "2025-03-01",
     phase_b_end = "2025-06-01", ward_type = "internistic", department = "0100"
   )
   testthat::local_mocked_bindings(
-    getModuleDirNames = function(...) list(local_dir = directory),
+    getModuleDirNames = function(...) list(local_dir = local_dir, global_dir = global_dir),
     getProcessPeakMemoryKiB = function() 2048,
     extractVariablesListValues = function(group, column) values[[column]],
     getVarByNameOrDefaultIfMissing = function(...) "site",
@@ -31,7 +34,10 @@ test_that("normal cohort start writes metrics on success and on an analysis erro
         quality = data.table::data.table(check = "example", count = 0L)
       )
     },
-    exportCohortDescription = function(...) data.table::data.table(file = "example.xlsx"),
+    exportCohortDescription = function(cases, wards, timezone, site, directory) {
+      expect_identical(directory, report_dir)
+      data.table::data.table(file = "example.xlsx")
+    },
     .package = "CohortDescription"
   )
   expect_message(result <- createCohortDescription(), "completed")
@@ -40,6 +46,11 @@ test_that("normal cohort start writes metrics on success and on an analysis erro
   expect_gte(metrics$elapsed_seconds, 0)
   expect_equal(metrics$max_rss_kib, 2048)
   expect_equal(result$file, "example.xlsx")
+  expect_true(file.exists(file.path(report_dir, "cohort_quality.csv")))
+  diagnostic <- file.path(local_dir, "diagnostics", "cohort_description", "unlinked_station_contacts.csv")
+  expect_identical(data.table::fread(diagnostic)$encounter_id, "missing")
+  expect_false(dir.exists(file.path(local_dir, "reports")))
+  expect_false(any(grepl("unlinked_station_contacts", list.files(global_dir, recursive = TRUE))))
   fail <- TRUE
   expect_error(createCohortDescription(), "simulated analysis failure")
   expect_identical(data.table::fread(output)$status, "failed")

@@ -107,7 +107,9 @@ writeCohortWorkbook <- function(template, cells, headers, destination, timezone)
   }
   xml2::write_xml(sheet, sheet_path)
   dir.create(dirname(destination), recursive = TRUE, showWarnings = FALSE)
-  zip::zipr(destination, list.files(directory, all.files = TRUE, no.. = TRUE), root = directory)
+  # zipr changes its working directory to root; resolve the output directory first.
+  archive_path <- file.path(normalizePath(dirname(destination), mustWork = TRUE), basename(destination))
+  zip::zipr(archive_path, list.files(directory, all.files = TRUE, no.. = TRUE), root = directory)
   destination
 }
 

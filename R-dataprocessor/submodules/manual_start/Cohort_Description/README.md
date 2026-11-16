@@ -15,7 +15,7 @@ docker compose run --build --rm --no-deps r-env Rscript R-dataprocessor/StartDat
 The console shows each loading/calculation step and its duration. During export,
 it shows file x of y, station, study period and FAS.
 
-Results are written to `outputLocal/dataprocessor/reports/cohort_description/`.
+Results are written to `outputGlobal/dataprocessor/reports/cohort_description/`.
 Each workbook contains the expanded local sheet with aggregate results.
 `cohort_manifest.csv` lists all files and population sizes; `cohort_quality.csv`
 contains aggregate data-quality counts. `open_questions.md` documents the agreed

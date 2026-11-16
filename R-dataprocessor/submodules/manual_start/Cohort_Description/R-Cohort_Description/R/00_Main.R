@@ -42,7 +42,7 @@ prepareCohortDescription <- function() {
 #' @export
 createCohortDescription <- function() {
   started <- proc.time()[["elapsed"]]
-  directory <- file.path(etlutils::getModuleDirNames(NULL)$local_dir, "reports", "cohort_description")
+  directory <- file.path(etlutils::getModuleDirNames(NULL)$global_dir, "reports", "cohort_description")
   dir.create(directory, recursive = TRUE, showWarnings = FALSE)
   # Write an initial status so a hard-killed run is never mistaken for a completed one.
   write_metrics <- function(status) {
