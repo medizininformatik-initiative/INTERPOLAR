@@ -1,7 +1,7 @@
 #' Reuse exact count aggregation in detail and narrow cross-code passes
 buildCodeSummaryCountsCte <- function() {
   paste0(
-    "counts AS (SELECT ARRAY[g.report_scope,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high] AS summary_id,g.report_scope,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high, ",
+    "counts AS (SELECT ARRAY[g.report_scope,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high,g.range_type,g.range_type_system,g.age_low,g.age_low_unit,g.age_low_code,g.age_low_system,g.age_high,g.age_high_unit,g.age_high_code,g.age_high_system] AS summary_id,g.report_scope,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high,g.range_type,g.range_type_system,g.age_low,g.age_low_unit,g.age_low_code,g.age_low_system,g.age_high,g.age_high_unit,g.age_high_code,g.age_high_system, ",
     "COUNT(DISTINCT g.count_key) AS count, ",
     "COUNT(DISTINCT g.pid) AS patient_count, COUNT(DISTINCT g.case_id) AS case_count, ",
     "CASE WHEN g.row_type = 'unresolved medication reference' THEN ",
@@ -14,7 +14,7 @@ buildCodeSummaryCountsCte <- function() {
 
     "COUNT(DISTINCT g.count_key) FILTER (WHERE g.unreferenced_medication) AS unreferenced_medication_count ",
     "FROM grouped g ",
-    "GROUP BY g.report_scope,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high)"
+    "GROUP BY g.report_scope,g.export_target,g.report,g.system,g.coding_path,g.row_type,g.version,g.code,g.unit,g.unit_system,g.low,g.high,g.range_type,g.range_type_system,g.age_low,g.age_low_unit,g.age_low_code,g.age_low_system,g.age_high,g.age_high_unit,g.age_high_code,g.age_high_system)"
   )
 }
 
@@ -40,10 +40,10 @@ buildCodeSummaryResultQuery <- function(ctes, collect_statistics = FALSE) {
   paste0(
     "/* INTERPOLAR DQA code summary */\nWITH ", paste(ctes, collapse = ",\n"),
     "\nSELECT c.summary_id,c.report_scope,c.output_target AS export_target,c.report,c.system,c.coding_path,c.row_type,c.version,c.code,",
-    "c.unit,c.unit_system,c.low,c.high,c.count,c.patient_count,c.case_count,c.no_case_count,c.medication_count,",
+    "c.unit,c.unit_system,c.low,c.high,c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system,c.count,c.patient_count,c.case_count,c.no_case_count,c.medication_count,",
     "c.medication_request_count,c.medication_administration_count,c.medication_statement_count,c.unreferenced_medication_count,",
     statistics_select, " FROM counts_outputs c", statistics_join,
-    "ORDER BY c.report_scope,c.output_target,c.report,c.system,c.coding_path,c.row_type,c.version,c.code,c.unit,c.unit_system,c.low,c.high"
+    "ORDER BY c.report_scope,c.output_target,c.report,c.system,c.coding_path,c.row_type,c.version,c.code,c.unit,c.unit_system,c.low,c.high,c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system"
   )
 }
 
@@ -81,7 +81,7 @@ buildCodeSummaryChunkMedicationCte <- function(sources) {
 
 #' Reuse the exact deduplicated resource/value stream and quartile calculation
 buildCodeSummaryStatisticsCtes <- function() {
-  dimensions <- "report_scope,report,system,coding_path,version,code,unit,unit_system,low,high"
+  dimensions <- "report_scope,report,system,coding_path,version,code,unit,unit_system,low,high,range_type,range_type_system,age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system"
   c(
     paste0(
       "measurements AS (SELECT DISTINCT ", dimensions, ",count_key,value FROM scoped_events WHERE NOT unresolved AND value IS NOT NULL ",
@@ -96,7 +96,7 @@ buildCodeSummaryStatisticsCtes <- function() {
 
 #' Compute exact quantiles independently, retaining the separate-pass query API
 buildCodeSummaryStatisticsQuery <- function(ctes) {
-  dimensions <- "report_scope,report,system,coding_path,version,code,unit,unit_system,low,high"
+  dimensions <- "report_scope,report,system,coding_path,version,code,unit,unit_system,low,high,range_type,range_type_system,age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system"
   ctes <- c(ctes, buildCodeSummaryStatisticsCtes())
   paste0(
     "/* INTERPOLAR DQA code statistics */\nWITH ", paste(ctes, collapse = ",\n"),
@@ -107,11 +107,11 @@ buildCodeSummaryStatisticsQuery <- function(ctes) {
 #' Aggregate cross-code totals/diagnostics or rare pools independently and exactly
 #'
 #' Distinct counts are never summed across detail chunks. The rare catalog carries
-#' aggregate group metadata only; full range selection still precedes matching it.
+#' aggregate group metadata only; all reference-range dimensions participate in matching.
 buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL) {
   from <- " FROM scoped_events e"
   if (mode == "rare") {
-    dimensions <- c("report_scope", "report", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high")
+    dimensions <- c("report_scope", "report", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")
     ctes <- c(ctes, buildCodeSummaryValuesCte(rare_groups, dimensions, "rare_groups"))
     e_keys <- paste0("e.", dimensions, collapse = ",")
     r_keys <- paste0("r.", dimensions, collapse = ",")
@@ -127,7 +127,7 @@ buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL) {
     "grouped AS (SELECT e.report_scope,", if (mode == "rare") "'global'" else "'both'", "::text AS export_target,",
     "e.report,e.system,", if (mode == "rare") "e.coding_path" else "NULL::text", " AS coding_path,",
     if (mode == "rare") "'other (count < 5)'::text" else "CASE WHEN e.unresolved THEN 'unresolved medication reference' ELSE 'total' END", " AS row_type,",
-    "NULL::text AS version,NULL::text AS code,NULL::text AS unit,NULL::text AS unit_system,NULL::text AS low,NULL::text AS high,",
+    "NULL::text AS version,NULL::text AS code,NULL::text AS unit,NULL::text AS unit_system,NULL::text AS low,NULL::text AS high,NULL::text AS range_type,NULL::text AS range_type_system,NULL::text AS age_low,NULL::text AS age_low_unit,NULL::text AS age_low_code,NULL::text AS age_low_system,NULL::text AS age_high,NULL::text AS age_high_unit,NULL::text AS age_high_code,NULL::text AS age_high_system,",
     "e.count_key,e.event_key,e.kind,e.pid,e.case_id,e.unreferenced_medication", from, ")"
   ), buildCodeSummaryCountsCte())
   buildCodeSummaryResultQuery(ctes)
@@ -141,12 +141,12 @@ buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL) {
 buildCodeSummaryDetailQuery <- function(ctes, collect_statistics = FALSE) {
   ctes <- c(ctes, paste0(
     "grouped AS (SELECT e.report_scope,'both'::text AS export_target,e.report,e.system,e.coding_path,",
-    "'detail'::text AS row_type,e.version,e.code,e.unit,e.unit_system,e.low,e.high,",
+    "'detail'::text AS row_type,e.version,e.code,e.unit,e.unit_system,e.low,e.high,e.range_type,e.range_type_system,e.age_low,e.age_low_unit,e.age_low_code,e.age_low_system,e.age_high,e.age_high_unit,e.age_high_code,e.age_high_system,",
     "e.count_key,e.event_key,e.kind,e.pid,e.case_id,e.unreferenced_medication FROM scoped_events e WHERE NOT e.unresolved)"
   ), buildCodeSummaryCountsCte())
   if (collect_statistics) {
     ctes <- c(ctes, buildCodeSummaryStatisticsCtes(), paste0(
-      "statistics AS (SELECT ARRAY[report_scope,'both',report,system,coding_path,'detail',version,code,unit,unit_system,low,high] AS summary_id,",
+      "statistics AS (SELECT ARRAY[report_scope,'both',report,system,coding_path,'detail',version,code,unit,unit_system,low,high,range_type,range_type_system,age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system] AS summary_id,",
       "quartiles[2] AS median,quartiles[1] AS q1,quartiles[3] AS q3,mean,sd,minimum,maximum FROM measurement_statistics)"
     ))
   }
@@ -166,6 +166,6 @@ buildCodeSummarySharedQuery <- function(ctes, collect_statistics = FALSE) {
     "\nSELECT c.* FROM ((", detail_query, ") UNION ALL (",
     total_query, ")) c ",
     "ORDER BY c.report_scope,c.export_target,c.report,c.system,c.coding_path,c.row_type,",
-    "c.version,c.code,c.unit,c.unit_system,c.low,c.high"
+    "c.version,c.code,c.unit,c.unit_system,c.low,c.high,c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system"
   )
 }

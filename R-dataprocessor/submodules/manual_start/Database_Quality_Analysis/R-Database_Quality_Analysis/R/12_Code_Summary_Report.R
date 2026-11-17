@@ -91,7 +91,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
       ))
     }
     query <- buildCodeSummaryQuery(
-      batch_sources, batch_links, config$code_summary_systems, config$code_summary_normal_range, report_types,
+      batch_sources, batch_links, config$code_summary_systems, report_types,
       case_scope_query = if (is.null(case_groups_query)) case_scope_query else NULL,
       case_groups_query = case_groups_query, export_variants = export_variants
     )
@@ -110,7 +110,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
   columns <- c(
     "row_type", "system", "coding_path", "version", "code", "count", "patient_count", "case_count", "no_case_count"
   )
-  measurement_columns <- c("unit", "unit_system", "median", "q1", "q3", "mean", "sd", "minimum", "maximum", "low", "high")
+  measurement_columns <- c("unit", "unit_system", "median", "q1", "q3", "mean", "sd", "minimum", "maximum", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")
   medication_columns <- c(
     "medication_count", "medication_request_count", "medication_administration_count",
     "medication_statement_count", "unreferenced_medication_count"
@@ -137,7 +137,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
       } else {
         report <- data.table::as.data.table(stats::setNames(
           lapply(output_columns, function(column) {
-            if (column %in% c("row_type", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high")) character() else numeric()
+            if (column %in% c("row_type", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")) character() else numeric()
           }), output_columns
         ))
       }
@@ -189,14 +189,10 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     "total: independently deduplicated per resource/system, across all Coding paths; coding_path is empty.",
     "Global CSVs retain all detail rows; all positive counts below five are written as <5; zero remains 0 and unavailable counts remain empty. Measurement statistics are empty when count is below five.",
     "Local output: every coded combination is a detail row, including count < 5, with its available statistics.",
-    "Detail groups: resource, system, coding_path, version, code; measurement sources also group by unit and limits.",
+    "Detail groups: resource, system, coding_path, version, code; measurement sources also group by unit, limits, type and age bounds.",
     "unit_system describes the measurement unit (not the coding system); it prevents ambiguous unit groups.",
-    paste0(
-      "Reference limits prefer referenceRange.type code=", config$code_summary_normal_range$code,
-      " regardless of type system; fallback to missing type=", config$code_summary_normal_range$fallback_to_missing_type, "."
-    ),
-    "Selection is per observation/coding/measurement; all ranges at the preferred priority are retained.",
-    "Other types do not supply reference limits. Coded observations without eligible ranges still count with empty limits.",
+    "All supplied reference ranges are grouped by limits, type code/system and age bounds with units.",
+    "Coded observations with missing reference ranges still count with empty range fields.",
     "Statistics: distinct observation/value per group, numeric finite values, sample SD, continuous quartiles.",
     "Low/high limits are kept as supplied; multiple reference ranges may place an observation in several groups.",
     "Medication.csv combines Medication codes, linked usage counts and direct medicationCodeableConcept codes.",

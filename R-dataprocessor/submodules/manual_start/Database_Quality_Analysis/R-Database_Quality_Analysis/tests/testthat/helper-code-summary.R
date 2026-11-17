@@ -52,6 +52,8 @@ codeSummaryFixture <- function() {
         "referenceRange/type/coding/code", "referenceRange/type/coding/system"
       )
       fields <- c(fields, "value", "unit", "unit_system", "low", "high", "range_type", "range_system")
+      paths <- c(paths, "referenceRange/age/low/value", "referenceRange/age/low/unit", "referenceRange/age/low/code", "referenceRange/age/low/system", "referenceRange/age/high/value", "referenceRange/age/high/unit", "referenceRange/age/high/code", "referenceRange/age/high/system")
+      fields <- c(fields, "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")
       paths <- c(paths, paste0("method/coding/", c("system", "version", "code")))
       fields <- c(fields, "method_system", "method_version", "method_code")
     }
@@ -186,8 +188,25 @@ runCodeSummaryFixtureQuery <- function(fixture, query) {
   ), stdin = sql_file, stdout = TRUE, stderr = error_file)
   if (!is.null(attr(output, "status"))) stop(paste(readLines(error_file), collapse = "\n"))
   header <- names(data.table::fread(text = paste0(output[[1]], "\n"), nrows = 0L))
-  text_columns <- intersect(header, c("summary_id", "report_scope", "export_target", "report", "system", "coding_path", "row_type", "version", "code", "unit", "unit_system", "low", "high"))
+  text_columns <- intersect(header, c("summary_id", "report_scope", "export_target", "report", "system", "coding_path", "row_type", "version", "code", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system"))
   # Match PostgreSQL/DBI text types, including formatted limits and leading zeros.
   classes <- if (length(text_columns)) stats::setNames(rep("character", length(text_columns)), text_columns)
   data.table::fread(text = paste0(paste(output, collapse = "\n"), "\n"), na.strings = "", keepLeadingZeros = TRUE, colClasses = classes)
+}
+
+# Repeated ranges and type Codings share six resources, three patients and two cases.
+codeSummaryRangeFixture <- function() {
+  fixture <- codeSummaryAgeFixture()
+  fixture$config$code_summary_exports$variants <- c("all_age_ge18", "filtered_age_ge18")
+  fixture$extra_sql <- c(
+    fixture$extra_sql,
+    "DELETE FROM observation;",
+    "UPDATE encounter SET enc_age_at_admission='40';",
+    "INSERT INTO pids_per_ward VALUES ('e2');",
+    "INSERT INTO observation (obs_id,obs_patient_ref,obs_encounter_calculated_ref,obs_code_system,obs_code_code,obs_value,obs_unit,obs_unit_system,obs_low,obs_high,obs_range_type,obs_range_system,obs_age_low,obs_age_low_unit,obs_age_low_code,obs_age_low_system,obs_age_high,obs_age_high_unit,obs_age_high_code,obs_age_high_system) SELECT 'range-'||n,'Patient/demo-'||((n-1)%3+1),'Encounter/e'||((n-1)%2+1),'http://loinc.org','2345-7',70+n*5,'mg/dL','http://unitsofmeasure.org','70','110',r.type,r.system,r.age_low,r.unit,r.code,'http://unitsofmeasure.org',r.age_high,r.unit,r.code,'http://unitsofmeasure.org' FROM generate_series(1,6) n CROSS JOIN (VALUES ('normal','http://terminology.hl7.org/CodeSystem/referencerange-meaning','18','65','years','a'),('therapeutic','http://terminology.hl7.org/CodeSystem/referencerange-meaning','18','65','years','a'),('normal','urn:example:range-types','18','65','years','a'),('normal','http://terminology.hl7.org/CodeSystem/referencerange-meaning','216','780','months','mo'),('normal','http://terminology.hl7.org/CodeSystem/referencerange-meaning','65',NULL,'years','a')) r(type,system,age_low,age_high,unit,code);",
+    "INSERT INTO observation SELECT * FROM observation;",
+    "INSERT INTO observation (obs_id,obs_patient_ref,obs_encounter_calculated_ref,obs_code_system,obs_code_code,obs_value,obs_unit,obs_unit_system) SELECT 'zero-'||n,'Patient/zero-'||n,'Encounter/e2','http://loinc.org','synthetic-zero',0,'1','http://unitsofmeasure.org' FROM generate_series(1,5) n;",
+    "INSERT INTO observation (obs_id,obs_patient_ref,obs_encounter_calculated_ref,obs_code_system,obs_code_code,obs_value,obs_unit,obs_low,obs_high,obs_range_type,obs_age_low,obs_age_low_unit) SELECT 'small-'||n,'Patient/small','Encounter/e2','http://loinc.org','synthetic-small',n,'mg/L','0','5','normal','18','years' FROM generate_series(1,3) n;"
+  )
+  fixture
 }

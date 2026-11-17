@@ -56,11 +56,15 @@ low = "referenceRange/low/value"
 high = "referenceRange/high/value"
 range_type = "referenceRange/type/coding/code"
 
-[normal_range]
-code = "normal"
-# Match the MRP selection: prefer the type code, regardless of its system.
-# Use untyped ranges only when no explicitly normal range exists for the measurement.
-fallback_to_missing_type = true
+range_type_system = "referenceRange/type/coding/system"
+age_low = "referenceRange/age/low/value"
+age_low_unit = "referenceRange/age/low/unit"
+age_low_code = "referenceRange/age/low/code"
+age_low_system = "referenceRange/age/low/system"
+age_high = "referenceRange/age/high/value"
+age_high_unit = "referenceRange/age/high/unit"
+age_high_code = "referenceRange/age/high/code"
+age_high_system = "referenceRange/age/high/system"
 
 # A mapped numeric value enables statistics for all systems on the source.
 # Optional measurement = true/false overrides automatic detection for that source.

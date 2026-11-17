@@ -32,11 +32,8 @@ test_that("code report settings are loaded from the module or selected TOML", {
   custom_config$code_summary_sources[[1]]$fields <- list(unit = "valueQuantity/code")
   sources <- resolveCodeSummarySources(fixture$metadata, custom_config, fixture$description)
   expect_equal(sources[[1]]$fields[["unit"]], "obs_unit")
-  writeLines(sub("fallback_to_missing_type = true", 'fallback_to_missing_type = "true"',
-    custom_text,
-    fixed = TRUE
-  ), custom_file)
-  expect_error(loadCodeSummaryConfig(custom_file), "must be a TOML boolean")
+  writeLines(custom_text[!startsWith(custom_text, "range_type_system =")], custom_file)
+  expect_error(loadCodeSummaryConfig(custom_file), "Incomplete code summary field paths")
   writeLines("[systems]\nLOINC = ['http://loinc.org']", custom_file)
   expect_error(loadCodeSummaryConfig(custom_file), "Missing code summary TOML sections")
 })

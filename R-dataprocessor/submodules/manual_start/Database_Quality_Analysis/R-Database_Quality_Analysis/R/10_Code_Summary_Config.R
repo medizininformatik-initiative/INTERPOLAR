@@ -24,7 +24,7 @@ loadCodeSummaryConfig <- function(path) {
     stop("Code summary TOML file not found: ", path, call. = FALSE)
   }
   config <- etlutils::tomlParseString(paste(readLines(path, warn = FALSE), collapse = "\n"))
-  required <- c("systems", "report_types", "sources", "fields", "medication_links", "normal_range")
+  required <- c("systems", "report_types", "sources", "fields", "medication_links")
   missing <- setdiff(required, names(config))
   if (length(missing)) {
     stop("Missing code summary TOML sections: ", paste(missing, collapse = ", "), call. = FALSE)
@@ -34,20 +34,10 @@ loadCodeSummaryConfig <- function(path) {
   config$report_types <- parseCodeSummaryReportTypes(config$report_types, names(config$systems))
   required_fields <- c(
     "resource_id", "system", "version", "code", "pid", "case_id", "value",
-    "unit", "unit_system", "low", "high", "range_type"
+    "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system"
   )
-  if (
-    !all(required_fields %in% names(config$fields)) ||
-    !all(c("code", "fallback_to_missing_type") %in% names(config$normal_range))
-  ) {
-    stop("Incomplete code summary field paths or normal-range rule in TOML.", call. = FALSE)
-  }
-  if (
-    !is.logical(config$normal_range$fallback_to_missing_type) ||
-    length(config$normal_range$fallback_to_missing_type) != 1L ||
-    is.na(config$normal_range$fallback_to_missing_type)
-  ) {
-    stop("normal_range.fallback_to_missing_type must be a TOML boolean.", call. = FALSE)
+  if (!all(required_fields %in% names(config$fields))) {
+    stop("Incomplete code summary field paths in TOML.", call. = FALSE)
   }
   config
 }
@@ -271,7 +261,7 @@ resolveCodeSummarySources <- function(metadata, config, table_description = NULL
     ) {
       stop("Source measurement must be a TOML boolean.", call. = FALSE)
     }
-    measurement_fields <- c("value", "unit", "unit_system", "low", "high", "range_type")
+    measurement_fields <- c("value", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")
     paths <- config$code_summary_fields
     # Resolve the mapped value first. Unrelated or ambiguous optional unit/range
     # paths must not prevent an ordinary coding source from being counted.

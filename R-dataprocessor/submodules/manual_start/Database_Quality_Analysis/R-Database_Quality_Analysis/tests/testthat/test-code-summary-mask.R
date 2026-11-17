@@ -1,7 +1,7 @@
 test_that("global CSVs mask all small counts and suppress rare measurement statistics in every scope", {
   count_columns <- c("count", "patient_count", "case_count", "no_case_count", "medication_count", "medication_request_count", "medication_administration_count", "medication_statement_count", "unreferenced_medication_count")
   values <- c(0, 1, 2, 3, 4, 5, NA_real_)
-  rows <- data.table::data.table(row_type = "detail", code = paste0("000", seq_along(values)), unit = "mg/dL", low = "1", high = "10")
+  rows <- data.table::data.table(row_type = "detail", code = paste0("000", seq_along(values)), unit = "mg/dL", low = "1", high = "10", range_type = "normal", range_type_system = "urn:type", age_low = "18", age_low_unit = "years", age_low_code = "a", age_low_system = "http://unitsofmeasure.org", age_high = NA_character_, age_high_unit = NA_character_, age_high_code = NA_character_, age_high_system = NA_character_)
   statistic_columns <- c("median", "q1", "q3", "mean", "sd", "minimum", "maximum")
   for (column in statistic_columns) data.table::set(rows, j = column, value = as.numeric(seq_along(values)))
   for (column in count_columns) data.table::set(rows, j = column, value = values)
@@ -42,6 +42,9 @@ test_that("global CSVs mask all small counts and suppress rare measurement stati
       expect_equal(exported$unit, rows$unit)
       expect_equal(exported$low, rows$low)
       expect_equal(exported$high, rows$high)
+      for (column in grep("^range_type|^age_", names(rows), value = TRUE)) {
+        expect_equal(exported[[column]], rows[[column]])
+      }
       for (column in statistic_columns) {
         expected <- as.character(rows[[column]])
         if (target == "global") expected[!is.na(values) & values < 5] <- NA_character_

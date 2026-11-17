@@ -20,7 +20,7 @@ codeSummaryReferenceSql <- function(expression, resource) {
 #' Clinical sources are filtered before materialization and Coding/range processing
 #' when no complete-database CSV is requested. Medication additionally retains narrow
 #' global identity projections for correct reference resolution. Only aggregates leave SQL.
-buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_types,
+buildCodeSummaryQuery <- function(sources, links, systems, report_types,
                                   case_scope_query = NULL, case_groups_query = NULL,
                                   export_variants = c("all", "filtered"),
                                   query_mode = c("combined", "catalog", "details", "statistics", "totals", "rare", "details_statistics"),
@@ -32,7 +32,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     sources <- lapply(sources, function(source) {
       source$catalog_measurement <- isTRUE(source$measurement)
       source$measurement <- FALSE
-      source$fields[c("value", "unit", "unit_system", "low", "high", "range_type")] <- NA_character_
+      source$fields[c("value", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")] <- NA_character_
       source
     })
   }
@@ -47,7 +47,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
   }, sources), `[[`, "reports"), use.names = FALSE))
   ctes <- character()
   # Build case buckets before sources so restricted exports can filter before
-  # materialization, Coding deduplication and reference-range ranking.
+  # materialization, Coding deduplication and reference-range grouping.
   if (!is.null(case_groups_query)) {
     ctes <- c(ctes, paste0("case_groups AS (", case_groups_query, ")"))
   } else if (!is.null(case_scope_query)) {
@@ -252,13 +252,6 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       if (numeric) expression <- paste0("(", expression, ")::double precision")
       paste0("CASE WHEN ", source_measurement_condition, " THEN ", expression, " END")
     }
-    # Reproduce MRP type priority in SQL, without converting units or selecting
-    # just one range: all ranges at the preferred priority remain visible.
-    range_priority <- paste0(
-      "CASE WHEN ", fieldSql("range_type"), " = ", quoteSqlString(normal_range$code),
-      " THEN 2 WHEN ", fieldSql("range_type"), " IS NULL THEN ",
-      if (isTRUE(normal_range$fallback_to_missing_type)) "1" else "0", " ELSE 0 END"
-    )
     # A Patient is its own patient association, without a subject reference.
     patient_reference <- if (source$resource == "Patient") {
       paste0("'Patient/' || ", fieldSql("resource_id"))
@@ -278,9 +271,18 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       paste0(measurementFieldSql("unit_system"), " AS unit_system"),
       paste0(measurementFieldSql("low"), " AS low"),
       paste0(measurementFieldSql("high"), " AS high"),
+      paste0(measurementFieldSql("range_type"), " AS range_type"),
+      paste0(measurementFieldSql("range_type_system"), " AS range_type_system"),
+      paste0(measurementFieldSql("age_low"), " AS age_low"),
+      paste0(measurementFieldSql("age_low_unit"), " AS age_low_unit"),
+      paste0(measurementFieldSql("age_low_code"), " AS age_low_code"),
+      paste0(measurementFieldSql("age_low_system"), " AS age_low_system"),
+      paste0(measurementFieldSql("age_high"), " AS age_high"),
+      paste0(measurementFieldSql("age_high_unit"), " AS age_high_unit"),
+      paste0(measurementFieldSql("age_high_code"), " AS age_high_code"),
+      paste0(measurementFieldSql("age_high_system"), " AS age_high_system"),
       paste0(measurementFieldSql("value", numeric = TRUE), " AS value"),
-      paste0(if (query_mode == "catalog" && isTRUE(source$catalog_measurement)) "true" else source_measurement_condition, " AS is_measurement"),
-      paste0("CASE WHEN ", source_measurement_condition, " THEN ", range_priority, " ELSE 0 END AS range_priority")
+      paste0(if (query_mode == "catalog" && isTRUE(source$catalog_measurement)) "true" else source_measurement_condition, " AS is_measurement")
     )
     paste0(
       "SELECT ", paste(parts, collapse = ", "), " WHERE ", fieldSql("system"), " IN (",
@@ -319,33 +321,13 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
       catalog_counts, ") counts GROUP BY system,code ORDER BY system,code"
     ))
   }
-  # Measurement rows are deduplicated after range selection. Duplicates do
-  # not change MAX(range_priority), so sorting them once beforehand is redundant.
+  # Keep each supplied range tuple together. DISTINCT removes flattened Coding
+  # duplicates; counts and statistics apply their own resource-level deduplication.
   ctes <- c(ctes, paste0(
-    "raw_codings AS (SELECT ", if (!any(measurement_sources)) "DISTINCT ", "* FROM (",
+    "codings AS (SELECT DISTINCT report,system,coding_path,version,code,kind,own_id,pid,case_id,unit,unit_system,low,high,range_type,range_type_system,age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system,value FROM (",
     paste(code_selects, collapse = " UNION ALL "),
     ") codes WHERE report IS NOT NULL AND code IS NOT NULL AND own_id IS NOT NULL)"
   ))
-  coding_columns <- "report,system,coding_path,version,code,kind,own_id,pid,case_id,unit,unit_system,low,high,value"
-  if (!any(measurement_sources)) {
-    # All omitted raw columns are constant here. raw_codings already deduplicated
-    # these rows; an extra UNION/DISTINCT or range window would only sort them again.
-    ctes <- c(ctes, paste0("codings AS (SELECT ", coding_columns, " FROM raw_codings)"))
-  } else {
-    ctes <- c(ctes, paste0(
-      "ranked_codings AS (SELECT *, MAX(range_priority) OVER (PARTITION BY ",
-      "report,system,coding_path,kind,own_id,version,code,pid,case_id,unit,unit_system,value) AS preferred_range_priority ",
-      "FROM raw_codings", if (!all(measurement_sources)) " WHERE is_measurement", ")"
-    ))
-    # Priority zero preserves coded observations without eligible limits.
-    ctes <- c(ctes, paste0(
-      "codings AS (SELECT DISTINCT report,system,coding_path,version,code,kind,own_id,pid,case_id,unit,unit_system, ",
-      "CASE WHEN range_priority > 0 THEN low END AS low, ",
-      "CASE WHEN range_priority > 0 THEN high END AS high, value FROM ranked_codings ",
-      "WHERE range_priority = preferred_range_priority",
-      if (!all(measurement_sources)) paste0(" UNION SELECT ", coding_columns, " FROM raw_codings WHERE NOT is_measurement"), ")"
-    ))
-  }
 
   usage_condition <- if (length(link_kinds)) {
     paste0("c.kind IN (", paste(vapply(link_kinds, quoteSqlString, character(1)), collapse = ", "), ")")
@@ -376,7 +358,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
   }
   event_columns <- paste0(
     "c.system, CASE WHEN ", usage_condition, " THEN c.kind || '/' || c.coding_path ELSE c.coding_path END AS coding_path, ",
-    "c.version,c.code,c.unit,c.unit_system,c.low,c.high, "
+    "c.version,c.code,c.unit,c.unit_system,c.low,c.high,c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system, "
   )
   event_tail <- paste0(
     "c.kind || '/' || c.own_id AS event_key, c.kind,c.pid,c.case_id,",
@@ -422,7 +404,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
     # Count usage resources beside their Medication code, rather than exporting
     # separate usage CSVs. Distinct keys prevent flattened rows multiplying counts.
     events <- c(events, paste0(
-      "SELECT 'Medication',c.system,c.coding_path,c.version,c.code,NULL,NULL,NULL,NULL, ",
+      "SELECT 'Medication',c.system,c.coding_path,c.version,c.code,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, ",
       "'Medication/' || c.own_id,l.kind || '/' || l.own_id,l.kind,l.pid,l.case_id, ",
       "NULL::double precision,false,false FROM links l JOIN codings c ON c.kind = 'Medication' ",
       "AND l.medication_ref = 'Medication/' || c.own_id WHERE l.own_id IS NOT NULL"
@@ -437,7 +419,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, normal_range, report_
         if (!global_identities) "AND d.coding_path = 'medicationCodeableConcept/coding'", "))"
       ))
       events <- c(events, paste0(
-        "SELECT 'Medication', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ",
+        "SELECT 'Medication', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, ",
         "l.kind || '/' || l.own_id, l.kind || '/' || l.own_id, l.kind, l.pid, l.case_id, ",
         "NULL::double precision,true,false FROM unresolved_links l"
       ))

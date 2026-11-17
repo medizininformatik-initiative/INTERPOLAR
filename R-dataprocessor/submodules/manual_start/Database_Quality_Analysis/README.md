@@ -398,7 +398,7 @@ metadata may be transferred to R; individual IDs and measurement values are not.
 
 The maintained configuration is `code_summary.toml` alongside the other module
 TOMLs. It defines `[processing]`, `[exports]`, `[systems]`, `[report_types]`, `[[sources]]`, shared `[fields]`,
-`[[medication_links]]` and `[normal_range]`. The shared
+`[[medication_links]]`. The shared
 `etlutils::tomlParseString()` parser retains nested source/field tables.
 
 | System family | Resource and Coding field | Exact system URI |
@@ -471,7 +471,7 @@ system URI, not the system family label.
 
 - `detail`: every coded combination in both outputs, including counts from 1 to 4.
   Groups use resource type, system, Coding path, version and code; measurement
-  sources add unit code, unit system and selected reference limits. Global CSVs
+  sources add unit code, unit system and reference limits, type code/system and age bounds with units. Global CSVs
   mask all positive counts below five as `<5`. Measured zeros remain `0`;
   unavailable counts remain empty. Local CSVs retain all exact counts.
 - `total`: independently deduplicated per resource and system, across all Coding
@@ -515,12 +515,14 @@ flattened Coding/reference rows from weighting statistics. Global detail rows wi
 their code, unit and reference limits. Local detail rows retain their statistics.
 Totals have no statistics because they may mix units and analytes.
 
-`low`/`high` retain the MRP reference-range priority per resource/Coding/measurement:
-prefer type code `normal`, regardless of its system, otherwise missing type when
-`[normal_range].fallback_to_missing_type = true`. Blank types count as missing.
-Other range types do not supply limits. Observations without eligible limits
-still contribute to counts and statistics. DQA retains all ranges at the
-preferred priority and does not convert units; totals remain deduplicated.
+All supplied reference ranges contribute separate detail groups. `low`/`high`
+retain the supplied limits; `range_type` and `range_type_system` identify the type.
+`age_low` and `age_high` retain the applicability age bounds. Each bound has
+`_unit` (display), `_code` and `_system` columns, preserving the supplied units
+without conversion. Missing fields remain empty. These age bounds describe the
+reference range; report scope still uses age at main-case admission.
+An observation may appear in several detail groups. Total resource, patient and
+case counts are independently deduplicated across those groups.
 
 ### Direct and referenced medication codes
 

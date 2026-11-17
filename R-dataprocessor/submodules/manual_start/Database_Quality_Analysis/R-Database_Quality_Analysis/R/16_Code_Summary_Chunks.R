@@ -38,10 +38,10 @@ normalizeCodeSummaryGroupKeys <- function(rows, columns) {
 runCodeSummaryChunks <- function(sources, links, config, report_types, case_scope_query,
                                  case_groups_query, export_variants, label, query_fun) {
   processing <- parseCodeSummaryProcessing(config$code_summary_processing)
-  dimensions <- c("report_scope", "report", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high")
+  dimensions <- c("report_scope", "report", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")
   runPass <- function(mode, keys = NULL, pass_label = mode) {
     query <- buildCodeSummaryQuery(sources, links, config$code_summary_systems,
-      config$code_summary_normal_range, report_types,
+      report_types,
       case_scope_query = case_scope_query, case_groups_query = case_groups_query,
       export_variants = export_variants,
       query_mode = mode, code_keys = keys
@@ -85,7 +85,7 @@ runCodeSummaryChunks <- function(sources, links, config, report_types, case_scop
   }
   result <- data.table::rbindlist(rows, use.names = TRUE, fill = TRUE)
   if (nrow(result)) {
-    data.table::setorderv(result, c("report_scope", "export_target", "report", "system", "coding_path", "row_type", "version", "code", "unit", "unit_system", "low", "high"), na.last = TRUE)
+    data.table::setorderv(result, c("report_scope", "export_target", "report", "system", "coding_path", "row_type", "version", "code", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system"), na.last = TRUE)
   }
   result
 }

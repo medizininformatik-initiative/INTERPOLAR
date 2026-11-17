@@ -1,4 +1,4 @@
-test_that("restricted sources discard measurements before materialization, casting and range ranking", {
+test_that("restricted sources discard measurements before materialization, casting and range grouping", {
   fixture <- codeSummaryAgeFixture()
   fixture$config$code_summary_exports$variants <- "filtered_age_ge18"
   fixture$metadata[COLUMN_NAME == "obs_value", DATA_TYPE := "text"]
@@ -16,7 +16,6 @@ test_that("restricted sources discard measurements before materialization, casti
       stage_query <- paste0(
         prefix,
         "\nSELECT 'source' AS stage,count(*) AS n FROM source_1 UNION ALL ",
-        "SELECT 'raw',count(*) FROM raw_codings WHERE kind='Observation' UNION ALL ",
         "SELECT 'normalized',count(*) FROM codings WHERE kind='Observation'"
       )
       stages <<- runCodeSummaryFixtureQuery(fixture, stage_query)
@@ -24,7 +23,6 @@ test_that("restricted sources discard measurements before materialization, casti
     }
   )
   expect_equal(stages[stage == "source", n], 6)
-  expect_equal(stages[stage == "raw", n], 6)
   expect_equal(stages[stage == "normalized", n], 3)
   local <- attr(attr(reports, "variant_reports")$filtered_age_ge18, "local_reports")$Observation
   expect_setequal(local[row_type == "detail", code], c("common", "age-check"))
@@ -112,7 +110,7 @@ test_that("large adult case selections do not repeat a nested-loop case membersh
     include_filtered = TRUE, table_description = fixture$description
   )
   query <- buildCodeSummaryQuery(
-    sources, list(), fixture$config$code_summary_systems, fixture$config$code_summary_normal_range,
+    sources, list(), fixture$config$code_summary_systems,
     fixture$config$code_summary_report_types,
     case_groups_query = case_query,
     export_variants = "filtered_age_ge18", query_mode = "catalog"
