@@ -29,11 +29,11 @@ jobs:
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only \
+            git diff --no-renames --name-only \
               "${{ github.event.pull_request.base.sha }}" \
               "${{ github.sha }}" > changed-files.txt
           elif [[ "${{ github.event.before }}" =~ ^0+$ ]]; then
-            git diff-tree --no-commit-id --name-only -r \
+            git diff-tree --no-renames --no-commit-id --name-only -r \
               "${{ github.sha }}" > changed-files.txt
           else
             base_ref="${{ github.event.before }}"
@@ -44,7 +44,7 @@ jobs:
               git fetch --no-tags origin develop
               base_ref="$(git merge-base HEAD origin/develop)"
             fi
-            git diff --name-only "${base_ref}" "${{ github.sha }}" > changed-files.txt
+            git diff --no-renames --name-only "${base_ref}" "${{ github.sha }}" > changed-files.txt
           fi
 
           cat changed-files.txt
@@ -83,16 +83,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Compute generated SQL input key
+        id: sql-inputs
+        run: echo "key=$(tools/generated-sql-cache-key.sh)" >> "$GITHUB_OUTPUT"
+
       - name: Restore successful generated SQL check
         id: generated-sql-cache
         uses: actions/cache/restore@v4
         with:
           path: .cache/generated-sql-drift
-          key: generated-sql-drift-${{ runner.os }}-${{ hashFiles('.github/workflows/sql-checks.yml', 'Dockerfile_R', 'Postgres-cds_hub/generate-sql.sh', 'Postgres-cds_hub/R-initcdstoolchain/**', 'Postgres-cds_hub/sql/template/**', 'Postgres-cds_hub/sql/start.sql', 'Postgres-cds_hub/sql/base/**', 'R-etlutils/**', 'R-cds2db/cds2db/inst/extdata/Table_Description_Definition.xlsx', 'R-cds2db/cds2db/inst/extdata/Table_Description.xlsx', 'R-cdstoolchain/pseudonym/**', 'R-dataprocessor/dataprocessor/inst/extdata/Dataprocessor_Table_Description.xlsx', 'R-dataprocessor/submodules/Dataprocessor_Submodules_Table_Description.xlsx', 'R-db2frontend/db2frontend/inst/extdata/Frontend_Table_Description.xlsx', 'tools/check-generated-sql.sh', 'tools/check-table-description-consistency.R', 'tools/test-check-table-description-consistency.R', 'tools/format-sql.sh', 'tools/install-pgformatter.sh') }}
+          key: generated-sql-drift-${{ runner.os }}-${{ steps.sql-inputs.outputs.key }}
+
+      - name: Set up Docker Buildx
+        if: steps.generated-sql-cache.outputs.cache-hit != 'true'
+        uses: docker/setup-buildx-action@v4
 
       - name: Build R runtime image
         if: steps.generated-sql-cache.outputs.cache-hit != 'true'
-        run: docker build -t interpolar-r -f Dockerfile_R .
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile_R
+          load: true
+          tags: interpolar-r
+          cache-from: type=gha,scope=sql-checks-r
+          cache-to: type=gha,scope=sql-checks-r,mode=max
 
       - name: Check generated SQL is committed
         if: steps.generated-sql-cache.outputs.cache-hit != 'true'
