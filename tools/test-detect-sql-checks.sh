@@ -140,4 +140,23 @@ git update-index --chmod=+x Postgres-cds_hub/sql/template/second.sql
 [[ "$("$cache_key_script")" != "$first_key" ]]
 assert_detection $'Postgres-cds_hub/sql/template/first.sql\nPostgres-cds_hub/sql/template/second.sql' "$generated_only"
 
+# A move from production code into tests must still report the removed input.
+# Check the actual workflow commands too, so removing the flag breaks this test.
+if grep -E '^[[:space:]]+git (diff|diff-tree) ' "${repo_root}/.github/workflows/sql-checks.yml" |
+  grep -v -- '--no-renames'; then
+  echo "SQL workflow must retain both paths of renames." >&2
+  exit 1
+fi
+production_file="R-cdstoolchain/pseudonym/R/moved_rule.R"
+test_file="R-cdstoolchain/pseudonym/tests/fixtures/moved_rule.R"
+mkdir -p "$(dirname "$production_file")" "$(dirname "$test_file")"
+printf 'exampleRule <- function(x) x\n' > "$production_file"
+git add .
+git -c user.name='SQL detection test' -c user.email=test@example.invalid commit -qm 'Synthetic baseline'
+git mv "$production_file" "$test_file"
+git -c user.name='SQL detection test' -c user.email=test@example.invalid commit -qm 'Move code to tests'
+assert_detection "$(git -c diff.renames=true diff --name-only HEAD^ HEAD)" "$no_checks"
+assert_detection "$(git -c diff.renames=true diff --no-renames --name-only HEAD^ HEAD)" "$generated_only"
+assert_detection "$(git -c diff.renames=true diff-tree --no-renames --no-commit-id --name-only -r HEAD)" "$generated_only"
+
 echo "SQL input detection and cache invalidation tests passed."

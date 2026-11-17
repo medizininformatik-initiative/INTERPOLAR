@@ -29,11 +29,11 @@ jobs:
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only \
+            git diff --no-renames --name-only \
               "${{ github.event.pull_request.base.sha }}" \
               "${{ github.sha }}" > changed-files.txt
           elif [[ "${{ github.event.before }}" =~ ^0+$ ]]; then
-            git diff-tree --no-commit-id --name-only -r \
+            git diff-tree --no-renames --no-commit-id --name-only -r \
               "${{ github.sha }}" > changed-files.txt
           else
             base_ref="${{ github.event.before }}"
@@ -44,7 +44,7 @@ jobs:
               git fetch --no-tags origin develop
               base_ref="$(git merge-base HEAD origin/develop)"
             fi
-            git diff --name-only "${base_ref}" "${{ github.sha }}" > changed-files.txt
+            git diff --no-renames --name-only "${base_ref}" "${{ github.sha }}" > changed-files.txt
           fi
 
           cat changed-files.txt
