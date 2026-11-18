@@ -11,7 +11,9 @@ RoxygenNote: 7.3.2
 Imports:
     data.table,
     etlutils,
-    openxlsx
+    openxlsx,
+    parallel,
+    tools
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

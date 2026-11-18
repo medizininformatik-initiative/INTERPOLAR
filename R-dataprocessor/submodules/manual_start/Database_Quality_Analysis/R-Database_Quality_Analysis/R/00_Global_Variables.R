@@ -2,6 +2,10 @@ utils::globalVariables(c(
   ".",
   "..non_fhir_output_columns",
   "..output_columns",
+  "..dimensions",
+  "source_rows",
+  "row_type",
+  "count",
   "COLUMN_DESCRIPTION",
   "COLUMN_NAME",
   "MODULE_DIRS",
@@ -9,5 +13,12 @@ utils::globalVariables(c(
   "TABLE_FAMILY",
   "TABLE_NAME",
   "VIEW_NAME",
-  "VIEW_SCHEMA"
+  "VIEW_SCHEMA",
+  "RESOURCE",
+  "FHIR_EXPRESSION",
+  "coding",
+  "export_target",
+  "report_scope",
+  "report",
+  "unreferenced_medication_count"
 ))

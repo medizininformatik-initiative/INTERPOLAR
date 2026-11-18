@@ -87,21 +87,6 @@ buildSelectQuery <- function(select_parts, table_ref, row_filter_condition = NA_
   )
 }
 
-#' Build a distinct count expression
-#'
-#' Builds a conditional COUNT DISTINCT expression for one grouping column.
-buildDistinctCountExpression <- function(conditions, grouping_column, alias) {
-  conditions <- conditions[!is.na(conditions)]
-  paste0(
-    "COUNT(DISTINCT CASE WHEN ",
-    paste(conditions, collapse = " AND "),
-    " THEN ",
-    quoteIdentifier(grouping_column),
-    " END) AS ",
-    quoteIdentifier(alias)
-  )
-}
-
 #' Quote a SQL string literal
 #'
 #' Escapes single quotes and wraps the value as a SQL string literal.
@@ -196,55 +181,70 @@ buildAvailabilityCountQuery <- function(
     table_metadata$VIEW_NAME[[1]]
   )
 
-  select_parts <- character()
-  alias_rows <- list()
-  alias_index <- 1L
+  count_groups <- count_groups[
+    !is.na(grouping_column) & grouping_column %in% table_metadata$COLUMN_NAME
+  ]
+  if (!nrow(count_groups)) {
+    return(list(query = NA_character_, alias_map = empty_alias_map))
+  }
   data_types <- getMetadataDataTypes(table_metadata)
+  availability_parts <- vapply(data_columns, function(column_name) {
+    paste0(
+      "CASE WHEN ", getValueAvailableCondition(column_name, table_metadata, data_types, config),
+      " THEN '1' ELSE '0' END"
+    )
+  }, character(1))
+  key_parts <- vapply(seq_len(nrow(count_groups)), function(index) {
+    count_group <- count_groups[index]
+    conditions <- c(
+      getValueAvailableCondition(count_group$grouping_column, table_metadata, data_types, config),
+      count_group$extra_condition
+    )
+    conditions <- conditions[!is.na(conditions)]
+    paste0(
+      "CASE WHEN ", paste0("(", conditions, ")", collapse = " AND "), " THEN ",
+      quoteIdentifier(count_group$grouping_column), " END AS key_", index
+    )
+  }, character(1))
 
-  for (column_name in data_columns) {
-    filled_condition <- getValueAvailableCondition(column_name, table_metadata, data_types, config)
-    for (count_group_index in seq_len(nrow(count_groups))) {
-      count_group <- count_groups[count_group_index]
-      grouping_column <- count_group$grouping_column
-      if (is.na(grouping_column) || !grouping_column %in% table_metadata$COLUMN_NAME) {
-        next
-      }
-
+  # A bit marks whether this row has an available value. OR across each ID
+  # preserves DISTINCT semantics even when its rows mix empty and filled values.
+  # Materialize only keys and bits once, rather than sorting each field/ID pair.
+  source_query <- buildSelectQuery(
+    c(key_parts, paste0("(", paste(availability_parts, collapse = " || "), ")::bit(", length(data_columns), ") AS availability")),
+    table_ref, row_filter_condition
+  )
+  alias_rows <- list()
+  group_queries <- character()
+  for (group_index in seq_len(nrow(count_groups))) {
+    select_parts <- character()
+    for (column_index in seq_along(data_columns)) {
+      alias_index <- (column_index - 1L) * nrow(count_groups) + group_index
       alias <- paste0("count_", alias_index)
-      grouping_filled_condition <- getValueAvailableCondition(
-        grouping_column,
-        table_metadata,
-        data_types,
-        config
-      )
-      select_parts <- c(
-        select_parts,
-        buildDistinctCountExpression(
-          c(filled_condition, grouping_filled_condition, count_group$extra_condition),
-          grouping_column,
-          alias
-        )
-      )
-      alias_rows[[length(alias_rows) + 1L]] <- data.table::data.table(
+      select_parts <- c(select_parts, paste0(
+        "COUNT(*) FILTER (WHERE get_bit(availability, ", column_index - 1L, ") = 1) AS ",
+        quoteIdentifier(alias)
+      ))
+      alias_rows[[alias_index]] <- data.table::data.table(
         alias = alias,
-        COLUMN_NAME = column_name,
-        count_column = count_group$count_column
+        COLUMN_NAME = data_columns[[column_index]],
+        count_column = count_groups$count_column[[group_index]]
       )
-      alias_index <- alias_index + 1L
     }
+    group_queries <- c(group_queries, paste0(
+      "(SELECT ", paste(select_parts, collapse = ", "),
+      " FROM (SELECT bit_or(availability) AS availability FROM source_rows ",
+      "WHERE key_", group_index, " IS NOT NULL GROUP BY key_", group_index,
+      ") grouped) counts_", group_index
+    ))
   }
-
-  alias_map <- if (length(alias_rows)) {
-    data.table::rbindlist(alias_rows, use.names = TRUE)
-  } else {
-    empty_alias_map
-  }
-  if (!length(select_parts)) {
-    return(list(query = NA_character_, alias_map = alias_map))
-  }
-
+  alias_map <- data.table::rbindlist(alias_rows, use.names = TRUE)
   list(
-    query = buildSelectQuery(select_parts, table_ref, row_filter_condition),
+    query = paste0(
+      "WITH source_rows AS MATERIALIZED (", source_query, ") SELECT ",
+      paste(vapply(alias_map$alias, quoteIdentifier, character(1)), collapse = ", "),
+      " FROM ", paste(group_queries, collapse = " CROSS JOIN ")
+    ),
     alias_map = alias_map
   )
 }
