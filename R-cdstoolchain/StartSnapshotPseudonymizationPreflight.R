@@ -12,14 +12,14 @@ command_arguments <- etlutils::initCommandLineArguments(
     path_to_dataprocessor_config_toml = "./R-dataprocessor/dataprocessor_config.toml",
     project_root = ".",
     review_report_file = paste0(
-      "./outputLocal/snapshot_pseudonymization_preflight/reports/",
+      "./outputLocal/snapshot_pseudonymization/reports/",
       "pseudonymization_rule_review.xlsx"
     )
   )
 )
 
 dataprocessor_config <- etlutils::initModule(
-  "snapshot_pseudonymization_preflight",
+  "snapshot_pseudonymization",
   db_schema_base_name = "dataprocessor",
   path_to_toml = command_arguments[["path_to_dataprocessor_config_toml"]],
   defaults = list(
