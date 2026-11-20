@@ -1,5 +1,5 @@
 # "php:apache" siehe https://hub.docker.com/r/library/php/
-FROM php:8.4-apache-trixie
+FROM php:8.6-apache-trixie
 
 LABEL maintainer "Sebastian Stäubert <sebastian.staeubert@imise.uni-leipzig.de>"
 
