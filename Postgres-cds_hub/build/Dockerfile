@@ -1,4 +1,4 @@
-FROM postgres:17
+FROM postgres:19
 
 RUN apt-get update && \
 	apt-get -y install postgresql-17-cron
