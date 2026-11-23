@@ -1,17 +1,16 @@
 # TOP-Analyse der Studienfälle
 
-Alle Befehle im INTERPOLAR-Hauptverzeichnis ausführen. Verwendet wird das TOP-Modellpaket 1.1.1 mit TOP-Framework 2.0.0; das Image wird beim ersten Lauf automatisch heruntergeladen.
+## Durchführung der TOP-Analyse
 
-## 1. Branch auschecken und bauen
+Alle Befehle im INTERPOLAR-Hauptverzeichnis ausführen.
+
+### 1. Docker-Umgebung vorbereiten
 
 ```bash
-git fetch origin
-git switch top-study-analysis
-git pull --ff-only
 docker compose build r-env
 ```
 
-## 2. Datenbank-TOML setzen
+### 2. Datenbank-TOML setzen
 
 ```bash
 cp R-cdstoolchain/top-study/database.example.toml R-cdstoolchain/top-study/database.toml
@@ -19,19 +18,25 @@ cp R-cdstoolchain/top-study/database.example.toml R-cdstoolchain/top-study/datab
 
 In `R-cdstoolchain/top-study/database.toml` den Wert `DB_NAME` auf die pseudonymisierte Snapshot-Datenbank setzen. Die übrigen Verbindungswerte kommen aus `cds_hub_db_config.toml`.
 
-## 3. Vollständigen Studienlauf starten
+### 3. Vollständigen Studienlauf starten
 
 ```bash
 ./run-top-study.sh
 ```
 
-Fortschritt und Laufzeiten erscheinen im Terminal und in `outputLocal/top-study/<Lauf>/progress.log`. Während einer TOP-Berechnung erscheint alle 60 Sekunden ein Lebenszeichen. Die Vorbereitung steht in `preparation.log`, die anschließende aggregierte Prüfung in `plausibility.log`.
+### 4. Rückmeldung hochladen
 
-## 4. Rückmeldung hochladen
+Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/TOP_Report_YYYY-MM-DD_HH-MM-SS.txt` hochladen.
 
-Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/<Lauf>/TOP_Report_YYYY-MM-DD_HH-MM-SS.txt` hochladen. Der Bericht enthält Trefferzahlen und Laufzeiten, Fallauswahl nach Station und Studiengrenzen, Laborabdeckung und Einheitenstatus sowie den Anämie-Kontrollvergleich. Zwischenkriterien und Fallzählung sind ausdrücklich gekennzeichnet. Die Non-AE-Algorithmen stehen mit ihren Modellnamen im Bericht; ihre Bedingungen definieren nicht automatisch die Restmenge der Studienfälle.
+## Hintergrundinformationen
 
-Die vollständigen TOP-ZIPs einschließlich `metadata.csv`, Modellkopien und Rohlogs bleiben unter `outputLocal/top-study/<Lauf>/` für die lokale Prüfung. Die Kontrollanalyse verändert weder Laborgrenzen noch TOP-Ergebnisse. Für die fachliche Bewertung müssen die lokalen Hämoglobin- und Glukose-Referenzgrenzen noch bestätigt werden.
+Die folgenden Informationen dienen der Einordnung der Ergebnisse und der lokalen Prüfung. Für die Durchführung genügen die vier Schritte oben.
+
+### Bericht und fachliche Einordnung
+
+Der Bericht enthält Trefferzahlen und Laufzeiten, Fallauswahl nach Station und Studiengrenzen, Laborabdeckung und Einheitenstatus sowie den Anämie-Kontrollvergleich. Zwischenkriterien und Fallzählung sind ausdrücklich gekennzeichnet. Die Non-AE-Algorithmen stehen mit ihren Modellnamen im Bericht; ihre Bedingungen definieren nicht automatisch die Restmenge der Studienfälle.
+
+Für die fachliche Bewertung müssen die lokalen Hämoglobin- und Glukose-Referenzgrenzen noch bestätigt werden.
 
 Der Dateiname enthält die lokale Startzeit am Standort, zum Beispiel `TOP_Report_2026-10-29_14-35-22.txt`.
 
@@ -45,3 +50,13 @@ sowie Minimum, Median und Maximum. Observations ohne Zahlenwert werden mitgezäh
 die Werteverteilung verwendet vorhandene Zahlenwerte. Fallzahlen verschiedener
 Gruppen können sich überschneiden. Modellparameter ohne Observations werden
 separat aufgeführt.
+
+### Ausführung und lokale Ablage
+
+Verwendet wird das TOP-Modellpaket 1.1.1 mit TOP-Framework 2.0.0; das Image wird beim ersten Lauf automatisch heruntergeladen.
+
+Fortschritt und Laufzeiten erscheinen im Terminal und in `outputLocal/top-study/progress.log`. Während einer TOP-Berechnung erscheint alle 60 Sekunden ein Lebenszeichen. Die Vorbereitung steht in `preparation.log`, die anschließende aggregierte Prüfung in `plausibility.log`.
+
+Die vollständigen TOP-ZIPs einschließlich `metadata.csv`, Modellkopien und Rohlogs bleiben unter `outputLocal/top-study/` für die lokale Prüfung.
+
+Der aktuelle Lauf liegt jeweils im Ordner `top-study`. Vor dem nächsten Start werden die bisherigen Ordner mit einem Zeitstempel im Format `top-study_YYYY-MM-DD_HH-MM-SS` umbenannt. Die Aufbewahrung richtet sich nach `MAX_DIR_COUNT` in der Dataprocessor-Konfiguration.

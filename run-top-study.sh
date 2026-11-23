@@ -14,19 +14,37 @@ export TOP_STUDY_IMAGE
 TOP_STUDY_IMAGE=$(cat "$tool_dir/image.txt")
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 report_name="TOP_Report_$(date +%Y-%m-%d_%H-%M-%S).txt"
-out="$root/outputLocal/top-study/$run_id"
-report_dir="$root/outputGlobal/top-study/$run_id"
-mkdir -p "$out" "$report_dir"
+out="$root/outputLocal/top-study"
+report_dir="$root/outputGlobal/top-study"
+mkdir -p "$root/outputLocal" "$root/outputGlobal"
+lock_dir="$root/outputLocal/.top-study.lock"
+mkdir "$lock_dir" 2>/dev/null || {
+  echo 'Ein TOP-Lauf ist bereits aktiv oder seine Startsperre besteht noch.' >&2
+  exit 1
+}
+trap 'rmdir "$lock_dir"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 docker_tool_dir="$tool_dir"
 docker_out="$out"
+docker_local="$root/outputLocal"
+docker_global="$root/outputGlobal"
 case "$OSTYPE" in
   msys*|cygwin*)
     # Git Bash must leave container paths alone; convert only host mount paths.
     export MSYS_NO_PATHCONV=1
     docker_tool_dir=$(cygpath -m "$tool_dir")
     docker_out=$(cygpath -m "$out")
+    docker_local=$(cygpath -m "$root/outputLocal")
+    docker_global=$(cygpath -m "$root/outputGlobal")
     ;;
 esac
+# Rotate before mounting the current run into any processing container.
+docker compose run --rm --no-deps \
+  --volume "$docker_tool_dir:/runner:ro" \
+  --volume "$docker_local:/outputs/outputLocal" \
+  --volume "$docker_global:/outputs/outputGlobal" \
+  --entrypoint Rscript r-env /runner/initialize-output.R
 started=$(date -u +%FT%TZ)
 start_seconds=$(date +%s)
 phase=initialization
@@ -78,6 +96,7 @@ finalize() {
   write_report
   echo "Laufstatus: $outcome (Exit $status). Ausgabe: $out"
   echo "Ausleitung: $report_dir/$report_name"
+  rmdir "$lock_dir"
   exit "$status"
 }
 # Waiting on a background command lets Bash handle Ctrl+C/TERM immediately.

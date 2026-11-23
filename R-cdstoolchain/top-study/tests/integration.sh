@@ -10,7 +10,7 @@ cleanup() {
 }
 trap cleanup EXIT
 report_file() {
-  printf '%s\n' "$work/outputGlobal/top-study/$(basename "$1")"/TOP_Report_*.txt
+  printf '%s\n' "$work/outputGlobal/top-study"/TOP_Report_*.txt
 }
 mkdir -p "$work/R-cdstoolchain" "$work/R-dataprocessor"
 cp -R "$root/R-cdstoolchain/top-study" "$work/R-cdstoolchain/"
@@ -74,11 +74,11 @@ done
   --volume "$work/R-cdstoolchain/top-study:/runner:ro" \
   --entrypoint Rscript r-env /runner/tests/check-associations.R)
 bash "$work/run-top-study.sh"
-output=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d)
+output="$work/outputLocal/top-study"
 [[ $(basename "$(report_file "$output")") =~ ^TOP_Report_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}[.]txt$ ]]
 docker run --rm --network none --read-only --tmpfs /tmp \
   --mount "type=bind,src=$output,dst=/run,readonly" \
-  --mount "type=bind,src=$work/outputGlobal/top-study/$(basename "$output"),dst=/global,readonly" \
+  --mount "type=bind,src=$work/outputGlobal/top-study,dst=/global,readonly" \
   --mount "type=bind,src=$root/R-cdstoolchain/top-study,dst=/runner,readonly" \
   --entrypoint Rscript interpolar-r-env:latest /runner/tests/verify.R
 (cd "$work" && docker compose run --rm --no-deps \
@@ -90,20 +90,23 @@ sed -i.bak 's/logProgress("Laborabdeckung, Einheiten und Umrechnungsstatus zähl
 code=0
 bash "$work/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
-last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+last="$work/outputLocal/top-study"
 grep -q $'\tfailed_or_interrupted\tplausibility' "$last/run-summary.tsv"
 grep -q 'ABGLEICH DER FALLAUSWAHL' "$(report_file "$last")"
-[[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
+[[ ! -d "$work/outputGlobal/top-study/results" ]]
 [[ $(find "$last/results" -name '*.zip' | wc -l) -eq 13 ]]
 cp "$work/audit-original.R" "$work/R-cdstoolchain/top-study/plausibility-functions.R"
-printf 'PASS: failed audit keeps partial aggregates and complete TOP ZIPs locally.\n'
+[[ $(find "$work/outputLocal" -maxdepth 1 -type d -name 'top-study_*' | wc -l) -eq 1 ]]
+[[ $(find "$work/outputGlobal" -maxdepth 1 -type d -name 'top-study_*' | wc -l) -eq 1 ]]
+[[ ! -d "$work/outputLocal/.top-study.lock" ]]
+printf 'PASS: failed audit keeps partial aggregates, complete TOP ZIPs and the previous run.\n'
 # Other data errors still block preparation, even with ignored missing encounters.
 docker exec "$database" psql -U probe -d probe -c \
   "UPDATE db2dataprocessor_out.v_encounter_last_version SET enc_period_start=NULL WHERE enc_id='early_hospital_w0'" >/dev/null
 code=0
 bash "$work/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
-last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+last="$work/outputLocal/top-study"
 grep -q '"invalid_contacts": 8' "$last/preparation.json"
 grep -q '"missing_start_contacts": 1' "$(report_file "$last")"
 grep -q 'failed_or_interrupted' "$(report_file "$last")"
@@ -118,12 +121,12 @@ docker exec "$database" psql -U probe -d probe -c \
 code=0
 bash "$work/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
-last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+last="$work/outputLocal/top-study"
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
 grep -q 'failed_or_interrupted' "$(report_file "$last")"
 grep -q $'\tfailed\t' "$last/algorithms.tsv"
 [[ ! -f "$last/private/adapter.yml" ]]
-[[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
+[[ ! -d "$work/outputGlobal/top-study/results" ]]
 printf 'PASS: completed study-only run and controlled failure. Artifacts: %s\n' "$work"
 # Exercise a user interruption while TOP is waiting for a database lock.
 docker exec "$database" psql -U probe -d probe -c \
@@ -140,15 +143,20 @@ for _attempt in $(seq 1 60); do
   sleep 0.1
 done
 [[ "$found" == true ]]
+# A second start must not rotate the active run or remove its lock.
+blocked_code=0
+bash "$work/run-top-study.sh" > "$work/concurrent-start.log" 2>&1 || blocked_code=$?
+[[ "$blocked_code" -ne 0 && -d "$work/outputLocal/.top-study.lock" ]]
+grep -q 'bereits aktiv' "$work/concurrent-start.log"
 kill -TERM "$launcher_pid"
 code=0
 wait "$launcher_pid" || code=$?
 [[ "$code" -eq 143 ]]
-last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+last="$work/outputLocal/top-study"
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
 grep -q 'failed_or_interrupted' "$(report_file "$last")"
 grep -q $'\tinterrupted\t' "$last/algorithms.tsv"
-[[ ! -d "$work/outputGlobal/top-study/$(basename "$last")/results" ]]
+[[ ! -d "$work/outputGlobal/top-study/results" ]]
 [[ ! -f "$last/private/adapter.yml" ]]
 # Stop only the synthetic lock holder; container cleanup removes its transaction.
 docker exec "$database" psql -U probe -d probe -c \
@@ -163,7 +171,7 @@ bash "$work/run-top-study.sh" > "$work/preparation-interruption.log" 2>&1 &
 launcher_pid=$!
 found=false
 for _attempt in $(seq 1 100); do
-  last=$(find "$work/outputLocal/top-study" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+  last="$work/outputLocal/top-study"
   if grep -q 'TEST preparation waiting' "$last/preparation.log" 2>/dev/null; then found=true; break; fi
   sleep 0.1
 done
@@ -176,6 +184,6 @@ grep -q $'\tfailed_or_interrupted\tprepare' "$last/run-summary.tsv"
 grep -q 'failed_or_interrupted' "$(report_file "$last")"
 grep -q 'Zahlen nicht verfügbar' "$(report_file "$last")"
 [[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
-[[ -z $(docker ps -q --filter "name=top-study-prepare-$(basename "$last")") ]]
+[[ -z $(docker ps -q --filter "name=top-study-prepare-") ]]
 [[ $(basename "$(report_file "$last")") =~ ^TOP_Report_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}[.]txt$ ]]
 printf 'PASS: preparation interruption recorded and container stopped.\n'
