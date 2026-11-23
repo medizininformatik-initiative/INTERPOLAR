@@ -2,6 +2,8 @@
 #'
 #' Builds the database query for retrospective MRPs that are eligible for the
 #' WP8 fallvignette export. Source fields are derived from the mapping workbook.
+#' Rejection reasons support legacy REDCap names without the _01 suffix.
+#' Non-empty current values take precedence over legacy values.
 #'
 #' @param mapping Normalized mapping returned by [loadFallvignetteMapping()].
 #'
@@ -43,7 +45,22 @@ buildFallvignetteSourceQuery <- function(mapping) {
     )
   }
 
+  legacy_reason_fields <- c(
+    ret_gewiss_grund1_abl_01 = "ret_gewiss_grund1_abl",
+    ret_gewiss_grund2_abl_01 = "ret_gewiss_grund2_abl"
+  )
+  get_rejection_reason_expression <- function(source_field) {
+    # JSON access also works when one REDCap version's column is absent.
+    paste0(
+      "COALESCE(NULLIF(to_jsonb(ret_fe)->>'", source_field, "', ''), ",
+      "NULLIF(to_jsonb(ret_fe)->>'", legacy_reason_fields[[source_field]], "', ''))"
+    )
+  }
+
   get_source_expression <- function(source_field) {
+    if (source_field %in% names(legacy_reason_fields)) {
+      return(paste0(get_rejection_reason_expression(source_field), " AS ", source_field))
+    }
     if (source_field == "fall_age_at_admission") {
       return("fall_fe.fall_age_at_admission AS fall_age_at_admission")
     }
@@ -95,9 +112,9 @@ buildFallvignetteSourceQuery <- function(mapping) {
     "WHERE ret_fe.ret_id IS NOT NULL\n",
     "  AND ret_fe.ret_meda_id IS NOT NULL\n",
     "  AND (\n",
-    "    ret_fe.ret_gewiss_grund1_abl_01 = ",
+    "    ", get_rejection_reason_expression("ret_gewiss_grund1_abl_01"), " = ",
     "'MRP sachlich richtig, aber klinisch nicht relevant'\n",
-    "    OR ret_fe.ret_gewiss_grund2_abl_01 = ",
+    "    OR ", get_rejection_reason_expression("ret_gewiss_grund2_abl_01"), " = ",
     "'MRP sachlich richtig, aber klinisch nicht relevant'\n",
     "  )\n",
     "  AND ret_fe.ret_id NOT LIKE '%-TEST-%'\n",
