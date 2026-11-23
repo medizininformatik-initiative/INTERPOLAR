@@ -27,8 +27,8 @@ Siehe [discussions/750](https://github.com/medizininformatik-initiative/INTERPOL
 
 ## TOP-Studienanalyse auf einem Snapshot
 
-Mit `./run-top-study.sh` werden die Studienfälle auf einer vorhandenen pseudonymisierten Snapshot-Datenbank analysiert. Einrichtung, Fortschrittsprotokolle und die Rückmeldung des DIZ sind in [TOP-Studienanalyse](TOP_Study_Analysis.md) beschrieben.
+Mit `./TOP-Framework/run-top-study.sh` werden die Studienfälle auf einer vorhandenen pseudonymisierten Snapshot-Datenbank analysiert. Einrichtung, Fortschrittsprotokolle und die Rückmeldung des DIZ sind in [TOP-Studienanalyse](TOP-Framework/README.md) beschrieben.
 
 ```sh
-./run-top-study.sh
+./TOP-Framework/run-top-study.sh
 ```

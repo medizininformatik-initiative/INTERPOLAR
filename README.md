@@ -38,6 +38,8 @@ Der DataProcessor verarbeitet die Daten des CDS_HUB. Diese Verarbeitung kann z.B
 
 Weitere Informationen zum DataProcessor befinden sich im Ordner [R-dataprocessor](./R-dataprocessor).
 
+Die [Übersicht der Submodule und manuellen Auswertungen](R-dataprocessor/README.md#submodule-und-manuelle-auswertungen-auf-einen-blick) führt zu den Anleitungen für Qualitätsanalysen, Berichte, Exporte und die TOP-Studienanalyse.
+
 ### Input-Repo
 
 Das Input-Repo wird für den Zugriff auf Algorithmen zur Berechnung, z.B. von Scores, verwendet. Eine Anleitung zur Einbindung befindet sich in der Discussion [#811](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/811).

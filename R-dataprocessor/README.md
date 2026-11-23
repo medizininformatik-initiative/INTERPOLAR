@@ -4,6 +4,20 @@ Generell ist das Modul "dataprocessor" dazu gedacht, Daten zu transformieren und
 
 Das Modul nutzt die im [Modul "cds2db"](../R-cds2db) typisierten Daten aus der Postgres-Datenbank, um Tabellen mit relevanten Patienten und Fallinformationen zu erstellen. Diese werden auch zurück in die Postgres-Datenbank geschrieben und anschließend über das [Modul "db2frontend"](../R-db2frontend) dem Frontend zur Verfügung gestellt.
 
+## Submodule und manuelle Auswertungen auf einen Blick
+
+Die folgenden Links führen zu den Anleitungen für Einrichtung und Ausführung.
+
+| Modul oder Auswertung | Zweck | Ausführung |
+| --- | --- | --- |
+| [Study 1a](submodules/01_Study_1a/) | Patienten- und Falldaten für das Frontend bereitstellen. | Reguläre Toolchain |
+| [MRP-Berechnung](submodules/02_MRP_Calculation/README.md) | Medikationsbezogene Probleme berechnen. | Reguläre Toolchain, abhängig von der Studienphase |
+| [Datenqualitätsanalyse](submodules/manual_start/Database_Quality_Analysis/README.md) | Datenverfügbarkeit und Werteverteilungen prüfen. | Manuell |
+| [MRP-Check](submodules/manual_start/MRP_Check/README.md) | MRPs für einen historischen Zeitraum auswerten. | Manuell |
+| [Statistische Berichte](submodules/manual_start/Statistical_Reports/README.md) | Kennzahlen zu Fällen, Medikationsanalysen und MRPs erzeugen. | Manuell |
+| [WP8-Export](submodules/manual_start/WP8_export/README.md) | Fallvignetten für die Prozessevaluation exportieren. | Manuell |
+| [TOP-Studienanalyse](../TOP-Framework/README.md) | TOP-Algorithmen auf Studienfälle anwenden und einen aggregierten Bericht erzeugen. | Manuell, über das eigene TOP-Startskript |
+
 ## Konfiguration
 
 Der Data Processor kann über die Datei [dataprocessor_config.toml](https://github.com/medizininformatik-initiative/INTERPOLAR/blob/main/R-dataprocessor/dataprocessor_config.toml) konfiguriert werden. Alle Parameter sind in der Datei durch Kommentare beschrieben.

@@ -1,5 +1,5 @@
 # Run from the repository root with Rscript.
-source("R-cdstoolchain/top-study/initialize-output.R")
+source("TOP-Framework/initialize-output.R")
 
 checkOutputRotation <- function() {
   previous_directory <- getwd()

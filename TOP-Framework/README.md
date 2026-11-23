@@ -13,15 +13,15 @@ docker compose build r-env
 ### 2. Datenbank-TOML setzen
 
 ```bash
-cp R-cdstoolchain/top-study/database.example.toml R-cdstoolchain/top-study/database.toml
+cp TOP-Framework/database.example.toml TOP-Framework/database.toml
 ```
 
-In `R-cdstoolchain/top-study/database.toml` den Wert `DB_NAME` auf die pseudonymisierte Snapshot-Datenbank setzen. Die übrigen Verbindungswerte kommen aus `cds_hub_db_config.toml`.
+In `TOP-Framework/database.toml` den Wert `DB_NAME` auf die pseudonymisierte Snapshot-Datenbank setzen. Die übrigen Verbindungswerte kommen aus `cds_hub_db_config.toml`.
 
 ### 3. Vollständigen Studienlauf starten
 
 ```bash
-./run-top-study.sh
+./TOP-Framework/run-top-study.sh
 ```
 
 ### 4. Rückmeldung hochladen

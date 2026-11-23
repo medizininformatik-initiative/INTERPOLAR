@@ -1,6 +1,6 @@
 # Synthetic integration test
 
-Run `bash R-cdstoolchain/top-study/tests/integration.sh` from the checkout.
+Run `bash TOP-Framework/tests/integration.sh` from the checkout.
 The TOP image is defined once in `../image.txt`; rerun this test after updating it.
 The test uses the existing R runtime and the pinned TOP image with two small
 model fixtures and the original anaemia and encounter models. It verifies five

@@ -2,11 +2,11 @@
 # One study run against an existing snapshot, using the repository's R runtime.
 set -euo pipefail
 umask 077
-root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
-tool_dir="$root/R-cdstoolchain/top-study"
+tool_dir="$root/TOP-Framework"
 [[ -f "$tool_dir/database.toml" ]] || {
-  echo 'R-cdstoolchain/top-study/database.example.toml nach database.toml kopieren und DB_NAME setzen.' >&2
+  echo 'TOP-Framework/database.example.toml nach database.toml kopieren und DB_NAME setzen.' >&2
   exit 1
 }
 # One image reference for template extraction, execution and version reporting.
@@ -136,7 +136,7 @@ phase=top
 container="top-study-run-$run_id"
 echo "[$(date -u +%FT%TZ)] Vollständige TOP-Studienanalyse starten"
 # A pipe streams progress; pipefail preserves the container exit status.
-docker compose -f docker-compose.yml -f R-cdstoolchain/top-study/compose.yml run --rm --no-deps \
+docker compose -f docker-compose.yml -f TOP-Framework/compose.yml run --rm --no-deps \
   --name "$container" --volume "$docker_tool_dir:/runner:ro" --volume "$docker_out:/run" top-study \
   2>&1 | tee "$out/progress.log" &
 command_pid=$!
