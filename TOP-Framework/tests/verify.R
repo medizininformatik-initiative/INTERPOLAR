@@ -22,7 +22,7 @@ algorithms <- utils::read.delim("/run/algorithms.tsv")
 stopifnot(
   status$status == "completed", status$exit_code == 0,
   nrow(algorithms) == 13L, all(algorithms$status == "completed"),
-  all(nzchar(algorithms$phenotype_name)), sum(algorithms$entry_type == "Fallzählung") == 1L,
+  all(nzchar(algorithms$phenotype_name)), !"entry_type" %in% names(algorithms),
   all(algorithms$matched_cases[algorithms$model != "anaemia"] == 5), all(algorithms$duration_seconds >= 0),
   !file.exists("/run/private/adapter.yml")
 )
@@ -66,7 +66,7 @@ report <- readLines(file.path("/global", report_files))
 stopifnot(
   identical(list.files("/global", all.files = FALSE), report_files),
   length(list.files("/run/results", pattern = "[.]zip$")) == 13L,
-  any(grepl("Zwischenkriterium", report, fixed = TRUE)),
+  !any(grepl("entry_type", report, fixed = TRUE)),
   all(vapply(algorithms$phenotype_name, function(name) any(grepl(name, report, fixed = TRUE)), logical(1))),
   any(grepl('"ignored_missing_encounter_contacts": 7', report, fixed = TRUE)),
   any(grepl('"total_hospital_cases": 9', report, fixed = TRUE)),

@@ -8,7 +8,7 @@ cp models/*.json /run/models/
 # Read the framework version from the bundled JAR, independently of the model package tag.
 unzip -p /opt/app/top-phenotypic-query.jar META-INF/maven/care.smith.top/top-phenotypic-query/pom.properties \
   | sed -n 's/^version=/top_framework_version=/p' > /run/framework-version.txt
-printf 'model\tphenotype_id\tphenotype_name\tentry_type\tstarted_utc\tfinished_utc\tduration_seconds\texit_code\tstatus\tmatched_cases\n' > /run/algorithms.tsv
+printf 'model\tphenotype_id\tphenotype_name\tstarted_utc\tfinished_utc\tduration_seconds\texit_code\tstatus\tmatched_cases\n' > /run/algorithms.tsv
 sha256sum models/*.json > /run/model-checksums.txt
 active=false
 java_pid=''
@@ -25,8 +25,8 @@ finish() {
     wait "$heartbeat_pid" 2>/dev/null || true
   fi
   if [[ "$active" == true ]]; then
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tinterrupted\t\n' \
-      "$model" "$id" "$name" "$entry_type" "$started" "$(date -u +%FT%TZ)" "$(( $(date +%s) - start_seconds ))" "$status" >> /run/algorithms.tsv
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\tinterrupted\t\n' \
+      "$model" "$id" "$name" "$started" "$(date -u +%FT%TZ)" "$(( $(date +%s) - start_seconds ))" "$status" >> /run/algorithms.tsv
   fi
   exit "$status"
 }
@@ -44,7 +44,7 @@ done
 [[ -s /run/algorithm-list.tsv ]] || { echo 'Keine Algorithmen gefunden.' >&2; exit 1; }
 total=$(wc -l < /run/algorithm-list.tsv)
 index=0
-while IFS=$'\t' read -r model id name entry_type; do
+while IFS=$'\t' read -r model id name; do
   [[ "$id" =~ ^[A-Za-z0-9_-]+$ ]] || { echo 'Ungültige Phänotyp-ID.' >&2; exit 1; }
   index=$((index + 1))
   started=$(date -u +%FT%TZ)
@@ -53,7 +53,7 @@ while IFS=$'\t' read -r model id name entry_type; do
   log_file="/run/logs/${model}_${id}.log"
   result_file="/run/results/${model}_${id}.zip"
   partial_file="/run/results/${model}_${id}.partial.zip"
-  printf '[%s] START %s/%s %s %s [%s] %s\n' "$started" "$index" "$total" "$model" "$id" "$entry_type" "$name"
+  printf '[%s] START %s/%s %s %s %s\n' "$started" "$index" "$total" "$model" "$id" "$name"
   /opt/java/openjdk/bin/java -jar top-phenotypic-query.jar query -fn \
     -p "$id" "models/$model.json" /run/private/adapter.yml -o "$partial_file" > "$log_file" 2>&1 &
   java_pid=$!
@@ -81,7 +81,7 @@ while IFS=$'\t' read -r model id name entry_type; do
     count=''
   fi
   duration=$(( $(date +%s) - start_seconds ))
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$model" "$id" "$name" "$entry_type" "$started" \
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$model" "$id" "$name" "$started" \
     "$(date -u +%FT%TZ)" "$duration" "$code" "$result_status" "$count" >> /run/algorithms.tsv
   active=false
   printf '[%s] %s %s %s Dauer=%ss Treffer=%s Exit=%s\n' \

@@ -46,8 +46,7 @@ and interruptions, and check that credentials and raw logs are not included.
 The full TOP ZIPs stay in `outputLocal/top-study/results/`, including metadata. Tests
 inspect all three CSV members, exact case IDs and phenotype/metadata consistency.
 The public folder contains only the aggregate report. `check-catalog.sh` checks
-all entries in the current image and the explicit classification of the three
-intermediate criteria and encounter count. Revisit these reviewed IDs in `algorithm-list.jq` when updating the TOP models.
+the model names, phenotype IDs and titles of all executable entries in the current image.
 
 The independent audit groups first ward contacts separately from the adapter's
 window query. Synthetic haemoglobin rows include duplicated measurements,
