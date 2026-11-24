@@ -35,6 +35,9 @@ runCli <- function() {
     .package = "etlutils"
   )
   workload <- function(...) {
+    if (script == "StartSnapshotPseudonymizationPreflight.R") {
+      writeLines(list(...)$review_report_file, file.path(output_root, "review-path.txt"))
+    }
     etlutils::runLevel2("Synthetic snapshot phase", {
       cat("\033[31mSynthetic progress\033[0m\n")
       TRUE

@@ -196,10 +196,9 @@ vorhandene Spalte `fall_bmi` behält ihre Position.
 
 ## Prüfberichte
 
-Der Pseudonymisierungslauf schreibt lokale Prüfberichte in diese Verzeichnisse:
+Vorprüfung und Pseudonymisierung schreiben lokale Prüfberichte in dasselbe Verzeichnis:
 
 ```text
-outputLocal/snapshot_pseudonymization_preflight/reports
 outputLocal/snapshot_pseudonymization/reports
 ```
 
