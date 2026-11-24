@@ -131,6 +131,12 @@ alle folgenden Bedingungen erfüllt sind:
 - Es handelt sich nicht um eine Test-MRP. IDs mit `-TEST-` und
   Kurzbeschreibungen mit `*TEST*` werden ausgeschlossen.
 
+Bei älteren REDCap-Ständen werden auch `ret_gewiss_grund1_abl` und
+`ret_gewiss_grund2_abl` unterstützt. Fehlt das jeweilige neue Feld oder ist sein
+Wert leer, wird der Wert aus dem alten Feld verwendet. Ein befülltes neues Feld
+hat Vorrang. Das gilt sowohl für die Fallauswahl als auch für die Übernahme der
+Bewertungen; Mapping und WP8-Exportfelder bleiben unverändert.
+
 Eine MRP-Dokumentation durch die Apotheker:innen ist keine Voraussetzung. Auf
 diese Weise werden auch vom Algorithmus erkannte und retrospektiv bewertete
 MRPs exportiert, die zuvor nicht pharmazeutisch dokumentiert wurden.

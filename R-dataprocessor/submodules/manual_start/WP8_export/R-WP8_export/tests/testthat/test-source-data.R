@@ -45,7 +45,10 @@ testthat::test_that("buildFallvignetteSourceQuery restricts the eligible populat
   testthat::expect_match(
     query,
     paste(
-      "ret_fe.ret_gewiss_grund1_abl_01 =",
+      paste0(
+        "COALESCE(NULLIF(to_jsonb(ret_fe)->>'ret_gewiss_grund1_abl_01', ''), ",
+        "NULLIF(to_jsonb(ret_fe)->>'ret_gewiss_grund1_abl', '')) ="
+      ),
       "'MRP sachlich richtig, aber klinisch nicht relevant'"
     ),
     fixed = TRUE
@@ -53,7 +56,10 @@ testthat::test_that("buildFallvignetteSourceQuery restricts the eligible populat
   testthat::expect_match(
     query,
     paste(
-      "ret_fe.ret_gewiss_grund2_abl_01 =",
+      paste0(
+        "COALESCE(NULLIF(to_jsonb(ret_fe)->>'ret_gewiss_grund2_abl_01', ''), ",
+        "NULLIF(to_jsonb(ret_fe)->>'ret_gewiss_grund2_abl', '')) ="
+      ),
       "'MRP sachlich richtig, aber klinisch nicht relevant'"
     ),
     fixed = TRUE
