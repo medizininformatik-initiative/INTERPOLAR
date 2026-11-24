@@ -9,7 +9,7 @@ tool_dir="$root/TOP-Framework"
   echo 'TOP-Framework/database.example.toml nach database.toml kopieren und DB_NAME setzen.' >&2
   exit 1
 }
-# One image reference for template extraction, execution and version reporting.
+# Resolve the current image once for template extraction, execution and reporting.
 export TOP_STUDY_IMAGE
 TOP_STUDY_IMAGE=$(cat "$tool_dir/image.txt")
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
@@ -39,6 +39,14 @@ case "$OSTYPE" in
     docker_global=$(cygpath -m "$root/outputGlobal")
     ;;
 esac
+# Refresh before rotating outputs; a failed pull preserves the previous run.
+echo 'Aktuelles TOP-Image herunterladen'
+docker pull "$TOP_STUDY_IMAGE"
+TOP_STUDY_IMAGE=$(docker image inspect --format '{{index .RepoDigests 0}}' "$TOP_STUDY_IMAGE")
+[[ "$TOP_STUDY_IMAGE" == *@sha256:* ]] || {
+  echo 'Der Digest des TOP-Images konnte nicht ermittelt werden.' >&2
+  exit 1
+}
 # Rotate before mounting the current run into any processing container.
 docker compose run --rm --no-deps \
   --volume "$docker_tool_dir:/runner:ro" \
@@ -73,7 +81,7 @@ write_report() {
     printf '\nPLAUSIBILITÄTSPRÜFUNG\n'
     if [[ -f "$out/plausibility.txt" ]]; then cat "$out/plausibility.txt"; else echo 'Prüfung noch nicht abgeschlossen; Zahlen nicht verfügbar.'; fi
     printf '\nVERSIONEN\n'
-    for file in revision.txt versions.json framework-version.txt model-checksums.txt; do
+    for file in revision.txt versions.json top-image.txt framework-version.txt model-checksums.txt; do
       if [[ -f "$out/$file" ]]; then printf '\n%s\n' "$file"; cat "$out/$file"; fi
     done
     printf '\n'
@@ -111,6 +119,7 @@ wait_for_command() {
 trap finalize EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+printf '%s\n' "$TOP_STUDY_IMAGE" > "$out/top-image.txt"
 git rev-parse HEAD > "$out/revision.txt"
 if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
   printf 'Working tree has tracked modifications.\n' >> "$out/revision.txt"

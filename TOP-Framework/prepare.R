@@ -12,8 +12,7 @@ prepareStudyRun <- function() {
   original_path <- file.path(out, "original.yml")
   periods <- readPeriods("/src/R-dataprocessor/dataprocessor_config.toml")
   original <- yaml::read_yaml(original_path, eval.expr = FALSE)
-  condition <- yaml::read_yaml("/runner/icd-prefix.yml", eval.expr = FALSE)$condition
-  adapter <- makeAdapter(original, condition, periods)
+  adapter <- makeAdapter(original, periods)
   yaml::write_yaml(adapter, file.path(out, "adapter.yml"))
   config <- etlutils::dbReadConfigWithOverrides(
     "/src/cds_hub_db_config.toml", "/runner/database.toml",
@@ -61,9 +60,8 @@ prepareStudyRun <- function() {
   yaml::write_yaml(adapter, file.path(out, "private", "adapter.yml"))
   Sys.chmod(file.path(out, "private", "adapter.yml"), "0600")
   jsonlite::write_json(list(
-    top_image = readLines("/runner/image.txt", warn = FALSE),
+    top_image = readLines(file.path(out, "top-image.txt"), warn = FALSE),
     original_adapter_sha256 = digest::digest(file = original_path, algo = "sha256"),
-    icd_component_sha256 = digest::digest(file = "/runner/icd-prefix.yml", algo = "sha256"),
     generated_adapter_sha256 = digest::digest(file = file.path(out, "adapter.yml"), algo = "sha256"),
     postgresql = as.character(pg_version), r = as.character(getRversion()),
     population = "study", timezone = "Europe/Berlin",

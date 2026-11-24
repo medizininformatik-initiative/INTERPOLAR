@@ -7,8 +7,8 @@ def title($language): [.titles[]? | select(.lang == $language) | .text | select(
     $model,
     .id,
     (title("de") // title("en") // .titles[0].text // .id | gsub("[\t\r\n]"; " ")),
-    # These boolean helper criteria were reviewed in the pinned TOP models.
-    # Recheck this classification when updating image.txt; it is not a title heuristic.
+    # These boolean helper criteria were reviewed in the TOP models.
+    # Recheck this classification when helper criteria change; it is not a title heuristic.
     (if ($model == "delirium" and .id == "5f66498f-afb1-4d7d-b00f-ba5a933d8cda")
         or ($model == "delirium" and .id == "ce5297ae-2f40-4849-8cb3-24b2dd1064ab")
         or ($model == "fall_injuries" and .id == "83f23c3f-062a-45f2-aab4-f5429ef670ca")

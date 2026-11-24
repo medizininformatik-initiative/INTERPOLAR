@@ -53,7 +53,7 @@ separat aufgeführt.
 
 ### Ausführung und lokale Ablage
 
-Verwendet wird das TOP-Modellpaket 1.1.1 mit TOP-Framework 2.0.0; das Image wird beim ersten Lauf automatisch heruntergeladen.
+Vor jedem Lauf wird das aktuelle TOP-Image (`latest`) heruntergeladen. Der gesamte Lauf verwendet dieses Image; die Framework-Version und der Image-Digest stehen im Bericht.
 
 Fortschritt und Laufzeiten erscheinen im Terminal und in `outputLocal/top-study/progress.log`. Während einer TOP-Berechnung erscheint alle 60 Sekunden ein Lebenszeichen. Die Vorbereitung steht in `preparation.log`, die anschließende aggregierte Prüfung in `plausibility.log`.
 

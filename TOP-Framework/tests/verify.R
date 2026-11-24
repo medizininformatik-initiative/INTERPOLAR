@@ -28,8 +28,9 @@ stopifnot(
 )
 versions <- jsonlite::read_json("/run/versions.json", simplifyVector = TRUE)
 stopifnot(
-  versions$top_image == readLines("/runner/image.txt"),
-  readLines("/run/framework-version.txt") == "top_framework_version=2.0.0",
+  versions$top_image == readLines("/run/top-image.txt"),
+  grepl("@sha256:[a-f0-9]{64}$", versions$top_image),
+  grepl("^top_framework_version=.+", readLines("/run/framework-version.txt")),
   algorithms$matched_cases[algorithms$phenotype_id == "3fcabb96-0d3e-4798-a088-2778bcf0268d"] == 1,
   versions$original_adapter_sha256 == digest::digest(file = "/run/original.yml", algo = "sha256")
 )
@@ -42,10 +43,12 @@ log <- readLines("/run/preparation.log")
 stopifnot(any(grepl("Ignorierte Stationszuordnungszeilen ohne Encounter: 7", log, fixed = TRUE)))
 original <- yaml::read_yaml("/run/original.yml", eval.expr = FALSE)
 actual <- yaml::read_yaml("/run/adapter.yml", eval.expr = FALSE)
-condition <- yaml::read_yaml("/runner/icd-prefix.yml", eval.expr = FALSE)$condition
 for (name in names(original$phenotypeQueries)) {
-  expected_query <- if (name == "condition") condition else original$phenotypeQueries[[name]]
+  expected_query <- original$phenotypeQueries[[name]]
   actual_query <- actual$phenotypeQueries[[name]]
+  if (!is.null(expected_query$baseQuery)) {
+    stopifnot(grepl(expected_query$baseQuery, actual_query$baseQuery, fixed = TRUE))
+  }
   expected_query$baseQuery <- NULL
   actual_query$baseQuery <- NULL
   stopifnot(identical(expected_query, actual_query))

@@ -40,6 +40,7 @@ networks:
     external: true
     name: $network
 EOF
+docker pull "$(cat "$root/TOP-Framework/image.txt")"
 docker run --rm --network none --read-only --tmpfs /tmp \
   --mount "type=bind,src=$root/TOP-Framework,dst=/runner,readonly" \
   --entrypoint bash "$(cat "$root/TOP-Framework/image.txt")" /runner/tests/check-catalog.sh

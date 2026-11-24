@@ -65,35 +65,15 @@ scopeSql <- function(periods, remaining = FALSE) {
 )")
 }
 
-# Repeated FHIR fields create rows, not additional measurements. Keep distinct
-# resources and differing measurement values; rows without an ID remain unchanged.
-deduplicateObservations <- function(query) {
-  source <- "FROM db2dataprocessor_out.v_observation_last_version"
-  if (length(strsplit(query, source, fixed = TRUE)[[1]]) != 2L) {
-    stop("Unerwartete TOP-Observation-Abfrage: Datenquelle nicht eindeutig.")
-  }
-  columns <- "obs_id, obs_encounter_calculated_ref, obs_effectivedatetime, analysis_value, analysis_loinc_code, analysis_unit"
-  replacement <- paste0(
-    "FROM (SELECT DISTINCT ", columns,
-    " FROM db2dataprocessor_out.v_observation_last_version WHERE analysis_value_status IN ('converted','already_reference_unit') AND NULLIF(obs_id, '') IS NOT NULL",
-    " UNION ALL SELECT ", columns,
-    " FROM db2dataprocessor_out.v_observation_last_version WHERE analysis_value_status IN ('converted','already_reference_unit') AND NULLIF(obs_id, '') IS NULL",
-    ") AS observation_rows"
-  )
-  sub(source, replacement, query, fixed = TRUE)
-}
-
 # Preserve all original restriction fragments by appending the population predicate
 # to the original WHERE. The population CTE is nested in IN, avoiding WITH collisions.
-makeAdapter <- function(original, condition, periods, remaining = FALSE) {
+makeAdapter <- function(original, periods, remaining = FALSE) {
   adapter <- original
   expected <- c(
     "encounter", "observation", "condition", "procedure", "medication",
     "medication_administration", "medication_statement", "medication_request"
   )
   if (!setequal(names(adapter$phenotypeQueries), expected)) stop("Unbekannte TOP-Abfragestruktur.")
-  adapter$phenotypeQueries$condition <- condition
-  adapter$phenotypeQueries$observation$baseQuery <- deduplicateObservations(adapter$phenotypeQueries$observation$baseQuery)
   expressions <- c(
     encounter = "enc_id", observation = "un.enc_id",
     condition = "SUBSTRING(con.con_encounter_calculated_ref FROM 11)",

@@ -53,8 +53,7 @@ main <- function() {
   DBI::dbExecute(con, "ALTER TABLE db2dataprocessor_out.v_observation_last_version DROP CONSTRAINT v_observation_last_version_pkey")
   DBI::dbExecute(con, "INSERT INTO db2dataprocessor_out.v_observation_last_version SELECT * FROM db2dataprocessor_out.v_observation_last_version WHERE obs_id='hb1'")
   original <- yaml::read_yaml("/baseline/original.yml", eval.expr = FALSE)
-  condition <- yaml::read_yaml("/runner/icd-prefix.yml", eval.expr = FALSE)$condition
-  adapter <- makeAdapter(original, condition, readPeriods("/src/R-dataprocessor/dataprocessor_config.toml"))
+  adapter <- makeAdapter(original, readPeriods("/src/R-dataprocessor/dataprocessor_config.toml"))
   sql <- gsub("{codes}", "'http://loinc.org|59260-0'", adapter$phenotypeQueries$observation$baseQuery, fixed = TRUE)
   actual <- DBI::dbGetQuery(con, sql)
   stopifnot(sum(actual$enc_id == "early_hospital") == 2)
