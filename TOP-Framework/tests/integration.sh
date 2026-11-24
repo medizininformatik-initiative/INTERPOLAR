@@ -32,7 +32,7 @@ services:
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml:ro
     networks: [internal]
   top-study:
-    image: ghcr.io/onto-med/top-interpolar-algorithms:1
+    image: $(cat "$root/TOP-Framework/image.txt")
     volumes:
       - ./TOP-Framework/tests/models:/opt/app/models:ro
 networks:
