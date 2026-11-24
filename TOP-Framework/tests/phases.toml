@@ -1,0 +1,3 @@
+[analyse]
+PHASES_WARD_1 = ["ward_name = 'A'", "phase_a_start = '2026-01-10'", "phase_b_start = '2026-01-15'", "phase_b_end = '2026-02-01'"]
+PHASES_WARD_2 = ["ward_name = 'B'", "phase_a_start = '2026-01-20'", "phase_b_start = '2026-01-25'", "phase_b_end = '2026-02-10'"]

@@ -40,7 +40,7 @@ jobs:
             changed-files.txt; then
             echo "mode=full" >> "$GITHUB_OUTPUT"
           elif grep -Eq \
-            '^(R-cds2db|R-cdstoolchain|R-dataprocessor|R-db2frontend|R-etlutils|Postgres-cds_hub/R-initcdstoolchain)/.*\.R$' \
+            '^(TOP-Framework|R-cds2db|R-cdstoolchain|R-dataprocessor|R-db2frontend|R-etlutils|Postgres-cds_hub/R-initcdstoolchain)/.*\.R$' \
             changed-files.txt; then
             echo "mode=changed" >> "$GITHUB_OUTPUT"
           else

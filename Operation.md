@@ -24,3 +24,11 @@ docker compose exec -w /cds_hub-initdb.d cds_hub psql -U cds_hub_db_admin -d cds
 
 ## Backup & Restore
 Siehe [discussions/750](https://github.com/medizininformatik-initiative/INTERPOLAR/discussions/750).
+
+## TOP-Studienanalyse auf einem Snapshot
+
+Mit `./TOP-Framework/run-top-study.sh` werden die Studienfälle auf einer vorhandenen pseudonymisierten Snapshot-Datenbank analysiert. Einrichtung, Fortschrittsprotokolle und die Rückmeldung des DIZ sind in [TOP-Studienanalyse](TOP-Framework/README.md) beschrieben.
+
+```sh
+./TOP-Framework/run-top-study.sh
+```
