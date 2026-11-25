@@ -58,74 +58,91 @@ buildCohortCases <- function(first, contacts, encounters, patients, timezone) {
 #' @param timezone Analysis time zone.
 #' @return Cases, normalised clinical events and aggregate quality diagnostics.
 loadCohortAnalysisData <- function(prepared, timezone) {
-  contacts <- prepared$known_ip_contacts
-  contacts[, case_id := etlutils::fhirdataExtractIDs(enc_main_encounter_calculated_ref, unique = FALSE)]
-  first <- selectFirstCohortContacts(contacts)
-  patients <- getResourcesFromDB(
-    "Patient", c("pat_id", "pat_birthdate", "pat_gender"),
-    unique(first$patient_id)
-  )
-  cases <- buildCohortCases(first, contacts, prepared$encounters, patients, timezone)
-  record_ids <- unique(dataprocessor::loadExistingRecordIDsFromDB(unique(cases$patient_id)))
-  data.table::setnames(record_ids, "pat_id", "patient_id")
-  if (anyDuplicated(record_ids$record_id)) stop("REDCap records map to multiple patients.")
-  analyses <- etlutils::getMedikationsanalyseFeData(
-    "Cohort Description: MedA",
-    "v_medikationsanalyse_fe_last_version"
-  )
-  analyses <- merge(analyses, record_ids, by = "record_id", sort = FALSE)
-  case_links <- etlutils::dbGetReadOnlyQuery(
-    "SELECT DISTINCT record_id, fall_id AS fall_meda_id, fall_fhir_enc_id AS case_id FROM v_fall_fe_last_version",
-    lock_id = "Cohort Description: MedA case links"
-  )
-  if (anyDuplicated(case_links, by = c("record_id", "fall_meda_id")))
-    stop("Ambiguous MedA hospital-case links.")
-  analyses <- merge(analyses, case_links, by = c("record_id", "fall_meda_id"), sort = FALSE)
-  validations <- etlutils::dbGetReadOnlyQuery(
-    paste0(
-      "SELECT DISTINCT record_id, mrp_meda_id AS meda_id, mrp_id, ",
-      "mrp_dokup_hand_emp_akz AS outcome FROM v_mrpdokumentation_validierung_fe_last_version"
-    ),
-    lock_id = "Cohort Description: manual MRP validation"
-  )
-  validations <- merge(validations, record_ids, by = "record_id", sort = FALSE)
-  cases <- calculateCohortMedAFeatures(cases, analyses, contacts, validations)
-  # Historical hospital admissions are fetched once for all patients, not once per case.
-  history <- getResourcesFromDB("Encounter", c("enc_id", "enc_patient_ref", "enc_period_start"),
-    unique(cases$patient_id),
-    additional_conditions = c(
-      "enc_type_code = 'fallkontakt'", "enc_class_code IN ('IMP', 'ACUTE', 'NONAC')"
+  runCohortStep("Select first stays and prepare patient demographics", {
+    contacts <- prepared$known_ip_contacts
+    contacts[, case_id := etlutils::fhirdataExtractIDs(enc_main_encounter_calculated_ref, unique = FALSE)]
+    first <- selectFirstCohortContacts(contacts)
+    patients <- getResourcesFromDB(
+      "Patient", c("pat_id", "pat_birthdate", "pat_gender"),
+      unique(first$patient_id)
     )
-  )
-  history[, `:=`(
-    patient_id = etlutils::fhirdataExtractIDs(enc_patient_ref, unique = FALSE),
-    start_datetime = enc_period_start
-  )]
-  history <- unique(history[, .(patient_id, enc_id, start_datetime)])
-  windows <- cases[, .(patient_id, ip_start, case_id, case_row = .I)]
-  previous <- history[windows,
-    on = .(patient_id, start_datetime <= ip_start),
-    nomatch = NULL, allow.cartesian = TRUE, .(case_row = i.case_row, current_case = i.case_id, enc_id)
-  ]
-  previous <- previous[enc_id != current_case, .(n = data.table::uniqueN(enc_id)), by = case_row]
-  cases[, m360 := 0L]
-  cases[previous$case_row, m360 := previous$n]
+    cases <- buildCohortCases(first, contacts, prepared$encounters, patients, timezone)
+  })
+  runCohortStep("Load and evaluate medication analyses and manual MRPs", {
+    record_ids <- unique(dataprocessor::loadExistingRecordIDsFromDB(unique(cases$patient_id)))
+    data.table::setnames(record_ids, "pat_id", "patient_id")
+    if (anyDuplicated(record_ids$record_id)) stop("REDCap records map to multiple patients.")
+    analyses <- etlutils::getMedikationsanalyseFeData(
+      "Cohort Description: MedA",
+      "v_medikationsanalyse_fe_last_version"
+    )
+    analyses <- merge(analyses, record_ids, by = "record_id", sort = FALSE)
+    case_links <- etlutils::dbGetReadOnlyQuery(
+      "SELECT DISTINCT record_id, fall_id AS fall_meda_id, fall_fhir_enc_id AS case_id FROM v_fall_fe_last_version",
+      lock_id = "Cohort Description: MedA case links"
+    )
+    if (anyDuplicated(case_links, by = c("record_id", "fall_meda_id")))
+      stop("Ambiguous MedA hospital-case links.")
+    analyses <- merge(analyses, case_links, by = c("record_id", "fall_meda_id"), sort = FALSE)
+    validations <- etlutils::dbGetReadOnlyQuery(
+      paste0(
+        "SELECT DISTINCT record_id, mrp_meda_id AS meda_id, mrp_id, ",
+        "mrp_dokup_hand_emp_akz AS outcome FROM v_mrpdokumentation_validierung_fe_last_version"
+      ),
+      lock_id = "Cohort Description: manual MRP validation"
+    )
+    validations <- merge(validations, record_ids, by = "record_id", sort = FALSE)
+    cases <- calculateCohortMedAFeatures(cases, analyses, contacts, validations)
+  })
+  runCohortStep("Load and count historical hospital cases", {
+    # Historical hospital admissions are fetched once for all patients, not once per case.
+    history <- getResourcesFromDB("Encounter", c("enc_id", "enc_patient_ref", "enc_period_start"),
+      unique(cases$patient_id),
+      additional_conditions = c(
+        "enc_type_code = 'fallkontakt'", "enc_class_code IN ('IMP', 'ACUTE', 'NONAC')"
+      )
+    )
+    history[, `:=`(
+      patient_id = etlutils::fhirdataExtractIDs(enc_patient_ref, unique = FALSE),
+      start_datetime = enc_period_start
+    )]
+    history <- unique(history[, .(patient_id, enc_id, start_datetime)])
+    windows <- cases[, .(patient_id, ip_start, case_id, case_row = .I)]
+    previous <- history[windows,
+      on = .(patient_id, start_datetime <= ip_start),
+      nomatch = NULL, allow.cartesian = TRUE, .(case_row = i.case_row, current_case = i.case_id, enc_id)
+    ]
+    previous <- previous[enc_id != current_case, .(n = data.table::uniqueN(enc_id)), by = case_row]
+    cases[, m360 := 0L]
+    cases[previous$case_row, m360 := previous$n]
+  })
   patient_ids <- unique(cases$patient_id)
-  diagnoses <- getConditionsFromDB(patient_ids)
-  encounters <- loadCohortOriginEncounters(diagnoses$con_encounter_calculated_ref, prepared$encounters)
-  diagnoses <- prepareCohortCoding(
-    diagnoses, encounters, etlutils::loadICDCatalogues(), timezone, "con", "icd"
+  runCohortStep("Load diagnoses and validate ICD catalogue membership", {
+    diagnoses <- getConditionsFromDB(patient_ids)
+    encounters <- loadCohortOriginEncounters(diagnoses$con_encounter_calculated_ref, prepared$encounters)
+    diagnoses <- prepareCohortCoding(
+      diagnoses, encounters, etlutils::loadICDCatalogues(), timezone, "con", "icd"
+    )
+    diagnoses[, `:=`(
+      patient_id = etlutils::fhirdataExtractIDs(con_patient_ref, unique = FALSE),
+      code = con_code_code
+    )]
+  })
+  runCohortStep("Load medication requests and resolve ATC codes", {
+    requests <- getMedicationRequestsFromDB(patient_ids, status_exclusion = c("cancelled", "entered-in-error"))
+    medications <- getATCMedicationsFromDB(requests, data.table::data.table(), data.table::data.table())
+    medications <- appendATCColumns(requests, medications)
+    medications[, `:=`(patient_id = etlutils::fhirdataExtractIDs(medreq_patient_ref, unique = FALSE), code = atc_code)]
+  })
+  observations <- runCohortStep("Load laboratory observations", getObservationsFromDB(patient_ids))
+  observations <- runCohortStep(
+    "Prepare laboratory values and reference ranges",
+    prepareCohortLaboratory(observations, getLOINCMapping()$processed_content)
   )
-  diagnoses[, `:=`(
-    patient_id = etlutils::fhirdataExtractIDs(con_patient_ref, unique = FALSE),
-    code = con_code_code
-  )]
-  requests <- getMedicationRequestsFromDB(patient_ids, status_exclusion = c("cancelled", "entered-in-error"))
-  medications <- getATCMedicationsFromDB(requests, data.table::data.table(), data.table::data.table())
-  medications <- appendATCColumns(requests, medications)
-  medications[, `:=`(patient_id = etlutils::fhirdataExtractIDs(medreq_patient_ref, unique = FALSE), code = atc_code)]
-  observations <- prepareCohortLaboratory(getObservationsFromDB(patient_ids), getLOINCMapping()$processed_content)
-  ops <- loadCohortProcedureData(patient_ids, encounters, etlutils::loadOPSCatalogues(), timezone)
+  ops <- runCohortStep(
+    "Load procedures and validate OPS catalogue membership",
+    loadCohortProcedureData(patient_ids, encounters, etlutils::loadOPSCatalogues(), timezone)
+  )
   quality <- data.table::data.table(
     check = c(
       "known_ip_contacts", "cases_before_eligibility", "cases_missing_hospital_start",
@@ -141,7 +158,10 @@ loadCohortAnalysisData <- function(prepared, timezone) {
     )
   )
   list(
-    cases = calculateCohortCodeFeatures(cases, diagnoses, medications, observations, ops$procedures),
+    cases = runCohortStep(
+      "Calculate clinical case features",
+      calculateCohortCodeFeatures(cases, diagnoses, medications, observations, ops$procedures)
+    ),
     quality = quality
   )
 }

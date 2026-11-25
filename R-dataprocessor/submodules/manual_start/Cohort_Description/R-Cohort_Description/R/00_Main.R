@@ -41,6 +41,21 @@ prepareCohortDescription <- function() {
 #' @return Invisibly, an aggregate manifest of generated workbooks.
 #' @export
 createCohortDescription <- function() {
+  started <- proc.time()[["elapsed"]]
+  directory <- file.path(etlutils::getModuleDirNames(NULL)$global_dir, "reports", "cohort_description")
+  dir.create(directory, recursive = TRUE, showWarnings = FALSE)
+  # Write an initial status so a hard-killed run is never mistaken for a completed one.
+  write_metrics <- function(status) {
+    data.table::fwrite(data.table::data.table(
+      status = status,
+      elapsed_seconds = if (status == "running") NA_real_ else proc.time()[["elapsed"]] - started,
+      max_rss_kib = if (status == "running") NA_real_ else etlutils::getProcessPeakMemoryKiB(),
+      memory_scope = "R process since start"
+    ), file.path(directory, "cohort_run_metrics.csv"), na = "NA")
+  }
+  write_metrics("running")
+  status <- "failed"
+  on.exit(write_metrics(status), add = TRUE)
   timezone <- etlutils::GLOBAL_TIMEZONE
   columns <- c("ward_name", "phase_a_start", "phase_b_start", "phase_b_end", "ward_type", "department")
   wards <- data.table::as.data.table(setNames(lapply(columns, function(column)
@@ -50,14 +65,18 @@ createCohortDescription <- function() {
   }
   # Validate dates before loading clinical data.
   buildCohortPeriods(wards)
-  prepared <- prepareCohortDescription()
+  prepared <- runCohortStep("Link known INTERPOLAR contacts", prepareCohortDescription())
+  prepared$known_ip_contacts <- retainLinkedCohortContacts(
+    prepared$known_ip_contacts,
+    file.path(etlutils::getModuleDirNames(NULL)$local_dir, "diagnostics", "cohort_description")
+  )
   data <- loadCohortAnalysisData(prepared, timezone)
-  directory <- file.path(etlutils::getModuleDirNames(NULL)$local_dir, "reports", "cohort_description")
-  manifest <- exportCohortDescription(
+  manifest <- runCohortStep("Export expanded workbooks", exportCohortDescription(
     data$cases, wards, timezone,
     etlutils::getVarByNameOrDefaultIfMissing("SITE_CODE"), directory
-  )
+  ))
   data.table::fwrite(data$quality, file.path(directory, "cohort_quality.csv"))
   message("Cohort Description completed: ", nrow(manifest), " expanded workbooks in ", directory)
+  status <- "completed"
   invisible(manifest)
 }

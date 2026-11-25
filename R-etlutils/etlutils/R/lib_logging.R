@@ -773,3 +773,24 @@ generateFinishMessage <- function() {
 
   return(finish_message)
 }
+
+#' Read the Peak Resident Memory of the Current R Process
+#'
+#' Reads the Linux process high-water mark, including memory used before this call.
+#' This is resident process memory, not R object size or total container/database memory.
+#' Returns NA when procfs or the high-water mark is unavailable, including on macOS.
+#' @return Peak resident memory in KiB, or NA_real_ when unavailable.
+#' @export
+getProcessPeakMemoryKiB <- function() {
+  path <- "/proc/self/status"
+  if (!file.exists(path)) return(NA_real_)
+  status <- tryCatch(readLines(path, warn = FALSE), error = function(error) character())
+  parseProcessPeakMemoryKiB(status)
+}
+
+# Linux reports kB here as multiples of 1024 bytes.
+parseProcessPeakMemoryKiB <- function(status) {
+  peak <- grep("^VmHWM:[[:space:]]*[0-9]+[[:space:]]+kB[[:space:]]*$", status, value = TRUE)
+  if (length(peak) != 1L) return(NA_real_)
+  as.numeric(sub("^VmHWM:[[:space:]]*([0-9]+).*$", "\\1", peak))
+}

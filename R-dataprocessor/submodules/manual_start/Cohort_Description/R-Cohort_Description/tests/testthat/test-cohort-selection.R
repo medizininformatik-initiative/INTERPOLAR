@@ -98,3 +98,68 @@ test_that("CRS limits are site-wide while A/B boundaries remain ward-specific", 
   expect_setequal(result[ward_name == "A"]$phase, c("CRS", "CRS B"))
   expect_setequal(result[ward_name == "B"]$phase, c("CRS", "CRS A"))
 })
+
+
+test_that("invalid first contacts report aggregate causes without exposing identifiers", {
+  time <- as.POSIXct("2026-01-01", tz = "UTC")
+  contacts <- data.table::data.table(
+    patient_id = "private-patient", encounter_id = paste0("private-contact-", 1:5),
+    ward_name = "private-ward", encounter_found = c(FALSE, TRUE, TRUE, TRUE, TRUE),
+    enc_main_encounter_calculated_ref = c(NA, "", rep("Encounter/private-case", 3)),
+    enc_period_start = c(as.POSIXct(NA), rep(time, 4)),
+    enc_period_end = time + 86400, input_datetime = c(rep(time, 2), as.POSIXct(NA), time, time),
+    pids_per_ward_id = c(1L, 2L, 3L, NA_integer_, 5L)
+  )
+  # A second coding repeats the first invalid contact; the fifth contact is valid.
+  contacts <- data.table::rbindlist(list(contacts, contacts[1]))
+  before <- data.table::copy(contacts)
+  error <- tryCatch(selectFirstCohortContacts(contacts), error = identity)
+  expect_s3_class(error, "error")
+  message <- conditionMessage(error)
+  expect_match(message, "5 known IP assignment row(s)", fixed = TRUE)
+  expect_match(message, "Affected distinct contacts (patient/Encounter): 4; rows without complete contact key: 0", fixed = TRUE)
+  expect_match(message, "Affected identifiable cases (patient/case): 1; rows without complete case key: 3", fixed = TRUE)
+  expect_match(message, "encounter_not_found=2, missing_case_id=3, missing_contact_start=2, missing_input_datetime=1, missing_pids_per_ward_id=1", fixed = TRUE)
+  expect_false(grepl("private-", message, fixed = TRUE))
+  expect_equal(contacts, before)
+  contacts[1, patient_id := NA_character_]
+  message <- conditionMessage(tryCatch(selectFirstCohortContacts(contacts), error = identity))
+  expect_match(message, "rows without complete contact key: 1", fixed = TRUE)
+})
+
+
+test_that("unlinked contacts are excluded with identifiers only in a local diagnostic file", {
+  directory <- tempfile("cohort-diagnostics-")
+  on.exit(unlink(directory, recursive = TRUE), add = TRUE)
+  time <- as.POSIXct("2026-01-01", tz = "UTC")
+  contacts <- data.table::data.table(
+    patient_id = "private-patient", encounter_id = c("private-missing", "private-present"),
+    ward_name = "ward", encounter_found = c(FALSE, TRUE),
+    enc_main_encounter_calculated_ref = c(NA, "Encounter/case"),
+    enc_period_start = c(as.POSIXct(NA), time), enc_period_end = time + 86400,
+    input_datetime = time, pids_per_ward_id = 1:2
+  )
+  before <- data.table::copy(contacts)
+  messages <- character()
+  output <- capture.output(result <- withCallingHandlers(
+    retainLinkedCohortContacts(contacts, directory),
+    message = function(m) {
+      messages <<- c(messages, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  ))
+  expect_equal(result, contacts[2])
+  expect_equal(contacts, before)
+  expect_false(any(grepl("private-", c(messages, output), fixed = TRUE)))
+  expect_match(messages[1], "excluded 1")
+  path <- file.path(directory, "unlinked_station_contacts.csv")
+  expect_equal(data.table::fread(path)$encounter_id, "private-missing")
+  expect_equal(selectFirstCohortContacts(result)$encounter_id, "private-present")
+  # Linked contacts with missing chronology still fail the existing validation.
+  result[, enc_period_start := as.POSIXct(NA)]
+  expect_error(selectFirstCohortContacts(result), "lack data")
+  expect_message(retainLinkedCohortContacts(contacts[2], directory), "excluded 0")
+  expect_equal(nrow(data.table::fread(path)), 0L)
+  expect_message(empty <- retainLinkedCohortContacts(contacts[1], directory), "excluded 1")
+  expect_equal(nrow(empty), 0L)
+})

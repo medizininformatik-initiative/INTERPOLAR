@@ -94,3 +94,32 @@ test_that("date SD is based on elapsed time across daylight-saving changes", {
   result <- calculateCohortCells(cases, specification)
   expect_equal(result[address == "L9"]$value, stats::sd(c(0, 23 / 24)), tolerance = 1e-10)
 })
+
+test_that("workbooks can be written to relative output paths and overwritten", {
+  template <- normalizePath(cohortAssetPath("cohort_template.xlsx"), mustWork = TRUE)
+  directory <- tempfile("cohort-relative-")
+  dir.create(directory)
+  previous <- setwd(directory)
+  on.exit(
+    {
+      setwd(previous)
+      unlink(directory, recursive = TRUE)
+    },
+    add = TRUE
+  )
+  destination <- file.path("outputGlobal", "dataprocessor", "reports", "cohort_description", "example.xlsx")
+  for (header in c("first run", "second run")) {
+    result <- writeCohortWorkbook(
+      template,
+      data.table::data.table(address = character(), value = numeric()),
+      c(header, "period", "ward"), destination, "UTC"
+    )
+    expect_identical(result, destination)
+    expect_true(file.exists(destination))
+    expect_identical(getwd(), normalizePath(directory))
+    xml <- utils::unzip(destination, files = "xl/worksheets/sheet2.xml", exdir = tempfile("read-xlsx-"))
+    document <- xml2::read_xml(xml)
+    expect_equal(xml2::xml_text(xml2::xml_find_first(document, "//*[local-name()='c'][@r='B1']")), header)
+    unlink(dirname(dirname(dirname(xml))), recursive = TRUE)
+  }
+})

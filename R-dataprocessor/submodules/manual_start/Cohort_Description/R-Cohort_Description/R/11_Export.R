@@ -107,7 +107,9 @@ writeCohortWorkbook <- function(template, cells, headers, destination, timezone)
   }
   xml2::write_xml(sheet, sheet_path)
   dir.create(dirname(destination), recursive = TRUE, showWarnings = FALSE)
-  zip::zipr(destination, list.files(directory, all.files = TRUE, no.. = TRUE), root = directory)
+  # zipr changes its working directory to root; resolve the output directory first.
+  archive_path <- file.path(normalizePath(dirname(destination), mustWork = TRUE), basename(destination))
+  zip::zipr(archive_path, list.files(directory, all.files = TRUE, no.. = TRUE), root = directory)
   destination
 }
 
@@ -131,35 +133,42 @@ exportCohortDescription <- function(cases, wards, timezone, site, directory) {
     period <- periods[i]
     ward <- wards[ward_name == period$ward_name]
     for (name in names(fas)) {
-      selected <- populations[ward_name == period$ward_name & phase == period$phase & get(fas[[name]])]
-      cache_key <- paste0("cases:", paste(sort(selected$cohort_case_index), collapse = ","))
-      cells <- cell_cache[[cache_key]]
-      if (is.null(cells)) {
-        cells <- calculateCohortCells(selected, specification)
-        cell_cache[[cache_key]] <- cells
-      }
-      # An ordinal prefix guarantees unique names even for sanitised ward labels.
-      filename <- paste0(sprintf("%02d", i), "_", gsub(
-        "[^[:alnum:]_-]", "_",
-        paste(period$ward_name, period$phase, name, sep = "_")
-      ), ".xlsx")
-      headers <- c(
-        paste(period$phase, site, period$ward_name, name, sep = " - "),
-        paste(
-          "Observation time period:", format(period$period_start, tz = timezone), "to",
-          format(period$period_end, tz = timezone), "(end exclusive)"
-        ),
-        paste("Ward type:", ward$ward_type, "-", ward$department)
+      file_number <- (i - 1L) * length(fas) + match(name, names(fas))
+      label <- paste0(
+        "File ", file_number, " of ", nrow(periods) * length(fas),
+        ": ", period$ward_name, " / ", period$phase, " / ", name
       )
-      writeCohortWorkbook(
-        cohortAssetPath("cohort_template.xlsx"), cells, headers,
-        file.path(directory, filename), timezone
-      )
-      manifest[[length(manifest) + 1L]] <- data.table::data.table(
-        file = filename,
-        ward = period$ward_name, phase = period$phase, fas = name,
-        cases = nrow(selected), patients = data.table::uniqueN(selected$patient_id)
-      )
+      runCohortStep(label, {
+        selected <- populations[ward_name == period$ward_name & phase == period$phase & get(fas[[name]])]
+        cache_key <- paste0("cases:", paste(sort(selected$cohort_case_index), collapse = ","))
+        cells <- cell_cache[[cache_key]]
+        if (is.null(cells)) {
+          cells <- calculateCohortCells(selected, specification)
+          cell_cache[[cache_key]] <- cells
+        }
+        # An ordinal prefix guarantees unique names even for sanitised ward labels.
+        filename <- paste0(sprintf("%02d", i), "_", gsub(
+          "[^[:alnum:]_-]", "_",
+          paste(period$ward_name, period$phase, name, sep = "_")
+        ), ".xlsx")
+        headers <- c(
+          paste(period$phase, site, period$ward_name, name, sep = " - "),
+          paste(
+            "Observation time period:", format(period$period_start, tz = timezone), "to",
+            format(period$period_end, tz = timezone), "(end exclusive)"
+          ),
+          paste("Ward type:", ward$ward_type, "-", ward$department)
+        )
+        writeCohortWorkbook(
+          cohortAssetPath("cohort_template.xlsx"), cells, headers,
+          file.path(directory, filename), timezone
+        )
+        manifest[[length(manifest) + 1L]] <- data.table::data.table(
+          file = filename,
+          ward = period$ward_name, phase = period$phase, fas = name,
+          cases = nrow(selected), patients = data.table::uniqueN(selected$patient_id)
+        )
+      })
     }
   }
   result <- data.table::rbindlist(manifest)
