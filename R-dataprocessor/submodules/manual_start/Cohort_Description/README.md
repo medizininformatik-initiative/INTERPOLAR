@@ -1,37 +1,79 @@
 # Cohort Description
 
-The manual submodule generates the complete expanded local cohort table for
-each configured station, each FAS (1, 2.1, 2.2, 3), and each study period
-(BS, CRS, CRS A, CRS B): 16 workbooks per station.
+The module generates all seven FAS (1, 2.1, 2.2, 3, 4, 4.1, 4.2) for every
+configured station and study, including empty combinations: 35 workbooks per station.
+BS, CRS A and CRS B use the regular snapshot; TRS and RES use the Broad Consent snapshot.
+FAS 4.x and the TRS time window use provisional definitions documented in `open_questions.md`.
 
-Set `DB_NAME` in `database.toml` to the database to analyse. Configure the ward
-phase dates, department and ward type in `dataprocessor_config.toml`, and provide
-the normal WP7 input repository. Run from the repository root:
+## Prepare the databases
+
+Start PostgreSQL and list the available snapshots:
+
+```sh
+docker compose up -d cds_hub
+./ip-snapshot.sh list
+```
+
+Activate each snapshot if its database is not already listed as activated:
+
+```sh
+./ip-snapshot.sh activate snap01_20261125_pseud
+./ip-snapshot.sh activate snap01_20261125_pseud_broad_consent
+```
+
+Replace these example snapshot names with the names shown by `list`.
+If the Broad Consent snapshot still needs to be created from the activated
+pseudonymized snapshot, use:
+
+```sh
+./ip-snapshot.sh create-broad-consent snap01_20261125_pseud
+```
+
+This leaves the BC database activated. Both databases use the same PostgreSQL service.
+See [snapshot operation](../../../../Database_Snapshot.md) for the complete workflow.
+
+## Configure and run
+
+Set the actual database names in this module's `database.toml`:
+
+```toml
+[sources.regular]
+DB_NAME = "ip_snap01_20261125_pseud"
+
+[sources.broad_consent]
+DB_NAME = "ip_snap01_20261125_pseud_broad_consent"
+```
+
+Select the database produced by the Broad Consent workflow as `broad_consent`.
+Connection settings inherit from the normal database configuration. Configure
+ward phase dates, department and ward type in `dataprocessor_config.toml`, and
+provide the normal WP7 input repository. Run from the repository root:
 
 ```sh
 docker compose run --build --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R cohort-description
 ```
 
-The console shows each loading/calculation step and its duration. During export,
-it shows file x of y, station, study period and FAS.
+The full run requires both databases and checks their connections before analysis.
+For an explicit partial run, append `database-source=regular` or
+`database-source=broad_consent`. Only the selected database is required.
 
-Results are written to `outputGlobal/dataprocessor/reports/cohort_description/`.
-Each workbook contains the expanded local sheet with aggregate results.
-`cohort_manifest.csv` lists all files and population sizes; `cohort_quality.csv`
-contains aggregate data-quality counts. `open_questions.md` documents the agreed
-calculation rules and any remaining scientific questions. `NA` denotes an unavailable statistic.
+The console shows loading/calculation steps and their durations. During export,
+it shows file x of y for the current source, station, study and FAS.
 
-`cohort_run_metrics.csv` records run status, elapsed analysis time in seconds and
-peak R-process resident memory in KiB (Linux). Divide KiB by 1048576 for GiB.
-The peak covers the R process since startup; database memory is separate.
-A completed export has status `completed`. `failed` indicates a handled failure;
-`running` without a final update indicates that the run has not completed.
-An unavailable measurement is written as `NA`.
+## Results
 
-Return the report directory, including the Excel workbooks and aggregate CSV files.
+Results are written below `outputGlobal/dataprocessor/reports/cohort_description/`,
+separately in `regular/` and `broad_consent/`. A partial run updates its selected source.
+Each source directory contains the expanded Excel workbooks, `cohort_manifest.csv`,
+`cohort_quality.csv`, `cohort_run_metrics.csv` and `open_questions.md`.
+The manifest records the source, population sizes and whether definitions are provisional.
+`NA` denotes an unavailable statistic.
 
-Unlinked station assignments are excluded from the analysis. Their identifiers
-and available assignment details are written locally to
-`outputLocal/dataprocessor/diagnostics/cohort_description/unlinked_station_contacts.csv`.
-This diagnostic file is separate from the aggregate report directory and is for
-local investigation. The log records only the excluded row count and file path.
+The metrics record source, status, elapsed seconds and peak R-process memory in KiB.
+A successfully finished source has status `completed`; `failed` indicates a handled
+failure and `running` means completion has not been recorded. For a full run, check
+both sources from that invocation. Return the completed source directories.
+
+Local ID diagnostics are written to
+`outputLocal/dataprocessor/diagnostics/cohort_description/<source>/unlinked_station_contacts.csv`.
+The log records only the excluded row count and file path.

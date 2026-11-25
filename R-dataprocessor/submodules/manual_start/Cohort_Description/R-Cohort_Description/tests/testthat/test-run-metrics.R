@@ -3,7 +3,7 @@ test_that("normal cohort start writes metrics on success and on an analysis erro
   on.exit(unlink(directory, recursive = TRUE), add = TRUE)
   global_dir <- file.path(directory, "outputGlobal", "dataprocessor")
   local_dir <- file.path(directory, "outputLocal", "dataprocessor")
-  report_dir <- file.path(global_dir, "reports", "cohort_description")
+  report_dir <- file.path(global_dir, "reports", "cohort_description", "regular")
   output <- file.path(report_dir, "cohort_run_metrics.csv")
   values <- list(
     ward_name = "A", phase_a_start = "2025-01-01", phase_b_start = "2025-03-01",
@@ -34,7 +34,7 @@ test_that("normal cohort start writes metrics on success and on an analysis erro
         quality = data.table::data.table(check = "example", count = 0L)
       )
     },
-    exportCohortDescription = function(cases, wards, timezone, site, directory) {
+    exportCohortDescription = function(cases, wards, timezone, site, directory, source) {
       expect_identical(directory, report_dir)
       data.table::data.table(file = "example.xlsx")
     },
@@ -47,7 +47,7 @@ test_that("normal cohort start writes metrics on success and on an analysis erro
   expect_equal(metrics$max_rss_kib, 2048)
   expect_equal(result$file, "example.xlsx")
   expect_true(file.exists(file.path(report_dir, "cohort_quality.csv")))
-  diagnostic <- file.path(local_dir, "diagnostics", "cohort_description", "unlinked_station_contacts.csv")
+  diagnostic <- file.path(local_dir, "diagnostics", "cohort_description", "regular", "unlinked_station_contacts.csv")
   expect_identical(data.table::fread(diagnostic)$encounter_id, "missing")
   expect_false(dir.exists(file.path(local_dir, "reports")))
   expect_false(any(grepl("unlinked_station_contacts", list.files(global_dir, recursive = TRUE))))

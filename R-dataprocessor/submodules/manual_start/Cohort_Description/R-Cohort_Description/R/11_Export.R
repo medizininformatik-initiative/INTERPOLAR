@@ -119,14 +119,18 @@ writeCohortWorkbook <- function(template, cells, headers, destination, timezone)
 #' @param timezone Analysis time zone.
 #' @param site Site label.
 #' @param directory Output directory.
+#' @param source Either regular or broad_consent.
 #' @return Aggregate manifest of output files and population sizes.
-exportCohortDescription <- function(cases, wards, timezone, site, directory) {
+exportCohortDescription <- function(cases, wards, timezone, site, directory, source = "regular") {
   cases <- data.table::copy(data.table::as.data.table(cases))
   cases[, cohort_case_index := .I]
-  periods <- buildCohortPeriods(wards)
+  periods <- buildCohortPeriods(wards, source, timezone)
   populations <- assignCohortPopulations(cases, periods, timezone)
   specification <- data.table::fread(cohortAssetPath("cohort_rows.csv"), colClasses = c(mask = "character"))
-  fas <- c("FAS 1" = "fas1", "FAS 2.1" = "fas21", "FAS 2.2" = "fas22", "FAS 3" = "fas3")
+  fas <- c(
+    "FAS 1" = "fas1", "FAS 2.1" = "fas21", "FAS 2.2" = "fas22", "FAS 3" = "fas3",
+    "FAS 4" = "fas4", "FAS 4.1" = "fas41", "FAS 4.2" = "fas42"
+  )
   manifest <- list()
   cell_cache <- new.env(parent = emptyenv())
   for (i in seq_len(nrow(periods))) {
@@ -165,7 +169,8 @@ exportCohortDescription <- function(cases, wards, timezone, site, directory) {
         )
         manifest[[length(manifest) + 1L]] <- data.table::data.table(
           file = filename,
-          ward = period$ward_name, phase = period$phase, fas = name,
+          source = source, ward = period$ward_name, phase = period$phase, fas = name,
+          definition_status = if (period$phase == "TRS" || startsWith(name, "FAS 4")) "provisional" else "agreed",
           cases = nrow(selected), patients = data.table::uniqueN(selected$patient_id)
         )
       })

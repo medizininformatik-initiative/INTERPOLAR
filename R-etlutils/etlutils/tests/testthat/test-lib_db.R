@@ -260,3 +260,24 @@ test_that("read-only query results do not depend on transfer coordination", {
 
   expect_equal(with_inactive_lock, without_lock)
 })
+
+test_that("named override sections preserve inheritance and validation", {
+  base <- tempfile(fileext = ".toml")
+  project <- tempfile(fileext = ".toml")
+  on.exit(unlink(c(base, project)), add = TRUE)
+  writeLines(c('DB_NAME = "live"', 'DB_HOST = "host"', "DB_PORT = 5432"), base)
+  writeLines(c(
+    "[sources.regular]", 'DB_NAME = "normal"', 'DB_HOST = ""',
+    "[sources.broad_consent]", 'DB_NAME = "bc"', "DB_PORT = 5433"
+  ), project)
+  regular <- dbReadConfigWithOverrides(base, project, "DB_NAME", c("sources", "regular"))
+  bc <- dbReadConfigWithOverrides(base, project, "DB_NAME", c("sources", "broad_consent"))
+  expect_equal(regular$DB_NAME, "normal")
+  expect_equal(regular$DB_HOST, "host")
+  expect_equal(regular$DB_PORT, 5432)
+  expect_equal(bc$DB_NAME, "bc")
+  expect_equal(bc$DB_PORT, 5433)
+  expect_error(dbReadConfigWithOverrides(base, project, "DB_NAME", c("sources", "absent")), "Missing")
+  writeLines(c("[sources.regular]", 'DB_NAME = "normal"', 'TYPO = "value"'), project)
+  expect_error(dbReadConfigWithOverrides(base, project, "DB_NAME", c("sources", "regular")), "Unknown")
+})

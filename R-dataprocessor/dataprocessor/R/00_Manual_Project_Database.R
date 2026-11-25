@@ -61,6 +61,9 @@ validateManualStartInvocation <- function(
       call. = FALSE
     )
   }
+  if (any(startsWith(command_line_args, "database-source="))) {
+    stop("database-source is only valid when starting a manual Data Processor project.", call. = FALSE)
+  }
   if ("--force" %in% command_line_args) {
     stop(
       "--force is only valid when starting a manual Data Processor project.",
@@ -288,11 +291,12 @@ setManualStartDatabaseContext <- function(db_config) {
   )
 }
 
-readManualStartDatabaseConfig <- function(base_config_path, project_config_path) {
+readManualStartDatabaseConfig <- function(base_config_path, project_config_path, source = NULL) {
   etlutils::dbReadConfigWithOverrides(
     path_to_db_toml = base_config_path,
     path_to_override_toml = project_config_path,
-    mandatory_override_parameters = "DB_NAME"
+    mandatory_override_parameters = "DB_NAME",
+    override_section = if (is.null(source)) NULL else c("sources", source)
   )
 }
 
@@ -329,38 +333,54 @@ configureManualStartDatabase <- function(
     )
   }
 
-  db_config <- tryCatch(
-    readManualStartDatabaseConfig(
-      config[["PATH_TO_DB_CONFIG_TOML"]],
-      project_db_config_path
-    ),
-    error = function(error) {
+  source_sections <- RcppTOML::parseToml(project_db_config_path)$sources
+  source_args <- command_line_args[startsWith(command_line_args, "database-source=")]
+  if (length(source_args) > 1L) stop("Specify database-source only once.", call. = FALSE)
+  if (is.null(source_sections)) {
+    if (length(source_args)) stop("database-source requires named sources in database.toml.", call. = FALSE)
+    source_names <- "default"
+  } else {
+    if (
+      !is.list(source_sections) || !length(source_sections) ||
+      any(!grepl("^[a-z][a-z0-9_]*$", names(source_sections)))
+    ) {
+      stop("Database sources must have non-empty lowercase names.", call. = FALSE)
+    }
+    source_names <- names(source_sections)
+    if (length(source_args)) {
+      selected <- sub("^database-source=", "", source_args)
+      if (!selected %in% source_names) stop("Unknown database-source: ", selected, call. = FALSE)
+      source_names <- selected
+    }
+  }
+  # Resolve and validate every selected configuration before connecting or analysing.
+  databases <- setNames(lapply(source_names, function(source) {
+    db_config <- if (is.null(source_sections)) {
+      readManualStartDatabaseConfig(config[["PATH_TO_DB_CONFIG_TOML"]], project_db_config_path)
+    } else {
+      readManualStartDatabaseConfig(config[["PATH_TO_DB_CONFIG_TOML"]], project_db_config_path, source)
+    }
+    validateManualStartDatabaseConfig(db_config, project_name)
+    db_config
+  }), source_names)
+  identities <- vapply(databases, function(db) paste(db$DB_HOST, db$DB_PORT, db$DB_NAME, sep = "/"), character(1))
+  if (anyDuplicated(identities)) stop("Named database sources must select distinct databases.", call. = FALSE)
+  force_database <- "--force" %in% command_line_args
+  for (db_config in databases) {
+    setManualStartDatabaseContext(db_config)
+    validateManualStartDatabaseConnection(db_config, project_name)
+    database_content_type <- getManualStartDatabaseContentType()
+    if (!identical(database_content_type, "pseudonymized_snapshot") && !force_database) {
       stop(
-        "Invalid database configuration for manual project '",
-        project_name, "': ", conditionMessage(error),
+        "Manual Data Processor projects must run on a pseudonymized snapshot database by default. ",
+        "Use --force only when running this project on another database is intentional.",
         call. = FALSE
       )
     }
-  )
-  validateManualStartDatabaseConfig(db_config, project_name)
-  force_database <- "--force" %in% command_line_args
-
-  setManualStartDatabaseContext(db_config)
-  validateManualStartDatabaseConnection(db_config, project_name)
-  database_content_type <- getManualStartDatabaseContentType()
-  if (
-    !identical(database_content_type, "pseudonymized_snapshot") &&
-    !force_database
-  ) {
-    stop(
-      "Manual Data Processor projects must run on a pseudonymized snapshot database by default. ",
-      "Use --force only when running this project on another database is intentional.",
-      call. = FALSE
-    )
+    message("Manual Data Processor project '", project_name, "' database verified: ", db_config[["DB_NAME"]])
   }
-  message(
-    "Manual Data Processor project '", project_name,
-    "' database verified: ", db_config[["DB_NAME"]]
-  )
-  invisible(db_config)
+  if (length(databases) > 1L) setManualStartDatabaseContext(databases[[1]])
+  result <- databases[[1]]
+  if (!is.null(source_sections)) attr(result, "sources") <- databases
+  invisible(result)
 }

@@ -67,7 +67,7 @@ resetLock <- function() {
 #' If a manual submodule should be started independently, it must be specified as a command-line argument for the dataprocessor
 #' using its name according to the manual_start subdirectory of the submodules directory.
 #'
-runSubmodules <- function(command_line_args = NULL) {
+runSubmodules <- function(command_line_args = NULL, database_source = NULL, database_sources = NULL) {
   # Get lists of submodule directories
   submodule_dirs <- list.dirs(DATAPROCESSOR_SUBMODULES_PATH, recursive = FALSE)
   manual_start_submodule_dirs <- list.dirs(DATAPROCESSOR_MANUAL_START_PATH, recursive = FALSE)
@@ -126,7 +126,18 @@ runSubmodules <- function(command_line_args = NULL) {
       # Check for Start.R and source it if exists
       start_script <- file.path(dir, "Start.R")
       if (file.exists(start_script)) {
-        source(start_script)
+        if (is.null(database_source)) {
+          source(start_script)
+        } else {
+          source(start_script, local = list2env(
+            list(
+              manual_database_source = database_source,
+              manual_database_sources = database_sources,
+              manual_database_partial = any(startsWith(command_line_args, "database-source="))
+            ),
+            parent = .GlobalEnv
+          ))
+        }
       }
     })
 
@@ -139,8 +150,9 @@ startDataprocessorModule <- function(
   command_line_args = NULL
 ) {
   config <- init(validate_config)
-  configureManualStartDatabase(config, command_line_args)
+  database <- configureManualStartDatabase(config, command_line_args)
   etlutils::startModule(config)
+  attr(config, "manual_sources") <- attr(database, "sources")
   config
 }
 
@@ -182,18 +194,26 @@ processData <- function(
   command_line_args = NULL
 ) {
   # Initialize and start module
-  startDataprocessorModule(validate_config, command_line_args)
+  config <- startDataprocessorModule(validate_config, command_line_args)
   manual_start <- length(getCalledManualStartSubmoduleDirs(command_line_args)) > 0L
 
   try(etlutils::runLevel1("Run Dataprocessor", {
-    sourceDataprocessorSubmodules(
-      ignore_newer_db_version,
-      allow_older_db_version = manual_start
-    )
-
-    etlutils::runLevel2("Run dataprocessor submodules", {
-      runSubmodules(command_line_args)
-    })
+    databases <- attr(config, "manual_sources")
+    source_names <- if (is.null(databases)) "default" else names(databases)
+    for (source_name in source_names) {
+      if (!is.null(databases)) {
+        etlutils::dbCloseAllConnections()
+        setManualStartDatabaseContext(databases[[source_name]])
+      }
+      sourceDataprocessorSubmodules(
+        ignore_newer_db_version,
+        allow_older_db_version = manual_start
+      )
+      etlutils::runLevel2("Run dataprocessor submodules", {
+        if (is.null(databases)) runSubmodules(command_line_args)
+        else runSubmodules(command_line_args, database_source = source_name, database_sources = source_names)
+      })
+    }
   }))
 
   # Reset lock and close all database connections. Do not surround this with runLevelX!

@@ -38,6 +38,7 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
 #'   database TOML file.
 #' @param mandatory_override_parameters Character vector of parameters that must
 #'   be explicitly set to a non-empty value in the project TOML file.
+#' @param override_section Optional character path to a named TOML section.
 #'
 #' @return Named list of database configuration values.
 #'
@@ -45,14 +46,22 @@ dbInitModuleContext <- function(module_name, path_to_db_toml, log) {
 dbReadConfigWithOverrides <- function(
   path_to_db_toml,
   path_to_override_toml = NULL,
-  mandatory_override_parameters = character()
+  mandatory_override_parameters = character(),
+  override_section = NULL
 ) {
   db_config <- readTomlAsNamedList(path_to_db_toml)
   if (is.null(path_to_override_toml)) {
     return(db_config)
   }
 
-  override_config <- readTomlAsNamedList(path_to_override_toml)
+  override_config <- if (is.null(override_section)) {
+    readTomlAsNamedList(path_to_override_toml)
+  } else {
+    parsed <- RcppTOML::parseToml(path_to_override_toml)
+    for (section in override_section) parsed <- parsed[[section]]
+    if (!is.list(parsed)) stop("Missing database configuration section.", call. = FALSE)
+    parsed
+  }
   is_non_empty <- function(value) {
     length(value) &&
       !is.na(value[[1]]) &&

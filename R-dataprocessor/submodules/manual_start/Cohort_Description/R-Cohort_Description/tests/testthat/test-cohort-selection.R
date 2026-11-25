@@ -49,6 +49,7 @@ test_that("FAS duration and phase boundaries use exact timestamps", {
     hospital_end = time + 10 * 86400, ip_start = time,
     ip_end = time + c(168 * 3600, 168 * 3600 - 1, 86400, 86400),
     has_completed_ip_meda = c(FALSE, FALSE, TRUE, TRUE),
+    has_reviewed_algorithmic_mrp = FALSE, has_irrelevant_algorithmic_mrp = FALSE, has_relevant_algorithmic_mrp = FALSE,
     has_qualifying_manual_mrp = c(FALSE, FALSE, TRUE, TRUE)
   )
   result <- assignCohortPopulations(cases, periods, "UTC")
@@ -63,7 +64,7 @@ test_that("FAS duration and phase boundaries use exact timestamps", {
   expect_equal(nrow(assignCohortPopulations(cases, periods, "UTC")), 0L)
   cases$hospital_end <- cases$hospital_end - 1
   result <- assignCohortPopulations(cases, periods, "UTC")
-  expect_setequal(result$phase, c("CRS", "CRS B"))
+  expect_setequal(result$phase, "CRS B")
 })
 
 test_that("BS can use a first-IP MedA without a documented hospital discharge", {
@@ -86,17 +87,18 @@ test_that("CRS limits are site-wide while A/B boundaries remain ward-specific", 
     phase_b_start = time + c(60, 70) * 86400, phase_b_end = time + c(90, 100) * 86400
   )
   periods <- buildCohortPeriods(wards)
-  expect_true(all(periods[phase == "CRS"]$period_start == time + 32 * 86400))
-  expect_true(all(periods[phase == "CRS"]$period_end == time + 100 * 86400))
+  expect_true(all(periods[phase %in% c("CRS A", "CRS B")]$admission_start == time + 32 * 86400))
+  expect_true(all(periods[phase %in% c("CRS A", "CRS B")]$admission_end == time + 100 * 86400))
   cases <- data.table::data.table(
     patient_id = c("p", "q"), case_id = c("c", "d"),
     ward_name = c("A", "B"), age = 18, hospital_start = time + 50 * 86400,
     hospital_end = time + 99 * 86400, ip_start = time + 65 * 86400,
-    ip_end = time + 72 * 86400, has_completed_ip_meda = TRUE, has_qualifying_manual_mrp = FALSE
+    ip_end = time + 72 * 86400, has_completed_ip_meda = TRUE, has_reviewed_algorithmic_mrp = FALSE, has_irrelevant_algorithmic_mrp = FALSE, has_relevant_algorithmic_mrp = FALSE,
+    has_qualifying_manual_mrp = FALSE
   )
   result <- assignCohortPopulations(cases, periods, "UTC")
-  expect_setequal(result[ward_name == "A"]$phase, c("CRS", "CRS B"))
-  expect_setequal(result[ward_name == "B"]$phase, c("CRS", "CRS A"))
+  expect_setequal(result[ward_name == "A"]$phase, "CRS B")
+  expect_setequal(result[ward_name == "B"]$phase, "CRS A")
 })
 
 

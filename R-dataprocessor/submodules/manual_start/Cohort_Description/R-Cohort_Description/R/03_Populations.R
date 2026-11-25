@@ -1,9 +1,12 @@
 #' Define site-specific study periods from validated ward configuration
 #'
 #' @param wards Table with ward_name, phase_a_start, phase_b_start, phase_b_end.
-#' @return One row per ward and BS/CRS/CRS A/CRS B with inclusive start and
+#' @param source Either regular or broad_consent.
+#' @param timezone Time zone for the fixed TRS calendar boundaries.
+#' @return One row per ward and selected study with inclusive start and
 #'   exclusive end; CRS admission and discharge limits remain site-wide.
-buildCohortPeriods <- function(wards) {
+buildCohortPeriods <- function(wards, source = "regular", timezone = etlutils::GLOBAL_TIMEZONE) {
+  if (!source %in% c("regular", "broad_consent")) stop("Unknown cohort data source.")
   wards <- data.table::copy(data.table::as.data.table(wards))
   if (
     !nrow(wards) || anyNA(wards[, .(ward_name, phase_a_start, phase_b_start, phase_b_end)]) ||
@@ -18,14 +21,27 @@ buildCohortPeriods <- function(wards) {
   crs_end <- max(wards$phase_b_end)
   data.table::rbindlist(lapply(seq_len(nrow(wards)), function(i) {
     ward <- wards[i]
+    if (source == "broad_consent") {
+      # Provisional TRS definition pending scientific confirmation (refs #1478).
+      trs_start <- as.POSIXct("2023-01-01", tz = timezone)
+      trs_end <- as.POSIXct("2027-01-01", tz = timezone)
+      return(data.table::data.table(
+        ward_name = ward$ward_name, phase = c("TRS", "RES"),
+        period_start = c(trs_start, ward$phase_b_start),
+        period_end = c(trs_end, crs_end),
+        admission_start = c(trs_start, crs_start),
+        admission_end = c(trs_end, crs_end),
+        discharge_limit = c(as.POSIXct(NA), crs_end + as.difftime(28, units = "days"))
+      ))
+    }
     data.table::data.table(
       ward_name = ward$ward_name,
-      phase = c("BS", "CRS", "CRS A", "CRS B"),
-      period_start = c(ward$phase_a_start, crs_start, crs_start, ward$phase_b_start),
-      period_end = c(crs_start, crs_end, ward$phase_b_start, crs_end),
-      admission_start = c(ward$phase_a_start, rep(crs_start, 3)),
-      admission_end = c(crs_start, rep(crs_end, 3)),
-      discharge_limit = c(as.POSIXct(NA), rep(crs_end + as.difftime(28, units = "days"), 3))
+      phase = c("BS", "CRS A", "CRS B"),
+      period_start = c(ward$phase_a_start, crs_start, ward$phase_b_start),
+      period_end = c(crs_start, ward$phase_b_start, crs_end),
+      admission_start = c(ward$phase_a_start, rep(crs_start, 2)),
+      admission_end = c(crs_start, rep(crs_end, 2)),
+      discharge_limit = c(as.POSIXct(NA), rep(crs_end + as.difftime(28, units = "days"), 2))
     )
   }))
 }
@@ -50,9 +66,14 @@ assignCohortPopulations <- function(cases, periods, timezone) {
     !is.na(ip_end) & as.Date(ip_end, tz = timezone) > as.Date(ip_start, tz = timezone) &
     hospital_start >= admission_start & hospital_start < admission_end &
     ip_start >= period_start & ip_start < period_end &
-    (phase == "BS" | (!is.na(hospital_end) & hospital_end < discharge_limit))]
+    (is.na(discharge_limit) | (!is.na(hospital_end) & hospital_end < discharge_limit))]
   joined[, `:=`(fas1 = TRUE, fas22 = has_completed_ip_meda %in% TRUE)]
   joined[, fas21 := fas22 | (!is.na(ip_end) & as.numeric(difftime(ip_end, ip_start, units = "hours")) >= 168)]
   joined[, fas3 := fas22 & has_qualifying_manual_mrp %in% TRUE]
+  joined[, `:=`(
+    fas4 = fas22 & has_reviewed_algorithmic_mrp %in% TRUE,
+    fas41 = fas22 & has_irrelevant_algorithmic_mrp %in% TRUE,
+    fas42 = fas22 & has_relevant_algorithmic_mrp %in% TRUE
+  )]
   joined
 }

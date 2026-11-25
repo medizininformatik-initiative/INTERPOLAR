@@ -3,8 +3,9 @@
 #' @param analyses Patient-linked MedA forms.
 #' @param contacts Known IP contacts with case_id.
 #' @param validations Patient-linked manual MRP forms with meda_id and outcome.
+#' @param algorithmic_reviews Completed reviews linked to calculated MRPs.
 #' @return Case rows with selection flags, cutoff and all MedA metric columns.
-calculateCohortMedAFeatures <- function(cases, analyses, contacts, validations) {
+calculateCohortMedAFeatures <- function(cases, analyses, contacts, validations, algorithmic_reviews = NULL) {
   cases <- data.table::copy(data.table::as.data.table(cases))
   selection <- prepareCohortMedicationAnalyses(cases, analyses)
   completed <- classifyCohortMedicationAnalyses(selection$all_completed, contacts)
@@ -53,5 +54,5 @@ calculateCohortMedAFeatures <- function(cases, analyses, contacts, validations) 
     data.table::set(cases, j = paste0("m", row), value = values)
   }
   cases[, case_row := NULL]
-  cases
+  addCohortAlgorithmicMRPFlags(cases, completed, algorithmic_reviews)
 }

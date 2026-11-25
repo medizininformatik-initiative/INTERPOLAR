@@ -18,6 +18,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports: 
     data.table,
+    RcppTOML,
     digest,
     etlutils,
     base64enc,

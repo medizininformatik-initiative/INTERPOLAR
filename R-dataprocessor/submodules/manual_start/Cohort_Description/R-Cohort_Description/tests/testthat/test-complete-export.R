@@ -34,9 +34,9 @@ test_that("every expanded result cell is mapped and all populations are exported
   directory <- tempfile("cohort-export-")
   on.exit(unlink(directory, recursive = TRUE))
   manifest <- exportCohortDescription(fixture$cases, fixture$wards, "UTC", "test", directory)
-  expect_equal(nrow(manifest), 16L)
+  expect_equal(nrow(manifest), 21L)
   expect_true(all(file.exists(file.path(directory, manifest$file))))
-  expect_equal(manifest[phase == "BS"]$cases, c(3L, 3L, 1L, 1L))
+  expect_equal(manifest[phase == "BS"]$cases, c(3L, 3L, 1L, 1L, 0L, 0L, 0L))
   expect_true(all(manifest[phase != "BS"]$cases == 0))
   template <- utils::unzip(cohortAssetPath("cohort_template.xlsx"), list = TRUE)$Name
   original <- tempfile()

@@ -92,7 +92,10 @@ loadCohortAnalysisData <- function(prepared, timezone) {
       lock_id = "Cohort Description: manual MRP validation"
     )
     validations <- merge(validations, record_ids, by = "record_id", sort = FALSE)
-    cases <- calculateCohortMedAFeatures(cases, analyses, contacts, validations)
+    cases <- calculateCohortMedAFeatures(
+      cases, analyses, contacts, validations,
+      loadCohortAlgorithmicReviews(record_ids)
+    )
   })
   runCohortStep("Load and count historical hospital cases", {
     # Historical hospital admissions are fetched once for all patients, not once per case.
