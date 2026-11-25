@@ -1,0 +1,20 @@
+Package: CohortDescription
+Title: Generate the INTERPOLAR Cohort Description
+Version: 0.0.0.9000
+Authors@R:
+    person("Alexander", "Strübing", , "alexander.struebing@imise.uni-leipzig.de", role = c("aut", "cre"))
+Description: Calculates case characteristics and exports expanded aggregate cohort
+    descriptions for each station, study period and full analysis set.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    etlutils,
+    data.table,
+    dataprocessor,
+    xml2,
+    zip
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
