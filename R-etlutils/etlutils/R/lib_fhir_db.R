@@ -15,6 +15,32 @@ resource_to_abbreviation <- list(
   servicerequest = "servreq"
 )
 
+#' Retrieve known INTERPOLAR station assignments
+#'
+#' Reads distinct station, patient and Encounter combinations in the database and
+#' orders them by patient and Encounter ID. All station assignments for a contact
+#' are retained. Their order within identical patient/Encounter keys is unspecified;
+#' contact chronology must be determined from Encounter timestamps.
+#'
+#' @param lock_id A character string identifying the database read operation.
+#' @param table_name Name of the database table or view containing the assignments.
+#'
+#' @return A data.table with `ward_name`, `patient_id` and `encounter_id`.
+#'   An empty result raises an error.
+#'
+#' @export
+getPidsPerWardData <- function(lock_id, table_name) {
+  query <- paste0(
+    "SELECT DISTINCT ward_name, patient_id, encounter_id FROM ", table_name,
+    " ORDER BY patient_id, encounter_id"
+  )
+  pids_per_ward_table <- dbGetReadOnlyQuery(query, lock_id = lock_id)
+  if (nrow(pids_per_ward_table) == 0L) {
+    stop("The pids_per_ward table is empty. Please check the data.")
+  }
+  return(pids_per_ward_table)
+}
+
 #' Get Abbreviation for Resource Name
 #'
 #' This function retrieves the abbreviation for a given resource name.

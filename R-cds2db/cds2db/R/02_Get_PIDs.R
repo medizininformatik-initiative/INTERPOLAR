@@ -1,70 +1,3 @@
-#' Converts a filter pattern list from the toml file into an internal representation
-#' as a list of lists. Every subcondition in a sublist must be fulfilled to fulfill
-#' the whole condition represented by the sublist (AND connected). Lines of the table
-#' can be accepted by the filter if at least one of the main conditions (which consists
-#' of these subconditions) in the main list is fulfilled (OR connected).
-#'
-#' @param filter_patterns_global_variable_name_prefix name of the variable in the glogbal environment which
-#' contains the filter patterns from the toml file
-#'
-#' @return the filter patterns which are converted to a list of lists
-#'
-convertFilterPatterns <- function(filter_patterns_global_variable_name_prefix = "ENCOUNTER_FILTER_PATTERN") {
-  ward_pids_filter_patterns <- etlutils::getGlobalVariablesByPrefix(filter_patterns_global_variable_name_prefix)
-
-  if (!length(ward_pids_filter_patterns)) {
-    stop("No ward filter patterns found with prefix", filter_patterns_global_variable_name_prefix, "in toml file")
-  }
-
-  # Initializes an empty list to store the final converted filter patterns. Each element in this list
-  # corresponds to a ward, with the ward name as the key. The value for each ward is another list that
-  # contains the AND-connected filter conditions (sub-conditions). Multiple groups of such conditions
-  # are stored as separate elements, representing the OR-connected groups of filters for the ward.
-  parsed_filter_patterns <- etlutils::parseStructuredConfigDefinitions(
-    definitions = ward_pids_filter_patterns,
-    allowed_key_pattern = "ward_name|[A-Za-z/]+",
-    allow_plus = TRUE
-  )
-  converted_filter_patterns <- list()
-  definition_names <- unique(vapply(parsed_filter_patterns, `[[`, "", "definition_name"))
-
-  for (definition_name in definition_names) {
-    definition_filter_patterns <- parsed_filter_patterns[
-      vapply(parsed_filter_patterns, `[[`, "", "definition_name") == definition_name
-    ]
-    single_ward_converted_filter_patterns <- list()
-    ward_name <- definition_filter_patterns[[which(
-      vapply(definition_filter_patterns, `[[`, "", "key") == "ward_name"
-    )[1]]]$value
-    condition_line_ids <- unique(vapply(definition_filter_patterns, function(filter_pattern) {
-      paste(filter_pattern$entry_name, filter_pattern$line_index, sep = "\r")
-    }, ""))
-
-    for (condition_line_id in condition_line_ids) {
-      line_filter_patterns <- definition_filter_patterns[
-        vapply(definition_filter_patterns, function(filter_pattern) {
-          paste(filter_pattern$entry_name, filter_pattern$line_index, sep = "\r") == condition_line_id
-        }, logical(1))
-      ]
-
-      if (line_filter_patterns[[1]]$key == "ward_name") {
-        next
-      }
-
-      and_conditions <- list()
-      for (filter_pattern in line_filter_patterns) {
-        and_conditions[[filter_pattern$key]] <- filter_pattern$value
-      }
-      single_ward_converted_filter_patterns[[paste0("Condition_", length(single_ward_converted_filter_patterns) + 1)]] <- and_conditions
-    }
-
-    converted_filter_patterns[[length(converted_filter_patterns) + 1]] <- single_ward_converted_filter_patterns
-    names(converted_filter_patterns)[length(converted_filter_patterns)] <- ward_name
-  }
-
-  converted_filter_patterns
-}
-
 #' Get FHIR table description based on filter patterns.
 #'
 #' This function takes a list of filter patterns and extracts unique column names
@@ -391,7 +324,9 @@ getPIDsSplittedByWard <- function(create_single_pids_per_ward, wards_min_encount
   } else {
     etlutils::runLevel3("Get Patient IDs by Encounters from FHIR Server", {
       etlutils::runLevel3("Load Encounters", {
-        filter_patterns <- convertFilterPatterns()
+        filter_patterns <- etlutils::convertFilterPatterns(
+          etlutils::getGlobalVariablesByPrefix("ENCOUNTER_FILTER_PATTERN")
+        )
         # the subject reference is needed in every case to extract them if the encounter matches the pattern
         # the period end is needed to check if the Encounter is still finished
         # maybe some other columns (state or something like this) could be important, so we had to add them here in future

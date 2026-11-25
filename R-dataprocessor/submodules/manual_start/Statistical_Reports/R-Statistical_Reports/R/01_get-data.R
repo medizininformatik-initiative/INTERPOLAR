@@ -344,50 +344,6 @@ getConsentData <- function(lock_id, table_name) {
 
 #------------------------------------------------------------------------------#
 
-#' Retrieve Patient IDs Per Ward Data
-#'
-#' This function retrieves patient data associated with wards, including the ward name,
-#' patient ID, encounter ID.
-#'
-#' @param lock_id A character string specifying the lock ID for database access control.
-#' @param table_name A character string specifying the name of the database table from which
-#'   the data should be retrieved.
-#'
-#' @return A data frame containing distinct records with the following columns:
-#'   - `ward_name`: The name of the ward.
-#'   - `patient_id`: The unique identifier of the patient (FHIR)
-#'   - `encounter_id`: The unique identifier of the encounter (FHIR)
-#'
-#' @details
-#' This function performs the following steps:
-#' 1. Constructs an SQL query to retrieve `ward_name`, `patient_id`, `encounter_id` from the specified table.
-#' 2. Executes the query using `etlutils::dbGetReadOnlyQuery` with the provided `lock_id`.
-#' 3. Ensures distinct records using `dplyr::distinct()`.
-#' 4. Sorts the results by `patient_id`, `encounter_id`.
-#' 5. Checks if the resulting data frame is empty and raises an error if so.
-#'
-#'
-#' @importFrom dplyr distinct arrange
-#' @export
-getPidsPerWardData <- function(lock_id, table_name) {
-  query <- paste0(
-    "SELECT ward_name, patient_id, encounter_id ",
-    "FROM ", table_name, "\n"
-  )
-
-  pids_per_ward_table <- etlutils::dbGetReadOnlyQuery(query, lock_id = lock_id) |>
-    dplyr::distinct() |>
-    dplyr::arrange(patient_id, encounter_id)
-
-  if (nrow(pids_per_ward_table) == 0) {
-    stop("The pids_per_ward table is empty. Please check the data.")
-  }
-
-  return(pids_per_ward_table)
-}
-
-#------------------------------------------------------------------------------#
-
 #' Retrieve and Process Patient Front-End Data
 #'
 #' This function retrieves patient data from a specified database table and processes it by

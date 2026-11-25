@@ -99,7 +99,7 @@
 #' and processing exclusions.
 #'
 #' @seealso
-#' [getPatientData()], [getEncounterData()], [getPidsPerWardData()],
+#' [getPatientData()], [getEncounterData()], [etlutils::getPidsPerWardData()],
 #' [getPatientFeData()], [getFallFeData()],
 #' [getMedikationsanalyseFeData()],
 #' [getMRPDokumentationValidierungFeData()],
@@ -164,7 +164,7 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     CheckEncountersWithoutCalculatedMainEncounterRef()
   # --> this table can have multiple rows per encounter
 
-  pids_per_ward_table <- getPidsPerWardData(
+  pids_per_ward_table <- etlutils::getPidsPerWardData(
     lock_id = "statistical reports[3]",
     table_name = "v_pids_per_ward"
   )
@@ -325,6 +325,9 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
     first_ward_stay_and_meda_filter = TRUE
   )
 
+  # Before reactivating this F1 path, supply the required exclusion level and type
+  # in prepareF1data()'s addMultipleRowsProcessingExclusionReason() call. Otherwise,
+  # multiple rows with the same main encounter and contact start cause an error.
   # statistical_report_data <- prepareF1data(
   #   full_analysis_set_1, REPORT_PERIOD_START,
   #   REPORT_PERIOD_END
