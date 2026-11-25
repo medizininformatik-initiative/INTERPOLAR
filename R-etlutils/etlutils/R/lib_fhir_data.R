@@ -133,11 +133,30 @@ fhirdataCreateResourceTable <- function(
 #'
 #' @param encounter_ids Character vector of FHIR Encounter IDs (enc_id).
 #' @param lock_id_extension Character scalar appended to lock_id for DB queries.
+#' @param column_names Character vector of database column names, or `"*"` (default)
+#'   for all columns. Explicit selections automatically include `enc_id` and
+#'   `enc_main_encounter_calculated_ref`, which are required for case resolution.
+#'   Explicit selections use SQL DISTINCT; `"*"` preserves the unrestricted query.
 #'
 #' @return data.table with all related encounters (deduplicated).
 #'
 #' @export
-fhirdataGetAllEncounters <- function(encounter_ids, lock_id_extension) {
+fhirdataGetAllEncounters <- function(encounter_ids, lock_id_extension, column_names = "*") {
+  select_all <- identical(column_names, "*")
+  if (
+    !is.character(column_names) || !length(column_names) || anyNA(column_names) ||
+    any(!nzchar(trimws(column_names))) || (!select_all && "*" %in% column_names)
+  ) {
+    stop('column_names must be "*" or a non-empty vector of column names.', call. = FALSE)
+  }
+  select_columns <- "*"
+  if (!select_all) {
+    column_names <- unique(c(column_names, "enc_id", "enc_main_encounter_calculated_ref"))
+    select_columns <- paste0(
+      "DISTINCT ", paste(DBI::dbQuoteIdentifier(DBI::ANSI(), column_names), collapse = ", ")
+    )
+  }
+
   # Guard: empty input
   if (!length(encounter_ids)) {
     return(data.table::data.table())
@@ -146,7 +165,7 @@ fhirdataGetAllEncounters <- function(encounter_ids, lock_id_extension) {
   # 1) Fetch encounters for given enc_id
   query_ids <- fhirdbGetQueryList(encounter_ids)
   query <- paste0(
-    "SELECT * FROM v_encounter_last_version\n",
+    "SELECT ", select_columns, " FROM v_encounter_last_version\n",
     "WHERE enc_id IN ", query_ids, "\n"
   )
   encounters <- dbGetReadOnlyQuery(query, lock_id = paste0("getAllEncounters.main[", lock_id_extension, "]"))
@@ -166,7 +185,7 @@ fhirdataGetAllEncounters <- function(encounter_ids, lock_id_extension) {
   if (length(main_refs)) {
     query_refs <- fhirdbGetQueryList(main_refs)
     query <- paste0(
-      "SELECT * FROM v_encounter_last_version\n",
+      "SELECT ", select_columns, " FROM v_encounter_last_version\n",
       "WHERE enc_main_encounter_calculated_ref IN ", query_refs, "\n"
     )
     all_encounters <- dbGetReadOnlyQuery(query, lock_id = paste0("getAllEncounters.cases[", lock_id_extension, "]"))

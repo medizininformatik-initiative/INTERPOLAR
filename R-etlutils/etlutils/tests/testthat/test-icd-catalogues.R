@@ -1,0 +1,20 @@
+test_that("ICD packages contain complete annual terminal-code expansions", {
+  catalogue <- loadICDCatalogues()
+  expect_equal(as.integer(table(catalogue$year)), c(14261L, 14290L, 14309L, 14370L))
+  expect_false(anyDuplicated(catalogue[c("year", "code")]) > 0L)
+  expect_false(anyNA(catalogue))
+  expect_error(loadICDCatalogues(2022), "available")
+  expect_error(loadICDCatalogues(NA), "available")
+  expect_identical(
+    isTerminalICD(c("A00", "A00.0", "I10", "I10.90", "ZZZ"), 2026, catalogue),
+    c(FALSE, TRUE, FALSE, TRUE, FALSE)
+  )
+  expect_identical(isTerminalICD(c("A00.0!", "A00.0+", "A00.0*"), 2026, catalogue), rep(TRUE, 3))
+  expect_identical(isTerminalICD(c(NA_character_, "", "A00.0"), c(2026, 2026, NA), catalogue), rep(NA, 3))
+  expect_identical(isTerminalICD(character(), integer(), catalogue), logical())
+  expect_error(isTerminalICD("A00.0", "2026.0.0", catalogue), "four-digit")
+  expect_error(isTerminalICD("A00.0", 2027, catalogue), "not been loaded")
+  new_codes <- setdiff(catalogue$code[catalogue$year == 2026], catalogue$code[catalogue$year == 2023])
+  expect_gt(length(new_codes), 0)
+  expect_identical(isTerminalICD(rep(new_codes[1], 2), c(2023, 2026), catalogue), c(FALSE, TRUE))
+})

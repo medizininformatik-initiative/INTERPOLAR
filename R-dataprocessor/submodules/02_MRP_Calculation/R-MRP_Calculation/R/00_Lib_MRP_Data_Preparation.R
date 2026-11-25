@@ -1,3 +1,6 @@
+# Enable data.table dispatch when the automatic submodule is loaded as a package.
+.datatable.aware <- TRUE
+
 ###########
 # General #
 ###########
@@ -334,12 +337,18 @@ addMedicationIdColumn <- function(medication_resources) {
   return(medication_resources)
 }
 
-#
-# MedicationRequest
-#
+#' Load medication requests and derive their documented event intervals
+#'
+#' @param patient_references Patient IDs or FHIR references.
+#' @param lock_id Read-only database operation identifier.
+#' @param status_exclusion FHIR statuses excluded from the query. The MRP default
+#'   excludes held, cancelled, erroneous and stopped requests. Retrospective
+#'   event analyses can retain stopped and held requests explicitly.
+#' @return Medication requests with medication IDs and start/end timestamps.
 getMedicationRequestsFromDB <- function(
   patient_references,
-  lock_id = "getResourcesFromDB(MedicationRequest)"
+  lock_id = "getResourcesFromDB(MedicationRequest)",
+  status_exclusion = c("on-hold", "cancelled", "entered-in-error", "stopped")
 ) {
   medication_requests <- getResourcesFromDB(
     resource_name = "MedicationRequest",
@@ -357,7 +366,7 @@ getMedicationRequestsFromDB <- function(
       "medreq_doseinstruc_timing_repeat_boundsperiod_end"
     ),
     patient_references = patient_references,
-    status_exclusion = c("on-hold", "cancelled", "entered-in-error", "stopped"), # https://simplifier.net/packages/hl7.fhir.r4.core/4.0.1/files/2832805)
+    status_exclusion = status_exclusion,
     lock_id = lock_id
   )
   medication_requests <- addMedicationIdColumn(medication_requests)
@@ -667,6 +676,7 @@ getConditionsFromDB <- function(
       "con_encounter_calculated_ref",
       "con_patient_ref",
       "con_code_code",
+      "con_code_version",
       "con_code_system",
       "con_code_display",
       "con_onsetperiod_start",

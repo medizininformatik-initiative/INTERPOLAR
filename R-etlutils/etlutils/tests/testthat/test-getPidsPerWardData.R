@@ -21,3 +21,16 @@ test_that("empty assignments and database failures retain their errors", {
   local_mocked_bindings(dbGetReadOnlyQuery = function(...) stop("database unavailable"))
   expect_error(getPidsPerWardData("test", "v_pids_per_ward"), "database unavailable")
 })
+
+test_that("registration metadata can be selected without changing reporting defaults", {
+  local_mocked_bindings(dbGetReadOnlyQuery = function(query, lock_id) {
+    expect_match(query, "SELECT DISTINCT ward_name, patient_id, encounter_id, input_datetime, pids_per_ward_id FROM")
+    data.frame(
+      ward_name = "A", patient_id = "p", encounter_id = "e",
+      input_datetime = as.POSIXct("2026-01-01", tz = "UTC"), pids_per_ward_id = 1L
+    )
+  })
+  result <- getPidsPerWardData("test", "v_pids_per_ward", c("input_datetime", "pids_per_ward_id"))
+  expect_equal(result$pids_per_ward_id, 1L)
+  expect_error(getPidsPerWardData("test", "v_pids_per_ward", "*"), "Invalid")
+})

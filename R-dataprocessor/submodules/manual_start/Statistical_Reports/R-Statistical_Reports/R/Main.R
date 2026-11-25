@@ -101,7 +101,7 @@
 #' @seealso
 #' [getPatientData()], [getEncounterData()], [etlutils::getPidsPerWardData()],
 #' [getPatientFeData()], [getFallFeData()],
-#' [getMedikationsanalyseFeData()],
+#' [etlutils::getMedikationsanalyseFeData()],
 #' [getMRPDokumentationValidierungFeData()],
 #' [getRetrolektiveMRPBewertungFeData()], [getConsentData()],
 #' [mergePatEnc()], [restrictToDefinedWards()],
@@ -188,11 +188,13 @@ createStatisticalReport <- function(REPORT_PERIOD_START = as.character(getFirstW
   # --> this table shows the trajectory of each case in the front-end system
   #     (multiple rows per case possible, if the case was treated on different INTERPOLAR wards)
 
-  medikationsanalyse_fe_table <- getMedikationsanalyseFeData(
+  medikationsanalyse_fe_table <- etlutils::getMedikationsanalyseFeData(
     lock_id = "statistical reports[6]",
     # table_name = "v_medikationsanalyse_fe"
     table_name = "v_medikationsanalyse_fe_last_version"
   ) |>
+    dplyr::select(-redcap_repeat_instance) |>
+    dplyr::distinct() |>
     CheckMissingFallMedaId() |>
     CheckMissingMedaDat()
   # --> this table should show only the last version of each medikationsanalyse_fe entry

@@ -1,0 +1,38 @@
+{
+  "retrieved": "2026-11-12",
+  "conditions_source": "https://terminologien.bfarm.de/files/conditions/bfarm.terminologien.ops-conditions.xml",
+  "catalogues": [
+    {
+      "year": 2023,
+      "package_version": "2023.0.0",
+      "file": "ops-2023.0.0.tar.gz",
+      "source": "https://terminologien.bfarm.de/packages/bfarm.terminologien.ops/2023.0.0",
+      "sha256": "584fca024e1a2a839427e4f1249bbcf9065305cfb33d1786747ba6b1aab9b4c2",
+      "terminal_count": 33337
+    },
+    {
+      "year": 2024,
+      "package_version": "2024.0.0",
+      "file": "ops-2024.0.0.tar.gz",
+      "source": "https://terminologien.bfarm.de/packages/bfarm.terminologien.ops/2024.0.0",
+      "sha256": "b0dc2905b2187771901637e5744cbbe8aadcf723b61243d9e2ca74d2535fca0d",
+      "terminal_count": 33786
+    },
+    {
+      "year": 2025,
+      "package_version": "2025.0.0",
+      "file": "ops-2025.0.0.tar.gz",
+      "source": "https://terminologien.bfarm.de/packages/bfarm.terminologien.ops/2025.0.0",
+      "sha256": "b85a2747446ea6f0535ea26396ec9d1e9a9d1ef6b85b9b6f12b21f9ff6e25f75",
+      "terminal_count": 34213
+    },
+    {
+      "year": 2026,
+      "package_version": "2026.0.0",
+      "file": "ops-2026.0.0.tar.gz",
+      "source": "https://terminologien.bfarm.de/packages/bfarm.terminologien.ops/2026.0.0",
+      "sha256": "01801cc5cb10d957047c7bf5f29659bccc418c3793bd5dbb422b167dca6a86e3",
+      "terminal_count": 34753
+    }
+  ]
+}
