@@ -144,9 +144,13 @@ archiveManualOutputs <- function(paths, module_dirs, submodule_name, output_cont
     on.exit(unlink(temporary_zip), add = TRUE)
     setwd(output_dir)
     # Prefix relative paths so archive members cannot be interpreted as options.
-    status <- utils::zip(temporary_zip, files = paste0("./", members), flags = "-qj")
+    status <- utils::zip(temporary_zip, files = paste0("./", members), flags = "-qjT")
     if (!identical(status, 0L) || !file.rename(temporary_zip, destination)) {
       stop("Could not create manual output archive: ", destination, call. = FALSE)
+    }
+    # ZIP has passed its integrity test and is in place before removing the inputs.
+    if (!all(file.remove(file.path(output_dir, members)))) {
+      stop("Could not remove all files included in ", destination, call. = FALSE)
     }
     message("Manual output archive: ", destination)
   }

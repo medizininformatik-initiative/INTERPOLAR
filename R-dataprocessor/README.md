@@ -66,10 +66,11 @@ Die bisherigen Berichtsnamen bleiben als Präfix erhalten. CSV-Namen innerhalb
 von ZIP-Archiven bleiben erhalten. Unveränderte Dateien früherer Läufe und
 Ausgaben automatischer Submodule werden nicht umbenannt. Bei einem Fehler des
 Submoduls wird kein Herkunftszusatz für einen abgeschlossenen Lauf vergeben.
-Pro Submodullauf gibt es zusätzlich je ein ZIP für die tatsächlich erzeugten
+Pro Submodullauf gibt es je ein ZIP für die tatsächlich erzeugten
 globalen und lokalen Ergebnisse im jeweiligen Ordner `reports`. Der Archivname
-folgt dem Schema `<Submodul>_<Herkunftszusatz>.zip`. Die
-Einzeldateien bleiben verfügbar. Im ZIP liegen sie direkt auf der obersten Ebene.
+folgt dem Schema `<Submodul>_<Herkunftszusatz>.zip`. Nach erfolgreicher
+ZIP-Prüfung werden die Einzeldateien entfernt. Im ZIP liegen sie direkt auf der
+obersten Ebene.
 
 Die endgültigen Pfade werden nach dem Umbenennen im Laufprotokoll ausgegeben.
 

@@ -73,6 +73,8 @@ test_that("only outputs written by the current run receive provenance", {
     utils::unzip(local_zip, list = TRUE)$Name,
     basename(paths[dirname(paths) == local_tables])
   )
+  expect_false(any(file.exists(paths)))
+  expect_true(file.exists(old_report))
   expect_length(nameManualOutputs(getManualOutputFiles(module_dirs), module_dirs, context), 0L)
 })
 
@@ -120,7 +122,7 @@ test_that("manual provenance is applied by the loader only after a successful ru
   )
   rlang::local_bindings(MODULE_DIRS = module_dirs, .env = .GlobalEnv)
   expect_message(runSubmodules("example-analysis"), "Manual output:")
-  expect_true(file.exists(file.path(module_dirs$global_dir, "reports", "report_context.csv")))
+  expect_true(file.exists(file.path(module_dirs$global_dir, "reports", "Example_Analysis_context.zip")))
   expect_false(file.exists(report_path))
 
   writeLines(c(
@@ -129,7 +131,7 @@ test_that("manual provenance is applied by the loader only after a successful ru
   ), file.path(manual_dir, "Start.R"))
   expect_error(runSubmodules("example-analysis"), "analysis failed")
   expect_true(file.exists(report_path))
-  expect_true(file.exists(file.path(module_dirs$global_dir, "reports", "report_context.csv")))
+  expect_true(file.exists(file.path(module_dirs$global_dir, "reports", "Example_Analysis_context.zip")))
 })
 
 
