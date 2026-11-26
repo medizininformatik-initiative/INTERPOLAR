@@ -1958,3 +1958,20 @@ test_that("database quality analysis value summary writer handles relative outpu
   expect_true(grepl(normalizePath(relative_root, mustWork = TRUE), file_name, fixed = TRUE))
   expect_equal(utils::unzip(file_name, list = TRUE)$Name, "FHIR/observation.csv")
 })
+
+
+test_that("disabling code reports permits a missing code summary TOML", {
+  config_env <- new.env(parent = emptyenv())
+  config_env$INCLUDE_CODE_SUMMARY <- FALSE
+  config_env$CODE_SUMMARY_CONFIG_FILE <- tempfile(fileext = ".toml")
+
+  config <- getConfig(envir = config_env, command_arguments = character())
+  expect_false(config$include_code_summary)
+  expect_null(config$code_summary_sources)
+
+  config_env$INCLUDE_CODE_SUMMARY <- TRUE
+  expect_error(
+    getConfig(envir = config_env, command_arguments = character()),
+    "Code summary TOML file not found"
+  )
+})

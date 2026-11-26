@@ -80,11 +80,12 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     default
   }
 
+  include_code_summary <- isTRUE(as.logical(getConfigValue("INCLUDE_CODE_SUMMARY", TRUE)))
   code_summary_file <- getConfigValue(
     "CODE_SUMMARY_CONFIG_FILE",
     getCodeSummaryConfigPath()
   )
-  code_summary <- loadCodeSummaryConfig(code_summary_file)
+  code_summary <- if (include_code_summary) loadCodeSummaryConfig(code_summary_file) else NULL
 
   list(
     view_prefix = getConfigValue("VIEW_PREFIX", "v_"),
@@ -94,7 +95,7 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
       getConfigValue("INCLUDE_VALUE_DATETIME_COLUMNS", TRUE)
     ),
     output_filename = getConfigValue("OUTPUT_FILENAME", "Database_Quality_Analysis"),
-    include_code_summary = as.logical(getConfigValue("INCLUDE_CODE_SUMMARY", TRUE)),
+    include_code_summary = include_code_summary,
     code_summary_config_file = code_summary_file,
     code_summary_query_batching = getConfigValue("CODE_SUMMARY_QUERY_BATCHING", "resource"),
     code_summary_sources = code_summary$sources,
