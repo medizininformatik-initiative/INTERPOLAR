@@ -48,7 +48,7 @@ Nach einem erfolgreichen manuellen Modullauf erhalten die neu geschriebenen oder
 Ausgaben, damit zusammengehörige Dateien zugeordnet werden können. Beispiel:
 
 ```text
-<Berichtsname>_2026-11-12_11-30-00Z_toolchain-2.1.0_pseudonymized_snapshot.xlsx
+<Berichtsname>_2026-11-12_11-30-00Z_toolchain-2.1.0_pseudonymized_snapshot-2026-09-03.xlsx
 ```
 
 Der Zeitstempel bezeichnet den Start des manuellen Submoduls in UTC (`Z`). `toolchain` ist die
@@ -58,7 +58,7 @@ Datenbanken. Die Datenherkunft ist `live` (laufende Datenbank),
 `v_db_parameter` hat Vorrang. Ohne diesen Eintrag wird die reguläre Live-Datenbank
 `cds_hub_db` beziehungsweise die Snapshot-Namenskonvention von `ip-snapshot.sh`
 (`ip_<Name>_YYYYMMDD`, gegebenenfalls mit `_pseud` und `_broad_consent`) verwendet.
-Das Snapshot-Datum wird nicht in den Dateinamen aufgenommen. Nicht bestimmbare
+Bei Snapshots folgt das Datum aus dem Datenbanknamen. Nicht bestimmbare
 Angaben erscheinen ausdrücklich als `unknown`; benutzerdefinierte Datenbanknamen
 werden nicht in Dateinamen übernommen.
 

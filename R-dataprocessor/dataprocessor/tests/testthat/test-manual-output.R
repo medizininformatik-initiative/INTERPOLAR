@@ -9,25 +9,25 @@ test_that("manual filenames distinguish live, snapshot types and UTC run time", 
   )
   expect_match(
     context("ip_snapshot_20260903"),
-    "_snapshot$"
+    "_snapshot-2026-09-03$"
   )
   expect_match(
     context("ip_snapshot_20260903_pseud"),
-    "_pseudonymized_snapshot$"
+    "_pseudonymized_snapshot-2026-09-03$"
   )
   expect_match(
     context("ip_snapshot_20260903_pseud_broad_consent"),
-    "_pseudonymized_snapshot$"
+    "_pseudonymized_snapshot-2026-09-03$"
   )
   expect_match(
     context("custom_snapshot", "pseudonymized_snapshot"),
-    "_pseudonymized_snapshot$"
+    "_pseudonymized_snapshot-unknown$"
   )
   expect_match(context("custom_database"), "_unknown$")
-  expect_false(grepl("2026-09-03|20260903", context("ip_snapshot_20260903_pseud")))
+  expect_match(context("ip_snapshot_20260230_pseud"), "_pseudonymized_snapshot-unknown$")
   expect_match(
     context("ip_snapshot_20260903_pseud", "unpseudonymized_snapshot"),
-    "_snapshot$"
+    "_snapshot-2026-09-03$"
   )
   expect_error(
     buildManualOutputContext("cds_hub_db", NA_character_, "../secret", run_time),
@@ -149,6 +149,6 @@ test_that("provenance reads the selected database and the executing code version
   )
   expect_match(
     getManualOutputContext(),
-    "_toolchain-2.2.0_pseudonymized_snapshot$"
+    "_toolchain-2.2.0_pseudonymized_snapshot-2026-09-03$"
   )
 })

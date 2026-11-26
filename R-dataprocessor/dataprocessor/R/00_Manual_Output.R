@@ -47,6 +47,17 @@ buildManualOutputContext <- function(database_name, database_content_type,
   if (identical(content_type, "unpseudonymized_snapshot")) {
     content_type <- "snapshot"
   }
+  if (content_type %in% c("snapshot", "pseudonymized_snapshot")) {
+    snapshot_date <- "unknown"
+    if (snapshot_name) {
+      date_text <- sub(snapshot_pattern, "\\1", database_name)
+      parsed_date <- as.Date(date_text, format = "%Y%m%d")
+      if (!is.na(parsed_date) && identical(format(parsed_date, "%Y%m%d"), date_text)) {
+        snapshot_date <- format(parsed_date, "%Y-%m-%d")
+      }
+    }
+    content_type <- paste(content_type, snapshot_date, sep = "-")
+  }
   if (!grepl("^[[:alnum:]][[:alnum:].+-]*$", release_version)) {
     stop("Invalid toolchain release version for output naming.", call. = FALSE)
   }
