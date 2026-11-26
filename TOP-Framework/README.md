@@ -26,7 +26,7 @@ In `TOP-Framework/database.toml` den Wert `DB_NAME` auf die pseudonymisierte Sna
 
 ### 4. Rückmeldung hochladen
 
-Nach Erfolg oder Abbruch ausschließlich `outputGlobal/top-study/TOP_Report_YYYY-MM-DD_HH-MM-SS.txt` hochladen.
+Nach Erfolg oder Abbruch ausschließlich das ZIP aus `outputGlobal/top-study/` hochladen. Es enthält nur den aggregierten Bericht `TOP_Report.txt`. Für die Erstellung werden auf dem Host `zip` und `unzip` benötigt.
 
 ## Hintergrundinformationen
 
@@ -38,7 +38,7 @@ Der Bericht enthält Trefferzahlen und Laufzeiten, Fallauswahl nach Station und 
 
 Für die fachliche Bewertung müssen die lokalen Hämoglobin- und Glukose-Referenzgrenzen noch bestätigt werden.
 
-Der Dateiname enthält die lokale Startzeit am Standort, zum Beispiel `TOP_Report_2026-10-29_14-35-22.txt`.
+Der ZIP-Name enthält den UTC-Startzeitpunkt, die CDS-Toolchain-Version und die Datenherkunft, zum Beispiel `top-framework_2026-10-29_13-35-22Z_toolchain-2.2.2_pseudonymized_snapshot-2026-09-11.zip`. Steht die Herkunft beim Abbruch noch nicht fest, lautet der Zusatz `unknown`.
 
 TOP erhält numerische Laborwerte mit `analysis_value_status = converted` oder
 `already_reference_unit`. Primär-LOINC und Referenzeinheit folgen der WP7-Laborliste.

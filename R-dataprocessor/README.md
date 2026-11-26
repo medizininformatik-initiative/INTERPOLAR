@@ -54,6 +54,40 @@ bleiben. Eine neuere Datenbankversion wird weiterhin abgelehnt. Fehlen einer
 Auswertung benötigte Views oder Spalten, meldet die konkrete Datenbankabfrage
 die strukturelle Inkompatibilität.
 
+### Dateinamen manueller Auswertungen
+
+Nach einem erfolgreichen manuellen Modullauf erhalten die neu geschriebenen oder
+überschriebenen Excel-, HTML-, CSV- und ZIP-Dateien in `reports`, `tables` und
+`data` einen gemeinsamen Herkunftszusatz. Dies gilt für globale und lokale
+Ausgaben, damit zusammengehörige Dateien zugeordnet werden können. Beispiel:
+
+```text
+<Berichtsname>_2026-11-12_11-30-00Z_toolchain-2.1.0_pseudonymized_snapshot-2026-09-03.xlsx
+```
+
+Der Zeitstempel bezeichnet den Start des manuellen Submoduls in UTC (`Z`). `toolchain` ist die
+Version des ausführenden Codes aus `release-version.txt`, auch bei älteren
+Datenbanken. Die Datenherkunft ist `live` (laufende Datenbank),
+`pseudonymized_snapshot` oder `snapshot` (nicht pseudonymisierter Snapshot). Der Eintrag `database_content_type` in
+`v_db_parameter` hat Vorrang. Ohne diesen Eintrag wird die reguläre Live-Datenbank
+`cds_hub_db` beziehungsweise die Snapshot-Namenskonvention von `ip-snapshot.sh`
+(`ip_<Name>_YYYYMMDD`, gegebenenfalls mit `_pseud` und `_broad_consent`) verwendet.
+Bei Snapshots folgt das Datum aus dem Datenbanknamen. Nicht bestimmbare
+Angaben erscheinen ausdrücklich als `unknown`; benutzerdefinierte Datenbanknamen
+werden nicht in Dateinamen übernommen.
+
+Die bisherigen Berichtsnamen bleiben als Präfix erhalten. CSV-Namen innerhalb
+von ZIP-Archiven bleiben erhalten. Unveränderte Dateien früherer Läufe und
+Ausgaben automatischer Submodule werden nicht umbenannt. Bei einem Fehler des
+Submoduls wird kein Herkunftszusatz für einen abgeschlossenen Lauf vergeben.
+Pro Submodullauf gibt es je ein ZIP für die tatsächlich erzeugten
+globalen und lokalen Ergebnisse im jeweiligen Ordner `reports`. Der Archivname
+folgt dem Schema `<Submodul>_<Herkunftszusatz>.zip`. Nach erfolgreicher
+ZIP-Prüfung werden die Einzeldateien entfernt. Im ZIP liegen sie direkt auf der
+obersten Ebene.
+
+Die endgültigen Pfade werden nach dem Umbenennen im Laufprotokoll ausgegeben.
+
 ### Anpassung der Codes für Körpergröße, -gewicht und BMI
 
 Im Abschnitt "analyse" in der toml-Datei können die auf dem FHIR-Server verfügbaren Codes und Codesysteme für Körpergröße, -gewicht und BMI eingestellt werden. Es werden nur Observationen gefunden, die genau diese Codes enthalten.
