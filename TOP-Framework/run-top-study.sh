@@ -13,7 +13,14 @@ tool_dir="$root/TOP-Framework"
 export TOP_STUDY_IMAGE
 TOP_STUDY_IMAGE=$(cat "$tool_dir/image.txt")
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
-report_name="TOP_Report_$(date +%Y-%m-%d_%H-%M-%S).txt"
+command -v zip >/dev/null && command -v unzip >/dev/null || {
+  echo 'Für die TOP-Ausleitung werden zip und unzip benötigt.' >&2
+  exit 1
+}
+version=$(sed -n '1{s/^[[:space:]]*//; s/[[:space:]]*$//; s/^[vV]//; p;}' release-version.txt)
+[[ "$version" =~ ^[[:alnum:]][[:alnum:].+-]*$ ]]
+report_name=TOP_Report.txt
+naming_source="$root/R-dataprocessor/dataprocessor/R/00_Manual_Output.R"
 out="$root/outputLocal/top-study"
 report_dir="$root/outputGlobal/top-study"
 mkdir -p "$root/outputLocal" "$root/outputGlobal"
@@ -25,6 +32,7 @@ mkdir "$lock_dir" 2>/dev/null || {
 trap 'rmdir "$lock_dir"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+docker_user="$(id -u):$(id -g)"
 docker_tool_dir="$tool_dir"
 docker_out="$out"
 docker_local="$root/outputLocal"
@@ -33,6 +41,7 @@ case "$OSTYPE" in
   msys*|cygwin*)
     # Git Bash must leave container paths alone; convert only host mount paths.
     export MSYS_NO_PATHCONV=1
+    naming_source=$(cygpath -m "$naming_source")
     docker_tool_dir=$(cygpath -m "$tool_dir")
     docker_out=$(cygpath -m "$out")
     docker_local=$(cygpath -m "$root/outputLocal")
@@ -48,13 +57,14 @@ TOP_STUDY_IMAGE=$(docker image inspect --format '{{index .RepoDigests 0}}' "$TOP
   exit 1
 }
 # Rotate before mounting the current run into any processing container.
-docker compose run --rm --no-deps \
+docker compose run --rm --no-deps --user "$docker_user" \
   --volume "$docker_tool_dir:/runner:ro" \
   --volume "$docker_local:/outputs/outputLocal" \
   --volume "$docker_global:/outputs/outputGlobal" \
   --entrypoint Rscript r-env /runner/initialize-output.R
-started=$(date -u +%FT%TZ)
 start_seconds=$(date +%s)
+started=$(date -u -d "@$start_seconds" +%FT%TZ)
+archive_timestamp=$(date -u -d "@$start_seconds" +%Y-%m-%d_%H-%M-%SZ)
 phase=initialization
 container=''
 command_pid=''
@@ -83,8 +93,8 @@ write_report() {
       if [[ -f "$out/$file" ]]; then printf '\n%s\n' "$file"; cat "$out/$file"; fi
     done
     printf '\n'
-  } > "$report_dir/$report_name.tmp"
-  mv "$report_dir/$report_name.tmp" "$report_dir/$report_name"
+  } > "$out/$report_name.tmp"
+  mv "$out/$report_name.tmp" "$out/$report_name"
 }
 finalize() {
   status=$?
@@ -99,9 +109,22 @@ finalize() {
     printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$started" "$(date -u +%FT%TZ)" \
       "$(( $(date +%s) - start_seconds ))" "$status" "$outcome" "$phase"
   } > "$out/run-summary.tsv"
-  write_report
+  context="${archive_timestamp}_toolchain-${version}_unknown"
+  if [[ -s "$out/archive-context.txt" ]]; then
+    context=$(cat "$out/archive-context.txt")
+  fi
+  archive_name="top-framework_$context.zip"
+  if write_report &&
+    (cd "$out" && zip -qjT "$report_dir/.$archive_name" "$report_name") &&
+    mv "$report_dir/.$archive_name" "$report_dir/$archive_name"; then
+    rm -f "$out/$report_name"
+    echo "Ausleitung: $report_dir/$archive_name"
+  else
+    rm -f "$report_dir/.$archive_name"
+    echo 'TOP-Ausleitungs-ZIP konnte nicht erstellt werden.' >&2
+    if [[ "$status" -eq 0 ]]; then status=1; fi
+  fi
   echo "Laufstatus: $outcome (Exit $status). Ausgabe: $out"
-  echo "Ausleitung: $report_dir/$report_name"
   rmdir "$lock_dir"
   exit "$status"
 }
@@ -129,21 +152,21 @@ docker run --rm --network none --read-only --entrypoint /usr/bin/unzip "$TOP_STU
 phase=prepare
 container="top-study-prepare-$run_id"
 echo "[$(date -u +%FT%TZ)] Studienadapter vorbereiten"
-docker compose run --rm --no-deps --name "$container" \
+docker compose run --rm --no-deps --user "$docker_user" --name "$container" \
   --volume "$docker_tool_dir:/runner:ro" --volume "$docker_out:/run" \
-  --entrypoint Rscript r-env /runner/prepare.R > "$out/preparation.log" 2>&1 &
+  --volume "$naming_source:/manual-output.R:ro" \
+  --entrypoint Rscript r-env /runner/prepare.R "$version" "$start_seconds" > "$out/preparation.log" 2>&1 &
 command_pid=$!
 wait_for_command || {
   code=$?
   echo 'Vorbereitung fehlgeschlagen; Details stehen lokal in preparation.log.' >&2
   exit "$code"
 }
-write_report
 phase=top
 container="top-study-run-$run_id"
 echo "[$(date -u +%FT%TZ)] Vollständige TOP-Studienanalyse starten"
 # A pipe streams progress; pipefail preserves the container exit status.
-docker compose -f docker-compose.yml -f TOP-Framework/compose.yml run --rm --no-deps \
+docker compose -f docker-compose.yml -f TOP-Framework/compose.yml run --rm --no-deps --user "$docker_user" \
   --name "$container" --volume "$docker_tool_dir:/runner:ro" --volume "$docker_out:/run" top-study \
   2>&1 | tee "$out/progress.log" &
 command_pid=$!
@@ -151,7 +174,7 @@ wait_for_command
 phase=plausibility
 container="top-study-plausibility-$run_id"
 echo "[$(date -u +%FT%TZ)] Aggregierte Plausibilitätsprüfung starten"
-docker compose run --rm --no-deps --name "$container" \
+docker compose run --rm --no-deps --user "$docker_user" --name "$container" \
   --volume "$docker_tool_dir:/runner:ro" --volume "$docker_out:/run" \
   --entrypoint Rscript r-env /runner/plausibility.R > "$out/plausibility.log" 2>&1 &
 command_pid=$!

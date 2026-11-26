@@ -1,4 +1,5 @@
 source("/runner/adapter.R")
+source("/manual-output.R")
 
 prepareStudyRun <- function() {
   logProgress <- function(text) {
@@ -30,6 +31,25 @@ prepareStudyRun <- function() {
   DBI::dbExecute(con, "SET default_transaction_read_only = on")
   DBI::dbExecute(con, "SET TIME ZONE 'Europe/Berlin'")
   DBI::dbExecute(con, "SET lock_timeout = '5s'")
+  args <- commandArgs(trailingOnly = TRUE)
+  version_view <- DBI::Id(
+    schema = if (is.null(config$DB_DATAPROCESSOR_SCHEMA_OUT)) "db2dataprocessor_out" else config$DB_DATAPROCESSOR_SCHEMA_OUT,
+    table = "v_db_parameter"
+  )
+  content_type <- NA_character_
+  if (DBI::dbExistsTable(con, version_view)) {
+    query <- paste(
+      "SELECT parameter_value FROM", DBI::dbQuoteIdentifier(con, version_view),
+      "WHERE parameter_name = 'database_content_type'"
+    )
+    marker <- DBI::dbGetQuery(con, query)$parameter_value
+    if (length(marker) == 1L) content_type <- marker[[1L]]
+  }
+  context <- buildManualOutputContext(
+    config$DB_NAME, content_type, args[[1L]],
+    as.POSIXct(as.numeric(args[[2L]]), origin = "1970-01-01", tz = "UTC")
+  )
+  writeLines(context, file.path(out, "archive-context.txt"))
   pg_version <- DBI::dbGetQuery(con, "SHOW server_version_num")[[1]][[1]]
   if (as.integer(pg_version) < 150000) stop("Die ICD-Präfixsuche benötigt PostgreSQL ab Version 15.")
   logProgress("Datenbanksitzung bereit. Fallauswahl und Zuordnungsprüfung starten.")

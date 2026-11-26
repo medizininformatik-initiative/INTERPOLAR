@@ -6,6 +6,7 @@ work=$(mktemp -d "${TMPDIR:-/tmp}/top-refresh-test.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/TOP-Framework" "$work/bin" "$work/outputLocal/top-study" "$work/outputGlobal/top-study"
 cp "$root/TOP-Framework/run-top-study.sh" "$root/TOP-Framework/image.txt" "$work/TOP-Framework/"
+cp "$root/release-version.txt" "$work/"
 touch "$work/TOP-Framework/database.toml"
 printf 'private\n' > "$work/outputLocal/top-study/result.txt"
 printf 'aggregate\n' > "$work/outputGlobal/top-study/report.txt"

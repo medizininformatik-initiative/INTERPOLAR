@@ -10,10 +10,13 @@ cleanup() {
 }
 trap cleanup EXIT
 report_file() {
-  printf '%s\n' "$work/outputGlobal/top-study"/TOP_Report_*.txt
+  printf '%s\n' "$work/outputGlobal/top-study"/top-framework_*.zip
 }
 mkdir -p "$work/R-dataprocessor"
 cp -R "$root/TOP-Framework" "$work/"
+cp "$root/release-version.txt" "$work/"
+mkdir -p "$work/R-dataprocessor/dataprocessor/R"
+cp "$root/R-dataprocessor/dataprocessor/R/00_Manual_Output.R" "$work/R-dataprocessor/dataprocessor/R/"
 cp "$root/TOP-Framework/tests/phases.toml" "$work/R-dataprocessor/dataprocessor_config.toml"
 printf 'DB_NAME = "probe"\n' > "$work/TOP-Framework/database.toml"
 cat > "$work/cds_hub_db_config.toml" <<EOF
@@ -26,7 +29,7 @@ EOF
 cat > "$work/docker-compose.yml" <<EOF
 services:
   r-env:
-    image: interpolar-r-env:latest
+    image: ${TOP_STUDY_TEST_R_IMAGE:-interpolar-r-env:latest}
     volumes:
       - ./R-dataprocessor/dataprocessor_config.toml:/src/R-dataprocessor/dataprocessor_config.toml:ro
       - ./cds_hub_db_config.toml:/src/cds_hub_db_config.toml:ro
@@ -75,12 +78,12 @@ done
   --entrypoint Rscript r-env /runner/tests/check-associations.R)
 bash "$work/TOP-Framework/run-top-study.sh"
 output="$work/outputLocal/top-study"
-[[ $(basename "$(report_file "$output")") =~ ^TOP_Report_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}[.]txt$ ]]
+[[ $(basename "$(report_file "$output")") =~ ^top-framework_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}Z_toolchain-[^_]+_unknown[.]zip$ ]]
 docker run --rm --network none --read-only --tmpfs /tmp \
   --mount "type=bind,src=$output,dst=/run,readonly" \
   --mount "type=bind,src=$work/outputGlobal/top-study,dst=/global,readonly" \
   --mount "type=bind,src=$root/TOP-Framework,dst=/runner,readonly" \
-  --entrypoint Rscript interpolar-r-env:latest /runner/tests/verify.R
+  --entrypoint Rscript ${TOP_STUDY_TEST_R_IMAGE:-interpolar-r-env:latest} /runner/tests/verify.R
 (cd "$work" && docker compose run --rm --no-deps \
   --volume "$work/TOP-Framework:/runner:ro" --volume "$output:/baseline:ro" \
   --volume "$work/reference-models/models:/reference-models:ro" \
@@ -92,7 +95,7 @@ bash "$work/TOP-Framework/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
 last="$work/outputLocal/top-study"
 grep -q $'\tfailed_or_interrupted\tplausibility' "$last/run-summary.tsv"
-grep -q 'ABGLEICH DER FALLAUSWAHL' "$(report_file "$last")"
+grep -q 'ABGLEICH DER FALLAUSWAHL' <(unzip -p "$(report_file "$last")" TOP_Report.txt)
 [[ ! -d "$work/outputGlobal/top-study/results" ]]
 [[ $(find "$last/results" -name '*.zip' | wc -l) -eq 13 ]]
 cp "$work/audit-original.R" "$work/TOP-Framework/plausibility-functions.R"
@@ -108,8 +111,8 @@ bash "$work/TOP-Framework/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
 last="$work/outputLocal/top-study"
 grep -q '"invalid_contacts": 8' "$last/preparation.json"
-grep -q '"missing_start_contacts": 1' "$(report_file "$last")"
-grep -q 'failed_or_interrupted' "$(report_file "$last")"
+grep -q '"missing_start_contacts": 1' <(unzip -p "$(report_file "$last")" TOP_Report.txt)
+grep -q 'failed_or_interrupted' <(unzip -p "$(report_file "$last")" TOP_Report.txt)
 grep -q '"ignored_missing_encounter_contacts": 7' "$last/preparation.json"
 [[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
 docker exec "$database" psql -U probe -d probe -c \
@@ -123,7 +126,7 @@ bash "$work/TOP-Framework/run-top-study.sh" || code=$?
 [[ "$code" -ne 0 ]]
 last="$work/outputLocal/top-study"
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
-grep -q 'failed_or_interrupted' "$(report_file "$last")"
+grep -q 'failed_or_interrupted' <(unzip -p "$(report_file "$last")" TOP_Report.txt)
 grep -q $'\tfailed\t' "$last/algorithms.tsv"
 [[ ! -f "$last/private/adapter.yml" ]]
 [[ ! -d "$work/outputGlobal/top-study/results" ]]
@@ -138,7 +141,7 @@ sleep 1
 bash "$work/TOP-Framework/run-top-study.sh" > "$work/interruption-console.log" 2>&1 &
 launcher_pid=$!
 found=false
-for _attempt in $(seq 1 60); do
+for _attempt in $(seq 1 200); do
   if grep -q 'START 1/' "$work/interruption-console.log"; then found=true; break; fi
   sleep 0.1
 done
@@ -154,7 +157,7 @@ wait "$launcher_pid" || code=$?
 [[ "$code" -eq 143 ]]
 last="$work/outputLocal/top-study"
 grep -q 'failed_or_interrupted' "$last/run-summary.tsv"
-grep -q 'failed_or_interrupted' "$(report_file "$last")"
+grep -q 'failed_or_interrupted' <(unzip -p "$(report_file "$last")" TOP_Report.txt)
 grep -q $'\tinterrupted\t' "$last/algorithms.tsv"
 [[ ! -d "$work/outputGlobal/top-study/results" ]]
 [[ ! -f "$last/private/adapter.yml" ]]
@@ -181,9 +184,9 @@ code=0
 wait "$launcher_pid" || code=$?
 [[ "$code" -eq 143 ]]
 grep -q $'\tfailed_or_interrupted\tprepare' "$last/run-summary.tsv"
-grep -q 'failed_or_interrupted' "$(report_file "$last")"
-grep -q 'Zahlen nicht verfügbar' "$(report_file "$last")"
+grep -q 'failed_or_interrupted' <(unzip -p "$(report_file "$last")" TOP_Report.txt)
+grep -q 'Zahlen nicht verfügbar' <(unzip -p "$(report_file "$last")" TOP_Report.txt)
 [[ ! -f "$last/algorithms.tsv" && ! -f "$last/private/adapter.yml" ]]
 [[ -z $(docker ps -q --filter "name=top-study-prepare-") ]]
-[[ $(basename "$(report_file "$last")") =~ ^TOP_Report_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}[.]txt$ ]]
+[[ $(basename "$(report_file "$last")") =~ ^top-framework_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}Z_toolchain-[^_]+_unknown[.]zip$ ]]
 printf 'PASS: preparation interruption recorded and container stopped.\n'
