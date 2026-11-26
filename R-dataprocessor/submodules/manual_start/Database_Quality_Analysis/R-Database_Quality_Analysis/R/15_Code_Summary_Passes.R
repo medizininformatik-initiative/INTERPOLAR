@@ -80,11 +80,11 @@ buildCodeSummaryChunkMedicationCte <- function(sources) {
 }
 
 #' Reuse the exact deduplicated resource/value stream and quartile calculation
-buildCodeSummaryStatisticsCtes <- function() {
+buildCodeSummaryStatisticsCtes <- function(events = "scoped_events") {
   dimensions <- "report_scope,report,system,coding_path,version,code,unit,unit_system,low,high,range_type,range_type_system,age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system"
   c(
     paste0(
-      "measurements AS (SELECT DISTINCT ", dimensions, ",count_key,value FROM scoped_events WHERE NOT unresolved AND value IS NOT NULL ",
+      "measurements AS (SELECT DISTINCT ", dimensions, ",count_key,value FROM ", events, " WHERE NOT unresolved AND value IS NOT NULL ",
       "AND value NOT IN ('NaN'::double precision,'Infinity'::double precision,'-Infinity'::double precision))"
     ),
     paste0(
@@ -108,8 +108,8 @@ buildCodeSummaryStatisticsQuery <- function(ctes) {
 #'
 #' Distinct counts are never summed across detail chunks. The rare catalog carries
 #' aggregate group metadata only; all reference-range dimensions participate in matching.
-buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL) {
-  from <- " FROM scoped_events e"
+buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL, events = "scoped_events") {
+  from <- paste0(" FROM ", events, " e")
   if (mode == "rare") {
     dimensions <- c("report_scope", "report", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")
     ctes <- c(ctes, buildCodeSummaryValuesCte(rare_groups, dimensions, "rare_groups"))
@@ -138,14 +138,14 @@ buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL) {
 #' Both outputs retain every code. Small counts are masked only during global
 #' CSV export, so no frequency/event/label caches or rare-pool passes are needed.
 #' Measurement chunks reuse their resolved events for exact statistics in SQL.
-buildCodeSummaryDetailQuery <- function(ctes, collect_statistics = FALSE) {
+buildCodeSummaryDetailQuery <- function(ctes, collect_statistics = FALSE, events = "scoped_events") {
   ctes <- c(ctes, paste0(
     "grouped AS (SELECT e.report_scope,'both'::text AS export_target,e.report,e.system,e.coding_path,",
     "'detail'::text AS row_type,e.version,e.code,e.unit,e.unit_system,e.low,e.high,e.range_type,e.range_type_system,e.age_low,e.age_low_unit,e.age_low_code,e.age_low_system,e.age_high,e.age_high_unit,e.age_high_code,e.age_high_system,",
-    "e.count_key,e.event_key,e.kind,e.pid,e.case_id,e.unreferenced_medication FROM scoped_events e WHERE NOT e.unresolved)"
+    "e.count_key,e.event_key,e.kind,e.pid,e.case_id,e.unreferenced_medication FROM ", events, " e WHERE NOT e.unresolved)"
   ), buildCodeSummaryCountsCte())
   if (collect_statistics) {
-    ctes <- c(ctes, buildCodeSummaryStatisticsCtes(), paste0(
+    ctes <- c(ctes, buildCodeSummaryStatisticsCtes(events), paste0(
       "statistics AS (SELECT ARRAY[report_scope,'both',report,system,coding_path,'detail',version,code,unit,unit_system,low,high,range_type,range_type_system,age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system] AS summary_id,",
       "quartiles[2] AS median,quartiles[1] AS q1,quartiles[3] AS q3,mean,sd,minimum,maximum FROM measurement_statistics)"
     ))
@@ -168,4 +168,59 @@ buildCodeSummarySharedQuery <- function(ctes, collect_statistics = FALSE) {
     "ORDER BY c.report_scope,c.export_target,c.report,c.system,c.coding_path,c.row_type,",
     "c.version,c.code,c.unit,c.unit_system,c.low,c.high,c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system"
   )
+}
+
+
+# Reaggregate the same resolved events, with a version-independent Medication key.
+buildCodeSummaryNoVersionQuery <- function(ctes, mode, measurements, has_observations) {
+  loinc <- "report='Observation' AND system='http://loinc.org'"
+  ctes <- c(ctes, paste0(
+    "no_version_events AS (SELECT report_scope,report || '_no_version' AS report,system,coding_path,",
+    "NULL::text AS version,code,unit,unit_system,low,high,range_type,range_type_system,",
+    "age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system,",
+    "no_version_key AS count_key,event_key,kind,pid,case_id,unreferenced_medication,unresolved,value ",
+    "FROM scoped_events", if (has_observations) paste0(" WHERE (", loinc, ") IS NOT TRUE"), ")"
+  ))
+  detail <- function(events) {
+    buildCodeSummaryDetailQuery(character(), measurements && mode %in% c("combined", "details_statistics"), events)
+  }
+  totals <- function(events) buildCodeSummaryCompactQuery(character(), "totals", events = events)
+  queries <- character()
+  if (mode != "totals") {
+    queries <- c(detail("scoped_events"), detail("no_version_events"))
+    if (has_observations) queries <- c(queries, buildCodeSummaryLoincCountsQuery(loinc))
+  }
+  if (mode %in% c("combined", "totals")) queries <- c(queries, totals("scoped_events"), totals("no_version_events"))
+  paste0(
+    "/* INTERPOLAR DQA shared summary with version-independent counts */\nWITH ",
+    paste(ctes, collapse = ",\n"), "\nSELECT c.* FROM (",
+    paste0("(", queries, ")", collapse = " UNION ALL "), ") c ORDER BY c.report_scope,c.export_target,",
+    "c.report,c.system,c.coding_path,c.row_type,c.version,c.code,c.unit,c.unit_system,c.low,c.high,",
+    "c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,",
+    "c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system"
+  )
+}
+
+
+# LOINC only needs one distinct count, so keep this aggregation narrow.
+buildCodeSummaryLoincCountsQuery <- function(loinc) {
+  absent_dimensions <- c(
+    "coding_path", "version", "low", "high", "range_type", "range_type_system",
+    "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit",
+    "age_high_code", "age_high_system"
+  )
+  absent_counts <- c(
+    "patient_count", "case_count", "no_case_count", "medication_count",
+    "medication_request_count", "medication_administration_count", "medication_statement_count",
+    "unreferenced_medication_count"
+  )
+  counts <- paste0(
+    "counts AS (SELECT NULL::text[] AS summary_id,report_scope,'both'::text AS export_target,",
+    "'LOINC_no_version'::text AS report,'http://loinc.org'::text AS system,'detail'::text AS row_type,",
+    "code,unit,unit_system,", paste0("NULL::text AS ", absent_dimensions, collapse = ","), ",",
+    "COUNT(DISTINCT count_key) AS count,", paste0("NULL::bigint AS ", absent_counts, collapse = ","),
+    " FROM scoped_events WHERE NOT unresolved AND ", loinc,
+    " GROUP BY report_scope,code,unit,unit_system)"
+  )
+  buildCodeSummaryResultQuery(counts)
 }

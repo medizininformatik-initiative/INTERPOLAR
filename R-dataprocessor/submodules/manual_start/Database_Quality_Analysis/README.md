@@ -273,6 +273,14 @@ Observation, Condition, Procedure and Medication for all adult main cases (suffi
 IP main cases (suffix `_interpolar`), plus `README.txt`. Adulthood means
 an age of at least 18 years at main-case admission.
 
+The same ZIP contains additional CSVs in `Codes_no_version/`, such as
+`Condition_all_no_version.csv` and `LOINC_interpolar_no_version.csv`.
+Their counts deduplicate the original resources across code versions. Direct
+medication codes match referenced Medication by system and code regardless of
+version. The LOINC files contain only code, unit, unit system and resource count.
+The other Observation CSVs in this folder contain the remaining Observation
+code systems. The global ZIP masks counts from one to four as `<5`.
+
 Medication usage resources contribute to Medication.csv only.
 Resources with an available configured source but no selected codes still get
 CSV headers. Unavailable sources are documented with their resolved fields.

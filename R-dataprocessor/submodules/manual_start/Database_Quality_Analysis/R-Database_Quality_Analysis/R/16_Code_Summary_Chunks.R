@@ -36,7 +36,8 @@ normalizeCodeSummaryGroupKeys <- function(rows, columns) {
 #' aggregate code/group metadata leaves SQL. No partial medians or ID counts are
 #' combined in R. A hot code stays intact and runs in its own shared detail pass.
 runCodeSummaryChunks <- function(sources, links, config, report_types, case_scope_query,
-                                 case_groups_query, export_variants, label, query_fun) {
+                                 case_groups_query, export_variants, label, query_fun,
+                                 include_no_version = FALSE) {
   processing <- parseCodeSummaryProcessing(config$code_summary_processing)
   dimensions <- c("report_scope", "report", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")
   runPass <- function(mode, keys = NULL, pass_label = mode) {
@@ -44,7 +45,7 @@ runCodeSummaryChunks <- function(sources, links, config, report_types, case_scop
       report_types,
       case_scope_query = case_scope_query, case_groups_query = case_groups_query,
       export_variants = export_variants,
-      query_mode = mode, code_keys = keys
+      query_mode = mode, code_keys = keys, include_no_version = include_no_version
     )
     if (is.na(query)) return(data.table::data.table())
     rows <- data.table::as.data.table(runLoggedQuery(

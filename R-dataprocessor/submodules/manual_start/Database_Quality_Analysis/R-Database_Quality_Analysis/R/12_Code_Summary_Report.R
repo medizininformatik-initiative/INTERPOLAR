@@ -6,13 +6,13 @@
 createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbGetReadOnlyQuery,
                                      table_description = NULL) {
   buildCodeSummaryReports(metadata, config, query_fun, table_description,
-    export_variants = c("all_cases", "interpolar_cases")
+    export_variants = c("all_cases", "interpolar_cases"), include_no_version = TRUE
   )
 }
 
 # Build the result tables for the scopes supplied by the caller.
 buildCodeSummaryReports <- function(metadata, config, query_fun, table_description = NULL,
-                                    export_variants) {
+                                    export_variants, include_no_version = FALSE) {
   started <- Sys.time()
   logProgress("Code summary: resolving configured sources and available database columns.")
   if (is.null(table_description)) {
@@ -95,13 +95,15 @@ buildCodeSummaryReports <- function(metadata, config, query_fun, table_descripti
       return(runCodeSummaryChunks(batch_sources, batch_links, config, report_types,
         case_scope_query = if (is.null(case_groups_query)) case_scope_query else NULL,
         case_groups_query = case_groups_query, export_variants = export_variants,
-        label = paste0(names(batches)[[index]], " (", index, "/", length(batches), ")"), query_fun = query_fun
+        label = paste0(names(batches)[[index]], " (", index, "/", length(batches), ")"), query_fun = query_fun,
+        include_no_version = include_no_version
       ))
     }
     query <- buildCodeSummaryQuery(
       batch_sources, batch_links, config$code_summary_systems, report_types,
       case_scope_query = if (is.null(case_groups_query)) case_scope_query else NULL,
-      case_groups_query = case_groups_query, export_variants = export_variants
+      case_groups_query = case_groups_query, export_variants = export_variants,
+      include_no_version = include_no_version
     )
     if (is.na(query)) return(data.table::data.table())
     data.table::as.data.table(runLoggedQuery(
@@ -132,16 +134,24 @@ buildCodeSummaryReports <- function(metadata, config, query_fun, table_descripti
       rows[, unreferenced_medication_count := NA_real_]
     }
   }
-  buildReports <- function(output_target, output_scope = "all") {
-    result <- lapply(report_names, function(report_name) {
+  buildReports <- function(output_target, output_scope = "all", no_version = FALSE) {
+    names_to_build <- report_names
+    if (no_version && any(source_resources == "Observation")) names_to_build <- c(names_to_build, "LOINC")
+    result <- lapply(names_to_build, function(report_name) {
       resource_sources <- Filter(function(source) source$resource == report_name, sources)
       output_columns <- c(
         columns,
         if (any(vapply(resource_sources, function(source) isTRUE(source$measurement), logical(1)))) measurement_columns,
         if (report_name == "Medication") medication_columns
       )
+      query_report <- report_name
+      if (no_version) {
+        query_report <- paste0(report_name, "_no_version")
+        output_columns <- setdiff(output_columns, "version")
+        if (report_name == "LOINC") output_columns <- c("code", "unit", "unit_system", "count")
+      }
       if (nrow(rows)) {
-        report <- rows[report_scope == output_scope & export_target == output_target & report == report_name, ..output_columns]
+        report <- rows[report_scope == output_scope & export_target == output_target & report == query_report, ..output_columns]
       } else {
         report <- data.table::as.data.table(stats::setNames(
           lapply(output_columns, function(column) {
@@ -149,10 +159,10 @@ buildCodeSummaryReports <- function(metadata, config, query_fun, table_descripti
           }), output_columns
         ))
       }
-      attr(report, "table_family") <- "Codes"
+      attr(report, "table_family") <- if (no_version) "Codes_no_version" else "Codes"
       report
     })
-    names(result) <- report_names
+    names(result) <- names_to_build
     result
   }
   result <- buildReports("global")
@@ -259,6 +269,10 @@ buildCodeSummaryReports <- function(metadata, config, query_fun, table_descripti
     local <- buildReports("local", variant)
     attr(reports, "description") <- description
     attr(local, "description") <- c("LOCAL CODE SUMMARY: includes all aggregate combinations, including counts below five.", description)
+    if (include_no_version) {
+      attr(reports, "no_version_reports") <- buildReports("global", variant, no_version = TRUE)
+      attr(local, "no_version_reports") <- buildReports("local", variant, no_version = TRUE)
+    }
     attr(reports, "local_reports") <- local
     attr(reports, "scope_label") <- sub("_cases$", "", variant)
     attr(reports, "scope_description") <- description[1:3]
@@ -305,12 +319,25 @@ writeCodeSummaryArchive <- function(code_summaries, filename_without_extension,
     scope_description <- attr(variant, "scope_description", exact = TRUE)
     tables <- if (target == "local") attr(variant, "local_reports", exact = TRUE) else variant
     if (is.null(tables)) stop("Local scoped code details unavailable; regenerate the code summaries.", call. = FALSE)
+    no_version_tables <- attr(tables, "no_version_reports", exact = TRUE)
     names(tables) <- paste0(names(tables), "_", scope_label)
+    if (length(no_version_tables)) {
+      names(no_version_tables) <- paste0(names(no_version_tables), "_", scope_label, "_no_version")
+      tables <- c(tables, no_version_tables)
+    }
     if (any(names(tables) %in% names(reports))) {
       stop("Scoped code CSV names collide with other report names.", call. = FALSE)
     }
     reports <- c(reports, tables)
     description <- c(description, "", paste0("CSV suffix _", scope_label, ":"), scope_description)
+  }
+  if (length(reports) && any(endsWith(names(reports), "_no_version"))) {
+    description <- c(
+      description, "",
+      "Codes_no_version: counts are deduplicated from the original resolved events without code version.",
+      "Direct medication codes match referenced Medication by system and code, regardless of version.",
+      "LOINC is reported separately by code, unit and unit system, with resource counts only."
+    )
   }
   if (target == "global") {
     # Format a copy only at the export boundary: local tables and SQL aggregate

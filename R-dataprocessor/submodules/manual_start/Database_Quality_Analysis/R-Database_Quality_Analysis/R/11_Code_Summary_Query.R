@@ -24,8 +24,9 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
                                   case_scope_query = NULL, case_groups_query = NULL,
                                   export_variants = c("all", "filtered"),
                                   query_mode = c("combined", "catalog", "details", "statistics", "totals", "rare", "details_statistics"),
-                                  code_keys = NULL, rare_groups = NULL) {
+                                  code_keys = NULL, rare_groups = NULL, include_no_version = FALSE) {
   query_mode <- match.arg(query_mode)
+  include_no_version <- include_no_version && query_mode %in% c("combined", "details", "details_statistics", "totals")
   if (!is.null(code_keys) && !nrow(code_keys)) return(NA_character_)
   if (query_mode == "rare" && (is.null(rare_groups) || !nrow(rare_groups))) return(NA_character_)
   if (query_mode %in% c("catalog", "totals")) {
@@ -355,6 +356,9 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
       "WHERE medication_ref IS NOT NULL)"
     ))
   }
+  no_version_key <- function(key) {
+    if (include_no_version) paste0(",", key, " AS no_version_key") else ""
+  }
   event_columns <- paste0(
     "c.system, CASE WHEN ", usage_condition, " THEN c.kind || '/' || c.coding_path ELSE c.coding_path END AS coding_path, ",
     "c.version,c.code,c.unit,c.unit_system,c.low,c.high,c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system, "
@@ -370,14 +374,14 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
   )
   events <- paste0(
     base_event_select,
-    "false AS unreferenced_medication FROM codings c WHERE NOT (", usage_condition, ") AND c.kind<>'Medication'"
+    "false AS unreferenced_medication", no_version_key("c.kind || '/' || c.own_id"), " FROM codings c WHERE NOT (", usage_condition, ") AND c.kind<>'Medication'"
   )
   if (medication_available) {
     # Keep this lookup out of unrelated resource streams in the combined mode.
     events <- c(events, paste0(
       base_event_select,
       if (length(links)) "(u.medication_ref IS NULL)" else "NULL::boolean",
-      " AS unreferenced_medication FROM codings c",
+      " AS unreferenced_medication", no_version_key("c.kind || '/' || c.own_id"), " FROM codings c",
       if (length(links)) " LEFT JOIN referenced_medication_ids u ON u.medication_ref='Medication/' || c.own_id",
       " WHERE c.kind='Medication'"
     ))
@@ -388,6 +392,15 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
       "LEFT JOIN primary_medication_codes m ON l.medication_ref=m.medication_ref ",
       "AND m.system=c.system AND m.code=c.code AND m.version_key=COALESCE(c.version,'') "
     ) else ""
+    if (include_no_version && medication_available) {
+      ctes <- c(ctes, paste0(
+        "medication_codes_no_version AS (SELECT DISTINCT medication_ref,system,code FROM primary_medication_codes)"
+      ))
+      direct_joins <- paste0(
+        direct_joins, " LEFT JOIN medication_codes_no_version mv ON l.medication_ref=mv.medication_ref ",
+        "AND mv.system=c.system AND mv.code=c.code"
+      )
+    }
     # Empty versions have already been normalized to NULL. The non-null key
     # above preserves null equality while allowing an ordinary equijoin.
     count_key <- if (medication_available) {
@@ -395,7 +408,9 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
     } else "c.kind || '/' || c.own_id"
     events <- c(events, paste0(
       "SELECT 'Medication' AS report, ", event_columns, count_key, " AS count_key, ", event_tail,
-      "false AS unresolved,false AS unreferenced_medication FROM codings c", direct_joins,
+      "false AS unresolved,false AS unreferenced_medication",
+      no_version_key(if (medication_available) "COALESCE(mv.medication_ref,c.kind || '/' || c.own_id)" else "c.kind || '/' || c.own_id"),
+      " FROM codings c", direct_joins,
       " WHERE ", usage_condition
     ))
   }
@@ -405,7 +420,8 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
     events <- c(events, paste0(
       "SELECT 'Medication',c.system,c.coding_path,c.version,c.code,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, ",
       "'Medication/' || c.own_id,l.kind || '/' || l.own_id,l.kind,l.pid,l.case_id, ",
-      "NULL::double precision,false,false FROM links l JOIN codings c ON c.kind = 'Medication' ",
+      "NULL::double precision,false,false", no_version_key("'Medication/' || c.own_id"),
+      " FROM links l JOIN codings c ON c.kind = 'Medication' ",
       "AND l.medication_ref = 'Medication/' || c.own_id WHERE l.own_id IS NOT NULL"
     ))
     if (include_diagnostics) {
@@ -420,7 +436,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
       events <- c(events, paste0(
         "SELECT 'Medication', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, ",
         "l.kind || '/' || l.own_id, l.kind || '/' || l.own_id, l.kind, l.pid, l.case_id, ",
-        "NULL::double precision,true,false FROM unresolved_links l"
+        "NULL::double precision,true,false", no_version_key("l.kind || '/' || l.own_id"), " FROM unresolved_links l"
       ))
     }
   }
@@ -444,9 +460,13 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
   # Share the resolved event stream across counts, measurements and totals
   # without materializing additional wide source or Coding copies.
   ctes <- c(ctes, paste0(
-    "scoped_events AS ", if (query_mode %in% c("combined", "details_statistics")) "MATERIALIZED ",
+    "scoped_events AS ", if (include_no_version || query_mode %in% c("combined", "details_statistics")) "MATERIALIZED ",
     "(", scoped_events, ")"
   ))
+  if (include_no_version) {
+    has_observations <- any(vapply(sources, function(source) source$resource == "Observation", logical(1)))
+    return(buildCodeSummaryNoVersionQuery(ctes, query_mode, any(measurement_sources), has_observations))
+  }
   if (query_mode == "details_statistics") {
     return(buildCodeSummaryDetailQuery(ctes, collect_statistics = any(measurement_sources)))
   }

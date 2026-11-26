@@ -47,6 +47,13 @@ test_that("both adult code scopes share classification and preserve counts, ages
 test_that("CSV variants are selected before aggregation and written to the existing ZIP", {
   fixture <- codeSummaryAgeFixture()
   fixture$config$code_summary_exports$variants <- NULL
+  fixture$extra_sql <- c(
+    fixture$extra_sql,
+    "INSERT INTO observation (obs_id,obs_encounter_calculated_ref,obs_code_system,obs_code_version,obs_code_code,obs_unit,obs_unit_system,obs_low) VALUES ('rollup1','Encounter/e2','http://loinc.org','v1','rollup','mg/dL','http://unitsofmeasure.org','1'),('rollup1','Encounter/e2','http://loinc.org','v2','rollup','mg/dL','http://unitsofmeasure.org','2'),('rollup2','Encounter/e2','http://loinc.org','v2','rollup','mg/dL','http://unitsofmeasure.org','2'),('rollup1','Encounter/e2','http://loinc.org','v1','rollup',NULL,NULL,NULL),('rollup1','Encounter/e2','http://loinc.org','v1','rollup','mg/dL','urn:other-unit',NULL);",
+    "INSERT INTO condition (con_id,con_encounter_calculated_ref,con_code_system,con_code_version,con_code_code) VALUES ('dx1','Encounter/e2','http://fhir.de/CodeSystem/bfarm/icd-10-gm','v1','I10'),('dx1','Encounter/e2','http://fhir.de/CodeSystem/bfarm/icd-10-gm','v2','I10'),('dx2','Encounter/e2','http://fhir.de/CodeSystem/bfarm/icd-10-gm','v2','I10');",
+    "INSERT INTO medication (med_id,med_code_system,med_code_version,med_code_code) VALUES ('rollup-med','http://fhir.de/CodeSystem/bfarm/atc','v1','rollup-atc'),('rollup-med','http://fhir.de/CodeSystem/bfarm/atc','v2','rollup-atc');",
+    "INSERT INTO medicationrequest (medreq_id,medreq_encounter_calculated_ref,medreq_medicationreference_ref,medreq_direct_system,medreq_direct_version,medreq_direct_code) VALUES ('rollup-request','Encounter/e2','Medication/rollup-med','http://fhir.de/CodeSystem/bfarm/atc','v1','rollup-atc'),('rollup-request','Encounter/e2','Medication/rollup-med','http://fhir.de/CodeSystem/bfarm/atc','v3','rollup-atc');"
+  )
   root <- tempfile("code-age-scopes-")
   dir.create(root)
   on.exit(unlink(root, recursive = TRUE), add = TRUE)
@@ -68,7 +75,54 @@ test_that("CSV variants are selected before aggregation and written to the exist
     expected <- unlist(lapply(c("all", "interpolar"), function(scope) {
       paste0("Codes/", names(reports), "_", scope, ".csv")
     }))
-    expect_setequal(members[endsWith(members, ".csv")], expected)
+    expected_no_version <- unlist(lapply(c("all", "interpolar"), function(scope) {
+      paste0("Codes_no_version/", c(names(reports), "LOINC"), "_", scope, "_no_version.csv")
+    }))
+    expect_setequal(members[endsWith(members, ".csv")], c(expected, expected_no_version))
+    output <- file.path(root, target, "unpacked")
+    utils::unzip(archive, exdir = output)
+    for (scope in c("all", "interpolar")) {
+      readCompact <- function(resource) {
+        data.table::fread(file.path(output, "Codes_no_version", paste0(resource, "_", scope, "_no_version.csv")))
+      }
+      loinc <- readCompact("LOINC")
+      expect_named(loinc, c("code", "unit", "unit_system", "count"))
+      expect_equal(
+        loinc[code == "rollup" & unit_system == "http://unitsofmeasure.org", count],
+        if (target == "global") "<5" else 2L
+      )
+      expect_equal(nrow(loinc[code == "rollup"]), 3L)
+      condition <- readCompact("Condition")
+      expect_false("version" %in% names(condition))
+      expect_equal(
+        condition[code == "I10" & row_type == "detail", count],
+        if (target == "global") "<5" else 2L
+      )
+      medication <- readCompact("Medication")
+      expect_equal(
+        medication[
+          code == "rollup-atc" & coding_path == "MedicationRequest/medicationCodeableConcept/coding",
+          .(count, medication_count, medication_request_count)
+        ],
+        if (target == "global") data.table::data.table(count = "<5", medication_count = "<5", medication_request_count = "<5")
+        else data.table::data.table(count = 1L, medication_count = 1L, medication_request_count = 1L)
+      )
+    }
+  }
+  chunk_fixture <- fixture
+  chunk_fixture$config$code_summary_processing <- list(enabled = TRUE, max_codes_per_chunk = 2L)
+  chunked <- createCodeSummaryReports(chunk_fixture$metadata, chunk_fixture$config,
+    table_description = chunk_fixture$description,
+    query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(chunk_fixture, query)
+  )
+  for (scope in c("all_cases", "interpolar_cases")) {
+    base_scope <- attr(reports, "variant_reports")[[scope]]
+    chunk_scope <- attr(chunked, "variant_reports")[[scope]]
+    expect_equal(attr(chunk_scope, "no_version_reports"), attr(base_scope, "no_version_reports"))
+    expect_equal(
+      attr(attr(chunk_scope, "local_reports"), "no_version_reports"),
+      attr(attr(base_scope, "local_reports"), "no_version_reports")
+    )
   }
   expect_warning(reports <- createCodeSummaryReports(fixture$metadata[COLUMN_NAME != "enc_age_at_admission"], fixture$config,
     table_description = fixture$description,
