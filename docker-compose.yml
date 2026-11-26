@@ -180,13 +180,15 @@ services:
   top-framework:
     profiles:
       - top-framework
-    image: ghcr.io/onto-med/top-interpolar-algorithms:1
+    build: ./TOP-framework
+    image: interpolar-top-framework:local
     restart: "no"
     init: true
     env_file:
       - .env_top-framework
     volumes:
       - ./outputLocal/top-results:/opt/app/results
+      - ./release-version.txt:/opt/app/release-version.txt:ro
     depends_on:
       - cds_hub
     networks:
