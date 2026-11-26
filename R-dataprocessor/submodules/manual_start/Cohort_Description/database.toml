@@ -3,6 +3,14 @@
 
 [sources.regular]
 DB_NAME = ""
+# DB_HOST = ""
+# DB_PORT = 5432
+# DB_DATAPROCESSOR_USER = ""
+# DB_DATAPROCESSOR_PASSWORD = ""
 
 [sources.broad_consent]
 DB_NAME = ""
+# DB_HOST = ""
+# DB_PORT = 5432
+# DB_DATAPROCESSOR_USER = ""
+# DB_DATAPROCESSOR_PASSWORD = ""
