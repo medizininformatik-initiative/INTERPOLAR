@@ -68,10 +68,16 @@ createCohortDescription <- function(source = "regular") {
   # Validate dates before loading clinical data.
   buildCohortPeriods(wards, source, timezone)
   prepared <- runCohortStep("Link known INTERPOLAR contacts", prepareCohortDescription())
-  prepared$known_ip_contacts <- retainLinkedCohortContacts(
-    prepared$known_ip_contacts,
-    file.path(etlutils::getModuleDirNames(NULL)$local_dir, "diagnostics", "cohort_description", source)
+  diagnostic_dir <- file.path(
+    etlutils::getModuleDirNames(NULL)$local_dir, "diagnostics", "cohort_description", source
   )
+  prepared$known_ip_contacts <- retainLinkedCohortContacts(prepared$known_ip_contacts, diagnostic_dir)
+  if (source == "broad_consent") {
+    prepared$diagnostic_dir <- diagnostic_dir
+    prepared$known_ip_contacts <- retainCohortContactsWithHospitalCase(
+      prepared$known_ip_contacts, prepared$encounters, diagnostic_dir
+    )
+  }
   data <- loadCohortAnalysisData(prepared, timezone)
   manifest <- runCohortStep("Export expanded workbooks", exportCohortDescription(
     data$cases, wards, timezone,

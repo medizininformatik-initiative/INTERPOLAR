@@ -138,3 +138,54 @@ retainLinkedCohortContacts <- function(contacts, directory) {
   )
   contacts[encounter_found == TRUE]
 }
+
+# Remove BC contacts that have no available hospital case. If an unassigned
+# contact could precede the first linked stay of another case, drop that case
+# too: otherwise its station and first stay could be assigned incorrectly.
+retainCohortContactsWithHospitalCase <- function(contacts, encounters, directory) {
+  contacts <- data.table::copy(contacts)
+  contacts[, case_id := etlutils::fhirdataExtractIDs(enc_main_encounter_calculated_ref, unique = FALSE)]
+  hospital <- unique(encounters[, .(
+    patient_id = etlutils::fhirdataExtractIDs(enc_patient_ref, unique = FALSE),
+    case_id = enc_id, hospital_start = enc_period_start
+  )])
+  keys <- c("patient_id", "case_id")
+  missing_reference <- contacts[is.na(case_id) | !nzchar(case_id)]
+  named <- contacts[!is.na(case_id) & nzchar(case_id)]
+  missing_hospital <- named[!hospital, on = keys]
+  retained <- named[hospital, on = keys, nomatch = NULL, which = TRUE]
+  retained <- named[sort(unique(retained))]
+
+  uncertain_cases <- retained[0L, ..keys]
+  if (nrow(missing_reference) && nrow(retained)) {
+    first_times <- retained[patient_id %in% missing_reference$patient_id,
+      .(first_start = min(enc_period_start)),
+      by = keys
+    ]
+    windows <- merge(first_times, hospital, by = keys, allow.cartesian = TRUE)
+    starts <- unique(missing_reference[, .(patient_id, unknown_start = enc_period_start)])
+    candidates <- merge(windows, starts, by = "patient_id", allow.cartesian = TRUE)
+    uncertain_cases <- unique(candidates[
+      is.na(unknown_start) |
+        (unknown_start >= hospital_start & unknown_start <= first_start),
+      ..keys
+    ])
+  }
+  uncertain <- retained[uncertain_cases, on = keys, nomatch = NULL]
+  excluded <- data.table::rbindlist(list(
+    missing_reference[, exclusion_reason := "missing_hospital_case_reference"],
+    missing_hospital[, exclusion_reason := "hospital_case_not_found"],
+    uncertain[, exclusion_reason := "first_ip_contact_uncertain"]
+  ))
+  dir.create(directory, recursive = TRUE, showWarnings = FALSE)
+  data.table::fwrite(excluded, file.path(directory, "unavailable_hospital_cases.csv"), na = "NA")
+  remaining <- retained[!uncertain_cases, on = keys]
+  message(
+    "Cohort Description: BC hospital links: ",
+    data.table::uniqueN(missing_reference, by = c("patient_id", "encounter_id")), " contacts without a case reference; ",
+    data.table::uniqueN(missing_hospital, by = keys), " cases without a hospital Encounter; ",
+    nrow(uncertain_cases), " cases with uncertain first IP contact; ",
+    data.table::uniqueN(remaining, by = keys), " linked cases before eligibility."
+  )
+  remaining
+}

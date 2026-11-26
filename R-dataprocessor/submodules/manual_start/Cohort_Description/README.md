@@ -86,3 +86,11 @@ The log records only the excluded row count and file path.
 `algorithmic_mrps_by_first_meda_timing.csv` counts FAS 1 cases and stored algorithmic MRPs by
 station, study and timing of the first completed MedA of the hospital case.
 It includes MRPs without a completed review.
+
+
+Broad Consent cases require the hospital Encounter and Patient resource.
+Contacts without a hospital case reference are excluded. If such a contact
+could be the first IP stay of an otherwise linked case, that case is also excluded.
+The log reports aggregate counts. Local details are written to
+`unavailable_hospital_cases.csv` and `unavailable_patients.csv` in the
+Broad Consent diagnostics folder.

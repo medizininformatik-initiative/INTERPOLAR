@@ -66,6 +66,16 @@ loadCohortAnalysisData <- function(prepared, timezone) {
       "Patient", c("pat_id", "pat_birthdate", "pat_gender"),
       unique(first$patient_id)
     )
+    if (!is.null(prepared$diagnostic_dir)) {
+      missing_patient <- first[!patient_id %in% patients$pat_id]
+      data.table::fwrite(
+        missing_patient[, .(patient_id, case_id, encounter_id)],
+        file.path(prepared$diagnostic_dir, "unavailable_patients.csv"),
+        na = "NA"
+      )
+      message("Cohort Description: excluded ", nrow(missing_patient), " BC cases without a Patient resource.")
+      first <- first[patient_id %in% patients$pat_id]
+    }
     cases <- buildCohortCases(first, contacts, prepared$encounters, patients, timezone)
   })
   runCohortStep("Load and evaluate medication analyses and manual MRPs", {

@@ -165,3 +165,26 @@ test_that("unlinked contacts are excluded with identifiers only in a local diagn
   expect_message(empty <- retainLinkedCohortContacts(contacts[1], directory), "excluded 1")
   expect_equal(nrow(empty), 0L)
 })
+
+test_that("BC drops unavailable cases without promoting a possible later IP contact", {
+  start <- as.POSIXct("2025-01-01", tz = "UTC")
+  contacts <- data.table::data.table(
+    patient_id = c("p", "p", "p", "q", "q"),
+    encounter_id = c("orphan", "later", "other", "linked", "missing"),
+    enc_main_encounter_calculated_ref = c(NA, "Encounter/a", "Encounter/b", "Encounter/c", "Encounter/d"),
+    enc_period_start = start + c(1, 2, 12, 4, 5) * 86400
+  )
+  encounters <- data.table::data.table(
+    enc_patient_ref = c("Patient/p", "Patient/p", "Patient/q"), enc_id = c("a", "b", "c"),
+    enc_period_start = start + c(0, 10, 3) * 86400
+  )
+  directory <- tempfile()
+  on.exit(unlink(directory, recursive = TRUE))
+  expect_message(
+    retained <- retainCohortContactsWithHospitalCase(contacts, encounters, directory),
+    "2 linked cases before eligibility"
+  )
+  expect_equal(retained$encounter_id, c("other", "linked"))
+  excluded <- data.table::fread(file.path(directory, "unavailable_hospital_cases.csv"))
+  expect_setequal(excluded$encounter_id, c("orphan", "later", "missing"))
+})
