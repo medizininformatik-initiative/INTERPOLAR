@@ -1,0 +1,7 @@
+# Name of the existing pseudonymized snapshot database.
+DB_NAME = ""
+# Optional: inherit all other connection settings from cds_hub_db_config.toml.
+DB_HOST = ""
+DB_PORT = ""
+DB_DATAPROCESSOR_USER = ""
+DB_DATAPROCESSOR_PASSWORD = ""
