@@ -226,7 +226,8 @@ buildSnapshotMedicationResolutionQuery <- function(
   source_root_queries,
   medication_relation,
   ingredient_reference_column =
-    SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN
+    SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN,
+  ingredient_coding_columns = character()
 ) {
   quoted_med_id <- snapshotQuotedColumn(connection, "med_id")
   quoted_med_system <- snapshotQuotedColumn(connection, "med_code_system")
@@ -276,18 +277,30 @@ buildSnapshotMedicationResolutionQuery <- function(
     "  ON medication_edges.source_medication_id = medication_walk.medication_id",
     sep = "\n"
   )
-  medication_code_values_query <- paste0(
-    "SELECT DISTINCT medication_walk.root_medication_id,\n",
-    "  medication.", quoted_med_system, " AS medication_system,\n",
-    "  medication.", quoted_med_code, " AS medication_code\n",
-    "FROM medication_walk\n",
-    "JOIN ", medication_relation, " medication\n",
-    "  ON medication.", quoted_med_id,
-    "::text = medication_walk.medication_id\n",
-    "WHERE NULLIF(medication.", quoted_med_system,
-    "::text, '') IS NOT NULL\n",
-    "  AND NULLIF(medication.", quoted_med_code, "::text, '') IS NOT NULL"
-  )
+  coding_columns <- list(c(quoted_med_system, quoted_med_code))
+  if (length(ingredient_coding_columns) == 2L) {
+    coding_columns[[2L]] <- vapply(
+      ingredient_coding_columns,
+      snapshotQuotedColumn,
+      character(1),
+      connection = connection
+    )
+  }
+  # Collect coding pairs from every reachable Medication, including its direct ingredients.
+  medication_code_values_query <- paste(vapply(coding_columns, function(columns) {
+    paste0(
+      "SELECT DISTINCT medication_walk.root_medication_id,\n",
+      "  medication.", columns[1L], " AS medication_system,\n",
+      "  medication.", columns[2L], " AS medication_code\n",
+      "FROM medication_walk\n",
+      "JOIN ", medication_relation, " medication\n",
+      "  ON medication.", quoted_med_id,
+      "::text = medication_walk.medication_id\n",
+      "WHERE NULLIF(medication.", columns[1L],
+      "::text, '') IS NOT NULL\n",
+      "  AND NULLIF(medication.", columns[2L], "::text, '') IS NOT NULL"
+    )
+  }, character(1)), collapse = "\nUNION\n")
   medication_codes_query <- paste(
     "SELECT root_medication_id, medication_system, medication_code,",
     "  row_number() OVER (",
@@ -662,6 +675,13 @@ prepareSnapshotMedicationResolutionTables <- function(
         SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN
       } else {
         NULL
+      },
+      ingredient_coding_columns = if (
+        all(SNAPSHOT_MEDICATION_INGREDIENT_CODING_COLUMNS %in% medication_fields)
+      ) {
+        SNAPSHOT_MEDICATION_INGREDIENT_CODING_COLUMNS
+      } else {
+        character()
       }
     )
     resolution_table_name <- basename(tempfile(

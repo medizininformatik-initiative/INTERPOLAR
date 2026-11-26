@@ -33,6 +33,10 @@ SNAPSHOT_MEDICATION_REFERENCE_SPECS <- data.table::data.table(
 
 SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN <-
   "med_ingredient_itemreference_ref"
+SNAPSHOT_MEDICATION_INGREDIENT_CODING_COLUMNS <- c(
+  "med_ingredient_itemcodeableconcept_system",
+  "med_ingredient_itemcodeableconcept_code"
+)
 SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN <-
   ".snapshot_medication_reference_issues"
 
